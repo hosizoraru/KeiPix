@@ -99,6 +99,23 @@ private struct ArtworkActionStrip: View {
                     .controlSize(.small)
 
                     if let url = artwork.pixivURL {
+                        Menu {
+                            ShareLink(item: url) {
+                                Label(L10n.share, systemImage: "square.and.arrow.up")
+                            }
+
+                            Button {
+                                PasteboardWriter.copy(url.absoluteString)
+                            } label: {
+                                Label(L10n.copyLink, systemImage: "link")
+                            }
+                        } label: {
+                            Label(L10n.share, systemImage: "square.and.arrow.up")
+                                .frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(.bordered)
+                        .controlSize(.small)
+
                         Link(destination: url) {
                             Label(L10n.openInPixiv, systemImage: "safari")
                                 .frame(maxWidth: .infinity)

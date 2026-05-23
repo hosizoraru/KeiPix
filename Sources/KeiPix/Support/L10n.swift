@@ -29,6 +29,9 @@ enum L10n {
     static var refresh: String { text("Refresh") }
     static var loading: String { text("Loading") }
     static var openInPixiv: String { text("Open in Pixiv") }
+    static var share: String { text("Share") }
+    static var shareCurrentPage: String { text("Share Current Page") }
+    static var copyLink: String { text("Copy Link") }
     static var download: String { text("Download") }
     static var downloads: String { text("Downloads") }
     static var downloading: String { text("Downloading") }

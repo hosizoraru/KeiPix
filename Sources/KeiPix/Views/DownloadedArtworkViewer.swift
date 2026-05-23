@@ -55,6 +55,13 @@ struct DownloadedArtworkViewer: View {
             .pickerStyle(.segmented)
             .frame(width: 260)
 
+            ShareLink(item: currentImageURL) {
+                Label(L10n.shareCurrentPage, systemImage: "square.and.arrow.up")
+            }
+            .labelStyle(.iconOnly)
+            .buttonStyle(.bordered)
+            .help(L10n.shareCurrentPage)
+
             Button {
                 dismiss()
             } label: {
@@ -64,6 +71,10 @@ struct DownloadedArtworkViewer: View {
             .buttonStyle(.bordered)
             .keyboardShortcut(.cancelAction)
         }
+    }
+
+    private var currentImageURL: URL {
+        imageURLs[safe: pageIndex] ?? imageURLs[0]
     }
 
     private var thumbnailRail: some View {
@@ -134,7 +145,7 @@ struct DownloadedArtworkViewer: View {
         VStack(spacing: 12) {
             Spacer(minLength: 0)
 
-            LocalImageView(url: imageURLs[safe: pageIndex] ?? imageURLs[0], contentMode: .fit)
+            LocalImageView(url: currentImageURL, contentMode: .fit)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .padding(18)
 
