@@ -19,6 +19,48 @@ struct KeiPixApp: App {
                 }
                 .keyboardShortcut("r", modifiers: .command)
             }
+
+            CommandMenu(L10n.artwork) {
+                Button(L10n.previousArtwork) {
+                    store.selectPreviousArtwork()
+                }
+                .keyboardShortcut(.leftArrow, modifiers: [.command])
+                .disabled(store.selectedArtwork == nil)
+
+                Button(L10n.nextArtwork) {
+                    store.selectNextArtwork()
+                }
+                .keyboardShortcut(.rightArrow, modifiers: [.command])
+                .disabled(store.selectedArtwork == nil)
+
+                Divider()
+
+                Button(store.selectedArtwork?.isBookmarked == true ? L10n.removeBookmark : L10n.bookmark) {
+                    Task { await store.toggleSelectedBookmark() }
+                }
+                .keyboardShortcut("b", modifiers: [.command])
+                .disabled(store.selectedArtwork == nil)
+
+                Button(L10n.download) {
+                    store.downloadSelectedArtwork()
+                }
+                .keyboardShortcut("d", modifiers: [.command, .shift])
+                .disabled(store.selectedArtwork == nil)
+
+                Divider()
+
+                Button(L10n.openInPixiv) {
+                    store.openSelectedArtworkInPixiv()
+                }
+                .keyboardShortcut("o", modifiers: [.command, .shift])
+                .disabled(store.selectedArtwork?.pixivURL == nil)
+
+                Button(L10n.copyLink) {
+                    store.copySelectedArtworkLink()
+                }
+                .keyboardShortcut("c", modifiers: [.command, .shift])
+                .disabled(store.selectedArtwork?.pixivURL == nil)
+            }
         }
 
         Settings {

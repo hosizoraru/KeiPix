@@ -283,6 +283,34 @@ final class KeiPixStore {
         updateArtwork(artwork.id) { $0.isBookmarked = false }
     }
 
+    func toggleSelectedBookmark() async {
+        guard let selectedArtwork else { return }
+        await toggleBookmark(selectedArtwork)
+    }
+
+    func downloadSelectedArtwork() {
+        guard let selectedArtwork else { return }
+        downloads.enqueue(selectedArtwork, preferOriginal: true)
+    }
+
+    func openSelectedArtworkInPixiv() {
+        guard let url = selectedArtwork?.pixivURL else { return }
+        NSWorkspace.shared.open(url)
+    }
+
+    func copySelectedArtworkLink() {
+        guard let url = selectedArtwork?.pixivURL else { return }
+        PasteboardWriter.copy(url.absoluteString)
+    }
+
+    func selectPreviousArtwork() {
+        selectAdjacentArtwork(delta: -1)
+    }
+
+    func selectNextArtwork() {
+        selectAdjacentArtwork(delta: 1)
+    }
+
     func toggleFollow(_ user: PixivUser) async {
         let nextValue = !user.isFollowed
         do {

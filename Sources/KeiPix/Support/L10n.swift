@@ -118,6 +118,9 @@ enum L10n {
     static var noUgoira: String { text("No Ugoira") }
     static var reset: String { text("Reset") }
     static var apply: String { text("Apply") }
+    static var artwork: String { text("Artwork") }
+    static var previousArtwork: String { text("Previous Artwork") }
+    static var nextArtwork: String { text("Next Artwork") }
     static var layout: String { text("Layout") }
     static var galleryLayout: String { text("Gallery Layout") }
     static var auto: String { text("Auto") }
