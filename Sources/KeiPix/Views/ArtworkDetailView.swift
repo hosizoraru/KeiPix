@@ -7,6 +7,7 @@ struct ArtworkDetailView: View {
         Group {
             if let artwork = store.selectedArtwork {
                 ArtworkInspectorView(artwork: artwork, store: store)
+                    .id(artwork.id)
             } else {
                 EmptyStateView(title: L10n.noArtworkTitle, subtitle: L10n.noArtworkSubtitle, systemImage: "sidebar.trailing")
             }
@@ -18,17 +19,24 @@ struct ArtworkDetailView: View {
 private struct ArtworkInspectorView: View {
     let artwork: PixivArtwork
     @Bindable var store: KeiPixStore
+    @State private var captionExpanded = false
+    @State private var tagsExpanded = false
+    @State private var metadataExpanded = false
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 0) {
+            VStack(spacing: 14) {
                 ArtworkHeroView(artwork: artwork, store: store)
 
-                VStack(alignment: .leading, spacing: 18) {
-                    ArtworkActionStrip(artwork: artwork, store: store)
+                VStack(alignment: .leading, spacing: 14) {
+                    ArtworkSummaryView(artwork: artwork, store: store)
 
                     if artwork.caption.htmlStripped.isEmpty == false {
-                        InspectorSection(title: nil) {
+                        CollapsibleInspectorSection(
+                            title: L10n.description,
+                            systemImage: "text.alignleft",
+                            isExpanded: $captionExpanded
+                        ) {
                             Text(artwork.caption.htmlStripped)
                                 .font(.callout)
                                 .foregroundStyle(.secondary)
@@ -37,7 +45,11 @@ private struct ArtworkInspectorView: View {
                         }
                     }
 
-                    InspectorSection(title: L10n.tags) {
+                    CollapsibleInspectorSection(
+                        title: L10n.tags,
+                        systemImage: "tag",
+                        isExpanded: $tagsExpanded
+                    ) {
                         FlowLayout(spacing: 8) {
                             ForEach(artwork.tags, id: \.self) { tag in
                                 Text(tag.translatedName.map { "#\(tag.name) / \($0)" } ?? "#\(tag.name)")
@@ -50,7 +62,11 @@ private struct ArtworkInspectorView: View {
                         }
                     }
 
-                    InspectorSection(title: nil) {
+                    CollapsibleInspectorSection(
+                        title: L10n.artworkInformation,
+                        systemImage: "info.circle",
+                        isExpanded: $metadataExpanded
+                    ) {
                         DetailMetadata(artwork: artwork)
                     }
                 }
@@ -58,6 +74,11 @@ private struct ArtworkInspectorView: View {
             }
         }
         .scrollEdgeEffectStyle(.soft, for: .top)
+        .onChange(of: artwork.id) { _, _ in
+            captionExpanded = false
+            tagsExpanded = false
+            metadataExpanded = false
+        }
     }
 }
 
@@ -66,14 +87,34 @@ private struct ArtworkHeroView: View {
     @Bindable var store: KeiPixStore
 
     var body: some View {
-        ZStack(alignment: .bottomLeading) {
-            RemoteImageView(url: store.useOriginalImagesInDetail ? artwork.originalURL : artwork.detailURL, contentMode: .fit)
-                .frame(maxWidth: .infinity)
-                .frame(height: 360)
-                .background(.quaternary)
-                .backgroundExtensionEffect()
+        RemoteImageView(url: store.useOriginalImagesInDetail ? artwork.originalURL : artwork.detailURL, contentMode: .fit)
+            .aspectRatio(artwork.aspectRatio, contentMode: .fit)
+            .frame(maxWidth: .infinity)
+            .frame(minHeight: 260)
+            .frame(maxHeight: 620)
+            .background(.quaternary)
+            .backgroundExtensionEffect()
+            .overlay(alignment: .topTrailing) {
+                if artwork.pageCount > 1 {
+                    Text("\(artwork.pageCount)P")
+                        .font(.caption.weight(.semibold))
+                        .padding(.horizontal, 9)
+                        .padding(.vertical, 5)
+                        .keiGlass(12)
+                        .padding(14)
+                }
+            }
+            .clipShape(RoundedRectangle(cornerRadius: 0, style: .continuous))
+    }
+}
 
-            VStack(alignment: .leading, spacing: 12) {
+private struct ArtworkSummaryView: View {
+    let artwork: PixivArtwork
+    @Bindable var store: KeiPixStore
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            VStack(alignment: .leading, spacing: 10) {
                 Text(artwork.title)
                     .font(.title2.weight(.semibold))
                     .lineLimit(3)
@@ -81,7 +122,7 @@ private struct ArtworkHeroView: View {
 
                 HStack(spacing: 10) {
                     RemoteImageView(url: artwork.user.avatarURL)
-                        .frame(width: 30, height: 30)
+                        .frame(width: 32, height: 32)
                         .clipShape(Circle())
 
                     VStack(alignment: .leading, spacing: 1) {
@@ -103,10 +144,11 @@ private struct ArtworkHeroView: View {
                     .controlSize(.small)
                 }
             }
-            .padding(14)
-            .keiGlass(22)
-            .padding(18)
+
+            ArtworkActionStrip(artwork: artwork, store: store)
         }
+        .padding(14)
+        .keiPanel(18)
     }
 }
 
@@ -167,6 +209,28 @@ private struct MetricView: View {
         }
         .labelStyle(.titleAndIcon)
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+private struct CollapsibleInspectorSection<Content: View>: View {
+    let title: String
+    let systemImage: String
+    @Binding var isExpanded: Bool
+    @ViewBuilder var content: Content
+
+    var body: some View {
+        DisclosureGroup(isExpanded: $isExpanded) {
+            content
+                .padding(.top, 10)
+        } label: {
+            Label(title, systemImage: systemImage)
+                .font(.headline)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .contentShape(Rectangle())
+        }
+        .disclosureGroupStyle(.automatic)
+        .padding(14)
+        .keiPanel(16)
     }
 }
 

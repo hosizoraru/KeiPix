@@ -43,6 +43,8 @@ enum L10n {
     static var monthly: String { text("Monthly") }
     static var details: String { text("Details") }
     static var tags: String { text("Tags") }
+    static var description: String { text("Description") }
+    static var artworkInformation: String { text("Artwork Information") }
     static var views: String { text("Views") }
     static var saves: String { text("Saves") }
     static var pages: String { text("Pages") }

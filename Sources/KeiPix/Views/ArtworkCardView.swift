@@ -4,6 +4,7 @@ struct ArtworkCardView: View {
     let artwork: PixivArtwork
     let isSelected: Bool
     let isCompact: Bool
+    var preferredHeight: CGFloat? = nil
     let action: () -> Void
     @State private var isHovering = false
 
@@ -11,7 +12,7 @@ struct ArtworkCardView: View {
         Button(action: action) {
             ZStack(alignment: .bottomLeading) {
                 RemoteImageView(url: artwork.thumbnailURL)
-                    .frame(height: imageHeight)
+                    .frame(height: renderedImageHeight)
                     .frame(maxWidth: .infinity)
                     .overlay(alignment: .bottom) {
                         LinearGradient(
@@ -19,7 +20,7 @@ struct ArtworkCardView: View {
                             startPoint: .center,
                             endPoint: .bottom
                         )
-                        .frame(height: imageHeight * 0.55)
+                        .frame(height: renderedImageHeight * 0.55)
                     }
 
                 VStack(alignment: .leading, spacing: 5) {
@@ -66,7 +67,7 @@ struct ArtworkCardView: View {
         .onHover { isHovering = $0 }
     }
 
-    private var imageHeight: CGFloat {
-        isCompact ? 152 : 222
+    private var renderedImageHeight: CGFloat {
+        preferredHeight ?? (isCompact ? 152 : 222)
     }
 }
