@@ -60,7 +60,8 @@ struct UserPreviewListView: View {
                                             Task { await store.openUserFeed(user: preview.user, route: .userManga) }
                                         },
                                         toggleFollow: {
-                                            Task { await toggleFollow(preview.user) }
+                                            restrict in
+                                            Task { await toggleFollow(preview.user, restrict: restrict) }
                                         },
                                         selectArtwork: { artwork in
                                             store.selectedArtwork = artwork
@@ -224,8 +225,8 @@ struct UserPreviewListView: View {
         }
     }
 
-    private func toggleFollow(_ user: PixivUser) async {
-        await store.toggleFollow(user)
+    private func toggleFollow(_ user: PixivUser, restrict: BookmarkRestrict = .public) async {
+        await store.toggleFollow(user, restrict: restrict)
         for index in previews.indices where previews[index].user.id == user.id {
             var updatedUser = previews[index].user
             updatedUser.isFollowed.toggle()
@@ -240,7 +241,7 @@ private struct UserPreviewCard: View {
     let openProfile: () -> Void
     let openIllustrations: () -> Void
     let openManga: () -> Void
-    let toggleFollow: () -> Void
+    let toggleFollow: (BookmarkRestrict) -> Void
     let selectArtwork: (PixivArtwork) -> Void
 
     var body: some View {
@@ -265,10 +266,24 @@ private struct UserPreviewCard: View {
 
                 Spacer()
 
-                Button(preview.user.isFollowed ? L10n.unfollow : L10n.follow) {
-                    toggleFollow()
+                if preview.user.isFollowed {
+                    Button(L10n.unfollow) {
+                        toggleFollow(.public)
+                    }
+                    .buttonStyle(.bordered)
+                } else {
+                    Menu {
+                        Button(L10n.followPublicly) {
+                            toggleFollow(.public)
+                        }
+                        Button(L10n.followPrivately) {
+                            toggleFollow(.private)
+                        }
+                    } label: {
+                        Label(L10n.follow, systemImage: "person.crop.circle.badge.plus")
+                    }
+                    .buttonStyle(.bordered)
                 }
-                .buttonStyle(.bordered)
             }
 
             if preview.illusts.isEmpty == false {
@@ -313,8 +328,17 @@ private struct UserPreviewCard: View {
             Button(L10n.creatorProfile) {
                 openProfile()
             }
-            Button(preview.user.isFollowed ? L10n.unfollow : L10n.follow) {
-                toggleFollow()
+            if preview.user.isFollowed {
+                Button(L10n.unfollow) {
+                    toggleFollow(.public)
+                }
+            } else {
+                Button(L10n.followPublicly) {
+                    toggleFollow(.public)
+                }
+                Button(L10n.followPrivately) {
+                    toggleFollow(.private)
+                }
             }
             Divider()
             Button(L10n.creatorIllustrations) {

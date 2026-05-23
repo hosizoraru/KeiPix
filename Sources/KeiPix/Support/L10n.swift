@@ -68,6 +68,8 @@ enum L10n {
     static var selectAll: String { text("Select All") }
     static var clearSelection: String { text("Clear Selection") }
     static var follow: String { text("Follow") }
+    static var followPublicly: String { text("Follow Publicly") }
+    static var followPrivately: String { text("Follow Privately") }
     static var unfollow: String { text("Unfollow") }
     static var close: String { text("Close") }
     static var creatorProfile: String { text("Creator Profile") }

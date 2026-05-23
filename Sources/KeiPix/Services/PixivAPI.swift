@@ -431,12 +431,12 @@ actor PixivAPI {
         ) as EmptyResponse
     }
 
-    func setFollow(userID: Int, isFollowed: Bool) async throws {
+    func setFollow(userID: Int, isFollowed: Bool, restrict: BookmarkRestrict = .public) async throws {
         if isFollowed {
             _ = try await requestJSON(
                 URL(string: "/v1/user/follow/add", relativeTo: Endpoint.apiBase)!,
                 method: "POST",
-                form: ["user_id": "\(userID)", "restrict": "public"]
+                form: ["user_id": "\(userID)", "restrict": restrict.rawValue]
             ) as EmptyResponse
         } else {
             _ = try await requestJSON(

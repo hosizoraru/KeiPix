@@ -344,10 +344,10 @@ final class KeiPixStore {
         selectAdjacentArtwork(delta: 1)
     }
 
-    func toggleFollow(_ user: PixivUser) async {
+    func toggleFollow(_ user: PixivUser, restrict: BookmarkRestrict = .public) async {
         let nextValue = !user.isFollowed
         do {
-            try await api.setFollow(userID: user.id, isFollowed: nextValue)
+            try await api.setFollow(userID: user.id, isFollowed: nextValue, restrict: restrict)
             for index in allArtworks.indices where allArtworks[index].user.id == user.id {
                 allArtworks[index].user.isFollowed = nextValue
             }

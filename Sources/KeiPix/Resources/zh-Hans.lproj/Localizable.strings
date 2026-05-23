@@ -65,6 +65,8 @@
 "Select All" = "全选";
 "Clear Selection" = "清空选择";
 "Follow" = "关注";
+"Follow Publicly" = "公开关注";
+"Follow Privately" = "私密关注";
 "Unfollow" = "取消关注";
 "Close" = "关闭";
 "Creator Profile" = "创作者资料";

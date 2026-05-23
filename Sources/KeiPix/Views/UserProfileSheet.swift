@@ -97,8 +97,15 @@ struct UserProfileSheet: View {
                     .buttonStyle(.bordered)
                     .disabled(isLoading)
                 } else {
-                    Button(L10n.follow) {
-                        Task { await toggleFollow() }
+                    Menu {
+                        Button(L10n.followPublicly) {
+                            Task { await toggleFollow(restrict: .public) }
+                        }
+                        Button(L10n.followPrivately) {
+                            Task { await toggleFollow(restrict: .private) }
+                        }
+                    } label: {
+                        Label(L10n.follow, systemImage: "person.crop.circle.badge.plus")
                     }
                     .buttonStyle(.glassProminent)
                     .disabled(isLoading)
@@ -260,7 +267,8 @@ struct UserProfileSheet: View {
                                     }
                                 },
                                 toggleFollow: {
-                                    Task { await toggleRelatedFollow(preview.user) }
+                                    restrict in
+                                    Task { await toggleRelatedFollow(preview.user, restrict: restrict) }
                                 }
                             )
                         }
@@ -321,15 +329,15 @@ struct UserProfileSheet: View {
         }
     }
 
-    private func toggleFollow() async {
+    private func toggleFollow(restrict: BookmarkRestrict = .public) async {
         var target = detail?.user ?? user
         target.isFollowed = isFollowed
-        await store.toggleFollow(target)
+        await store.toggleFollow(target, restrict: restrict)
         isFollowed.toggle()
     }
 
-    private func toggleRelatedFollow(_ user: PixivUser) async {
-        await store.toggleFollow(user)
+    private func toggleRelatedFollow(_ user: PixivUser, restrict: BookmarkRestrict = .public) async {
+        await store.toggleFollow(user, restrict: restrict)
         for index in relatedUsers.indices where relatedUsers[index].user.id == user.id {
             var updatedUser = relatedUsers[index].user
             updatedUser.isFollowed.toggle()
@@ -346,7 +354,7 @@ private struct RelatedCreatorCard: View {
     let preview: PixivUserPreview
     let openProfile: () -> Void
     let openIllustrations: () -> Void
-    let toggleFollow: () -> Void
+    let toggleFollow: (BookmarkRestrict) -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -383,10 +391,24 @@ private struct RelatedCreatorCard: View {
             }
 
             HStack(spacing: 8) {
-                Button(preview.user.isFollowed ? L10n.unfollow : L10n.follow) {
-                    toggleFollow()
+                if preview.user.isFollowed {
+                    Button(L10n.unfollow) {
+                        toggleFollow(.public)
+                    }
+                    .buttonStyle(.bordered)
+                } else {
+                    Menu {
+                        Button(L10n.followPublicly) {
+                            toggleFollow(.public)
+                        }
+                        Button(L10n.followPrivately) {
+                            toggleFollow(.private)
+                        }
+                    } label: {
+                        Label(L10n.follow, systemImage: "person.crop.circle.badge.plus")
+                    }
+                    .buttonStyle(.bordered)
                 }
-                .buttonStyle(.bordered)
 
                 Button {
                     openIllustrations()
