@@ -299,6 +299,11 @@
 "Muted Tags" = "Muted Tags";
 "Muted Creators" = "Muted Creators";
 "Muted Artworks" = "Muted Artworks";
+"Open Muted Content Manager" = "Open Muted Content Manager";
+"Search muted content" = "Search muted content";
+"Pixiv mute sync" = "Pixiv mute sync";
+"Add muted tag" = "Add muted tag";
+"Delete from Muted Content" = "Delete from Muted Content";
 "Sync from Pixiv" = "Sync from Pixiv";
 "Upload to Pixiv" = "Upload to Pixiv";
 "Export Muted Content" = "Export Muted Content";
@@ -309,7 +314,10 @@
 "Imported" = "Imported";
 "Pixiv sync covers muted tags and creators. Local muted artworks stay on this Mac." = "Pixiv sync covers muted tags and creators. Local muted artworks stay on this Mac.";
 "Clear Muted Content" = "Clear Muted Content";
+"Clear all muted content?" = "Clear all muted content?";
 "No muted content" = "No muted content";
+"Mute artworks, creators, or tags from artwork menus, or add tags here." = "Mute artworks, creators, or tags from artwork menus, or add tags here.";
+"%d muted items" = "%d muted items";
 "Content Rating" = "Content Rating";
 "All Ages" = "All Ages";
 "Yes" = "Yes";

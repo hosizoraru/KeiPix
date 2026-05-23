@@ -299,6 +299,11 @@
 "Muted Tags" = "屏蔽标签";
 "Muted Creators" = "屏蔽创作者";
 "Muted Artworks" = "屏蔽作品";
+"Open Muted Content Manager" = "打开屏蔽内容管理";
+"Search muted content" = "搜索屏蔽内容";
+"Pixiv mute sync" = "Pixiv 屏蔽同步";
+"Add muted tag" = "新增屏蔽标签";
+"Delete from Muted Content" = "从屏蔽内容中删除";
 "Sync from Pixiv" = "从 Pixiv 同步";
 "Upload to Pixiv" = "上传到 Pixiv";
 "Export Muted Content" = "导出屏蔽内容";
@@ -309,7 +314,10 @@
 "Imported" = "已导入";
 "Pixiv sync covers muted tags and creators. Local muted artworks stay on this Mac." = "Pixiv 同步包含屏蔽标签和创作者，本地屏蔽作品会保留在这台 Mac。";
 "Clear Muted Content" = "清空屏蔽内容";
+"Clear all muted content?" = "清空全部屏蔽内容？";
 "No muted content" = "暂无屏蔽内容";
+"Mute artworks, creators, or tags from artwork menus, or add tags here." = "可以从作品菜单屏蔽作品、创作者或标签，也可以在这里新增标签。";
+"%d muted items" = "%d 个屏蔽项";
 "Content Rating" = "内容分级";
 "All Ages" = "全年龄";
 "Yes" = "是";

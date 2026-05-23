@@ -59,6 +59,7 @@ enum PixivRouteSection: Identifiable {
                 .privateFollowing,
                 .followingCreators,
                 .history,
+                .mutedContent,
                 .mangaWatchlist,
                 .downloads
             ]
@@ -103,6 +104,7 @@ enum PixivRoute: String, CaseIterable, Identifiable, Codable {
     case privateFollowing
     case followingCreators
     case history
+    case mutedContent
     case mangaWatchlist
     case downloads
     case recommendedUsers
@@ -155,6 +157,7 @@ enum PixivRoute: String, CaseIterable, Identifiable, Codable {
         case .privateFollowing: L10n.privateFollowing
         case .followingCreators: L10n.followingCreators
         case .history: L10n.history
+        case .mutedContent: L10n.mutedContent
         case .mangaWatchlist: L10n.mangaWatchlist
         case .downloads: L10n.downloads
         case .recommendedUsers: L10n.recommendedCreators
@@ -171,7 +174,8 @@ enum PixivRoute: String, CaseIterable, Identifiable, Codable {
              .savedSearches,
              .trendingTags,
              .spotlight,
-             .bookmarkTags:
+             .bookmarkTags,
+             .mutedContent:
             false
         default:
             true
@@ -238,6 +242,7 @@ enum PixivRoute: String, CaseIterable, Identifiable, Codable {
         case .privateFollowing: "person.2.badge.key"
         case .followingCreators: "person.2.crop.square.stack"
         case .history: "clock.arrow.circlepath"
+        case .mutedContent: "eye.slash"
         case .mangaWatchlist: "rectangle.stack.badge.person.crop"
         case .downloads: "arrow.down.circle"
         }

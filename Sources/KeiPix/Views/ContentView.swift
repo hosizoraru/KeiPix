@@ -204,6 +204,8 @@ private struct ContentColumnView: View {
             BookmarkTagsView(store: store)
         } else if store.selectedRoute == .history {
             BrowsingHistoryView(store: store)
+        } else if store.selectedRoute == .mutedContent {
+            MutedContentView(store: store)
         } else if store.selectedRoute == .followingCreators || store.selectedRoute == .recommendedUsers || store.selectedRoute == .searchUsers {
             UserPreviewListView(store: store, mode: userPreviewMode)
         } else {

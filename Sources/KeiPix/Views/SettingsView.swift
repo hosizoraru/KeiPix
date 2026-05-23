@@ -138,19 +138,15 @@ struct SettingsView: View {
                         .textSelection(.enabled)
                 }
 
-                if store.mutedTagList.isEmpty,
-                   store.mutedUserList.isEmpty,
-                   store.mutedArtworkList.isEmpty {
-                    Text(L10n.noMutedContent)
+                LabeledContent(L10n.mutedContent) {
+                    Text(String(format: L10n.mutedContentCountFormat, mutedContentCount))
                         .foregroundStyle(.secondary)
-                } else {
-                    MutedContentList(store: store)
+                }
 
-                    Button(role: .destructive) {
-                        store.clearMutedContent()
-                    } label: {
-                        Label(L10n.clearMutedContent, systemImage: "trash")
-                    }
+                Button {
+                    store.select(.mutedContent)
+                } label: {
+                    Label(L10n.openMutedContentManager, systemImage: "eye.slash")
                 }
             }
 
@@ -403,6 +399,10 @@ struct SettingsView: View {
         }
     }
 
+    private var mutedContentCount: Int {
+        store.mutedTagList.count + store.mutedUserList.count + store.mutedArtworkList.count
+    }
+
     private func syncMutedContentFromPixiv() async {
         isSyncingMutedContent = true
         mutedContentSyncMessage = nil
@@ -461,72 +461,5 @@ struct SettingsView: View {
         } catch {
             restrictedModeMessage = error.localizedDescription
         }
-    }
-}
-
-private struct MutedContentList: View {
-    @Bindable var store: KeiPixStore
-
-    var body: some View {
-        if store.mutedTagList.isEmpty == false {
-            mutedGroup(L10n.mutedTags, systemImage: "tag") {
-                ForEach(store.mutedTagList, id: \.self) { tag in
-                    mutedRow(title: "#\(tag)", systemImage: "tag") {
-                        store.unmuteTag(tag)
-                    }
-                }
-            }
-        }
-
-        if store.mutedUserList.isEmpty == false {
-            mutedGroup(L10n.mutedCreators, systemImage: "person.slash") {
-                ForEach(store.mutedUserList) { user in
-                    mutedRow(title: user.name, systemImage: "person") {
-                        store.unmuteUser(id: user.id)
-                    }
-                }
-            }
-        }
-
-        if store.mutedArtworkList.isEmpty == false {
-            mutedGroup(L10n.mutedArtworks, systemImage: "photo.badge.exclamationmark") {
-                ForEach(store.mutedArtworkList) { artwork in
-                    mutedRow(title: artwork.title, systemImage: "photo") {
-                        store.unmuteArtwork(id: artwork.id)
-                    }
-                }
-            }
-        }
-    }
-
-    private func mutedGroup<Content: View>(
-        _ title: String,
-        systemImage: String,
-        @ViewBuilder content: @escaping () -> Content
-    ) -> some View {
-        DisclosureGroup {
-            VStack(alignment: .leading, spacing: 6) {
-                content()
-            }
-            .padding(.top, 6)
-        } label: {
-            Label(title, systemImage: systemImage)
-        }
-    }
-
-    private func mutedRow(title: String, systemImage: String, remove: @escaping () -> Void) -> some View {
-        HStack(spacing: 8) {
-            Label(title, systemImage: systemImage)
-                .lineLimit(1)
-
-            Spacer()
-
-            Button(role: .destructive, action: remove) {
-                Image(systemName: "xmark.circle")
-            }
-            .buttonStyle(.borderless)
-            .help(L10n.reset)
-        }
-        .font(.callout)
     }
 }

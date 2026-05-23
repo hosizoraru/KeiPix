@@ -301,6 +301,11 @@ enum L10n {
     static var mutedTags: String { text("Muted Tags") }
     static var mutedCreators: String { text("Muted Creators") }
     static var mutedArtworks: String { text("Muted Artworks") }
+    static var openMutedContentManager: String { text("Open Muted Content Manager") }
+    static var searchMutedContent: String { text("Search muted content") }
+    static var pixivMuteSync: String { text("Pixiv mute sync") }
+    static var addMutedTag: String { text("Add muted tag") }
+    static var deleteFromMutedContent: String { text("Delete from Muted Content") }
     static var syncFromPixiv: String { text("Sync from Pixiv") }
     static var uploadToPixiv: String { text("Upload to Pixiv") }
     static var exportMutedContent: String { text("Export Muted Content") }
@@ -311,7 +316,10 @@ enum L10n {
     static var imported: String { text("Imported") }
     static var muteSyncHint: String { text("Pixiv sync covers muted tags and creators. Local muted artworks stay on this Mac.") }
     static var clearMutedContent: String { text("Clear Muted Content") }
+    static var clearMutedContentConfirmation: String { text("Clear all muted content?") }
     static var noMutedContent: String { text("No muted content") }
+    static var noMutedContentHint: String { text("Mute artworks, creators, or tags from artwork menus, or add tags here.") }
+    static var mutedContentCountFormat: String { text("%d muted items") }
     static var contentRating: String { text("Content Rating") }
     static var allAges: String { text("All Ages") }
     static var yes: String { text("Yes") }

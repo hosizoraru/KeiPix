@@ -70,9 +70,9 @@ final class KeiPixStore {
     let api = PixivAPI()
     var allArtworks: [PixivArtwork] = []
     private var nextURL: URL?
-    private var mutedTags = Set(UserDefaults.standard.stringArray(forKey: "mutedTags") ?? [])
-    private var mutedUsers = KeiPixStore.loadIntStringDictionary("mutedUsers")
-    private var mutedArtworks = KeiPixStore.loadIntStringDictionary("mutedArtworks")
+    var mutedTags = Set(UserDefaults.standard.stringArray(forKey: "mutedTags") ?? [])
+    var mutedUsers = KeiPixStore.loadIntStringDictionary("mutedUsers")
+    var mutedArtworks = KeiPixStore.loadIntStringDictionary("mutedArtworks")
     var recordedBrowsingHistoryIDs = Set<Int>()
 
     init() {
@@ -574,122 +574,6 @@ final class KeiPixStore {
         setSearchUgoiraFilter(.all)
     }
 
-    var mutedTagList: [String] {
-        mutedTags.sorted { $0.localizedStandardCompare($1) == .orderedAscending }
-    }
-
-    var mutedUserList: [MutedUserEntry] {
-        mutedUsers
-            .map { MutedUserEntry(id: $0.key, name: $0.value) }
-            .sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
-    }
-
-    var mutedArtworkList: [MutedArtworkEntry] {
-        mutedArtworks
-            .map { MutedArtworkEntry(id: $0.key, title: $0.value) }
-            .sorted { $0.title.localizedStandardCompare($1.title) == .orderedAscending }
-    }
-
-    func muteArtwork(_ artwork: PixivArtwork) {
-        mutedArtworks[artwork.id] = artwork.title
-        persistMutedArtworks()
-        applyContentFilters()
-    }
-
-    func unmuteArtwork(id: Int) {
-        mutedArtworks[id] = nil
-        persistMutedArtworks()
-        applyContentFilters()
-    }
-
-    func muteUser(_ user: PixivUser) {
-        mutedUsers[user.id] = user.name
-        persistMutedUsers()
-        applyContentFilters()
-    }
-
-    func unmuteUser(id: Int) {
-        mutedUsers[id] = nil
-        persistMutedUsers()
-        applyContentFilters()
-    }
-
-    func muteTag(_ tag: PixivTag) {
-        mutedTags.insert(tag.name)
-        persistMutedTags()
-        applyContentFilters()
-    }
-
-    func unmuteTag(_ tag: String) {
-        mutedTags.remove(tag)
-        persistMutedTags()
-        applyContentFilters()
-    }
-
-    func clearMutedContent() {
-        mutedTags.removeAll()
-        mutedUsers.removeAll()
-        mutedArtworks.removeAll()
-        persistMutedTags()
-        persistMutedUsers()
-        persistMutedArtworks()
-        applyContentFilters()
-    }
-
-    func exportMutedContentData() throws -> Data {
-        let archive = MutedContentArchive(
-            exportedAt: Date(),
-            tags: mutedTagList,
-            users: mutedUserList,
-            artworks: mutedArtworkList
-        )
-        let encoder = JSONEncoder()
-        encoder.dateEncodingStrategy = .iso8601
-        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-        return try encoder.encode(archive)
-    }
-
-    func importMutedContentData(_ data: Data) throws {
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        let archive = try decoder.decode(MutedContentArchive.self, from: data)
-
-        mutedTags.formUnion(archive.tags)
-        for user in archive.users {
-            mutedUsers[user.id] = user.name
-        }
-        for artwork in archive.artworks {
-            mutedArtworks[artwork.id] = artwork.title
-        }
-
-        persistMutedTags()
-        persistMutedUsers()
-        persistMutedArtworks()
-        applyContentFilters()
-    }
-
-    func importAccountMutedContent() async throws {
-        let accountMuteList = try await api.muteList()
-        for tag in accountMuteList.mutedTags {
-            mutedTags.insert(tag.tag)
-        }
-        for user in accountMuteList.mutedUsers {
-            mutedUsers[user.id] = user.name
-        }
-        persistMutedTags()
-        persistMutedUsers()
-        applyContentFilters()
-    }
-
-    func uploadLocalMutedContentToAccount() async throws {
-        try await api.editMute(
-            addTags: mutedTagList,
-            addUserIDs: mutedUserList.map(\.id),
-            deleteTags: [],
-            deleteUserIDs: []
-        )
-    }
-
     func refreshRestrictedModeSetting() async {
         guard session != nil else {
             restrictedModeEnabled = nil
@@ -797,7 +681,7 @@ final class KeiPixStore {
             return try await api.following(restrict: "private")
         case .history:
             return try await api.browsingHistoryIllusts()
-        case .mangaWatchlist, .downloads, .savedSearches, .trendingTags, .bookmarkTags, .spotlight:
+        case .mangaWatchlist, .downloads, .savedSearches, .trendingTags, .bookmarkTags, .mutedContent, .spotlight:
             return PixivFeedResponse(illusts: [], nextURL: nil)
         case .followingCreators, .recommendedUsers, .searchUsers:
             return PixivFeedResponse(illusts: [], nextURL: nil)
@@ -905,31 +789,6 @@ final class KeiPixStore {
         return true
     }
 
-    private func isMutedLocally(_ artwork: PixivArtwork) -> Bool {
-        if artwork.isMuted {
-            return true
-        }
-        if mutedArtworks[artwork.id] != nil {
-            return true
-        }
-        if mutedUsers[artwork.user.id] != nil {
-            return true
-        }
-        return artwork.tags.contains { mutedTags.contains($0.name) }
-    }
-
-    private func persistMutedTags() {
-        UserDefaults.standard.set(mutedTagList, forKey: "mutedTags")
-    }
-
-    private func persistMutedUsers() {
-        UserDefaults.standard.set(Self.stringKeyedDictionary(mutedUsers), forKey: "mutedUsers")
-    }
-
-    private func persistMutedArtworks() {
-        UserDefaults.standard.set(Self.stringKeyedDictionary(mutedArtworks), forKey: "mutedArtworks")
-    }
-
     private static func loadGalleryLayoutMode() -> GalleryLayoutMode {
         let defaults = UserDefaults.standard
         if let rawValue = defaults.string(forKey: "galleryLayoutMode"),
@@ -966,7 +825,7 @@ final class KeiPixStore {
         }
     }
 
-    private static func stringKeyedDictionary(_ dictionary: [Int: String]) -> [String: String] {
+    static func stringKeyedDictionary(_ dictionary: [Int: String]) -> [String: String] {
         dictionary.reduce(into: [:]) { result, pair in
             result[String(pair.key)] = pair.value
         }
