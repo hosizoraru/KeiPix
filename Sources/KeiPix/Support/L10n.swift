@@ -67,6 +67,9 @@ enum L10n {
     static var imagePages: String { text("Image Pages") }
     static var ugoiraZip: String { text("Ugoira ZIP") }
     static var ugoiraFrameCountFormat: String { text("%d frames") }
+    static var exportGIF: String { text("Export GIF") }
+    static var previewUgoira: String { text("Preview Ugoira") }
+    static var ugoiraMetadataMissing: String { text("Ugoira metadata is missing. Re-download this item to enable in-app preview and GIF export.") }
     static var export: String { text("Export") }
     static var `import`: String { text("Import") }
     static var downloadFolder: String { text("Download Folder") }

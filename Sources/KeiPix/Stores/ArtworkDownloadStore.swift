@@ -54,6 +54,7 @@ final class ArtworkDownloadStore {
             isR18G: artwork.isR18G,
             artifactKind: .imagePages,
             ugoiraFrameCount: nil,
+            ugoiraFrames: nil,
             pageCount: sourceURLs.count,
             completedPages: 0,
             status: .queued,
@@ -92,6 +93,7 @@ final class ArtworkDownloadStore {
                 isR18G: artwork.isR18G,
                 artifactKind: .imagePages,
                 ugoiraFrameCount: nil,
+                ugoiraFrames: nil,
                 pageCount: sourceURLs.count,
                 completedPages: 0,
                 status: .queued,
@@ -110,7 +112,7 @@ final class ArtworkDownloadStore {
         return newItems.count
     }
 
-    func enqueueUgoira(_ artwork: PixivArtwork, zipURL: URL, frameCount: Int) {
+    func enqueueUgoira(_ artwork: PixivArtwork, zipURL: URL, frames: [PixivUgoiraFrame]) {
         if let existingIndex = items.firstIndex(where: {
             $0.artworkID == artwork.id
                 && $0.resolvedArtifactKind == .ugoiraZip
@@ -132,7 +134,8 @@ final class ArtworkDownloadStore {
             isR18: artwork.isR18,
             isR18G: artwork.isR18G,
             artifactKind: .ugoiraZip,
-            ugoiraFrameCount: frameCount,
+            ugoiraFrameCount: frames.count,
+            ugoiraFrames: frames,
             pageCount: 1,
             completedPages: 0,
             status: .queued,

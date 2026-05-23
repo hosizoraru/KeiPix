@@ -4,16 +4,22 @@ import Foundation
 
 enum UgoiraFrameDecoder {
     static func decode(zipData: Data, metadata: PixivUgoiraMetadata) throws -> UgoiraAnimation {
+        try decode(zipData: zipData, frames: metadata.frames)
+    }
+
+    static func decode(zipData: Data, frames metadataFrames: [PixivUgoiraFrame]) throws -> UgoiraAnimation {
         let imageDataByName = try UgoiraZipArchive.extractFiles(from: zipData)
 
-        let frames = metadata.frames.compactMap { frame -> UgoiraAnimationFrame? in
+        let frames = metadataFrames.compactMap { frame -> UgoiraAnimationFrame? in
             guard let data = imageDataByName[frame.file],
                   let image = NSImage(data: data) else {
                 return nil
             }
+            let delayMilliseconds = max(frame.delay, 1)
             return UgoiraAnimationFrame(
                 image: image,
-                delay: .milliseconds(max(frame.delay, 1))
+                delay: .milliseconds(delayMilliseconds),
+                delayMilliseconds: delayMilliseconds
             )
         }
 

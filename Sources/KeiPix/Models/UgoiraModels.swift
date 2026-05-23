@@ -23,7 +23,7 @@ struct PixivUgoiraZipURLs: Decodable, Sendable {
     let medium: URL
 }
 
-struct PixivUgoiraFrame: Decodable, Hashable, Sendable {
+struct PixivUgoiraFrame: Codable, Hashable, Sendable {
     let file: String
     let delay: Int
 }
@@ -31,6 +31,7 @@ struct PixivUgoiraFrame: Decodable, Hashable, Sendable {
 struct UgoiraAnimationFrame {
     let image: NSImage
     let delay: Duration
+    let delayMilliseconds: Int
 }
 
 struct UgoiraAnimation {

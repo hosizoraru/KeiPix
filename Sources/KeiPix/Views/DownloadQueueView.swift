@@ -2,8 +2,7 @@ import SwiftUI
 
 struct DownloadQueueView: View {
     @Bindable var store: KeiPixStore
-    @State private var selectedDownloadedArtwork: ArtworkDownloadItem?
-    @State private var selectedDownloadedImageURLs: [URL] = []
+    @State private var selectedPreview: DownloadedPreview?
 
     var body: some View {
         VStack(spacing: 0) {
@@ -25,9 +24,9 @@ struct DownloadQueueView: View {
                             DownloadQueueRow(
                                 item: item,
                                 downloads: store.downloads,
-                                canOpen: store.downloads.hasReadableImages(for: item),
+                                canOpen: store.downloads.hasReadableDownload(for: item),
                                 open: {
-                                    openDownloadedArtwork(item)
+                                    openDownloadedItem(item)
                                 }
                             )
                         }
@@ -38,16 +37,40 @@ struct DownloadQueueView: View {
             }
         }
         .navigationTitle(L10n.downloads)
-        .sheet(item: $selectedDownloadedArtwork) { item in
-            DownloadedArtworkViewer(item: item, imageURLs: selectedDownloadedImageURLs)
+        .sheet(item: $selectedPreview) { preview in
+            switch preview {
+            case .images(let item, let imageURLs):
+                DownloadedArtworkViewer(item: item, imageURLs: imageURLs)
+            case .ugoira(let item, let zipURL):
+                DownloadedUgoiraViewer(item: item, zipURL: zipURL)
+            }
         }
     }
 
-    private func openDownloadedArtwork(_ item: ArtworkDownloadItem) {
-        let imageURLs = store.downloads.imageFileURLs(for: item)
-        guard imageURLs.isEmpty == false else { return }
-        selectedDownloadedImageURLs = imageURLs
-        selectedDownloadedArtwork = item
+    private func openDownloadedItem(_ item: ArtworkDownloadItem) {
+        switch item.resolvedArtifactKind {
+        case .imagePages:
+            let imageURLs = store.downloads.imageFileURLs(for: item)
+            guard imageURLs.isEmpty == false else { return }
+            selectedPreview = .images(item: item, imageURLs: imageURLs)
+        case .ugoiraZip:
+            guard let filePath = item.downloadedFilePaths?.first else { return }
+            selectedPreview = .ugoira(item: item, zipURL: URL(fileURLWithPath: filePath))
+        }
+    }
+}
+
+private enum DownloadedPreview: Identifiable {
+    case images(item: ArtworkDownloadItem, imageURLs: [URL])
+    case ugoira(item: ArtworkDownloadItem, zipURL: URL)
+
+    var id: String {
+        switch self {
+        case .images(let item, _):
+            "\(item.id.uuidString)-images"
+        case .ugoira(let item, _):
+            "\(item.id.uuidString)-ugoira"
+        }
     }
 }
 

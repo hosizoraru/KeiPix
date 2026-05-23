@@ -64,6 +64,9 @@
 "Image Pages" = "图片页";
 "Ugoira ZIP" = "动图 ZIP";
 "%d frames" = "%d 帧";
+"Export GIF" = "导出 GIF";
+"Preview Ugoira" = "预览动图";
+"Ugoira metadata is missing. Re-download this item to enable in-app preview and GIF export." = "缺少动图元数据。重新下载此项目后可在 App 内预览并导出 GIF。";
 "Export" = "导出";
 "Import" = "导入";
 "Download Folder" = "下载文件夹";

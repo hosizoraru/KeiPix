@@ -395,7 +395,7 @@ final class KeiPixStore {
             downloads.enqueueUgoira(
                 artwork,
                 zipURL: metadata.zipURLs.medium,
-                frameCount: metadata.frames.count
+                frames: metadata.frames
             )
         } catch {
             errorMessage = error.localizedDescription

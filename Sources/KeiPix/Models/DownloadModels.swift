@@ -46,6 +46,7 @@ struct ArtworkDownloadItem: Identifiable, Codable, Sendable {
     var isR18G: Bool? = nil
     var artifactKind: ArtworkDownloadArtifactKind? = nil
     var ugoiraFrameCount: Int? = nil
+    var ugoiraFrames: [PixivUgoiraFrame]? = nil
     let pageCount: Int
     var completedPages: Int
     var status: ArtworkDownloadStatus
