@@ -41,6 +41,12 @@ struct SettingsView: View {
             if let session = store.session {
                 Section(L10n.account) {
                     LabeledContent(L10n.profile, value: "\(session.user.name) @\(session.user.account)")
+
+                    Button(role: .destructive) {
+                        Task { await store.logout() }
+                    } label: {
+                        Label(L10n.logout, systemImage: "rectangle.portrait.and.arrow.right")
+                    }
                 }
             }
         }

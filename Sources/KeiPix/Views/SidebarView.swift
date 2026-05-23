@@ -33,28 +33,6 @@ struct SidebarView: View {
         .onChange(of: store.selectedRoute) { _, newValue in
             store.select(newValue)
         }
-        .safeAreaInset(edge: .bottom) {
-            VStack(spacing: 10) {
-                if store.session == nil {
-                    Button {
-                        store.isLoginPresented = true
-                    } label: {
-                        Label(L10n.login, systemImage: "person.crop.circle.badge.plus")
-                            .frame(maxWidth: .infinity)
-                    }
-                    .buttonStyle(.borderedProminent)
-                } else {
-                    Button(role: .destructive) {
-                        Task { await store.logout() }
-                    } label: {
-                        Label(L10n.logout, systemImage: "rectangle.portrait.and.arrow.right")
-                            .frame(maxWidth: .infinity)
-                    }
-                }
-            }
-            .padding()
-            .background(.bar)
-        }
     }
 
     private func sidebarRow(_ route: PixivRoute) -> some View {
