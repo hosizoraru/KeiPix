@@ -575,6 +575,38 @@ final class KeiPixStore {
         applyContentFilters()
     }
 
+    func exportMutedContentData() throws -> Data {
+        let archive = MutedContentArchive(
+            exportedAt: Date(),
+            tags: mutedTagList,
+            users: mutedUserList,
+            artworks: mutedArtworkList
+        )
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        return try encoder.encode(archive)
+    }
+
+    func importMutedContentData(_ data: Data) throws {
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let archive = try decoder.decode(MutedContentArchive.self, from: data)
+
+        mutedTags.formUnion(archive.tags)
+        for user in archive.users {
+            mutedUsers[user.id] = user.name
+        }
+        for artwork in archive.artworks {
+            mutedArtworks[artwork.id] = artwork.title
+        }
+
+        persistMutedTags()
+        persistMutedUsers()
+        persistMutedArtworks()
+        applyContentFilters()
+    }
+
     func importAccountMutedContent() async throws {
         let accountMuteList = try await api.muteList()
         for tag in accountMuteList.mutedTags {

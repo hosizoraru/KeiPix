@@ -40,6 +40,8 @@
 "Downloaded" = "Downloaded";
 "Queued" = "Queued";
 "Failed" = "Failed";
+"Export" = "Export";
+"Import" = "Import";
 "Download Folder" = "Download Folder";
 "Choose Folder" = "Choose Folder";
 "Open Folder" = "Open Folder";
@@ -265,8 +267,12 @@
 "Muted Artworks" = "Muted Artworks";
 "Sync from Pixiv" = "Sync from Pixiv";
 "Upload to Pixiv" = "Upload to Pixiv";
+"Export Muted Content" = "Export Muted Content";
+"Import Muted Content" = "Import Muted Content";
 "Synced" = "Synced";
 "Uploaded" = "Uploaded";
+"Exported" = "Exported";
+"Imported" = "Imported";
 "Pixiv sync covers muted tags and creators. Local muted artworks stay on this Mac." = "Pixiv sync covers muted tags and creators. Local muted artworks stay on this Mac.";
 "Clear Muted Content" = "Clear Muted Content";
 "No muted content" = "No muted content";

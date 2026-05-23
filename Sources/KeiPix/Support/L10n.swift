@@ -43,6 +43,8 @@ enum L10n {
     static var downloaded: String { text("Downloaded") }
     static var queued: String { text("Queued") }
     static var failed: String { text("Failed") }
+    static var export: String { text("Export") }
+    static var `import`: String { text("Import") }
     static var downloadFolder: String { text("Download Folder") }
     static var chooseFolder: String { text("Choose Folder") }
     static var openFolder: String { text("Open Folder") }
@@ -267,8 +269,12 @@ enum L10n {
     static var mutedArtworks: String { text("Muted Artworks") }
     static var syncFromPixiv: String { text("Sync from Pixiv") }
     static var uploadToPixiv: String { text("Upload to Pixiv") }
+    static var exportMutedContent: String { text("Export Muted Content") }
+    static var importMutedContent: String { text("Import Muted Content") }
     static var synced: String { text("Synced") }
     static var uploaded: String { text("Uploaded") }
+    static var exported: String { text("Exported") }
+    static var imported: String { text("Imported") }
     static var muteSyncHint: String { text("Pixiv sync covers muted tags and creators. Local muted artworks stay on this Mac.") }
     static var clearMutedContent: String { text("Clear Muted Content") }
     static var noMutedContent: String { text("No muted content") }

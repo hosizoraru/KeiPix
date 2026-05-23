@@ -40,6 +40,8 @@
 "Downloaded" = "已下载";
 "Queued" = "排队中";
 "Failed" = "失败";
+"Export" = "导出";
+"Import" = "导入";
 "Download Folder" = "下载文件夹";
 "Choose Folder" = "选择文件夹";
 "Open Folder" = "打开文件夹";
@@ -265,8 +267,12 @@
 "Muted Artworks" = "屏蔽作品";
 "Sync from Pixiv" = "从 Pixiv 同步";
 "Upload to Pixiv" = "上传到 Pixiv";
+"Export Muted Content" = "导出屏蔽内容";
+"Import Muted Content" = "导入屏蔽内容";
 "Synced" = "已同步";
 "Uploaded" = "已上传";
+"Exported" = "已导出";
+"Imported" = "已导入";
 "Pixiv sync covers muted tags and creators. Local muted artworks stay on this Mac." = "Pixiv 同步包含屏蔽标签和创作者，本地屏蔽作品会保留在这台 Mac。";
 "Clear Muted Content" = "清空屏蔽内容";
 "No muted content" = "暂无屏蔽内容";

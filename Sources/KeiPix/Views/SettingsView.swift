@@ -100,6 +100,22 @@ struct SettingsView: View {
                     }
                 }
 
+                HStack(spacing: 10) {
+                    Button {
+                        exportLocalMutedContent()
+                    } label: {
+                        Label(L10n.exportMutedContent, systemImage: "square.and.arrow.up")
+                    }
+                    .disabled(isSyncingMutedContent || (store.mutedTagList.isEmpty && store.mutedUserList.isEmpty && store.mutedArtworkList.isEmpty))
+
+                    Button {
+                        importLocalMutedContent()
+                    } label: {
+                        Label(L10n.importMutedContent, systemImage: "square.and.arrow.down")
+                    }
+                    .disabled(isSyncingMutedContent)
+                }
+
                 if let mutedContentSyncMessage {
                     Text(mutedContentSyncMessage)
                         .font(.caption)
@@ -369,6 +385,28 @@ struct SettingsView: View {
         do {
             try await store.uploadLocalMutedContentToAccount()
             mutedContentSyncMessage = L10n.uploaded
+        } catch {
+            mutedContentSyncMessage = error.localizedDescription
+        }
+    }
+
+    private func exportLocalMutedContent() {
+        mutedContentSyncMessage = nil
+        do {
+            if try store.exportMutedContentToFile() {
+                mutedContentSyncMessage = L10n.exported
+            }
+        } catch {
+            mutedContentSyncMessage = error.localizedDescription
+        }
+    }
+
+    private func importLocalMutedContent() {
+        mutedContentSyncMessage = nil
+        do {
+            if try store.importMutedContentFromFile() {
+                mutedContentSyncMessage = L10n.imported
+            }
         } catch {
             mutedContentSyncMessage = error.localizedDescription
         }

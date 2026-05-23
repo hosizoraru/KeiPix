@@ -1,13 +1,21 @@
 import Foundation
 
-struct MutedUserEntry: Identifiable, Hashable {
+struct MutedUserEntry: Codable, Identifiable, Hashable, Sendable {
     let id: Int
     let name: String
 }
 
-struct MutedArtworkEntry: Identifiable, Hashable {
+struct MutedArtworkEntry: Codable, Identifiable, Hashable, Sendable {
     let id: Int
     let title: String
+}
+
+struct MutedContentArchive: Codable, Sendable {
+    var schemaVersion = 1
+    let exportedAt: Date
+    let tags: [String]
+    let users: [MutedUserEntry]
+    let artworks: [MutedArtworkEntry]
 }
 
 struct PixivMuteList: Decodable, Sendable {
