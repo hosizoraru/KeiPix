@@ -117,4 +117,25 @@ struct ArtworkDownloadItem: Identifiable, Codable, Sendable {
     var resolvedArtifactKind: ArtworkDownloadArtifactKind {
         artifactKind ?? .imagePages
     }
+
+    func matchesDownloadSearch(_ query: String) -> Bool {
+        let tokens = query
+            .split(whereSeparator: \.isWhitespace)
+            .map { $0.lowercased() }
+        guard tokens.isEmpty == false else { return true }
+
+        let fields = [
+            String(artworkID),
+            title,
+            creatorName,
+            creatorID.map(String.init) ?? "",
+            status.title,
+            resolvedArtifactKind.title,
+            tags?.joined(separator: " ") ?? "",
+            folderPath ?? "",
+            errorMessage ?? ""
+        ].joined(separator: " ").lowercased()
+
+        return tokens.allSatisfy { fields.contains($0) }
+    }
 }

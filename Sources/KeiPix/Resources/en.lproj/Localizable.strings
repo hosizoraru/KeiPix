@@ -79,6 +79,9 @@
 "Choose" = "Choose";
 "Clear Completed" = "Clear Completed";
 "Clear Invalid" = "Clear Invalid";
+"Clear Failed" = "Clear Failed";
+"Retry Failed" = "Retry Failed";
+"Download Actions" = "Download Actions";
 "Reveal in Finder" = "Reveal in Finder";
 "Open Downloaded Artwork" = "Open Downloaded Artwork";
 "Delete Download" = "Delete Download";
@@ -92,6 +95,7 @@
 "Add to Download Queue" = "Add to Download Queue";
 "Queued %d downloads" = "Queued %d downloads";
 "Download Filter" = "Download Filter";
+"Search downloads" = "Search downloads";
 "All Downloads" = "All";
 "Active" = "Active";
 "Completed" = "Completed";

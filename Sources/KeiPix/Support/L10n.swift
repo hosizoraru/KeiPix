@@ -82,6 +82,9 @@ enum L10n {
     static var choose: String { text("Choose") }
     static var clearCompleted: String { text("Clear Completed") }
     static var clearInvalidDownloads: String { text("Clear Invalid") }
+    static var clearFailedDownloads: String { text("Clear Failed") }
+    static var retryFailedDownloads: String { text("Retry Failed") }
+    static var downloadActions: String { text("Download Actions") }
     static var revealInFinder: String { text("Reveal in Finder") }
     static var openDownloadedArtwork: String { text("Open Downloaded Artwork") }
     static var deleteDownload: String { text("Delete Download") }
@@ -95,6 +98,7 @@ enum L10n {
     static var addToDownloadQueue: String { text("Add to Download Queue") }
     static var queuedDownloadsFormat: String { text("Queued %d downloads") }
     static var downloadFilter: String { text("Download Filter") }
+    static var searchDownloads: String { text("Search downloads") }
     static var allDownloads: String { text("All Downloads") }
     static var activeDownloads: String { text("Active") }
     static var completedDownloads: String { text("Completed") }

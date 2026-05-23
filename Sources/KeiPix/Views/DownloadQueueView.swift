@@ -45,6 +45,11 @@ struct DownloadQueueView: View {
             }
         }
         .navigationTitle(L10n.downloads)
+        .searchable(
+            text: downloadSearchBinding,
+            placement: .toolbar,
+            prompt: L10n.searchDownloads
+        )
         .sheet(item: $selectedPreview) { preview in
             switch preview {
             case .images(let item, let imageURLs):
@@ -52,6 +57,14 @@ struct DownloadQueueView: View {
             case .ugoira(let item, let zipURL):
                 DownloadedUgoiraViewer(item: item, zipURL: zipURL)
             }
+        }
+    }
+
+    private var downloadSearchBinding: Binding<String> {
+        Binding {
+            store.downloads.downloadSearchText
+        } set: { value in
+            store.downloads.setDownloadSearchText(value)
         }
     }
 
@@ -108,20 +121,39 @@ private struct DownloadQueueHeader: View {
                 }
                 .buttonStyle(.bordered)
 
-                Button {
-                    downloads.clearInvalidItems()
-                } label: {
-                    Label(L10n.clearInvalidDownloads, systemImage: "exclamationmark.arrow.trianglehead.2.clockwise.rotate.90")
-                }
-                .buttonStyle(.bordered)
+                Menu {
+                    Button {
+                        downloads.retryFailedFilteredItems()
+                    } label: {
+                        Label(L10n.retryFailedDownloads, systemImage: "arrow.clockwise")
+                    }
+                    .disabled(downloads.failedFilteredCount == 0)
 
-                Button {
-                    downloads.clearCompleted()
+                    Button(role: .destructive) {
+                        downloads.clearFailedFilteredItems()
+                    } label: {
+                        Label(L10n.clearFailedDownloads, systemImage: "trash")
+                    }
+                    .disabled(downloads.failedFilteredCount == 0)
+
+                    Divider()
+
+                    Button {
+                        downloads.clearInvalidItems()
+                    } label: {
+                        Label(L10n.clearInvalidDownloads, systemImage: "exclamationmark.arrow.trianglehead.2.clockwise.rotate.90")
+                    }
+
+                    Button {
+                        downloads.clearCompleted()
+                    } label: {
+                        Label(L10n.clearCompleted, systemImage: "checkmark.circle")
+                    }
+                    .disabled(downloads.completedCount == 0)
                 } label: {
-                    Label(L10n.clearCompleted, systemImage: "checkmark.circle")
+                    Label(L10n.downloadActions, systemImage: "ellipsis.circle")
                 }
                 .buttonStyle(.bordered)
-                .disabled(downloads.completedCount == 0)
             }
 
             HStack(spacing: 12) {

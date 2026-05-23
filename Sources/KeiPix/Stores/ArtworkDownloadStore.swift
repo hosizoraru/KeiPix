@@ -10,6 +10,7 @@ final class ArtworkDownloadStore {
     var downloadDirectoryPath: String
     var downloadNamingTemplate: String
     var downloadQueueFilter: DownloadQueueFilter
+    var downloadSearchText = ""
 
     private let fileManager = FileManager.default
     private var workerTask: Task<Void, Never>?
@@ -160,7 +161,10 @@ final class ArtworkDownloadStore {
     }
 
     var filteredItems: [ArtworkDownloadItem] {
-        items.filter(downloadQueueFilter.includes)
+        let query = downloadSearchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        return items
+            .filter(downloadQueueFilter.includes)
+            .filter { $0.matchesDownloadSearch(query) }
     }
 
     var activeCount: Int {
@@ -174,6 +178,49 @@ final class ArtworkDownloadStore {
     func setDownloadQueueFilter(_ filter: DownloadQueueFilter) {
         downloadQueueFilter = filter
         UserDefaults.standard.set(filter.rawValue, forKey: "downloadQueueFilter")
+    }
+
+    func setDownloadSearchText(_ text: String) {
+        downloadSearchText = text
+    }
+
+    var failedFilteredCount: Int {
+        filteredItems.filter { $0.status == .failed }.count
+    }
+
+    @discardableResult
+    func retryFailedFilteredItems() -> Int {
+        let ids = Set(filteredItems.filter {
+            $0.status == .failed && $0.sourceImageURLs?.isEmpty == false
+        }.map(\.id))
+        guard ids.isEmpty == false else { return 0 }
+
+        for index in items.indices where ids.contains(items[index].id) {
+            items[index].status = .queued
+            items[index].completedPages = 0
+            items[index].folderPath = nil
+            items[index].downloadedFilePaths = nil
+            items[index].errorMessage = nil
+            items[index].updatedAt = Date()
+        }
+        persistItems()
+        startWorkerIfNeeded(preferOriginal: true)
+        return ids.count
+    }
+
+    @discardableResult
+    func clearFailedFilteredItems() -> Int {
+        let failedItems = filteredItems.filter { $0.status == .failed }
+        guard failedItems.isEmpty == false else { return 0 }
+
+        for item in failedItems {
+            trashDownloadedFiles(for: item)
+        }
+
+        let ids = Set(failedItems.map(\.id))
+        items.removeAll { ids.contains($0.id) }
+        persistItems()
+        return ids.count
     }
 
     @discardableResult
@@ -206,16 +253,7 @@ final class ArtworkDownloadStore {
         if let index = items.firstIndex(where: { $0.id == item.id }) {
             items.remove(at: index)
         }
-        if let filePaths = item.downloadedFilePaths, filePaths.isEmpty == false {
-            for filePath in filePaths {
-                moveToTrash(URL(fileURLWithPath: filePath, isDirectory: false))
-            }
-            persistItems()
-            return
-        }
-        if let folderPath = item.folderPath {
-            moveToTrash(URL(fileURLWithPath: folderPath, isDirectory: true))
-        }
+        trashDownloadedFiles(for: item)
         persistItems()
     }
 
@@ -442,6 +480,19 @@ final class ArtworkDownloadStore {
             _ = try fileManager.trashItem(at: url, resultingItemURL: nil)
         } catch {
             try? fileManager.removeItem(at: url)
+        }
+    }
+
+    private func trashDownloadedFiles(for item: ArtworkDownloadItem) {
+        if let filePaths = item.downloadedFilePaths, filePaths.isEmpty == false {
+            for filePath in filePaths {
+                moveToTrash(URL(fileURLWithPath: filePath, isDirectory: false))
+            }
+            return
+        }
+
+        if let folderPath = item.folderPath {
+            moveToTrash(URL(fileURLWithPath: folderPath, isDirectory: true))
         }
     }
 

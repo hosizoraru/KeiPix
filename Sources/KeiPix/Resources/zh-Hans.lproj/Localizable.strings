@@ -79,6 +79,9 @@
 "Choose" = "选择";
 "Clear Completed" = "清理已完成";
 "Clear Invalid" = "清理无效";
+"Clear Failed" = "清理失败";
+"Retry Failed" = "重试失败项";
+"Download Actions" = "下载操作";
 "Reveal in Finder" = "在 Finder 中显示";
 "Open Downloaded Artwork" = "打开已下载作品";
 "Delete Download" = "删除下载";
@@ -92,6 +95,7 @@
 "Add to Download Queue" = "加入下载队列";
 "Queued %d downloads" = "已加入 %d 个下载";
 "Download Filter" = "下载筛选";
+"Search downloads" = "搜索下载";
 "All Downloads" = "全部";
 "Active" = "进行中";
 "Completed" = "已完成";
