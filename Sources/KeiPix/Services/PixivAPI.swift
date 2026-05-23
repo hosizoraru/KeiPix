@@ -111,6 +111,13 @@ actor PixivAPI {
         ])
     }
 
+    func latestIllusts(contentType: String) async throws -> PixivFeedResponse {
+        try await requestFeed(path: "/v1/illust/new", query: [
+            "content_type": contentType,
+            "filter": "for_android"
+        ])
+    }
+
     func relatedIllusts(illustID: Int) async throws -> PixivFeedResponse {
         try await requestFeed(path: "/v2/illust/related", query: [
             "filter": "for_android",

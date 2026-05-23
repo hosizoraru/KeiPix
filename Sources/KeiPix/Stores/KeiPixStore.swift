@@ -671,6 +671,10 @@ final class KeiPixStore {
             return try await api.recommendedIllusts()
         case .mangaRecommended:
             return try await api.recommendedMangas()
+        case .newIllustrations:
+            return try await api.latestIllusts(contentType: "illust")
+        case .newManga:
+            return try await api.latestIllusts(contentType: "manga")
         case .search:
             let keyword = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
             if keyword.isEmpty {

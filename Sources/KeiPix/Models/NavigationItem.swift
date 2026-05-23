@@ -20,7 +20,17 @@ enum PixivRouteSection: Identifiable {
     var routes: [PixivRoute] {
         switch self {
         case .works:
-            [.illustrations, .mangaRecommended, .trendingTags, .recommendedUsers, .search, .searchUsers, .savedSearches]
+            [
+                .illustrations,
+                .mangaRecommended,
+                .newIllustrations,
+                .newManga,
+                .trendingTags,
+                .recommendedUsers,
+                .search,
+                .searchUsers,
+                .savedSearches
+            ]
         case .ranking:
             [
                 .rankingDaily,
@@ -57,6 +67,8 @@ enum PixivRouteSection: Identifiable {
 enum PixivRoute: String, CaseIterable, Identifiable, Codable {
     case illustrations = "explore"
     case mangaRecommended
+    case newIllustrations
+    case newManga
     case trendingTags
     case search
     case searchUsers
@@ -105,6 +117,8 @@ enum PixivRoute: String, CaseIterable, Identifiable, Codable {
         switch self {
         case .illustrations: L10n.illustrations
         case .mangaRecommended: L10n.manga
+        case .newIllustrations: L10n.newIllustrations
+        case .newManga: L10n.newManga
         case .trendingTags: L10n.trendingTags
         case .search: L10n.search
         case .searchUsers: L10n.searchCreators
@@ -182,6 +196,8 @@ enum PixivRoute: String, CaseIterable, Identifiable, Codable {
         switch self {
         case .illustrations: "photo.on.rectangle"
         case .mangaRecommended: "book.closed"
+        case .newIllustrations: "sparkle.magnifyingglass"
+        case .newManga: "book.pages"
         case .trendingTags: "number"
         case .recommendedUsers: "person.crop.circle.badge.plus"
         case .search: "magnifyingglass"

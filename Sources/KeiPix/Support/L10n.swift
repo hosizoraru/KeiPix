@@ -5,6 +5,8 @@ enum L10n {
     static var works: String { text("Works") }
     static var illustrations: String { text("Illustrations") }
     static var manga: String { text("Manga") }
+    static var newIllustrations: String { text("New Illustrations") }
+    static var newManga: String { text("New Manga") }
     static var trendingTags: String { text("Trending Tags") }
     static var search: String { text("Search") }
     static var searchCreators: String { text("Search Creators") }
