@@ -22,9 +22,18 @@ enum PixivRouteSection: Identifiable {
         case .works:
             [.illustrations, .mangaRecommended, .recommendedUsers, .search, .searchUsers, .savedSearches]
         case .ranking:
-            [.rankingDaily, .rankingWeekly, .rankingMonthly]
+            [
+                .rankingDaily,
+                .rankingWeekly,
+                .rankingMonthly,
+                .rankingDailyMale,
+                .rankingDailyFemale,
+                .rankingWeeklyOriginal,
+                .rankingWeeklyRookie,
+                .rankingDailyR18
+            ]
         case .mangaRanking:
-            [.mangaRankingDaily, .mangaRankingWeekly, .mangaRankingMonthly]
+            [.mangaRankingDaily, .mangaRankingWeekly, .mangaRankingMonthly, .mangaRankingDailyR18]
         case .library:
             [.publicBookmarks, .privateBookmarks, .following, .followingCreators, .history, .mangaWatchlist, .downloads]
         }
@@ -43,9 +52,15 @@ enum PixivRoute: String, CaseIterable, Identifiable, Codable {
     case rankingDaily
     case rankingWeekly
     case rankingMonthly
+    case rankingDailyMale
+    case rankingDailyFemale
+    case rankingWeeklyOriginal
+    case rankingWeeklyRookie
+    case rankingDailyR18
     case mangaRankingDaily
     case mangaRankingWeekly
     case mangaRankingMonthly
+    case mangaRankingDailyR18
     case publicBookmarks
     case privateBookmarks
     case following
@@ -78,9 +93,15 @@ enum PixivRoute: String, CaseIterable, Identifiable, Codable {
         case .rankingDaily: L10n.daily
         case .rankingWeekly: L10n.weekly
         case .rankingMonthly: L10n.monthly
+        case .rankingDailyMale: L10n.forMale
+        case .rankingDailyFemale: L10n.forFemale
+        case .rankingWeeklyOriginal: L10n.originals
+        case .rankingWeeklyRookie: L10n.rookies
+        case .rankingDailyR18: L10n.dailyR18
         case .mangaRankingDaily: L10n.dailyManga
         case .mangaRankingWeekly: L10n.weeklyManga
         case .mangaRankingMonthly: L10n.monthlyManga
+        case .mangaRankingDailyR18: L10n.dailyR18Manga
         case .publicBookmarks: L10n.publicBookmarks
         case .privateBookmarks: L10n.privateBookmarks
         case .following: L10n.following
@@ -113,7 +134,12 @@ enum PixivRoute: String, CaseIterable, Identifiable, Codable {
         case .userManga: "person.crop.square"
         case .userPublicBookmarks: "person.crop.circle.badge.checkmark"
         case .rankingDaily, .rankingWeekly, .rankingMonthly: "chart.bar"
+        case .rankingDailyMale, .rankingDailyFemale: "person.2"
+        case .rankingWeeklyOriginal: "paintpalette"
+        case .rankingWeeklyRookie: "sparkles"
+        case .rankingDailyR18: "exclamationmark.triangle"
         case .mangaRankingDaily, .mangaRankingWeekly, .mangaRankingMonthly: "chart.bar.doc.horizontal"
+        case .mangaRankingDailyR18: "exclamationmark.triangle"
         case .publicBookmarks, .privateBookmarks: "bookmark"
         case .following: "person.2"
         case .followingCreators: "person.2.crop.square.stack"

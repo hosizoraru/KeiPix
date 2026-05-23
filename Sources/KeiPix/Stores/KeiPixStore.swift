@@ -702,12 +702,24 @@ final class KeiPixStore {
             return try await api.ranking(mode: "week")
         case .rankingMonthly:
             return try await api.ranking(mode: "month")
+        case .rankingDailyMale:
+            return try await api.ranking(mode: "day_male")
+        case .rankingDailyFemale:
+            return try await api.ranking(mode: "day_female")
+        case .rankingWeeklyOriginal:
+            return try await api.ranking(mode: "week_original")
+        case .rankingWeeklyRookie:
+            return try await api.ranking(mode: "week_rookie")
+        case .rankingDailyR18:
+            return try await api.ranking(mode: "day_r18")
         case .mangaRankingDaily:
             return try await api.ranking(mode: "day_manga")
         case .mangaRankingWeekly:
             return try await api.ranking(mode: "week_manga")
         case .mangaRankingMonthly:
             return try await api.ranking(mode: "month_manga")
+        case .mangaRankingDailyR18:
+            return try await api.ranking(mode: "day_r18_manga")
         case .publicBookmarks:
             guard let userID = session?.user.id else { throw PixivAPIError.missingSession }
             return try await api.bookmarks(restrict: "public", userID: userID)

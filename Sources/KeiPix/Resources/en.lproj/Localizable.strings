@@ -167,9 +167,15 @@
 "Daily" = "Daily";
 "Weekly" = "Weekly";
 "Monthly" = "Monthly";
+"For Male" = "For Male";
+"For Female" = "For Female";
+"Originals" = "Originals";
+"Rookies" = "Rookies";
+"Daily R-18" = "Daily R-18";
 "Daily Manga" = "Daily Manga";
 "Weekly Manga" = "Weekly Manga";
 "Monthly Manga" = "Monthly Manga";
+"Daily R-18 Manga" = "Daily R-18 Manga";
 "Details" = "Details";
 "Tags" = "Tags";
 "Description" = "Description";

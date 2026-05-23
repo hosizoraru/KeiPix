@@ -170,9 +170,15 @@ enum L10n {
     static var daily: String { text("Daily") }
     static var weekly: String { text("Weekly") }
     static var monthly: String { text("Monthly") }
+    static var forMale: String { text("For Male") }
+    static var forFemale: String { text("For Female") }
+    static var originals: String { text("Originals") }
+    static var rookies: String { text("Rookies") }
+    static var dailyR18: String { text("Daily R-18") }
     static var dailyManga: String { text("Daily Manga") }
     static var weeklyManga: String { text("Weekly Manga") }
     static var monthlyManga: String { text("Monthly Manga") }
+    static var dailyR18Manga: String { text("Daily R-18 Manga") }
     static var details: String { text("Details") }
     static var tags: String { text("Tags") }
     static var description: String { text("Description") }
