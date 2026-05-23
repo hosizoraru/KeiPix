@@ -96,6 +96,11 @@
 "Queued %d downloads" = "Queued %d downloads";
 "Download Filter" = "Download Filter";
 "Search downloads" = "Search downloads";
+"Sort Downloads" = "Sort Downloads";
+"Recently Updated" = "Recently Updated";
+"Title" = "Title";
+"Creator" = "Creator";
+"Status and Type" = "Status and Type";
 "All Downloads" = "All";
 "Active" = "Active";
 "Completed" = "Completed";

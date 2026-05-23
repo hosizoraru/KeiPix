@@ -79,6 +79,86 @@ enum DownloadQueueFilter: String, CaseIterable, Identifiable, Sendable {
     }
 }
 
+enum DownloadQueueSort: String, CaseIterable, Identifiable, Sendable {
+    case newest
+    case oldest
+    case recentlyUpdated
+    case title
+    case creator
+    case statusAndType
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .newest:
+            L10n.newest
+        case .oldest:
+            L10n.oldest
+        case .recentlyUpdated:
+            L10n.recentlyUpdated
+        case .title:
+            L10n.downloadSortTitle
+        case .creator:
+            L10n.downloadSortCreator
+        case .statusAndType:
+            L10n.statusAndType
+        }
+    }
+
+    func sorted(_ items: [ArtworkDownloadItem]) -> [ArtworkDownloadItem] {
+        switch self {
+        case .newest:
+            items.sorted { first, second in
+                first.createdAt != second.createdAt
+                    ? first.createdAt > second.createdAt
+                    : first.title.localizedStandardCompare(second.title) == .orderedAscending
+            }
+        case .oldest:
+            items.sorted { first, second in
+                first.createdAt != second.createdAt
+                    ? first.createdAt < second.createdAt
+                    : first.title.localizedStandardCompare(second.title) == .orderedAscending
+            }
+        case .recentlyUpdated:
+            items.sorted { first, second in
+                first.updatedAt != second.updatedAt
+                    ? first.updatedAt > second.updatedAt
+                    : first.title.localizedStandardCompare(second.title) == .orderedAscending
+            }
+        case .title:
+            items.sorted { first, second in
+                let titleOrder = first.title.localizedStandardCompare(second.title)
+                return titleOrder == .orderedSame
+                    ? first.createdAt > second.createdAt
+                    : titleOrder == .orderedAscending
+            }
+        case .creator:
+            items.sorted { first, second in
+                let creatorOrder = first.creatorName.localizedStandardCompare(second.creatorName)
+                if creatorOrder != .orderedSame {
+                    return creatorOrder == .orderedAscending
+                }
+                return first.title.localizedStandardCompare(second.title) == .orderedAscending
+            }
+        case .statusAndType:
+            items.sorted { first, second in
+                let firstKey = first.sortStatusKey
+                let secondKey = second.sortStatusKey
+                if firstKey != secondKey {
+                    return firstKey < secondKey
+                }
+                let firstType = first.resolvedArtifactKind.rawValue
+                let secondType = second.resolvedArtifactKind.rawValue
+                if firstType != secondType {
+                    return firstType < secondType
+                }
+                return first.updatedAt > second.updatedAt
+            }
+        }
+    }
+}
+
 struct ArtworkDownloadItem: Identifiable, Codable, Sendable {
     let id: UUID
     let artworkID: Int
@@ -137,5 +217,18 @@ struct ArtworkDownloadItem: Identifiable, Codable, Sendable {
         ].joined(separator: " ").lowercased()
 
         return tokens.allSatisfy { fields.contains($0) }
+    }
+
+    var sortStatusKey: Int {
+        switch status {
+        case .downloading:
+            0
+        case .queued:
+            1
+        case .failed:
+            2
+        case .completed:
+            3
+        }
     }
 }

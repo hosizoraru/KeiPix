@@ -99,6 +99,11 @@ enum L10n {
     static var queuedDownloadsFormat: String { text("Queued %d downloads") }
     static var downloadFilter: String { text("Download Filter") }
     static var searchDownloads: String { text("Search downloads") }
+    static var sortDownloads: String { text("Sort Downloads") }
+    static var recentlyUpdated: String { text("Recently Updated") }
+    static var downloadSortTitle: String { text("Title") }
+    static var downloadSortCreator: String { text("Creator") }
+    static var statusAndType: String { text("Status and Type") }
     static var allDownloads: String { text("All Downloads") }
     static var activeDownloads: String { text("Active") }
     static var completedDownloads: String { text("Completed") }

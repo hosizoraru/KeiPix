@@ -114,6 +114,17 @@ private struct DownloadQueueHeader: View {
 
                 Spacer()
 
+                Menu {
+                    Picker(L10n.sortDownloads, selection: downloadSortBinding) {
+                        ForEach(DownloadQueueSort.allCases) { sort in
+                            Text(sort.title).tag(sort)
+                        }
+                    }
+                } label: {
+                    Label(downloads.downloadQueueSort.title, systemImage: "arrow.up.arrow.down")
+                }
+                .buttonStyle(.bordered)
+
                 Button {
                     downloads.openDownloadDirectory()
                 } label: {
@@ -180,6 +191,14 @@ private struct DownloadQueueHeader: View {
             downloads.downloadQueueFilter
         } set: { value in
             downloads.setDownloadQueueFilter(value)
+        }
+    }
+
+    private var downloadSortBinding: Binding<DownloadQueueSort> {
+        Binding {
+            downloads.downloadQueueSort
+        } set: { value in
+            downloads.setDownloadQueueSort(value)
         }
     }
 

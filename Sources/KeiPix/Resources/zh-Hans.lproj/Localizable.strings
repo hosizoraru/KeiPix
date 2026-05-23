@@ -96,6 +96,11 @@
 "Queued %d downloads" = "已加入 %d 个下载";
 "Download Filter" = "下载筛选";
 "Search downloads" = "搜索下载";
+"Sort Downloads" = "下载排序";
+"Recently Updated" = "最近更新";
+"Title" = "标题";
+"Creator" = "作者";
+"Status and Type" = "状态和类型";
 "All Downloads" = "全部";
 "Active" = "进行中";
 "Completed" = "已完成";

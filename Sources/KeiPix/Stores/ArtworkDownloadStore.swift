@@ -10,6 +10,7 @@ final class ArtworkDownloadStore {
     var downloadDirectoryPath: String
     var downloadNamingTemplate: String
     var downloadQueueFilter: DownloadQueueFilter
+    var downloadQueueSort: DownloadQueueSort
     var downloadSearchText = ""
 
     private let fileManager = FileManager.default
@@ -22,6 +23,8 @@ final class ArtworkDownloadStore {
             ?? DownloadNamingTemplate.defaultTemplate
         downloadQueueFilter = UserDefaults.standard.string(forKey: "downloadQueueFilter")
             .flatMap(DownloadQueueFilter.init(rawValue:)) ?? .all
+        downloadQueueSort = UserDefaults.standard.string(forKey: "downloadQueueSort")
+            .flatMap(DownloadQueueSort.init(rawValue:)) ?? .newest
         items = ArtworkDownloadStore.loadItems()
         var restoredInterruptedItems = false
         for index in items.indices where items[index].status == .downloading || items[index].status == .queued {
@@ -162,9 +165,10 @@ final class ArtworkDownloadStore {
 
     var filteredItems: [ArtworkDownloadItem] {
         let query = downloadSearchText.trimmingCharacters(in: .whitespacesAndNewlines)
-        return items
+        let filtered = items
             .filter(downloadQueueFilter.includes)
             .filter { $0.matchesDownloadSearch(query) }
+        return downloadQueueSort.sorted(filtered)
     }
 
     var activeCount: Int {
@@ -178,6 +182,11 @@ final class ArtworkDownloadStore {
     func setDownloadQueueFilter(_ filter: DownloadQueueFilter) {
         downloadQueueFilter = filter
         UserDefaults.standard.set(filter.rawValue, forKey: "downloadQueueFilter")
+    }
+
+    func setDownloadQueueSort(_ sort: DownloadQueueSort) {
+        downloadQueueSort = sort
+        UserDefaults.standard.set(sort.rawValue, forKey: "downloadQueueSort")
     }
 
     func setDownloadSearchText(_ text: String) {
