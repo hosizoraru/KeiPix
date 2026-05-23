@@ -2,6 +2,8 @@ import SwiftUI
 
 struct DownloadQueueView: View {
     @Bindable var store: KeiPixStore
+    @State private var selectedDownloadedArtwork: ArtworkDownloadItem?
+    @State private var selectedDownloadedImageURLs: [URL] = []
 
     var body: some View {
         VStack(spacing: 0) {
@@ -20,7 +22,14 @@ struct DownloadQueueView: View {
                 ScrollView {
                     LazyVStack(spacing: 10) {
                         ForEach(store.downloads.items) { item in
-                            DownloadQueueRow(item: item, downloads: store.downloads)
+                            DownloadQueueRow(
+                                item: item,
+                                downloads: store.downloads,
+                                canOpen: store.downloads.hasReadableImages(for: item),
+                                open: {
+                                    openDownloadedArtwork(item)
+                                }
+                            )
                         }
                     }
                     .padding(18)
@@ -29,6 +38,16 @@ struct DownloadQueueView: View {
             }
         }
         .navigationTitle(L10n.downloads)
+        .sheet(item: $selectedDownloadedArtwork) { item in
+            DownloadedArtworkViewer(item: item, imageURLs: selectedDownloadedImageURLs)
+        }
+    }
+
+    private func openDownloadedArtwork(_ item: ArtworkDownloadItem) {
+        let imageURLs = store.downloads.imageFileURLs(for: item)
+        guard imageURLs.isEmpty == false else { return }
+        selectedDownloadedImageURLs = imageURLs
+        selectedDownloadedArtwork = item
     }
 }
 
@@ -71,6 +90,8 @@ private struct DownloadQueueHeader: View {
 private struct DownloadQueueRow: View {
     let item: ArtworkDownloadItem
     @Bindable var downloads: ArtworkDownloadStore
+    let canOpen: Bool
+    let open: () -> Void
 
     var body: some View {
         HStack(spacing: 12) {
@@ -114,6 +135,16 @@ private struct DownloadQueueRow: View {
             }
 
             Spacer(minLength: 10)
+
+            Button {
+                open()
+            } label: {
+                Label(L10n.openDownloadedArtwork, systemImage: "book")
+            }
+            .labelStyle(.iconOnly)
+            .buttonStyle(.borderedProminent)
+            .disabled(canOpen == false)
+            .help(L10n.openDownloadedArtwork)
 
             Button {
                 downloads.reveal(item)

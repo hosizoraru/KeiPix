@@ -101,6 +101,28 @@ final class ArtworkDownloadStore {
         NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: folderPath, isDirectory: true)])
     }
 
+    func imageFileURLs(for item: ArtworkDownloadItem) -> [URL] {
+        guard item.status == .completed, let folderPath = item.folderPath else { return [] }
+        let folder = URL(fileURLWithPath: folderPath, isDirectory: true)
+        let urls = (try? fileManager.contentsOfDirectory(
+            at: folder,
+            includingPropertiesForKeys: [.isRegularFileKey],
+            options: [.skipsHiddenFiles]
+        )) ?? []
+        return urls
+            .filter { url in
+                let isRegularFile = (try? url.resourceValues(forKeys: [.isRegularFileKey]).isRegularFile) ?? false
+                return isRegularFile && url.pathExtension.isImageExtension
+            }
+            .sorted { first, second in
+                first.lastPathComponent.localizedStandardCompare(second.lastPathComponent) == .orderedAscending
+            }
+    }
+
+    func hasReadableImages(for item: ArtworkDownloadItem) -> Bool {
+        imageFileURLs(for: item).isEmpty == false
+    }
+
     func chooseDownloadDirectory() {
         let panel = NSOpenPanel()
         panel.canChooseFiles = false

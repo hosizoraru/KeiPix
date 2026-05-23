@@ -31,6 +31,7 @@
 "Choose" = "选择";
 "Clear Completed" = "清理已完成";
 "Reveal in Finder" = "在 Finder 中显示";
+"Open Downloaded Artwork" = "打开已下载作品";
 "No downloads yet" = "暂无下载";
 "Download artworks from the detail view or artwork context menus." = "可以从作品详情或作品右键菜单下载。";
 "Download interrupted" = "下载已中断";
@@ -50,6 +51,7 @@
 "Clear Selection" = "清空选择";
 "Follow" = "关注";
 "Unfollow" = "取消关注";
+"Close" = "关闭";
 "Creator Profile" = "创作者资料";
 "Creator Illustrations" = "作者插画";
 "Creator Manga" = "作者漫画";

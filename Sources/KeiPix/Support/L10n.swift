@@ -34,6 +34,7 @@ enum L10n {
     static var choose: String { text("Choose") }
     static var clearCompleted: String { text("Clear Completed") }
     static var revealInFinder: String { text("Reveal in Finder") }
+    static var openDownloadedArtwork: String { text("Open Downloaded Artwork") }
     static var noDownloadsTitle: String { text("No downloads yet") }
     static var noDownloadsSubtitle: String { text("Download artworks from the detail view or artwork context menus.") }
     static var downloadInterrupted: String { text("Download interrupted") }
@@ -53,6 +54,7 @@ enum L10n {
     static var clearSelection: String { text("Clear Selection") }
     static var follow: String { text("Follow") }
     static var unfollow: String { text("Unfollow") }
+    static var close: String { text("Close") }
     static var creatorProfile: String { text("Creator Profile") }
     static var creatorIllustrations: String { text("Creator Illustrations") }
     static var creatorManga: String { text("Creator Manga") }

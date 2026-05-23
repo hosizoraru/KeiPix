@@ -31,6 +31,7 @@
 "Choose" = "Choose";
 "Clear Completed" = "Clear Completed";
 "Reveal in Finder" = "Reveal in Finder";
+"Open Downloaded Artwork" = "Open Downloaded Artwork";
 "No downloads yet" = "No downloads yet";
 "Download artworks from the detail view or artwork context menus." = "Download artworks from the detail view or artwork context menus.";
 "Download interrupted" = "Download interrupted";
@@ -50,6 +51,7 @@
 "Clear Selection" = "Clear Selection";
 "Follow" = "Follow";
 "Unfollow" = "Unfollow";
+"Close" = "Close";
 "Creator Profile" = "Creator Profile";
 "Creator Illustrations" = "Creator Illustrations";
 "Creator Manga" = "Creator Manga";
