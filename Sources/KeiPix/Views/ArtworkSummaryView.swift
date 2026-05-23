@@ -98,6 +98,29 @@ private struct ArtworkActionStrip: View {
                         .controlSize(.small)
                     }
                 }
+
+                Menu {
+                    Button(L10n.muteArtwork) {
+                        store.muteArtwork(artwork)
+                    }
+                    Button(L10n.muteCreator) {
+                        store.muteUser(artwork.user)
+                    }
+                    if artwork.tags.isEmpty == false {
+                        Menu(L10n.muteTag) {
+                            ForEach(artwork.tags, id: \.self) { tag in
+                                Button("#\(tag.name)") {
+                                    store.muteTag(tag)
+                                }
+                            }
+                        }
+                    }
+                } label: {
+                    Label(L10n.mute, systemImage: "eye.slash")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
             }
         }
     }

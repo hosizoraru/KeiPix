@@ -21,6 +21,7 @@ final class KeiPixStore {
     var galleryLayoutMode = KeiPixStore.loadGalleryLayoutMode()
     var showContentBadges = UserDefaults.standard.object(forKey: "showContentBadges") as? Bool ?? true
     var showAccountIdentity = UserDefaults.standard.object(forKey: "showAccountIdentity") as? Bool ?? true
+    var hideMutedContent = UserDefaults.standard.object(forKey: "hideMutedContent") as? Bool ?? true
     var hideAIArtworks = UserDefaults.standard.bool(forKey: "hideAIArtworks")
     var hideR18Artworks = UserDefaults.standard.bool(forKey: "hideR18Artworks")
     var hideR18GArtworks = UserDefaults.standard.bool(forKey: "hideR18GArtworks")
@@ -42,6 +43,9 @@ final class KeiPixStore {
     private let api = PixivAPI()
     private var allArtworks: [PixivArtwork] = []
     private var nextURL: URL?
+    private var mutedTags = Set(UserDefaults.standard.stringArray(forKey: "mutedTags") ?? [])
+    private var mutedUsers = KeiPixStore.loadIntStringDictionary("mutedUsers")
+    private var mutedArtworks = KeiPixStore.loadIntStringDictionary("mutedArtworks")
 
     init() {
         Task { await bootstrap() }
@@ -234,6 +238,12 @@ final class KeiPixStore {
         UserDefaults.standard.set(value, forKey: "showAccountIdentity")
     }
 
+    func setHideMutedContent(_ value: Bool) {
+        hideMutedContent = value
+        UserDefaults.standard.set(value, forKey: "hideMutedContent")
+        applyContentFilters()
+    }
+
     func setHideAIArtworks(_ value: Bool) {
         hideAIArtworks = value
         UserDefaults.standard.set(value, forKey: "hideAIArtworks")
@@ -336,6 +346,68 @@ final class KeiPixStore {
         UserDefaults.standard.set(behavior.rawValue, forKey: "horizontalSwipeBehavior")
     }
 
+    var mutedTagList: [String] {
+        mutedTags.sorted { $0.localizedStandardCompare($1) == .orderedAscending }
+    }
+
+    var mutedUserList: [MutedUserEntry] {
+        mutedUsers
+            .map { MutedUserEntry(id: $0.key, name: $0.value) }
+            .sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
+    }
+
+    var mutedArtworkList: [MutedArtworkEntry] {
+        mutedArtworks
+            .map { MutedArtworkEntry(id: $0.key, title: $0.value) }
+            .sorted { $0.title.localizedStandardCompare($1.title) == .orderedAscending }
+    }
+
+    func muteArtwork(_ artwork: PixivArtwork) {
+        mutedArtworks[artwork.id] = artwork.title
+        persistMutedArtworks()
+        applyContentFilters()
+    }
+
+    func unmuteArtwork(id: Int) {
+        mutedArtworks[id] = nil
+        persistMutedArtworks()
+        applyContentFilters()
+    }
+
+    func muteUser(_ user: PixivUser) {
+        mutedUsers[user.id] = user.name
+        persistMutedUsers()
+        applyContentFilters()
+    }
+
+    func unmuteUser(id: Int) {
+        mutedUsers[id] = nil
+        persistMutedUsers()
+        applyContentFilters()
+    }
+
+    func muteTag(_ tag: PixivTag) {
+        mutedTags.insert(tag.name)
+        persistMutedTags()
+        applyContentFilters()
+    }
+
+    func unmuteTag(_ tag: String) {
+        mutedTags.remove(tag)
+        persistMutedTags()
+        applyContentFilters()
+    }
+
+    func clearMutedContent() {
+        mutedTags.removeAll()
+        mutedUsers.removeAll()
+        mutedArtworks.removeAll()
+        persistMutedTags()
+        persistMutedUsers()
+        persistMutedArtworks()
+        applyContentFilters()
+    }
+
     @discardableResult
     func selectAdjacentArtwork(delta: Int) -> Bool {
         guard let selectedArtwork,
@@ -415,6 +487,9 @@ final class KeiPixStore {
     }
 
     private func passesContentFilters(_ artwork: PixivArtwork) -> Bool {
+        if hideMutedContent, isMutedLocally(artwork) {
+            return false
+        }
         if hideAIArtworks, artwork.isAI {
             return false
         }
@@ -453,6 +528,31 @@ final class KeiPixStore {
         return true
     }
 
+    private func isMutedLocally(_ artwork: PixivArtwork) -> Bool {
+        if artwork.isMuted {
+            return true
+        }
+        if mutedArtworks[artwork.id] != nil {
+            return true
+        }
+        if mutedUsers[artwork.user.id] != nil {
+            return true
+        }
+        return artwork.tags.contains { mutedTags.contains($0.name) }
+    }
+
+    private func persistMutedTags() {
+        UserDefaults.standard.set(mutedTagList, forKey: "mutedTags")
+    }
+
+    private func persistMutedUsers() {
+        UserDefaults.standard.set(Self.stringKeyedDictionary(mutedUsers), forKey: "mutedUsers")
+    }
+
+    private func persistMutedArtworks() {
+        UserDefaults.standard.set(Self.stringKeyedDictionary(mutedArtworks), forKey: "mutedArtworks")
+    }
+
     private static func loadGalleryLayoutMode() -> GalleryLayoutMode {
         let defaults = UserDefaults.standard
         if let rawValue = defaults.string(forKey: "galleryLayoutMode"),
@@ -473,5 +573,21 @@ final class KeiPixStore {
             return defaultValue
         }
         return value
+    }
+
+    private static func loadIntStringDictionary(_ key: String) -> [Int: String] {
+        guard let stored = UserDefaults.standard.dictionary(forKey: key) as? [String: String] else {
+            return [:]
+        }
+        return stored.reduce(into: [:]) { result, pair in
+            guard let id = Int(pair.key) else { return }
+            result[id] = pair.value
+        }
+    }
+
+    private static func stringKeyedDictionary(_ dictionary: [Int: String]) -> [String: String] {
+        dictionary.reduce(into: [:]) { result, pair in
+            result[String(pair.key)] = pair.value
+        }
     }
 }

@@ -45,6 +45,7 @@
 "Use original images in detail" = "Use original images in detail";
 "Content Filters" = "Content Filters";
 "Show content badges" = "Show content badges";
+"Hide muted content" = "Hide muted content";
 "Hide AI-generated artworks" = "Hide AI-generated artworks";
 "Hide R-18 artworks" = "Hide R-18 artworks";
 "Hide R-18G artworks" = "Hide R-18G artworks";
@@ -144,6 +145,16 @@
 "R-18G" = "R-18G";
 "Ugoira" = "Ugoira";
 "Muted" = "Muted";
+"Mute" = "Mute";
+"Mute Artwork" = "Mute Artwork";
+"Mute Creator" = "Mute Creator";
+"Mute Tag" = "Mute Tag";
+"Muted Content" = "Muted Content";
+"Muted Tags" = "Muted Tags";
+"Muted Creators" = "Muted Creators";
+"Muted Artworks" = "Muted Artworks";
+"Clear Muted Content" = "Clear Muted Content";
+"No muted content" = "No muted content";
 "Content Rating" = "Content Rating";
 "All Ages" = "All Ages";
 "Yes" = "Yes";

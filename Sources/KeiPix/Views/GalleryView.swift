@@ -84,6 +84,22 @@ private struct GalleryContentGrid: View {
             Button(artwork.isBookmarked ? L10n.removeBookmark : L10n.bookmark) {
                 Task { await store.toggleBookmark(artwork) }
             }
+            Divider()
+            Button(L10n.muteArtwork) {
+                store.muteArtwork(artwork)
+            }
+            Button(L10n.muteCreator) {
+                store.muteUser(artwork.user)
+            }
+            if artwork.tags.isEmpty == false {
+                Menu(L10n.muteTag) {
+                    ForEach(artwork.tags.prefix(12), id: \.self) { tag in
+                        Button("#\(tag.name)") {
+                            store.muteTag(tag)
+                        }
+                    }
+                }
+            }
             if let url = artwork.pixivURL {
                 Link(L10n.openInPixiv, destination: url)
             }
@@ -124,6 +140,22 @@ private struct MasonryArtworkGrid: View {
                 .contextMenu {
                     Button(artwork.isBookmarked ? L10n.removeBookmark : L10n.bookmark) {
                         Task { await store.toggleBookmark(artwork) }
+                    }
+                    Divider()
+                    Button(L10n.muteArtwork) {
+                        store.muteArtwork(artwork)
+                    }
+                    Button(L10n.muteCreator) {
+                        store.muteUser(artwork.user)
+                    }
+                    if artwork.tags.isEmpty == false {
+                        Menu(L10n.muteTag) {
+                            ForEach(artwork.tags.prefix(12), id: \.self) { tag in
+                                Button("#\(tag.name)") {
+                                    store.muteTag(tag)
+                                }
+                            }
+                        }
                     }
                     if let url = artwork.pixivURL {
                         Link(L10n.openInPixiv, destination: url)

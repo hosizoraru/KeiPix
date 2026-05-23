@@ -45,6 +45,7 @@
 "Use original images in detail" = "详情页使用原图";
 "Content Filters" = "内容过滤";
 "Show content badges" = "显示内容标识";
+"Hide muted content" = "隐藏已屏蔽内容";
 "Hide AI-generated artworks" = "隐藏 AI 生成作品";
 "Hide R-18 artworks" = "隐藏 R-18 作品";
 "Hide R-18G artworks" = "隐藏 R-18G 作品";
@@ -144,6 +145,16 @@
 "R-18G" = "R-18G";
 "Ugoira" = "动图";
 "Muted" = "已屏蔽";
+"Mute" = "屏蔽";
+"Mute Artwork" = "屏蔽作品";
+"Mute Creator" = "屏蔽创作者";
+"Mute Tag" = "屏蔽标签";
+"Muted Content" = "屏蔽内容";
+"Muted Tags" = "屏蔽标签";
+"Muted Creators" = "屏蔽创作者";
+"Muted Artworks" = "屏蔽作品";
+"Clear Muted Content" = "清空屏蔽内容";
+"No muted content" = "暂无屏蔽内容";
 "Content Rating" = "内容分级";
 "All Ages" = "全年龄";
 "Yes" = "是";
