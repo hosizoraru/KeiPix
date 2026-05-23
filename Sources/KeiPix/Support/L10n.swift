@@ -80,6 +80,11 @@ enum L10n {
     static var region: String { text("Region") }
     static var job: String { text("Job") }
     static var links: String { text("Links") }
+    static var workspace: String { text("Workspace") }
+    static var tool: String { text("Tool") }
+    static var tablet: String { text("Tablet") }
+    static var mouse: String { text("Mouse") }
+    static var workspaceComment: String { text("Workspace Comment") }
     static var settings: String { text("Settings") }
     static var language: String { text("Language") }
     static var automatic: String { text("Automatic") }

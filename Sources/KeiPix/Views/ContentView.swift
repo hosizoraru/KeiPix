@@ -9,10 +9,10 @@ struct ContentView: View {
             SidebarView(store: store)
         } content: {
             ContentColumnView(store: store)
-                .navigationSplitViewColumnWidth(min: 500, ideal: 720)
+                .navigationSplitViewColumnWidth(min: 480, ideal: 720)
         } detail: {
             ArtworkDetailView(store: store)
-                .navigationSplitViewColumnWidth(min: 360, ideal: 480)
+                .navigationSplitViewColumnWidth(min: 340, ideal: 480)
         }
         .frame(minWidth: minimumWindowWidth, minHeight: 700)
         .searchable(text: $store.searchText, prompt: L10n.searchPlaceholder)
@@ -130,9 +130,9 @@ struct ContentView: View {
 
     private var minimumWindowWidth: CGFloat {
         if sidebarVisible {
-            store.showAccountIdentity ? 1060 : 1020
+            store.showAccountIdentity ? 1020 : 980
         } else {
-            940
+            900
         }
     }
 

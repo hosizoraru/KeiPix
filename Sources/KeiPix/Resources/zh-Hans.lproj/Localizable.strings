@@ -77,6 +77,11 @@
 "Region" = "地区";
 "Job" = "职业";
 "Links" = "链接";
+"Workspace" = "工作区";
+"Tool" = "工具";
+"Tablet" = "数位板";
+"Mouse" = "鼠标";
+"Workspace Comment" = "工作区说明";
 "Settings" = "设置";
 "Language" = "语言";
 "Automatic" = "自动";
@@ -144,7 +149,7 @@
 "Protect sensitive content from screen capture" = "保护敏感内容不被截屏捕获";
 "R-18 and R-18G artwork windows are hidden from screenshots and screen sharing when possible." = "展示 R-18 和 R-18G 作品时，尽可能让窗口从截屏和屏幕共享中隐藏。";
 "Show account identity" = "显示账号身份信息";
-"Hide your Pixiv name and ID in the sidebar for screenshots." = "隐藏侧边栏里的 Pixiv 名字和 ID，方便分享截图。";
+"Hide your Pixiv name and ID in the sidebar for screenshots." = "隐藏侧边栏里的 Pixiv 名字和 ID；账号区会收缩为仅头像显示。";
 "Profile" = "资料";
 "Hidden" = "已隐藏";
 "Login to Pixiv" = "登录 Pixiv";

@@ -9,7 +9,7 @@ struct KeiPixApp: App {
     var body: some Scene {
         WindowGroup("KeiPix", id: "main") {
             ContentView(store: store)
-                .frame(minWidth: 940, minHeight: 700)
+                .frame(minWidth: 900, minHeight: 700)
                 .background(WindowCaptureProtectionBridge(isProtected: store.isMainWindowCaptureProtected))
                 .environment(\.locale, store.appLanguage.locale ?? .current)
         }

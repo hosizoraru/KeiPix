@@ -36,6 +36,7 @@ struct UserProfileSheet: View {
                         metrics
                         comment
                         links
+                        workspaceSection
                         feedActions
                         relatedCreatorSection
                     }
@@ -192,6 +193,40 @@ struct UserProfileSheet: View {
         }
         .padding(14)
         .keiPanel(14)
+    }
+
+    @ViewBuilder
+    private var workspaceSection: some View {
+        if let workspace = detail?.workspace {
+            let entries = workspace.infoEntries
+            let comment = workspace.trimmedComment
+
+            if entries.isEmpty == false || comment != nil {
+                VStack(alignment: .leading, spacing: 10) {
+                    Label(L10n.workspace, systemImage: "paintbrush.pointed")
+                        .font(.headline)
+
+                    ForEach(entries, id: \.title) { entry in
+                        ProfileInfoLine(title: entry.title, value: entry.value)
+                    }
+
+                    if let comment {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(L10n.workspaceComment)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                            Text(comment)
+                                .font(.callout)
+                                .foregroundStyle(.secondary)
+                                .fixedSize(horizontal: false, vertical: true)
+                                .textSelection(.enabled)
+                        }
+                    }
+                }
+                .padding(14)
+                .keiPanel(14)
+            }
+        }
     }
 
     @ViewBuilder
@@ -403,5 +438,29 @@ private struct ProfileInfoLine: View {
             Text(value)
                 .font(.caption)
         }
+    }
+}
+
+private extension PixivUserWorkspace {
+    var infoEntries: [(title: String, value: String)] {
+        [
+            (L10n.tool, tool),
+            (L10n.tablet, tablet),
+            (L10n.mouse, mouse)
+        ].compactMap { title, value in
+            guard let trimmed = value?.trimmedNonEmpty else { return nil }
+            return (title, trimmed)
+        }
+    }
+
+    var trimmedComment: String? {
+        comment?.htmlStripped.trimmedNonEmpty
+    }
+}
+
+private extension String {
+    var trimmedNonEmpty: String? {
+        let trimmed = trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? nil : trimmed
     }
 }

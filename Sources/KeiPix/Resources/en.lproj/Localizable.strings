@@ -77,6 +77,11 @@
 "Region" = "Region";
 "Job" = "Job";
 "Links" = "Links";
+"Workspace" = "Workspace";
+"Tool" = "Tool";
+"Tablet" = "Tablet";
+"Mouse" = "Mouse";
+"Workspace Comment" = "Workspace Comment";
 "Settings" = "Settings";
 "Language" = "Language";
 "Automatic" = "Automatic";
@@ -144,7 +149,7 @@
 "Protect sensitive content from screen capture" = "Protect sensitive content from screen capture";
 "R-18 and R-18G artwork windows are hidden from screenshots and screen sharing when possible." = "R-18 and R-18G artwork windows are hidden from screenshots and screen sharing when possible.";
 "Show account identity" = "Show account identity";
-"Hide your Pixiv name and ID in the sidebar for screenshots." = "Hide your Pixiv name and ID in the sidebar for screenshots.";
+"Hide your Pixiv name and ID in the sidebar for screenshots." = "Hide your Pixiv name and ID in the sidebar. The account header shrinks to avatar only.";
 "Profile" = "Profile";
 "Hidden" = "Hidden";
 "Login to Pixiv" = "Login to Pixiv";
