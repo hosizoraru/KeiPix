@@ -17,6 +17,11 @@ struct ContentView: View {
         .frame(minWidth: minimumWindowWidth, minHeight: 700)
         .searchable(text: $store.searchText, prompt: L10n.searchPlaceholder)
         .searchSuggestions {
+            ForEach(store.matchingLocalSearchTerms(), id: \.self) { keyword in
+                SearchKeywordSuggestionRow(keyword: keyword, isSaved: store.savedSearches.containsCaseInsensitive(keyword))
+                    .searchCompletion(keyword)
+            }
+
             ForEach(store.searchSuggestions, id: \.name) { suggestion in
                 SearchSuggestionRow(tag: suggestion)
                     .searchCompletion(suggestion.name)
@@ -180,6 +185,8 @@ private struct ContentColumnView: View {
             MangaWatchlistView(store: store)
         } else if store.selectedRoute == .downloads {
             DownloadQueueView(store: store)
+        } else if store.selectedRoute == .savedSearches {
+            SavedSearchesView(store: store)
         } else if store.selectedRoute == .followingCreators || store.selectedRoute == .recommendedUsers || store.selectedRoute == .searchUsers {
             UserPreviewListView(store: store, mode: userPreviewMode)
         } else {
@@ -220,5 +227,27 @@ private struct SearchSuggestionRow: View {
                 }
             }
         }
+    }
+}
+
+private struct SearchKeywordSuggestionRow: View {
+    let keyword: String
+    let isSaved: Bool
+
+    var body: some View {
+        Label {
+            Text(keyword)
+                .lineLimit(1)
+        } icon: {
+            Image(systemName: isSaved ? "star.fill" : "clock.arrow.circlepath")
+                .foregroundStyle(.secondary)
+                .frame(width: 16)
+        }
+    }
+}
+
+private extension Array where Element == String {
+    func containsCaseInsensitive(_ value: String) -> Bool {
+        contains { $0.localizedCaseInsensitiveCompare(value) == .orderedSame }
     }
 }

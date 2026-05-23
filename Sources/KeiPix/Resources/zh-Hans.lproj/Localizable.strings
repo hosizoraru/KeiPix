@@ -4,6 +4,13 @@
 "Manga" = "漫画";
 "Search" = "搜索";
 "Search Creators" = "搜索作者";
+"Saved Searches" = "保存的搜索";
+"Save Search" = "保存搜索";
+"Recent Searches" = "最近搜索";
+"No saved searches" = "暂无保存的搜索";
+"No recent searches" = "暂无最近搜索";
+"Remove Saved Search" = "移除保存的搜索";
+"Clear Search History" = "清空搜索历史";
 "Ranking" = "排行榜";
 "Manga Ranking" = "漫画榜";
 "Bookmarks" = "收藏";

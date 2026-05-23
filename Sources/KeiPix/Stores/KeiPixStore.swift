@@ -15,6 +15,8 @@ final class KeiPixStore {
     var searchText = ""
     var searchSubmissionID = 0
     var searchSuggestions: [PixivTag] = []
+    var searchHistory = UserDefaults.standard.stringArray(forKey: "searchHistory") ?? []
+    var savedSearches = UserDefaults.standard.stringArray(forKey: "savedSearches") ?? []
     var errorMessage: String?
     var isLoading = false
     var isLoadingMore = false
@@ -166,6 +168,10 @@ final class KeiPixStore {
 
     func runSearch() async {
         searchSuggestions = []
+        let keyword = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        if keyword.isEmpty == false {
+            recordSearch(keyword)
+        }
         if selectedRoute == .searchUsers {
             searchSubmissionID += 1
             return
@@ -195,6 +201,53 @@ final class KeiPixStore {
         } catch {
             searchSuggestions = []
         }
+    }
+
+    func matchingLocalSearchTerms(limit: Int = 8) -> [String] {
+        let keyword = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        let source = (savedSearches + searchHistory).uniquedCaseInsensitive()
+        let matches = keyword.isEmpty
+            ? source
+            : source.filter { $0.localizedCaseInsensitiveContains(keyword) }
+        return Array(matches.prefix(limit))
+    }
+
+    func saveCurrentSearch() {
+        saveSearch(searchText)
+    }
+
+    func saveSearch(_ keyword: String) {
+        let normalized = keyword.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard normalized.isEmpty == false else { return }
+        savedSearches.removeAll { $0.localizedCaseInsensitiveCompare(normalized) == .orderedSame }
+        savedSearches.insert(normalized, at: 0)
+        savedSearches = Array(savedSearches.prefix(50))
+        UserDefaults.standard.set(savedSearches, forKey: "savedSearches")
+    }
+
+    func removeSavedSearch(_ keyword: String) {
+        savedSearches.removeAll { $0.localizedCaseInsensitiveCompare(keyword) == .orderedSame }
+        UserDefaults.standard.set(savedSearches, forKey: "savedSearches")
+    }
+
+    func clearSearchHistory() {
+        searchHistory = []
+        UserDefaults.standard.set(searchHistory, forKey: "searchHistory")
+    }
+
+    func runSavedSearch(_ keyword: String) async {
+        searchText = keyword
+        selectedRoute = .search
+        await runSearch()
+    }
+
+    private func recordSearch(_ keyword: String) {
+        let normalized = keyword.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard normalized.isEmpty == false else { return }
+        searchHistory.removeAll { $0.localizedCaseInsensitiveCompare(normalized) == .orderedSame }
+        searchHistory.insert(normalized, at: 0)
+        searchHistory = Array(searchHistory.prefix(50))
+        UserDefaults.standard.set(searchHistory, forKey: "searchHistory")
     }
 
     func toggleBookmark(_ artwork: PixivArtwork) async {
@@ -609,7 +662,7 @@ final class KeiPixStore {
             return try await api.following()
         case .history:
             return try await api.browsingHistoryIllusts()
-        case .mangaWatchlist, .downloads:
+        case .mangaWatchlist, .downloads, .savedSearches:
             return PixivFeedResponse(illusts: [], nextURL: nil)
         case .followingCreators, .recommendedUsers, .searchUsers:
             return PixivFeedResponse(illusts: [], nextURL: nil)
@@ -786,5 +839,14 @@ private extension Array where Element == PixivTag {
 
     func prefixArray(_ maxLength: Int) -> [PixivTag] {
         Array(prefix(maxLength))
+    }
+}
+
+private extension Array where Element == String {
+    func uniquedCaseInsensitive() -> [String] {
+        var seen = Set<String>()
+        return filter { value in
+            seen.insert(value.lowercased()).inserted
+        }
     }
 }

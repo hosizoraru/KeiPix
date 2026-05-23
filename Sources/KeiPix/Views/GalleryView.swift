@@ -195,6 +195,16 @@ private struct FeedHeaderView: View {
 
             Spacer()
 
+            if store.selectedRoute == .search,
+               store.searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false {
+                Button {
+                    store.saveCurrentSearch()
+                } label: {
+                    Label(L10n.saveSearch, systemImage: "star")
+                }
+                .buttonStyle(.bordered)
+            }
+
             Button {
                 batchDownloadLimit = min(max(1, batchDownloadLimit), maxBatchDownloadLimit)
                 isBatchDownloadPresented = true

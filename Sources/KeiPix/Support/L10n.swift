@@ -7,6 +7,13 @@ enum L10n {
     static var manga: String { text("Manga") }
     static var search: String { text("Search") }
     static var searchCreators: String { text("Search Creators") }
+    static var savedSearches: String { text("Saved Searches") }
+    static var saveSearch: String { text("Save Search") }
+    static var recentSearches: String { text("Recent Searches") }
+    static var noSavedSearches: String { text("No saved searches") }
+    static var noRecentSearches: String { text("No recent searches") }
+    static var removeSavedSearch: String { text("Remove Saved Search") }
+    static var clearSearchHistory: String { text("Clear Search History") }
     static var ranking: String { text("Ranking") }
     static var mangaRanking: String { text("Manga Ranking") }
     static var bookmarks: String { text("Bookmarks") }
