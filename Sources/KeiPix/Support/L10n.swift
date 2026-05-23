@@ -48,6 +48,15 @@ enum L10n {
     static var views: String { text("Views") }
     static var saves: String { text("Saves") }
     static var pages: String { text("Pages") }
+    static var page: String { text("Page") }
+    static var previousPage: String { text("Previous Page") }
+    static var nextPage: String { text("Next Page") }
+    static var thumbnails: String { text("Thumbnails") }
+    static var readingMode: String { text("Reading Mode") }
+    static var singlePage: String { text("Single Page") }
+    static var continuousReading: String { text("Continuous Reading") }
+    static var pageIndex: String { text("Page Index") }
+    static var jumpToPage: String { text("Jump to Page") }
     static var aiGenerated: String { text("AI generated") }
     static var created: String { text("Created") }
     static var artworkID: String { text("Artwork ID") }
@@ -55,6 +64,10 @@ enum L10n {
     static var results: String { text("Results") }
     static var nextPageAvailable: String { text("More available") }
     static var noMorePages: String { text("End of feed") }
+
+    static func pageStatus(_ page: Int, _ count: Int) -> String {
+        String(format: text("Page %d of %d"), locale: Locale.current, page, count)
+    }
 
     static func text(_ key: String) -> String {
         let selected = UserDefaults.standard.string(forKey: "appLanguage")

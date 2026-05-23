@@ -36,4 +36,12 @@ actor ImagePipeline {
         cache.setObject(image, forKey: key)
         return image
     }
+
+    func prefetch(_ urls: [URL]) async {
+        for url in urls {
+            let key = url as NSURL
+            guard cache.object(forKey: key) == nil else { continue }
+            _ = try? await image(for: url)
+        }
+    }
 }

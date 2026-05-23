@@ -45,6 +45,16 @@
 "Views" = "浏览";
 "Saves" = "收藏";
 "Pages" = "页数";
+"Page" = "页码";
+"Previous Page" = "上一页";
+"Next Page" = "下一页";
+"Thumbnails" = "缩略图";
+"Reading Mode" = "阅读模式";
+"Single Page" = "单页";
+"Continuous Reading" = "连续阅读";
+"Page Index" = "页码索引";
+"Jump to Page" = "跳转页码";
+"Page %d of %d" = "第 %d / %d 页";
 "AI generated" = "AI 生成";
 "Created" = "创建时间";
 "Artwork ID" = "作品 ID";

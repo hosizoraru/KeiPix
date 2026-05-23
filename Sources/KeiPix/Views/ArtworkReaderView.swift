@@ -1,0 +1,320 @@
+import SwiftUI
+
+struct ArtworkReaderView: View {
+    let artwork: PixivArtwork
+    @Bindable var store: KeiPixStore
+    @Binding var pageIndex: Int
+    @Binding var readingMode: ArtworkReadingMode
+    @Binding var scrollTarget: Int?
+    let scrollToPage: (Int) -> Void
+
+    var body: some View {
+        Group {
+            switch readingMode {
+            case .singlePage:
+                ArtworkSinglePageReader(
+                    artwork: artwork,
+                    store: store,
+                    pageIndex: $pageIndex,
+                    movePage: movePage
+                )
+            case .continuous:
+                ArtworkContinuousReader(
+                    artwork: artwork,
+                    store: store,
+                    pageIndex: $pageIndex
+                )
+                .padding(.horizontal, 18)
+            case .index:
+                ArtworkPageIndexGrid(
+                    artwork: artwork,
+                    selectedPage: pageIndex,
+                    selectPage: { index in
+                        readingMode = .singlePage
+                        scrollToPage(index)
+                    }
+                )
+                .padding(.horizontal, 18)
+            }
+        }
+        .overlay {
+            if pageCount > 1 {
+                HStack {
+                    Button(L10n.previousPage) { movePage(-1) }
+                        .keyboardShortcut(.leftArrow, modifiers: [])
+                        .hidden()
+                    Button(L10n.nextPage) { movePage(1) }
+                        .keyboardShortcut(.rightArrow, modifiers: [])
+                        .hidden()
+                }
+                .accessibilityHidden(true)
+            }
+        }
+        .onChange(of: scrollTarget) { _, value in
+            guard readingMode == .continuous, let value, value != pageIndex else { return }
+            pageIndex = min(max(value, 0), pageCount - 1)
+        }
+    }
+
+    private var pageCount: Int {
+        artwork.displayPageCount
+    }
+
+    private func movePage(_ delta: Int) {
+        scrollToPage(pageIndex + delta)
+    }
+}
+
+struct ArtworkReaderControls: View {
+    @Binding var pageIndex: Int
+    @Binding var readingMode: ArtworkReadingMode
+    let pageCount: Int
+    let scrollToPage: (Int) -> Void
+
+    @State private var pageText = "1"
+
+    var body: some View {
+        VStack(spacing: 10) {
+            Picker(L10n.readingMode, selection: $readingMode) {
+                ForEach(ArtworkReadingMode.allCases) { mode in
+                    Label(mode.title, systemImage: mode.systemImage)
+                        .tag(mode)
+                }
+            }
+            .pickerStyle(.segmented)
+
+            if pageCount > 1 {
+                HStack(spacing: 10) {
+                    Button {
+                        scrollToPage(pageIndex - 1)
+                    } label: {
+                        Image(systemName: "chevron.left")
+                            .frame(width: 18, height: 18)
+                    }
+                    .disabled(pageIndex <= 0)
+                    .accessibilityLabel(L10n.previousPage)
+
+                    TextField(L10n.page, text: $pageText)
+                        .textFieldStyle(.roundedBorder)
+                        .multilineTextAlignment(.center)
+                        .frame(width: 62)
+                        .onSubmit(commitPageText)
+
+                    Text("/ \(pageCount)")
+                        .font(.callout.monospacedDigit())
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+
+                    Slider(
+                        value: Binding(
+                            get: { Double(pageIndex + 1) },
+                            set: { scrollToPage(Int($0.rounded()) - 1) }
+                        ),
+                        in: 1...Double(pageCount),
+                        step: 1
+                    )
+                    .accessibilityLabel(L10n.jumpToPage)
+
+                    Button {
+                        scrollToPage(pageIndex + 1)
+                    } label: {
+                        Image(systemName: "chevron.right")
+                            .frame(width: 18, height: 18)
+                    }
+                    .disabled(pageIndex >= pageCount - 1)
+                    .accessibilityLabel(L10n.nextPage)
+                }
+            }
+        }
+        .padding(12)
+        .keiPanel(16)
+        .onAppear {
+            syncPageText()
+        }
+        .onChange(of: pageIndex) { _, _ in
+            syncPageText()
+        }
+        .onChange(of: pageCount) { _, _ in
+            syncPageText()
+        }
+    }
+
+    private func syncPageText() {
+        pageText = "\(min(max(pageIndex, 0), max(pageCount - 1, 0)) + 1)"
+    }
+
+    private func commitPageText() {
+        let target = (Int(pageText) ?? pageIndex + 1) - 1
+        scrollToPage(target)
+        syncPageText()
+    }
+}
+
+private struct ArtworkSinglePageReader: View {
+    let artwork: PixivArtwork
+    @Bindable var store: KeiPixStore
+    @Binding var pageIndex: Int
+    let movePage: (Int) -> Void
+
+    var body: some View {
+        RemoteImageView(url: artwork.imageURL(at: pageIndex, preferOriginal: store.useOriginalImagesInDetail), contentMode: .fit)
+            .aspectRatio(artwork.aspectRatio, contentMode: .fit)
+            .frame(maxWidth: .infinity)
+            .frame(minHeight: 260)
+            .frame(maxHeight: 680)
+            .background(.quaternary)
+            .backgroundExtensionEffect()
+            .overlay(alignment: .leading) {
+                if pageCount > 1 {
+                    PageNavigationButton(systemImage: "chevron.left", title: L10n.previousPage) {
+                        movePage(-1)
+                    }
+                    .disabled(pageIndex <= 0)
+                    .padding(.leading, 12)
+                }
+            }
+            .overlay(alignment: .trailing) {
+                if pageCount > 1 {
+                    PageNavigationButton(systemImage: "chevron.right", title: L10n.nextPage) {
+                        movePage(1)
+                    }
+                    .disabled(pageIndex >= pageCount - 1)
+                    .padding(.trailing, 12)
+                }
+            }
+            .overlay(alignment: .topTrailing) {
+                if pageCount > 1 {
+                    PageBadge(index: pageIndex, count: pageCount)
+                        .padding(14)
+                }
+            }
+            .clipShape(RoundedRectangle(cornerRadius: 0, style: .continuous))
+    }
+
+    private var pageCount: Int {
+        artwork.displayPageCount
+    }
+}
+
+private struct ArtworkContinuousReader: View {
+    let artwork: PixivArtwork
+    @Bindable var store: KeiPixStore
+    @Binding var pageIndex: Int
+
+    var body: some View {
+        LazyVStack(spacing: 16) {
+            ForEach(0..<pageCount, id: \.self) { index in
+                VStack(spacing: 8) {
+                    RemoteImageView(url: artwork.imageURL(at: index, preferOriginal: store.useOriginalImagesInDetail), contentMode: .fit)
+                        .aspectRatio(artwork.aspectRatio, contentMode: .fit)
+                        .frame(maxWidth: .infinity)
+                        .background(.quaternary, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                        .overlay(alignment: .topTrailing) {
+                            PageBadge(index: index, count: pageCount)
+                                .padding(10)
+                        }
+
+                    Divider()
+                        .opacity(index == pageCount - 1 ? 0 : 0.55)
+                }
+                .id(index)
+                .scrollTargetLayout()
+                .onTapGesture {
+                    pageIndex = index
+                }
+            }
+        }
+    }
+
+    private var pageCount: Int {
+        artwork.displayPageCount
+    }
+}
+
+private struct ArtworkPageIndexGrid: View {
+    let artwork: PixivArtwork
+    let selectedPage: Int
+    let selectPage: (Int) -> Void
+
+    private let columns = [GridItem(.adaptive(minimum: 72, maximum: 92), spacing: 10)]
+
+    var body: some View {
+        LazyVGrid(columns: columns, spacing: 10) {
+            ForEach(0..<pageCount, id: \.self) { index in
+                Button {
+                    selectPage(index)
+                } label: {
+                    PageThumbnail(
+                        url: artwork.thumbnailURL(at: index),
+                        index: index,
+                        isSelected: index == selectedPage
+                    )
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(L10n.pageStatus(index + 1, pageCount))
+                .id(index)
+            }
+        }
+        .scrollTargetLayout()
+    }
+
+    private var pageCount: Int {
+        artwork.displayPageCount
+    }
+}
+
+private struct PageThumbnail: View {
+    let url: URL?
+    let index: Int
+    let isSelected: Bool
+
+    var body: some View {
+        ZStack(alignment: .topTrailing) {
+            RemoteImageView(url: url)
+                .frame(height: 72)
+                .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+
+            Text("\(index + 1)")
+                .font(.caption2.weight(.bold))
+                .padding(.horizontal, 5)
+                .padding(.vertical, 2)
+                .background(.thinMaterial, in: Capsule())
+                .padding(4)
+        }
+        .overlay {
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .stroke(isSelected ? Color.accentColor : Color.secondary.opacity(0.2), lineWidth: isSelected ? 2 : 1)
+        }
+    }
+}
+
+private struct PageBadge: View {
+    let index: Int
+    let count: Int
+
+    var body: some View {
+        Text("\(index + 1) / \(count)")
+            .font(.caption.weight(.semibold).monospacedDigit())
+            .padding(.horizontal, 9)
+            .padding(.vertical, 5)
+            .keiGlass(12)
+    }
+}
+
+private struct PageNavigationButton: View {
+    let systemImage: String
+    let title: String
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Image(systemName: systemImage)
+                .font(.title3.weight(.semibold))
+                .frame(width: 34, height: 46)
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(title)
+        .keiInteractiveGlass(18)
+    }
+}

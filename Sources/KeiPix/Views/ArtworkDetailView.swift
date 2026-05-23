@@ -19,301 +19,107 @@ struct ArtworkDetailView: View {
 private struct ArtworkInspectorView: View {
     let artwork: PixivArtwork
     @Bindable var store: KeiPixStore
+
     @State private var captionExpanded = false
     @State private var tagsExpanded = false
     @State private var metadataExpanded = false
+    @State private var pageIndex = 0
+    @State private var readingMode: ArtworkReadingMode
+    @State private var scrollTarget: Int?
+
+    init(artwork: PixivArtwork, store: KeiPixStore) {
+        self.artwork = artwork
+        self.store = store
+        _readingMode = State(initialValue: ArtworkReadingMode.defaultMode(for: artwork.displayPageCount))
+    }
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: 14) {
-                ArtworkHeroView(artwork: artwork, store: store)
-
-                VStack(alignment: .leading, spacing: 14) {
-                    ArtworkSummaryView(artwork: artwork, store: store)
-
-                    if artwork.caption.htmlStripped.isEmpty == false {
-                        CollapsibleInspectorSection(
-                            title: L10n.description,
-                            systemImage: "text.alignleft",
-                            isExpanded: $captionExpanded
-                        ) {
-                            Text(artwork.caption.htmlStripped)
-                                .font(.callout)
-                                .foregroundStyle(.secondary)
-                                .textSelection(.enabled)
-                                .fixedSize(horizontal: false, vertical: true)
-                        }
-                    }
-
-                    CollapsibleInspectorSection(
-                        title: L10n.tags,
-                        systemImage: "tag",
-                        isExpanded: $tagsExpanded
-                    ) {
-                        FlowLayout(spacing: 8) {
-                            ForEach(artwork.tags, id: \.self) { tag in
-                                Text(tag.translatedName.map { "#\(tag.name) / \($0)" } ?? "#\(tag.name)")
-                                    .font(.caption)
-                                    .padding(.horizontal, 9)
-                                    .padding(.vertical, 5)
-                                    .foregroundStyle(.secondary)
-                                    .background(.quinary, in: Capsule())
+        ScrollViewReader { proxy in
+            ScrollView {
+                VStack(spacing: 14) {
+                    if pageCount > 1 {
+                        ArtworkReaderControls(
+                            pageIndex: $pageIndex,
+                            readingMode: $readingMode,
+                            pageCount: pageCount,
+                            scrollToPage: { index in
+                                scrollToPage(index, proxy: proxy)
                             }
+                        )
+                        .padding(.horizontal, 18)
+                        .padding(.top, 14)
+                    }
+
+                    ArtworkReaderView(
+                        artwork: artwork,
+                        store: store,
+                        pageIndex: $pageIndex,
+                        readingMode: $readingMode,
+                        scrollTarget: $scrollTarget,
+                        scrollToPage: { index in
+                            scrollToPage(index, proxy: proxy)
                         }
-                    }
+                    )
 
-                    CollapsibleInspectorSection(
-                        title: L10n.artworkInformation,
-                        systemImage: "info.circle",
-                        isExpanded: $metadataExpanded
-                    ) {
-                        DetailMetadata(artwork: artwork)
-                    }
-                }
-                .padding(18)
-            }
-        }
-        .scrollEdgeEffectStyle(.soft, for: .top)
-        .onChange(of: artwork.id) { _, _ in
-            captionExpanded = false
-            tagsExpanded = false
-            metadataExpanded = false
-        }
-    }
-}
+                    ArtworkSummaryView(artwork: artwork, store: store, pageIndex: pageIndex, pageCount: pageCount)
+                        .padding(.horizontal, 18)
 
-private struct ArtworkHeroView: View {
-    let artwork: PixivArtwork
-    @Bindable var store: KeiPixStore
-
-    var body: some View {
-        RemoteImageView(url: store.useOriginalImagesInDetail ? artwork.originalURL : artwork.detailURL, contentMode: .fit)
-            .aspectRatio(artwork.aspectRatio, contentMode: .fit)
-            .frame(maxWidth: .infinity)
-            .frame(minHeight: 260)
-            .frame(maxHeight: 620)
-            .background(.quaternary)
-            .backgroundExtensionEffect()
-            .overlay(alignment: .topTrailing) {
-                if artwork.pageCount > 1 {
-                    Text("\(artwork.pageCount)P")
-                        .font(.caption.weight(.semibold))
-                        .padding(.horizontal, 9)
-                        .padding(.vertical, 5)
-                        .keiGlass(12)
-                        .padding(14)
+                    ArtworkInformationSections(
+                        artwork: artwork,
+                        captionExpanded: $captionExpanded,
+                        tagsExpanded: $tagsExpanded,
+                        metadataExpanded: $metadataExpanded
+                    )
+                    .padding(.horizontal, 18)
+                    .padding(.bottom, 18)
                 }
             }
-            .clipShape(RoundedRectangle(cornerRadius: 0, style: .continuous))
-    }
-}
-
-private struct ArtworkSummaryView: View {
-    let artwork: PixivArtwork
-    @Bindable var store: KeiPixStore
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            VStack(alignment: .leading, spacing: 10) {
-                Text(artwork.title)
-                    .font(.title2.weight(.semibold))
-                    .lineLimit(3)
-                    .textSelection(.enabled)
-
-                HStack(spacing: 10) {
-                    RemoteImageView(url: artwork.user.avatarURL)
-                        .frame(width: 32, height: 32)
-                        .clipShape(Circle())
-
-                    VStack(alignment: .leading, spacing: 1) {
-                        Text(artwork.user.name)
-                            .font(.headline)
-                            .lineLimit(1)
-                        Text("@\(artwork.user.account)")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                            .lineLimit(1)
-                    }
-
-                    Spacer(minLength: 8)
-
-                    Button(artwork.user.isFollowed ? L10n.unfollow : L10n.follow) {
-                        Task { await store.toggleFollow(artwork.user) }
-                    }
-                    .buttonStyle(.bordered)
-                    .controlSize(.small)
-                }
+            .scrollPosition(id: $scrollTarget, anchor: .top)
+            .scrollEdgeEffectStyle(.soft, for: .top)
+            .onChange(of: pageIndex) { _, value in
+                prefetchAround(value)
             }
-
-            ArtworkActionStrip(artwork: artwork, store: store)
-        }
-        .padding(14)
-        .keiPanel(18)
-    }
-}
-
-private struct ArtworkActionStrip: View {
-    let artwork: PixivArtwork
-    @Bindable var store: KeiPixStore
-
-    var body: some View {
-        GlassEffectContainer {
-            VStack(spacing: 12) {
-                HStack(spacing: 10) {
-                    MetricView(title: L10n.views, value: artwork.totalView, systemImage: "eye")
-                    MetricView(title: L10n.saves, value: artwork.totalBookmarks, systemImage: "bookmark")
-                    MetricView(title: L10n.pages, value: artwork.pageCount, systemImage: "square.stack")
-                }
-
-                HStack(spacing: 10) {
-                    Button {
-                        Task { await store.toggleBookmark(artwork) }
-                    } label: {
-                        Label(artwork.isBookmarked ? L10n.removeBookmark : L10n.bookmark, systemImage: artwork.isBookmarked ? "bookmark.fill" : "bookmark")
-                            .frame(maxWidth: .infinity)
-                    }
-                    .buttonStyle(.glassProminent)
-                    .controlSize(.small)
-
-                    if let url = artwork.pixivURL {
-                        Link(destination: url) {
-                            Label(L10n.openInPixiv, systemImage: "safari")
-                                .frame(maxWidth: .infinity)
-                        }
-                        .buttonStyle(.bordered)
-                        .controlSize(.small)
-                    }
-                }
+            .onChange(of: scrollTarget) { _, value in
+                guard readingMode == .continuous, let value, value != pageIndex else { return }
+                pageIndex = min(max(value, 0), pageCount - 1)
+            }
+            .onChange(of: readingMode) { _, mode in
+                guard mode != .singlePage else { return }
+                scrollToPage(pageIndex, proxy: proxy)
+            }
+            .task(id: artwork.id) {
+                resetForArtwork()
+                prefetchAround(0)
             }
         }
     }
-}
 
-private struct MetricView: View {
-    let title: String
-    let value: Int
-    let systemImage: String
-
-    var body: some View {
-        Label {
-            VStack(alignment: .leading, spacing: 1) {
-                Text(value.formatted())
-                    .font(.headline)
-                Text(title)
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-            }
-        } icon: {
-            Image(systemName: systemImage)
-                .foregroundStyle(.secondary)
-        }
-        .labelStyle(.titleAndIcon)
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
-}
-
-private struct CollapsibleInspectorSection<Content: View>: View {
-    let title: String
-    let systemImage: String
-    @Binding var isExpanded: Bool
-    @ViewBuilder var content: Content
-
-    var body: some View {
-        DisclosureGroup(isExpanded: $isExpanded) {
-            content
-                .padding(.top, 10)
-        } label: {
-            Label(title, systemImage: systemImage)
-                .font(.headline)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .contentShape(Rectangle())
-        }
-        .disclosureGroupStyle(.automatic)
-        .padding(14)
-        .keiPanel(16)
-    }
-}
-
-private struct InspectorSection<Content: View>: View {
-    let title: String?
-    @ViewBuilder var content: Content
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            if let title {
-                Text(title)
-                    .font(.headline)
-            }
-            content
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(14)
-        .keiPanel(16)
-    }
-}
-
-private struct DetailMetadata: View {
-    let artwork: PixivArtwork
-
-    var body: some View {
-        Grid(alignment: .leading, horizontalSpacing: 16, verticalSpacing: 8) {
-            GridRow {
-                Text(L10n.artworkID)
-                    .foregroundStyle(.secondary)
-                Text("\(artwork.id)")
-                    .textSelection(.enabled)
-            }
-            GridRow {
-                Text(L10n.creatorID)
-                    .foregroundStyle(.secondary)
-                Text("\(artwork.user.id)")
-                    .textSelection(.enabled)
-            }
-            GridRow {
-                Text(L10n.created)
-                    .foregroundStyle(.secondary)
-                Text(artwork.createDate.formatted(date: .abbreviated, time: .shortened))
-            }
-        }
-        .font(.caption)
-    }
-}
-
-private struct FlowLayout: Layout {
-    var spacing: CGFloat
-
-    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
-        let width = proposal.width ?? 320
-        return layout(in: width, subviews: subviews).size
+    private var pageCount: Int {
+        artwork.displayPageCount
     }
 
-    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
-        for item in layout(in: bounds.width, subviews: subviews).items {
-            subviews[item.index].place(
-                at: CGPoint(x: bounds.minX + item.frame.minX, y: bounds.minY + item.frame.minY),
-                proposal: ProposedViewSize(item.frame.size)
-            )
+    private func resetForArtwork() {
+        captionExpanded = false
+        tagsExpanded = false
+        metadataExpanded = false
+        pageIndex = 0
+        scrollTarget = nil
+        readingMode = ArtworkReadingMode.defaultMode(for: pageCount)
+    }
+
+    private func scrollToPage(_ index: Int, proxy: ScrollViewProxy) {
+        let clamped = min(max(index, 0), pageCount - 1)
+        pageIndex = clamped
+        guard readingMode != .singlePage else { return }
+        withAnimation(.snappy(duration: 0.22)) {
+            proxy.scrollTo(clamped, anchor: .top)
         }
     }
 
-    private func layout(in width: CGFloat, subviews: Subviews) -> (items: [(index: Int, frame: CGRect)], size: CGSize) {
-        var items: [(Int, CGRect)] = []
-        var x: CGFloat = 0
-        var y: CGFloat = 0
-        var rowHeight: CGFloat = 0
-
-        for (index, subview) in subviews.enumerated() {
-            let size = subview.sizeThatFits(.unspecified)
-            if x + size.width > width, x > 0 {
-                x = 0
-                y += rowHeight + spacing
-                rowHeight = 0
-            }
-            items.append((index, CGRect(origin: CGPoint(x: x, y: y), size: size)))
-            x += size.width + spacing
-            rowHeight = max(rowHeight, size.height)
+    private func prefetchAround(_ index: Int) {
+        let urls = artwork.prefetchURLs(around: index, preferOriginal: store.useOriginalImagesInDetail)
+        Task {
+            await ImagePipeline.shared.prefetch(urls)
         }
-
-        return (items, CGSize(width: width, height: y + rowHeight))
     }
 }

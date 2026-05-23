@@ -45,6 +45,16 @@
 "Views" = "Views";
 "Saves" = "Saves";
 "Pages" = "Pages";
+"Page" = "Page";
+"Previous Page" = "Previous Page";
+"Next Page" = "Next Page";
+"Thumbnails" = "Thumbnails";
+"Reading Mode" = "Reading Mode";
+"Single Page" = "Single Page";
+"Continuous Reading" = "Continuous Reading";
+"Page Index" = "Page Index";
+"Jump to Page" = "Jump to Page";
+"Page %d of %d" = "Page %d of %d";
 "AI generated" = "AI generated";
 "Created" = "Created";
 "Artwork ID" = "Artwork ID";
