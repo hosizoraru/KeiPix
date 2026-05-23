@@ -101,6 +101,7 @@ private struct ArtworkInspectorView: View {
             .task(id: artwork.id) {
                 resetForArtwork()
                 prefetchAround(0)
+                await store.recordBrowsingHistory(for: artwork)
             }
         }
     }

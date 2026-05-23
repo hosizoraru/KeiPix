@@ -138,6 +138,19 @@ actor PixivAPI {
         ])
     }
 
+    func browsingHistoryIllusts(offset: Int = 0) async throws -> PixivFeedResponse {
+        try await requestBrowsingHistory(offset: offset)
+    }
+
+    func addBrowsingHistory(illustIDs: [Int]) async throws {
+        guard illustIDs.isEmpty == false else { return }
+        _ = try await requestJSON(
+            URL(string: "/v2/user/browsing-history/illust/add", relativeTo: Endpoint.apiBase)!,
+            method: "POST",
+            formItems: illustIDs.map { ("illust_ids[]", "\($0)") }
+        ) as EmptyResponse
+    }
+
     func muteList() async throws -> PixivMuteList {
         try await requestJSON(
             URL(string: "/v1/mute/list", relativeTo: Endpoint.apiBase)!,
@@ -206,7 +219,15 @@ actor PixivAPI {
     }
 
     func nextFeed(_ url: URL) async throws -> PixivFeedResponse {
-        try await requestFeed(url: url)
+        if url.path == "/v1/user/browsing-history/illusts" {
+            let offset = URLComponents(url: url, resolvingAgainstBaseURL: false)?
+                .queryItems?
+                .first(where: { $0.name == "offset" })?
+                .value
+                .flatMap(Int.init) ?? 0
+            return try await requestBrowsingHistory(offset: offset)
+        }
+        return try await requestFeed(url: url)
     }
 
     func ugoiraMetadata(illustID: Int) async throws -> PixivUgoiraMetadata {
@@ -317,6 +338,26 @@ actor PixivAPI {
 
     private func requestFeed(url: URL) async throws -> PixivFeedResponse {
         try await requestJSON(url, method: "GET", form: nil)
+    }
+
+    private func requestBrowsingHistory(offset: Int) async throws -> PixivFeedResponse {
+        let pageSize = 30
+        var components = URLComponents(url: URL(string: "/v1/user/browsing-history/illusts", relativeTo: Endpoint.apiBase)!, resolvingAgainstBaseURL: true)!
+        if offset > 0 {
+            components.queryItems = [URLQueryItem(name: "offset", value: "\(offset)")]
+        }
+        guard let url = components.url else { throw PixivAPIError.invalidResponse }
+
+        let response: PixivFeedResponse = try await requestJSON(url, method: "GET", form: nil)
+        let nextURL = response.nextURL ?? Self.browsingHistoryNextURL(offset: offset + pageSize, pageSize: pageSize, itemCount: response.illusts.count)
+        return PixivFeedResponse(illusts: response.illusts, nextURL: nextURL)
+    }
+
+    private static func browsingHistoryNextURL(offset: Int, pageSize: Int, itemCount: Int) -> URL? {
+        guard itemCount >= pageSize else { return nil }
+        var components = URLComponents(url: URL(string: "/v1/user/browsing-history/illusts", relativeTo: Endpoint.apiBase)!, resolvingAgainstBaseURL: true)!
+        components.queryItems = [URLQueryItem(name: "offset", value: "\(offset)")]
+        return components.url
     }
 
     private func oauthToken(parameters: [String: String]) async throws -> PixivAuthResponse {

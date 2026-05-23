@@ -11,6 +11,7 @@ enum L10n {
     static var bookmarks: String { text("Bookmarks") }
     static var library: String { text("Library") }
     static var following: String { text("Following") }
+    static var history: String { text("History") }
     static var login: String { text("Login") }
     static var logout: String { text("Logout") }
     static var refresh: String { text("Refresh") }

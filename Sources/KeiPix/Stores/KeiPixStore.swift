@@ -46,6 +46,7 @@ final class KeiPixStore {
     private var mutedTags = Set(UserDefaults.standard.stringArray(forKey: "mutedTags") ?? [])
     private var mutedUsers = KeiPixStore.loadIntStringDictionary("mutedUsers")
     private var mutedArtworks = KeiPixStore.loadIntStringDictionary("mutedArtworks")
+    private var recordedBrowsingHistoryIDs = Set<Int>()
 
     init() {
         Task { await bootstrap() }
@@ -89,6 +90,7 @@ final class KeiPixStore {
             artworks = []
             selectedArtwork = nil
             nextURL = nil
+            recordedBrowsingHistoryIDs.removeAll()
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -231,6 +233,19 @@ final class KeiPixStore {
     func nextRelatedArtworks(_ url: URL) async throws -> PixivFeedResponse {
         let response = try await api.nextFeed(url)
         return filteredFeedResponse(response)
+    }
+
+    func recordBrowsingHistory(for artwork: PixivArtwork) async {
+        guard session != nil,
+              recordedBrowsingHistoryIDs.insert(artwork.id).inserted else {
+            return
+        }
+
+        do {
+            try await api.addBrowsingHistory(illustIDs: [artwork.id])
+        } catch {
+            recordedBrowsingHistoryIDs.remove(artwork.id)
+        }
     }
 
     func setUseOriginalImagesInDetail(_ value: Bool) {
@@ -493,6 +508,8 @@ final class KeiPixStore {
             return try await api.bookmarks(restrict: "private", userID: userID)
         case .following:
             return try await api.following()
+        case .history:
+            return try await api.browsingHistoryIllusts()
         }
     }
 

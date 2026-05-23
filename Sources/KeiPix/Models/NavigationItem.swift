@@ -26,7 +26,7 @@ enum PixivRouteSection: Identifiable {
         case .mangaRanking:
             [.mangaRankingDaily, .mangaRankingWeekly, .mangaRankingMonthly]
         case .library:
-            [.publicBookmarks, .privateBookmarks, .following]
+            [.publicBookmarks, .privateBookmarks, .following, .history]
         }
     }
 }
@@ -47,6 +47,7 @@ enum PixivRoute: String, CaseIterable, Identifiable, Codable {
     case publicBookmarks
     case privateBookmarks
     case following
+    case history
 
     static var sidebarSections: [PixivRouteSection] {
         [.works, .ranking, .mangaRanking, .library]
@@ -75,6 +76,7 @@ enum PixivRoute: String, CaseIterable, Identifiable, Codable {
         case .publicBookmarks: L10n.publicBookmarks
         case .privateBookmarks: L10n.privateBookmarks
         case .following: L10n.following
+        case .history: L10n.history
         }
     }
 
@@ -90,6 +92,7 @@ enum PixivRoute: String, CaseIterable, Identifiable, Codable {
         case .mangaRankingDaily, .mangaRankingWeekly, .mangaRankingMonthly: "chart.bar.doc.horizontal"
         case .publicBookmarks, .privateBookmarks: "bookmark"
         case .following: "person.2"
+        case .history: "clock.arrow.circlepath"
         }
     }
 }
