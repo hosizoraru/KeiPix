@@ -95,6 +95,8 @@
 "Hide AI-generated artworks" = "Hide AI-generated artworks";
 "Hide R-18 artworks" = "Hide R-18 artworks";
 "Hide R-18G artworks" = "Hide R-18G artworks";
+"Pixiv Restricted Mode" = "Pixiv Restricted Mode";
+"Syncs Pixiv account restricted mode for adult content visibility across clients." = "Syncs Pixiv account restricted mode for adult content visibility across clients.";
 "Search Filters" = "Search Filters";
 "Match Type" = "Match Type";
 "Partial tag match" = "Partial tag match";

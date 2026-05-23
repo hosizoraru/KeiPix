@@ -62,3 +62,11 @@ struct PixivMutedUser: Decodable, Identifiable, Hashable, Sendable {
         avatarURL = value.flatMap(URL.init(string:))
     }
 }
+
+struct PixivRestrictedModeSettings: Decodable, Sendable {
+    let isRestrictedModeEnabled: Bool
+
+    enum CodingKeys: String, CodingKey {
+        case isRestrictedModeEnabled = "is_restricted_mode_enabled"
+    }
+}

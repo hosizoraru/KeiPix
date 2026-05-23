@@ -3,7 +3,9 @@ import SwiftUI
 struct SettingsView: View {
     @Bindable var store: KeiPixStore
     @State private var isSyncingMutedContent = false
+    @State private var isUpdatingRestrictedMode = false
     @State private var mutedContentSyncMessage: String?
+    @State private var restrictedModeMessage: String?
 
     var body: some View {
         Form {
@@ -26,6 +28,31 @@ struct SettingsView: View {
                 Toggle(L10n.hideAIArtworks, isOn: hideAIBinding)
                 Toggle(L10n.hideR18Artworks, isOn: hideR18Binding)
                 Toggle(L10n.hideR18GArtworks, isOn: hideR18GBinding)
+
+                if store.session != nil {
+                    Divider()
+
+                    HStack(spacing: 8) {
+                        Toggle(L10n.pixivRestrictedMode, isOn: restrictedModeBinding)
+                            .disabled(store.restrictedModeEnabled == nil || isUpdatingRestrictedMode)
+
+                        if store.restrictedModeEnabled == nil || isUpdatingRestrictedMode {
+                            ProgressView()
+                                .controlSize(.small)
+                        }
+                    }
+
+                    Text(L10n.pixivRestrictedModeHint)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+
+                    if let restrictedModeMessage {
+                        Text(restrictedModeMessage)
+                            .font(.caption)
+                            .foregroundStyle(.red)
+                            .textSelection(.enabled)
+                    }
+                }
             }
 
             Section(L10n.mutedContent) {
@@ -152,6 +179,11 @@ struct SettingsView: View {
         .formStyle(.grouped)
         .padding(24)
         .frame(width: 520)
+        .task {
+            if store.session != nil, store.restrictedModeEnabled == nil {
+                await store.refreshRestrictedModeSetting()
+            }
+        }
     }
 
     private var languageBinding: Binding<AppLanguage> {
@@ -207,6 +239,14 @@ struct SettingsView: View {
             store.hideR18GArtworks
         } set: { value in
             store.setHideR18GArtworks(value)
+        }
+    }
+
+    private var restrictedModeBinding: Binding<Bool> {
+        Binding {
+            store.restrictedModeEnabled ?? false
+        } set: { value in
+            Task { await updateRestrictedMode(value) }
         }
     }
 
@@ -273,6 +313,18 @@ struct SettingsView: View {
             mutedContentSyncMessage = L10n.uploaded
         } catch {
             mutedContentSyncMessage = error.localizedDescription
+        }
+    }
+
+    private func updateRestrictedMode(_ value: Bool) async {
+        isUpdatingRestrictedMode = true
+        restrictedModeMessage = nil
+        defer { isUpdatingRestrictedMode = false }
+
+        do {
+            try await store.setRestrictedModeEnabled(value)
+        } catch {
+            restrictedModeMessage = error.localizedDescription
         }
     }
 }

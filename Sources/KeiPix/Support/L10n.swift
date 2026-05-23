@@ -98,6 +98,8 @@ enum L10n {
     static var hideAIArtworks: String { text("Hide AI-generated artworks") }
     static var hideR18Artworks: String { text("Hide R-18 artworks") }
     static var hideR18GArtworks: String { text("Hide R-18G artworks") }
+    static var pixivRestrictedMode: String { text("Pixiv Restricted Mode") }
+    static var pixivRestrictedModeHint: String { text("Syncs Pixiv account restricted mode for adult content visibility across clients.") }
     static var searchFilters: String { text("Search Filters") }
     static var matchType: String { text("Match Type") }
     static var partialTagMatch: String { text("Partial tag match") }

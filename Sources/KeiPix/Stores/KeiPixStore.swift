@@ -33,6 +33,7 @@ final class KeiPixStore {
     var hideAIArtworks = UserDefaults.standard.bool(forKey: "hideAIArtworks")
     var hideR18Artworks = UserDefaults.standard.bool(forKey: "hideR18Artworks")
     var hideR18GArtworks = UserDefaults.standard.bool(forKey: "hideR18GArtworks")
+    var restrictedModeEnabled: Bool?
     var searchMatchType = KeiPixStore.loadEnum("searchMatchType", defaultValue: SearchMatchType.partialTags)
     var searchSort = KeiPixStore.loadEnum("searchSort", defaultValue: SearchSort.dateDescending)
     var searchAgeLimit = KeiPixStore.loadEnum("searchAgeLimit", defaultValue: SearchAgeLimit.unlimited)
@@ -72,6 +73,7 @@ final class KeiPixStore {
         do {
             session = try await api.loadSession()
             if session != nil {
+                await refreshRestrictedModeSetting()
                 await reloadCurrentFeed()
             }
         } catch {
@@ -92,6 +94,7 @@ final class KeiPixStore {
             session = try await api.login(code: code)
             isLoginPresented = false
             selectedRoute = .illustrations
+            await refreshRestrictedModeSetting()
             await reloadCurrentFeed()
         } catch {
             errorMessage = error.localizedDescription
@@ -102,6 +105,7 @@ final class KeiPixStore {
         do {
             try await api.clearSession()
             session = nil
+            restrictedModeEnabled = nil
             allArtworks = []
             artworks = []
             selectedArtwork = nil
@@ -673,6 +677,30 @@ final class KeiPixStore {
             deleteTags: [],
             deleteUserIDs: []
         )
+    }
+
+    func refreshRestrictedModeSetting() async {
+        guard session != nil else {
+            restrictedModeEnabled = nil
+            return
+        }
+
+        do {
+            restrictedModeEnabled = try await api.restrictedModeSettings().isRestrictedModeEnabled
+        } catch {
+            restrictedModeEnabled = nil
+        }
+    }
+
+    func setRestrictedModeEnabled(_ value: Bool) async throws {
+        let previous = restrictedModeEnabled
+        restrictedModeEnabled = value
+        do {
+            try await api.setRestrictedModeEnabled(value)
+        } catch {
+            restrictedModeEnabled = previous
+            throw error
+        }
     }
 
     @discardableResult

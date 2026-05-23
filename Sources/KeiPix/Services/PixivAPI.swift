@@ -214,6 +214,22 @@ actor PixivAPI {
         ) as EmptyResponse
     }
 
+    func restrictedModeSettings() async throws -> PixivRestrictedModeSettings {
+        try await requestJSON(
+            URL(string: "/v1/user/restricted-mode-settings", relativeTo: Endpoint.apiBase)!,
+            method: "GET",
+            form: nil
+        )
+    }
+
+    func setRestrictedModeEnabled(_ isEnabled: Bool) async throws {
+        _ = try await requestJSON(
+            URL(string: "/v1/user/restricted-mode-settings", relativeTo: Endpoint.apiBase)!,
+            method: "POST",
+            form: ["is_restricted_mode_enabled": isEnabled ? "true" : "false"]
+        ) as EmptyResponse
+    }
+
     func userDetail(userID: Int) async throws -> PixivUserDetail {
         try await requestJSON(
             URL(string: "/v1/user/detail?filter=for_android&user_id=\(userID)", relativeTo: Endpoint.apiBase)!,
