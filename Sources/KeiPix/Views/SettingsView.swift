@@ -55,6 +55,15 @@ struct SettingsView: View {
                 }
             }
 
+            Section(L10n.bookmarks) {
+                Picker(L10n.defaultBookmarkVisibility, selection: defaultBookmarkRestrictBinding) {
+                    ForEach(BookmarkRestrict.allCases) { restrict in
+                        Text(restrict.title).tag(restrict)
+                    }
+                }
+                .pickerStyle(.segmented)
+            }
+
             Section(L10n.mutedContent) {
                 Text(L10n.muteSyncHint)
                     .font(.caption)
@@ -247,6 +256,14 @@ struct SettingsView: View {
             store.restrictedModeEnabled ?? false
         } set: { value in
             Task { await updateRestrictedMode(value) }
+        }
+    }
+
+    private var defaultBookmarkRestrictBinding: Binding<BookmarkRestrict> {
+        Binding {
+            store.defaultBookmarkRestrict
+        } set: { value in
+            store.setDefaultBookmarkRestrict(value)
         }
     }
 

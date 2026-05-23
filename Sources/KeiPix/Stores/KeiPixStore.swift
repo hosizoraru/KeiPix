@@ -35,6 +35,7 @@ final class KeiPixStore {
     var hideR18Artworks = UserDefaults.standard.bool(forKey: "hideR18Artworks")
     var hideR18GArtworks = UserDefaults.standard.bool(forKey: "hideR18GArtworks")
     var restrictedModeEnabled: Bool?
+    var defaultBookmarkRestrict = KeiPixStore.loadEnum("defaultBookmarkRestrict", defaultValue: BookmarkRestrict.public)
     var searchMatchType = KeiPixStore.loadEnum("searchMatchType", defaultValue: SearchMatchType.partialTags)
     var searchSort = KeiPixStore.loadEnum("searchSort", defaultValue: SearchSort.dateDescending)
     var searchAgeLimit = KeiPixStore.loadEnum("searchAgeLimit", defaultValue: SearchAgeLimit.unlimited)
@@ -273,7 +274,7 @@ final class KeiPixStore {
         let nextValue = !artwork.isBookmarked
         do {
             if nextValue {
-                try await api.addBookmark(illustID: artwork.id, restrict: .public, tags: [])
+                try await api.addBookmark(illustID: artwork.id, restrict: defaultBookmarkRestrict, tags: [])
             } else {
                 try await api.deleteBookmark(illustID: artwork.id)
             }
@@ -295,6 +296,11 @@ final class KeiPixStore {
     func saveBookmark(_ artwork: PixivArtwork, restrict: BookmarkRestrict, tags: [String]) async throws {
         try await api.addBookmark(illustID: artwork.id, restrict: restrict, tags: tags)
         updateArtwork(artwork.id) { $0.isBookmarked = true }
+    }
+
+    func setDefaultBookmarkRestrict(_ restrict: BookmarkRestrict) {
+        defaultBookmarkRestrict = restrict
+        UserDefaults.standard.set(restrict.rawValue, forKey: "defaultBookmarkRestrict")
     }
 
     func setBookmarkTagFilter(_ tag: String?) {
