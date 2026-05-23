@@ -18,6 +18,10 @@ final class KeiPixStore {
         .flatMap(AppLanguage.init(rawValue:)) ?? .automatic
     var useOriginalImagesInDetail = UserDefaults.standard.bool(forKey: "useOriginalImagesInDetail")
     var galleryLayoutMode = KeiPixStore.loadGalleryLayoutMode()
+    var showContentBadges = UserDefaults.standard.object(forKey: "showContentBadges") as? Bool ?? true
+    var hideAIArtworks = UserDefaults.standard.bool(forKey: "hideAIArtworks")
+    var hideR18Artworks = UserDefaults.standard.bool(forKey: "hideR18Artworks")
+    var hideR18GArtworks = UserDefaults.standard.bool(forKey: "hideR18GArtworks")
     var trackpadGesturesEnabled = UserDefaults.standard.object(forKey: "trackpadGesturesEnabled") as? Bool ?? true
     var horizontalSwipeBehavior = UserDefaults.standard.string(forKey: "horizontalSwipeBehavior")
         .flatMap(TrackpadHorizontalSwipeBehavior.init(rawValue:)) ?? .pageOnly
@@ -25,6 +29,7 @@ final class KeiPixStore {
     var compactArtworkCards: Bool { galleryLayoutMode.usesCompactGrid }
 
     private let api = PixivAPI()
+    private var allArtworks: [PixivArtwork] = []
     private var nextURL: URL?
 
     init() {
@@ -65,6 +70,7 @@ final class KeiPixStore {
         do {
             try await api.clearSession()
             session = nil
+            allArtworks = []
             artworks = []
             selectedArtwork = nil
             nextURL = nil
@@ -80,6 +86,7 @@ final class KeiPixStore {
 
     func reloadCurrentFeed() async {
         guard session != nil else {
+            allArtworks = []
             artworks = []
             selectedArtwork = nil
             nextURL = nil
@@ -92,9 +99,9 @@ final class KeiPixStore {
 
         do {
             let response = try await loadFeed(for: selectedRoute)
-            artworks = response.illusts
+            allArtworks = response.illusts
             nextURL = response.nextURL
-            selectedArtwork = response.illusts.first
+            applyContentFilters()
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -108,8 +115,9 @@ final class KeiPixStore {
 
         do {
             let response = try await api.nextFeed(nextURL)
-            artworks.append(contentsOf: response.illusts)
+            allArtworks.append(contentsOf: response.illusts)
             self.nextURL = response.nextURL
+            applyContentFilters()
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -134,6 +142,9 @@ final class KeiPixStore {
         let nextValue = !user.isFollowed
         do {
             try await api.setFollow(userID: user.id, isFollowed: nextValue)
+            for index in allArtworks.indices where allArtworks[index].user.id == user.id {
+                allArtworks[index].user.isFollowed = nextValue
+            }
             for index in artworks.indices where artworks[index].user.id == user.id {
                 artworks[index].user.isFollowed = nextValue
             }
@@ -148,6 +159,29 @@ final class KeiPixStore {
     func setUseOriginalImagesInDetail(_ value: Bool) {
         useOriginalImagesInDetail = value
         UserDefaults.standard.set(value, forKey: "useOriginalImagesInDetail")
+    }
+
+    func setShowContentBadges(_ value: Bool) {
+        showContentBadges = value
+        UserDefaults.standard.set(value, forKey: "showContentBadges")
+    }
+
+    func setHideAIArtworks(_ value: Bool) {
+        hideAIArtworks = value
+        UserDefaults.standard.set(value, forKey: "hideAIArtworks")
+        applyContentFilters()
+    }
+
+    func setHideR18Artworks(_ value: Bool) {
+        hideR18Artworks = value
+        UserDefaults.standard.set(value, forKey: "hideR18Artworks")
+        applyContentFilters()
+    }
+
+    func setHideR18GArtworks(_ value: Bool) {
+        hideR18GArtworks = value
+        UserDefaults.standard.set(value, forKey: "hideR18GArtworks")
+        applyContentFilters()
     }
 
     func setAppLanguage(_ language: AppLanguage) {
@@ -223,12 +257,38 @@ final class KeiPixStore {
     }
 
     private func updateArtwork(_ id: Int, mutate: (inout PixivArtwork) -> Void) {
+        if let index = allArtworks.firstIndex(where: { $0.id == id }) {
+            mutate(&allArtworks[index])
+        }
         if let index = artworks.firstIndex(where: { $0.id == id }) {
             mutate(&artworks[index])
             if selectedArtwork?.id == id {
                 selectedArtwork = artworks[index]
             }
         }
+    }
+
+    private func applyContentFilters() {
+        let selectedID = selectedArtwork?.id
+        artworks = allArtworks.filter(passesContentFilters)
+        if let selectedID, let selected = artworks.first(where: { $0.id == selectedID }) {
+            selectedArtwork = selected
+        } else {
+            selectedArtwork = artworks.first
+        }
+    }
+
+    private func passesContentFilters(_ artwork: PixivArtwork) -> Bool {
+        if hideAIArtworks, artwork.isAI {
+            return false
+        }
+        if hideR18GArtworks, artwork.isR18G {
+            return false
+        }
+        if hideR18Artworks, artwork.isR18 {
+            return false
+        }
+        return true
     }
 
     private static func loadGalleryLayoutMode() -> GalleryLayoutMode {

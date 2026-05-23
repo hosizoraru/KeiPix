@@ -14,6 +14,10 @@ struct ArtworkSummaryView: View {
                     .lineLimit(3)
                     .textSelection(.enabled)
 
+                if store.showContentBadges {
+                    ArtworkContentBadgesView(badges: artwork.contentBadges)
+                }
+
                 HStack(spacing: 10) {
                     RemoteImageView(url: artwork.user.avatarURL)
                         .frame(width: 32, height: 32)

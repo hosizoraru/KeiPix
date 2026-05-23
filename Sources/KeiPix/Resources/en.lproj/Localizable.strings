@@ -24,6 +24,11 @@
 "English" = "English";
 "Appearance" = "Appearance";
 "Use original images in detail" = "Use original images in detail";
+"Content Filters" = "Content Filters";
+"Show content badges" = "Show content badges";
+"Hide AI-generated artworks" = "Hide AI-generated artworks";
+"Hide R-18 artworks" = "Hide R-18 artworks";
+"Hide R-18G artworks" = "Hide R-18G artworks";
 "Layout" = "Layout";
 "Gallery Layout" = "Gallery Layout";
 "Auto" = "Auto";
@@ -81,6 +86,14 @@
 "Toggle Zoom" = "Toggle Zoom";
 "Page %d of %d" = "Page %d of %d";
 "AI generated" = "AI generated";
+"R-18" = "R-18";
+"R-18G" = "R-18G";
+"Ugoira" = "Ugoira";
+"Muted" = "Muted";
+"Content Rating" = "Content Rating";
+"All Ages" = "All Ages";
+"Yes" = "Yes";
+"No" = "No";
 "Created" = "Created";
 "Artwork ID" = "Artwork ID";
 "Creator ID" = "Creator ID";

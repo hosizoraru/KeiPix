@@ -18,6 +18,13 @@ struct SettingsView: View {
                 Toggle(L10n.useOriginalImages, isOn: originalBinding)
             }
 
+            Section(L10n.contentFilters) {
+                Toggle(L10n.showContentBadges, isOn: showContentBadgesBinding)
+                Toggle(L10n.hideAIArtworks, isOn: hideAIBinding)
+                Toggle(L10n.hideR18Artworks, isOn: hideR18Binding)
+                Toggle(L10n.hideR18GArtworks, isOn: hideR18GBinding)
+            }
+
             Section(L10n.layout) {
                 Picker(L10n.galleryLayout, selection: galleryLayoutBinding) {
                     ForEach(GalleryLayoutMode.allCases) { mode in
@@ -68,6 +75,38 @@ struct SettingsView: View {
             store.useOriginalImagesInDetail
         } set: { value in
             store.setUseOriginalImagesInDetail(value)
+        }
+    }
+
+    private var showContentBadgesBinding: Binding<Bool> {
+        Binding {
+            store.showContentBadges
+        } set: { value in
+            store.setShowContentBadges(value)
+        }
+    }
+
+    private var hideAIBinding: Binding<Bool> {
+        Binding {
+            store.hideAIArtworks
+        } set: { value in
+            store.setHideAIArtworks(value)
+        }
+    }
+
+    private var hideR18Binding: Binding<Bool> {
+        Binding {
+            store.hideR18Artworks
+        } set: { value in
+            store.setHideR18Artworks(value)
+        }
+    }
+
+    private var hideR18GBinding: Binding<Bool> {
+        Binding {
+            store.hideR18GArtworks
+        } set: { value in
+            store.setHideR18GArtworks(value)
         }
     }
 

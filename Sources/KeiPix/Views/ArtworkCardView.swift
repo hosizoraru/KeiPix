@@ -4,6 +4,7 @@ struct ArtworkCardView: View {
     let artwork: PixivArtwork
     let isSelected: Bool
     let isCompact: Bool
+    var showContentBadges = true
     var displayStyle: ArtworkCardDisplayStyle = .regular
     var preferredHeight: CGFloat? = nil
     var fillsAvailableHeight = false
@@ -46,6 +47,12 @@ struct ArtworkCardView: View {
                     )
                     .frame(height: height * resolvedDisplayStyle.overlayFraction)
                 }
+
+            if showContentBadges {
+                ArtworkContentBadgesView(badges: artwork.contentBadges, style: .overlay)
+                    .padding(8)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            }
 
             VStack(alignment: .leading, spacing: 5) {
                 HStack(alignment: .firstTextBaseline, spacing: 6) {

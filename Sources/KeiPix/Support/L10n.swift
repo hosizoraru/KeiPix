@@ -27,6 +27,11 @@ enum L10n {
     static var english: String { text("English") }
     static var appearance: String { text("Appearance") }
     static var useOriginalImages: String { text("Use original images in detail") }
+    static var contentFilters: String { text("Content Filters") }
+    static var showContentBadges: String { text("Show content badges") }
+    static var hideAIArtworks: String { text("Hide AI-generated artworks") }
+    static var hideR18Artworks: String { text("Hide R-18 artworks") }
+    static var hideR18GArtworks: String { text("Hide R-18G artworks") }
     static var layout: String { text("Layout") }
     static var galleryLayout: String { text("Gallery Layout") }
     static var auto: String { text("Auto") }
@@ -83,6 +88,14 @@ enum L10n {
     static var resetZoom: String { text("Reset Zoom") }
     static var toggleZoom: String { text("Toggle Zoom") }
     static var aiGenerated: String { text("AI generated") }
+    static var r18: String { text("R-18") }
+    static var r18g: String { text("R-18G") }
+    static var ugoira: String { text("Ugoira") }
+    static var muted: String { text("Muted") }
+    static var contentRating: String { text("Content Rating") }
+    static var allAges: String { text("All Ages") }
+    static var yes: String { text("Yes") }
+    static var no: String { text("No") }
     static var created: String { text("Created") }
     static var artworkID: String { text("Artwork ID") }
     static var creatorID: String { text("Creator ID") }

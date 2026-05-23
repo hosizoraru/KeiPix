@@ -94,7 +94,27 @@ private struct DetailMetadata: View {
                     .foregroundStyle(.secondary)
                 Text(artwork.createDate.formatted(date: .abbreviated, time: .shortened))
             }
+            GridRow {
+                Text(L10n.contentRating)
+                    .foregroundStyle(.secondary)
+                Text(contentRating)
+            }
+            GridRow {
+                Text(L10n.aiGenerated)
+                    .foregroundStyle(.secondary)
+                Text(artwork.isAI ? L10n.yes : L10n.no)
+            }
         }
         .font(.caption)
+    }
+
+    private var contentRating: String {
+        if artwork.isR18G {
+            return L10n.r18g
+        }
+        if artwork.isR18 {
+            return L10n.r18
+        }
+        return L10n.allAges
     }
 }

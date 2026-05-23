@@ -24,6 +24,11 @@
 "English" = "English";
 "Appearance" = "外观";
 "Use original images in detail" = "详情页使用原图";
+"Content Filters" = "内容过滤";
+"Show content badges" = "显示内容标识";
+"Hide AI-generated artworks" = "隐藏 AI 生成作品";
+"Hide R-18 artworks" = "隐藏 R-18 作品";
+"Hide R-18G artworks" = "隐藏 R-18G 作品";
 "Layout" = "布局";
 "Gallery Layout" = "画廊布局";
 "Auto" = "自动";
@@ -81,6 +86,14 @@
 "Toggle Zoom" = "切换缩放";
 "Page %d of %d" = "第 %d / %d 页";
 "AI generated" = "AI 生成";
+"R-18" = "R-18";
+"R-18G" = "R-18G";
+"Ugoira" = "动图";
+"Muted" = "已屏蔽";
+"Content Rating" = "内容分级";
+"All Ages" = "全年龄";
+"Yes" = "是";
+"No" = "否";
 "Created" = "创建时间";
 "Artwork ID" = "作品 ID";
 "Creator ID" = "创作者 ID";

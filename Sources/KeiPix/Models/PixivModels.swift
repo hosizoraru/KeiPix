@@ -127,6 +127,8 @@ struct PixivArtwork: Decodable, Identifiable, Hashable, Sendable {
     var isBookmarked: Bool
     let isMuted: Bool
     let isAI: Bool
+    let sanityLevel: Int
+    let xRestrict: Int
     let images: [PixivImageSet]
 
     var thumbnailURL: URL? { images.first?.medium ?? images.first?.squareMedium }
@@ -138,6 +140,30 @@ struct PixivArtwork: Decodable, Identifiable, Hashable, Sendable {
         return CGFloat(width) / CGFloat(height)
     }
     var isUgoira: Bool { type == "ugoira" }
+    var isR18G: Bool {
+        xRestrict == 2 || tags.contains { $0.name.localizedCaseInsensitiveCompare("R-18G") == .orderedSame }
+    }
+    var isR18: Bool {
+        xRestrict == 1 || isR18G || tags.contains { $0.name.localizedCaseInsensitiveContains("R-18") }
+    }
+    var contentBadges: [ArtworkContentBadge] {
+        var badges: [ArtworkContentBadge] = []
+        if isR18G {
+            badges.append(.r18g)
+        } else if isR18 {
+            badges.append(.r18)
+        }
+        if isAI {
+            badges.append(.aiGenerated)
+        }
+        if isUgoira {
+            badges.append(.ugoira)
+        }
+        if isMuted {
+            badges.append(.muted)
+        }
+        return badges
+    }
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -158,6 +184,8 @@ struct PixivArtwork: Decodable, Identifiable, Hashable, Sendable {
         case isBookmarked = "is_bookmarked"
         case isMuted = "is_muted"
         case illustAIType = "illust_ai_type"
+        case sanityLevel = "sanity_level"
+        case xRestrict = "x_restrict"
     }
 
     enum MetaSingleKeys: String, CodingKey {
@@ -185,6 +213,8 @@ struct PixivArtwork: Decodable, Identifiable, Hashable, Sendable {
         isBookmarked = try container.decodeIfPresent(Bool.self, forKey: .isBookmarked) ?? false
         isMuted = try container.decodeIfPresent(Bool.self, forKey: .isMuted) ?? false
         isAI = (try container.decodeIfPresent(Int.self, forKey: .illustAIType) ?? 0) == 2
+        sanityLevel = try container.decodeIfPresent(Int.self, forKey: .sanityLevel) ?? 0
+        xRestrict = try container.decodeIfPresent(Int.self, forKey: .xRestrict) ?? 0
 
         let metaPages = try container.decodeIfPresent([[String: PixivImageSet]].self, forKey: .metaPages) ?? []
         var decodedImages = metaPages.compactMap { $0["image_urls"] }

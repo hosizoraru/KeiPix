@@ -43,6 +43,18 @@ struct ContentView: View {
             }
 
             ToolbarItem(placement: .primaryAction) {
+                Menu {
+                    Toggle(L10n.showContentBadges, isOn: showContentBadgesBinding)
+                    Divider()
+                    Toggle(L10n.hideAIArtworks, isOn: hideAIBinding)
+                    Toggle(L10n.hideR18Artworks, isOn: hideR18Binding)
+                    Toggle(L10n.hideR18GArtworks, isOn: hideR18GBinding)
+                } label: {
+                    Label(L10n.contentFilters, systemImage: "line.3.horizontal.decrease.circle")
+                }
+            }
+
+            ToolbarItem(placement: .primaryAction) {
                 Picker(L10n.galleryLayout, selection: galleryLayoutBinding) {
                     ForEach(GalleryLayoutMode.allCases) { mode in
                         Text(mode.title).tag(mode)
@@ -104,6 +116,38 @@ struct ContentView: View {
             store.galleryLayoutMode
         } set: { value in
             store.setGalleryLayoutMode(value)
+        }
+    }
+
+    private var showContentBadgesBinding: Binding<Bool> {
+        Binding {
+            store.showContentBadges
+        } set: { value in
+            store.setShowContentBadges(value)
+        }
+    }
+
+    private var hideAIBinding: Binding<Bool> {
+        Binding {
+            store.hideAIArtworks
+        } set: { value in
+            store.setHideAIArtworks(value)
+        }
+    }
+
+    private var hideR18Binding: Binding<Bool> {
+        Binding {
+            store.hideR18Artworks
+        } set: { value in
+            store.setHideR18Artworks(value)
+        }
+    }
+
+    private var hideR18GBinding: Binding<Bool> {
+        Binding {
+            store.hideR18GArtworks
+        } set: { value in
+            store.setHideR18GArtworks(value)
         }
     }
 }
