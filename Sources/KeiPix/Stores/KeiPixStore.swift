@@ -223,6 +223,16 @@ final class KeiPixStore {
         try await api.addIllustComment(illustID: artwork.id, comment: comment)
     }
 
+    func relatedArtworks(for artwork: PixivArtwork) async throws -> PixivFeedResponse {
+        let response = try await api.relatedIllusts(illustID: artwork.id)
+        return filteredFeedResponse(response)
+    }
+
+    func nextRelatedArtworks(_ url: URL) async throws -> PixivFeedResponse {
+        let response = try await api.nextFeed(url)
+        return filteredFeedResponse(response)
+    }
+
     func setUseOriginalImagesInDetail(_ value: Bool) {
         useOriginalImagesInDetail = value
         UserDefaults.standard.set(value, forKey: "useOriginalImagesInDetail")
@@ -506,6 +516,10 @@ final class KeiPixStore {
         } else {
             selectedArtwork = artworks.first
         }
+    }
+
+    private func filteredFeedResponse(_ response: PixivFeedResponse) -> PixivFeedResponse {
+        PixivFeedResponse(illusts: response.illusts.filter(passesContentFilters), nextURL: response.nextURL)
     }
 
     private func passesContentFilters(_ artwork: PixivArtwork) -> Bool {

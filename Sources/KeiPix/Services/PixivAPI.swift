@@ -111,6 +111,13 @@ actor PixivAPI {
         ])
     }
 
+    func relatedIllusts(illustID: Int) async throws -> PixivFeedResponse {
+        try await requestFeed(path: "/v2/illust/related", query: [
+            "filter": "for_android",
+            "illust_id": "\(illustID)"
+        ])
+    }
+
     func ranking(mode: String) async throws -> PixivFeedResponse {
         try await requestFeed(path: "/v1/illust/ranking", query: [
             "filter": "for_android",

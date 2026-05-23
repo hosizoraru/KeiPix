@@ -71,6 +71,10 @@ private struct ArtworkInspectorView: View {
                     ArtworkCommentsView(artwork: artwork, store: store)
                         .padding(.horizontal, 18)
 
+                    ArtworkRelatedView(artwork: artwork, store: store)
+                        .id(artwork.id)
+                        .padding(.horizontal, 18)
+
                     ArtworkInformationSections(
                         artwork: artwork,
                         captionExpanded: $captionExpanded,
