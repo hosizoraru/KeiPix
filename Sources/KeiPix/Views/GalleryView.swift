@@ -14,48 +14,43 @@ struct GalleryView: View {
                 EmptyStateView(title: L10n.noArtworkTitle, subtitle: L10n.noArtworkSubtitle, systemImage: "photo.on.rectangle.angled")
             } else {
                 ScrollView {
-                    FeedHeaderView(store: store)
-                        .padding(.horizontal, 18)
-                        .padding(.top, 18)
+                    LazyVStack(spacing: 0, pinnedViews: [.sectionHeaders]) {
+                        Section {
+                            LazyVGrid(columns: columns, spacing: 12) {
+                                ForEach(store.artworks) { artwork in
+                                    ArtworkCardView(
+                                        artwork: artwork,
+                                        isSelected: store.selectedArtwork?.id == artwork.id,
+                                        isCompact: store.compactArtworkCards
+                                    ) {
+                                        store.selectedArtwork = artwork
+                                    }
+                                    .contextMenu {
+                                        Button(artwork.isBookmarked ? L10n.removeBookmark : L10n.bookmark) {
+                                            Task { await store.toggleBookmark(artwork) }
+                                        }
+                                        if let url = artwork.pixivURL {
+                                            Link(L10n.openInPixiv, destination: url)
+                                        }
+                                    }
+                                }
 
-                    LazyVGrid(columns: columns, spacing: 14) {
-                        ForEach(store.artworks) { artwork in
-                            ArtworkCardView(
-                                artwork: artwork,
-                                isSelected: store.selectedArtwork?.id == artwork.id,
-                                isCompact: store.compactArtworkCards
-                            )
-                            .onTapGesture {
-                                store.selectedArtwork = artwork
-                            }
-                            .contextMenu {
-                                Button(artwork.isBookmarked ? L10n.removeBookmark : L10n.bookmark) {
-                                    Task { await store.toggleBookmark(artwork) }
-                                }
-                                if let url = artwork.pixivURL {
-                                    Link(L10n.openInPixiv, destination: url)
+                                if store.hasNextPage {
+                                    LoadMoreTile(store: store)
                                 }
                             }
-                        }
-
-                        if store.hasNextPage {
-                            Button {
-                                Task { await store.loadMore() }
-                            } label: {
-                                if store.isLoadingMore {
-                                    ProgressView()
-                                } else {
-                                    Label(L10n.loadMore, systemImage: "arrow.down.circle")
-                                }
-                            }
-                            .buttonStyle(.bordered)
-                            .frame(height: 80)
-                            .gridCellColumns(2)
+                            .padding(.horizontal, 18)
+                            .padding(.top, 14)
+                            .padding(.bottom, 20)
+                        } header: {
+                            FeedHeaderView(store: store)
+                                .padding(.horizontal, 18)
+                                .padding(.vertical, 10)
+                                .background(.bar)
                         }
                     }
-                    .padding(.horizontal, 18)
-                    .padding(.bottom, 18)
                 }
+                .scrollEdgeEffectStyle(.soft, for: .top)
             }
         }
         .navigationTitle(store.selectedRoute.title)
@@ -63,7 +58,7 @@ struct GalleryView: View {
 
     private var columns: [GridItem] {
         [
-            GridItem(.adaptive(minimum: store.compactArtworkCards ? 160 : 190, maximum: store.compactArtworkCards ? 220 : 270), spacing: 14)
+            GridItem(.adaptive(minimum: store.compactArtworkCards ? 148 : 190, maximum: store.compactArtworkCards ? 210 : 260), spacing: 12)
         ]
     }
 }
@@ -75,7 +70,7 @@ private struct FeedHeaderView: View {
         HStack(spacing: 12) {
             VStack(alignment: .leading, spacing: 3) {
                 Text(store.selectedRoute.title)
-                    .font(.title2.weight(.semibold))
+                    .font(.headline)
                 Text("\(store.artworks.count.formatted()) \(L10n.results) · \(store.hasNextPage ? L10n.nextPageAvailable : L10n.noMorePages)")
                     .font(.caption)
                     .foregroundStyle(.secondary)
@@ -92,8 +87,32 @@ private struct FeedHeaderView: View {
                 .buttonStyle(.bordered)
             }
         }
-        .cardPadding()
-        .keiGlass(18)
+    }
+}
+
+private struct LoadMoreTile: View {
+    @Bindable var store: KeiPixStore
+
+    var body: some View {
+        Button {
+            Task { await store.loadMore() }
+        } label: {
+            VStack(spacing: 8) {
+                if store.isLoadingMore {
+                    ProgressView()
+                } else {
+                    Image(systemName: "arrow.down.circle")
+                        .font(.title3)
+                    Text(L10n.loadMore)
+                        .font(.caption.weight(.medium))
+                }
+            }
+            .frame(maxWidth: .infinity)
+            .frame(height: store.compactArtworkCards ? 150 : 210)
+            .contentShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .keiInteractiveGlass(18)
     }
 }
 

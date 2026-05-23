@@ -3,7 +3,17 @@ import SwiftUI
 extension View {
     func keiGlass(_ radius: CGFloat = 18) -> some View {
         self
-            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: radius, style: .continuous))
+            .glassEffect(.regular, in: RoundedRectangle(cornerRadius: radius, style: .continuous))
+    }
+
+    func keiInteractiveGlass(_ radius: CGFloat = 18) -> some View {
+        self
+            .glassEffect(.regular.interactive(), in: RoundedRectangle(cornerRadius: radius, style: .continuous))
+    }
+
+    func keiPanel(_ radius: CGFloat = 16) -> some View {
+        self
+            .background(.thinMaterial, in: RoundedRectangle(cornerRadius: radius, style: .continuous))
             .overlay {
                 RoundedRectangle(cornerRadius: radius, style: .continuous)
                     .stroke(.quaternary, lineWidth: 1)
