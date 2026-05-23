@@ -18,6 +18,14 @@ enum L10n {
     static var openInPixiv: String { text("Open in Pixiv") }
     static var bookmark: String { text("Bookmark") }
     static var removeBookmark: String { text("Remove Bookmark") }
+    static var editBookmark: String { text("Edit Bookmark") }
+    static var saveBookmark: String { text("Save Bookmark") }
+    static var bookmarkTags: String { text("Bookmark Tags") }
+    static var addTag: String { text("Add Tag") }
+    static var tagName: String { text("Tag Name") }
+    static var noBookmarkTags: String { text("No bookmark tags") }
+    static var selectAll: String { text("Select All") }
+    static var clearSelection: String { text("Clear Selection") }
     static var follow: String { text("Follow") }
     static var unfollow: String { text("Unfollow") }
     static var settings: String { text("Settings") }

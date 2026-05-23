@@ -140,11 +140,34 @@ final class KeiPixStore {
     func toggleBookmark(_ artwork: PixivArtwork) async {
         let nextValue = !artwork.isBookmarked
         do {
-            try await api.setBookmark(illustID: artwork.id, isBookmarked: nextValue)
+            if nextValue {
+                try await api.addBookmark(illustID: artwork.id, restrict: .public, tags: [])
+            } else {
+                try await api.deleteBookmark(illustID: artwork.id)
+            }
             updateArtwork(artwork.id) { $0.isBookmarked = nextValue }
         } catch {
             errorMessage = error.localizedDescription
         }
+    }
+
+    func bookmarkDetail(for artwork: PixivArtwork) async throws -> PixivBookmarkDetail {
+        try await api.bookmarkDetail(illustID: artwork.id)
+    }
+
+    func bookmarkTagSuggestions(restrict: BookmarkRestrict) async throws -> [PixivBookmarkTag] {
+        guard let userID = session?.user.id else { throw PixivAPIError.missingSession }
+        return try await api.bookmarkTags(userID: userID, restrict: restrict)
+    }
+
+    func saveBookmark(_ artwork: PixivArtwork, restrict: BookmarkRestrict, tags: [String]) async throws {
+        try await api.addBookmark(illustID: artwork.id, restrict: restrict, tags: tags)
+        updateArtwork(artwork.id) { $0.isBookmarked = true }
+    }
+
+    func removeBookmark(_ artwork: PixivArtwork) async throws {
+        try await api.deleteBookmark(illustID: artwork.id)
+        updateArtwork(artwork.id) { $0.isBookmarked = false }
     }
 
     func toggleFollow(_ user: PixivUser) async {

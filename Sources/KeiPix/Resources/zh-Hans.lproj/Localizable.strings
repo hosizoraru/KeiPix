@@ -15,6 +15,14 @@
 "Open in Pixiv" = "在 Pixiv 打开";
 "Bookmark" = "收藏";
 "Remove Bookmark" = "取消收藏";
+"Edit Bookmark" = "编辑收藏";
+"Save Bookmark" = "保存收藏";
+"Bookmark Tags" = "收藏标签";
+"Add Tag" = "添加标签";
+"Tag Name" = "标签名";
+"No bookmark tags" = "暂无收藏标签";
+"Select All" = "全选";
+"Clear Selection" = "清空选择";
 "Follow" = "关注";
 "Unfollow" = "取消关注";
 "Settings" = "设置";

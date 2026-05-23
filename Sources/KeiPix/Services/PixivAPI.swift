@@ -172,20 +172,47 @@ actor PixivAPI {
         try await requestData(url, includeAuth: false, includePixivImageReferer: true)
     }
 
-    func setBookmark(illustID: Int, isBookmarked: Bool) async throws {
-        if isBookmarked {
-            _ = try await requestJSON(
-                URL(string: "/v2/illust/bookmark/add", relativeTo: Endpoint.apiBase)!,
-                method: "POST",
-                form: ["illust_id": "\(illustID)", "restrict": "public"]
-            ) as EmptyResponse
-        } else {
-            _ = try await requestJSON(
-                URL(string: "/v1/illust/bookmark/delete", relativeTo: Endpoint.apiBase)!,
-                method: "POST",
-                form: ["illust_id": "\(illustID)"]
-            ) as EmptyResponse
+    func bookmarkDetail(illustID: Int) async throws -> PixivBookmarkDetail {
+        var components = URLComponents(url: URL(string: "/v2/illust/bookmark/detail", relativeTo: Endpoint.apiBase)!, resolvingAgainstBaseURL: true)!
+        components.queryItems = [URLQueryItem(name: "illust_id", value: "\(illustID)")]
+        guard let url = components.url else { throw PixivAPIError.invalidResponse }
+        let response: PixivBookmarkDetailResponse = try await requestJSON(url, method: "GET", form: nil)
+        return response.detail
+    }
+
+    func bookmarkTags(userID: String, restrict: BookmarkRestrict) async throws -> [PixivBookmarkTag] {
+        var components = URLComponents(url: URL(string: "/v1/user/bookmark-tags/illust", relativeTo: Endpoint.apiBase)!, resolvingAgainstBaseURL: true)!
+        components.queryItems = [
+            URLQueryItem(name: "user_id", value: userID),
+            URLQueryItem(name: "restrict", value: restrict.rawValue)
+        ]
+        guard let url = components.url else { throw PixivAPIError.invalidResponse }
+        let response: PixivBookmarkTagsResponse = try await requestJSON(url, method: "GET", form: nil)
+        return response.bookmarkTags
+    }
+
+    func addBookmark(illustID: Int, restrict: BookmarkRestrict, tags: [String]) async throws {
+        var form = [
+            "illust_id": "\(illustID)",
+            "restrict": restrict.rawValue
+        ]
+        if tags.isEmpty == false {
+            form["tags[]"] = tags.joined(separator: " ")
         }
+
+        _ = try await requestJSON(
+            URL(string: "/v2/illust/bookmark/add", relativeTo: Endpoint.apiBase)!,
+            method: "POST",
+            form: form
+        ) as EmptyResponse
+    }
+
+    func deleteBookmark(illustID: Int) async throws {
+        _ = try await requestJSON(
+            URL(string: "/v1/illust/bookmark/delete", relativeTo: Endpoint.apiBase)!,
+            method: "POST",
+            form: ["illust_id": "\(illustID)"]
+        ) as EmptyResponse
     }
 
     func setFollow(userID: Int, isFollowed: Bool) async throws {

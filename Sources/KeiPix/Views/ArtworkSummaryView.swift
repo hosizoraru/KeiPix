@@ -56,6 +56,8 @@ private struct ArtworkActionStrip: View {
     let pageIndex: Int
     let pageCount: Int
 
+    @State private var isBookmarkEditorPresented = false
+
     var body: some View {
         GlassEffectContainer {
             VStack(spacing: 12) {
@@ -67,13 +69,16 @@ private struct ArtworkActionStrip: View {
 
                 HStack(spacing: 10) {
                     Button {
-                        Task { await store.toggleBookmark(artwork) }
+                        isBookmarkEditorPresented = true
                     } label: {
-                        Label(artwork.isBookmarked ? L10n.removeBookmark : L10n.bookmark, systemImage: artwork.isBookmarked ? "bookmark.fill" : "bookmark")
+                        Label(artwork.isBookmarked ? L10n.editBookmark : L10n.bookmark, systemImage: artwork.isBookmarked ? "bookmark.fill" : "bookmark")
                             .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.glassProminent)
                     .controlSize(.small)
+                    .sheet(isPresented: $isBookmarkEditorPresented) {
+                        BookmarkEditorView(artwork: artwork, store: store)
+                    }
 
                     if let url = artwork.pixivURL {
                         Link(destination: url) {

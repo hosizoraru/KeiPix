@@ -15,6 +15,14 @@
 "Open in Pixiv" = "Open in Pixiv";
 "Bookmark" = "Bookmark";
 "Remove Bookmark" = "Remove Bookmark";
+"Edit Bookmark" = "Edit Bookmark";
+"Save Bookmark" = "Save Bookmark";
+"Bookmark Tags" = "Bookmark Tags";
+"Add Tag" = "Add Tag";
+"Tag Name" = "Tag Name";
+"No bookmark tags" = "No bookmark tags";
+"Select All" = "Select All";
+"Clear Selection" = "Clear Selection";
 "Follow" = "Follow";
 "Unfollow" = "Unfollow";
 "Settings" = "Settings";
