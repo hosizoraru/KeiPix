@@ -10,6 +10,7 @@ struct ArtworkCommentsView: View {
     @State private var nextURL: URL?
     @State private var totalComments: Int?
     @State private var draft = ""
+    @State private var replyTarget: PixivComment?
     @State private var isLoading = false
     @State private var isLoadingMore = false
     @State private var isPosting = false
@@ -34,7 +35,9 @@ struct ArtworkCommentsView: View {
                 } else {
                     LazyVStack(alignment: .leading, spacing: 12) {
                         ForEach(comments) { comment in
-                            CommentRow(comment: comment)
+                            CommentThreadRow(comment: comment, store: store) { target in
+                                replyTarget = target
+                            }
                         }
                     }
                 }
@@ -84,7 +87,26 @@ struct ArtworkCommentsView: View {
 
     private var composer: some View {
         VStack(alignment: .trailing, spacing: 8) {
-            TextField(L10n.writeComment, text: $draft, axis: .vertical)
+            if let replyTarget {
+                HStack(spacing: 8) {
+                    Label(replyTargetTitle(replyTarget), systemImage: "arrowshape.turn.up.left")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+
+                    Spacer()
+
+                    Button {
+                        self.replyTarget = nil
+                    } label: {
+                        Label(L10n.cancelReply, systemImage: "xmark.circle")
+                    }
+                    .labelStyle(.iconOnly)
+                    .buttonStyle(.borderless)
+                }
+            }
+
+            TextField(replyTarget.map(replyTargetTitle) ?? L10n.writeComment, text: $draft, axis: .vertical)
                 .textFieldStyle(.roundedBorder)
                 .lineLimit(2...5)
                 .disabled(isPosting)
@@ -115,6 +137,10 @@ struct ArtworkCommentsView: View {
 
     private var trimmedDraft: String {
         draft.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private func replyTargetTitle(_ comment: PixivComment) -> String {
+        String(format: L10n.replyToFormat, comment.user?.name ?? L10n.comments)
     }
 
     private func loadInitial() async {
@@ -159,8 +185,9 @@ struct ArtworkCommentsView: View {
         defer { isPosting = false }
 
         do {
-            try await store.postComment(comment, for: artwork)
+            try await store.postComment(comment, for: artwork, parentCommentID: replyTarget?.id)
             draft = ""
+            replyTarget = nil
             hasLoaded = false
             await loadInitial()
         } catch {
@@ -169,8 +196,115 @@ struct ArtworkCommentsView: View {
     }
 }
 
+private struct CommentThreadRow: View {
+    let comment: PixivComment
+    @Bindable var store: KeiPixStore
+    let reply: (PixivComment) -> Void
+
+    @State private var replies: [PixivComment] = []
+    @State private var nextURL: URL?
+    @State private var isLoadingReplies = false
+    @State private var isExpanded = false
+    @State private var errorMessage: String?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            CommentRow(comment: comment) {
+                reply(comment)
+            }
+
+            if isExpanded {
+                VStack(alignment: .leading, spacing: 8) {
+                    ForEach(replies) { replyComment in
+                        CommentRow(comment: replyComment) {
+                            reply(replyComment)
+                        }
+                        .padding(.leading, 28)
+                    }
+
+                    if nextURL != nil {
+                        Button {
+                            Task { await loadMoreReplies() }
+                        } label: {
+                            Label(isLoadingReplies ? L10n.loading : L10n.loadMoreComments, systemImage: "ellipsis.circle")
+                        }
+                        .buttonStyle(.bordered)
+                        .controlSize(.small)
+                        .disabled(isLoadingReplies)
+                        .padding(.leading, 28)
+                    }
+                }
+            }
+
+            if comment.hasReplies || replies.isEmpty == false {
+                Button {
+                    Task { await toggleReplies() }
+                } label: {
+                    if isLoadingReplies {
+                        ProgressView()
+                            .controlSize(.small)
+                    } else {
+                        Label(isExpanded ? L10n.hideReplies : L10n.viewReplies, systemImage: "arrowshape.turn.up.left")
+                    }
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
+                .disabled(isLoadingReplies)
+                .padding(.leading, 40)
+            }
+
+            if let errorMessage {
+                Text(errorMessage)
+                    .font(.caption)
+                    .foregroundStyle(.red)
+                    .textSelection(.enabled)
+                    .padding(.leading, 40)
+            }
+        }
+    }
+
+    private func toggleReplies() async {
+        if replies.isEmpty == false {
+            isExpanded.toggle()
+            return
+        }
+        await loadInitialReplies()
+    }
+
+    private func loadInitialReplies() async {
+        isLoadingReplies = true
+        errorMessage = nil
+        defer { isLoadingReplies = false }
+
+        do {
+            let response = try await store.commentReplies(for: comment)
+            replies = response.comments
+            nextURL = response.nextURL
+            isExpanded = true
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    private func loadMoreReplies() async {
+        guard let nextURL else { return }
+        isLoadingReplies = true
+        errorMessage = nil
+        defer { isLoadingReplies = false }
+
+        do {
+            let response = try await store.nextComments(nextURL)
+            replies.append(contentsOf: response.comments)
+            self.nextURL = response.nextURL
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+}
+
 private struct CommentRow: View {
     let comment: PixivComment
+    let reply: () -> Void
 
     var body: some View {
         HStack(alignment: .top, spacing: 10) {
@@ -217,6 +351,25 @@ private struct CommentRow: View {
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
+
+                HStack(spacing: 8) {
+                    Button {
+                        reply()
+                    } label: {
+                        Label(L10n.reply, systemImage: "arrowshape.turn.up.left")
+                    }
+                    .buttonStyle(.borderless)
+
+                    if let text = comment.comment, text.isEmpty == false {
+                        Button {
+                            PasteboardWriter.copy(text)
+                        } label: {
+                            Label(L10n.copyComment, systemImage: "doc.on.doc")
+                        }
+                        .buttonStyle(.borderless)
+                    }
+                }
+                .font(.caption)
             }
         }
         .padding(10)

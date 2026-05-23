@@ -406,6 +406,13 @@ actor PixivAPI {
         try await requestJSON(url, method: "GET", form: nil)
     }
 
+    func illustCommentReplies(commentID: Int) async throws -> PixivCommentResponse {
+        var components = URLComponents(url: URL(string: "/v2/illust/comment/replies", relativeTo: Endpoint.apiBase)!, resolvingAgainstBaseURL: true)!
+        components.queryItems = [URLQueryItem(name: "comment_id", value: "\(commentID)")]
+        guard let url = components.url else { throw PixivAPIError.invalidResponse }
+        return try await requestJSON(url, method: "GET", form: nil)
+    }
+
     func addIllustComment(illustID: Int, comment: String, parentCommentID: Int? = nil) async throws {
         var form = [
             "illust_id": "\(illustID)",

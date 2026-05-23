@@ -470,8 +470,12 @@ final class KeiPixStore {
         try await api.nextComments(url)
     }
 
-    func postComment(_ comment: String, for artwork: PixivArtwork) async throws {
-        try await api.addIllustComment(illustID: artwork.id, comment: comment)
+    func commentReplies(for comment: PixivComment) async throws -> PixivCommentResponse {
+        try await api.illustCommentReplies(commentID: comment.id)
+    }
+
+    func postComment(_ comment: String, for artwork: PixivArtwork, parentCommentID: Int? = nil) async throws {
+        try await api.addIllustComment(illustID: artwork.id, comment: comment, parentCommentID: parentCommentID)
     }
 
     func relatedArtworks(for artwork: PixivArtwork) async throws -> PixivFeedResponse {

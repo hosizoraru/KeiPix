@@ -228,6 +228,12 @@ enum L10n {
     static var postComment: String { text("Post Comment") }
     static var noComments: String { text("No comments") }
     static var loadMoreComments: String { text("Load More Comments") }
+    static var reply: String { text("Reply") }
+    static var replyToFormat: String { text("Reply to %@") }
+    static var cancelReply: String { text("Cancel Reply") }
+    static var viewReplies: String { text("View Replies") }
+    static var hideReplies: String { text("Hide Replies") }
+    static var copyComment: String { text("Copy Comment") }
     static var replies: String { text("Replies") }
     static var relatedArtworks: String { text("Related Artworks") }
     static var noRelatedArtworks: String { text("No related artworks") }

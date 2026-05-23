@@ -225,6 +225,12 @@
 "Post Comment" = "发送评论";
 "No comments" = "暂无评论";
 "Load More Comments" = "加载更多评论";
+"Reply" = "回复";
+"Reply to %@" = "回复给 %@";
+"Cancel Reply" = "取消回复";
+"View Replies" = "查看回复";
+"Hide Replies" = "收起回复";
+"Copy Comment" = "复制评论";
 "Replies" = "回复";
 "Related Artworks" = "相关作品";
 "No related artworks" = "暂无相关作品";

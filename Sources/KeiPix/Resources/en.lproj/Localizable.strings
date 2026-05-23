@@ -225,6 +225,12 @@
 "Post Comment" = "Post Comment";
 "No comments" = "No comments";
 "Load More Comments" = "Load More Comments";
+"Reply" = "Reply";
+"Reply to %@" = "Reply to %@";
+"Cancel Reply" = "Cancel Reply";
+"View Replies" = "View Replies";
+"Hide Replies" = "Hide Replies";
+"Copy Comment" = "Copy Comment";
 "Replies" = "Replies";
 "Related Artworks" = "Related Artworks";
 "No related artworks" = "No related artworks";
