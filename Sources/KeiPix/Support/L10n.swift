@@ -72,7 +72,9 @@ enum L10n {
     static var follow: String { text("Follow") }
     static var followPublicly: String { text("Follow Publicly") }
     static var followPrivately: String { text("Follow Privately") }
+    static var followUsingDefault: String { text("Follow Using Default") }
     static var followVisibility: String { text("Follow Visibility") }
+    static var defaultFollowVisibility: String { text("Default Follow Visibility") }
     static var followingPublicly: String { text("Following Publicly") }
     static var followingPrivately: String { text("Following Privately") }
     static var unfollow: String { text("Unfollow") }

@@ -98,8 +98,7 @@ struct UserPreviewListView: View {
                                         openManga: {
                                             Task { await store.openUserFeed(user: preview.user, route: .userManga) }
                                         },
-                                        toggleFollow: {
-                                            restrict in
+                                        toggleFollow: { restrict in
                                             Task { await toggleFollow(preview.user, restrict: restrict) }
                                         },
                                         selectArtwork: { artwork in
@@ -268,7 +267,7 @@ struct UserPreviewListView: View {
         }
     }
 
-    private func toggleFollow(_ user: PixivUser, restrict: BookmarkRestrict = .public) async {
+    private func toggleFollow(_ user: PixivUser, restrict: BookmarkRestrict? = nil) async {
         await store.toggleFollow(user, restrict: restrict)
         for index in previews.indices where previews[index].user.id == user.id {
             var updatedUser = previews[index].user
@@ -284,7 +283,7 @@ private struct UserPreviewCard: View {
     let openProfile: () -> Void
     let openIllustrations: () -> Void
     let openManga: () -> Void
-    let toggleFollow: (BookmarkRestrict) -> Void
+    let toggleFollow: (BookmarkRestrict?) -> Void
     let selectArtwork: (PixivArtwork) -> Void
 
     var body: some View {
@@ -311,11 +310,17 @@ private struct UserPreviewCard: View {
 
                 if preview.user.isFollowed {
                     Button(L10n.unfollow) {
-                        toggleFollow(.public)
+                        toggleFollow(nil)
                     }
                     .buttonStyle(.bordered)
                 } else {
                     Menu {
+                        Button(L10n.followUsingDefault) {
+                            toggleFollow(nil)
+                        }
+
+                        Divider()
+
                         Button(L10n.followPublicly) {
                             toggleFollow(.public)
                         }
@@ -373,9 +378,12 @@ private struct UserPreviewCard: View {
             }
             if preview.user.isFollowed {
                 Button(L10n.unfollow) {
-                    toggleFollow(.public)
+                    toggleFollow(nil)
                 }
             } else {
+                Button(L10n.followUsingDefault) {
+                    toggleFollow(nil)
+                }
                 Button(L10n.followPublicly) {
                     toggleFollow(.public)
                 }

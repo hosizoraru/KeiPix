@@ -130,6 +130,12 @@ struct UserProfileSheet: View {
                 .buttonStyle(.bordered)
             } else {
                 Menu {
+                    Button(L10n.followUsingDefault) {
+                        Task { await toggleFollow() }
+                    }
+
+                    Divider()
+
                     Button(L10n.followPublicly) {
                         Task { await toggleFollow(restrict: .public) }
                     }
@@ -410,12 +416,13 @@ struct UserProfileSheet: View {
         }
     }
 
-    private func toggleFollow(restrict: BookmarkRestrict = .public) async {
+    private func toggleFollow(restrict: BookmarkRestrict? = nil) async {
         var target = detail?.user ?? user
         target.isFollowed = isFollowed
         await store.toggleFollow(target, restrict: restrict)
+        let appliedRestrict = restrict ?? store.defaultFollowRestrict
         isFollowed.toggle()
-        followRestrict = isFollowed ? restrict : nil
+        followRestrict = isFollowed ? appliedRestrict : nil
     }
 
     private func updateFollowVisibility(_ restrict: BookmarkRestrict) async {
@@ -426,7 +433,7 @@ struct UserProfileSheet: View {
         followRestrict = restrict
     }
 
-    private func toggleRelatedFollow(_ user: PixivUser, restrict: BookmarkRestrict = .public) async {
+    private func toggleRelatedFollow(_ user: PixivUser, restrict: BookmarkRestrict? = nil) async {
         await store.toggleFollow(user, restrict: restrict)
         for index in relatedUsers.indices where relatedUsers[index].user.id == user.id {
             var updatedUser = relatedUsers[index].user
@@ -444,7 +451,7 @@ private struct RelatedCreatorCard: View {
     let preview: PixivUserPreview
     let openProfile: () -> Void
     let openIllustrations: () -> Void
-    let toggleFollow: (BookmarkRestrict) -> Void
+    let toggleFollow: (BookmarkRestrict?) -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -483,11 +490,17 @@ private struct RelatedCreatorCard: View {
             HStack(spacing: 8) {
                 if preview.user.isFollowed {
                     Button(L10n.unfollow) {
-                        toggleFollow(.public)
+                        toggleFollow(nil)
                     }
                     .buttonStyle(.bordered)
                 } else {
                     Menu {
+                        Button(L10n.followUsingDefault) {
+                            toggleFollow(nil)
+                        }
+
+                        Divider()
+
                         Button(L10n.followPublicly) {
                             toggleFollow(.public)
                         }

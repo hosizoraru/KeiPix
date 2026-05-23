@@ -21,9 +21,9 @@ struct SidebarView: View {
         }
         .listStyle(.sidebar)
         .navigationSplitViewColumnWidth(
-            min: store.showAccountIdentity ? 184 : 148,
-            ideal: store.showAccountIdentity ? 198 : 158,
-            max: store.showAccountIdentity ? 224 : 184
+            min: store.showAccountIdentity ? 168 : 132,
+            ideal: store.showAccountIdentity ? 184 : 144,
+            max: store.showAccountIdentity ? 216 : 168
         )
         .onChange(of: store.selectedRoute) { _, newValue in
             guard newValue.isSidebarRoute else { return }

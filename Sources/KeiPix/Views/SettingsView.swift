@@ -64,6 +64,15 @@ struct SettingsView: View {
                 .pickerStyle(.segmented)
             }
 
+            Section(L10n.followingCreators) {
+                Picker(L10n.defaultFollowVisibility, selection: defaultFollowRestrictBinding) {
+                    ForEach(BookmarkRestrict.allCases) { restrict in
+                        Text(restrict.title).tag(restrict)
+                    }
+                }
+                .pickerStyle(.segmented)
+            }
+
             Section(L10n.mutedContent) {
                 Text(L10n.muteSyncHint)
                     .font(.caption)
@@ -264,6 +273,14 @@ struct SettingsView: View {
             store.defaultBookmarkRestrict
         } set: { value in
             store.setDefaultBookmarkRestrict(value)
+        }
+    }
+
+    private var defaultFollowRestrictBinding: Binding<BookmarkRestrict> {
+        Binding {
+            store.defaultFollowRestrict
+        } set: { value in
+            store.setDefaultFollowRestrict(value)
         }
     }
 

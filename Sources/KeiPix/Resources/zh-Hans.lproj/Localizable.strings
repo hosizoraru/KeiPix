@@ -69,7 +69,9 @@
 "Follow" = "关注";
 "Follow Publicly" = "公开关注";
 "Follow Privately" = "私密关注";
+"Follow Using Default" = "按默认可见性关注";
 "Follow Visibility" = "关注可见性";
+"Default Follow Visibility" = "默认关注可见性";
 "Following Publicly" = "公开关注中";
 "Following Privately" = "私密关注中";
 "Unfollow" = "取消关注";
