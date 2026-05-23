@@ -131,6 +131,33 @@ actor PixivAPI {
         ])
     }
 
+    func muteList() async throws -> PixivMuteList {
+        try await requestJSON(
+            URL(string: "/v1/mute/list", relativeTo: Endpoint.apiBase)!,
+            method: "GET",
+            form: nil
+        )
+    }
+
+    func editMute(
+        addTags: [String],
+        addUserIDs: [Int],
+        deleteTags: [String],
+        deleteUserIDs: [Int]
+    ) async throws {
+        var formItems: [(String, String)] = []
+        formItems.append(contentsOf: addTags.map { ("add_tags[]", $0) })
+        formItems.append(contentsOf: addUserIDs.map { ("add_user_ids[]", "\($0)") })
+        formItems.append(contentsOf: deleteTags.map { ("delete_tags[]", $0) })
+        formItems.append(contentsOf: deleteUserIDs.map { ("delete_user_ids[]", "\($0)") })
+
+        _ = try await requestJSON(
+            URL(string: "/v1/mute/edit", relativeTo: Endpoint.apiBase)!,
+            method: "POST",
+            formItems: formItems
+        ) as EmptyResponse
+    }
+
     func userDetail(userID: Int) async throws -> PixivUserDetail {
         try await requestJSON(
             URL(string: "/v1/user/detail?filter=for_android&user_id=\(userID)", relativeTo: Endpoint.apiBase)!,
@@ -315,13 +342,29 @@ actor PixivAPI {
         includeAuth: Bool = true,
         retrying: Bool = false
     ) async throws -> T {
+        try await requestJSON(
+            url,
+            method: method,
+            formItems: form?.map { ($0.key, $0.value) },
+            includeAuth: includeAuth,
+            retrying: retrying
+        )
+    }
+
+    private func requestJSON<T: Decodable>(
+        _ url: URL,
+        method: String,
+        formItems: [(String, String)]?,
+        includeAuth: Bool = true,
+        retrying: Bool = false
+    ) async throws -> T {
         var request = URLRequest(url: url)
         request.httpMethod = method
         applyHeaders(to: &request, includeAuth: includeAuth)
 
-        if let form {
+        if let formItems {
             request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
-            request.httpBody = form
+            request.httpBody = formItems
                 .map { key, value in
                     "\(Self.formEscape(key))=\(Self.formEscape(value))"
                 }
@@ -338,7 +381,7 @@ actor PixivAPI {
             let body = String(decoding: data, as: UTF8.self)
             if body.localizedCaseInsensitiveContains("access token") || httpResponse.statusCode == 401 {
                 try await refreshToken()
-                return try await requestJSON(url, method: method, form: form, includeAuth: includeAuth, retrying: true)
+                return try await requestJSON(url, method: method, formItems: formItems, includeAuth: includeAuth, retrying: true)
             }
         }
 

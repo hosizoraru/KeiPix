@@ -153,6 +153,11 @@
 "Muted Tags" = "Muted Tags";
 "Muted Creators" = "Muted Creators";
 "Muted Artworks" = "Muted Artworks";
+"Sync from Pixiv" = "Sync from Pixiv";
+"Upload to Pixiv" = "Upload to Pixiv";
+"Synced" = "Synced";
+"Uploaded" = "Uploaded";
+"Pixiv sync covers muted tags and creators. Local muted artworks stay on this Mac." = "Pixiv sync covers muted tags and creators. Local muted artworks stay on this Mac.";
 "Clear Muted Content" = "Clear Muted Content";
 "No muted content" = "No muted content";
 "Content Rating" = "Content Rating";

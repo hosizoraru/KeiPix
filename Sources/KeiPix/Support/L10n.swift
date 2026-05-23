@@ -155,6 +155,11 @@ enum L10n {
     static var mutedTags: String { text("Muted Tags") }
     static var mutedCreators: String { text("Muted Creators") }
     static var mutedArtworks: String { text("Muted Artworks") }
+    static var syncFromPixiv: String { text("Sync from Pixiv") }
+    static var uploadToPixiv: String { text("Upload to Pixiv") }
+    static var synced: String { text("Synced") }
+    static var uploaded: String { text("Uploaded") }
+    static var muteSyncHint: String { text("Pixiv sync covers muted tags and creators. Local muted artworks stay on this Mac.") }
     static var clearMutedContent: String { text("Clear Muted Content") }
     static var noMutedContent: String { text("No muted content") }
     static var contentRating: String { text("Content Rating") }

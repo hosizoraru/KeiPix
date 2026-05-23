@@ -408,6 +408,28 @@ final class KeiPixStore {
         applyContentFilters()
     }
 
+    func importAccountMutedContent() async throws {
+        let accountMuteList = try await api.muteList()
+        for tag in accountMuteList.mutedTags {
+            mutedTags.insert(tag.tag)
+        }
+        for user in accountMuteList.mutedUsers {
+            mutedUsers[user.id] = user.name
+        }
+        persistMutedTags()
+        persistMutedUsers()
+        applyContentFilters()
+    }
+
+    func uploadLocalMutedContentToAccount() async throws {
+        try await api.editMute(
+            addTags: mutedTagList,
+            addUserIDs: mutedUserList.map(\.id),
+            deleteTags: [],
+            deleteUserIDs: []
+        )
+    }
+
     @discardableResult
     func selectAdjacentArtwork(delta: Int) -> Bool {
         guard let selectedArtwork,

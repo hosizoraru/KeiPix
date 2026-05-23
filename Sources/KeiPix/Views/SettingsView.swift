@@ -2,6 +2,8 @@ import SwiftUI
 
 struct SettingsView: View {
     @Bindable var store: KeiPixStore
+    @State private var isSyncingMutedContent = false
+    @State private var mutedContentSyncMessage: String?
 
     var body: some View {
         Form {
@@ -27,6 +29,38 @@ struct SettingsView: View {
             }
 
             Section(L10n.mutedContent) {
+                Text(L10n.muteSyncHint)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
+                HStack(spacing: 10) {
+                    Button {
+                        Task { await syncMutedContentFromPixiv() }
+                    } label: {
+                        Label(L10n.syncFromPixiv, systemImage: "arrow.down.circle")
+                    }
+                    .disabled(isSyncingMutedContent)
+
+                    Button {
+                        Task { await uploadMutedContentToPixiv() }
+                    } label: {
+                        Label(L10n.uploadToPixiv, systemImage: "arrow.up.circle")
+                    }
+                    .disabled(isSyncingMutedContent || (store.mutedTagList.isEmpty && store.mutedUserList.isEmpty))
+
+                    if isSyncingMutedContent {
+                        ProgressView()
+                            .controlSize(.small)
+                    }
+                }
+
+                if let mutedContentSyncMessage {
+                    Text(mutedContentSyncMessage)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .textSelection(.enabled)
+                }
+
                 if store.mutedTagList.isEmpty,
                    store.mutedUserList.isEmpty,
                    store.mutedArtworkList.isEmpty {
@@ -169,6 +203,32 @@ struct SettingsView: View {
             store.showAccountIdentity
         } set: { value in
             store.setShowAccountIdentity(value)
+        }
+    }
+
+    private func syncMutedContentFromPixiv() async {
+        isSyncingMutedContent = true
+        mutedContentSyncMessage = nil
+        defer { isSyncingMutedContent = false }
+
+        do {
+            try await store.importAccountMutedContent()
+            mutedContentSyncMessage = L10n.synced
+        } catch {
+            mutedContentSyncMessage = error.localizedDescription
+        }
+    }
+
+    private func uploadMutedContentToPixiv() async {
+        isSyncingMutedContent = true
+        mutedContentSyncMessage = nil
+        defer { isSyncingMutedContent = false }
+
+        do {
+            try await store.uploadLocalMutedContentToAccount()
+            mutedContentSyncMessage = L10n.uploaded
+        } catch {
+            mutedContentSyncMessage = error.localizedDescription
         }
     }
 }
