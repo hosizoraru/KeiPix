@@ -125,6 +125,15 @@ actor PixivAPI {
         ])
     }
 
+    func illustDetail(illustID: Int) async throws -> PixivArtwork {
+        let response: PixivArtworkDetailResponse = try await requestJSON(
+            URL(string: "/v1/illust/detail?filter=for_android&illust_id=\(illustID)", relativeTo: Endpoint.apiBase)!,
+            method: "GET",
+            form: nil
+        )
+        return response.illust
+    }
+
     func illustSeries(seriesID: Int) async throws -> PixivArtworkSeriesResponse {
         var components = URLComponents(url: URL(string: "/v1/illust/series", relativeTo: Endpoint.apiBase)!, resolvingAgainstBaseURL: true)!
         components.queryItems = [URLQueryItem(name: "illust_series_id", value: "\(seriesID)")]

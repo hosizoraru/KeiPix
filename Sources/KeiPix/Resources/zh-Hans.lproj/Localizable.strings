@@ -25,6 +25,19 @@
 "Following" = "关注";
 "Following Creators" = "关注作者";
 "History" = "浏览历史";
+"History Source" = "历史来源";
+"Local" = "本地";
+"Pixiv" = "Pixiv";
+"Search history" = "搜索历史";
+"Clear Search" = "清空搜索";
+"Clear History" = "清空历史";
+"Clear all local browsing history?" = "清空全部本地浏览历史？";
+"Delete from History" = "从历史中删除";
+"No local history" = "暂无本地历史";
+"Open artworks to build a private local history on this Mac." = "打开作品后，会在这台 Mac 上生成私密本地历史。";
+"No Pixiv history" = "暂无 Pixiv 历史";
+"Refresh Pixiv history after opening artworks from this account." = "使用当前账号打开作品后，可以刷新 Pixiv 历史。";
+"%d history items" = "%d 条历史";
 "Manga Watchlist" = "漫画追更";
 "Recommended Creators" = "推荐作者";
 "Related Creators" = "相关作者";
@@ -36,6 +49,7 @@
 "Logout" = "退出登录";
 "Refresh" = "刷新";
 "Loading" = "加载中";
+"Cancel" = "取消";
 "Open in Pixiv" = "在 Pixiv 打开";
 "Share" = "分享";
 "Share Current Page" = "分享当前页";

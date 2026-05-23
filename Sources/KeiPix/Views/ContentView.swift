@@ -202,6 +202,8 @@ private struct ContentColumnView: View {
             SpotlightView(store: store)
         } else if store.selectedRoute == .bookmarkTags {
             BookmarkTagsView(store: store)
+        } else if store.selectedRoute == .history {
+            BrowsingHistoryView(store: store)
         } else if store.selectedRoute == .followingCreators || store.selectedRoute == .recommendedUsers || store.selectedRoute == .searchUsers {
             UserPreviewListView(store: store, mode: userPreviewMode)
         } else {

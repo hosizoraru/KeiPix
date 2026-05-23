@@ -28,6 +28,19 @@ enum L10n {
     static var following: String { text("Following") }
     static var followingCreators: String { text("Following Creators") }
     static var history: String { text("History") }
+    static var historySource: String { text("History Source") }
+    static var localHistory: String { text("Local") }
+    static var pixivHistory: String { text("Pixiv") }
+    static var searchHistory: String { text("Search history") }
+    static var clearSearch: String { text("Clear Search") }
+    static var clearHistory: String { text("Clear History") }
+    static var clearHistoryConfirmation: String { text("Clear all local browsing history?") }
+    static var deleteFromHistory: String { text("Delete from History") }
+    static var noLocalHistoryTitle: String { text("No local history") }
+    static var noLocalHistorySubtitle: String { text("Open artworks to build a private local history on this Mac.") }
+    static var noPixivHistoryTitle: String { text("No Pixiv history") }
+    static var noPixivHistorySubtitle: String { text("Refresh Pixiv history after opening artworks from this account.") }
+    static var historyItemCountFormat: String { text("%d history items") }
     static var mangaWatchlist: String { text("Manga Watchlist") }
     static var recommendedCreators: String { text("Recommended Creators") }
     static var relatedCreators: String { text("Related Creators") }
@@ -39,6 +52,7 @@ enum L10n {
     static var logout: String { text("Logout") }
     static var refresh: String { text("Refresh") }
     static var loading: String { text("Loading") }
+    static var cancel: String { text("Cancel") }
     static var openInPixiv: String { text("Open in Pixiv") }
     static var share: String { text("Share") }
     static var shareCurrentPage: String { text("Share Current Page") }

@@ -267,6 +267,10 @@ struct PixivFeedResponse: Decodable, Sendable {
     }
 }
 
+struct PixivArtworkDetailResponse: Decodable, Sendable {
+    let illust: PixivArtwork
+}
+
 struct PixivAuthResponse: Decodable, Sendable {
     let accessToken: String
     let refreshToken: String

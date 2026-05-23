@@ -25,6 +25,19 @@
 "Following" = "Following";
 "Following Creators" = "Following Creators";
 "History" = "History";
+"History Source" = "History Source";
+"Local" = "Local";
+"Pixiv" = "Pixiv";
+"Search history" = "Search history";
+"Clear Search" = "Clear Search";
+"Clear History" = "Clear History";
+"Clear all local browsing history?" = "Clear all local browsing history?";
+"Delete from History" = "Delete from History";
+"No local history" = "No local history";
+"Open artworks to build a private local history on this Mac." = "Open artworks to build a private local history on this Mac.";
+"No Pixiv history" = "No Pixiv history";
+"Refresh Pixiv history after opening artworks from this account." = "Refresh Pixiv history after opening artworks from this account.";
+"%d history items" = "%d history items";
 "Manga Watchlist" = "Manga Watchlist";
 "Recommended Creators" = "Recommended Creators";
 "Related Creators" = "Related Creators";
@@ -36,6 +49,7 @@
 "Logout" = "Logout";
 "Refresh" = "Refresh";
 "Loading" = "Loading";
+"Cancel" = "Cancel";
 "Open in Pixiv" = "Open in Pixiv";
 "Share" = "Share";
 "Share Current Page" = "Share Current Page";

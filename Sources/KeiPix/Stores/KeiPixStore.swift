@@ -19,6 +19,7 @@ final class KeiPixStore {
     var searchHistory = UserDefaults.standard.stringArray(forKey: "searchHistory") ?? []
     var savedSearches = UserDefaults.standard.stringArray(forKey: "savedSearches") ?? []
     var bookmarkTagFilter: String?
+    var localBrowsingHistory = KeiPixStore.loadLocalBrowsingHistory()
     var errorMessage: String?
     var isLoading = false
     var isLoadingMore = false
@@ -66,13 +67,13 @@ final class KeiPixStore {
         screenCaptureProtectionEnabled && readerWindowArtwork?.requiresScreenCaptureProtection == true
     }
 
-    private let api = PixivAPI()
-    private var allArtworks: [PixivArtwork] = []
+    let api = PixivAPI()
+    var allArtworks: [PixivArtwork] = []
     private var nextURL: URL?
     private var mutedTags = Set(UserDefaults.standard.stringArray(forKey: "mutedTags") ?? [])
     private var mutedUsers = KeiPixStore.loadIntStringDictionary("mutedUsers")
     private var mutedArtworks = KeiPixStore.loadIntStringDictionary("mutedArtworks")
-    private var recordedBrowsingHistoryIDs = Set<Int>()
+    var recordedBrowsingHistoryIDs = Set<Int>()
 
     init() {
         Task { await bootstrap() }
@@ -548,19 +549,6 @@ final class KeiPixStore {
             selectedArtwork = filtered.illusts.first(where: { $0.id == series.latestContentID }) ?? filtered.illusts.first
         } catch {
             errorMessage = error.localizedDescription
-        }
-    }
-
-    func recordBrowsingHistory(for artwork: PixivArtwork) async {
-        guard session != nil,
-              recordedBrowsingHistoryIDs.insert(artwork.id).inserted else {
-            return
-        }
-
-        do {
-            try await api.addBrowsingHistory(illustIDs: [artwork.id])
-        } catch {
-            recordedBrowsingHistoryIDs.remove(artwork.id)
         }
     }
 
