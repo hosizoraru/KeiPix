@@ -12,6 +12,7 @@ enum L10n {
     static var library: String { text("Library") }
     static var following: String { text("Following") }
     static var history: String { text("History") }
+    static var mangaWatchlist: String { text("Manga Watchlist") }
     static var login: String { text("Login") }
     static var logout: String { text("Logout") }
     static var refresh: String { text("Refresh") }
@@ -138,6 +139,10 @@ enum L10n {
     static var addToWatchlist: String { text("Add to Watchlist") }
     static var watchlistAdded: String { text("Watchlist Added") }
     static var openSeriesInPixiv: String { text("Open Series in Pixiv") }
+    static var openLatestArtwork: String { text("Open Latest Artwork") }
+    static var noWatchlistSeries: String { text("No watchlist series") }
+    static var loadMoreWatchlist: String { text("Load More Watchlist") }
+    static var removeFromWatchlist: String { text("Remove from Watchlist") }
     static var views: String { text("Views") }
     static var saves: String { text("Saves") }
     static var pages: String { text("Pages") }

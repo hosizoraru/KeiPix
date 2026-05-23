@@ -101,7 +101,13 @@ final class KeiPixStore {
     func select(_ route: PixivRoute) {
         focusedUser = nil
         selectedRoute = route
-        Task { await reloadCurrentFeed() }
+        if route.usesArtworkFeed {
+            Task { await reloadCurrentFeed() }
+        } else {
+            allArtworks = []
+            artworks = []
+            nextURL = nil
+        }
     }
 
     func openUserFeed(user: PixivUser, route: PixivRoute) async {
@@ -115,6 +121,12 @@ final class KeiPixStore {
             allArtworks = []
             artworks = []
             selectedArtwork = nil
+            nextURL = nil
+            return
+        }
+        guard selectedRoute.usesArtworkFeed else {
+            allArtworks = []
+            artworks = []
             nextURL = nil
             return
         }
@@ -274,6 +286,24 @@ final class KeiPixStore {
 
     func setMangaWatchlist(seriesID: Int, isAdded: Bool) async throws {
         try await api.setMangaWatchlist(seriesID: seriesID, isAdded: isAdded)
+    }
+
+    func mangaWatchlist() async throws -> PixivMangaWatchlistResponse {
+        try await api.mangaWatchlist()
+    }
+
+    func nextMangaWatchlist(_ url: URL) async throws -> PixivMangaWatchlistResponse {
+        try await api.nextMangaWatchlist(url)
+    }
+
+    func openLatestArtwork(in series: PixivMangaSeriesPreview) async {
+        do {
+            let response = try await api.illustSeries(seriesID: series.id)
+            let filtered = filteredArtworkSeriesResponse(response)
+            selectedArtwork = filtered.illusts.first(where: { $0.id == series.latestContentID }) ?? filtered.illusts.first
+        } catch {
+            errorMessage = error.localizedDescription
+        }
     }
 
     func recordBrowsingHistory(for artwork: PixivArtwork) async {
@@ -551,6 +581,8 @@ final class KeiPixStore {
             return try await api.following()
         case .history:
             return try await api.browsingHistoryIllusts()
+        case .mangaWatchlist:
+            return PixivFeedResponse(illusts: [], nextURL: nil)
         }
     }
 

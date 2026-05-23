@@ -138,6 +138,18 @@ actor PixivAPI {
         ) as EmptyResponse
     }
 
+    func mangaWatchlist() async throws -> PixivMangaWatchlistResponse {
+        try await requestJSON(
+            URL(string: "/v1/watchlist/manga", relativeTo: Endpoint.apiBase)!,
+            method: "GET",
+            form: nil
+        )
+    }
+
+    func nextMangaWatchlist(_ url: URL) async throws -> PixivMangaWatchlistResponse {
+        try await requestJSON(url, method: "GET", form: nil)
+    }
+
     func ranking(mode: String) async throws -> PixivFeedResponse {
         try await requestFeed(path: "/v1/illust/ranking", query: [
             "filter": "for_android",

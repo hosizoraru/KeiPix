@@ -9,6 +9,7 @@
 "Library" = "书架";
 "Following" = "关注";
 "History" = "浏览历史";
+"Manga Watchlist" = "漫画追更";
 "Login" = "登录";
 "Logout" = "退出登录";
 "Refresh" = "刷新";
@@ -135,6 +136,10 @@
 "Add to Watchlist" = "添加到追更";
 "Watchlist Added" = "已追更";
 "Open Series in Pixiv" = "在 Pixiv 打开系列";
+"Open Latest Artwork" = "打开最新作品";
+"No watchlist series" = "暂无追更系列";
+"Load More Watchlist" = "加载更多追更";
+"Remove from Watchlist" = "取消追更";
 "Views" = "浏览";
 "Saves" = "收藏";
 "Pages" = "页数";

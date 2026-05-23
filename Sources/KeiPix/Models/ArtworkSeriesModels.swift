@@ -72,3 +72,83 @@ struct PixivArtworkSeriesDetail: Decodable, Identifiable, Hashable, Sendable {
         watchlistAdded = try container.decodeIfPresent(Bool.self, forKey: .watchlistAdded) ?? false
     }
 }
+
+struct PixivMangaWatchlistResponse: Decodable, Sendable {
+    let series: [PixivMangaSeriesPreview]
+    let nextURL: URL?
+
+    enum CodingKeys: String, CodingKey {
+        case series
+        case nextURL = "next_url"
+    }
+}
+
+struct PixivMangaSeriesPreview: Decodable, Identifiable, Hashable, Sendable {
+    let id: Int
+    let title: String
+    let user: PixivMangaSeriesUser?
+    let latestContentID: Int
+    let lastPublishedContentDate: Date?
+    let publishedContentCount: Int
+    let coverURL: URL?
+    let maskText: String?
+
+    var pixivURL: URL? {
+        guard let user else { return nil }
+        return URL(string: "https://www.pixiv.net/user/\(user.id)/series/\(id)")
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case title
+        case user
+        case latestContentID = "latest_content_id"
+        case lastPublishedContentDate = "last_published_content_datetime"
+        case publishedContentCount = "published_content_count"
+        case coverURL = "url"
+        case maskText = "mask_text"
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(Int.self, forKey: .id)
+        title = try container.decodeIfPresent(String.self, forKey: .title) ?? ""
+        user = try container.decodeIfPresent(PixivMangaSeriesUser.self, forKey: .user)
+        latestContentID = try container.decodeIfPresent(Int.self, forKey: .latestContentID) ?? 0
+        lastPublishedContentDate = try container.decodeIfPresent(Date.self, forKey: .lastPublishedContentDate)
+        publishedContentCount = try container.decodeIfPresent(Int.self, forKey: .publishedContentCount) ?? 0
+        coverURL = try container.decodeIfPresent(URL.self, forKey: .coverURL)
+        maskText = try container.decodeIfPresent(String.self, forKey: .maskText)
+    }
+}
+
+struct PixivMangaSeriesUser: Decodable, Identifiable, Hashable, Sendable {
+    let id: Int
+    let name: String
+    let account: String?
+    let avatarURL: URL?
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case name
+        case account
+        case profileImageURLs = "profile_image_urls"
+    }
+
+    enum ProfileKeys: String, CodingKey {
+        case medium
+        case px170 = "px_170x170"
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(Int.self, forKey: .id)
+        name = try container.decodeIfPresent(String.self, forKey: .name) ?? ""
+        account = try container.decodeIfPresent(String.self, forKey: .account)
+
+        let profile = try? container.nestedContainer(keyedBy: ProfileKeys.self, forKey: .profileImageURLs)
+        let value = try profile?.decodeIfPresent(String.self, forKey: .medium)
+            ?? profile?.decodeIfPresent(String.self, forKey: .px170)
+        avatarURL = value.flatMap(URL.init(string:))
+    }
+}

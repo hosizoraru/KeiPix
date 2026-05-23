@@ -9,6 +9,7 @@
 "Library" = "Library";
 "Following" = "Following";
 "History" = "History";
+"Manga Watchlist" = "Manga Watchlist";
 "Login" = "Login";
 "Logout" = "Logout";
 "Refresh" = "Refresh";
@@ -135,6 +136,10 @@
 "Add to Watchlist" = "Add to Watchlist";
 "Watchlist Added" = "Watchlist Added";
 "Open Series in Pixiv" = "Open Series in Pixiv";
+"Open Latest Artwork" = "Open Latest Artwork";
+"No watchlist series" = "No watchlist series";
+"Load More Watchlist" = "Load More Watchlist";
+"Remove from Watchlist" = "Remove from Watchlist";
 "Views" = "Views";
 "Saves" = "Saves";
 "Pages" = "Pages";

@@ -8,7 +8,7 @@ struct ContentView: View {
         NavigationSplitView(columnVisibility: $columnVisibility) {
             SidebarView(store: store)
         } content: {
-            GalleryView(store: store)
+            ContentColumnView(store: store)
                 .navigationSplitViewColumnWidth(min: 500, ideal: 720)
         } detail: {
             ArtworkDetailView(store: store)
@@ -161,6 +161,18 @@ struct ContentView: View {
             store.hideR18GArtworks
         } set: { value in
             store.setHideR18GArtworks(value)
+        }
+    }
+}
+
+private struct ContentColumnView: View {
+    @Bindable var store: KeiPixStore
+
+    var body: some View {
+        if store.selectedRoute == .mangaWatchlist {
+            MangaWatchlistView(store: store)
+        } else {
+            GalleryView(store: store)
         }
     }
 }
