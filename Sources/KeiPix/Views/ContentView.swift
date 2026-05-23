@@ -16,8 +16,17 @@ struct ContentView: View {
         }
         .frame(minWidth: minimumWindowWidth, minHeight: 700)
         .searchable(text: $store.searchText, prompt: L10n.searchPlaceholder)
+        .searchSuggestions {
+            ForEach(store.searchSuggestions, id: \.name) { suggestion in
+                SearchSuggestionRow(tag: suggestion)
+                    .searchCompletion(suggestion.name)
+            }
+        }
         .onSubmit(of: .search) {
             Task { await store.runSearch() }
+        }
+        .task(id: store.searchText) {
+            await store.refreshSearchSuggestions()
         }
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
@@ -152,6 +161,30 @@ struct ContentView: View {
             store.hideR18GArtworks
         } set: { value in
             store.setHideR18GArtworks(value)
+        }
+    }
+}
+
+private struct SearchSuggestionRow: View {
+    let tag: PixivTag
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "tag")
+                .foregroundStyle(.secondary)
+                .frame(width: 16)
+
+            VStack(alignment: .leading, spacing: 1) {
+                Text(tag.name)
+                    .lineLimit(1)
+
+                if let translatedName = tag.translatedName, translatedName.isEmpty == false {
+                    Text(translatedName)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                }
+            }
         }
     }
 }

@@ -11,6 +11,7 @@ final class KeiPixStore {
     var selectedArtwork: PixivArtwork?
     var focusedUser: PixivUser?
     var searchText = ""
+    var searchSuggestions: [PixivTag] = []
     var errorMessage: String?
     var isLoading = false
     var isLoadingMore = false
@@ -89,6 +90,7 @@ final class KeiPixStore {
             allArtworks = []
             artworks = []
             selectedArtwork = nil
+            searchSuggestions = []
             nextURL = nil
             recordedBrowsingHistoryIDs.removeAll()
         } catch {
@@ -149,7 +151,31 @@ final class KeiPixStore {
 
     func runSearch() async {
         selectedRoute = .search
+        searchSuggestions = []
         await reloadCurrentFeed()
+    }
+
+    func refreshSearchSuggestions() async {
+        guard session != nil else {
+            searchSuggestions = []
+            return
+        }
+
+        let keyword = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard keyword.isEmpty == false else {
+            searchSuggestions = []
+            return
+        }
+
+        do {
+            try await Task.sleep(for: .milliseconds(260))
+            let suggestions = try await api.searchAutocomplete(keyword: keyword)
+            guard keyword == searchText.trimmingCharacters(in: .whitespacesAndNewlines) else { return }
+            searchSuggestions = suggestions.uniquedByName().prefixArray(10)
+        } catch is CancellationError {
+        } catch {
+            searchSuggestions = []
+        }
     }
 
     func toggleBookmark(_ artwork: PixivArtwork) async {
@@ -642,5 +668,18 @@ final class KeiPixStore {
         dictionary.reduce(into: [:]) { result, pair in
             result[String(pair.key)] = pair.value
         }
+    }
+}
+
+private extension Array where Element == PixivTag {
+    func uniquedByName() -> [PixivTag] {
+        var seen = Set<String>()
+        return filter { tag in
+            seen.insert(tag.name).inserted
+        }
+    }
+
+    func prefixArray(_ maxLength: Int) -> [PixivTag] {
+        Array(prefix(maxLength))
     }
 }

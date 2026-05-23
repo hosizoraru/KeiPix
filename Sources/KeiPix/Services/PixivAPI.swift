@@ -218,6 +218,20 @@ actor PixivAPI {
         return try await requestFeed(path: "/v1/search/illust", query: query)
     }
 
+    func searchAutocomplete(keyword: String) async throws -> [PixivTag] {
+        let trimmed = keyword.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard trimmed.isEmpty == false else { return [] }
+
+        var components = URLComponents(url: URL(string: "/v2/search/autocomplete", relativeTo: Endpoint.apiBase)!, resolvingAgainstBaseURL: true)!
+        components.queryItems = [
+            URLQueryItem(name: "merge_plain_keyword_results", value: "true"),
+            URLQueryItem(name: "word", value: trimmed)
+        ]
+        guard let url = components.url else { throw PixivAPIError.invalidResponse }
+        let response: PixivSearchAutocompleteResponse = try await requestJSON(url, method: "GET", form: nil)
+        return response.tags
+    }
+
     func nextFeed(_ url: URL) async throws -> PixivFeedResponse {
         if url.path == "/v1/user/browsing-history/illusts" {
             let offset = URLComponents(url: url, resolvingAgainstBaseURL: false)?
