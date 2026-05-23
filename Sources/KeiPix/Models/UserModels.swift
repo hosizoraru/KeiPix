@@ -41,6 +41,28 @@ struct PixivUserWorkspace: Decodable, Hashable, Sendable {
     let comment: String?
 }
 
+struct PixivFollowDetailResponse: Decodable, Sendable {
+    let followDetail: PixivFollowDetail
+
+    enum CodingKeys: String, CodingKey {
+        case followDetail = "follow_detail"
+    }
+}
+
+struct PixivFollowDetail: Decodable, Hashable, Sendable {
+    let isFollowed: Bool
+    let restrict: String?
+
+    var restrictValue: BookmarkRestrict {
+        restrict.flatMap(BookmarkRestrict.init(rawValue:)) ?? .public
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case isFollowed = "is_followed"
+        case restrict
+    }
+}
+
 struct PixivUserPreviewResponse: Decodable, Sendable {
     let userPreviews: [PixivUserPreview]
     let nextURL: URL?

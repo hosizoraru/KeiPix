@@ -67,6 +67,9 @@
 "Follow" = "关注";
 "Follow Publicly" = "公开关注";
 "Follow Privately" = "私密关注";
+"Follow Visibility" = "关注可见性";
+"Following Publicly" = "公开关注中";
+"Following Privately" = "私密关注中";
 "Unfollow" = "取消关注";
 "Close" = "关闭";
 "Creator Profile" = "创作者资料";

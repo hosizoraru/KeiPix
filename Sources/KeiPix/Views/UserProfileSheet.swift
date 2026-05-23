@@ -12,6 +12,7 @@ struct UserProfileSheet: View {
     @State private var relatedUsers: [PixivUserPreview] = []
     @State private var errorMessage: String?
     @State private var relatedErrorMessage: String?
+    @State private var followRestrict: BookmarkRestrict?
     @State private var selectedRelatedUser: PixivUser?
 
     init(user: PixivUser, store: KeiPixStore) {
@@ -90,29 +91,61 @@ struct UserProfileSheet: View {
 
                 Spacer()
 
-                if isFollowed {
-                    Button(L10n.unfollow) {
-                        Task { await toggleFollow() }
-                    }
-                    .buttonStyle(.bordered)
-                    .disabled(isLoading)
-                } else {
-                    Menu {
-                        Button(L10n.followPublicly) {
-                            Task { await toggleFollow(restrict: .public) }
-                        }
-                        Button(L10n.followPrivately) {
-                            Task { await toggleFollow(restrict: .private) }
-                        }
-                    } label: {
-                        Label(L10n.follow, systemImage: "person.crop.circle.badge.plus")
-                    }
-                    .buttonStyle(.glassProminent)
-                    .disabled(isLoading)
-                }
+                followMenu
             }
             .padding(20)
         }
+    }
+
+    private var followMenu: some View {
+        Group {
+            if isFollowed {
+                Menu {
+                    Button(L10n.followPublicly) {
+                        Task { await updateFollowVisibility(.public) }
+                    }
+                    .disabled(followRestrict == .public)
+
+                    Button(L10n.followPrivately) {
+                        Task { await updateFollowVisibility(.private) }
+                    }
+                    .disabled(followRestrict == .private)
+
+                    Divider()
+
+                    Button(role: .destructive) {
+                        Task { await toggleFollow() }
+                    } label: {
+                        Label(L10n.unfollow, systemImage: "person.crop.circle.badge.minus")
+                    }
+                } label: {
+                    Label(followStatusTitle, systemImage: followStatusImage)
+                }
+                .buttonStyle(.bordered)
+            } else {
+                Menu {
+                    Button(L10n.followPublicly) {
+                        Task { await toggleFollow(restrict: .public) }
+                    }
+                    Button(L10n.followPrivately) {
+                        Task { await toggleFollow(restrict: .private) }
+                    }
+                } label: {
+                    Label(L10n.follow, systemImage: "person.crop.circle.badge.plus")
+                }
+                .buttonStyle(.glassProminent)
+            }
+        }
+        .disabled(isLoading)
+        .help(L10n.followVisibility)
+    }
+
+    private var followStatusTitle: String {
+        followRestrict == .private ? L10n.followingPrivately : L10n.followingPublicly
+    }
+
+    private var followStatusImage: String {
+        followRestrict == .private ? "lock.circle" : "person.crop.circle.badge.checkmark"
     }
 
     private var metrics: some View {
@@ -311,8 +344,23 @@ struct UserProfileSheet: View {
             let loaded = try await store.userDetail(for: user)
             detail = loaded
             isFollowed = loaded.user.isFollowed
+            if loaded.user.isFollowed {
+                await loadFollowDetail()
+            } else {
+                followRestrict = nil
+            }
         } catch {
             errorMessage = error.localizedDescription
+        }
+    }
+
+    private func loadFollowDetail() async {
+        do {
+            let followDetail = try await store.followDetail(for: detail?.user ?? user)
+            isFollowed = followDetail.isFollowed
+            followRestrict = followDetail.isFollowed ? followDetail.restrictValue : nil
+        } catch {
+            followRestrict = nil
         }
     }
 
@@ -334,6 +382,15 @@ struct UserProfileSheet: View {
         target.isFollowed = isFollowed
         await store.toggleFollow(target, restrict: restrict)
         isFollowed.toggle()
+        followRestrict = isFollowed ? restrict : nil
+    }
+
+    private func updateFollowVisibility(_ restrict: BookmarkRestrict) async {
+        var target = detail?.user ?? user
+        target.isFollowed = false
+        await store.toggleFollow(target, restrict: restrict)
+        isFollowed = true
+        followRestrict = restrict
     }
 
     private func toggleRelatedFollow(_ user: PixivUser, restrict: BookmarkRestrict = .public) async {

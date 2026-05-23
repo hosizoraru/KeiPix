@@ -67,6 +67,9 @@
 "Follow" = "Follow";
 "Follow Publicly" = "Follow Publicly";
 "Follow Privately" = "Follow Privately";
+"Follow Visibility" = "Follow Visibility";
+"Following Publicly" = "Following Publicly";
+"Following Privately" = "Following Privately";
 "Unfollow" = "Unfollow";
 "Close" = "Close";
 "Creator Profile" = "Creator Profile";

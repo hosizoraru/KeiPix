@@ -372,6 +372,10 @@ final class KeiPixStore {
         try await api.userDetail(userID: user.id)
     }
 
+    func followDetail(for user: PixivUser) async throws -> PixivFollowDetail {
+        try await api.followDetail(userID: user.id)
+    }
+
     func recommendedUsers() async throws -> PixivUserPreviewResponse {
         let response = try await api.recommendedUsers()
         return filteredUserPreviewResponse(response)
