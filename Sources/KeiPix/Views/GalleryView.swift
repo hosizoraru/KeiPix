@@ -205,6 +205,33 @@ private struct FeedHeaderView: View {
                 .buttonStyle(.bordered)
             }
 
+            if store.selectedRoute.isRankingRoute {
+                Menu {
+                    Toggle(L10n.useRankingDate, isOn: useRankingDateBinding)
+
+                    DatePicker(
+                        L10n.rankingDate,
+                        selection: rankingDateBinding,
+                        in: ...Date(),
+                        displayedComponents: .date
+                    )
+                    .disabled(store.useRankingDate == false)
+
+                    Divider()
+
+                    Button {
+                        store.setUseRankingDate(false)
+                        Task { await store.reloadCurrentFeed() }
+                    } label: {
+                        Label(L10n.latestRanking, systemImage: "clock")
+                    }
+                } label: {
+                    Label(rankingDateTitle, systemImage: "calendar")
+                }
+                .menuStyle(.button)
+                .buttonStyle(.bordered)
+            }
+
             Button {
                 batchDownloadLimit = min(max(1, batchDownloadLimit), maxBatchDownloadLimit)
                 isBatchDownloadPresented = true
@@ -235,6 +262,33 @@ private struct FeedHeaderView: View {
 
     private var maxBatchDownloadLimit: Int {
         min(max(store.artworks.count, 1), 100)
+    }
+
+    private var rankingDateTitle: String {
+        store.useRankingDate
+            ? store.rankingDate.formatted(date: .abbreviated, time: .omitted)
+            : L10n.latestRanking
+    }
+
+    private var useRankingDateBinding: Binding<Bool> {
+        Binding {
+            store.useRankingDate
+        } set: { value in
+            store.setUseRankingDate(value)
+            Task { await store.reloadCurrentFeed() }
+        }
+    }
+
+    private var rankingDateBinding: Binding<Date> {
+        Binding {
+            store.rankingDate
+        } set: { value in
+            store.setRankingDate(value)
+            if store.useRankingDate == false {
+                store.setUseRankingDate(true)
+            }
+            Task { await store.reloadCurrentFeed() }
+        }
     }
 
     private func queueBatchDownload() {

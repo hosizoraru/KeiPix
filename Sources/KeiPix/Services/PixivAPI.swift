@@ -150,11 +150,15 @@ actor PixivAPI {
         try await requestJSON(url, method: "GET", form: nil)
     }
 
-    func ranking(mode: String) async throws -> PixivFeedResponse {
-        try await requestFeed(path: "/v1/illust/ranking", query: [
+    func ranking(mode: String, date: String? = nil) async throws -> PixivFeedResponse {
+        var query = [
             "filter": "for_android",
             "mode": mode
-        ])
+        ]
+        if let date {
+            query["date"] = date
+        }
+        return try await requestFeed(path: "/v1/illust/ranking", query: query)
     }
 
     func bookmarks(restrict: String, userID: String) async throws -> PixivFeedResponse {

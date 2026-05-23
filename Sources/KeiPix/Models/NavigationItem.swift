@@ -133,6 +133,26 @@ enum PixivRoute: String, CaseIterable, Identifiable, Codable {
         }
     }
 
+    var isRankingRoute: Bool {
+        switch self {
+        case .rankingDaily,
+             .rankingWeekly,
+             .rankingMonthly,
+             .rankingDailyMale,
+             .rankingDailyFemale,
+             .rankingWeeklyOriginal,
+             .rankingWeeklyRookie,
+             .rankingDailyR18,
+             .mangaRankingDaily,
+             .mangaRankingWeekly,
+             .mangaRankingMonthly,
+             .mangaRankingDailyR18:
+            true
+        default:
+            false
+        }
+    }
+
     var systemImage: String {
         switch self {
         case .illustrations: "photo.on.rectangle"

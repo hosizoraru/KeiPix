@@ -42,6 +42,8 @@ final class KeiPixStore {
     ) ?? .none
     var searchArtworkType = KeiPixStore.loadEnum("searchArtworkType", defaultValue: SearchArtworkType.all)
     var searchUgoiraFilter = KeiPixStore.loadEnum("searchUgoiraFilter", defaultValue: SearchUgoiraFilter.all)
+    var useRankingDate = UserDefaults.standard.object(forKey: "useRankingDate") as? Bool ?? false
+    var rankingDate = UserDefaults.standard.object(forKey: "rankingDate") as? Date ?? KeiPixStore.defaultRankingDate()
     var trackpadGesturesEnabled = UserDefaults.standard.object(forKey: "trackpadGesturesEnabled") as? Bool ?? true
     var horizontalSwipeBehavior = UserDefaults.standard.string(forKey: "horizontalSwipeBehavior")
         .flatMap(TrackpadHorizontalSwipeBehavior.init(rawValue:)) ?? .pageOnly
@@ -554,6 +556,16 @@ final class KeiPixStore {
         setSearchUgoiraFilter(.all)
     }
 
+    func setUseRankingDate(_ value: Bool) {
+        useRankingDate = value
+        UserDefaults.standard.set(value, forKey: "useRankingDate")
+    }
+
+    func setRankingDate(_ value: Date) {
+        rankingDate = value
+        UserDefaults.standard.set(value, forKey: "rankingDate")
+    }
+
     func setAppLanguage(_ language: AppLanguage) {
         appLanguage = language
         UserDefaults.standard.set(language.rawValue, forKey: "appLanguage")
@@ -697,29 +709,29 @@ final class KeiPixStore {
             guard let focusedUser else { throw PixivAPIError.invalidResponse }
             return try await api.bookmarks(restrict: "public", userID: "\(focusedUser.id)")
         case .rankingDaily:
-            return try await api.ranking(mode: "day")
+            return try await api.ranking(mode: "day", date: rankingDateParameter)
         case .rankingWeekly:
-            return try await api.ranking(mode: "week")
+            return try await api.ranking(mode: "week", date: rankingDateParameter)
         case .rankingMonthly:
-            return try await api.ranking(mode: "month")
+            return try await api.ranking(mode: "month", date: rankingDateParameter)
         case .rankingDailyMale:
-            return try await api.ranking(mode: "day_male")
+            return try await api.ranking(mode: "day_male", date: rankingDateParameter)
         case .rankingDailyFemale:
-            return try await api.ranking(mode: "day_female")
+            return try await api.ranking(mode: "day_female", date: rankingDateParameter)
         case .rankingWeeklyOriginal:
-            return try await api.ranking(mode: "week_original")
+            return try await api.ranking(mode: "week_original", date: rankingDateParameter)
         case .rankingWeeklyRookie:
-            return try await api.ranking(mode: "week_rookie")
+            return try await api.ranking(mode: "week_rookie", date: rankingDateParameter)
         case .rankingDailyR18:
-            return try await api.ranking(mode: "day_r18")
+            return try await api.ranking(mode: "day_r18", date: rankingDateParameter)
         case .mangaRankingDaily:
-            return try await api.ranking(mode: "day_manga")
+            return try await api.ranking(mode: "day_manga", date: rankingDateParameter)
         case .mangaRankingWeekly:
-            return try await api.ranking(mode: "week_manga")
+            return try await api.ranking(mode: "week_manga", date: rankingDateParameter)
         case .mangaRankingMonthly:
-            return try await api.ranking(mode: "month_manga")
+            return try await api.ranking(mode: "month_manga", date: rankingDateParameter)
         case .mangaRankingDailyR18:
-            return try await api.ranking(mode: "day_r18_manga")
+            return try await api.ranking(mode: "day_r18_manga", date: rankingDateParameter)
         case .publicBookmarks:
             guard let userID = session?.user.id else { throw PixivAPIError.missingSession }
             return try await api.bookmarks(restrict: "public", userID: userID)
@@ -763,6 +775,11 @@ final class KeiPixStore {
 
     private func filteredFeedResponse(_ response: PixivFeedResponse) -> PixivFeedResponse {
         PixivFeedResponse(illusts: response.illusts.filter(passesContentFilters), nextURL: response.nextURL)
+    }
+
+    private var rankingDateParameter: String? {
+        guard useRankingDate else { return nil }
+        return Self.rankingDateFormatter.string(from: rankingDate)
     }
 
     private func filteredArtworkSeriesResponse(_ response: PixivArtworkSeriesResponse) -> PixivArtworkSeriesResponse {
@@ -874,6 +891,10 @@ final class KeiPixStore {
         return mode
     }
 
+    private static func defaultRankingDate() -> Date {
+        Calendar.current.date(byAdding: .day, value: -1, to: Date()) ?? Date()
+    }
+
     private static func loadEnum<T: RawRepresentable>(_ key: String, defaultValue: T) -> T where T.RawValue == String {
         guard let rawValue = UserDefaults.standard.string(forKey: key),
               let value = T(rawValue: rawValue) else {
@@ -897,6 +918,14 @@ final class KeiPixStore {
             result[String(pair.key)] = pair.value
         }
     }
+
+    private static let rankingDateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.calendar = Calendar(identifier: .gregorian)
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "yyyy-MM-dd"
+        return formatter
+    }()
 }
 
 private extension Array where Element == PixivTag {

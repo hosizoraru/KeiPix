@@ -165,6 +165,9 @@
 "Public bookmarks" = "公开收藏";
 "Private bookmarks" = "私密收藏";
 "Private Following" = "私密关注作品";
+"Ranking Date" = "排行榜日期";
+"Use Ranking Date" = "使用指定日期";
+"Latest Ranking" = "最新榜单";
 "Daily" = "日榜";
 "Weekly" = "周榜";
 "Monthly" = "月榜";
