@@ -85,92 +85,42 @@ private struct GalleryContentGrid: View {
 
 private struct MasonryArtworkGrid: View {
     @Bindable var store: KeiPixStore
-    @State private var measuredHeight: CGFloat = 1
 
     private let spacing: CGFloat = 12
     private let preferredColumnWidth: CGFloat = 224
+    private let minColumnWidth: CGFloat = 176
+    private let maxColumnWidth: CGFloat = 260
 
     var body: some View {
-        GeometryReader { proxy in
-            let layout = layout(for: proxy.size.width)
-
-            HStack(alignment: .top, spacing: spacing) {
-                ForEach(layout.columns) { column in
-                    LazyVStack(spacing: spacing) {
-                        ForEach(column.items) { item in
-                            ArtworkCardView(
-                                artwork: item.artwork,
-                                isSelected: store.selectedArtwork?.id == item.artwork.id,
-                                isCompact: false,
-                                preferredHeight: item.height
-                            ) {
-                                store.selectedArtwork = item.artwork
-                            }
-                            .contextMenu {
-                                Button(item.artwork.isBookmarked ? L10n.removeBookmark : L10n.bookmark) {
-                                    Task { await store.toggleBookmark(item.artwork) }
-                                }
-                                if let url = item.artwork.pixivURL {
-                                    Link(L10n.openInPixiv, destination: url)
-                                }
-                            }
-                        }
+        MasonryLayout(
+            spacing: spacing,
+            preferredColumnWidth: preferredColumnWidth,
+            minColumnWidth: minColumnWidth,
+            maxColumnWidth: maxColumnWidth
+        ) {
+            ForEach(store.artworks) { artwork in
+                let presentation = ArtworkMasonryPresentation(artwork: artwork)
+                ArtworkCardView(
+                    artwork: artwork,
+                    isSelected: store.selectedArtwork?.id == artwork.id,
+                    isCompact: false,
+                    displayStyle: presentation.cardStyle,
+                    fillsAvailableHeight: true
+                ) {
+                    store.selectedArtwork = artwork
+                }
+                .layoutValue(key: MasonryAspectRatioKey.self, value: presentation.aspectRatio)
+                .contextMenu {
+                    Button(artwork.isBookmarked ? L10n.removeBookmark : L10n.bookmark) {
+                        Task { await store.toggleBookmark(artwork) }
                     }
-                    .frame(width: layout.columnWidth)
+                    if let url = artwork.pixivURL {
+                        Link(L10n.openInPixiv, destination: url)
+                    }
                 }
             }
-            .task(id: layout.identity) {
-                measuredHeight = layout.height
-            }
         }
-        .frame(height: measuredHeight)
     }
-
-    private func layout(for width: CGFloat) -> MasonryLayoutResult {
-        let availableWidth = max(width, preferredColumnWidth)
-        let columnCount = max(1, Int((availableWidth + spacing) / (preferredColumnWidth + spacing)))
-        let columnWidth = (availableWidth - CGFloat(columnCount - 1) * spacing) / CGFloat(columnCount)
-        var columns = (0..<columnCount).map { MasonryColumn(id: $0, items: []) }
-        var columnHeights = Array(repeating: CGFloat.zero, count: columnCount)
-
-        for artwork in store.artworks {
-            let height = tileHeight(for: artwork, width: columnWidth)
-            let targetIndex = columnHeights.enumerated().min(by: { $0.element < $1.element })?.offset ?? 0
-            columns[targetIndex].items.append(MasonryItem(artwork: artwork, height: height))
-            columnHeights[targetIndex] += height + spacing
-        }
-
-        let totalHeight = max(1, (columnHeights.max() ?? 1) - spacing)
-        return MasonryLayoutResult(
-            columns: columns,
-            columnWidth: columnWidth,
-            height: totalHeight,
-            identity: "\(Int(width.rounded()))-\(store.artworks.map(\.id).hashValue)"
-        )
-    }
-
-    private func tileHeight(for artwork: PixivArtwork, width: CGFloat) -> CGFloat {
-        let rawHeight = width / max(artwork.aspectRatio, 0.1)
-        return min(max(rawHeight, 138), 430)
-    }
-}
-
-private struct MasonryLayoutResult {
-    let columns: [MasonryColumn]
-    let columnWidth: CGFloat
-    let height: CGFloat
-    let identity: String
-}
-
-private struct MasonryColumn: Identifiable {
-    let id: Int
-    var items: [MasonryItem]
-}
-
-private struct MasonryItem: Identifiable {
-    var id: Int { artwork.id }
-    let artwork: PixivArtwork
-    let height: CGFloat
 }
 
 private struct FeedHeaderView: View {

@@ -4,54 +4,20 @@ struct ArtworkCardView: View {
     let artwork: PixivArtwork
     let isSelected: Bool
     let isCompact: Bool
+    var displayStyle: ArtworkCardDisplayStyle = .regular
     var preferredHeight: CGFloat? = nil
+    var fillsAvailableHeight = false
     let action: () -> Void
     @State private var isHovering = false
 
     var body: some View {
         Button(action: action) {
-            ZStack(alignment: .bottomLeading) {
-                RemoteImageView(url: artwork.thumbnailURL)
-                    .frame(height: renderedImageHeight)
-                    .frame(maxWidth: .infinity)
-                    .overlay(alignment: .bottom) {
-                        LinearGradient(
-                            colors: [.clear, .black.opacity(0.68)],
-                            startPoint: .center,
-                            endPoint: .bottom
-                        )
-                        .frame(height: renderedImageHeight * 0.55)
-                    }
-
-                VStack(alignment: .leading, spacing: 5) {
-                    HStack(alignment: .firstTextBaseline, spacing: 6) {
-                        Text(artwork.title)
-                            .font(isCompact ? .caption.weight(.semibold) : .subheadline.weight(.semibold))
-                            .lineLimit(isCompact ? 1 : 2)
-                        Spacer(minLength: 6)
-                        if artwork.pageCount > 1 {
-                            Text("\(artwork.pageCount)P")
-                                .font(.caption2.weight(.semibold))
-                                .padding(.horizontal, 7)
-                                .padding(.vertical, 3)
-                                .keiGlass(10)
-                        }
-                    }
-
-                    Text(artwork.user.name)
-                        .font(.caption2)
-                        .foregroundStyle(.white.opacity(0.78))
-                        .lineLimit(1)
-
-                    HStack(spacing: 10) {
-                        Label(artwork.totalView.formatted(), systemImage: "eye")
-                        Label(artwork.totalBookmarks.formatted(), systemImage: artwork.isBookmarked ? "bookmark.fill" : "bookmark")
-                    }
-                    .font(.caption2)
-                    .foregroundStyle(.white.opacity(0.74))
-                    .labelStyle(.titleAndIcon)
+            if fillsAvailableHeight {
+                GeometryReader { proxy in
+                    cardContent(height: proxy.size.height)
                 }
-                .padding(10)
+            } else {
+                cardContent(height: renderedImageHeight)
             }
         }
         .buttonStyle(.plain)
@@ -67,7 +33,57 @@ struct ArtworkCardView: View {
         .onHover { isHovering = $0 }
     }
 
+    private func cardContent(height: CGFloat) -> some View {
+        ZStack(alignment: .bottomLeading) {
+            RemoteImageView(url: artwork.thumbnailURL)
+                .frame(height: height)
+                .frame(maxWidth: .infinity)
+                .overlay(alignment: .bottom) {
+                    LinearGradient(
+                        colors: [.clear, .black.opacity(0.68)],
+                        startPoint: .center,
+                        endPoint: .bottom
+                    )
+                    .frame(height: height * resolvedDisplayStyle.overlayFraction)
+                }
+
+            VStack(alignment: .leading, spacing: 5) {
+                HStack(alignment: .firstTextBaseline, spacing: 6) {
+                    Text(artwork.title)
+                        .font(isCompact ? .caption.weight(.semibold) : .subheadline.weight(.semibold))
+                        .lineLimit(resolvedDisplayStyle.titleLineLimit)
+                    Spacer(minLength: 6)
+                    if artwork.pageCount > 1 {
+                        Text("\(artwork.pageCount)P")
+                            .font(.caption2.weight(.semibold))
+                            .padding(.horizontal, 7)
+                            .padding(.vertical, 3)
+                            .keiGlass(10)
+                    }
+                }
+
+                Text(artwork.user.name)
+                    .font(.caption2)
+                    .foregroundStyle(.white.opacity(0.78))
+                    .lineLimit(1)
+
+                HStack(spacing: 10) {
+                    Label(artwork.totalView.formatted(), systemImage: "eye")
+                    Label(artwork.totalBookmarks.formatted(), systemImage: artwork.isBookmarked ? "bookmark.fill" : "bookmark")
+                }
+                .font(.caption2)
+                .foregroundStyle(.white.opacity(0.74))
+                .labelStyle(.titleAndIcon)
+            }
+            .padding(10)
+        }
+    }
+
     private var renderedImageHeight: CGFloat {
         preferredHeight ?? (isCompact ? 152 : 222)
+    }
+
+    private var resolvedDisplayStyle: ArtworkCardDisplayStyle {
+        isCompact ? .compact : displayStyle
     }
 }
