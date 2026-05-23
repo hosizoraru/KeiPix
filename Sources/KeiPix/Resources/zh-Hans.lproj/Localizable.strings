@@ -118,6 +118,8 @@
 "Artwork" = "作品";
 "Previous Artwork" = "上一个作品";
 "Next Artwork" = "下一个作品";
+"Reader Window" = "阅读窗口";
+"Open Reader Window" = "打开阅读窗口";
 "Layout" = "布局";
 "Gallery Layout" = "画廊布局";
 "Auto" = "自动";

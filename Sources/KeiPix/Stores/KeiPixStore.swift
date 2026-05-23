@@ -11,6 +11,7 @@ final class KeiPixStore {
     var selectedRoute: PixivRoute = .illustrations
     var artworks: [PixivArtwork] = []
     var selectedArtwork: PixivArtwork?
+    var readerWindowArtwork: PixivArtwork?
     var focusedUser: PixivUser?
     var searchText = ""
     var searchSubmissionID = 0
@@ -95,6 +96,7 @@ final class KeiPixStore {
             allArtworks = []
             artworks = []
             selectedArtwork = nil
+            readerWindowArtwork = nil
             searchSuggestions = []
             nextURL = nil
             recordedBrowsingHistoryIDs.removeAll()
@@ -301,6 +303,15 @@ final class KeiPixStore {
     func copySelectedArtworkLink() {
         guard let url = selectedArtwork?.pixivURL else { return }
         PasteboardWriter.copy(url.absoluteString)
+    }
+
+    func prepareReaderWindow(for artwork: PixivArtwork) {
+        readerWindowArtwork = artwork
+    }
+
+    func prepareSelectedReaderWindow() {
+        guard let selectedArtwork else { return }
+        prepareReaderWindow(for: selectedArtwork)
     }
 
     func selectPreviousArtwork() {

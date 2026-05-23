@@ -64,6 +64,7 @@ private struct ArtworkActionStrip: View {
     let pageIndex: Int
     let pageCount: Int
 
+    @Environment(\.openWindow) private var openWindow
     @State private var isBookmarkEditorPresented = false
 
     var body: some View {
@@ -125,28 +126,40 @@ private struct ArtworkActionStrip: View {
                     }
                 }
 
-                Menu {
-                    Button(L10n.muteArtwork) {
-                        store.muteArtwork(artwork)
+                HStack(spacing: 10) {
+                    Button {
+                        store.prepareReaderWindow(for: artwork)
+                        openWindow(id: "artwork-reader")
+                    } label: {
+                        Label(L10n.openReaderWindow, systemImage: "rectangle.inset.filled")
+                            .frame(maxWidth: .infinity)
                     }
-                    Button(L10n.muteCreator) {
-                        store.muteUser(artwork.user)
-                    }
-                    if artwork.tags.isEmpty == false {
-                        Menu(L10n.muteTag) {
-                            ForEach(artwork.tags, id: \.self) { tag in
-                                Button("#\(tag.name)") {
-                                    store.muteTag(tag)
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+
+                    Menu {
+                        Button(L10n.muteArtwork) {
+                            store.muteArtwork(artwork)
+                        }
+                        Button(L10n.muteCreator) {
+                            store.muteUser(artwork.user)
+                        }
+                        if artwork.tags.isEmpty == false {
+                            Menu(L10n.muteTag) {
+                                ForEach(artwork.tags, id: \.self) { tag in
+                                    Button("#\(tag.name)") {
+                                        store.muteTag(tag)
+                                    }
                                 }
                             }
                         }
+                    } label: {
+                        Label(L10n.mute, systemImage: "eye.slash")
+                            .frame(maxWidth: .infinity)
                     }
-                } label: {
-                    Label(L10n.mute, systemImage: "eye.slash")
-                        .frame(maxWidth: .infinity)
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
                 }
-                .buttonStyle(.bordered)
-                .controlSize(.small)
             }
         }
     }

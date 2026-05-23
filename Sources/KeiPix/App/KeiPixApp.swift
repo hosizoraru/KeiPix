@@ -3,6 +3,7 @@ import SwiftUI
 @main
 struct KeiPixApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
+    @Environment(\.openWindow) private var openWindow
     @State private var store = KeiPixStore()
 
     var body: some Scene {
@@ -49,6 +50,15 @@ struct KeiPixApp: App {
 
                 Divider()
 
+                Button(L10n.openReaderWindow) {
+                    store.prepareSelectedReaderWindow()
+                    openWindow(id: "artwork-reader")
+                }
+                .keyboardShortcut(.return, modifiers: [.command])
+                .disabled(store.selectedArtwork == nil)
+
+                Divider()
+
                 Button(L10n.openInPixiv) {
                     store.openSelectedArtworkInPixiv()
                 }
@@ -62,6 +72,14 @@ struct KeiPixApp: App {
                 .disabled(store.selectedArtwork?.pixivURL == nil)
             }
         }
+
+        Window(L10n.readerWindow, id: "artwork-reader") {
+            ArtworkReaderWindowView(store: store)
+                .frame(minWidth: 900, minHeight: 680)
+                .environment(\.locale, store.appLanguage.locale ?? .current)
+        }
+        .defaultSize(width: 1180, height: 860)
+        .restorationBehavior(.disabled)
 
         Settings {
             SettingsView(store: store)

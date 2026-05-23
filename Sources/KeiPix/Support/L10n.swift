@@ -121,6 +121,8 @@ enum L10n {
     static var artwork: String { text("Artwork") }
     static var previousArtwork: String { text("Previous Artwork") }
     static var nextArtwork: String { text("Next Artwork") }
+    static var readerWindow: String { text("Reader Window") }
+    static var openReaderWindow: String { text("Open Reader Window") }
     static var layout: String { text("Layout") }
     static var galleryLayout: String { text("Gallery Layout") }
     static var auto: String { text("Auto") }
