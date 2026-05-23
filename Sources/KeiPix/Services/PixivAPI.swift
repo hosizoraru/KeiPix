@@ -161,11 +161,15 @@ actor PixivAPI {
         return try await requestFeed(path: "/v1/illust/ranking", query: query)
     }
 
-    func bookmarks(restrict: String, userID: String) async throws -> PixivFeedResponse {
-        try await requestFeed(path: "/v1/user/bookmarks/illust", query: [
+    func bookmarks(restrict: String, userID: String, tag: String? = nil) async throws -> PixivFeedResponse {
+        var query = [
             "user_id": userID,
             "restrict": restrict
-        ])
+        ]
+        if let tag, tag.isEmpty == false {
+            query["tag"] = tag
+        }
+        return try await requestFeed(path: "/v1/user/bookmarks/illust", query: query)
     }
 
     func following(restrict: String = "public") async throws -> PixivFeedResponse {

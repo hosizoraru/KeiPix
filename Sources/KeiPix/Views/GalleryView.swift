@@ -177,6 +177,9 @@ private struct FeedHeaderView: View {
     @State private var isBatchDownloadPresented = false
     @State private var batchDownloadLimit = 30
     @State private var lastQueuedDownloadCount: Int?
+    @State private var bookmarkTags: [PixivBookmarkTag] = []
+    @State private var isLoadingBookmarkTags = false
+    @State private var bookmarkTagErrorMessage: String?
 
     var body: some View {
         HStack(spacing: 12) {
@@ -202,6 +205,48 @@ private struct FeedHeaderView: View {
                 } label: {
                     Label(L10n.saveSearch, systemImage: "star")
                 }
+                .buttonStyle(.bordered)
+            }
+
+            if store.selectedRoute.isOwnBookmarkRoute {
+                Menu {
+                    Button {
+                        store.setBookmarkTagFilter(nil)
+                    } label: {
+                        Label(L10n.allBookmarkTags, systemImage: store.bookmarkTagFilter == nil ? "checkmark" : "tag")
+                    }
+
+                    Divider()
+
+                    if isLoadingBookmarkTags {
+                        ProgressView()
+                    } else if bookmarkTags.isEmpty {
+                        Text(L10n.noBookmarkTags)
+                    } else {
+                        ForEach(bookmarkTags) { tag in
+                            Button {
+                                store.setBookmarkTagFilter(tag.name)
+                            } label: {
+                                HStack {
+                                    Label(
+                                        tag.name,
+                                        systemImage: store.bookmarkTagFilter == tag.name ? "checkmark" : "tag"
+                                    )
+                                    Spacer()
+                                    Text(tag.count.formatted())
+                                }
+                            }
+                        }
+                    }
+
+                    if let bookmarkTagErrorMessage {
+                        Divider()
+                        Text(bookmarkTagErrorMessage)
+                    }
+                } label: {
+                    Label(bookmarkTagTitle, systemImage: "tag")
+                }
+                .menuStyle(.button)
                 .buttonStyle(.bordered)
             }
 
@@ -258,10 +303,44 @@ private struct FeedHeaderView: View {
                 .buttonStyle(.bordered)
             }
         }
+        .task(id: bookmarkTagRouteKey) {
+            await loadBookmarkTagsIfNeeded()
+        }
     }
 
     private var maxBatchDownloadLimit: Int {
         min(max(store.artworks.count, 1), 100)
+    }
+
+    private var bookmarkTagTitle: String {
+        store.bookmarkTagFilter.map { "#\($0)" } ?? L10n.bookmarkTags
+    }
+
+    private var bookmarkTagRouteKey: String {
+        store.selectedRoute.isOwnBookmarkRoute ? store.selectedRoute.rawValue : ""
+    }
+
+    private func loadBookmarkTagsIfNeeded() async {
+        guard store.selectedRoute.isOwnBookmarkRoute else {
+            bookmarkTags = []
+            bookmarkTagErrorMessage = nil
+            return
+        }
+
+        isLoadingBookmarkTags = true
+        bookmarkTagErrorMessage = nil
+        defer { isLoadingBookmarkTags = false }
+
+        do {
+            bookmarkTags = try await store.bookmarkTagSuggestions(restrict: bookmarkRestrict)
+        } catch {
+            bookmarkTags = []
+            bookmarkTagErrorMessage = error.localizedDescription
+        }
+    }
+
+    private var bookmarkRestrict: BookmarkRestrict {
+        store.selectedRoute == .privateBookmarks ? .private : .public
     }
 
     private var rankingDateTitle: String {

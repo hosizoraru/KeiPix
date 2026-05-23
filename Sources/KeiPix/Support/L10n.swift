@@ -61,6 +61,7 @@ enum L10n {
     static var editBookmark: String { text("Edit Bookmark") }
     static var saveBookmark: String { text("Save Bookmark") }
     static var bookmarkTags: String { text("Bookmark Tags") }
+    static var allBookmarkTags: String { text("All Bookmark Tags") }
     static var addTag: String { text("Add Tag") }
     static var tagName: String { text("Tag Name") }
     static var noBookmarkTags: String { text("No bookmark tags") }

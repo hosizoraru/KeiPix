@@ -18,6 +18,7 @@ final class KeiPixStore {
     var searchSuggestions: [PixivTag] = []
     var searchHistory = UserDefaults.standard.stringArray(forKey: "searchHistory") ?? []
     var savedSearches = UserDefaults.standard.stringArray(forKey: "savedSearches") ?? []
+    var bookmarkTagFilter: String?
     var errorMessage: String?
     var isLoading = false
     var isLoadingMore = false
@@ -120,6 +121,9 @@ final class KeiPixStore {
 
     func select(_ route: PixivRoute) {
         focusedUser = nil
+        if route != selectedRoute || route.isOwnBookmarkRoute == false {
+            bookmarkTagFilter = nil
+        }
         selectedRoute = route
         if route.usesArtworkFeed {
             Task { await reloadCurrentFeed() }
@@ -291,6 +295,11 @@ final class KeiPixStore {
     func saveBookmark(_ artwork: PixivArtwork, restrict: BookmarkRestrict, tags: [String]) async throws {
         try await api.addBookmark(illustID: artwork.id, restrict: restrict, tags: tags)
         updateArtwork(artwork.id) { $0.isBookmarked = true }
+    }
+
+    func setBookmarkTagFilter(_ tag: String?) {
+        bookmarkTagFilter = tag
+        Task { await reloadCurrentFeed() }
     }
 
     func removeBookmark(_ artwork: PixivArtwork) async throws {
@@ -762,10 +771,10 @@ final class KeiPixStore {
             return try await api.ranking(mode: "day_r18_manga", date: rankingDateParameter)
         case .publicBookmarks:
             guard let userID = session?.user.id else { throw PixivAPIError.missingSession }
-            return try await api.bookmarks(restrict: "public", userID: userID)
+            return try await api.bookmarks(restrict: "public", userID: userID, tag: bookmarkTagFilter)
         case .privateBookmarks:
             guard let userID = session?.user.id else { throw PixivAPIError.missingSession }
-            return try await api.bookmarks(restrict: "private", userID: userID)
+            return try await api.bookmarks(restrict: "private", userID: userID, tag: bookmarkTagFilter)
         case .following:
             return try await api.following(restrict: "public")
         case .privateFollowing:
@@ -954,26 +963,4 @@ final class KeiPixStore {
         formatter.dateFormat = "yyyy-MM-dd"
         return formatter
     }()
-}
-
-private extension Array where Element == PixivTag {
-    func uniquedByName() -> [PixivTag] {
-        var seen = Set<String>()
-        return filter { tag in
-            seen.insert(tag.name).inserted
-        }
-    }
-
-    func prefixArray(_ maxLength: Int) -> [PixivTag] {
-        Array(prefix(maxLength))
-    }
-}
-
-private extension Array where Element == String {
-    func uniquedCaseInsensitive() -> [String] {
-        var seen = Set<String>()
-        return filter { value in
-            seen.insert(value.lowercased()).inserted
-        }
-    }
 }

@@ -153,6 +153,10 @@ enum PixivRoute: String, CaseIterable, Identifiable, Codable {
         }
     }
 
+    var isOwnBookmarkRoute: Bool {
+        self == .publicBookmarks || self == .privateBookmarks
+    }
+
     var systemImage: String {
         switch self {
         case .illustrations: "photo.on.rectangle"
