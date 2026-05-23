@@ -9,6 +9,7 @@ struct MasonryLayout: Layout {
     var preferredColumnWidth: CGFloat = 224
     var minColumnWidth: CGFloat = 176
     var maxColumnWidth: CGFloat = 260
+    var fixedColumnCount: Int? = nil
 
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
         resolvedLayout(for: proposal, subviews: subviews).size
@@ -77,6 +78,10 @@ struct MasonryLayout: Layout {
     }
 
     private func resolvedColumnCount(for width: CGFloat) -> Int {
+        if let fixedColumnCount {
+            return min(max(1, fixedColumnCount), maximumColumnCount(for: width))
+        }
+
         var count = max(1, Int((width + spacing) / (preferredColumnWidth + spacing)))
 
         while count < 12, columnWidth(for: width, count: count) > maxColumnWidth {
@@ -88,6 +93,10 @@ struct MasonryLayout: Layout {
         }
 
         return count
+    }
+
+    private func maximumColumnCount(for width: CGFloat) -> Int {
+        max(1, Int((width + spacing) / (minColumnWidth + spacing)))
     }
 
     private func columnWidth(for width: CGFloat, count: Int) -> CGFloat {

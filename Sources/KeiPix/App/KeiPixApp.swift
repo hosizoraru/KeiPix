@@ -8,9 +8,10 @@ struct KeiPixApp: App {
     var body: some Scene {
         WindowGroup("KeiPix", id: "main") {
             ContentView(store: store)
-                .frame(minWidth: 1040, minHeight: 700)
+                .frame(minWidth: 920, minHeight: 700)
                 .environment(\.locale, store.appLanguage.locale ?? .current)
         }
+        .defaultSize(width: 1280, height: 800)
         .commands {
             CommandGroup(after: .newItem) {
                 Button(L10n.refresh) {

@@ -17,11 +17,12 @@ final class KeiPixStore {
     var appLanguage = UserDefaults.standard.string(forKey: "appLanguage")
         .flatMap(AppLanguage.init(rawValue:)) ?? .automatic
     var useOriginalImagesInDetail = UserDefaults.standard.bool(forKey: "useOriginalImagesInDetail")
-    var compactArtworkCards = UserDefaults.standard.bool(forKey: "compactArtworkCards")
+    var galleryLayoutMode = KeiPixStore.loadGalleryLayoutMode()
     var trackpadGesturesEnabled = UserDefaults.standard.object(forKey: "trackpadGesturesEnabled") as? Bool ?? true
     var horizontalSwipeBehavior = UserDefaults.standard.string(forKey: "horizontalSwipeBehavior")
         .flatMap(TrackpadHorizontalSwipeBehavior.init(rawValue:)) ?? .pageOnly
     var hasNextPage: Bool { nextURL != nil }
+    var compactArtworkCards: Bool { galleryLayoutMode.usesCompactGrid }
 
     private let api = PixivAPI()
     private var nextURL: URL?
@@ -155,8 +156,13 @@ final class KeiPixStore {
     }
 
     func setCompactArtworkCards(_ value: Bool) {
-        compactArtworkCards = value
-        UserDefaults.standard.set(value, forKey: "compactArtworkCards")
+        setGalleryLayoutMode(value ? .compactGrid : .autoMasonry)
+    }
+
+    func setGalleryLayoutMode(_ mode: GalleryLayoutMode) {
+        galleryLayoutMode = mode
+        UserDefaults.standard.set(mode.rawValue, forKey: "galleryLayoutMode")
+        UserDefaults.standard.set(mode.usesCompactGrid, forKey: "compactArtworkCards")
     }
 
     func setTrackpadGesturesEnabled(_ value: Bool) {
@@ -215,5 +221,19 @@ final class KeiPixStore {
                 selectedArtwork = artworks[index]
             }
         }
+    }
+
+    private static func loadGalleryLayoutMode() -> GalleryLayoutMode {
+        let defaults = UserDefaults.standard
+        if let rawValue = defaults.string(forKey: "galleryLayoutMode"),
+           let mode = GalleryLayoutMode(rawValue: rawValue) {
+            return mode
+        }
+
+        let mode: GalleryLayoutMode = defaults.bool(forKey: "compactArtworkCards")
+            ? .compactGrid
+            : .autoMasonry
+        defaults.set(mode.rawValue, forKey: "galleryLayoutMode")
+        return mode
     }
 }

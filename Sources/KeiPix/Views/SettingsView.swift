@@ -16,7 +16,15 @@ struct SettingsView: View {
 
             Section(L10n.appearance) {
                 Toggle(L10n.useOriginalImages, isOn: originalBinding)
-                Toggle(L10n.compactCards, isOn: compactCardsBinding)
+            }
+
+            Section(L10n.layout) {
+                Picker(L10n.galleryLayout, selection: galleryLayoutBinding) {
+                    ForEach(GalleryLayoutMode.allCases) { mode in
+                        Text(mode.title).tag(mode)
+                    }
+                }
+                .pickerStyle(.segmented)
             }
 
             Section(L10n.trackpad) {
@@ -57,11 +65,11 @@ struct SettingsView: View {
         }
     }
 
-    private var compactCardsBinding: Binding<Bool> {
+    private var galleryLayoutBinding: Binding<GalleryLayoutMode> {
         Binding {
-            store.compactArtworkCards
+            store.galleryLayoutMode
         } set: { value in
-            store.setCompactArtworkCards(value)
+            store.setGalleryLayoutMode(value)
         }
     }
 

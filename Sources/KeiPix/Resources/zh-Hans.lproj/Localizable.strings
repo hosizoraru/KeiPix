@@ -20,7 +20,17 @@
 "Appearance" = "外观";
 "Use original images in detail" = "详情页使用原图";
 "Layout" = "布局";
+"Gallery Layout" = "画廊布局";
+"Auto" = "自动";
+"Two Columns" = "两列";
+"Three Columns" = "三列";
+"Compact" = "紧凑";
 "Compact artwork cards" = "紧凑作品卡片";
+"Window Size" = "窗口尺寸";
+"Small" = "小";
+"Balanced" = "均衡";
+"Wide" = "宽屏";
+"Reading" = "阅读";
 "Trackpad" = "触控板";
 "Enable trackpad gestures" = "启用触控板手势";
 "Two-finger swipe behavior" = "双指横扫行为";

@@ -39,7 +39,7 @@ private struct GalleryContentGrid: View {
     @Bindable var store: KeiPixStore
 
     var body: some View {
-        if store.compactArtworkCards {
+        if store.galleryLayoutMode.usesCompactGrid {
             LazyVGrid(columns: compactColumns, spacing: 12) {
                 ForEach(store.artworks) { artwork in
                     artworkTile(artwork)
@@ -51,7 +51,7 @@ private struct GalleryContentGrid: View {
             }
         } else {
             VStack(spacing: 14) {
-                MasonryArtworkGrid(store: store)
+                MasonryArtworkGrid(store: store, fixedColumnCount: store.galleryLayoutMode.fixedColumnCount)
 
                 if store.hasNextPage {
                     LoadMoreTile(store: store)
@@ -85,6 +85,7 @@ private struct GalleryContentGrid: View {
 
 private struct MasonryArtworkGrid: View {
     @Bindable var store: KeiPixStore
+    let fixedColumnCount: Int?
 
     private let spacing: CGFloat = 12
     private let preferredColumnWidth: CGFloat = 224
@@ -96,7 +97,8 @@ private struct MasonryArtworkGrid: View {
             spacing: spacing,
             preferredColumnWidth: preferredColumnWidth,
             minColumnWidth: minColumnWidth,
-            maxColumnWidth: maxColumnWidth
+            maxColumnWidth: maxColumnWidth,
+            fixedColumnCount: fixedColumnCount
         ) {
             ForEach(store.artworks) { artwork in
                 let presentation = ArtworkMasonryPresentation(artwork: artwork)

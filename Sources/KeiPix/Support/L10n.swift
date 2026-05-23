@@ -23,7 +23,17 @@ enum L10n {
     static var appearance: String { text("Appearance") }
     static var useOriginalImages: String { text("Use original images in detail") }
     static var layout: String { text("Layout") }
+    static var galleryLayout: String { text("Gallery Layout") }
+    static var auto: String { text("Auto") }
+    static var twoColumns: String { text("Two Columns") }
+    static var threeColumns: String { text("Three Columns") }
+    static var compact: String { text("Compact") }
     static var compactCards: String { text("Compact artwork cards") }
+    static var windowSize: String { text("Window Size") }
+    static var smallWindow: String { text("Small") }
+    static var balancedWindow: String { text("Balanced") }
+    static var wideWindow: String { text("Wide") }
+    static var readingWindow: String { text("Reading") }
     static var trackpad: String { text("Trackpad") }
     static var enableTrackpadGestures: String { text("Enable trackpad gestures") }
     static var twoFingerSwipeBehavior: String { text("Two-finger swipe behavior") }

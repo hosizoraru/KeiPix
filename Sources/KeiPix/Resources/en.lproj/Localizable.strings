@@ -20,7 +20,17 @@
 "Appearance" = "Appearance";
 "Use original images in detail" = "Use original images in detail";
 "Layout" = "Layout";
+"Gallery Layout" = "Gallery Layout";
+"Auto" = "Auto";
+"Two Columns" = "Two Columns";
+"Three Columns" = "Three Columns";
+"Compact" = "Compact";
 "Compact artwork cards" = "Compact artwork cards";
+"Window Size" = "Window Size";
+"Small" = "Small";
+"Balanced" = "Balanced";
+"Wide" = "Wide";
+"Reading" = "Reading";
 "Trackpad" = "Trackpad";
 "Enable trackpad gestures" = "Enable trackpad gestures";
 "Two-finger swipe behavior" = "Two-finger swipe behavior";

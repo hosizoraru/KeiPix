@@ -29,7 +29,7 @@ struct SidebarView: View {
             }
         }
         .listStyle(.sidebar)
-        .navigationSplitViewColumnWidth(min: 210, ideal: 230, max: 280)
+        .navigationSplitViewColumnWidth(min: 220, ideal: 236, max: 270)
         .onChange(of: store.selectedRoute) { _, newValue in
             store.select(newValue)
         }
@@ -58,7 +58,13 @@ struct SidebarView: View {
     }
 
     private func sidebarRow(_ route: PixivRoute) -> some View {
-        Label(route.title, systemImage: route.systemImage)
+        Label {
+            Text(route.title)
+                .lineLimit(1)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        } icon: {
+            Image(systemName: route.systemImage)
+        }
             .tag(route)
     }
 }
@@ -84,5 +90,6 @@ private struct UserHeader: View {
             Spacer(minLength: 0)
         }
         .padding(.vertical, 4)
+        .help("\(session.user.name) @\(session.user.account)")
     }
 }

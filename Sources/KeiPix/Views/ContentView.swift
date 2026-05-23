@@ -2,17 +2,19 @@ import SwiftUI
 
 struct ContentView: View {
     @Bindable var store: KeiPixStore
+    @State private var columnVisibility: NavigationSplitViewVisibility = .all
 
     var body: some View {
-        NavigationSplitView {
+        NavigationSplitView(columnVisibility: $columnVisibility) {
             SidebarView(store: store)
         } content: {
             GalleryView(store: store)
-                .navigationSplitViewColumnWidth(min: 560, ideal: 780)
+                .navigationSplitViewColumnWidth(min: 500, ideal: 720)
         } detail: {
             ArtworkDetailView(store: store)
-                .navigationSplitViewColumnWidth(min: 360, ideal: 460)
+                .navigationSplitViewColumnWidth(min: 360, ideal: 480)
         }
+        .frame(minWidth: minimumWindowWidth, minHeight: 700)
         .searchable(text: $store.searchText, prompt: L10n.searchPlaceholder)
         .onSubmit(of: .search) {
             Task { await store.runSearch() }
@@ -29,10 +31,26 @@ struct ContentView: View {
             ToolbarSpacer(.fixed, placement: .primaryAction)
 
             ToolbarItem(placement: .primaryAction) {
-                Toggle(isOn: compactCardsBinding) {
-                    Label(L10n.compactCards, systemImage: store.compactArtworkCards ? "rectangle.grid.3x2.fill" : "rectangle.grid.2x2")
+                Menu {
+                    ForEach(WindowSizePreset.allCases) { preset in
+                        Button(preset.title) {
+                            preset.apply(sidebarVisible: sidebarVisible)
+                        }
+                    }
+                } label: {
+                    Label(L10n.windowSize, systemImage: "macwindow")
                 }
-                .toggleStyle(.button)
+            }
+
+            ToolbarItem(placement: .primaryAction) {
+                Picker(L10n.galleryLayout, selection: galleryLayoutBinding) {
+                    ForEach(GalleryLayoutMode.allCases) { mode in
+                        Text(mode.title).tag(mode)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .controlSize(.small)
+                .frame(width: 300)
             }
 
             ToolbarItem(placement: .primaryAction) {
@@ -73,11 +91,19 @@ struct ContentView: View {
         }
     }
 
-    private var compactCardsBinding: Binding<Bool> {
+    private var sidebarVisible: Bool {
+        columnVisibility == .all || columnVisibility == .automatic
+    }
+
+    private var minimumWindowWidth: CGFloat {
+        sidebarVisible ? 1080 : 1040
+    }
+
+    private var galleryLayoutBinding: Binding<GalleryLayoutMode> {
         Binding {
-            store.compactArtworkCards
+            store.galleryLayoutMode
         } set: { value in
-            store.setCompactArtworkCards(value)
+            store.setGalleryLayoutMode(value)
         }
     }
 }
