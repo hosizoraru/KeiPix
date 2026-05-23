@@ -9,6 +9,7 @@ final class ArtworkDownloadStore {
     var isDownloading = false
     var downloadDirectoryPath: String
     var downloadNamingTemplate: String
+    var downloadQueueFilter: DownloadQueueFilter
 
     private let fileManager = FileManager.default
     private var workerTask: Task<Void, Never>?
@@ -18,6 +19,8 @@ final class ArtworkDownloadStore {
             ?? ArtworkDownloadStore.defaultDownloadDirectory.path(percentEncoded: false)
         downloadNamingTemplate = UserDefaults.standard.string(forKey: "downloadNamingTemplate")
             ?? DownloadNamingTemplate.defaultTemplate
+        downloadQueueFilter = UserDefaults.standard.string(forKey: "downloadQueueFilter")
+            .flatMap(DownloadQueueFilter.init(rawValue:)) ?? .all
         items = ArtworkDownloadStore.loadItems()
         var restoredInterruptedItems = false
         for index in items.indices where items[index].status == .downloading || items[index].status == .queued {
@@ -154,6 +157,23 @@ final class ArtworkDownloadStore {
     func clearCompleted() {
         items.removeAll { $0.status == .completed }
         persistItems()
+    }
+
+    var filteredItems: [ArtworkDownloadItem] {
+        items.filter(downloadQueueFilter.includes)
+    }
+
+    var activeCount: Int {
+        items.filter { $0.status == .queued || $0.status == .downloading }.count
+    }
+
+    var completedCount: Int {
+        items.filter { $0.status == .completed }.count
+    }
+
+    func setDownloadQueueFilter(_ filter: DownloadQueueFilter) {
+        downloadQueueFilter = filter
+        UserDefaults.standard.set(filter.rawValue, forKey: "downloadQueueFilter")
     }
 
     @discardableResult

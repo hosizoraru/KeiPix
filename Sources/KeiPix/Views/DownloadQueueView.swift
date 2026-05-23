@@ -5,6 +5,8 @@ struct DownloadQueueView: View {
     @State private var selectedPreview: DownloadedPreview?
 
     var body: some View {
+        let visibleItems = store.downloads.filteredItems
+
         VStack(spacing: 0) {
             DownloadQueueHeader(downloads: store.downloads)
                 .padding(.horizontal, 18)
@@ -17,10 +19,16 @@ struct DownloadQueueView: View {
                     subtitle: L10n.noDownloadsSubtitle,
                     systemImage: "arrow.down.circle"
                 )
+            } else if visibleItems.isEmpty {
+                EmptyStateView(
+                    title: L10n.noMatchingDownloadsTitle,
+                    subtitle: L10n.noMatchingDownloadsSubtitle,
+                    systemImage: "line.3.horizontal.decrease.circle"
+                )
             } else {
                 ScrollView {
                     LazyVStack(spacing: 10) {
-                        ForEach(store.downloads.items) { item in
+                        ForEach(visibleItems) { item in
                             DownloadQueueRow(
                                 item: item,
                                 downloads: store.downloads,
@@ -78,42 +86,78 @@ private struct DownloadQueueHeader: View {
     @Bindable var downloads: ArtworkDownloadStore
 
     var body: some View {
-        HStack(spacing: 12) {
-            VStack(alignment: .leading, spacing: 3) {
-                Text(L10n.downloads)
-                    .font(.headline)
-                Text(downloads.downloadDirectoryPath)
-                    .font(.caption)
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 12) {
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(L10n.downloads)
+                        .font(.headline)
+                    Text(downloads.downloadDirectoryPath)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                        .textSelection(.enabled)
+                }
+
+                Spacer()
+
+                Button {
+                    downloads.openDownloadDirectory()
+                } label: {
+                    Label(L10n.openFolder, systemImage: "folder")
+                }
+                .buttonStyle(.bordered)
+
+                Button {
+                    downloads.clearInvalidItems()
+                } label: {
+                    Label(L10n.clearInvalidDownloads, systemImage: "exclamationmark.arrow.trianglehead.2.clockwise.rotate.90")
+                }
+                .buttonStyle(.bordered)
+
+                Button {
+                    downloads.clearCompleted()
+                } label: {
+                    Label(L10n.clearCompleted, systemImage: "checkmark.circle")
+                }
+                .buttonStyle(.bordered)
+                .disabled(downloads.completedCount == 0)
+            }
+
+            HStack(spacing: 12) {
+                Picker(L10n.downloadFilter, selection: downloadFilterBinding) {
+                    ForEach(DownloadQueueFilter.allCases) { filter in
+                        Text(filter.title).tag(filter)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .frame(maxWidth: 620)
+
+                Spacer()
+
+                Text(summaryText)
+                    .font(.caption.monospacedDigit())
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
-                    .truncationMode(.middle)
-                    .textSelection(.enabled)
             }
-
-            Spacer()
-
-            Button {
-                downloads.openDownloadDirectory()
-            } label: {
-                Label(L10n.openFolder, systemImage: "folder")
-            }
-            .buttonStyle(.bordered)
-
-            Button {
-                downloads.clearInvalidItems()
-            } label: {
-                Label(L10n.clearInvalidDownloads, systemImage: "exclamationmark.arrow.trianglehead.2.clockwise.rotate.90")
-            }
-            .buttonStyle(.bordered)
-
-            Button {
-                downloads.clearCompleted()
-            } label: {
-                Label(L10n.clearCompleted, systemImage: "checkmark.circle")
-            }
-            .buttonStyle(.bordered)
-            .disabled(downloads.items.contains { $0.status == .completed } == false)
         }
+    }
+
+    private var downloadFilterBinding: Binding<DownloadQueueFilter> {
+        Binding {
+            downloads.downloadQueueFilter
+        } set: { value in
+            downloads.setDownloadQueueFilter(value)
+        }
+    }
+
+    private var summaryText: String {
+        String(
+            format: L10n.downloadQueueSummaryFormat,
+            downloads.filteredItems.count,
+            downloads.activeCount,
+            downloads.completedCount
+        )
     }
 }
 

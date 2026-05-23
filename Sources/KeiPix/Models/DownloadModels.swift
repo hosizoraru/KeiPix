@@ -34,6 +34,51 @@ enum ArtworkDownloadArtifactKind: String, Codable, Sendable {
     }
 }
 
+enum DownloadQueueFilter: String, CaseIterable, Identifiable, Sendable {
+    case all
+    case active
+    case completed
+    case failed
+    case imagePages
+    case ugoiraZip
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .all:
+            L10n.allDownloads
+        case .active:
+            L10n.activeDownloads
+        case .completed:
+            L10n.completedDownloads
+        case .failed:
+            L10n.failedDownloads
+        case .imagePages:
+            L10n.imagePages
+        case .ugoiraZip:
+            L10n.ugoiraZip
+        }
+    }
+
+    func includes(_ item: ArtworkDownloadItem) -> Bool {
+        switch self {
+        case .all:
+            true
+        case .active:
+            item.status == .queued || item.status == .downloading
+        case .completed:
+            item.status == .completed
+        case .failed:
+            item.status == .failed
+        case .imagePages:
+            item.resolvedArtifactKind == .imagePages
+        case .ugoiraZip:
+            item.resolvedArtifactKind == .ugoiraZip
+        }
+    }
+}
+
 struct ArtworkDownloadItem: Identifiable, Codable, Sendable {
     let id: UUID
     let artworkID: Int

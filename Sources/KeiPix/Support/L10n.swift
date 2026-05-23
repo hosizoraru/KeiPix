@@ -87,11 +87,19 @@ enum L10n {
     static var deleteDownload: String { text("Delete Download") }
     static var noDownloadsTitle: String { text("No downloads yet") }
     static var noDownloadsSubtitle: String { text("Download artworks from the detail view or artwork context menus.") }
+    static var noMatchingDownloadsTitle: String { text("No matching downloads") }
+    static var noMatchingDownloadsSubtitle: String { text("Change the download filter to see other queue items.") }
     static var downloadInterrupted: String { text("Download interrupted") }
     static var batchDownload: String { text("Batch Download") }
     static var maximumDownloads: String { text("Maximum downloads") }
     static var addToDownloadQueue: String { text("Add to Download Queue") }
     static var queuedDownloadsFormat: String { text("Queued %d downloads") }
+    static var downloadFilter: String { text("Download Filter") }
+    static var allDownloads: String { text("All Downloads") }
+    static var activeDownloads: String { text("Active") }
+    static var completedDownloads: String { text("Completed") }
+    static var failedDownloads: String { text("Failed Downloads") }
+    static var downloadQueueSummaryFormat: String { text("%d shown · %d active · %d completed") }
     static var bookmark: String { text("Bookmark") }
     static var removeBookmark: String { text("Remove Bookmark") }
     static var editBookmark: String { text("Edit Bookmark") }
