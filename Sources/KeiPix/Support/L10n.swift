@@ -102,6 +102,7 @@ enum L10n {
     static var english: String { text("English") }
     static var appearance: String { text("Appearance") }
     static var useOriginalImages: String { text("Use original images in detail") }
+    static var showTranslatedTags: String { text("Show translated tag names") }
     static var contentFilters: String { text("Content Filters") }
     static var showContentBadges: String { text("Show content badges") }
     static var hideMutedContent: String { text("Hide muted content") }
@@ -202,6 +203,9 @@ enum L10n {
     static var dailyR18Manga: String { text("Daily R-18 Manga") }
     static var details: String { text("Details") }
     static var tags: String { text("Tags") }
+    static var searchTag: String { text("Search Tag") }
+    static var copyTag: String { text("Copy Tag") }
+    static var copyTranslatedTag: String { text("Copy Translated Tag") }
     static var description: String { text("Description") }
     static var artworkInformation: String { text("Artwork Information") }
     static var comments: String { text("Comments") }

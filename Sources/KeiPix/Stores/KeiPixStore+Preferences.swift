@@ -17,6 +17,11 @@ extension KeiPixStore {
         UserDefaults.standard.set(value, forKey: "useOriginalImagesInDetail")
     }
 
+    func setShowTranslatedTags(_ value: Bool) {
+        showTranslatedTags = value
+        UserDefaults.standard.set(value, forKey: "showTranslatedTags")
+    }
+
     func setShowContentBadges(_ value: Bool) {
         showContentBadges = value
         UserDefaults.standard.set(value, forKey: "showContentBadges")

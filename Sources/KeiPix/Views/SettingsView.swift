@@ -20,6 +20,7 @@ struct SettingsView: View {
 
             Section(L10n.appearance) {
                 Toggle(L10n.useOriginalImages, isOn: originalBinding)
+                Toggle(L10n.showTranslatedTags, isOn: translatedTagsBinding)
             }
 
             Section(L10n.contentFilters) {
@@ -224,6 +225,14 @@ struct SettingsView: View {
             store.useOriginalImagesInDetail
         } set: { value in
             store.setUseOriginalImagesInDetail(value)
+        }
+    }
+
+    private var translatedTagsBinding: Binding<Bool> {
+        Binding {
+            store.showTranslatedTags
+        } set: { value in
+            store.setShowTranslatedTags(value)
         }
     }
 

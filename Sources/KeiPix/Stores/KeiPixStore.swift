@@ -27,6 +27,7 @@ final class KeiPixStore {
         .flatMap(AppLanguage.init(rawValue:)) ?? .automatic
     var useOriginalImagesInDetail = UserDefaults.standard.bool(forKey: "useOriginalImagesInDetail")
     var galleryLayoutMode = KeiPixStore.loadGalleryLayoutMode()
+    var showTranslatedTags = UserDefaults.standard.object(forKey: "showTranslatedTags") as? Bool ?? true
     var showContentBadges = UserDefaults.standard.object(forKey: "showContentBadges") as? Bool ?? true
     var showAccountIdentity = UserDefaults.standard.object(forKey: "showAccountIdentity") as? Bool ?? true
     var privacyModeEnabled = UserDefaults.standard.object(forKey: "privacyModeEnabled") as? Bool ?? false

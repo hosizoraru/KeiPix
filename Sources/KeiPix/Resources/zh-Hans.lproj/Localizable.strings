@@ -99,6 +99,7 @@
 "English" = "English";
 "Appearance" = "外观";
 "Use original images in detail" = "详情页使用原图";
+"Show translated tag names" = "显示标签翻译名";
 "Content Filters" = "内容过滤";
 "Show content badges" = "显示内容标识";
 "Hide muted content" = "隐藏已屏蔽内容";
@@ -199,6 +200,9 @@
 "Daily R-18 Manga" = "R-18 漫画日榜";
 "Details" = "详情";
 "Tags" = "标签";
+"Search Tag" = "搜索标签";
+"Copy Tag" = "复制标签";
+"Copy Translated Tag" = "复制标签翻译名";
 "Description" = "简介";
 "Artwork Information" = "作品信息";
 "Comments" = "评论";

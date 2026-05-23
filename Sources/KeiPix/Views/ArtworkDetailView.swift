@@ -81,6 +81,7 @@ private struct ArtworkInspectorView: View {
 
                     ArtworkInformationSections(
                         artwork: artwork,
+                        store: store,
                         captionExpanded: $captionExpanded,
                         tagsExpanded: $tagsExpanded,
                         metadataExpanded: $metadataExpanded

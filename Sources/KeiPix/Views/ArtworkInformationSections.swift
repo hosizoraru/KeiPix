@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ArtworkInformationSections: View {
     let artwork: PixivArtwork
+    @Bindable var store: KeiPixStore
     @Binding var captionExpanded: Bool
     @Binding var tagsExpanded: Bool
     @Binding var metadataExpanded: Bool
@@ -27,16 +28,7 @@ struct ArtworkInformationSections: View {
                 systemImage: "tag",
                 isExpanded: $tagsExpanded
             ) {
-                FlowLayout(spacing: 8) {
-                    ForEach(artwork.tags, id: \.self) { tag in
-                        Text(tag.translatedName.map { "#\(tag.name) / \($0)" } ?? "#\(tag.name)")
-                            .font(.caption)
-                            .padding(.horizontal, 9)
-                            .padding(.vertical, 5)
-                            .foregroundStyle(.secondary)
-                            .background(.quinary, in: Capsule())
-                    }
-                }
+                ArtworkTagChipsView(tags: artwork.tags, store: store)
             }
 
             CollapsibleInspectorSection(

@@ -99,6 +99,7 @@
 "English" = "English";
 "Appearance" = "Appearance";
 "Use original images in detail" = "Use original images in detail";
+"Show translated tag names" = "Show translated tag names";
 "Content Filters" = "Content Filters";
 "Show content badges" = "Show content badges";
 "Hide muted content" = "Hide muted content";
@@ -199,6 +200,9 @@
 "Daily R-18 Manga" = "Daily R-18 Manga";
 "Details" = "Details";
 "Tags" = "Tags";
+"Search Tag" = "Search Tag";
+"Copy Tag" = "Copy Tag";
+"Copy Translated Tag" = "Copy Translated Tag";
 "Description" = "Description";
 "Artwork Information" = "Artwork Information";
 "Comments" = "Comments";
