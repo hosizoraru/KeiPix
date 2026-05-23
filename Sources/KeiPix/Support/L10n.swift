@@ -32,6 +32,33 @@ enum L10n {
     static var hideAIArtworks: String { text("Hide AI-generated artworks") }
     static var hideR18Artworks: String { text("Hide R-18 artworks") }
     static var hideR18GArtworks: String { text("Hide R-18G artworks") }
+    static var searchFilters: String { text("Search Filters") }
+    static var matchType: String { text("Match Type") }
+    static var partialTagMatch: String { text("Partial tag match") }
+    static var exactTagMatch: String { text("Exact tag match") }
+    static var titleAndCaption: String { text("Title and caption") }
+    static var sort: String { text("Sort") }
+    static var newest: String { text("Newest") }
+    static var oldest: String { text("Oldest") }
+    static var popular: String { text("Popular") }
+    static var ageLimit: String { text("Age Limit") }
+    static var unlimited: String { text("Unlimited") }
+    static var dateRange: String { text("Date Range") }
+    static var anytime: String { text("Anytime") }
+    static var pastDay: String { text("Past Day") }
+    static var pastWeek: String { text("Past Week") }
+    static var pastMonth: String { text("Past Month") }
+    static var pastYear: String { text("Past Year") }
+    static var minimumBookmarks: String { text("Minimum Bookmarks") }
+    static var noMinimum: String { text("No minimum") }
+    static var workType: String { text("Work Type") }
+    static var allWorks: String { text("All Works") }
+    static var ugoiraFilter: String { text("Ugoira Filter") }
+    static var all: String { text("All") }
+    static var onlyUgoira: String { text("Only Ugoira") }
+    static var noUgoira: String { text("No Ugoira") }
+    static var reset: String { text("Reset") }
+    static var apply: String { text("Apply") }
     static var layout: String { text("Layout") }
     static var galleryLayout: String { text("Gallery Layout") }
     static var auto: String { text("Auto") }
@@ -96,6 +123,11 @@ enum L10n {
     static var allAges: String { text("All Ages") }
     static var yes: String { text("Yes") }
     static var no: String { text("No") }
+    static var playUgoira: String { text("Play Ugoira") }
+    static var pauseUgoira: String { text("Pause Ugoira") }
+    static var reloadUgoira: String { text("Reload Ugoira") }
+    static var loadingUgoira: String { text("Loading Ugoira") }
+    static var retry: String { text("Retry") }
     static var created: String { text("Created") }
     static var artworkID: String { text("Artwork ID") }
     static var creatorID: String { text("Creator ID") }

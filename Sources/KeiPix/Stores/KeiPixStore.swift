@@ -22,6 +22,15 @@ final class KeiPixStore {
     var hideAIArtworks = UserDefaults.standard.bool(forKey: "hideAIArtworks")
     var hideR18Artworks = UserDefaults.standard.bool(forKey: "hideR18Artworks")
     var hideR18GArtworks = UserDefaults.standard.bool(forKey: "hideR18GArtworks")
+    var searchMatchType = KeiPixStore.loadEnum("searchMatchType", defaultValue: SearchMatchType.partialTags)
+    var searchSort = KeiPixStore.loadEnum("searchSort", defaultValue: SearchSort.dateDescending)
+    var searchAgeLimit = KeiPixStore.loadEnum("searchAgeLimit", defaultValue: SearchAgeLimit.unlimited)
+    var searchDateRange = KeiPixStore.loadEnum("searchDateRange", defaultValue: SearchDateRange.anytime)
+    var searchMinimumBookmarks = SearchMinimumBookmarks(
+        rawValue: UserDefaults.standard.integer(forKey: "searchMinimumBookmarks")
+    ) ?? .none
+    var searchArtworkType = KeiPixStore.loadEnum("searchArtworkType", defaultValue: SearchArtworkType.all)
+    var searchUgoiraFilter = KeiPixStore.loadEnum("searchUgoiraFilter", defaultValue: SearchUgoiraFilter.all)
     var trackpadGesturesEnabled = UserDefaults.standard.object(forKey: "trackpadGesturesEnabled") as? Bool ?? true
     var horizontalSwipeBehavior = UserDefaults.standard.string(forKey: "horizontalSwipeBehavior")
         .flatMap(TrackpadHorizontalSwipeBehavior.init(rawValue:)) ?? .pageOnly
@@ -156,6 +165,12 @@ final class KeiPixStore {
         }
     }
 
+    func loadUgoiraAnimation(for artwork: PixivArtwork) async throws -> UgoiraAnimation {
+        let metadata = try await api.ugoiraMetadata(illustID: artwork.id)
+        let zipData = try await api.ugoiraZipData(url: metadata.zipURLs.medium)
+        return try UgoiraFrameDecoder.decode(zipData: zipData, metadata: metadata)
+    }
+
     func setUseOriginalImagesInDetail(_ value: Bool) {
         useOriginalImagesInDetail = value
         UserDefaults.standard.set(value, forKey: "useOriginalImagesInDetail")
@@ -182,6 +197,65 @@ final class KeiPixStore {
         hideR18GArtworks = value
         UserDefaults.standard.set(value, forKey: "hideR18GArtworks")
         applyContentFilters()
+    }
+
+    var searchOptions: SearchOptions {
+        SearchOptions(
+            matchType: searchMatchType,
+            sort: searchSort,
+            ageLimit: searchAgeLimit,
+            dateRange: searchDateRange,
+            minimumBookmarks: searchMinimumBookmarks,
+            artworkType: searchArtworkType,
+            ugoiraFilter: searchUgoiraFilter
+        )
+    }
+
+    func setSearchMatchType(_ value: SearchMatchType) {
+        searchMatchType = value
+        UserDefaults.standard.set(value.rawValue, forKey: "searchMatchType")
+    }
+
+    func setSearchSort(_ value: SearchSort) {
+        searchSort = value
+        UserDefaults.standard.set(value.rawValue, forKey: "searchSort")
+    }
+
+    func setSearchAgeLimit(_ value: SearchAgeLimit) {
+        searchAgeLimit = value
+        UserDefaults.standard.set(value.rawValue, forKey: "searchAgeLimit")
+    }
+
+    func setSearchDateRange(_ value: SearchDateRange) {
+        searchDateRange = value
+        UserDefaults.standard.set(value.rawValue, forKey: "searchDateRange")
+    }
+
+    func setSearchMinimumBookmarks(_ value: SearchMinimumBookmarks) {
+        searchMinimumBookmarks = value
+        UserDefaults.standard.set(value.rawValue, forKey: "searchMinimumBookmarks")
+    }
+
+    func setSearchArtworkType(_ value: SearchArtworkType) {
+        searchArtworkType = value
+        UserDefaults.standard.set(value.rawValue, forKey: "searchArtworkType")
+        applyContentFilters()
+    }
+
+    func setSearchUgoiraFilter(_ value: SearchUgoiraFilter) {
+        searchUgoiraFilter = value
+        UserDefaults.standard.set(value.rawValue, forKey: "searchUgoiraFilter")
+        applyContentFilters()
+    }
+
+    func resetSearchOptions() {
+        setSearchMatchType(.partialTags)
+        setSearchSort(.dateDescending)
+        setSearchAgeLimit(.unlimited)
+        setSearchDateRange(.anytime)
+        setSearchMinimumBookmarks(.none)
+        setSearchArtworkType(.all)
+        setSearchUgoiraFilter(.all)
     }
 
     func setAppLanguage(_ language: AppLanguage) {
@@ -232,7 +306,7 @@ final class KeiPixStore {
             if keyword.isEmpty {
                 return PixivFeedResponse(illusts: [], nextURL: nil)
             }
-            return try await api.search(keyword: keyword)
+            return try await api.search(keyword: keyword, options: searchOptions)
         case .rankingDaily:
             return try await api.ranking(mode: "day")
         case .rankingWeekly:
@@ -288,6 +362,32 @@ final class KeiPixStore {
         if hideR18Artworks, artwork.isR18 {
             return false
         }
+        if selectedRoute == .search {
+            switch searchArtworkType {
+            case .all:
+                break
+            case .illustrations:
+                if artwork.type != "illust" {
+                    return false
+                }
+            case .manga:
+                if artwork.type != "manga" {
+                    return false
+                }
+            }
+            switch searchUgoiraFilter {
+            case .all:
+                break
+            case .onlyUgoira:
+                if artwork.isUgoira == false {
+                    return false
+                }
+            case .noUgoira:
+                if artwork.isUgoira {
+                    return false
+                }
+            }
+        }
         return true
     }
 
@@ -303,5 +403,13 @@ final class KeiPixStore {
             : .autoMasonry
         defaults.set(mode.rawValue, forKey: "galleryLayoutMode")
         return mode
+    }
+
+    private static func loadEnum<T: RawRepresentable>(_ key: String, defaultValue: T) -> T where T.RawValue == String {
+        guard let rawValue = UserDefaults.standard.string(forKey: key),
+              let value = T(rawValue: rawValue) else {
+            return defaultValue
+        }
+        return value
     }
 }

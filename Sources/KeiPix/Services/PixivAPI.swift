@@ -131,19 +131,45 @@ actor PixivAPI {
         ])
     }
 
-    func search(keyword: String) async throws -> PixivFeedResponse {
-        try await requestFeed(path: "/v1/search/illust", query: [
+    func search(keyword: String, options: SearchOptions) async throws -> PixivFeedResponse {
+        var query = [
             "filter": "for_android",
             "include_translated_tag_results": "true",
             "merge_plain_keyword_results": "true",
-            "word": keyword,
-            "sort": "date_desc",
-            "search_target": "partial_match_for_tags"
-        ])
+            "word": (keyword + options.ageLimit.keywordSuffix).trimmingCharacters(in: .whitespacesAndNewlines),
+            "search_target": options.matchType.apiValue
+        ]
+
+        if options.sort == .popularPreview {
+            return try await requestFeed(path: "/v1/search/popular-preview/illust", query: query)
+        }
+
+        query["sort"] = options.sort.apiValue
+        if options.minimumBookmarks.rawValue > 0 {
+            query["bookmark_num_min"] = "\(options.minimumBookmarks.rawValue)"
+        }
+        if let startDate = options.dateRange.startDate() {
+            query["start_date"] = Self.searchDateFormatter.string(from: startDate)
+            query["end_date"] = Self.searchDateFormatter.string(from: Date())
+        }
+        return try await requestFeed(path: "/v1/search/illust", query: query)
     }
 
     func nextFeed(_ url: URL) async throws -> PixivFeedResponse {
         try await requestFeed(url: url)
+    }
+
+    func ugoiraMetadata(illustID: Int) async throws -> PixivUgoiraMetadata {
+        let response: PixivUgoiraMetadataResponse = try await requestJSON(
+            URL(string: "/v1/ugoira/metadata?illust_id=\(illustID)", relativeTo: Endpoint.apiBase)!,
+            method: "GET",
+            form: nil
+        )
+        return response.metadata
+    }
+
+    func ugoiraZipData(url: URL) async throws -> Data {
+        try await requestData(url, includeAuth: false, includePixivImageReferer: true)
     }
 
     func setBookmark(illustID: Int, isBookmarked: Bool) async throws {
@@ -257,6 +283,26 @@ actor PixivAPI {
         return try jsonDecoder.decode(T.self, from: data)
     }
 
+    private func requestData(
+        _ url: URL,
+        includeAuth: Bool,
+        includePixivImageReferer: Bool = false
+    ) async throws -> Data {
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        applyHeaders(to: &request, includeAuth: includeAuth)
+        if includePixivImageReferer {
+            request.setValue("https://app-api.pixiv.net/", forHTTPHeaderField: "Referer")
+        }
+
+        let (data, response) = try await urlSession.data(for: request)
+        guard let httpResponse = response as? HTTPURLResponse,
+              (200..<300).contains(httpResponse.statusCode) else {
+            throw PixivAPIError.invalidResponse
+        }
+        return data
+    }
+
     private func applyHeaders(to request: inout URLRequest, includeAuth: Bool) {
         let time = Self.clientTime()
         request.setValue(time, forHTTPHeaderField: "X-Client-Time")
@@ -299,6 +345,14 @@ actor PixivAPI {
     private static let hashSalt = "28c1fdd170a5204386cb1313c7077b34f83e4aaf4aa829ce78c231e05b0bae2c"
     private static let clientID = "MOBrBDS8blbauoSck0ZfDbtuzpyT"
     private static let clientSecret = "lsACyCD94FhDUtGTXi3QzcFE2uU1hqtDaKeqrdwj"
+    private static let searchDateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.calendar = Calendar(identifier: .gregorian)
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = TimeZone(secondsFromGMT: 0)
+        formatter.dateFormat = "yyyy-MM-dd"
+        return formatter
+    }()
 }
 
 private struct PixivErrorResponse: Decodable {

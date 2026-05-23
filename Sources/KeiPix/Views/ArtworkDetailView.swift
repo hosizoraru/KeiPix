@@ -50,16 +50,20 @@ private struct ArtworkInspectorView: View {
                         .padding(.top, 14)
                     }
 
-                    ArtworkReaderView(
-                        artwork: artwork,
-                        store: store,
-                        pageIndex: $pageIndex,
-                        readingMode: $readingMode,
-                        scrollTarget: $scrollTarget,
-                        scrollToPage: { index in
-                            scrollToPage(index, proxy: proxy)
-                        }
-                    )
+                    if artwork.isUgoira {
+                        UgoiraPlayerView(artwork: artwork, store: store)
+                    } else {
+                        ArtworkReaderView(
+                            artwork: artwork,
+                            store: store,
+                            pageIndex: $pageIndex,
+                            readingMode: $readingMode,
+                            scrollTarget: $scrollTarget,
+                            scrollToPage: { index in
+                                scrollToPage(index, proxy: proxy)
+                            }
+                        )
+                    }
 
                     ArtworkSummaryView(artwork: artwork, store: store, pageIndex: pageIndex, pageCount: pageCount)
                         .padding(.horizontal, 18)

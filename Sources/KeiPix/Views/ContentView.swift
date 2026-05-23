@@ -55,6 +55,10 @@ struct ContentView: View {
             }
 
             ToolbarItem(placement: .primaryAction) {
+                SearchFilterButton(store: store)
+            }
+
+            ToolbarItem(placement: .primaryAction) {
                 Picker(L10n.galleryLayout, selection: galleryLayoutBinding) {
                     ForEach(GalleryLayoutMode.allCases) { mode in
                         Text(mode.title).tag(mode)
