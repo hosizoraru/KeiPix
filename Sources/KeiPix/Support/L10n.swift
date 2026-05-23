@@ -5,6 +5,7 @@ enum L10n {
     static var works: String { text("Works") }
     static var illustrations: String { text("Illustrations") }
     static var manga: String { text("Manga") }
+    static var trendingTags: String { text("Trending Tags") }
     static var search: String { text("Search") }
     static var searchCreators: String { text("Search Creators") }
     static var savedSearches: String { text("Saved Searches") }
@@ -25,6 +26,7 @@ enum L10n {
     static var recommendedCreators: String { text("Recommended Creators") }
     static var relatedCreators: String { text("Related Creators") }
     static var noRelatedCreators: String { text("No related creators") }
+    static var noTrendingTags: String { text("No trending tags") }
     static var creatorNetwork: String { text("Creator Network") }
     static var enterSearchKeyword: String { text("Enter a search keyword") }
     static var login: String { text("Login") }
@@ -139,6 +141,7 @@ enum L10n {
     static var reset: String { text("Reset") }
     static var apply: String { text("Apply") }
     static var artwork: String { text("Artwork") }
+    static var selectArtwork: String { text("Select Artwork") }
     static var previousArtwork: String { text("Previous Artwork") }
     static var nextArtwork: String { text("Next Artwork") }
     static var readerWindow: String { text("Reader Window") }

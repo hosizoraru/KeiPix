@@ -355,6 +355,14 @@ actor PixivAPI {
         return response.tags
     }
 
+    func trendingIllustTags() async throws -> PixivTrendingTagResponse {
+        try await requestJSON(
+            URL(string: "/v1/trending-tags/illust?filter=for_android&include_translated_tag_results=true", relativeTo: Endpoint.apiBase)!,
+            method: "GET",
+            form: nil
+        )
+    }
+
     func nextFeed(_ url: URL) async throws -> PixivFeedResponse {
         if url.path == "/v1/user/browsing-history/illusts" {
             let offset = URLComponents(url: url, resolvingAgainstBaseURL: false)?

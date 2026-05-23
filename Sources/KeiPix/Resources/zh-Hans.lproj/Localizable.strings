@@ -2,6 +2,7 @@
 "Works" = "作品";
 "Illustrations" = "插画";
 "Manga" = "漫画";
+"Trending Tags" = "热门标签";
 "Search" = "搜索";
 "Search Creators" = "搜索作者";
 "Saved Searches" = "保存的搜索";
@@ -22,6 +23,7 @@
 "Recommended Creators" = "推荐作者";
 "Related Creators" = "相关作者";
 "No related creators" = "暂无相关作者";
+"No trending tags" = "暂无热门标签";
 "Creator Network" = "创作者关系";
 "Enter a search keyword" = "请输入搜索关键词";
 "Login" = "登录";
@@ -136,6 +138,7 @@
 "Reset" = "重置";
 "Apply" = "应用";
 "Artwork" = "作品";
+"Select Artwork" = "选中作品";
 "Previous Artwork" = "上一个作品";
 "Next Artwork" = "下一个作品";
 "Reader Window" = "阅读窗口";

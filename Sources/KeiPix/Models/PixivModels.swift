@@ -94,6 +94,11 @@ struct PixivTag: Decodable, Hashable, Sendable {
     let name: String
     let translatedName: String?
 
+    init(name: String, translatedName: String?) {
+        self.name = name
+        self.translatedName = translatedName
+    }
+
     enum CodingKeys: String, CodingKey {
         case name
         case translatedName = "translated_name"

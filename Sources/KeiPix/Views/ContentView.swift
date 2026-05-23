@@ -196,6 +196,8 @@ private struct ContentColumnView: View {
             DownloadQueueView(store: store)
         } else if store.selectedRoute == .savedSearches {
             SavedSearchesView(store: store)
+        } else if store.selectedRoute == .trendingTags {
+            TrendingTagsView(store: store)
         } else if store.selectedRoute == .followingCreators || store.selectedRoute == .recommendedUsers || store.selectedRoute == .searchUsers {
             UserPreviewListView(store: store, mode: userPreviewMode)
         } else {
