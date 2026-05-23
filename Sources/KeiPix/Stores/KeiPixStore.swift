@@ -297,6 +297,15 @@ final class KeiPixStore {
         return try await api.bookmarkTags(userID: userID, restrict: restrict)
     }
 
+    func bookmarkTagPage(restrict: BookmarkRestrict) async throws -> PixivBookmarkTagsResponse {
+        guard let userID = session?.user.id else { throw PixivAPIError.missingSession }
+        return try await api.bookmarkTagPage(userID: userID, restrict: restrict)
+    }
+
+    func nextBookmarkTagPage(_ url: URL) async throws -> PixivBookmarkTagsResponse {
+        try await api.nextBookmarkTagPage(url)
+    }
+
     func saveBookmark(_ artwork: PixivArtwork, restrict: BookmarkRestrict, tags: [String]) async throws {
         try await api.addBookmark(illustID: artwork.id, restrict: restrict, tags: tags)
         updateArtwork(artwork.id) { $0.isBookmarked = true }
@@ -304,6 +313,13 @@ final class KeiPixStore {
 
     func setBookmarkTagFilter(_ tag: String?) {
         bookmarkTagFilter = tag
+        Task { await reloadCurrentFeed() }
+    }
+
+    func openBookmarks(restrict: BookmarkRestrict, tag: String?) {
+        focusedUser = nil
+        bookmarkTagFilter = tag
+        selectedRoute = restrict == .private ? .privateBookmarks : .publicBookmarks
         Task { await reloadCurrentFeed() }
     }
 
@@ -736,7 +752,7 @@ final class KeiPixStore {
             return try await api.following(restrict: "private")
         case .history:
             return try await api.browsingHistoryIllusts()
-        case .mangaWatchlist, .downloads, .savedSearches, .trendingTags:
+        case .mangaWatchlist, .downloads, .savedSearches, .trendingTags, .bookmarkTags:
             return PixivFeedResponse(illusts: [], nextURL: nil)
         case .followingCreators, .recommendedUsers, .searchUsers:
             return PixivFeedResponse(illusts: [], nextURL: nil)

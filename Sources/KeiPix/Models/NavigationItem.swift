@@ -52,6 +52,7 @@ enum PixivRouteSection: Identifiable {
             [
                 .publicBookmarks,
                 .privateBookmarks,
+                .bookmarkTags,
                 .allFollowing,
                 .following,
                 .privateFollowing,
@@ -94,6 +95,7 @@ enum PixivRoute: String, CaseIterable, Identifiable, Codable {
     case mangaRankingDailyR18
     case publicBookmarks
     case privateBookmarks
+    case bookmarkTags
     case allFollowing
     case following
     case privateFollowing
@@ -144,6 +146,7 @@ enum PixivRoute: String, CaseIterable, Identifiable, Codable {
         case .mangaRankingDailyR18: L10n.dailyR18Manga
         case .publicBookmarks: L10n.publicBookmarks
         case .privateBookmarks: L10n.privateBookmarks
+        case .bookmarkTags: L10n.bookmarkTags
         case .allFollowing: L10n.allFollowing
         case .following: L10n.following
         case .privateFollowing: L10n.privateFollowing
@@ -157,7 +160,14 @@ enum PixivRoute: String, CaseIterable, Identifiable, Codable {
 
     var usesArtworkFeed: Bool {
         switch self {
-        case .mangaWatchlist, .downloads, .followingCreators, .recommendedUsers, .searchUsers, .savedSearches, .trendingTags:
+        case .mangaWatchlist,
+             .downloads,
+             .followingCreators,
+             .recommendedUsers,
+             .searchUsers,
+             .savedSearches,
+             .trendingTags,
+             .bookmarkTags:
             false
         default:
             true
@@ -217,6 +227,7 @@ enum PixivRoute: String, CaseIterable, Identifiable, Codable {
         case .mangaRankingDaily, .mangaRankingWeekly, .mangaRankingMonthly: "chart.bar.doc.horizontal"
         case .mangaRankingDailyR18: "exclamationmark.triangle"
         case .publicBookmarks, .privateBookmarks: "bookmark"
+        case .bookmarkTags: "tag"
         case .allFollowing: "person.2.wave.2"
         case .following: "person.2"
         case .privateFollowing: "person.2.badge.key"

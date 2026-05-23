@@ -431,14 +431,21 @@ actor PixivAPI {
     }
 
     func bookmarkTags(userID: String, restrict: BookmarkRestrict) async throws -> [PixivBookmarkTag] {
+        try await bookmarkTagPage(userID: userID, restrict: restrict).bookmarkTags
+    }
+
+    func bookmarkTagPage(userID: String, restrict: BookmarkRestrict) async throws -> PixivBookmarkTagsResponse {
         var components = URLComponents(url: URL(string: "/v1/user/bookmark-tags/illust", relativeTo: Endpoint.apiBase)!, resolvingAgainstBaseURL: true)!
         components.queryItems = [
             URLQueryItem(name: "user_id", value: userID),
             URLQueryItem(name: "restrict", value: restrict.rawValue)
         ]
         guard let url = components.url else { throw PixivAPIError.invalidResponse }
-        let response: PixivBookmarkTagsResponse = try await requestJSON(url, method: "GET", form: nil)
-        return response.bookmarkTags
+        return try await requestJSON(url, method: "GET", form: nil)
+    }
+
+    func nextBookmarkTagPage(_ url: URL) async throws -> PixivBookmarkTagsResponse {
+        try await requestJSON(url, method: "GET", form: nil)
     }
 
     func addBookmark(illustID: Int, restrict: BookmarkRestrict, tags: [String]) async throws {
