@@ -172,6 +172,33 @@ actor PixivAPI {
         try await requestData(url, includeAuth: false, includePixivImageReferer: true)
     }
 
+    func illustComments(illustID: Int) async throws -> PixivCommentResponse {
+        var components = URLComponents(url: URL(string: "/v3/illust/comments", relativeTo: Endpoint.apiBase)!, resolvingAgainstBaseURL: true)!
+        components.queryItems = [URLQueryItem(name: "illust_id", value: "\(illustID)")]
+        guard let url = components.url else { throw PixivAPIError.invalidResponse }
+        return try await requestJSON(url, method: "GET", form: nil)
+    }
+
+    func nextComments(_ url: URL) async throws -> PixivCommentResponse {
+        try await requestJSON(url, method: "GET", form: nil)
+    }
+
+    func addIllustComment(illustID: Int, comment: String, parentCommentID: Int? = nil) async throws {
+        var form = [
+            "illust_id": "\(illustID)",
+            "comment": comment
+        ]
+        if let parentCommentID {
+            form["parent_comment_id"] = "\(parentCommentID)"
+        }
+
+        _ = try await requestJSON(
+            URL(string: "/v1/illust/comment/add", relativeTo: Endpoint.apiBase)!,
+            method: "POST",
+            form: form
+        ) as EmptyResponse
+    }
+
     func bookmarkDetail(illustID: Int) async throws -> PixivBookmarkDetail {
         var components = URLComponents(url: URL(string: "/v2/illust/bookmark/detail", relativeTo: Endpoint.apiBase)!, resolvingAgainstBaseURL: true)!
         components.queryItems = [URLQueryItem(name: "illust_id", value: "\(illustID)")]

@@ -64,6 +64,7 @@ private struct ArtworkActionStrip: View {
                 HStack(spacing: 10) {
                     MetricView(title: L10n.views, value: artwork.totalView, systemImage: "eye")
                     MetricView(title: L10n.saves, value: artwork.totalBookmarks, systemImage: "bookmark")
+                    MetricView(title: L10n.comments, value: artwork.totalComments, systemImage: "text.bubble")
                     MetricView(title: L10n.pages, value: pageCount, systemImage: "square.stack", detail: pageCount > 1 ? "\(pageIndex + 1) / \(pageCount)" : nil)
                 }
 

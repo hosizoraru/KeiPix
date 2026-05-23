@@ -108,6 +108,12 @@ enum L10n {
     static var tags: String { text("Tags") }
     static var description: String { text("Description") }
     static var artworkInformation: String { text("Artwork Information") }
+    static var comments: String { text("Comments") }
+    static var writeComment: String { text("Write a comment") }
+    static var postComment: String { text("Post Comment") }
+    static var noComments: String { text("No comments") }
+    static var loadMoreComments: String { text("Load More Comments") }
+    static var replies: String { text("Replies") }
     static var views: String { text("Views") }
     static var saves: String { text("Saves") }
     static var pages: String { text("Pages") }

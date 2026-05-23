@@ -124,6 +124,7 @@ struct PixivArtwork: Decodable, Identifiable, Hashable, Sendable {
     let height: Int
     let totalView: Int
     let totalBookmarks: Int
+    let totalComments: Int
     var isBookmarked: Bool
     let isMuted: Bool
     let isAI: Bool
@@ -181,6 +182,7 @@ struct PixivArtwork: Decodable, Identifiable, Hashable, Sendable {
         case height
         case totalView = "total_view"
         case totalBookmarks = "total_bookmarks"
+        case totalComments = "total_comments"
         case isBookmarked = "is_bookmarked"
         case isMuted = "is_muted"
         case illustAIType = "illust_ai_type"
@@ -210,6 +212,7 @@ struct PixivArtwork: Decodable, Identifiable, Hashable, Sendable {
         height = try container.decodeIfPresent(Int.self, forKey: .height) ?? 1
         totalView = try container.decodeIfPresent(Int.self, forKey: .totalView) ?? 0
         totalBookmarks = try container.decodeIfPresent(Int.self, forKey: .totalBookmarks) ?? 0
+        totalComments = try container.decodeIfPresent(Int.self, forKey: .totalComments) ?? 0
         isBookmarked = try container.decodeIfPresent(Bool.self, forKey: .isBookmarked) ?? false
         isMuted = try container.decodeIfPresent(Bool.self, forKey: .isMuted) ?? false
         isAI = (try container.decodeIfPresent(Int.self, forKey: .illustAIType) ?? 0) == 2

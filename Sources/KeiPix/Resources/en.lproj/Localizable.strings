@@ -105,6 +105,12 @@
 "Tags" = "Tags";
 "Description" = "Description";
 "Artwork Information" = "Artwork Information";
+"Comments" = "Comments";
+"Write a comment" = "Write a comment";
+"Post Comment" = "Post Comment";
+"No comments" = "No comments";
+"Load More Comments" = "Load More Comments";
+"Replies" = "Replies";
 "Views" = "Views";
 "Saves" = "Saves";
 "Pages" = "Pages";

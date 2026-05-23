@@ -194,6 +194,18 @@ final class KeiPixStore {
         return try UgoiraFrameDecoder.decode(zipData: zipData, metadata: metadata)
     }
 
+    func comments(for artwork: PixivArtwork) async throws -> PixivCommentResponse {
+        try await api.illustComments(illustID: artwork.id)
+    }
+
+    func nextComments(_ url: URL) async throws -> PixivCommentResponse {
+        try await api.nextComments(url)
+    }
+
+    func postComment(_ comment: String, for artwork: PixivArtwork) async throws {
+        try await api.addIllustComment(illustID: artwork.id, comment: comment)
+    }
+
     func setUseOriginalImagesInDetail(_ value: Bool) {
         useOriginalImagesInDetail = value
         UserDefaults.standard.set(value, forKey: "useOriginalImagesInDetail")

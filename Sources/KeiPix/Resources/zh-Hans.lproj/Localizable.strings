@@ -105,6 +105,12 @@
 "Tags" = "标签";
 "Description" = "简介";
 "Artwork Information" = "作品信息";
+"Comments" = "评论";
+"Write a comment" = "写评论";
+"Post Comment" = "发送评论";
+"No comments" = "暂无评论";
+"Load More Comments" = "加载更多评论";
+"Replies" = "回复";
 "Views" = "浏览";
 "Saves" = "收藏";
 "Pages" = "页数";
