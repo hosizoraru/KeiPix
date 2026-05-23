@@ -171,10 +171,21 @@ private struct ContentColumnView: View {
     var body: some View {
         if store.selectedRoute == .mangaWatchlist {
             MangaWatchlistView(store: store)
-        } else if store.selectedRoute == .followingCreators || store.selectedRoute == .recommendedUsers {
-            UserPreviewListView(store: store, mode: store.selectedRoute == .followingCreators ? .following : .recommended)
+        } else if store.selectedRoute == .followingCreators || store.selectedRoute == .recommendedUsers || store.selectedRoute == .searchUsers {
+            UserPreviewListView(store: store, mode: userPreviewMode)
         } else {
             GalleryView(store: store)
+        }
+    }
+
+    private var userPreviewMode: UserPreviewListMode {
+        switch store.selectedRoute {
+        case .followingCreators:
+            .following
+        case .searchUsers:
+            .search
+        default:
+            .recommended
         }
     }
 }

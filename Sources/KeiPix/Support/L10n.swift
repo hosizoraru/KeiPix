@@ -6,6 +6,7 @@ enum L10n {
     static var illustrations: String { text("Illustrations") }
     static var manga: String { text("Manga") }
     static var search: String { text("Search") }
+    static var searchCreators: String { text("Search Creators") }
     static var ranking: String { text("Ranking") }
     static var mangaRanking: String { text("Manga Ranking") }
     static var bookmarks: String { text("Bookmarks") }
@@ -15,6 +16,7 @@ enum L10n {
     static var history: String { text("History") }
     static var mangaWatchlist: String { text("Manga Watchlist") }
     static var recommendedCreators: String { text("Recommended Creators") }
+    static var enterSearchKeyword: String { text("Enter a search keyword") }
     static var login: String { text("Login") }
     static var logout: String { text("Logout") }
     static var refresh: String { text("Refresh") }

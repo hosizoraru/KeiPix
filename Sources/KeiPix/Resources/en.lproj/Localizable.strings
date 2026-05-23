@@ -3,6 +3,7 @@
 "Illustrations" = "Illustrations";
 "Manga" = "Manga";
 "Search" = "Search";
+"Search Creators" = "Search Creators";
 "Ranking" = "Ranking";
 "Manga Ranking" = "Manga Ranking";
 "Bookmarks" = "Bookmarks";
@@ -12,6 +13,7 @@
 "History" = "History";
 "Manga Watchlist" = "Manga Watchlist";
 "Recommended Creators" = "Recommended Creators";
+"Enter a search keyword" = "Enter a search keyword";
 "Login" = "Login";
 "Logout" = "Logout";
 "Refresh" = "Refresh";

@@ -3,11 +3,13 @@ import SwiftUI
 enum UserPreviewListMode {
     case recommended
     case following
+    case search
 
     var title: String {
         switch self {
         case .recommended: L10n.recommendedCreators
         case .following: L10n.followingCreators
+        case .search: L10n.searchCreators
         }
     }
 }
@@ -34,6 +36,9 @@ struct UserPreviewListView: View {
                 EmptyStateView(title: L10n.signedOutTitle, subtitle: L10n.signedOutSubtitle, systemImage: "person.crop.circle.badge.exclamationmark")
             } else if isLoading {
                 ProgressView(L10n.loading)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else if mode == .search, searchKeyword.isEmpty {
+                ContentUnavailableView(L10n.enterSearchKeyword, systemImage: "magnifyingglass")
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if previews.isEmpty {
                 ContentUnavailableView(L10n.noCreators, systemImage: "person.2")
@@ -111,8 +116,12 @@ struct UserPreviewListView: View {
         }
     }
 
+    private var searchKeyword: String {
+        store.searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
     private var modeKey: String {
-        "\(mode.title)-\(restrict.rawValue)"
+        "\(mode.title)-\(restrict.rawValue)-\(store.searchSubmissionID)"
     }
 
     private var header: some View {
@@ -120,7 +129,7 @@ struct UserPreviewListView: View {
             VStack(alignment: .leading, spacing: 3) {
                 Text(mode.title)
                     .font(.headline)
-                Text("\(previews.count.formatted()) \(L10n.results) · \(nextURL == nil ? L10n.noMorePages : L10n.nextPageAvailable)")
+                Text(headerSubtitle)
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -137,6 +146,14 @@ struct UserPreviewListView: View {
                 .frame(width: 160)
             }
         }
+    }
+
+    private var headerSubtitle: String {
+        let pagingText = nextURL == nil ? L10n.noMorePages : L10n.nextPageAvailable
+        if mode == .search, searchKeyword.isEmpty == false {
+            return "\(searchKeyword) · \(previews.count.formatted()) \(L10n.results) · \(pagingText)"
+        }
+        return "\(previews.count.formatted()) \(L10n.results) · \(pagingText)"
     }
 
     private var restrictBinding: Binding<BookmarkRestrict> {
@@ -182,6 +199,8 @@ struct UserPreviewListView: View {
                 try await store.recommendedUsers()
             case .following:
                 try await store.followingUsers(restrict: restrict)
+            case .search:
+                try await store.searchUsers(keyword: searchKeyword)
             }
             previews = response.userPreviews
             nextURL = response.nextURL

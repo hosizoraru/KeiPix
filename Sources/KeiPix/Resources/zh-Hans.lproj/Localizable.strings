@@ -3,6 +3,7 @@
 "Illustrations" = "插画";
 "Manga" = "漫画";
 "Search" = "搜索";
+"Search Creators" = "搜索作者";
 "Ranking" = "排行榜";
 "Manga Ranking" = "漫画榜";
 "Bookmarks" = "收藏";
@@ -12,6 +13,7 @@
 "History" = "浏览历史";
 "Manga Watchlist" = "漫画追更";
 "Recommended Creators" = "推荐作者";
+"Enter a search keyword" = "请输入搜索关键词";
 "Login" = "登录";
 "Logout" = "退出登录";
 "Refresh" = "刷新";

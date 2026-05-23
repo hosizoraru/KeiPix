@@ -226,6 +226,21 @@ actor PixivAPI {
         )
     }
 
+    func searchUsers(keyword: String) async throws -> PixivUserPreviewResponse {
+        let trimmed = keyword.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard trimmed.isEmpty == false else {
+            return PixivUserPreviewResponse(userPreviews: [], nextURL: nil)
+        }
+
+        var components = URLComponents(url: URL(string: "/v1/search/user", relativeTo: Endpoint.apiBase)!, resolvingAgainstBaseURL: true)!
+        components.queryItems = [
+            URLQueryItem(name: "filter", value: "for_android"),
+            URLQueryItem(name: "word", value: trimmed)
+        ]
+        guard let url = components.url else { throw PixivAPIError.invalidResponse }
+        return try await requestJSON(url, method: "GET", form: nil)
+    }
+
     func followingUsers(userID: String, restrict: String) async throws -> PixivUserPreviewResponse {
         var components = URLComponents(url: URL(string: "/v1/user/following", relativeTo: Endpoint.apiBase)!, resolvingAgainstBaseURL: true)!
         components.queryItems = [

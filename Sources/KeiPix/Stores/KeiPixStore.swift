@@ -11,6 +11,7 @@ final class KeiPixStore {
     var selectedArtwork: PixivArtwork?
     var focusedUser: PixivUser?
     var searchText = ""
+    var searchSubmissionID = 0
     var searchSuggestions: [PixivTag] = []
     var errorMessage: String?
     var isLoading = false
@@ -162,8 +163,12 @@ final class KeiPixStore {
     }
 
     func runSearch() async {
-        selectedRoute = .search
         searchSuggestions = []
+        if selectedRoute == .searchUsers {
+            searchSubmissionID += 1
+            return
+        }
+        selectedRoute = .search
         await reloadCurrentFeed()
     }
 
@@ -253,6 +258,11 @@ final class KeiPixStore {
 
     func recommendedUsers() async throws -> PixivUserPreviewResponse {
         let response = try await api.recommendedUsers()
+        return filteredUserPreviewResponse(response)
+    }
+
+    func searchUsers(keyword: String) async throws -> PixivUserPreviewResponse {
+        let response = try await api.searchUsers(keyword: keyword)
         return filteredUserPreviewResponse(response)
     }
 
@@ -599,7 +609,7 @@ final class KeiPixStore {
             return try await api.browsingHistoryIllusts()
         case .mangaWatchlist:
             return PixivFeedResponse(illusts: [], nextURL: nil)
-        case .followingCreators, .recommendedUsers:
+        case .followingCreators, .recommendedUsers, .searchUsers:
             return PixivFeedResponse(illusts: [], nextURL: nil)
         }
     }
