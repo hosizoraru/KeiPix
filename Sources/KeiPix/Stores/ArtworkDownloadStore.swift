@@ -11,7 +11,6 @@ final class ArtworkDownloadStore {
 
     private let fileManager = FileManager.default
     private var workerTask: Task<Void, Never>?
-    private var queuedArtworkSnapshots: [UUID: PixivArtwork] = [:]
 
     init() {
         downloadDirectoryPath = UserDefaults.standard.string(forKey: "downloadDirectoryPath")
@@ -42,16 +41,16 @@ final class ArtworkDownloadStore {
             artworkID: artwork.id,
             title: artwork.title,
             creatorName: artwork.user.name,
-            pageCount: downloadPageCount(for: artwork),
+            pageCount: sourceImageURLs(for: artwork, preferOriginal: preferOriginal).count,
             completedPages: 0,
             status: .queued,
             folderPath: nil,
+            sourceImageURLs: sourceImageURLs(for: artwork, preferOriginal: preferOriginal),
             errorMessage: nil,
             createdAt: Date(),
             updatedAt: Date()
         )
         items.insert(item, at: 0)
-        queuedArtworkSnapshots[item.id] = artwork
         persistItems()
         startWorkerIfNeeded(preferOriginal: preferOriginal)
     }
@@ -69,19 +68,17 @@ final class ArtworkDownloadStore {
                 artworkID: artwork.id,
                 title: artwork.title,
                 creatorName: artwork.user.name,
-                pageCount: downloadPageCount(for: artwork),
+                pageCount: sourceImageURLs(for: artwork, preferOriginal: preferOriginal).count,
                 completedPages: 0,
                 status: .queued,
                 folderPath: nil,
+                sourceImageURLs: sourceImageURLs(for: artwork, preferOriginal: preferOriginal),
                 errorMessage: nil,
                 createdAt: now,
                 updatedAt: now
             )
         }
 
-        for (item, artwork) in zip(newItems, candidates) {
-            queuedArtworkSnapshots[item.id] = artwork
-        }
         items.insert(contentsOf: newItems, at: 0)
         persistItems()
         startWorkerIfNeeded(preferOriginal: preferOriginal)
@@ -90,6 +87,41 @@ final class ArtworkDownloadStore {
 
     func clearCompleted() {
         items.removeAll { $0.status == .completed }
+        persistItems()
+    }
+
+    @discardableResult
+    func clearInvalidItems() -> Int {
+        let initialCount = items.count
+        items.removeAll { item in
+            item.status == .completed && hasReadableImages(for: item) == false
+        }
+        persistItems()
+        return initialCount - items.count
+    }
+
+    func retry(_ item: ArtworkDownloadItem) {
+        guard let index = items.firstIndex(where: { $0.id == item.id }),
+              items[index].status == .failed,
+              items[index].sourceImageURLs?.isEmpty == false else {
+            return
+        }
+        items[index].status = .queued
+        items[index].completedPages = 0
+        items[index].folderPath = nil
+        items[index].errorMessage = nil
+        items[index].updatedAt = Date()
+        persistItems()
+        startWorkerIfNeeded(preferOriginal: true)
+    }
+
+    func delete(_ item: ArtworkDownloadItem) {
+        if let index = items.firstIndex(where: { $0.id == item.id }) {
+            items.remove(at: index)
+        }
+        if let folderPath = item.folderPath {
+            moveToTrash(URL(fileURLWithPath: folderPath, isDirectory: true))
+        }
         persistItems()
     }
 
@@ -164,8 +196,8 @@ final class ArtworkDownloadStore {
 
         while let index = items.firstIndex(where: { $0.status == .queued }) {
             var item = items[index]
-            guard let artwork = queuedArtworkSnapshots[item.id] else {
-                markFailed(itemID: item.id, error: ArtworkDownloadError.missingArtworkSnapshot)
+            guard let sourceURLs = item.sourceImageURLs, sourceURLs.isEmpty == false else {
+                markFailed(itemID: item.id, error: ArtworkDownloadError.missingSourceURLs)
                 continue
             }
             item.status = .downloading
@@ -175,41 +207,41 @@ final class ArtworkDownloadStore {
             persistItems()
 
             do {
-                let folder = try await download(artwork, itemID: item.id, preferOriginal: preferOriginal)
+                let folder = try await download(item, sourceURLs: sourceURLs)
                 markCompleted(itemID: item.id, folder: folder)
-                queuedArtworkSnapshots[item.id] = nil
             } catch {
                 markFailed(itemID: item.id, error: error)
-                queuedArtworkSnapshots[item.id] = nil
             }
         }
     }
 
-    private func download(_ artwork: PixivArtwork, itemID: UUID, preferOriginal: Bool) async throws -> URL {
+    private func download(_ item: ArtworkDownloadItem, sourceURLs: [URL]) async throws -> URL {
         let root = URL(fileURLWithPath: downloadDirectoryPath, isDirectory: true)
-        let folder = root.appending(path: "\(artwork.id) - \(artwork.title.safePathComponent)", directoryHint: .isDirectory)
+        let folder = root.appending(path: "\(item.artworkID) - \(item.title.safePathComponent)", directoryHint: .isDirectory)
         try fileManager.createDirectory(at: folder, withIntermediateDirectories: true)
 
-        let totalPages = downloadPageCount(for: artwork)
-        for pageIndex in 0..<totalPages {
-            guard let url = artwork.imageURL(at: pageIndex, preferOriginal: preferOriginal) else { continue }
+        let totalPages = sourceURLs.count
+        for (pageIndex, url) in sourceURLs.enumerated() {
             let data = try await ImagePipeline.shared.data(for: url)
-            let fileURL = folder.appending(path: fileName(for: artwork, pageIndex: pageIndex, totalPages: totalPages, sourceURL: url))
+            let fileURL = folder.appending(path: fileName(artworkID: item.artworkID, pageIndex: pageIndex, totalPages: totalPages, sourceURL: url))
             try data.write(to: fileURL, options: .atomic)
-            markPageCompleted(itemID: itemID, completedPages: pageIndex + 1, folder: folder)
+            markPageCompleted(itemID: item.id, completedPages: pageIndex + 1, folder: folder)
         }
 
         return folder
     }
 
-    private func downloadPageCount(for artwork: PixivArtwork) -> Int {
-        max(artwork.images.count, 1)
+    private func sourceImageURLs(for artwork: PixivArtwork, preferOriginal: Bool) -> [URL] {
+        let pageCount = max(artwork.images.count, 1)
+        return (0..<pageCount).compactMap {
+            artwork.imageURL(at: $0, preferOriginal: preferOriginal)
+        }
     }
 
-    private func fileName(for artwork: PixivArtwork, pageIndex: Int, totalPages: Int, sourceURL: URL) -> String {
+    private func fileName(artworkID: Int, pageIndex: Int, totalPages: Int, sourceURL: URL) -> String {
         let ext = sourceURL.pathExtension.isImageExtension ? sourceURL.pathExtension.lowercased() : "jpg"
         let pageSuffix = totalPages > 1 ? "_p\(pageIndex)" : ""
-        return "\(artwork.id)\(pageSuffix).\(ext)"
+        return "\(artworkID)\(pageSuffix).\(ext)"
     }
 
     private func markPageCompleted(itemID: UUID, completedPages: Int, folder: URL) {
@@ -247,6 +279,15 @@ final class ArtworkDownloadStore {
         }
     }
 
+    private func moveToTrash(_ url: URL) {
+        guard fileManager.fileExists(atPath: url.path(percentEncoded: false)) else { return }
+        do {
+            _ = try fileManager.trashItem(at: url, resultingItemURL: nil)
+        } catch {
+            try? fileManager.removeItem(at: url)
+        }
+    }
+
     private static func loadItems() -> [ArtworkDownloadItem] {
         do {
             let url = try manifestURL()
@@ -275,7 +316,7 @@ final class ArtworkDownloadStore {
 }
 
 private enum ArtworkDownloadError: LocalizedError {
-    case missingArtworkSnapshot
+    case missingSourceURLs
 
     var errorDescription: String? {
         L10n.downloadInterrupted

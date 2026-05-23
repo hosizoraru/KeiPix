@@ -33,8 +33,10 @@ enum L10n {
     static var openFolder: String { text("Open Folder") }
     static var choose: String { text("Choose") }
     static var clearCompleted: String { text("Clear Completed") }
+    static var clearInvalidDownloads: String { text("Clear Invalid") }
     static var revealInFinder: String { text("Reveal in Finder") }
     static var openDownloadedArtwork: String { text("Open Downloaded Artwork") }
+    static var deleteDownload: String { text("Delete Download") }
     static var noDownloadsTitle: String { text("No downloads yet") }
     static var noDownloadsSubtitle: String { text("Download artworks from the detail view or artwork context menus.") }
     static var downloadInterrupted: String { text("Download interrupted") }

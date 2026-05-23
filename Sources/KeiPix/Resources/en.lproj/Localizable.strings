@@ -30,8 +30,10 @@
 "Open Folder" = "Open Folder";
 "Choose" = "Choose";
 "Clear Completed" = "Clear Completed";
+"Clear Invalid" = "Clear Invalid";
 "Reveal in Finder" = "Reveal in Finder";
 "Open Downloaded Artwork" = "Open Downloaded Artwork";
+"Delete Download" = "Delete Download";
 "No downloads yet" = "No downloads yet";
 "Download artworks from the detail view or artwork context menus." = "Download artworks from the detail view or artwork context menus.";
 "Download interrupted" = "Download interrupted";

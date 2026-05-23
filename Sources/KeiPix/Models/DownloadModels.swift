@@ -29,6 +29,7 @@ struct ArtworkDownloadItem: Identifiable, Codable, Sendable {
     var completedPages: Int
     var status: ArtworkDownloadStatus
     var folderPath: String?
+    var sourceImageURLs: [URL]?
     var errorMessage: String?
     let createdAt: Date
     var updatedAt: Date

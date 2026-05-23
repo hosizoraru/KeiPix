@@ -30,8 +30,10 @@
 "Open Folder" = "打开文件夹";
 "Choose" = "选择";
 "Clear Completed" = "清理已完成";
+"Clear Invalid" = "清理无效";
 "Reveal in Finder" = "在 Finder 中显示";
 "Open Downloaded Artwork" = "打开已下载作品";
+"Delete Download" = "删除下载";
 "No downloads yet" = "暂无下载";
 "Download artworks from the detail view or artwork context menus." = "可以从作品详情或作品右键菜单下载。";
 "Download interrupted" = "下载已中断";

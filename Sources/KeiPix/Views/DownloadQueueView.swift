@@ -77,6 +77,13 @@ private struct DownloadQueueHeader: View {
             .buttonStyle(.bordered)
 
             Button {
+                downloads.clearInvalidItems()
+            } label: {
+                Label(L10n.clearInvalidDownloads, systemImage: "exclamationmark.arrow.trianglehead.2.clockwise.rotate.90")
+            }
+            .buttonStyle(.bordered)
+
+            Button {
                 downloads.clearCompleted()
             } label: {
                 Label(L10n.clearCompleted, systemImage: "checkmark.circle")
@@ -136,6 +143,18 @@ private struct DownloadQueueRow: View {
 
             Spacer(minLength: 10)
 
+            if item.status == .failed {
+                Button {
+                    downloads.retry(item)
+                } label: {
+                    Label(L10n.retry, systemImage: "arrow.clockwise")
+                }
+                .labelStyle(.iconOnly)
+                .buttonStyle(.bordered)
+                .disabled(item.sourceImageURLs?.isEmpty != false)
+                .help(L10n.retry)
+            }
+
             Button {
                 open()
             } label: {
@@ -154,9 +173,36 @@ private struct DownloadQueueRow: View {
             .labelStyle(.iconOnly)
             .buttonStyle(.bordered)
             .help(L10n.revealInFinder)
+
+            Button(role: .destructive) {
+                downloads.delete(item)
+            } label: {
+                Label(L10n.deleteDownload, systemImage: "trash")
+            }
+            .labelStyle(.iconOnly)
+            .buttonStyle(.bordered)
+            .disabled(item.status == .downloading)
+            .help(L10n.deleteDownload)
         }
         .padding(12)
         .keiPanel(16)
+        .contextMenu {
+            if item.status == .failed {
+                Button(L10n.retry) {
+                    downloads.retry(item)
+                }
+                .disabled(item.sourceImageURLs?.isEmpty != false)
+            }
+            Button(L10n.revealInFinder) {
+                downloads.reveal(item)
+            }
+            Button(role: .destructive) {
+                downloads.delete(item)
+            } label: {
+                Text(L10n.deleteDownload)
+            }
+            .disabled(item.status == .downloading)
+        }
     }
 
     @ViewBuilder
