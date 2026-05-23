@@ -66,6 +66,10 @@
 "Download Folder" = "Download Folder";
 "Choose Folder" = "Choose Folder";
 "Open Folder" = "Open Folder";
+"Download Naming Template" = "Download Naming Template";
+"Use placeholders like ${id}, ${title}, ${user}, ${userId}, ${page}, ${page1}, ${pages}, ${ext}, ${AI}, ${R18}, ${R18G}, ${tag1}, ${tag2}, ${tag(name)}. Paths stay inside the download folder." = "Use placeholders like ${id}, ${title}, ${user}, ${userId}, ${page}, ${page1}, ${pages}, ${ext}, ${AI}, ${R18}, ${R18G}, ${tag1}, ${tag2}, ${tag(name)}. Paths stay inside the download folder.";
+"Template Preview" = "Template Preview";
+"Reset Template" = "Reset Template";
 "Choose" = "Choose";
 "Clear Completed" = "Clear Completed";
 "Clear Invalid" = "Clear Invalid";

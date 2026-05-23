@@ -69,6 +69,10 @@ enum L10n {
     static var downloadFolder: String { text("Download Folder") }
     static var chooseFolder: String { text("Choose Folder") }
     static var openFolder: String { text("Open Folder") }
+    static var downloadNamingTemplate: String { text("Download Naming Template") }
+    static var downloadNamingTemplateHint: String { text("Use placeholders like ${id}, ${title}, ${user}, ${userId}, ${page}, ${page1}, ${pages}, ${ext}, ${AI}, ${R18}, ${R18G}, ${tag1}, ${tag2}, ${tag(name)}. Paths stay inside the download folder.") }
+    static var templatePreview: String { text("Template Preview") }
+    static var resetTemplate: String { text("Reset Template") }
     static var choose: String { text("Choose") }
     static var clearCompleted: String { text("Clear Completed") }
     static var clearInvalidDownloads: String { text("Clear Invalid") }

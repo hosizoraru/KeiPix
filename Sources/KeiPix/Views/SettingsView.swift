@@ -180,6 +180,28 @@ struct SettingsView: View {
                         Label(L10n.openFolder, systemImage: "folder")
                     }
                 }
+
+                Divider()
+
+                TextField(L10n.downloadNamingTemplate, text: downloadNamingTemplateBinding)
+                    .textFieldStyle(.roundedBorder)
+
+                Text(L10n.downloadNamingTemplateHint)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
+                LabeledContent(L10n.templatePreview) {
+                    Text(store.downloads.downloadNamingTemplatePreview)
+                        .lineLimit(2)
+                        .truncationMode(.middle)
+                        .textSelection(.enabled)
+                }
+
+                Button {
+                    store.downloads.resetDownloadNamingTemplate()
+                } label: {
+                    Label(L10n.resetTemplate, systemImage: "arrow.counterclockwise")
+                }
             }
 
             Section(L10n.trackpad) {
@@ -356,6 +378,14 @@ struct SettingsView: View {
             store.galleryLayoutMode
         } set: { value in
             store.setGalleryLayoutMode(value)
+        }
+    }
+
+    private var downloadNamingTemplateBinding: Binding<String> {
+        Binding {
+            store.downloads.downloadNamingTemplate
+        } set: { value in
+            store.downloads.setDownloadNamingTemplate(value)
         }
     }
 

@@ -66,6 +66,10 @@
 "Download Folder" = "下载文件夹";
 "Choose Folder" = "选择文件夹";
 "Open Folder" = "打开文件夹";
+"Download Naming Template" = "下载命名模板";
+"Use placeholders like ${id}, ${title}, ${user}, ${userId}, ${page}, ${page1}, ${pages}, ${ext}, ${AI}, ${R18}, ${R18G}, ${tag1}, ${tag2}, ${tag(name)}. Paths stay inside the download folder." = "可使用 ${id}、${title}、${user}、${userId}、${page}、${page1}、${pages}、${ext}、${AI}、${R18}、${R18G}、${tag1}、${tag2}、${tag(name)} 等占位符。路径会限制在下载文件夹内。";
+"Template Preview" = "模板预览";
+"Reset Template" = "重置模板";
 "Choose" = "选择";
 "Clear Completed" = "清理已完成";
 "Clear Invalid" = "清理无效";

@@ -25,11 +25,17 @@ struct ArtworkDownloadItem: Identifiable, Codable, Sendable {
     let artworkID: Int
     let title: String
     let creatorName: String
+    var creatorID: Int? = nil
+    var tags: [String]? = nil
+    var isAI: Bool? = nil
+    var isR18: Bool? = nil
+    var isR18G: Bool? = nil
     let pageCount: Int
     var completedPages: Int
     var status: ArtworkDownloadStatus
     var folderPath: String?
     var sourceImageURLs: [URL]?
+    var downloadedFilePaths: [String]? = nil
     var errorMessage: String?
     let createdAt: Date
     var updatedAt: Date
