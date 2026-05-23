@@ -311,8 +311,22 @@ struct UserProfileSheet: View {
     @ViewBuilder
     private var relatedCreatorSection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Label(L10n.relatedCreators, systemImage: "person.2.crop.square.stack")
-                .font(.headline)
+            HStack {
+                Label(L10n.relatedCreators, systemImage: "person.2.crop.square.stack")
+                    .font(.headline)
+
+                Spacer()
+
+                if relatedUsers.isEmpty == false {
+                    Button {
+                        relationshipListMode = .related(detail?.user ?? user)
+                    } label: {
+                        Label(L10n.viewAllRelatedCreators, systemImage: "arrow.right.circle")
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+                }
+            }
 
             if isLoadingRelatedUsers {
                 ProgressView()

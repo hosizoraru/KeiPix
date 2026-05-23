@@ -6,6 +6,7 @@ enum UserPreviewListMode: Identifiable {
     case search
     case userFollowing(PixivUser)
     case userFollowers(PixivUser)
+    case related(PixivUser)
 
     var title: String {
         switch self {
@@ -14,6 +15,7 @@ enum UserPreviewListMode: Identifiable {
         case .search: L10n.searchCreators
         case .userFollowing(let user): "\(L10n.followingCreators) · \(user.name)"
         case .userFollowers(let user): "\(L10n.followers) · \(user.name)"
+        case .related(let user): "\(L10n.relatedCreators) · \(user.name)"
         }
     }
 
@@ -47,6 +49,8 @@ enum UserPreviewListMode: Identifiable {
             "user-following-\(user.id)"
         case .userFollowers(let user):
             "user-followers-\(user.id)"
+        case .related(let user):
+            "related-\(user.id)"
         }
     }
 
@@ -100,6 +104,9 @@ struct UserPreviewListView: View {
                                         },
                                         toggleFollow: { restrict in
                                             Task { await toggleFollow(preview.user, restrict: restrict) }
+                                        },
+                                        muteCreator: {
+                                            store.muteUser(preview.user)
                                         },
                                         selectArtwork: { artwork in
                                             store.selectedArtwork = artwork
@@ -244,6 +251,8 @@ struct UserPreviewListView: View {
                 try await store.followingUsers(for: user, restrict: restrict)
             case .userFollowers(let user):
                 try await store.followerUsers(for: user, restrict: restrict)
+            case .related(let user):
+                try await store.relatedUsers(for: user)
             }
             previews = response.userPreviews
             nextURL = response.nextURL
@@ -284,6 +293,7 @@ private struct UserPreviewCard: View {
     let openIllustrations: () -> Void
     let openManga: () -> Void
     let toggleFollow: (BookmarkRestrict?) -> Void
+    let muteCreator: () -> Void
     let selectArtwork: (PixivArtwork) -> Void
 
     var body: some View {
@@ -307,6 +317,15 @@ private struct UserPreviewCard: View {
                 }
 
                 Spacer()
+
+                if preview.isMuted {
+                    Label(L10n.muted, systemImage: "eye.slash")
+                        .font(.caption.weight(.semibold))
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .foregroundStyle(.secondary)
+                        .background(.quaternary, in: Capsule())
+                }
 
                 if preview.user.isFollowed {
                     Button(L10n.unfollow) {
@@ -368,6 +387,17 @@ private struct UserPreviewCard: View {
                     Label(L10n.manga, systemImage: "book.closed")
                 }
                 .buttonStyle(.bordered)
+
+                Spacer()
+
+                Button(role: .destructive) {
+                    muteCreator()
+                } label: {
+                    Label(L10n.muteCreator, systemImage: "eye.slash")
+                }
+                .labelStyle(.iconOnly)
+                .buttonStyle(.bordered)
+                .help(L10n.muteCreator)
             }
         }
         .padding(12)
@@ -397,6 +427,12 @@ private struct UserPreviewCard: View {
             }
             Button(L10n.creatorManga) {
                 openManga()
+            }
+            Divider()
+            Button(role: .destructive) {
+                muteCreator()
+            } label: {
+                Label(L10n.muteCreator, systemImage: "eye.slash")
             }
         }
     }
