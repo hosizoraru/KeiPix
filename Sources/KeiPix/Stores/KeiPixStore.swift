@@ -40,6 +40,7 @@ final class KeiPixStore {
     var defaultBookmarkRestrict = KeiPixStore.loadEnum("defaultBookmarkRestrict", defaultValue: BookmarkRestrict.public)
     var defaultFollowRestrict = KeiPixStore.loadEnum("defaultFollowRestrict", defaultValue: BookmarkRestrict.public)
     var followCreatorAfterBookmark = UserDefaults.standard.object(forKey: "followCreatorAfterBookmark") as? Bool ?? false
+    var autoTagBookmarksWithArtworkTags = UserDefaults.standard.object(forKey: "autoTagBookmarksWithArtworkTags") as? Bool ?? false
     var searchMatchType = KeiPixStore.loadEnum("searchMatchType", defaultValue: SearchMatchType.partialTags)
     var searchSort = KeiPixStore.loadEnum("searchSort", defaultValue: SearchSort.dateDescending)
     var searchAgeLimit = KeiPixStore.loadEnum("searchAgeLimit", defaultValue: SearchAgeLimit.unlimited)
@@ -279,7 +280,11 @@ final class KeiPixStore {
         let nextValue = !artwork.isBookmarked
         do {
             if nextValue {
-                try await api.addBookmark(illustID: artwork.id, restrict: defaultBookmarkRestrict, tags: [])
+                try await api.addBookmark(
+                    illustID: artwork.id,
+                    restrict: defaultBookmarkRestrict,
+                    tags: automaticBookmarkTags(for: artwork)
+                )
             } else {
                 try await api.deleteBookmark(illustID: artwork.id)
             }
@@ -334,6 +339,16 @@ final class KeiPixStore {
     func removeBookmark(_ artwork: PixivArtwork) async throws {
         try await api.deleteBookmark(illustID: artwork.id)
         updateArtwork(artwork.id) { $0.isBookmarked = false }
+    }
+
+    func automaticBookmarkTags(for artwork: PixivArtwork) -> [String] {
+        guard autoTagBookmarksWithArtworkTags else { return [] }
+        var seen = Set<String>()
+        return artwork.tags.compactMap { tag in
+            let name = tag.name.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard name.isEmpty == false, seen.insert(name).inserted else { return nil }
+            return name
+        }
     }
 
     func toggleSelectedBookmark() async {

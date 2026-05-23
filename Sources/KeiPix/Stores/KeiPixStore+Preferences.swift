@@ -17,6 +17,11 @@ extension KeiPixStore {
         UserDefaults.standard.set(value, forKey: "followCreatorAfterBookmark")
     }
 
+    func setAutoTagBookmarksWithArtworkTags(_ value: Bool) {
+        autoTagBookmarksWithArtworkTags = value
+        UserDefaults.standard.set(value, forKey: "autoTagBookmarksWithArtworkTags")
+    }
+
     func setUseOriginalImagesInDetail(_ value: Bool) {
         useOriginalImagesInDetail = value
         UserDefaults.standard.set(value, forKey: "useOriginalImagesInDetail")

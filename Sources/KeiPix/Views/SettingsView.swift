@@ -64,6 +64,11 @@ struct SettingsView: View {
                 }
                 .pickerStyle(.segmented)
 
+                Toggle(L10n.autoTagBookmarksWithArtworkTags, isOn: autoTagBookmarksBinding)
+                Text(L10n.autoTagBookmarksWithArtworkTagsHint)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
                 Toggle(L10n.followCreatorAfterBookmark, isOn: followCreatorAfterBookmarkBinding)
                 Text(L10n.followCreatorAfterBookmarkHint)
                     .font(.caption)
@@ -326,6 +331,14 @@ struct SettingsView: View {
             store.followCreatorAfterBookmark
         } set: { value in
             store.setFollowCreatorAfterBookmark(value)
+        }
+    }
+
+    private var autoTagBookmarksBinding: Binding<Bool> {
+        Binding {
+            store.autoTagBookmarksWithArtworkTags
+        } set: { value in
+            store.setAutoTagBookmarksWithArtworkTags(value)
         }
     }
 

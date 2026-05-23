@@ -199,7 +199,9 @@ struct BookmarkEditorView: View {
             let detail = try await store.bookmarkDetail(for: artwork)
             isBookmarked = detail.isBookmarked
             restrict = detail.restrict
-            selectedTags = Set(detail.tags.filter(\.isRegistered).map(\.name))
+            selectedTags = detail.isBookmarked
+                ? Set(detail.tags.filter(\.isRegistered).map(\.name))
+                : Set(store.automaticBookmarkTags(for: artwork))
             knownTags = detail.tags.map { PixivBookmarkTag(name: $0.name, count: 0) }
             await loadSuggestions(for: detail.restrict)
         } catch {

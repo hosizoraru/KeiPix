@@ -84,6 +84,8 @@
 "Follow Using Default" = "Follow Using Default";
 "Follow Visibility" = "Follow Visibility";
 "Default Follow Visibility" = "Default Follow Visibility";
+"Use artwork tags for new bookmarks" = "Use artwork tags for new bookmarks";
+"Quick bookmarks use the artwork tags, and the bookmark editor preselects them for new bookmarks." = "Quick bookmarks use the artwork tags, and the bookmark editor preselects them for new bookmarks.";
 "Follow creator after bookmarking" = "Follow creator after bookmarking";
 "New bookmarks also follow the creator using your default follow visibility." = "New bookmarks also follow the creator using your default follow visibility.";
 "Following Publicly" = "Following Publicly";
