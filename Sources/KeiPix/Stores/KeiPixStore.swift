@@ -663,8 +663,16 @@ final class KeiPixStore {
             return try await api.ranking(mode: "week_original", date: rankingDateParameter)
         case .rankingWeeklyRookie:
             return try await api.ranking(mode: "week_rookie", date: rankingDateParameter)
+        case .rankingDailyAI:
+            return try await api.ranking(mode: "day_ai", date: rankingDateParameter)
+        case .rankingDailyR18AI:
+            return try await api.ranking(mode: "day_r18_ai", date: rankingDateParameter)
         case .rankingDailyR18:
             return try await api.ranking(mode: "day_r18", date: rankingDateParameter)
+        case .rankingWeeklyR18:
+            return try await api.ranking(mode: "week_r18", date: rankingDateParameter)
+        case .rankingWeeklyR18G:
+            return try await api.ranking(mode: "week_r18g", date: rankingDateParameter)
         case .mangaRankingDaily:
             return try await api.ranking(mode: "day_manga", date: rankingDateParameter)
         case .mangaRankingWeekly:

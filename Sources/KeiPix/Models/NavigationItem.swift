@@ -30,7 +30,11 @@ enum PixivRouteSection: Identifiable {
                 .rankingDailyFemale,
                 .rankingWeeklyOriginal,
                 .rankingWeeklyRookie,
-                .rankingDailyR18
+                .rankingDailyAI,
+                .rankingDailyR18AI,
+                .rankingDailyR18,
+                .rankingWeeklyR18,
+                .rankingWeeklyR18G
             ]
         case .mangaRanking:
             [.mangaRankingDaily, .mangaRankingWeekly, .mangaRankingMonthly, .mangaRankingDailyR18]
@@ -66,7 +70,11 @@ enum PixivRoute: String, CaseIterable, Identifiable, Codable {
     case rankingDailyFemale
     case rankingWeeklyOriginal
     case rankingWeeklyRookie
+    case rankingDailyAI
+    case rankingDailyR18AI
     case rankingDailyR18
+    case rankingWeeklyR18
+    case rankingWeeklyR18G
     case mangaRankingDaily
     case mangaRankingWeekly
     case mangaRankingMonthly
@@ -109,7 +117,11 @@ enum PixivRoute: String, CaseIterable, Identifiable, Codable {
         case .rankingDailyFemale: L10n.forFemale
         case .rankingWeeklyOriginal: L10n.originals
         case .rankingWeeklyRookie: L10n.rookies
+        case .rankingDailyAI: L10n.dailyAI
+        case .rankingDailyR18AI: L10n.dailyR18AI
         case .rankingDailyR18: L10n.dailyR18
+        case .rankingWeeklyR18: L10n.weeklyR18
+        case .rankingWeeklyR18G: L10n.weeklyR18G
         case .mangaRankingDaily: L10n.dailyManga
         case .mangaRankingWeekly: L10n.weeklyManga
         case .mangaRankingMonthly: L10n.monthlyManga
@@ -146,6 +158,10 @@ enum PixivRoute: String, CaseIterable, Identifiable, Codable {
              .rankingWeeklyOriginal,
              .rankingWeeklyRookie,
              .rankingDailyR18,
+             .rankingDailyAI,
+             .rankingDailyR18AI,
+             .rankingWeeklyR18,
+             .rankingWeeklyR18G,
              .mangaRankingDaily,
              .mangaRankingWeekly,
              .mangaRankingMonthly,
@@ -175,7 +191,10 @@ enum PixivRoute: String, CaseIterable, Identifiable, Codable {
         case .rankingDailyMale, .rankingDailyFemale: "person.2"
         case .rankingWeeklyOriginal: "paintpalette"
         case .rankingWeeklyRookie: "sparkles"
-        case .rankingDailyR18: "exclamationmark.triangle"
+        case .rankingDailyAI: "sparkles"
+        case .rankingDailyR18AI: "sparkles.rectangle.stack"
+        case .rankingDailyR18, .rankingWeeklyR18: "exclamationmark.triangle"
+        case .rankingWeeklyR18G: "exclamationmark.octagon"
         case .mangaRankingDaily, .mangaRankingWeekly, .mangaRankingMonthly: "chart.bar.doc.horizontal"
         case .mangaRankingDailyR18: "exclamationmark.triangle"
         case .publicBookmarks, .privateBookmarks: "bookmark"
