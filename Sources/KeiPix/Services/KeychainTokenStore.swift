@@ -21,9 +21,14 @@ struct KeychainTokenStore: Sendable {
     private let mirror = SessionMirrorStore()
 
     func load() throws -> PixivSession? {
+        if let mirroredSession = try mirror.load() {
+            return mirroredSession
+        }
+
         var query = baseQuery
         query[kSecReturnData as String] = true
         query[kSecMatchLimit as String] = kSecMatchLimitOne
+        query[kSecUseAuthenticationUI as String] = kSecUseAuthenticationUISkip
 
         var item: CFTypeRef?
         let status = SecItemCopyMatching(query as CFDictionary, &item)
@@ -54,30 +59,37 @@ struct KeychainTokenStore: Sendable {
         let update: [String: Any] = [
             kSecValueData as String: data
         ]
-        let status = SecItemUpdate(baseQuery as CFDictionary, update as CFDictionary)
+        var query = baseQuery
+        query[kSecUseAuthenticationUI as String] = kSecUseAuthenticationUISkip
+        let status = SecItemUpdate(query as CFDictionary, update as CFDictionary)
         if status == errSecSuccess {
             return
         }
         if status == errSecItemNotFound {
-            var query = baseQuery
             query[kSecValueData as String] = data
             query[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlock
             let addStatus = SecItemAdd(query as CFDictionary, nil)
-            guard addStatus == errSecSuccess else {
+            guard addStatus == errSecSuccess || addStatus == errSecInteractionNotAllowed else {
                 throw KeychainTokenStoreError.keychain(addStatus)
             }
             return
         }
-        throw KeychainTokenStoreError.keychain(status)
+        if status != errSecInteractionNotAllowed {
+            throw KeychainTokenStoreError.keychain(status)
+        }
     }
 
     func delete() throws {
         try mirror.delete()
-        let status = SecItemDelete(baseQuery as CFDictionary)
+        var query = baseQuery
+        query[kSecUseAuthenticationUI as String] = kSecUseAuthenticationUISkip
+        let status = SecItemDelete(query as CFDictionary)
         if status == errSecSuccess || status == errSecItemNotFound {
             return
         }
-        throw KeychainTokenStoreError.keychain(status)
+        if status != errSecInteractionNotAllowed {
+            throw KeychainTokenStoreError.keychain(status)
+        }
     }
 
     private var baseQuery: [String: Any] {
