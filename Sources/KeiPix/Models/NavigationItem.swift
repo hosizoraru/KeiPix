@@ -38,6 +38,7 @@ enum PixivRouteSection: Identifiable {
             [
                 .publicBookmarks,
                 .privateBookmarks,
+                .allFollowing,
                 .following,
                 .privateFollowing,
                 .followingCreators,
@@ -72,6 +73,7 @@ enum PixivRoute: String, CaseIterable, Identifiable, Codable {
     case mangaRankingDailyR18
     case publicBookmarks
     case privateBookmarks
+    case allFollowing
     case following
     case privateFollowing
     case followingCreators
@@ -114,6 +116,7 @@ enum PixivRoute: String, CaseIterable, Identifiable, Codable {
         case .mangaRankingDailyR18: L10n.dailyR18Manga
         case .publicBookmarks: L10n.publicBookmarks
         case .privateBookmarks: L10n.privateBookmarks
+        case .allFollowing: L10n.allFollowing
         case .following: L10n.following
         case .privateFollowing: L10n.privateFollowing
         case .followingCreators: L10n.followingCreators
@@ -176,6 +179,7 @@ enum PixivRoute: String, CaseIterable, Identifiable, Codable {
         case .mangaRankingDaily, .mangaRankingWeekly, .mangaRankingMonthly: "chart.bar.doc.horizontal"
         case .mangaRankingDailyR18: "exclamationmark.triangle"
         case .publicBookmarks, .privateBookmarks: "bookmark"
+        case .allFollowing: "person.2.wave.2"
         case .following: "person.2"
         case .privateFollowing: "person.2.badge.key"
         case .followingCreators: "person.2.crop.square.stack"
