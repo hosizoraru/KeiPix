@@ -167,6 +167,7 @@ enum L10n {
     static var loadMore: String { text("Load More") }
     static var publicBookmarks: String { text("Public bookmarks") }
     static var privateBookmarks: String { text("Private bookmarks") }
+    static var privateFollowing: String { text("Private Following") }
     static var daily: String { text("Daily") }
     static var weekly: String { text("Weekly") }
     static var monthly: String { text("Monthly") }

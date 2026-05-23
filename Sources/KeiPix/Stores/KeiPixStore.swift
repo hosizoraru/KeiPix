@@ -727,7 +727,9 @@ final class KeiPixStore {
             guard let userID = session?.user.id else { throw PixivAPIError.missingSession }
             return try await api.bookmarks(restrict: "private", userID: userID)
         case .following:
-            return try await api.following()
+            return try await api.following(restrict: "public")
+        case .privateFollowing:
+            return try await api.following(restrict: "private")
         case .history:
             return try await api.browsingHistoryIllusts()
         case .mangaWatchlist, .downloads, .savedSearches:

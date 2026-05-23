@@ -164,9 +164,9 @@ actor PixivAPI {
         ])
     }
 
-    func following() async throws -> PixivFeedResponse {
+    func following(restrict: String = "public") async throws -> PixivFeedResponse {
         try await requestFeed(path: "/v2/illust/follow", query: [
-            "restrict": "public"
+            "restrict": restrict
         ])
     }
 

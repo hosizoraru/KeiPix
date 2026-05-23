@@ -35,7 +35,16 @@ enum PixivRouteSection: Identifiable {
         case .mangaRanking:
             [.mangaRankingDaily, .mangaRankingWeekly, .mangaRankingMonthly, .mangaRankingDailyR18]
         case .library:
-            [.publicBookmarks, .privateBookmarks, .following, .followingCreators, .history, .mangaWatchlist, .downloads]
+            [
+                .publicBookmarks,
+                .privateBookmarks,
+                .following,
+                .privateFollowing,
+                .followingCreators,
+                .history,
+                .mangaWatchlist,
+                .downloads
+            ]
         }
     }
 }
@@ -64,6 +73,7 @@ enum PixivRoute: String, CaseIterable, Identifiable, Codable {
     case publicBookmarks
     case privateBookmarks
     case following
+    case privateFollowing
     case followingCreators
     case history
     case mangaWatchlist
@@ -105,6 +115,7 @@ enum PixivRoute: String, CaseIterable, Identifiable, Codable {
         case .publicBookmarks: L10n.publicBookmarks
         case .privateBookmarks: L10n.privateBookmarks
         case .following: L10n.following
+        case .privateFollowing: L10n.privateFollowing
         case .followingCreators: L10n.followingCreators
         case .history: L10n.history
         case .mangaWatchlist: L10n.mangaWatchlist
@@ -142,6 +153,7 @@ enum PixivRoute: String, CaseIterable, Identifiable, Codable {
         case .mangaRankingDailyR18: "exclamationmark.triangle"
         case .publicBookmarks, .privateBookmarks: "bookmark"
         case .following: "person.2"
+        case .privateFollowing: "person.2.badge.key"
         case .followingCreators: "person.2.crop.square.stack"
         case .history: "clock.arrow.circlepath"
         case .mangaWatchlist: "rectangle.stack.badge.person.crop"
