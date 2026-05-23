@@ -198,6 +198,8 @@ private struct ContentColumnView: View {
             SavedSearchesView(store: store)
         } else if store.selectedRoute == .trendingTags {
             TrendingTagsView(store: store)
+        } else if store.selectedRoute == .spotlight {
+            SpotlightView(store: store)
         } else if store.selectedRoute == .bookmarkTags {
             BookmarkTagsView(store: store)
         } else if store.selectedRoute == .followingCreators || store.selectedRoute == .recommendedUsers || store.selectedRoute == .searchUsers {

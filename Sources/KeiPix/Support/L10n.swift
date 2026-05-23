@@ -8,6 +8,10 @@ enum L10n {
     static var newIllustrations: String { text("New Illustrations") }
     static var newManga: String { text("New Manga") }
     static var trendingTags: String { text("Trending Tags") }
+    static var spotlight: String { text("Spotlight") }
+    static var noSpotlightArticles: String { text("No spotlight articles") }
+    static var loadMoreSpotlightArticles: String { text("Load More Spotlight Articles") }
+    static var openArticle: String { text("Open Article") }
     static var search: String { text("Search") }
     static var searchCreators: String { text("Search Creators") }
     static var savedSearches: String { text("Saved Searches") }

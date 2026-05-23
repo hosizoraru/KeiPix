@@ -370,6 +370,20 @@ actor PixivAPI {
         )
     }
 
+    func spotlightArticles(category: String = "all") async throws -> PixivSpotlightResponse {
+        var components = URLComponents(url: URL(string: "/v1/spotlight/articles", relativeTo: Endpoint.apiBase)!, resolvingAgainstBaseURL: true)!
+        components.queryItems = [
+            URLQueryItem(name: "filter", value: "for_android"),
+            URLQueryItem(name: "category", value: category)
+        ]
+        guard let url = components.url else { throw PixivAPIError.invalidResponse }
+        return try await requestJSON(url, method: "GET", form: nil)
+    }
+
+    func nextSpotlightArticles(_ url: URL) async throws -> PixivSpotlightResponse {
+        try await requestJSON(url, method: "GET", form: nil)
+    }
+
     func nextFeed(_ url: URL) async throws -> PixivFeedResponse {
         if url.path == "/v1/user/browsing-history/illusts" {
             let offset = URLComponents(url: url, resolvingAgainstBaseURL: false)?

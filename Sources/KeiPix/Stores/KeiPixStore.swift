@@ -441,6 +441,14 @@ final class KeiPixStore {
         return response.trendTags.filter { passesContentFilters($0.artwork) }
     }
 
+    func spotlightArticles() async throws -> PixivSpotlightResponse {
+        try await api.spotlightArticles()
+    }
+
+    func nextSpotlightArticles(_ url: URL) async throws -> PixivSpotlightResponse {
+        try await api.nextSpotlightArticles(url)
+    }
+
     func followingUsers(restrict: BookmarkRestrict) async throws -> PixivUserPreviewResponse {
         guard let userID = session?.user.id else { throw PixivAPIError.missingSession }
         let response = try await api.followingUsers(userID: userID, restrict: restrict.rawValue)
@@ -779,7 +787,7 @@ final class KeiPixStore {
             return try await api.following(restrict: "private")
         case .history:
             return try await api.browsingHistoryIllusts()
-        case .mangaWatchlist, .downloads, .savedSearches, .trendingTags, .bookmarkTags:
+        case .mangaWatchlist, .downloads, .savedSearches, .trendingTags, .bookmarkTags, .spotlight:
             return PixivFeedResponse(illusts: [], nextURL: nil)
         case .followingCreators, .recommendedUsers, .searchUsers:
             return PixivFeedResponse(illusts: [], nextURL: nil)
