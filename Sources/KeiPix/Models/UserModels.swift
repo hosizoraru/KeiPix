@@ -40,3 +40,40 @@ struct PixivUserWorkspace: Decodable, Hashable, Sendable {
     let mouse: String?
     let comment: String?
 }
+
+struct PixivUserPreviewResponse: Decodable, Sendable {
+    let userPreviews: [PixivUserPreview]
+    let nextURL: URL?
+
+    enum CodingKeys: String, CodingKey {
+        case userPreviews = "user_previews"
+        case nextURL = "next_url"
+    }
+}
+
+struct PixivUserPreview: Decodable, Identifiable, Hashable, Sendable {
+    let user: PixivUser
+    let illusts: [PixivArtwork]
+    let isMuted: Bool
+
+    var id: Int { user.id }
+
+    enum CodingKeys: String, CodingKey {
+        case user
+        case illusts
+        case isMuted = "is_muted"
+    }
+
+    init(user: PixivUser, illusts: [PixivArtwork], isMuted: Bool) {
+        self.user = user
+        self.illusts = illusts
+        self.isMuted = isMuted
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        user = try container.decode(PixivUser.self, forKey: .user)
+        illusts = try container.decodeIfPresent([PixivArtwork].self, forKey: .illusts) ?? []
+        isMuted = try container.decodeIfPresent(Bool.self, forKey: .isMuted) ?? false
+    }
+}

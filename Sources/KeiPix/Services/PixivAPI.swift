@@ -218,6 +218,29 @@ actor PixivAPI {
         )
     }
 
+    func recommendedUsers() async throws -> PixivUserPreviewResponse {
+        try await requestJSON(
+            URL(string: "/v1/user/recommended?filter=for_android", relativeTo: Endpoint.apiBase)!,
+            method: "GET",
+            form: nil
+        )
+    }
+
+    func followingUsers(userID: String, restrict: String) async throws -> PixivUserPreviewResponse {
+        var components = URLComponents(url: URL(string: "/v1/user/following", relativeTo: Endpoint.apiBase)!, resolvingAgainstBaseURL: true)!
+        components.queryItems = [
+            URLQueryItem(name: "filter", value: "for_android"),
+            URLQueryItem(name: "user_id", value: userID),
+            URLQueryItem(name: "restrict", value: restrict)
+        ]
+        guard let url = components.url else { throw PixivAPIError.invalidResponse }
+        return try await requestJSON(url, method: "GET", form: nil)
+    }
+
+    func nextUserPreviews(_ url: URL) async throws -> PixivUserPreviewResponse {
+        try await requestJSON(url, method: "GET", form: nil)
+    }
+
     func userIllusts(userID: Int, type: String) async throws -> PixivFeedResponse {
         try await requestFeed(path: "/v1/user/illusts", query: [
             "filter": "for_android",

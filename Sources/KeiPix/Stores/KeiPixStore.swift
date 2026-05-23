@@ -251,6 +251,22 @@ final class KeiPixStore {
         try await api.userDetail(userID: user.id)
     }
 
+    func recommendedUsers() async throws -> PixivUserPreviewResponse {
+        let response = try await api.recommendedUsers()
+        return filteredUserPreviewResponse(response)
+    }
+
+    func followingUsers(restrict: BookmarkRestrict) async throws -> PixivUserPreviewResponse {
+        guard let userID = session?.user.id else { throw PixivAPIError.missingSession }
+        let response = try await api.followingUsers(userID: userID, restrict: restrict.rawValue)
+        return filteredUserPreviewResponse(response)
+    }
+
+    func nextUserPreviews(_ url: URL) async throws -> PixivUserPreviewResponse {
+        let response = try await api.nextUserPreviews(url)
+        return filteredUserPreviewResponse(response)
+    }
+
     func comments(for artwork: PixivArtwork) async throws -> PixivCommentResponse {
         try await api.illustComments(illustID: artwork.id)
     }
@@ -583,6 +599,8 @@ final class KeiPixStore {
             return try await api.browsingHistoryIllusts()
         case .mangaWatchlist:
             return PixivFeedResponse(illusts: [], nextURL: nil)
+        case .followingCreators, .recommendedUsers:
+            return PixivFeedResponse(illusts: [], nextURL: nil)
         }
     }
 
@@ -623,6 +641,19 @@ final class KeiPixStore {
             detail: response.detail,
             firstArtwork: firstArtwork,
             illusts: illusts,
+            nextURL: response.nextURL
+        )
+    }
+
+    private func filteredUserPreviewResponse(_ response: PixivUserPreviewResponse) -> PixivUserPreviewResponse {
+        PixivUserPreviewResponse(
+            userPreviews: response.userPreviews.map { preview in
+                PixivUserPreview(
+                    user: preview.user,
+                    illusts: preview.illusts.filter(passesContentFilters),
+                    isMuted: preview.isMuted
+                )
+            },
             nextURL: response.nextURL
         )
     }

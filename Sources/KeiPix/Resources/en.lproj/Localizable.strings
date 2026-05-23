@@ -8,8 +8,10 @@
 "Bookmarks" = "Bookmarks";
 "Library" = "Library";
 "Following" = "Following";
+"Following Creators" = "Following Creators";
 "History" = "History";
 "Manga Watchlist" = "Manga Watchlist";
+"Recommended Creators" = "Recommended Creators";
 "Login" = "Login";
 "Logout" = "Logout";
 "Refresh" = "Refresh";
@@ -140,6 +142,10 @@
 "No watchlist series" = "No watchlist series";
 "Load More Watchlist" = "Load More Watchlist";
 "Remove from Watchlist" = "Remove from Watchlist";
+"No creators" = "No creators";
+"Load More Creators" = "Load More Creators";
+"Public" = "Public";
+"Private" = "Private";
 "Views" = "Views";
 "Saves" = "Saves";
 "Pages" = "Pages";

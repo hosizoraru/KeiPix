@@ -11,8 +11,10 @@ enum L10n {
     static var bookmarks: String { text("Bookmarks") }
     static var library: String { text("Library") }
     static var following: String { text("Following") }
+    static var followingCreators: String { text("Following Creators") }
     static var history: String { text("History") }
     static var mangaWatchlist: String { text("Manga Watchlist") }
+    static var recommendedCreators: String { text("Recommended Creators") }
     static var login: String { text("Login") }
     static var logout: String { text("Logout") }
     static var refresh: String { text("Refresh") }
@@ -143,6 +145,10 @@ enum L10n {
     static var noWatchlistSeries: String { text("No watchlist series") }
     static var loadMoreWatchlist: String { text("Load More Watchlist") }
     static var removeFromWatchlist: String { text("Remove from Watchlist") }
+    static var noCreators: String { text("No creators") }
+    static var loadMoreCreators: String { text("Load More Creators") }
+    static var publicRestrict: String { text("Public") }
+    static var privateRestrict: String { text("Private") }
     static var views: String { text("Views") }
     static var saves: String { text("Saves") }
     static var pages: String { text("Pages") }

@@ -20,13 +20,13 @@ enum PixivRouteSection: Identifiable {
     var routes: [PixivRoute] {
         switch self {
         case .works:
-            [.illustrations, .mangaRecommended, .search]
+            [.illustrations, .mangaRecommended, .recommendedUsers, .search]
         case .ranking:
             [.rankingDaily, .rankingWeekly, .rankingMonthly]
         case .mangaRanking:
             [.mangaRankingDaily, .mangaRankingWeekly, .mangaRankingMonthly]
         case .library:
-            [.publicBookmarks, .privateBookmarks, .following, .history, .mangaWatchlist]
+            [.publicBookmarks, .privateBookmarks, .following, .followingCreators, .history, .mangaWatchlist]
         }
     }
 }
@@ -47,8 +47,10 @@ enum PixivRoute: String, CaseIterable, Identifiable, Codable {
     case publicBookmarks
     case privateBookmarks
     case following
+    case followingCreators
     case history
     case mangaWatchlist
+    case recommendedUsers
 
     static var sidebarSections: [PixivRouteSection] {
         [.works, .ranking, .mangaRanking, .library]
@@ -77,14 +79,16 @@ enum PixivRoute: String, CaseIterable, Identifiable, Codable {
         case .publicBookmarks: L10n.publicBookmarks
         case .privateBookmarks: L10n.privateBookmarks
         case .following: L10n.following
+        case .followingCreators: L10n.followingCreators
         case .history: L10n.history
         case .mangaWatchlist: L10n.mangaWatchlist
+        case .recommendedUsers: L10n.recommendedCreators
         }
     }
 
     var usesArtworkFeed: Bool {
         switch self {
-        case .mangaWatchlist:
+        case .mangaWatchlist, .followingCreators, .recommendedUsers:
             false
         default:
             true
@@ -95,6 +99,7 @@ enum PixivRoute: String, CaseIterable, Identifiable, Codable {
         switch self {
         case .illustrations: "photo.on.rectangle"
         case .mangaRecommended: "book.closed"
+        case .recommendedUsers: "person.crop.circle.badge.plus"
         case .search: "magnifyingglass"
         case .userIllustrations: "person.crop.rectangle.stack"
         case .userManga: "person.crop.square"
@@ -103,6 +108,7 @@ enum PixivRoute: String, CaseIterable, Identifiable, Codable {
         case .mangaRankingDaily, .mangaRankingWeekly, .mangaRankingMonthly: "chart.bar.doc.horizontal"
         case .publicBookmarks, .privateBookmarks: "bookmark"
         case .following: "person.2"
+        case .followingCreators: "person.2.crop.square.stack"
         case .history: "clock.arrow.circlepath"
         case .mangaWatchlist: "rectangle.stack.badge.person.crop"
         }

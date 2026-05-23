@@ -8,8 +8,10 @@
 "Bookmarks" = "收藏";
 "Library" = "书架";
 "Following" = "关注";
+"Following Creators" = "关注作者";
 "History" = "浏览历史";
 "Manga Watchlist" = "漫画追更";
+"Recommended Creators" = "推荐作者";
 "Login" = "登录";
 "Logout" = "退出登录";
 "Refresh" = "刷新";
@@ -140,6 +142,10 @@
 "No watchlist series" = "暂无追更系列";
 "Load More Watchlist" = "加载更多追更";
 "Remove from Watchlist" = "取消追更";
+"No creators" = "暂无作者";
+"Load More Creators" = "加载更多作者";
+"Public" = "公开";
+"Private" = "私密";
 "Views" = "浏览";
 "Saves" = "收藏";
 "Pages" = "页数";

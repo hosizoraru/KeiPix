@@ -171,6 +171,8 @@ private struct ContentColumnView: View {
     var body: some View {
         if store.selectedRoute == .mangaWatchlist {
             MangaWatchlistView(store: store)
+        } else if store.selectedRoute == .followingCreators || store.selectedRoute == .recommendedUsers {
+            UserPreviewListView(store: store, mode: store.selectedRoute == .followingCreators ? .following : .recommended)
         } else {
             GalleryView(store: store)
         }
