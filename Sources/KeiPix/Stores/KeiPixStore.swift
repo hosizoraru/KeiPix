@@ -18,6 +18,9 @@ final class KeiPixStore {
         .flatMap(AppLanguage.init(rawValue:)) ?? .automatic
     var useOriginalImagesInDetail = UserDefaults.standard.bool(forKey: "useOriginalImagesInDetail")
     var compactArtworkCards = UserDefaults.standard.bool(forKey: "compactArtworkCards")
+    var trackpadGesturesEnabled = UserDefaults.standard.object(forKey: "trackpadGesturesEnabled") as? Bool ?? true
+    var horizontalSwipeBehavior = UserDefaults.standard.string(forKey: "horizontalSwipeBehavior")
+        .flatMap(TrackpadHorizontalSwipeBehavior.init(rawValue:)) ?? .pageOnly
     var hasNextPage: Bool { nextURL != nil }
 
     private let api = PixivAPI()
@@ -154,6 +157,28 @@ final class KeiPixStore {
     func setCompactArtworkCards(_ value: Bool) {
         compactArtworkCards = value
         UserDefaults.standard.set(value, forKey: "compactArtworkCards")
+    }
+
+    func setTrackpadGesturesEnabled(_ value: Bool) {
+        trackpadGesturesEnabled = value
+        UserDefaults.standard.set(value, forKey: "trackpadGesturesEnabled")
+    }
+
+    func setHorizontalSwipeBehavior(_ behavior: TrackpadHorizontalSwipeBehavior) {
+        horizontalSwipeBehavior = behavior
+        UserDefaults.standard.set(behavior.rawValue, forKey: "horizontalSwipeBehavior")
+    }
+
+    @discardableResult
+    func selectAdjacentArtwork(delta: Int) -> Bool {
+        guard let selectedArtwork,
+              let index = artworks.firstIndex(where: { $0.id == selectedArtwork.id }) else {
+            return false
+        }
+        let nextIndex = index + delta
+        guard artworks.indices.contains(nextIndex) else { return false }
+        self.selectedArtwork = artworks[nextIndex]
+        return true
     }
 
     private func loadFeed(for route: PixivRoute) async throws -> PixivFeedResponse {

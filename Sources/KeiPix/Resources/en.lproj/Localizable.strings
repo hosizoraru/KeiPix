@@ -21,6 +21,11 @@
 "Use original images in detail" = "Use original images in detail";
 "Layout" = "Layout";
 "Compact artwork cards" = "Compact artwork cards";
+"Trackpad" = "Trackpad";
+"Enable trackpad gestures" = "Enable trackpad gestures";
+"Two-finger swipe behavior" = "Two-finger swipe behavior";
+"Page within artwork" = "Page within artwork";
+"Switch artwork at edges" = "Switch artwork at edges";
 "Account" = "Account";
 "Profile" = "Profile";
 "Login to Pixiv" = "Login to Pixiv";
@@ -54,6 +59,8 @@
 "Continuous Reading" = "Continuous Reading";
 "Page Index" = "Page Index";
 "Jump to Page" = "Jump to Page";
+"Reset Zoom" = "Reset Zoom";
+"Toggle Zoom" = "Toggle Zoom";
 "Page %d of %d" = "Page %d of %d";
 "AI generated" = "AI generated";
 "Created" = "Created";

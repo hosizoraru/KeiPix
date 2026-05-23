@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 
 struct ArtworkReaderView: View {
@@ -8,6 +9,8 @@ struct ArtworkReaderView: View {
     @Binding var scrollTarget: Int?
     let scrollToPage: (Int) -> Void
 
+    @State private var interaction = ArtworkReaderInteractionState()
+
     var body: some View {
         Group {
             switch readingMode {
@@ -16,13 +19,16 @@ struct ArtworkReaderView: View {
                     artwork: artwork,
                     store: store,
                     pageIndex: $pageIndex,
-                    movePage: movePage
+                    interaction: interaction,
+                    movePage: movePage,
+                    handlePageSwipe: handlePageSwipe
                 )
             case .continuous:
                 ArtworkContinuousReader(
                     artwork: artwork,
                     store: store,
-                    pageIndex: $pageIndex
+                    pageIndex: $pageIndex,
+                    handlePageSwipe: handlePageSwipe
                 )
                 .padding(.horizontal, 18)
             case .index:
@@ -32,27 +38,36 @@ struct ArtworkReaderView: View {
                     selectPage: { index in
                         readingMode = .singlePage
                         scrollToPage(index)
-                    }
+                    },
+                    handlePageSwipe: handlePageSwipe
                 )
                 .padding(.horizontal, 18)
             }
         }
         .overlay {
-            if pageCount > 1 {
-                HStack {
-                    Button(L10n.previousPage) { movePage(-1) }
-                        .keyboardShortcut(.leftArrow, modifiers: [])
-                        .hidden()
-                    Button(L10n.nextPage) { movePage(1) }
-                        .keyboardShortcut(.rightArrow, modifiers: [])
-                        .hidden()
-                }
-                .accessibilityHidden(true)
+            HStack {
+                Button(L10n.previousPage) { movePage(-1) }
+                    .keyboardShortcut(.leftArrow, modifiers: [])
+                    .hidden()
+                Button(L10n.nextPage) { movePage(1) }
+                    .keyboardShortcut(.rightArrow, modifiers: [])
+                    .hidden()
+                Button(L10n.resetZoom) { interaction.resetZoom() }
+                    .keyboardShortcut(.escape, modifiers: [])
+                    .hidden()
+                Button(L10n.toggleZoom) { interaction.toggleSmartZoom(in: .zero) }
+                    .keyboardShortcut(.space, modifiers: [])
+                    .hidden()
             }
+            .accessibilityHidden(true)
         }
         .onChange(of: scrollTarget) { _, value in
             guard readingMode == .continuous, let value, value != pageIndex else { return }
             pageIndex = min(max(value, 0), pageCount - 1)
+        }
+        .onChange(of: pageIndex) { _, value in
+            interaction.activePageIndex = value
+            interaction.resetZoom()
         }
     }
 
@@ -61,7 +76,27 @@ struct ArtworkReaderView: View {
     }
 
     private func movePage(_ delta: Int) {
-        scrollToPage(pageIndex + delta)
+        let target = pageIndex + delta
+        if (0..<pageCount).contains(target) {
+            scrollToPage(target)
+        } else if store.horizontalSwipeBehavior == .pageThenArtworkAtEdges {
+            store.selectAdjacentArtwork(delta: delta)
+        }
+    }
+
+    private func handlePageSwipe(_ event: TrackpadScrollEvent) -> Bool {
+        guard store.trackpadGesturesEnabled, event.isMomentum == false, interaction.isZoomed == false else {
+            return false
+        }
+        let result = interaction.trackSwipe(
+            deltaX: event.deltaX,
+            deltaY: event.deltaY,
+            isFinished: event.isFinished
+        )
+        if let pageDelta = result.pageDelta {
+            movePage(pageDelta)
+        }
+        return result.handled
     }
 }
 
@@ -154,45 +189,108 @@ private struct ArtworkSinglePageReader: View {
     let artwork: PixivArtwork
     @Bindable var store: KeiPixStore
     @Binding var pageIndex: Int
+    let interaction: ArtworkReaderInteractionState
     let movePage: (Int) -> Void
+    let handlePageSwipe: (TrackpadScrollEvent) -> Bool
 
     var body: some View {
-        RemoteImageView(url: artwork.imageURL(at: pageIndex, preferOriginal: store.useOriginalImagesInDetail), contentMode: .fit)
-            .aspectRatio(artwork.aspectRatio, contentMode: .fit)
-            .frame(maxWidth: .infinity)
-            .frame(minHeight: 260)
-            .frame(maxHeight: 680)
-            .background(.quaternary)
-            .backgroundExtensionEffect()
-            .overlay(alignment: .leading) {
-                if pageCount > 1 {
-                    PageNavigationButton(systemImage: "chevron.left", title: L10n.previousPage) {
-                        movePage(-1)
+        GeometryReader { proxy in
+            ZStack {
+                RemoteImageView(url: artwork.imageURL(at: pageIndex, preferOriginal: store.useOriginalImagesInDetail), contentMode: .fit)
+                    .scaleEffect(interaction.scale)
+                    .offset(interaction.offset)
+
+                TrackpadEventBridge(
+                    isEnabled: store.trackpadGesturesEnabled,
+                    onScroll: { event in
+                        handleScroll(event, in: proxy.size)
+                    },
+                    onMagnify: { delta, phase in
+                        handleMagnify(delta, phase: phase, in: proxy.size)
+                    },
+                    onSmartMagnify: {
+                        interaction.toggleSmartZoom(in: proxy.size)
+                        return true
+                    },
+                    onDrag: { delta in
+                        guard interaction.isZoomed else { return false }
+                        interaction.applyPan(deltaX: -delta.width, deltaY: -delta.height, in: proxy.size)
+                        return true
                     }
-                    .disabled(pageIndex <= 0)
-                    .padding(.leading, 12)
-                }
-            }
-            .overlay(alignment: .trailing) {
+                )
+
                 if pageCount > 1 {
-                    PageNavigationButton(systemImage: "chevron.right", title: L10n.nextPage) {
-                        movePage(1)
+                    HStack {
+                        PageNavigationButton(systemImage: "chevron.left", title: L10n.previousPage) {
+                            movePage(-1)
+                        }
+                        .disabled(pageIndex <= 0)
+
+                        Spacer()
+
+                        PageNavigationButton(systemImage: "chevron.right", title: L10n.nextPage) {
+                            movePage(1)
+                        }
+                        .disabled(pageIndex >= pageCount - 1)
                     }
-                    .disabled(pageIndex >= pageCount - 1)
-                    .padding(.trailing, 12)
+                    .padding(.horizontal, 12)
                 }
-            }
-            .overlay(alignment: .topTrailing) {
-                if pageCount > 1 {
-                    PageBadge(index: pageIndex, count: pageCount)
-                        .padding(14)
+
+                VStack {
+                    HStack {
+                        if interaction.isZoomed {
+                            Button {
+                                interaction.resetZoom()
+                            } label: {
+                                Label(L10n.resetZoom, systemImage: "arrow.down.right.and.arrow.up.left")
+                            }
+                            .buttonStyle(.plain)
+                            .controlSize(.small)
+                            .keiInteractiveGlass(12)
+                        }
+
+                        Spacer()
+
+                        if pageCount > 1 {
+                            PageBadge(index: pageIndex, count: pageCount)
+                        }
+                    }
+                    Spacer()
                 }
+                .padding(14)
             }
-            .clipShape(RoundedRectangle(cornerRadius: 0, style: .continuous))
+            .clipped()
+            .contentShape(Rectangle())
+        }
+        .aspectRatio(artwork.aspectRatio, contentMode: .fit)
+        .frame(maxWidth: .infinity)
+        .frame(minHeight: 260)
+        .frame(maxHeight: 680)
+        .background(.quaternary)
+        .backgroundExtensionEffect()
+        .clipShape(RoundedRectangle(cornerRadius: 0, style: .continuous))
     }
 
     private var pageCount: Int {
         artwork.displayPageCount
+    }
+
+    private func handleScroll(_ event: TrackpadScrollEvent, in size: CGSize) -> Bool {
+        guard store.trackpadGesturesEnabled else { return false }
+        if interaction.isZoomed {
+            interaction.applyPan(deltaX: event.deltaX, deltaY: event.deltaY, in: size)
+            return true
+        }
+        return handlePageSwipe(event)
+    }
+
+    private func handleMagnify(_ delta: CGFloat, phase: NSEvent.Phase, in size: CGSize) -> Bool {
+        guard store.trackpadGesturesEnabled else { return false }
+        interaction.applyMagnification(delta, in: size)
+        if phase.contains(.ended) || phase.contains(.cancelled) {
+            interaction.finishMagnification()
+        }
+        return true
     }
 }
 
@@ -200,6 +298,7 @@ private struct ArtworkContinuousReader: View {
     let artwork: PixivArtwork
     @Bindable var store: KeiPixStore
     @Binding var pageIndex: Int
+    let handlePageSwipe: (TrackpadScrollEvent) -> Bool
 
     var body: some View {
         LazyVStack(spacing: 16) {
@@ -210,6 +309,15 @@ private struct ArtworkContinuousReader: View {
                         .frame(maxWidth: .infinity)
                         .background(.quaternary, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
                         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                        .overlay {
+                            TrackpadEventBridge(
+                                isEnabled: store.trackpadGesturesEnabled,
+                                onScroll: handlePageSwipe,
+                                onMagnify: { _, _ in false },
+                                onSmartMagnify: { false },
+                                onDrag: { _ in false }
+                            )
+                        }
                         .overlay(alignment: .topTrailing) {
                             PageBadge(index: index, count: pageCount)
                                 .padding(10)
@@ -236,6 +344,7 @@ private struct ArtworkPageIndexGrid: View {
     let artwork: PixivArtwork
     let selectedPage: Int
     let selectPage: (Int) -> Void
+    let handlePageSwipe: (TrackpadScrollEvent) -> Bool
 
     private let columns = [GridItem(.adaptive(minimum: 72, maximum: 92), spacing: 10)]
 
@@ -255,6 +364,15 @@ private struct ArtworkPageIndexGrid: View {
                 .accessibilityLabel(L10n.pageStatus(index + 1, pageCount))
                 .id(index)
             }
+        }
+        .background {
+            TrackpadEventBridge(
+                isEnabled: true,
+                onScroll: handlePageSwipe,
+                onMagnify: { _, _ in false },
+                onSmartMagnify: { false },
+                onDrag: { _ in false }
+            )
         }
         .scrollTargetLayout()
     }

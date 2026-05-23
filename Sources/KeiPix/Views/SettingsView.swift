@@ -19,6 +19,17 @@ struct SettingsView: View {
                 Toggle(L10n.compactCards, isOn: compactCardsBinding)
             }
 
+            Section(L10n.trackpad) {
+                Toggle(L10n.enableTrackpadGestures, isOn: trackpadGesturesBinding)
+
+                Picker(L10n.twoFingerSwipeBehavior, selection: horizontalSwipeBehaviorBinding) {
+                    ForEach(TrackpadHorizontalSwipeBehavior.allCases) { behavior in
+                        Text(behavior.title).tag(behavior)
+                    }
+                }
+                .pickerStyle(.menu)
+            }
+
             if let session = store.session {
                 Section(L10n.account) {
                     LabeledContent(L10n.profile, value: "\(session.user.name) @\(session.user.account)")
@@ -51,6 +62,22 @@ struct SettingsView: View {
             store.compactArtworkCards
         } set: { value in
             store.setCompactArtworkCards(value)
+        }
+    }
+
+    private var trackpadGesturesBinding: Binding<Bool> {
+        Binding {
+            store.trackpadGesturesEnabled
+        } set: { value in
+            store.setTrackpadGesturesEnabled(value)
+        }
+    }
+
+    private var horizontalSwipeBehaviorBinding: Binding<TrackpadHorizontalSwipeBehavior> {
+        Binding {
+            store.horizontalSwipeBehavior
+        } set: { value in
+            store.setHorizontalSwipeBehavior(value)
         }
     }
 }

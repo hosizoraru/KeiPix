@@ -24,6 +24,11 @@ enum L10n {
     static var useOriginalImages: String { text("Use original images in detail") }
     static var layout: String { text("Layout") }
     static var compactCards: String { text("Compact artwork cards") }
+    static var trackpad: String { text("Trackpad") }
+    static var enableTrackpadGestures: String { text("Enable trackpad gestures") }
+    static var twoFingerSwipeBehavior: String { text("Two-finger swipe behavior") }
+    static var pageOnlySwipe: String { text("Page within artwork") }
+    static var pageThenArtworkSwipe: String { text("Switch artwork at edges") }
     static var account: String { text("Account") }
     static var profile: String { text("Profile") }
     static var loginTitle: String { text("Login to Pixiv") }
@@ -57,6 +62,8 @@ enum L10n {
     static var continuousReading: String { text("Continuous Reading") }
     static var pageIndex: String { text("Page Index") }
     static var jumpToPage: String { text("Jump to Page") }
+    static var resetZoom: String { text("Reset Zoom") }
+    static var toggleZoom: String { text("Toggle Zoom") }
     static var aiGenerated: String { text("AI generated") }
     static var created: String { text("Created") }
     static var artworkID: String { text("Artwork ID") }

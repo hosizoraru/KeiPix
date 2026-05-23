@@ -21,6 +21,11 @@
 "Use original images in detail" = "详情页使用原图";
 "Layout" = "布局";
 "Compact artwork cards" = "紧凑作品卡片";
+"Trackpad" = "触控板";
+"Enable trackpad gestures" = "启用触控板手势";
+"Two-finger swipe behavior" = "双指横扫行为";
+"Page within artwork" = "仅作品内翻页";
+"Switch artwork at edges" = "边界后切换作品";
 "Account" = "账号";
 "Profile" = "资料";
 "Login to Pixiv" = "登录 Pixiv";
@@ -54,6 +59,8 @@
 "Continuous Reading" = "连续阅读";
 "Page Index" = "页码索引";
 "Jump to Page" = "跳转页码";
+"Reset Zoom" = "重置缩放";
+"Toggle Zoom" = "切换缩放";
 "Page %d of %d" = "第 %d / %d 页";
 "AI generated" = "AI 生成";
 "Created" = "创建时间";
