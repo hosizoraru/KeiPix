@@ -99,8 +99,10 @@
 "Two-finger swipe behavior" = "双指横扫行为";
 "Page within artwork" = "仅作品内翻页";
 "Switch artwork at edges" = "边界后切换作品";
+"Privacy" = "隐私";
 "Account" = "账号";
 "Show account identity" = "显示账号身份信息";
+"Hide your Pixiv name and ID in the sidebar for screenshots." = "隐藏侧边栏里的 Pixiv 名字和 ID，方便分享截图。";
 "Profile" = "资料";
 "Hidden" = "已隐藏";
 "Login to Pixiv" = "登录 Pixiv";

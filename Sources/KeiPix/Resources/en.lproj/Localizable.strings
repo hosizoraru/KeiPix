@@ -99,8 +99,10 @@
 "Two-finger swipe behavior" = "Two-finger swipe behavior";
 "Page within artwork" = "Page within artwork";
 "Switch artwork at edges" = "Switch artwork at edges";
+"Privacy" = "Privacy";
 "Account" = "Account";
 "Show account identity" = "Show account identity";
+"Hide your Pixiv name and ID in the sidebar for screenshots." = "Hide your Pixiv name and ID in the sidebar for screenshots.";
 "Profile" = "Profile";
 "Hidden" = "Hidden";
 "Login to Pixiv" = "Login to Pixiv";

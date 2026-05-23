@@ -102,8 +102,10 @@ enum L10n {
     static var twoFingerSwipeBehavior: String { text("Two-finger swipe behavior") }
     static var pageOnlySwipe: String { text("Page within artwork") }
     static var pageThenArtworkSwipe: String { text("Switch artwork at edges") }
+    static var privacy: String { text("Privacy") }
     static var account: String { text("Account") }
     static var showAccountIdentity: String { text("Show account identity") }
+    static var accountIdentityPrivacyHint: String { text("Hide your Pixiv name and ID in the sidebar for screenshots.") }
     static var profile: String { text("Profile") }
     static var hidden: String { text("Hidden") }
     static var loginTitle: String { text("Login to Pixiv") }

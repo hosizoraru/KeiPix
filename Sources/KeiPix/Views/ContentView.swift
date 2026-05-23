@@ -43,7 +43,10 @@ struct ContentView: View {
                 Menu {
                     ForEach(WindowSizePreset.allCases) { preset in
                         Button(preset.title) {
-                            preset.apply(sidebarVisible: sidebarVisible)
+                            preset.apply(
+                                sidebarVisible: sidebarVisible,
+                                accountIdentityVisible: store.showAccountIdentity
+                            )
                         }
                     }
                 } label: {
@@ -121,7 +124,11 @@ struct ContentView: View {
     }
 
     private var minimumWindowWidth: CGFloat {
-        sidebarVisible ? 1060 : 940
+        if sidebarVisible {
+            store.showAccountIdentity ? 1060 : 1020
+        } else {
+            940
+        }
     }
 
     private var galleryLayoutBinding: Binding<GalleryLayoutMode> {

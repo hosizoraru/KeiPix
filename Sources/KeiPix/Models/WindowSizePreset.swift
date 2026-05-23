@@ -22,16 +22,16 @@ enum WindowSizePreset: String, CaseIterable, Identifiable {
         }
     }
 
-    func size(sidebarVisible: Bool) -> CGSize {
+    func size(sidebarVisible: Bool, accountIdentityVisible: Bool = true) -> CGSize {
         switch (self, sidebarVisible) {
         case (.small, true):
-            CGSize(width: 1060, height: 720)
+            CGSize(width: accountIdentityVisible ? 1060 : 1020, height: 720)
         case (.balanced, true):
-            CGSize(width: 1240, height: 800)
+            CGSize(width: accountIdentityVisible ? 1240 : 1200, height: 800)
         case (.wide, true):
-            CGSize(width: 1400, height: 860)
+            CGSize(width: accountIdentityVisible ? 1400 : 1360, height: 860)
         case (.reading, true):
-            CGSize(width: 1320, height: 860)
+            CGSize(width: accountIdentityVisible ? 1320 : 1280, height: 860)
         case (.small, false):
             CGSize(width: 940, height: 700)
         case (.balanced, false):
@@ -44,9 +44,9 @@ enum WindowSizePreset: String, CaseIterable, Identifiable {
     }
 
     @MainActor
-    func apply(sidebarVisible: Bool) {
+    func apply(sidebarVisible: Bool, accountIdentityVisible: Bool = true) {
         guard let window = NSApp.keyWindow ?? NSApp.mainWindow else { return }
-        let targetSize = size(sidebarVisible: sidebarVisible)
+        let targetSize = size(sidebarVisible: sidebarVisible, accountIdentityVisible: accountIdentityVisible)
         let visibleFrame = window.screen?.visibleFrame ?? NSScreen.main?.visibleFrame ?? window.frame
         let fittedSize = CGSize(
             width: min(targetSize.width, visibleFrame.width),

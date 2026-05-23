@@ -20,7 +20,7 @@ struct SidebarView: View {
             }
         }
         .listStyle(.sidebar)
-        .navigationSplitViewColumnWidth(min: store.showAccountIdentity ? 188 : 172, ideal: store.showAccountIdentity ? 208 : 184, max: 238)
+        .navigationSplitViewColumnWidth(min: store.showAccountIdentity ? 188 : 160, ideal: store.showAccountIdentity ? 208 : 172, max: 238)
         .onChange(of: store.selectedRoute) { _, newValue in
             guard newValue.isSidebarRoute else { return }
             store.select(newValue)
@@ -46,7 +46,11 @@ private struct UserHeader: View {
     let showIdentity: Bool
 
     var body: some View {
-        HStack(spacing: 10) {
+        HStack(spacing: showIdentity ? 10 : 0) {
+            if showIdentity == false {
+                Spacer(minLength: 0)
+            }
+
             RemoteImageView(url: session.user.profileImageURL)
                 .frame(width: 34, height: 34)
                 .clipShape(Circle())
@@ -61,6 +65,10 @@ private struct UserHeader: View {
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
                 }
+                Spacer(minLength: 0)
+            }
+
+            if showIdentity == false {
                 Spacer(minLength: 0)
             }
         }

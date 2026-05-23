@@ -98,8 +98,14 @@ struct SettingsView: View {
             }
 
             if let session = store.session {
-                Section(L10n.account) {
+                Section(L10n.privacy) {
                     Toggle(L10n.showAccountIdentity, isOn: accountIdentityBinding)
+                    Text(L10n.accountIdentityPrivacyHint)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+
+                Section(L10n.account) {
                     LabeledContent(
                         L10n.profile,
                         value: store.showAccountIdentity ? "\(session.user.name) @\(session.user.account)" : L10n.hidden
