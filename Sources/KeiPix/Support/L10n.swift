@@ -161,6 +161,10 @@ enum L10n {
     static var pageThenArtworkSwipe: String { text("Switch artwork at edges") }
     static var privacy: String { text("Privacy") }
     static var account: String { text("Account") }
+    static var privacyMode: String { text("Privacy Mode") }
+    static var enablePrivacyMode: String { text("Enable Privacy Mode") }
+    static var disablePrivacyMode: String { text("Disable Privacy Mode") }
+    static var privacyModeHint: String { text("Quickly hides sidebar account identity for screenshots and screen sharing.") }
     static var protectSensitiveContent: String { text("Protect sensitive content from screen capture") }
     static var screenCaptureProtectionHint: String { text("R-18 and R-18G artwork windows are hidden from screenshots and screen sharing when possible.") }
     static var showAccountIdentity: String { text("Show account identity") }

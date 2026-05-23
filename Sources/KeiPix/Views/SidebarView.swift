@@ -7,7 +7,7 @@ struct SidebarView: View {
         List(selection: $store.selectedRoute) {
             if let session = store.session {
                 Section {
-                    UserHeader(session: session, showIdentity: store.showAccountIdentity)
+                    UserHeader(session: session, showIdentity: store.showsSidebarAccountIdentity)
                 }
             }
 
@@ -21,9 +21,9 @@ struct SidebarView: View {
         }
         .listStyle(.sidebar)
         .navigationSplitViewColumnWidth(
-            min: store.showAccountIdentity ? 168 : 132,
-            ideal: store.showAccountIdentity ? 184 : 144,
-            max: store.showAccountIdentity ? 216 : 168
+            min: store.showsSidebarAccountIdentity ? 168 : 132,
+            ideal: store.showsSidebarAccountIdentity ? 184 : 144,
+            max: store.showsSidebarAccountIdentity ? 216 : 168
         )
         .onChange(of: store.selectedRoute) { _, newValue in
             guard newValue.isSidebarRoute else { return }

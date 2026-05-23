@@ -20,6 +20,13 @@ struct KeiPixApp: App {
                     Task { await store.reloadCurrentFeed() }
                 }
                 .keyboardShortcut("r", modifiers: .command)
+
+                Divider()
+
+                Button(store.privacyModeEnabled ? L10n.disablePrivacyMode : L10n.enablePrivacyMode) {
+                    store.setPrivacyModeEnabled(!store.privacyModeEnabled)
+                }
+                .keyboardShortcut("p", modifiers: [.command, .shift])
             }
 
             CommandMenu(L10n.artwork) {

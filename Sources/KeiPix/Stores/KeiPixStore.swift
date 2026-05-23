@@ -29,6 +29,7 @@ final class KeiPixStore {
     var galleryLayoutMode = KeiPixStore.loadGalleryLayoutMode()
     var showContentBadges = UserDefaults.standard.object(forKey: "showContentBadges") as? Bool ?? true
     var showAccountIdentity = UserDefaults.standard.object(forKey: "showAccountIdentity") as? Bool ?? true
+    var privacyModeEnabled = UserDefaults.standard.object(forKey: "privacyModeEnabled") as? Bool ?? false
     var screenCaptureProtectionEnabled = UserDefaults.standard.object(forKey: "screenCaptureProtectionEnabled") as? Bool ?? true
     var hideMutedContent = UserDefaults.standard.object(forKey: "hideMutedContent") as? Bool ?? true
     var hideAIArtworks = UserDefaults.standard.bool(forKey: "hideAIArtworks")
@@ -53,6 +54,7 @@ final class KeiPixStore {
         .flatMap(TrackpadHorizontalSwipeBehavior.init(rawValue:)) ?? .pageOnly
     var hasNextPage: Bool { nextURL != nil }
     var compactArtworkCards: Bool { galleryLayoutMode.usesCompactGrid }
+    var showsSidebarAccountIdentity: Bool { showAccountIdentity && privacyModeEnabled == false }
     var isMainWindowCaptureProtected: Bool {
         screenCaptureProtectionEnabled && selectedArtwork?.requiresScreenCaptureProtection == true
     }

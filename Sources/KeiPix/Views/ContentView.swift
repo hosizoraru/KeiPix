@@ -50,13 +50,22 @@ struct ContentView: View {
                         Button(preset.title) {
                             preset.apply(
                                 sidebarVisible: sidebarVisible,
-                                accountIdentityVisible: store.showAccountIdentity
+                                accountIdentityVisible: store.showsSidebarAccountIdentity
                             )
                         }
                     }
                 } label: {
                     Label(L10n.windowSize, systemImage: "macwindow")
                 }
+            }
+
+            ToolbarItem(placement: .primaryAction) {
+                Button {
+                    store.setPrivacyModeEnabled(!store.privacyModeEnabled)
+                } label: {
+                    Label(L10n.privacyMode, systemImage: store.privacyModeEnabled ? "eye.slash.fill" : "eye")
+                }
+                .help(store.privacyModeEnabled ? L10n.disablePrivacyMode : L10n.enablePrivacyMode)
             }
 
             ToolbarItem(placement: .primaryAction) {
@@ -130,7 +139,7 @@ struct ContentView: View {
 
     private var minimumWindowWidth: CGFloat {
         if sidebarVisible {
-            store.showAccountIdentity ? 970 : 930
+            store.showsSidebarAccountIdentity ? 970 : 930
         } else {
             840
         }

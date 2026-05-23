@@ -27,6 +27,11 @@ extension KeiPixStore {
         UserDefaults.standard.set(value, forKey: "showAccountIdentity")
     }
 
+    func setPrivacyModeEnabled(_ value: Bool) {
+        privacyModeEnabled = value
+        UserDefaults.standard.set(value, forKey: "privacyModeEnabled")
+    }
+
     func setScreenCaptureProtectionEnabled(_ value: Bool) {
         screenCaptureProtectionEnabled = value
         UserDefaults.standard.set(value, forKey: "screenCaptureProtectionEnabled")

@@ -166,6 +166,13 @@ struct SettingsView: View {
             }
 
             Section(L10n.privacy) {
+                Toggle(L10n.privacyMode, isOn: privacyModeBinding)
+                Text(L10n.privacyModeHint)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
+                Divider()
+
                 Toggle(L10n.protectSensitiveContent, isOn: screenCaptureProtectionBinding)
                 Text(L10n.screenCaptureProtectionHint)
                     .font(.caption)
@@ -321,6 +328,14 @@ struct SettingsView: View {
             store.screenCaptureProtectionEnabled
         } set: { value in
             store.setScreenCaptureProtectionEnabled(value)
+        }
+    }
+
+    private var privacyModeBinding: Binding<Bool> {
+        Binding {
+            store.privacyModeEnabled
+        } set: { value in
+            store.setPrivacyModeEnabled(value)
         }
     }
 

@@ -158,6 +158,10 @@
 "Switch artwork at edges" = "Switch artwork at edges";
 "Privacy" = "Privacy";
 "Account" = "Account";
+"Privacy Mode" = "Privacy Mode";
+"Enable Privacy Mode" = "Enable Privacy Mode";
+"Disable Privacy Mode" = "Disable Privacy Mode";
+"Quickly hides sidebar account identity for screenshots and screen sharing." = "Quickly hides sidebar account identity for screenshots and screen sharing.";
 "Protect sensitive content from screen capture" = "Protect sensitive content from screen capture";
 "R-18 and R-18G artwork windows are hidden from screenshots and screen sharing when possible." = "R-18 and R-18G artwork windows are hidden from screenshots and screen sharing when possible.";
 "Show account identity" = "Show account identity";
