@@ -4,6 +4,7 @@ import SwiftUI
 struct RemoteImageView: View {
     let url: URL?
     var contentMode: ContentMode = .fill
+    var onImageLoaded: ((NSImage) -> Void)? = nil
     @State private var image: NSImage?
     @State private var failed = false
 
@@ -41,7 +42,9 @@ struct RemoteImageView: View {
         failed = false
         image = nil
         do {
-            image = try await ImagePipeline.shared.image(for: url)
+            let loadedImage = try await ImagePipeline.shared.image(for: url)
+            image = loadedImage
+            onImageLoaded?(loadedImage)
         } catch {
             failed = true
         }

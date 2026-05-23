@@ -10,6 +10,7 @@ struct ArtworkReaderView: View {
     let scrollToPage: (Int) -> Void
 
     @State private var interaction = ArtworkReaderInteractionState()
+    @State private var pageAspectRatios: [Int: CGFloat] = [:]
 
     var body: some View {
         Group {
@@ -19,16 +20,20 @@ struct ArtworkReaderView: View {
                     artwork: artwork,
                     store: store,
                     pageIndex: $pageIndex,
+                    presentation: presentation(for: pageIndex),
                     interaction: interaction,
                     movePage: movePage,
-                    handlePageSwipe: handlePageSwipe
+                    handlePageSwipe: handlePageSwipe,
+                    onImageLoaded: updatePageAspectRatio
                 )
             case .continuous:
                 ArtworkContinuousReader(
                     artwork: artwork,
                     store: store,
                     pageIndex: $pageIndex,
-                    handlePageSwipe: handlePageSwipe
+                    presentation: presentation(for:),
+                    handlePageSwipe: handlePageSwipe,
+                    onImageLoaded: updatePageAspectRatio
                 )
                 .padding(.horizontal, 18)
             case .index:
@@ -69,6 +74,10 @@ struct ArtworkReaderView: View {
             interaction.activePageIndex = value
             interaction.resetZoom()
         }
+        .onChange(of: artwork.id) { _, _ in
+            pageAspectRatios.removeAll()
+            interaction.resetZoom()
+        }
     }
 
     private var pageCount: Int {
@@ -97,6 +106,22 @@ struct ArtworkReaderView: View {
             movePage(pageDelta)
         }
         return result.handled
+    }
+
+    private func presentation(for index: Int) -> ReaderPagePresentation {
+        ReaderPagePresentation(
+            pageIndex: index,
+            aspectRatio: pageAspectRatios[index],
+            fallbackAspectRatio: artwork.aspectRatio
+        )
+    }
+
+    private func updatePageAspectRatio(_ image: NSImage, pageIndex: Int) {
+        guard let aspectRatio = ReaderPagePresentation.aspectRatio(from: image),
+              pageAspectRatios[pageIndex] != aspectRatio else {
+            return
+        }
+        pageAspectRatios[pageIndex] = aspectRatio
     }
 }
 
@@ -189,14 +214,24 @@ private struct ArtworkSinglePageReader: View {
     let artwork: PixivArtwork
     @Bindable var store: KeiPixStore
     @Binding var pageIndex: Int
+    let presentation: ReaderPagePresentation
     let interaction: ArtworkReaderInteractionState
     let movePage: (Int) -> Void
     let handlePageSwipe: (TrackpadScrollEvent) -> Bool
+    let onImageLoaded: (NSImage, Int) -> Void
 
     var body: some View {
+        let currentPageIndex = pageIndex
+
         GeometryReader { proxy in
             ZStack {
-                RemoteImageView(url: artwork.imageURL(at: pageIndex, preferOriginal: store.useOriginalImagesInDetail), contentMode: .fit)
+                RemoteImageView(
+                    url: artwork.imageURL(at: currentPageIndex, preferOriginal: store.useOriginalImagesInDetail),
+                    contentMode: .fit,
+                    onImageLoaded: { image in
+                        onImageLoaded(image, currentPageIndex)
+                    }
+                )
                     .scaleEffect(interaction.scale)
                     .offset(interaction.offset)
 
@@ -262,10 +297,10 @@ private struct ArtworkSinglePageReader: View {
             .clipped()
             .contentShape(Rectangle())
         }
-        .aspectRatio(artwork.aspectRatio, contentMode: .fit)
+        .aspectRatio(presentation.aspectRatio, contentMode: .fit)
         .frame(maxWidth: .infinity)
         .frame(minHeight: 260)
-        .frame(maxHeight: 680)
+        .frame(maxHeight: presentation.singlePageMaxHeight())
         .background(.quaternary)
         .backgroundExtensionEffect()
         .clipShape(RoundedRectangle(cornerRadius: 0, style: .continuous))
@@ -298,15 +333,27 @@ private struct ArtworkContinuousReader: View {
     let artwork: PixivArtwork
     @Bindable var store: KeiPixStore
     @Binding var pageIndex: Int
+    let presentation: (Int) -> ReaderPagePresentation
     let handlePageSwipe: (TrackpadScrollEvent) -> Bool
+    let onImageLoaded: (NSImage, Int) -> Void
 
     var body: some View {
         LazyVStack(spacing: 16) {
             ForEach(0..<pageCount, id: \.self) { index in
+                let pagePresentation = presentation(index)
+
                 VStack(spacing: 8) {
-                    RemoteImageView(url: artwork.imageURL(at: index, preferOriginal: store.useOriginalImagesInDetail), contentMode: .fit)
-                        .aspectRatio(artwork.aspectRatio, contentMode: .fit)
-                        .frame(maxWidth: .infinity)
+                    RemoteImageView(
+                        url: artwork.imageURL(at: index, preferOriginal: store.useOriginalImagesInDetail),
+                        contentMode: .fit,
+                        onImageLoaded: { image in
+                            onImageLoaded(image, index)
+                        }
+                    )
+                        .aspectRatio(pagePresentation.aspectRatio, contentMode: .fit)
+                        .containerRelativeFrame(.horizontal) { length, _ in
+                            pagePresentation.continuousWidth(in: length)
+                        }
                         .background(.quaternary, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
                         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                         .overlay {
@@ -322,6 +369,7 @@ private struct ArtworkContinuousReader: View {
                             PageBadge(index: index, count: pageCount)
                                 .padding(10)
                         }
+                        .frame(maxWidth: .infinity, alignment: .center)
 
                     Divider()
                         .opacity(index == pageCount - 1 ? 0 : 0.55)
