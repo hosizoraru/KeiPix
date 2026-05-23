@@ -6,6 +6,12 @@ struct SavedSearchesView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
+                SavedSearchPresetSection(
+                    presets: store.savedSearchPresets,
+                    rowAction: runPreset,
+                    removeAction: store.removeSavedSearchPreset
+                )
+
                 SavedSearchSection(
                     title: L10n.savedSearches,
                     emptyTitle: L10n.noSavedSearches,
@@ -51,6 +57,65 @@ struct SavedSearchesView: View {
     private func runSearch(_ keyword: String) {
         Task {
             await store.runSavedSearch(keyword)
+        }
+    }
+
+    private func runPreset(_ preset: SavedSearchPreset) {
+        Task {
+            await store.runSavedSearchPreset(preset)
+        }
+    }
+}
+
+private struct SavedSearchPresetSection: View {
+    let presets: [SavedSearchPreset]
+    let rowAction: (SavedSearchPreset) -> Void
+    let removeAction: (SavedSearchPreset) -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(L10n.savedSearchPresets)
+                .font(.headline)
+
+            if presets.isEmpty {
+                Text(L10n.noSavedSearchPresets)
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(14)
+                    .keiPanel(14)
+            } else {
+                LazyVStack(spacing: 8) {
+                    ForEach(presets) { preset in
+                        HStack(spacing: 10) {
+                            Button {
+                                rowAction(preset)
+                            } label: {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Label(preset.keyword, systemImage: "slider.horizontal.3")
+                                        .font(.callout.weight(.medium))
+                                    Text(preset.options.summary)
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                        .lineLimit(2)
+                                }
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                            }
+                            .buttonStyle(.plain)
+
+                            Button(role: .destructive) {
+                                removeAction(preset)
+                            } label: {
+                                Label(L10n.removeSearchPreset, systemImage: "trash")
+                            }
+                            .labelStyle(.iconOnly)
+                            .buttonStyle(.bordered)
+                        }
+                        .padding(12)
+                        .keiPanel(14)
+                    }
+                }
+            }
         }
     }
 }

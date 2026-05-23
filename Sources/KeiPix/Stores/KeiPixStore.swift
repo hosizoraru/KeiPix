@@ -18,6 +18,7 @@ final class KeiPixStore {
     var searchSuggestions: [PixivTag] = []
     var searchHistory = UserDefaults.standard.stringArray(forKey: "searchHistory") ?? []
     var savedSearches = UserDefaults.standard.stringArray(forKey: "savedSearches") ?? []
+    var savedSearchPresets = KeiPixStore.loadSavedSearchPresets()
     var bookmarkTagFilter: String?
     var localBrowsingHistory = KeiPixStore.loadLocalBrowsingHistory()
     var errorMessage: String?
@@ -244,6 +245,10 @@ final class KeiPixStore {
         saveSearch(searchText)
     }
 
+    func saveCurrentSearchPreset() {
+        saveSearchPreset(searchText, options: searchOptions)
+    }
+
     func saveSearch(_ keyword: String) {
         let normalized = keyword.trimmingCharacters(in: .whitespacesAndNewlines)
         guard normalized.isEmpty == false else { return }
@@ -258,6 +263,30 @@ final class KeiPixStore {
         UserDefaults.standard.set(savedSearches, forKey: "savedSearches")
     }
 
+    func saveSearchPreset(_ keyword: String, options: SearchOptions) {
+        let normalized = keyword.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard normalized.isEmpty == false else { return }
+
+        let now = Date()
+        if let index = savedSearchPresets.firstIndex(where: {
+            $0.keyword.localizedCaseInsensitiveCompare(normalized) == .orderedSame
+        }) {
+            savedSearchPresets[index].keyword = normalized
+            savedSearchPresets[index].options = options
+            savedSearchPresets[index].updatedAt = now
+        } else {
+            savedSearchPresets.insert(SavedSearchPreset(keyword: normalized, options: options), at: 0)
+        }
+        savedSearchPresets = Array(savedSearchPresets.prefix(50))
+        persistSavedSearchPresets()
+        saveSearch(normalized)
+    }
+
+    func removeSavedSearchPreset(_ preset: SavedSearchPreset) {
+        savedSearchPresets.removeAll { $0.id == preset.id }
+        persistSavedSearchPresets()
+    }
+
     func clearSearchHistory() {
         searchHistory = []
         UserDefaults.standard.set(searchHistory, forKey: "searchHistory")
@@ -267,6 +296,23 @@ final class KeiPixStore {
         searchText = keyword
         selectedRoute = .search
         await runSearch()
+    }
+
+    func runSavedSearchPreset(_ preset: SavedSearchPreset) async {
+        searchText = preset.keyword
+        applySearchOptions(preset.options)
+        selectedRoute = .search
+        await runSearch()
+    }
+
+    private func applySearchOptions(_ options: SearchOptions) {
+        setSearchMatchType(options.matchType)
+        setSearchSort(options.sort)
+        setSearchAgeLimit(options.ageLimit)
+        setSearchDateRange(options.dateRange)
+        setSearchMinimumBookmarks(options.minimumBookmarks)
+        setSearchArtworkType(options.artworkType)
+        setSearchUgoiraFilter(options.ugoiraFilter)
     }
 
     private func recordSearch(_ keyword: String) {
@@ -834,6 +880,18 @@ final class KeiPixStore {
             : .autoMasonry
         defaults.set(mode.rawValue, forKey: "galleryLayoutMode")
         return mode
+    }
+
+    private static func loadSavedSearchPresets() -> [SavedSearchPreset] {
+        guard let data = UserDefaults.standard.data(forKey: "savedSearchPresets") else {
+            return []
+        }
+        return (try? JSONDecoder().decode([SavedSearchPreset].self, from: data)) ?? []
+    }
+
+    private func persistSavedSearchPresets() {
+        guard let data = try? JSONEncoder().encode(savedSearchPresets) else { return }
+        UserDefaults.standard.set(data, forKey: "savedSearchPresets")
     }
 
     private static func defaultRankingDate() -> Date {

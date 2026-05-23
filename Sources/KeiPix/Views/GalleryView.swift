@@ -200,11 +200,22 @@ private struct FeedHeaderView: View {
 
             if store.selectedRoute == .search,
                store.searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false {
-                Button {
-                    store.saveCurrentSearch()
+                Menu {
+                    Button {
+                        store.saveCurrentSearch()
+                    } label: {
+                        Label(L10n.saveSearch, systemImage: "star")
+                    }
+
+                    Button {
+                        store.saveCurrentSearchPreset()
+                    } label: {
+                        Label(L10n.saveSearchWithFilters, systemImage: "slider.horizontal.3")
+                    }
                 } label: {
                     Label(L10n.saveSearch, systemImage: "star")
                 }
+                .menuStyle(.button)
                 .buttonStyle(.bordered)
             }
 

@@ -15,11 +15,15 @@ enum L10n {
     static var search: String { text("Search") }
     static var searchCreators: String { text("Search Creators") }
     static var savedSearches: String { text("Saved Searches") }
+    static var savedSearchPresets: String { text("Saved Search Presets") }
     static var saveSearch: String { text("Save Search") }
+    static var saveSearchWithFilters: String { text("Save Search with Filters") }
     static var recentSearches: String { text("Recent Searches") }
     static var noSavedSearches: String { text("No saved searches") }
+    static var noSavedSearchPresets: String { text("No saved search presets") }
     static var noRecentSearches: String { text("No recent searches") }
     static var removeSavedSearch: String { text("Remove Saved Search") }
+    static var removeSearchPreset: String { text("Remove Search Preset") }
     static var clearSearchHistory: String { text("Clear Search History") }
     static var ranking: String { text("Ranking") }
     static var mangaRanking: String { text("Manga Ranking") }

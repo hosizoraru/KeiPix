@@ -1,6 +1,6 @@
 import Foundation
 
-enum SearchMatchType: String, CaseIterable, Identifiable {
+enum SearchMatchType: String, CaseIterable, Identifiable, Codable {
     case partialTags
     case exactTags
     case titleAndCaption
@@ -30,7 +30,7 @@ enum SearchMatchType: String, CaseIterable, Identifiable {
     }
 }
 
-enum SearchSort: String, CaseIterable, Identifiable {
+enum SearchSort: String, CaseIterable, Identifiable, Codable {
     case dateDescending
     case dateAscending
     case popularPreview
@@ -60,7 +60,7 @@ enum SearchSort: String, CaseIterable, Identifiable {
     }
 }
 
-enum SearchAgeLimit: String, CaseIterable, Identifiable {
+enum SearchAgeLimit: String, CaseIterable, Identifiable, Codable {
     case unlimited
     case allAges
     case r18
@@ -90,7 +90,7 @@ enum SearchAgeLimit: String, CaseIterable, Identifiable {
     }
 }
 
-enum SearchDateRange: String, CaseIterable, Identifiable {
+enum SearchDateRange: String, CaseIterable, Identifiable, Codable {
     case anytime
     case pastDay
     case pastWeek
@@ -130,7 +130,7 @@ enum SearchDateRange: String, CaseIterable, Identifiable {
     }
 }
 
-enum SearchMinimumBookmarks: Int, CaseIterable, Identifiable {
+enum SearchMinimumBookmarks: Int, CaseIterable, Identifiable, Codable {
     case none = 0
     case oneHundred = 100
     case fiveHundred = 500
@@ -145,7 +145,7 @@ enum SearchMinimumBookmarks: Int, CaseIterable, Identifiable {
     }
 }
 
-enum SearchArtworkType: String, CaseIterable, Identifiable {
+enum SearchArtworkType: String, CaseIterable, Identifiable, Codable {
     case all
     case illustrations
     case manga
@@ -164,7 +164,7 @@ enum SearchArtworkType: String, CaseIterable, Identifiable {
     }
 }
 
-enum SearchUgoiraFilter: String, CaseIterable, Identifiable {
+enum SearchUgoiraFilter: String, CaseIterable, Identifiable, Codable {
     case all
     case onlyUgoira
     case noUgoira
@@ -183,7 +183,7 @@ enum SearchUgoiraFilter: String, CaseIterable, Identifiable {
     }
 }
 
-struct SearchOptions {
+struct SearchOptions: Codable, Hashable, Sendable {
     var matchType: SearchMatchType
     var sort: SearchSort
     var ageLimit: SearchAgeLimit
@@ -191,4 +191,38 @@ struct SearchOptions {
     var minimumBookmarks: SearchMinimumBookmarks
     var artworkType: SearchArtworkType
     var ugoiraFilter: SearchUgoiraFilter
+
+    var summary: String {
+        [
+            matchType.title,
+            sort.title,
+            ageLimit.title,
+            dateRange.title,
+            minimumBookmarks.title,
+            artworkType.title,
+            ugoiraFilter.title
+        ].joined(separator: " · ")
+    }
+}
+
+struct SavedSearchPreset: Identifiable, Codable, Hashable, Sendable {
+    var id: UUID
+    var keyword: String
+    var options: SearchOptions
+    var createdAt: Date
+    var updatedAt: Date
+
+    init(
+        id: UUID = UUID(),
+        keyword: String,
+        options: SearchOptions,
+        createdAt: Date = Date(),
+        updatedAt: Date = Date()
+    ) {
+        self.id = id
+        self.keyword = keyword
+        self.options = options
+        self.createdAt = createdAt
+        self.updatedAt = updatedAt
+    }
 }

@@ -12,11 +12,15 @@
 "Search" = "Search";
 "Search Creators" = "Search Creators";
 "Saved Searches" = "Saved Searches";
+"Saved Search Presets" = "Saved Search Presets";
 "Save Search" = "Save Search";
+"Save Search with Filters" = "Save Search with Filters";
 "Recent Searches" = "Recent Searches";
 "No saved searches" = "No saved searches";
+"No saved search presets" = "No saved search presets";
 "No recent searches" = "No recent searches";
 "Remove Saved Search" = "Remove Saved Search";
+"Remove Search Preset" = "Remove Search Preset";
 "Clear Search History" = "Clear Search History";
 "Ranking" = "Ranking";
 "Manga Ranking" = "Manga Ranking";
