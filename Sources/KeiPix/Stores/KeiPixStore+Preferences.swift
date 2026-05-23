@@ -12,6 +12,11 @@ extension KeiPixStore {
         UserDefaults.standard.set(restrict.rawValue, forKey: "defaultFollowRestrict")
     }
 
+    func setFollowCreatorAfterBookmark(_ value: Bool) {
+        followCreatorAfterBookmark = value
+        UserDefaults.standard.set(value, forKey: "followCreatorAfterBookmark")
+    }
+
     func setUseOriginalImagesInDetail(_ value: Bool) {
         useOriginalImagesInDetail = value
         UserDefaults.standard.set(value, forKey: "useOriginalImagesInDetail")

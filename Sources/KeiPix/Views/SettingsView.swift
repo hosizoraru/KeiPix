@@ -63,6 +63,11 @@ struct SettingsView: View {
                     }
                 }
                 .pickerStyle(.segmented)
+
+                Toggle(L10n.followCreatorAfterBookmark, isOn: followCreatorAfterBookmarkBinding)
+                Text(L10n.followCreatorAfterBookmarkHint)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
 
             Section(L10n.followingCreators) {
@@ -313,6 +318,14 @@ struct SettingsView: View {
             store.defaultFollowRestrict
         } set: { value in
             store.setDefaultFollowRestrict(value)
+        }
+    }
+
+    private var followCreatorAfterBookmarkBinding: Binding<Bool> {
+        Binding {
+            store.followCreatorAfterBookmark
+        } set: { value in
+            store.setFollowCreatorAfterBookmark(value)
         }
     }
 

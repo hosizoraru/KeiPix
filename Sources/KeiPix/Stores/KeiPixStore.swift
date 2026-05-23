@@ -39,6 +39,7 @@ final class KeiPixStore {
     var restrictedModeEnabled: Bool?
     var defaultBookmarkRestrict = KeiPixStore.loadEnum("defaultBookmarkRestrict", defaultValue: BookmarkRestrict.public)
     var defaultFollowRestrict = KeiPixStore.loadEnum("defaultFollowRestrict", defaultValue: BookmarkRestrict.public)
+    var followCreatorAfterBookmark = UserDefaults.standard.object(forKey: "followCreatorAfterBookmark") as? Bool ?? false
     var searchMatchType = KeiPixStore.loadEnum("searchMatchType", defaultValue: SearchMatchType.partialTags)
     var searchSort = KeiPixStore.loadEnum("searchSort", defaultValue: SearchSort.dateDescending)
     var searchAgeLimit = KeiPixStore.loadEnum("searchAgeLimit", defaultValue: SearchAgeLimit.unlimited)
@@ -283,6 +284,9 @@ final class KeiPixStore {
                 try await api.deleteBookmark(illustID: artwork.id)
             }
             updateArtwork(artwork.id) { $0.isBookmarked = nextValue }
+            if nextValue {
+                await followCreatorAfterBookmarkIfNeeded(artwork)
+            }
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -307,8 +311,12 @@ final class KeiPixStore {
     }
 
     func saveBookmark(_ artwork: PixivArtwork, restrict: BookmarkRestrict, tags: [String]) async throws {
+        let wasBookmarked = artwork.isBookmarked
         try await api.addBookmark(illustID: artwork.id, restrict: restrict, tags: tags)
         updateArtwork(artwork.id) { $0.isBookmarked = true }
+        if wasBookmarked == false {
+            await followCreatorAfterBookmarkIfNeeded(artwork)
+        }
     }
 
     func setBookmarkTagFilter(_ tag: String?) {
@@ -370,17 +378,32 @@ final class KeiPixStore {
         let followRestrict = restrict ?? defaultFollowRestrict
         do {
             try await api.setFollow(userID: user.id, isFollowed: nextValue, restrict: followRestrict)
-            for index in allArtworks.indices where allArtworks[index].user.id == user.id {
-                allArtworks[index].user.isFollowed = nextValue
-            }
-            for index in artworks.indices where artworks[index].user.id == user.id {
-                artworks[index].user.isFollowed = nextValue
-            }
-            if selectedArtwork?.user.id == user.id {
-                selectedArtwork?.user.isFollowed = nextValue
-            }
+            updateFollowState(userID: user.id, isFollowed: nextValue)
         } catch {
             errorMessage = error.localizedDescription
+        }
+    }
+
+    private func followCreatorAfterBookmarkIfNeeded(_ artwork: PixivArtwork) async {
+        guard followCreatorAfterBookmark, artwork.user.isFollowed == false else { return }
+
+        do {
+            try await api.setFollow(userID: artwork.user.id, isFollowed: true, restrict: defaultFollowRestrict)
+            updateFollowState(userID: artwork.user.id, isFollowed: true)
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    private func updateFollowState(userID: Int, isFollowed: Bool) {
+        for index in allArtworks.indices where allArtworks[index].user.id == userID {
+            allArtworks[index].user.isFollowed = isFollowed
+        }
+        for index in artworks.indices where artworks[index].user.id == userID {
+            artworks[index].user.isFollowed = isFollowed
+        }
+        if selectedArtwork?.user.id == userID {
+            selectedArtwork?.user.isFollowed = isFollowed
         }
     }
 

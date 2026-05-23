@@ -80,6 +80,8 @@
 "Follow Using Default" = "按默认可见性关注";
 "Follow Visibility" = "关注可见性";
 "Default Follow Visibility" = "默认关注可见性";
+"Follow creator after bookmarking" = "收藏后关注作者";
+"New bookmarks also follow the creator using your default follow visibility." = "新增收藏时，会按默认关注可见性同时关注作者。";
 "Following Publicly" = "公开关注中";
 "Following Privately" = "私密关注中";
 "Unfollow" = "取消关注";

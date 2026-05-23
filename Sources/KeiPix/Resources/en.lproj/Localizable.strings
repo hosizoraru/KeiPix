@@ -80,6 +80,8 @@
 "Follow Using Default" = "Follow Using Default";
 "Follow Visibility" = "Follow Visibility";
 "Default Follow Visibility" = "Default Follow Visibility";
+"Follow creator after bookmarking" = "Follow creator after bookmarking";
+"New bookmarks also follow the creator using your default follow visibility." = "New bookmarks also follow the creator using your default follow visibility.";
 "Following Publicly" = "Following Publicly";
 "Following Privately" = "Following Privately";
 "Unfollow" = "Unfollow";

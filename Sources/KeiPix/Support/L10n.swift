@@ -83,6 +83,8 @@ enum L10n {
     static var followUsingDefault: String { text("Follow Using Default") }
     static var followVisibility: String { text("Follow Visibility") }
     static var defaultFollowVisibility: String { text("Default Follow Visibility") }
+    static var followCreatorAfterBookmark: String { text("Follow creator after bookmarking") }
+    static var followCreatorAfterBookmarkHint: String { text("New bookmarks also follow the creator using your default follow visibility.") }
     static var followingPublicly: String { text("Following Publicly") }
     static var followingPrivately: String { text("Following Privately") }
     static var unfollow: String { text("Unfollow") }
