@@ -14,6 +14,7 @@ struct UserProfileSheet: View {
     @State private var relatedErrorMessage: String?
     @State private var followRestrict: BookmarkRestrict?
     @State private var selectedRelatedUser: PixivUser?
+    @State private var relationshipListMode: UserPreviewListMode?
 
     init(user: PixivUser, store: KeiPixStore) {
         self.user = user
@@ -38,6 +39,7 @@ struct UserProfileSheet: View {
                         comment
                         links
                         workspaceSection
+                        creatorNetworkSection
                         feedActions
                         relatedCreatorSection
                     }
@@ -60,6 +62,10 @@ struct UserProfileSheet: View {
         }
         .sheet(item: $selectedRelatedUser) { relatedUser in
             UserProfileSheet(user: relatedUser, store: store)
+        }
+        .sheet(item: $relationshipListMode) { mode in
+            UserPreviewListView(store: store, mode: mode)
+                .frame(width: 920, height: 680)
         }
     }
 
@@ -267,6 +273,33 @@ struct UserProfileSheet: View {
                 .keiPanel(14)
             }
         }
+    }
+
+    private var creatorNetworkSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Label(L10n.creatorNetwork, systemImage: "person.2")
+                .font(.headline)
+
+            HStack(spacing: 10) {
+                Button {
+                    relationshipListMode = .userFollowers(detail?.user ?? user)
+                } label: {
+                    Label(L10n.followers, systemImage: "person.2")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.bordered)
+
+                Button {
+                    relationshipListMode = .userFollowing(detail?.user ?? user)
+                } label: {
+                    Label(L10n.followingCreators, systemImage: "person.2.crop.square.stack")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.bordered)
+            }
+        }
+        .padding(14)
+        .keiPanel(14)
     }
 
     @ViewBuilder

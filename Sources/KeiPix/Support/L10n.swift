@@ -25,6 +25,7 @@ enum L10n {
     static var recommendedCreators: String { text("Recommended Creators") }
     static var relatedCreators: String { text("Related Creators") }
     static var noRelatedCreators: String { text("No related creators") }
+    static var creatorNetwork: String { text("Creator Network") }
     static var enterSearchKeyword: String { text("Enter a search keyword") }
     static var login: String { text("Login") }
     static var logout: String { text("Logout") }

@@ -397,6 +397,16 @@ final class KeiPixStore {
         return filteredUserPreviewResponse(response)
     }
 
+    func followingUsers(for user: PixivUser, restrict: BookmarkRestrict) async throws -> PixivUserPreviewResponse {
+        let response = try await api.followingUsers(userID: "\(user.id)", restrict: restrict.rawValue)
+        return filteredUserPreviewResponse(response)
+    }
+
+    func followerUsers(for user: PixivUser, restrict: BookmarkRestrict) async throws -> PixivUserPreviewResponse {
+        let response = try await api.followerUsers(userID: "\(user.id)", restrict: restrict.rawValue)
+        return filteredUserPreviewResponse(response)
+    }
+
     func nextUserPreviews(_ url: URL) async throws -> PixivUserPreviewResponse {
         let response = try await api.nextUserPreviews(url)
         return filteredUserPreviewResponse(response)

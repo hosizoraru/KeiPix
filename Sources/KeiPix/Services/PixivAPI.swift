@@ -294,6 +294,17 @@ actor PixivAPI {
         return try await requestJSON(url, method: "GET", form: nil)
     }
 
+    func followerUsers(userID: String, restrict: String) async throws -> PixivUserPreviewResponse {
+        var components = URLComponents(url: URL(string: "/v1/user/follower", relativeTo: Endpoint.apiBase)!, resolvingAgainstBaseURL: true)!
+        components.queryItems = [
+            URLQueryItem(name: "filter", value: "for_android"),
+            URLQueryItem(name: "user_id", value: userID),
+            URLQueryItem(name: "restrict", value: restrict)
+        ]
+        guard let url = components.url else { throw PixivAPIError.invalidResponse }
+        return try await requestJSON(url, method: "GET", form: nil)
+    }
+
     func nextUserPreviews(_ url: URL) async throws -> PixivUserPreviewResponse {
         try await requestJSON(url, method: "GET", form: nil)
     }

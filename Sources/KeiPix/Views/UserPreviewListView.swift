@@ -1,17 +1,56 @@
 import SwiftUI
 
-enum UserPreviewListMode {
+enum UserPreviewListMode: Identifiable {
     case recommended
     case following
     case search
+    case userFollowing(PixivUser)
+    case userFollowers(PixivUser)
 
     var title: String {
         switch self {
         case .recommended: L10n.recommendedCreators
         case .following: L10n.followingCreators
         case .search: L10n.searchCreators
+        case .userFollowing(let user): "\(L10n.followingCreators) · \(user.name)"
+        case .userFollowers(let user): "\(L10n.followers) · \(user.name)"
         }
     }
+
+    var usesRestrictPicker: Bool {
+        switch self {
+        case .following, .userFollowing, .userFollowers:
+            true
+        default:
+            false
+        }
+    }
+
+    var requiresSearchKeyword: Bool {
+        switch self {
+        case .search:
+            true
+        default:
+            false
+        }
+    }
+
+    var key: String {
+        switch self {
+        case .recommended:
+            "recommended"
+        case .following:
+            "following"
+        case .search:
+            "search"
+        case .userFollowing(let user):
+            "user-following-\(user.id)"
+        case .userFollowers(let user):
+            "user-followers-\(user.id)"
+        }
+    }
+
+    var id: String { key }
 }
 
 struct UserPreviewListView: View {
@@ -37,7 +76,7 @@ struct UserPreviewListView: View {
             } else if isLoading {
                 ProgressView(L10n.loading)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else if mode == .search, searchKeyword.isEmpty {
+            } else if mode.requiresSearchKeyword, searchKeyword.isEmpty {
                 ContentUnavailableView(L10n.enterSearchKeyword, systemImage: "magnifyingglass")
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if previews.isEmpty {
@@ -122,7 +161,7 @@ struct UserPreviewListView: View {
     }
 
     private var modeKey: String {
-        "\(mode.title)-\(restrict.rawValue)-\(store.searchSubmissionID)"
+        "\(mode.key)-\(restrict.rawValue)-\(store.searchSubmissionID)"
     }
 
     private var header: some View {
@@ -137,7 +176,7 @@ struct UserPreviewListView: View {
 
             Spacer()
 
-            if mode == .following {
+            if mode.usesRestrictPicker {
                 Picker(L10n.followingCreators, selection: restrictBinding) {
                     Text(L10n.publicRestrict).tag(BookmarkRestrict.public)
                     Text(L10n.privateRestrict).tag(BookmarkRestrict.private)
@@ -151,7 +190,7 @@ struct UserPreviewListView: View {
 
     private var headerSubtitle: String {
         let pagingText = nextURL == nil ? L10n.noMorePages : L10n.nextPageAvailable
-        if mode == .search, searchKeyword.isEmpty == false {
+        if mode.requiresSearchKeyword, searchKeyword.isEmpty == false {
             return "\(searchKeyword) · \(previews.count.formatted()) \(L10n.results) · \(pagingText)"
         }
         return "\(previews.count.formatted()) \(L10n.results) · \(pagingText)"
@@ -202,6 +241,10 @@ struct UserPreviewListView: View {
                 try await store.followingUsers(restrict: restrict)
             case .search:
                 try await store.searchUsers(keyword: searchKeyword)
+            case .userFollowing(let user):
+                try await store.followingUsers(for: user, restrict: restrict)
+            case .userFollowers(let user):
+                try await store.followerUsers(for: user, restrict: restrict)
             }
             previews = response.userPreviews
             nextURL = response.nextURL
