@@ -121,7 +121,7 @@ struct ArtworkSeriesView: View {
                 Task { await store.toggleBookmark(seriesArtwork) }
             }
             Button(L10n.download) {
-                store.downloads.enqueue(seriesArtwork, preferOriginal: true)
+                store.enqueueDownload(seriesArtwork)
             }
             Divider()
             Button(L10n.muteArtwork) {

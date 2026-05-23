@@ -293,7 +293,7 @@ final class KeiPixStore {
             updateArtwork(artwork.id) { $0.isBookmarked = nextValue }
             if nextValue {
                 if autoDownloadBookmarkedArtworks {
-                    downloads.enqueue(artwork, preferOriginal: true)
+                    enqueueDownload(artwork)
                 }
                 await followCreatorAfterBookmarkIfNeeded(artwork)
             }
@@ -326,7 +326,7 @@ final class KeiPixStore {
         updateArtwork(artwork.id) { $0.isBookmarked = true }
         if wasBookmarked == false {
             if autoDownloadBookmarkedArtworks {
-                downloads.enqueue(artwork, preferOriginal: true)
+                enqueueDownload(artwork)
             }
             await followCreatorAfterBookmarkIfNeeded(artwork)
         }
@@ -366,7 +366,40 @@ final class KeiPixStore {
 
     func downloadSelectedArtwork() {
         guard let selectedArtwork else { return }
-        downloads.enqueue(selectedArtwork, preferOriginal: true)
+        enqueueDownload(selectedArtwork)
+    }
+
+    func enqueueDownload(_ artwork: PixivArtwork, preferOriginal: Bool = true) {
+        if artwork.isUgoira {
+            Task { await enqueueUgoiraDownload(artwork) }
+        } else {
+            downloads.enqueue(artwork, preferOriginal: preferOriginal)
+        }
+    }
+
+    @discardableResult
+    func enqueueDownloads(_ artworks: [PixivArtwork], limit: Int, preferOriginal: Bool = true) -> Int {
+        let candidates = Array(artworks.prefix(max(limit, 0)))
+        let imageArtworks = candidates.filter { $0.isUgoira == false }
+        let ugoiraArtworks = candidates.filter(\.isUgoira)
+        let imageCount = downloads.enqueue(imageArtworks, limit: imageArtworks.count, preferOriginal: preferOriginal)
+        for artwork in ugoiraArtworks {
+            enqueueDownload(artwork, preferOriginal: preferOriginal)
+        }
+        return imageCount + ugoiraArtworks.count
+    }
+
+    private func enqueueUgoiraDownload(_ artwork: PixivArtwork) async {
+        do {
+            let metadata = try await api.ugoiraMetadata(illustID: artwork.id)
+            downloads.enqueueUgoira(
+                artwork,
+                zipURL: metadata.zipURLs.medium,
+                frameCount: metadata.frames.count
+            )
+        } catch {
+            errorMessage = error.localizedDescription
+        }
     }
 
     func openSelectedArtworkInPixiv() {

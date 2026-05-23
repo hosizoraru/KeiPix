@@ -144,7 +144,7 @@ struct BrowsingHistoryView: View {
                                     Task { await store.toggleBookmark(artwork) }
                                 }
                                 Button(L10n.download) {
-                                    store.downloads.enqueue(artwork, preferOriginal: true)
+                                    store.enqueueDownload(artwork)
                                 }
                                 if let url = artwork.pixivURL {
                                     Link(L10n.openInPixiv, destination: url)

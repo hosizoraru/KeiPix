@@ -61,6 +61,9 @@
 "Downloaded" = "Downloaded";
 "Queued" = "Queued";
 "Failed" = "Failed";
+"Image Pages" = "Image Pages";
+"Ugoira ZIP" = "Ugoira ZIP";
+"%d frames" = "%d frames";
 "Export" = "Export";
 "Import" = "Import";
 "Download Folder" = "Download Folder";

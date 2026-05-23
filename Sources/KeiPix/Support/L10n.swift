@@ -64,6 +64,9 @@ enum L10n {
     static var downloaded: String { text("Downloaded") }
     static var queued: String { text("Queued") }
     static var failed: String { text("Failed") }
+    static var imagePages: String { text("Image Pages") }
+    static var ugoiraZip: String { text("Ugoira ZIP") }
+    static var ugoiraFrameCountFormat: String { text("%d frames") }
     static var export: String { text("Export") }
     static var `import`: String { text("Import") }
     static var downloadFolder: String { text("Download Folder") }

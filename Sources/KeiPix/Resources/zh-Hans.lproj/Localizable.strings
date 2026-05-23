@@ -61,6 +61,9 @@
 "Downloaded" = "已下载";
 "Queued" = "排队中";
 "Failed" = "失败";
+"Image Pages" = "图片页";
+"Ugoira ZIP" = "动图 ZIP";
+"%d frames" = "%d 帧";
 "Export" = "导出";
 "Import" = "导入";
 "Download Folder" = "下载文件夹";

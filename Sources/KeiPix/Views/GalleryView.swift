@@ -85,7 +85,7 @@ private struct GalleryContentGrid: View {
                 Task { await store.toggleBookmark(artwork) }
             }
             Button(L10n.download) {
-                store.downloads.enqueue(artwork, preferOriginal: true)
+                store.enqueueDownload(artwork)
             }
             Divider()
             Button(L10n.muteArtwork) {
@@ -145,7 +145,7 @@ private struct MasonryArtworkGrid: View {
                         Task { await store.toggleBookmark(artwork) }
                     }
                     Button(L10n.download) {
-                        store.downloads.enqueue(artwork, preferOriginal: true)
+                        store.enqueueDownload(artwork)
                     }
                     Divider()
                     Button(L10n.muteArtwork) {
@@ -371,7 +371,7 @@ private struct FeedHeaderView: View {
     }
 
     private func queueBatchDownload() {
-        let count = store.downloads.enqueue(
+        let count = store.enqueueDownloads(
             store.artworks,
             limit: min(batchDownloadLimit, maxBatchDownloadLimit),
             preferOriginal: true

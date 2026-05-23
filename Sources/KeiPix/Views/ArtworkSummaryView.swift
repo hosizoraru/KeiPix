@@ -91,7 +91,7 @@ private struct ArtworkActionStrip: View {
                     }
 
                     Button {
-                        store.downloads.enqueue(artwork, preferOriginal: true)
+                        store.enqueueDownload(artwork)
                     } label: {
                         Label(L10n.download, systemImage: "arrow.down.circle")
                             .frame(maxWidth: .infinity)

@@ -215,14 +215,14 @@ struct DownloadNamingTemplate: Sendable {
 
         private static func normalizedExtension(from url: URL) -> String {
             let ext = url.pathExtension.lowercased()
-            return ext.isImageExtension ? ext : "jpg"
+            return ext.isDownloadExtension ? ext : "jpg"
         }
     }
 }
 
 private extension String {
-    var isImageExtension: Bool {
-        ["jpg", "jpeg", "png", "gif", "webp", "avif"].contains(lowercased())
+    var isDownloadExtension: Bool {
+        ["jpg", "jpeg", "png", "gif", "webp", "avif", "zip"].contains(lowercased())
     }
 
     var pathExtension: String {

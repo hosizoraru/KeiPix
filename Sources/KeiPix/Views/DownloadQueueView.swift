@@ -116,6 +116,11 @@ private struct DownloadQueueRow: View {
                         .padding(.horizontal, 7)
                         .padding(.vertical, 3)
                         .keiGlass(10)
+
+                    Text(item.resolvedArtifactKind.title)
+                        .font(.caption.weight(.medium))
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
                 }
 
                 Text(item.creatorName)

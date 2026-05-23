@@ -32,7 +32,9 @@ final class ArtworkDownloadStore {
 
     func enqueue(_ artwork: PixivArtwork, preferOriginal: Bool = true) {
         if let existingIndex = items.firstIndex(where: {
-            $0.artworkID == artwork.id && ($0.status == .queued || $0.status == .downloading)
+            $0.artworkID == artwork.id
+                && $0.resolvedArtifactKind == .imagePages
+                && ($0.status == .queued || $0.status == .downloading)
         }) {
             items[existingIndex].updatedAt = Date()
             persistItems()
@@ -50,6 +52,8 @@ final class ArtworkDownloadStore {
             isAI: artwork.isAI,
             isR18: artwork.isR18,
             isR18G: artwork.isR18G,
+            artifactKind: .imagePages,
+            ugoiraFrameCount: nil,
             pageCount: sourceURLs.count,
             completedPages: 0,
             status: .queued,
@@ -67,7 +71,9 @@ final class ArtworkDownloadStore {
 
     @discardableResult
     func enqueue(_ artworks: [PixivArtwork], limit: Int, preferOriginal: Bool = true) -> Int {
-        let existingArtworkIDs = Set(items.filter { $0.status != .failed }.map(\.artworkID))
+        let existingArtworkIDs = Set(items.filter {
+            $0.status != .failed && $0.resolvedArtifactKind == .imagePages
+        }.map(\.artworkID))
         let candidates = artworks.prefix(max(limit, 0)).filter { existingArtworkIDs.contains($0.id) == false }
         guard candidates.isEmpty == false else { return 0 }
 
@@ -84,6 +90,8 @@ final class ArtworkDownloadStore {
                 isAI: artwork.isAI,
                 isR18: artwork.isR18,
                 isR18G: artwork.isR18G,
+                artifactKind: .imagePages,
+                ugoiraFrameCount: nil,
                 pageCount: sourceURLs.count,
                 completedPages: 0,
                 status: .queued,
@@ -102,6 +110,44 @@ final class ArtworkDownloadStore {
         return newItems.count
     }
 
+    func enqueueUgoira(_ artwork: PixivArtwork, zipURL: URL, frameCount: Int) {
+        if let existingIndex = items.firstIndex(where: {
+            $0.artworkID == artwork.id
+                && $0.resolvedArtifactKind == .ugoiraZip
+                && ($0.status == .queued || $0.status == .downloading)
+        }) {
+            items[existingIndex].updatedAt = Date()
+            persistItems()
+            return
+        }
+
+        let item = ArtworkDownloadItem(
+            id: UUID(),
+            artworkID: artwork.id,
+            title: artwork.title,
+            creatorName: artwork.user.name,
+            creatorID: artwork.user.id,
+            tags: artwork.tags.map(\.name),
+            isAI: artwork.isAI,
+            isR18: artwork.isR18,
+            isR18G: artwork.isR18G,
+            artifactKind: .ugoiraZip,
+            ugoiraFrameCount: frameCount,
+            pageCount: 1,
+            completedPages: 0,
+            status: .queued,
+            folderPath: nil,
+            sourceImageURLs: [zipURL],
+            downloadedFilePaths: nil,
+            errorMessage: nil,
+            createdAt: Date(),
+            updatedAt: Date()
+        )
+        items.insert(item, at: 0)
+        persistItems()
+        startWorkerIfNeeded(preferOriginal: true)
+    }
+
     func clearCompleted() {
         items.removeAll { $0.status == .completed }
         persistItems()
@@ -111,7 +157,7 @@ final class ArtworkDownloadStore {
     func clearInvalidItems() -> Int {
         let initialCount = items.count
         items.removeAll { item in
-            item.status == .completed && hasReadableImages(for: item) == false
+            item.status == .completed && hasReadableDownload(for: item) == false
         }
         persistItems()
         return initialCount - items.count
@@ -163,6 +209,8 @@ final class ArtworkDownloadStore {
     }
 
     func imageFileURLs(for item: ArtworkDownloadItem) -> [URL] {
+        guard item.resolvedArtifactKind == .imagePages else { return [] }
+
         if let filePaths = item.downloadedFilePaths, filePaths.isEmpty == false {
             return filePaths
                 .map { URL(fileURLWithPath: $0, isDirectory: false) }
@@ -191,6 +239,15 @@ final class ArtworkDownloadStore {
 
     func hasReadableImages(for item: ArtworkDownloadItem) -> Bool {
         imageFileURLs(for: item).isEmpty == false
+    }
+
+    func hasReadableDownload(for item: ArtworkDownloadItem) -> Bool {
+        switch item.resolvedArtifactKind {
+        case .imagePages:
+            hasReadableImages(for: item)
+        case .ugoiraZip:
+            item.downloadedFilePaths?.contains { fileManager.fileExists(atPath: $0) } == true
+        }
     }
 
     func chooseDownloadDirectory() {
