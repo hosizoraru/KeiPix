@@ -174,6 +174,9 @@ private struct MasonryArtworkGrid: View {
 
 private struct FeedHeaderView: View {
     @Bindable var store: KeiPixStore
+    @State private var isBatchDownloadPresented = false
+    @State private var batchDownloadLimit = 30
+    @State private var lastQueuedDownloadCount: Int?
 
     var body: some View {
         HStack(spacing: 12) {
@@ -192,6 +195,23 @@ private struct FeedHeaderView: View {
 
             Spacer()
 
+            Button {
+                batchDownloadLimit = min(max(1, batchDownloadLimit), maxBatchDownloadLimit)
+                isBatchDownloadPresented = true
+            } label: {
+                Label(L10n.batchDownload, systemImage: "square.and.arrow.down.on.square")
+            }
+            .buttonStyle(.bordered)
+            .popover(isPresented: $isBatchDownloadPresented, arrowEdge: .bottom) {
+                BatchDownloadPopover(
+                    limit: $batchDownloadLimit,
+                    maxLimit: maxBatchDownloadLimit,
+                    queuedCount: lastQueuedDownloadCount,
+                    downloadDirectoryPath: store.downloads.downloadDirectoryPath,
+                    action: queueBatchDownload
+                )
+            }
+
             if store.selectedRoute == .search {
                 Button {
                     Task { await store.runSearch() }
@@ -200,6 +220,69 @@ private struct FeedHeaderView: View {
                 }
                 .buttonStyle(.bordered)
             }
+        }
+    }
+
+    private var maxBatchDownloadLimit: Int {
+        min(max(store.artworks.count, 1), 100)
+    }
+
+    private func queueBatchDownload() {
+        let count = store.downloads.enqueue(
+            store.artworks,
+            limit: min(batchDownloadLimit, maxBatchDownloadLimit),
+            preferOriginal: true
+        )
+        lastQueuedDownloadCount = count
+        if count > 0 {
+            isBatchDownloadPresented = false
+        }
+    }
+}
+
+private struct BatchDownloadPopover: View {
+    @Binding var limit: Int
+    let maxLimit: Int
+    let queuedCount: Int?
+    let downloadDirectoryPath: String
+    let action: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(L10n.batchDownload)
+                    .font(.headline)
+                Text(downloadDirectoryPath)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+            }
+
+            Stepper(value: $limit, in: 1...maxLimit) {
+                LabeledContent(L10n.maximumDownloads, value: "\(limit)")
+            }
+
+            if let queuedCount {
+                Text(String(format: L10n.queuedDownloadsFormat, queuedCount))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            HStack {
+                Spacer()
+                Button {
+                    action()
+                } label: {
+                    Label(L10n.addToDownloadQueue, systemImage: "arrow.down.circle")
+                }
+                .buttonStyle(.glassProminent)
+            }
+        }
+        .padding(16)
+        .frame(width: 320)
+        .onAppear {
+            limit = min(max(1, limit), maxLimit)
         }
     }
 }

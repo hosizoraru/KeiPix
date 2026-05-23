@@ -33,6 +33,7 @@ final class ArtworkDownloadStore {
             $0.artworkID == artwork.id && ($0.status == .queued || $0.status == .downloading)
         }) {
             items[existingIndex].updatedAt = Date()
+            persistItems()
             return
         }
 
@@ -53,6 +54,38 @@ final class ArtworkDownloadStore {
         queuedArtworkSnapshots[item.id] = artwork
         persistItems()
         startWorkerIfNeeded(preferOriginal: preferOriginal)
+    }
+
+    @discardableResult
+    func enqueue(_ artworks: [PixivArtwork], limit: Int, preferOriginal: Bool = true) -> Int {
+        let existingArtworkIDs = Set(items.filter { $0.status != .failed }.map(\.artworkID))
+        let candidates = artworks.prefix(max(limit, 0)).filter { existingArtworkIDs.contains($0.id) == false }
+        guard candidates.isEmpty == false else { return 0 }
+
+        let now = Date()
+        let newItems = candidates.map { artwork in
+            ArtworkDownloadItem(
+                id: UUID(),
+                artworkID: artwork.id,
+                title: artwork.title,
+                creatorName: artwork.user.name,
+                pageCount: downloadPageCount(for: artwork),
+                completedPages: 0,
+                status: .queued,
+                folderPath: nil,
+                errorMessage: nil,
+                createdAt: now,
+                updatedAt: now
+            )
+        }
+
+        for (item, artwork) in zip(newItems, candidates) {
+            queuedArtworkSnapshots[item.id] = artwork
+        }
+        items.insert(contentsOf: newItems, at: 0)
+        persistItems()
+        startWorkerIfNeeded(preferOriginal: preferOriginal)
+        return newItems.count
     }
 
     func clearCompleted() {

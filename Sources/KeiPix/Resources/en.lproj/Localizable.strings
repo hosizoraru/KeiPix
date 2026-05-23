@@ -34,6 +34,10 @@
 "No downloads yet" = "No downloads yet";
 "Download artworks from the detail view or artwork context menus." = "Download artworks from the detail view or artwork context menus.";
 "Download interrupted" = "Download interrupted";
+"Batch Download" = "Batch Download";
+"Maximum downloads" = "Maximum downloads";
+"Add to Download Queue" = "Add to Download Queue";
+"Queued %d downloads" = "Queued %d downloads";
 "Bookmark" = "Bookmark";
 "Remove Bookmark" = "Remove Bookmark";
 "Edit Bookmark" = "Edit Bookmark";
