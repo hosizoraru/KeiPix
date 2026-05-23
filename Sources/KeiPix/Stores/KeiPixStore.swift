@@ -261,6 +261,21 @@ final class KeiPixStore {
         return filteredFeedResponse(response)
     }
 
+    func artworkSeries(for artwork: PixivArtwork) async throws -> PixivArtworkSeriesResponse? {
+        guard let series = artwork.series else { return nil }
+        let response = try await api.illustSeries(seriesID: series.id)
+        return filteredArtworkSeriesResponse(response)
+    }
+
+    func nextArtworkSeries(_ url: URL) async throws -> PixivArtworkSeriesResponse {
+        let response = try await api.nextIllustSeries(url)
+        return filteredArtworkSeriesResponse(response)
+    }
+
+    func setMangaWatchlist(seriesID: Int, isAdded: Bool) async throws {
+        try await api.setMangaWatchlist(seriesID: seriesID, isAdded: isAdded)
+    }
+
     func recordBrowsingHistory(for artwork: PixivArtwork) async {
         guard session != nil,
               recordedBrowsingHistoryIDs.insert(artwork.id).inserted else {
@@ -563,6 +578,21 @@ final class KeiPixStore {
 
     private func filteredFeedResponse(_ response: PixivFeedResponse) -> PixivFeedResponse {
         PixivFeedResponse(illusts: response.illusts.filter(passesContentFilters), nextURL: response.nextURL)
+    }
+
+    private func filteredArtworkSeriesResponse(_ response: PixivArtworkSeriesResponse) -> PixivArtworkSeriesResponse {
+        let firstArtwork = response.firstArtwork.flatMap { passesContentFilters($0) ? $0 : nil }
+        var illusts = response.illusts.filter(passesContentFilters)
+        if let firstArtwork, illusts.contains(where: { $0.id == firstArtwork.id }) == false {
+            illusts.insert(firstArtwork, at: 0)
+        }
+
+        return PixivArtworkSeriesResponse(
+            detail: response.detail,
+            firstArtwork: firstArtwork,
+            illusts: illusts,
+            nextURL: response.nextURL
+        )
     }
 
     private func passesContentFilters(_ artwork: PixivArtwork) -> Bool {

@@ -68,6 +68,10 @@ private struct ArtworkInspectorView: View {
                     ArtworkSummaryView(artwork: artwork, store: store, pageIndex: pageIndex, pageCount: pageCount)
                         .padding(.horizontal, 18)
 
+                    ArtworkSeriesView(artwork: artwork, store: store)
+                        .id(artwork.id)
+                        .padding(.horizontal, 18)
+
                     ArtworkCommentsView(artwork: artwork, store: store)
                         .padding(.horizontal, 18)
 

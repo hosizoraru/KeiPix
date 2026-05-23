@@ -118,6 +118,26 @@ actor PixivAPI {
         ])
     }
 
+    func illustSeries(seriesID: Int) async throws -> PixivArtworkSeriesResponse {
+        var components = URLComponents(url: URL(string: "/v1/illust/series", relativeTo: Endpoint.apiBase)!, resolvingAgainstBaseURL: true)!
+        components.queryItems = [URLQueryItem(name: "illust_series_id", value: "\(seriesID)")]
+        guard let url = components.url else { throw PixivAPIError.invalidResponse }
+        return try await requestJSON(url, method: "GET", form: nil)
+    }
+
+    func nextIllustSeries(_ url: URL) async throws -> PixivArtworkSeriesResponse {
+        try await requestJSON(url, method: "GET", form: nil)
+    }
+
+    func setMangaWatchlist(seriesID: Int, isAdded: Bool) async throws {
+        let path = isAdded ? "/v1/watchlist/manga/add" : "/v1/watchlist/manga/delete"
+        _ = try await requestJSON(
+            URL(string: path, relativeTo: Endpoint.apiBase)!,
+            method: "POST",
+            form: ["series_id": "\(seriesID)"]
+        ) as EmptyResponse
+    }
+
     func ranking(mode: String) async throws -> PixivFeedResponse {
         try await requestFeed(path: "/v1/illust/ranking", query: [
             "filter": "for_android",

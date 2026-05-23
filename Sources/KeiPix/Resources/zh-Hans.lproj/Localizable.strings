@@ -129,6 +129,12 @@
 "Related Artworks" = "相关作品";
 "No related artworks" = "暂无相关作品";
 "Load More Related Artworks" = "加载更多相关作品";
+"Artwork Series" = "作品系列";
+"No series artworks" = "暂无系列作品";
+"Load More Series Artworks" = "加载更多系列作品";
+"Add to Watchlist" = "添加到追更";
+"Watchlist Added" = "已追更";
+"Open Series in Pixiv" = "在 Pixiv 打开系列";
 "Views" = "浏览";
 "Saves" = "收藏";
 "Pages" = "页数";

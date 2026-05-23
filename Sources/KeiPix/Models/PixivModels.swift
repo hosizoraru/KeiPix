@@ -114,6 +114,11 @@ struct PixivImageSet: Decodable, Hashable, Sendable {
     }
 }
 
+struct PixivArtworkSeriesSummary: Decodable, Hashable, Sendable {
+    let id: Int
+    let title: String
+}
+
 struct PixivArtwork: Decodable, Identifiable, Hashable, Sendable {
     let id: Int
     let title: String
@@ -133,6 +138,7 @@ struct PixivArtwork: Decodable, Identifiable, Hashable, Sendable {
     let isAI: Bool
     let sanityLevel: Int
     let xRestrict: Int
+    let series: PixivArtworkSeriesSummary?
     let images: [PixivImageSet]
 
     var thumbnailURL: URL? { images.first?.medium ?? images.first?.squareMedium }
@@ -191,6 +197,7 @@ struct PixivArtwork: Decodable, Identifiable, Hashable, Sendable {
         case illustAIType = "illust_ai_type"
         case sanityLevel = "sanity_level"
         case xRestrict = "x_restrict"
+        case series
     }
 
     enum MetaSingleKeys: String, CodingKey {
@@ -221,6 +228,7 @@ struct PixivArtwork: Decodable, Identifiable, Hashable, Sendable {
         isAI = (try container.decodeIfPresent(Int.self, forKey: .illustAIType) ?? 0) == 2
         sanityLevel = try container.decodeIfPresent(Int.self, forKey: .sanityLevel) ?? 0
         xRestrict = try container.decodeIfPresent(Int.self, forKey: .xRestrict) ?? 0
+        series = try container.decodeIfPresent(PixivArtworkSeriesSummary.self, forKey: .series)
 
         let metaPages = try container.decodeIfPresent([[String: PixivImageSet]].self, forKey: .metaPages) ?? []
         var decodedImages = metaPages.compactMap { $0["image_urls"] }

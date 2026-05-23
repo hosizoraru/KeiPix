@@ -132,6 +132,12 @@ enum L10n {
     static var relatedArtworks: String { text("Related Artworks") }
     static var noRelatedArtworks: String { text("No related artworks") }
     static var loadMoreRelatedArtworks: String { text("Load More Related Artworks") }
+    static var artworkSeries: String { text("Artwork Series") }
+    static var noSeriesArtworks: String { text("No series artworks") }
+    static var loadMoreSeriesArtworks: String { text("Load More Series Artworks") }
+    static var addToWatchlist: String { text("Add to Watchlist") }
+    static var watchlistAdded: String { text("Watchlist Added") }
+    static var openSeriesInPixiv: String { text("Open Series in Pixiv") }
     static var views: String { text("Views") }
     static var saves: String { text("Saves") }
     static var pages: String { text("Pages") }
