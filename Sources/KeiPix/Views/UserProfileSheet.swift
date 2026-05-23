@@ -7,8 +7,12 @@ struct UserProfileSheet: View {
     @Environment(\.dismiss) private var dismiss
     @State private var detail: PixivUserDetail?
     @State private var isLoading = true
+    @State private var isLoadingRelatedUsers = false
     @State private var isFollowed: Bool
+    @State private var relatedUsers: [PixivUserPreview] = []
     @State private var errorMessage: String?
+    @State private var relatedErrorMessage: String?
+    @State private var selectedRelatedUser: PixivUser?
 
     init(user: PixivUser, store: KeiPixStore) {
         self.user = user
@@ -33,6 +37,7 @@ struct UserProfileSheet: View {
                         comment
                         links
                         feedActions
+                        relatedCreatorSection
                     }
 
                     if let errorMessage {
@@ -49,6 +54,10 @@ struct UserProfileSheet: View {
         .frame(minHeight: 520)
         .task(id: user.id) {
             await loadDetail()
+            await loadRelatedUsers()
+        }
+        .sheet(item: $selectedRelatedUser) { relatedUser in
+            UserProfileSheet(user: relatedUser, store: store)
         }
     }
 
@@ -185,6 +194,58 @@ struct UserProfileSheet: View {
         .keiPanel(14)
     }
 
+    @ViewBuilder
+    private var relatedCreatorSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Label(L10n.relatedCreators, systemImage: "person.2.crop.square.stack")
+                .font(.headline)
+
+            if isLoadingRelatedUsers {
+                ProgressView()
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .padding(.vertical, 18)
+            } else if relatedUsers.isEmpty {
+                Text(L10n.noRelatedCreators)
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            } else {
+                ScrollView(.horizontal) {
+                    HStack(spacing: 10) {
+                        ForEach(relatedUsers.prefix(10)) { preview in
+                            RelatedCreatorCard(
+                                preview: preview,
+                                openProfile: {
+                                    selectedRelatedUser = preview.user
+                                },
+                                openIllustrations: {
+                                    Task {
+                                        await store.openUserFeed(user: preview.user, route: .userIllustrations)
+                                        dismiss()
+                                    }
+                                },
+                                toggleFollow: {
+                                    Task { await toggleRelatedFollow(preview.user) }
+                                }
+                            )
+                        }
+                    }
+                    .padding(.vertical, 2)
+                }
+                .scrollIndicators(.hidden)
+            }
+
+            if let relatedErrorMessage {
+                Text(relatedErrorMessage)
+                    .font(.caption)
+                    .foregroundStyle(.red)
+                    .textSelection(.enabled)
+            }
+        }
+        .padding(14)
+        .keiPanel(14)
+    }
+
     private func feedButton(_ title: String, systemImage: String, route: PixivRoute) -> some View {
         Button {
             Task {
@@ -212,11 +273,98 @@ struct UserProfileSheet: View {
         }
     }
 
+    private func loadRelatedUsers() async {
+        isLoadingRelatedUsers = true
+        relatedErrorMessage = nil
+        defer { isLoadingRelatedUsers = false }
+
+        do {
+            let response = try await store.relatedUsers(for: user)
+            relatedUsers = response.userPreviews.filter { $0.user.id != user.id }
+        } catch {
+            relatedErrorMessage = error.localizedDescription
+        }
+    }
+
     private func toggleFollow() async {
         var target = detail?.user ?? user
         target.isFollowed = isFollowed
         await store.toggleFollow(target)
         isFollowed.toggle()
+    }
+
+    private func toggleRelatedFollow(_ user: PixivUser) async {
+        await store.toggleFollow(user)
+        for index in relatedUsers.indices where relatedUsers[index].user.id == user.id {
+            var updatedUser = relatedUsers[index].user
+            updatedUser.isFollowed.toggle()
+            relatedUsers[index] = PixivUserPreview(
+                user: updatedUser,
+                illusts: relatedUsers[index].illusts,
+                isMuted: relatedUsers[index].isMuted
+            )
+        }
+    }
+}
+
+private struct RelatedCreatorCard: View {
+    let preview: PixivUserPreview
+    let openProfile: () -> Void
+    let openIllustrations: () -> Void
+    let toggleFollow: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Button(action: openProfile) {
+                VStack(alignment: .leading, spacing: 8) {
+                    RemoteImageView(url: preview.user.avatarURL)
+                        .frame(width: 52, height: 52)
+                        .clipShape(Circle())
+
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(preview.user.name)
+                            .font(.headline)
+                            .lineLimit(1)
+                        Text("@\(preview.user.account)")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .buttonStyle(.plain)
+
+            HStack(spacing: 6) {
+                ForEach(preview.illusts.prefix(2)) { artwork in
+                    Button(action: openIllustrations) {
+                        RemoteImageView(url: artwork.thumbnailURL)
+                            .aspectRatio(1, contentMode: .fill)
+                            .frame(width: 56, height: 56)
+                            .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+
+            HStack(spacing: 8) {
+                Button(preview.user.isFollowed ? L10n.unfollow : L10n.follow) {
+                    toggleFollow()
+                }
+                .buttonStyle(.bordered)
+
+                Button {
+                    openIllustrations()
+                } label: {
+                    Label(L10n.illustrations, systemImage: "photo")
+                }
+                .labelStyle(.iconOnly)
+                .buttonStyle(.bordered)
+            }
+        }
+        .frame(width: 170, alignment: .leading)
+        .padding(12)
+        .keiInteractiveGlass(14)
     }
 }
 

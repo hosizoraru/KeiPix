@@ -362,6 +362,11 @@ final class KeiPixStore {
         return filteredUserPreviewResponse(response)
     }
 
+    func relatedUsers(for user: PixivUser) async throws -> PixivUserPreviewResponse {
+        let response = try await api.relatedUsers(userID: user.id)
+        return filteredUserPreviewResponse(response)
+    }
+
     func searchUsers(keyword: String) async throws -> PixivUserPreviewResponse {
         let response = try await api.searchUsers(keyword: keyword)
         return filteredUserPreviewResponse(response)

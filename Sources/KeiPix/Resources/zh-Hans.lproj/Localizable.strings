@@ -20,6 +20,8 @@
 "History" = "浏览历史";
 "Manga Watchlist" = "漫画追更";
 "Recommended Creators" = "推荐作者";
+"Related Creators" = "相关作者";
+"No related creators" = "暂无相关作者";
 "Enter a search keyword" = "请输入搜索关键词";
 "Login" = "登录";
 "Logout" = "退出登录";

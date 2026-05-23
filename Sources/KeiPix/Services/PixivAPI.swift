@@ -226,6 +226,16 @@ actor PixivAPI {
         )
     }
 
+    func relatedUsers(userID: Int) async throws -> PixivUserPreviewResponse {
+        var components = URLComponents(url: URL(string: "/v1/user/related", relativeTo: Endpoint.apiBase)!, resolvingAgainstBaseURL: true)!
+        components.queryItems = [
+            URLQueryItem(name: "filter", value: "for_android"),
+            URLQueryItem(name: "seed_user_id", value: "\(userID)")
+        ]
+        guard let url = components.url else { throw PixivAPIError.invalidResponse }
+        return try await requestJSON(url, method: "GET", form: nil)
+    }
+
     func searchUsers(keyword: String) async throws -> PixivUserPreviewResponse {
         let trimmed = keyword.trimmingCharacters(in: .whitespacesAndNewlines)
         guard trimmed.isEmpty == false else {
