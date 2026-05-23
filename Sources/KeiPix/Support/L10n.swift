@@ -91,6 +91,8 @@ enum L10n {
     static var autoTagBookmarksWithArtworkTagsHint: String { text("Quick bookmarks use the artwork tags, and the bookmark editor preselects them for new bookmarks.") }
     static var followCreatorAfterBookmark: String { text("Follow creator after bookmarking") }
     static var followCreatorAfterBookmarkHint: String { text("New bookmarks also follow the creator using your default follow visibility.") }
+    static var autoDownloadBookmarkedArtworks: String { text("Download new bookmarks automatically") }
+    static var autoDownloadBookmarkedArtworksHint: String { text("New bookmarks are added to the download queue using original images when available.") }
     static var followingPublicly: String { text("Following Publicly") }
     static var followingPrivately: String { text("Following Privately") }
     static var unfollow: String { text("Unfollow") }

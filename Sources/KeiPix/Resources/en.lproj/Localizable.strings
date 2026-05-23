@@ -88,6 +88,8 @@
 "Quick bookmarks use the artwork tags, and the bookmark editor preselects them for new bookmarks." = "Quick bookmarks use the artwork tags, and the bookmark editor preselects them for new bookmarks.";
 "Follow creator after bookmarking" = "Follow creator after bookmarking";
 "New bookmarks also follow the creator using your default follow visibility." = "New bookmarks also follow the creator using your default follow visibility.";
+"Download new bookmarks automatically" = "Download new bookmarks automatically";
+"New bookmarks are added to the download queue using original images when available." = "New bookmarks are added to the download queue using original images when available.";
 "Following Publicly" = "Following Publicly";
 "Following Privately" = "Following Privately";
 "Unfollow" = "Unfollow";

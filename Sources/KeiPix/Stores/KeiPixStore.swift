@@ -40,6 +40,7 @@ final class KeiPixStore {
     var defaultBookmarkRestrict = KeiPixStore.loadEnum("defaultBookmarkRestrict", defaultValue: BookmarkRestrict.public)
     var defaultFollowRestrict = KeiPixStore.loadEnum("defaultFollowRestrict", defaultValue: BookmarkRestrict.public)
     var followCreatorAfterBookmark = UserDefaults.standard.object(forKey: "followCreatorAfterBookmark") as? Bool ?? false
+    var autoDownloadBookmarkedArtworks = UserDefaults.standard.object(forKey: "autoDownloadBookmarkedArtworks") as? Bool ?? false
     var autoTagBookmarksWithArtworkTags = UserDefaults.standard.object(forKey: "autoTagBookmarksWithArtworkTags") as? Bool ?? false
     var searchMatchType = KeiPixStore.loadEnum("searchMatchType", defaultValue: SearchMatchType.partialTags)
     var searchSort = KeiPixStore.loadEnum("searchSort", defaultValue: SearchSort.dateDescending)
@@ -290,6 +291,9 @@ final class KeiPixStore {
             }
             updateArtwork(artwork.id) { $0.isBookmarked = nextValue }
             if nextValue {
+                if autoDownloadBookmarkedArtworks {
+                    downloads.enqueue(artwork, preferOriginal: true)
+                }
                 await followCreatorAfterBookmarkIfNeeded(artwork)
             }
         } catch {
@@ -320,6 +324,9 @@ final class KeiPixStore {
         try await api.addBookmark(illustID: artwork.id, restrict: restrict, tags: tags)
         updateArtwork(artwork.id) { $0.isBookmarked = true }
         if wasBookmarked == false {
+            if autoDownloadBookmarkedArtworks {
+                downloads.enqueue(artwork, preferOriginal: true)
+            }
             await followCreatorAfterBookmarkIfNeeded(artwork)
         }
     }

@@ -73,6 +73,11 @@ struct SettingsView: View {
                 Text(L10n.followCreatorAfterBookmarkHint)
                     .font(.caption)
                     .foregroundStyle(.secondary)
+
+                Toggle(L10n.autoDownloadBookmarkedArtworks, isOn: autoDownloadBookmarksBinding)
+                Text(L10n.autoDownloadBookmarkedArtworksHint)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
 
             Section(L10n.followingCreators) {
@@ -339,6 +344,14 @@ struct SettingsView: View {
             store.autoTagBookmarksWithArtworkTags
         } set: { value in
             store.setAutoTagBookmarksWithArtworkTags(value)
+        }
+    }
+
+    private var autoDownloadBookmarksBinding: Binding<Bool> {
+        Binding {
+            store.autoDownloadBookmarkedArtworks
+        } set: { value in
+            store.setAutoDownloadBookmarkedArtworks(value)
         }
     }
 

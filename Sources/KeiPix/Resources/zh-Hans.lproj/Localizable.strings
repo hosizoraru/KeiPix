@@ -88,6 +88,8 @@
 "Quick bookmarks use the artwork tags, and the bookmark editor preselects them for new bookmarks." = "快速收藏会带上作品标签，收藏编辑器也会为新收藏预选这些标签。";
 "Follow creator after bookmarking" = "收藏后关注作者";
 "New bookmarks also follow the creator using your default follow visibility." = "新增收藏时，会按默认关注可见性同时关注作者。";
+"Download new bookmarks automatically" = "新收藏自动下载";
+"New bookmarks are added to the download queue using original images when available." = "新增收藏会加入下载队列，并优先使用原图。";
 "Following Publicly" = "公开关注中";
 "Following Privately" = "私密关注中";
 "Unfollow" = "取消关注";
