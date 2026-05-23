@@ -10,6 +10,7 @@ struct KeiPixApp: App {
         WindowGroup("KeiPix", id: "main") {
             ContentView(store: store)
                 .frame(minWidth: 940, minHeight: 700)
+                .background(WindowCaptureProtectionBridge(isProtected: store.isMainWindowCaptureProtected))
                 .environment(\.locale, store.appLanguage.locale ?? .current)
         }
         .defaultSize(width: 1240, height: 800)
@@ -76,6 +77,7 @@ struct KeiPixApp: App {
         Window(L10n.readerWindow, id: "artwork-reader") {
             ArtworkReaderWindowView(store: store)
                 .frame(minWidth: 900, minHeight: 680)
+                .background(WindowCaptureProtectionBridge(isProtected: store.isReaderWindowCaptureProtected))
                 .environment(\.locale, store.appLanguage.locale ?? .current)
         }
         .defaultSize(width: 1180, height: 860)

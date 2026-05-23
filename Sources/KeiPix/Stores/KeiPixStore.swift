@@ -28,6 +28,7 @@ final class KeiPixStore {
     var galleryLayoutMode = KeiPixStore.loadGalleryLayoutMode()
     var showContentBadges = UserDefaults.standard.object(forKey: "showContentBadges") as? Bool ?? true
     var showAccountIdentity = UserDefaults.standard.object(forKey: "showAccountIdentity") as? Bool ?? true
+    var screenCaptureProtectionEnabled = UserDefaults.standard.object(forKey: "screenCaptureProtectionEnabled") as? Bool ?? true
     var hideMutedContent = UserDefaults.standard.object(forKey: "hideMutedContent") as? Bool ?? true
     var hideAIArtworks = UserDefaults.standard.bool(forKey: "hideAIArtworks")
     var hideR18Artworks = UserDefaults.standard.bool(forKey: "hideR18Artworks")
@@ -46,6 +47,12 @@ final class KeiPixStore {
         .flatMap(TrackpadHorizontalSwipeBehavior.init(rawValue:)) ?? .pageOnly
     var hasNextPage: Bool { nextURL != nil }
     var compactArtworkCards: Bool { galleryLayoutMode.usesCompactGrid }
+    var isMainWindowCaptureProtected: Bool {
+        screenCaptureProtectionEnabled && selectedArtwork?.requiresScreenCaptureProtection == true
+    }
+    var isReaderWindowCaptureProtected: Bool {
+        screenCaptureProtectionEnabled && readerWindowArtwork?.requiresScreenCaptureProtection == true
+    }
 
     private let api = PixivAPI()
     private var allArtworks: [PixivArtwork] = []
@@ -452,6 +459,11 @@ final class KeiPixStore {
     func setShowAccountIdentity(_ value: Bool) {
         showAccountIdentity = value
         UserDefaults.standard.set(value, forKey: "showAccountIdentity")
+    }
+
+    func setScreenCaptureProtectionEnabled(_ value: Bool) {
+        screenCaptureProtectionEnabled = value
+        UserDefaults.standard.set(value, forKey: "screenCaptureProtectionEnabled")
     }
 
     func setHideMutedContent(_ value: Bool) {

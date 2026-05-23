@@ -139,6 +139,8 @@
 "Switch artwork at edges" = "边界后切换作品";
 "Privacy" = "隐私";
 "Account" = "账号";
+"Protect sensitive content from screen capture" = "保护敏感内容不被截屏捕获";
+"R-18 and R-18G artwork windows are hidden from screenshots and screen sharing when possible." = "展示 R-18 和 R-18G 作品时，尽可能让窗口从截屏和屏幕共享中隐藏。";
 "Show account identity" = "显示账号身份信息";
 "Hide your Pixiv name and ID in the sidebar for screenshots." = "隐藏侧边栏里的 Pixiv 名字和 ID，方便分享截图。";
 "Profile" = "资料";

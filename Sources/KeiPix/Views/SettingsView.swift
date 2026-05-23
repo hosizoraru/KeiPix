@@ -120,14 +120,21 @@ struct SettingsView: View {
                 .pickerStyle(.menu)
             }
 
-            if let session = store.session {
-                Section(L10n.privacy) {
+            Section(L10n.privacy) {
+                Toggle(L10n.protectSensitiveContent, isOn: screenCaptureProtectionBinding)
+                Text(L10n.screenCaptureProtectionHint)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
+                if store.session != nil {
                     Toggle(L10n.showAccountIdentity, isOn: accountIdentityBinding)
                     Text(L10n.accountIdentityPrivacyHint)
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
+            }
 
+            if let session = store.session {
                 Section(L10n.account) {
                     LabeledContent(
                         L10n.profile,
@@ -232,6 +239,14 @@ struct SettingsView: View {
             store.showAccountIdentity
         } set: { value in
             store.setShowAccountIdentity(value)
+        }
+    }
+
+    private var screenCaptureProtectionBinding: Binding<Bool> {
+        Binding {
+            store.screenCaptureProtectionEnabled
+        } set: { value in
+            store.setScreenCaptureProtectionEnabled(value)
         }
     }
 

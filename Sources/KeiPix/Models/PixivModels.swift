@@ -156,6 +156,9 @@ struct PixivArtwork: Decodable, Identifiable, Hashable, Sendable {
     var isR18: Bool {
         xRestrict == 1 || isR18G || tags.contains { $0.name.localizedCaseInsensitiveContains("R-18") }
     }
+    var requiresScreenCaptureProtection: Bool {
+        isR18 || isR18G
+    }
     var contentBadges: [ArtworkContentBadge] {
         var badges: [ArtworkContentBadge] = []
         if isR18G {

@@ -142,6 +142,8 @@ enum L10n {
     static var pageThenArtworkSwipe: String { text("Switch artwork at edges") }
     static var privacy: String { text("Privacy") }
     static var account: String { text("Account") }
+    static var protectSensitiveContent: String { text("Protect sensitive content from screen capture") }
+    static var screenCaptureProtectionHint: String { text("R-18 and R-18G artwork windows are hidden from screenshots and screen sharing when possible.") }
     static var showAccountIdentity: String { text("Show account identity") }
     static var accountIdentityPrivacyHint: String { text("Hide your Pixiv name and ID in the sidebar for screenshots.") }
     static var profile: String { text("Profile") }
