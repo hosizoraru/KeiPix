@@ -178,6 +178,8 @@ private struct ContentColumnView: View {
     var body: some View {
         if store.selectedRoute == .mangaWatchlist {
             MangaWatchlistView(store: store)
+        } else if store.selectedRoute == .downloads {
+            DownloadQueueView(store: store)
         } else if store.selectedRoute == .followingCreators || store.selectedRoute == .recommendedUsers || store.selectedRoute == .searchUsers {
             UserPreviewListView(store: store, mode: userPreviewMode)
         } else {

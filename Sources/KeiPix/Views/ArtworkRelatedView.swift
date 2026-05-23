@@ -42,6 +42,9 @@ struct ArtworkRelatedView: View {
                                 Button(related.isBookmarked ? L10n.removeBookmark : L10n.bookmark) {
                                     Task { await store.toggleBookmark(related) }
                                 }
+                                Button(L10n.download) {
+                                    store.downloads.enqueue(related, preferOriginal: true)
+                                }
                                 Divider()
                                 Button(L10n.muteArtwork) {
                                     store.muteArtwork(related)

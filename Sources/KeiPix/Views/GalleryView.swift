@@ -84,6 +84,9 @@ private struct GalleryContentGrid: View {
             Button(artwork.isBookmarked ? L10n.removeBookmark : L10n.bookmark) {
                 Task { await store.toggleBookmark(artwork) }
             }
+            Button(L10n.download) {
+                store.downloads.enqueue(artwork, preferOriginal: true)
+            }
             Divider()
             Button(L10n.muteArtwork) {
                 store.muteArtwork(artwork)
@@ -140,6 +143,9 @@ private struct MasonryArtworkGrid: View {
                 .contextMenu {
                     Button(artwork.isBookmarked ? L10n.removeBookmark : L10n.bookmark) {
                         Task { await store.toggleBookmark(artwork) }
+                    }
+                    Button(L10n.download) {
+                        store.downloads.enqueue(artwork, preferOriginal: true)
                     }
                     Divider()
                     Button(L10n.muteArtwork) {

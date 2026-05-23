@@ -120,6 +120,9 @@ struct ArtworkSeriesView: View {
             Button(seriesArtwork.isBookmarked ? L10n.removeBookmark : L10n.bookmark) {
                 Task { await store.toggleBookmark(seriesArtwork) }
             }
+            Button(L10n.download) {
+                store.downloads.enqueue(seriesArtwork, preferOriginal: true)
+            }
             Divider()
             Button(L10n.muteArtwork) {
                 store.muteArtwork(seriesArtwork)

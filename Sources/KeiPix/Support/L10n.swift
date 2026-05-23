@@ -22,6 +22,21 @@ enum L10n {
     static var refresh: String { text("Refresh") }
     static var loading: String { text("Loading") }
     static var openInPixiv: String { text("Open in Pixiv") }
+    static var download: String { text("Download") }
+    static var downloads: String { text("Downloads") }
+    static var downloading: String { text("Downloading") }
+    static var downloaded: String { text("Downloaded") }
+    static var queued: String { text("Queued") }
+    static var failed: String { text("Failed") }
+    static var downloadFolder: String { text("Download Folder") }
+    static var chooseFolder: String { text("Choose Folder") }
+    static var openFolder: String { text("Open Folder") }
+    static var choose: String { text("Choose") }
+    static var clearCompleted: String { text("Clear Completed") }
+    static var revealInFinder: String { text("Reveal in Finder") }
+    static var noDownloadsTitle: String { text("No downloads yet") }
+    static var noDownloadsSubtitle: String { text("Download artworks from the detail view or artwork context menus.") }
+    static var downloadInterrupted: String { text("Download interrupted") }
     static var bookmark: String { text("Bookmark") }
     static var removeBookmark: String { text("Remove Bookmark") }
     static var editBookmark: String { text("Edit Bookmark") }

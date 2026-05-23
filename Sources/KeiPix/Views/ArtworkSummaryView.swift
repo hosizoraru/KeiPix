@@ -89,6 +89,15 @@ private struct ArtworkActionStrip: View {
                         BookmarkEditorView(artwork: artwork, store: store)
                     }
 
+                    Button {
+                        store.downloads.enqueue(artwork, preferOriginal: true)
+                    } label: {
+                        Label(L10n.download, systemImage: "arrow.down.circle")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+
                     if let url = artwork.pixivURL {
                         Link(destination: url) {
                             Label(L10n.openInPixiv, systemImage: "safari")

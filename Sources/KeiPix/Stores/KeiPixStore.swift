@@ -5,6 +5,8 @@ import Observation
 @MainActor
 @Observable
 final class KeiPixStore {
+    let downloads = ArtworkDownloadStore()
+
     var session: PixivSession?
     var selectedRoute: PixivRoute = .illustrations
     var artworks: [PixivArtwork] = []
@@ -607,7 +609,7 @@ final class KeiPixStore {
             return try await api.following()
         case .history:
             return try await api.browsingHistoryIllusts()
-        case .mangaWatchlist:
+        case .mangaWatchlist, .downloads:
             return PixivFeedResponse(illusts: [], nextURL: nil)
         case .followingCreators, .recommendedUsers, .searchUsers:
             return PixivFeedResponse(illusts: [], nextURL: nil)

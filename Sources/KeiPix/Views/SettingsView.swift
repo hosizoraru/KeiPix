@@ -86,6 +86,29 @@ struct SettingsView: View {
                 .pickerStyle(.segmented)
             }
 
+            Section(L10n.downloads) {
+                LabeledContent(L10n.downloadFolder) {
+                    Text(store.downloads.downloadDirectoryPath)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                        .textSelection(.enabled)
+                }
+
+                HStack(spacing: 10) {
+                    Button {
+                        store.downloads.chooseDownloadDirectory()
+                    } label: {
+                        Label(L10n.chooseFolder, systemImage: "folder.badge.gearshape")
+                    }
+
+                    Button {
+                        store.downloads.openDownloadDirectory()
+                    } label: {
+                        Label(L10n.openFolder, systemImage: "folder")
+                    }
+                }
+            }
+
             Section(L10n.trackpad) {
                 Toggle(L10n.enableTrackpadGestures, isOn: trackpadGesturesBinding)
 

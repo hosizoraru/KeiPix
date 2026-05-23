@@ -26,7 +26,7 @@ enum PixivRouteSection: Identifiable {
         case .mangaRanking:
             [.mangaRankingDaily, .mangaRankingWeekly, .mangaRankingMonthly]
         case .library:
-            [.publicBookmarks, .privateBookmarks, .following, .followingCreators, .history, .mangaWatchlist]
+            [.publicBookmarks, .privateBookmarks, .following, .followingCreators, .history, .mangaWatchlist, .downloads]
         }
     }
 }
@@ -51,6 +51,7 @@ enum PixivRoute: String, CaseIterable, Identifiable, Codable {
     case followingCreators
     case history
     case mangaWatchlist
+    case downloads
     case recommendedUsers
 
     static var sidebarSections: [PixivRouteSection] {
@@ -84,13 +85,14 @@ enum PixivRoute: String, CaseIterable, Identifiable, Codable {
         case .followingCreators: L10n.followingCreators
         case .history: L10n.history
         case .mangaWatchlist: L10n.mangaWatchlist
+        case .downloads: L10n.downloads
         case .recommendedUsers: L10n.recommendedCreators
         }
     }
 
     var usesArtworkFeed: Bool {
         switch self {
-        case .mangaWatchlist, .followingCreators, .recommendedUsers, .searchUsers:
+        case .mangaWatchlist, .downloads, .followingCreators, .recommendedUsers, .searchUsers:
             false
         default:
             true
@@ -114,6 +116,7 @@ enum PixivRoute: String, CaseIterable, Identifiable, Codable {
         case .followingCreators: "person.2.crop.square.stack"
         case .history: "clock.arrow.circlepath"
         case .mangaWatchlist: "rectangle.stack.badge.person.crop"
+        case .downloads: "arrow.down.circle"
         }
     }
 }
