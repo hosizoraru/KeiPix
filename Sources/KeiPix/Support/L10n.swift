@@ -28,6 +28,17 @@ enum L10n {
     static var clearSelection: String { text("Clear Selection") }
     static var follow: String { text("Follow") }
     static var unfollow: String { text("Unfollow") }
+    static var creatorProfile: String { text("Creator Profile") }
+    static var creatorIllustrations: String { text("Creator Illustrations") }
+    static var creatorManga: String { text("Creator Manga") }
+    static var creatorPublicBookmarks: String { text("Creator Public Bookmarks") }
+    static var openCreatorProfile: String { text("Open Creator Profile") }
+    static var worksCount: String { text("Works Count") }
+    static var publicSaves: String { text("Public Saves") }
+    static var followers: String { text("Followers") }
+    static var region: String { text("Region") }
+    static var job: String { text("Job") }
+    static var links: String { text("Links") }
     static var settings: String { text("Settings") }
     static var language: String { text("Language") }
     static var automatic: String { text("Automatic") }
@@ -85,7 +96,9 @@ enum L10n {
     static var pageOnlySwipe: String { text("Page within artwork") }
     static var pageThenArtworkSwipe: String { text("Switch artwork at edges") }
     static var account: String { text("Account") }
+    static var showAccountIdentity: String { text("Show account identity") }
     static var profile: String { text("Profile") }
+    static var hidden: String { text("Hidden") }
     static var loginTitle: String { text("Login to Pixiv") }
     static var loginHint: String { text("Complete login in the embedded Pixiv page. KeiPix captures only the authorization code.") }
     static var signedOutTitle: String { text("Sign in to load Pixiv feeds") }

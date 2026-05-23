@@ -25,6 +25,17 @@
 "Clear Selection" = "Clear Selection";
 "Follow" = "Follow";
 "Unfollow" = "Unfollow";
+"Creator Profile" = "Creator Profile";
+"Creator Illustrations" = "Creator Illustrations";
+"Creator Manga" = "Creator Manga";
+"Creator Public Bookmarks" = "Creator Public Bookmarks";
+"Open Creator Profile" = "Open Creator Profile";
+"Works Count" = "Works Count";
+"Public Saves" = "Public Saves";
+"Followers" = "Followers";
+"Region" = "Region";
+"Job" = "Job";
+"Links" = "Links";
 "Settings" = "Settings";
 "Language" = "Language";
 "Automatic" = "Automatic";
@@ -82,7 +93,9 @@
 "Page within artwork" = "Page within artwork";
 "Switch artwork at edges" = "Switch artwork at edges";
 "Account" = "Account";
+"Show account identity" = "Show account identity";
 "Profile" = "Profile";
+"Hidden" = "Hidden";
 "Login to Pixiv" = "Login to Pixiv";
 "Complete login in the embedded Pixiv page. KeiPix captures only the authorization code." = "Complete login in the embedded Pixiv page. KeiPix captures only the authorization code.";
 "Sign in to load Pixiv feeds" = "Sign in to load Pixiv feeds";

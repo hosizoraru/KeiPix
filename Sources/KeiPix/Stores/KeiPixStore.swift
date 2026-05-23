@@ -9,6 +9,7 @@ final class KeiPixStore {
     var selectedRoute: PixivRoute = .illustrations
     var artworks: [PixivArtwork] = []
     var selectedArtwork: PixivArtwork?
+    var focusedUser: PixivUser?
     var searchText = ""
     var errorMessage: String?
     var isLoading = false
@@ -19,6 +20,7 @@ final class KeiPixStore {
     var useOriginalImagesInDetail = UserDefaults.standard.bool(forKey: "useOriginalImagesInDetail")
     var galleryLayoutMode = KeiPixStore.loadGalleryLayoutMode()
     var showContentBadges = UserDefaults.standard.object(forKey: "showContentBadges") as? Bool ?? true
+    var showAccountIdentity = UserDefaults.standard.object(forKey: "showAccountIdentity") as? Bool ?? true
     var hideAIArtworks = UserDefaults.standard.bool(forKey: "hideAIArtworks")
     var hideR18Artworks = UserDefaults.standard.bool(forKey: "hideR18Artworks")
     var hideR18GArtworks = UserDefaults.standard.bool(forKey: "hideR18GArtworks")
@@ -89,8 +91,15 @@ final class KeiPixStore {
     }
 
     func select(_ route: PixivRoute) {
+        focusedUser = nil
         selectedRoute = route
         Task { await reloadCurrentFeed() }
+    }
+
+    func openUserFeed(user: PixivUser, route: PixivRoute) async {
+        focusedUser = user
+        selectedRoute = route
+        await reloadCurrentFeed()
     }
 
     func reloadCurrentFeed() async {
@@ -194,6 +203,10 @@ final class KeiPixStore {
         return try UgoiraFrameDecoder.decode(zipData: zipData, metadata: metadata)
     }
 
+    func userDetail(for user: PixivUser) async throws -> PixivUserDetail {
+        try await api.userDetail(userID: user.id)
+    }
+
     func comments(for artwork: PixivArtwork) async throws -> PixivCommentResponse {
         try await api.illustComments(illustID: artwork.id)
     }
@@ -214,6 +227,11 @@ final class KeiPixStore {
     func setShowContentBadges(_ value: Bool) {
         showContentBadges = value
         UserDefaults.standard.set(value, forKey: "showContentBadges")
+    }
+
+    func setShowAccountIdentity(_ value: Bool) {
+        showAccountIdentity = value
+        UserDefaults.standard.set(value, forKey: "showAccountIdentity")
     }
 
     func setHideAIArtworks(_ value: Bool) {
@@ -342,6 +360,15 @@ final class KeiPixStore {
                 return PixivFeedResponse(illusts: [], nextURL: nil)
             }
             return try await api.search(keyword: keyword, options: searchOptions)
+        case .userIllustrations:
+            guard let focusedUser else { throw PixivAPIError.invalidResponse }
+            return try await api.userIllusts(userID: focusedUser.id, type: "illust")
+        case .userManga:
+            guard let focusedUser else { throw PixivAPIError.invalidResponse }
+            return try await api.userIllusts(userID: focusedUser.id, type: "manga")
+        case .userPublicBookmarks:
+            guard let focusedUser else { throw PixivAPIError.invalidResponse }
+            return try await api.bookmarks(restrict: "public", userID: "\(focusedUser.id)")
         case .rankingDaily:
             return try await api.ranking(mode: "day")
         case .rankingWeekly:

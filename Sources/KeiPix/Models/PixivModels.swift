@@ -57,6 +57,7 @@ struct PixivUser: Decodable, Identifiable, Hashable, Sendable {
     let id: Int
     let name: String
     let account: String
+    let comment: String?
     let avatarURL: URL?
     var isFollowed: Bool
 
@@ -64,6 +65,7 @@ struct PixivUser: Decodable, Identifiable, Hashable, Sendable {
         case id
         case name
         case account
+        case comment
         case profileImageURLs = "profile_image_urls"
         case isFollowed = "is_followed"
     }
@@ -78,6 +80,7 @@ struct PixivUser: Decodable, Identifiable, Hashable, Sendable {
         id = try container.decode(Int.self, forKey: .id)
         name = try container.decode(String.self, forKey: .name)
         account = try container.decode(String.self, forKey: .account)
+        comment = try container.decodeIfPresent(String.self, forKey: .comment)
         isFollowed = try container.decodeIfPresent(Bool.self, forKey: .isFollowed) ?? false
 
         let profile = try? container.nestedContainer(keyedBy: ProfileKeys.self, forKey: .profileImageURLs)

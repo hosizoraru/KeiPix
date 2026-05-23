@@ -35,6 +35,9 @@ enum PixivRoute: String, CaseIterable, Identifiable, Codable {
     case illustrations = "explore"
     case mangaRecommended
     case search
+    case userIllustrations
+    case userManga
+    case userPublicBookmarks
     case rankingDaily
     case rankingWeekly
     case rankingMonthly
@@ -49,6 +52,10 @@ enum PixivRoute: String, CaseIterable, Identifiable, Codable {
         [.works, .ranking, .mangaRanking, .library]
     }
 
+    var isSidebarRoute: Bool {
+        Self.sidebarSections.flatMap(\.routes).contains(self)
+    }
+
     var id: String { rawValue }
 
     var title: String {
@@ -56,6 +63,9 @@ enum PixivRoute: String, CaseIterable, Identifiable, Codable {
         case .illustrations: L10n.illustrations
         case .mangaRecommended: L10n.manga
         case .search: L10n.search
+        case .userIllustrations: L10n.creatorIllustrations
+        case .userManga: L10n.creatorManga
+        case .userPublicBookmarks: L10n.creatorPublicBookmarks
         case .rankingDaily: L10n.daily
         case .rankingWeekly: L10n.weekly
         case .rankingMonthly: L10n.monthly
@@ -73,6 +83,9 @@ enum PixivRoute: String, CaseIterable, Identifiable, Codable {
         case .illustrations: "photo.on.rectangle"
         case .mangaRecommended: "book.closed"
         case .search: "magnifyingglass"
+        case .userIllustrations: "person.crop.rectangle.stack"
+        case .userManga: "person.crop.square"
+        case .userPublicBookmarks: "person.crop.circle.badge.checkmark"
         case .rankingDaily, .rankingWeekly, .rankingMonthly: "chart.bar"
         case .mangaRankingDaily, .mangaRankingWeekly, .mangaRankingMonthly: "chart.bar.doc.horizontal"
         case .publicBookmarks, .privateBookmarks: "bookmark"

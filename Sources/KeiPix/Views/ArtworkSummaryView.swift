@@ -5,6 +5,7 @@ struct ArtworkSummaryView: View {
     @Bindable var store: KeiPixStore
     let pageIndex: Int
     let pageCount: Int
+    @State private var isUserProfilePresented = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
@@ -18,7 +19,10 @@ struct ArtworkSummaryView: View {
                     ArtworkContentBadgesView(badges: artwork.contentBadges)
                 }
 
-                HStack(spacing: 10) {
+                Button {
+                    isUserProfilePresented = true
+                } label: {
+                    HStack(spacing: 10) {
                     RemoteImageView(url: artwork.user.avatarURL)
                         .frame(width: 32, height: 32)
                         .clipShape(Circle())
@@ -35,11 +39,15 @@ struct ArtworkSummaryView: View {
 
                     Spacer(minLength: 8)
 
-                    Button(artwork.user.isFollowed ? L10n.unfollow : L10n.follow) {
-                        Task { await store.toggleFollow(artwork.user) }
+                        Image(systemName: "chevron.right")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(.tertiary)
                     }
-                    .buttonStyle(.bordered)
-                    .controlSize(.small)
+                }
+                .buttonStyle(.plain)
+                .help(L10n.openCreatorProfile)
+                .sheet(isPresented: $isUserProfilePresented) {
+                    UserProfileSheet(user: artwork.user, store: store)
                 }
             }
 

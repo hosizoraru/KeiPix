@@ -131,6 +131,22 @@ actor PixivAPI {
         ])
     }
 
+    func userDetail(userID: Int) async throws -> PixivUserDetail {
+        try await requestJSON(
+            URL(string: "/v1/user/detail?filter=for_android&user_id=\(userID)", relativeTo: Endpoint.apiBase)!,
+            method: "GET",
+            form: nil
+        )
+    }
+
+    func userIllusts(userID: Int, type: String) async throws -> PixivFeedResponse {
+        try await requestFeed(path: "/v1/user/illusts", query: [
+            "filter": "for_android",
+            "user_id": "\(userID)",
+            "type": type
+        ])
+    }
+
     func search(keyword: String, options: SearchOptions) async throws -> PixivFeedResponse {
         var query = [
             "filter": "for_android",

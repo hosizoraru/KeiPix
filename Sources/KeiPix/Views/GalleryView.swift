@@ -31,7 +31,14 @@ struct GalleryView: View {
                 .scrollEdgeEffectStyle(.soft, for: .top)
             }
         }
-        .navigationTitle(store.selectedRoute.title)
+        .navigationTitle(navigationTitle)
+    }
+
+    private var navigationTitle: String {
+        if let focusedUser = store.focusedUser {
+            return "\(store.selectedRoute.title) · \(focusedUser.name)"
+        }
+        return store.selectedRoute.title
     }
 }
 
@@ -135,6 +142,11 @@ private struct FeedHeaderView: View {
             VStack(alignment: .leading, spacing: 3) {
                 Text(store.selectedRoute.title)
                     .font(.headline)
+                if let focusedUser = store.focusedUser {
+                    Text("@\(focusedUser.account)")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
                 Text("\(store.artworks.count.formatted()) \(L10n.results) · \(store.hasNextPage ? L10n.nextPageAvailable : L10n.noMorePages)")
                     .font(.caption)
                     .foregroundStyle(.secondary)

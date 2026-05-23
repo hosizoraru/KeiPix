@@ -47,7 +47,11 @@ struct SettingsView: View {
 
             if let session = store.session {
                 Section(L10n.account) {
-                    LabeledContent(L10n.profile, value: "\(session.user.name) @\(session.user.account)")
+                    Toggle(L10n.showAccountIdentity, isOn: accountIdentityBinding)
+                    LabeledContent(
+                        L10n.profile,
+                        value: store.showAccountIdentity ? "\(session.user.name) @\(session.user.account)" : L10n.hidden
+                    )
 
                     Button(role: .destructive) {
                         Task { await store.logout() }
@@ -131,6 +135,14 @@ struct SettingsView: View {
             store.horizontalSwipeBehavior
         } set: { value in
             store.setHorizontalSwipeBehavior(value)
+        }
+    }
+
+    private var accountIdentityBinding: Binding<Bool> {
+        Binding {
+            store.showAccountIdentity
+        } set: { value in
+            store.setShowAccountIdentity(value)
         }
     }
 }

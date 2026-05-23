@@ -25,6 +25,17 @@
 "Clear Selection" = "清空选择";
 "Follow" = "关注";
 "Unfollow" = "取消关注";
+"Creator Profile" = "创作者资料";
+"Creator Illustrations" = "作者插画";
+"Creator Manga" = "作者漫画";
+"Creator Public Bookmarks" = "作者公开收藏";
+"Open Creator Profile" = "打开创作者资料";
+"Works Count" = "作品数";
+"Public Saves" = "公开收藏";
+"Followers" = "关注中";
+"Region" = "地区";
+"Job" = "职业";
+"Links" = "链接";
 "Settings" = "设置";
 "Language" = "语言";
 "Automatic" = "自动";
@@ -82,7 +93,9 @@
 "Page within artwork" = "仅作品内翻页";
 "Switch artwork at edges" = "边界后切换作品";
 "Account" = "账号";
+"Show account identity" = "显示账号身份信息";
 "Profile" = "资料";
+"Hidden" = "已隐藏";
 "Login to Pixiv" = "登录 Pixiv";
 "Complete login in the embedded Pixiv page. KeiPix captures only the authorization code." = "在内嵌 Pixiv 页面完成登录。KeiPix 只捕获授权码。";
 "Sign in to load Pixiv feeds" = "登录后加载 Pixiv 信息流";

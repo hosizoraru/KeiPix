@@ -7,7 +7,7 @@ struct SidebarView: View {
         List(selection: $store.selectedRoute) {
             if let session = store.session {
                 Section {
-                    UserHeader(session: session)
+                    UserHeader(session: session, showIdentity: store.showAccountIdentity)
                 }
             }
 
@@ -20,8 +20,9 @@ struct SidebarView: View {
             }
         }
         .listStyle(.sidebar)
-        .navigationSplitViewColumnWidth(min: 196, ideal: 216, max: 248)
+        .navigationSplitViewColumnWidth(min: store.showAccountIdentity ? 188 : 172, ideal: store.showAccountIdentity ? 208 : 184, max: 238)
         .onChange(of: store.selectedRoute) { _, newValue in
+            guard newValue.isSidebarRoute else { return }
             store.select(newValue)
         }
     }
@@ -42,6 +43,7 @@ struct SidebarView: View {
 
 private struct UserHeader: View {
     let session: PixivSession
+    let showIdentity: Bool
 
     var body: some View {
         HStack(spacing: 10) {
@@ -49,18 +51,20 @@ private struct UserHeader: View {
                 .frame(width: 34, height: 34)
                 .clipShape(Circle())
 
-            VStack(alignment: .leading, spacing: 2) {
-                Text(session.user.name)
-                    .font(.headline)
-                    .lineLimit(1)
-                Text("@\(session.user.account)")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
+            if showIdentity {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(session.user.name)
+                        .font(.headline)
+                        .lineLimit(1)
+                    Text("@\(session.user.account)")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                }
+                Spacer(minLength: 0)
             }
-            Spacer(minLength: 0)
         }
         .padding(.vertical, 4)
-        .help("\(session.user.name) @\(session.user.account)")
+        .help(showIdentity ? "\(session.user.name) @\(session.user.account)" : L10n.account)
     }
 }
