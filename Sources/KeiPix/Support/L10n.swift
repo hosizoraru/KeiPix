@@ -2,9 +2,14 @@ import Foundation
 
 enum L10n {
     static var explore: String { text("Explore") }
+    static var works: String { text("Works") }
+    static var illustrations: String { text("Illustrations") }
+    static var manga: String { text("Manga") }
     static var search: String { text("Search") }
     static var ranking: String { text("Ranking") }
+    static var mangaRanking: String { text("Manga Ranking") }
     static var bookmarks: String { text("Bookmarks") }
+    static var library: String { text("Library") }
     static var following: String { text("Following") }
     static var login: String { text("Login") }
     static var logout: String { text("Logout") }
@@ -56,6 +61,9 @@ enum L10n {
     static var daily: String { text("Daily") }
     static var weekly: String { text("Weekly") }
     static var monthly: String { text("Monthly") }
+    static var dailyManga: String { text("Daily Manga") }
+    static var weeklyManga: String { text("Weekly Manga") }
+    static var monthlyManga: String { text("Monthly Manga") }
     static var details: String { text("Details") }
     static var tags: String { text("Tags") }
     static var description: String { text("Description") }

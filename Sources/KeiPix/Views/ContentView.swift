@@ -96,7 +96,7 @@ struct ContentView: View {
     }
 
     private var minimumWindowWidth: CGFloat {
-        sidebarVisible ? 1080 : 1040
+        sidebarVisible ? 1060 : 940
     }
 
     private var galleryLayoutBinding: Binding<GalleryLayoutMode> {

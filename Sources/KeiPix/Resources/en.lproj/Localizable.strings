@@ -1,7 +1,12 @@
 "Explore" = "Explore";
+"Works" = "Works";
+"Illustrations" = "Illustrations";
+"Manga" = "Manga";
 "Search" = "Search";
 "Ranking" = "Ranking";
+"Manga Ranking" = "Manga Ranking";
 "Bookmarks" = "Bookmarks";
+"Library" = "Library";
 "Following" = "Following";
 "Login" = "Login";
 "Logout" = "Logout";
@@ -53,6 +58,9 @@
 "Daily" = "Daily";
 "Weekly" = "Weekly";
 "Monthly" = "Monthly";
+"Daily Manga" = "Daily Manga";
+"Weekly Manga" = "Weekly Manga";
+"Monthly Manga" = "Monthly Manga";
 "Details" = "Details";
 "Tags" = "Tags";
 "Description" = "Description";

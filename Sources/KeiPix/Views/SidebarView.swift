@@ -11,25 +11,16 @@ struct SidebarView: View {
                 }
             }
 
-            Section(L10n.explore) {
-                sidebarRow(.explore)
-                sidebarRow(.search)
-            }
-
-            Section(L10n.ranking) {
-                sidebarRow(.rankingDaily)
-                sidebarRow(.rankingWeekly)
-                sidebarRow(.rankingMonthly)
-            }
-
-            Section(L10n.bookmarks) {
-                sidebarRow(.publicBookmarks)
-                sidebarRow(.privateBookmarks)
-                sidebarRow(.following)
+            ForEach(PixivRoute.sidebarSections) { section in
+                Section(section.title) {
+                    ForEach(section.routes) { route in
+                        sidebarRow(route)
+                    }
+                }
             }
         }
         .listStyle(.sidebar)
-        .navigationSplitViewColumnWidth(min: 220, ideal: 236, max: 270)
+        .navigationSplitViewColumnWidth(min: 196, ideal: 216, max: 248)
         .onChange(of: store.selectedRoute) { _, newValue in
             store.select(newValue)
         }
@@ -42,8 +33,10 @@ struct SidebarView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
         } icon: {
             Image(systemName: route.systemImage)
+                .frame(width: 16)
         }
             .tag(route)
+            .help(route.title)
     }
 }
 

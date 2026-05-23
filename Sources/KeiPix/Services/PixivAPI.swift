@@ -103,6 +103,14 @@ actor PixivAPI {
         ])
     }
 
+    func recommendedMangas() async throws -> PixivFeedResponse {
+        try await requestFeed(path: "/v1/manga/recommended", query: [
+            "filter": "for_android",
+            "include_ranking_illusts": "true",
+            "include_privacy_policy": "true"
+        ])
+    }
+
     func ranking(mode: String) async throws -> PixivFeedResponse {
         try await requestFeed(path: "/v1/illust/ranking", query: [
             "filter": "for_android",

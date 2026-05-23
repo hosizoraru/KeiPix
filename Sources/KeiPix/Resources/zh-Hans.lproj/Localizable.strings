@@ -1,7 +1,12 @@
 "Explore" = "发现";
+"Works" = "作品";
+"Illustrations" = "插画";
+"Manga" = "漫画";
 "Search" = "搜索";
 "Ranking" = "排行榜";
+"Manga Ranking" = "漫画榜";
 "Bookmarks" = "收藏";
+"Library" = "书架";
 "Following" = "关注";
 "Login" = "登录";
 "Logout" = "退出登录";
@@ -53,6 +58,9 @@
 "Daily" = "日榜";
 "Weekly" = "周榜";
 "Monthly" = "月榜";
+"Daily Manga" = "漫画日榜";
+"Weekly Manga" = "漫画周榜";
+"Monthly Manga" = "漫画月榜";
 "Details" = "详情";
 "Tags" = "标签";
 "Description" = "简介";

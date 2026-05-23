@@ -6,7 +6,7 @@ import Observation
 @Observable
 final class KeiPixStore {
     var session: PixivSession?
-    var selectedRoute: PixivRoute = .explore
+    var selectedRoute: PixivRoute = .illustrations
     var artworks: [PixivArtwork] = []
     var selectedArtwork: PixivArtwork?
     var searchText = ""
@@ -54,7 +54,7 @@ final class KeiPixStore {
         do {
             session = try await api.login(code: code)
             isLoginPresented = false
-            selectedRoute = .explore
+            selectedRoute = .illustrations
             await reloadCurrentFeed()
         } catch {
             errorMessage = error.localizedDescription
@@ -189,8 +189,10 @@ final class KeiPixStore {
 
     private func loadFeed(for route: PixivRoute) async throws -> PixivFeedResponse {
         switch route {
-        case .explore:
+        case .illustrations:
             return try await api.recommendedIllusts()
+        case .mangaRecommended:
+            return try await api.recommendedMangas()
         case .search:
             let keyword = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
             if keyword.isEmpty {
@@ -203,6 +205,12 @@ final class KeiPixStore {
             return try await api.ranking(mode: "week")
         case .rankingMonthly:
             return try await api.ranking(mode: "month")
+        case .mangaRankingDaily:
+            return try await api.ranking(mode: "day_manga")
+        case .mangaRankingWeekly:
+            return try await api.ranking(mode: "week_manga")
+        case .mangaRankingMonthly:
+            return try await api.ranking(mode: "month_manga")
         case .publicBookmarks:
             guard let userID = session?.user.id else { throw PixivAPIError.missingSession }
             return try await api.bookmarks(restrict: "public", userID: userID)
