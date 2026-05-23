@@ -8,8 +8,10 @@ struct ArtworkDetailView: View {
             if let artwork = store.selectedArtwork {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 16) {
-                        RemoteImageView(url: store.useOriginalImagesInDetail ? artwork.originalURL : artwork.detailURL)
+                        RemoteImageView(url: store.useOriginalImagesInDetail ? artwork.originalURL : artwork.detailURL, contentMode: .fit)
+                            .frame(maxHeight: 460)
                             .aspectRatio(artwork.aspectRatio, contentMode: .fit)
+                            .contentShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
                             .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
                             .shadow(radius: 16, y: 8)
 
@@ -25,6 +27,8 @@ struct ArtworkDetailView: View {
                         }
 
                         TagCloud(tags: artwork.tags)
+
+                        DetailMetadata(artwork: artwork)
                     }
                     .padding(18)
                 }
@@ -33,6 +37,35 @@ struct ArtworkDetailView: View {
                 EmptyStateView(title: L10n.noArtworkTitle, subtitle: L10n.noArtworkSubtitle, systemImage: "sidebar.trailing")
             }
         }
+    }
+}
+
+private struct DetailMetadata: View {
+    let artwork: PixivArtwork
+
+    var body: some View {
+        Grid(alignment: .leading, horizontalSpacing: 16, verticalSpacing: 8) {
+            GridRow {
+                Text(L10n.artworkID)
+                    .foregroundStyle(.secondary)
+                Text("\(artwork.id)")
+                    .textSelection(.enabled)
+            }
+            GridRow {
+                Text(L10n.creatorID)
+                    .foregroundStyle(.secondary)
+                Text("\(artwork.user.id)")
+                    .textSelection(.enabled)
+            }
+            GridRow {
+                Text(L10n.created)
+                    .foregroundStyle(.secondary)
+                Text(artwork.createDate.formatted(date: .abbreviated, time: .shortened))
+            }
+        }
+        .font(.caption)
+        .cardPadding()
+        .keiGlass()
     }
 }
 

@@ -3,11 +3,13 @@ import SwiftUI
 struct ArtworkCardView: View {
     let artwork: PixivArtwork
     let isSelected: Bool
+    let isCompact: Bool
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: isCompact ? 7 : 10) {
             ZStack(alignment: .topTrailing) {
                 RemoteImageView(url: artwork.thumbnailURL)
+                    .frame(height: imageHeight)
                     .aspectRatio(artwork.aspectRatio, contentMode: .fit)
                     .frame(maxWidth: .infinity)
                     .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
@@ -24,8 +26,8 @@ struct ArtworkCardView: View {
 
             VStack(alignment: .leading, spacing: 5) {
                 Text(artwork.title)
-                    .font(.headline)
-                    .lineLimit(2)
+                    .font(isCompact ? .subheadline.weight(.semibold) : .headline)
+                    .lineLimit(isCompact ? 1 : 2)
                 Text(artwork.user.name)
                     .font(.caption)
                     .foregroundStyle(.secondary)
@@ -49,5 +51,9 @@ struct ArtworkCardView: View {
             RoundedRectangle(cornerRadius: 20, style: .continuous)
                 .stroke(isSelected ? Color.accentColor : .clear, lineWidth: 2)
         }
+    }
+
+    private var imageHeight: CGFloat {
+        isCompact ? 150 : 210
     }
 }

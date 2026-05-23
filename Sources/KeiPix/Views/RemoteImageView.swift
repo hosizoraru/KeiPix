@@ -3,6 +3,7 @@ import SwiftUI
 
 struct RemoteImageView: View {
     let url: URL?
+    var contentMode: ContentMode = .fill
     @State private var image: NSImage?
     @State private var failed = false
 
@@ -11,7 +12,7 @@ struct RemoteImageView: View {
             if let image {
                 Image(nsImage: image)
                     .resizable()
-                    .scaledToFill()
+                    .aspectRatio(contentMode: contentMode)
             } else {
                 Rectangle()
                     .fill(.quaternary)

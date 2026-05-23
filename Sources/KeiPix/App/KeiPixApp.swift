@@ -9,6 +9,7 @@ struct KeiPixApp: App {
         WindowGroup("KeiPix", id: "main") {
             ContentView(store: store)
                 .frame(minWidth: 1040, minHeight: 700)
+                .environment(\.locale, store.appLanguage.locale ?? .current)
         }
         .commands {
             CommandGroup(after: .newItem) {
@@ -21,6 +22,7 @@ struct KeiPixApp: App {
 
         Settings {
             SettingsView(store: store)
+                .environment(\.locale, store.appLanguage.locale ?? .current)
         }
     }
 }

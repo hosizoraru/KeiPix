@@ -18,6 +18,7 @@ enum KeychainTokenStoreError: LocalizedError {
 struct KeychainTokenStore: Sendable {
     private let service = "com.keipix.client"
     private let account = "pixiv-session"
+    private let mirror = SessionMirrorStore()
 
     func load() throws -> PixivSession? {
         var query = baseQuery
@@ -27,21 +28,28 @@ struct KeychainTokenStore: Sendable {
         var item: CFTypeRef?
         let status = SecItemCopyMatching(query as CFDictionary, &item)
         if status == errSecItemNotFound {
-            return nil
+            return try mirror.load()
         }
         guard status == errSecSuccess else {
-            throw KeychainTokenStoreError.keychain(status)
+            return try mirror.load()
         }
         guard let data = item as? Data else {
-            throw KeychainTokenStoreError.decodeFailed
+            return try mirror.load()
         }
-        return try JSONDecoder().decode(PixivSession.self, from: data)
+        do {
+            let session = try JSONDecoder().decode(PixivSession.self, from: data)
+            try mirror.save(session)
+            return session
+        } catch {
+            return try mirror.load()
+        }
     }
 
     func save(_ session: PixivSession) throws {
         guard let data = try? JSONEncoder().encode(session) else {
             throw KeychainTokenStoreError.encodeFailed
         }
+        try mirror.save(session)
 
         let update: [String: Any] = [
             kSecValueData as String: data
@@ -64,6 +72,7 @@ struct KeychainTokenStore: Sendable {
     }
 
     func delete() throws {
+        try mirror.delete()
         let status = SecItemDelete(baseQuery as CFDictionary)
         if status == errSecSuccess || status == errSecItemNotFound {
             return
@@ -77,5 +86,39 @@ struct KeychainTokenStore: Sendable {
             kSecAttrService as String: service,
             kSecAttrAccount as String: account
         ]
+    }
+}
+
+private struct SessionMirrorStore: Sendable {
+    private var fileURL: URL {
+        URL.applicationSupportDirectory
+            .appending(path: "KeiPix", directoryHint: .isDirectory)
+            .appending(path: "pixiv-session.json")
+    }
+
+    func load() throws -> PixivSession? {
+        let url = fileURL
+        guard FileManager.default.fileExists(atPath: url.path) else {
+            return nil
+        }
+        let data = try Data(contentsOf: url)
+        return try JSONDecoder().decode(PixivSession.self, from: data)
+    }
+
+    func save(_ session: PixivSession) throws {
+        let url = fileURL
+        try FileManager.default.createDirectory(
+            at: url.deletingLastPathComponent(),
+            withIntermediateDirectories: true
+        )
+        let data = try JSONEncoder().encode(session)
+        try data.write(to: url, options: [.atomic, .completeFileProtectionUnlessOpen])
+    }
+
+    func delete() throws {
+        let url = fileURL
+        if FileManager.default.fileExists(atPath: url.path) {
+            try FileManager.default.removeItem(at: url)
+        }
     }
 }

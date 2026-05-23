@@ -3,10 +3,6 @@ import SwiftUI
 struct GalleryView: View {
     @Bindable var store: KeiPixStore
 
-    private let columns = [
-        GridItem(.adaptive(minimum: 190, maximum: 260), spacing: 14)
-    ]
-
     var body: some View {
         Group {
             if store.session == nil {
@@ -18,11 +14,16 @@ struct GalleryView: View {
                 EmptyStateView(title: L10n.noArtworkTitle, subtitle: L10n.noArtworkSubtitle, systemImage: "photo.on.rectangle.angled")
             } else {
                 ScrollView {
+                    FeedHeaderView(store: store)
+                        .padding(.horizontal, 18)
+                        .padding(.top, 18)
+
                     LazyVGrid(columns: columns, spacing: 14) {
                         ForEach(store.artworks) { artwork in
                             ArtworkCardView(
                                 artwork: artwork,
-                                isSelected: store.selectedArtwork?.id == artwork.id
+                                isSelected: store.selectedArtwork?.id == artwork.id,
+                                isCompact: store.compactArtworkCards
                             )
                             .onTapGesture {
                                 store.selectedArtwork = artwork
@@ -52,11 +53,47 @@ struct GalleryView: View {
                             .gridCellColumns(2)
                         }
                     }
-                    .padding(18)
+                    .padding(.horizontal, 18)
+                    .padding(.bottom, 18)
                 }
             }
         }
         .navigationTitle(store.selectedRoute.title)
+    }
+
+    private var columns: [GridItem] {
+        [
+            GridItem(.adaptive(minimum: store.compactArtworkCards ? 160 : 190, maximum: store.compactArtworkCards ? 220 : 270), spacing: 14)
+        ]
+    }
+}
+
+private struct FeedHeaderView: View {
+    @Bindable var store: KeiPixStore
+
+    var body: some View {
+        HStack(spacing: 12) {
+            VStack(alignment: .leading, spacing: 3) {
+                Text(store.selectedRoute.title)
+                    .font(.title2.weight(.semibold))
+                Text("\(store.artworks.count.formatted()) \(L10n.results) · \(store.hasNextPage ? L10n.nextPageAvailable : L10n.noMorePages)")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            Spacer()
+
+            if store.selectedRoute == .search {
+                Button {
+                    Task { await store.runSearch() }
+                } label: {
+                    Label(L10n.search, systemImage: "magnifyingglass")
+                }
+                .buttonStyle(.bordered)
+            }
+        }
+        .cardPadding()
+        .keiGlass(18)
     }
 }
 

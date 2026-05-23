@@ -27,8 +27,8 @@ mkdir -p "$APP_MACOS" "$APP_RESOURCES"
 cp "$BUILD_BINARY" "$APP_BINARY"
 chmod +x "$APP_BINARY"
 
-if [ -d "$BUILD_DIR/KeiPix_KeiPix.resources" ]; then
-  cp -R "$BUILD_DIR/KeiPix_KeiPix.resources/." "$APP_RESOURCES/"
+if [ -d "$BUILD_DIR/KeiPix_KeiPix.bundle" ]; then
+  cp -R "$BUILD_DIR/KeiPix_KeiPix.bundle" "$APP_BUNDLE/"
 fi
 
 cat >"$INFO_PLIST" <<PLIST
@@ -40,10 +40,17 @@ cat >"$INFO_PLIST" <<PLIST
   <string>$APP_NAME</string>
   <key>CFBundleIdentifier</key>
   <string>$BUNDLE_ID</string>
+  <key>CFBundleDevelopmentRegion</key>
+  <string>en</string>
   <key>CFBundleName</key>
   <string>$APP_NAME</string>
   <key>CFBundlePackageType</key>
   <string>APPL</string>
+  <key>CFBundleLocalizations</key>
+  <array>
+    <string>en</string>
+    <string>zh-Hans</string>
+  </array>
   <key>LSMinimumSystemVersion</key>
   <string>$MIN_SYSTEM_VERSION</string>
   <key>NSHighResolutionCapable</key>

@@ -14,7 +14,10 @@ final class KeiPixStore {
     var isLoading = false
     var isLoadingMore = false
     var isLoginPresented = false
+    var appLanguage = UserDefaults.standard.string(forKey: "appLanguage")
+        .flatMap(AppLanguage.init(rawValue:)) ?? .automatic
     var useOriginalImagesInDetail = UserDefaults.standard.bool(forKey: "useOriginalImagesInDetail")
+    var compactArtworkCards = UserDefaults.standard.bool(forKey: "compactArtworkCards")
     var hasNextPage: Bool { nextURL != nil }
 
     private let api = PixivAPI()
@@ -141,6 +144,16 @@ final class KeiPixStore {
     func setUseOriginalImagesInDetail(_ value: Bool) {
         useOriginalImagesInDetail = value
         UserDefaults.standard.set(value, forKey: "useOriginalImagesInDetail")
+    }
+
+    func setAppLanguage(_ language: AppLanguage) {
+        appLanguage = language
+        UserDefaults.standard.set(language.rawValue, forKey: "appLanguage")
+    }
+
+    func setCompactArtworkCards(_ value: Bool) {
+        compactArtworkCards = value
+        UserDefaults.standard.set(value, forKey: "compactArtworkCards")
     }
 
     private func loadFeed(for route: PixivRoute) async throws -> PixivFeedResponse {

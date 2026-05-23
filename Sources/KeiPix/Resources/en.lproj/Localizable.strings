@@ -13,8 +13,16 @@
 "Follow" = "Follow";
 "Unfollow" = "Unfollow";
 "Settings" = "Settings";
+"Language" = "Language";
+"Automatic" = "Automatic";
+"Simplified Chinese" = "Simplified Chinese";
+"English" = "English";
 "Appearance" = "Appearance";
 "Use original images in detail" = "Use original images in detail";
+"Layout" = "Layout";
+"Compact artwork cards" = "Compact artwork cards";
+"Account" = "Account";
+"Profile" = "Profile";
 "Login to Pixiv" = "Login to Pixiv";
 "Complete login in the embedded Pixiv page. KeiPix captures only the authorization code." = "Complete login in the embedded Pixiv page. KeiPix captures only the authorization code.";
 "Sign in to load Pixiv feeds" = "Sign in to load Pixiv feeds";
@@ -36,3 +44,9 @@
 "Saves" = "Saves";
 "Pages" = "Pages";
 "AI generated" = "AI generated";
+"Created" = "Created";
+"Artwork ID" = "Artwork ID";
+"Creator ID" = "Creator ID";
+"Results" = "results";
+"More available" = "More available";
+"End of feed" = "End of feed";

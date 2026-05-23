@@ -16,8 +16,16 @@ enum L10n {
     static var follow: String { text("Follow") }
     static var unfollow: String { text("Unfollow") }
     static var settings: String { text("Settings") }
+    static var language: String { text("Language") }
+    static var automatic: String { text("Automatic") }
+    static var simplifiedChinese: String { text("Simplified Chinese") }
+    static var english: String { text("English") }
     static var appearance: String { text("Appearance") }
     static var useOriginalImages: String { text("Use original images in detail") }
+    static var layout: String { text("Layout") }
+    static var compactCards: String { text("Compact artwork cards") }
+    static var account: String { text("Account") }
+    static var profile: String { text("Profile") }
     static var loginTitle: String { text("Login to Pixiv") }
     static var loginHint: String { text("Complete login in the embedded Pixiv page. KeiPix captures only the authorization code.") }
     static var signedOutTitle: String { text("Sign in to load Pixiv feeds") }
@@ -39,8 +47,21 @@ enum L10n {
     static var saves: String { text("Saves") }
     static var pages: String { text("Pages") }
     static var aiGenerated: String { text("AI generated") }
+    static var created: String { text("Created") }
+    static var artworkID: String { text("Artwork ID") }
+    static var creatorID: String { text("Creator ID") }
+    static var results: String { text("Results") }
+    static var nextPageAvailable: String { text("More available") }
+    static var noMorePages: String { text("End of feed") }
 
     static func text(_ key: String) -> String {
-        String(localized: String.LocalizationValue(key), bundle: .module)
+        let selected = UserDefaults.standard.string(forKey: "appLanguage")
+            .flatMap(AppLanguage.init(rawValue:)) ?? .automatic
+        if let lprojName = selected.lprojName,
+           let path = Bundle.module.path(forResource: lprojName.lowercased(), ofType: "lproj") ?? Bundle.module.path(forResource: lprojName, ofType: "lproj"),
+           let bundle = Bundle(path: path) {
+            return bundle.localizedString(forKey: key, value: key, table: nil)
+        }
+        return Bundle.module.localizedString(forKey: key, value: key, table: nil)
     }
 }

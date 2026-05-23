@@ -29,6 +29,7 @@ struct SidebarView: View {
             }
         }
         .listStyle(.sidebar)
+        .navigationSplitViewColumnWidth(min: 210, ideal: 230, max: 280)
         .onChange(of: store.selectedRoute) { _, newValue in
             store.select(newValue)
         }
@@ -80,6 +81,7 @@ private struct UserHeader: View {
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
             }
+            Spacer(minLength: 0)
         }
         .padding(.vertical, 4)
     }
