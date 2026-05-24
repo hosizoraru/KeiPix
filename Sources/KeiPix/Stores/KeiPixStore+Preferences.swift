@@ -104,11 +104,24 @@ extension KeiPixStore {
     func setSearchMinimumBookmarks(_ value: SearchMinimumBookmarks) {
         searchMinimumBookmarks = value
         UserDefaults.standard.set(value.rawValue, forKey: "searchMinimumBookmarks")
+        applyContentFilters()
+    }
+
+    func setSearchMaximumBookmarks(_ value: SearchMaximumBookmarks) {
+        searchMaximumBookmarks = value
+        UserDefaults.standard.set(value.rawValue, forKey: "searchMaximumBookmarks")
+        applyContentFilters()
     }
 
     func setSearchArtworkType(_ value: SearchArtworkType) {
         searchArtworkType = value
         UserDefaults.standard.set(value.rawValue, forKey: "searchArtworkType")
+        applyContentFilters()
+    }
+
+    func setSearchAIFilter(_ value: SearchAIFilter) {
+        searchAIFilter = value
+        UserDefaults.standard.set(value.rawValue, forKey: "searchAIFilter")
         applyContentFilters()
     }
 

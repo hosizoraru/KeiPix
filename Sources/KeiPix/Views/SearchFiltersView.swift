@@ -52,7 +52,9 @@ private struct SearchFiltersView: View {
                 filterPicker(L10n.ageLimit, selection: ageLimitBinding, options: SearchAgeLimit.allCases)
                 filterPicker(L10n.dateRange, selection: dateRangeBinding, options: SearchDateRange.allCases)
                 filterPicker(L10n.minimumBookmarks, selection: minimumBookmarksBinding, options: SearchMinimumBookmarks.allCases)
+                filterPicker(L10n.maximumBookmarks, selection: maximumBookmarksBinding, options: SearchMaximumBookmarks.allCases)
                 filterPicker(L10n.workType, selection: artworkTypeBinding, options: SearchArtworkType.allCases)
+                filterPicker(L10n.aiFilter, selection: aiFilterBinding, options: SearchAIFilter.allCases)
                 filterPicker(L10n.ugoiraFilter, selection: ugoiraFilterBinding, options: SearchUgoiraFilter.allCases)
             }
 
@@ -83,7 +85,7 @@ private struct SearchFiltersView: View {
             }
         }
         .padding(18)
-        .frame(width: 360)
+        .frame(width: 390)
     }
 
     private func filterPicker<Option: CaseIterable & Identifiable>(
@@ -154,11 +156,27 @@ private struct SearchFiltersView: View {
         }
     }
 
+    private var maximumBookmarksBinding: Binding<SearchMaximumBookmarks> {
+        Binding {
+            store.searchMaximumBookmarks
+        } set: { value in
+            store.setSearchMaximumBookmarks(value)
+        }
+    }
+
     private var artworkTypeBinding: Binding<SearchArtworkType> {
         Binding {
             store.searchArtworkType
         } set: { value in
             store.setSearchArtworkType(value)
+        }
+    }
+
+    private var aiFilterBinding: Binding<SearchAIFilter> {
+        Binding {
+            store.searchAIFilter
+        } set: { value in
+            store.setSearchAIFilter(value)
         }
     }
 

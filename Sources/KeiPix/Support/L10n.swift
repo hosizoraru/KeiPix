@@ -410,9 +410,14 @@ enum L10n {
     static var pastMonth: String { text("Past Month") }
     static var pastYear: String { text("Past Year") }
     static var minimumBookmarks: String { text("Minimum Bookmarks") }
+    static var maximumBookmarks: String { text("Maximum Bookmarks") }
     static var noMinimum: String { text("No minimum") }
+    static var noMaximum: String { text("No maximum") }
     static var workType: String { text("Work Type") }
     static var allWorks: String { text("All Works") }
+    static var aiFilter: String { text("AI Filter") }
+    static var excludeAI: String { text("Exclude AI") }
+    static var onlyAI: String { text("Only AI") }
     static var ugoiraFilter: String { text("Ugoira Filter") }
     static var all: String { text("All") }
     static var onlyUgoira: String { text("Only Ugoira") }

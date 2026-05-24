@@ -119,7 +119,9 @@ extension KeiPixStore {
         setSearchAgeLimit(options.ageLimit)
         setSearchDateRange(options.dateRange)
         setSearchMinimumBookmarks(options.minimumBookmarks)
+        setSearchMaximumBookmarks(options.maximumBookmarks)
         setSearchArtworkType(options.artworkType)
+        setSearchAIFilter(options.aiFilter)
         setSearchUgoiraFilter(options.ugoiraFilter)
     }
 }

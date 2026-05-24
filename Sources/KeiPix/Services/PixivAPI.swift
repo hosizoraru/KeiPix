@@ -361,6 +361,9 @@ actor PixivAPI {
         if options.minimumBookmarks.rawValue > 0 {
             query["bookmark_num_min"] = "\(options.minimumBookmarks.rawValue)"
         }
+        if options.maximumBookmarks.rawValue > 0 {
+            query["bookmark_num_max"] = "\(options.maximumBookmarks.rawValue)"
+        }
         if let startDate = options.dateRange.startDate() {
             query["start_date"] = Self.searchDateFormatter.string(from: startDate)
             query["end_date"] = Self.searchDateFormatter.string(from: Date())
@@ -387,13 +390,17 @@ actor PixivAPI {
     }
 
     private func searchQuery(keyword: String, options: SearchOptions) -> [String: String] {
-        [
+        var query = [
             "filter": "for_android",
             "include_translated_tag_results": "true",
             "merge_plain_keyword_results": "true",
             "word": (keyword + options.ageLimit.keywordSuffix).trimmingCharacters(in: .whitespacesAndNewlines),
             "search_target": options.matchType.apiValue
         ]
+        if let searchAIType = options.aiFilter.apiValue {
+            query["search_ai_type"] = searchAIType
+        }
+        return query
     }
 
     func trendingIllustTags() async throws -> PixivTrendingTagResponse {

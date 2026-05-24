@@ -415,9 +415,14 @@
 "Past Month" = "过去一月";
 "Past Year" = "过去一年";
 "Minimum Bookmarks" = "最低收藏";
+"Maximum Bookmarks" = "最高收藏";
 "No minimum" = "不限制";
+"No maximum" = "不限制";
 "Work Type" = "作品类型";
 "All Works" = "全部作品";
+"AI Filter" = "AI 过滤";
+"Exclude AI" = "排除 AI";
+"Only AI" = "仅 AI";
 "Ugoira Filter" = "动图过滤";
 "All" = "全部";
 "Only Ugoira" = "仅动图";

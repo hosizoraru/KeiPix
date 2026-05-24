@@ -415,9 +415,14 @@
 "Past Month" = "Past Month";
 "Past Year" = "Past Year";
 "Minimum Bookmarks" = "Minimum Bookmarks";
+"Maximum Bookmarks" = "Maximum Bookmarks";
 "No minimum" = "No minimum";
+"No maximum" = "No maximum";
 "Work Type" = "Work Type";
 "All Works" = "All Works";
+"AI Filter" = "AI Filter";
+"Exclude AI" = "Exclude AI";
+"Only AI" = "Only AI";
 "Ugoira Filter" = "Ugoira Filter";
 "All" = "All";
 "Only Ugoira" = "Only Ugoira";

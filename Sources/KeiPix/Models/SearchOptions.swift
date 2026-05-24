@@ -149,6 +149,21 @@ enum SearchMinimumBookmarks: Int, CaseIterable, Identifiable, Codable, SearchFil
     }
 }
 
+enum SearchMaximumBookmarks: Int, CaseIterable, Identifiable, Codable, SearchFilterOptionTitle {
+    case none = 0
+    case oneHundred = 100
+    case fiveHundred = 500
+    case oneThousand = 1000
+    case fiveThousand = 5000
+    case tenThousand = 10000
+
+    var id: Int { rawValue }
+
+    var title: String {
+        rawValue == 0 ? L10n.noMaximum : "\(rawValue.formatted())"
+    }
+}
+
 enum SearchArtworkType: String, CaseIterable, Identifiable, Codable, SearchFilterOptionTitle {
     case all
     case illustrations
@@ -187,13 +202,45 @@ enum SearchUgoiraFilter: String, CaseIterable, Identifiable, Codable, SearchFilt
     }
 }
 
+enum SearchAIFilter: String, CaseIterable, Identifiable, Codable, SearchFilterOptionTitle {
+    case all
+    case excludeAI
+    case onlyAI
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .all:
+            L10n.all
+        case .excludeAI:
+            L10n.excludeAI
+        case .onlyAI:
+            L10n.onlyAI
+        }
+    }
+
+    var apiValue: String? {
+        switch self {
+        case .all:
+            nil
+        case .excludeAI:
+            "1"
+        case .onlyAI:
+            "2"
+        }
+    }
+}
+
 struct SearchOptions: Codable, Hashable, Sendable {
     var matchType: SearchMatchType
     var sort: SearchSort
     var ageLimit: SearchAgeLimit
     var dateRange: SearchDateRange
     var minimumBookmarks: SearchMinimumBookmarks
+    var maximumBookmarks: SearchMaximumBookmarks
     var artworkType: SearchArtworkType
+    var aiFilter: SearchAIFilter
     var ugoiraFilter: SearchUgoiraFilter
 
     static let defaultValue = SearchOptions(
@@ -202,9 +249,58 @@ struct SearchOptions: Codable, Hashable, Sendable {
         ageLimit: .unlimited,
         dateRange: .anytime,
         minimumBookmarks: .none,
+        maximumBookmarks: .none,
         artworkType: .all,
+        aiFilter: .all,
         ugoiraFilter: .all
     )
+
+    init(
+        matchType: SearchMatchType,
+        sort: SearchSort,
+        ageLimit: SearchAgeLimit,
+        dateRange: SearchDateRange,
+        minimumBookmarks: SearchMinimumBookmarks,
+        maximumBookmarks: SearchMaximumBookmarks,
+        artworkType: SearchArtworkType,
+        aiFilter: SearchAIFilter,
+        ugoiraFilter: SearchUgoiraFilter
+    ) {
+        self.matchType = matchType
+        self.sort = sort
+        self.ageLimit = ageLimit
+        self.dateRange = dateRange
+        self.minimumBookmarks = minimumBookmarks
+        self.maximumBookmarks = maximumBookmarks
+        self.artworkType = artworkType
+        self.aiFilter = aiFilter
+        self.ugoiraFilter = ugoiraFilter
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case matchType
+        case sort
+        case ageLimit
+        case dateRange
+        case minimumBookmarks
+        case maximumBookmarks
+        case artworkType
+        case aiFilter
+        case ugoiraFilter
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        matchType = try container.decodeIfPresent(SearchMatchType.self, forKey: .matchType) ?? .partialTags
+        sort = try container.decodeIfPresent(SearchSort.self, forKey: .sort) ?? .dateDescending
+        ageLimit = try container.decodeIfPresent(SearchAgeLimit.self, forKey: .ageLimit) ?? .unlimited
+        dateRange = try container.decodeIfPresent(SearchDateRange.self, forKey: .dateRange) ?? .anytime
+        minimumBookmarks = try container.decodeIfPresent(SearchMinimumBookmarks.self, forKey: .minimumBookmarks) ?? .none
+        maximumBookmarks = try container.decodeIfPresent(SearchMaximumBookmarks.self, forKey: .maximumBookmarks) ?? .none
+        artworkType = try container.decodeIfPresent(SearchArtworkType.self, forKey: .artworkType) ?? .all
+        aiFilter = try container.decodeIfPresent(SearchAIFilter.self, forKey: .aiFilter) ?? .all
+        ugoiraFilter = try container.decodeIfPresent(SearchUgoiraFilter.self, forKey: .ugoiraFilter) ?? .all
+    }
 
     var isDefault: Bool {
         self == Self.defaultValue
@@ -217,7 +313,9 @@ struct SearchOptions: Codable, Hashable, Sendable {
             ageLimit.title,
             dateRange.title,
             minimumBookmarks.title,
+            maximumBookmarks.title,
             artworkType.title,
+            aiFilter.title,
             ugoiraFilter.title
         ].joined(separator: " · ")
     }

@@ -62,7 +62,11 @@ final class KeiPixStore {
     var searchMinimumBookmarks = SearchMinimumBookmarks(
         rawValue: UserDefaults.standard.integer(forKey: "searchMinimumBookmarks")
     ) ?? .none
+    var searchMaximumBookmarks = SearchMaximumBookmarks(
+        rawValue: UserDefaults.standard.integer(forKey: "searchMaximumBookmarks")
+    ) ?? .none
     var searchArtworkType = KeiPixStore.loadEnum("searchArtworkType", defaultValue: SearchArtworkType.all)
+    var searchAIFilter = KeiPixStore.loadEnum("searchAIFilter", defaultValue: SearchAIFilter.all)
     var searchUgoiraFilter = KeiPixStore.loadEnum("searchUgoiraFilter", defaultValue: SearchUgoiraFilter.all)
     var useRankingDate = UserDefaults.standard.object(forKey: "useRankingDate") as? Bool ?? false
     var rankingDate = KeiPixStore.loadRankingDate()
@@ -879,7 +883,9 @@ final class KeiPixStore {
             ageLimit: searchAgeLimit,
             dateRange: searchDateRange,
             minimumBookmarks: searchMinimumBookmarks,
+            maximumBookmarks: searchMaximumBookmarks,
             artworkType: searchArtworkType,
+            aiFilter: searchAIFilter,
             ugoiraFilter: searchUgoiraFilter
         )
     }
@@ -890,7 +896,9 @@ final class KeiPixStore {
         setSearchAgeLimit(.unlimited)
         setSearchDateRange(.anytime)
         setSearchMinimumBookmarks(.none)
+        setSearchMaximumBookmarks(.none)
         setSearchArtworkType(.all)
+        setSearchAIFilter(.all)
         setSearchUgoiraFilter(.all)
     }
 
@@ -1104,6 +1112,24 @@ final class KeiPixStore {
                 }
             case .manga:
                 if artwork.type != "manga" {
+                    return false
+                }
+            }
+            if searchMinimumBookmarks.rawValue > 0, artwork.totalBookmarks < searchMinimumBookmarks.rawValue {
+                return false
+            }
+            if searchMaximumBookmarks.rawValue > 0, artwork.totalBookmarks > searchMaximumBookmarks.rawValue {
+                return false
+            }
+            switch searchAIFilter {
+            case .all:
+                break
+            case .excludeAI:
+                if artwork.isAI {
+                    return false
+                }
+            case .onlyAI:
+                if artwork.isAI == false {
                     return false
                 }
             }
