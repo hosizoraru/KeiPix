@@ -105,6 +105,9 @@ private struct GalleryContentGrid: View {
             }
             if let url = artwork.pixivURL {
                 Link(L10n.openInPixiv, destination: url)
+                Button(L10n.copyLink) {
+                    PasteboardWriter.copy(url.absoluteString)
+                }
             }
         }
     }
@@ -165,6 +168,9 @@ private struct MasonryArtworkGrid: View {
                     }
                     if let url = artwork.pixivURL {
                         Link(L10n.openInPixiv, destination: url)
+                        Button(L10n.copyLink) {
+                            PasteboardWriter.copy(url.absoluteString)
+                        }
                     }
                 }
             }
