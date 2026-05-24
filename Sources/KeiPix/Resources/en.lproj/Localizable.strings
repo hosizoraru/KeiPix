@@ -481,6 +481,8 @@
 "Delete from Muted Content" = "Delete from Muted Content";
 "Sync from Pixiv" = "Sync from Pixiv";
 "Upload to Pixiv" = "Upload to Pixiv";
+"Sync muted content from Pixiv?" = "Sync muted content from Pixiv?";
+"This imports muted tags and creators from your Pixiv account into this Mac. You can undo the local changes after syncing." = "This imports muted tags and creators from your Pixiv account into this Mac. You can undo the local changes after syncing.";
 "Upload local muted tags and creators to Pixiv?" = "Upload local muted tags and creators to Pixiv?";
 "This adds the local muted tags and creators to your Pixiv account." = "This adds the local muted tags and creators to your Pixiv account.";
 "Export Muted Content" = "Export Muted Content";

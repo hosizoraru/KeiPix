@@ -9,6 +9,7 @@ struct MutedContentView: View {
     @State private var statusMessage: String?
     @State private var statusMessageIsError = false
     @State private var isClearConfirmationPresented = false
+    @State private var isSyncConfirmationPresented = false
     @State private var isUploadConfirmationPresented = false
     @State private var pendingRemoval: MutedContentRemovalAction?
 
@@ -82,6 +83,18 @@ struct MutedContentView: View {
             Button(L10n.cancel, role: .cancel) {}
         } message: {
             Text(L10n.uploadMutedContentConfirmationMessage)
+        }
+        .confirmationDialog(
+            L10n.syncMutedContentConfirmation,
+            isPresented: $isSyncConfirmationPresented,
+            titleVisibility: .visible
+        ) {
+            Button(L10n.syncFromPixiv) {
+                Task { await syncFromPixiv() }
+            }
+            Button(L10n.cancel, role: .cancel) {}
+        } message: {
+            Text(L10n.syncMutedContentConfirmationMessage)
         }
         .confirmationDialog(
             pendingRemoval?.title ?? L10n.deleteFromMutedContent,
@@ -159,7 +172,7 @@ struct MutedContentView: View {
 
             FlowLayout(spacing: 10) {
                 Button {
-                    Task { await syncFromPixiv() }
+                    isSyncConfirmationPresented = true
                 } label: {
                     Label(L10n.syncFromPixiv, systemImage: "arrow.down.circle")
                 }

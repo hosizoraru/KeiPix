@@ -8,6 +8,7 @@ struct SettingsView: View {
     @State private var mutedContentSyncMessageIsError = false
     @State private var restrictedModeMessage: String?
     @State private var isLogoutConfirmationPresented = false
+    @State private var isMutedContentSyncConfirmationPresented = false
     @State private var isMutedContentUploadConfirmationPresented = false
 
     var body: some View {
@@ -99,7 +100,7 @@ struct SettingsView: View {
 
                 FlowLayout(spacing: 8) {
                     Button {
-                        Task { await syncMutedContentFromPixiv() }
+                        isMutedContentSyncConfirmationPresented = true
                     } label: {
                         Label(L10n.syncFromPixiv, systemImage: "arrow.down.circle")
                     }
@@ -281,6 +282,18 @@ struct SettingsView: View {
             Button(L10n.cancel, role: .cancel) {}
         } message: {
             Text(L10n.logoutConfirmation)
+        }
+        .confirmationDialog(
+            L10n.syncMutedContentConfirmation,
+            isPresented: $isMutedContentSyncConfirmationPresented,
+            titleVisibility: .visible
+        ) {
+            Button(L10n.syncFromPixiv) {
+                Task { await syncMutedContentFromPixiv() }
+            }
+            Button(L10n.cancel, role: .cancel) {}
+        } message: {
+            Text(L10n.syncMutedContentConfirmationMessage)
         }
         .confirmationDialog(
             L10n.uploadMutedContentConfirmation,

@@ -496,6 +496,8 @@ enum L10n {
     static var deleteFromMutedContent: String { text("Delete from Muted Content") }
     static var syncFromPixiv: String { text("Sync from Pixiv") }
     static var uploadToPixiv: String { text("Upload to Pixiv") }
+    static var syncMutedContentConfirmation: String { text("Sync muted content from Pixiv?") }
+    static var syncMutedContentConfirmationMessage: String { text("This imports muted tags and creators from your Pixiv account into this Mac. You can undo the local changes after syncing.") }
     static var uploadMutedContentConfirmation: String { text("Upload local muted tags and creators to Pixiv?") }
     static var uploadMutedContentConfirmationMessage: String { text("This adds the local muted tags and creators to your Pixiv account.") }
     static var exportMutedContent: String { text("Export Muted Content") }

@@ -481,6 +481,8 @@
 "Delete from Muted Content" = "从屏蔽内容中删除";
 "Sync from Pixiv" = "从 Pixiv 同步";
 "Upload to Pixiv" = "上传到 Pixiv";
+"Sync muted content from Pixiv?" = "从 Pixiv 同步屏蔽内容？";
+"This imports muted tags and creators from your Pixiv account into this Mac. You can undo the local changes after syncing." = "这会把 Pixiv 账号里的屏蔽标签和创作者导入到这台 Mac。同步后的本地改动可以撤销。";
 "Upload local muted tags and creators to Pixiv?" = "把本地屏蔽标签和创作者上传到 Pixiv？";
 "This adds the local muted tags and creators to your Pixiv account." = "这会把本地屏蔽标签和创作者添加到你的 Pixiv 账号。";
 "Export Muted Content" = "导出屏蔽内容";
