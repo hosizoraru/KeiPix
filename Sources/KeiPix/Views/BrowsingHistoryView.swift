@@ -167,6 +167,9 @@ struct BrowsingHistoryView: View {
                                 },
                                 delete: {
                                     pendingDeleteItem = item
+                                },
+                                copyLink: {
+                                    copyHistoryItemLink(item)
                                 }
                             )
                         }
@@ -319,6 +322,12 @@ struct BrowsingHistoryView: View {
             ? String(format: L10n.loadedPixivHistoryItemsFormat, loadedCount)
             : L10n.noMorePages
     }
+
+    private func copyHistoryItemLink(_ item: LocalArtworkHistoryItem) {
+        guard let url = item.pixivURL else { return }
+        PasteboardWriter.copy(url.absoluteString)
+        actionMessage = L10n.copied
+    }
 }
 
 private enum BrowsingHistorySource: String, CaseIterable, Identifiable {
@@ -341,62 +350,96 @@ private struct LocalHistoryCard: View {
     let showContentBadges: Bool
     let select: () -> Void
     let delete: () -> Void
+    let copyLink: () -> Void
     private let thumbnailHeight: CGFloat = 168
 
     var body: some View {
-        Button(action: select) {
-            VStack(alignment: .leading, spacing: 0) {
-                ZStack(alignment: .topLeading) {
-                    RemoteImageView(url: item.thumbnailURL)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: thumbnailHeight)
-                        .clipped()
+        ZStack(alignment: .topTrailing) {
+            Button(action: select) {
+                cardContent
+                    .contentShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+            }
+            .buttonStyle(.plain)
+            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .frame(maxWidth: .infinity)
+            .overlay {
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .strokeBorder(borderStyle, lineWidth: isSelected ? 2 : 1)
+            }
+            .contextMenu {
+                historyMenuContent
+            }
 
-                    if showContentBadges {
-                        ArtworkContentBadgesView(badges: item.contentBadges, style: .overlay)
-                            .padding(8)
-                    }
+            Menu {
+                historyMenuContent
+            } label: {
+                Label(L10n.moreActions, systemImage: "ellipsis.circle")
+            }
+            .labelStyle(.iconOnly)
+            .buttonStyle(.bordered)
+            .controlSize(.small)
+            .help(L10n.moreActions)
+            .padding(8)
+        }
+    }
+
+    private var cardContent: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            ZStack(alignment: .topLeading) {
+                RemoteImageView(url: item.thumbnailURL)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: thumbnailHeight)
+                    .clipped()
+
+                if showContentBadges {
+                    ArtworkContentBadgesView(badges: item.contentBadges, style: .overlay)
+                        .padding(8)
                 }
-                .frame(maxWidth: .infinity)
-                .frame(height: thumbnailHeight)
-                .clipped()
+            }
+            .frame(maxWidth: .infinity)
+            .frame(height: thumbnailHeight)
+            .clipped()
 
-                VStack(alignment: .leading, spacing: 5) {
-                    Text(item.title)
-                        .font(.callout.weight(.semibold))
-                        .lineLimit(2)
+            VStack(alignment: .leading, spacing: 5) {
+                Text(item.title)
+                    .font(.callout.weight(.semibold))
+                    .lineLimit(2)
 
-                    Text(item.creatorName)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
-
-                    HStack(spacing: 8) {
-                        Label("\(item.pageCount) \(L10n.pages)", systemImage: "square.stack")
-                        Spacer(minLength: 8)
-                        Text(item.viewedAt.formatted(date: .abbreviated, time: .shortened))
-                    }
-                    .font(.caption2)
+                Text(item.creatorName)
+                    .font(.caption)
                     .foregroundStyle(.secondary)
+                    .lineLimit(1)
+
+                HStack(spacing: 8) {
+                    Label("\(item.pageCount) \(L10n.pages)", systemImage: "square.stack")
+                    Spacer(minLength: 8)
+                    Text(item.viewedAt.formatted(date: .abbreviated, time: .shortened))
                 }
-                .padding(10)
+                .font(.caption2)
+                .foregroundStyle(.secondary)
             }
-            .contentShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .padding(10)
         }
-        .buttonStyle(.plain)
-        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-        .frame(maxWidth: .infinity)
-        .overlay {
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .strokeBorder(borderStyle, lineWidth: isSelected ? 2 : 1)
+    }
+
+    @ViewBuilder
+    private var historyMenuContent: some View {
+        if let url = item.pixivURL {
+            Link(destination: url) {
+                Label(L10n.openInPixiv, systemImage: "safari")
+            }
+
+            Button {
+                copyLink()
+            } label: {
+                Label(L10n.copyLink, systemImage: "link")
+            }
         }
-        .contextMenu {
-            Button(role: .destructive, action: delete) {
-                Label(L10n.deleteFromHistory, systemImage: "trash")
-            }
-            if let url = item.pixivURL {
-                Link(L10n.openInPixiv, destination: url)
-            }
+
+        Divider()
+
+        Button(role: .destructive, action: delete) {
+            Label(L10n.deleteFromHistory, systemImage: "trash")
         }
     }
 

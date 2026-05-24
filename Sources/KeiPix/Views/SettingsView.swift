@@ -11,6 +11,7 @@ struct SettingsView: View {
     @State private var isLogoutConfirmationPresented = false
     @State private var isMutedContentSyncConfirmationPresented = false
     @State private var isMutedContentUploadConfirmationPresented = false
+    @State private var isMutedContentImportConfirmationPresented = false
 
     var body: some View {
         Form {
@@ -129,7 +130,7 @@ struct SettingsView: View {
                     .disabled(isSyncingMutedContent || (store.mutedTagList.isEmpty && store.mutedUserList.isEmpty && store.mutedArtworkList.isEmpty))
 
                     Button {
-                        importLocalMutedContent()
+                        isMutedContentImportConfirmationPresented = true
                     } label: {
                         Label(L10n.importMutedContent, systemImage: "square.and.arrow.down")
                     }
@@ -333,6 +334,18 @@ struct SettingsView: View {
             Button(L10n.cancel, role: .cancel) {}
         } message: {
             Text(L10n.uploadMutedContentConfirmationMessage)
+        }
+        .confirmationDialog(
+            L10n.importMutedContentConfirmation,
+            isPresented: $isMutedContentImportConfirmationPresented,
+            titleVisibility: .visible
+        ) {
+            Button(L10n.importMutedContent) {
+                importLocalMutedContent()
+            }
+            Button(L10n.cancel, role: .cancel) {}
+        } message: {
+            Text(L10n.importMutedContentConfirmationMessage)
         }
         .task {
             if store.session != nil, store.restrictedModeEnabled == nil {
