@@ -286,12 +286,24 @@ private struct DownloadQueueHeader: View {
             } label: {
                 Label(L10n.downloadFolder, systemImage: "folder")
             }
+            .labelStyle(.iconOnly)
             .buttonStyle(.bordered)
             .help(downloads.downloadDirectoryPath)
 
-            TextField(L10n.searchDownloads, text: downloadSearchBinding)
-                .textFieldStyle(.roundedBorder)
-                .frame(minWidth: 170, idealWidth: 220, maxWidth: 260)
+            HStack(spacing: 6) {
+                TextField(L10n.searchDownloads, text: downloadSearchBinding)
+                    .textFieldStyle(.roundedBorder)
+                    .frame(minWidth: 170, idealWidth: 220, maxWidth: 260)
+
+                Button {
+                    downloads.setDownloadSearchText("")
+                } label: {
+                    Label(L10n.clearSearch, systemImage: "xmark.circle")
+                }
+                .labelStyle(.iconOnly)
+                .disabled(downloads.downloadSearchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                .help(L10n.clearSearch)
+            }
 
             Menu {
                 Picker(L10n.sortDownloads, selection: downloadSortBinding) {
@@ -304,6 +316,7 @@ private struct DownloadQueueHeader: View {
                     .lineLimit(1)
             }
             .buttonStyle(.bordered)
+            .help("\(L10n.sortDownloads): \(downloads.downloadQueueSort.title)")
 
             Menu {
                 Picker(L10n.downloadFilter, selection: downloadFilterBinding) {
@@ -316,7 +329,7 @@ private struct DownloadQueueHeader: View {
                     .lineLimit(1)
             }
             .buttonStyle(.bordered)
-            .help(summaryHelpText)
+            .help("\(L10n.downloadFilter): \(downloads.downloadQueueFilter.title) · \(summaryHelpText)")
 
             Menu {
                 Button(action: copyVisibleLinks) {
