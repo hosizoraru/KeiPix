@@ -22,12 +22,23 @@ struct RuntimeReadinessView: View {
             } label: {
                 Label(L10n.copyDiagnostics, systemImage: "doc.on.doc")
             }
+            .task(id: didCopyDiagnostics) {
+                await dismissCopyStatusIfNeeded()
+            }
 
             if didCopyDiagnostics {
                 Text(L10n.copiedDiagnostics)
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
+        }
+    }
+
+    private func dismissCopyStatusIfNeeded() async {
+        guard didCopyDiagnostics else { return }
+        try? await Task.sleep(for: .seconds(2.5))
+        if didCopyDiagnostics {
+            didCopyDiagnostics = false
         }
     }
 }

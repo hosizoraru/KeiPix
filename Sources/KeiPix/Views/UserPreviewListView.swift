@@ -85,6 +85,9 @@ struct UserPreviewListView: View {
                                                 copyCreatorLink: {
                                                     copyCreatorLink(preview.user)
                                                 },
+                                                copyArtworkLink: { artwork in
+                                                    copyArtworkLink(artwork)
+                                                },
                                                 selectArtwork: { artwork in
                                                     store.selectedArtwork = artwork
                                                 }
@@ -218,6 +221,9 @@ struct UserPreviewListView: View {
         }
         .task(id: listRefreshKey) {
             await loadInitial()
+        }
+        .task(id: bulkStatusText) {
+            await dismissBulkStatusTextIfNeeded(bulkStatusText)
         }
     }
 
@@ -757,6 +763,12 @@ struct UserPreviewListView: View {
         bulkStatusText = String(format: L10n.copiedCreatorLinksFormat, 1)
     }
 
+    private func copyArtworkLink(_ artwork: PixivArtwork) {
+        guard let url = artwork.pixivURL else { return }
+        PasteboardWriter.copy(url.absoluteString)
+        bulkStatusText = String(format: L10n.copiedArtworkLinksFormat, 1)
+    }
+
     private func copyVisibleCreatorLinks() {
         let links = visiblePreviews.compactMap { $0.user.pixivURL?.absoluteString }
         guard links.isEmpty == false else { return }
@@ -801,6 +813,14 @@ struct UserPreviewListView: View {
             preview.user.isFollowed ? (preview.user.id, restrict) : nil
         })
     }
+
+    private func dismissBulkStatusTextIfNeeded(_ message: String?) async {
+        guard let message else { return }
+        try? await Task.sleep(for: .seconds(2.5))
+        if bulkStatusText == message {
+            bulkStatusText = nil
+        }
+    }
 }
 
 private struct UserPreviewCard: View {
@@ -815,6 +835,7 @@ private struct UserPreviewCard: View {
     let requestUnfollow: () -> Void
     let requestMuteCreator: () -> Void
     let copyCreatorLink: () -> Void
+    let copyArtworkLink: (PixivArtwork) -> Void
     let selectArtwork: (PixivArtwork) -> Void
 
     var body: some View {
@@ -907,7 +928,7 @@ private struct UserPreviewCard: View {
                             if let url = artwork.pixivURL {
                                 Link(L10n.openInPixiv, destination: url)
                                 Button(L10n.copyLink) {
-                                    PasteboardWriter.copy(url.absoluteString)
+                                    copyArtworkLink(artwork)
                                 }
                             }
                         }
