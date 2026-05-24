@@ -17,7 +17,7 @@ struct GalleryView: View {
                 ScrollView {
                     LazyVStack(spacing: 0, pinnedViews: [.sectionHeaders]) {
                         Section {
-                            GalleryContentGrid(store: store)
+                            GalleryContentGrid(store: store, actionMessage: $actionMessage)
                                 .padding(.horizontal, 18)
                                 .padding(.top, 14)
                                 .padding(.bottom, 20)
@@ -96,6 +96,7 @@ struct GalleryView: View {
 
 private struct GalleryContentGrid: View {
     @Bindable var store: KeiPixStore
+    @Binding var actionMessage: String?
 
     var body: some View {
         if store.galleryLayoutMode.usesCompactGrid {
@@ -110,7 +111,11 @@ private struct GalleryContentGrid: View {
             }
         } else {
             VStack(spacing: 14) {
-                MasonryArtworkGrid(store: store, fixedColumnCount: store.galleryLayoutMode.fixedColumnCount)
+                MasonryArtworkGrid(
+                    store: store,
+                    actionMessage: $actionMessage,
+                    fixedColumnCount: store.galleryLayoutMode.fixedColumnCount
+                )
 
                 if store.hasNextPage {
                     LoadMoreTile(store: store)
@@ -137,11 +142,12 @@ private struct GalleryContentGrid: View {
                 if artwork.isBookmarked {
                     store.requestDangerAction(AppDangerAction(kind: .removeBookmark(artwork)))
                 } else {
-                    Task { await store.toggleBookmark(artwork) }
+                    Task { await bookmark(artwork) }
                 }
             }
             Button(L10n.download) {
                 store.enqueueDownload(artwork)
+                actionMessage = String(format: L10n.queuedDownloadsFormat, 1)
             }
             Divider()
             Button(L10n.muteArtwork) {
@@ -163,14 +169,29 @@ private struct GalleryContentGrid: View {
                 Link(L10n.openInPixiv, destination: url)
                 Button(L10n.copyLink) {
                     PasteboardWriter.copy(url.absoluteString)
+                    actionMessage = L10n.copied
                 }
             }
+        }
+    }
+
+    private func bookmark(_ artwork: PixivArtwork) async {
+        do {
+            try await store.saveBookmark(
+                artwork,
+                restrict: store.defaultBookmarkRestrict,
+                tags: store.automaticBookmarkTags(for: artwork)
+            )
+            actionMessage = String(format: L10n.savedBookmarkFormat, artwork.title)
+        } catch {
+            store.errorMessage = error.localizedDescription
         }
     }
 }
 
 private struct MasonryArtworkGrid: View {
     @Bindable var store: KeiPixStore
+    @Binding var actionMessage: String?
     let fixedColumnCount: Int?
 
     private let spacing: CGFloat = 12
@@ -204,11 +225,12 @@ private struct MasonryArtworkGrid: View {
                         if artwork.isBookmarked {
                             store.requestDangerAction(AppDangerAction(kind: .removeBookmark(artwork)))
                         } else {
-                            Task { await store.toggleBookmark(artwork) }
+                            Task { await bookmark(artwork) }
                         }
                     }
                     Button(L10n.download) {
                         store.enqueueDownload(artwork)
+                        actionMessage = String(format: L10n.queuedDownloadsFormat, 1)
                     }
                     Divider()
                     Button(L10n.muteArtwork) {
@@ -230,10 +252,24 @@ private struct MasonryArtworkGrid: View {
                         Link(L10n.openInPixiv, destination: url)
                         Button(L10n.copyLink) {
                             PasteboardWriter.copy(url.absoluteString)
+                            actionMessage = L10n.copied
                         }
                     }
                 }
             }
+        }
+    }
+
+    private func bookmark(_ artwork: PixivArtwork) async {
+        do {
+            try await store.saveBookmark(
+                artwork,
+                restrict: store.defaultBookmarkRestrict,
+                tags: store.automaticBookmarkTags(for: artwork)
+            )
+            actionMessage = String(format: L10n.savedBookmarkFormat, artwork.title)
+        } catch {
+            store.errorMessage = error.localizedDescription
         }
     }
 }
