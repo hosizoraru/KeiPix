@@ -1,15 +1,14 @@
 import SwiftUI
 
-struct MasonryAspectRatioKey: LayoutValueKey {
-    static let defaultValue: CGFloat = ArtworkMasonryPresentation.fallbackAspectRatio
+struct TrendingTagAspectRatioKey: LayoutValueKey {
+    static let defaultValue: CGFloat = TrendingTagPresentation.fallbackAspectRatio
 }
 
-struct MasonryLayout: Layout {
+struct TrendingTagMasonryLayout: Layout {
     var spacing: CGFloat = 12
-    var preferredColumnWidth: CGFloat = 224
-    var minColumnWidth: CGFloat = 176
-    var maxColumnWidth: CGFloat = 260
-    var fixedColumnCount: Int? = nil
+    var preferredColumnWidth: CGFloat = 188
+    var minColumnWidth: CGFloat = 156
+    var maxColumnWidth: CGFloat = 232
 
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
         resolvedLayout(for: proposal, subviews: subviews).size
@@ -25,7 +24,7 @@ struct MasonryLayout: Layout {
         }
     }
 
-    private func resolvedLayout(for proposal: ProposedViewSize, subviews: Subviews) -> MasonryResolvedLayout {
+    private func resolvedLayout(for proposal: ProposedViewSize, subviews: Subviews) -> TrendingTagResolvedLayout {
         let availableWidth = max(proposal.width ?? preferredColumnWidth, minColumnWidth)
         let columnCount = resolvedColumnCount(for: availableWidth)
         let columnWidth = (availableWidth - CGFloat(columnCount - 1) * spacing) / CGFloat(columnCount)
@@ -34,7 +33,7 @@ struct MasonryLayout: Layout {
         frames.reserveCapacity(subviews.count)
 
         for subview in subviews {
-            let presentation = ArtworkMasonryPresentation(aspectRatio: subview[MasonryAspectRatioKey.self])
+            let presentation = TrendingTagPresentation(aspectRatio: subview[TrendingTagAspectRatioKey.self])
             let span = min(presentation.span(for: columnCount), columnCount)
             let spanWidth = CGFloat(span) * columnWidth + CGFloat(span - 1) * spacing
             let height = presentation.height(for: spanWidth, span: span, columnCount: columnCount)
@@ -53,12 +52,12 @@ struct MasonryLayout: Layout {
         }
 
         let height = max(1, (columnHeights.max() ?? 0) - spacing)
-        return MasonryResolvedLayout(frames: frames, size: CGSize(width: availableWidth, height: height))
+        return TrendingTagResolvedLayout(frames: frames, size: CGSize(width: availableWidth, height: height))
     }
 
-    private func originForNextItem(span: Int, columnWidth: CGFloat, columnHeights: [CGFloat]) -> MasonryItemOrigin {
+    private func originForNextItem(span: Int, columnWidth: CGFloat, columnHeights: [CGFloat]) -> TrendingTagItemOrigin {
         guard span < columnHeights.count else {
-            return MasonryItemOrigin(column: 0, x: 0, y: columnHeights.max() ?? 0)
+            return TrendingTagItemOrigin(column: 0, x: 0, y: columnHeights.max() ?? 0)
         }
 
         let maxStartColumn = columnHeights.count - span
@@ -74,17 +73,13 @@ struct MasonryLayout: Layout {
         }
 
         let x = CGFloat(bestColumn) * (columnWidth + spacing)
-        return MasonryItemOrigin(column: bestColumn, x: x, y: bestHeight)
+        return TrendingTagItemOrigin(column: bestColumn, x: x, y: bestHeight)
     }
 
     private func resolvedColumnCount(for width: CGFloat) -> Int {
-        if let fixedColumnCount {
-            return min(max(1, fixedColumnCount), maximumColumnCount(for: width))
-        }
-
         var count = max(1, Int((width + spacing) / (preferredColumnWidth + spacing)))
 
-        while count < 12, columnWidth(for: width, count: count) > maxColumnWidth {
+        while count < 8, columnWidth(for: width, count: count) > maxColumnWidth {
             count += 1
         }
 
@@ -95,21 +90,17 @@ struct MasonryLayout: Layout {
         return count
     }
 
-    private func maximumColumnCount(for width: CGFloat) -> Int {
-        max(1, Int((width + spacing) / (minColumnWidth + spacing)))
-    }
-
     private func columnWidth(for width: CGFloat, count: Int) -> CGFloat {
         (width - CGFloat(count - 1) * spacing) / CGFloat(count)
     }
 }
 
-private struct MasonryResolvedLayout {
+private struct TrendingTagResolvedLayout {
     let frames: [CGRect]
     let size: CGSize
 }
 
-private struct MasonryItemOrigin {
+private struct TrendingTagItemOrigin {
     let column: Int
     let x: CGFloat
     let y: CGFloat
