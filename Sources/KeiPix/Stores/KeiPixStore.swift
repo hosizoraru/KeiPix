@@ -25,6 +25,8 @@ final class KeiPixStore {
     var savedSearchPresets = KeiPixStore.loadSavedSearchPresets()
     var bookmarkTagFilter: String?
     var localBrowsingHistory = KeiPixStore.loadLocalBrowsingHistory()
+    var spotlightFavoriteArticles = KeiPixStore.loadSpotlightArticles(key: "spotlightFavoriteArticles")
+    var spotlightArticleHistory = KeiPixStore.loadSpotlightArticles(key: "spotlightArticleHistory")
     var errorMessage: String?
     var isLoading = false
     var isLoadingMore = false
@@ -1004,6 +1006,13 @@ final class KeiPixStore {
             return []
         }
         return (try? JSONDecoder().decode([SavedSearchPreset].self, from: data)) ?? []
+    }
+
+    static func loadSpotlightArticles(key: String) -> [PixivSpotlightArticle] {
+        guard let data = UserDefaults.standard.data(forKey: key) else {
+            return []
+        }
+        return (try? JSONDecoder().decode([PixivSpotlightArticle].self, from: data)) ?? []
     }
 
     func persistSavedSearchPresets() {

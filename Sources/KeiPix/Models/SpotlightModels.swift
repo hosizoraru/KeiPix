@@ -16,7 +16,7 @@ struct PixivSpotlightResponse: Decodable, Sendable {
     }
 }
 
-struct PixivSpotlightArticle: Decodable, Identifiable, Hashable, Sendable {
+struct PixivSpotlightArticle: Codable, Identifiable, Hashable, Sendable {
     let id: Int
     let title: String
     let pureTitle: String
@@ -62,5 +62,35 @@ struct PixivSpotlightArticle: Decodable, Identifiable, Hashable, Sendable {
         articleURL = container.decodeCleanURLIfPresent(forKey: .articleURL)
             ?? URL(string: "https://www.pixivision.net/a/\(id)")!
         publishDate = try container.decode(Date.self, forKey: .publishDate)
+    }
+}
+
+enum SpotlightArticleCollectionMode: String, CaseIterable, Identifiable {
+    case latest
+    case favorites
+    case history
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .latest:
+            L10n.latestArticles
+        case .favorites:
+            L10n.savedArticles
+        case .history:
+            L10n.articleHistory
+        }
+    }
+
+    var systemImage: String {
+        switch self {
+        case .latest:
+            "newspaper"
+        case .favorites:
+            "star.fill"
+        case .history:
+            "clock.arrow.circlepath"
+        }
     }
 }

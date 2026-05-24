@@ -8,58 +8,85 @@ struct SpotlightView: View {
     @State private var isLoadingMore = false
     @State private var errorMessage: String?
     @State private var actionMessage: String?
+    @State private var collectionMode = SpotlightArticleCollectionMode.latest
 
     var body: some View {
         Group {
             if store.session == nil {
                 EmptyStateView(title: L10n.signedOutTitle, subtitle: L10n.signedOutSubtitle, systemImage: "person.crop.circle.badge.exclamationmark")
-            } else if isLoading {
+            } else if isLoading, collectionMode == .latest {
                 ProgressView(L10n.loading)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else if articles.isEmpty {
+            } else if displayedArticles.isEmpty {
                 ContentUnavailableView {
-                    Label(L10n.noSpotlightArticles, systemImage: "newspaper")
+                    Label(emptyTitle, systemImage: collectionMode.systemImage)
                 } description: {
                     if let errorMessage {
                         Text(errorMessage)
+                    } else {
+                        Text(emptySubtitle)
                     }
                 } actions: {
-                    Button {
-                        Task { await load() }
-                    } label: {
-                        Label(L10n.retry, systemImage: "arrow.clockwise")
+                    if collectionMode == .latest {
+                        Button {
+                            Task { await load() }
+                        } label: {
+                            Label(L10n.retry, systemImage: "arrow.clockwise")
+                        }
+                        .buttonStyle(.borderedProminent)
                     }
-                    .buttonStyle(.borderedProminent)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 ScrollView {
-                    LazyVGrid(columns: articleColumns, spacing: 14) {
-                        ForEach(articles) { article in
-                            SpotlightArticleCard(
-                                article: article,
-                                isSelected: store.selectedSpotlightArticle?.id == article.id
-                            ) {
-                                store.selectedSpotlightArticle = article
-                            } copied: {
-                                showActionMessage(L10n.copied)
-                            }
-                        }
+                    LazyVStack(spacing: 14, pinnedViews: [.sectionHeaders]) {
+                        Section {
+                            LazyVGrid(columns: articleColumns, spacing: 14) {
+                                ForEach(displayedArticles) { article in
+                                    SpotlightArticleCard(
+                                        article: article,
+                                        isSelected: store.selectedSpotlightArticle?.id == article.id,
+                                        isSaved: store.isSpotlightArticleSaved(article),
+                                        isInHistory: store.spotlightArticleHistory.contains { $0.id == article.id }
+                                    ) {
+                                        store.recordSpotlightArticleHistory(article)
+                                        store.selectedSpotlightArticle = article
+                                    } copied: {
+                                        showActionMessage(L10n.copied)
+                                    } toggleSaved: {
+                                        toggleSaved(article)
+                                    } removeFromHistory: {
+                                        store.removeSpotlightArticleHistory(article)
+                                        showActionMessage(L10n.removedArticleHistory)
+                                    }
+                                }
 
-                        if nextURL != nil {
-                            Button {
-                                Task { await loadMore() }
-                            } label: {
-                                Label(isLoadingMore ? L10n.loading : L10n.loadMoreSpotlightArticles, systemImage: "arrow.down.circle")
-                                    .frame(maxWidth: .infinity)
+                                if collectionMode == .latest, nextURL != nil {
+                                    Button {
+                                        Task { await loadMore() }
+                                    } label: {
+                                        Label(isLoadingMore ? L10n.loading : L10n.loadMoreSpotlightArticles, systemImage: "arrow.down.circle")
+                                            .frame(maxWidth: .infinity)
+                                    }
+                                    .buttonStyle(.bordered)
+                                    .disabled(isLoadingMore)
+                                    .gridCellColumns(2)
+                                }
                             }
-                            .buttonStyle(.bordered)
-                            .disabled(isLoadingMore)
-                            .gridCellColumns(2)
+                            .padding(.horizontal, 18)
+                            .padding(.top, 14)
+                        } header: {
+                            SpotlightCollectionHeader(
+                                mode: $collectionMode,
+                                countText: collectionSummary,
+                                canClearHistory: store.spotlightArticleHistory.isEmpty == false,
+                                clearHistory: clearHistory
+                            )
+                            .padding(.horizontal, 18)
+                            .padding(.vertical, 6)
+                            .background(.bar)
                         }
                     }
-                    .padding(.horizontal, 18)
-                    .padding(.top, 14)
                     .padding(.bottom, 18)
                 }
                 .scrollEdgeEffectStyle(.soft, for: .top)
@@ -103,6 +130,9 @@ struct SpotlightView: View {
         .task(id: store.routeRefreshGeneration) {
             await load()
         }
+        .onChange(of: collectionMode) { _, _ in
+            selectStableArticle()
+        }
     }
 
     private var articleColumns: [GridItem] {
@@ -124,7 +154,51 @@ struct SpotlightView: View {
     }
 
     private var spotlightSummary: String {
-        "\(articles.count.formatted()) \(L10n.results) · \(nextURL == nil ? L10n.noMorePages : L10n.nextPageAvailable)"
+        "\(displayedArticles.count.formatted()) \(L10n.results) · \(collectionMode.title)"
+    }
+
+    private var displayedArticles: [PixivSpotlightArticle] {
+        switch collectionMode {
+        case .latest:
+            articles
+        case .favorites:
+            store.spotlightFavoriteArticles
+        case .history:
+            store.spotlightArticleHistory
+        }
+    }
+
+    private var collectionSummary: String {
+        switch collectionMode {
+        case .latest:
+            "\(articles.count.formatted()) · \(nextURL == nil ? L10n.noMorePages : L10n.nextPageAvailable)"
+        case .favorites:
+            String(format: L10n.savedArticleCountFormat, store.spotlightFavoriteArticles.count)
+        case .history:
+            String(format: L10n.articleHistoryCountFormat, store.spotlightArticleHistory.count)
+        }
+    }
+
+    private var emptyTitle: String {
+        switch collectionMode {
+        case .latest:
+            L10n.noSpotlightArticles
+        case .favorites:
+            L10n.noSavedArticles
+        case .history:
+            L10n.noArticleHistory
+        }
+    }
+
+    private var emptySubtitle: String {
+        switch collectionMode {
+        case .latest:
+            L10n.noSpotlightArticles
+        case .favorites:
+            L10n.saveArticlesHint
+        case .history:
+            L10n.articleHistoryHint
+        }
     }
 
     private func load() async {
@@ -168,10 +242,11 @@ struct SpotlightView: View {
     }
 
     private func selectStableArticle() {
-        if store.selectedSpotlightArticle != nil {
+        let currentID = store.selectedSpotlightArticle?.id
+        if let currentID, displayedArticles.contains(where: { $0.id == currentID }) {
             return
         }
-        store.selectedSpotlightArticle = articles.first
+        store.selectedSpotlightArticle = displayedArticles.first
     }
 
     private func showActionMessage(_ message: String) {
@@ -183,13 +258,68 @@ struct SpotlightView: View {
             }
         }
     }
+
+    private func toggleSaved(_ article: PixivSpotlightArticle) {
+        let saved = store.toggleSpotlightArticleFavorite(article)
+        if saved == false, collectionMode == .favorites {
+            selectStableArticle()
+        }
+        showActionMessage(saved ? L10n.savedArticle : L10n.removedSavedArticle)
+    }
+
+    private func clearHistory() {
+        store.clearSpotlightArticleHistory()
+        if collectionMode == .history {
+            store.selectedSpotlightArticle = displayedArticles.first
+        }
+        showActionMessage(L10n.clearedArticleHistory)
+    }
+}
+
+private struct SpotlightCollectionHeader: View {
+    @Binding var mode: SpotlightArticleCollectionMode
+    let countText: String
+    let canClearHistory: Bool
+    let clearHistory: () -> Void
+
+    var body: some View {
+        FlowLayout(spacing: 8) {
+            Picker(L10n.spotlightCollection, selection: $mode) {
+                ForEach(SpotlightArticleCollectionMode.allCases) { mode in
+                    Label(mode.title, systemImage: mode.systemImage).tag(mode)
+                }
+            }
+            .pickerStyle(.segmented)
+            .labelsHidden()
+            .frame(minWidth: 300, idealWidth: 360, maxWidth: 420)
+
+            Text(countText)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+
+            if mode == .history {
+                Button(role: .destructive, action: clearHistory) {
+                    Label(L10n.clearArticleHistory, systemImage: "trash")
+                }
+                .buttonStyle(.bordered)
+                .disabled(canClearHistory == false)
+            }
+        }
+        .controlSize(.small)
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
 }
 
 private struct SpotlightArticleCard: View {
     let article: PixivSpotlightArticle
     let isSelected: Bool
+    let isSaved: Bool
+    let isInHistory: Bool
     let select: () -> Void
     let copied: () -> Void
+    let toggleSaved: () -> Void
+    let removeFromHistory: () -> Void
     @State private var isHovering = false
 
     var body: some View {
@@ -221,6 +351,18 @@ private struct SpotlightArticleCard: View {
                         Label(article.publishDate.formatted(date: .abbreviated, time: .omitted), systemImage: "calendar")
                             .lineLimit(1)
 
+                        if isSaved {
+                            Image(systemName: "star.fill")
+                                .foregroundStyle(.yellow)
+                                .help(L10n.savedArticle)
+                        }
+
+                        if isInHistory {
+                            Image(systemName: "clock.arrow.circlepath")
+                                .foregroundStyle(.secondary)
+                                .help(L10n.articleHistory)
+                        }
+
                         Spacer()
 
                         Label(L10n.openArticle, systemImage: "newspaper")
@@ -249,6 +391,17 @@ private struct SpotlightArticleCard: View {
             Button(L10n.openArticle) {
                 select()
             }
+            Button(isSaved ? L10n.removeSavedArticle : L10n.saveArticle) {
+                toggleSaved()
+            }
+            if isInHistory {
+                Button(role: .destructive) {
+                    removeFromHistory()
+                } label: {
+                    Text(L10n.removeFromArticleHistory)
+                }
+            }
+            Divider()
             Link(L10n.openInPixiv, destination: article.articleURL)
             Button(L10n.copyLink) {
                 PasteboardWriter.copy(article.articleURL.absoluteString)

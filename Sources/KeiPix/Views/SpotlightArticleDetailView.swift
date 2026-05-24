@@ -12,6 +12,7 @@ struct SpotlightArticleDetailView: View {
             VStack(spacing: 0) {
                 SpotlightArticleHeader(
                     article: article,
+                    isSaved: store.isSpotlightArticleSaved(article),
                     navigationState: webNavigationState,
                     goBack: {
                         webCommand = WebArticleCommand(action: .goBack)
@@ -29,6 +30,10 @@ struct SpotlightArticleDetailView: View {
                     copyLink: {
                         PasteboardWriter.copy(article.articleURL.absoluteString)
                         showActionMessage(L10n.copiedArticleLink)
+                    },
+                    toggleSaved: {
+                        let saved = store.toggleSpotlightArticleFavorite(article)
+                        showActionMessage(saved ? L10n.savedArticle : L10n.removedSavedArticle)
                     }
                 )
                     .padding(16)
@@ -55,6 +60,9 @@ struct SpotlightArticleDetailView: View {
                 .id(article.id)
             }
             .navigationTitle(article.pureTitle.isEmpty ? L10n.spotlight : article.pureTitle)
+            .task(id: article.id) {
+                store.recordSpotlightArticleHistory(article)
+            }
             .sheet(item: $webProfileUser) { user in
                 UserProfileSheet(user: user, store: store)
             }
@@ -110,12 +118,14 @@ struct SpotlightArticleDetailView: View {
 
 private struct SpotlightArticleHeader: View {
     let article: PixivSpotlightArticle
+    let isSaved: Bool
     let navigationState: WebArticleNavigationState
     let goBack: () -> Void
     let goForward: () -> Void
     let reload: () -> Void
     let copyCurrentPageLink: () -> Void
     let copyLink: () -> Void
+    let toggleSaved: () -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -162,6 +172,12 @@ private struct SpotlightArticleHeader: View {
                 .labelStyle(.iconOnly)
 
                 Spacer(minLength: 8)
+
+                Button(action: toggleSaved) {
+                    Label(isSaved ? L10n.removeSavedArticle : L10n.saveArticle, systemImage: isSaved ? "star.fill" : "star")
+                }
+                .labelStyle(.iconOnly)
+                .help(isSaved ? L10n.removeSavedArticle : L10n.saveArticle)
 
                 ShareLink(item: article.articleURL) {
                     Label(L10n.share, systemImage: "square.and.arrow.up")

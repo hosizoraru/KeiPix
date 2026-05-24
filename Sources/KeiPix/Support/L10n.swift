@@ -15,6 +15,24 @@ enum L10n {
     static var openArticle: String { text("Open Article") }
     static var selectArticle: String { text("Select an article") }
     static var copiedArticleLink: String { text("Copied article link") }
+    static var spotlightCollection: String { text("Spotlight Collection") }
+    static var latestArticles: String { text("Latest Articles") }
+    static var savedArticles: String { text("Saved Articles") }
+    static var articleHistory: String { text("Article History") }
+    static var saveArticle: String { text("Save Article") }
+    static var removeSavedArticle: String { text("Remove Saved Article") }
+    static var savedArticle: String { text("Saved article") }
+    static var removedSavedArticle: String { text("Removed saved article") }
+    static var noSavedArticles: String { text("No saved articles") }
+    static var saveArticlesHint: String { text("Save Pixivision articles here for later reading.") }
+    static var noArticleHistory: String { text("No article history") }
+    static var articleHistoryHint: String { text("Open Pixivision articles to build a local reading history.") }
+    static var clearArticleHistory: String { text("Clear Article History") }
+    static var clearedArticleHistory: String { text("Cleared article history") }
+    static var removeFromArticleHistory: String { text("Remove from Article History") }
+    static var removedArticleHistory: String { text("Removed article history item") }
+    static var savedArticleCountFormat: String { text("%d saved articles") }
+    static var articleHistoryCountFormat: String { text("%d history articles") }
     static var search: String { text("Search") }
     static var searchCreators: String { text("Search Creators") }
     static var savedSearches: String { text("Saved Searches") }
