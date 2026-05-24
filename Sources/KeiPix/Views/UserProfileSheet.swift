@@ -97,6 +97,7 @@ struct UserProfileSheet: View {
                 Spacer()
 
                 followMenu
+                profileActionsMenu
             }
             .padding(20)
         }
@@ -151,6 +152,24 @@ struct UserProfileSheet: View {
         .help(L10n.followVisibility)
     }
 
+    @ViewBuilder
+    private var profileActionsMenu: some View {
+        if let url = currentUser.pixivURL {
+            Menu {
+                Link(L10n.openInPixiv, destination: url)
+
+                Button(L10n.copyLink) {
+                    PasteboardWriter.copy(url.absoluteString)
+                }
+            } label: {
+                Label(L10n.moreActions, systemImage: "ellipsis.circle")
+            }
+            .labelStyle(.iconOnly)
+            .buttonStyle(.bordered)
+            .help(L10n.moreActions)
+        }
+    }
+
     private var followStatusTitle: String {
         followRestrict == .private ? L10n.followingPrivately : L10n.followingPublicly
     }
@@ -194,7 +213,7 @@ struct UserProfileSheet: View {
     private var links: some View {
         let profile = detail?.profile
         let entries: [(String, URL?)] = [
-            ("Pixiv", URL(string: "https://www.pixiv.net/users/\(user.id)")),
+            ("Pixiv", currentUser.pixivURL),
             ("Web", profile?.webpage),
             ("X", profile?.twitterURL),
             ("Pawoo", profile?.pawooURL)
@@ -338,9 +357,13 @@ struct UserProfileSheet: View {
         ]
     }
 
+    private var currentUser: PixivUser {
+        detail?.user ?? user
+    }
+
     private func openFeed(_ route: PixivRoute) {
         Task {
-            await store.openUserFeed(user: detail?.user ?? user, route: route)
+            await store.openUserFeed(user: currentUser, route: route)
             dismiss()
         }
     }
