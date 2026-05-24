@@ -223,6 +223,8 @@
 "Creator Filter" = "作者筛选";
 "Creator Sort" = "作者排序";
 "Reset Creator Filters" = "重置作者筛选";
+"Reset creator filters" = "已重置作者筛选";
+"Refreshed %d creators" = "已刷新 %d 位作者";
 "All Creators" = "全部作者";
 "Unfollowed" = "未关注";
 "Default Order" = "默认顺序";

@@ -371,7 +371,7 @@ struct UserPreviewListView: View {
     private var creatorActionsMenu: some View {
         Menu {
             Button {
-                Task { await loadInitial() }
+                Task { await refreshCreatorList() }
             } label: {
                 Label(L10n.refresh, systemImage: "arrow.clockwise")
             }
@@ -449,7 +449,7 @@ struct UserPreviewListView: View {
             }
         }
         .help(L10n.creatorActions)
-        .disabled(visiblePreviews.isEmpty)
+        .disabled(previews.isEmpty && hasActiveCreatorListState == false)
     }
 
     private var headerSubtitle: String {
@@ -513,6 +513,7 @@ struct UserPreviewListView: View {
         creatorSearchText = ""
         creatorFilter = .all
         creatorSort = .defaultOrder
+        bulkStatusText = L10n.resetCreatorFiltersDone
     }
 
     private func bulkActionTargetCount(_ action: CreatorBulkAction) -> Int {
@@ -659,6 +660,12 @@ struct UserPreviewListView: View {
         } catch {
             errorMessage = error.localizedDescription
         }
+    }
+
+    private func refreshCreatorList() async {
+        await loadInitial()
+        guard errorMessage == nil else { return }
+        bulkStatusText = String(format: L10n.refreshedCreatorsFormat, previews.count)
     }
 
     private func loadMore() async {

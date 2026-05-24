@@ -221,6 +221,8 @@ enum L10n {
     static var creatorFilter: String { text("Creator Filter") }
     static var creatorSort: String { text("Creator Sort") }
     static var resetCreatorFilters: String { text("Reset Creator Filters") }
+    static var resetCreatorFiltersDone: String { text("Reset creator filters") }
+    static var refreshedCreatorsFormat: String { text("Refreshed %d creators") }
     static var allCreators: String { text("All Creators") }
     static var unfollowed: String { text("Unfollowed") }
     static var defaultOrder: String { text("Default Order") }

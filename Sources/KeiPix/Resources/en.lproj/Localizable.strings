@@ -223,6 +223,8 @@
 "Creator Filter" = "Creator Filter";
 "Creator Sort" = "Creator Sort";
 "Reset Creator Filters" = "Reset Creator Filters";
+"Reset creator filters" = "Reset creator filters";
+"Refreshed %d creators" = "Refreshed %d creators";
 "All Creators" = "All Creators";
 "Unfollowed" = "Unfollowed";
 "Default Order" = "Default Order";
