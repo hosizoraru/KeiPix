@@ -38,6 +38,15 @@ extension KeiPixStore {
         persistLocalBrowsingHistory()
     }
 
+    func restoreLocalBrowsingHistory(_ items: [LocalArtworkHistoryItem]) {
+        guard items.isEmpty == false else { return }
+        let restoredIDs = Set(items.map(\.id))
+        localBrowsingHistory.removeAll { restoredIDs.contains($0.id) }
+        localBrowsingHistory.insert(contentsOf: items, at: 0)
+        localBrowsingHistory = Array(localBrowsingHistory.prefix(1000))
+        persistLocalBrowsingHistory()
+    }
+
     func selectLocalHistoryItem(_ item: LocalArtworkHistoryItem) async {
         if let artwork = allKnownArtwork(id: item.id) {
             selectedArtwork = artwork

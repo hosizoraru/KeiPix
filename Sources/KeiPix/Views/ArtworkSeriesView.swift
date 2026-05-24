@@ -13,6 +13,7 @@ struct ArtworkSeriesView: View {
     @State private var isLoadingMore = false
     @State private var isUpdatingWatchlist = false
     @State private var errorMessage: String?
+    @State private var pendingWatchlistRemoval: PixivArtworkSeriesDetail?
 
     private let columns = [
         GridItem(.adaptive(minimum: 140, maximum: 210), spacing: 12)
@@ -66,6 +67,21 @@ struct ArtworkSeriesView: View {
                 guard value, hasLoaded == false else { return }
                 Task { await loadInitial() }
             }
+            .confirmationDialog(
+                L10n.removeFromWatchlist,
+                isPresented: watchlistRemovalBinding,
+                titleVisibility: .visible,
+                presenting: pendingWatchlistRemoval
+            ) { detail in
+                Button(L10n.removeFromWatchlist, role: .destructive) {
+                    Task { await updateWatchlist(detail, isAdded: false) }
+                }
+                Button(L10n.cancel, role: .cancel) {
+                    pendingWatchlistRemoval = nil
+                }
+            } message: { detail in
+                Text(String(format: L10n.removeFromWatchlistConfirmationFormat, detail.title))
+            }
         }
     }
 
@@ -118,23 +134,27 @@ struct ArtworkSeriesView: View {
         }
         .contextMenu {
             Button(seriesArtwork.isBookmarked ? L10n.removeBookmark : L10n.bookmark) {
-                Task { await store.toggleBookmark(seriesArtwork) }
+                if seriesArtwork.isBookmarked {
+                    store.requestDangerAction(AppDangerAction(kind: .removeBookmark(seriesArtwork)))
+                } else {
+                    Task { await store.toggleBookmark(seriesArtwork) }
+                }
             }
             Button(L10n.download) {
                 store.enqueueDownload(seriesArtwork)
             }
             Divider()
             Button(L10n.muteArtwork) {
-                store.muteArtwork(seriesArtwork)
+                store.requestDangerAction(AppDangerAction(kind: .muteArtwork(seriesArtwork)))
             }
             Button(L10n.muteCreator) {
-                store.muteUser(seriesArtwork.user)
+                store.requestDangerAction(AppDangerAction(kind: .muteCreator(seriesArtwork.user)))
             }
             if seriesArtwork.tags.isEmpty == false {
                 Menu(L10n.muteTag) {
                     ForEach(seriesArtwork.tags.prefix(12), id: \.self) { tag in
                         Button("#\(tag.name)") {
-                            store.muteTag(tag)
+                            store.requestDangerAction(AppDangerAction(kind: .muteTag(tag)))
                         }
                     }
                 }
@@ -179,28 +199,65 @@ struct ArtworkSeriesView: View {
     }
 
     private func toggleWatchlist() async {
-        guard var detail else { return }
+        guard let detail else { return }
+        if detail.watchlistAdded {
+            pendingWatchlistRemoval = detail
+            return
+        }
+        await updateWatchlist(detail, isAdded: true)
+    }
+
+    private func updateWatchlist(_ currentDetail: PixivArtworkSeriesDetail, isAdded nextValue: Bool) async {
+        var updatedDetail = currentDetail
         isUpdatingWatchlist = true
         errorMessage = nil
-        defer { isUpdatingWatchlist = false }
+        defer {
+            isUpdatingWatchlist = false
+            pendingWatchlistRemoval = nil
+        }
 
         do {
-            let nextValue = !detail.watchlistAdded
-            try await store.setMangaWatchlist(seriesID: detail.id, isAdded: nextValue)
-            detail = PixivArtworkSeriesDetail(
-                id: detail.id,
-                title: detail.title,
-                caption: detail.caption,
-                createDate: detail.createDate,
-                coverImageURLs: detail.coverImageURLs,
-                workCount: detail.workCount,
-                user: detail.user,
+            try await store.setMangaWatchlist(seriesID: currentDetail.id, isAdded: nextValue)
+            updatedDetail = PixivArtworkSeriesDetail(
+                id: currentDetail.id,
+                title: currentDetail.title,
+                caption: currentDetail.caption,
+                createDate: currentDetail.createDate,
+                coverImageURLs: currentDetail.coverImageURLs,
+                workCount: currentDetail.workCount,
+                user: currentDetail.user,
                 watchlistAdded: nextValue
             )
-            self.detail = detail
+            detail = updatedDetail
+            if nextValue == false {
+                store.undoAction = AppUndoAction(kind: .restoreMangaWatchlist(watchlistPreview(from: currentDetail)))
+            }
         } catch {
             errorMessage = error.localizedDescription
         }
+    }
+
+    private var watchlistRemovalBinding: Binding<Bool> {
+        Binding {
+            pendingWatchlistRemoval != nil
+        } set: { value in
+            if value == false {
+                pendingWatchlistRemoval = nil
+            }
+        }
+    }
+
+    private func watchlistPreview(from detail: PixivArtworkSeriesDetail) -> PixivMangaSeriesPreview {
+        PixivMangaSeriesPreview(
+            id: detail.id,
+            title: detail.title,
+            user: detail.user.map(PixivMangaSeriesUser.init(user:)),
+            latestContentID: artwork.id,
+            lastPublishedContentDate: detail.createDate,
+            publishedContentCount: detail.workCount,
+            coverURL: detail.coverImageURLs?.medium ?? detail.coverImageURLs?.large ?? artwork.thumbnailURL,
+            maskText: nil
+        )
     }
 }
 

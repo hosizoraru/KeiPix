@@ -32,6 +32,21 @@ struct PixivUserProfile: Decodable, Hashable, Sendable {
         case pawooURL = "pawoo_url"
         case isPremium = "is_premium"
     }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        webpage = container.decodeCleanURLIfPresent(forKey: .webpage)
+        region = try container.decodeIfPresent(String.self, forKey: .region)
+        job = try container.decodeIfPresent(String.self, forKey: .job)
+        totalFollowUsers = try container.decodeIfPresent(Int.self, forKey: .totalFollowUsers) ?? 0
+        totalIllusts = try container.decodeIfPresent(Int.self, forKey: .totalIllusts) ?? 0
+        totalManga = try container.decodeIfPresent(Int.self, forKey: .totalManga) ?? 0
+        totalIllustBookmarksPublic = try container.decodeIfPresent(Int.self, forKey: .totalIllustBookmarksPublic) ?? 0
+        backgroundImageURL = container.decodeCleanURLIfPresent(forKey: .backgroundImageURL)
+        twitterURL = container.decodeCleanURLIfPresent(forKey: .twitterURL)
+        pawooURL = container.decodeCleanURLIfPresent(forKey: .pawooURL)
+        isPremium = try container.decodeIfPresent(Bool.self, forKey: .isPremium) ?? false
+    }
 }
 
 struct PixivUserWorkspace: Decodable, Hashable, Sendable {
@@ -70,6 +85,17 @@ struct PixivUserPreviewResponse: Decodable, Sendable {
     enum CodingKeys: String, CodingKey {
         case userPreviews = "user_previews"
         case nextURL = "next_url"
+    }
+
+    init(userPreviews: [PixivUserPreview], nextURL: URL?) {
+        self.userPreviews = userPreviews
+        self.nextURL = nextURL
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        userPreviews = try container.decodeIfPresent([PixivUserPreview].self, forKey: .userPreviews) ?? []
+        nextURL = container.decodeCleanURLIfPresent(forKey: .nextURL)
     }
 }
 

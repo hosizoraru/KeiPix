@@ -8,6 +8,8 @@ struct MutedContentView: View {
     @State private var isSyncing = false
     @State private var statusMessage: String?
     @State private var isClearConfirmationPresented = false
+    @State private var isUploadConfirmationPresented = false
+    @State private var pendingRemoval: MutedContentRemovalAction?
 
     var body: some View {
         VStack(spacing: 0) {
@@ -28,31 +30,87 @@ struct MutedContentView: View {
             .scrollEdgeEffectStyle(.soft, for: .top)
         }
         .navigationTitle(L10n.mutedContent)
+        .toolbar {
+            ToolbarItem(placement: .status) {
+                Text(totalCountText)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .help(totalCountText)
+            }
+        }
+        .overlay(alignment: .bottom) {
+            if let statusMessage {
+                FloatingStatusBanner(maxWidth: 520) {
+                    Text(statusMessage)
+                        .font(.callout)
+                        .foregroundStyle(statusMessageStyle)
+                        .textSelection(.enabled)
+                }
+                .padding(.horizontal, 18)
+                .padding(.bottom, 14)
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+        }
+        .animation(.snappy(duration: 0.18), value: statusMessage)
+        .task(id: statusMessage) {
+            await dismissStatusMessageIfNeeded(statusMessage)
+        }
         .confirmationDialog(
             L10n.clearMutedContentConfirmation,
             isPresented: $isClearConfirmationPresented,
             titleVisibility: .visible
         ) {
             Button(L10n.clearMutedContent, role: .destructive) {
+                let archive = store.mutedContentArchiveSnapshot()
                 store.clearMutedContent()
+                store.undoAction = AppUndoAction(kind: .restoreMutedContent(archive))
             }
             Button(L10n.cancel, role: .cancel) {}
+        }
+        .confirmationDialog(
+            L10n.uploadMutedContentConfirmation,
+            isPresented: $isUploadConfirmationPresented,
+            titleVisibility: .visible
+        ) {
+            Button(L10n.uploadToPixiv, role: .destructive) {
+                Task { await uploadToPixiv() }
+            }
+            Button(L10n.cancel, role: .cancel) {}
+        } message: {
+            Text(L10n.uploadMutedContentConfirmationMessage)
+        }
+        .confirmationDialog(
+            pendingRemoval?.title ?? L10n.deleteFromMutedContent,
+            isPresented: removalBinding,
+            titleVisibility: .visible,
+            presenting: pendingRemoval
+        ) { action in
+            Button(action.title, role: .destructive) {
+                performRemoval(action)
+            }
+            Button(L10n.cancel, role: .cancel) {
+                pendingRemoval = nil
+            }
+        } message: { action in
+            Text(action.message)
         }
     }
 
     private var header: some View {
-        HStack(spacing: 12) {
+        FlowLayout(spacing: 8) {
             Picker(L10n.mutedContent, selection: $category) {
                 ForEach(MutedContentCategory.allCases) { category in
                     Text(category.title).tag(category)
                 }
             }
             .pickerStyle(.segmented)
-            .frame(width: 320)
+            .labelsHidden()
+            .frame(width: 260)
 
             TextField(L10n.searchMutedContent, text: $searchText)
                 .textFieldStyle(.roundedBorder)
-                .frame(maxWidth: 280)
+                .frame(width: 240)
 
             Button {
                 searchText = ""
@@ -60,22 +118,21 @@ struct MutedContentView: View {
                 Label(L10n.clearSearch, systemImage: "xmark.circle")
             }
             .labelStyle(.iconOnly)
-            .disabled(searchText.isEmpty)
-            .help(L10n.clearSearch)
+                .disabled(searchText.isEmpty)
+                .help(L10n.clearSearch)
 
-            Spacer()
-
-            Text(totalCountText)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-
-            Button(role: .destructive) {
-                isClearConfirmationPresented = true
+            Menu {
+                Button(role: .destructive) {
+                    isClearConfirmationPresented = true
+                } label: {
+                    Label(L10n.clearMutedContent, systemImage: "trash")
+                }
+                .disabled(totalCount == 0)
             } label: {
-                Label(L10n.clearMutedContent, systemImage: "trash")
+                Label(L10n.moreActions, systemImage: "ellipsis.circle")
             }
-            .disabled(totalCount == 0)
         }
+        .controlSize(.small)
     }
 
     private var syncPanel: some View {
@@ -97,7 +154,7 @@ struct MutedContentView: View {
                 }
             }
 
-            HStack(spacing: 10) {
+            FlowLayout(spacing: 10) {
                 Button {
                     Task { await syncFromPixiv() }
                 } label: {
@@ -106,7 +163,7 @@ struct MutedContentView: View {
                 .disabled(isSyncing)
 
                 Button {
-                    Task { await uploadToPixiv() }
+                    isUploadConfirmationPresented = true
                 } label: {
                     Label(L10n.uploadToPixiv, systemImage: "arrow.up.circle")
                 }
@@ -125,13 +182,6 @@ struct MutedContentView: View {
                     Label(L10n.importMutedContent, systemImage: "square.and.arrow.down")
                 }
                 .disabled(isSyncing)
-            }
-
-            if let statusMessage {
-                Text(statusMessage)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .textSelection(.enabled)
             }
         }
         .padding(14)
@@ -174,7 +224,12 @@ struct MutedContentView: View {
                 .textFieldStyle(.roundedBorder)
 
             Button {
-                store.muteTag(named: newTagText)
+                let normalized = newTagText.trimmingCharacters(in: .whitespacesAndNewlines)
+                let wasMuted = store.mutedTagList.contains(normalized)
+                store.muteTag(named: normalized)
+                if wasMuted == false {
+                    store.undoAction = AppUndoAction(kind: .unmuteTag(normalized))
+                }
                 newTagText = ""
             } label: {
                 Label(L10n.addTag, systemImage: "plus.circle")
@@ -191,7 +246,7 @@ struct MutedContentView: View {
                 FlowLayout(spacing: 8) {
                     ForEach(filteredTags, id: \.self) { tag in
                         removableChip(title: "#\(tag)", systemImage: "tag") {
-                            store.unmuteTag(tag)
+                            pendingRemoval = .tag(tag)
                         }
                     }
                 }
@@ -211,7 +266,7 @@ struct MutedContentView: View {
                             subtitle: "\(L10n.creatorID): \(user.id)",
                             systemImage: "person.slash"
                         ) {
-                            store.unmuteUser(id: user.id)
+                            pendingRemoval = .creator(user)
                         }
                     }
                 }
@@ -231,7 +286,7 @@ struct MutedContentView: View {
                             subtitle: "\(L10n.artworkID): \(artwork.id)",
                             systemImage: "photo.badge.exclamationmark"
                         ) {
-                            store.unmuteArtwork(id: artwork.id)
+                            pendingRemoval = .artwork(artwork)
                         }
                     }
                 }
@@ -313,12 +368,64 @@ struct MutedContentView: View {
         return value.localizedCaseInsensitiveContains(normalized)
     }
 
+    private var removalBinding: Binding<Bool> {
+        Binding {
+            pendingRemoval != nil
+        } set: { value in
+            if value == false {
+                pendingRemoval = nil
+            }
+        }
+    }
+
+    private func performRemoval(_ action: MutedContentRemovalAction) {
+        pendingRemoval = nil
+
+        switch action {
+        case .tag(let tag):
+            store.unmuteTag(tag)
+            store.undoAction = AppUndoAction(kind: .remuteTag(tag))
+        case .creator(let user):
+            store.unmuteUser(id: user.id)
+            store.undoAction = AppUndoAction(kind: .remuteCreator(user))
+        case .artwork(let artwork):
+            store.unmuteArtwork(id: artwork.id)
+            store.undoAction = AppUndoAction(kind: .remuteArtwork(artwork))
+        }
+    }
+
     private var totalCount: Int {
         store.mutedTagList.count + store.mutedUserList.count + store.mutedArtworkList.count
     }
 
     private var totalCountText: String {
         String(format: L10n.mutedContentCountFormat, totalCount)
+    }
+
+    private var statusMessageStyle: Color {
+        guard let statusMessage else { return .secondary }
+        if statusMessage == L10n.synced
+            || statusMessage == L10n.uploaded
+            || statusMessage == L10n.exported
+            || statusMessage == L10n.imported {
+            return .secondary
+        }
+        return .red
+    }
+
+    private func dismissStatusMessageIfNeeded(_ message: String?) async {
+        guard let message, isSuccessStatusMessage(message) else { return }
+        try? await Task.sleep(for: .seconds(3))
+        if statusMessage == message {
+            statusMessage = nil
+        }
+    }
+
+    private func isSuccessStatusMessage(_ message: String) -> Bool {
+        message == L10n.synced
+            || message == L10n.uploaded
+            || message == L10n.exported
+            || message == L10n.imported
     }
 
     private var categoryCountText: String {
@@ -340,7 +447,9 @@ struct MutedContentView: View {
         defer { isSyncing = false }
 
         do {
+            let snapshot = store.mutedContentArchiveSnapshot()
             try await store.importAccountMutedContent()
+            store.undoAction = AppUndoAction(kind: .restoreMutedContentSnapshot(snapshot))
             statusMessage = L10n.synced
         } catch {
             statusMessage = error.localizedDescription
@@ -374,11 +483,45 @@ struct MutedContentView: View {
     private func importLocalMutedContent() {
         statusMessage = nil
         do {
+            let snapshot = store.mutedContentArchiveSnapshot()
             if try store.importMutedContentFromFile() {
+                store.undoAction = AppUndoAction(kind: .restoreMutedContentSnapshot(snapshot))
                 statusMessage = L10n.imported
             }
         } catch {
             statusMessage = error.localizedDescription
+        }
+    }
+}
+
+private enum MutedContentRemovalAction: Identifiable {
+    case tag(String)
+    case creator(MutedUserEntry)
+    case artwork(MutedArtworkEntry)
+
+    var id: String {
+        switch self {
+        case .tag(let tag):
+            "tag-\(tag)"
+        case .creator(let user):
+            "creator-\(user.id)"
+        case .artwork(let artwork):
+            "artwork-\(artwork.id)"
+        }
+    }
+
+    var title: String {
+        L10n.deleteFromMutedContent
+    }
+
+    var message: String {
+        switch self {
+        case .tag(let tag):
+            String(format: L10n.removeMutedTagConfirmationFormat, tag)
+        case .creator(let user):
+            String(format: L10n.removeMutedCreatorConfirmationFormat, user.name)
+        case .artwork(let artwork):
+            String(format: L10n.removeMutedArtworkConfirmationFormat, artwork.title)
         }
     }
 }

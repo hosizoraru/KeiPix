@@ -135,6 +135,32 @@ struct ContentView: View {
             LoginSheetView(store: store)
                 .frame(width: 900, height: 680)
         }
+        .confirmationDialog(
+            store.pendingDangerAction?.title ?? L10n.moreActions,
+            isPresented: dangerActionBinding,
+            titleVisibility: .visible,
+            presenting: store.pendingDangerAction
+        ) { action in
+            Button(action.title, role: .destructive) {
+                Task { await store.performDangerAction(action) }
+            }
+            Button(L10n.cancel, role: .cancel) {
+                store.pendingDangerAction = nil
+            }
+        } message: { action in
+            Text(action.confirmationMessage)
+        }
+        .overlay(alignment: .bottom) {
+            if let undoAction = store.undoAction {
+                AppUndoBar(action: undoAction) {
+                    Task { await store.performUndo(undoAction) }
+                }
+                .padding(.horizontal, 18)
+                .padding(.bottom, 14)
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+        }
+        .animation(.snappy(duration: 0.18), value: store.undoAction?.id)
         .alert(L10n.errorTitle, isPresented: errorBinding) {
             Button("OK") { store.errorMessage = nil }
         } message: {
@@ -148,6 +174,16 @@ struct ContentView: View {
         } set: { value in
             if value == false {
                 store.errorMessage = nil
+            }
+        }
+    }
+
+    private var dangerActionBinding: Binding<Bool> {
+        Binding {
+            store.pendingDangerAction != nil
+        } set: { value in
+            if value == false {
+                store.pendingDangerAction = nil
             }
         }
     }

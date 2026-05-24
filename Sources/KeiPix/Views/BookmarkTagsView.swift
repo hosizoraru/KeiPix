@@ -92,17 +92,29 @@ struct BookmarkTagsView: View {
             }
         }
         .navigationTitle(L10n.bookmarkTags)
-        .safeAreaInset(edge: .bottom) {
-            if let errorMessage {
-                Text(errorMessage)
-                    .font(.callout)
-                    .foregroundStyle(.red)
-                    .textSelection(.enabled)
-                    .padding(12)
-                    .frame(maxWidth: .infinity)
-                    .background(.bar)
+        .toolbar {
+            ToolbarItem(placement: .status) {
+                Text(bookmarkTagSummary)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .help(bookmarkTagSummary)
             }
         }
+        .overlay(alignment: .bottom) {
+            if let errorMessage {
+                FloatingStatusBanner {
+                    Text(errorMessage)
+                        .font(.callout)
+                        .foregroundStyle(.red)
+                        .textSelection(.enabled)
+                }
+                .padding(.horizontal, 18)
+                .padding(.bottom, 14)
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+        }
+        .animation(.snappy(duration: 0.18), value: errorMessage)
         .task(id: bookmarkTagLoadKey) {
             await load()
         }
@@ -113,17 +125,19 @@ struct BookmarkTagsView: View {
     }
 
     private var header: some View {
-        HStack(spacing: 12) {
-            Label("\(filteredTags.count.formatted()) \(L10n.results)", systemImage: "tag")
-                .font(.caption.weight(.medium))
-                .foregroundStyle(.secondary)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
-                .background(.quaternary, in: Capsule())
-
+        FlowLayout(spacing: 8) {
             TextField(L10n.searchBookmarkTags, text: $filterText)
                 .textFieldStyle(.roundedBorder)
                 .frame(width: 220)
+
+            Button {
+                filterText = ""
+            } label: {
+                Label(L10n.clearSearch, systemImage: "xmark.circle")
+            }
+            .labelStyle(.iconOnly)
+            .disabled(filterText.isEmpty)
+            .help(L10n.clearSearch)
 
             Picker(L10n.defaultBookmarkVisibility, selection: $selectedRestrict) {
                 ForEach(BookmarkRestrict.allCases) { restrict in
@@ -131,10 +145,15 @@ struct BookmarkTagsView: View {
                 }
             }
             .pickerStyle(.segmented)
-            .frame(width: 220)
-
-            Spacer(minLength: 0)
+            .labelsHidden()
+            .frame(width: 180)
         }
+        .controlSize(.small)
+    }
+
+    private var bookmarkTagSummary: String {
+        let paging = nextURL == nil ? L10n.noMorePages : L10n.nextPageAvailable
+        return "\(filteredTags.count.formatted()) \(L10n.results) · \(paging)"
     }
 
     private var filteredTags: [PixivBookmarkTag] {

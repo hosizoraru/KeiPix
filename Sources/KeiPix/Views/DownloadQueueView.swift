@@ -4,12 +4,18 @@ import SwiftUI
 struct DownloadQueueView: View {
     @Bindable var store: KeiPixStore
     @State private var selectedPreview: DownloadedPreview?
+    @State private var pendingDangerAction: DownloadDangerAction?
+    @State private var actionMessage: String?
 
     var body: some View {
         let visibleItems = store.downloads.filteredItems
 
         VStack(spacing: 0) {
-            DownloadQueueHeader(downloads: store.downloads)
+            DownloadQueueHeader(
+                downloads: store.downloads,
+                requestDangerAction: { pendingDangerAction = $0 },
+                copyVisibleLinks: copyVisibleLinks
+            )
                 .padding(.horizontal, 18)
                 .padding(.vertical, 12)
                 .background(.bar)
@@ -36,6 +42,9 @@ struct DownloadQueueView: View {
                                 canOpen: store.downloads.hasReadableDownload(for: item),
                                 open: {
                                     openDownloadedItem(item)
+                                },
+                                delete: {
+                                    pendingDangerAction = .deleteItem(item)
                                 }
                             )
                         }
@@ -46,6 +55,43 @@ struct DownloadQueueView: View {
             }
         }
         .navigationTitle(L10n.downloads)
+        .toolbar {
+            ToolbarItem(placement: .status) {
+                downloadStatusBadge
+            }
+        }
+        .overlay(alignment: .bottom) {
+            if let actionMessage {
+                FloatingStatusBanner(maxWidth: 520) {
+                    Text(actionMessage)
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                        .textSelection(.enabled)
+                }
+                .padding(.horizontal, 18)
+                .padding(.bottom, 14)
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+        }
+        .animation(.snappy(duration: 0.18), value: actionMessage)
+        .task(id: actionMessage) {
+            await dismissActionMessageIfNeeded(actionMessage)
+        }
+        .confirmationDialog(
+            pendingDangerAction?.title ?? L10n.downloadActions,
+            isPresented: downloadDangerActionBinding,
+            titleVisibility: .visible,
+            presenting: pendingDangerAction
+        ) { action in
+            Button(action.confirmButtonTitle, role: .destructive) {
+                perform(action)
+            }
+            Button(L10n.cancel, role: .cancel) {
+                pendingDangerAction = nil
+            }
+        } message: { action in
+            Text(action.message)
+        }
         .sheet(item: $selectedPreview) { preview in
             switch preview {
             case .images(let item, let imageURLs):
@@ -54,6 +100,28 @@ struct DownloadQueueView: View {
                 DownloadedUgoiraViewer(item: item, zipURL: zipURL)
             }
         }
+    }
+
+    private var downloadStatusBadge: some View {
+        Text(downloadStatusText)
+            .font(.caption.monospacedDigit())
+            .foregroundStyle(.secondary)
+            .lineLimit(1)
+            .help(downloadStatusHelp)
+    }
+
+    private var downloadStatusText: String {
+        "\(store.downloads.filteredItems.count.formatted()) · \(store.downloads.filteredDownloadedSizeText)"
+    }
+
+    private var downloadStatusHelp: String {
+        String(
+            format: L10n.downloadQueueDetailedSummaryFormat,
+            store.downloads.filteredItems.count,
+            store.downloads.activeCount,
+            store.downloads.completedCount,
+            store.downloads.filteredDownloadedSizeText
+        )
     }
 
     private func openDownloadedItem(_ item: ArtworkDownloadItem) {
@@ -65,6 +133,70 @@ struct DownloadQueueView: View {
         case .ugoiraZip:
             guard let filePath = item.downloadedFilePaths?.first else { return }
             selectedPreview = .ugoira(item: item, zipURL: URL(fileURLWithPath: filePath))
+        }
+    }
+
+    private var downloadDangerActionBinding: Binding<Bool> {
+        Binding {
+            pendingDangerAction != nil
+        } set: { value in
+            if value == false {
+                pendingDangerAction = nil
+            }
+        }
+    }
+
+    private func copyVisibleLinks() {
+        let links = store.downloads.filteredPixivLinks
+        guard links.isEmpty == false else { return }
+        PasteboardWriter.copy(links.joined(separator: "\n"))
+        actionMessage = String(format: L10n.copiedLinksFormat, links.count)
+    }
+
+    private func dismissActionMessageIfNeeded(_ message: String?) async {
+        guard let message else { return }
+        try? await Task.sleep(for: .seconds(2.5))
+        if actionMessage == message {
+            actionMessage = nil
+        }
+    }
+
+    private func perform(_ action: DownloadDangerAction) {
+        pendingDangerAction = nil
+
+        switch action {
+        case .deleteItem(let item):
+            store.downloads.delete(item)
+            store.undoAction = AppUndoAction(kind: .restoreDownloads([item]))
+            actionMessage = String(format: L10n.deletedDownloadsFormat, 1)
+        case .deleteVisible:
+            let items = store.downloads.filteredItems.filter { $0.status != .downloading }
+            let count = store.downloads.deleteFilteredItems()
+            if count > 0 {
+                store.undoAction = AppUndoAction(kind: .restoreDownloads(items))
+                actionMessage = String(format: L10n.deletedDownloadsFormat, count)
+            }
+        case .clearFailed:
+            let items = store.downloads.filteredItems.filter { $0.status == .failed }
+            let count = store.downloads.clearFailedFilteredItems()
+            if count > 0 {
+                store.undoAction = AppUndoAction(kind: .restoreDownloads(items))
+                actionMessage = String(format: L10n.deletedDownloadsFormat, count)
+            }
+        case .clearInvalid:
+            let items = store.downloads.invalidCompletedItems
+            let count = store.downloads.clearInvalidItems()
+            if count > 0 {
+                store.undoAction = AppUndoAction(kind: .restoreDownloads(items))
+                actionMessage = String(format: L10n.clearedDownloadsFormat, count)
+            }
+        case .clearCompleted:
+            let items = store.downloads.completedItems
+            store.downloads.clearCompleted()
+            if items.isEmpty == false {
+                store.undoAction = AppUndoAction(kind: .restoreDownloads(items))
+                actionMessage = String(format: L10n.clearedDownloadsFormat, items.count)
+            }
         }
     }
 }
@@ -85,26 +217,22 @@ private enum DownloadedPreview: Identifiable {
 
 private struct DownloadQueueHeader: View {
     @Bindable var downloads: ArtworkDownloadStore
-    @State private var isConfirmingDeleteVisibleDownloads = false
-    @State private var actionMessage: String?
+    let requestDangerAction: (DownloadDangerAction) -> Void
+    let copyVisibleLinks: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack(spacing: 12) {
-                VStack(alignment: .leading, spacing: 3) {
-                    Text(downloads.downloadDirectoryPath)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
-                        .truncationMode(.middle)
-                        .textSelection(.enabled)
-                }
+        VStack(alignment: .leading, spacing: 8) {
+            Text(downloads.downloadDirectoryPath)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+                .truncationMode(.middle)
+                .textSelection(.enabled)
 
-                Spacer()
-
+            FlowLayout(spacing: 8) {
                 TextField(L10n.searchDownloads, text: downloadSearchBinding)
                     .textFieldStyle(.roundedBorder)
-                    .frame(width: 240)
+                    .frame(width: 220)
 
                 Menu {
                     Picker(L10n.sortDownloads, selection: downloadSortBinding) {
@@ -117,6 +245,18 @@ private struct DownloadQueueHeader: View {
                 }
                 .buttonStyle(.bordered)
 
+                Menu {
+                    Picker(L10n.downloadFilter, selection: downloadFilterBinding) {
+                        ForEach(DownloadQueueFilter.allCases) { filter in
+                            Text(filter.title).tag(filter)
+                        }
+                    }
+                } label: {
+                    Label(downloads.downloadQueueFilter.title, systemImage: "line.3.horizontal.decrease.circle")
+                }
+                .buttonStyle(.bordered)
+                .help(summaryHelpText)
+
                 Button {
                     downloads.openDownloadDirectory()
                 } label: {
@@ -125,9 +265,7 @@ private struct DownloadQueueHeader: View {
                 .buttonStyle(.bordered)
 
                 Menu {
-                    Button {
-                        copyVisibleLinks()
-                    } label: {
+                    Button(action: copyVisibleLinks) {
                         Label(L10n.copyVisibleDownloadLinks, systemImage: "link")
                     }
                     .disabled(downloads.filteredPixivLinks.isEmpty)
@@ -142,7 +280,7 @@ private struct DownloadQueueHeader: View {
                     .disabled(downloads.filteredItems.isEmpty)
 
                     Button(role: .destructive) {
-                        isConfirmingDeleteVisibleDownloads = true
+                        requestDangerAction(.deleteVisible(count: downloads.filteredDeletableCount))
                     } label: {
                         Label(L10n.deleteVisibleDownloads, systemImage: "trash")
                     }
@@ -158,7 +296,7 @@ private struct DownloadQueueHeader: View {
                     .disabled(downloads.failedFilteredCount == 0)
 
                     Button(role: .destructive) {
-                        downloads.clearFailedFilteredItems()
+                        requestDangerAction(.clearFailed(count: downloads.failedFilteredCount))
                     } label: {
                         Label(L10n.clearFailedDownloads, systemImage: "trash")
                     }
@@ -167,13 +305,14 @@ private struct DownloadQueueHeader: View {
                     Divider()
 
                     Button {
-                        downloads.clearInvalidItems()
+                        requestDangerAction(.clearInvalid(count: downloads.invalidCompletedItems.count))
                     } label: {
                         Label(L10n.clearInvalidDownloads, systemImage: "exclamationmark.arrow.trianglehead.2.clockwise.rotate.90")
                     }
+                    .disabled(downloads.invalidCompletedItems.isEmpty)
 
                     Button {
-                        downloads.clearCompleted()
+                        requestDangerAction(.clearCompleted(count: downloads.completedCount))
                     } label: {
                         Label(L10n.clearCompleted, systemImage: "checkmark.circle")
                     }
@@ -182,49 +321,9 @@ private struct DownloadQueueHeader: View {
                     Label(L10n.downloadActions, systemImage: "ellipsis.circle")
                 }
                 .buttonStyle(.bordered)
+
             }
-
-            HStack(spacing: 12) {
-                Picker(L10n.downloadFilter, selection: downloadFilterBinding) {
-                    ForEach(DownloadQueueFilter.allCases) { filter in
-                        Text(filter.title).tag(filter)
-                    }
-                }
-                .pickerStyle(.segmented)
-                .frame(maxWidth: 620)
-
-                Spacer()
-
-                Text(summaryText)
-                    .font(.caption.monospacedDigit())
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-
-                Text(storageText)
-                    .font(.caption.monospacedDigit())
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-            }
-
-            if let actionMessage {
-                Text(actionMessage)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-            }
-        }
-        .confirmationDialog(
-            L10n.deleteVisibleDownloads,
-            isPresented: $isConfirmingDeleteVisibleDownloads,
-            titleVisibility: .visible
-        ) {
-            Button(L10n.deleteVisibleDownloads, role: .destructive) {
-                let count = downloads.deleteFilteredItems()
-                actionMessage = String(format: L10n.deletedDownloadsFormat, count)
-            }
-            Button(L10n.cancel, role: .cancel) {}
-        } message: {
-            Text(String(format: L10n.deleteVisibleDownloadsConfirmationFormat, downloads.filteredDeletableCount))
+                .controlSize(.small)
         }
     }
 
@@ -252,24 +351,14 @@ private struct DownloadQueueHeader: View {
         }
     }
 
-    private var summaryText: String {
+    private var summaryHelpText: String {
         String(
-            format: L10n.downloadQueueSummaryFormat,
+            format: L10n.downloadQueueDetailedSummaryFormat,
             downloads.filteredItems.count,
             downloads.activeCount,
-            downloads.completedCount
+            downloads.completedCount,
+            downloads.filteredDownloadedSizeText
         )
-    }
-
-    private var storageText: String {
-        String(format: L10n.downloadStorageSummaryFormat, downloads.filteredDownloadedSizeText)
-    }
-
-    private func copyVisibleLinks() {
-        let links = downloads.filteredPixivLinks
-        guard links.isEmpty == false else { return }
-        PasteboardWriter.copy(links.joined(separator: "\n"))
-        actionMessage = String(format: L10n.copiedLinksFormat, links.count)
     }
 }
 
@@ -278,6 +367,7 @@ private struct DownloadQueueRow: View {
     @Bindable var downloads: ArtworkDownloadStore
     let canOpen: Bool
     let open: () -> Void
+    let delete: () -> Void
 
     var body: some View {
         HStack(spacing: 12) {
@@ -384,9 +474,7 @@ private struct DownloadQueueRow: View {
 
                 Divider()
 
-                Button(role: .destructive) {
-                    downloads.delete(item)
-                } label: {
+                Button(role: .destructive, action: delete) {
                     Label(L10n.deleteDownload, systemImage: "trash")
                 }
                 .disabled(item.status == .downloading)
@@ -397,9 +485,7 @@ private struct DownloadQueueRow: View {
             .buttonStyle(.bordered)
             .help(L10n.moreActions)
 
-            Button(role: .destructive) {
-                downloads.delete(item)
-            } label: {
+            Button(role: .destructive, action: delete) {
                 Label(L10n.deleteDownload, systemImage: "trash")
             }
             .labelStyle(.iconOnly)
@@ -427,9 +513,7 @@ private struct DownloadQueueRow: View {
                     PasteboardWriter.copy(pixivURL.absoluteString)
                 }
             }
-            Button(role: .destructive) {
-                downloads.delete(item)
-            } label: {
+            Button(role: .destructive, action: delete) {
                 Text(L10n.deleteDownload)
             }
             .disabled(item.status == .downloading)
@@ -451,6 +535,61 @@ private struct DownloadQueueRow: View {
         case .failed:
             Image(systemName: "exclamationmark.triangle.fill")
                 .foregroundStyle(.orange)
+        }
+    }
+}
+
+private enum DownloadDangerAction: Identifiable {
+    case deleteItem(ArtworkDownloadItem)
+    case deleteVisible(count: Int)
+    case clearFailed(count: Int)
+    case clearInvalid(count: Int)
+    case clearCompleted(count: Int)
+
+    var id: String {
+        switch self {
+        case .deleteItem(let item):
+            "delete-\(item.id.uuidString)"
+        case .deleteVisible(let count):
+            "delete-visible-\(count)"
+        case .clearFailed(let count):
+            "clear-failed-\(count)"
+        case .clearInvalid(let count):
+            "clear-invalid-\(count)"
+        case .clearCompleted(let count):
+            "clear-completed-\(count)"
+        }
+    }
+
+    var title: String {
+        switch self {
+        case .deleteItem:
+            L10n.deleteDownload
+        case .deleteVisible:
+            L10n.deleteVisibleDownloads
+        case .clearFailed:
+            L10n.clearFailedDownloads
+        case .clearInvalid:
+            L10n.clearInvalidDownloads
+        case .clearCompleted:
+            L10n.clearCompleted
+        }
+    }
+
+    var confirmButtonTitle: String { title }
+
+    var message: String {
+        switch self {
+        case .deleteItem(let item):
+            String(format: L10n.deleteDownloadConfirmationFormat, item.title)
+        case .deleteVisible(let count):
+            String(format: L10n.deleteVisibleDownloadsConfirmationFormat, count)
+        case .clearFailed(let count):
+            String(format: L10n.clearFailedDownloadsConfirmationFormat, count)
+        case .clearInvalid(let count):
+            String(format: L10n.clearInvalidDownloadsConfirmationFormat, count)
+        case .clearCompleted(let count):
+            String(format: L10n.clearCompletedDownloadsConfirmationFormat, count)
         }
     }
 }

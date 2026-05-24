@@ -4,29 +4,12 @@ struct SavedSearchesView: View {
     @Bindable var store: KeiPixStore
     @State private var librarySearchText = ""
     @State private var actionMessage: String?
+    @State private var pendingDangerAction: SavedSearchDangerAction?
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 18) {
-                HStack(spacing: 10) {
-                    Image(systemName: "magnifyingglass")
-                        .foregroundStyle(.secondary)
-
-                    TextField(L10n.searchSavedSearches, text: $librarySearchText)
-                        .textFieldStyle(.roundedBorder)
-                        .frame(maxWidth: 360)
-
-                    Spacer(minLength: 0)
-                }
-                .padding(12)
-                .keiPanel(14)
-
-                if let actionMessage {
-                    Text(actionMessage)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .padding(.horizontal, 2)
-                }
+            VStack(alignment: .leading, spacing: 14) {
+                header
 
                 SavedSearchPresetSection(
                     presets: visiblePresets,
@@ -34,7 +17,9 @@ struct SavedSearchesView: View {
                     rowAction: runPreset,
                     copyAction: copyPresetKeyword,
                     copyPixivWebAction: copyPresetPixivWebLink,
-                    removeAction: store.removeSavedSearchPreset
+                    removeAction: { preset in
+                        pendingDangerAction = .removePreset(preset)
+                    }
                 )
 
                 SavedSearchSection(
@@ -66,7 +51,7 @@ struct SavedSearchesView: View {
                             Divider()
 
                             Button(role: .destructive) {
-                                store.removeSavedSearch(keyword)
+                                pendingDangerAction = .removeSavedSearch(keyword)
                             } label: {
                                 Label(L10n.removeSavedSearch, systemImage: "star.slash")
                             }
@@ -85,7 +70,7 @@ struct SavedSearchesView: View {
                     rowAction: runSearch,
                     footer: {
                         Button(role: .destructive) {
-                            store.clearSearchHistory()
+                            pendingDangerAction = .clearSearchHistory(count: store.searchHistory.count)
                         } label: {
                             Label(L10n.clearSearchHistory, systemImage: "trash")
                         }
@@ -126,6 +111,80 @@ struct SavedSearchesView: View {
         }
         .scrollEdgeEffectStyle(.soft, for: .top)
         .navigationTitle(L10n.savedSearches)
+        .toolbar {
+            ToolbarItem(placement: .status) {
+                Text(savedSearchStatusText)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .help(savedSearchStatusHelp)
+            }
+        }
+        .overlay(alignment: .bottom) {
+            if let actionMessage {
+                FloatingStatusBanner(maxWidth: 520) {
+                    Text(actionMessage)
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                        .textSelection(.enabled)
+                }
+                .padding(.horizontal, 18)
+                .padding(.bottom, 14)
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+        }
+        .animation(.snappy(duration: 0.18), value: actionMessage)
+        .task(id: actionMessage) {
+            await dismissActionMessageIfNeeded(actionMessage)
+        }
+        .confirmationDialog(
+            pendingDangerAction?.title ?? L10n.searchActions,
+            isPresented: savedSearchDangerBinding,
+            titleVisibility: .visible,
+            presenting: pendingDangerAction
+        ) { action in
+            Button(action.confirmButtonTitle, role: .destructive) {
+                perform(action)
+            }
+            Button(L10n.cancel, role: .cancel) {
+                pendingDangerAction = nil
+            }
+        } message: { action in
+            Text(action.message)
+        }
+    }
+
+    private var header: some View {
+        FlowLayout(spacing: 8) {
+            TextField(L10n.searchSavedSearches, text: $librarySearchText)
+                .textFieldStyle(.roundedBorder)
+                .frame(width: 260)
+
+            Button {
+                librarySearchText = ""
+            } label: {
+                Label(L10n.clearSearch, systemImage: "xmark.circle")
+            }
+            .labelStyle(.iconOnly)
+            .disabled(librarySearchText.isEmpty)
+            .help(L10n.clearSearch)
+        }
+        .controlSize(.small)
+    }
+
+    private var savedSearchStatusText: String {
+        [
+            "\(store.savedSearchPresets.count.formatted()) \(L10n.savedSearchPresets)",
+            "\(store.savedSearches.count.formatted()) \(L10n.savedSearches)",
+            "\(store.searchHistory.count.formatted()) \(L10n.recentSearches)"
+        ].joined(separator: " · ")
+    }
+
+    private var savedSearchStatusHelp: String {
+        if normalizedLibrarySearchText.isEmpty {
+            return savedSearchStatusText
+        }
+        return "\(normalizedLibrarySearchText) · \(savedSearchStatusText)"
     }
 
     private var normalizedLibrarySearchText: String {
@@ -186,6 +245,50 @@ struct SavedSearchesView: View {
         actionMessage = L10n.copiedPixivWebSearchLink
     }
 
+    private func dismissActionMessageIfNeeded(_ message: String?) async {
+        guard let message else { return }
+        do {
+            try await Task.sleep(for: .seconds(3))
+        } catch {
+            return
+        }
+        if actionMessage == message {
+            actionMessage = nil
+        }
+    }
+
+    private var savedSearchDangerBinding: Binding<Bool> {
+        Binding {
+            pendingDangerAction != nil
+        } set: { value in
+            if value == false {
+                pendingDangerAction = nil
+            }
+        }
+    }
+
+    private func perform(_ action: SavedSearchDangerAction) {
+        pendingDangerAction = nil
+
+        switch action {
+        case .removeSavedSearch(let keyword):
+            store.removeSavedSearch(keyword)
+            store.undoAction = AppUndoAction(kind: .restoreSavedSearches([keyword]))
+            actionMessage = String(format: L10n.removedSavedSearchesFormat, 1)
+        case .removePreset(let preset):
+            store.removeSavedSearchPreset(preset)
+            store.undoAction = AppUndoAction(kind: .restoreSavedSearchPresets([preset]))
+            actionMessage = String(format: L10n.removedSearchPresetsFormat, 1)
+        case .clearSearchHistory:
+            let keywords = store.searchHistory
+            store.clearSearchHistory()
+            if keywords.isEmpty == false {
+                store.undoAction = AppUndoAction(kind: .restoreSearchHistory(keywords))
+                actionMessage = String(format: L10n.clearedSearchHistoryItemsFormat, keywords.count)
+            }
+        }
+    }
+
     @ViewBuilder
     private func pixivWebSearchActions(keyword: String, options: SearchOptions) -> some View {
         if let url = PixivWebURLBuilder.searchURL(keyword: keyword, options: options) {
@@ -198,6 +301,47 @@ struct SavedSearchesView: View {
             } label: {
                 Label(L10n.copyPixivWebSearchLink, systemImage: "link")
             }
+        }
+    }
+}
+
+private enum SavedSearchDangerAction: Identifiable {
+    case removeSavedSearch(String)
+    case removePreset(SavedSearchPreset)
+    case clearSearchHistory(count: Int)
+
+    var id: String {
+        switch self {
+        case .removeSavedSearch(let keyword):
+            "saved-\(keyword)"
+        case .removePreset(let preset):
+            "preset-\(preset.id.uuidString)"
+        case .clearSearchHistory(let count):
+            "history-\(count)"
+        }
+    }
+
+    var title: String {
+        switch self {
+        case .removeSavedSearch:
+            L10n.removeSavedSearch
+        case .removePreset:
+            L10n.removeSearchPreset
+        case .clearSearchHistory:
+            L10n.clearSearchHistory
+        }
+    }
+
+    var confirmButtonTitle: String { title }
+
+    var message: String {
+        switch self {
+        case .removeSavedSearch(let keyword):
+            String(format: L10n.removeSavedSearchConfirmationFormat, keyword)
+        case .removePreset(let preset):
+            String(format: L10n.removeSearchPresetConfirmationFormat, preset.keyword)
+        case .clearSearchHistory(let count):
+            String(format: L10n.clearSearchHistoryConfirmationFormat, count)
         }
     }
 }

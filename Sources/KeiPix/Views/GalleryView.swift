@@ -2,6 +2,7 @@ import SwiftUI
 
 struct GalleryView: View {
     @Bindable var store: KeiPixStore
+    @State private var actionMessage: String?
 
     var body: some View {
         Group {
@@ -21,9 +22,9 @@ struct GalleryView: View {
                                 .padding(.top, 14)
                                 .padding(.bottom, 20)
                         } header: {
-                            FeedHeaderView(store: store)
+                            FeedHeaderView(store: store, actionMessage: $actionMessage)
                                 .padding(.horizontal, 18)
-                                .padding(.vertical, 6)
+                                .padding(.vertical, 5)
                                 .background(.bar)
                         }
                     }
@@ -32,6 +33,31 @@ struct GalleryView: View {
             }
         }
         .navigationTitle(navigationTitle)
+        .overlay(alignment: .bottom) {
+            if let actionMessage {
+                FloatingStatusBanner(maxWidth: 520) {
+                    Text(actionMessage)
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                        .textSelection(.enabled)
+                }
+                .padding(.horizontal, 18)
+                .padding(.bottom, 14)
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+        }
+        .animation(.snappy(duration: 0.18), value: actionMessage)
+        .toolbar {
+            if store.session != nil, store.artworks.isEmpty == false {
+                ToolbarItem(placement: .status) {
+                    Text(feedStatusText)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                        .help(feedDetailSummary)
+                }
+            }
+        }
     }
 
     private var navigationTitle: String {
@@ -39,6 +65,32 @@ struct GalleryView: View {
             return "\(store.selectedRoute.title) · \(focusedUser.name)"
         }
         return store.selectedRoute.title
+    }
+
+    private var feedStatusText: String {
+        var parts = ["\(store.artworks.count.formatted()) \(L10n.results)"]
+        if store.selectedRoute == .search, store.searchOptions.isDefault == false {
+            parts.append(L10n.activeSearchFilters)
+        }
+        return parts.joined(separator: " · ")
+    }
+
+    private var feedDetailSummary: String {
+        var parts = [
+            feedStatusText,
+            store.hasNextPage ? L10n.nextPageAvailable : L10n.noMorePages
+        ]
+        if let focusedUser = store.focusedUser {
+            parts.append("\(focusedUser.name) @\(focusedUser.account)")
+        }
+        if store.selectedRoute == .search {
+            let keyword = store.searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+            if keyword.isEmpty == false {
+                parts.append(keyword)
+            }
+            parts.append(store.searchOptions.summary)
+        }
+        return parts.joined(separator: " · ")
     }
 }
 
@@ -82,23 +134,27 @@ private struct GalleryContentGrid: View {
         }
         .contextMenu {
             Button(artwork.isBookmarked ? L10n.removeBookmark : L10n.bookmark) {
-                Task { await store.toggleBookmark(artwork) }
+                if artwork.isBookmarked {
+                    store.requestDangerAction(AppDangerAction(kind: .removeBookmark(artwork)))
+                } else {
+                    Task { await store.toggleBookmark(artwork) }
+                }
             }
             Button(L10n.download) {
                 store.enqueueDownload(artwork)
             }
             Divider()
             Button(L10n.muteArtwork) {
-                store.muteArtwork(artwork)
+                store.requestDangerAction(AppDangerAction(kind: .muteArtwork(artwork)))
             }
             Button(L10n.muteCreator) {
-                store.muteUser(artwork.user)
+                store.requestDangerAction(AppDangerAction(kind: .muteCreator(artwork.user)))
             }
             if artwork.tags.isEmpty == false {
                 Menu(L10n.muteTag) {
                     ForEach(artwork.tags.prefix(12), id: \.self) { tag in
                         Button("#\(tag.name)") {
-                            store.muteTag(tag)
+                            store.requestDangerAction(AppDangerAction(kind: .muteTag(tag)))
                         }
                     }
                 }
@@ -145,23 +201,27 @@ private struct MasonryArtworkGrid: View {
                 .layoutValue(key: MasonryAspectRatioKey.self, value: presentation.aspectRatio)
                 .contextMenu {
                     Button(artwork.isBookmarked ? L10n.removeBookmark : L10n.bookmark) {
-                        Task { await store.toggleBookmark(artwork) }
+                        if artwork.isBookmarked {
+                            store.requestDangerAction(AppDangerAction(kind: .removeBookmark(artwork)))
+                        } else {
+                            Task { await store.toggleBookmark(artwork) }
+                        }
                     }
                     Button(L10n.download) {
                         store.enqueueDownload(artwork)
                     }
                     Divider()
                     Button(L10n.muteArtwork) {
-                        store.muteArtwork(artwork)
+                        store.requestDangerAction(AppDangerAction(kind: .muteArtwork(artwork)))
                     }
                     Button(L10n.muteCreator) {
-                        store.muteUser(artwork.user)
+                        store.requestDangerAction(AppDangerAction(kind: .muteCreator(artwork.user)))
                     }
                     if artwork.tags.isEmpty == false {
                         Menu(L10n.muteTag) {
                             ForEach(artwork.tags.prefix(12), id: \.self) { tag in
                                 Button("#\(tag.name)") {
-                                    store.muteTag(tag)
+                                    store.requestDangerAction(AppDangerAction(kind: .muteTag(tag)))
                                 }
                             }
                         }
@@ -180,222 +240,183 @@ private struct MasonryArtworkGrid: View {
 
 private struct FeedHeaderView: View {
     @Bindable var store: KeiPixStore
+    @Binding var actionMessage: String?
     @State private var isBatchDownloadPresented = false
     @State private var batchDownloadLimit = 30
     @State private var lastQueuedDownloadCount: Int?
     @State private var bookmarkTags: [PixivBookmarkTag] = []
     @State private var isLoadingBookmarkTags = false
     @State private var bookmarkTagErrorMessage: String?
-    @State private var searchActionMessage: String?
-    @State private var feedActionMessage: String?
+    @State private var isRankingDatePopoverPresented = false
+    @State private var draftUseRankingDate = false
+    @State private var draftRankingDate = KeiPixStore.latestSelectableRankingDate()
 
     var body: some View {
-        HStack(spacing: 10) {
-            feedStatus
-
-            Spacer(minLength: 12)
-
-            if store.selectedRoute == .search,
-               store.searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false {
-                Menu {
-                    if let pixivWebSearchURL {
-                        Link(destination: pixivWebSearchURL) {
-                            Label(L10n.openPixivWebSearch, systemImage: "safari")
-                        }
-
-                        Button {
-                            copyPixivWebSearchLink(pixivWebSearchURL)
-                        } label: {
-                            Label(L10n.copyPixivWebSearchLink, systemImage: "link")
-                        }
-
-                        Divider()
-                    }
-
-                    Button {
-                        copySearchSummary()
-                    } label: {
-                        Label(L10n.copySearchSummary, systemImage: "doc.on.doc")
-                    }
-
-                    Button {
-                        resetSearchFilters()
-                    } label: {
-                        Label(L10n.resetSearchFilters, systemImage: "arrow.counterclockwise")
-                    }
-                    .disabled(store.searchOptions.isDefault)
-
-                    Divider()
-
-                    Button {
-                        store.saveCurrentSearch()
-                    } label: {
-                        Label(L10n.saveSearch, systemImage: "star")
-                    }
-
-                    Button {
-                        store.saveCurrentSearchPreset()
-                    } label: {
-                        Label(L10n.saveSearchWithFilters, systemImage: "slider.horizontal.3")
-                    }
-                } label: {
-                    Label(L10n.searchActions, systemImage: "ellipsis.circle")
-                }
-                .menuStyle(.button)
-                .buttonStyle(.bordered)
-            }
-
-            if store.selectedRoute.isOwnBookmarkRoute {
-                Menu {
-                    Button {
-                        store.setBookmarkTagFilter(nil)
-                    } label: {
-                        Label(L10n.allBookmarkTags, systemImage: store.bookmarkTagFilter == nil ? "checkmark" : "tag")
-                    }
-
-                    Divider()
-
-                    if isLoadingBookmarkTags {
-                        ProgressView()
-                    } else if bookmarkTags.isEmpty {
-                        Text(L10n.noBookmarkTags)
-                    } else {
-                        ForEach(bookmarkTags) { tag in
-                            Button {
-                                store.setBookmarkTagFilter(tag.name)
-                            } label: {
-                                HStack {
-                                    Label(
-                                        tag.name,
-                                        systemImage: store.bookmarkTagFilter == tag.name ? "checkmark" : "tag"
-                                    )
-                                    Spacer()
-                                    Text(tag.count.formatted())
-                                }
-                            }
-                        }
-                    }
-
-                    if let bookmarkTagErrorMessage {
-                        Divider()
-                        Text(bookmarkTagErrorMessage)
-                    }
-                } label: {
-                    Label(bookmarkTagTitle, systemImage: "tag")
-                }
-                .menuStyle(.button)
-                .buttonStyle(.bordered)
-            }
-
-            if store.selectedRoute.isRankingRoute {
-                Menu {
-                    Toggle(L10n.useRankingDate, isOn: useRankingDateBinding)
-
-                    DatePicker(
-                        L10n.rankingDate,
-                        selection: rankingDateBinding,
-                        in: ...Date(),
-                        displayedComponents: .date
-                    )
-                    .disabled(store.useRankingDate == false)
-
-                    Divider()
-
-                    Button {
-                        store.setUseRankingDate(false)
-                        Task { await store.reloadCurrentFeed() }
-                    } label: {
-                        Label(L10n.latestRanking, systemImage: "clock")
-                    }
-                } label: {
-                    Label(rankingDateTitle, systemImage: "calendar")
-                }
-                .menuStyle(.button)
-                .buttonStyle(.bordered)
-            }
-
-            Menu {
-                Button {
-                    copyLoadedArtworkLinks()
-                } label: {
-                    Label(L10n.copyLoadedArtworkLinks, systemImage: "link")
-                }
-                .disabled(loadedArtworkLinks.isEmpty)
-            } label: {
-                Label(L10n.moreActions, systemImage: "ellipsis.circle")
-            }
-            .menuStyle(.button)
-            .buttonStyle(.bordered)
-
-            Button {
-                batchDownloadLimit = min(max(1, batchDownloadLimit), maxBatchDownloadLimit)
-                isBatchDownloadPresented = true
-            } label: {
-                Label(L10n.batchDownload, systemImage: "square.and.arrow.down.on.square")
-            }
-            .buttonStyle(.bordered)
-            .popover(isPresented: $isBatchDownloadPresented, arrowEdge: .bottom) {
-                BatchDownloadPopover(
-                    limit: $batchDownloadLimit,
-                    maxLimit: maxBatchDownloadLimit,
-                    queuedCount: lastQueuedDownloadCount,
-                    downloadDirectoryPath: store.downloads.downloadDirectoryPath,
-                    action: queueBatchDownload
-                )
-            }
-
-            if store.selectedRoute == .search {
-                Button {
-                    Task { await store.runSearch() }
-                } label: {
-                    Label(L10n.search, systemImage: "magnifyingglass")
-                }
-                .buttonStyle(.bordered)
-            }
+        FlowLayout(spacing: 8) {
+            headerActions
         }
+        .controlSize(.small)
         .task(id: bookmarkTagRouteKey) {
             await loadBookmarkTagsIfNeeded()
         }
+        .task(id: actionMessage) {
+            await dismissActionMessageIfNeeded(actionMessage)
+        }
     }
 
-    private var feedStatus: some View {
-        HStack(spacing: 6) {
-            Label(resultSummary, systemImage: "photo.on.rectangle")
-                .labelStyle(.titleAndIcon)
+    @ViewBuilder
+    private var headerActions: some View {
+        if store.selectedRoute == .search,
+           store.searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false {
+            Menu {
+                if let pixivWebSearchURL {
+                    Link(destination: pixivWebSearchURL) {
+                        Label(L10n.openPixivWebSearch, systemImage: "safari")
+                    }
 
-            if let focusedUser = store.focusedUser {
-                Text("@\(focusedUser.account)")
-                    .lineLimit(1)
+                    Button {
+                        copyPixivWebSearchLink(pixivWebSearchURL)
+                    } label: {
+                        Label(L10n.copyPixivWebSearchLink, systemImage: "link")
+                    }
+
+                    Divider()
+                }
+
+                Button {
+                    copySearchSummary()
+                } label: {
+                    Label(L10n.copySearchSummary, systemImage: "doc.on.doc")
+                }
+
+                Button {
+                    resetSearchFilters()
+                } label: {
+                    Label(L10n.resetSearchFilters, systemImage: "arrow.counterclockwise")
+                }
+                .disabled(store.searchOptions.isDefault)
+
+                Divider()
+
+                Button {
+                    store.saveCurrentSearch()
+                } label: {
+                    Label(L10n.saveSearch, systemImage: "star")
+                }
+
+                Button {
+                    store.saveCurrentSearchPreset()
+                } label: {
+                    Label(L10n.saveSearchWithFilters, systemImage: "slider.horizontal.3")
+                }
+            } label: {
+                Label(L10n.searchActions, systemImage: "ellipsis.circle")
             }
+            .menuStyle(.button)
+            .buttonStyle(.bordered)
+        }
 
-            if store.selectedRoute == .search {
-                Label(searchSummary, systemImage: "slider.horizontal.3")
-                    .labelStyle(.titleAndIcon)
-                    .lineLimit(1)
-                    .help(searchSummary)
+        if store.selectedRoute.isOwnBookmarkRoute {
+            Menu {
+                Button {
+                    store.setBookmarkTagFilter(nil)
+                } label: {
+                    Label(L10n.allBookmarkTags, systemImage: store.bookmarkTagFilter == nil ? "checkmark" : "tag")
+                }
+
+                Divider()
+
+                if isLoadingBookmarkTags {
+                    ProgressView()
+                } else if bookmarkTags.isEmpty {
+                    Text(L10n.noBookmarkTags)
+                } else {
+                    ForEach(bookmarkTags) { tag in
+                        Button {
+                            store.setBookmarkTagFilter(tag.name)
+                        } label: {
+                            HStack {
+                                Label(
+                                    tag.name,
+                                    systemImage: store.bookmarkTagFilter == tag.name ? "checkmark" : "tag"
+                                )
+                                Spacer()
+                                Text(tag.count.formatted())
+                            }
+                        }
+                    }
+                }
+
+                if let bookmarkTagErrorMessage {
+                    Divider()
+                    Text(bookmarkTagErrorMessage)
+                }
+            } label: {
+                Label(bookmarkTagTitle, systemImage: "tag")
             }
+            .menuStyle(.button)
+            .buttonStyle(.bordered)
+        }
 
-            if let feedActionMessage {
-                Text(feedActionMessage)
-                    .foregroundStyle(.tertiary)
-                    .lineLimit(1)
+        if store.selectedRoute.isRankingRoute {
+            Button {
+                draftUseRankingDate = store.useRankingDate
+                draftRankingDate = store.rankingDate
+                isRankingDatePopoverPresented = true
+            } label: {
+                Label(rankingDateTitle, systemImage: "calendar")
             }
-
-            if let searchActionMessage, store.selectedRoute == .search {
-                Text(searchActionMessage)
-                    .foregroundStyle(.tertiary)
-                    .lineLimit(1)
+            .buttonStyle(.bordered)
+            .popover(isPresented: $isRankingDatePopoverPresented, arrowEdge: .bottom) {
+                RankingDatePopover(
+                    useRankingDate: $draftUseRankingDate,
+                    rankingDate: $draftRankingDate,
+                    apply: applyRankingDate,
+                    useLatest: useLatestRanking
+                )
+                .frame(width: 280)
+                .padding(14)
             }
         }
-        .font(.caption.weight(.medium))
-        .foregroundStyle(.secondary)
-        .padding(.horizontal, 8)
-        .padding(.vertical, 4)
-        .background(.quaternary, in: Capsule())
-    }
 
-    private var resultSummary: String {
-        "\(store.artworks.count.formatted()) \(L10n.results) · \(store.hasNextPage ? L10n.nextPageAvailable : L10n.noMorePages)"
+        Menu {
+            Button {
+                copyLoadedArtworkLinks()
+            } label: {
+                Label(L10n.copyLoadedArtworkLinks, systemImage: "link")
+            }
+            .disabled(loadedArtworkLinks.isEmpty)
+        } label: {
+            Label(L10n.moreActions, systemImage: "ellipsis.circle")
+        }
+        .menuStyle(.button)
+        .buttonStyle(.bordered)
+
+        Button {
+            batchDownloadLimit = min(max(1, batchDownloadLimit), maxBatchDownloadLimit)
+            isBatchDownloadPresented = true
+        } label: {
+            Label(L10n.batchDownload, systemImage: "square.and.arrow.down.on.square")
+        }
+        .buttonStyle(.bordered)
+        .popover(isPresented: $isBatchDownloadPresented, arrowEdge: .bottom) {
+            BatchDownloadPopover(
+                limit: $batchDownloadLimit,
+                maxLimit: maxBatchDownloadLimit,
+                queuedCount: lastQueuedDownloadCount,
+                downloadDirectoryPath: store.downloads.downloadDirectoryPath,
+                action: queueBatchDownload
+            )
+        }
+
+        if store.selectedRoute == .search {
+            Button {
+                Task { await store.runSearch() }
+            } label: {
+                Label(L10n.search, systemImage: "magnifyingglass")
+            }
+            .buttonStyle(.bordered)
+        }
     }
 
     private var maxBatchDownloadLimit: Int {
@@ -455,25 +476,19 @@ private struct FeedHeaderView: View {
             : L10n.latestRanking
     }
 
-    private var useRankingDateBinding: Binding<Bool> {
-        Binding {
-            store.useRankingDate
-        } set: { value in
-            store.setUseRankingDate(value)
-            Task { await store.reloadCurrentFeed() }
-        }
+    private func applyRankingDate() {
+        store.setRankingDate(draftRankingDate)
+        store.setUseRankingDate(draftUseRankingDate)
+        isRankingDatePopoverPresented = false
+        Task { await store.reloadCurrentFeed() }
     }
 
-    private var rankingDateBinding: Binding<Date> {
-        Binding {
-            store.rankingDate
-        } set: { value in
-            store.setRankingDate(value)
-            if store.useRankingDate == false {
-                store.setUseRankingDate(true)
-            }
-            Task { await store.reloadCurrentFeed() }
-        }
+    private func useLatestRanking() {
+        draftUseRankingDate = false
+        draftRankingDate = KeiPixStore.latestSelectableRankingDate()
+        store.setUseRankingDate(false)
+        isRankingDatePopoverPresented = false
+        Task { await store.reloadCurrentFeed() }
     }
 
     private func queueBatchDownload() {
@@ -492,44 +507,76 @@ private struct FeedHeaderView: View {
         let links = loadedArtworkLinks
         guard links.isEmpty == false else { return }
         PasteboardWriter.copy(links.joined(separator: "\n"))
-        feedActionMessage = String(format: L10n.copiedArtworkLinksFormat, links.count)
-
-        Task {
-            try? await Task.sleep(for: .seconds(2))
-            if feedActionMessage == String(format: L10n.copiedArtworkLinksFormat, links.count) {
-                feedActionMessage = nil
-            }
-        }
+        actionMessage = String(format: L10n.copiedArtworkLinksFormat, links.count)
     }
 
     private func copySearchSummary() {
         PasteboardWriter.copy(searchSummary)
-        searchActionMessage = L10n.copiedSearchSummary
-
-        Task {
-            try? await Task.sleep(for: .seconds(2))
-            if searchActionMessage == L10n.copiedSearchSummary {
-                searchActionMessage = nil
-            }
-        }
+        actionMessage = L10n.copiedSearchSummary
     }
 
     private func copyPixivWebSearchLink(_ url: URL) {
         PasteboardWriter.copy(url.absoluteString)
-        searchActionMessage = L10n.copiedPixivWebSearchLink
-
-        Task {
-            try? await Task.sleep(for: .seconds(2))
-            if searchActionMessage == L10n.copiedPixivWebSearchLink {
-                searchActionMessage = nil
-            }
-        }
+        actionMessage = L10n.copiedPixivWebSearchLink
     }
 
     private func resetSearchFilters() {
         store.resetSearchOptions()
-        searchActionMessage = nil
+        actionMessage = nil
         Task { await store.runSearch() }
+    }
+
+    private func dismissActionMessageIfNeeded(_ message: String?) async {
+        guard let message else { return }
+        try? await Task.sleep(for: .seconds(2))
+        if actionMessage == message {
+            actionMessage = nil
+        }
+    }
+}
+
+private struct RankingDatePopover: View {
+    @Binding var useRankingDate: Bool
+    @Binding var rankingDate: Date
+    let apply: () -> Void
+    let useLatest: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text(L10n.rankingDate)
+                .font(.headline)
+
+            Toggle(L10n.useRankingDate, isOn: $useRankingDate)
+
+            DatePicker(
+                L10n.rankingDate,
+                selection: $rankingDate,
+                in: ...KeiPixStore.latestSelectableRankingDate(),
+                displayedComponents: .date
+            )
+            .datePickerStyle(.graphical)
+            .labelsHidden()
+
+            Divider()
+
+            HStack(spacing: 8) {
+                Button {
+                    useLatest()
+                } label: {
+                    Label(L10n.latestRanking, systemImage: "clock")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.bordered)
+
+                Button {
+                    apply()
+                } label: {
+                    Label(L10n.apply, systemImage: "checkmark")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.borderedProminent)
+            }
+        }
     }
 }
 

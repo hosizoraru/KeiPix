@@ -225,6 +225,14 @@ final class ArtworkDownloadStore {
         items.filter { $0.status == .completed }.count
     }
 
+    var completedItems: [ArtworkDownloadItem] {
+        items.filter { $0.status == .completed }
+    }
+
+    var invalidCompletedItems: [ArtworkDownloadItem] {
+        items.filter { $0.status == .completed && hasReadableDownload(for: $0) == false }
+    }
+
     var filteredDownloadedByteCount: Int64 {
         filteredItems.reduce(Int64(0)) { partialResult, item in
             partialResult + downloadedByteCount(for: item)
@@ -327,6 +335,14 @@ final class ArtworkDownloadStore {
             items.remove(at: index)
         }
         trashDownloadedFiles(for: item)
+        persistItems()
+    }
+
+    func restoreItems(_ restoredItems: [ArtworkDownloadItem]) {
+        guard restoredItems.isEmpty == false else { return }
+        let restoredIDs = Set(restoredItems.map(\.id))
+        items.removeAll { restoredIDs.contains($0.id) }
+        items.insert(contentsOf: restoredItems, at: 0)
         persistItems()
     }
 

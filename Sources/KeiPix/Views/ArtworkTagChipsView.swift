@@ -67,7 +67,7 @@ struct ArtworkTagChipsView: View {
             Divider()
 
             Button(L10n.muteTag) {
-                store.muteTag(tag)
+                store.requestDangerAction(AppDangerAction(kind: .muteTag(tag)))
             }
         }
     }

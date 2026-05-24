@@ -95,7 +95,9 @@ private struct CreatorQuickActionsMenu: View {
 
             if artwork.user.isFollowed {
                 Button(role: .destructive) {
-                    Task { await store.toggleFollow(artwork.user) }
+                    store.requestDangerAction(
+                        AppDangerAction(kind: .unfollowCreator(artwork.user, nil))
+                    )
                 } label: {
                     Label(L10n.unfollow, systemImage: "person.badge.minus")
                 }
@@ -251,16 +253,16 @@ private struct ArtworkActionStrip: View {
 
                     Menu {
                         Button(L10n.muteArtwork) {
-                            store.muteArtwork(artwork)
+                            store.requestDangerAction(AppDangerAction(kind: .muteArtwork(artwork)))
                         }
                         Button(L10n.muteCreator) {
-                            store.muteUser(artwork.user)
+                            store.requestDangerAction(AppDangerAction(kind: .muteCreator(artwork.user)))
                         }
                         if artwork.tags.isEmpty == false {
                             Menu(L10n.muteTag) {
                                 ForEach(artwork.tags, id: \.self) { tag in
                                     Button("#\(tag.name)") {
-                                        store.muteTag(tag)
+                                        store.requestDangerAction(AppDangerAction(kind: .muteTag(tag)))
                                     }
                                 }
                             }

@@ -157,6 +157,66 @@ enum CreatorBulkAction: String, Identifiable {
     }
 }
 
+struct CreatorDangerAction: Identifiable {
+    enum Kind {
+        case unfollow
+        case mute
+    }
+
+    let id = UUID()
+    let kind: Kind
+    let user: PixivUser
+    let restoreRestrict: BookmarkRestrict?
+
+    var title: String {
+        switch kind {
+        case .unfollow:
+            L10n.unfollow
+        case .mute:
+            L10n.muteCreator
+        }
+    }
+
+    var confirmationMessage: String {
+        switch kind {
+        case .unfollow:
+            String(format: L10n.unfollowCreatorConfirmationFormat, user.name)
+        case .mute:
+            String(format: L10n.muteCreatorConfirmationFormat, user.name)
+        }
+    }
+}
+
+struct CreatorFollowRestore: Identifiable {
+    let user: PixivUser
+    let restrict: BookmarkRestrict
+
+    var id: Int { user.id }
+}
+
+struct CreatorUndoAction: Identifiable {
+    enum Kind {
+        case restoreFollows([CreatorFollowRestore])
+        case unmuteUsers([PixivUser])
+    }
+
+    let id = UUID()
+    let kind: Kind
+
+    var message: String {
+        switch kind {
+        case .restoreFollows(let restores):
+            restores.count == 1
+                ? String(format: L10n.unfollowedCreatorFormat, restores[0].user.name)
+                : String(format: L10n.unfollowedCreatorsFormat, restores.count)
+        case .unmuteUsers(let users):
+            users.count == 1
+                ? String(format: L10n.mutedCreatorFormat, users[0].name)
+                : String(format: L10n.mutedCreatorsFormat, users.count)
+        }
+    }
+}
+
 extension PixivUserPreview {
     func matchesCreatorQuery(_ query: String) -> Bool {
         let fields = [

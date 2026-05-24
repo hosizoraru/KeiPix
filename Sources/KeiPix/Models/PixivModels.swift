@@ -36,9 +36,8 @@ struct PixivAccountUser: Codable, Equatable, Sendable {
         isPremium = try container.decodeIfPresent(Bool.self, forKey: .isPremium) ?? false
 
         let profile = try? container.nestedContainer(keyedBy: ProfileKeys.self, forKey: .profileImageURLs)
-        let value = try profile?.decodeIfPresent(String.self, forKey: .px170)
-            ?? profile?.decodeIfPresent(String.self, forKey: .medium)
-        profileImageURL = value.flatMap(URL.init(string:))
+        profileImageURL = profile?.decodeCleanURLIfPresent(forKey: .px170)
+            ?? profile?.decodeCleanURLIfPresent(forKey: .medium)
     }
 
     func encode(to encoder: Encoder) throws {
@@ -85,9 +84,8 @@ struct PixivUser: Decodable, Identifiable, Hashable, Sendable {
         isFollowed = try container.decodeIfPresent(Bool.self, forKey: .isFollowed) ?? false
 
         let profile = try? container.nestedContainer(keyedBy: ProfileKeys.self, forKey: .profileImageURLs)
-        let value = try profile?.decodeIfPresent(String.self, forKey: .medium)
-            ?? profile?.decodeIfPresent(String.self, forKey: .px170)
-        avatarURL = value.flatMap(URL.init(string:))
+        avatarURL = profile?.decodeCleanURLIfPresent(forKey: .medium)
+            ?? profile?.decodeCleanURLIfPresent(forKey: .px170)
     }
 }
 
@@ -117,6 +115,26 @@ struct PixivImageSet: Decodable, Hashable, Sendable {
         case medium
         case large
         case original
+    }
+
+    init(
+        squareMedium: URL?,
+        medium: URL?,
+        large: URL?,
+        original: URL?
+    ) {
+        self.squareMedium = squareMedium
+        self.medium = medium
+        self.large = large
+        self.original = original
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        squareMedium = container.decodeCleanURLIfPresent(forKey: .squareMedium)
+        medium = container.decodeCleanURLIfPresent(forKey: .medium)
+        large = container.decodeCleanURLIfPresent(forKey: .large)
+        original = container.decodeCleanURLIfPresent(forKey: .original)
     }
 }
 
@@ -244,7 +262,7 @@ struct PixivArtwork: Decodable, Identifiable, Hashable, Sendable {
         if decodedImages.isEmpty {
             let base = try container.decodeIfPresent(PixivImageSet.self, forKey: .imageURLs)
             let singlePage = try? container.nestedContainer(keyedBy: MetaSingleKeys.self, forKey: .metaSinglePage)
-            let original = try singlePage?.decodeIfPresent(URL.self, forKey: .originalImageURL)
+            let original = singlePage?.decodeCleanURLIfPresent(forKey: .originalImageURL)
             if let base {
                 decodedImages = [PixivImageSet(
                     squareMedium: base.squareMedium,
@@ -265,6 +283,17 @@ struct PixivFeedResponse: Decodable, Sendable {
     enum CodingKeys: String, CodingKey {
         case illusts
         case nextURL = "next_url"
+    }
+
+    init(illusts: [PixivArtwork], nextURL: URL?) {
+        self.illusts = illusts
+        self.nextURL = nextURL
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        illusts = try container.decodeIfPresent([PixivArtwork].self, forKey: .illusts) ?? []
+        nextURL = container.decodeCleanURLIfPresent(forKey: .nextURL)
     }
 }
 

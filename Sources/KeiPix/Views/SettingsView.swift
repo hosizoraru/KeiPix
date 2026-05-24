@@ -6,6 +6,8 @@ struct SettingsView: View {
     @State private var isUpdatingRestrictedMode = false
     @State private var mutedContentSyncMessage: String?
     @State private var restrictedModeMessage: String?
+    @State private var isLogoutConfirmationPresented = false
+    @State private var isMutedContentUploadConfirmationPresented = false
 
     var body: some View {
         Form {
@@ -103,7 +105,7 @@ struct SettingsView: View {
                     .disabled(isSyncingMutedContent)
 
                     Button {
-                        Task { await uploadMutedContentToPixiv() }
+                        isMutedContentUploadConfirmationPresented = true
                     } label: {
                         Label(L10n.uploadToPixiv, systemImage: "arrow.up.circle")
                     }
@@ -244,7 +246,7 @@ struct SettingsView: View {
                     )
 
                     Button(role: .destructive) {
-                        Task { await store.logout() }
+                        isLogoutConfirmationPresented = true
                     } label: {
                         Label(L10n.logout, systemImage: "rectangle.portrait.and.arrow.right")
                     }
@@ -256,6 +258,41 @@ struct SettingsView: View {
         .formStyle(.grouped)
         .padding(24)
         .frame(width: 520)
+        .overlay(alignment: .bottom) {
+            if let undoAction = store.undoAction {
+                AppUndoBar(action: undoAction) {
+                    Task { await store.performUndo(undoAction) }
+                }
+                .padding(.horizontal, 18)
+                .padding(.bottom, 14)
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+        }
+        .animation(.snappy(duration: 0.18), value: store.undoAction?.id)
+        .confirmationDialog(
+            L10n.logout,
+            isPresented: $isLogoutConfirmationPresented,
+            titleVisibility: .visible
+        ) {
+            Button(L10n.logout, role: .destructive) {
+                Task { await store.logout() }
+            }
+            Button(L10n.cancel, role: .cancel) {}
+        } message: {
+            Text(L10n.logoutConfirmation)
+        }
+        .confirmationDialog(
+            L10n.uploadMutedContentConfirmation,
+            isPresented: $isMutedContentUploadConfirmationPresented,
+            titleVisibility: .visible
+        ) {
+            Button(L10n.uploadToPixiv, role: .destructive) {
+                Task { await uploadMutedContentToPixiv() }
+            }
+            Button(L10n.cancel, role: .cancel) {}
+        } message: {
+            Text(L10n.uploadMutedContentConfirmationMessage)
+        }
         .task {
             if store.session != nil, store.restrictedModeEnabled == nil {
                 await store.refreshRestrictedModeSetting()
@@ -441,7 +478,9 @@ struct SettingsView: View {
         defer { isSyncingMutedContent = false }
 
         do {
+            let snapshot = store.mutedContentArchiveSnapshot()
             try await store.importAccountMutedContent()
+            store.undoAction = AppUndoAction(kind: .restoreMutedContentSnapshot(snapshot))
             mutedContentSyncMessage = L10n.synced
         } catch {
             mutedContentSyncMessage = error.localizedDescription
@@ -475,7 +514,9 @@ struct SettingsView: View {
     private func importLocalMutedContent() {
         mutedContentSyncMessage = nil
         do {
+            let snapshot = store.mutedContentArchiveSnapshot()
             if try store.importMutedContentFromFile() {
+                store.undoAction = AppUndoAction(kind: .restoreMutedContentSnapshot(snapshot))
                 mutedContentSyncMessage = L10n.imported
             }
         } catch {

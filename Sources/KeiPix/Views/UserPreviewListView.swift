@@ -20,6 +20,8 @@ struct UserPreviewListView: View {
     @State private var isCheckingFollowVisibility = false
     @State private var followRestrictsByUserID: [Int: BookmarkRestrict] = [:]
     @State private var bulkStatusText: String?
+    @State private var pendingDangerAction: CreatorDangerAction?
+    @State private var undoAction: CreatorUndoAction?
 
     private let columns = [
         GridItem(.adaptive(minimum: 360, maximum: 520), spacing: 14)
@@ -68,11 +70,14 @@ struct UserPreviewListView: View {
                                                 openManga: {
                                                     Task { await store.openUserFeed(user: preview.user, route: .userManga) }
                                                 },
-                                                toggleFollow: { restrict in
-                                                    Task { await toggleFollow(preview.user, restrict: restrict) }
+                                                followCreator: { restrict in
+                                                    Task { await follow(preview.user, restrict: restrict) }
                                                 },
-                                                muteCreator: {
-                                                    muteCreator(preview.user)
+                                                requestUnfollow: {
+                                                    requestDangerAction(.unfollow, user: preview.user)
+                                                },
+                                                requestMuteCreator: {
+                                                    requestDangerAction(.mute, user: preview.user)
                                                 },
                                                 copyCreatorLink: {
                                                     copyCreatorLink(preview.user)
@@ -104,48 +109,77 @@ struct UserPreviewListView: View {
             }
         }
         .navigationTitle(mode.title)
-        .safeAreaInset(edge: .bottom) {
-            if errorMessage != nil || bulkStatusText != nil || isRunningBulkAction || isCheckingFollowVisibility {
-                VStack(alignment: .leading, spacing: 6) {
-                    if isCheckingFollowVisibility {
-                        HStack(spacing: 8) {
-                            ProgressView()
-                                .controlSize(.small)
-                            Text(L10n.checkingFollowVisibility)
-                        }
-                        .font(.callout)
-                        .foregroundStyle(.secondary)
-                    }
-
-                    if isRunningBulkAction {
-                        HStack(spacing: 8) {
-                            ProgressView()
-                                .controlSize(.small)
-                            Text(L10n.runningCreatorAction)
-                        }
-                        .font(.callout)
-                        .foregroundStyle(.secondary)
-                    }
-
-                    if let bulkStatusText {
-                        Text(bulkStatusText)
-                            .font(.callout)
-                            .foregroundStyle(.secondary)
-                            .textSelection(.enabled)
-                    }
-
-                    if let errorMessage {
-                        Text(errorMessage)
-                            .font(.callout)
-                            .foregroundStyle(.red)
-                            .textSelection(.enabled)
-                    }
-                }
-                .padding(12)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(.bar)
+        .toolbar {
+            ToolbarItem(placement: .status) {
+                Text(headerSubtitle)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .help(headerDetail)
             }
         }
+        .overlay(alignment: .bottom) {
+            if isStatusBannerVisible {
+                FloatingStatusBanner {
+                    VStack(alignment: .leading, spacing: 6) {
+                        if let undoAction {
+                            HStack(spacing: 10) {
+                                Text(undoAction.message)
+                                    .font(.callout)
+                                    .foregroundStyle(.secondary)
+                                    .lineLimit(1)
+
+                                Spacer()
+
+                                Button(L10n.undo) {
+                                    Task { await performUndo(undoAction) }
+                                }
+                                .buttonStyle(.bordered)
+                                .controlSize(.small)
+                            }
+                        }
+
+                        if isCheckingFollowVisibility {
+                            HStack(spacing: 8) {
+                                ProgressView()
+                                    .controlSize(.small)
+                                Text(L10n.checkingFollowVisibility)
+                            }
+                            .font(.callout)
+                            .foregroundStyle(.secondary)
+                        }
+
+                        if isRunningBulkAction {
+                            HStack(spacing: 8) {
+                                ProgressView()
+                                    .controlSize(.small)
+                                Text(L10n.runningCreatorAction)
+                            }
+                            .font(.callout)
+                            .foregroundStyle(.secondary)
+                        }
+
+                        if let bulkStatusText {
+                            Text(bulkStatusText)
+                                .font(.callout)
+                                .foregroundStyle(.secondary)
+                                .textSelection(.enabled)
+                        }
+
+                        if let errorMessage {
+                            Text(errorMessage)
+                                .font(.callout)
+                                .foregroundStyle(.red)
+                                .textSelection(.enabled)
+                        }
+                    }
+                }
+                .padding(.horizontal, 18)
+                .padding(.bottom, 14)
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+        }
+        .animation(.snappy(duration: 0.18), value: isStatusBannerVisible)
         .confirmationDialog(
             pendingBulkAction?.title ?? L10n.creatorActions,
             isPresented: $isShowingBulkConfirmation,
@@ -161,16 +195,42 @@ struct UserPreviewListView: View {
         } message: { action in
             Text(action.confirmationMessage(count: bulkActionTargetCount(action)))
         }
+        .confirmationDialog(
+            pendingDangerAction?.title ?? L10n.creatorActions,
+            isPresented: dangerConfirmationBinding,
+            titleVisibility: .visible,
+            presenting: pendingDangerAction
+        ) { action in
+            Button(action.title, role: .destructive) {
+                Task { await performDangerAction(action) }
+            }
+            Button(L10n.cancel, role: .cancel) {
+                pendingDangerAction = nil
+            }
+        } message: { action in
+            Text(action.confirmationMessage)
+        }
         .sheet(item: $profileUser) { user in
             UserProfileSheet(user: user, store: store)
         }
-        .task(id: modeKey) {
+        .task(id: listRefreshKey) {
             await loadInitial()
         }
     }
 
+    private var isStatusBannerVisible: Bool {
+        errorMessage != nil || bulkStatusText != nil || isRunningBulkAction || isCheckingFollowVisibility || undoAction != nil
+    }
+
     private var visibleFollowedPreviews: [PixivUserPreview] {
         visiblePreviews.filter(\.user.isFollowed)
+    }
+
+    private var isCurrentAccountFollowingList: Bool {
+        if case .following = mode {
+            return true
+        }
+        return false
     }
 
     private var hasActiveCreatorListState: Bool {
@@ -187,6 +247,9 @@ struct UserPreviewListView: View {
 
             switch creatorFilter {
             case .all:
+                if isCurrentAccountFollowingList {
+                    return preview.user.isFollowed
+                }
                 return true
             case .followed:
                 return preview.user.isFollowed
@@ -229,72 +292,63 @@ struct UserPreviewListView: View {
         "\(mode.key)-\(restrict.rawValue)-\(store.searchSubmissionID)"
     }
 
+    private var listRefreshKey: String {
+        "\(modeKey)-\(store.routeRefreshGeneration)"
+    }
+
     private var header: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack(spacing: 12) {
-                HStack(spacing: 8) {
-                    Label(headerSubtitle, systemImage: "person.2")
-                        .labelStyle(.titleAndIcon)
-                        .lineLimit(1)
-
-                    if visiblePreviews.isEmpty == false {
-                        CreatorListSummaryStrip(previews: visiblePreviews)
-                    }
+        FlowLayout(spacing: 8) {
+            if mode.usesRestrictPicker {
+                Picker(L10n.followingCreators, selection: restrictBinding) {
+                    Text(L10n.publicRestrict).tag(BookmarkRestrict.public)
+                    Text(L10n.privateRestrict).tag(BookmarkRestrict.private)
                 }
-                .font(.caption.weight(.medium))
-                .foregroundStyle(.secondary)
-
-                Spacer()
-
-                if mode.usesRestrictPicker {
-                    Picker(L10n.followingCreators, selection: restrictBinding) {
-                        Text(L10n.publicRestrict).tag(BookmarkRestrict.public)
-                        Text(L10n.privateRestrict).tag(BookmarkRestrict.private)
-                    }
-                    .pickerStyle(.segmented)
-                    .controlSize(.small)
-                    .frame(width: 160)
-                }
+                .pickerStyle(.segmented)
+                .frame(width: 160)
             }
 
-            HStack(spacing: 10) {
+            HStack(spacing: 6) {
                 Image(systemName: "magnifyingglass")
                     .foregroundStyle(.secondary)
 
                 TextField(L10n.searchCreatorsInList, text: $creatorSearchText)
                     .textFieldStyle(.roundedBorder)
                     .frame(width: 240)
+            }
 
+            Menu {
                 Picker(L10n.creatorFilter, selection: $creatorFilter) {
                     ForEach(CreatorListFilter.allCases) { filter in
                         Text(filter.title).tag(filter)
                     }
                 }
-                .pickerStyle(.menu)
-                .help(L10n.creatorFilter)
+                .pickerStyle(.inline)
+
+                Divider()
 
                 Picker(L10n.creatorSort, selection: $creatorSort) {
                     ForEach(CreatorListSort.allCases) { sort in
                         Text(sort.title).tag(sort)
                     }
                 }
-                .pickerStyle(.menu)
-                .help(L10n.creatorSort)
-
-                creatorActionsMenu
-
-                Button {
-                    Task { await loadInitial() }
-                } label: {
-                    Label(L10n.refresh, systemImage: "arrow.clockwise")
-                }
-                .labelStyle(.iconOnly)
-                .help(L10n.refresh)
-                .disabled(isLoading)
-
-                Spacer(minLength: 0)
+                .pickerStyle(.inline)
+            } label: {
+                Label(L10n.creatorFilter, systemImage: "line.3.horizontal.decrease.circle")
             }
+            .help("\(L10n.creatorFilter) / \(L10n.creatorSort)")
+
+            creatorActionsMenu
+
+            Button {
+                Task { await loadInitial() }
+            } label: {
+                Label(L10n.refresh, systemImage: "arrow.clockwise")
+            }
+            .labelStyle(.iconOnly)
+            .help(L10n.refresh)
+            .disabled(isLoading)
         }
+        .controlSize(.small)
     }
 
     private var creatorActionsMenu: some View {
@@ -375,6 +429,10 @@ struct UserPreviewListView: View {
     }
 
     private var headerSubtitle: String {
+        "\(visiblePreviews.count.formatted()) / \(previews.count.formatted()) \(L10n.results)"
+    }
+
+    private var headerDetail: String {
         let pagingText = nextURL == nil ? L10n.noMorePages : L10n.nextPageAvailable
         let shownText = "\(visiblePreviews.count.formatted()) / \(previews.count.formatted()) \(L10n.results)"
         if mode.requiresSearchKeyword, searchKeyword.isEmpty == false {
@@ -419,6 +477,14 @@ struct UserPreviewListView: View {
         isShowingBulkConfirmation = true
     }
 
+    private func requestDangerAction(_ kind: CreatorDangerAction.Kind, user: PixivUser) {
+        pendingDangerAction = CreatorDangerAction(
+            kind: kind,
+            user: user,
+            restoreRestrict: followRestrictsByUserID[user.id] ?? store.defaultFollowRestrict
+        )
+    }
+
     private func resetCreatorListState() {
         creatorSearchText = ""
         creatorFilter = .all
@@ -454,39 +520,58 @@ struct UserPreviewListView: View {
             pendingBulkAction = nil
         }
 
+        var updatedCount = 0
         switch action {
         case .followPublic:
-            await followCreators(targets, restrict: .public)
+            updatedCount = await followCreators(targets, restrict: .public)
         case .followPrivate:
-            await followCreators(targets, restrict: .private)
+            updatedCount = await followCreators(targets, restrict: .private)
         case .mute:
+            let mutedUsers = targets.map(\.user)
             for target in targets {
                 store.muteUser(target.user)
                 updateMutedState(userID: target.user.id, isMuted: true)
             }
+            updatedCount = targets.count
+            undoAction = CreatorUndoAction(kind: .unmuteUsers(mutedUsers))
         case .unfollow:
-            await unfollowCreators(targets)
+            let restores = await unfollowCreators(targets)
+            updatedCount = restores.count
+            if restores.isEmpty == false {
+                undoAction = CreatorUndoAction(kind: .restoreFollows(restores))
+            }
         }
 
-        bulkStatusText = String(format: L10n.creatorActionCompletedFormat, targets.count)
+        bulkStatusText = String(format: L10n.creatorActionCompletedFormat, updatedCount)
     }
 
-    private func followCreators(_ targets: [PixivUserPreview], restrict: BookmarkRestrict) async {
+    private func followCreators(_ targets: [PixivUserPreview], restrict: BookmarkRestrict) async -> Int {
+        var updatedCount = 0
         for target in targets {
-            var user = target.user
-            user.isFollowed = false
-            await store.toggleFollow(user, restrict: restrict)
-            updateFollowState(userID: user.id, isFollowed: true, restrict: restrict)
+            do {
+                try await store.setFollow(target.user, isFollowed: true, restrict: restrict)
+                updateFollowState(userID: target.user.id, isFollowed: true, restrict: restrict)
+                updatedCount += 1
+            } catch {
+                errorMessage = error.localizedDescription
+            }
         }
+        return updatedCount
     }
 
-    private func unfollowCreators(_ targets: [PixivUserPreview]) async {
+    private func unfollowCreators(_ targets: [PixivUserPreview]) async -> [CreatorFollowRestore] {
+        var restores: [CreatorFollowRestore] = []
         for target in targets {
-            var user = target.user
-            user.isFollowed = true
-            await store.toggleFollow(user)
-            updateFollowState(userID: user.id, isFollowed: false, restrict: nil)
+            let restrict = followRestrictsByUserID[target.user.id] ?? store.defaultFollowRestrict
+            do {
+                try await store.setFollow(target.user, isFollowed: false, restrict: restrict)
+                updateFollowState(userID: target.user.id, isFollowed: false, restrict: nil)
+                restores.append(CreatorFollowRestore(user: target.user, restrict: restrict))
+            } catch {
+                errorMessage = error.localizedDescription
+            }
         }
+        return restores
     }
 
     private func checkVisibleFollowVisibility() async {
@@ -568,16 +653,66 @@ struct UserPreviewListView: View {
         }
     }
 
-    private func toggleFollow(_ user: PixivUser, restrict: BookmarkRestrict? = nil) async {
-        await store.toggleFollow(user, restrict: restrict)
-        let nextValue = !user.isFollowed
-        let appliedRestrict = nextValue ? (restrict ?? store.defaultFollowRestrict) : nil
-        updateFollowState(userID: user.id, isFollowed: nextValue, restrict: appliedRestrict)
+    private func follow(_ user: PixivUser, restrict: BookmarkRestrict? = nil) async {
+        do {
+            let appliedRestrict = restrict ?? store.defaultFollowRestrict
+            try await store.setFollow(user, isFollowed: true, restrict: appliedRestrict)
+            updateFollowState(userID: user.id, isFollowed: true, restrict: appliedRestrict)
+        } catch {
+            errorMessage = error.localizedDescription
+        }
     }
 
-    private func muteCreator(_ user: PixivUser) {
-        store.muteUser(user)
-        updateMutedState(userID: user.id, isMuted: true)
+    private func performDangerAction(_ action: CreatorDangerAction) async {
+        defer { pendingDangerAction = nil }
+
+        switch action.kind {
+        case .unfollow:
+            let restrict = action.restoreRestrict ?? store.defaultFollowRestrict
+            do {
+                try await store.setFollow(action.user, isFollowed: false, restrict: restrict)
+                updateFollowState(userID: action.user.id, isFollowed: false, restrict: nil)
+                undoAction = CreatorUndoAction(kind: .restoreFollows([
+                    CreatorFollowRestore(user: action.user, restrict: restrict)
+                ]))
+            } catch {
+                errorMessage = error.localizedDescription
+            }
+        case .mute:
+            store.muteUser(action.user)
+            updateMutedState(userID: action.user.id, isMuted: true)
+            undoAction = CreatorUndoAction(kind: .unmuteUsers([action.user]))
+        }
+    }
+
+    private var dangerConfirmationBinding: Binding<Bool> {
+        Binding {
+            pendingDangerAction != nil
+        } set: { value in
+            if value == false {
+                pendingDangerAction = nil
+            }
+        }
+    }
+
+    private func performUndo(_ action: CreatorUndoAction) async {
+        switch action.kind {
+        case .restoreFollows(let restores):
+            for restore in restores {
+                do {
+                    try await store.setFollow(restore.user, isFollowed: true, restrict: restore.restrict)
+                    updateFollowState(userID: restore.user.id, isFollowed: true, restrict: restore.restrict)
+                } catch {
+                    errorMessage = error.localizedDescription
+                }
+            }
+        case .unmuteUsers(let users):
+            for user in users {
+                store.unmuteUser(id: user.id)
+                updateMutedState(userID: user.id, isMuted: false)
+            }
+        }
+        undoAction = nil
     }
 
     private func copyCreatorLink(_ user: PixivUser) {
@@ -639,8 +774,9 @@ private struct UserPreviewCard: View {
     let openProfile: () -> Void
     let openIllustrations: () -> Void
     let openManga: () -> Void
-    let toggleFollow: (BookmarkRestrict?) -> Void
-    let muteCreator: () -> Void
+    let followCreator: (BookmarkRestrict?) -> Void
+    let requestUnfollow: () -> Void
+    let requestMuteCreator: () -> Void
     let copyCreatorLink: () -> Void
     let selectArtwork: (PixivArtwork) -> Void
 
@@ -686,22 +822,22 @@ private struct UserPreviewCard: View {
 
                 if preview.user.isFollowed {
                     Button(L10n.unfollow) {
-                        toggleFollow(nil)
+                        requestUnfollow()
                     }
                     .buttonStyle(.bordered)
                 } else {
                     Menu {
                         Button(L10n.followUsingDefault) {
-                            toggleFollow(nil)
+                            followCreator(nil)
                         }
 
                         Divider()
 
                         Button(L10n.followPublicly) {
-                            toggleFollow(.public)
+                            followCreator(.public)
                         }
                         Button(L10n.followPrivately) {
-                            toggleFollow(.private)
+                            followCreator(.private)
                         }
                     } label: {
                         Label(L10n.follow, systemImage: "person.crop.circle.badge.plus")
@@ -760,7 +896,7 @@ private struct UserPreviewCard: View {
                 Spacer()
 
                 Button(role: .destructive) {
-                    muteCreator()
+                    requestMuteCreator()
                 } label: {
                     Label(L10n.muteCreator, systemImage: "eye.slash")
                 }
@@ -783,17 +919,17 @@ private struct UserPreviewCard: View {
             }
             if preview.user.isFollowed {
                 Button(L10n.unfollow) {
-                    toggleFollow(nil)
+                    requestUnfollow()
                 }
             } else {
                 Button(L10n.followUsingDefault) {
-                    toggleFollow(nil)
+                    followCreator(nil)
                 }
                 Button(L10n.followPublicly) {
-                    toggleFollow(.public)
+                    followCreator(.public)
                 }
                 Button(L10n.followPrivately) {
-                    toggleFollow(.private)
+                    followCreator(.private)
                 }
             }
             Divider()
@@ -805,7 +941,7 @@ private struct UserPreviewCard: View {
             }
             Divider()
             Button(role: .destructive) {
-                muteCreator()
+                requestMuteCreator()
             } label: {
                 Label(L10n.muteCreator, systemImage: "eye.slash")
             }

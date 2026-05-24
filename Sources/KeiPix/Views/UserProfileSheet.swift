@@ -15,6 +15,7 @@ struct UserProfileSheet: View {
     @State private var followRestrict: BookmarkRestrict?
     @State private var selectedRelatedUser: PixivUser?
     @State private var relationshipListMode: UserPreviewListMode?
+    @State private var pendingDangerAction: AppDangerAction?
 
     init(user: PixivUser, store: KeiPixStore) {
         self.user = user
@@ -65,6 +66,33 @@ struct UserProfileSheet: View {
         .sheet(item: $relationshipListMode) { mode in
             UserPreviewListView(store: store, mode: mode)
                 .frame(width: 920, height: 680)
+        }
+        .overlay(alignment: .bottom) {
+            if let undoAction = store.undoAction {
+                AppUndoBar(action: undoAction) {
+                    Task { await store.performUndo(undoAction) }
+                }
+                .padding(.horizontal, 18)
+                .padding(.bottom, 14)
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+        }
+        .animation(.snappy(duration: 0.18), value: store.undoAction?.id)
+        .confirmationDialog(
+            pendingDangerAction?.title ?? L10n.moreActions,
+            isPresented: dangerActionBinding,
+            titleVisibility: .visible
+        ) {
+            if let pendingDangerAction {
+                Button(pendingDangerAction.title, role: .destructive) {
+                    Task { await performDangerAction(pendingDangerAction) }
+                }
+            }
+            Button(L10n.cancel, role: .cancel) {}
+        } message: {
+            if let pendingDangerAction {
+                Text(pendingDangerAction.confirmationMessage)
+            }
         }
     }
 
@@ -120,7 +148,7 @@ struct UserProfileSheet: View {
                     Divider()
 
                     Button(role: .destructive) {
-                        Task { await toggleFollow() }
+                        pendingDangerAction = AppDangerAction(kind: .unfollowCreator(currentUser, followRestrict))
                     } label: {
                         Label(L10n.unfollow, systemImage: "person.crop.circle.badge.minus")
                     }
@@ -416,8 +444,16 @@ struct UserProfileSheet: View {
                                     restrict in
                                     Task { await toggleRelatedFollow(preview.user, restrict: restrict) }
                                 },
-                                muteCreator: {
-                                    muteRelatedCreator(preview.user)
+                                requestUnfollow: {
+                                    pendingDangerAction = AppDangerAction(
+                                        kind: .unfollowCreator(
+                                            preview.user,
+                                            preview.user.isFollowed ? store.defaultFollowRestrict : nil
+                                        )
+                                    )
+                                },
+                                requestMuteCreator: {
+                                    pendingDangerAction = AppDangerAction(kind: .muteCreator(preview.user))
                                 },
                                 selectArtwork: { artwork in
                                     store.selectedArtwork = artwork
@@ -485,27 +521,77 @@ struct UserProfileSheet: View {
     }
 
     private func toggleFollow(restrict: BookmarkRestrict? = nil) async {
-        var target = detail?.user ?? user
-        target.isFollowed = isFollowed
-        await store.toggleFollow(target, restrict: restrict)
+        let target = detail?.user ?? user
+        let nextValue = isFollowed == false
         let appliedRestrict = restrict ?? store.defaultFollowRestrict
-        isFollowed.toggle()
-        followRestrict = isFollowed ? appliedRestrict : nil
+        do {
+            try await store.setFollow(target, isFollowed: nextValue, restrict: appliedRestrict)
+            isFollowed = nextValue
+            followRestrict = nextValue ? appliedRestrict : nil
+        } catch {
+            errorMessage = error.localizedDescription
+        }
     }
 
     private func updateFollowVisibility(_ restrict: BookmarkRestrict) async {
-        var target = detail?.user ?? user
-        target.isFollowed = false
-        await store.toggleFollow(target, restrict: restrict)
-        isFollowed = true
-        followRestrict = restrict
+        let target = detail?.user ?? user
+        do {
+            try await store.setFollow(target, isFollowed: true, restrict: restrict)
+            isFollowed = true
+            followRestrict = restrict
+        } catch {
+            errorMessage = error.localizedDescription
+        }
     }
 
     private func toggleRelatedFollow(_ user: PixivUser, restrict: BookmarkRestrict? = nil) async {
-        await store.toggleFollow(user, restrict: restrict)
-        for index in relatedUsers.indices where relatedUsers[index].user.id == user.id {
+        let nextValue = user.isFollowed == false
+        let appliedRestrict = restrict ?? store.defaultFollowRestrict
+        do {
+            try await store.setFollow(user, isFollowed: nextValue, restrict: appliedRestrict)
+        } catch {
+            relatedErrorMessage = error.localizedDescription
+            return
+        }
+        updateRelatedFollowState(userID: user.id, isFollowed: nextValue)
+    }
+
+    private func performDangerAction(_ action: AppDangerAction) async {
+        defer { pendingDangerAction = nil }
+        let succeeded = await store.performDangerAction(action)
+        guard succeeded else {
+            errorMessage = store.errorMessage
+            return
+        }
+
+        switch action.kind {
+        case .unfollowCreator(let user, _):
+            if user.id == currentUser.id {
+                isFollowed = false
+                followRestrict = nil
+            }
+            updateRelatedFollowState(userID: user.id, isFollowed: false)
+        case .muteCreator(let user):
+            updateRelatedMutedState(userID: user.id, isMuted: true)
+        case .removeBookmark, .muteArtwork, .muteTag:
+            break
+        }
+    }
+
+    private var dangerActionBinding: Binding<Bool> {
+        Binding {
+            pendingDangerAction != nil
+        } set: { value in
+            if value == false {
+                pendingDangerAction = nil
+            }
+        }
+    }
+
+    private func updateRelatedFollowState(userID: Int, isFollowed: Bool) {
+        for index in relatedUsers.indices where relatedUsers[index].user.id == userID {
             var updatedUser = relatedUsers[index].user
-            updatedUser.isFollowed.toggle()
+            updatedUser.isFollowed = isFollowed
             relatedUsers[index] = PixivUserPreview(
                 user: updatedUser,
                 illusts: relatedUsers[index].illusts,
@@ -514,13 +600,12 @@ struct UserProfileSheet: View {
         }
     }
 
-    private func muteRelatedCreator(_ user: PixivUser) {
-        store.muteUser(user)
-        for index in relatedUsers.indices where relatedUsers[index].user.id == user.id {
+    private func updateRelatedMutedState(userID: Int, isMuted: Bool) {
+        for index in relatedUsers.indices where relatedUsers[index].user.id == userID {
             relatedUsers[index] = PixivUserPreview(
                 user: relatedUsers[index].user,
                 illusts: relatedUsers[index].illusts,
-                isMuted: true
+                isMuted: isMuted
             )
         }
     }
@@ -531,7 +616,8 @@ private struct RelatedCreatorCard: View {
     let openProfile: () -> Void
     let openIllustrations: () -> Void
     let toggleFollow: (BookmarkRestrict?) -> Void
-    let muteCreator: () -> Void
+    let requestUnfollow: () -> Void
+    let requestMuteCreator: () -> Void
     let selectArtwork: (PixivArtwork) -> Void
 
     var body: some View {
@@ -591,7 +677,7 @@ private struct RelatedCreatorCard: View {
             HStack(spacing: 8) {
                 if preview.user.isFollowed {
                     Button(L10n.unfollow) {
-                        toggleFollow(nil)
+                        requestUnfollow()
                     }
                     .buttonStyle(.bordered)
                 } else {
@@ -641,7 +727,7 @@ private struct RelatedCreatorCard: View {
 
             if preview.user.isFollowed {
                 Button(L10n.unfollow) {
-                    toggleFollow(nil)
+                    requestUnfollow()
                 }
             } else {
                 Button(L10n.followUsingDefault) {
@@ -658,7 +744,7 @@ private struct RelatedCreatorCard: View {
             Divider()
 
             Button(role: .destructive) {
-                muteCreator()
+                requestMuteCreator()
             } label: {
                 Label(L10n.muteCreator, systemImage: "eye.slash")
             }

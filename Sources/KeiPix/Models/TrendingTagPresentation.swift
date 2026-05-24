@@ -27,13 +27,16 @@ struct TrendingTagPresentation {
     func height(for width: CGFloat, span: Int, columnCount: Int) -> CGFloat {
         let naturalHeight = width / max(aspectRatio, 0.1)
         if span >= 3, columnCount >= 3 {
-            return naturalHeight.clamped(to: 160...240)
+            return naturalHeight.clamped(to: 118...240)
         }
         if span == 2 {
-            return naturalHeight.clamped(to: 150...230)
+            return naturalHeight.clamped(to: 118...230)
         }
         if aspectRatio < 0.72 {
-            return naturalHeight.clamped(to: 220...330)
+            return naturalHeight.clamped(to: 220...360)
+        }
+        if aspectRatio >= 1.48 {
+            return naturalHeight.clamped(to: 118...260)
         }
         return naturalHeight.clamped(to: 150...260)
     }

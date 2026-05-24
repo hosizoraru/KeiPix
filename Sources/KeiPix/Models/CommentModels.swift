@@ -10,6 +10,13 @@ struct PixivCommentResponse: Decodable, Sendable {
         case comments
         case nextURL = "next_url"
     }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        totalComments = try container.decodeIfPresent(Int.self, forKey: .totalComments)
+        comments = try container.decodeIfPresent([PixivComment].self, forKey: .comments) ?? []
+        nextURL = container.decodeCleanURLIfPresent(forKey: .nextURL)
+    }
 }
 
 struct PixivComment: Decodable, Identifiable, Hashable, Sendable {
@@ -56,5 +63,11 @@ struct PixivCommentStamp: Decodable, Hashable, Sendable {
     enum CodingKeys: String, CodingKey {
         case stampID = "stamp_id"
         case stampURL = "stamp_url"
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        stampID = try container.decodeIfPresent(Int.self, forKey: .stampID)
+        stampURL = container.decodeCleanURLIfPresent(forKey: .stampURL)
     }
 }

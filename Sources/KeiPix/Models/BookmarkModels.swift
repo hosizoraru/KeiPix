@@ -56,6 +56,12 @@ struct PixivBookmarkTagsResponse: Decodable, Sendable {
         case bookmarkTags = "bookmark_tags"
         case nextURL = "next_url"
     }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        bookmarkTags = try container.decodeIfPresent([PixivBookmarkTag].self, forKey: .bookmarkTags) ?? []
+        nextURL = container.decodeCleanURLIfPresent(forKey: .nextURL)
+    }
 }
 
 struct PixivBookmarkTag: Decodable, Identifiable, Hashable, Sendable {

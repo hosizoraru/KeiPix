@@ -16,6 +16,10 @@ struct MutedContentArchive: Codable, Sendable {
     let tags: [String]
     let users: [MutedUserEntry]
     let artworks: [MutedArtworkEntry]
+
+    var totalCount: Int {
+        tags.count + users.count + artworks.count
+    }
 }
 
 struct PixivMuteList: Decodable, Sendable {
@@ -65,9 +69,8 @@ struct PixivMutedUser: Decodable, Identifiable, Hashable, Sendable {
         account = try container.decodeIfPresent(String.self, forKey: .account)
 
         let profile = try? container.nestedContainer(keyedBy: ProfileKeys.self, forKey: .profileImageURLs)
-        let value = try profile?.decodeIfPresent(String.self, forKey: .medium)
-            ?? profile?.decodeIfPresent(String.self, forKey: .px170)
-        avatarURL = value.flatMap(URL.init(string:))
+        avatarURL = profile?.decodeCleanURLIfPresent(forKey: .medium)
+            ?? profile?.decodeCleanURLIfPresent(forKey: .px170)
     }
 }
 

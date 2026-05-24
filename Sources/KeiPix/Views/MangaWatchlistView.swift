@@ -9,6 +9,7 @@ struct MangaWatchlistView: View {
     @State private var isLoadingMore = false
     @State private var removingSeriesIDs = Set<Int>()
     @State private var errorMessage: String?
+    @State private var pendingRemoval: PixivMangaSeriesPreview?
 
     private let columns = [
         GridItem(.adaptive(minimum: 220, maximum: 320), spacing: 14)
@@ -35,7 +36,7 @@ struct MangaWatchlistView: View {
                                     Task { await store.openLatestArtwork(in: item) }
                                 },
                                 remove: {
-                                    Task { await remove(item) }
+                                    pendingRemoval = item
                                 }
                             )
                         }
@@ -50,17 +51,35 @@ struct MangaWatchlistView: View {
             }
         }
         .navigationTitle(L10n.mangaWatchlist)
-        .safeAreaInset(edge: .bottom) {
+        .confirmationDialog(
+            L10n.removeFromWatchlist,
+            isPresented: removalBinding,
+            titleVisibility: .visible,
+            presenting: pendingRemoval
+        ) { item in
+            Button(L10n.removeFromWatchlist, role: .destructive) {
+                Task { await remove(item) }
+            }
+            Button(L10n.cancel, role: .cancel) {
+                pendingRemoval = nil
+            }
+        } message: { item in
+            Text(String(format: L10n.removeFromWatchlistConfirmationFormat, item.title))
+        }
+        .overlay(alignment: .bottom) {
             if let errorMessage {
-                Text(errorMessage)
-                    .font(.callout)
-                    .foregroundStyle(.red)
-                    .textSelection(.enabled)
-                    .padding(12)
-                    .frame(maxWidth: .infinity)
-                    .background(.bar)
+                FloatingStatusBanner {
+                    Text(errorMessage)
+                        .font(.callout)
+                        .foregroundStyle(.red)
+                        .textSelection(.enabled)
+                }
+                .padding(.horizontal, 18)
+                .padding(.bottom, 14)
+                .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
+        .animation(.snappy(duration: 0.18), value: errorMessage)
         .task(id: store.routeRefreshGeneration) {
             await loadInitial()
         }
@@ -127,8 +146,20 @@ struct MangaWatchlistView: View {
         do {
             try await store.setMangaWatchlist(seriesID: item.id, isAdded: false)
             series.removeAll { $0.id == item.id }
+            pendingRemoval = nil
+            store.undoAction = AppUndoAction(kind: .restoreMangaWatchlist(item))
         } catch {
             errorMessage = error.localizedDescription
+        }
+    }
+
+    private var removalBinding: Binding<Bool> {
+        Binding {
+            pendingRemoval != nil
+        } set: { value in
+            if value == false {
+                pendingRemoval = nil
+            }
         }
     }
 }

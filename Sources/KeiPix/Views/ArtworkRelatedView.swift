@@ -40,23 +40,27 @@ struct ArtworkRelatedView: View {
                             }
                             .contextMenu {
                                 Button(related.isBookmarked ? L10n.removeBookmark : L10n.bookmark) {
-                                    Task { await store.toggleBookmark(related) }
+                                    if related.isBookmarked {
+                                        store.requestDangerAction(AppDangerAction(kind: .removeBookmark(related)))
+                                    } else {
+                                        Task { await store.toggleBookmark(related) }
+                                    }
                                 }
                                 Button(L10n.download) {
                                     store.enqueueDownload(related)
                                 }
                                 Divider()
                                 Button(L10n.muteArtwork) {
-                                    store.muteArtwork(related)
+                                    store.requestDangerAction(AppDangerAction(kind: .muteArtwork(related)))
                                 }
                                 Button(L10n.muteCreator) {
-                                    store.muteUser(related.user)
+                                    store.requestDangerAction(AppDangerAction(kind: .muteCreator(related.user)))
                                 }
                                 if related.tags.isEmpty == false {
                                     Menu(L10n.muteTag) {
                                         ForEach(related.tags.prefix(12), id: \.self) { tag in
                                             Button("#\(tag.name)") {
-                                                store.muteTag(tag)
+                                                store.requestDangerAction(AppDangerAction(kind: .muteTag(tag)))
                                             }
                                         }
                                     }

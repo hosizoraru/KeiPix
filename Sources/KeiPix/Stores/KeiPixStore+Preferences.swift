@@ -124,8 +124,8 @@ extension KeiPixStore {
     }
 
     func setRankingDate(_ value: Date) {
-        rankingDate = value
-        UserDefaults.standard.set(value, forKey: "rankingDate")
+        rankingDate = Self.clampedRankingDate(value)
+        UserDefaults.standard.set(rankingDate, forKey: "rankingDate")
     }
 
     func setAppLanguage(_ language: AppLanguage) {

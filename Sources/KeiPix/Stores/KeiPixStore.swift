@@ -13,6 +13,8 @@ final class KeiPixStore {
     var selectedArtwork: PixivArtwork?
     var selectedSpotlightArticle: PixivSpotlightArticle?
     var readerWindowArtwork: PixivArtwork?
+    var pendingDangerAction: AppDangerAction?
+    var undoAction: AppUndoAction?
     var focusedUser: PixivUser?
     var searchText = ""
     var searchSubmissionID = 0
@@ -56,7 +58,7 @@ final class KeiPixStore {
     var searchArtworkType = KeiPixStore.loadEnum("searchArtworkType", defaultValue: SearchArtworkType.all)
     var searchUgoiraFilter = KeiPixStore.loadEnum("searchUgoiraFilter", defaultValue: SearchUgoiraFilter.all)
     var useRankingDate = UserDefaults.standard.object(forKey: "useRankingDate") as? Bool ?? false
-    var rankingDate = UserDefaults.standard.object(forKey: "rankingDate") as? Date ?? KeiPixStore.defaultRankingDate()
+    var rankingDate = KeiPixStore.loadRankingDate()
     var trackpadGesturesEnabled = UserDefaults.standard.object(forKey: "trackpadGesturesEnabled") as? Bool ?? true
     var horizontalSwipeBehavior = UserDefaults.standard.string(forKey: "horizontalSwipeBehavior")
         .flatMap(TrackpadHorizontalSwipeBehavior.init(rawValue:)) ?? .pageOnly
@@ -156,6 +158,27 @@ final class KeiPixStore {
         await reloadCurrentFeed()
     }
 
+    func openArtworkFromWebLink(_ artworkID: Int) async {
+        guard session != nil else {
+            isLoginPresented = true
+            return
+        }
+
+        do {
+            let artwork = try await api.illustDetail(illustID: artworkID)
+            focusedUser = nil
+            bookmarkTagFilter = nil
+            selectedSpotlightArticle = nil
+            selectedRoute = .illustrations
+            allArtworks = [artwork]
+            artworks = [artwork]
+            selectedArtwork = artwork
+            await recordBrowsingHistory(for: artwork)
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
     func reloadCurrentFeed() async {
         guard session != nil else {
             allArtworks = []
@@ -181,7 +204,22 @@ final class KeiPixStore {
             nextURL = response.nextURL
             applyContentFilters()
         } catch {
-            errorMessage = error.localizedDescription
+            guard isCancellationLike(error) == false else { return }
+            if selectedRoute.isRankingRoute, useRankingDate {
+                setUseRankingDate(false)
+                do {
+                    let response = try await loadFeed(for: selectedRoute)
+                    allArtworks = response.illusts
+                    nextURL = response.nextURL
+                    applyContentFilters()
+                    errorMessage = L10n.rankingDateFallbackMessage
+                } catch {
+                    guard isCancellationLike(error) == false else { return }
+                    errorMessage = error.localizedDescription
+                }
+            } else {
+                errorMessage = error.localizedDescription
+            }
         }
     }
 
@@ -191,6 +229,14 @@ final class KeiPixStore {
         } else {
             routeRefreshGeneration += 1
         }
+    }
+
+    private func isCancellationLike(_ error: Error) -> Bool {
+        if error is CancellationError {
+            return true
+        }
+        let nsError = error as NSError
+        return nsError.domain == NSURLErrorDomain && nsError.code == NSURLErrorCancelled
     }
 
     func loadMore() async {
@@ -246,117 +292,24 @@ final class KeiPixStore {
         }
     }
 
-    func matchingLocalSearchTerms(limit: Int = 8) -> [String] {
-        let keyword = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
-        let source = (savedSearches + searchHistory).uniquedCaseInsensitive()
-        let matches = keyword.isEmpty
-            ? source
-            : source.filter { $0.localizedCaseInsensitiveContains(keyword) }
-        return Array(matches.prefix(limit))
-    }
-
-    func saveCurrentSearch() {
-        saveSearch(searchText)
-    }
-
-    func saveCurrentSearchPreset() {
-        saveSearchPreset(searchText, options: searchOptions)
-    }
-
-    func saveSearch(_ keyword: String) {
-        let normalized = keyword.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard normalized.isEmpty == false else { return }
-        savedSearches.removeAll { $0.localizedCaseInsensitiveCompare(normalized) == .orderedSame }
-        savedSearches.insert(normalized, at: 0)
-        savedSearches = Array(savedSearches.prefix(50))
-        UserDefaults.standard.set(savedSearches, forKey: "savedSearches")
-    }
-
-    func removeSavedSearch(_ keyword: String) {
-        savedSearches.removeAll { $0.localizedCaseInsensitiveCompare(keyword) == .orderedSame }
-        UserDefaults.standard.set(savedSearches, forKey: "savedSearches")
-    }
-
-    func saveSearchPreset(_ keyword: String, options: SearchOptions) {
-        let normalized = keyword.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard normalized.isEmpty == false else { return }
-
-        let now = Date()
-        if let index = savedSearchPresets.firstIndex(where: {
-            $0.keyword.localizedCaseInsensitiveCompare(normalized) == .orderedSame
-        }) {
-            savedSearchPresets[index].keyword = normalized
-            savedSearchPresets[index].options = options
-            savedSearchPresets[index].updatedAt = now
-        } else {
-            savedSearchPresets.insert(SavedSearchPreset(keyword: normalized, options: options), at: 0)
-        }
-        savedSearchPresets = Array(savedSearchPresets.prefix(50))
-        persistSavedSearchPresets()
-        saveSearch(normalized)
-    }
-
-    func removeSavedSearchPreset(_ preset: SavedSearchPreset) {
-        savedSearchPresets.removeAll { $0.id == preset.id }
-        persistSavedSearchPresets()
-    }
-
-    func clearSearchHistory() {
-        searchHistory = []
-        UserDefaults.standard.set(searchHistory, forKey: "searchHistory")
-    }
-
-    func runSavedSearch(_ keyword: String) async {
-        searchText = keyword
-        selectedRoute = .search
-        await runSearch()
-    }
-
-    func runSavedSearchPreset(_ preset: SavedSearchPreset) async {
-        searchText = preset.keyword
-        applySearchOptions(preset.options)
-        selectedRoute = .search
-        await runSearch()
-    }
-
-    private func applySearchOptions(_ options: SearchOptions) {
-        setSearchMatchType(options.matchType)
-        setSearchSort(options.sort)
-        setSearchAgeLimit(options.ageLimit)
-        setSearchDateRange(options.dateRange)
-        setSearchMinimumBookmarks(options.minimumBookmarks)
-        setSearchArtworkType(options.artworkType)
-        setSearchUgoiraFilter(options.ugoiraFilter)
-    }
-
-    private func recordSearch(_ keyword: String) {
-        let normalized = keyword.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard normalized.isEmpty == false else { return }
-        searchHistory.removeAll { $0.localizedCaseInsensitiveCompare(normalized) == .orderedSame }
-        searchHistory.insert(normalized, at: 0)
-        searchHistory = Array(searchHistory.prefix(50))
-        UserDefaults.standard.set(searchHistory, forKey: "searchHistory")
-    }
-
     func toggleBookmark(_ artwork: PixivArtwork) async {
         let nextValue = !artwork.isBookmarked
+        guard nextValue else {
+            requestDangerAction(AppDangerAction(kind: .removeBookmark(artwork)))
+            return
+        }
+
         do {
-            if nextValue {
-                try await api.addBookmark(
-                    illustID: artwork.id,
-                    restrict: defaultBookmarkRestrict,
-                    tags: automaticBookmarkTags(for: artwork)
-                )
-            } else {
-                try await api.deleteBookmark(illustID: artwork.id)
+            try await api.addBookmark(
+                illustID: artwork.id,
+                restrict: defaultBookmarkRestrict,
+                tags: automaticBookmarkTags(for: artwork)
+            )
+            updateArtwork(artwork.id) { $0.isBookmarked = true }
+            if autoDownloadBookmarkedArtworks {
+                enqueueDownload(artwork)
             }
-            updateArtwork(artwork.id) { $0.isBookmarked = nextValue }
-            if nextValue {
-                if autoDownloadBookmarkedArtworks {
-                    enqueueDownload(artwork)
-                }
-                await followCreatorAfterBookmarkIfNeeded(artwork)
-            }
+            await followCreatorAfterBookmarkIfNeeded(artwork)
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -421,7 +374,11 @@ final class KeiPixStore {
 
     func toggleSelectedBookmark() async {
         guard let selectedArtwork else { return }
-        await toggleBookmark(selectedArtwork)
+        if selectedArtwork.isBookmarked {
+            requestDangerAction(AppDangerAction(kind: .removeBookmark(selectedArtwork)))
+        } else {
+            await toggleBookmark(selectedArtwork)
+        }
     }
 
     func downloadSelectedArtwork() {
@@ -499,13 +456,17 @@ final class KeiPixStore {
 
     func toggleFollow(_ user: PixivUser, restrict: BookmarkRestrict? = nil) async {
         let nextValue = !user.isFollowed
-        let followRestrict = restrict ?? defaultFollowRestrict
         do {
-            try await api.setFollow(userID: user.id, isFollowed: nextValue, restrict: followRestrict)
-            updateFollowState(userID: user.id, isFollowed: nextValue)
+            try await setFollow(user, isFollowed: nextValue, restrict: restrict)
         } catch {
             errorMessage = error.localizedDescription
         }
+    }
+
+    func setFollow(_ user: PixivUser, isFollowed: Bool, restrict: BookmarkRestrict? = nil) async throws {
+        let followRestrict = restrict ?? defaultFollowRestrict
+        try await api.setFollow(userID: user.id, isFollowed: isFollowed, restrict: followRestrict)
+        updateFollowState(userID: user.id, isFollowed: isFollowed)
     }
 
     private func followCreatorAfterBookmarkIfNeeded(_ artwork: PixivArtwork) async {
@@ -539,6 +500,10 @@ final class KeiPixStore {
 
     func userDetail(for user: PixivUser) async throws -> PixivUserDetail {
         try await api.userDetail(userID: user.id)
+    }
+
+    func userDetail(userID: Int) async throws -> PixivUserDetail {
+        try await api.userDetail(userID: userID)
     }
 
     func followDetail(for user: PixivUser) async throws -> PixivFollowDetail {
@@ -911,13 +876,32 @@ final class KeiPixStore {
         return (try? JSONDecoder().decode([SavedSearchPreset].self, from: data)) ?? []
     }
 
-    private func persistSavedSearchPresets() {
+    func persistSavedSearchPresets() {
         guard let data = try? JSONEncoder().encode(savedSearchPresets) else { return }
         UserDefaults.standard.set(data, forKey: "savedSearchPresets")
     }
 
     private static func defaultRankingDate() -> Date {
-        Calendar.current.date(byAdding: .day, value: -1, to: Date()) ?? Date()
+        latestSelectableRankingDate()
+    }
+
+    static func latestSelectableRankingDate() -> Date {
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+        return calendar.date(byAdding: .day, value: -1, to: today) ?? today
+    }
+
+    static func clampedRankingDate(_ date: Date) -> Date {
+        min(date, latestSelectableRankingDate())
+    }
+
+    private static func loadRankingDate() -> Date {
+        let stored = UserDefaults.standard.object(forKey: "rankingDate") as? Date ?? defaultRankingDate()
+        let clamped = clampedRankingDate(stored)
+        if clamped != stored {
+            UserDefaults.standard.set(clamped, forKey: "rankingDate")
+        }
+        return clamped
     }
 
     private static func loadEnum<T: RawRepresentable>(_ key: String, defaultValue: T) -> T where T.RawValue == String {

@@ -20,71 +20,71 @@ struct SpotlightView: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 ScrollView {
-                    LazyVStack(spacing: 0, pinnedViews: [.sectionHeaders]) {
-                        Section {
-                            LazyVStack(spacing: 12) {
-                                ForEach(articles) { article in
-                                    SpotlightArticleCard(
-                                        article: article,
-                                        isSelected: store.selectedSpotlightArticle?.id == article.id
-                                    ) {
-                                        store.selectedSpotlightArticle = article
-                                    }
-                                }
+                    LazyVStack(spacing: 12) {
+                        ForEach(articles) { article in
+                            SpotlightArticleCard(
+                                article: article,
+                                isSelected: store.selectedSpotlightArticle?.id == article.id
+                            ) {
+                                store.selectedSpotlightArticle = article
                             }
-                            .padding(.horizontal, 18)
-                            .padding(.top, 14)
+                        }
 
-                            if nextURL != nil {
-                                Button {
-                                    Task { await loadMore() }
-                                } label: {
-                                    Label(isLoadingMore ? L10n.loading : L10n.loadMoreSpotlightArticles, systemImage: "arrow.down.circle")
-                                        .frame(maxWidth: .infinity)
-                                }
-                                .buttonStyle(.bordered)
-                                .disabled(isLoadingMore)
-                                .padding(.horizontal, 18)
-                                .padding(.vertical, 14)
+                        if nextURL != nil {
+                            Button {
+                                Task { await loadMore() }
+                            } label: {
+                                Label(isLoadingMore ? L10n.loading : L10n.loadMoreSpotlightArticles, systemImage: "arrow.down.circle")
+                                    .frame(maxWidth: .infinity)
                             }
-                        } header: {
-                            header
-                                .padding(.horizontal, 18)
-                                .padding(.vertical, 6)
-                                .background(.bar)
+                            .buttonStyle(.bordered)
+                            .disabled(isLoadingMore)
                         }
                     }
+                    .padding(.horizontal, 18)
+                    .padding(.top, 14)
+                    .padding(.bottom, 18)
                 }
                 .scrollEdgeEffectStyle(.soft, for: .top)
             }
         }
         .navigationTitle(L10n.spotlight)
-        .safeAreaInset(edge: .bottom) {
-            if let errorMessage {
-                Text(errorMessage)
-                    .font(.callout)
-                    .foregroundStyle(.red)
-                    .textSelection(.enabled)
-                    .padding(12)
-                    .frame(maxWidth: .infinity)
-                    .background(.bar)
+        .toolbar {
+            if articles.isEmpty == false {
+                ToolbarItem(placement: .status) {
+                    spotlightCountBadge
+                }
             }
         }
+        .overlay(alignment: .bottom) {
+            if let errorMessage {
+                FloatingStatusBanner {
+                    Text(errorMessage)
+                        .font(.callout)
+                        .foregroundStyle(.red)
+                        .textSelection(.enabled)
+                }
+                .padding(.horizontal, 18)
+                .padding(.bottom, 14)
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+        }
+        .animation(.snappy(duration: 0.18), value: errorMessage)
         .task(id: store.routeRefreshGeneration) {
             await load()
         }
     }
 
-    private var header: some View {
-        HStack(spacing: 8) {
-            Label("\(articles.count.formatted()) \(L10n.results) · \(nextURL == nil ? L10n.noMorePages : L10n.nextPageAvailable)", systemImage: "newspaper")
-                .font(.caption.weight(.medium))
-                .foregroundStyle(.secondary)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
-                .background(.quaternary, in: Capsule())
-            Spacer()
-        }
+    private var spotlightCountBadge: some View {
+        Text(spotlightSummary)
+            .font(.caption)
+            .foregroundStyle(.secondary)
+            .lineLimit(1)
+            .help(spotlightSummary)
+    }
+
+    private var spotlightSummary: String {
+        "\(articles.count.formatted()) \(L10n.results) · \(nextURL == nil ? L10n.noMorePages : L10n.nextPageAvailable)"
     }
 
     private func load() async {

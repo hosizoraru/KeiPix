@@ -13,6 +13,7 @@ struct BookmarkEditorView: View {
     @State private var isSaving = false
     @State private var isBookmarked = false
     @State private var errorMessage: String?
+    @State private var isConfirmingRemoveBookmark = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -109,6 +110,18 @@ struct BookmarkEditorView: View {
         }
         .frame(width: 520)
         .frame(minHeight: 500)
+        .confirmationDialog(
+            L10n.removeBookmark,
+            isPresented: $isConfirmingRemoveBookmark,
+            titleVisibility: .visible
+        ) {
+            Button(L10n.removeBookmark, role: .destructive) {
+                Task { await removeBookmark() }
+            }
+            Button(L10n.cancel, role: .cancel) {}
+        } message: {
+            Text(String(format: L10n.removeBookmarkConfirmationFormat, artwork.title))
+        }
         .task(id: artwork.id) {
             await loadDetail()
         }
@@ -138,7 +151,7 @@ struct BookmarkEditorView: View {
         HStack(spacing: 10) {
             if isBookmarked {
                 Button(role: .destructive) {
-                    Task { await removeBookmark() }
+                    isConfirmingRemoveBookmark = true
                 } label: {
                     Label(L10n.removeBookmark, systemImage: "bookmark.slash")
                 }
@@ -275,7 +288,19 @@ struct BookmarkEditorView: View {
         defer { isSaving = false }
 
         do {
+            let detail = try? await store.bookmarkDetail(for: artwork)
+            let restoreRestrict = detail?.restrict ?? restrict
+            let restoreTags = detail?.tags
+                .filter(\.isRegistered)
+                .map(\.name) ?? Array(selectedTags)
             try await store.removeBookmark(artwork)
+            store.undoAction = AppUndoAction(
+                kind: .restoreBookmark(
+                    artwork: artwork,
+                    restrict: restoreRestrict,
+                    tags: restoreTags
+                )
+            )
             dismiss()
         } catch {
             errorMessage = error.localizedDescription

@@ -12,6 +12,26 @@ struct PixivArtworkSeriesResponse: Decodable, Sendable {
         case illusts
         case nextURL = "next_url"
     }
+
+    init(
+        detail: PixivArtworkSeriesDetail?,
+        firstArtwork: PixivArtwork?,
+        illusts: [PixivArtwork],
+        nextURL: URL?
+    ) {
+        self.detail = detail
+        self.firstArtwork = firstArtwork
+        self.illusts = illusts
+        self.nextURL = nextURL
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        detail = try container.decodeIfPresent(PixivArtworkSeriesDetail.self, forKey: .detail)
+        firstArtwork = try container.decodeIfPresent(PixivArtwork.self, forKey: .firstArtwork)
+        illusts = try container.decodeIfPresent([PixivArtwork].self, forKey: .illusts) ?? []
+        nextURL = container.decodeCleanURLIfPresent(forKey: .nextURL)
+    }
 }
 
 struct PixivArtworkSeriesDetail: Decodable, Identifiable, Hashable, Sendable {
@@ -81,6 +101,12 @@ struct PixivMangaWatchlistResponse: Decodable, Sendable {
         case series
         case nextURL = "next_url"
     }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        series = try container.decodeIfPresent([PixivMangaSeriesPreview].self, forKey: .series) ?? []
+        nextURL = container.decodeCleanURLIfPresent(forKey: .nextURL)
+    }
 }
 
 struct PixivMangaSeriesPreview: Decodable, Identifiable, Hashable, Sendable {
@@ -109,6 +135,26 @@ struct PixivMangaSeriesPreview: Decodable, Identifiable, Hashable, Sendable {
         case maskText = "mask_text"
     }
 
+    init(
+        id: Int,
+        title: String,
+        user: PixivMangaSeriesUser?,
+        latestContentID: Int,
+        lastPublishedContentDate: Date?,
+        publishedContentCount: Int,
+        coverURL: URL?,
+        maskText: String?
+    ) {
+        self.id = id
+        self.title = title
+        self.user = user
+        self.latestContentID = latestContentID
+        self.lastPublishedContentDate = lastPublishedContentDate
+        self.publishedContentCount = publishedContentCount
+        self.coverURL = coverURL
+        self.maskText = maskText
+    }
+
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         id = try container.decode(Int.self, forKey: .id)
@@ -117,7 +163,7 @@ struct PixivMangaSeriesPreview: Decodable, Identifiable, Hashable, Sendable {
         latestContentID = try container.decodeIfPresent(Int.self, forKey: .latestContentID) ?? 0
         lastPublishedContentDate = try container.decodeIfPresent(Date.self, forKey: .lastPublishedContentDate)
         publishedContentCount = try container.decodeIfPresent(Int.self, forKey: .publishedContentCount) ?? 0
-        coverURL = try container.decodeIfPresent(URL.self, forKey: .coverURL)
+        coverURL = container.decodeCleanURLIfPresent(forKey: .coverURL)
         maskText = try container.decodeIfPresent(String.self, forKey: .maskText)
     }
 }
@@ -140,6 +186,13 @@ struct PixivMangaSeriesUser: Decodable, Identifiable, Hashable, Sendable {
         case px170 = "px_170x170"
     }
 
+    init(user: PixivUser) {
+        id = user.id
+        name = user.name
+        account = user.account
+        avatarURL = user.avatarURL
+    }
+
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         id = try container.decode(Int.self, forKey: .id)
@@ -147,8 +200,7 @@ struct PixivMangaSeriesUser: Decodable, Identifiable, Hashable, Sendable {
         account = try container.decodeIfPresent(String.self, forKey: .account)
 
         let profile = try? container.nestedContainer(keyedBy: ProfileKeys.self, forKey: .profileImageURLs)
-        let value = try profile?.decodeIfPresent(String.self, forKey: .medium)
-            ?? profile?.decodeIfPresent(String.self, forKey: .px170)
-        avatarURL = value.flatMap(URL.init(string:))
+        avatarURL = profile?.decodeCleanURLIfPresent(forKey: .medium)
+            ?? profile?.decodeCleanURLIfPresent(forKey: .px170)
     }
 }

@@ -5,6 +5,7 @@ struct BrowsingHistoryView: View {
     @State private var source = BrowsingHistorySource.local
     @State private var localSearchText = ""
     @State private var isClearConfirmationPresented = false
+    @State private var pendingDeleteItem: LocalArtworkHistoryItem?
 
     var body: some View {
         VStack(spacing: 0) {
@@ -23,32 +24,61 @@ struct BrowsingHistoryView: View {
             }
         }
         .navigationTitle(L10n.history)
+        .toolbar {
+            ToolbarItem(placement: .status) {
+                Text(historyStatusText)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .help(historyStatusText)
+            }
+        }
         .confirmationDialog(
             L10n.clearHistoryConfirmation,
             isPresented: $isClearConfirmationPresented,
             titleVisibility: .visible
         ) {
             Button(L10n.clearHistory, role: .destructive) {
+                let items = store.localBrowsingHistory
                 store.clearLocalBrowsingHistory()
+                store.undoAction = AppUndoAction(kind: .restoreLocalHistory(items))
             }
             Button(L10n.cancel, role: .cancel) {}
+        }
+        .confirmationDialog(
+            L10n.deleteFromHistory,
+            isPresented: localDeleteBinding,
+            titleVisibility: .visible,
+            presenting: pendingDeleteItem
+        ) { item in
+            Button(L10n.deleteFromHistory, role: .destructive) {
+                store.deleteLocalHistoryItem(item)
+                store.undoAction = AppUndoAction(kind: .restoreLocalHistory([item]))
+                pendingDeleteItem = nil
+            }
+            Button(L10n.cancel, role: .cancel) {
+                pendingDeleteItem = nil
+            }
+        } message: { item in
+            Text(String(format: L10n.deleteHistoryItemConfirmationFormat, item.title))
         }
     }
 
     private var header: some View {
-        HStack(spacing: 12) {
+        FlowLayout(spacing: 8) {
             Picker(L10n.historySource, selection: $source) {
                 ForEach(BrowsingHistorySource.allCases) { source in
                     Text(source.title).tag(source)
                 }
             }
             .pickerStyle(.segmented)
+            .labelsHidden()
             .frame(width: 220)
 
             if source == .local {
                 TextField(L10n.searchHistory, text: $localSearchText)
                     .textFieldStyle(.roundedBorder)
-                    .frame(maxWidth: 280)
+                    .frame(width: 240)
 
                 Button {
                     localSearchText = ""
@@ -60,13 +90,7 @@ struct BrowsingHistoryView: View {
                 .help(L10n.clearSearch)
             }
 
-            Spacer()
-
             if source == .local {
-                Text(localHistoryCountText)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-
                 Button(role: .destructive) {
                     isClearConfirmationPresented = true
                 } label: {
@@ -81,6 +105,7 @@ struct BrowsingHistoryView: View {
                 }
             }
         }
+        .controlSize(.small)
     }
 
     private var localHistoryContent: some View {
@@ -104,7 +129,7 @@ struct BrowsingHistoryView: View {
                                     Task { await store.selectLocalHistoryItem(item) }
                                 },
                                 delete: {
-                                    store.deleteLocalHistoryItem(item)
+                                    pendingDeleteItem = item
                                 }
                             )
                         }
@@ -141,7 +166,11 @@ struct BrowsingHistoryView: View {
                             }
                             .contextMenu {
                                 Button(artwork.isBookmarked ? L10n.removeBookmark : L10n.bookmark) {
-                                    Task { await store.toggleBookmark(artwork) }
+                                    if artwork.isBookmarked {
+                                        store.requestDangerAction(AppDangerAction(kind: .removeBookmark(artwork)))
+                                    } else {
+                                        Task { await store.toggleBookmark(artwork) }
+                                    }
                                 }
                                 Button(L10n.download) {
                                     store.enqueueDownload(artwork)
@@ -177,8 +206,27 @@ struct BrowsingHistoryView: View {
         [GridItem(.adaptive(minimum: 160, maximum: 220), spacing: 14)]
     }
 
+    private var localDeleteBinding: Binding<Bool> {
+        Binding {
+            pendingDeleteItem != nil
+        } set: { value in
+            if value == false {
+                pendingDeleteItem = nil
+            }
+        }
+    }
+
     private var localHistoryCountText: String {
         String(format: L10n.historyItemCountFormat, store.localHistoryItems(matching: localSearchText).count)
+    }
+
+    private var historyStatusText: String {
+        switch source {
+        case .local:
+            localHistoryCountText
+        case .pixiv:
+            "\(store.artworks.count.formatted()) \(L10n.results)"
+        }
     }
 }
 

@@ -36,6 +36,12 @@ extension KeiPixStore {
         applyContentFilters()
     }
 
+    func muteUserEntry(_ user: MutedUserEntry) {
+        mutedUsers[user.id] = user.name
+        persistMutedUsers()
+        applyContentFilters()
+    }
+
     func unmuteUser(id: Int) {
         mutedUsers[id] = nil
         persistMutedUsers()
@@ -51,6 +57,12 @@ extension KeiPixStore {
         guard normalized.isEmpty == false else { return }
         mutedTags.insert(normalized)
         persistMutedTags()
+        applyContentFilters()
+    }
+
+    func muteArtworkEntry(_ artwork: MutedArtworkEntry) {
+        mutedArtworks[artwork.id] = artwork.title
+        persistMutedArtworks()
         applyContentFilters()
     }
 
@@ -70,13 +82,47 @@ extension KeiPixStore {
         applyContentFilters()
     }
 
-    func exportMutedContentData() throws -> Data {
-        let archive = MutedContentArchive(
+    func mutedContentArchiveSnapshot() -> MutedContentArchive {
+        MutedContentArchive(
             exportedAt: Date(),
             tags: mutedTagList,
             users: mutedUserList,
             artworks: mutedArtworkList
         )
+    }
+
+    func restoreMutedContent(_ archive: MutedContentArchive) {
+        mutedTags.formUnion(archive.tags)
+        for user in archive.users {
+            mutedUsers[user.id] = user.name
+        }
+        for artwork in archive.artworks {
+            mutedArtworks[artwork.id] = artwork.title
+        }
+
+        persistMutedTags()
+        persistMutedUsers()
+        persistMutedArtworks()
+        applyContentFilters()
+    }
+
+    func replaceMutedContent(with archive: MutedContentArchive) {
+        mutedTags = Set(archive.tags)
+        mutedUsers = archive.users.reduce(into: [:]) { result, user in
+            result[user.id] = user.name
+        }
+        mutedArtworks = archive.artworks.reduce(into: [:]) { result, artwork in
+            result[artwork.id] = artwork.title
+        }
+
+        persistMutedTags()
+        persistMutedUsers()
+        persistMutedArtworks()
+        applyContentFilters()
+    }
+
+    func exportMutedContentData() throws -> Data {
+        let archive = mutedContentArchiveSnapshot()
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]

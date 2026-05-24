@@ -35,6 +35,12 @@ enum L10n {
     static var removeSavedSearch: String { text("Remove Saved Search") }
     static var removeSearchPreset: String { text("Remove Search Preset") }
     static var clearSearchHistory: String { text("Clear Search History") }
+    static var removeSavedSearchConfirmationFormat: String { text("Remove saved search %@?") }
+    static var removeSearchPresetConfirmationFormat: String { text("Remove search preset %@?") }
+    static var clearSearchHistoryConfirmationFormat: String { text("Clear %d recent searches?") }
+    static var removedSavedSearchesFormat: String { text("Removed %d saved searches") }
+    static var removedSearchPresetsFormat: String { text("Removed %d search presets") }
+    static var clearedSearchHistoryItemsFormat: String { text("Cleared %d recent searches") }
     static var searchSavedSearches: String { text("Search saved searches") }
     static var copyKeyword: String { text("Copy Keyword") }
     static var copiedKeywordFormat: String { text("Copied %@") }
@@ -54,6 +60,8 @@ enum L10n {
     static var clearSearch: String { text("Clear Search") }
     static var clearHistory: String { text("Clear History") }
     static var clearHistoryConfirmation: String { text("Clear all local browsing history?") }
+    static var deleteHistoryItemConfirmationFormat: String { text("Delete %@ from local history?") }
+    static var clearedHistoryItemsFormat: String { text("Cleared %d history items") }
     static var deleteFromHistory: String { text("Delete from History") }
     static var noLocalHistoryTitle: String { text("No local history") }
     static var noLocalHistorySubtitle: String { text("Open artworks to build a private local history on this Mac.") }
@@ -70,6 +78,7 @@ enum L10n {
     static var enterSearchKeyword: String { text("Enter a search keyword") }
     static var login: String { text("Login") }
     static var logout: String { text("Logout") }
+    static var logoutConfirmation: String { text("Logout from this Pixiv account?") }
     static var refresh: String { text("Refresh") }
     static var loading: String { text("Loading") }
     static var cancel: String { text("Cancel") }
@@ -116,6 +125,12 @@ enum L10n {
     static var revealFirstVisibleDownload: String { text("Reveal First Visible") }
     static var deleteVisibleDownloads: String { text("Delete Visible Downloads") }
     static var deleteVisibleDownloadsConfirmationFormat: String { text("Delete %d visible downloads and move local files to Trash?") }
+    static var deleteDownloadConfirmationFormat: String { text("Delete %@ and move local files to Trash?") }
+    static var clearFailedDownloadsConfirmationFormat: String { text("Clear %d failed downloads and move partial local files to Trash?") }
+    static var clearInvalidDownloadsConfirmationFormat: String { text("Clear %d invalid download records?") }
+    static var clearCompletedDownloadsConfirmationFormat: String { text("Clear %d completed download records?") }
+    static var downloadQueueDetailedSummaryFormat: String { text("%d shown, %d active, %d completed, %@ stored") }
+    static var clearedDownloadsFormat: String { text("Cleared %d downloads") }
     static var copiedLinksFormat: String { text("Copied %d links") }
     static var copiedArtworkLinksFormat: String { text("Copied %d artwork links") }
     static var deletedDownloadsFormat: String { text("Deleted %d downloads") }
@@ -212,6 +227,20 @@ enum L10n {
     static var copiedCreatorSummaryFormat: String { text("Copied %d creator summaries") }
     static var followVisibilityUpdatedFormat: String { text("Checked follow visibility for %d creators") }
     static var followVisibilityPartiallyUpdatedFormat: String { text("Checked follow visibility for %d creators, %d failed") }
+    static var unfollowCreatorConfirmationFormat: String { text("Unfollow %@?") }
+    static var muteCreatorConfirmationFormat: String { text("Mute %@?") }
+    static var unfollowedCreatorFormat: String { text("Unfollowed %@") }
+    static var unfollowedCreatorsFormat: String { text("Unfollowed %d creators") }
+    static var mutedCreatorFormat: String { text("Muted %@") }
+    static var mutedCreatorsFormat: String { text("Muted %d creators") }
+    static var removeBookmarkConfirmationFormat: String { text("Remove bookmark from %@?") }
+    static var muteArtworkConfirmationFormat: String { text("Mute artwork %@?") }
+    static var muteTagConfirmationFormat: String { text("Mute tag #%@?") }
+    static var removedBookmarkFormat: String { text("Removed bookmark from %@") }
+    static var mutedArtworkFormat: String { text("Muted artwork %@") }
+    static var mutedTagFormat: String { text("Muted tag #%@") }
+    static var rankingDateFallbackMessage: String { text("Selected ranking date was unavailable. Showing the latest ranking.") }
+    static var undo: String { text("Undo") }
     static var worksCount: String { text("Works Count") }
     static var publicSaves: String { text("Public Saves") }
     static var followers: String { text("Followers") }
@@ -389,6 +418,8 @@ enum L10n {
     static var noWatchlistSeries: String { text("No watchlist series") }
     static var loadMoreWatchlist: String { text("Load More Watchlist") }
     static var removeFromWatchlist: String { text("Remove from Watchlist") }
+    static var removeFromWatchlistConfirmationFormat: String { text("Remove %@ from watchlist?") }
+    static var removedFromWatchlistFormat: String { text("Removed %@ from watchlist") }
     static var noCreators: String { text("No creators") }
     static var noMatchingCreators: String { text("No matching creators") }
     static var loadMoreCreators: String { text("Load More Creators") }
@@ -430,6 +461,8 @@ enum L10n {
     static var deleteFromMutedContent: String { text("Delete from Muted Content") }
     static var syncFromPixiv: String { text("Sync from Pixiv") }
     static var uploadToPixiv: String { text("Upload to Pixiv") }
+    static var uploadMutedContentConfirmation: String { text("Upload local muted tags and creators to Pixiv?") }
+    static var uploadMutedContentConfirmationMessage: String { text("This adds the local muted tags and creators to your Pixiv account.") }
     static var exportMutedContent: String { text("Export Muted Content") }
     static var importMutedContent: String { text("Import Muted Content") }
     static var synced: String { text("Synced") }
@@ -439,6 +472,14 @@ enum L10n {
     static var muteSyncHint: String { text("Pixiv sync covers muted tags and creators. Local muted artworks stay on this Mac.") }
     static var clearMutedContent: String { text("Clear Muted Content") }
     static var clearMutedContentConfirmation: String { text("Clear all muted content?") }
+    static var clearedMutedContentItemsFormat: String { text("Cleared %d muted items") }
+    static var removeMutedTagConfirmationFormat: String { text("Remove muted tag #%@?") }
+    static var removeMutedCreatorConfirmationFormat: String { text("Remove muted creator %@?") }
+    static var removeMutedArtworkConfirmationFormat: String { text("Remove muted artwork %@?") }
+    static var removedMutedTagFormat: String { text("Removed muted tag #%@") }
+    static var removedMutedCreatorFormat: String { text("Removed muted creator %@") }
+    static var removedMutedArtworkFormat: String { text("Removed muted artwork %@") }
+    static var mutedContentSnapshotChangedFormat: String { text("Changed muted content; previous snapshot had %d items") }
     static var noMutedContent: String { text("No muted content") }
     static var noMutedContentHint: String { text("Mute artworks, creators, or tags from artwork menus, or add tags here.") }
     static var mutedContentCountFormat: String { text("%d muted items") }
