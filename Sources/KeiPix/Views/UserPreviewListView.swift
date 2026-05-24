@@ -861,6 +861,18 @@ private struct UserPreviewCard: View {
                             ArtworkPreviewThumb(artwork: artwork, showContentBadges: showContentBadges)
                         }
                         .buttonStyle(.plain)
+                        .contextMenu {
+                            Button(L10n.selectArtwork) {
+                                selectArtwork(artwork)
+                            }
+
+                            if let url = artwork.pixivURL {
+                                Link(L10n.openInPixiv, destination: url)
+                                Button(L10n.copyLink) {
+                                    PasteboardWriter.copy(url.absoluteString)
+                                }
+                            }
+                        }
                     }
                 }
             }
