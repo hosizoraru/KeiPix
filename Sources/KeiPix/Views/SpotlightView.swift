@@ -146,16 +146,18 @@ private struct SpotlightArticleCard: View {
                     .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
 
                 VStack(alignment: .leading, spacing: 8) {
-                    Text(article.pureTitle.isEmpty ? article.title : article.pureTitle)
+                    Text(primaryTitle)
                         .font(.headline)
                         .lineLimit(2)
                         .multilineTextAlignment(.leading)
 
-                    Text(article.title)
-                        .font(.callout)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(2)
-                        .multilineTextAlignment(.leading)
+                    if let secondaryTitle {
+                        Text(secondaryTitle)
+                            .font(.callout)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(2)
+                            .multilineTextAlignment(.leading)
+                    }
 
                     Spacer(minLength: 4)
 
@@ -186,7 +188,7 @@ private struct SpotlightArticleCard: View {
         .shadow(color: .black.opacity(isHovering ? 0.12 : 0.04), radius: isHovering ? 8 : 2, y: isHovering ? 4 : 1)
         .animation(.snappy(duration: 0.16), value: isHovering)
         .onHover { isHovering = $0 }
-        .help(article.pureTitle.isEmpty ? article.title : article.pureTitle)
+        .help(primaryTitle)
         .contextMenu {
             Button(L10n.openArticle) {
                 select()
@@ -196,5 +198,19 @@ private struct SpotlightArticleCard: View {
                 PasteboardWriter.copy(article.articleURL.absoluteString)
             }
         }
+    }
+
+    private var primaryTitle: String {
+        article.pureTitle.isEmpty ? article.title : article.pureTitle
+    }
+
+    private var secondaryTitle: String? {
+        let normalizedTitle = article.title.trimmingCharacters(in: .whitespacesAndNewlines)
+        let normalizedPrimaryTitle = primaryTitle.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard normalizedTitle.isEmpty == false,
+              normalizedTitle.localizedCaseInsensitiveCompare(normalizedPrimaryTitle) != .orderedSame else {
+            return nil
+        }
+        return normalizedTitle
     }
 }
