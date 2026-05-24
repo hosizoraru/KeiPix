@@ -418,6 +418,10 @@ struct UserProfileSheet: View {
                                 },
                                 muteCreator: {
                                     muteRelatedCreator(preview.user)
+                                },
+                                selectArtwork: { artwork in
+                                    store.selectedArtwork = artwork
+                                    dismiss()
                                 }
                             )
                         }
@@ -528,6 +532,7 @@ private struct RelatedCreatorCard: View {
     let openIllustrations: () -> Void
     let toggleFollow: (BookmarkRestrict?) -> Void
     let muteCreator: () -> Void
+    let selectArtwork: (PixivArtwork) -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -559,13 +564,27 @@ private struct RelatedCreatorCard: View {
 
             HStack(spacing: 6) {
                 ForEach(preview.illusts.prefix(2)) { artwork in
-                    Button(action: openIllustrations) {
+                    Button {
+                        selectArtwork(artwork)
+                    } label: {
                         RemoteImageView(url: artwork.thumbnailURL)
                             .aspectRatio(1, contentMode: .fill)
                             .frame(width: 56, height: 56)
                             .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
                     }
                     .buttonStyle(.plain)
+                    .contextMenu {
+                        Button(L10n.selectArtwork) {
+                            selectArtwork(artwork)
+                        }
+
+                        if let url = artwork.pixivURL {
+                            Link(L10n.openInPixiv, destination: url)
+                            Button(L10n.copyLink) {
+                                PasteboardWriter.copy(url.absoluteString)
+                            }
+                        }
+                    }
                 }
             }
 
