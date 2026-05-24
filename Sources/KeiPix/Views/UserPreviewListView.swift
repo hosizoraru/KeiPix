@@ -133,6 +133,13 @@ struct UserPreviewListView: View {
                     }
                     .disabled(visiblePreviews.isEmpty)
 
+                    Button {
+                        copyVisibleCreatorSummary()
+                    } label: {
+                        Label(L10n.copyVisibleCreatorSummary, systemImage: "doc.text")
+                    }
+                    .disabled(visiblePreviews.isEmpty)
+
                     Divider()
 
                     Button {
@@ -575,6 +582,17 @@ struct UserPreviewListView: View {
         guard links.isEmpty == false else { return }
         PasteboardWriter.copy(links.joined(separator: "\n"))
         bulkStatusText = String(format: L10n.copiedCreatorLinksFormat, links.count)
+    }
+
+    private func copyVisibleCreatorSummary() {
+        let summaries = visiblePreviews.map { preview in
+            let user = preview.user
+            let url = user.pixivURL?.absoluteString ?? ""
+            return "\(user.name)\t@\(user.account)\t\(user.id)\t\(url)"
+        }
+        guard summaries.isEmpty == false else { return }
+        PasteboardWriter.copy(summaries.joined(separator: "\n"))
+        bulkStatusText = String(format: L10n.copiedCreatorSummaryFormat, summaries.count)
     }
 
     private func updateFollowState(userID: Int, isFollowed: Bool, restrict: BookmarkRestrict?) {

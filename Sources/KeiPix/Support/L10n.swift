@@ -193,6 +193,7 @@ enum L10n {
     static var muteVisibleCreators: String { text("Mute Visible Creators") }
     static var unfollowVisibleCreators: String { text("Unfollow Visible Creators") }
     static var copyVisibleCreatorLinks: String { text("Copy Visible Creator Links") }
+    static var copyVisibleCreatorSummary: String { text("Copy Visible Creator Summary") }
     static var runningCreatorAction: String { text("Updating creators") }
     static var publicFollow: String { text("Public Follow") }
     static var privateFollow: String { text("Private Follow") }
@@ -202,6 +203,7 @@ enum L10n {
     static var unfollowVisibleCreatorsConfirmationFormat: String { text("Unfollow %d visible creators?") }
     static var creatorActionCompletedFormat: String { text("Updated %d creators") }
     static var copiedCreatorLinksFormat: String { text("Copied %d creator links") }
+    static var copiedCreatorSummaryFormat: String { text("Copied %d creator summaries") }
     static var followVisibilityUpdatedFormat: String { text("Checked follow visibility for %d creators") }
     static var followVisibilityPartiallyUpdatedFormat: String { text("Checked follow visibility for %d creators, %d failed") }
     static var worksCount: String { text("Works Count") }

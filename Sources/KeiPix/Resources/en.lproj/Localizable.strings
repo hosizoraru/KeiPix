@@ -189,6 +189,7 @@
 "Mute Visible Creators" = "Mute Visible Creators";
 "Unfollow Visible Creators" = "Unfollow Visible Creators";
 "Copy Visible Creator Links" = "Copy Visible Creator Links";
+"Copy Visible Creator Summary" = "Copy Visible Creator Summary";
 "Updating creators" = "Updating creators";
 "Public Follow" = "Public Follow";
 "Private Follow" = "Private Follow";
@@ -198,6 +199,7 @@
 "Unfollow %d visible creators?" = "Unfollow %d visible creators?";
 "Updated %d creators" = "Updated %d creators";
 "Copied %d creator links" = "Copied %d creator links";
+"Copied %d creator summaries" = "Copied %d creator summaries";
 "Checked follow visibility for %d creators" = "Checked follow visibility for %d creators";
 "Checked follow visibility for %d creators, %d failed" = "Checked follow visibility for %d creators, %d failed";
 "Works Count" = "Works Count";
