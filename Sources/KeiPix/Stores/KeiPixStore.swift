@@ -75,6 +75,7 @@ final class KeiPixStore {
     let api = PixivAPI()
     var allArtworks: [PixivArtwork] = []
     private var nextURL: URL?
+    private var activeFeedRequestID: UUID?
     var mutedTags = Set(UserDefaults.standard.stringArray(forKey: "mutedTags") ?? [])
     var mutedUsers = KeiPixStore.loadIntStringDictionary("mutedUsers")
     var mutedArtworks = KeiPixStore.loadIntStringDictionary("mutedArtworks")
@@ -136,6 +137,7 @@ final class KeiPixStore {
 
     func select(_ route: PixivRoute) {
         focusedUser = nil
+        errorMessage = nil
         if route != selectedRoute || route.isOwnBookmarkRoute == false {
             bookmarkTagFilter = nil
         }
@@ -146,14 +148,19 @@ final class KeiPixStore {
         if route.usesArtworkFeed {
             Task { await reloadCurrentFeed() }
         } else {
+            activeFeedRequestID = nil
             allArtworks = []
             artworks = []
             nextURL = nil
+            isLoading = false
         }
     }
 
     func openUserFeed(user: PixivUser, route: PixivRoute) async {
         focusedUser = user
+        bookmarkTagFilter = nil
+        selectedSpotlightArticle = nil
+        errorMessage = nil
         selectedRoute = route
         await reloadCurrentFeed()
     }
@@ -180,6 +187,7 @@ final class KeiPixStore {
     }
 
     func reloadCurrentFeed() async {
+        let context = currentFeedRequestContext()
         guard session != nil else {
             allArtworks = []
             artworks = []
@@ -187,35 +195,46 @@ final class KeiPixStore {
             nextURL = nil
             return
         }
-        guard selectedRoute.usesArtworkFeed else {
+        guard context.route.usesArtworkFeed else {
             allArtworks = []
             artworks = []
             nextURL = nil
             return
         }
 
+        let requestID = UUID()
+        activeFeedRequestID = requestID
         isLoading = true
         errorMessage = nil
-        defer { isLoading = false }
+        defer {
+            if activeFeedRequestID == requestID {
+                isLoading = false
+                activeFeedRequestID = nil
+            }
+        }
 
         do {
-            let response = try await loadFeed(for: selectedRoute)
+            let response = try await loadFeed(for: context.route)
+            guard currentFeedRequestContext() == context else { return }
             allArtworks = response.illusts
             nextURL = response.nextURL
             applyContentFilters()
         } catch {
             guard isCancellationLike(error) == false else { return }
-            if selectedRoute.isRankingRoute, useRankingDate {
+            guard currentFeedRequestContext() == context else { return }
+            if context.route.isRankingRoute, useRankingDate {
                 setUseRankingDate(false)
                 setRankingDate(Self.latestSelectableRankingDate())
                 do {
-                    let response = try await loadFeed(for: selectedRoute)
+                    let response = try await loadFeed(for: context.route)
+                    guard selectedRoute == context.route else { return }
                     allArtworks = response.illusts
                     nextURL = response.nextURL
                     applyContentFilters()
                     errorMessage = L10n.rankingDateFallbackMessage
                 } catch {
                     guard isCancellationLike(error) == false else { return }
+                    guard selectedRoute == context.route else { return }
                     errorMessage = error.localizedDescription
                 }
             } else {
@@ -258,6 +277,7 @@ final class KeiPixStore {
 
     func runSearch() async {
         searchSuggestions = []
+        errorMessage = nil
         let keyword = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
         if keyword.isEmpty == false {
             recordSearch(keyword)
@@ -266,6 +286,9 @@ final class KeiPixStore {
             searchSubmissionID += 1
             return
         }
+        focusedUser = nil
+        bookmarkTagFilter = nil
+        selectedSpotlightArticle = nil
         selectedRoute = .search
         await reloadCurrentFeed()
     }
@@ -791,6 +814,19 @@ final class KeiPixStore {
         return Self.rankingDateFormatter.string(from: rankingDate)
     }
 
+    private func currentFeedRequestContext() -> FeedRequestContext {
+        FeedRequestContext(
+            route: selectedRoute,
+            focusedUserID: focusedUser?.id,
+            searchText: searchText.trimmingCharacters(in: .whitespacesAndNewlines),
+            searchSubmissionID: searchSubmissionID,
+            bookmarkTagFilter: bookmarkTagFilter,
+            useRankingDate: useRankingDate,
+            rankingDate: rankingDate,
+            searchOptions: searchOptions
+        )
+    }
+
     private func filteredArtworkSeriesResponse(_ response: PixivArtworkSeriesResponse) -> PixivArtworkSeriesResponse {
         let firstArtwork = response.firstArtwork.flatMap { passesContentFilters($0) ? $0 : nil }
         var illusts = response.illusts.filter(passesContentFilters)
@@ -962,4 +998,15 @@ final class KeiPixStore {
         formatter.dateFormat = "yyyy-MM-dd"
         return formatter
     }()
+}
+
+private struct FeedRequestContext: Equatable {
+    let route: PixivRoute
+    let focusedUserID: Int?
+    let searchText: String
+    let searchSubmissionID: Int
+    let bookmarkTagFilter: String?
+    let useRankingDate: Bool
+    let rankingDate: Date
+    let searchOptions: SearchOptions
 }
