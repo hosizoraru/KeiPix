@@ -38,6 +38,21 @@ struct UserProfileSheet: View {
                         ProgressView()
                             .frame(maxWidth: .infinity, alignment: .center)
                             .padding(40)
+                    } else if detail == nil, let errorMessage {
+                        ContentUnavailableView {
+                            Label(L10n.errorTitle, systemImage: "exclamationmark.triangle")
+                        } description: {
+                            Text(errorMessage)
+                        } actions: {
+                            Button {
+                                Task { await loadDetail() }
+                            } label: {
+                                Label(L10n.retry, systemImage: "arrow.clockwise")
+                            }
+                            .buttonStyle(.borderedProminent)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .frame(minHeight: 260)
                     } else {
                         metrics
                         profileCollectionShortcuts
@@ -421,6 +436,16 @@ struct UserProfileSheet: View {
                     .font(.headline)
 
                 Spacer()
+
+                if relatedErrorMessage != nil {
+                    Button {
+                        Task { await loadRelatedUsers() }
+                    } label: {
+                        Label(L10n.retry, systemImage: "arrow.clockwise")
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+                }
 
                 if relatedUsers.isEmpty == false {
                     Button {
