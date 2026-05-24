@@ -62,6 +62,14 @@ struct BrowsingHistoryView: View {
         } message: { item in
             Text(String(format: L10n.deleteHistoryItemConfirmationFormat, item.title))
         }
+        .onChange(of: source) { _, value in
+            guard value == .pixiv else { return }
+            Task { await store.reloadCurrentFeed() }
+        }
+        .task(id: store.routeRefreshGeneration) {
+            guard source == .pixiv else { return }
+            await store.reloadCurrentFeed()
+        }
     }
 
     private var header: some View {
@@ -90,19 +98,25 @@ struct BrowsingHistoryView: View {
                 .help(L10n.clearSearch)
             }
 
-            if source == .local {
-                Button(role: .destructive) {
-                    isClearConfirmationPresented = true
-                } label: {
-                    Label(L10n.clearHistory, systemImage: "trash")
+            Menu {
+                switch source {
+                case .local:
+                    Button(role: .destructive) {
+                        isClearConfirmationPresented = true
+                    } label: {
+                        Label(L10n.clearHistory, systemImage: "trash")
+                    }
+                    .disabled(store.localBrowsingHistory.isEmpty)
+                case .pixiv:
+                    Button {
+                        Task { await store.reloadCurrentFeed() }
+                    } label: {
+                        Label(L10n.refresh, systemImage: "arrow.clockwise")
+                    }
+                    .disabled(store.isLoading)
                 }
-                .disabled(store.localBrowsingHistory.isEmpty)
-            } else {
-                Button {
-                    Task { await store.reloadCurrentFeed() }
-                } label: {
-                    Label(L10n.refresh, systemImage: "arrow.clockwise")
-                }
+            } label: {
+                Label(L10n.moreActions, systemImage: "ellipsis.circle")
             }
         }
         .controlSize(.small)
