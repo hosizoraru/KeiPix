@@ -36,98 +36,8 @@ struct UserPreviewListView: View {
             } else if isLoading {
                 ProgressView(L10n.loading)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else if mode.requiresSearchKeyword, searchKeyword.isEmpty {
-                ContentUnavailableView(L10n.enterSearchKeyword, systemImage: "magnifyingglass")
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else if previews.isEmpty {
-                if let errorMessage {
-                    ContentUnavailableView {
-                        Label(L10n.errorTitle, systemImage: "exclamationmark.triangle")
-                    } description: {
-                        Text(errorMessage)
-                    } actions: {
-                        Button {
-                            Task { await loadInitial() }
-                        } label: {
-                            Label(L10n.retry, systemImage: "arrow.clockwise")
-                        }
-                        .buttonStyle(.borderedProminent)
-                    }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                } else {
-                    ContentUnavailableView(L10n.noCreators, systemImage: "person.2")
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                }
             } else {
-                ScrollView {
-                    LazyVStack(spacing: 0, pinnedViews: [.sectionHeaders]) {
-                        Section {
-                            Group {
-                                if visiblePreviews.isEmpty {
-                                    VStack(spacing: 14) {
-                                        ContentUnavailableView(L10n.noMatchingCreators, systemImage: "person.crop.circle.badge.questionmark")
-                                            .frame(maxWidth: .infinity)
-                                            .frame(minHeight: 260)
-
-                                        if nextURL != nil {
-                                            loadMoreButton
-                                                .frame(maxWidth: 420)
-                                        }
-                                    }
-                                } else {
-                                    LazyVGrid(columns: columns, spacing: 14) {
-                                        ForEach(visiblePreviews) { preview in
-                                            UserPreviewCard(
-                                                preview: preview,
-                                                followRestrict: followRestrictsByUserID[preview.user.id],
-                                                isUpdating: updatingCreatorIDs.contains(preview.user.id),
-                                                showContentBadges: store.showContentBadges,
-                                                openProfile: { profileUser = preview.user },
-                                                openIllustrations: {
-                                                    Task { await store.openUserFeed(user: preview.user, route: .userIllustrations) }
-                                                },
-                                                openManga: {
-                                                    Task { await store.openUserFeed(user: preview.user, route: .userManga) }
-                                                },
-                                                followCreator: { restrict in
-                                                    Task { await follow(preview.user, restrict: restrict) }
-                                                },
-                                                requestUnfollow: {
-                                                    requestDangerAction(.unfollow, user: preview.user)
-                                                },
-                                                requestMuteCreator: {
-                                                    requestDangerAction(.mute, user: preview.user)
-                                                },
-                                                copyCreatorLink: {
-                                                    copyCreatorLink(preview.user)
-                                                },
-                                                copyArtworkLink: { artwork in
-                                                    copyArtworkLink(artwork)
-                                                },
-                                                selectArtwork: { artwork in
-                                                    store.selectedArtwork = artwork
-                                                }
-                                            )
-                                        }
-
-                                        if nextURL != nil {
-                                            loadMoreButton
-                                        }
-                                    }
-                                }
-                            }
-                            .padding(.horizontal, 18)
-                            .padding(.top, 14)
-                            .padding(.bottom, 20)
-                        } header: {
-                            header
-                                .padding(.horizontal, 18)
-                                .padding(.vertical, 6)
-                                .background(.bar)
-                        }
-                    }
-                }
-                .scrollEdgeEffectStyle(.soft, for: .top)
+                creatorListSurface
             }
         }
         .navigationTitle(mode.title)
@@ -240,6 +150,107 @@ struct UserPreviewListView: View {
         }
         .task(id: bulkStatusText) {
             await dismissBulkStatusTextIfNeeded(bulkStatusText)
+        }
+    }
+
+    private var creatorListSurface: some View {
+        VStack(spacing: 0) {
+            header
+                .padding(.horizontal, 18)
+                .padding(.vertical, 6)
+                .background(.bar)
+
+            Divider()
+
+            creatorListContent
+        }
+    }
+
+    @ViewBuilder
+    private var creatorListContent: some View {
+        if mode.requiresSearchKeyword, searchKeyword.isEmpty {
+            ContentUnavailableView(L10n.enterSearchKeyword, systemImage: "magnifyingglass")
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+        } else if previews.isEmpty {
+            if let errorMessage {
+                ContentUnavailableView {
+                    Label(L10n.errorTitle, systemImage: "exclamationmark.triangle")
+                } description: {
+                    Text(errorMessage)
+                } actions: {
+                    Button {
+                        Task { await loadInitial() }
+                    } label: {
+                        Label(L10n.retry, systemImage: "arrow.clockwise")
+                    }
+                    .buttonStyle(.borderedProminent)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                ContentUnavailableView(L10n.noCreators, systemImage: "person.2")
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
+        } else {
+            ScrollView {
+                Group {
+                    if visiblePreviews.isEmpty {
+                        VStack(spacing: 14) {
+                            ContentUnavailableView(L10n.noMatchingCreators, systemImage: "person.crop.circle.badge.questionmark")
+                                .frame(maxWidth: .infinity)
+                                .frame(minHeight: 260)
+
+                            if nextURL != nil {
+                                loadMoreButton
+                                    .frame(maxWidth: 420)
+                            }
+                        }
+                    } else {
+                        LazyVGrid(columns: columns, spacing: 14) {
+                            ForEach(visiblePreviews) { preview in
+                                UserPreviewCard(
+                                    preview: preview,
+                                    followRestrict: followRestrictsByUserID[preview.user.id],
+                                    isUpdating: updatingCreatorIDs.contains(preview.user.id),
+                                    showContentBadges: store.showContentBadges,
+                                    openProfile: { profileUser = preview.user },
+                                    openIllustrations: {
+                                        Task { await store.openUserFeed(user: preview.user, route: .userIllustrations) }
+                                    },
+                                    openManga: {
+                                        Task { await store.openUserFeed(user: preview.user, route: .userManga) }
+                                    },
+                                    followCreator: { restrict in
+                                        Task { await follow(preview.user, restrict: restrict) }
+                                    },
+                                    requestUnfollow: {
+                                        requestDangerAction(.unfollow, user: preview.user)
+                                    },
+                                    requestMuteCreator: {
+                                        requestDangerAction(.mute, user: preview.user)
+                                    },
+                                    copyCreatorLink: {
+                                        copyCreatorLink(preview.user)
+                                    },
+                                    copyArtworkLink: { artwork in
+                                        copyArtworkLink(artwork)
+                                    },
+                                    selectArtwork: { artwork in
+                                        store.selectedArtwork = artwork
+                                    }
+                                )
+                            }
+
+                            if nextURL != nil {
+                                loadMoreButton
+                            }
+                        }
+                    }
+                }
+                .padding(.horizontal, 18)
+                .padding(.top, 14)
+                .padding(.bottom, 20)
+            }
+            .scrollEdgeEffectStyle(.soft, for: .top)
         }
     }
 
@@ -469,7 +480,6 @@ struct UserPreviewListView: View {
             }
         }
         .help(L10n.creatorActions)
-        .disabled(previews.isEmpty && hasActiveCreatorListState == false)
     }
 
     private var headerSubtitle: String {
