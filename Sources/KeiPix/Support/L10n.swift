@@ -58,6 +58,7 @@ enum L10n {
     static var refresh: String { text("Refresh") }
     static var loading: String { text("Loading") }
     static var cancel: String { text("Cancel") }
+    static var open: String { text("Open") }
     static var openInPixiv: String { text("Open in Pixiv") }
     static var share: String { text("Share") }
     static var shareCurrentPage: String { text("Share Current Page") }
@@ -149,6 +150,9 @@ enum L10n {
     static var creatorManga: String { text("Creator Manga") }
     static var creatorPublicBookmarks: String { text("Creator Public Bookmarks") }
     static var openCreatorProfile: String { text("Open Creator Profile") }
+    static var creatorCollections: String { text("Creator Collections") }
+    static var openCreatorCollection: String { text("Open creator collection") }
+    static var openCreatorNetwork: String { text("Open creator network") }
     static var creatorFilter: String { text("Creator Filter") }
     static var creatorSort: String { text("Creator Sort") }
     static var allCreators: String { text("All Creators") }

@@ -55,6 +55,7 @@
 "Refresh" = "Refresh";
 "Loading" = "Loading";
 "Cancel" = "Cancel";
+"Open" = "Open";
 "Open in Pixiv" = "Open in Pixiv";
 "Share" = "Share";
 "Share Current Page" = "Share Current Page";
@@ -145,6 +146,9 @@
 "Creator Manga" = "Creator Manga";
 "Creator Public Bookmarks" = "Creator Public Bookmarks";
 "Open Creator Profile" = "Open Creator Profile";
+"Creator Collections" = "Creator Collections";
+"Open creator collection" = "Open creator collection";
+"Open creator network" = "Open creator network";
 "Creator Filter" = "Creator Filter";
 "Creator Sort" = "Creator Sort";
 "All Creators" = "All Creators";

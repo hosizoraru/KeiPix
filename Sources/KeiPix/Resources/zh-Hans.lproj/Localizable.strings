@@ -55,6 +55,7 @@
 "Refresh" = "刷新";
 "Loading" = "加载中";
 "Cancel" = "取消";
+"Open" = "打开";
 "Open in Pixiv" = "在 Pixiv 打开";
 "Share" = "分享";
 "Share Current Page" = "分享当前页";
@@ -145,6 +146,9 @@
 "Creator Manga" = "作者漫画";
 "Creator Public Bookmarks" = "作者公开收藏";
 "Open Creator Profile" = "打开创作者资料";
+"Creator Collections" = "作者集合";
+"Open creator collection" = "打开作者集合";
+"Open creator network" = "打开作者关系";
 "Creator Filter" = "作者筛选";
 "Creator Sort" = "作者排序";
 "All Creators" = "全部作者";

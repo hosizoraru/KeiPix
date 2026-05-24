@@ -36,11 +36,10 @@ struct UserProfileSheet: View {
                             .padding(40)
                     } else {
                         metrics
+                        profileCollectionShortcuts
                         comment
                         links
                         workspaceSection
-                        creatorNetworkSection
-                        feedActions
                         relatedCreatorSection
                     }
 
@@ -232,21 +231,6 @@ struct UserProfileSheet: View {
         }
     }
 
-    private var feedActions: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Label(L10n.works, systemImage: "rectangle.stack")
-                .font(.headline)
-
-            HStack(spacing: 10) {
-                feedButton(L10n.creatorIllustrations, systemImage: "photo.on.rectangle", route: .userIllustrations)
-                feedButton(L10n.creatorManga, systemImage: "book.closed", route: .userManga)
-                feedButton(L10n.creatorPublicBookmarks, systemImage: "bookmark", route: .userPublicBookmarks)
-            }
-        }
-        .padding(14)
-        .keiPanel(14)
-    }
-
     @ViewBuilder
     private var workspaceSection: some View {
         if let workspace = detail?.workspace {
@@ -281,31 +265,84 @@ struct UserProfileSheet: View {
         }
     }
 
-    private var creatorNetworkSection: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Label(L10n.creatorNetwork, systemImage: "person.2")
+    private var profileCollectionShortcuts: some View {
+        let profile = detail?.profile
+        return VStack(alignment: .leading, spacing: 10) {
+            Label(L10n.creatorCollections, systemImage: "rectangle.stack")
                 .font(.headline)
 
-            HStack(spacing: 10) {
-                Button {
-                    relationshipListMode = .userFollowers(detail?.user ?? user)
-                } label: {
-                    Label(L10n.followers, systemImage: "person.2")
-                        .frame(maxWidth: .infinity)
+            LazyVGrid(columns: profileShortcutColumns, alignment: .leading, spacing: 10) {
+                ProfileCollectionShortcutButton(
+                    title: L10n.creatorIllustrations,
+                    value: (profile?.totalIllusts ?? 0).formatted(),
+                    detail: L10n.openCreatorCollection,
+                    systemImage: "photo.on.rectangle"
+                ) {
+                    openFeed(.userIllustrations)
                 }
-                .buttonStyle(.bordered)
 
-                Button {
-                    relationshipListMode = .userFollowing(detail?.user ?? user)
-                } label: {
-                    Label(L10n.followingCreators, systemImage: "person.2.crop.square.stack")
-                        .frame(maxWidth: .infinity)
+                ProfileCollectionShortcutButton(
+                    title: L10n.creatorManga,
+                    value: (profile?.totalManga ?? 0).formatted(),
+                    detail: L10n.openCreatorCollection,
+                    systemImage: "book.closed"
+                ) {
+                    openFeed(.userManga)
                 }
-                .buttonStyle(.bordered)
+
+                ProfileCollectionShortcutButton(
+                    title: L10n.creatorPublicBookmarks,
+                    value: (profile?.totalIllustBookmarksPublic ?? 0).formatted(),
+                    detail: L10n.openCreatorCollection,
+                    systemImage: "bookmark"
+                ) {
+                    openFeed(.userPublicBookmarks)
+                }
+
+                ProfileCollectionShortcutButton(
+                    title: L10n.followers,
+                    value: (profile?.totalFollowUsers ?? 0).formatted(),
+                    detail: L10n.openCreatorNetwork,
+                    systemImage: "person.2"
+                ) {
+                    relationshipListMode = .userFollowers(detail?.user ?? user)
+                }
+
+                ProfileCollectionShortcutButton(
+                    title: L10n.followingCreators,
+                    value: L10n.open,
+                    detail: L10n.openCreatorNetwork,
+                    systemImage: "person.2.crop.square.stack"
+                ) {
+                    relationshipListMode = .userFollowing(detail?.user ?? user)
+                }
+
+                ProfileCollectionShortcutButton(
+                    title: L10n.relatedCreators,
+                    value: relatedUsers.isEmpty ? L10n.open : "\(relatedUsers.count.formatted())+",
+                    detail: L10n.openCreatorNetwork,
+                    systemImage: "person.3"
+                ) {
+                    relationshipListMode = .related(detail?.user ?? user)
+                }
+                .disabled(isLoadingRelatedUsers)
             }
         }
         .padding(14)
         .keiPanel(14)
+    }
+
+    private var profileShortcutColumns: [GridItem] {
+        [
+            GridItem(.adaptive(minimum: 158, maximum: 240), spacing: 10, alignment: .top)
+        ]
+    }
+
+    private func openFeed(_ route: PixivRoute) {
+        Task {
+            await store.openUserFeed(user: detail?.user ?? user, route: route)
+            dismiss()
+        }
     }
 
     @ViewBuilder
@@ -373,19 +410,6 @@ struct UserProfileSheet: View {
         }
         .padding(14)
         .keiPanel(14)
-    }
-
-    private func feedButton(_ title: String, systemImage: String, route: PixivRoute) -> some View {
-        Button {
-            Task {
-                await store.openUserFeed(user: detail?.user ?? user, route: route)
-                dismiss()
-            }
-        } label: {
-            Label(title, systemImage: systemImage)
-                .frame(maxWidth: .infinity)
-        }
-        .buttonStyle(.bordered)
     }
 
     private func loadDetail() async {
@@ -562,6 +586,45 @@ private struct ProfileMetric: View {
                 .foregroundStyle(.secondary)
         }
         .frame(minWidth: 100, alignment: .leading)
+    }
+}
+
+private struct ProfileCollectionShortcutButton: View {
+    let title: String
+    let value: String
+    let detail: String
+    let systemImage: String
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(alignment: .top, spacing: 10) {
+                Image(systemName: systemImage)
+                    .font(.title3)
+                    .foregroundStyle(.secondary)
+                    .frame(width: 24)
+
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(value)
+                        .font(.headline)
+                        .lineLimit(1)
+                    Text(title)
+                        .font(.callout.weight(.medium))
+                        .lineLimit(1)
+                    Text(detail)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                }
+
+                Spacer(minLength: 0)
+            }
+            .frame(maxWidth: .infinity, minHeight: 82, alignment: .topLeading)
+            .padding(12)
+            .contentShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .keiInteractiveGlass(12)
     }
 }
 
