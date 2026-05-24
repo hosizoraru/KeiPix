@@ -178,6 +178,14 @@
 "No bookmark tags" = "暂无收藏标签";
 "Select All" = "全选";
 "Clear Selection" = "清空选择";
+"Selected %d bookmark tags" = "已选择 %d 个收藏标签";
+"Cleared bookmark tag selection" = "已清空收藏标签选择";
+"Added bookmark tag #%@" = "已添加收藏标签 #%@";
+"Bookmark tag #%@ is already selected" = "收藏标签 #%@ 已选择";
+"Reset Bookmark Edits" = "重置收藏编辑";
+"Reset unsaved bookmark edits?" = "重置未保存的收藏编辑？";
+"Reset bookmark edits" = "已重置收藏编辑";
+"No bookmark changes" = "收藏没有变更";
 "Follow" = "关注";
 "Follow Publicly" = "公开关注";
 "Follow Privately" = "私密关注";

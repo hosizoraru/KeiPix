@@ -176,6 +176,14 @@ enum L10n {
     static var noBookmarkTags: String { text("No bookmark tags") }
     static var selectAll: String { text("Select All") }
     static var clearSelection: String { text("Clear Selection") }
+    static var selectedBookmarkTagsFormat: String { text("Selected %d bookmark tags") }
+    static var clearedBookmarkTagSelection: String { text("Cleared bookmark tag selection") }
+    static var addedBookmarkTagFormat: String { text("Added bookmark tag #%@") }
+    static var bookmarkTagAlreadySelectedFormat: String { text("Bookmark tag #%@ is already selected") }
+    static var resetBookmarkEdits: String { text("Reset Bookmark Edits") }
+    static var resetBookmarkEditsConfirmation: String { text("Reset unsaved bookmark edits?") }
+    static var resetBookmarkEditsDone: String { text("Reset bookmark edits") }
+    static var noBookmarkChanges: String { text("No bookmark changes") }
     static var follow: String { text("Follow") }
     static var followPublicly: String { text("Follow Publicly") }
     static var followPrivately: String { text("Follow Privately") }

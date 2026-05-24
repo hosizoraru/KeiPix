@@ -14,7 +14,12 @@ struct BookmarkEditorView: View {
     @State private var isSaving = false
     @State private var isBookmarked = false
     @State private var errorMessage: String?
+    @State private var actionMessage: String?
     @State private var isConfirmingRemoveBookmark = false
+    @State private var isConfirmingReset = false
+    @State private var initialRestrict = BookmarkRestrict.public
+    @State private var initialSelectedTags: Set<String> = []
+    @State private var initialKnownTags: [PixivBookmarkTag] = []
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -78,12 +83,15 @@ struct BookmarkEditorView: View {
                             Button(allSelected ? L10n.clearSelection : L10n.selectAll) {
                                 if allSelected {
                                     selectedTags.removeAll()
+                                    showActionMessage(L10n.clearedBookmarkTagSelection)
                                 } else {
                                     selectedTags = Set(allDisplayTags.map(\.name))
+                                    showActionMessage(String(format: L10n.selectedBookmarkTagsFormat, selectedTags.count))
                                 }
                             }
                             .buttonStyle(.borderless)
                             .controlSize(.small)
+                            .disabled(isSaving)
 
                             Spacer()
 
@@ -111,6 +119,23 @@ struct BookmarkEditorView: View {
         }
         .frame(width: 520)
         .frame(minHeight: 500)
+        .overlay(alignment: .bottom) {
+            if let actionMessage {
+                FloatingStatusBanner(maxWidth: 420) {
+                    Text(actionMessage)
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                        .textSelection(.enabled)
+                }
+                .padding(.horizontal, 18)
+                .padding(.bottom, 82)
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+        }
+        .animation(.snappy(duration: 0.18), value: actionMessage)
+        .task(id: actionMessage) {
+            await dismissActionMessageIfNeeded(actionMessage)
+        }
         .confirmationDialog(
             L10n.removeBookmark,
             isPresented: $isConfirmingRemoveBookmark,
@@ -122,6 +147,18 @@ struct BookmarkEditorView: View {
             Button(L10n.cancel, role: .cancel) {}
         } message: {
             Text(String(format: L10n.removeBookmarkConfirmationFormat, artwork.title))
+        }
+        .confirmationDialog(
+            L10n.resetBookmarkEdits,
+            isPresented: $isConfirmingReset,
+            titleVisibility: .visible
+        ) {
+            Button(L10n.reset, role: .destructive) {
+                resetLocalEdits()
+            }
+            Button(L10n.cancel, role: .cancel) {}
+        } message: {
+            Text(L10n.resetBookmarkEditsConfirmation)
         }
         .task(id: artwork.id) {
             await loadDetail()
@@ -162,7 +199,11 @@ struct BookmarkEditorView: View {
             Spacer()
 
             Button(L10n.reset) {
-                Task { await loadDetail() }
+                if hasUnsavedChanges {
+                    isConfirmingReset = true
+                } else {
+                    showActionMessage(L10n.noBookmarkChanges)
+                }
             }
             .disabled(isSaving || isLoading)
 
@@ -177,7 +218,7 @@ struct BookmarkEditorView: View {
                 }
             }
             .buttonStyle(.glassProminent)
-            .disabled(isSaving || isLoading)
+            .disabled(isSaving || isLoading || canSave == false)
         }
         .padding(20)
     }
@@ -204,6 +245,14 @@ struct BookmarkEditorView: View {
         customTag.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
+    private var hasUnsavedChanges: Bool {
+        restrict != initialRestrict || selectedTags != initialSelectedTags
+    }
+
+    private var canSave: Bool {
+        isBookmarked == false || hasUnsavedChanges
+    }
+
     private func loadDetail() async {
         isLoading = true
         errorMessage = nil
@@ -218,6 +267,9 @@ struct BookmarkEditorView: View {
                 : Set(store.automaticBookmarkTags(for: artwork))
             knownTags = detail.tags.map { PixivBookmarkTag(name: $0.name, count: 0) }
             await loadSuggestions(for: detail.restrict)
+            initialRestrict = restrict
+            initialSelectedTags = selectedTags
+            initialKnownTags = knownTags
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -251,11 +303,17 @@ struct BookmarkEditorView: View {
     private func addCustomTag() {
         let tag = trimmedCustomTag
         guard tag.isEmpty == false else { return }
+        let wasSelected = selectedTags.contains(tag)
         selectedTags.insert(tag)
         if knownTags.contains(where: { $0.name == tag }) == false {
             knownTags.insert(PixivBookmarkTag(name: tag, count: 0), at: 0)
         }
         customTag = ""
+        showActionMessage(
+            wasSelected
+                ? String(format: L10n.bookmarkTagAlreadySelectedFormat, tag)
+                : String(format: L10n.addedBookmarkTagFormat, tag)
+        )
     }
 
     private func toggleTag(_ tag: String) {
@@ -263,6 +321,31 @@ struct BookmarkEditorView: View {
             selectedTags.remove(tag)
         } else {
             selectedTags.insert(tag)
+        }
+    }
+
+    private func resetLocalEdits() {
+        restrict = initialRestrict
+        selectedTags = initialSelectedTags
+        knownTags = initialKnownTags
+        customTag = ""
+        errorMessage = nil
+        showActionMessage(L10n.resetBookmarkEditsDone)
+    }
+
+    private func showActionMessage(_ message: String) {
+        actionMessage = message
+    }
+
+    private func dismissActionMessageIfNeeded(_ message: String?) async {
+        guard let message else { return }
+        do {
+            try await Task.sleep(for: .seconds(2.4))
+        } catch {
+            return
+        }
+        if actionMessage == message {
+            actionMessage = nil
         }
     }
 

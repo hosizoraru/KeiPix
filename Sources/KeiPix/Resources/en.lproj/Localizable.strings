@@ -178,6 +178,14 @@
 "No bookmark tags" = "No bookmark tags";
 "Select All" = "Select All";
 "Clear Selection" = "Clear Selection";
+"Selected %d bookmark tags" = "Selected %d bookmark tags";
+"Cleared bookmark tag selection" = "Cleared bookmark tag selection";
+"Added bookmark tag #%@" = "Added bookmark tag #%@";
+"Bookmark tag #%@ is already selected" = "Bookmark tag #%@ is already selected";
+"Reset Bookmark Edits" = "Reset Bookmark Edits";
+"Reset unsaved bookmark edits?" = "Reset unsaved bookmark edits?";
+"Reset bookmark edits" = "Reset bookmark edits";
+"No bookmark changes" = "No bookmark changes";
 "Follow" = "Follow";
 "Follow Publicly" = "Follow Publicly";
 "Follow Privately" = "Follow Privately";
