@@ -26,48 +26,67 @@ struct BookmarkTagsView: View {
                 ScrollView {
                     LazyVStack(spacing: 0, pinnedViews: [.sectionHeaders]) {
                         Section {
-                            LazyVGrid(columns: columns, spacing: 12) {
-                                BookmarkTagCard(
-                                    title: L10n.allBookmarkTags,
-                                    count: totalVisibleCount,
-                                    systemImage: "tray.full",
-                                    action: { store.openBookmarks(restrict: selectedRestrict, tag: nil) }
-                                )
-
-                                BookmarkTagCard(
-                                    title: L10n.unclassified,
-                                    count: nil,
-                                    systemImage: "tag.slash",
-                                    action: { store.openBookmarks(restrict: selectedRestrict, tag: "未分類") }
-                                )
-
-                                ForEach(filteredTags) { tag in
+                            if tags.isEmpty, let errorMessage {
+                                ContentUnavailableView {
+                                    Label(L10n.errorTitle, systemImage: "exclamationmark.triangle")
+                                } description: {
+                                    Text(errorMessage)
+                                } actions: {
+                                    Button {
+                                        Task { await load(showFeedback: true) }
+                                    } label: {
+                                        Label(L10n.retry, systemImage: "arrow.clockwise")
+                                    }
+                                    .buttonStyle(.borderedProminent)
+                                }
+                                .frame(maxWidth: .infinity)
+                                .frame(minHeight: 360)
+                                .padding(.horizontal, 18)
+                                .padding(.top, 14)
+                            } else {
+                                LazyVGrid(columns: columns, spacing: 12) {
                                     BookmarkTagCard(
-                                        title: tag.name,
-                                        count: tag.count,
-                                        systemImage: "tag",
-                                        action: { store.openBookmarks(restrict: selectedRestrict, tag: tag.name) }
+                                        title: L10n.allBookmarkTags,
+                                        count: totalVisibleCount,
+                                        systemImage: "tray.full",
+                                        action: { store.openBookmarks(restrict: selectedRestrict, tag: nil) }
                                     )
-                                    .contextMenu {
-                                        Button(L10n.copyTag) {
-                                            PasteboardWriter.copy(tag.name)
-                                            showActionMessage(String(format: L10n.copiedKeywordFormat, "#\(tag.name)"))
+
+                                    BookmarkTagCard(
+                                        title: L10n.unclassified,
+                                        count: nil,
+                                        systemImage: "tag.slash",
+                                        action: { store.openBookmarks(restrict: selectedRestrict, tag: "未分類") }
+                                    )
+
+                                    ForEach(filteredTags) { tag in
+                                        BookmarkTagCard(
+                                            title: tag.name,
+                                            count: tag.count,
+                                            systemImage: "tag",
+                                            action: { store.openBookmarks(restrict: selectedRestrict, tag: tag.name) }
+                                        )
+                                        .contextMenu {
+                                            Button(L10n.copyTag) {
+                                                PasteboardWriter.copy(tag.name)
+                                                showActionMessage(String(format: L10n.copiedKeywordFormat, "#\(tag.name)"))
+                                            }
                                         }
                                     }
                                 }
-                            }
-                            .padding(.horizontal, 18)
-                            .padding(.top, 14)
+                                .padding(.horizontal, 18)
+                                .padding(.top, 14)
 
-                            if filteredTags.isEmpty {
-                                Text(tags.isEmpty ? L10n.noBookmarkTags : L10n.noMatchingBookmarkTags)
-                                    .font(.callout)
-                                    .foregroundStyle(.secondary)
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                    .padding(14)
-                                    .keiPanel(14)
-                                    .padding(.horizontal, 18)
-                                    .padding(.top, 12)
+                                if filteredTags.isEmpty {
+                                    Text(tags.isEmpty ? L10n.noBookmarkTags : L10n.noMatchingBookmarkTags)
+                                        .font(.callout)
+                                        .foregroundStyle(.secondary)
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                        .padding(14)
+                                        .keiPanel(14)
+                                        .padding(.horizontal, 18)
+                                        .padding(.top, 12)
+                                }
                             }
 
                             if nextURL != nil {
