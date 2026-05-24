@@ -305,6 +305,9 @@
 "Creator Collections" = "作者集合";
 "Open creator collection" = "打开作者集合";
 "Open creator network" = "打开作者关系";
+"Recent Creator Works" = "作者近期作品";
+"No recent creator works" = "暂无作者近期作品";
+"View All Works" = "查看全部作品";
 "Creator Filter" = "作者筛选";
 "Creator Sort" = "作者排序";
 "Reset Creator Filters" = "重置作者筛选";

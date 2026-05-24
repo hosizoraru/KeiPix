@@ -56,6 +56,18 @@ struct UserProfileSheet: View {
                     } else {
                         metrics
                         profileCollectionShortcuts
+                        UserProfileRecentWorksSection(
+                            user: currentUser,
+                            store: store,
+                            openAllWorks: {
+                                openFeed(.userIllustrations)
+                            },
+                            selectArtwork: { artwork in
+                                store.selectedArtwork = artwork
+                                dismiss()
+                            },
+                            showStatus: showStatus
+                        )
                         comment
                         links
                         workspaceSection

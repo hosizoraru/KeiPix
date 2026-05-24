@@ -747,6 +747,22 @@ final class KeiPixStore {
         return filteredUserPreviewResponse(response)
     }
 
+    func creatorPreviewArtworks(for user: PixivUser) async throws -> [PixivArtwork] {
+        async let illustrations = api.userIllusts(userID: user.id, type: "illust")
+        async let manga = api.userIllusts(userID: user.id, type: "manga")
+        let responses = try await [illustrations, manga]
+        var seenArtworkIDs = Set<Int>()
+        return responses
+            .flatMap(\.illusts)
+            .filter(passesContentFilters)
+            .filter { artwork in
+                seenArtworkIDs.insert(artwork.id).inserted
+            }
+            .sorted { first, second in
+                first.createDate > second.createDate
+            }
+    }
+
     func searchUsers(keyword: String) async throws -> PixivUserPreviewResponse {
         let response = try await api.searchUsers(keyword: keyword)
         return filteredUserPreviewResponse(response)

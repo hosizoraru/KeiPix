@@ -300,6 +300,9 @@ enum L10n {
     static var creatorCollections: String { text("Creator Collections") }
     static var openCreatorCollection: String { text("Open creator collection") }
     static var openCreatorNetwork: String { text("Open creator network") }
+    static var recentCreatorWorks: String { text("Recent Creator Works") }
+    static var noRecentCreatorWorks: String { text("No recent creator works") }
+    static var viewAllWorks: String { text("View All Works") }
     static var creatorFilter: String { text("Creator Filter") }
     static var creatorSort: String { text("Creator Sort") }
     static var resetCreatorFilters: String { text("Reset Creator Filters") }
