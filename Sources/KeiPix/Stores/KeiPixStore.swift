@@ -8,6 +8,7 @@ final class KeiPixStore {
     let downloads = ArtworkDownloadStore()
 
     var session: PixivSession?
+    var storedAccounts: [PixivStoredAccount] = []
     var selectedRoute: PixivRoute = .illustrations
     var artworks: [PixivArtwork] = []
     var selectedArtwork: PixivArtwork?
@@ -91,7 +92,9 @@ final class KeiPixStore {
 
     func bootstrap() async {
         do {
+            storedAccounts = try await api.storedAccounts()
             session = try await api.loadSession()
+            storedAccounts = try await api.storedAccounts()
             if session != nil {
                 await refreshRestrictedModeSetting()
                 await reloadCurrentFeed()
@@ -112,6 +115,7 @@ final class KeiPixStore {
 
         do {
             session = try await api.login(code: code)
+            storedAccounts = try await api.storedAccounts()
             isLoginPresented = false
             selectedRoute = .illustrations
             await refreshRestrictedModeSetting()
@@ -123,20 +127,64 @@ final class KeiPixStore {
 
     func logout() async {
         do {
-            try await api.clearSession()
-            session = nil
-            restrictedModeEnabled = nil
-            allArtworks = []
-            artworks = []
-            selectedArtwork = nil
-            selectedSpotlightArticle = nil
-            readerWindowArtwork = nil
-            searchSuggestions = []
-            nextURL = nil
-            recordedBrowsingHistoryIDs.removeAll()
+            session = try await api.clearSession()
+            storedAccounts = try await api.storedAccounts()
+            resetLoadedSessionContent()
+            if session != nil {
+                await refreshRestrictedModeSetting()
+                await reloadCurrentFeed()
+            }
         } catch {
             errorMessage = error.localizedDescription
         }
+    }
+
+    func switchAccount(userID: String) async {
+        guard session?.user.id != userID else { return }
+        isLoading = true
+        errorMessage = nil
+        defer { isLoading = false }
+
+        do {
+            session = try await api.selectAccount(userID: userID)
+            storedAccounts = try await api.storedAccounts()
+            resetLoadedSessionContent()
+            selectedRoute = .illustrations
+            if session != nil {
+                await refreshRestrictedModeSetting()
+                await reloadCurrentFeed()
+            }
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    func removeStoredAccount(userID: String) async {
+        do {
+            session = try await api.deleteAccount(userID: userID)
+            storedAccounts = try await api.storedAccounts()
+            resetLoadedSessionContent()
+            if session != nil {
+                await refreshRestrictedModeSetting()
+                await reloadCurrentFeed()
+            }
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    private func resetLoadedSessionContent() {
+        restrictedModeEnabled = nil
+        allArtworks = []
+        artworks = []
+        selectedArtwork = nil
+        selectedSpotlightArticle = nil
+        readerWindowArtwork = nil
+        imageSourceSearchRequest = nil
+        searchSuggestions = []
+        nextURL = nil
+        activeFeedRequestID = nil
+        recordedBrowsingHistoryIDs.removeAll()
     }
 
     func select(_ route: PixivRoute) {

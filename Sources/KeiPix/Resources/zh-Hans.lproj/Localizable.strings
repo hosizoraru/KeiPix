@@ -438,6 +438,13 @@
 "Switch artwork at edges" = "边界后切换作品";
 "Privacy" = "隐私";
 "Account" = "账号";
+"Add Account" = "添加账号";
+"Current Account" = "当前账号";
+"Switch Account" = "切换账号";
+"Remove Account" = "移除账号";
+"Switched to %@" = "已切换到 %@";
+"Removed account %@" = "已移除账号 %@";
+"Remove account %@ from this Mac?" = "从这台 Mac 移除账号 %@？";
 "Privacy Mode" = "隐私模式";
 "App Controls" = "应用控制";
 "Enable Privacy Mode" = "启用隐私模式";

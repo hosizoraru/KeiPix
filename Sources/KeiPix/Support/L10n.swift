@@ -433,6 +433,13 @@ enum L10n {
     static var pageThenArtworkSwipe: String { text("Switch artwork at edges") }
     static var privacy: String { text("Privacy") }
     static var account: String { text("Account") }
+    static var addAccount: String { text("Add Account") }
+    static var currentAccount: String { text("Current Account") }
+    static var switchAccount: String { text("Switch Account") }
+    static var removeAccount: String { text("Remove Account") }
+    static var switchedAccountFormat: String { text("Switched to %@") }
+    static var removedAccountFormat: String { text("Removed account %@") }
+    static var removeAccountConfirmationFormat: String { text("Remove account %@ from this Mac?") }
     static var privacyMode: String { text("Privacy Mode") }
     static var appControls: String { text("App Controls") }
     static var enablePrivacyMode: String { text("Enable Privacy Mode") }

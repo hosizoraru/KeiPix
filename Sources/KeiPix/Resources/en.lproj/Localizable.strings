@@ -438,6 +438,13 @@
 "Switch artwork at edges" = "Switch artwork at edges";
 "Privacy" = "Privacy";
 "Account" = "Account";
+"Add Account" = "Add Account";
+"Current Account" = "Current Account";
+"Switch Account" = "Switch Account";
+"Remove Account" = "Remove Account";
+"Switched to %@" = "Switched to %@";
+"Removed account %@" = "Removed account %@";
+"Remove account %@ from this Mac?" = "Remove account %@ from this Mac?";
 "Privacy Mode" = "Privacy Mode";
 "App Controls" = "App Controls";
 "Enable Privacy Mode" = "Enable Privacy Mode";

@@ -7,6 +7,24 @@ struct PixivSession: Codable, Equatable, Sendable {
     var user: PixivAccountUser
 }
 
+struct PixivStoredAccount: Codable, Identifiable, Equatable, Sendable {
+    let id: String
+    let name: String
+    let account: String
+    let profileImageURL: URL?
+    let isPremium: Bool
+    let lastUsedAt: Date
+
+    init(session: PixivSession, lastUsedAt: Date = Date()) {
+        id = session.user.id
+        name = session.user.name
+        account = session.user.account
+        profileImageURL = session.user.profileImageURL
+        isPremium = session.user.isPremium
+        self.lastUsedAt = lastUsedAt
+    }
+}
+
 struct PixivAccountUser: Codable, Equatable, Sendable {
     let id: String
     let name: String

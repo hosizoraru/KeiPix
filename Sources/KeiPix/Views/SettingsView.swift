@@ -9,6 +9,8 @@ struct SettingsView: View {
     @State private var restrictedModeMessage: String?
     @State private var settingsActionMessage: String?
     @State private var isLogoutConfirmationPresented = false
+    @State private var isAccountLoginPresented = false
+    @State private var accountRemovalCandidate: PixivStoredAccount?
     @State private var isMutedContentSyncConfirmationPresented = false
     @State private var isMutedContentUploadConfirmationPresented = false
     @State private var isMutedContentImportConfirmationPresented = false
@@ -275,10 +277,43 @@ struct SettingsView: View {
                         value: store.showAccountIdentity ? "\(session.user.name) @\(session.user.account)" : L10n.hidden
                     )
 
+                    if store.storedAccounts.isEmpty == false {
+                        ForEach(store.storedAccounts) { account in
+                            StoredAccountRow(
+                                account: account,
+                                isCurrent: account.id == session.user.id,
+                                showIdentity: store.showAccountIdentity,
+                                switchAccount: {
+                                    Task {
+                                        await store.switchAccount(userID: account.id)
+                                        showSettingsActionMessage(String(format: L10n.switchedAccountFormat, account.name))
+                                    }
+                                },
+                                removeAccount: {
+                                    accountRemovalCandidate = account
+                                }
+                            )
+                        }
+                    }
+
+                    Button {
+                        isAccountLoginPresented = true
+                    } label: {
+                        Label(L10n.addAccount, systemImage: "person.crop.circle.badge.plus")
+                    }
+
                     Button(role: .destructive) {
                         isLogoutConfirmationPresented = true
                     } label: {
                         Label(L10n.logout, systemImage: "rectangle.portrait.and.arrow.right")
+                    }
+                }
+            } else {
+                Section(L10n.account) {
+                    Button {
+                        isAccountLoginPresented = true
+                    } label: {
+                        Label(L10n.addAccount, systemImage: "person.crop.circle.badge.plus")
                     }
                 }
             }
@@ -315,6 +350,10 @@ struct SettingsView: View {
         .task(id: settingsActionMessage) {
             await dismissSettingsActionMessageIfNeeded(settingsActionMessage)
         }
+        .sheet(isPresented: $isAccountLoginPresented) {
+            LoginSheetView(store: store)
+                .frame(width: 900, height: 680)
+        }
         .confirmationDialog(
             L10n.logout,
             isPresented: $isLogoutConfirmationPresented,
@@ -326,6 +365,24 @@ struct SettingsView: View {
             Button(L10n.cancel, role: .cancel) {}
         } message: {
             Text(L10n.logoutConfirmation)
+        }
+        .confirmationDialog(
+            accountRemovalCandidate.map { String(format: L10n.removeAccountConfirmationFormat, $0.name) } ?? L10n.removeAccount,
+            isPresented: accountRemovalBinding,
+            titleVisibility: .visible,
+            presenting: accountRemovalCandidate
+        ) { account in
+            Button(L10n.removeAccount, role: .destructive) {
+                Task {
+                    await store.removeStoredAccount(userID: account.id)
+                    showSettingsActionMessage(String(format: L10n.removedAccountFormat, account.name))
+                }
+            }
+            Button(L10n.cancel, role: .cancel) {
+                accountRemovalCandidate = nil
+            }
+        } message: { account in
+            Text(String(format: L10n.removeAccountConfirmationFormat, account.name))
         }
         .confirmationDialog(
             L10n.syncMutedContentConfirmation,
@@ -546,6 +603,16 @@ struct SettingsView: View {
         }
     }
 
+    private var accountRemovalBinding: Binding<Bool> {
+        Binding {
+            accountRemovalCandidate != nil
+        } set: { value in
+            if value == false {
+                accountRemovalCandidate = nil
+            }
+        }
+    }
+
     private var mutedContentCount: Int {
         store.mutedTagList.count + store.mutedUserList.count + store.mutedArtworkList.count
     }
@@ -636,5 +703,55 @@ struct SettingsView: View {
         if settingsActionMessage == message {
             settingsActionMessage = nil
         }
+    }
+}
+
+private struct StoredAccountRow: View {
+    let account: PixivStoredAccount
+    let isCurrent: Bool
+    let showIdentity: Bool
+    let switchAccount: () -> Void
+    let removeAccount: () -> Void
+
+    var body: some View {
+        HStack(spacing: 10) {
+            RemoteImageView(url: account.profileImageURL)
+                .frame(width: 30, height: 30)
+                .clipShape(Circle())
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(showIdentity ? account.name : L10n.hidden)
+                    .font(.headline)
+                    .lineLimit(1)
+
+                Text(showIdentity ? "@\(account.account)" : L10n.accountIdentityHidden)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+            }
+
+            Spacer(minLength: 8)
+
+            if isCurrent {
+                Label(L10n.currentAccount, systemImage: "checkmark.circle.fill")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.green)
+            } else {
+                Button(action: switchAccount) {
+                    Label(L10n.switchAccount, systemImage: "arrow.triangle.2.circlepath")
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
+            }
+
+            Button(role: .destructive, action: removeAccount) {
+                Label(L10n.removeAccount, systemImage: "trash")
+            }
+            .labelStyle(.iconOnly)
+            .buttonStyle(.bordered)
+            .controlSize(.small)
+            .help(L10n.removeAccount)
+        }
+        .help(showIdentity ? "\(account.name) @\(account.account)" : L10n.accountIdentityHidden)
     }
 }

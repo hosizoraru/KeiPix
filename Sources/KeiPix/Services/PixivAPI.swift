@@ -48,13 +48,30 @@ actor PixivAPI {
         return stored
     }
 
+    func storedAccounts() throws -> [PixivStoredAccount] {
+        try tokenStore.accounts()
+    }
+
     func currentSession() -> PixivSession? {
         session
     }
 
-    func clearSession() throws {
-        session = nil
-        try tokenStore.delete()
+    func selectAccount(userID: String) throws -> PixivSession? {
+        let selected = try tokenStore.select(userID: userID)
+        session = selected
+        return selected
+    }
+
+    func deleteAccount(userID: String) throws -> PixivSession? {
+        let selected = try tokenStore.delete(userID: userID)
+        session = selected
+        return selected
+    }
+
+    func clearSession() throws -> PixivSession? {
+        let selected = try tokenStore.deleteCurrent()
+        session = selected
+        return selected
     }
 
     func makeLoginURL() -> URL {

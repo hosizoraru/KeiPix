@@ -3,6 +3,7 @@ import WebKit
 
 struct LoginSheetView: View {
     @Bindable var store: KeiPixStore
+    @Environment(\.dismiss) private var dismiss
     @State private var loginURL: URL?
 
     var body: some View {
@@ -18,6 +19,7 @@ struct LoginSheetView: View {
                 Spacer()
                 Button {
                     store.isLoginPresented = false
+                    dismiss()
                 } label: {
                     Image(systemName: "xmark")
                 }
@@ -30,7 +32,10 @@ struct LoginSheetView: View {
 
             if let loginURL {
                 PixivLoginWebView(url: loginURL) { code in
-                    Task { await store.completeLogin(code: code) }
+                    Task {
+                        await store.completeLogin(code: code)
+                        dismiss()
+                    }
                 }
             } else {
                 ProgressView(L10n.loading)
