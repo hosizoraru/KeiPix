@@ -366,6 +366,7 @@ enum L10n {
     static var privacy: String { text("Privacy") }
     static var account: String { text("Account") }
     static var privacyMode: String { text("Privacy Mode") }
+    static var appControls: String { text("App Controls") }
     static var enablePrivacyMode: String { text("Enable Privacy Mode") }
     static var disablePrivacyMode: String { text("Disable Privacy Mode") }
     static var privacyModeHint: String { text("Quickly hides sidebar account identity for screenshots and screen sharing.") }
@@ -401,6 +402,8 @@ enum L10n {
     static var noArtworkTitle: String { text("No artworks loaded") }
     static var noArtworkSubtitle: String { text("Refresh the current section or start a search.") }
     static var errorTitle: String { text("Request failed") }
+    static var copyError: String { text("Copy Error") }
+    static var copiedError: String { text("Copied Error") }
     static var copied: String { text("Copied") }
     static var loadMore: String { text("Load More") }
     static var publicBookmarks: String { text("Public bookmarks") }
@@ -546,6 +549,7 @@ enum L10n {
     static var reloadUgoira: String { text("Reload Ugoira") }
     static var loadingUgoira: String { text("Loading Ugoira") }
     static var retry: String { text("Retry") }
+    static var ok: String { text("OK") }
     static var created: String { text("Created") }
     static var artworkID: String { text("Artwork ID") }
     static var creatorID: String { text("Creator ID") }

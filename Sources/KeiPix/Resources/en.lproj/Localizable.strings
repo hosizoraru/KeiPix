@@ -368,6 +368,7 @@
 "Privacy" = "Privacy";
 "Account" = "Account";
 "Privacy Mode" = "Privacy Mode";
+"App Controls" = "App Controls";
 "Enable Privacy Mode" = "Enable Privacy Mode";
 "Disable Privacy Mode" = "Disable Privacy Mode";
 "Quickly hides sidebar account identity for screenshots and screen sharing." = "Quickly hides sidebar account identity for screenshots and screen sharing.";
@@ -385,6 +386,8 @@
 "No artworks loaded" = "No artworks loaded";
 "Refresh the current section or start a search." = "Refresh the current section or start a search.";
 "Request failed" = "Request failed";
+"Copy Error" = "Copy Error";
+"Copied Error" = "Copied Error";
 "Copied" = "Copied";
 "Load More" = "Load More";
 "Public bookmarks" = "Public bookmarks";
@@ -531,6 +534,7 @@
 "Reload Ugoira" = "Reload Ugoira";
 "Loading Ugoira" = "Loading Ugoira";
 "Retry" = "Retry";
+"OK" = "OK";
 "Created" = "Created";
 "Artwork ID" = "Artwork ID";
 "Creator ID" = "Creator ID";

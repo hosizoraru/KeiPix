@@ -4,6 +4,7 @@ struct ContentView: View {
     @Bindable var store: KeiPixStore
     @State private var columnVisibility: NavigationSplitViewVisibility = .all
     @State private var isSidebarPresented = true
+    @State private var statusMessage: String?
     @Environment(\.undoManager) private var undoManager
 
     var body: some View {
@@ -61,42 +62,6 @@ struct ContentView: View {
             }
 
             ToolbarItem(placement: .primaryAction) {
-                Menu {
-                    ForEach(WindowSizePreset.allCases) { preset in
-                        Button(preset.title) {
-                            preset.apply(
-                                sidebarVisible: sidebarVisible,
-                                accountIdentityVisible: store.showsSidebarAccountIdentity
-                            )
-                        }
-                    }
-                } label: {
-                    Label(L10n.windowSize, systemImage: "macwindow")
-                }
-            }
-
-            ToolbarItem(placement: .primaryAction) {
-                Button {
-                    store.setPrivacyModeEnabled(!store.privacyModeEnabled)
-                } label: {
-                    Label(L10n.privacyMode, systemImage: store.privacyModeEnabled ? "eye.slash.fill" : "eye")
-                }
-                .help(store.privacyModeEnabled ? L10n.disablePrivacyMode : L10n.enablePrivacyMode)
-            }
-
-            ToolbarItem(placement: .primaryAction) {
-                Menu {
-                    Toggle(L10n.showContentBadges, isOn: showContentBadgesBinding)
-                    Divider()
-                    Toggle(L10n.hideAIArtworks, isOn: hideAIBinding)
-                    Toggle(L10n.hideR18Artworks, isOn: hideR18Binding)
-                    Toggle(L10n.hideR18GArtworks, isOn: hideR18GBinding)
-                } label: {
-                    Label(L10n.contentFilters, systemImage: "line.3.horizontal.decrease.circle")
-                }
-            }
-
-            ToolbarItem(placement: .primaryAction) {
                 if showsSearchFilters {
                     SearchFilterButton(store: store)
                 }
@@ -120,9 +85,7 @@ struct ContentView: View {
             }
 
             ToolbarItem(placement: .primaryAction) {
-                SettingsLink {
-                    Label(L10n.settings, systemImage: "gearshape")
-                }
+                appControlsMenu
             }
 
             ToolbarItem(placement: .primaryAction) {
@@ -156,24 +119,86 @@ struct ContentView: View {
             Text(action.confirmationMessage)
         }
         .overlay(alignment: .bottom) {
-            if let undoAction = store.undoAction {
-                AppUndoBar(action: undoAction) {
-                    Task { await store.performUndo(undoAction) }
+            VStack(spacing: 8) {
+                if let statusMessage {
+                    FloatingStatusBanner(maxWidth: 520) {
+                        Text(statusMessage)
+                            .font(.callout)
+                            .foregroundStyle(.secondary)
+                            .textSelection(.enabled)
+                    }
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
-                .padding(.horizontal, 18)
-                .padding(.bottom, 14)
-                .transition(.move(edge: .bottom).combined(with: .opacity))
+
+                if let undoAction = store.undoAction {
+                    AppUndoBar(action: undoAction) {
+                        Task { await store.performUndo(undoAction) }
+                    }
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                }
             }
+            .padding(.horizontal, 18)
+            .padding(.bottom, 14)
         }
+        .animation(.snappy(duration: 0.18), value: statusMessage)
         .animation(.snappy(duration: 0.18), value: store.undoAction?.id)
         .onChange(of: store.undoAction?.id) { _, _ in
             registerCurrentUndoAction()
         }
         .alert(L10n.errorTitle, isPresented: errorBinding) {
-            Button("OK") { store.errorMessage = nil }
+            Button(L10n.retry) {
+                store.errorMessage = nil
+                store.requestRouteRefresh()
+            }
+            Button(L10n.copyError) {
+                copyCurrentError()
+            }
+            Button(L10n.ok) { store.errorMessage = nil }
         } message: {
             Text(store.errorMessage ?? "")
         }
+    }
+
+    private var appControlsMenu: some View {
+        Menu {
+            Menu {
+                ForEach(WindowSizePreset.allCases) { preset in
+                    Button(preset.title) {
+                        preset.apply(
+                            sidebarVisible: sidebarVisible,
+                            accountIdentityVisible: store.showsSidebarAccountIdentity
+                        )
+                    }
+                }
+            } label: {
+                Label(L10n.windowSize, systemImage: "macwindow")
+            }
+
+            Button {
+                store.setPrivacyModeEnabled(!store.privacyModeEnabled)
+            } label: {
+                Label(
+                    store.privacyModeEnabled ? L10n.disablePrivacyMode : L10n.enablePrivacyMode,
+                    systemImage: store.privacyModeEnabled ? "eye.slash.fill" : "eye"
+                )
+            }
+
+            Divider()
+
+            Toggle(L10n.showContentBadges, isOn: showContentBadgesBinding)
+            Toggle(L10n.hideAIArtworks, isOn: hideAIBinding)
+            Toggle(L10n.hideR18Artworks, isOn: hideR18Binding)
+            Toggle(L10n.hideR18GArtworks, isOn: hideR18GBinding)
+
+            Divider()
+
+            SettingsLink {
+                Label(L10n.settings, systemImage: "gearshape")
+            }
+        } label: {
+            Label(L10n.appControls, systemImage: "ellipsis.circle")
+        }
+        .help(L10n.appControls)
     }
 
     private var errorBinding: Binding<Bool> {
@@ -213,6 +238,23 @@ struct ContentView: View {
             }
         }
         undoManager?.setActionName(L10n.undo)
+    }
+
+    private func copyCurrentError() {
+        guard let message = store.errorMessage else { return }
+        PasteboardWriter.copy(message)
+        store.errorMessage = nil
+        showStatus(L10n.copiedError)
+    }
+
+    private func showStatus(_ message: String) {
+        statusMessage = message
+        Task {
+            try? await Task.sleep(for: .seconds(2.5))
+            if statusMessage == message {
+                statusMessage = nil
+            }
+        }
     }
 
     private var minimumWindowWidth: CGFloat {

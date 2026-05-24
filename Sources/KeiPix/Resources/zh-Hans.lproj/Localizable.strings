@@ -368,6 +368,7 @@
 "Privacy" = "隐私";
 "Account" = "账号";
 "Privacy Mode" = "隐私模式";
+"App Controls" = "应用控制";
 "Enable Privacy Mode" = "启用隐私模式";
 "Disable Privacy Mode" = "关闭隐私模式";
 "Quickly hides sidebar account identity for screenshots and screen sharing." = "快速隐藏侧边栏账号身份信息，方便截图和屏幕共享。";
@@ -385,6 +386,8 @@
 "No artworks loaded" = "暂无作品";
 "Refresh the current section or start a search." = "刷新当前分类，或发起搜索。";
 "Request failed" = "请求失败";
+"Copy Error" = "复制错误";
+"Copied Error" = "已复制错误";
 "Copied" = "已复制";
 "Load More" = "加载更多";
 "Public bookmarks" = "公开收藏";
@@ -531,6 +534,7 @@
 "Reload Ugoira" = "重新加载动图";
 "Loading Ugoira" = "正在加载动图";
 "Retry" = "重试";
+"OK" = "确定";
 "Created" = "创建时间";
 "Artwork ID" = "作品 ID";
 "Creator ID" = "创作者 ID";
