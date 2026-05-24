@@ -120,6 +120,17 @@ enum L10n {
     static var openInPixiv: String { text("Open in Pixiv") }
     static var share: String { text("Share") }
     static var shareCurrentPage: String { text("Share Current Page") }
+    static var imageSourceSearch: String { text("Image Source Search") }
+    static var searchImageSource: String { text("Search Image Source") }
+    static var searchingImageSource: String { text("Searching image source") }
+    static var searchingImageSourcePageFormat: String { text("Searching page %d with SauceNAO") }
+    static var imageSourceSearchUnavailable: String { text("No searchable image is available for this page") }
+    static var imageSourceSearchFailed: String { text("Image source search failed") }
+    static var noImageSourceResults: String { text("No image source results") }
+    static var noImageSourceResultsHint: String { text("SauceNAO did not return Pixiv artwork matches for this page.") }
+    static var imageSourceResultsFormat: String { text("%d Pixiv matches") }
+    static var openInSauceNAO: String { text("Open in SauceNAO") }
+    static var copySauceNAOLink: String { text("Copy SauceNAO Link") }
     static var copyCurrentPageLink: String { text("Copy Current Page Link") }
     static var downloadCurrentPage: String { text("Download Current Page") }
     static var queuedCurrentPage: String { text("Queued Current Page") }

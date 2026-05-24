@@ -273,6 +273,14 @@ private struct ArtworkActionStrip: View {
                             }
                         }
 
+                        if currentPageURL != nil || currentLocalPageURL != nil {
+                            Button {
+                                store.presentImageSourceSearch(for: artwork, pageIndex: pageIndex)
+                            } label: {
+                                Label(L10n.searchImageSource, systemImage: "magnifyingglass")
+                            }
+                        }
+
                         if let currentPageURL {
                             Button {
                                 PasteboardWriter.copy(currentPageURL.absoluteString)

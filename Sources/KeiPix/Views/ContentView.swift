@@ -103,6 +103,10 @@ struct ContentView: View {
             LoginSheetView(store: store)
                 .frame(width: 900, height: 680)
         }
+        .sheet(item: $store.imageSourceSearchRequest) { request in
+            ImageSourceSearchSheet(store: store, request: request)
+                .frame(width: 720, height: 560)
+        }
         .confirmationDialog(
             store.pendingDangerAction?.title ?? L10n.moreActions,
             isPresented: dangerActionBinding,

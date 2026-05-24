@@ -64,6 +64,14 @@ struct KeiPixApp: App {
                 .keyboardShortcut("d", modifiers: [.command, .shift])
                 .disabled(store.selectedArtwork == nil)
 
+                Button(L10n.searchImageSource) {
+                    if let artwork = store.selectedArtwork {
+                        store.presentImageSourceSearch(for: artwork)
+                    }
+                }
+                .keyboardShortcut("s", modifiers: [.command, .option])
+                .disabled(store.selectedArtwork == nil)
+
                 Divider()
 
                 Button(L10n.openReaderWindow) {

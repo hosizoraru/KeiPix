@@ -169,6 +169,9 @@ private struct GalleryContentGrid: View {
                 store.enqueueDownload(artwork)
                 actionMessage = String(format: L10n.queuedDownloadsFormat, 1)
             }
+            Button(L10n.searchImageSource) {
+                store.presentImageSourceSearch(for: artwork)
+            }
             Divider()
             Button(L10n.muteArtwork) {
                 store.requestDangerAction(AppDangerAction(kind: .muteArtwork(artwork)))
@@ -252,6 +255,9 @@ private struct MasonryArtworkGrid: View {
                     Button(L10n.download) {
                         store.enqueueDownload(artwork)
                         actionMessage = String(format: L10n.queuedDownloadsFormat, 1)
+                    }
+                    Button(L10n.searchImageSource) {
+                        store.presentImageSourceSearch(for: artwork)
                     }
                     Divider()
                     Button(L10n.muteArtwork) {

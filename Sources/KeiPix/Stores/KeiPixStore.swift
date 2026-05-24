@@ -13,6 +13,7 @@ final class KeiPixStore {
     var selectedArtwork: PixivArtwork?
     var selectedSpotlightArticle: PixivSpotlightArticle?
     var readerWindowArtwork: PixivArtwork?
+    var imageSourceSearchRequest: ImageSourceSearchRequest?
     var pendingDangerAction: AppDangerAction?
     var undoAction: AppUndoAction?
     var focusedUser: PixivUser?
