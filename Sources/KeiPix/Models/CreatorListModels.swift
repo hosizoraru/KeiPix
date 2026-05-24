@@ -198,6 +198,7 @@ struct CreatorUndoAction: Identifiable {
     enum Kind {
         case restoreFollows([CreatorFollowRestore])
         case unmuteUsers([PixivUser])
+        case unfollowUsers([PixivUser])
     }
 
     let id = UUID()
@@ -213,6 +214,10 @@ struct CreatorUndoAction: Identifiable {
             users.count == 1
                 ? String(format: L10n.mutedCreatorFormat, users[0].name)
                 : String(format: L10n.mutedCreatorsFormat, users.count)
+        case .unfollowUsers(let users):
+            users.count == 1
+                ? String(format: L10n.followedCreatorFormat, users[0].name)
+                : String(format: L10n.followedCreatorsFormat, users.count)
         }
     }
 }

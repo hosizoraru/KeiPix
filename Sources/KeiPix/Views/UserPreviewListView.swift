@@ -344,7 +344,9 @@ struct UserPreviewListView: View {
                     Text(L10n.privateRestrict).tag(BookmarkRestrict.private)
                 }
                 .pickerStyle(.segmented)
-                .frame(width: 160)
+                .labelsHidden()
+                .frame(width: 88)
+                .accessibilityLabel(L10n.followingCreators)
             }
 
             HStack(spacing: 6) {
@@ -353,7 +355,7 @@ struct UserPreviewListView: View {
 
                 TextField(L10n.searchCreatorsInList, text: $creatorSearchText)
                     .textFieldStyle(.roundedBorder)
-                    .frame(minWidth: 160, idealWidth: 200, maxWidth: 240)
+                    .frame(minWidth: 180, idealWidth: 220, maxWidth: 260)
             }
 
             Button {
@@ -477,6 +479,7 @@ struct UserPreviewListView: View {
                     .controlSize(.small)
             } else {
                 Label(L10n.creatorActions, systemImage: "slider.horizontal.3")
+                    .labelStyle(.iconOnly)
             }
         }
         .help(L10n.creatorActions)
@@ -583,9 +586,17 @@ struct UserPreviewListView: View {
         var updatedCount = 0
         switch action {
         case .followPublic:
-            updatedCount = await followCreators(targets, restrict: .public)
+            let followedUsers = await followCreators(targets, restrict: .public)
+            updatedCount = followedUsers.count
+            if followedUsers.isEmpty == false {
+                presentUndo(CreatorUndoAction(kind: .unfollowUsers(followedUsers)))
+            }
         case .followPrivate:
-            updatedCount = await followCreators(targets, restrict: .private)
+            let followedUsers = await followCreators(targets, restrict: .private)
+            updatedCount = followedUsers.count
+            if followedUsers.isEmpty == false {
+                presentUndo(CreatorUndoAction(kind: .unfollowUsers(followedUsers)))
+            }
         case .mute:
             let mutedUsers = targets.map(\.user)
             for target in targets {
@@ -605,18 +616,18 @@ struct UserPreviewListView: View {
         bulkStatusText = String(format: L10n.creatorActionCompletedFormat, updatedCount)
     }
 
-    private func followCreators(_ targets: [PixivUserPreview], restrict: BookmarkRestrict) async -> Int {
-        var updatedCount = 0
+    private func followCreators(_ targets: [PixivUserPreview], restrict: BookmarkRestrict) async -> [PixivUser] {
+        var followedUsers: [PixivUser] = []
         for target in targets {
             do {
                 try await store.setFollow(target.user, isFollowed: true, restrict: restrict)
                 updateFollowState(userID: target.user.id, isFollowed: true, restrict: restrict)
-                updatedCount += 1
+                followedUsers.append(target.user)
             } catch {
                 errorMessage = error.localizedDescription
             }
         }
-        return updatedCount
+        return followedUsers
     }
 
     private func unfollowCreators(_ targets: [PixivUserPreview]) async -> [CreatorFollowRestore] {
@@ -692,8 +703,9 @@ struct UserPreviewListView: View {
             case .related(let user):
                 try await store.relatedUsers(for: user)
             }
-            previews = response.userPreviews
-            followRestrictsByUserID = inferredFollowRestricts(for: response.userPreviews)
+            let loadedPreviews = normalizedLoadedPreviews(response.userPreviews)
+            previews = loadedPreviews
+            followRestrictsByUserID = inferredFollowRestricts(for: loadedPreviews)
             nextURL = response.nextURL
         } catch {
             errorMessage = error.localizedDescription
@@ -714,8 +726,9 @@ struct UserPreviewListView: View {
 
         do {
             let response = try await store.nextUserPreviews(nextURL)
-            previews.append(contentsOf: response.userPreviews)
-            followRestrictsByUserID.merge(inferredFollowRestricts(for: response.userPreviews)) { _, new in new }
+            let loadedPreviews = normalizedLoadedPreviews(response.userPreviews)
+            previews.append(contentsOf: loadedPreviews)
+            followRestrictsByUserID.merge(inferredFollowRestricts(for: loadedPreviews)) { _, new in new }
             self.nextURL = response.nextURL
         } catch {
             errorMessage = error.localizedDescription
@@ -731,6 +744,7 @@ struct UserPreviewListView: View {
             let appliedRestrict = restrict ?? store.defaultFollowRestrict
             try await store.setFollow(user, isFollowed: true, restrict: appliedRestrict)
             updateFollowState(userID: user.id, isFollowed: true, restrict: appliedRestrict)
+            presentUndo(CreatorUndoAction(kind: .unfollowUsers([user])))
             bulkStatusText = String(format: L10n.followedCreatorFormat, user.name)
         } catch {
             errorMessage = error.localizedDescription
@@ -790,6 +804,16 @@ struct UserPreviewListView: View {
                 store.unmuteUser(id: user.id)
                 updateMutedState(userID: user.id, isMuted: false)
                 restoredCount += 1
+            }
+        case .unfollowUsers(let users):
+            for user in users {
+                do {
+                    try await store.setFollow(user, isFollowed: false, restrict: store.defaultFollowRestrict)
+                    updateFollowState(userID: user.id, isFollowed: false, restrict: nil)
+                    restoredCount += 1
+                } catch {
+                    errorMessage = error.localizedDescription
+                }
             }
         }
         if restoredCount > 0 {
@@ -867,6 +891,15 @@ struct UserPreviewListView: View {
     private func updateMutedState(userID: Int, isMuted: Bool) {
         for index in previews.indices where previews[index].user.id == userID {
             previews[index] = PixivUserPreview(user: previews[index].user, illusts: previews[index].illusts, isMuted: isMuted)
+        }
+    }
+
+    private func normalizedLoadedPreviews(_ userPreviews: [PixivUserPreview]) -> [PixivUserPreview] {
+        guard isCurrentAccountFollowingList else { return userPreviews }
+        return userPreviews.map { preview in
+            var user = preview.user
+            user.isFollowed = true
+            return PixivUserPreview(user: user, illusts: preview.illusts, isMuted: preview.isMuted)
         }
     }
 

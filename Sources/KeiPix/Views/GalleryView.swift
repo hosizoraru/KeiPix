@@ -574,13 +574,13 @@ private struct FeedHeaderView: View {
     private func reloadRankingFeed(requestedUseRankingDate: Bool, requestedRankingDate: Date) async {
         await store.reloadCurrentFeed()
 
-        if requestedUseRankingDate,
-           store.useRankingDate == false,
-           store.errorMessage == L10n.rankingDateFallbackMessage {
+        if requestedUseRankingDate, store.useRankingDate == false {
             draftUseRankingDate = false
             draftRankingDate = store.rankingDate
             actionMessage = L10n.rankingDateFallbackMessage
-            store.errorMessage = nil
+            if store.errorMessage == L10n.rankingDateFallbackMessage {
+                store.errorMessage = nil
+            }
             return
         }
 
