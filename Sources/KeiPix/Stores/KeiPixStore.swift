@@ -513,369 +513,6 @@ final class KeiPixStore {
         }
     }
 
-    func toggleBookmark(_ artwork: PixivArtwork) async {
-        let nextValue = !artwork.isBookmarked
-        guard nextValue else {
-            requestDangerAction(AppDangerAction(kind: .removeBookmark(artwork)))
-            return
-        }
-
-        do {
-            try await api.addBookmark(
-                illustID: artwork.id,
-                restrict: defaultBookmarkRestrict,
-                tags: automaticBookmarkTags(for: artwork)
-            )
-            updateArtwork(artwork.id) { $0.isBookmarked = true }
-            if autoDownloadBookmarkedArtworks {
-                enqueueDownload(artwork)
-            }
-            await followCreatorAfterBookmarkIfNeeded(artwork)
-        } catch {
-            errorMessage = error.localizedDescription
-        }
-    }
-
-    func bookmarkDetail(for artwork: PixivArtwork) async throws -> PixivBookmarkDetail {
-        try await api.bookmarkDetail(illustID: artwork.id)
-    }
-
-    func bookmarkTagSuggestions(restrict: BookmarkRestrict) async throws -> [PixivBookmarkTag] {
-        guard let userID = session?.user.id else { throw PixivAPIError.missingSession }
-        return try await api.bookmarkTags(userID: userID, restrict: restrict)
-    }
-
-    func bookmarkTagPage(restrict: BookmarkRestrict) async throws -> PixivBookmarkTagsResponse {
-        guard let userID = session?.user.id else { throw PixivAPIError.missingSession }
-        return try await api.bookmarkTagPage(userID: userID, restrict: restrict)
-    }
-
-    func nextBookmarkTagPage(_ url: URL) async throws -> PixivBookmarkTagsResponse {
-        try await api.nextBookmarkTagPage(url)
-    }
-
-    func saveBookmark(_ artwork: PixivArtwork, restrict: BookmarkRestrict, tags: [String]) async throws {
-        let wasBookmarked = artwork.isBookmarked
-        try await api.addBookmark(illustID: artwork.id, restrict: restrict, tags: tags)
-        updateArtwork(artwork.id) { $0.isBookmarked = true }
-        if wasBookmarked == false {
-            if autoDownloadBookmarkedArtworks {
-                enqueueDownload(artwork)
-            }
-            await followCreatorAfterBookmarkIfNeeded(artwork)
-        }
-    }
-
-    func setBookmarkTagFilter(_ tag: String?) {
-        bookmarkTagFilter = tag
-        Task { await reloadCurrentFeed() }
-    }
-
-    func openBookmarks(restrict: BookmarkRestrict, tag: String?) {
-        focusedUser = nil
-        bookmarkTagFilter = tag
-        selectedRoute = restrict == .private ? .privateBookmarks : .publicBookmarks
-        Task { await reloadCurrentFeed() }
-    }
-
-    func removeBookmark(_ artwork: PixivArtwork) async throws {
-        try await api.deleteBookmark(illustID: artwork.id)
-        updateArtwork(artwork.id) { $0.isBookmarked = false }
-    }
-
-    func automaticBookmarkTags(for artwork: PixivArtwork) -> [String] {
-        guard autoTagBookmarksWithArtworkTags else { return [] }
-        var seen = Set<String>()
-        return artwork.tags.compactMap { tag in
-            let name = tag.name.trimmingCharacters(in: .whitespacesAndNewlines)
-            guard name.isEmpty == false, seen.insert(name).inserted else { return nil }
-            return name
-        }
-    }
-
-    func toggleSelectedBookmark() async {
-        guard let selectedArtwork else { return }
-        if selectedArtwork.isBookmarked {
-            requestDangerAction(AppDangerAction(kind: .removeBookmark(selectedArtwork)))
-        } else {
-            await toggleBookmark(selectedArtwork)
-        }
-    }
-
-    func downloadSelectedArtwork() {
-        guard let selectedArtwork else { return }
-        enqueueDownload(selectedArtwork)
-    }
-
-    func enqueueDownload(_ artwork: PixivArtwork, preferOriginal: Bool = true) {
-        if artwork.isUgoira {
-            Task { await enqueueUgoiraDownload(artwork) }
-        } else {
-            downloads.enqueue(artwork, preferOriginal: preferOriginal)
-        }
-    }
-
-    func enqueueDownloadPage(_ artwork: PixivArtwork, pageIndex: Int, preferOriginal: Bool = true) {
-        guard artwork.isUgoira == false else {
-            enqueueDownload(artwork, preferOriginal: preferOriginal)
-            return
-        }
-        downloads.enqueuePage(artwork, pageIndex: pageIndex, preferOriginal: preferOriginal)
-    }
-
-    @discardableResult
-    func enqueueDownloads(_ artworks: [PixivArtwork], limit: Int, preferOriginal: Bool = true) -> Int {
-        let candidates = Array(artworks.prefix(max(limit, 0)))
-        let imageArtworks = candidates.filter { $0.isUgoira == false }
-        let ugoiraArtworks = candidates.filter(\.isUgoira)
-        let imageCount = downloads.enqueue(imageArtworks, limit: imageArtworks.count, preferOriginal: preferOriginal)
-        for artwork in ugoiraArtworks {
-            enqueueDownload(artwork, preferOriginal: preferOriginal)
-        }
-        return imageCount + ugoiraArtworks.count
-    }
-
-    private func enqueueUgoiraDownload(_ artwork: PixivArtwork) async {
-        do {
-            let metadata = try await api.ugoiraMetadata(illustID: artwork.id)
-            downloads.enqueueUgoira(
-                artwork,
-                zipURL: metadata.zipURLs.medium,
-                frames: metadata.frames
-            )
-        } catch {
-            errorMessage = error.localizedDescription
-        }
-    }
-
-    func openSelectedArtworkInPixiv() {
-        guard let url = selectedArtwork?.pixivURL else { return }
-        NSWorkspace.shared.open(url)
-    }
-
-    func copySelectedArtworkLink() {
-        guard let url = selectedArtwork?.pixivURL else { return }
-        PasteboardWriter.copy(url.absoluteString)
-    }
-
-    func prepareReaderWindow(for artwork: PixivArtwork) {
-        readerWindowArtwork = artwork
-    }
-
-    func prepareSelectedReaderWindow() {
-        guard let selectedArtwork else { return }
-        prepareReaderWindow(for: selectedArtwork)
-    }
-
-    func presentSelectedArtworkCreatorProfile() {
-        presentedUserProfile = selectedArtwork?.user
-    }
-
-    func openSelectedArtworkCreatorFeed(_ route: PixivRoute) async {
-        guard let user = selectedArtwork?.user else { return }
-        await openUserFeed(user: user, route: route)
-    }
-
-    func selectPreviousArtwork() {
-        selectAdjacentArtwork(delta: -1)
-    }
-
-    func selectNextArtwork() {
-        selectAdjacentArtwork(delta: 1)
-    }
-
-    func toggleFollow(_ user: PixivUser, restrict: BookmarkRestrict? = nil) async {
-        let nextValue = !user.isFollowed
-        guard nextValue else {
-            requestDangerAction(AppDangerAction(kind: .unfollowCreator(user, restrict)))
-            return
-        }
-
-        do {
-            try await setFollow(user, isFollowed: nextValue, restrict: restrict)
-        } catch {
-            errorMessage = error.localizedDescription
-        }
-    }
-
-    func setFollow(_ user: PixivUser, isFollowed: Bool, restrict: BookmarkRestrict? = nil) async throws {
-        let followRestrict = restrict ?? defaultFollowRestrict
-        try await api.setFollow(userID: user.id, isFollowed: isFollowed, restrict: followRestrict)
-        updateFollowState(userID: user.id, isFollowed: isFollowed)
-    }
-
-    private func followCreatorAfterBookmarkIfNeeded(_ artwork: PixivArtwork) async {
-        guard followCreatorAfterBookmark, artwork.user.isFollowed == false else { return }
-
-        do {
-            try await api.setFollow(userID: artwork.user.id, isFollowed: true, restrict: defaultFollowRestrict)
-            updateFollowState(userID: artwork.user.id, isFollowed: true)
-        } catch {
-            errorMessage = error.localizedDescription
-        }
-    }
-
-    private func updateFollowState(userID: Int, isFollowed: Bool) {
-        for index in allArtworks.indices where allArtworks[index].user.id == userID {
-            allArtworks[index].user.isFollowed = isFollowed
-        }
-        for index in artworks.indices where artworks[index].user.id == userID {
-            artworks[index].user.isFollowed = isFollowed
-        }
-        if selectedArtwork?.user.id == userID {
-            selectedArtwork?.user.isFollowed = isFollowed
-        }
-    }
-
-    func loadUgoiraAnimation(for artwork: PixivArtwork) async throws -> UgoiraAnimation {
-        let metadata = try await api.ugoiraMetadata(illustID: artwork.id)
-        let zipData = try await api.ugoiraZipData(url: metadata.zipURLs.medium)
-        return try UgoiraFrameDecoder.decode(zipData: zipData, metadata: metadata)
-    }
-
-    func loadUgoiraExportPackage(for artwork: PixivArtwork) async throws -> UgoiraExportPackage {
-        let metadata = try await api.ugoiraMetadata(illustID: artwork.id)
-        let zipData = try await api.ugoiraZipData(url: metadata.zipURLs.medium)
-        let animation = try UgoiraFrameDecoder.decode(zipData: zipData, metadata: metadata)
-        return UgoiraExportPackage(metadata: metadata, zipData: zipData, animation: animation)
-    }
-
-    func userDetail(for user: PixivUser) async throws -> PixivUserDetail {
-        try await api.userDetail(userID: user.id)
-    }
-
-    func userDetail(userID: Int) async throws -> PixivUserDetail {
-        try await api.userDetail(userID: userID)
-    }
-
-    func followDetail(for user: PixivUser) async throws -> PixivFollowDetail {
-        try await api.followDetail(userID: user.id)
-    }
-
-    func recommendedUsers() async throws -> PixivUserPreviewResponse {
-        let response = try await api.recommendedUsers()
-        return filteredUserPreviewResponse(response)
-    }
-
-    func relatedUsers(for user: PixivUser) async throws -> PixivUserPreviewResponse {
-        let response = try await api.relatedUsers(userID: user.id)
-        return filteredUserPreviewResponse(response)
-    }
-
-    func creatorPreviewArtworks(for user: PixivUser) async throws -> [PixivArtwork] {
-        async let illustrations = api.userIllusts(userID: user.id, type: "illust")
-        async let manga = api.userIllusts(userID: user.id, type: "manga")
-        let responses = try await [illustrations, manga]
-        var seenArtworkIDs = Set<Int>()
-        return responses
-            .flatMap(\.illusts)
-            .filter(passesContentFilters)
-            .filter { artwork in
-                seenArtworkIDs.insert(artwork.id).inserted
-            }
-            .sorted { first, second in
-                first.createDate > second.createDate
-            }
-    }
-
-    func searchUsers(keyword: String) async throws -> PixivUserPreviewResponse {
-        let response = try await api.searchUsers(keyword: keyword)
-        return filteredUserPreviewResponse(response)
-    }
-
-    func trendingTags() async throws -> [PixivTrendingTag] {
-        let response = try await api.trendingIllustTags()
-        return response.trendTags.filter { passesContentFilters($0.artwork) }
-    }
-
-    func spotlightArticles() async throws -> PixivSpotlightResponse {
-        try await api.spotlightArticles()
-    }
-
-    func nextSpotlightArticles(_ url: URL) async throws -> PixivSpotlightResponse {
-        try await api.nextSpotlightArticles(url)
-    }
-
-    func followingUsers(restrict: BookmarkRestrict) async throws -> PixivUserPreviewResponse {
-        guard let userID = session?.user.id else { throw PixivAPIError.missingSession }
-        let response = try await api.followingUsers(userID: userID, restrict: restrict.rawValue)
-        return filteredUserPreviewResponse(response)
-    }
-
-    func followingUsers(for user: PixivUser, restrict: BookmarkRestrict) async throws -> PixivUserPreviewResponse {
-        let response = try await api.followingUsers(userID: "\(user.id)", restrict: restrict.rawValue)
-        return filteredUserPreviewResponse(response)
-    }
-
-    func followerUsers(for user: PixivUser, restrict: BookmarkRestrict) async throws -> PixivUserPreviewResponse {
-        let response = try await api.followerUsers(userID: "\(user.id)", restrict: restrict.rawValue)
-        return filteredUserPreviewResponse(response)
-    }
-
-    func nextUserPreviews(_ url: URL) async throws -> PixivUserPreviewResponse {
-        let response = try await api.nextUserPreviews(url)
-        return filteredUserPreviewResponse(response)
-    }
-
-    func comments(for artwork: PixivArtwork) async throws -> PixivCommentResponse {
-        try await api.illustComments(illustID: artwork.id)
-    }
-
-    func nextComments(_ url: URL) async throws -> PixivCommentResponse {
-        try await api.nextComments(url)
-    }
-
-    func commentReplies(for comment: PixivComment) async throws -> PixivCommentResponse {
-        try await api.illustCommentReplies(commentID: comment.id)
-    }
-
-    func postComment(_ comment: String, for artwork: PixivArtwork, parentCommentID: Int? = nil) async throws {
-        try await api.addIllustComment(illustID: artwork.id, comment: comment, parentCommentID: parentCommentID)
-    }
-
-    func relatedArtworks(for artwork: PixivArtwork) async throws -> PixivFeedResponse {
-        let response = try await api.relatedIllusts(illustID: artwork.id)
-        return filteredFeedResponse(response)
-    }
-
-    func nextRelatedArtworks(_ url: URL) async throws -> PixivFeedResponse {
-        let response = try await api.nextFeed(url)
-        return filteredFeedResponse(response)
-    }
-
-    func artworkSeries(for artwork: PixivArtwork) async throws -> PixivArtworkSeriesResponse? {
-        guard let series = artwork.series else { return nil }
-        let response = try await api.illustSeries(seriesID: series.id)
-        return filteredArtworkSeriesResponse(response)
-    }
-
-    func nextArtworkSeries(_ url: URL) async throws -> PixivArtworkSeriesResponse {
-        let response = try await api.nextIllustSeries(url)
-        return filteredArtworkSeriesResponse(response)
-    }
-
-    func setMangaWatchlist(seriesID: Int, isAdded: Bool) async throws {
-        try await api.setMangaWatchlist(seriesID: seriesID, isAdded: isAdded)
-    }
-
-    func mangaWatchlist() async throws -> PixivMangaWatchlistResponse {
-        try await api.mangaWatchlist()
-    }
-
-    func nextMangaWatchlist(_ url: URL) async throws -> PixivMangaWatchlistResponse {
-        try await api.nextMangaWatchlist(url)
-    }
-
-    func openLatestArtwork(in series: PixivMangaSeriesPreview) async {
-        do {
-            let response = try await api.illustSeries(seriesID: series.id)
-            let filtered = filteredArtworkSeriesResponse(response)
-            selectedArtwork = filtered.illusts.first(where: { $0.id == series.latestContentID }) ?? filtered.illusts.first
-        } catch {
-            errorMessage = error.localizedDescription
-        }
-    }
-
     var searchOptions: SearchOptions {
         SearchOptions(
             matchType: searchMatchType,
@@ -1016,18 +653,6 @@ final class KeiPixStore {
         }
     }
 
-    private func updateArtwork(_ id: Int, mutate: (inout PixivArtwork) -> Void) {
-        if let index = allArtworks.firstIndex(where: { $0.id == id }) {
-            mutate(&allArtworks[index])
-        }
-        if let index = artworks.firstIndex(where: { $0.id == id }) {
-            mutate(&artworks[index])
-            if selectedArtwork?.id == id {
-                selectedArtwork = artworks[index]
-            }
-        }
-    }
-
     func applyContentFilters() {
         let selectedID = selectedArtwork?.id
         artworks = allArtworks.filter(passesContentFilters)
@@ -1039,7 +664,7 @@ final class KeiPixStore {
         }
     }
 
-    private func filteredFeedResponse(_ response: PixivFeedResponse) -> PixivFeedResponse {
+    func filteredFeedResponse(_ response: PixivFeedResponse) -> PixivFeedResponse {
         PixivFeedResponse(illusts: response.illusts.filter(passesContentFilters), nextURL: response.nextURL)
     }
 
@@ -1061,7 +686,7 @@ final class KeiPixStore {
         )
     }
 
-    private func filteredArtworkSeriesResponse(_ response: PixivArtworkSeriesResponse) -> PixivArtworkSeriesResponse {
+    func filteredArtworkSeriesResponse(_ response: PixivArtworkSeriesResponse) -> PixivArtworkSeriesResponse {
         let firstArtwork = response.firstArtwork.flatMap { passesContentFilters($0) ? $0 : nil }
         var illusts = response.illusts.filter(passesContentFilters)
         if let firstArtwork, illusts.contains(where: { $0.id == firstArtwork.id }) == false {
@@ -1076,7 +701,7 @@ final class KeiPixStore {
         )
     }
 
-    private func filteredUserPreviewResponse(_ response: PixivUserPreviewResponse) -> PixivUserPreviewResponse {
+    func filteredUserPreviewResponse(_ response: PixivUserPreviewResponse) -> PixivUserPreviewResponse {
         PixivUserPreviewResponse(
             userPreviews: response.userPreviews.map { preview in
                 PixivUserPreview(
@@ -1089,7 +714,7 @@ final class KeiPixStore {
         )
     }
 
-    private func passesContentFilters(_ artwork: PixivArtwork) -> Bool {
+    func passesContentFilters(_ artwork: PixivArtwork) -> Bool {
         if hideMutedContent, isMutedLocally(artwork) {
             return false
         }
