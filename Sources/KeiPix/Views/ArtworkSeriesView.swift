@@ -13,6 +13,7 @@ struct ArtworkSeriesView: View {
     @State private var isLoadingMore = false
     @State private var isUpdatingWatchlist = false
     @State private var errorMessage: String?
+    @State private var statusMessage: String?
     @State private var pendingWatchlistRemoval: PixivArtworkSeriesDetail?
 
     private let columns = [
@@ -35,6 +36,13 @@ struct ArtworkSeriesView: View {
                         Text(errorMessage)
                             .font(.callout)
                             .foregroundStyle(.red)
+                            .textSelection(.enabled)
+                    }
+
+                    if let statusMessage {
+                        Text(statusMessage)
+                            .font(.callout)
+                            .foregroundStyle(.secondary)
                             .textSelection(.enabled)
                     }
 
@@ -231,9 +239,22 @@ struct ArtworkSeriesView: View {
             detail = updatedDetail
             if nextValue == false {
                 store.undoAction = AppUndoAction(kind: .restoreMangaWatchlist(watchlistPreview(from: currentDetail)))
+                showStatus(String(format: L10n.removedFromWatchlistFormat, currentDetail.title))
+            } else {
+                showStatus(String(format: L10n.addedToWatchlistFormat, currentDetail.title))
             }
         } catch {
             errorMessage = error.localizedDescription
+        }
+    }
+
+    private func showStatus(_ message: String) {
+        statusMessage = message
+        Task {
+            try? await Task.sleep(for: .seconds(2.5))
+            if statusMessage == message {
+                statusMessage = nil
+            }
         }
     }
 

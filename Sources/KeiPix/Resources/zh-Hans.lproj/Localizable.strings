@@ -167,6 +167,7 @@
 "Remove Bookmark" = "取消收藏";
 "Edit Bookmark" = "编辑收藏";
 "Save Bookmark" = "保存收藏";
+"Saved bookmark for %@" = "已保存 %@ 的收藏";
 "Bookmark Tags" = "收藏标签";
 "All Bookmark Tags" = "全部收藏标签";
 "Search bookmark tags" = "搜索收藏标签";
@@ -382,6 +383,7 @@
 "Comments" = "评论";
 "Write a comment" = "写评论";
 "Post Comment" = "发送评论";
+"Posted comment" = "已发送评论";
 "No comments" = "暂无评论";
 "Load More Comments" = "加载更多评论";
 "Reply" = "回复";
@@ -390,6 +392,7 @@
 "View Replies" = "查看回复";
 "Hide Replies" = "收起回复";
 "Copy Comment" = "复制评论";
+"Copied comment" = "已复制评论";
 "Replies" = "回复";
 "Related Artworks" = "相关作品";
 "No related artworks" = "暂无相关作品";
@@ -399,6 +402,7 @@
 "Load More Series Artworks" = "加载更多系列作品";
 "Add to Watchlist" = "添加到追更";
 "Watchlist Added" = "已追更";
+"Added %@ to watchlist" = "已追更 %@";
 "Open Series in Pixiv" = "在 Pixiv 打开系列";
 "Open Latest Artwork" = "打开最新作品";
 "No watchlist series" = "暂无追更系列";

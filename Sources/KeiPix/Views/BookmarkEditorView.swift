@@ -3,6 +3,7 @@ import SwiftUI
 struct BookmarkEditorView: View {
     let artwork: PixivArtwork
     @Bindable var store: KeiPixStore
+    var didSave: () -> Void = {}
 
     @Environment(\.dismiss) private var dismiss
     @State private var restrict = BookmarkRestrict.public
@@ -276,6 +277,7 @@ struct BookmarkEditorView: View {
                 restrict: restrict,
                 tags: Array(selectedTags).sorted { $0.localizedStandardCompare($1) == .orderedAscending }
             )
+            didSave()
             dismiss()
         } catch {
             errorMessage = error.localizedDescription

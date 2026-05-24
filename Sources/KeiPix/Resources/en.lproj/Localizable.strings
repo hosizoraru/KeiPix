@@ -167,6 +167,7 @@
 "Remove Bookmark" = "Remove Bookmark";
 "Edit Bookmark" = "Edit Bookmark";
 "Save Bookmark" = "Save Bookmark";
+"Saved bookmark for %@" = "Saved bookmark for %@";
 "Bookmark Tags" = "Bookmark Tags";
 "All Bookmark Tags" = "All Bookmark Tags";
 "Search bookmark tags" = "Search bookmark tags";
@@ -382,6 +383,7 @@
 "Comments" = "Comments";
 "Write a comment" = "Write a comment";
 "Post Comment" = "Post Comment";
+"Posted comment" = "Posted comment";
 "No comments" = "No comments";
 "Load More Comments" = "Load More Comments";
 "Reply" = "Reply";
@@ -390,6 +392,7 @@
 "View Replies" = "View Replies";
 "Hide Replies" = "Hide Replies";
 "Copy Comment" = "Copy Comment";
+"Copied comment" = "Copied comment";
 "Replies" = "Replies";
 "Related Artworks" = "Related Artworks";
 "No related artworks" = "No related artworks";
@@ -399,6 +402,7 @@
 "Load More Series Artworks" = "Load More Series Artworks";
 "Add to Watchlist" = "Add to Watchlist";
 "Watchlist Added" = "Watchlist Added";
+"Added %@ to watchlist" = "Added %@ to watchlist";
 "Open Series in Pixiv" = "Open Series in Pixiv";
 "Open Latest Artwork" = "Open Latest Artwork";
 "No watchlist series" = "No watchlist series";

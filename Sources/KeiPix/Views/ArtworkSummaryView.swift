@@ -168,11 +168,14 @@ private struct ArtworkActionStrip: View {
                     .buttonStyle(.glassProminent)
                     .controlSize(.small)
                     .sheet(isPresented: $isBookmarkEditorPresented) {
-                        BookmarkEditorView(artwork: artwork, store: store)
+                        BookmarkEditorView(artwork: artwork, store: store) {
+                            showActionMessage(String(format: L10n.savedBookmarkFormat, artwork.title))
+                        }
                     }
 
                     Button {
                         store.enqueueDownload(artwork)
+                        showActionMessage(String(format: L10n.queuedDownloadsFormat, 1))
                     } label: {
                         Label(L10n.download, systemImage: "arrow.down.circle")
                             .frame(maxWidth: .infinity)

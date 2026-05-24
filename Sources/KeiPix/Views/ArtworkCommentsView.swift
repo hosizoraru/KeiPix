@@ -15,6 +15,7 @@ struct ArtworkCommentsView: View {
     @State private var isLoadingMore = false
     @State private var isPosting = false
     @State private var errorMessage: String?
+    @State private var statusMessage: String?
 
     var body: some View {
         DisclosureGroup(isExpanded: $isExpanded) {
@@ -35,11 +36,21 @@ struct ArtworkCommentsView: View {
                 } else {
                     LazyVStack(alignment: .leading, spacing: 12) {
                         ForEach(comments) { comment in
-                            CommentThreadRow(comment: comment, store: store) { target in
-                                replyTarget = target
-                            }
+                            CommentThreadRow(
+                                comment: comment,
+                                store: store,
+                                reply: { target in replyTarget = target },
+                                copied: { showStatus(L10n.copiedComment) }
+                            )
                         }
                     }
+                }
+
+                if let statusMessage {
+                    Text(statusMessage)
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                        .textSelection(.enabled)
                 }
 
                 if let errorMessage {
@@ -190,8 +201,19 @@ struct ArtworkCommentsView: View {
             replyTarget = nil
             hasLoaded = false
             await loadInitial()
+            showStatus(L10n.postedComment)
         } catch {
             errorMessage = error.localizedDescription
+        }
+    }
+
+    private func showStatus(_ message: String) {
+        statusMessage = message
+        Task {
+            try? await Task.sleep(for: .seconds(2.5))
+            if statusMessage == message {
+                statusMessage = nil
+            }
         }
     }
 }
@@ -200,6 +222,7 @@ private struct CommentThreadRow: View {
     let comment: PixivComment
     @Bindable var store: KeiPixStore
     let reply: (PixivComment) -> Void
+    let copied: () -> Void
 
     @State private var replies: [PixivComment] = []
     @State private var nextURL: URL?
@@ -211,6 +234,8 @@ private struct CommentThreadRow: View {
         VStack(alignment: .leading, spacing: 8) {
             CommentRow(comment: comment) {
                 reply(comment)
+            } copied: {
+                copied()
             }
 
             if isExpanded {
@@ -218,6 +243,8 @@ private struct CommentThreadRow: View {
                     ForEach(replies) { replyComment in
                         CommentRow(comment: replyComment) {
                             reply(replyComment)
+                        } copied: {
+                            copied()
                         }
                         .padding(.leading, 28)
                     }
@@ -305,6 +332,7 @@ private struct CommentThreadRow: View {
 private struct CommentRow: View {
     let comment: PixivComment
     let reply: () -> Void
+    let copied: () -> Void
 
     var body: some View {
         HStack(alignment: .top, spacing: 10) {
@@ -363,6 +391,7 @@ private struct CommentRow: View {
                     if let text = comment.comment, text.isEmpty == false {
                         Button {
                             PasteboardWriter.copy(text)
+                            copied()
                         } label: {
                             Label(L10n.copyComment, systemImage: "doc.on.doc")
                         }

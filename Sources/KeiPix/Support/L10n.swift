@@ -165,6 +165,7 @@ enum L10n {
     static var removeBookmark: String { text("Remove Bookmark") }
     static var editBookmark: String { text("Edit Bookmark") }
     static var saveBookmark: String { text("Save Bookmark") }
+    static var savedBookmarkFormat: String { text("Saved bookmark for %@") }
     static var bookmarkTags: String { text("Bookmark Tags") }
     static var allBookmarkTags: String { text("All Bookmark Tags") }
     static var searchBookmarkTags: String { text("Search bookmark tags") }
@@ -398,6 +399,7 @@ enum L10n {
     static var comments: String { text("Comments") }
     static var writeComment: String { text("Write a comment") }
     static var postComment: String { text("Post Comment") }
+    static var postedComment: String { text("Posted comment") }
     static var noComments: String { text("No comments") }
     static var loadMoreComments: String { text("Load More Comments") }
     static var reply: String { text("Reply") }
@@ -406,6 +408,7 @@ enum L10n {
     static var viewReplies: String { text("View Replies") }
     static var hideReplies: String { text("Hide Replies") }
     static var copyComment: String { text("Copy Comment") }
+    static var copiedComment: String { text("Copied comment") }
     static var replies: String { text("Replies") }
     static var relatedArtworks: String { text("Related Artworks") }
     static var noRelatedArtworks: String { text("No related artworks") }
@@ -415,6 +418,7 @@ enum L10n {
     static var loadMoreSeriesArtworks: String { text("Load More Series Artworks") }
     static var addToWatchlist: String { text("Add to Watchlist") }
     static var watchlistAdded: String { text("Watchlist Added") }
+    static var addedToWatchlistFormat: String { text("Added %@ to watchlist") }
     static var openSeriesInPixiv: String { text("Open Series in Pixiv") }
     static var openLatestArtwork: String { text("Open Latest Artwork") }
     static var noWatchlistSeries: String { text("No watchlist series") }
