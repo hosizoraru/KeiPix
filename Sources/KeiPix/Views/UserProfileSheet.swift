@@ -84,7 +84,7 @@ struct UserProfileSheet: View {
 
                 if let undoAction = store.undoAction {
                     AppUndoBar(action: undoAction) {
-                        Task { await store.performUndo(undoAction) }
+                        Task { await performUndo(undoAction) }
                     }
                     .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
@@ -613,6 +613,24 @@ struct UserProfileSheet: View {
             updateRelatedMutedState(userID: user.id, isMuted: true)
             showStatus(String(format: L10n.mutedCreatorFormat, user.name))
         case .removeBookmark, .muteArtwork, .muteTag:
+            break
+        }
+    }
+
+    private func performUndo(_ action: AppUndoAction) async {
+        await store.performUndo(action)
+
+        switch action.kind {
+        case .restoreFollow(let user, let restrict):
+            if user.id == currentUser.id {
+                isFollowed = true
+                followRestrict = restrict
+            }
+            updateRelatedFollowState(userID: user.id, isFollowed: true)
+            showStatus(String(format: L10n.followedCreatorFormat, user.name))
+        case .unmuteCreator(let user):
+            updateRelatedMutedState(userID: user.id, isMuted: false)
+        default:
             break
         }
     }
