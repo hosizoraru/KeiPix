@@ -43,6 +43,7 @@ struct WebArticleView: NSViewRepresentable {
 
         let webView = WKWebView(frame: .zero, configuration: configuration)
         webView.allowsBackForwardNavigationGestures = true
+        webView.underPageBackgroundColor = .textBackgroundColor
         webView.navigationDelegate = context.coordinator
         webView.uiDelegate = context.coordinator
         webView.load(URLRequest(url: url))
@@ -237,13 +238,40 @@ struct WebArticleView: NSViewRepresentable {
 
         html,
         body {
-          background: Canvas !important;
-          color: CanvasText !important;
+          color-scheme: light dark !important;
+          background: rgb(250, 250, 250) !important;
+          color: rgb(26, 26, 28) !important;
         }
 
         body {
           margin: 0 !important;
           padding: 0 !important;
+        }
+
+        @media (prefers-color-scheme: dark) {
+          html,
+          body {
+            background: rgb(28, 28, 30) !important;
+            color: rgba(255, 255, 255, 0.9) !important;
+          }
+
+          main,
+          article,
+          section,
+          [class*="Article"],
+          [class*="article"],
+          [class*="Contents"],
+          [class*="contents"],
+          [class*="Container"],
+          [class*="container"],
+          [class*="Wrapper"],
+          [class*="wrapper"] {
+            background-color: rgb(28, 28, 30) !important;
+          }
+
+          a {
+            color: rgb(125, 180, 255) !important;
+          }
         }
 
         main,
