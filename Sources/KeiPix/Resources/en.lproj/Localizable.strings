@@ -63,9 +63,12 @@
 "Delete from History" = "Delete from History";
 "No local history" = "No local history";
 "Open artworks to build a private local history on this Mac." = "Open artworks to build a private local history on this Mac.";
+"No matching history" = "No matching history";
+"Change the history search to see other items." = "Change the history search to see other items.";
 "No Pixiv history" = "No Pixiv history";
 "Refresh Pixiv history after opening artworks from this account." = "Refresh Pixiv history after opening artworks from this account.";
 "%d history items" = "%d history items";
+"Refreshed %d Pixiv history items" = "Refreshed %d Pixiv history items";
 "Manga Watchlist" = "Manga Watchlist";
 "Recommended Creators" = "Recommended Creators";
 "Related Creators" = "Related Creators";

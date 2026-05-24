@@ -63,9 +63,12 @@
 "Delete from History" = "从历史中删除";
 "No local history" = "暂无本地历史";
 "Open artworks to build a private local history on this Mac." = "打开作品后，会在这台 Mac 上生成私密本地历史。";
+"No matching history" = "没有匹配的历史";
+"Change the history search to see other items." = "调整历史搜索即可查看其他项目。";
 "No Pixiv history" = "暂无 Pixiv 历史";
 "Refresh Pixiv history after opening artworks from this account." = "使用当前账号打开作品后，可以刷新 Pixiv 历史。";
 "%d history items" = "%d 条历史";
+"Refreshed %d Pixiv history items" = "已刷新 %d 条 Pixiv 历史";
 "Manga Watchlist" = "漫画追更";
 "Recommended Creators" = "推荐作者";
 "Related Creators" = "相关作者";

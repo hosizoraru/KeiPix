@@ -66,9 +66,12 @@ enum L10n {
     static var deleteFromHistory: String { text("Delete from History") }
     static var noLocalHistoryTitle: String { text("No local history") }
     static var noLocalHistorySubtitle: String { text("Open artworks to build a private local history on this Mac.") }
+    static var noMatchingHistoryTitle: String { text("No matching history") }
+    static var noMatchingHistorySubtitle: String { text("Change the history search to see other items.") }
     static var noPixivHistoryTitle: String { text("No Pixiv history") }
     static var noPixivHistorySubtitle: String { text("Refresh Pixiv history after opening artworks from this account.") }
     static var historyItemCountFormat: String { text("%d history items") }
+    static var refreshedPixivHistoryFormat: String { text("Refreshed %d Pixiv history items") }
     static var mangaWatchlist: String { text("Manga Watchlist") }
     static var recommendedCreators: String { text("Recommended Creators") }
     static var relatedCreators: String { text("Related Creators") }

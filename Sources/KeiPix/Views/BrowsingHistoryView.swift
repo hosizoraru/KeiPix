@@ -67,11 +67,11 @@ struct BrowsingHistoryView: View {
         }
         .onChange(of: source) { _, value in
             guard value == .pixiv else { return }
-            Task { await store.reloadCurrentFeed() }
+            Task { await reloadPixivHistory(showFeedback: false) }
         }
         .task(id: store.routeRefreshGeneration) {
             guard source == .pixiv else { return }
-            await store.reloadCurrentFeed()
+            await reloadPixivHistory(showFeedback: false)
         }
         .overlay(alignment: .bottom) {
             if let actionMessage {
@@ -129,7 +129,7 @@ struct BrowsingHistoryView: View {
                     .disabled(store.localBrowsingHistory.isEmpty)
                 case .pixiv:
                     Button {
-                        Task { await store.reloadCurrentFeed() }
+                        Task { await reloadPixivHistory(showFeedback: true) }
                     } label: {
                         Label(L10n.refresh, systemImage: "arrow.clockwise")
                     }
@@ -147,8 +147,8 @@ struct BrowsingHistoryView: View {
         return Group {
             if items.isEmpty {
                 EmptyStateView(
-                    title: L10n.noLocalHistoryTitle,
-                    subtitle: L10n.noLocalHistorySubtitle,
+                    title: store.localBrowsingHistory.isEmpty ? L10n.noLocalHistoryTitle : L10n.noMatchingHistoryTitle,
+                    subtitle: store.localBrowsingHistory.isEmpty ? L10n.noLocalHistorySubtitle : L10n.noMatchingHistorySubtitle,
                     systemImage: "clock.arrow.circlepath"
                 )
             } else {
@@ -291,6 +291,12 @@ struct BrowsingHistoryView: View {
         } catch {
             store.errorMessage = error.localizedDescription
         }
+    }
+
+    private func reloadPixivHistory(showFeedback: Bool) async {
+        await store.reloadCurrentFeed()
+        guard showFeedback, store.errorMessage == nil else { return }
+        actionMessage = String(format: L10n.refreshedPixivHistoryFormat, store.artworks.count)
     }
 }
 
