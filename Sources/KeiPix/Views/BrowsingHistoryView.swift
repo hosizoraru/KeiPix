@@ -101,12 +101,13 @@ struct BrowsingHistoryView: View {
             }
             .pickerStyle(.segmented)
             .labelsHidden()
-            .frame(minWidth: 180, idealWidth: 220, maxWidth: 240)
+            .frame(minWidth: 120, idealWidth: 132, maxWidth: 150)
+            .accessibilityLabel(L10n.historySource)
 
             if source == .local {
                 TextField(L10n.searchHistory, text: $localSearchText)
                     .textFieldStyle(.roundedBorder)
-                    .frame(minWidth: 170, idealWidth: 220, maxWidth: 260)
+                    .frame(minWidth: 180, idealWidth: 220, maxWidth: 260)
 
                 Button {
                     localSearchText = ""
@@ -137,7 +138,9 @@ struct BrowsingHistoryView: View {
                 }
             } label: {
                 Label(L10n.moreActions, systemImage: "ellipsis.circle")
+                    .labelStyle(.iconOnly)
             }
+            .help(L10n.moreActions)
         }
         .controlSize(.small)
     }

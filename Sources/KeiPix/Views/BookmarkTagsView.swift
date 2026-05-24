@@ -180,7 +180,8 @@ struct BookmarkTagsView: View {
             }
             .pickerStyle(.segmented)
             .labelsHidden()
-            .frame(minWidth: 150, idealWidth: 180, maxWidth: 220)
+            .frame(minWidth: 96, idealWidth: 112, maxWidth: 128)
+            .accessibilityLabel(L10n.defaultBookmarkVisibility)
 
             Menu {
                 Button {
@@ -198,7 +199,9 @@ struct BookmarkTagsView: View {
                 .disabled(filteredTags.isEmpty)
             } label: {
                 Label(L10n.moreActions, systemImage: "ellipsis.circle")
+                    .labelStyle(.iconOnly)
             }
+            .help(L10n.moreActions)
         }
         .controlSize(.small)
     }
