@@ -77,6 +77,8 @@ enum L10n {
     static var share: String { text("Share") }
     static var shareCurrentPage: String { text("Share Current Page") }
     static var copyLink: String { text("Copy Link") }
+    static var copyArtworkSummary: String { text("Copy Artwork Summary") }
+    static var copiedArtworkSummary: String { text("Copied Artwork Summary") }
     static var moreActions: String { text("More Actions") }
     static var download: String { text("Download") }
     static var downloads: String { text("Downloads") }
