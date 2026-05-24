@@ -146,6 +146,11 @@ struct ContentView: View {
             registerCurrentUndoAction()
         }
         .alert(L10n.errorTitle, isPresented: errorBinding) {
+            if store.selectedRoute.isRankingRoute {
+                Button(L10n.latestRanking) {
+                    resetRankingToLatest()
+                }
+            }
             Button(L10n.retry) {
                 store.errorMessage = nil
                 store.requestRouteRefresh()
@@ -245,6 +250,14 @@ struct ContentView: View {
         PasteboardWriter.copy(message)
         store.errorMessage = nil
         showStatus(L10n.copiedError)
+    }
+
+    private func resetRankingToLatest() {
+        store.errorMessage = nil
+        store.setRankingDate(KeiPixStore.latestSelectableRankingDate())
+        store.setUseRankingDate(false)
+        store.requestRouteRefresh()
+        showStatus(L10n.latestRankingApplied)
     }
 
     private func showStatus(_ message: String) {
