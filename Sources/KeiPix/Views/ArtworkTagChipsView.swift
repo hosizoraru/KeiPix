@@ -40,6 +40,18 @@ struct ArtworkTagChipsView: View {
                 search(tag)
             }
 
+            if let url = PixivWebURLBuilder.tagURL(tagName: tag.name) {
+                Link(destination: url) {
+                    Label(L10n.openTagInPixiv, systemImage: "safari")
+                }
+
+                Button {
+                    PasteboardWriter.copy(url.absoluteString)
+                } label: {
+                    Label(L10n.copyTagLink, systemImage: "link")
+                }
+            }
+
             Divider()
 
             Button(L10n.copyTag) {

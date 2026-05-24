@@ -330,6 +330,8 @@
 "Details" = "详情";
 "Tags" = "标签";
 "Search Tag" = "搜索标签";
+"Open Tag in Pixiv" = "在 Pixiv 打开标签";
+"Copy Tag Link" = "复制标签链接";
 "Copy Tag" = "复制标签";
 "Copy Translated Tag" = "复制标签翻译名";
 "Description" = "简介";

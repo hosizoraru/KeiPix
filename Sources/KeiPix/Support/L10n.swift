@@ -352,6 +352,8 @@ enum L10n {
     static var details: String { text("Details") }
     static var tags: String { text("Tags") }
     static var searchTag: String { text("Search Tag") }
+    static var openTagInPixiv: String { text("Open Tag in Pixiv") }
+    static var copyTagLink: String { text("Copy Tag Link") }
     static var copyTag: String { text("Copy Tag") }
     static var copyTranslatedTag: String { text("Copy Translated Tag") }
     static var description: String { text("Description") }
