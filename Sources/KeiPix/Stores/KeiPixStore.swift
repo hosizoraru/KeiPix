@@ -16,6 +16,7 @@ final class KeiPixStore {
     var focusedUser: PixivUser?
     var searchText = ""
     var searchSubmissionID = 0
+    var routeRefreshGeneration = 0
     var searchSuggestions: [PixivTag] = []
     var searchHistory = UserDefaults.standard.stringArray(forKey: "searchHistory") ?? []
     var savedSearches = UserDefaults.standard.stringArray(forKey: "savedSearches") ?? []
@@ -181,6 +182,14 @@ final class KeiPixStore {
             applyContentFilters()
         } catch {
             errorMessage = error.localizedDescription
+        }
+    }
+
+    func requestRouteRefresh() {
+        if selectedRoute.usesArtworkFeed {
+            Task { await reloadCurrentFeed() }
+        } else {
+            routeRefreshGeneration += 1
         }
     }
 

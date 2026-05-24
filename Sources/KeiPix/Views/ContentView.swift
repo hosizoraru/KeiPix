@@ -53,7 +53,7 @@ struct ContentView: View {
 
             ToolbarItem(placement: .primaryAction) {
                 Button {
-                    Task { await store.reloadCurrentFeed() }
+                    store.requestRouteRefresh()
                 } label: {
                     Label(L10n.refresh, systemImage: "arrow.clockwise")
                 }

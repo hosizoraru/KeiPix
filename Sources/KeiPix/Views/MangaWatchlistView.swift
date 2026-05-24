@@ -50,16 +50,6 @@ struct MangaWatchlistView: View {
             }
         }
         .navigationTitle(L10n.mangaWatchlist)
-        .toolbar {
-            ToolbarItem(placement: .primaryAction) {
-                Button {
-                    Task { await loadInitial() }
-                } label: {
-                    Label(L10n.refresh, systemImage: "arrow.clockwise")
-                }
-                .disabled(isLoading)
-            }
-        }
         .safeAreaInset(edge: .bottom) {
             if let errorMessage {
                 Text(errorMessage)
@@ -71,7 +61,7 @@ struct MangaWatchlistView: View {
                     .background(.bar)
             }
         }
-        .task {
+        .task(id: store.routeRefreshGeneration) {
             await loadInitial()
         }
     }
@@ -236,4 +226,3 @@ private struct MangaWatchlistCard: View {
         }
     }
 }
-

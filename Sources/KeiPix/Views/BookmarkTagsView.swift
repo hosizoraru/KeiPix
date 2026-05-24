@@ -92,16 +92,6 @@ struct BookmarkTagsView: View {
             }
         }
         .navigationTitle(L10n.bookmarkTags)
-        .toolbar {
-            ToolbarItem(placement: .primaryAction) {
-                Button {
-                    Task { await load() }
-                } label: {
-                    Label(L10n.refresh, systemImage: "arrow.clockwise")
-                }
-                .disabled(isLoading)
-            }
-        }
         .safeAreaInset(edge: .bottom) {
             if let errorMessage {
                 Text(errorMessage)
@@ -113,9 +103,13 @@ struct BookmarkTagsView: View {
                     .background(.bar)
             }
         }
-        .task(id: selectedRestrict) {
+        .task(id: bookmarkTagLoadKey) {
             await load()
         }
+    }
+
+    private var bookmarkTagLoadKey: String {
+        "\(selectedRestrict.rawValue)-\(store.routeRefreshGeneration)"
     }
 
     private var header: some View {

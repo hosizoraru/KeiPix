@@ -46,11 +46,6 @@ struct DownloadQueueView: View {
             }
         }
         .navigationTitle(L10n.downloads)
-        .searchable(
-            text: downloadSearchBinding,
-            placement: .toolbar,
-            prompt: L10n.searchDownloads
-        )
         .sheet(item: $selectedPreview) { preview in
             switch preview {
             case .images(let item, let imageURLs):
@@ -58,14 +53,6 @@ struct DownloadQueueView: View {
             case .ugoira(let item, let zipURL):
                 DownloadedUgoiraViewer(item: item, zipURL: zipURL)
             }
-        }
-    }
-
-    private var downloadSearchBinding: Binding<String> {
-        Binding {
-            store.downloads.downloadSearchText
-        } set: { value in
-            store.downloads.setDownloadSearchText(value)
         }
     }
 
@@ -105,8 +92,6 @@ private struct DownloadQueueHeader: View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 12) {
                 VStack(alignment: .leading, spacing: 3) {
-                    Text(L10n.downloads)
-                        .font(.headline)
                     Text(downloads.downloadDirectoryPath)
                         .font(.caption)
                         .foregroundStyle(.secondary)
@@ -116,6 +101,10 @@ private struct DownloadQueueHeader: View {
                 }
 
                 Spacer()
+
+                TextField(L10n.searchDownloads, text: downloadSearchBinding)
+                    .textFieldStyle(.roundedBorder)
+                    .frame(width: 240)
 
                 Menu {
                     Picker(L10n.sortDownloads, selection: downloadSortBinding) {
@@ -244,6 +233,14 @@ private struct DownloadQueueHeader: View {
             downloads.downloadQueueFilter
         } set: { value in
             downloads.setDownloadQueueFilter(value)
+        }
+    }
+
+    private var downloadSearchBinding: Binding<String> {
+        Binding {
+            downloads.downloadSearchText
+        } set: { value in
+            downloads.setDownloadSearchText(value)
         }
     }
 

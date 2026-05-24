@@ -6,7 +6,10 @@ struct TrendingTagsView: View {
     @State private var isLoading = false
     @State private var errorMessage: String?
 
-    private let spacing: CGFloat = 12
+    private let columns = [
+        GridItem(.adaptive(minimum: 168, maximum: 224), spacing: 12)
+    ]
+    private let cardHeight: CGFloat = 150
 
     var body: some View {
         Group {
@@ -23,25 +26,17 @@ struct TrendingTagsView: View {
                     VStack(alignment: .leading, spacing: 10) {
                         header
 
-                        MasonryLayout(
-                            spacing: spacing,
-                            preferredColumnWidth: 170,
-                            minColumnWidth: 140,
-                            maxColumnWidth: 220,
-                            singleColumnHeightRange: 132...238,
-                            multiColumnHeightRange: 132...190,
-                            fullRowHeightRange: 132...178
-                        ) {
+                        LazyVGrid(columns: columns, spacing: 12) {
                             ForEach(tags) { tag in
                                 TrendingTagCard(
                                     tag: tag,
+                                    cardHeight: cardHeight,
                                     showTranslatedName: store.showTranslatedTags,
                                     showContentBadges: store.showContentBadges,
                                     search: { search(tag) },
                                     selectArtwork: { store.selectedArtwork = tag.artwork },
                                     mute: { store.muteTag(tag.pixivTag) }
                                 )
-                                .layoutValue(key: MasonryAspectRatioKey.self, value: tag.artwork.aspectRatio)
                             }
                         }
                     }
@@ -53,16 +48,6 @@ struct TrendingTagsView: View {
             }
         }
         .navigationTitle(L10n.trendingTags)
-        .toolbar {
-            ToolbarItem(placement: .primaryAction) {
-                Button {
-                    Task { await load() }
-                } label: {
-                    Label(L10n.refresh, systemImage: "arrow.clockwise")
-                }
-                .disabled(isLoading)
-            }
-        }
         .safeAreaInset(edge: .bottom) {
             if let errorMessage {
                 Text(errorMessage)
@@ -74,7 +59,7 @@ struct TrendingTagsView: View {
                     .background(.bar)
             }
         }
-        .task {
+        .task(id: store.routeRefreshGeneration) {
             await load()
         }
     }
@@ -112,6 +97,7 @@ struct TrendingTagsView: View {
 
 private struct TrendingTagCard: View {
     let tag: PixivTrendingTag
+    let cardHeight: CGFloat
     let showTranslatedName: Bool
     let showContentBadges: Bool
     let search: () -> Void
@@ -125,7 +111,7 @@ private struct TrendingTagCard: View {
             ZStack(alignment: .bottomLeading) {
                 RemoteImageView(url: tag.artwork.thumbnailURL, contentMode: .fill)
                     .frame(maxWidth: .infinity)
-                    .frame(maxHeight: .infinity)
+                    .frame(height: cardHeight)
                     .clipped()
                     .overlay(alignment: .bottom) {
                         LinearGradient(
@@ -159,7 +145,8 @@ private struct TrendingTagCard: View {
             }
         }
         .buttonStyle(.plain)
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .frame(maxWidth: .infinity)
+        .frame(height: cardHeight)
         .contentShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         .overlay {
