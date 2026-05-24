@@ -24,7 +24,6 @@ struct MutedContentView: View {
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
-                    syncPanel
                     contentPanel
                 }
                 .padding(18)
@@ -138,39 +137,6 @@ struct MutedContentView: View {
                 .help(L10n.clearSearch)
 
             Menu {
-                Button(role: .destructive) {
-                    isClearConfirmationPresented = true
-                } label: {
-                    Label(L10n.clearMutedContent, systemImage: "trash")
-                }
-                .disabled(totalCount == 0)
-            } label: {
-                Label(L10n.moreActions, systemImage: "ellipsis.circle")
-            }
-        }
-        .controlSize(.small)
-    }
-
-    private var syncPanel: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(L10n.pixivMuteSync)
-                        .font(.headline)
-                    Text(L10n.muteSyncHint)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-
-                Spacer()
-
-                if isSyncing {
-                    ProgressView()
-                        .controlSize(.small)
-                }
-            }
-
-            FlowLayout(spacing: 10) {
                 Button {
                     isSyncConfirmationPresented = true
                 } label: {
@@ -185,6 +151,8 @@ struct MutedContentView: View {
                 }
                 .disabled(isSyncing || (store.mutedTagList.isEmpty && store.mutedUserList.isEmpty))
 
+                Divider()
+
                 Button {
                     exportLocalMutedContent()
                 } label: {
@@ -198,10 +166,26 @@ struct MutedContentView: View {
                     Label(L10n.importMutedContent, systemImage: "square.and.arrow.down")
                 }
                 .disabled(isSyncing)
+
+                Divider()
+
+                Button(role: .destructive) {
+                    isClearConfirmationPresented = true
+                } label: {
+                    Label(L10n.clearMutedContent, systemImage: "trash")
+                }
+                .disabled(totalCount == 0)
+            } label: {
+                if isSyncing {
+                    ProgressView()
+                        .controlSize(.small)
+                } else {
+                    Label(L10n.moreActions, systemImage: "ellipsis.circle")
+                }
             }
+            .help(L10n.muteSyncHint)
         }
-        .padding(14)
-        .keiGlass(18)
+        .controlSize(.small)
     }
 
     private var contentPanel: some View {
