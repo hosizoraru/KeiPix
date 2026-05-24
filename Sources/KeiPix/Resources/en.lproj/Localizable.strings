@@ -647,6 +647,9 @@
 "Quick diagnostics for signed-in QA and screenshot-safe support reports." = "Quick diagnostics for signed-in QA and screenshot-safe support reports.";
 "Copy Diagnostics" = "Copy Diagnostics";
 "Copied Diagnostics" = "Copied Diagnostics";
+"Save Diagnostics" = "Save Diagnostics";
+"Saved Diagnostics" = "Saved Diagnostics";
+"Unable to save diagnostics" = "Unable to save diagnostics";
 "Run Network Diagnostics" = "Run Network Diagnostics";
 "Running diagnostics" = "Running diagnostics";
 "Refresh Cache Status" = "Refresh Cache Status";

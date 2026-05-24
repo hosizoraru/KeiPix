@@ -464,6 +464,9 @@ enum L10n {
     static var runtimeReadinessHint: String { text("Quick diagnostics for signed-in QA and screenshot-safe support reports.") }
     static var copyDiagnostics: String { text("Copy Diagnostics") }
     static var copiedDiagnostics: String { text("Copied Diagnostics") }
+    static var saveDiagnostics: String { text("Save Diagnostics") }
+    static var savedDiagnostics: String { text("Saved Diagnostics") }
+    static var unableToSaveDiagnostics: String { text("Unable to save diagnostics") }
     static var runNetworkDiagnostics: String { text("Run Network Diagnostics") }
     static var runningDiagnostics: String { text("Running diagnostics") }
     static var refreshCacheStatus: String { text("Refresh Cache Status") }

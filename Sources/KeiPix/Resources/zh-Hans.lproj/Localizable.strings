@@ -647,6 +647,9 @@
 "Quick diagnostics for signed-in QA and screenshot-safe support reports." = "用于登录后验收和截图安全支持报告的快速诊断。";
 "Copy Diagnostics" = "复制诊断";
 "Copied Diagnostics" = "已复制诊断";
+"Save Diagnostics" = "保存诊断";
+"Saved Diagnostics" = "已保存诊断";
+"Unable to save diagnostics" = "无法保存诊断";
 "Run Network Diagnostics" = "运行网络诊断";
 "Running diagnostics" = "正在诊断";
 "Refresh Cache Status" = "刷新缓存状态";

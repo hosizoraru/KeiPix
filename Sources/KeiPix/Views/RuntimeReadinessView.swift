@@ -1,4 +1,6 @@
+import AppKit
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct RuntimeReadinessView: View {
     let store: KeiPixStore
@@ -86,6 +88,12 @@ struct RuntimeReadinessView: View {
                 await dismissCopyStatusIfNeeded()
             }
 
+            Button {
+                saveDiagnostics(snapshot)
+            } label: {
+                Label(L10n.saveDiagnostics, systemImage: "square.and.arrow.down")
+            }
+
             if didCopyDiagnostics {
                 Text(L10n.copiedDiagnostics)
                     .font(.caption)
@@ -118,6 +126,28 @@ struct RuntimeReadinessView: View {
     }
 
     private func copyDiagnostics(_ snapshot: RuntimeReadinessSnapshot) {
+        PasteboardWriter.copy(diagnosticsReport(snapshot))
+    }
+
+    private func saveDiagnostics(_ snapshot: RuntimeReadinessSnapshot) {
+        let panel = NSSavePanel()
+        panel.title = L10n.saveDiagnostics
+        panel.nameFieldStringValue = "keipix-diagnostics-\(Self.fileDateFormatter.string(from: Date())).txt"
+        panel.allowedContentTypes = [.plainText]
+
+        guard panel.runModal() == .OK, let url = panel.url else {
+            return
+        }
+
+        do {
+            try diagnosticsReport(snapshot).write(to: url, atomically: true, encoding: .utf8)
+            cacheMessage = L10n.savedDiagnostics
+        } catch {
+            cacheMessage = "\(L10n.unableToSaveDiagnostics): \(error.localizedDescription)"
+        }
+    }
+
+    private func diagnosticsReport(_ snapshot: RuntimeReadinessSnapshot) -> String {
         var lines = [snapshot.diagnosticsText]
         if let cacheStatus {
             lines.append("Image Cache: \(cacheStatus.summaryText)")
@@ -127,7 +157,7 @@ struct RuntimeReadinessView: View {
             lines.append("Network Diagnostics")
             lines += networkResults.map(\.diagnosticsLine)
         }
-        PasteboardWriter.copy(lines.joined(separator: "\n"))
+        return lines.joined(separator: "\n")
     }
 
     private func dismissCopyStatusIfNeeded() async {
@@ -137,6 +167,14 @@ struct RuntimeReadinessView: View {
             didCopyDiagnostics = false
         }
     }
+
+    private static let fileDateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.calendar = Calendar(identifier: .gregorian)
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "yyyyMMdd-HHmmss"
+        return formatter
+    }()
 }
 
 private struct NetworkDiagnosticResultRow: View {

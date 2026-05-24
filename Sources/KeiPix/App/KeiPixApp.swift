@@ -40,6 +40,11 @@ struct KeiPixApp: App {
                     store.presentLocalImageSourceSearch()
                 }
                 .keyboardShortcut("i", modifiers: [.command, .option])
+
+                Button(L10n.copyDiagnostics) {
+                    store.copyRuntimeReadinessDiagnostics()
+                }
+                .keyboardShortcut("g", modifiers: [.command, .option])
             }
 
             CommandMenu(L10n.artwork) {
