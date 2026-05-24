@@ -206,6 +206,8 @@ private extension View {
 }
 
 private struct TrendingTagArtworkImage: View {
+    private let cornerRadius: CGFloat = 18
+
     let url: URL?
     let imageLoaded: (CGFloat) -> Void
 
@@ -215,12 +217,11 @@ private struct TrendingTagArtworkImage: View {
     var body: some View {
         GeometryReader { proxy in
             if let image {
-                ExactFillNSImageView(image: image)
+                ExactFillNSImageView(image: image, cornerRadius: cornerRadius)
                     .frame(width: proxy.size.width, height: proxy.size.height)
                     .allowsHitTesting(false)
-                    .clipped()
             } else {
-                Rectangle()
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
                     .fill(.clear)
                     .overlay {
                         if failed {
@@ -236,7 +237,7 @@ private struct TrendingTagArtworkImage: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .clipped()
+        .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
         .task(id: url) {
             await load()
         }
@@ -266,15 +267,18 @@ private struct TrendingTagArtworkImage: View {
 
 private struct ExactFillNSImageView: NSViewRepresentable {
     let image: NSImage
+    let cornerRadius: CGFloat
 
     func makeNSView(context: Context) -> ExactFillNSImageContainer {
         let view = ExactFillNSImageContainer()
         view.image = image
+        view.cornerRadius = cornerRadius
         return view
     }
 
     func updateNSView(_ nsView: ExactFillNSImageContainer, context: Context) {
         nsView.image = image
+        nsView.cornerRadius = cornerRadius
     }
 }
 
@@ -283,6 +287,16 @@ private final class ExactFillNSImageContainer: NSView {
         didSet {
             needsDisplay = true
         }
+    }
+
+    var cornerRadius: CGFloat = 18 {
+        didSet {
+            needsDisplay = true
+        }
+    }
+
+    override var isOpaque: Bool {
+        false
     }
 
     override init(frame frameRect: NSRect) {
@@ -304,9 +318,15 @@ private final class ExactFillNSImageContainer: NSView {
             return
         }
 
-        let destination = bounds.insetBy(dx: -1, dy: -1)
+        NSGraphicsContext.current?.imageInterpolation = .high
+        NSGraphicsContext.current?.shouldAntialias = true
+
+        let clipPath = NSBezierPath(roundedRect: bounds, xRadius: cornerRadius, yRadius: cornerRadius)
+        clipPath.addClip()
+
+        let destination = bounds.insetBy(dx: -2, dy: -2)
         let source = sourceRect(for: imageSize, filling: destination.size)
-        image.draw(in: destination, from: source, operation: .sourceOver, fraction: 1)
+        image.draw(in: destination, from: source, operation: .sourceOver, fraction: 1, respectFlipped: true, hints: nil)
     }
 
     private func resolvedImageSize(for image: NSImage) -> CGSize {
