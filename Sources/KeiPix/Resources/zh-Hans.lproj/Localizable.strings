@@ -313,6 +313,9 @@
 "Syncs Pixiv account restricted mode for adult content visibility across clients." = "同步 Pixiv 账号的限制模式，影响各客户端成人内容可见性。";
 "Search Filters" = "搜索筛选";
 "Active Search Filters" = "已启用搜索筛选";
+"Filter Summary" = "筛选摘要";
+"Search filters reset" = "已重置搜索筛选";
+"Search filters applied" = "已应用搜索筛选";
 "Match Type" = "匹配方式";
 "Partial tag match" = "标签部分匹配";
 "Exact tag match" = "标签完全匹配";

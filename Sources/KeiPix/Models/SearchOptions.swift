@@ -1,6 +1,10 @@
 import Foundation
 
-enum SearchMatchType: String, CaseIterable, Identifiable, Codable {
+protocol SearchFilterOptionTitle {
+    var title: String { get }
+}
+
+enum SearchMatchType: String, CaseIterable, Identifiable, Codable, SearchFilterOptionTitle {
     case partialTags
     case exactTags
     case titleAndCaption
@@ -30,7 +34,7 @@ enum SearchMatchType: String, CaseIterable, Identifiable, Codable {
     }
 }
 
-enum SearchSort: String, CaseIterable, Identifiable, Codable {
+enum SearchSort: String, CaseIterable, Identifiable, Codable, SearchFilterOptionTitle {
     case dateDescending
     case dateAscending
     case popularPreview
@@ -60,7 +64,7 @@ enum SearchSort: String, CaseIterable, Identifiable, Codable {
     }
 }
 
-enum SearchAgeLimit: String, CaseIterable, Identifiable, Codable {
+enum SearchAgeLimit: String, CaseIterable, Identifiable, Codable, SearchFilterOptionTitle {
     case unlimited
     case allAges
     case r18
@@ -90,7 +94,7 @@ enum SearchAgeLimit: String, CaseIterable, Identifiable, Codable {
     }
 }
 
-enum SearchDateRange: String, CaseIterable, Identifiable, Codable {
+enum SearchDateRange: String, CaseIterable, Identifiable, Codable, SearchFilterOptionTitle {
     case anytime
     case pastDay
     case pastWeek
@@ -130,7 +134,7 @@ enum SearchDateRange: String, CaseIterable, Identifiable, Codable {
     }
 }
 
-enum SearchMinimumBookmarks: Int, CaseIterable, Identifiable, Codable {
+enum SearchMinimumBookmarks: Int, CaseIterable, Identifiable, Codable, SearchFilterOptionTitle {
     case none = 0
     case oneHundred = 100
     case fiveHundred = 500
@@ -145,7 +149,7 @@ enum SearchMinimumBookmarks: Int, CaseIterable, Identifiable, Codable {
     }
 }
 
-enum SearchArtworkType: String, CaseIterable, Identifiable, Codable {
+enum SearchArtworkType: String, CaseIterable, Identifiable, Codable, SearchFilterOptionTitle {
     case all
     case illustrations
     case manga
@@ -164,7 +168,7 @@ enum SearchArtworkType: String, CaseIterable, Identifiable, Codable {
     }
 }
 
-enum SearchUgoiraFilter: String, CaseIterable, Identifiable, Codable {
+enum SearchUgoiraFilter: String, CaseIterable, Identifiable, Codable, SearchFilterOptionTitle {
     case all
     case onlyUgoira
     case noUgoira

@@ -30,67 +30,52 @@ struct SearchFilterButton: View {
 private struct SearchFiltersView: View {
     @Bindable var store: KeiPixStore
     let dismiss: () -> Void
+    @State private var statusMessage: String?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text(L10n.searchFilters)
-                .font(.headline)
+            VStack(alignment: .leading, spacing: 6) {
+                Text(L10n.searchFilters)
+                    .font(.headline)
 
-            Form {
-                Picker(L10n.matchType, selection: matchTypeBinding) {
-                    ForEach(SearchMatchType.allCases) { option in
-                        Text(option.title).tag(option)
-                    }
-                }
-
-                Picker(L10n.sort, selection: sortBinding) {
-                    ForEach(SearchSort.allCases) { option in
-                        Text(option.title).tag(option)
-                    }
-                }
-
-                Picker(L10n.ageLimit, selection: ageLimitBinding) {
-                    ForEach(SearchAgeLimit.allCases) { option in
-                        Text(option.title).tag(option)
-                    }
-                }
-
-                Picker(L10n.dateRange, selection: dateRangeBinding) {
-                    ForEach(SearchDateRange.allCases) { option in
-                        Text(option.title).tag(option)
-                    }
-                }
-
-                Picker(L10n.minimumBookmarks, selection: minimumBookmarksBinding) {
-                    ForEach(SearchMinimumBookmarks.allCases) { option in
-                        Text(option.title).tag(option)
-                    }
-                }
-
-                Picker(L10n.workType, selection: artworkTypeBinding) {
-                    ForEach(SearchArtworkType.allCases) { option in
-                        Text(option.title).tag(option)
-                    }
-                }
-
-                Picker(L10n.ugoiraFilter, selection: ugoiraFilterBinding) {
-                    ForEach(SearchUgoiraFilter.allCases) { option in
-                        Text(option.title).tag(option)
-                    }
-                }
+                Text(store.searchOptions.summary)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(3)
+                    .textSelection(.enabled)
+                    .accessibilityLabel(L10n.filterSummary)
             }
-            .formStyle(.grouped)
+
+            VStack(alignment: .leading, spacing: 10) {
+                filterPicker(L10n.matchType, selection: matchTypeBinding, options: SearchMatchType.allCases)
+                filterPicker(L10n.sort, selection: sortBinding, options: SearchSort.allCases)
+                filterPicker(L10n.ageLimit, selection: ageLimitBinding, options: SearchAgeLimit.allCases)
+                filterPicker(L10n.dateRange, selection: dateRangeBinding, options: SearchDateRange.allCases)
+                filterPicker(L10n.minimumBookmarks, selection: minimumBookmarksBinding, options: SearchMinimumBookmarks.allCases)
+                filterPicker(L10n.workType, selection: artworkTypeBinding, options: SearchArtworkType.allCases)
+                filterPicker(L10n.ugoiraFilter, selection: ugoiraFilterBinding, options: SearchUgoiraFilter.allCases)
+            }
+
+            if let statusMessage {
+                Text(statusMessage)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .textSelection(.enabled)
+            }
 
             HStack {
                 Button(L10n.reset) {
                     store.resetSearchOptions()
+                    showStatus(L10n.searchFiltersReset)
                 }
+                .disabled(store.searchOptions.isDefault)
 
                 Spacer()
 
                 Button(L10n.apply) {
                     Task {
                         await store.runSearch()
+                        showStatus(L10n.searchFiltersApplied)
                         dismiss()
                     }
                 }
@@ -98,7 +83,35 @@ private struct SearchFiltersView: View {
             }
         }
         .padding(18)
-        .frame(width: 380)
+        .frame(width: 360)
+    }
+
+    private func filterPicker<Option: CaseIterable & Identifiable>(
+        _ title: String,
+        selection: Binding<Option>,
+        options: Option.AllCases
+    ) -> some View where Option: Hashable, Option: SearchFilterOptionTitle, Option.AllCases: RandomAccessCollection {
+        LabeledContent(title) {
+            Picker(title, selection: selection) {
+                ForEach(options) { option in
+                    Text(option.title).tag(option)
+                }
+            }
+            .pickerStyle(.menu)
+            .labelsHidden()
+            .frame(maxWidth: 190, alignment: .trailing)
+        }
+        .font(.callout)
+    }
+
+    private func showStatus(_ message: String) {
+        statusMessage = message
+        Task {
+            try? await Task.sleep(for: .seconds(2))
+            if statusMessage == message {
+                statusMessage = nil
+            }
+        }
     }
 
     private var matchTypeBinding: Binding<SearchMatchType> {

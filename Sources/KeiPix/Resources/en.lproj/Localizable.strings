@@ -313,6 +313,9 @@
 "Syncs Pixiv account restricted mode for adult content visibility across clients." = "Syncs Pixiv account restricted mode for adult content visibility across clients.";
 "Search Filters" = "Search Filters";
 "Active Search Filters" = "Active Search Filters";
+"Filter Summary" = "Filter Summary";
+"Search filters reset" = "Search filters reset";
+"Search filters applied" = "Search filters applied";
 "Match Type" = "Match Type";
 "Partial tag match" = "Partial tag match";
 "Exact tag match" = "Exact tag match";

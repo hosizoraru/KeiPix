@@ -225,67 +225,6 @@ private struct ArtworkActionStrip: View {
                     .buttonStyle(.bordered)
                     .controlSize(.small)
 
-                    if let url = artwork.pixivURL {
-                        Menu {
-                            ShareLink(item: url) {
-                                Label(L10n.share, systemImage: "square.and.arrow.up")
-                            }
-
-                            if let currentPageURL {
-                                ShareLink(item: currentPageURL) {
-                                    Label(L10n.shareCurrentPage, systemImage: "photo")
-                                }
-
-                                Button {
-                                    PasteboardWriter.copy(currentPageURL.absoluteString)
-                                    showActionMessage(L10n.copied)
-                                } label: {
-                                    Label(L10n.copyCurrentPageLink, systemImage: "link")
-                                }
-
-                                Button {
-                                    store.enqueueDownloadPage(
-                                        artwork,
-                                        pageIndex: pageIndex,
-                                        preferOriginal: store.useOriginalImagesInDetail
-                                    )
-                                    showActionMessage(L10n.queuedCurrentPage)
-                                } label: {
-                                    Label(L10n.downloadCurrentPage, systemImage: "arrow.down.circle")
-                                }
-
-                                Divider()
-                            }
-
-                            Button {
-                                PasteboardWriter.copy(url.absoluteString)
-                                showActionMessage(L10n.copied)
-                            } label: {
-                                Label(L10n.copyLink, systemImage: "link")
-                            }
-
-                            Button {
-                                copyArtworkSummary()
-                            } label: {
-                                Label(L10n.copyArtworkSummary, systemImage: "doc.text")
-                            }
-                        } label: {
-                            Label(L10n.share, systemImage: "square.and.arrow.up")
-                                .frame(maxWidth: .infinity)
-                        }
-                        .buttonStyle(.bordered)
-                        .controlSize(.small)
-
-                        Link(destination: url) {
-                            Label(L10n.openInPixiv, systemImage: "safari")
-                                .frame(maxWidth: .infinity)
-                        }
-                        .buttonStyle(.bordered)
-                        .controlSize(.small)
-                    }
-                }
-
-                HStack(spacing: 10) {
                     Button {
                         store.prepareReaderWindow(for: artwork)
                         openWindow(id: "artwork-reader")
@@ -297,6 +236,62 @@ private struct ArtworkActionStrip: View {
                     .controlSize(.small)
 
                     Menu {
+                        Button {
+                            store.prepareReaderWindow(for: artwork)
+                            openWindow(id: "artwork-reader")
+                        } label: {
+                            Label(L10n.openReaderWindow, systemImage: "rectangle.inset.filled")
+                        }
+
+                        Divider()
+
+                        if let url = artwork.pixivURL {
+                            ShareLink(item: url) {
+                                Label(L10n.share, systemImage: "square.and.arrow.up")
+                            }
+
+                            Button {
+                                PasteboardWriter.copy(url.absoluteString)
+                                showActionMessage(L10n.copied)
+                            } label: {
+                                Label(L10n.copyLink, systemImage: "link")
+                            }
+                        }
+
+                        if let currentPageURL {
+                            ShareLink(item: currentPageURL) {
+                                Label(L10n.shareCurrentPage, systemImage: "photo")
+                            }
+
+                            Button {
+                                PasteboardWriter.copy(currentPageURL.absoluteString)
+                                showActionMessage(L10n.copied)
+                            } label: {
+                                Label(L10n.copyCurrentPageLink, systemImage: "link")
+                            }
+
+                            Button {
+                                store.enqueueDownloadPage(
+                                    artwork,
+                                    pageIndex: pageIndex,
+                                    preferOriginal: store.useOriginalImagesInDetail
+                                )
+                                showActionMessage(L10n.queuedCurrentPage)
+                            } label: {
+                                Label(L10n.downloadCurrentPage, systemImage: "arrow.down.circle")
+                            }
+                        }
+
+                        Divider()
+
+                        Button {
+                            copyArtworkSummary()
+                        } label: {
+                            Label(L10n.copyArtworkSummary, systemImage: "doc.text")
+                        }
+
+                        Divider()
+
                         Button(L10n.muteArtwork) {
                             store.requestDangerAction(AppDangerAction(kind: .muteArtwork(artwork)))
                         }
@@ -313,12 +308,13 @@ private struct ArtworkActionStrip: View {
                             }
                         }
                     } label: {
-                        Label(L10n.mute, systemImage: "eye.slash")
+                        Label(L10n.moreActions, systemImage: "ellipsis.circle")
                             .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.bordered)
                     .controlSize(.small)
                 }
+
             }
         }
     }

@@ -311,6 +311,9 @@ enum L10n {
     static var pixivRestrictedModeHint: String { text("Syncs Pixiv account restricted mode for adult content visibility across clients.") }
     static var searchFilters: String { text("Search Filters") }
     static var activeSearchFilters: String { text("Active Search Filters") }
+    static var filterSummary: String { text("Filter Summary") }
+    static var searchFiltersReset: String { text("Search filters reset") }
+    static var searchFiltersApplied: String { text("Search filters applied") }
     static var matchType: String { text("Match Type") }
     static var partialTagMatch: String { text("Partial tag match") }
     static var exactTagMatch: String { text("Exact tag match") }
