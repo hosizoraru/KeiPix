@@ -8,6 +8,7 @@
 "Spotlight" = "Pixivision";
 "No spotlight articles" = "暂无 Pixivision 文章";
 "Load More Spotlight Articles" = "加载更多 Pixivision 文章";
+"Loaded %d Spotlight articles" = "已加载 %d 篇 Pixivision 文章";
 "Open Article" = "打开文章";
 "Select an article" = "选择一篇文章";
 "Copied article link" = "已复制文章链接";

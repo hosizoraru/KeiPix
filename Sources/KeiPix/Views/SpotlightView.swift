@@ -67,7 +67,7 @@ struct SpotlightView: View {
         }
         .navigationTitle(L10n.spotlight)
         .toolbar {
-            if articles.isEmpty == false {
+            if store.session != nil {
                 ToolbarItem(placement: .status) {
                     spotlightCountBadge
                 }
@@ -157,6 +157,11 @@ struct SpotlightView: View {
             articles.append(contentsOf: response.articles)
             selectStableArticle()
             self.nextURL = response.nextURL
+            if response.articles.isEmpty {
+                showActionMessage(L10n.noMorePages)
+            } else {
+                showActionMessage(String(format: L10n.loadedSpotlightArticlesFormat, response.articles.count))
+            }
         } catch {
             errorMessage = error.localizedDescription
         }

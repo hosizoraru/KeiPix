@@ -11,6 +11,7 @@ enum L10n {
     static var spotlight: String { text("Spotlight") }
     static var noSpotlightArticles: String { text("No spotlight articles") }
     static var loadMoreSpotlightArticles: String { text("Load More Spotlight Articles") }
+    static var loadedSpotlightArticlesFormat: String { text("Loaded %d Spotlight articles") }
     static var openArticle: String { text("Open Article") }
     static var selectArticle: String { text("Select an article") }
     static var copiedArticleLink: String { text("Copied article link") }
