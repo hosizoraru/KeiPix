@@ -211,13 +211,58 @@ private struct TrendingTagArtworkImage: View {
     let url: URL?
     let imageLoaded: (CGFloat) -> Void
 
+    @State private var image: NSImage?
+    @State private var failed = false
+
     var body: some View {
-        RemoteImageView(url: url, contentMode: .fill) { image in
-            if let aspectRatio = ReaderPagePresentation.aspectRatio(from: image) {
-                imageLoaded(aspectRatio)
+        GeometryReader { proxy in
+            ZStack {
+                if let image {
+                    Image(nsImage: image)
+                        .resizable()
+                        .interpolation(.high)
+                        .scaledToFill()
+                        .frame(width: proxy.size.width + 2, height: proxy.size.height + 2)
+                        .clipped()
+                        .allowsHitTesting(false)
+                } else if failed {
+                    Image(systemName: "photo")
+                        .font(.title3)
+                        .foregroundStyle(.secondary)
+                } else {
+                    ProgressView()
+                        .controlSize(.small)
+                        .padding(8)
+                        .background(.ultraThinMaterial, in: Circle())
+                }
             }
+            .frame(width: proxy.size.width, height: proxy.size.height)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
+        .task(id: url) {
+            await load()
+        }
+    }
+
+    private func load() async {
+        guard let url else {
+            image = nil
+            failed = true
+            return
+        }
+
+        image = nil
+        failed = false
+
+        do {
+            let loadedImage = try await ImagePipeline.shared.image(for: url)
+            image = loadedImage
+            if let aspectRatio = ReaderPagePresentation.aspectRatio(from: loadedImage) {
+                imageLoaded(aspectRatio)
+            }
+        } catch {
+            failed = true
+        }
     }
 }
