@@ -423,6 +423,14 @@ final class KeiPixStore {
         }
     }
 
+    func enqueueDownloadPage(_ artwork: PixivArtwork, pageIndex: Int, preferOriginal: Bool = true) {
+        guard artwork.isUgoira == false else {
+            enqueueDownload(artwork, preferOriginal: preferOriginal)
+            return
+        }
+        downloads.enqueuePage(artwork, pageIndex: pageIndex, preferOriginal: preferOriginal)
+    }
+
     @discardableResult
     func enqueueDownloads(_ artworks: [PixivArtwork], limit: Int, preferOriginal: Bool = true) -> Int {
         let candidates = Array(artworks.prefix(max(limit, 0)))

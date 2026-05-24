@@ -184,8 +184,35 @@ private struct ArtworkActionStrip: View {
                                 Label(L10n.share, systemImage: "square.and.arrow.up")
                             }
 
+                            if let currentPageURL {
+                                ShareLink(item: currentPageURL) {
+                                    Label(L10n.shareCurrentPage, systemImage: "photo")
+                                }
+
+                                Button {
+                                    PasteboardWriter.copy(currentPageURL.absoluteString)
+                                    showActionMessage(L10n.copied)
+                                } label: {
+                                    Label(L10n.copyCurrentPageLink, systemImage: "link")
+                                }
+
+                                Button {
+                                    store.enqueueDownloadPage(
+                                        artwork,
+                                        pageIndex: pageIndex,
+                                        preferOriginal: store.useOriginalImagesInDetail
+                                    )
+                                    showActionMessage(L10n.queuedCurrentPage)
+                                } label: {
+                                    Label(L10n.downloadCurrentPage, systemImage: "arrow.down.circle")
+                                }
+
+                                Divider()
+                            }
+
                             Button {
                                 PasteboardWriter.copy(url.absoluteString)
+                                showActionMessage(L10n.copied)
                             } label: {
                                 Label(L10n.copyLink, systemImage: "link")
                             }
@@ -251,14 +278,22 @@ private struct ArtworkActionStrip: View {
 
     private func copyArtworkSummary() {
         PasteboardWriter.copy(artworkSummaryText)
-        actionMessage = L10n.copiedArtworkSummary
+        showActionMessage(L10n.copiedArtworkSummary)
+    }
+
+    private func showActionMessage(_ message: String) {
+        actionMessage = message
 
         Task {
             try? await Task.sleep(for: .seconds(2))
-            if actionMessage == L10n.copiedArtworkSummary {
+            if actionMessage == message {
                 actionMessage = nil
             }
         }
+    }
+
+    private var currentPageURL: URL? {
+        artwork.imageURL(at: pageIndex, preferOriginal: store.useOriginalImagesInDetail)
     }
 
     private var artworkSummaryText: String {

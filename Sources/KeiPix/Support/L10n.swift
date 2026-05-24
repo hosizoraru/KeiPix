@@ -76,6 +76,9 @@ enum L10n {
     static var openInPixiv: String { text("Open in Pixiv") }
     static var share: String { text("Share") }
     static var shareCurrentPage: String { text("Share Current Page") }
+    static var copyCurrentPageLink: String { text("Copy Current Page Link") }
+    static var downloadCurrentPage: String { text("Download Current Page") }
+    static var queuedCurrentPage: String { text("Queued Current Page") }
     static var copyLink: String { text("Copy Link") }
     static var copyArtworkSummary: String { text("Copy Artwork Summary") }
     static var copiedArtworkSummary: String { text("Copied Artwork Summary") }

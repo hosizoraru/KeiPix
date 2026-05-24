@@ -177,6 +177,8 @@ struct ArtworkDownloadItem: Identifiable, Codable, Sendable {
     var status: ArtworkDownloadStatus
     var folderPath: String?
     var sourceImageURLs: [URL]?
+    var sourcePageIndexes: [Int]? = nil
+    var sourceTotalPageCount: Int? = nil
     var downloadedFilePaths: [String]? = nil
     var errorMessage: String?
     let createdAt: Date

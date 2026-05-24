@@ -41,6 +41,7 @@ final class ArtworkDownloadStore {
         if let existingIndex = items.firstIndex(where: {
             $0.artworkID == artwork.id
                 && $0.resolvedArtifactKind == .imagePages
+                && $0.sourcePageIndexes == nil
                 && ($0.status == .queued || $0.status == .downloading)
         }) {
             items[existingIndex].updatedAt = Date()
@@ -77,10 +78,55 @@ final class ArtworkDownloadStore {
         startWorkerIfNeeded(preferOriginal: preferOriginal)
     }
 
+    func enqueuePage(_ artwork: PixivArtwork, pageIndex: Int, preferOriginal: Bool = true) {
+        let clampedPageIndex = min(max(pageIndex, 0), max(artwork.displayPageCount - 1, 0))
+        guard let sourceURL = artwork.imageURL(at: clampedPageIndex, preferOriginal: preferOriginal) else { return }
+
+        if let existingIndex = items.firstIndex(where: {
+            $0.artworkID == artwork.id
+                && $0.resolvedArtifactKind == .imagePages
+                && $0.sourcePageIndexes == [clampedPageIndex]
+                && ($0.status == .queued || $0.status == .downloading)
+        }) {
+            items[existingIndex].updatedAt = Date()
+            persistItems()
+            return
+        }
+
+        let item = ArtworkDownloadItem(
+            id: UUID(),
+            artworkID: artwork.id,
+            title: artwork.title,
+            creatorName: artwork.user.name,
+            creatorID: artwork.user.id,
+            tags: artwork.tags.map(\.name),
+            isAI: artwork.isAI,
+            isR18: artwork.isR18,
+            isR18G: artwork.isR18G,
+            artifactKind: .imagePages,
+            ugoiraFrameCount: nil,
+            ugoiraFrames: nil,
+            pageCount: 1,
+            completedPages: 0,
+            status: .queued,
+            folderPath: nil,
+            sourceImageURLs: [sourceURL],
+            sourcePageIndexes: [clampedPageIndex],
+            sourceTotalPageCount: artwork.displayPageCount,
+            downloadedFilePaths: nil,
+            errorMessage: nil,
+            createdAt: Date(),
+            updatedAt: Date()
+        )
+        items.insert(item, at: 0)
+        persistItems()
+        startWorkerIfNeeded(preferOriginal: preferOriginal)
+    }
+
     @discardableResult
     func enqueue(_ artworks: [PixivArtwork], limit: Int, preferOriginal: Bool = true) -> Int {
         let existingArtworkIDs = Set(items.filter {
-            $0.status != .failed && $0.resolvedArtifactKind == .imagePages
+            $0.status != .failed && $0.resolvedArtifactKind == .imagePages && $0.sourcePageIndexes == nil
         }.map(\.artworkID))
         let candidates = artworks.prefix(max(limit, 0)).filter { existingArtworkIDs.contains($0.id) == false }
         guard candidates.isEmpty == false else { return 0 }
@@ -457,13 +503,14 @@ final class ArtworkDownloadStore {
         try fileManager.createDirectory(at: root, withIntermediateDirectories: true)
         let template = DownloadNamingTemplate(rawValue: downloadNamingTemplate)
 
-        let totalPages = sourceURLs.count
+        let totalPages = item.sourceTotalPageCount ?? sourceURLs.count
         var lastFolder = root
         for (pageIndex, url) in sourceURLs.enumerated() {
             let data = try await ImagePipeline.shared.data(for: url)
+            let sourcePageIndex = item.sourcePageIndexes?[safe: pageIndex] ?? pageIndex
             let renderedPath = template.render(context: .init(
                 item: item,
-                pageIndex: pageIndex,
+                pageIndex: sourcePageIndex,
                 totalPages: totalPages,
                 sourceURL: url
             ))
