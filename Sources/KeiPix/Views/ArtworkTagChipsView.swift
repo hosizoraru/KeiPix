@@ -3,13 +3,24 @@ import SwiftUI
 struct ArtworkTagChipsView: View {
     let tags: [PixivTag]
     @Bindable var store: KeiPixStore
+    @State private var actionMessage: String?
 
     var body: some View {
-        FlowLayout(spacing: 8) {
-            ForEach(tags, id: \.self) { tag in
-                tagChip(tag)
+        VStack(alignment: .leading, spacing: 8) {
+            FlowLayout(spacing: 8) {
+                ForEach(tags, id: \.self) { tag in
+                    tagChip(tag)
+                }
+            }
+
+            if let actionMessage {
+                Text(actionMessage)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .textSelection(.enabled)
             }
         }
+        .animation(.snappy(duration: 0.18), value: actionMessage)
     }
 
     private func tagChip(_ tag: PixivTag) -> some View {
@@ -47,6 +58,7 @@ struct ArtworkTagChipsView: View {
 
                 Button {
                     PasteboardWriter.copy(url.absoluteString)
+                    showActionMessage(L10n.copied)
                 } label: {
                     Label(L10n.copyTagLink, systemImage: "link")
                 }
@@ -56,11 +68,13 @@ struct ArtworkTagChipsView: View {
 
             Button(L10n.copyTag) {
                 PasteboardWriter.copy(tag.name)
+                showActionMessage(String(format: L10n.copiedKeywordFormat, "#\(tag.name)"))
             }
 
             if let translatedName = translatedName(for: tag) {
                 Button(L10n.copyTranslatedTag) {
                     PasteboardWriter.copy(translatedName)
+                    showActionMessage(String(format: L10n.copiedKeywordFormat, translatedName))
                 }
             }
 
@@ -92,5 +106,15 @@ struct ArtworkTagChipsView: View {
     private func search(_ tag: PixivTag) {
         store.searchText = tag.name
         Task { await store.runSearch() }
+    }
+
+    private func showActionMessage(_ message: String) {
+        actionMessage = message
+        Task {
+            try? await Task.sleep(for: .seconds(2.5))
+            if actionMessage == message {
+                actionMessage = nil
+            }
+        }
     }
 }

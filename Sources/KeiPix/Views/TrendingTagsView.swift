@@ -7,6 +7,7 @@ struct TrendingTagsView: View {
     @State private var thumbnailAspectRatios: [String: CGFloat] = [:]
     @State private var isLoading = false
     @State private var errorMessage: String?
+    @State private var actionMessage: String?
 
     var body: some View {
         Group {
@@ -31,6 +32,9 @@ struct TrendingTagsView: View {
                                 search: { search(tag) },
                                 selectArtwork: { store.selectedArtwork = tag.artwork },
                                 mute: { store.requestDangerAction(AppDangerAction(kind: .muteTag(tag.pixivTag))) },
+                                copied: { copiedText in
+                                    showActionMessage(String(format: L10n.copiedKeywordFormat, copiedText))
+                                },
                                 imageLoaded: { aspectRatio in
                                     thumbnailAspectRatios[tag.id] = aspectRatio
                                 }
@@ -54,18 +58,31 @@ struct TrendingTagsView: View {
             }
         }
         .overlay(alignment: .bottom) {
-            if let errorMessage {
-                FloatingStatusBanner {
-                    Text(errorMessage)
-                        .font(.callout)
-                        .foregroundStyle(.red)
-                        .textSelection(.enabled)
+            VStack(spacing: 8) {
+                if let actionMessage {
+                    FloatingStatusBanner {
+                        Text(actionMessage)
+                            .font(.callout)
+                            .foregroundStyle(.secondary)
+                            .textSelection(.enabled)
+                    }
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
-                .padding(.horizontal, 18)
-                .padding(.bottom, 14)
-                .transition(.move(edge: .bottom).combined(with: .opacity))
+
+                if let errorMessage {
+                    FloatingStatusBanner {
+                        Text(errorMessage)
+                            .font(.callout)
+                            .foregroundStyle(.red)
+                            .textSelection(.enabled)
+                    }
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                }
             }
+            .padding(.horizontal, 18)
+            .padding(.bottom, 14)
         }
+        .animation(.snappy(duration: 0.18), value: actionMessage)
         .animation(.snappy(duration: 0.18), value: errorMessage)
         .task(id: store.routeRefreshGeneration) {
             await load()
@@ -103,6 +120,16 @@ struct TrendingTagsView: View {
         store.searchText = tag.name
         Task { await store.runSearch() }
     }
+
+    private func showActionMessage(_ message: String) {
+        actionMessage = message
+        Task {
+            try? await Task.sleep(for: .seconds(2.5))
+            if actionMessage == message {
+                actionMessage = nil
+            }
+        }
+    }
 }
 
 private struct TrendingTagCard: View {
@@ -112,6 +139,7 @@ private struct TrendingTagCard: View {
     let search: () -> Void
     let selectArtwork: () -> Void
     let mute: () -> Void
+    let copied: (String) -> Void
     let imageLoaded: (CGFloat) -> Void
 
     @State private var isHovering = false
@@ -165,11 +193,13 @@ private struct TrendingTagCard: View {
 
             Button(L10n.copyTag) {
                 PasteboardWriter.copy(tag.name)
+                copied("#\(tag.name)")
             }
 
             if let translatedName {
                 Button(L10n.copyTranslatedTag) {
                     PasteboardWriter.copy(translatedName)
+                    copied(translatedName)
                 }
             }
 
