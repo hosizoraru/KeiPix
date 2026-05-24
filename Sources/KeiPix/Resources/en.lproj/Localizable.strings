@@ -519,6 +519,8 @@
 "This adds the local muted tags and creators to your Pixiv account." = "This adds the local muted tags and creators to your Pixiv account.";
 "Export Muted Content" = "Export Muted Content";
 "Import Muted Content" = "Import Muted Content";
+"Import muted content from file?" = "Import muted content from file?";
+"This replaces local muted content with the selected file. You can undo the local changes after importing." = "This replaces local muted content with the selected file. You can undo the local changes after importing.";
 "Synced" = "Synced";
 "Uploaded" = "Uploaded";
 "Exported" = "Exported";

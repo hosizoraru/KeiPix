@@ -519,6 +519,8 @@
 "This adds the local muted tags and creators to your Pixiv account." = "这会把本地屏蔽标签和创作者添加到你的 Pixiv 账号。";
 "Export Muted Content" = "导出屏蔽内容";
 "Import Muted Content" = "导入屏蔽内容";
+"Import muted content from file?" = "从文件导入屏蔽内容？";
+"This replaces local muted content with the selected file. You can undo the local changes after importing." = "这会用所选文件替换本地屏蔽内容。导入后的本地改动可以撤销。";
 "Synced" = "已同步";
 "Uploaded" = "已上传";
 "Exported" = "已导出";

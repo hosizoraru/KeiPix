@@ -392,37 +392,38 @@ private struct SavedSearchPresetSection: View {
                             }
                             .buttonStyle(.plain)
 
-                            if let url = PixivWebURLBuilder.searchURL(keyword: preset.keyword, options: preset.options) {
-                                Link(destination: url) {
-                                    Label(L10n.openPixivWebSearch, systemImage: "safari")
+                            Menu {
+                                if let url = PixivWebURLBuilder.searchURL(keyword: preset.keyword, options: preset.options) {
+                                    Link(destination: url) {
+                                        Label(L10n.openPixivWebSearch, systemImage: "safari")
+                                    }
                                 }
-                                .labelStyle(.iconOnly)
-                                .buttonStyle(.bordered)
-                            }
 
-                            Button {
-                                copyAction(preset)
+                                Button {
+                                    copyAction(preset)
+                                } label: {
+                                    Label(L10n.copyKeyword, systemImage: "doc.on.doc")
+                                }
+
+                                Button {
+                                    copyPixivWebAction(preset)
+                                } label: {
+                                    Label(L10n.copyPixivWebSearchLink, systemImage: "link")
+                                }
+
+                                Divider()
+
+                                Button(role: .destructive) {
+                                    removeAction(preset)
+                                } label: {
+                                    Label(L10n.removeSearchPreset, systemImage: "trash")
+                                }
                             } label: {
-                                Label(L10n.copyKeyword, systemImage: "doc.on.doc")
+                                Label(L10n.moreActions, systemImage: "ellipsis.circle")
                             }
                             .labelStyle(.iconOnly)
                             .buttonStyle(.bordered)
-
-                            Button {
-                                copyPixivWebAction(preset)
-                            } label: {
-                                Label(L10n.copyPixivWebSearchLink, systemImage: "link")
-                            }
-                            .labelStyle(.iconOnly)
-                            .buttonStyle(.bordered)
-
-                            Button(role: .destructive) {
-                                removeAction(preset)
-                            } label: {
-                                Label(L10n.removeSearchPreset, systemImage: "trash")
-                            }
-                            .labelStyle(.iconOnly)
-                            .buttonStyle(.bordered)
+                            .help(L10n.moreActions)
                         }
                         .padding(12)
                         .keiPanel(14)

@@ -9,6 +9,7 @@ struct MutedContentView: View {
     @State private var statusMessage: String?
     @State private var statusMessageIsError = false
     @State private var isClearConfirmationPresented = false
+    @State private var isImportConfirmationPresented = false
     @State private var isSyncConfirmationPresented = false
     @State private var isUploadConfirmationPresented = false
     @State private var pendingRemoval: MutedContentRemovalAction?
@@ -82,6 +83,18 @@ struct MutedContentView: View {
             Button(L10n.cancel, role: .cancel) {}
         } message: {
             Text(L10n.uploadMutedContentConfirmationMessage)
+        }
+        .confirmationDialog(
+            L10n.importMutedContentConfirmation,
+            isPresented: $isImportConfirmationPresented,
+            titleVisibility: .visible
+        ) {
+            Button(L10n.importMutedContent) {
+                importLocalMutedContent()
+            }
+            Button(L10n.cancel, role: .cancel) {}
+        } message: {
+            Text(L10n.importMutedContentConfirmationMessage)
         }
         .confirmationDialog(
             L10n.syncMutedContentConfirmation,
@@ -161,7 +174,7 @@ struct MutedContentView: View {
                 .disabled(isSyncing || totalCount == 0)
 
                 Button {
-                    importLocalMutedContent()
+                    isImportConfirmationPresented = true
                 } label: {
                     Label(L10n.importMutedContent, systemImage: "square.and.arrow.down")
                 }
