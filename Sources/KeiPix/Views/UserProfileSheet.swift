@@ -185,7 +185,7 @@ struct UserProfileSheet: View {
                 ProfileMetric(title: L10n.illustrations, value: profile?.totalIllusts ?? 0, systemImage: "photo")
                 ProfileMetric(title: L10n.manga, value: profile?.totalManga ?? 0, systemImage: "book.pages")
                 ProfileMetric(title: L10n.publicSaves, value: profile?.totalIllustBookmarksPublic ?? 0, systemImage: "bookmark")
-                ProfileMetric(title: L10n.followers, value: profile?.totalFollowUsers ?? 0, systemImage: "person.2")
+                ProfileMetric(title: L10n.followingCreators, value: profile?.totalFollowUsers ?? 0, systemImage: "person.2")
             }
         }
         .padding(14)
@@ -319,21 +319,21 @@ struct UserProfileSheet: View {
                 }
 
                 ProfileCollectionShortcutButton(
-                    title: L10n.followers,
-                    value: (profile?.totalFollowUsers ?? 0).formatted(),
-                    detail: L10n.openCreatorNetwork,
-                    systemImage: "person.2"
-                ) {
-                    relationshipListMode = .userFollowers(detail?.user ?? user)
-                }
-
-                ProfileCollectionShortcutButton(
                     title: L10n.followingCreators,
-                    value: L10n.open,
+                    value: (profile?.totalFollowUsers ?? 0).formatted(),
                     detail: L10n.openCreatorNetwork,
                     systemImage: "person.2.crop.square.stack"
                 ) {
                     relationshipListMode = .userFollowing(detail?.user ?? user)
+                }
+
+                ProfileCollectionShortcutButton(
+                    title: L10n.followers,
+                    value: L10n.open,
+                    detail: L10n.openCreatorNetwork,
+                    systemImage: "person.2"
+                ) {
+                    relationshipListMode = .userFollowers(detail?.user ?? user)
                 }
 
                 ProfileCollectionShortcutButton(
