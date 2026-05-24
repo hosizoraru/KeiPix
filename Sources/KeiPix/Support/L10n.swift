@@ -358,6 +358,8 @@ enum L10n {
     static var jumpToPage: String { text("Jump to Page") }
     static var resetZoom: String { text("Reset Zoom") }
     static var toggleZoom: String { text("Toggle Zoom") }
+    static var toggleReadingMode: String { text("Toggle Reading Mode") }
+    static var revealCurrentPage: String { text("Reveal Current Page") }
     static var aiGenerated: String { text("AI generated") }
     static var r18: String { text("R-18") }
     static var r18g: String { text("R-18G") }

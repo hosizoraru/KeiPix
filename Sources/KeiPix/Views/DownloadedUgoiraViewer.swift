@@ -47,6 +47,23 @@ struct DownloadedUgoiraViewer: View {
                 .background(.bar)
         }
         .frame(minWidth: 760, minHeight: 560)
+        .toolbar {
+            ToolbarItemGroup {
+                Button {
+                    togglePlayback()
+                } label: {
+                    Label(isPlaying ? L10n.pauseUgoira : L10n.playUgoira, systemImage: isPlaying ? "pause.fill" : "play.fill")
+                }
+                .keyboardShortcut(.space, modifiers: [])
+                .disabled(animation == nil || isLoading)
+
+                Button {
+                    revealZip()
+                } label: {
+                    Label(L10n.revealInFinder, systemImage: "folder")
+                }
+            }
+        }
         .task(id: zipURL) {
             await load()
         }
@@ -122,6 +139,38 @@ struct DownloadedUgoiraViewer: View {
             }
 
             Spacer()
+
+            Button {
+                revealZip()
+            } label: {
+                Label(L10n.revealInFinder, systemImage: "folder")
+            }
+            .buttonStyle(.bordered)
+
+            Menu {
+                if let pixivURL = item.pixivURL {
+                    Button {
+                        NSWorkspace.shared.open(pixivURL)
+                    } label: {
+                        Label(L10n.openInPixiv, systemImage: "safari")
+                    }
+
+                    Button {
+                        PasteboardWriter.copy(pixivURL.absoluteString)
+                    } label: {
+                        Label(L10n.copyLink, systemImage: "link")
+                    }
+                }
+
+                Button {
+                    revealZip()
+                } label: {
+                    Label(L10n.revealInFinder, systemImage: "folder")
+                }
+            } label: {
+                Label(L10n.moreActions, systemImage: "ellipsis.circle")
+            }
+            .buttonStyle(.bordered)
 
             Button {
                 Task { await exportGIF() }
@@ -207,5 +256,9 @@ struct DownloadedUgoiraViewer: View {
         playbackTask?.cancel()
         playbackTask = nil
         isPlaying = false
+    }
+
+    private func revealZip() {
+        NSWorkspace.shared.activateFileViewerSelecting([zipURL])
     }
 }

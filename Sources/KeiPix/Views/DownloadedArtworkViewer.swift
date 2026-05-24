@@ -33,6 +33,32 @@ struct DownloadedArtworkViewer: View {
             }
         }
         .frame(minWidth: 900, minHeight: 680)
+        .toolbar {
+            ToolbarItemGroup {
+                Button {
+                    previousPage()
+                } label: {
+                    Label(L10n.previousPage, systemImage: "chevron.left")
+                }
+                .keyboardShortcut(.leftArrow, modifiers: [])
+                .disabled(pageIndex == 0)
+
+                Button {
+                    nextPage()
+                } label: {
+                    Label(L10n.nextPage, systemImage: "chevron.right")
+                }
+                .keyboardShortcut(.rightArrow, modifiers: [])
+                .disabled(pageIndex >= imageURLs.count - 1)
+
+                Button {
+                    isContinuous.toggle()
+                } label: {
+                    Label(L10n.toggleReadingMode, systemImage: "rectangle.split.1x2")
+                }
+                .keyboardShortcut(.space, modifiers: [])
+            }
+        }
     }
 
     private var header: some View {
@@ -54,6 +80,42 @@ struct DownloadedArtworkViewer: View {
             }
             .pickerStyle(.segmented)
             .frame(width: 260)
+
+            Button {
+                revealCurrentPage()
+            } label: {
+                Label(L10n.revealCurrentPage, systemImage: "folder")
+            }
+            .labelStyle(.iconOnly)
+            .buttonStyle(.bordered)
+            .help(L10n.revealCurrentPage)
+
+            Menu {
+                if let pixivURL = item.pixivURL {
+                    Button {
+                        NSWorkspace.shared.open(pixivURL)
+                    } label: {
+                        Label(L10n.openInPixiv, systemImage: "safari")
+                    }
+
+                    Button {
+                        PasteboardWriter.copy(pixivURL.absoluteString)
+                    } label: {
+                        Label(L10n.copyLink, systemImage: "link")
+                    }
+                }
+
+                Button {
+                    revealCurrentPage()
+                } label: {
+                    Label(L10n.revealCurrentPage, systemImage: "folder")
+                }
+            } label: {
+                Label(L10n.moreActions, systemImage: "ellipsis.circle")
+            }
+            .labelStyle(.iconOnly)
+            .buttonStyle(.bordered)
+            .help(L10n.moreActions)
 
             ShareLink(item: currentImageURL) {
                 Label(L10n.shareCurrentPage, systemImage: "square.and.arrow.up")
@@ -151,7 +213,7 @@ struct DownloadedArtworkViewer: View {
 
             HStack(spacing: 12) {
                 Button {
-                    pageIndex = max(pageIndex - 1, 0)
+                    previousPage()
                 } label: {
                     Label(L10n.previousPage, systemImage: "chevron.left")
                 }
@@ -163,7 +225,7 @@ struct DownloadedArtworkViewer: View {
                     .frame(minWidth: 120)
 
                 Button {
-                    pageIndex = min(pageIndex + 1, imageURLs.count - 1)
+                    nextPage()
                 } label: {
                     Label(L10n.nextPage, systemImage: "chevron.right")
                 }
@@ -171,6 +233,18 @@ struct DownloadedArtworkViewer: View {
             }
             .padding(.bottom, 16)
         }
+    }
+
+    private func previousPage() {
+        pageIndex = max(pageIndex - 1, 0)
+    }
+
+    private func nextPage() {
+        pageIndex = min(pageIndex + 1, imageURLs.count - 1)
+    }
+
+    private func revealCurrentPage() {
+        NSWorkspace.shared.activateFileViewerSelecting([currentImageURL])
     }
 }
 

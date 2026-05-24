@@ -354,6 +354,8 @@
 "Jump to Page" = "跳转页码";
 "Reset Zoom" = "重置缩放";
 "Toggle Zoom" = "切换缩放";
+"Toggle Reading Mode" = "切换阅读模式";
+"Reveal Current Page" = "显示当前页";
 "Page %d of %d" = "第 %d / %d 页";
 "AI generated" = "AI 生成";
 "R-18" = "R-18";
