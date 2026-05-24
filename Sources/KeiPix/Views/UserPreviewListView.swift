@@ -480,6 +480,10 @@ struct UserPreviewListView: View {
                 Text(headerSubtitle)
                     .font(.caption)
                     .foregroundStyle(.secondary)
+
+                if visiblePreviews.isEmpty == false {
+                    CreatorListSummaryStrip(previews: visiblePreviews)
+                }
             }
 
             Spacer()
