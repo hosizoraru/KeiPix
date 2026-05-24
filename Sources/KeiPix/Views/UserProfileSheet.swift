@@ -19,6 +19,7 @@ struct UserProfileSheet: View {
     @State private var selectedRelatedUser: PixivUser?
     @State private var relationshipListMode: UserPreviewListMode?
     @State private var pendingDangerAction: AppDangerAction?
+    @State private var feedbackRequest: FeedbackReportRequest?
 
     init(user: PixivUser, store: KeiPixStore) {
         self.user = user
@@ -157,6 +158,13 @@ struct UserProfileSheet: View {
             UserPreviewListView(store: store, mode: mode)
                 .frame(width: 920, height: 680)
         }
+        .sheet(item: $feedbackRequest) { request in
+            FeedbackReportSheet(request: request) {
+                pendingDangerAction = AppDangerAction(kind: .muteCreator(currentUser))
+            } onComplete: { message in
+                showStatus(message)
+            }
+        }
         .overlay(alignment: .bottom) {
             VStack(spacing: 8) {
                 if let statusMessage {
@@ -292,6 +300,14 @@ struct UserProfileSheet: View {
                 Button(L10n.copyLink) {
                     PasteboardWriter.copy(url.absoluteString)
                     showStatus(L10n.copied)
+                }
+
+                Divider()
+
+                Button {
+                    feedbackRequest = .creator(currentUser)
+                } label: {
+                    Label(L10n.feedbackAndMute, systemImage: "exclamationmark.bubble")
                 }
             } label: {
                 Label(L10n.moreActions, systemImage: "ellipsis.circle")
