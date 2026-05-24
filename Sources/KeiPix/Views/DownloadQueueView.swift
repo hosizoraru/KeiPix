@@ -121,7 +121,10 @@ struct DownloadQueueView: View {
     }
 
     private var downloadStatusText: String {
-        "\(store.downloads.filteredItems.count.formatted()) · \(store.downloads.filteredDownloadedSizeText)"
+        if store.downloads.isPaused {
+            return "\(L10n.downloadsPaused) · \(store.downloads.filteredItems.count.formatted())"
+        }
+        return "\(store.downloads.filteredItems.count.formatted()) · \(store.downloads.filteredDownloadedSizeText)"
     }
 
     private var downloadStatusHelp: String {
@@ -289,6 +292,31 @@ private struct DownloadQueueHeader: View {
             .labelStyle(.iconOnly)
             .buttonStyle(.bordered)
             .help(downloads.downloadDirectoryPath)
+
+            Button {
+                if downloads.isPaused {
+                    if downloads.resumeQueue() {
+                        showActionMessage(L10n.downloadsResumed)
+                    } else {
+                        showActionMessage(L10n.noDownloadRecordsChanged)
+                    }
+                } else {
+                    if downloads.pauseQueue() {
+                        showActionMessage(L10n.downloadsPaused)
+                    } else {
+                        showActionMessage(L10n.noDownloadRecordsChanged)
+                    }
+                }
+            } label: {
+                Label(
+                    downloads.isPaused ? L10n.resumeDownloads : L10n.pauseDownloads,
+                    systemImage: downloads.isPaused ? "play.circle" : "pause.circle"
+                )
+            }
+            .labelStyle(.iconOnly)
+            .buttonStyle(.bordered)
+            .disabled(downloads.isPaused ? downloads.hasQueuedItems == false : downloads.activeCount == 0)
+            .help(downloads.isPaused ? L10n.resumeDownloads : L10n.pauseDownloads)
 
             HStack(spacing: 6) {
                 TextField(L10n.searchDownloads, text: downloadSearchBinding)

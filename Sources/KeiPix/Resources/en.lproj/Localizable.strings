@@ -173,6 +173,7 @@
 "No download links to copy" = "No download links to copy";
 "Reveal in Finder" = "Reveal in Finder";
 "Open Downloaded Artwork" = "Open Downloaded Artwork";
+"Reveal Downloaded Artwork" = "Reveal Downloaded Artwork";
 "Delete Download" = "Delete Download";
 "Remove Download Record" = "Remove Download Record";
 "No downloads yet" = "No downloads yet";
@@ -184,6 +185,13 @@
 "Maximum downloads" = "Maximum downloads";
 "Add to Download Queue" = "Add to Download Queue";
 "Queued %d downloads" = "Queued %d downloads";
+"Pause Downloads" = "Pause Downloads";
+"Resume Downloads" = "Resume Downloads";
+"Downloads Paused" = "Downloads Paused";
+"Downloads Resumed" = "Downloads Resumed";
+"Downloaded Locally" = "Downloaded Locally";
+"In Download Queue" = "In Download Queue";
+"Download Failed" = "Download Failed";
 "Download Filter" = "Download Filter";
 "Search downloads" = "Search downloads";
 "Sort Downloads" = "Sort Downloads";

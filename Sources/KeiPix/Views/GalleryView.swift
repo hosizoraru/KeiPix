@@ -152,7 +152,8 @@ private struct GalleryContentGrid: View {
             artwork: artwork,
             isSelected: store.selectedArtwork?.id == artwork.id,
             isCompact: store.compactArtworkCards,
-            showContentBadges: store.showContentBadges
+            showContentBadges: store.showContentBadges,
+            downloadState: store.downloads.downloadState(for: artwork.id)
         ) {
             store.selectedArtwork = artwork
         }
@@ -233,6 +234,7 @@ private struct MasonryArtworkGrid: View {
                     isSelected: store.selectedArtwork?.id == artwork.id,
                     isCompact: false,
                     showContentBadges: store.showContentBadges,
+                    downloadState: store.downloads.downloadState(for: artwork.id),
                     displayStyle: presentation.cardStyle,
                     fillsAvailableHeight: true
                 ) {

@@ -5,6 +5,7 @@ struct ArtworkCardView: View {
     let isSelected: Bool
     let isCompact: Bool
     var showContentBadges = true
+    var downloadState: ArtworkDownloadArtworkState = .none
     var displayStyle: ArtworkCardDisplayStyle = .regular
     var preferredHeight: CGFloat? = nil
     var fillsAvailableHeight = false
@@ -54,6 +55,12 @@ struct ArtworkCardView: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             }
 
+            if downloadState != .none {
+                ArtworkDownloadStateBadge(state: downloadState)
+                    .padding(8)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
+            }
+
             VStack(alignment: .leading, spacing: 5) {
                 HStack(alignment: .firstTextBaseline, spacing: 6) {
                     Text(artwork.title)
@@ -92,5 +99,35 @@ struct ArtworkCardView: View {
 
     private var resolvedDisplayStyle: ArtworkCardDisplayStyle {
         isCompact ? .compact : displayStyle
+    }
+}
+
+private struct ArtworkDownloadStateBadge: View {
+    let state: ArtworkDownloadArtworkState
+
+    var body: some View {
+        Label(state.shortTitle, systemImage: state.systemImage)
+            .font(.caption2.weight(.bold))
+            .labelStyle(.titleAndIcon)
+            .padding(.horizontal, 7)
+            .padding(.vertical, 4)
+            .foregroundStyle(.white)
+            .background(tint.opacity(0.78), in: Capsule())
+            .help(state.title)
+    }
+
+    private var tint: Color {
+        switch state {
+        case .none:
+            .secondary
+        case .queued:
+            .secondary
+        case .downloading:
+            .blue
+        case .downloaded:
+            .green
+        case .failed:
+            .orange
+        }
     }
 }

@@ -200,6 +200,10 @@ private struct ArtworkActionStrip: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
 
+                if downloadState != .none {
+                    DownloadStateSummary(state: downloadState)
+                }
+
                 HStack(spacing: 10) {
                     Button {
                         isBookmarkEditorPresented = true
@@ -216,10 +220,15 @@ private struct ArtworkActionStrip: View {
                     }
 
                     Button {
-                        store.enqueueDownload(artwork)
-                        showActionMessage(String(format: L10n.queuedDownloadsFormat, 1))
+                        if downloadState == .downloaded {
+                            store.prepareReaderWindow(for: artwork)
+                            openWindow(id: "artwork-reader")
+                        } else {
+                            store.enqueueDownload(artwork)
+                            showActionMessage(String(format: L10n.queuedDownloadsFormat, 1))
+                        }
                     } label: {
-                        Label(L10n.download, systemImage: "arrow.down.circle")
+                        Label(downloadPrimaryTitle, systemImage: downloadPrimarySystemImage)
                             .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.bordered)
@@ -292,6 +301,15 @@ private struct ArtworkActionStrip: View {
                             }
                         }
 
+                        if let downloadedItem {
+                            Button {
+                                _ = store.downloads.reveal(downloadedItem)
+                                showActionMessage(L10n.revealedDownloadInFinder)
+                            } label: {
+                                Label(L10n.revealDownloadedArtwork, systemImage: "folder")
+                            }
+                        }
+
                         Divider()
 
                         Button {
@@ -353,6 +371,22 @@ private struct ArtworkActionStrip: View {
         store.downloads.downloadedImageURL(artworkID: artwork.id, pageIndex: pageIndex)
     }
 
+    private var downloadedItem: ArtworkDownloadItem? {
+        store.downloads.completedDownloadItem(for: artwork.id)
+    }
+
+    private var downloadState: ArtworkDownloadArtworkState {
+        store.downloads.downloadState(for: artwork.id)
+    }
+
+    private var downloadPrimaryTitle: String {
+        downloadState == .downloaded ? L10n.openDownloadedArtwork : L10n.download
+    }
+
+    private var downloadPrimarySystemImage: String {
+        downloadState == .downloaded ? "book" : "arrow.down.circle"
+    }
+
     private var sharePageURL: URL? {
         currentLocalPageURL ?? currentPageURL
     }
@@ -377,6 +411,34 @@ private struct ArtworkActionStrip: View {
         ]
         .compactMap { $0 }
         .joined(separator: "\n")
+    }
+}
+
+private struct DownloadStateSummary: View {
+    let state: ArtworkDownloadArtworkState
+
+    var body: some View {
+        Label(state.title, systemImage: state.systemImage)
+            .font(.caption.weight(.semibold))
+            .foregroundStyle(tint)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .lineLimit(1)
+            .help(state.title)
+    }
+
+    private var tint: Color {
+        switch state {
+        case .none:
+            .secondary
+        case .queued:
+            .secondary
+        case .downloading:
+            .blue
+        case .downloaded:
+            .green
+        case .failed:
+            .orange
+        }
     }
 }
 

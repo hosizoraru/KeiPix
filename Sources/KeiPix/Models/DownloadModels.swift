@@ -20,6 +20,59 @@ enum ArtworkDownloadStatus: String, Codable, Sendable {
     }
 }
 
+enum ArtworkDownloadArtworkState: String, Sendable {
+    case none
+    case queued
+    case downloading
+    case downloaded
+    case failed
+
+    var title: String {
+        switch self {
+        case .none:
+            ""
+        case .queued:
+            L10n.inDownloadQueue
+        case .downloading:
+            L10n.downloading
+        case .downloaded:
+            L10n.downloadedLocally
+        case .failed:
+            L10n.downloadFailed
+        }
+    }
+
+    var shortTitle: String {
+        switch self {
+        case .none:
+            ""
+        case .queued:
+            L10n.queued
+        case .downloading:
+            L10n.downloading
+        case .downloaded:
+            L10n.downloaded
+        case .failed:
+            L10n.failed
+        }
+    }
+
+    var systemImage: String {
+        switch self {
+        case .none:
+            ""
+        case .queued:
+            "clock"
+        case .downloading:
+            "arrow.down.circle"
+        case .downloaded:
+            "checkmark.circle.fill"
+        case .failed:
+            "exclamationmark.triangle.fill"
+        }
+    }
+}
+
 enum ArtworkDownloadArtifactKind: String, Codable, Sendable {
     case imagePages
     case ugoiraZip

@@ -168,6 +168,7 @@ enum L10n {
     static var noDownloadLinksToCopy: String { text("No download links to copy") }
     static var revealInFinder: String { text("Reveal in Finder") }
     static var openDownloadedArtwork: String { text("Open Downloaded Artwork") }
+    static var revealDownloadedArtwork: String { text("Reveal Downloaded Artwork") }
     static var deleteDownload: String { text("Remove Download Record") }
     static var noDownloadsTitle: String { text("No downloads yet") }
     static var noDownloadsSubtitle: String { text("Download artworks from the detail view or artwork context menus.") }
@@ -178,6 +179,13 @@ enum L10n {
     static var maximumDownloads: String { text("Maximum downloads") }
     static var addToDownloadQueue: String { text("Add to Download Queue") }
     static var queuedDownloadsFormat: String { text("Queued %d downloads") }
+    static var pauseDownloads: String { text("Pause Downloads") }
+    static var resumeDownloads: String { text("Resume Downloads") }
+    static var downloadsPaused: String { text("Downloads Paused") }
+    static var downloadsResumed: String { text("Downloads Resumed") }
+    static var downloadedLocally: String { text("Downloaded Locally") }
+    static var inDownloadQueue: String { text("In Download Queue") }
+    static var downloadFailed: String { text("Download Failed") }
     static var downloadFilter: String { text("Download Filter") }
     static var searchDownloads: String { text("Search downloads") }
     static var sortDownloads: String { text("Sort Downloads") }

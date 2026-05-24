@@ -173,6 +173,7 @@
 "No download links to copy" = "没有可复制的下载链接";
 "Reveal in Finder" = "在 Finder 中显示";
 "Open Downloaded Artwork" = "打开已下载作品";
+"Reveal Downloaded Artwork" = "显示已下载作品";
 "Delete Download" = "删除下载";
 "Remove Download Record" = "移除下载记录";
 "No downloads yet" = "暂无下载";
@@ -184,6 +185,13 @@
 "Maximum downloads" = "最大下载数";
 "Add to Download Queue" = "加入下载队列";
 "Queued %d downloads" = "已加入 %d 个下载";
+"Pause Downloads" = "暂停下载";
+"Resume Downloads" = "继续下载";
+"Downloads Paused" = "下载已暂停";
+"Downloads Resumed" = "下载已继续";
+"Downloaded Locally" = "已本地下载";
+"In Download Queue" = "已在下载队列";
+"Download Failed" = "下载失败";
 "Download Filter" = "下载筛选";
 "Search downloads" = "搜索下载";
 "Sort Downloads" = "下载排序";

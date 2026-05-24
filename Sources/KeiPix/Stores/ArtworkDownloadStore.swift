@@ -12,6 +12,7 @@ final class ArtworkDownloadStore {
     var downloadQueueFilter: DownloadQueueFilter
     var downloadQueueSort: DownloadQueueSort
     var downloadSearchText = ""
+    var isPaused: Bool
 
     private let fileManager = FileManager.default
     private var workerTask: Task<Void, Never>?
@@ -25,16 +26,93 @@ final class ArtworkDownloadStore {
             .flatMap(DownloadQueueFilter.init(rawValue:)) ?? .all
         downloadQueueSort = UserDefaults.standard.string(forKey: "downloadQueueSort")
             .flatMap(DownloadQueueSort.init(rawValue:)) ?? .newest
+        isPaused = UserDefaults.standard.bool(forKey: "downloadQueuePaused")
         items = ArtworkDownloadStore.loadItems()
         var restoredInterruptedItems = false
-        for index in items.indices where items[index].status == .downloading || items[index].status == .queued {
-            items[index].status = .failed
-            items[index].errorMessage = L10n.downloadInterrupted
-            restoredInterruptedItems = true
+        for index in items.indices {
+            var itemChanged = false
+            if items[index].status == .downloading {
+                items[index].status = .queued
+                items[index].errorMessage = isPaused ? nil : L10n.downloadInterrupted
+                itemChanged = true
+            }
+
+            if items[index].status == .queued, isPaused == false {
+                items[index].errorMessage = nil
+                itemChanged = true
+            }
+
+            if itemChanged {
+                items[index].updatedAt = Date()
+                restoredInterruptedItems = true
+            }
         }
         if restoredInterruptedItems {
             persistItems()
         }
+    }
+
+    @discardableResult
+    func pauseQueue() -> Bool {
+        guard isPaused == false, activeCount > 0 || isDownloading else { return false }
+        isPaused = true
+        UserDefaults.standard.set(true, forKey: "downloadQueuePaused")
+
+        var changedItems = false
+        for index in items.indices where items[index].status == .downloading {
+            items[index].status = .queued
+            items[index].errorMessage = nil
+            items[index].updatedAt = Date()
+            changedItems = true
+        }
+        if changedItems {
+            persistItems()
+        }
+
+        workerTask?.cancel()
+        return true
+    }
+
+    @discardableResult
+    func resumeQueue(preferOriginal: Bool = true) -> Bool {
+        let hadQueuedItems = items.contains { $0.status == .queued }
+        guard isPaused || hadQueuedItems else { return false }
+        isPaused = false
+        UserDefaults.standard.set(false, forKey: "downloadQueuePaused")
+        startWorkerIfNeeded(preferOriginal: preferOriginal)
+        return hadQueuedItems
+    }
+
+    var hasQueuedItems: Bool {
+        items.contains { $0.status == .queued }
+    }
+
+    func downloadState(for artworkID: Int) -> ArtworkDownloadArtworkState {
+        let matches = items.filter { $0.artworkID == artworkID }
+        guard matches.isEmpty == false else { return .none }
+
+        if matches.contains(where: { $0.status == .downloading }) {
+            return .downloading
+        }
+        if matches.contains(where: { $0.status == .queued }) {
+            return .queued
+        }
+        if matches.contains(where: { $0.status == .completed && hasReadableDownload(for: $0) }) {
+            return .downloaded
+        }
+        if matches.contains(where: { $0.status == .failed }) {
+            return .failed
+        }
+        return .none
+    }
+
+    func completedDownloadItem(for artworkID: Int) -> ArtworkDownloadItem? {
+        items
+            .filter { $0.artworkID == artworkID && $0.status == .completed && hasReadableDownload(for: $0) }
+            .sorted { first, second in
+                first.updatedAt > second.updatedAt
+            }
+            .first
     }
 
     func enqueue(_ artwork: PixivArtwork, preferOriginal: Bool = true) {
@@ -536,6 +614,8 @@ final class ArtworkDownloadStore {
     }
 
     private func startWorkerIfNeeded(preferOriginal: Bool) {
+        guard isPaused == false else { return }
+        guard items.contains(where: { $0.status == .queued }) else { return }
         guard workerTask == nil else { return }
         workerTask = Task { [weak self] in
             await self?.drainQueue(preferOriginal: preferOriginal)
@@ -543,6 +623,7 @@ final class ArtworkDownloadStore {
     }
 
     private func drainQueue(preferOriginal: Bool) async {
+        guard isPaused == false else { return }
         guard isDownloading == false else { return }
         isDownloading = true
         defer {
@@ -550,7 +631,9 @@ final class ArtworkDownloadStore {
             workerTask = nil
         }
 
-        while let index = items.firstIndex(where: { $0.status == .queued }) {
+        while isPaused == false,
+              Task.isCancelled == false,
+              let index = items.firstIndex(where: { $0.status == .queued }) {
             var item = items[index]
             guard let sourceURLs = item.sourceImageURLs, sourceURLs.isEmpty == false else {
                 markFailed(itemID: item.id, error: ArtworkDownloadError.missingSourceURLs)
@@ -565,6 +648,8 @@ final class ArtworkDownloadStore {
             do {
                 let folder = try await download(item, sourceURLs: sourceURLs)
                 markCompleted(itemID: item.id, folder: folder)
+            } catch is CancellationError {
+                markQueued(itemID: item.id)
             } catch {
                 markFailed(itemID: item.id, error: error)
             }
@@ -579,7 +664,9 @@ final class ArtworkDownloadStore {
         let totalPages = item.sourceTotalPageCount ?? sourceURLs.count
         var lastFolder = root
         for (pageIndex, url) in sourceURLs.enumerated() {
+            try Task.checkCancellation()
             let data = try await ImagePipeline.shared.data(for: url)
+            try Task.checkCancellation()
             let sourcePageIndex = item.sourcePageIndexes?[safe: pageIndex] ?? pageIndex
             let renderedPath = template.render(context: .init(
                 item: item,
@@ -640,6 +727,14 @@ final class ArtworkDownloadStore {
         items[index].status = .completed
         items[index].completedPages = items[index].pageCount
         items[index].folderPath = folder.path(percentEncoded: false)
+        items[index].updatedAt = Date()
+        persistItems()
+    }
+
+    private func markQueued(itemID: UUID) {
+        guard let index = items.firstIndex(where: { $0.id == itemID }) else { return }
+        items[index].status = .queued
+        items[index].errorMessage = nil
         items[index].updatedAt = Date()
         persistItems()
     }
