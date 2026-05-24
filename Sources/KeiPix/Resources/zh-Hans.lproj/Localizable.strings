@@ -124,6 +124,10 @@
 "Delete %d visible downloads and move local files to Trash?" = "删除 %d 个可见下载并将本地文件移到废纸篓？";
 "Delete %@ and move local files to Trash?" = "删除 %@ 并将本地文件移到废纸篓？";
 "Clear %d failed downloads and move partial local files to Trash?" = "清理 %d 个失败下载，并将残留本地文件移到废纸篓？";
+"Remove Visible Download Records" = "移除可见下载记录";
+"Remove %d visible download records? Local files stay in the download folder." = "移除 %d 条可见下载记录？本地文件会保留在下载文件夹中。";
+"Remove %@ from the download queue? Local files stay in the download folder." = "从下载队列移除 %@？本地文件会保留在下载文件夹中。";
+"Clear %d failed download records? Local files stay in the download folder." = "清理 %d 条失败下载记录？本地文件会保留在下载文件夹中。";
 "Clear %d invalid download records?" = "清理 %d 条无效下载记录？";
 "Clear %d completed download records?" = "清理 %d 条已完成下载记录？";
 "%d shown, %d active, %d completed, %@ stored" = "显示 %d，进行中 %d，已完成 %d，占用 %@";
@@ -131,9 +135,11 @@
 "Copied %d links" = "已复制 %d 个链接";
 "Copied %d artwork links" = "已复制 %d 个作品链接";
 "Deleted %d downloads" = "已删除 %d 个下载";
+"Removed %d download records" = "已移除 %d 条下载记录";
 "Reveal in Finder" = "在 Finder 中显示";
 "Open Downloaded Artwork" = "打开已下载作品";
 "Delete Download" = "删除下载";
+"Remove Download Record" = "移除下载记录";
 "No downloads yet" = "暂无下载";
 "Download artworks from the detail view or artwork context menus." = "可以从作品详情或作品右键菜单下载。";
 "No matching downloads" = "没有符合条件的下载";

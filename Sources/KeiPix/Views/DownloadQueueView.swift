@@ -221,110 +221,117 @@ private struct DownloadQueueHeader: View {
     let copyVisibleLinks: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(downloads.downloadDirectoryPath)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .lineLimit(1)
-                .truncationMode(.middle)
-                .textSelection(.enabled)
+        FlowLayout(spacing: 8) {
+            Label {
+                Text(downloads.downloadDirectoryPath)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+                    .textSelection(.enabled)
+                    .frame(minWidth: 180, idealWidth: 300, maxWidth: 360, alignment: .leading)
+            } icon: {
+                Image(systemName: "folder")
+                    .foregroundStyle(.secondary)
+            }
+            .font(.caption)
+            .foregroundStyle(.secondary)
+            .padding(.horizontal, 9)
+            .padding(.vertical, 5)
+            .background(.regularMaterial, in: Capsule())
+            .help(downloads.downloadDirectoryPath)
 
-            FlowLayout(spacing: 8) {
-                TextField(L10n.searchDownloads, text: downloadSearchBinding)
-                    .textFieldStyle(.roundedBorder)
-                    .frame(width: 220)
+            TextField(L10n.searchDownloads, text: downloadSearchBinding)
+                .textFieldStyle(.roundedBorder)
+                .frame(width: 220)
 
-                Menu {
-                    Picker(L10n.sortDownloads, selection: downloadSortBinding) {
-                        ForEach(DownloadQueueSort.allCases) { sort in
-                            Text(sort.title).tag(sort)
-                        }
+            Menu {
+                Picker(L10n.sortDownloads, selection: downloadSortBinding) {
+                    ForEach(DownloadQueueSort.allCases) { sort in
+                        Text(sort.title).tag(sort)
                     }
-                } label: {
-                    Label(downloads.downloadQueueSort.title, systemImage: "arrow.up.arrow.down")
                 }
-                .buttonStyle(.bordered)
+            } label: {
+                Label(downloads.downloadQueueSort.title, systemImage: "arrow.up.arrow.down")
+            }
+            .buttonStyle(.bordered)
 
-                Menu {
-                    Picker(L10n.downloadFilter, selection: downloadFilterBinding) {
-                        ForEach(DownloadQueueFilter.allCases) { filter in
-                            Text(filter.title).tag(filter)
-                        }
+            Menu {
+                Picker(L10n.downloadFilter, selection: downloadFilterBinding) {
+                    ForEach(DownloadQueueFilter.allCases) { filter in
+                        Text(filter.title).tag(filter)
                     }
-                } label: {
-                    Label(downloads.downloadQueueFilter.title, systemImage: "line.3.horizontal.decrease.circle")
                 }
-                .buttonStyle(.bordered)
-                .help(summaryHelpText)
+            } label: {
+                Label(downloads.downloadQueueFilter.title, systemImage: "line.3.horizontal.decrease.circle")
+            }
+            .buttonStyle(.bordered)
+            .help(summaryHelpText)
+
+            Button {
+                downloads.openDownloadDirectory()
+            } label: {
+                Label(L10n.openFolder, systemImage: "folder")
+            }
+            .buttonStyle(.bordered)
+
+            Menu {
+                Button(action: copyVisibleLinks) {
+                    Label(L10n.copyVisibleDownloadLinks, systemImage: "link")
+                }
+                .disabled(downloads.filteredPixivLinks.isEmpty)
 
                 Button {
-                    downloads.openDownloadDirectory()
+                    if downloads.revealFirstFilteredDownload() == false {
+                        downloads.openDownloadDirectory()
+                    }
                 } label: {
-                    Label(L10n.openFolder, systemImage: "folder")
+                    Label(L10n.revealFirstVisibleDownload, systemImage: "folder")
                 }
-                .buttonStyle(.bordered)
+                .disabled(downloads.filteredItems.isEmpty)
 
-                Menu {
-                    Button(action: copyVisibleLinks) {
-                        Label(L10n.copyVisibleDownloadLinks, systemImage: "link")
-                    }
-                    .disabled(downloads.filteredPixivLinks.isEmpty)
-
-                    Button {
-                        if downloads.revealFirstFilteredDownload() == false {
-                            downloads.openDownloadDirectory()
-                        }
-                    } label: {
-                        Label(L10n.revealFirstVisibleDownload, systemImage: "folder")
-                    }
-                    .disabled(downloads.filteredItems.isEmpty)
-
-                    Button(role: .destructive) {
-                        requestDangerAction(.deleteVisible(count: downloads.filteredDeletableCount))
-                    } label: {
-                        Label(L10n.deleteVisibleDownloads, systemImage: "trash")
-                    }
-                    .disabled(downloads.filteredDeletableCount == 0)
-
-                    Divider()
-
-                    Button {
-                        downloads.retryFailedFilteredItems()
-                    } label: {
-                        Label(L10n.retryFailedDownloads, systemImage: "arrow.clockwise")
-                    }
-                    .disabled(downloads.failedFilteredCount == 0)
-
-                    Button(role: .destructive) {
-                        requestDangerAction(.clearFailed(count: downloads.failedFilteredCount))
-                    } label: {
-                        Label(L10n.clearFailedDownloads, systemImage: "trash")
-                    }
-                    .disabled(downloads.failedFilteredCount == 0)
-
-                    Divider()
-
-                    Button {
-                        requestDangerAction(.clearInvalid(count: downloads.invalidCompletedItems.count))
-                    } label: {
-                        Label(L10n.clearInvalidDownloads, systemImage: "exclamationmark.arrow.trianglehead.2.clockwise.rotate.90")
-                    }
-                    .disabled(downloads.invalidCompletedItems.isEmpty)
-
-                    Button {
-                        requestDangerAction(.clearCompleted(count: downloads.completedCount))
-                    } label: {
-                        Label(L10n.clearCompleted, systemImage: "checkmark.circle")
-                    }
-                    .disabled(downloads.completedCount == 0)
+                Button(role: .destructive) {
+                    requestDangerAction(.deleteVisible(count: downloads.filteredDeletableCount))
                 } label: {
-                    Label(L10n.downloadActions, systemImage: "ellipsis.circle")
+                    Label(L10n.deleteVisibleDownloads, systemImage: "trash")
                 }
-                .buttonStyle(.bordered)
+                .disabled(downloads.filteredDeletableCount == 0)
 
+                Divider()
+
+                Button {
+                    downloads.retryFailedFilteredItems()
+                } label: {
+                    Label(L10n.retryFailedDownloads, systemImage: "arrow.clockwise")
+                }
+                .disabled(downloads.failedFilteredCount == 0)
+
+                Button(role: .destructive) {
+                    requestDangerAction(.clearFailed(count: downloads.failedFilteredCount))
+                } label: {
+                    Label(L10n.clearFailedDownloads, systemImage: "trash")
+                }
+                .disabled(downloads.failedFilteredCount == 0)
+
+                Divider()
+
+                Button {
+                    requestDangerAction(.clearInvalid(count: downloads.invalidCompletedItems.count))
+                } label: {
+                    Label(L10n.clearInvalidDownloads, systemImage: "exclamationmark.arrow.trianglehead.2.clockwise.rotate.90")
+                }
+                .disabled(downloads.invalidCompletedItems.isEmpty)
+
+                Button {
+                    requestDangerAction(.clearCompleted(count: downloads.completedCount))
+                } label: {
+                    Label(L10n.clearCompleted, systemImage: "checkmark.circle")
+                }
+                .disabled(downloads.completedCount == 0)
+            } label: {
+                Label(L10n.downloadActions, systemImage: "ellipsis.circle")
             }
-                .controlSize(.small)
+            .buttonStyle(.bordered)
         }
+        .controlSize(.small)
     }
 
     private var downloadFilterBinding: Binding<DownloadQueueFilter> {

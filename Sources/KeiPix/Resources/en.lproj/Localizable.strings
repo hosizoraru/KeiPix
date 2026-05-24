@@ -124,6 +124,10 @@
 "Delete %d visible downloads and move local files to Trash?" = "Delete %d visible downloads and move local files to Trash?";
 "Delete %@ and move local files to Trash?" = "Delete %@ and move local files to Trash?";
 "Clear %d failed downloads and move partial local files to Trash?" = "Clear %d failed downloads and move partial local files to Trash?";
+"Remove Visible Download Records" = "Remove Visible Download Records";
+"Remove %d visible download records? Local files stay in the download folder." = "Remove %d visible download records? Local files stay in the download folder.";
+"Remove %@ from the download queue? Local files stay in the download folder." = "Remove %@ from the download queue? Local files stay in the download folder.";
+"Clear %d failed download records? Local files stay in the download folder." = "Clear %d failed download records? Local files stay in the download folder.";
 "Clear %d invalid download records?" = "Clear %d invalid download records?";
 "Clear %d completed download records?" = "Clear %d completed download records?";
 "%d shown, %d active, %d completed, %@ stored" = "%d shown, %d active, %d completed, %@ stored";
@@ -131,9 +135,11 @@
 "Copied %d links" = "Copied %d links";
 "Copied %d artwork links" = "Copied %d artwork links";
 "Deleted %d downloads" = "Deleted %d downloads";
+"Removed %d download records" = "Removed %d download records";
 "Reveal in Finder" = "Reveal in Finder";
 "Open Downloaded Artwork" = "Open Downloaded Artwork";
 "Delete Download" = "Delete Download";
+"Remove Download Record" = "Remove Download Record";
 "No downloads yet" = "No downloads yet";
 "Download artworks from the detail view or artwork context menus." = "Download artworks from the detail view or artwork context menus.";
 "No matching downloads" = "No matching downloads";

@@ -294,10 +294,6 @@ final class ArtworkDownloadStore {
         let failedItems = filteredItems.filter { $0.status == .failed }
         guard failedItems.isEmpty == false else { return 0 }
 
-        for item in failedItems {
-            trashDownloadedFiles(for: item)
-        }
-
         let ids = Set(failedItems.map(\.id))
         items.removeAll { ids.contains($0.id) }
         persistItems()
@@ -334,7 +330,6 @@ final class ArtworkDownloadStore {
         if let index = items.firstIndex(where: { $0.id == item.id }) {
             items.remove(at: index)
         }
-        trashDownloadedFiles(for: item)
         persistItems()
     }
 
@@ -350,10 +345,6 @@ final class ArtworkDownloadStore {
     func deleteFilteredItems() -> Int {
         let targets = filteredItems.filter { $0.status != .downloading }
         guard targets.isEmpty == false else { return 0 }
-
-        for target in targets {
-            trashDownloadedFiles(for: target)
-        }
 
         let ids = Set(targets.map(\.id))
         items.removeAll { ids.contains($0.id) }
@@ -605,15 +596,6 @@ final class ArtworkDownloadStore {
         }
     }
 
-    private func moveToTrash(_ url: URL) {
-        guard fileManager.fileExists(atPath: url.path(percentEncoded: false)) else { return }
-        do {
-            _ = try fileManager.trashItem(at: url, resultingItemURL: nil)
-        } catch {
-            try? fileManager.removeItem(at: url)
-        }
-    }
-
     private func byteCount(at url: URL) -> Int64 {
         let path = url.path(percentEncoded: false)
         guard fileManager.fileExists(atPath: path) else { return 0 }
@@ -640,19 +622,6 @@ final class ArtworkDownloadStore {
             total += Int64(values.totalFileAllocatedSize ?? values.fileSize ?? 0)
         }
         return total
-    }
-
-    private func trashDownloadedFiles(for item: ArtworkDownloadItem) {
-        if let filePaths = item.downloadedFilePaths, filePaths.isEmpty == false {
-            for filePath in filePaths {
-                moveToTrash(URL(fileURLWithPath: filePath, isDirectory: false))
-            }
-            return
-        }
-
-        if let folderPath = item.folderPath {
-            moveToTrash(URL(fileURLWithPath: folderPath, isDirectory: true))
-        }
     }
 
     private static func loadItems() -> [ArtworkDownloadItem] {

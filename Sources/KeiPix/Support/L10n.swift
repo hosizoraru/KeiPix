@@ -123,20 +123,20 @@ enum L10n {
     static var copyVisibleDownloadLinks: String { text("Copy Visible Links") }
     static var copyLoadedArtworkLinks: String { text("Copy Loaded Artwork Links") }
     static var revealFirstVisibleDownload: String { text("Reveal First Visible") }
-    static var deleteVisibleDownloads: String { text("Delete Visible Downloads") }
-    static var deleteVisibleDownloadsConfirmationFormat: String { text("Delete %d visible downloads and move local files to Trash?") }
-    static var deleteDownloadConfirmationFormat: String { text("Delete %@ and move local files to Trash?") }
-    static var clearFailedDownloadsConfirmationFormat: String { text("Clear %d failed downloads and move partial local files to Trash?") }
+    static var deleteVisibleDownloads: String { text("Remove Visible Download Records") }
+    static var deleteVisibleDownloadsConfirmationFormat: String { text("Remove %d visible download records? Local files stay in the download folder.") }
+    static var deleteDownloadConfirmationFormat: String { text("Remove %@ from the download queue? Local files stay in the download folder.") }
+    static var clearFailedDownloadsConfirmationFormat: String { text("Clear %d failed download records? Local files stay in the download folder.") }
     static var clearInvalidDownloadsConfirmationFormat: String { text("Clear %d invalid download records?") }
     static var clearCompletedDownloadsConfirmationFormat: String { text("Clear %d completed download records?") }
     static var downloadQueueDetailedSummaryFormat: String { text("%d shown, %d active, %d completed, %@ stored") }
     static var clearedDownloadsFormat: String { text("Cleared %d downloads") }
     static var copiedLinksFormat: String { text("Copied %d links") }
     static var copiedArtworkLinksFormat: String { text("Copied %d artwork links") }
-    static var deletedDownloadsFormat: String { text("Deleted %d downloads") }
+    static var deletedDownloadsFormat: String { text("Removed %d download records") }
     static var revealInFinder: String { text("Reveal in Finder") }
     static var openDownloadedArtwork: String { text("Open Downloaded Artwork") }
-    static var deleteDownload: String { text("Delete Download") }
+    static var deleteDownload: String { text("Remove Download Record") }
     static var noDownloadsTitle: String { text("No downloads yet") }
     static var noDownloadsSubtitle: String { text("Download artworks from the detail view or artwork context menus.") }
     static var noMatchingDownloadsTitle: String { text("No matching downloads") }
