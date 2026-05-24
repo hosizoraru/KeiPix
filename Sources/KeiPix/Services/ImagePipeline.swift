@@ -5,16 +5,19 @@ actor ImagePipeline {
     static let shared = ImagePipeline()
 
     private let session: URLSession
+    private let urlCache: URLCache
     private let cache = NSCache<NSURL, NSImage>()
 
     private init() {
         let configuration = URLSessionConfiguration.default
         configuration.requestCachePolicy = .returnCacheDataElseLoad
-        configuration.urlCache = URLCache(
+        let urlCache = URLCache(
             memoryCapacity: 64 * 1024 * 1024,
             diskCapacity: 512 * 1024 * 1024,
             directory: URL.cachesDirectory.appending(path: "KeiPixImages")
         )
+        self.urlCache = urlCache
+        configuration.urlCache = urlCache
         session = URLSession(configuration: configuration)
         cache.countLimit = 350
     }
@@ -48,6 +51,21 @@ actor ImagePipeline {
             guard cache.object(forKey: key) == nil else { continue }
             _ = try? await image(for: url)
         }
+    }
+
+    func cacheStatus() -> ImageCacheStatus {
+        ImageCacheStatus(
+            memoryCapacity: urlCache.memoryCapacity,
+            memoryUsage: urlCache.currentMemoryUsage,
+            diskCapacity: urlCache.diskCapacity,
+            diskUsage: urlCache.currentDiskUsage
+        )
+    }
+
+    func clearCaches() -> ImageCacheStatus {
+        cache.removeAllObjects()
+        urlCache.removeAllCachedResponses()
+        return cacheStatus()
     }
 
     private func authenticatedRequest(for url: URL) -> URLRequest {

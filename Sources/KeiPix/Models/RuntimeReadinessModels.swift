@@ -1,4 +1,5 @@
 import Foundation
+import CFNetwork
 
 struct RuntimeReadinessRow: Identifiable, Hashable {
     let id: String
@@ -16,6 +17,57 @@ struct RuntimeReadinessSnapshot: Hashable {
 
 @MainActor
 extension KeiPixStore {
+    var systemProxySummary: String {
+        guard let settings = CFNetworkCopySystemProxySettings()?.takeRetainedValue() as? [String: Any] else {
+            return L10n.unknown
+        }
+
+        let httpEnabled = (settings[kCFNetworkProxiesHTTPEnable as String] as? NSNumber)?.boolValue == true
+        let httpsEnabled = (settings["HTTPSEnable"] as? NSNumber)?.boolValue == true
+        let socksEnabled = (settings[kCFNetworkProxiesSOCKSEnable as String] as? NSNumber)?.boolValue == true
+        let autoConfig = (settings[kCFNetworkProxiesProxyAutoConfigEnable as String] as? NSNumber)?.boolValue == true
+        let autoDiscovery = (settings[kCFNetworkProxiesProxyAutoDiscoveryEnable as String] as? NSNumber)?.boolValue == true
+
+        var values: [String] = []
+        if httpEnabled {
+            values.append(proxyDescription(label: "HTTP", hostKey: kCFNetworkProxiesHTTPProxy as String, portKey: kCFNetworkProxiesHTTPPort as String, settings: settings))
+        }
+        if httpsEnabled {
+            values.append(proxyDescription(label: "HTTPS", hostKey: "HTTPSProxy", portKey: "HTTPSPort", settings: settings))
+        }
+        if socksEnabled {
+            values.append(proxyDescription(label: "SOCKS", hostKey: kCFNetworkProxiesSOCKSProxy as String, portKey: kCFNetworkProxiesSOCKSPort as String, settings: settings))
+        }
+        if autoConfig {
+            values.append("PAC")
+        }
+        if autoDiscovery {
+            values.append("WPAD")
+        }
+        return values.isEmpty ? L10n.directConnection : values.joined(separator: " · ")
+    }
+
+    func runNetworkDiagnostics() async -> [NetworkDiagnosticResult] {
+        let proxyResult = NetworkDiagnosticResult(
+            id: "proxy",
+            title: L10n.systemProxy,
+            status: .passed,
+            detail: systemProxySummary,
+            duration: nil
+        )
+        let apiResult = await pixivAPIDiagnostic()
+        let imageResult = await imageHostDiagnostic()
+        return [proxyResult, apiResult, imageResult]
+    }
+
+    func imageCacheStatus() async -> ImageCacheStatus {
+        await ImagePipeline.shared.cacheStatus()
+    }
+
+    func clearImageCache() async -> ImageCacheStatus {
+        await ImagePipeline.shared.clearCaches()
+    }
+
     var runtimeReadinessSnapshot: RuntimeReadinessSnapshot {
         let checkedAt = Date()
         let rows = runtimeReadinessRows
@@ -37,6 +89,7 @@ extension KeiPixStore {
             feedReadinessRow,
             selectionReadinessRow,
             downloadReadinessRow,
+            proxyReadinessRow,
             filterReadinessRow,
             mutedReadinessRow,
             privacyReadinessRow,
@@ -120,6 +173,16 @@ extension KeiPixStore {
         )
     }
 
+    private var proxyReadinessRow: RuntimeReadinessRow {
+        RuntimeReadinessRow(
+            id: "proxy",
+            title: L10n.systemProxy,
+            value: systemProxySummary,
+            systemImage: "network",
+            isReady: true
+        )
+    }
+
     private var filterReadinessRow: RuntimeReadinessRow {
         let activeFilters = [
             hideMutedContent ? L10n.muted : nil,
@@ -186,9 +249,82 @@ extension KeiPixStore {
         lines += rows.map { "\($0.title): \($0.value)" }
         lines += [
             "",
-            "Downloads: \(downloads.downloadDirectoryPath)"
+            "Downloads: \(downloads.downloadDirectoryPath)",
+            "System Proxy: \(systemProxySummary)"
         ]
         return lines.joined(separator: "\n")
+    }
+
+    private func pixivAPIDiagnostic() async -> NetworkDiagnosticResult {
+        guard let rawUserID = session?.user.id, let userID = Int(rawUserID) else {
+            return NetworkDiagnosticResult(
+                id: "pixiv-api",
+                title: L10n.pixivAPI,
+                status: .skipped,
+                detail: L10n.signedOut,
+                duration: nil
+            )
+        }
+
+        let startedAt = Date()
+        do {
+            _ = try await api.userDetail(userID: userID)
+            return NetworkDiagnosticResult(
+                id: "pixiv-api",
+                title: L10n.pixivAPI,
+                status: .passed,
+                detail: L10n.reachable,
+                duration: Date().timeIntervalSince(startedAt)
+            )
+        } catch {
+            return NetworkDiagnosticResult(
+                id: "pixiv-api",
+                title: L10n.pixivAPI,
+                status: .failed,
+                detail: error.localizedDescription,
+                duration: Date().timeIntervalSince(startedAt)
+            )
+        }
+    }
+
+    private func imageHostDiagnostic() async -> NetworkDiagnosticResult {
+        guard let url = selectedArtwork?.thumbnailURL ?? artworks.first?.thumbnailURL ?? allArtworks.first?.thumbnailURL else {
+            return NetworkDiagnosticResult(
+                id: "image-host",
+                title: L10n.imageHost,
+                status: .skipped,
+                detail: L10n.noArtworkForImageProbe,
+                duration: nil
+            )
+        }
+
+        let startedAt = Date()
+        do {
+            _ = try await ImagePipeline.shared.data(for: url)
+            return NetworkDiagnosticResult(
+                id: "image-host",
+                title: L10n.imageHost,
+                status: .passed,
+                detail: url.host(percentEncoded: false) ?? L10n.reachable,
+                duration: Date().timeIntervalSince(startedAt)
+            )
+        } catch {
+            return NetworkDiagnosticResult(
+                id: "image-host",
+                title: L10n.imageHost,
+                status: .failed,
+                detail: error.localizedDescription,
+                duration: Date().timeIntervalSince(startedAt)
+            )
+        }
+    }
+
+    private func proxyDescription(label: String, hostKey: String, portKey: String, settings: [String: Any]) -> String {
+        let host = settings[hostKey] as? String ?? "?"
+        if let port = settings[portKey] {
+            return "\(label) \(host):\(port)"
+        }
+        return "\(label) \(host)"
     }
 
     private static let runtimeReadinessDateFormatter: DateFormatter = {

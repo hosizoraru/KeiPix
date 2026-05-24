@@ -395,6 +395,23 @@ enum L10n {
     static var runtimeReadinessHint: String { text("Quick diagnostics for signed-in QA and screenshot-safe support reports.") }
     static var copyDiagnostics: String { text("Copy Diagnostics") }
     static var copiedDiagnostics: String { text("Copied Diagnostics") }
+    static var runNetworkDiagnostics: String { text("Run Network Diagnostics") }
+    static var runningDiagnostics: String { text("Running diagnostics") }
+    static var refreshCacheStatus: String { text("Refresh Cache Status") }
+    static var clearImageCache: String { text("Clear Image Cache") }
+    static var imageCacheCleared: String { text("Image cache cleared") }
+    static var imageCache: String { text("Image Cache") }
+    static var cacheUsageFormat: String { text("%@ used of %@") }
+    static var availableInDiagnostics: String { text("Available in diagnostics") }
+    static var systemProxy: String { text("System Proxy") }
+    static var directConnection: String { text("Direct connection") }
+    static var pixivAPI: String { text("Pixiv API") }
+    static var imageHost: String { text("Image Host") }
+    static var reachable: String { text("Reachable") }
+    static var skipped: String { text("Skipped") }
+    static var passed: String { text("Passed") }
+    static var unknown: String { text("Unknown") }
+    static var noArtworkForImageProbe: String { text("Open an artwork to test the image host") }
     static var session: String { text("Session") }
     static var signedIn: String { text("Signed In") }
     static var signedOut: String { text("Signed Out") }
