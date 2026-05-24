@@ -9,6 +9,7 @@ struct MangaWatchlistView: View {
     @State private var isLoadingMore = false
     @State private var removingSeriesIDs = Set<Int>()
     @State private var errorMessage: String?
+    @State private var actionMessage: String?
     @State private var pendingRemoval: PixivMangaSeriesPreview?
 
     private let columns = [
@@ -67,19 +68,43 @@ struct MangaWatchlistView: View {
             Text(String(format: L10n.removeFromWatchlistConfirmationFormat, item.title))
         }
         .overlay(alignment: .bottom) {
-            if let errorMessage {
-                FloatingStatusBanner {
-                    Text(errorMessage)
-                        .font(.callout)
-                        .foregroundStyle(.red)
-                        .textSelection(.enabled)
+            VStack(spacing: 8) {
+                if let actionMessage {
+                    FloatingStatusBanner {
+                        Text(actionMessage)
+                            .font(.callout)
+                            .foregroundStyle(.secondary)
+                            .textSelection(.enabled)
+                    }
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
-                .padding(.horizontal, 18)
-                .padding(.bottom, 14)
-                .transition(.move(edge: .bottom).combined(with: .opacity))
+
+                if let undoAction = store.undoAction {
+                    AppUndoBar(action: undoAction) {
+                        Task { await store.performUndo(undoAction) }
+                    }
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                }
+
+                if let errorMessage {
+                    FloatingStatusBanner {
+                        Text(errorMessage)
+                            .font(.callout)
+                            .foregroundStyle(.red)
+                            .textSelection(.enabled)
+                    }
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                }
             }
+            .padding(.horizontal, 18)
+            .padding(.bottom, 14)
         }
+        .animation(.snappy(duration: 0.18), value: actionMessage)
+        .animation(.snappy(duration: 0.18), value: store.undoAction?.id)
         .animation(.snappy(duration: 0.18), value: errorMessage)
+        .task(id: actionMessage) {
+            await dismissActionMessageIfNeeded(actionMessage)
+        }
         .task(id: store.routeRefreshGeneration) {
             await loadInitial()
         }
@@ -148,6 +173,7 @@ struct MangaWatchlistView: View {
             series.removeAll { $0.id == item.id }
             pendingRemoval = nil
             store.undoAction = AppUndoAction(kind: .restoreMangaWatchlist(item))
+            actionMessage = String(format: L10n.removedFromWatchlistFormat, item.title)
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -160,6 +186,14 @@ struct MangaWatchlistView: View {
             if value == false {
                 pendingRemoval = nil
             }
+        }
+    }
+
+    private func dismissActionMessageIfNeeded(_ message: String?) async {
+        guard let message else { return }
+        try? await Task.sleep(for: .seconds(2.5))
+        if actionMessage == message {
+            actionMessage = nil
         }
     }
 }

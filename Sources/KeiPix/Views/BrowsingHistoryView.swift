@@ -203,14 +203,19 @@ struct BrowsingHistoryView: View {
                                     if artwork.isBookmarked {
                                         store.requestDangerAction(AppDangerAction(kind: .removeBookmark(artwork)))
                                     } else {
-                                        Task { await store.toggleBookmark(artwork) }
+                                        Task { await bookmark(artwork) }
                                     }
                                 }
                                 Button(L10n.download) {
                                     store.enqueueDownload(artwork)
+                                    actionMessage = String(format: L10n.queuedDownloadsFormat, 1)
                                 }
                                 if let url = artwork.pixivURL {
                                     Link(L10n.openInPixiv, destination: url)
+                                    Button(L10n.copyLink) {
+                                        PasteboardWriter.copy(url.absoluteString)
+                                        actionMessage = L10n.copied
+                                    }
                                 }
                             }
                         }
@@ -272,6 +277,19 @@ struct BrowsingHistoryView: View {
         }
         if actionMessage == message {
             actionMessage = nil
+        }
+    }
+
+    private func bookmark(_ artwork: PixivArtwork) async {
+        do {
+            try await store.saveBookmark(
+                artwork,
+                restrict: store.defaultBookmarkRestrict,
+                tags: store.automaticBookmarkTags(for: artwork)
+            )
+            actionMessage = String(format: L10n.savedBookmarkFormat, artwork.title)
+        } catch {
+            store.errorMessage = error.localizedDescription
         }
     }
 }
