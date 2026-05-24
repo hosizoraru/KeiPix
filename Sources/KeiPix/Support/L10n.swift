@@ -29,6 +29,12 @@ enum L10n {
     static var openPixivWebSearch: String { text("Open Pixiv Web Search") }
     static var copyPixivWebSearchLink: String { text("Copy Pixiv Web Search Link") }
     static var copiedPixivWebSearchLink: String { text("Copied Pixiv Web Search Link") }
+    static var openPixivLinkFromClipboard: String { text("Open Pixiv Link from Clipboard") }
+    static var openedPixivLinkFormat: String { text("Opened Pixiv link %@") }
+    static var noPixivLinkInClipboard: String { text("No Pixiv link in clipboard") }
+    static var unsupportedPixivLink: String { text("Unsupported Pixiv link") }
+    static var loginRequiredForPixivLink: String { text("Login to open Pixiv links") }
+    static var pixivisionArticleFormat: String { text("Pixivision Article #%d") }
     static var recentSearches: String { text("Recent Searches") }
     static var noSavedSearches: String { text("No saved searches") }
     static var noSavedSearchPresets: String { text("No saved search presets") }

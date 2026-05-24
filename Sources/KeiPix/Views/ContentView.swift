@@ -166,6 +166,14 @@ struct ContentView: View {
 
     private var appControlsMenu: some View {
         Menu {
+            Button {
+                Task { await openPixivLinkFromClipboard() }
+            } label: {
+                Label(L10n.openPixivLinkFromClipboard, systemImage: "link.badge.plus")
+            }
+
+            Divider()
+
             Menu {
                 ForEach(WindowSizePreset.allCases) { preset in
                     Button(preset.title) {
@@ -258,6 +266,11 @@ struct ContentView: View {
         store.setUseRankingDate(false)
         store.requestRouteRefresh()
         showStatus(L10n.latestRankingApplied)
+    }
+
+    private func openPixivLinkFromClipboard() async {
+        let message = await store.openPixivLinkFromClipboard()
+        showStatus(message)
     }
 
     private func showStatus(_ message: String) {

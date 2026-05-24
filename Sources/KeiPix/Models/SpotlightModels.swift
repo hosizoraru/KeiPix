@@ -33,6 +33,26 @@ struct PixivSpotlightArticle: Decodable, Identifiable, Hashable, Sendable {
         case publishDate = "publish_date"
     }
 
+    init(id: Int, title: String, pureTitle: String, thumbnail: URL?, articleURL: URL, publishDate: Date) {
+        self.id = id
+        self.title = title
+        self.pureTitle = pureTitle
+        self.thumbnail = thumbnail
+        self.articleURL = articleURL
+        self.publishDate = publishDate
+    }
+
+    static func linkPlaceholder(id: Int, url: URL) -> PixivSpotlightArticle {
+        PixivSpotlightArticle(
+            id: id,
+            title: String(format: L10n.pixivisionArticleFormat, id),
+            pureTitle: String(format: L10n.pixivisionArticleFormat, id),
+            thumbnail: nil,
+            articleURL: url,
+            publishDate: Date()
+        )
+    }
+
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         id = try container.decode(Int.self, forKey: .id)

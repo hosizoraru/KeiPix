@@ -26,6 +26,12 @@
 "Open Pixiv Web Search" = "Open Pixiv Web Search";
 "Copy Pixiv Web Search Link" = "Copy Pixiv Web Search Link";
 "Copied Pixiv Web Search Link" = "Copied Pixiv Web Search Link";
+"Open Pixiv Link from Clipboard" = "Open Pixiv Link from Clipboard";
+"Opened Pixiv link %@" = "Opened Pixiv link %@";
+"No Pixiv link in clipboard" = "No Pixiv link in clipboard";
+"Unsupported Pixiv link" = "Unsupported Pixiv link";
+"Login to open Pixiv links" = "Login to open Pixiv links";
+"Pixivision Article #%d" = "Pixivision Article #%d";
 "Recent Searches" = "Recent Searches";
 "No saved searches" = "No saved searches";
 "No saved search presets" = "No saved search presets";

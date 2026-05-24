@@ -26,6 +26,12 @@
 "Open Pixiv Web Search" = "打开 Pixiv Web 搜索";
 "Copy Pixiv Web Search Link" = "复制 Pixiv Web 搜索链接";
 "Copied Pixiv Web Search Link" = "已复制 Pixiv Web 搜索链接";
+"Open Pixiv Link from Clipboard" = "打开剪贴板里的 Pixiv 链接";
+"Opened Pixiv link %@" = "已打开 Pixiv 链接 %@";
+"No Pixiv link in clipboard" = "剪贴板里没有 Pixiv 链接";
+"Unsupported Pixiv link" = "暂不支持这个 Pixiv 链接";
+"Login to open Pixiv links" = "登录后可打开 Pixiv 链接";
+"Pixivision Article #%d" = "Pixivision 文章 #%d";
 "Recent Searches" = "最近搜索";
 "No saved searches" = "暂无保存的搜索";
 "No saved search presets" = "暂无搜索预设";

@@ -168,8 +168,7 @@ struct SpotlightView: View {
     }
 
     private func selectStableArticle() {
-        if let selected = store.selectedSpotlightArticle,
-           articles.contains(where: { $0.id == selected.id }) {
+        if store.selectedSpotlightArticle != nil {
             return
         }
         store.selectedSpotlightArticle = articles.first

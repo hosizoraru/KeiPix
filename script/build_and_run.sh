@@ -67,6 +67,17 @@ cat >"$INFO_PLIST" <<PLIST
     <string>en</string>
     <string>zh-Hans</string>
   </array>
+  <key>CFBundleURLTypes</key>
+  <array>
+    <dict>
+      <key>CFBundleURLName</key>
+      <string>$BUNDLE_ID</string>
+      <key>CFBundleURLSchemes</key>
+      <array>
+        <string>keipix</string>
+      </array>
+    </dict>
+  </array>
   <key>LSMinimumSystemVersion</key>
   <string>$MIN_SYSTEM_VERSION</string>
   <key>NSHighResolutionCapable</key>

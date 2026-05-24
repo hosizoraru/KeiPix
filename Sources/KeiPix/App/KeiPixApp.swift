@@ -12,6 +12,9 @@ struct KeiPixApp: App {
                 .frame(minWidth: 840, minHeight: 700)
                 .background(WindowCaptureProtectionBridge(isProtected: store.isMainWindowCaptureProtected))
                 .environment(\.locale, store.appLanguage.locale ?? .current)
+                .onOpenURL { url in
+                    Task { await store.openPixivLink(url) }
+                }
         }
         .defaultSize(width: 1180, height: 800)
         .commands {
@@ -27,6 +30,11 @@ struct KeiPixApp: App {
                     store.setPrivacyModeEnabled(!store.privacyModeEnabled)
                 }
                 .keyboardShortcut("p", modifiers: [.command, .shift])
+
+                Button(L10n.openPixivLinkFromClipboard) {
+                    Task { await store.openPixivLinkFromClipboard() }
+                }
+                .keyboardShortcut("l", modifiers: [.command, .shift])
             }
 
             CommandMenu(L10n.artwork) {
