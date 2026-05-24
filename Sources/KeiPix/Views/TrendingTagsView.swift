@@ -17,8 +17,21 @@ struct TrendingTagsView: View {
                 ProgressView(L10n.loading)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if tags.isEmpty {
-                ContentUnavailableView(L10n.noTrendingTags, systemImage: "number")
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                ContentUnavailableView {
+                    Label(L10n.noTrendingTags, systemImage: "number")
+                } description: {
+                    if let errorMessage {
+                        Text(errorMessage)
+                    }
+                } actions: {
+                    Button {
+                        Task { await load() }
+                    } label: {
+                        Label(L10n.retry, systemImage: "arrow.clockwise")
+                    }
+                    .buttonStyle(.borderedProminent)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 ScrollView {
                     TrendingTagMasonryLayout(spacing: 12) {
@@ -51,7 +64,7 @@ struct TrendingTagsView: View {
         }
         .navigationTitle(L10n.trendingTags)
         .toolbar {
-            if tags.isEmpty == false {
+            if store.session != nil {
                 ToolbarItem(placement: .status) {
                     resultCountBadge
                 }
