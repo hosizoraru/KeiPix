@@ -1,4 +1,6 @@
+import AppKit
 import Foundation
+import UniformTypeIdentifiers
 
 @MainActor
 extension KeiPixStore {
@@ -12,11 +14,23 @@ extension KeiPixStore {
             return
         }
 
-        imageSourceSearchRequest = ImageSourceSearchRequest(
-            artwork: artwork,
-            pageIndex: clampedPageIndex,
-            imageURL: imageURL,
-            localImageURL: localImageURL
-        )
+        imageSourceSearchRequest = ImageSourceSearchRequest(artwork: artwork, pageIndex: clampedPageIndex, imageURL: imageURL, localImageURL: localImageURL)
+    }
+
+    func presentLocalImageSourceSearch() {
+        let panel = NSOpenPanel()
+        panel.allowedContentTypes = [.image]
+        panel.allowsMultipleSelection = false
+        panel.canChooseDirectories = false
+        panel.canChooseFiles = true
+        panel.title = L10n.searchLocalImageSource
+        panel.prompt = L10n.chooseImage
+
+        guard panel.runModal() == .OK,
+              let url = panel.url else {
+            return
+        }
+
+        imageSourceSearchRequest = ImageSourceSearchRequest(localImageURL: url)
     }
 }

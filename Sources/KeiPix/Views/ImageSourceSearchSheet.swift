@@ -24,7 +24,7 @@ struct ImageSourceSearchSheet: View {
 
     private var header: some View {
         HStack(alignment: .top, spacing: 14) {
-            RemoteImageView(url: request.artwork.thumbnailURL(at: request.pageIndex))
+            RemoteImageView(url: request.thumbnailURL, localURL: request.localImageURL)
                 .aspectRatio(1, contentMode: .fill)
                 .frame(width: 72, height: 72)
                 .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
@@ -32,11 +32,11 @@ struct ImageSourceSearchSheet: View {
             VStack(alignment: .leading, spacing: 6) {
                 Text(L10n.imageSourceSearch)
                     .font(.title3.weight(.semibold))
-                Text(request.artwork.title)
+                Text(request.title)
                     .font(.headline)
                     .lineLimit(2)
                     .textSelection(.enabled)
-                Text(String(format: L10n.searchingImageSourcePageFormat, request.pageNumber))
+                Text(request.detail)
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -141,7 +141,7 @@ struct ImageSourceSearchSheet: View {
                 let data = try await imageData()
                 let results = try await SauceNAOClient.search(
                     imageData: data,
-                    filename: "\(request.artwork.id)_p\(request.pageIndex).jpg"
+                    filename: request.filename
                 )
                 state = .loaded(results)
             } catch {

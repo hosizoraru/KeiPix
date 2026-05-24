@@ -122,8 +122,11 @@
 "Share Current Page" = "Share Current Page";
 "Image Source Search" = "Image Source Search";
 "Search Image Source" = "Search Image Source";
+"Search Local Image" = "Search Local Image";
+"Choose Image" = "Choose Image";
 "Searching image source" = "Searching image source";
 "Searching page %d with SauceNAO" = "Searching page %d with SauceNAO";
+"Searching local image with SauceNAO" = "Searching local image with SauceNAO";
 "No searchable image is available for this page" = "No searchable image is available for this page";
 "Image source search failed" = "Image source search failed";
 "No image source results" = "No image source results";

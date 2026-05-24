@@ -122,8 +122,11 @@ enum L10n {
     static var shareCurrentPage: String { text("Share Current Page") }
     static var imageSourceSearch: String { text("Image Source Search") }
     static var searchImageSource: String { text("Search Image Source") }
+    static var searchLocalImageSource: String { text("Search Local Image") }
+    static var chooseImage: String { text("Choose Image") }
     static var searchingImageSource: String { text("Searching image source") }
     static var searchingImageSourcePageFormat: String { text("Searching page %d with SauceNAO") }
+    static var searchingLocalImageSource: String { text("Searching local image with SauceNAO") }
     static var imageSourceSearchUnavailable: String { text("No searchable image is available for this page") }
     static var imageSourceSearchFailed: String { text("Image source search failed") }
     static var noImageSourceResults: String { text("No image source results") }

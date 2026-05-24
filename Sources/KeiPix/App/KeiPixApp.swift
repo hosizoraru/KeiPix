@@ -35,6 +35,11 @@ struct KeiPixApp: App {
                     Task { await store.openPixivLinkFromClipboard() }
                 }
                 .keyboardShortcut("l", modifiers: [.command, .shift])
+
+                Button(L10n.searchLocalImageSource) {
+                    store.presentLocalImageSourceSearch()
+                }
+                .keyboardShortcut("i", modifiers: [.command, .option])
             }
 
             CommandMenu(L10n.artwork) {

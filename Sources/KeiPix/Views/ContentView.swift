@@ -176,6 +176,12 @@ struct ContentView: View {
                 Label(L10n.openPixivLinkFromClipboard, systemImage: "link.badge.plus")
             }
 
+            Button {
+                store.presentLocalImageSourceSearch()
+            } label: {
+                Label(L10n.searchLocalImageSource, systemImage: "photo.badge.magnifyingglass")
+            }
+
             Divider()
 
             Menu {

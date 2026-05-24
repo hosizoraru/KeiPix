@@ -122,8 +122,11 @@
 "Share Current Page" = "分享当前页";
 "Image Source Search" = "以图搜图";
 "Search Image Source" = "以图搜图";
+"Search Local Image" = "搜索本地图片";
+"Choose Image" = "选择图片";
 "Searching image source" = "正在以图搜图";
 "Searching page %d with SauceNAO" = "正在用 SauceNAO 搜索第 %d 页";
+"Searching local image with SauceNAO" = "正在用 SauceNAO 搜索本地图片";
 "No searchable image is available for this page" = "当前页没有可搜索的图片";
 "Image source search failed" = "以图搜图失败";
 "No image source results" = "没有以图搜图结果";
