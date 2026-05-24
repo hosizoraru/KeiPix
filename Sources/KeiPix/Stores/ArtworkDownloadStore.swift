@@ -179,6 +179,16 @@ final class ArtworkDownloadStore {
         items.filter { $0.status == .completed }.count
     }
 
+    var filteredDownloadedByteCount: Int64 {
+        filteredItems.reduce(Int64(0)) { partialResult, item in
+            partialResult + downloadedByteCount(for: item)
+        }
+    }
+
+    var filteredDownloadedSizeText: String {
+        Self.fileSizeFormatter.string(fromByteCount: filteredDownloadedByteCount)
+    }
+
     func setDownloadQueueFilter(_ filter: DownloadQueueFilter) {
         downloadQueueFilter = filter
         UserDefaults.standard.set(filter.rawValue, forKey: "downloadQueueFilter")
@@ -318,6 +328,23 @@ final class ArtworkDownloadStore {
         case .ugoiraZip:
             item.downloadedFilePaths?.contains { fileManager.fileExists(atPath: $0) } == true
         }
+    }
+
+    func downloadedByteCount(for item: ArtworkDownloadItem) -> Int64 {
+        if let filePaths = item.downloadedFilePaths, filePaths.isEmpty == false {
+            return filePaths.reduce(Int64(0)) { partialResult, filePath in
+                partialResult + byteCount(at: URL(fileURLWithPath: filePath, isDirectory: false))
+            }
+        }
+
+        guard let folderPath = item.folderPath else { return 0 }
+        return byteCount(at: URL(fileURLWithPath: folderPath, isDirectory: true))
+    }
+
+    func downloadedSizeText(for item: ArtworkDownloadItem) -> String? {
+        let byteCount = downloadedByteCount(for: item)
+        guard byteCount > 0 else { return nil }
+        return Self.fileSizeFormatter.string(fromByteCount: byteCount)
     }
 
     func chooseDownloadDirectory() {
@@ -492,6 +519,34 @@ final class ArtworkDownloadStore {
         }
     }
 
+    private func byteCount(at url: URL) -> Int64 {
+        let path = url.path(percentEncoded: false)
+        guard fileManager.fileExists(atPath: path) else { return 0 }
+
+        if let values = try? url.resourceValues(forKeys: [.isDirectoryKey, .fileSizeKey, .totalFileAllocatedSizeKey]),
+           values.isDirectory != true {
+            return Int64(values.totalFileAllocatedSize ?? values.fileSize ?? 0)
+        }
+
+        guard let enumerator = fileManager.enumerator(
+            at: url,
+            includingPropertiesForKeys: [.isRegularFileKey, .fileSizeKey, .totalFileAllocatedSizeKey],
+            options: [.skipsHiddenFiles]
+        ) else {
+            return 0
+        }
+
+        var total: Int64 = 0
+        for case let fileURL as URL in enumerator {
+            guard let values = try? fileURL.resourceValues(forKeys: [.isRegularFileKey, .fileSizeKey, .totalFileAllocatedSizeKey]),
+                  values.isRegularFile == true else {
+                continue
+            }
+            total += Int64(values.totalFileAllocatedSize ?? values.fileSize ?? 0)
+        }
+        return total
+    }
+
     private func trashDownloadedFiles(for item: ArtworkDownloadItem) {
         if let filePaths = item.downloadedFilePaths, filePaths.isEmpty == false {
             for filePath in filePaths {
@@ -530,6 +585,13 @@ final class ArtworkDownloadStore {
             .appending(path: "KeiPix", directoryHint: .isDirectory)
         ?? URL.homeDirectory.appending(path: "Downloads/KeiPix", directoryHint: .isDirectory)
     }
+
+    private static let fileSizeFormatter: ByteCountFormatter = {
+        let formatter = ByteCountFormatter()
+        formatter.allowedUnits = [.useKB, .useMB, .useGB]
+        formatter.countStyle = .file
+        return formatter
+    }()
 }
 
 private enum ArtworkDownloadError: LocalizedError {

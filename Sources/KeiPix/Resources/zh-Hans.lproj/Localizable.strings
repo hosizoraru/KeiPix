@@ -60,6 +60,7 @@
 "Share" = "分享";
 "Share Current Page" = "分享当前页";
 "Copy Link" = "复制链接";
+"More Actions" = "更多操作";
 "Download" = "下载";
 "Downloads" = "下载";
 "Downloading" = "下载中";
@@ -111,6 +112,7 @@
 "Completed" = "已完成";
 "Failed Downloads" = "失败";
 "%d shown · %d active · %d completed" = "显示 %d · 进行中 %d · 已完成 %d";
+"Storage %@" = "存储 %@";
 "Bookmark" = "收藏";
 "Remove Bookmark" = "取消收藏";
 "Edit Bookmark" = "编辑收藏";

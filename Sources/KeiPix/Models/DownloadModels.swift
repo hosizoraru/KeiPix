@@ -198,6 +198,10 @@ struct ArtworkDownloadItem: Identifiable, Codable, Sendable {
         artifactKind ?? .imagePages
     }
 
+    var pixivURL: URL? {
+        URL(string: "https://www.pixiv.net/artworks/\(artworkID)")
+    }
+
     func matchesDownloadSearch(_ query: String) -> Bool {
         let tokens = query
             .split(whereSeparator: \.isWhitespace)

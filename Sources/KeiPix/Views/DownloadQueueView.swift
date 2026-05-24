@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 
 struct DownloadQueueView: View {
@@ -182,6 +183,11 @@ private struct DownloadQueueHeader: View {
                     .font(.caption.monospacedDigit())
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
+
+                Text(storageText)
+                    .font(.caption.monospacedDigit())
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
             }
         }
     }
@@ -209,6 +215,10 @@ private struct DownloadQueueHeader: View {
             downloads.activeCount,
             downloads.completedCount
         )
+    }
+
+    private var storageText: String {
+        String(format: L10n.downloadStorageSummaryFormat, downloads.filteredDownloadedSizeText)
     }
 }
 
@@ -251,6 +261,9 @@ private struct DownloadQueueRow: View {
 
                 HStack(spacing: 8) {
                     Text(item.progressLabel)
+                    if let downloadedSize = downloads.downloadedSizeText(for: item) {
+                        Text(downloadedSize)
+                    }
                     if let errorMessage = item.errorMessage {
                         Text(errorMessage)
                             .foregroundStyle(.red)
@@ -297,6 +310,42 @@ private struct DownloadQueueRow: View {
             .buttonStyle(.bordered)
             .help(L10n.revealInFinder)
 
+            Menu {
+                if let pixivURL = item.pixivURL {
+                    Button {
+                        NSWorkspace.shared.open(pixivURL)
+                    } label: {
+                        Label(L10n.openInPixiv, systemImage: "safari")
+                    }
+
+                    Button {
+                        PasteboardWriter.copy(pixivURL.absoluteString)
+                    } label: {
+                        Label(L10n.copyLink, systemImage: "link")
+                    }
+                }
+
+                Button {
+                    downloads.reveal(item)
+                } label: {
+                    Label(L10n.revealInFinder, systemImage: "folder")
+                }
+
+                Divider()
+
+                Button(role: .destructive) {
+                    downloads.delete(item)
+                } label: {
+                    Label(L10n.deleteDownload, systemImage: "trash")
+                }
+                .disabled(item.status == .downloading)
+            } label: {
+                Label(L10n.moreActions, systemImage: "ellipsis.circle")
+            }
+            .labelStyle(.iconOnly)
+            .buttonStyle(.bordered)
+            .help(L10n.moreActions)
+
             Button(role: .destructive) {
                 downloads.delete(item)
             } label: {
@@ -318,6 +367,14 @@ private struct DownloadQueueRow: View {
             }
             Button(L10n.revealInFinder) {
                 downloads.reveal(item)
+            }
+            if let pixivURL = item.pixivURL {
+                Button(L10n.openInPixiv) {
+                    NSWorkspace.shared.open(pixivURL)
+                }
+                Button(L10n.copyLink) {
+                    PasteboardWriter.copy(pixivURL.absoluteString)
+                }
             }
             Button(role: .destructive) {
                 downloads.delete(item)

@@ -63,6 +63,7 @@ enum L10n {
     static var share: String { text("Share") }
     static var shareCurrentPage: String { text("Share Current Page") }
     static var copyLink: String { text("Copy Link") }
+    static var moreActions: String { text("More Actions") }
     static var download: String { text("Download") }
     static var downloads: String { text("Downloads") }
     static var downloading: String { text("Downloading") }
@@ -115,6 +116,7 @@ enum L10n {
     static var completedDownloads: String { text("Completed") }
     static var failedDownloads: String { text("Failed Downloads") }
     static var downloadQueueSummaryFormat: String { text("%d shown · %d active · %d completed") }
+    static var downloadStorageSummaryFormat: String { text("Storage %@") }
     static var bookmark: String { text("Bookmark") }
     static var removeBookmark: String { text("Remove Bookmark") }
     static var editBookmark: String { text("Edit Bookmark") }
