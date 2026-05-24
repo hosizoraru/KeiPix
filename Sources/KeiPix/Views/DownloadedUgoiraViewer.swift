@@ -13,6 +13,7 @@ struct DownloadedUgoiraViewer: View {
     @State private var isLoading = false
     @State private var isExporting = false
     @State private var message: String?
+    @State private var exportedGIFURL: URL?
     @State private var playbackTask: Task<Void, Never>?
 
     var body: some View {
@@ -118,7 +119,7 @@ struct DownloadedUgoiraViewer: View {
             .disabled(animation == nil || isLoading)
 
             if let animation {
-                Text("\(currentFrameIndex + 1) / \(animation.frameCount)")
+                Text(ugoiraSummary(animation))
                     .font(.caption.monospacedDigit())
                     .foregroundStyle(.secondary)
                     .padding(.horizontal, 9)
@@ -148,6 +149,31 @@ struct DownloadedUgoiraViewer: View {
             .buttonStyle(.bordered)
 
             Menu {
+                Button {
+                    Task { await exportGIF() }
+                } label: {
+                    Label(L10n.exportGIF, systemImage: "film")
+                }
+                .disabled(animation == nil || isLoading || isExporting)
+
+                ShareLink(item: zipURL) {
+                    Label(L10n.shareUgoiraZip, systemImage: "archivebox")
+                }
+
+                if let exportedGIFURL {
+                    ShareLink(item: exportedGIFURL) {
+                        Label(L10n.shareExportedGIF, systemImage: "square.and.arrow.up")
+                    }
+
+                    Button {
+                        NSWorkspace.shared.activateFileViewerSelecting([exportedGIFURL])
+                    } label: {
+                        Label(L10n.revealExportedGIF, systemImage: "folder")
+                    }
+                }
+
+                Divider()
+
                 if let pixivURL = item.pixivURL {
                     Button {
                         NSWorkspace.shared.open(pixivURL)
@@ -172,14 +198,6 @@ struct DownloadedUgoiraViewer: View {
                 Label(L10n.moreActions, systemImage: "ellipsis.circle")
             }
             .buttonStyle(.bordered)
-
-            Button {
-                Task { await exportGIF() }
-            } label: {
-                Label(L10n.exportGIF, systemImage: "film")
-            }
-            .buttonStyle(.bordered)
-            .disabled(animation == nil || isLoading || isExporting)
         }
     }
 
@@ -217,7 +235,8 @@ struct DownloadedUgoiraViewer: View {
             try await Task.detached(priority: .userInitiated) {
                 try UgoiraGIFExporter.export(animation: animation, to: url)
             }.value
-            message = L10n.exported
+            exportedGIFURL = url
+            message = String(format: L10n.exportedGIFFormat, url.lastPathComponent)
         } catch {
             message = error.localizedDescription
         }
@@ -229,6 +248,11 @@ struct DownloadedUgoiraViewer: View {
         panel.canCreateDirectories = true
         panel.nameFieldStringValue = "\(item.artworkID).gif"
         return panel.runModal() == .OK ? panel.url : nil
+    }
+
+    private func ugoiraSummary(_ animation: UgoiraAnimation) -> String {
+        let seconds = Double(animation.totalDurationMilliseconds) / 1000.0
+        return "\(currentFrameIndex + 1) / \(animation.frameCount) · \(seconds.formatted(.number.precision(.fractionLength(1))))s"
     }
 
     private func togglePlayback() {

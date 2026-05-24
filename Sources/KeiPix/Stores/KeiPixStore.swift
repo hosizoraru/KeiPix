@@ -608,6 +608,13 @@ final class KeiPixStore {
         return try UgoiraFrameDecoder.decode(zipData: zipData, metadata: metadata)
     }
 
+    func loadUgoiraExportPackage(for artwork: PixivArtwork) async throws -> UgoiraExportPackage {
+        let metadata = try await api.ugoiraMetadata(illustID: artwork.id)
+        let zipData = try await api.ugoiraZipData(url: metadata.zipURLs.medium)
+        let animation = try UgoiraFrameDecoder.decode(zipData: zipData, metadata: metadata)
+        return UgoiraExportPackage(metadata: metadata, zipData: zipData, animation: animation)
+    }
+
     func userDetail(for user: PixivUser) async throws -> PixivUserDetail {
         try await api.userDetail(userID: user.id)
     }

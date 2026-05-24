@@ -121,6 +121,13 @@
 "Ugoira ZIP" = "Ugoira ZIP";
 "%d frames" = "%d frames";
 "Export GIF" = "Export GIF";
+"Export Ugoira ZIP" = "Export Ugoira ZIP";
+"Ugoira Export Actions" = "Ugoira Export Actions";
+"Share Ugoira ZIP" = "Share Ugoira ZIP";
+"Share Exported GIF" = "Share Exported GIF";
+"Reveal Exported GIF" = "Reveal Exported GIF";
+"Exported GIF %@" = "Exported GIF %@";
+"Exported ZIP %@" = "Exported ZIP %@";
 "Preview Ugoira" = "Preview Ugoira";
 "Ugoira metadata is missing. Re-download this item to enable in-app preview and GIF export." = "Ugoira metadata is missing. Re-download this item to enable in-app preview and GIF export.";
 "Export" = "Export";

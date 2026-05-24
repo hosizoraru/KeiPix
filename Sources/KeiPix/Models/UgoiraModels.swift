@@ -41,4 +41,14 @@ struct UgoiraAnimation {
     var totalDuration: Duration {
         frames.reduce(.zero) { $0 + $1.delay }
     }
+
+    var totalDurationMilliseconds: Int {
+        frames.reduce(0) { $0 + $1.delayMilliseconds }
+    }
+}
+
+struct UgoiraExportPackage {
+    let metadata: PixivUgoiraMetadata
+    let zipData: Data
+    let animation: UgoiraAnimation
 }

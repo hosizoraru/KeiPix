@@ -1,4 +1,5 @@
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct UgoiraPlayerView: View {
     let artwork: PixivArtwork
@@ -8,7 +9,11 @@ struct UgoiraPlayerView: View {
     @State private var currentFrameIndex = 0
     @State private var isPlaying = false
     @State private var isLoading = false
+    @State private var isExporting = false
     @State private var errorMessage: String?
+    @State private var statusMessage: String?
+    @State private var exportedGIFURL: URL?
+    @State private var exportPackage: UgoiraExportPackage?
     @State private var playbackTask: Task<Void, Never>?
 
     var body: some View {
@@ -50,6 +55,20 @@ struct UgoiraPlayerView: View {
                     .padding(16)
                     .keiPanel(18)
                     .frame(maxWidth: min(proxy.size.width - 48, 360))
+                }
+
+                if let statusMessage {
+                    VStack {
+                        Spacer()
+                        Text(statusMessage)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 7)
+                            .keiGlass(14)
+                            .padding(.bottom, 56)
+                    }
+                    .transition(.opacity)
                 }
             }
             .contentShape(Rectangle())
@@ -101,7 +120,7 @@ struct UgoiraPlayerView: View {
             .disabled(animation == nil || isLoading)
 
             if let animation {
-                Text("\(currentFrameIndex + 1) / \(animation.frameCount)")
+                Text(ugoiraSummary(animation))
                     .font(.caption.monospacedDigit())
                     .foregroundStyle(.secondary)
                     .padding(.horizontal, 9)
@@ -110,6 +129,48 @@ struct UgoiraPlayerView: View {
             }
 
             Spacer()
+
+            Menu {
+                Button {
+                    Task { await exportGIF() }
+                } label: {
+                    Label(L10n.exportGIF, systemImage: "film")
+                }
+                .disabled(animation == nil || isLoading || isExporting)
+
+                Button {
+                    Task { await exportZip() }
+                } label: {
+                    Label(L10n.exportUgoiraZip, systemImage: "archivebox")
+                }
+                .disabled(isLoading || isExporting)
+
+                if let exportedGIFURL {
+                    Divider()
+
+                    ShareLink(item: exportedGIFURL) {
+                        Label(L10n.shareExportedGIF, systemImage: "square.and.arrow.up")
+                    }
+
+                    Button {
+                        NSWorkspace.shared.activateFileViewerSelecting([exportedGIFURL])
+                    } label: {
+                        Label(L10n.revealExportedGIF, systemImage: "folder")
+                    }
+                }
+            } label: {
+                if isExporting {
+                    ProgressView()
+                        .controlSize(.small)
+                } else {
+                    Label(L10n.ugoiraExportActions, systemImage: "square.and.arrow.up")
+                }
+            }
+            .menuStyle(.button)
+            .buttonStyle(.plain)
+            .controlSize(.small)
+            .keiInteractiveGlass(12)
+            .disabled(isLoading)
 
             Button {
                 Task { await loadAndPlay(forceReload: true) }
@@ -135,12 +196,95 @@ struct UgoiraPlayerView: View {
         currentFrameIndex = 0
 
         do {
-            animation = try await store.loadUgoiraAnimation(for: artwork)
+            let package = try await store.loadUgoiraExportPackage(for: artwork)
+            exportPackage = package
+            animation = package.animation
             isLoading = false
             startPlayback()
         } catch {
             isLoading = false
             errorMessage = error.localizedDescription
+        }
+    }
+
+    private func exportGIF() async {
+        let package: UgoiraExportPackage
+        do {
+            package = try await loadedExportPackage()
+        } catch {
+            showStatus(error.localizedDescription)
+            return
+        }
+
+        guard let url = savePanelURL(extension: "gif", contentType: .gif, title: L10n.exportGIF) else { return }
+        isExporting = true
+        defer { isExporting = false }
+
+        do {
+            try await Task.detached(priority: .userInitiated) {
+                try UgoiraGIFExporter.export(animation: package.animation, to: url)
+            }.value
+            exportedGIFURL = url
+            showStatus(String(format: L10n.exportedGIFFormat, url.lastPathComponent))
+        } catch {
+            showStatus(error.localizedDescription)
+        }
+    }
+
+    private func exportZip() async {
+        let package: UgoiraExportPackage
+        do {
+            package = try await loadedExportPackage()
+        } catch {
+            showStatus(error.localizedDescription)
+            return
+        }
+
+        guard let url = savePanelURL(extension: "zip", contentType: .zip, title: L10n.exportUgoiraZip) else { return }
+        isExporting = true
+        defer { isExporting = false }
+
+        do {
+            try package.zipData.write(to: url, options: .atomic)
+            showStatus(String(format: L10n.exportedZipFormat, url.lastPathComponent))
+        } catch {
+            showStatus(error.localizedDescription)
+        }
+    }
+
+    private func loadedExportPackage() async throws -> UgoiraExportPackage {
+        if let exportPackage {
+            return exportPackage
+        }
+        isLoading = true
+        defer { isLoading = false }
+        let package = try await store.loadUgoiraExportPackage(for: artwork)
+        exportPackage = package
+        animation = package.animation
+        return package
+    }
+
+    private func savePanelURL(extension fileExtension: String, contentType: UTType, title: String) -> URL? {
+        let panel = NSSavePanel()
+        panel.allowedContentTypes = [contentType]
+        panel.canCreateDirectories = true
+        panel.title = title
+        panel.nameFieldStringValue = "\(artwork.id).\(fileExtension)"
+        return panel.runModal() == .OK ? panel.url : nil
+    }
+
+    private func ugoiraSummary(_ animation: UgoiraAnimation) -> String {
+        let seconds = Double(animation.totalDurationMilliseconds) / 1000.0
+        return "\(currentFrameIndex + 1) / \(animation.frameCount) · \(seconds.formatted(.number.precision(.fractionLength(1))))s"
+    }
+
+    private func showStatus(_ message: String) {
+        statusMessage = message
+        Task {
+            try? await Task.sleep(for: .seconds(2.5))
+            if statusMessage == message {
+                statusMessage = nil
+            }
         }
     }
 
