@@ -24,8 +24,21 @@ struct MangaWatchlistView: View {
                 ProgressView(L10n.loading)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if series.isEmpty {
-                ContentUnavailableView(L10n.noWatchlistSeries, systemImage: "rectangle.stack.badge.person.crop")
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                ContentUnavailableView {
+                    Label(L10n.noWatchlistSeries, systemImage: "rectangle.stack.badge.person.crop")
+                } description: {
+                    if let errorMessage {
+                        Text(errorMessage)
+                    }
+                } actions: {
+                    Button {
+                        Task { await loadInitial() }
+                    } label: {
+                        Label(L10n.retry, systemImage: "arrow.clockwise")
+                    }
+                    .buttonStyle(.borderedProminent)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 ScrollView {
                     LazyVGrid(columns: columns, spacing: 14) {
@@ -52,6 +65,17 @@ struct MangaWatchlistView: View {
             }
         }
         .navigationTitle(L10n.mangaWatchlist)
+        .toolbar {
+            if store.session != nil {
+                ToolbarItem(placement: .status) {
+                    Text(watchlistStatusText)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                        .help(watchlistStatusText)
+                }
+            }
+        }
         .confirmationDialog(
             L10n.removeFromWatchlist,
             isPresented: removalBinding,
@@ -133,6 +157,11 @@ struct MangaWatchlistView: View {
         .disabled(isLoadingMore)
     }
 
+    private var watchlistStatusText: String {
+        let paging = nextURL == nil ? L10n.noMorePages : L10n.nextPageAvailable
+        return "\(series.count.formatted()) \(L10n.results) · \(paging)"
+    }
+
     private func loadInitial() async {
         guard store.session != nil else { return }
         isLoading = true
@@ -158,6 +187,11 @@ struct MangaWatchlistView: View {
             let response = try await store.nextMangaWatchlist(nextURL)
             series.append(contentsOf: response.series)
             self.nextURL = response.nextURL
+            if response.series.isEmpty {
+                actionMessage = L10n.noMorePages
+            } else {
+                actionMessage = String(format: L10n.loadedWatchlistSeriesFormat, response.series.count)
+            }
         } catch {
             errorMessage = error.localizedDescription
         }

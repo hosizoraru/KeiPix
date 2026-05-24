@@ -181,11 +181,19 @@ struct BrowsingHistoryView: View {
                 ProgressView(L10n.loading)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if store.artworks.isEmpty {
-                EmptyStateView(
-                    title: L10n.noPixivHistoryTitle,
-                    subtitle: L10n.noPixivHistorySubtitle,
-                    systemImage: "clock.badge.questionmark"
-                )
+                ContentUnavailableView {
+                    Label(L10n.noPixivHistoryTitle, systemImage: "clock.badge.questionmark")
+                } description: {
+                    Text(store.errorMessage ?? L10n.noPixivHistorySubtitle)
+                } actions: {
+                    Button {
+                        Task { await reloadPixivHistory(showFeedback: true) }
+                    } label: {
+                        Label(L10n.retry, systemImage: "arrow.clockwise")
+                    }
+                    .buttonStyle(.borderedProminent)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 ScrollView {
                     LazyVGrid(columns: pixivColumns, spacing: 14) {
@@ -222,7 +230,7 @@ struct BrowsingHistoryView: View {
 
                         if store.hasNextPage {
                             Button {
-                                Task { await store.loadMore() }
+                                Task { await loadMorePixivHistory() }
                             } label: {
                                 Label(L10n.loadMore, systemImage: "arrow.down.circle")
                                     .frame(maxWidth: .infinity, minHeight: 132)
@@ -297,6 +305,16 @@ struct BrowsingHistoryView: View {
         await store.reloadCurrentFeed()
         guard showFeedback, store.errorMessage == nil else { return }
         actionMessage = String(format: L10n.refreshedPixivHistoryFormat, store.artworks.count)
+    }
+
+    private func loadMorePixivHistory() async {
+        let previousCount = store.artworks.count
+        await store.loadMore()
+        guard store.errorMessage == nil else { return }
+        let loadedCount = max(store.artworks.count - previousCount, 0)
+        actionMessage = loadedCount > 0
+            ? String(format: L10n.loadedPixivHistoryItemsFormat, loadedCount)
+            : L10n.noMorePages
     }
 }
 

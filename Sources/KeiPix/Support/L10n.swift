@@ -77,6 +77,7 @@ enum L10n {
     static var noPixivHistorySubtitle: String { text("Refresh Pixiv history after opening artworks from this account.") }
     static var historyItemCountFormat: String { text("%d history items") }
     static var refreshedPixivHistoryFormat: String { text("Refreshed %d Pixiv history items") }
+    static var loadedPixivHistoryItemsFormat: String { text("Loaded %d Pixiv history items") }
     static var mangaWatchlist: String { text("Manga Watchlist") }
     static var recommendedCreators: String { text("Recommended Creators") }
     static var relatedCreators: String { text("Related Creators") }
@@ -200,6 +201,7 @@ enum L10n {
     static var noBookmarkTagsToCopy: String { text("No bookmark tags to copy") }
     static var copiedBookmarkTagsFormat: String { text("Copied %d bookmark tags") }
     static var refreshedBookmarkTagsFormat: String { text("Refreshed %d bookmark tags") }
+    static var loadedBookmarkTagsFormat: String { text("Loaded %d bookmark tags") }
     static var selectAll: String { text("Select All") }
     static var clearSelection: String { text("Clear Selection") }
     static var selectedBookmarkTagsFormat: String { text("Selected %d bookmark tags") }
@@ -476,6 +478,7 @@ enum L10n {
     static var openLatestArtwork: String { text("Open Latest Artwork") }
     static var noWatchlistSeries: String { text("No watchlist series") }
     static var loadMoreWatchlist: String { text("Load More Watchlist") }
+    static var loadedWatchlistSeriesFormat: String { text("Loaded %d watchlist series") }
     static var removeFromWatchlist: String { text("Remove from Watchlist") }
     static var removeFromWatchlistConfirmationFormat: String { text("Remove %@ from watchlist?") }
     static var removedFromWatchlistFormat: String { text("Removed %@ from watchlist") }

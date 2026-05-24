@@ -74,6 +74,7 @@
 "Refresh Pixiv history after opening artworks from this account." = "Refresh Pixiv history after opening artworks from this account.";
 "%d history items" = "%d history items";
 "Refreshed %d Pixiv history items" = "Refreshed %d Pixiv history items";
+"Loaded %d Pixiv history items" = "Loaded %d Pixiv history items";
 "Manga Watchlist" = "Manga Watchlist";
 "Recommended Creators" = "Recommended Creators";
 "Related Creators" = "Related Creators";
@@ -202,6 +203,7 @@
 "No bookmark tags to copy" = "No bookmark tags to copy";
 "Copied %d bookmark tags" = "Copied %d bookmark tags";
 "Refreshed %d bookmark tags" = "Refreshed %d bookmark tags";
+"Loaded %d bookmark tags" = "Loaded %d bookmark tags";
 "Select All" = "Select All";
 "Clear Selection" = "Clear Selection";
 "Selected %d bookmark tags" = "Selected %d bookmark tags";
@@ -460,6 +462,7 @@
 "Open Latest Artwork" = "Open Latest Artwork";
 "No watchlist series" = "No watchlist series";
 "Load More Watchlist" = "Load More Watchlist";
+"Loaded %d watchlist series" = "Loaded %d watchlist series";
 "Remove from Watchlist" = "Remove from Watchlist";
 "Remove %@ from watchlist?" = "Remove %@ from watchlist?";
 "Removed %@ from watchlist" = "Removed %@ from watchlist";

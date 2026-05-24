@@ -61,9 +61,10 @@ private struct RuntimeReadinessRowView: View {
 
             Text(row.value)
                 .foregroundStyle(.secondary)
-                .lineLimit(2)
+                .lineLimit(3)
                 .multilineTextAlignment(.trailing)
                 .textSelection(.enabled)
+                .help(row.value)
         }
     }
 

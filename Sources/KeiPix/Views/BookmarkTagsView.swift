@@ -230,6 +230,11 @@ struct BookmarkTagsView: View {
             let response = try await store.nextBookmarkTagPage(nextURL)
             tags.append(contentsOf: response.bookmarkTags)
             self.nextURL = response.nextURL
+            if response.bookmarkTags.isEmpty {
+                showActionMessage(L10n.noMorePages)
+            } else {
+                showActionMessage(String(format: L10n.loadedBookmarkTagsFormat, response.bookmarkTags.count))
+            }
         } catch {
             errorMessage = error.localizedDescription
         }

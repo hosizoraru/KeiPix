@@ -74,6 +74,7 @@
 "Refresh Pixiv history after opening artworks from this account." = "使用当前账号打开作品后，可以刷新 Pixiv 历史。";
 "%d history items" = "%d 条历史";
 "Refreshed %d Pixiv history items" = "已刷新 %d 条 Pixiv 历史";
+"Loaded %d Pixiv history items" = "已加载 %d 条 Pixiv 历史";
 "Manga Watchlist" = "漫画追更";
 "Recommended Creators" = "推荐作者";
 "Related Creators" = "相关作者";
@@ -202,6 +203,7 @@
 "No bookmark tags to copy" = "没有可复制的收藏标签";
 "Copied %d bookmark tags" = "已复制 %d 个收藏标签";
 "Refreshed %d bookmark tags" = "已刷新 %d 个收藏标签";
+"Loaded %d bookmark tags" = "已加载 %d 个收藏标签";
 "Select All" = "全选";
 "Clear Selection" = "清空选择";
 "Selected %d bookmark tags" = "已选择 %d 个收藏标签";
@@ -460,6 +462,7 @@
 "Open Latest Artwork" = "打开最新作品";
 "No watchlist series" = "暂无追更系列";
 "Load More Watchlist" = "加载更多追更";
+"Loaded %d watchlist series" = "已加载 %d 个追更系列";
 "Remove from Watchlist" = "取消追更";
 "Remove %@ from watchlist?" = "取消追更 %@？";
 "Removed %@ from watchlist" = "已取消追更 %@";
