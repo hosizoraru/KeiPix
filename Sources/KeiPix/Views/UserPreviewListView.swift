@@ -40,8 +40,24 @@ struct UserPreviewListView: View {
                 ContentUnavailableView(L10n.enterSearchKeyword, systemImage: "magnifyingglass")
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if previews.isEmpty {
-                ContentUnavailableView(L10n.noCreators, systemImage: "person.2")
+                if let errorMessage {
+                    ContentUnavailableView {
+                        Label(L10n.errorTitle, systemImage: "exclamationmark.triangle")
+                    } description: {
+                        Text(errorMessage)
+                    } actions: {
+                        Button {
+                            Task { await loadInitial() }
+                        } label: {
+                            Label(L10n.retry, systemImage: "arrow.clockwise")
+                        }
+                        .buttonStyle(.borderedProminent)
+                    }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else {
+                    ContentUnavailableView(L10n.noCreators, systemImage: "person.2")
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                }
             } else {
                 ScrollView {
                     LazyVStack(spacing: 0, pinnedViews: [.sectionHeaders]) {
@@ -228,7 +244,11 @@ struct UserPreviewListView: View {
     }
 
     private var isStatusBannerVisible: Bool {
-        errorMessage != nil || bulkStatusText != nil || isRunningBulkAction || isCheckingFollowVisibility || undoAction != nil
+        (errorMessage != nil && previews.isEmpty == false)
+            || bulkStatusText != nil
+            || isRunningBulkAction
+            || isCheckingFollowVisibility
+            || undoAction != nil
     }
 
     private var visibleFollowedPreviews: [PixivUserPreview] {
