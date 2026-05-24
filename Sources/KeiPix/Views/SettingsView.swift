@@ -5,6 +5,7 @@ struct SettingsView: View {
     @State private var isSyncingMutedContent = false
     @State private var isUpdatingRestrictedMode = false
     @State private var mutedContentSyncMessage: String?
+    @State private var mutedContentSyncMessageIsError = false
     @State private var restrictedModeMessage: String?
     @State private var isLogoutConfirmationPresented = false
     @State private var isMutedContentUploadConfirmationPresented = false
@@ -96,7 +97,7 @@ struct SettingsView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
 
-                HStack(spacing: 10) {
+                FlowLayout(spacing: 8) {
                     Button {
                         Task { await syncMutedContentFromPixiv() }
                     } label: {
@@ -117,7 +118,7 @@ struct SettingsView: View {
                     }
                 }
 
-                HStack(spacing: 10) {
+                FlowLayout(spacing: 8) {
                     Button {
                         exportLocalMutedContent()
                     } label: {
@@ -136,7 +137,7 @@ struct SettingsView: View {
                 if let mutedContentSyncMessage {
                     Text(mutedContentSyncMessage)
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(mutedContentSyncMessageIsError ? .red : .secondary)
                         .textSelection(.enabled)
                 }
 
@@ -169,7 +170,7 @@ struct SettingsView: View {
                         .textSelection(.enabled)
                 }
 
-                HStack(spacing: 10) {
+                FlowLayout(spacing: 8) {
                     Button {
                         store.downloads.chooseDownloadDirectory()
                     } label: {
@@ -475,6 +476,7 @@ struct SettingsView: View {
     private func syncMutedContentFromPixiv() async {
         isSyncingMutedContent = true
         mutedContentSyncMessage = nil
+        mutedContentSyncMessageIsError = false
         defer { isSyncingMutedContent = false }
 
         do {
@@ -482,45 +484,56 @@ struct SettingsView: View {
             try await store.importAccountMutedContent()
             store.undoAction = AppUndoAction(kind: .restoreMutedContentSnapshot(snapshot))
             mutedContentSyncMessage = L10n.synced
+            mutedContentSyncMessageIsError = false
         } catch {
             mutedContentSyncMessage = error.localizedDescription
+            mutedContentSyncMessageIsError = true
         }
     }
 
     private func uploadMutedContentToPixiv() async {
         isSyncingMutedContent = true
         mutedContentSyncMessage = nil
+        mutedContentSyncMessageIsError = false
         defer { isSyncingMutedContent = false }
 
         do {
             try await store.uploadLocalMutedContentToAccount()
             mutedContentSyncMessage = L10n.uploaded
+            mutedContentSyncMessageIsError = false
         } catch {
             mutedContentSyncMessage = error.localizedDescription
+            mutedContentSyncMessageIsError = true
         }
     }
 
     private func exportLocalMutedContent() {
         mutedContentSyncMessage = nil
+        mutedContentSyncMessageIsError = false
         do {
             if try store.exportMutedContentToFile() {
                 mutedContentSyncMessage = L10n.exported
+                mutedContentSyncMessageIsError = false
             }
         } catch {
             mutedContentSyncMessage = error.localizedDescription
+            mutedContentSyncMessageIsError = true
         }
     }
 
     private func importLocalMutedContent() {
         mutedContentSyncMessage = nil
+        mutedContentSyncMessageIsError = false
         do {
             let snapshot = store.mutedContentArchiveSnapshot()
             if try store.importMutedContentFromFile() {
                 store.undoAction = AppUndoAction(kind: .restoreMutedContentSnapshot(snapshot))
                 mutedContentSyncMessage = L10n.imported
+                mutedContentSyncMessageIsError = false
             }
         } catch {
             mutedContentSyncMessage = error.localizedDescription
+            mutedContentSyncMessageIsError = true
         }
     }
 
