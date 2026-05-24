@@ -230,6 +230,7 @@ enum L10n {
     static var followVisibilityUpdatedFormat: String { text("Checked follow visibility for %d creators") }
     static var followVisibilityPartiallyUpdatedFormat: String { text("Checked follow visibility for %d creators, %d failed") }
     static var followedCreatorFormat: String { text("Followed %@") }
+    static var updatedCreatorFollowVisibilityFormat: String { text("Updated follow visibility for %@") }
     static var unfollowCreatorConfirmationFormat: String { text("Unfollow %@?") }
     static var muteCreatorConfirmationFormat: String { text("Mute %@?") }
     static var unfollowedCreatorFormat: String { text("Unfollowed %@") }

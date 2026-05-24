@@ -8,6 +8,7 @@ struct BookmarkTagsView: View {
     @State private var isLoading = false
     @State private var isLoadingMore = false
     @State private var errorMessage: String?
+    @State private var actionMessage: String?
     @State private var filterText = ""
 
     private let columns = [
@@ -50,6 +51,7 @@ struct BookmarkTagsView: View {
                                     .contextMenu {
                                         Button(L10n.copyTag) {
                                             PasteboardWriter.copy(tag.name)
+                                            showActionMessage(String(format: L10n.copiedKeywordFormat, "#\(tag.name)"))
                                         }
                                     }
                                 }
@@ -102,18 +104,31 @@ struct BookmarkTagsView: View {
             }
         }
         .overlay(alignment: .bottom) {
-            if let errorMessage {
-                FloatingStatusBanner {
-                    Text(errorMessage)
-                        .font(.callout)
-                        .foregroundStyle(.red)
-                        .textSelection(.enabled)
+            VStack(spacing: 8) {
+                if let actionMessage {
+                    FloatingStatusBanner {
+                        Text(actionMessage)
+                            .font(.callout)
+                            .foregroundStyle(.secondary)
+                            .textSelection(.enabled)
+                    }
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
-                .padding(.horizontal, 18)
-                .padding(.bottom, 14)
-                .transition(.move(edge: .bottom).combined(with: .opacity))
+
+                if let errorMessage {
+                    FloatingStatusBanner {
+                        Text(errorMessage)
+                            .font(.callout)
+                            .foregroundStyle(.red)
+                            .textSelection(.enabled)
+                    }
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                }
             }
+            .padding(.horizontal, 18)
+            .padding(.bottom, 14)
         }
+        .animation(.snappy(duration: 0.18), value: actionMessage)
         .animation(.snappy(duration: 0.18), value: errorMessage)
         .task(id: bookmarkTagLoadKey) {
             await load()
@@ -196,6 +211,16 @@ struct BookmarkTagsView: View {
             self.nextURL = response.nextURL
         } catch {
             errorMessage = error.localizedDescription
+        }
+    }
+
+    private func showActionMessage(_ message: String) {
+        actionMessage = message
+        Task {
+            try? await Task.sleep(for: .seconds(2.5))
+            if actionMessage == message {
+                actionMessage = nil
+            }
         }
     }
 }

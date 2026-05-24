@@ -11,6 +11,8 @@ struct ArtworkRelatedView: View {
     @State private var isLoading = false
     @State private var isLoadingMore = false
     @State private var errorMessage: String?
+    @State private var statusMessage: String?
+    @State private var pendingDangerAction: AppDangerAction?
 
     private let columns = [
         GridItem(.adaptive(minimum: 140, maximum: 210), spacing: 12)
@@ -41,26 +43,27 @@ struct ArtworkRelatedView: View {
                             .contextMenu {
                                 Button(related.isBookmarked ? L10n.removeBookmark : L10n.bookmark) {
                                     if related.isBookmarked {
-                                        store.requestDangerAction(AppDangerAction(kind: .removeBookmark(related)))
+                                        pendingDangerAction = AppDangerAction(kind: .removeBookmark(related))
                                     } else {
-                                        Task { await store.toggleBookmark(related) }
+                                        Task { await bookmark(related) }
                                     }
                                 }
                                 Button(L10n.download) {
                                     store.enqueueDownload(related)
+                                    showStatus(String(format: L10n.queuedDownloadsFormat, 1))
                                 }
                                 Divider()
                                 Button(L10n.muteArtwork) {
-                                    store.requestDangerAction(AppDangerAction(kind: .muteArtwork(related)))
+                                    pendingDangerAction = AppDangerAction(kind: .muteArtwork(related))
                                 }
                                 Button(L10n.muteCreator) {
-                                    store.requestDangerAction(AppDangerAction(kind: .muteCreator(related.user)))
+                                    pendingDangerAction = AppDangerAction(kind: .muteCreator(related.user))
                                 }
                                 if related.tags.isEmpty == false {
                                     Menu(L10n.muteTag) {
                                         ForEach(related.tags.prefix(12), id: \.self) { tag in
                                             Button("#\(tag.name)") {
-                                                store.requestDangerAction(AppDangerAction(kind: .muteTag(tag)))
+                                                pendingDangerAction = AppDangerAction(kind: .muteTag(tag))
                                             }
                                         }
                                     }
@@ -71,6 +74,13 @@ struct ArtworkRelatedView: View {
                             }
                         }
                     }
+                }
+
+                if let statusMessage {
+                    Text(statusMessage)
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                        .textSelection(.enabled)
                 }
 
                 if let errorMessage {
@@ -109,6 +119,22 @@ struct ArtworkRelatedView: View {
             guard value, hasLoaded == false else { return }
             Task { await loadInitial() }
         }
+        .confirmationDialog(
+            pendingDangerAction?.title ?? L10n.moreActions,
+            isPresented: dangerActionBinding,
+            titleVisibility: .visible
+        ) {
+            if let pendingDangerAction {
+                Button(pendingDangerAction.title, role: .destructive) {
+                    Task { await performDangerAction(pendingDangerAction) }
+                }
+            }
+            Button(L10n.cancel, role: .cancel) {}
+        } message: {
+            if let pendingDangerAction {
+                Text(pendingDangerAction.confirmationMessage)
+            }
+        }
     }
 
     private var title: String {
@@ -146,6 +172,70 @@ struct ArtworkRelatedView: View {
             self.nextURL = response.nextURL
         } catch {
             errorMessage = error.localizedDescription
+        }
+    }
+
+    private func bookmark(_ related: PixivArtwork) async {
+        do {
+            try await store.saveBookmark(
+                related,
+                restrict: store.defaultBookmarkRestrict,
+                tags: store.automaticBookmarkTags(for: related)
+            )
+            updateRelatedArtwork(related.id) { $0.isBookmarked = true }
+            showStatus(String(format: L10n.savedBookmarkFormat, related.title))
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    private func performDangerAction(_ action: AppDangerAction) async {
+        defer { pendingDangerAction = nil }
+        let succeeded = await store.performDangerAction(action)
+        guard succeeded else {
+            errorMessage = store.errorMessage
+            return
+        }
+
+        switch action.kind {
+        case .removeBookmark(let artwork):
+            updateRelatedArtwork(artwork.id) { $0.isBookmarked = false }
+        case .muteArtwork(let artwork):
+            relatedArtworks.removeAll { $0.id == artwork.id }
+        case .muteCreator(let user):
+            relatedArtworks.removeAll { $0.user.id == user.id }
+        case .muteTag(let tag):
+            relatedArtworks.removeAll { artwork in
+                artwork.tags.contains { $0.name.localizedCaseInsensitiveCompare(tag.name) == .orderedSame }
+            }
+        case .unfollowCreator:
+            break
+        }
+    }
+
+    private var dangerActionBinding: Binding<Bool> {
+        Binding {
+            pendingDangerAction != nil
+        } set: { value in
+            if value == false {
+                pendingDangerAction = nil
+            }
+        }
+    }
+
+    private func updateRelatedArtwork(_ id: Int, update: (inout PixivArtwork) -> Void) {
+        for index in relatedArtworks.indices where relatedArtworks[index].id == id {
+            update(&relatedArtworks[index])
+        }
+    }
+
+    private func showStatus(_ message: String) {
+        statusMessage = message
+        Task {
+            try? await Task.sleep(for: .seconds(2.5))
+            if statusMessage == message {
+                statusMessage = nil
+            }
         }
     }
 }

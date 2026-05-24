@@ -7,6 +7,7 @@ struct SpotlightView: View {
     @State private var isLoading = false
     @State private var isLoadingMore = false
     @State private var errorMessage: String?
+    @State private var actionMessage: String?
 
     var body: some View {
         Group {
@@ -27,6 +28,8 @@ struct SpotlightView: View {
                                 isSelected: store.selectedSpotlightArticle?.id == article.id
                             ) {
                                 store.selectedSpotlightArticle = article
+                            } copied: {
+                                showActionMessage(L10n.copied)
                             }
                         }
 
@@ -57,18 +60,31 @@ struct SpotlightView: View {
             }
         }
         .overlay(alignment: .bottom) {
-            if let errorMessage {
-                FloatingStatusBanner {
-                    Text(errorMessage)
-                        .font(.callout)
-                        .foregroundStyle(.red)
-                        .textSelection(.enabled)
+            VStack(spacing: 8) {
+                if let actionMessage {
+                    FloatingStatusBanner {
+                        Text(actionMessage)
+                            .font(.callout)
+                            .foregroundStyle(.secondary)
+                            .textSelection(.enabled)
+                    }
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
-                .padding(.horizontal, 18)
-                .padding(.bottom, 14)
-                .transition(.move(edge: .bottom).combined(with: .opacity))
+
+                if let errorMessage {
+                    FloatingStatusBanner {
+                        Text(errorMessage)
+                            .font(.callout)
+                            .foregroundStyle(.red)
+                            .textSelection(.enabled)
+                    }
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                }
             }
+            .padding(.horizontal, 18)
+            .padding(.bottom, 14)
         }
+        .animation(.snappy(duration: 0.18), value: actionMessage)
         .animation(.snappy(duration: 0.18), value: errorMessage)
         .task(id: store.routeRefreshGeneration) {
             await load()
@@ -129,12 +145,23 @@ struct SpotlightView: View {
         }
         store.selectedSpotlightArticle = articles.first
     }
+
+    private func showActionMessage(_ message: String) {
+        actionMessage = message
+        Task {
+            try? await Task.sleep(for: .seconds(2.5))
+            if actionMessage == message {
+                actionMessage = nil
+            }
+        }
+    }
 }
 
 private struct SpotlightArticleCard: View {
     let article: PixivSpotlightArticle
     let isSelected: Bool
     let select: () -> Void
+    let copied: () -> Void
     @State private var isHovering = false
 
     var body: some View {
@@ -196,6 +223,7 @@ private struct SpotlightArticleCard: View {
             Link(L10n.openInPixiv, destination: article.articleURL)
             Button(L10n.copyLink) {
                 PasteboardWriter.copy(article.articleURL.absoluteString)
+                copied()
             }
         }
     }

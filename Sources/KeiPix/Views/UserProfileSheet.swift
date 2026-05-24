@@ -12,7 +12,10 @@ struct UserProfileSheet: View {
     @State private var relatedUsers: [PixivUserPreview] = []
     @State private var errorMessage: String?
     @State private var relatedErrorMessage: String?
+    @State private var statusMessage: String?
     @State private var followRestrict: BookmarkRestrict?
+    @State private var isUpdatingFollow = false
+    @State private var updatingRelatedUserIDs: Set<Int> = []
     @State private var selectedRelatedUser: PixivUser?
     @State private var relationshipListMode: UserPreviewListMode?
     @State private var pendingDangerAction: AppDangerAction?
@@ -68,15 +71,28 @@ struct UserProfileSheet: View {
                 .frame(width: 920, height: 680)
         }
         .overlay(alignment: .bottom) {
-            if let undoAction = store.undoAction {
-                AppUndoBar(action: undoAction) {
-                    Task { await store.performUndo(undoAction) }
+            VStack(spacing: 8) {
+                if let statusMessage {
+                    FloatingStatusBanner {
+                        Text(statusMessage)
+                            .font(.callout)
+                            .foregroundStyle(.secondary)
+                            .textSelection(.enabled)
+                    }
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
-                .padding(.horizontal, 18)
-                .padding(.bottom, 14)
-                .transition(.move(edge: .bottom).combined(with: .opacity))
+
+                if let undoAction = store.undoAction {
+                    AppUndoBar(action: undoAction) {
+                        Task { await store.performUndo(undoAction) }
+                    }
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                }
             }
+            .padding(.horizontal, 18)
+            .padding(.bottom, 14)
         }
+        .animation(.snappy(duration: 0.18), value: statusMessage)
         .animation(.snappy(duration: 0.18), value: store.undoAction?.id)
         .confirmationDialog(
             pendingDangerAction?.title ?? L10n.moreActions,
@@ -176,7 +192,7 @@ struct UserProfileSheet: View {
                 .buttonStyle(.glassProminent)
             }
         }
-        .disabled(isLoading)
+        .disabled(isLoading || isUpdatingFollow)
         .help(L10n.followVisibility)
     }
 
@@ -188,6 +204,7 @@ struct UserProfileSheet: View {
 
                 Button(L10n.copyLink) {
                     PasteboardWriter.copy(url.absoluteString)
+                    showStatus(L10n.copied)
                 }
             } label: {
                 Label(L10n.moreActions, systemImage: "ellipsis.circle")
@@ -444,16 +461,20 @@ struct UserProfileSheet: View {
                                     restrict in
                                     Task { await toggleRelatedFollow(preview.user, restrict: restrict) }
                                 },
+                                isUpdatingFollow: updatingRelatedUserIDs.contains(preview.user.id),
                                 requestUnfollow: {
                                     pendingDangerAction = AppDangerAction(
                                         kind: .unfollowCreator(
                                             preview.user,
-                                            preview.user.isFollowed ? store.defaultFollowRestrict : nil
+                                            nil
                                         )
                                     )
                                 },
                                 requestMuteCreator: {
                                     pendingDangerAction = AppDangerAction(kind: .muteCreator(preview.user))
+                                },
+                                copied: {
+                                    showStatus(L10n.copied)
                                 },
                                 selectArtwork: { artwork in
                                     store.selectedArtwork = artwork
@@ -521,32 +542,45 @@ struct UserProfileSheet: View {
     }
 
     private func toggleFollow(restrict: BookmarkRestrict? = nil) async {
+        guard isUpdatingFollow == false else { return }
         let target = detail?.user ?? user
         let nextValue = isFollowed == false
         let appliedRestrict = restrict ?? store.defaultFollowRestrict
+        isUpdatingFollow = true
+        defer { isUpdatingFollow = false }
         do {
             try await store.setFollow(target, isFollowed: nextValue, restrict: appliedRestrict)
             isFollowed = nextValue
             followRestrict = nextValue ? appliedRestrict : nil
+            if nextValue {
+                showStatus(String(format: L10n.followedCreatorFormat, target.name))
+            }
         } catch {
             errorMessage = error.localizedDescription
         }
     }
 
     private func updateFollowVisibility(_ restrict: BookmarkRestrict) async {
+        guard isUpdatingFollow == false else { return }
         let target = detail?.user ?? user
+        isUpdatingFollow = true
+        defer { isUpdatingFollow = false }
         do {
             try await store.setFollow(target, isFollowed: true, restrict: restrict)
             isFollowed = true
             followRestrict = restrict
+            showStatus(String(format: L10n.updatedCreatorFollowVisibilityFormat, target.name))
         } catch {
             errorMessage = error.localizedDescription
         }
     }
 
     private func toggleRelatedFollow(_ user: PixivUser, restrict: BookmarkRestrict? = nil) async {
+        guard updatingRelatedUserIDs.contains(user.id) == false else { return }
         let nextValue = user.isFollowed == false
         let appliedRestrict = restrict ?? store.defaultFollowRestrict
+        updatingRelatedUserIDs.insert(user.id)
+        defer { updatingRelatedUserIDs.remove(user.id) }
         do {
             try await store.setFollow(user, isFollowed: nextValue, restrict: appliedRestrict)
         } catch {
@@ -554,6 +588,9 @@ struct UserProfileSheet: View {
             return
         }
         updateRelatedFollowState(userID: user.id, isFollowed: nextValue)
+        if nextValue {
+            showStatus(String(format: L10n.followedCreatorFormat, user.name))
+        }
     }
 
     private func performDangerAction(_ action: AppDangerAction) async {
@@ -571,8 +608,10 @@ struct UserProfileSheet: View {
                 followRestrict = nil
             }
             updateRelatedFollowState(userID: user.id, isFollowed: false)
+            showStatus(String(format: L10n.unfollowedCreatorFormat, user.name))
         case .muteCreator(let user):
             updateRelatedMutedState(userID: user.id, isMuted: true)
+            showStatus(String(format: L10n.mutedCreatorFormat, user.name))
         case .removeBookmark, .muteArtwork, .muteTag:
             break
         }
@@ -609,6 +648,16 @@ struct UserProfileSheet: View {
             )
         }
     }
+
+    private func showStatus(_ message: String) {
+        statusMessage = message
+        Task {
+            try? await Task.sleep(for: .seconds(2.5))
+            if statusMessage == message {
+                statusMessage = nil
+            }
+        }
+    }
 }
 
 private struct RelatedCreatorCard: View {
@@ -616,8 +665,10 @@ private struct RelatedCreatorCard: View {
     let openProfile: () -> Void
     let openIllustrations: () -> Void
     let toggleFollow: (BookmarkRestrict?) -> Void
+    let isUpdatingFollow: Bool
     let requestUnfollow: () -> Void
     let requestMuteCreator: () -> Void
+    let copied: () -> Void
     let selectArtwork: (PixivArtwork) -> Void
 
     var body: some View {
@@ -668,6 +719,7 @@ private struct RelatedCreatorCard: View {
                             Link(L10n.openInPixiv, destination: url)
                             Button(L10n.copyLink) {
                                 PasteboardWriter.copy(url.absoluteString)
+                                copied()
                             }
                         }
                     }
@@ -680,6 +732,7 @@ private struct RelatedCreatorCard: View {
                         requestUnfollow()
                     }
                     .buttonStyle(.bordered)
+                    .disabled(isUpdatingFollow)
                 } else {
                     Menu {
                         Button(L10n.followUsingDefault) {
@@ -698,6 +751,7 @@ private struct RelatedCreatorCard: View {
                         Label(L10n.follow, systemImage: "person.crop.circle.badge.plus")
                     }
                     .buttonStyle(.bordered)
+                    .disabled(isUpdatingFollow)
                 }
 
                 Button {
@@ -720,6 +774,7 @@ private struct RelatedCreatorCard: View {
                 Link(L10n.openInPixiv, destination: url)
                 Button(L10n.copyLink) {
                     PasteboardWriter.copy(url.absoluteString)
+                    copied()
                 }
             }
 
@@ -729,16 +784,20 @@ private struct RelatedCreatorCard: View {
                 Button(L10n.unfollow) {
                     requestUnfollow()
                 }
+                .disabled(isUpdatingFollow)
             } else {
                 Button(L10n.followUsingDefault) {
                     toggleFollow(nil)
                 }
+                .disabled(isUpdatingFollow)
                 Button(L10n.followPublicly) {
                     toggleFollow(.public)
                 }
+                .disabled(isUpdatingFollow)
                 Button(L10n.followPrivately) {
                     toggleFollow(.private)
                 }
+                .disabled(isUpdatingFollow)
             }
 
             Divider()

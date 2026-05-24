@@ -232,6 +232,7 @@
 "Checked follow visibility for %d creators" = "Checked follow visibility for %d creators";
 "Checked follow visibility for %d creators, %d failed" = "Checked follow visibility for %d creators, %d failed";
 "Followed %@" = "Followed %@";
+"Updated follow visibility for %@" = "Updated follow visibility for %@";
 "Unfollow %@?" = "Unfollow %@?";
 "Mute %@?" = "Mute %@?";
 "Unfollowed %@" = "Unfollowed %@";
