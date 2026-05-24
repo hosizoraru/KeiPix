@@ -58,6 +58,7 @@
 "Clear History" = "Clear History";
 "Clear all local browsing history?" = "Clear all local browsing history?";
 "Delete %@ from local history?" = "Delete %@ from local history?";
+"Deleted %@ from local history" = "Deleted %@ from local history";
 "Cleared %d history items" = "Cleared %d history items";
 "Delete from History" = "Delete from History";
 "No local history" = "No local history";
@@ -443,6 +444,7 @@
 "Search muted content" = "Search muted content";
 "Pixiv mute sync" = "Pixiv mute sync";
 "Add muted tag" = "Add muted tag";
+"#%@ is already muted" = "#%@ is already muted";
 "Delete from Muted Content" = "Delete from Muted Content";
 "Sync from Pixiv" = "Sync from Pixiv";
 "Upload to Pixiv" = "Upload to Pixiv";

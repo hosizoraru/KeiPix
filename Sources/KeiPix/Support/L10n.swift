@@ -61,6 +61,7 @@ enum L10n {
     static var clearHistory: String { text("Clear History") }
     static var clearHistoryConfirmation: String { text("Clear all local browsing history?") }
     static var deleteHistoryItemConfirmationFormat: String { text("Delete %@ from local history?") }
+    static var deletedHistoryItemFormat: String { text("Deleted %@ from local history") }
     static var clearedHistoryItemsFormat: String { text("Cleared %d history items") }
     static var deleteFromHistory: String { text("Delete from History") }
     static var noLocalHistoryTitle: String { text("No local history") }
@@ -458,6 +459,7 @@ enum L10n {
     static var searchMutedContent: String { text("Search muted content") }
     static var pixivMuteSync: String { text("Pixiv mute sync") }
     static var addMutedTag: String { text("Add muted tag") }
+    static var alreadyMutedTagFormat: String { text("#%@ is already muted") }
     static var deleteFromMutedContent: String { text("Delete from Muted Content") }
     static var syncFromPixiv: String { text("Sync from Pixiv") }
     static var uploadToPixiv: String { text("Upload to Pixiv") }

@@ -7,6 +7,7 @@ struct MutedContentView: View {
     @State private var newTagText = ""
     @State private var isSyncing = false
     @State private var statusMessage: String?
+    @State private var statusMessageIsError = false
     @State private var isClearConfirmationPresented = false
     @State private var isUploadConfirmationPresented = false
     @State private var pendingRemoval: MutedContentRemovalAction?
@@ -65,6 +66,8 @@ struct MutedContentView: View {
                 let archive = store.mutedContentArchiveSnapshot()
                 store.clearMutedContent()
                 store.undoAction = AppUndoAction(kind: .restoreMutedContent(archive))
+                statusMessageIsError = false
+                statusMessage = String(format: L10n.clearedMutedContentItemsFormat, archive.totalCount)
             }
             Button(L10n.cancel, role: .cancel) {}
         }
@@ -225,10 +228,16 @@ struct MutedContentView: View {
 
             Button {
                 let normalized = newTagText.trimmingCharacters(in: .whitespacesAndNewlines)
-                let wasMuted = store.mutedTagList.contains(normalized)
+                let wasMuted = store.mutedTagList.contains {
+                    $0.localizedCaseInsensitiveCompare(normalized) == .orderedSame
+                }
                 store.muteTag(named: normalized)
+                statusMessageIsError = false
                 if wasMuted == false {
                     store.undoAction = AppUndoAction(kind: .unmuteTag(normalized))
+                    statusMessage = String(format: L10n.mutedTagFormat, normalized)
+                } else {
+                    statusMessage = String(format: L10n.alreadyMutedTagFormat, normalized)
                 }
                 newTagText = ""
             } label: {
@@ -385,12 +394,18 @@ struct MutedContentView: View {
         case .tag(let tag):
             store.unmuteTag(tag)
             store.undoAction = AppUndoAction(kind: .remuteTag(tag))
+            statusMessageIsError = false
+            statusMessage = String(format: L10n.removedMutedTagFormat, tag)
         case .creator(let user):
             store.unmuteUser(id: user.id)
             store.undoAction = AppUndoAction(kind: .remuteCreator(user))
+            statusMessageIsError = false
+            statusMessage = String(format: L10n.removedMutedCreatorFormat, user.name)
         case .artwork(let artwork):
             store.unmuteArtwork(id: artwork.id)
             store.undoAction = AppUndoAction(kind: .remuteArtwork(artwork))
+            statusMessageIsError = false
+            statusMessage = String(format: L10n.removedMutedArtworkFormat, artwork.title)
         }
     }
 
@@ -403,29 +418,15 @@ struct MutedContentView: View {
     }
 
     private var statusMessageStyle: Color {
-        guard let statusMessage else { return .secondary }
-        if statusMessage == L10n.synced
-            || statusMessage == L10n.uploaded
-            || statusMessage == L10n.exported
-            || statusMessage == L10n.imported {
-            return .secondary
-        }
-        return .red
+        statusMessageIsError ? .red : .secondary
     }
 
     private func dismissStatusMessageIfNeeded(_ message: String?) async {
-        guard let message, isSuccessStatusMessage(message) else { return }
+        guard let message, statusMessageIsError == false else { return }
         try? await Task.sleep(for: .seconds(3))
         if statusMessage == message {
             statusMessage = nil
         }
-    }
-
-    private func isSuccessStatusMessage(_ message: String) -> Bool {
-        message == L10n.synced
-            || message == L10n.uploaded
-            || message == L10n.exported
-            || message == L10n.imported
     }
 
     private var categoryCountText: String {
@@ -444,6 +445,7 @@ struct MutedContentView: View {
     private func syncFromPixiv() async {
         isSyncing = true
         statusMessage = nil
+        statusMessageIsError = false
         defer { isSyncing = false }
 
         do {
@@ -452,6 +454,7 @@ struct MutedContentView: View {
             store.undoAction = AppUndoAction(kind: .restoreMutedContentSnapshot(snapshot))
             statusMessage = L10n.synced
         } catch {
+            statusMessageIsError = true
             statusMessage = error.localizedDescription
         }
     }
@@ -459,29 +462,34 @@ struct MutedContentView: View {
     private func uploadToPixiv() async {
         isSyncing = true
         statusMessage = nil
+        statusMessageIsError = false
         defer { isSyncing = false }
 
         do {
             try await store.uploadLocalMutedContentToAccount()
             statusMessage = L10n.uploaded
         } catch {
+            statusMessageIsError = true
             statusMessage = error.localizedDescription
         }
     }
 
     private func exportLocalMutedContent() {
         statusMessage = nil
+        statusMessageIsError = false
         do {
             if try store.exportMutedContentToFile() {
                 statusMessage = L10n.exported
             }
         } catch {
+            statusMessageIsError = true
             statusMessage = error.localizedDescription
         }
     }
 
     private func importLocalMutedContent() {
         statusMessage = nil
+        statusMessageIsError = false
         do {
             let snapshot = store.mutedContentArchiveSnapshot()
             if try store.importMutedContentFromFile() {
@@ -489,6 +497,7 @@ struct MutedContentView: View {
                 statusMessage = L10n.imported
             }
         } catch {
+            statusMessageIsError = true
             statusMessage = error.localizedDescription
         }
     }

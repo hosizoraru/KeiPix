@@ -6,6 +6,7 @@ struct BrowsingHistoryView: View {
     @State private var localSearchText = ""
     @State private var isClearConfirmationPresented = false
     @State private var pendingDeleteItem: LocalArtworkHistoryItem?
+    @State private var actionMessage: String?
 
     var body: some View {
         VStack(spacing: 0) {
@@ -42,6 +43,7 @@ struct BrowsingHistoryView: View {
                 let items = store.localBrowsingHistory
                 store.clearLocalBrowsingHistory()
                 store.undoAction = AppUndoAction(kind: .restoreLocalHistory(items))
+                actionMessage = String(format: L10n.clearedHistoryItemsFormat, items.count)
             }
             Button(L10n.cancel, role: .cancel) {}
         }
@@ -54,6 +56,7 @@ struct BrowsingHistoryView: View {
             Button(L10n.deleteFromHistory, role: .destructive) {
                 store.deleteLocalHistoryItem(item)
                 store.undoAction = AppUndoAction(kind: .restoreLocalHistory([item]))
+                actionMessage = String(format: L10n.deletedHistoryItemFormat, item.title)
                 pendingDeleteItem = nil
             }
             Button(L10n.cancel, role: .cancel) {
@@ -69,6 +72,23 @@ struct BrowsingHistoryView: View {
         .task(id: store.routeRefreshGeneration) {
             guard source == .pixiv else { return }
             await store.reloadCurrentFeed()
+        }
+        .overlay(alignment: .bottom) {
+            if let actionMessage {
+                FloatingStatusBanner(maxWidth: 520) {
+                    Text(actionMessage)
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                        .textSelection(.enabled)
+                }
+                .padding(.horizontal, 18)
+                .padding(.bottom, 14)
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+        }
+        .animation(.snappy(duration: 0.18), value: actionMessage)
+        .task(id: actionMessage) {
+            await dismissActionMessageIfNeeded(actionMessage)
         }
     }
 
@@ -240,6 +260,18 @@ struct BrowsingHistoryView: View {
             localHistoryCountText
         case .pixiv:
             "\(store.artworks.count.formatted()) \(L10n.results)"
+        }
+    }
+
+    private func dismissActionMessageIfNeeded(_ message: String?) async {
+        guard let message else { return }
+        do {
+            try await Task.sleep(for: .seconds(3))
+        } catch {
+            return
+        }
+        if actionMessage == message {
+            actionMessage = nil
         }
     }
 }

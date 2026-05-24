@@ -58,6 +58,7 @@
 "Clear History" = "清空历史";
 "Clear all local browsing history?" = "清空全部本地浏览历史？";
 "Delete %@ from local history?" = "从本地历史中删除 %@？";
+"Deleted %@ from local history" = "已从本地历史删除 %@";
 "Cleared %d history items" = "已清空 %d 条历史";
 "Delete from History" = "从历史中删除";
 "No local history" = "暂无本地历史";
@@ -443,6 +444,7 @@
 "Search muted content" = "搜索屏蔽内容";
 "Pixiv mute sync" = "Pixiv 屏蔽同步";
 "Add muted tag" = "新增屏蔽标签";
+"#%@ is already muted" = "#%@ 已在屏蔽列表中";
 "Delete from Muted Content" = "从屏蔽内容中删除";
 "Sync from Pixiv" = "从 Pixiv 同步";
 "Upload to Pixiv" = "上传到 Pixiv";
