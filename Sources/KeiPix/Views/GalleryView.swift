@@ -181,6 +181,7 @@ private struct FeedHeaderView: View {
     @State private var isLoadingBookmarkTags = false
     @State private var bookmarkTagErrorMessage: String?
     @State private var searchActionMessage: String?
+    @State private var feedActionMessage: String?
 
     var body: some View {
         HStack(spacing: 12) {
@@ -195,6 +196,13 @@ private struct FeedHeaderView: View {
                 Text("\(store.artworks.count.formatted()) \(L10n.results) · \(store.hasNextPage ? L10n.nextPageAvailable : L10n.noMorePages)")
                     .font(.caption)
                     .foregroundStyle(.secondary)
+
+                if let feedActionMessage {
+                    Text(feedActionMessage)
+                        .font(.caption)
+                        .foregroundStyle(.tertiary)
+                        .lineLimit(1)
+                }
 
                 if store.selectedRoute == .search {
                     HStack(spacing: 6) {
@@ -338,6 +346,19 @@ private struct FeedHeaderView: View {
                 .buttonStyle(.bordered)
             }
 
+            Menu {
+                Button {
+                    copyLoadedArtworkLinks()
+                } label: {
+                    Label(L10n.copyLoadedArtworkLinks, systemImage: "link")
+                }
+                .disabled(loadedArtworkLinks.isEmpty)
+            } label: {
+                Label(L10n.moreActions, systemImage: "ellipsis.circle")
+            }
+            .menuStyle(.button)
+            .buttonStyle(.bordered)
+
             Button {
                 batchDownloadLimit = min(max(1, batchDownloadLimit), maxBatchDownloadLimit)
                 isBatchDownloadPresented = true
@@ -371,6 +392,10 @@ private struct FeedHeaderView: View {
 
     private var maxBatchDownloadLimit: Int {
         min(max(store.artworks.count, 1), 100)
+    }
+
+    private var loadedArtworkLinks: [String] {
+        store.artworks.compactMap { $0.pixivURL?.absoluteString }
     }
 
     private var bookmarkTagTitle: String {
@@ -452,6 +477,20 @@ private struct FeedHeaderView: View {
         lastQueuedDownloadCount = count
         if count > 0 {
             isBatchDownloadPresented = false
+        }
+    }
+
+    private func copyLoadedArtworkLinks() {
+        let links = loadedArtworkLinks
+        guard links.isEmpty == false else { return }
+        PasteboardWriter.copy(links.joined(separator: "\n"))
+        feedActionMessage = String(format: L10n.copiedArtworkLinksFormat, links.count)
+
+        Task {
+            try? await Task.sleep(for: .seconds(2))
+            if feedActionMessage == String(format: L10n.copiedArtworkLinksFormat, links.count) {
+                feedActionMessage = nil
+            }
         }
     }
 

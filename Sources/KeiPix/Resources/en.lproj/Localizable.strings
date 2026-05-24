@@ -103,10 +103,12 @@
 "Retry Failed" = "Retry Failed";
 "Download Actions" = "Download Actions";
 "Copy Visible Links" = "Copy Visible Links";
+"Copy Loaded Artwork Links" = "Copy Loaded Artwork Links";
 "Reveal First Visible" = "Reveal First Visible";
 "Delete Visible Downloads" = "Delete Visible Downloads";
 "Delete %d visible downloads and move local files to Trash?" = "Delete %d visible downloads and move local files to Trash?";
 "Copied %d links" = "Copied %d links";
+"Copied %d artwork links" = "Copied %d artwork links";
 "Deleted %d downloads" = "Deleted %d downloads";
 "Reveal in Finder" = "Reveal in Finder";
 "Open Downloaded Artwork" = "Open Downloaded Artwork";
