@@ -577,6 +577,8 @@ private struct FeedHeaderView: View {
         if requestedUseRankingDate,
            store.useRankingDate == false,
            store.errorMessage == L10n.rankingDateFallbackMessage {
+            draftUseRankingDate = false
+            draftRankingDate = store.rankingDate
             actionMessage = L10n.rankingDateFallbackMessage
             store.errorMessage = nil
             return

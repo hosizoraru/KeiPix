@@ -207,6 +207,7 @@ final class KeiPixStore {
             guard isCancellationLike(error) == false else { return }
             if selectedRoute.isRankingRoute, useRankingDate {
                 setUseRankingDate(false)
+                setRankingDate(Self.latestSelectableRankingDate())
                 do {
                     let response = try await loadFeed(for: selectedRoute)
                     allArtworks = response.illusts
