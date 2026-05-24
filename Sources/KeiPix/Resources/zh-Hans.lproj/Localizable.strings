@@ -182,6 +182,7 @@
 "Follow Visible Privately" = "私密关注可见作者";
 "Mute Visible Creators" = "屏蔽可见作者";
 "Unfollow Visible Creators" = "取消关注可见作者";
+"Copy Visible Creator Links" = "复制可见作者链接";
 "Updating creators" = "正在更新作者";
 "Public Follow" = "公开关注";
 "Private Follow" = "私密关注";
@@ -190,6 +191,7 @@
 "Mute %d visible creators?" = "屏蔽 %d 位可见作者？";
 "Unfollow %d visible creators?" = "取消关注 %d 位可见作者？";
 "Updated %d creators" = "已更新 %d 位作者";
+"Copied %d creator links" = "已复制 %d 个作者链接";
 "Checked follow visibility for %d creators" = "已检查 %d 位作者的关注可见性";
 "Checked follow visibility for %d creators, %d failed" = "已检查 %d 位作者的关注可见性，%d 位失败";
 "Works Count" = "作品数";

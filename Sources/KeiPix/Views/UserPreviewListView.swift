@@ -231,6 +231,9 @@ struct UserPreviewListView: View {
                                                 muteCreator: {
                                                     muteCreator(preview.user)
                                                 },
+                                                copyCreatorLink: {
+                                                    copyCreatorLink(preview.user)
+                                                },
                                                 selectArtwork: { artwork in
                                                     store.selectedArtwork = artwork
                                                 }
@@ -268,6 +271,15 @@ struct UserPreviewListView: View {
                         Label(L10n.checkFollowVisibility, systemImage: "checkmark.seal")
                     }
                     .disabled(isCheckingFollowVisibility || visibleFollowedPreviews.isEmpty)
+
+                    Divider()
+
+                    Button {
+                        copyVisibleCreatorLinks()
+                    } label: {
+                        Label(L10n.copyVisibleCreatorLinks, systemImage: "link")
+                    }
+                    .disabled(visiblePreviews.isEmpty)
 
                     Divider()
 
@@ -684,6 +696,19 @@ struct UserPreviewListView: View {
         updateMutedState(userID: user.id, isMuted: true)
     }
 
+    private func copyCreatorLink(_ user: PixivUser) {
+        guard let url = user.pixivURL else { return }
+        PasteboardWriter.copy(url.absoluteString)
+        bulkStatusText = String(format: L10n.copiedCreatorLinksFormat, 1)
+    }
+
+    private func copyVisibleCreatorLinks() {
+        let links = visiblePreviews.compactMap { $0.user.pixivURL?.absoluteString }
+        guard links.isEmpty == false else { return }
+        PasteboardWriter.copy(links.joined(separator: "\n"))
+        bulkStatusText = String(format: L10n.copiedCreatorLinksFormat, links.count)
+    }
+
     private func updateFollowState(userID: Int, isFollowed: Bool, restrict: BookmarkRestrict?) {
         for index in previews.indices where previews[index].user.id == userID {
             var updatedUser = previews[index].user
@@ -754,6 +779,7 @@ private struct UserPreviewCard: View {
     let openManga: () -> Void
     let toggleFollow: (BookmarkRestrict?) -> Void
     let muteCreator: () -> Void
+    let copyCreatorLink: () -> Void
     let selectArtwork: (PixivArtwork) -> Void
 
     var body: some View {
@@ -874,6 +900,12 @@ private struct UserPreviewCard: View {
         .contextMenu {
             Button(L10n.creatorProfile) {
                 openProfile()
+            }
+            if let url = preview.user.pixivURL {
+                Link(L10n.openInPixiv, destination: url)
+            }
+            Button(L10n.copyLink) {
+                copyCreatorLink()
             }
             if preview.user.isFollowed {
                 Button(L10n.unfollow) {

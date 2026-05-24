@@ -60,6 +60,7 @@ struct PixivUser: Decodable, Identifiable, Hashable, Sendable {
     let comment: String?
     let avatarURL: URL?
     var isFollowed: Bool
+    var pixivURL: URL? { URL(string: "https://www.pixiv.net/users/\(id)") }
 
     enum CodingKeys: String, CodingKey {
         case id
