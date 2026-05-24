@@ -241,7 +241,7 @@ private struct DownloadQueueHeader: View {
 
             TextField(L10n.searchDownloads, text: downloadSearchBinding)
                 .textFieldStyle(.roundedBorder)
-                .frame(width: 220)
+                .frame(minWidth: 170, idealWidth: 220, maxWidth: 260)
 
             Menu {
                 Picker(L10n.sortDownloads, selection: downloadSortBinding) {
@@ -251,6 +251,7 @@ private struct DownloadQueueHeader: View {
                 }
             } label: {
                 Label(downloads.downloadQueueSort.title, systemImage: "arrow.up.arrow.down")
+                    .lineLimit(1)
             }
             .buttonStyle(.bordered)
 
@@ -262,6 +263,7 @@ private struct DownloadQueueHeader: View {
                 }
             } label: {
                 Label(downloads.downloadQueueFilter.title, systemImage: "line.3.horizontal.decrease.circle")
+                    .lineLimit(1)
             }
             .buttonStyle(.bordered)
             .help(summaryHelpText)

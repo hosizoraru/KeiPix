@@ -18,14 +18,19 @@ struct FlowLayout: Layout {
     }
 
     private func layout(in width: CGFloat, subviews: Subviews) -> (items: [(index: Int, frame: CGRect)], size: CGSize) {
+        let availableWidth = max(width, 1)
         var items: [(Int, CGRect)] = []
         var x: CGFloat = 0
         var y: CGFloat = 0
         var rowHeight: CGFloat = 0
 
         for (index, subview) in subviews.enumerated() {
-            let size = subview.sizeThatFits(.unspecified)
-            if x + size.width > width, x > 0 {
+            let measuredSize = subview.sizeThatFits(ProposedViewSize(width: availableWidth, height: nil))
+            let size = CGSize(
+                width: min(measuredSize.width, availableWidth),
+                height: measuredSize.height
+            )
+            if x + size.width > availableWidth, x > 0 {
                 x = 0
                 y += rowHeight + spacing
                 rowHeight = 0

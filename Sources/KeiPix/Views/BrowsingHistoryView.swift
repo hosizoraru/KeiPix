@@ -101,12 +101,12 @@ struct BrowsingHistoryView: View {
             }
             .pickerStyle(.segmented)
             .labelsHidden()
-            .frame(width: 220)
+            .frame(minWidth: 180, idealWidth: 220, maxWidth: 240)
 
             if source == .local {
                 TextField(L10n.searchHistory, text: $localSearchText)
                     .textFieldStyle(.roundedBorder)
-                    .frame(width: 240)
+                    .frame(minWidth: 170, idealWidth: 220, maxWidth: 260)
 
                 Button {
                     localSearchText = ""

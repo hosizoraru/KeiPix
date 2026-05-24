@@ -109,11 +109,11 @@ struct MutedContentView: View {
             }
             .pickerStyle(.segmented)
             .labelsHidden()
-            .frame(width: 260)
+            .frame(minWidth: 210, idealWidth: 250, maxWidth: 280)
 
             TextField(L10n.searchMutedContent, text: $searchText)
                 .textFieldStyle(.roundedBorder)
-                .frame(width: 240)
+                .frame(minWidth: 170, idealWidth: 220, maxWidth: 260)
 
             Button {
                 searchText = ""

@@ -314,8 +314,17 @@ struct UserPreviewListView: View {
 
                 TextField(L10n.searchCreatorsInList, text: $creatorSearchText)
                     .textFieldStyle(.roundedBorder)
-                    .frame(width: 220)
+                    .frame(minWidth: 160, idealWidth: 200, maxWidth: 240)
             }
+
+            Button {
+                creatorSearchText = ""
+            } label: {
+                Label(L10n.clearSearch, systemImage: "xmark.circle")
+            }
+            .labelStyle(.iconOnly)
+            .disabled(creatorSearchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+            .help(L10n.clearSearch)
 
             Menu {
                 Picker(L10n.creatorFilter, selection: $creatorFilter) {
@@ -334,13 +343,21 @@ struct UserPreviewListView: View {
                 }
                 .pickerStyle(.inline)
             } label: {
-                Label(L10n.creatorFilter, systemImage: "line.3.horizontal.decrease.circle")
+                Label(creatorFilterSummary, systemImage: "line.3.horizontal.decrease.circle")
+                    .lineLimit(1)
             }
-            .help("\(L10n.creatorFilter) / \(L10n.creatorSort)")
+            .help("\(L10n.creatorFilter): \(creatorFilter.title) · \(L10n.creatorSort): \(creatorSort.title)")
 
             creatorActionsMenu
         }
         .controlSize(.small)
+    }
+
+    private var creatorFilterSummary: String {
+        if creatorFilter == .all, creatorSort == .defaultOrder {
+            return L10n.creatorFilter
+        }
+        return "\(creatorFilter.title) · \(creatorSort.title)"
     }
 
     private var creatorActionsMenu: some View {

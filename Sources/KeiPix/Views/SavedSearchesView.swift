@@ -158,7 +158,7 @@ struct SavedSearchesView: View {
         FlowLayout(spacing: 8) {
             TextField(L10n.searchSavedSearches, text: $librarySearchText)
                 .textFieldStyle(.roundedBorder)
-                .frame(width: 260)
+                .frame(minWidth: 180, idealWidth: 240, maxWidth: 300)
 
             Button {
                 librarySearchText = ""

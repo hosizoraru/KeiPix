@@ -128,7 +128,7 @@ struct BookmarkTagsView: View {
         FlowLayout(spacing: 8) {
             TextField(L10n.searchBookmarkTags, text: $filterText)
                 .textFieldStyle(.roundedBorder)
-                .frame(width: 220)
+                .frame(minWidth: 170, idealWidth: 220, maxWidth: 260)
 
             Button {
                 filterText = ""
@@ -146,7 +146,7 @@ struct BookmarkTagsView: View {
             }
             .pickerStyle(.segmented)
             .labelsHidden()
-            .frame(width: 180)
+            .frame(minWidth: 150, idealWidth: 180, maxWidth: 220)
         }
         .controlSize(.small)
     }
