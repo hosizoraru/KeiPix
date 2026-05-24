@@ -76,6 +76,9 @@
 "Refreshed %d Pixiv history items" = "Refreshed %d Pixiv history items";
 "Loaded %d Pixiv history items" = "Loaded %d Pixiv history items";
 "Manga Watchlist" = "Manga Watchlist";
+"No matching watchlist series" = "No matching watchlist series";
+"Change the watchlist search to see other series." = "Change the watchlist search to see other series.";
+"Search watchlist series" = "Search watchlist series";
 "Recommended Creators" = "Recommended Creators";
 "Related Creators" = "Related Creators";
 "No related creators" = "No related creators";
@@ -467,6 +470,7 @@
 "No watchlist series" = "No watchlist series";
 "Load More Watchlist" = "Load More Watchlist";
 "Loaded %d watchlist series" = "Loaded %d watchlist series";
+"Refreshed %d watchlist series" = "Refreshed %d watchlist series";
 "Remove from Watchlist" = "Remove from Watchlist";
 "Remove %@ from watchlist?" = "Remove %@ from watchlist?";
 "Removed %@ from watchlist" = "Removed %@ from watchlist";

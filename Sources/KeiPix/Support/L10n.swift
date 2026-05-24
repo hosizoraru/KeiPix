@@ -481,8 +481,12 @@ enum L10n {
     static var openSeriesInPixiv: String { text("Open Series in Pixiv") }
     static var openLatestArtwork: String { text("Open Latest Artwork") }
     static var noWatchlistSeries: String { text("No watchlist series") }
+    static var noMatchingWatchlistSeries: String { text("No matching watchlist series") }
+    static var noMatchingWatchlistSeriesSubtitle: String { text("Change the watchlist search to see other series.") }
+    static var searchWatchlistSeries: String { text("Search watchlist series") }
     static var loadMoreWatchlist: String { text("Load More Watchlist") }
     static var loadedWatchlistSeriesFormat: String { text("Loaded %d watchlist series") }
+    static var refreshedWatchlistSeriesFormat: String { text("Refreshed %d watchlist series") }
     static var removeFromWatchlist: String { text("Remove from Watchlist") }
     static var removeFromWatchlistConfirmationFormat: String { text("Remove %@ from watchlist?") }
     static var removedFromWatchlistFormat: String { text("Removed %@ from watchlist") }

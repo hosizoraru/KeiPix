@@ -11,6 +11,7 @@ struct MangaWatchlistView: View {
     @State private var errorMessage: String?
     @State private var actionMessage: String?
     @State private var pendingRemoval: PixivMangaSeriesPreview?
+    @State private var watchlistSearchText = ""
 
     private let columns = [
         GridItem(.adaptive(minimum: 220, maximum: 320), spacing: 14)
@@ -23,45 +24,8 @@ struct MangaWatchlistView: View {
             } else if isLoading {
                 ProgressView(L10n.loading)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else if series.isEmpty {
-                ContentUnavailableView {
-                    Label(L10n.noWatchlistSeries, systemImage: "rectangle.stack.badge.person.crop")
-                } description: {
-                    if let errorMessage {
-                        Text(errorMessage)
-                    }
-                } actions: {
-                    Button {
-                        Task { await loadInitial() }
-                    } label: {
-                        Label(L10n.retry, systemImage: "arrow.clockwise")
-                    }
-                    .buttonStyle(.borderedProminent)
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
-                ScrollView {
-                    LazyVGrid(columns: columns, spacing: 14) {
-                        ForEach(series) { item in
-                            MangaWatchlistCard(
-                                series: item,
-                                isRemoving: removingSeriesIDs.contains(item.id),
-                                openLatest: {
-                                    Task { await store.openLatestArtwork(in: item) }
-                                },
-                                remove: {
-                                    pendingRemoval = item
-                                }
-                            )
-                        }
-
-                        if nextURL != nil {
-                            loadMoreButton
-                        }
-                    }
-                    .padding(18)
-                }
-                .scrollEdgeEffectStyle(.soft, for: .top)
+                watchlistSurface
             }
         }
         .navigationTitle(L10n.mangaWatchlist)
@@ -157,12 +121,123 @@ struct MangaWatchlistView: View {
         .disabled(isLoadingMore)
     }
 
-    private var watchlistStatusText: String {
-        let paging = nextURL == nil ? L10n.noMorePages : L10n.nextPageAvailable
-        return "\(series.count.formatted()) \(L10n.results) · \(paging)"
+    private var watchlistSurface: some View {
+        VStack(spacing: 0) {
+            header
+                .padding(.horizontal, 18)
+                .padding(.vertical, 8)
+                .background(.bar)
+
+            Divider()
+
+            watchlistContent
+        }
     }
 
-    private func loadInitial() async {
+    private var header: some View {
+        FlowLayout(spacing: 8) {
+            TextField(L10n.searchWatchlistSeries, text: $watchlistSearchText)
+                .textFieldStyle(.roundedBorder)
+                .frame(minWidth: 180, idealWidth: 240, maxWidth: 300)
+
+            Button {
+                watchlistSearchText = ""
+            } label: {
+                Label(L10n.clearSearch, systemImage: "xmark.circle")
+            }
+            .labelStyle(.iconOnly)
+            .disabled(normalizedWatchlistSearchText.isEmpty)
+            .help(L10n.clearSearch)
+
+            Menu {
+                Button {
+                    Task { await loadInitial(showFeedback: true) }
+                } label: {
+                    Label(L10n.refresh, systemImage: "arrow.clockwise")
+                }
+                .disabled(isLoading)
+            } label: {
+                Label(L10n.moreActions, systemImage: "ellipsis.circle")
+                    .labelStyle(.iconOnly)
+            }
+            .help(L10n.moreActions)
+        }
+        .controlSize(.small)
+    }
+
+    @ViewBuilder
+    private var watchlistContent: some View {
+        if series.isEmpty {
+            ContentUnavailableView {
+                Label(L10n.noWatchlistSeries, systemImage: "rectangle.stack.badge.person.crop")
+            } description: {
+                if let errorMessage {
+                    Text(errorMessage)
+                }
+            } actions: {
+                Button {
+                    Task { await loadInitial(showFeedback: true) }
+                } label: {
+                    Label(L10n.retry, systemImage: "arrow.clockwise")
+                }
+                .buttonStyle(.borderedProminent)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        } else if filteredSeries.isEmpty {
+            EmptyStateView(
+                title: L10n.noMatchingWatchlistSeries,
+                subtitle: L10n.noMatchingWatchlistSeriesSubtitle,
+                systemImage: "line.3.horizontal.decrease.circle"
+            )
+        } else {
+            ScrollView {
+                LazyVGrid(columns: columns, spacing: 14) {
+                    ForEach(filteredSeries) { item in
+                        MangaWatchlistCard(
+                            series: item,
+                            isRemoving: removingSeriesIDs.contains(item.id),
+                            openLatest: {
+                                Task { await store.openLatestArtwork(in: item) }
+                            },
+                            remove: {
+                                pendingRemoval = item
+                            }
+                        )
+                    }
+
+                    if nextURL != nil {
+                        loadMoreButton
+                    }
+                }
+                .padding(18)
+            }
+            .scrollEdgeEffectStyle(.soft, for: .top)
+        }
+    }
+
+    private var watchlistStatusText: String {
+        let paging = nextURL == nil ? L10n.noMorePages : L10n.nextPageAvailable
+        if normalizedWatchlistSearchText.isEmpty {
+            return "\(series.count.formatted()) \(L10n.results) · \(paging)"
+        }
+        return "\(filteredSeries.count.formatted()) / \(series.count.formatted()) \(L10n.results) · \(paging)"
+    }
+
+    private var normalizedWatchlistSearchText: String {
+        watchlistSearchText.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private var filteredSeries: [PixivMangaSeriesPreview] {
+        let query = normalizedWatchlistSearchText
+        guard query.isEmpty == false else { return series }
+        return series.filter { item in
+            item.title.localizedCaseInsensitiveContains(query)
+                || item.user?.name.localizedCaseInsensitiveContains(query) == true
+                || item.user?.account?.localizedCaseInsensitiveContains(query) == true
+        }
+    }
+
+    private func loadInitial(showFeedback: Bool = false) async {
         guard store.session != nil else { return }
         isLoading = true
         errorMessage = nil
@@ -172,6 +247,9 @@ struct MangaWatchlistView: View {
             let response = try await store.mangaWatchlist()
             series = response.series
             nextURL = response.nextURL
+            if showFeedback {
+                actionMessage = String(format: L10n.refreshedWatchlistSeriesFormat, series.count)
+            }
         } catch {
             errorMessage = error.localizedDescription
         }

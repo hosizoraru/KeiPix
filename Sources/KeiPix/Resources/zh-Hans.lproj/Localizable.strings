@@ -76,6 +76,9 @@
 "Refreshed %d Pixiv history items" = "已刷新 %d 条 Pixiv 历史";
 "Loaded %d Pixiv history items" = "已加载 %d 条 Pixiv 历史";
 "Manga Watchlist" = "漫画追更";
+"No matching watchlist series" = "没有匹配的追更系列";
+"Change the watchlist search to see other series." = "调整追更搜索即可查看其他系列。";
+"Search watchlist series" = "搜索追更系列";
 "Recommended Creators" = "推荐作者";
 "Related Creators" = "相关作者";
 "No related creators" = "暂无相关作者";
@@ -467,6 +470,7 @@
 "No watchlist series" = "暂无追更系列";
 "Load More Watchlist" = "加载更多追更";
 "Loaded %d watchlist series" = "已加载 %d 个追更系列";
+"Refreshed %d watchlist series" = "已刷新 %d 个追更系列";
 "Remove from Watchlist" = "取消追更";
 "Remove %@ from watchlist?" = "取消追更 %@？";
 "Removed %@ from watchlist" = "已取消追更 %@";
