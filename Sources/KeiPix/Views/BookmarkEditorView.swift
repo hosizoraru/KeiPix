@@ -287,23 +287,11 @@ struct BookmarkEditorView: View {
         errorMessage = nil
         defer { isSaving = false }
 
-        do {
-            let detail = try? await store.bookmarkDetail(for: artwork)
-            let restoreRestrict = detail?.restrict ?? restrict
-            let restoreTags = detail?.tags
-                .filter(\.isRegistered)
-                .map(\.name) ?? Array(selectedTags)
-            try await store.removeBookmark(artwork)
-            store.undoAction = AppUndoAction(
-                kind: .restoreBookmark(
-                    artwork: artwork,
-                    restrict: restoreRestrict,
-                    tags: restoreTags
-                )
-            )
+        let didRemove = await store.performDangerAction(AppDangerAction(kind: .removeBookmark(artwork)))
+        if didRemove {
             dismiss()
-        } catch {
-            errorMessage = error.localizedDescription
+        } else {
+            errorMessage = store.errorMessage
         }
     }
 }

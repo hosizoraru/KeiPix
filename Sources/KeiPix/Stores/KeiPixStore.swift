@@ -456,6 +456,11 @@ final class KeiPixStore {
 
     func toggleFollow(_ user: PixivUser, restrict: BookmarkRestrict? = nil) async {
         let nextValue = !user.isFollowed
+        guard nextValue else {
+            requestDangerAction(AppDangerAction(kind: .unfollowCreator(user, restrict)))
+            return
+        }
+
         do {
             try await setFollow(user, isFollowed: nextValue, restrict: restrict)
         } catch {
