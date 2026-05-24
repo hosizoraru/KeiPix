@@ -82,7 +82,7 @@ struct TrendingTagsView: View {
                     .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
 
-                if let errorMessage {
+                if let errorMessage, tags.isEmpty == false {
                     FloatingStatusBanner {
                         Text(errorMessage)
                             .font(.callout)
@@ -161,8 +161,23 @@ private struct TrendingTagCard: View {
         Button(action: search) {
             GeometryReader { proxy in
                 ZStack(alignment: .bottomLeading) {
+                    Color.black.opacity(0.82)
+
                     TrendingTagArtworkImage(url: tag.artwork.thumbnailURL, imageLoaded: imageLoaded)
                         .frame(width: proxy.size.width, height: proxy.size.height)
+
+                    LinearGradient(
+                        stops: [
+                            .init(color: .black.opacity(0), location: 0),
+                            .init(color: .black.opacity(0.18), location: 0.46),
+                            .init(color: .black.opacity(0.68), location: 1)
+                        ],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                    .frame(width: proxy.size.width, height: max(72, proxy.size.height * 0.48))
+                    .frame(width: proxy.size.width, height: proxy.size.height, alignment: .bottom)
+                    .allowsHitTesting(false)
 
                     if showContentBadges {
                         ArtworkContentBadgesView(badges: tag.artwork.contentBadges, style: .overlay)
@@ -266,21 +281,29 @@ private struct TrendingTagArtworkImage: View {
             ZStack {
                 if let image {
                     filledImage(image, size: size)
-                        .blur(radius: 16)
-                        .scaleEffect(1.12)
-                        .opacity(0.42)
-
-                    filledImage(image, size: size)
-                        .scaleEffect(1.025)
                 } else if failed {
-                    Image(systemName: "photo")
-                        .font(.title3)
-                        .foregroundStyle(.secondary)
+                    Rectangle()
+                        .fill(
+                            LinearGradient(
+                                colors: [.black.opacity(0.72), .black.opacity(0.92)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .overlay {
+                            Image(systemName: "photo")
+                                .font(.title3)
+                                .foregroundStyle(.white.opacity(0.58))
+                        }
                 } else {
-                    ProgressView()
-                        .controlSize(.small)
-                        .padding(8)
-                        .background(.ultraThinMaterial, in: Circle())
+                    Rectangle()
+                        .fill(.black.opacity(0.78))
+                        .overlay {
+                            ProgressView()
+                                .controlSize(.small)
+                                .padding(8)
+                                .background(.thinMaterial, in: Circle())
+                        }
                 }
             }
             .frame(width: size.width, height: size.height)
