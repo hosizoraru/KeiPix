@@ -341,19 +341,25 @@ private struct LocalHistoryCard: View {
     let showContentBadges: Bool
     let select: () -> Void
     let delete: () -> Void
+    private let thumbnailHeight: CGFloat = 168
 
     var body: some View {
         Button(action: select) {
             VStack(alignment: .leading, spacing: 0) {
                 ZStack(alignment: .topLeading) {
                     RemoteImageView(url: item.thumbnailURL)
-                        .aspectRatio(cardAspectRatio, contentMode: .fill)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: thumbnailHeight)
+                        .clipped()
 
                     if showContentBadges {
                         ArtworkContentBadgesView(badges: item.contentBadges, style: .overlay)
                             .padding(8)
                     }
                 }
+                .frame(maxWidth: .infinity)
+                .frame(height: thumbnailHeight)
+                .clipped()
 
                 VStack(alignment: .leading, spacing: 5) {
                     Text(item.title)
@@ -379,6 +385,7 @@ private struct LocalHistoryCard: View {
         }
         .buttonStyle(.plain)
         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .frame(maxWidth: .infinity)
         .overlay {
             RoundedRectangle(cornerRadius: 12, style: .continuous)
                 .strokeBorder(borderStyle, lineWidth: isSelected ? 2 : 1)
@@ -391,10 +398,6 @@ private struct LocalHistoryCard: View {
                 Link(L10n.openInPixiv, destination: url)
             }
         }
-    }
-
-    private var cardAspectRatio: CGFloat {
-        CGFloat(min(max(item.aspectRatio, 0.72), 1.35))
     }
 
     private var borderStyle: some ShapeStyle {
