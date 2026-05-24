@@ -19,9 +19,15 @@
 "No saved searches" = "No saved searches";
 "No saved search presets" = "No saved search presets";
 "No recent searches" = "No recent searches";
+"No matching searches" = "No matching searches";
 "Remove Saved Search" = "Remove Saved Search";
 "Remove Search Preset" = "Remove Search Preset";
 "Clear Search History" = "Clear Search History";
+"Search saved searches" = "Search saved searches";
+"Copy Keyword" = "Copy Keyword";
+"Copied %@" = "Copied %@";
+"Saved %@" = "Saved %@";
+"Saved %@ with filters" = "Saved %@ with filters";
 "Ranking" = "Ranking";
 "Manga Ranking" = "Manga Ranking";
 "Bookmarks" = "Bookmarks";

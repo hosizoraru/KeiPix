@@ -19,9 +19,15 @@
 "No saved searches" = "暂无保存的搜索";
 "No saved search presets" = "暂无搜索预设";
 "No recent searches" = "暂无最近搜索";
+"No matching searches" = "没有匹配的搜索";
 "Remove Saved Search" = "移除保存的搜索";
 "Remove Search Preset" = "移除搜索预设";
 "Clear Search History" = "清空搜索历史";
+"Search saved searches" = "搜索保存的搜索";
+"Copy Keyword" = "复制关键词";
+"Copied %@" = "已复制 %@";
+"Saved %@" = "已保存 %@";
+"Saved %@ with filters" = "已保存 %@ 和当前筛选";
 "Ranking" = "排行榜";
 "Manga Ranking" = "漫画榜";
 "Bookmarks" = "收藏";

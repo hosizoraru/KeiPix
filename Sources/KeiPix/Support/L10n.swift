@@ -22,9 +22,15 @@ enum L10n {
     static var noSavedSearches: String { text("No saved searches") }
     static var noSavedSearchPresets: String { text("No saved search presets") }
     static var noRecentSearches: String { text("No recent searches") }
+    static var noMatchingSearches: String { text("No matching searches") }
     static var removeSavedSearch: String { text("Remove Saved Search") }
     static var removeSearchPreset: String { text("Remove Search Preset") }
     static var clearSearchHistory: String { text("Clear Search History") }
+    static var searchSavedSearches: String { text("Search saved searches") }
+    static var copyKeyword: String { text("Copy Keyword") }
+    static var copiedKeywordFormat: String { text("Copied %@") }
+    static var savedSearchFormat: String { text("Saved %@") }
+    static var savedSearchPresetFormat: String { text("Saved %@ with filters") }
     static var ranking: String { text("Ranking") }
     static var mangaRanking: String { text("Manga Ranking") }
     static var bookmarks: String { text("Bookmarks") }

@@ -2,26 +2,58 @@ import SwiftUI
 
 struct SavedSearchesView: View {
     @Bindable var store: KeiPixStore
+    @State private var librarySearchText = ""
+    @State private var actionMessage: String?
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
+                if let actionMessage {
+                    Text(actionMessage)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .padding(.horizontal, 2)
+                }
+
                 SavedSearchPresetSection(
-                    presets: store.savedSearchPresets,
+                    presets: visiblePresets,
+                    hasUnfilteredContent: store.savedSearchPresets.isEmpty == false,
                     rowAction: runPreset,
+                    copyAction: copyPresetKeyword,
                     removeAction: store.removeSavedSearchPreset
                 )
 
                 SavedSearchSection(
                     title: L10n.savedSearches,
                     emptyTitle: L10n.noSavedSearches,
-                    keywords: store.savedSearches,
+                    noMatchesTitle: L10n.noMatchingSearches,
+                    keywords: visibleSavedSearches,
+                    hasUnfilteredContent: store.savedSearches.isEmpty == false,
                     rowAction: runSearch,
                     trailingAction: { keyword in
-                        Button(role: .destructive) {
-                            store.removeSavedSearch(keyword)
+                        Menu {
+                            Button {
+                                copyKeyword(keyword)
+                            } label: {
+                                Label(L10n.copyKeyword, systemImage: "doc.on.doc")
+                            }
+
+                            Button {
+                                store.saveSearchPreset(keyword, options: store.searchOptions)
+                                actionMessage = String(format: L10n.savedSearchPresetFormat, keyword)
+                            } label: {
+                                Label(L10n.saveSearchWithFilters, systemImage: "slider.horizontal.3")
+                            }
+
+                            Divider()
+
+                            Button(role: .destructive) {
+                                store.removeSavedSearch(keyword)
+                            } label: {
+                                Label(L10n.removeSavedSearch, systemImage: "star.slash")
+                            }
                         } label: {
-                            Label(L10n.removeSavedSearch, systemImage: "star.slash")
+                            Label(L10n.moreActions, systemImage: "ellipsis.circle")
                         }
                     }
                 )
@@ -29,7 +61,9 @@ struct SavedSearchesView: View {
                 SavedSearchSection(
                     title: L10n.recentSearches,
                     emptyTitle: L10n.noRecentSearches,
-                    keywords: store.searchHistory,
+                    noMatchesTitle: L10n.noMatchingSearches,
+                    keywords: visibleSearchHistory,
+                    hasUnfilteredContent: store.searchHistory.isEmpty == false,
                     rowAction: runSearch,
                     footer: {
                         Button(role: .destructive) {
@@ -40,10 +74,28 @@ struct SavedSearchesView: View {
                         .disabled(store.searchHistory.isEmpty)
                     },
                     trailingAction: { keyword in
-                        Button {
-                            store.saveSearch(keyword)
+                        Menu {
+                            Button {
+                                copyKeyword(keyword)
+                            } label: {
+                                Label(L10n.copyKeyword, systemImage: "doc.on.doc")
+                            }
+
+                            Button {
+                                store.saveSearch(keyword)
+                                actionMessage = String(format: L10n.savedSearchFormat, keyword)
+                            } label: {
+                                Label(L10n.saveSearch, systemImage: "star")
+                            }
+
+                            Button {
+                                store.saveSearchPreset(keyword, options: store.searchOptions)
+                                actionMessage = String(format: L10n.savedSearchPresetFormat, keyword)
+                            } label: {
+                                Label(L10n.saveSearchWithFilters, systemImage: "slider.horizontal.3")
+                            }
                         } label: {
-                            Label(L10n.saveSearch, systemImage: "star")
+                            Label(L10n.moreActions, systemImage: "ellipsis.circle")
                         }
                     }
                 )
@@ -52,6 +104,28 @@ struct SavedSearchesView: View {
         }
         .scrollEdgeEffectStyle(.soft, for: .top)
         .navigationTitle(L10n.savedSearches)
+        .searchable(text: $librarySearchText, placement: .toolbar, prompt: L10n.searchSavedSearches)
+    }
+
+    private var normalizedLibrarySearchText: String {
+        librarySearchText.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private var visiblePresets: [SavedSearchPreset] {
+        let query = normalizedLibrarySearchText
+        guard query.isEmpty == false else { return store.savedSearchPresets }
+        return store.savedSearchPresets.filter {
+            $0.keyword.localizedCaseInsensitiveContains(query)
+                || $0.options.summary.localizedCaseInsensitiveContains(query)
+        }
+    }
+
+    private var visibleSavedSearches: [String] {
+        filteredKeywords(store.savedSearches)
+    }
+
+    private var visibleSearchHistory: [String] {
+        filteredKeywords(store.searchHistory)
     }
 
     private func runSearch(_ keyword: String) {
@@ -65,11 +139,28 @@ struct SavedSearchesView: View {
             await store.runSavedSearchPreset(preset)
         }
     }
+
+    private func filteredKeywords(_ keywords: [String]) -> [String] {
+        let query = normalizedLibrarySearchText
+        guard query.isEmpty == false else { return keywords }
+        return keywords.filter { $0.localizedCaseInsensitiveContains(query) }
+    }
+
+    private func copyKeyword(_ keyword: String) {
+        PasteboardWriter.copy(keyword)
+        actionMessage = String(format: L10n.copiedKeywordFormat, keyword)
+    }
+
+    private func copyPresetKeyword(_ preset: SavedSearchPreset) {
+        copyKeyword(preset.keyword)
+    }
 }
 
 private struct SavedSearchPresetSection: View {
     let presets: [SavedSearchPreset]
+    let hasUnfilteredContent: Bool
     let rowAction: (SavedSearchPreset) -> Void
+    let copyAction: (SavedSearchPreset) -> Void
     let removeAction: (SavedSearchPreset) -> Void
 
     var body: some View {
@@ -78,7 +169,7 @@ private struct SavedSearchPresetSection: View {
                 .font(.headline)
 
             if presets.isEmpty {
-                Text(L10n.noSavedSearchPresets)
+                Text(hasUnfilteredContent ? L10n.noMatchingSearches : L10n.noSavedSearchPresets)
                     .font(.callout)
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -103,6 +194,14 @@ private struct SavedSearchPresetSection: View {
                             }
                             .buttonStyle(.plain)
 
+                            Button {
+                                copyAction(preset)
+                            } label: {
+                                Label(L10n.copyKeyword, systemImage: "doc.on.doc")
+                            }
+                            .labelStyle(.iconOnly)
+                            .buttonStyle(.bordered)
+
                             Button(role: .destructive) {
                                 removeAction(preset)
                             } label: {
@@ -123,7 +222,9 @@ private struct SavedSearchPresetSection: View {
 private struct SavedSearchSection<TrailingAction: View, Footer: View>: View {
     let title: String
     let emptyTitle: String
+    let noMatchesTitle: String
     let keywords: [String]
+    let hasUnfilteredContent: Bool
     let rowAction: (String) -> Void
     @ViewBuilder var footer: () -> Footer
     @ViewBuilder var trailingAction: (String) -> TrailingAction
@@ -131,14 +232,18 @@ private struct SavedSearchSection<TrailingAction: View, Footer: View>: View {
     init(
         title: String,
         emptyTitle: String,
+        noMatchesTitle: String,
         keywords: [String],
+        hasUnfilteredContent: Bool,
         rowAction: @escaping (String) -> Void,
         @ViewBuilder footer: @escaping () -> Footer = { EmptyView() },
         @ViewBuilder trailingAction: @escaping (String) -> TrailingAction
     ) {
         self.title = title
         self.emptyTitle = emptyTitle
+        self.noMatchesTitle = noMatchesTitle
         self.keywords = keywords
+        self.hasUnfilteredContent = hasUnfilteredContent
         self.rowAction = rowAction
         self.footer = footer
         self.trailingAction = trailingAction
@@ -154,7 +259,7 @@ private struct SavedSearchSection<TrailingAction: View, Footer: View>: View {
             }
 
             if keywords.isEmpty {
-                Text(emptyTitle)
+                Text(hasUnfilteredContent ? noMatchesTitle : emptyTitle)
                     .font(.callout)
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .leading)
