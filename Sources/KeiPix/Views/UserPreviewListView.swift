@@ -28,6 +28,15 @@ enum UserPreviewListMode: Identifiable {
         }
     }
 
+    var infersFollowRestrictFromPicker: Bool {
+        switch self {
+        case .following, .userFollowing:
+            true
+        default:
+            false
+        }
+    }
+
     var requiresSearchKeyword: Bool {
         switch self {
         case .search:
@@ -165,6 +174,8 @@ struct UserPreviewListView: View {
     @State private var pendingBulkAction: CreatorBulkAction?
     @State private var isShowingBulkConfirmation = false
     @State private var isRunningBulkAction = false
+    @State private var isCheckingFollowVisibility = false
+    @State private var followRestrictsByUserID: [Int: BookmarkRestrict] = [:]
     @State private var bulkStatusText: String?
 
     private let columns = [
@@ -205,6 +216,7 @@ struct UserPreviewListView: View {
                                         ForEach(visiblePreviews) { preview in
                                             UserPreviewCard(
                                                 preview: preview,
+                                                followRestrict: followRestrictsByUserID[preview.user.id],
                                                 showContentBadges: store.showContentBadges,
                                                 openProfile: { profileUser = preview.user },
                                                 openIllustrations: {
@@ -250,6 +262,15 @@ struct UserPreviewListView: View {
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Menu {
+                    Button {
+                        Task { await checkVisibleFollowVisibility() }
+                    } label: {
+                        Label(L10n.checkFollowVisibility, systemImage: "checkmark.seal")
+                    }
+                    .disabled(isCheckingFollowVisibility || visibleFollowedPreviews.isEmpty)
+
+                    Divider()
+
                     Button {
                         requestBulkAction(.followPublic)
                     } label: {
@@ -321,8 +342,18 @@ struct UserPreviewListView: View {
             }
         }
         .safeAreaInset(edge: .bottom) {
-            if errorMessage != nil || bulkStatusText != nil || isRunningBulkAction {
+            if errorMessage != nil || bulkStatusText != nil || isRunningBulkAction || isCheckingFollowVisibility {
                 VStack(alignment: .leading, spacing: 6) {
+                    if isCheckingFollowVisibility {
+                        HStack(spacing: 8) {
+                            ProgressView()
+                                .controlSize(.small)
+                            Text(L10n.checkingFollowVisibility)
+                        }
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                    }
+
                     if isRunningBulkAction {
                         HStack(spacing: 8) {
                             ProgressView()
@@ -373,6 +404,10 @@ struct UserPreviewListView: View {
         .task(id: modeKey) {
             await loadInitial()
         }
+    }
+
+    private var visibleFollowedPreviews: [PixivUserPreview] {
+        visiblePreviews.filter(\.user.isFollowed)
     }
 
     private var visiblePreviews: [PixivUserPreview] {
@@ -545,7 +580,7 @@ struct UserPreviewListView: View {
             var user = target.user
             user.isFollowed = false
             await store.toggleFollow(user, restrict: restrict)
-            updateFollowState(userID: user.id, isFollowed: true)
+            updateFollowState(userID: user.id, isFollowed: true, restrict: restrict)
         }
     }
 
@@ -554,7 +589,41 @@ struct UserPreviewListView: View {
             var user = target.user
             user.isFollowed = true
             await store.toggleFollow(user)
-            updateFollowState(userID: user.id, isFollowed: false)
+            updateFollowState(userID: user.id, isFollowed: false, restrict: nil)
+        }
+    }
+
+    private func checkVisibleFollowVisibility() async {
+        let targets = visibleFollowedPreviews
+        guard targets.isEmpty == false else { return }
+
+        isCheckingFollowVisibility = true
+        bulkStatusText = nil
+        defer { isCheckingFollowVisibility = false }
+
+        var updatedCount = 0
+        var failedCount = 0
+
+        for target in targets {
+            do {
+                let detail = try await store.followDetail(for: target.user)
+                if detail.isFollowed {
+                    followRestrictsByUserID[target.user.id] = detail.restrictValue
+                    updatedCount += 1
+                } else {
+                    updateFollowState(userID: target.user.id, isFollowed: false, restrict: nil)
+                    updatedCount += 1
+                }
+            } catch {
+                failedCount += 1
+                errorMessage = error.localizedDescription
+            }
+        }
+
+        if failedCount == 0 {
+            bulkStatusText = String(format: L10n.followVisibilityUpdatedFormat, updatedCount)
+        } else {
+            bulkStatusText = String(format: L10n.followVisibilityPartiallyUpdatedFormat, updatedCount, failedCount)
         }
     }
 
@@ -580,6 +649,7 @@ struct UserPreviewListView: View {
                 try await store.relatedUsers(for: user)
             }
             previews = response.userPreviews
+            followRestrictsByUserID = inferredFollowRestricts(for: response.userPreviews)
             nextURL = response.nextURL
         } catch {
             errorMessage = error.localizedDescription
@@ -595,6 +665,7 @@ struct UserPreviewListView: View {
         do {
             let response = try await store.nextUserPreviews(nextURL)
             previews.append(contentsOf: response.userPreviews)
+            followRestrictsByUserID.merge(inferredFollowRestricts(for: response.userPreviews)) { _, new in new }
             self.nextURL = response.nextURL
         } catch {
             errorMessage = error.localizedDescription
@@ -603,7 +674,9 @@ struct UserPreviewListView: View {
 
     private func toggleFollow(_ user: PixivUser, restrict: BookmarkRestrict? = nil) async {
         await store.toggleFollow(user, restrict: restrict)
-        updateFollowState(userID: user.id, isFollowed: !user.isFollowed)
+        let nextValue = !user.isFollowed
+        let appliedRestrict = nextValue ? (restrict ?? store.defaultFollowRestrict) : nil
+        updateFollowState(userID: user.id, isFollowed: nextValue, restrict: appliedRestrict)
     }
 
     private func muteCreator(_ user: PixivUser) {
@@ -611,11 +684,17 @@ struct UserPreviewListView: View {
         updateMutedState(userID: user.id, isMuted: true)
     }
 
-    private func updateFollowState(userID: Int, isFollowed: Bool) {
+    private func updateFollowState(userID: Int, isFollowed: Bool, restrict: BookmarkRestrict?) {
         for index in previews.indices where previews[index].user.id == userID {
             var updatedUser = previews[index].user
             updatedUser.isFollowed = isFollowed
             previews[index] = PixivUserPreview(user: updatedUser, illusts: previews[index].illusts, isMuted: previews[index].isMuted)
+        }
+
+        if isFollowed, let restrict {
+            followRestrictsByUserID[userID] = restrict
+        } else if isFollowed == false {
+            followRestrictsByUserID[userID] = nil
         }
     }
 
@@ -623,6 +702,13 @@ struct UserPreviewListView: View {
         for index in previews.indices where previews[index].user.id == userID {
             previews[index] = PixivUserPreview(user: previews[index].user, illusts: previews[index].illusts, isMuted: isMuted)
         }
+    }
+
+    private func inferredFollowRestricts(for userPreviews: [PixivUserPreview]) -> [Int: BookmarkRestrict] {
+        guard mode.infersFollowRestrictFromPicker else { return [:] }
+        return Dictionary(uniqueKeysWithValues: userPreviews.compactMap { preview in
+            preview.user.isFollowed ? (preview.user.id, restrict) : nil
+        })
     }
 }
 
@@ -639,8 +725,29 @@ private extension PixivUserPreview {
     }
 }
 
+private extension BookmarkRestrict {
+    var creatorVisibilityTitle: String {
+        switch self {
+        case .public:
+            L10n.publicFollow
+        case .private:
+            L10n.privateFollow
+        }
+    }
+
+    var creatorVisibilitySystemImage: String {
+        switch self {
+        case .public:
+            "person.crop.circle.badge.checkmark"
+        case .private:
+            "lock.circle"
+        }
+    }
+}
+
 private struct UserPreviewCard: View {
     let preview: PixivUserPreview
+    let followRestrict: BookmarkRestrict?
     let showContentBadges: Bool
     let openProfile: () -> Void
     let openIllustrations: () -> Void
@@ -673,6 +780,15 @@ private struct UserPreviewCard: View {
 
                 if preview.isMuted {
                     Label(L10n.muted, systemImage: "eye.slash")
+                        .font(.caption.weight(.semibold))
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .foregroundStyle(.secondary)
+                        .background(.quaternary, in: Capsule())
+                }
+
+                if preview.user.isFollowed, let followRestrict {
+                    Label(followRestrict.creatorVisibilityTitle, systemImage: followRestrict.creatorVisibilitySystemImage)
                         .font(.caption.weight(.semibold))
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4)
