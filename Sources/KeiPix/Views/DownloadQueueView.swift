@@ -14,7 +14,8 @@ struct DownloadQueueView: View {
             DownloadQueueHeader(
                 downloads: store.downloads,
                 requestDangerAction: { pendingDangerAction = $0 },
-                copyVisibleLinks: copyVisibleLinks
+                copyVisibleLinks: copyVisibleLinks,
+                showActionMessage: showActionMessage
             )
                 .padding(.horizontal, 18)
                 .padding(.vertical, 12)
@@ -43,8 +44,14 @@ struct DownloadQueueView: View {
                                 open: {
                                     openDownloadedItem(item)
                                 },
+                                retry: {
+                                    retryDownload(item)
+                                },
+                                reveal: {
+                                    revealDownload(item)
+                                },
                                 copied: {
-                                    actionMessage = L10n.copied
+                                    showActionMessage(L10n.copied)
                                 },
                                 delete: {
                                     pendingDangerAction = .deleteItem(item)
@@ -131,10 +138,16 @@ struct DownloadQueueView: View {
         switch item.resolvedArtifactKind {
         case .imagePages:
             let imageURLs = store.downloads.imageFileURLs(for: item)
-            guard imageURLs.isEmpty == false else { return }
+            guard imageURLs.isEmpty == false else {
+                showActionMessage(L10n.unableToOpenDownloadedArtwork)
+                return
+            }
             selectedPreview = .images(item: item, imageURLs: imageURLs)
         case .ugoiraZip:
-            guard let filePath = item.downloadedFilePaths?.first else { return }
+            guard let filePath = item.downloadedFilePaths?.first else {
+                showActionMessage(L10n.unableToOpenDownloadedArtwork)
+                return
+            }
             selectedPreview = .ugoira(item: item, zipURL: URL(fileURLWithPath: filePath))
         }
     }
@@ -151,9 +164,32 @@ struct DownloadQueueView: View {
 
     private func copyVisibleLinks() {
         let links = store.downloads.filteredPixivLinks
-        guard links.isEmpty == false else { return }
+        guard links.isEmpty == false else {
+            showActionMessage(L10n.noDownloadLinksToCopy)
+            return
+        }
         PasteboardWriter.copy(links.joined(separator: "\n"))
-        actionMessage = String(format: L10n.copiedLinksFormat, links.count)
+        showActionMessage(String(format: L10n.copiedLinksFormat, links.count))
+    }
+
+    private func retryDownload(_ item: ArtworkDownloadItem) {
+        if store.downloads.retry(item) {
+            showActionMessage(String(format: L10n.retriedDownloadsFormat, 1))
+        } else {
+            showActionMessage(L10n.noRetryableDownloads)
+        }
+    }
+
+    private func revealDownload(_ item: ArtworkDownloadItem) {
+        if store.downloads.reveal(item) {
+            showActionMessage(L10n.revealedDownloadInFinder)
+        } else {
+            showActionMessage(L10n.openedDownloadFolder)
+        }
+    }
+
+    private func showActionMessage(_ message: String) {
+        actionMessage = message
     }
 
     private func dismissActionMessageIfNeeded(_ message: String?) async {
@@ -171,34 +207,34 @@ struct DownloadQueueView: View {
         case .deleteItem(let item):
             store.downloads.delete(item)
             store.undoAction = AppUndoAction(kind: .restoreDownloads([item]))
-            actionMessage = String(format: L10n.deletedDownloadsFormat, 1)
+            showActionMessage(String(format: L10n.deletedDownloadsFormat, 1))
         case .deleteVisible:
             let items = store.downloads.filteredItems.filter { $0.status != .downloading }
             let count = store.downloads.deleteFilteredItems()
             if count > 0 {
                 store.undoAction = AppUndoAction(kind: .restoreDownloads(items))
-                actionMessage = String(format: L10n.deletedDownloadsFormat, count)
+                showActionMessage(String(format: L10n.deletedDownloadsFormat, count))
             }
         case .clearFailed:
             let items = store.downloads.filteredItems.filter { $0.status == .failed }
             let count = store.downloads.clearFailedFilteredItems()
             if count > 0 {
                 store.undoAction = AppUndoAction(kind: .restoreDownloads(items))
-                actionMessage = String(format: L10n.deletedDownloadsFormat, count)
+                showActionMessage(String(format: L10n.deletedDownloadsFormat, count))
             }
         case .clearInvalid:
             let items = store.downloads.invalidCompletedItems
             let count = store.downloads.clearInvalidItems()
             if count > 0 {
                 store.undoAction = AppUndoAction(kind: .restoreDownloads(items))
-                actionMessage = String(format: L10n.clearedDownloadsFormat, count)
+                showActionMessage(String(format: L10n.clearedDownloadsFormat, count))
             }
         case .clearCompleted:
             let items = store.downloads.completedItems
             store.downloads.clearCompleted()
             if items.isEmpty == false {
                 store.undoAction = AppUndoAction(kind: .restoreDownloads(items))
-                actionMessage = String(format: L10n.clearedDownloadsFormat, items.count)
+                showActionMessage(String(format: L10n.clearedDownloadsFormat, items.count))
             }
         }
     }
@@ -222,6 +258,7 @@ private struct DownloadQueueHeader: View {
     @Bindable var downloads: ArtworkDownloadStore
     let requestDangerAction: (DownloadDangerAction) -> Void
     let copyVisibleLinks: () -> Void
+    let showActionMessage: (String) -> Void
 
     var body: some View {
         FlowLayout(spacing: 8) {
@@ -287,6 +324,9 @@ private struct DownloadQueueHeader: View {
                 Button {
                     if downloads.revealFirstFilteredDownload() == false {
                         downloads.openDownloadDirectory()
+                        showActionMessage(L10n.openedDownloadFolder)
+                    } else {
+                        showActionMessage(L10n.revealedDownloadInFinder)
                     }
                 } label: {
                     Label(L10n.revealFirstVisibleDownload, systemImage: "folder")
@@ -303,7 +343,12 @@ private struct DownloadQueueHeader: View {
                 Divider()
 
                 Button {
-                    downloads.retryFailedFilteredItems()
+                    let count = downloads.retryFailedFilteredItems()
+                    showActionMessage(
+                        count > 0
+                            ? String(format: L10n.retriedDownloadsFormat, count)
+                            : L10n.noRetryableDownloads
+                    )
                 } label: {
                     Label(L10n.retryFailedDownloads, systemImage: "arrow.clockwise")
                 }
@@ -318,14 +363,14 @@ private struct DownloadQueueHeader: View {
 
                 Divider()
 
-                Button {
+                Button(role: .destructive) {
                     requestDangerAction(.clearInvalid(count: downloads.invalidCompletedItems.count))
                 } label: {
                     Label(L10n.clearInvalidDownloads, systemImage: "exclamationmark.arrow.trianglehead.2.clockwise.rotate.90")
                 }
                 .disabled(downloads.invalidCompletedItems.isEmpty)
 
-                Button {
+                Button(role: .destructive) {
                     requestDangerAction(.clearCompleted(count: downloads.completedCount))
                 } label: {
                     Label(L10n.clearCompleted, systemImage: "checkmark.circle")
@@ -379,6 +424,8 @@ private struct DownloadQueueRow: View {
     @Bindable var downloads: ArtworkDownloadStore
     let canOpen: Bool
     let open: () -> Void
+    let retry: () -> Void
+    let reveal: () -> Void
     let copied: () -> Void
     let delete: () -> Void
 
@@ -435,7 +482,7 @@ private struct DownloadQueueRow: View {
 
             if item.status == .failed {
                 Button {
-                    downloads.retry(item)
+                    retry()
                 } label: {
                     Label(L10n.retry, systemImage: "arrow.clockwise")
                 }
@@ -456,7 +503,7 @@ private struct DownloadQueueRow: View {
             .help(L10n.openDownloadedArtwork)
 
             Button {
-                downloads.reveal(item)
+                reveal()
             } label: {
                 Label(L10n.revealInFinder, systemImage: "folder")
             }
@@ -481,7 +528,7 @@ private struct DownloadQueueRow: View {
                 }
 
                 Button {
-                    downloads.reveal(item)
+                    reveal()
                 } label: {
                     Label(L10n.revealInFinder, systemImage: "folder")
                 }
@@ -512,12 +559,12 @@ private struct DownloadQueueRow: View {
         .contextMenu {
             if item.status == .failed {
                 Button(L10n.retry) {
-                    downloads.retry(item)
+                    retry()
                 }
                 .disabled(item.sourceImageURLs?.isEmpty != false)
             }
             Button(L10n.revealInFinder) {
-                downloads.reveal(item)
+                reveal()
             }
             if let pixivURL = item.pixivURL {
                 Button(L10n.openInPixiv) {

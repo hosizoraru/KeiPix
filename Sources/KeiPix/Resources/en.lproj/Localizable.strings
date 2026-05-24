@@ -137,6 +137,12 @@
 "Copied %d artwork links" = "Copied %d artwork links";
 "Deleted %d downloads" = "Deleted %d downloads";
 "Removed %d download records" = "Removed %d download records";
+"Retried %d downloads" = "Retried %d downloads";
+"No retryable downloads" = "No retryable downloads";
+"Revealed download in Finder" = "Revealed download in Finder";
+"Opened download folder" = "Opened download folder";
+"Unable to open downloaded artwork" = "Unable to open downloaded artwork";
+"No download links to copy" = "No download links to copy";
 "Reveal in Finder" = "Reveal in Finder";
 "Open Downloaded Artwork" = "Open Downloaded Artwork";
 "Delete Download" = "Delete Download";

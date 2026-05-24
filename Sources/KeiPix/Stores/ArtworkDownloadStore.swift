@@ -310,11 +310,12 @@ final class ArtworkDownloadStore {
         return initialCount - items.count
     }
 
-    func retry(_ item: ArtworkDownloadItem) {
+    @discardableResult
+    func retry(_ item: ArtworkDownloadItem) -> Bool {
         guard let index = items.firstIndex(where: { $0.id == item.id }),
               items[index].status == .failed,
               items[index].sourceImageURLs?.isEmpty == false else {
-            return
+            return false
         }
         items[index].status = .queued
         items[index].completedPages = 0
@@ -324,6 +325,7 @@ final class ArtworkDownloadStore {
         items[index].updatedAt = Date()
         persistItems()
         startWorkerIfNeeded(preferOriginal: true)
+        return true
     }
 
     func delete(_ item: ArtworkDownloadItem) {
@@ -352,16 +354,18 @@ final class ArtworkDownloadStore {
         return targets.count
     }
 
-    func reveal(_ item: ArtworkDownloadItem) {
+    @discardableResult
+    func reveal(_ item: ArtworkDownloadItem) -> Bool {
         if let filePath = item.downloadedFilePaths?.first {
             NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: filePath, isDirectory: false)])
-            return
+            return true
         }
         guard let folderPath = item.folderPath else {
             openDownloadDirectory()
-            return
+            return false
         }
         NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: folderPath, isDirectory: true)])
+        return true
     }
 
     @discardableResult

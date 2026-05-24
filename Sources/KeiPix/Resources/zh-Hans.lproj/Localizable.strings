@@ -137,6 +137,12 @@
 "Copied %d artwork links" = "已复制 %d 个作品链接";
 "Deleted %d downloads" = "已删除 %d 个下载";
 "Removed %d download records" = "已移除 %d 条下载记录";
+"Retried %d downloads" = "已重试 %d 个下载";
+"No retryable downloads" = "没有可重试的下载";
+"Revealed download in Finder" = "已在 Finder 中显示下载";
+"Opened download folder" = "已打开下载文件夹";
+"Unable to open downloaded artwork" = "无法打开已下载作品";
+"No download links to copy" = "没有可复制的下载链接";
 "Reveal in Finder" = "在 Finder 中显示";
 "Open Downloaded Artwork" = "打开已下载作品";
 "Delete Download" = "删除下载";

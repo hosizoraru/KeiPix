@@ -135,6 +135,12 @@ enum L10n {
     static var copiedLinksFormat: String { text("Copied %d links") }
     static var copiedArtworkLinksFormat: String { text("Copied %d artwork links") }
     static var deletedDownloadsFormat: String { text("Removed %d download records") }
+    static var retriedDownloadsFormat: String { text("Retried %d downloads") }
+    static var noRetryableDownloads: String { text("No retryable downloads") }
+    static var revealedDownloadInFinder: String { text("Revealed download in Finder") }
+    static var openedDownloadFolder: String { text("Opened download folder") }
+    static var unableToOpenDownloadedArtwork: String { text("Unable to open downloaded artwork") }
+    static var noDownloadLinksToCopy: String { text("No download links to copy") }
     static var revealInFinder: String { text("Reveal in Finder") }
     static var openDownloadedArtwork: String { text("Open Downloaded Artwork") }
     static var deleteDownload: String { text("Remove Download Record") }
