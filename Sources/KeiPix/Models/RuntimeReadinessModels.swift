@@ -12,7 +12,61 @@ struct RuntimeReadinessRow: Identifiable, Hashable {
 struct RuntimeReadinessSnapshot: Hashable {
     let checkedAt: Date
     let rows: [RuntimeReadinessRow]
+    let mutableActionItems: [MutableActionQAItem]
     let diagnosticsText: String
+
+    var mutableActionChecklistText: String {
+        MutableActionQAItem.checklistText(for: mutableActionItems)
+    }
+}
+
+enum MutableActionQAStatus: String, CaseIterable, Hashable {
+    case verified
+    case needsTestAccount
+    case needsExplicitApproval
+
+    var title: String {
+        switch self {
+        case .verified:
+            L10n.verified
+        case .needsTestAccount:
+            L10n.needsTestAccount
+        case .needsExplicitApproval:
+            L10n.needsExplicitApproval
+        }
+    }
+
+    var systemImage: String {
+        switch self {
+        case .verified:
+            "checkmark.circle"
+        case .needsTestAccount:
+            "person.crop.circle.badge.questionmark"
+        case .needsExplicitApproval:
+            "hand.raised.circle"
+        }
+    }
+}
+
+struct MutableActionQAItem: Identifiable, Hashable {
+    let id: String
+    let title: String
+    let detail: String
+    let status: MutableActionQAStatus
+    let systemImage: String
+
+    var checklistLine: String {
+        "- [\(status.title)] \(title): \(detail)"
+    }
+
+    static func checklistText(for items: [MutableActionQAItem]) -> String {
+        var lines = [
+            "KeiPix Mutable Action QA Checklist",
+            ""
+        ]
+        lines += items.map(\.checklistLine)
+        return lines.joined(separator: "\n")
+    }
 }
 
 @MainActor
@@ -71,10 +125,16 @@ extension KeiPixStore {
     var runtimeReadinessSnapshot: RuntimeReadinessSnapshot {
         let checkedAt = Date()
         let rows = runtimeReadinessRows
+        let mutableActionItems = mutableActionQAItems
         return RuntimeReadinessSnapshot(
             checkedAt: checkedAt,
             rows: rows,
-            diagnosticsText: runtimeReadinessDiagnosticsText(checkedAt: checkedAt, rows: rows)
+            mutableActionItems: mutableActionItems,
+            diagnosticsText: runtimeReadinessDiagnosticsText(
+                checkedAt: checkedAt,
+                rows: rows,
+                mutableActionItems: mutableActionItems
+            )
         )
     }
 
@@ -94,6 +154,53 @@ extension KeiPixStore {
             mutedReadinessRow,
             privacyReadinessRow,
             trackpadReadinessRow
+        ]
+    }
+
+    var mutableActionQAItems: [MutableActionQAItem] {
+        [
+            MutableActionQAItem(
+                id: "download-queue",
+                title: L10n.qaDownloadQueue,
+                detail: L10n.qaDownloadQueueDetail,
+                status: .verified,
+                systemImage: "arrow.down.circle"
+            ),
+            MutableActionQAItem(
+                id: "follow-toggle",
+                title: L10n.qaFollowToggle,
+                detail: L10n.qaFollowToggleDetail,
+                status: .needsTestAccount,
+                systemImage: "person.crop.circle.badge.plus"
+            ),
+            MutableActionQAItem(
+                id: "bookmark-toggle",
+                title: L10n.qaBookmarkToggle,
+                detail: L10n.qaBookmarkToggleDetail,
+                status: .needsTestAccount,
+                systemImage: "bookmark"
+            ),
+            MutableActionQAItem(
+                id: "comment-post",
+                title: L10n.qaCommentPost,
+                detail: L10n.qaCommentPostDetail,
+                status: .needsExplicitApproval,
+                systemImage: "text.bubble"
+            ),
+            MutableActionQAItem(
+                id: "download-delete",
+                title: L10n.qaDownloadDelete,
+                detail: L10n.qaDownloadDeleteDetail,
+                status: .needsExplicitApproval,
+                systemImage: "trash"
+            ),
+            MutableActionQAItem(
+                id: "mute-sync",
+                title: L10n.qaMuteSync,
+                detail: L10n.qaMuteSyncDetail,
+                status: .needsExplicitApproval,
+                systemImage: "eye.slash"
+            )
         ]
     }
 
@@ -242,7 +349,11 @@ extension KeiPixStore {
         )
     }
 
-    private func runtimeReadinessDiagnosticsText(checkedAt: Date, rows: [RuntimeReadinessRow]) -> String {
+    private func runtimeReadinessDiagnosticsText(
+        checkedAt: Date,
+        rows: [RuntimeReadinessRow],
+        mutableActionItems: [MutableActionQAItem]
+    ) -> String {
         var lines = [
             "KeiPix Runtime Readiness",
             "Checked: \(Self.runtimeReadinessDateFormatter.string(from: checkedAt))",
@@ -250,6 +361,11 @@ extension KeiPixStore {
             ""
         ]
         lines += rows.map { "\($0.title): \($0.value)" }
+        lines += [
+            "",
+            "Mutable Action QA"
+        ]
+        lines += mutableActionItems.map(\.checklistLine)
         lines += [
             "",
             "Downloads: \(downloads.downloadDirectoryPath)",

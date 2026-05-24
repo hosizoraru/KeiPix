@@ -5,6 +5,7 @@ import UniformTypeIdentifiers
 struct RuntimeReadinessView: View {
     let store: KeiPixStore
     @State private var didCopyDiagnostics = false
+    @State private var didCopyChecklist = false
     @State private var isRunningDiagnostics = false
     @State private var networkResults: [NetworkDiagnosticResult] = []
     @State private var cacheStatus: ImageCacheStatus?
@@ -38,6 +39,20 @@ struct RuntimeReadinessView: View {
                 ForEach(networkResults) { result in
                     NetworkDiagnosticResultRow(result: result)
                 }
+            }
+
+            Divider()
+
+            MutableActionReadinessView(
+                items: snapshot.mutableActionItems,
+                didCopyChecklist: didCopyChecklist,
+                copyChecklist: {
+                    PasteboardWriter.copy(snapshot.mutableActionChecklistText)
+                    didCopyChecklist = true
+                }
+            )
+            .task(id: didCopyChecklist) {
+                await dismissChecklistCopyStatusIfNeeded()
             }
 
             FlowLayout(spacing: 8) {
@@ -168,6 +183,14 @@ struct RuntimeReadinessView: View {
         }
     }
 
+    private func dismissChecklistCopyStatusIfNeeded() async {
+        guard didCopyChecklist else { return }
+        try? await Task.sleep(for: .seconds(2.5))
+        if didCopyChecklist {
+            didCopyChecklist = false
+        }
+    }
+
     private static let fileDateFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.calendar = Calendar(identifier: .gregorian)
@@ -175,6 +198,88 @@ struct RuntimeReadinessView: View {
         formatter.dateFormat = "yyyyMMdd-HHmmss"
         return formatter
     }()
+}
+
+struct MutableActionReadinessView: View {
+    let items: [MutableActionQAItem]
+    let didCopyChecklist: Bool
+    let copyChecklist: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .firstTextBaseline, spacing: 10) {
+                Label(L10n.mutableActionReadiness, systemImage: "checklist")
+                    .font(.headline)
+
+                Spacer()
+
+                Button {
+                    copyChecklist()
+                } label: {
+                    Label(L10n.copyQAReviewChecklist, systemImage: "doc.on.doc")
+                }
+                .controlSize(.small)
+            }
+
+            Text(L10n.mutableActionReadinessHint)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
+            VStack(spacing: 8) {
+                ForEach(items) { item in
+                    MutableActionReadinessRow(item: item)
+                }
+            }
+
+            if didCopyChecklist {
+                Text(L10n.copiedQAReviewChecklist)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .padding(.vertical, 4)
+    }
+}
+
+private struct MutableActionReadinessRow: View {
+    let item: MutableActionQAItem
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            Label {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(item.title)
+                    Text(item.detail)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(2)
+                }
+            } icon: {
+                Image(systemName: item.systemImage)
+                    .foregroundStyle(.secondary)
+                    .frame(width: 18)
+            }
+
+            Spacer(minLength: 16)
+
+            Label(item.status.title, systemImage: item.status.systemImage)
+                .font(.caption)
+                .foregroundStyle(statusColor)
+                .labelStyle(.titleAndIcon)
+                .fixedSize(horizontal: true, vertical: false)
+        }
+    }
+
+    private var statusColor: Color {
+        switch item.status {
+        case .verified:
+            .green
+        case .needsTestAccount:
+            .orange
+        case .needsExplicitApproval:
+            .red
+        }
+    }
 }
 
 private struct NetworkDiagnosticResultRow: View {

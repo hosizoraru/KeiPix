@@ -480,6 +480,25 @@ enum L10n {
     static var imageCache: String { text("Image Cache") }
     static var cacheUsageFormat: String { text("%@ used of %@") }
     static var availableInDiagnostics: String { text("Available in diagnostics") }
+    static var mutableActionReadiness: String { text("Mutable Action Readiness") }
+    static var mutableActionReadinessHint: String { text("Remote or destructive actions stay visible in QA until a test account or explicit approval covers them.") }
+    static var copyQAReviewChecklist: String { text("Copy QA Checklist") }
+    static var copiedQAReviewChecklist: String { text("Copied QA Checklist") }
+    static var verified: String { text("Verified") }
+    static var needsTestAccount: String { text("Needs Test Account") }
+    static var needsExplicitApproval: String { text("Needs Explicit Approval") }
+    static var qaDownloadQueue: String { text("Download queue") }
+    static var qaDownloadQueueDetail: String { text("Queueing downloads is covered by read-only runtime QA.") }
+    static var qaFollowToggle: String { text("Follow and unfollow") }
+    static var qaFollowToggleDetail: String { text("Requires a disposable Pixiv test account.") }
+    static var qaBookmarkToggle: String { text("Bookmark add and remove") }
+    static var qaBookmarkToggleDetail: String { text("Requires a disposable Pixiv test account.") }
+    static var qaCommentPost: String { text("Comment posting") }
+    static var qaCommentPostDetail: String { text("Requires explicit approval for remote write verification.") }
+    static var qaDownloadDelete: String { text("Download deletion") }
+    static var qaDownloadDeleteDetail: String { text("Requires explicit approval before deleting local files.") }
+    static var qaMuteSync: String { text("Mute sync") }
+    static var qaMuteSyncDetail: String { text("Requires explicit approval before syncing mute changes.") }
     static var systemProxy: String { text("System Proxy") }
     static var directConnection: String { text("Direct connection") }
     static var pixivAPI: String { text("Pixiv API") }
