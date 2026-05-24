@@ -336,12 +336,14 @@ private struct FeedHeaderView: View {
 
                 Button {
                     store.saveCurrentSearch()
+                    actionMessage = String(format: L10n.savedSearchFormat, normalizedSearchKeyword)
                 } label: {
                     Label(L10n.saveSearch, systemImage: "star")
                 }
 
                 Button {
                     store.saveCurrentSearchPreset()
+                    actionMessage = String(format: L10n.savedSearchPresetFormat, normalizedSearchKeyword)
                 } label: {
                     Label(L10n.saveSearchWithFilters, systemImage: "slider.horizontal.3")
                 }
@@ -476,11 +478,15 @@ private struct FeedHeaderView: View {
     }
 
     private var searchSummary: String {
-        let keyword = store.searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        let keyword = normalizedSearchKeyword
         guard keyword.isEmpty == false else {
             return store.searchOptions.summary
         }
         return "\(keyword) · \(store.searchOptions.summary)"
+    }
+
+    private var normalizedSearchKeyword: String {
+        store.searchText.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     private var pixivWebSearchURL: URL? {
@@ -609,7 +615,7 @@ private struct FeedHeaderView: View {
 
     private func resetSearchFilters() {
         store.resetSearchOptions()
-        actionMessage = nil
+        actionMessage = L10n.searchFiltersReset
         Task { await store.runSearch() }
     }
 
