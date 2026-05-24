@@ -3,6 +3,7 @@ import SwiftUI
 struct UserPreviewListView: View {
     @Bindable var store: KeiPixStore
     let mode: UserPreviewListMode
+    @Environment(\.undoManager) private var undoManager
 
     @State private var previews: [PixivUserPreview] = []
     @State private var nextURL: URL?
@@ -531,12 +532,12 @@ struct UserPreviewListView: View {
                 updateMutedState(userID: target.user.id, isMuted: true)
             }
             updatedCount = targets.count
-            undoAction = CreatorUndoAction(kind: .unmuteUsers(mutedUsers))
+            presentUndo(CreatorUndoAction(kind: .unmuteUsers(mutedUsers)))
         case .unfollow:
             let restores = await unfollowCreators(targets)
             updatedCount = restores.count
             if restores.isEmpty == false {
-                undoAction = CreatorUndoAction(kind: .restoreFollows(restores))
+                presentUndo(CreatorUndoAction(kind: .restoreFollows(restores)))
             }
         }
 
@@ -670,16 +671,16 @@ struct UserPreviewListView: View {
             do {
                 try await store.setFollow(action.user, isFollowed: false, restrict: restrict)
                 updateFollowState(userID: action.user.id, isFollowed: false, restrict: nil)
-                undoAction = CreatorUndoAction(kind: .restoreFollows([
+                presentUndo(CreatorUndoAction(kind: .restoreFollows([
                     CreatorFollowRestore(user: action.user, restrict: restrict)
-                ]))
+                ])))
             } catch {
                 errorMessage = error.localizedDescription
             }
         case .mute:
             store.muteUser(action.user)
             updateMutedState(userID: action.user.id, isMuted: true)
-            undoAction = CreatorUndoAction(kind: .unmuteUsers([action.user]))
+            presentUndo(CreatorUndoAction(kind: .unmuteUsers([action.user])))
         }
     }
 
@@ -711,6 +712,16 @@ struct UserPreviewListView: View {
             }
         }
         undoAction = nil
+    }
+
+    private func presentUndo(_ action: CreatorUndoAction) {
+        undoAction = action
+        undoManager?.registerUndo(withTarget: store) { _ in
+            Task { @MainActor in
+                await performUndo(action)
+            }
+        }
+        undoManager?.setActionName(L10n.undo)
     }
 
     private func copyCreatorLink(_ user: PixivUser) {

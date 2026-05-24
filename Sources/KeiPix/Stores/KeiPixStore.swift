@@ -890,6 +890,25 @@ final class KeiPixStore {
         latestSelectableRankingDate()
     }
 
+    static func rankingDateRange() -> ClosedRange<Date> {
+        let earliest = earliestSelectableRankingDate()
+        let latest = latestSelectableRankingDate()
+        if latest < earliest {
+            return earliest...earliest
+        }
+        return earliest...latest
+    }
+
+    static func earliestSelectableRankingDate() -> Date {
+        var components = DateComponents()
+        components.calendar = Calendar(identifier: .gregorian)
+        components.timeZone = .current
+        components.year = 2007
+        components.month = 9
+        components.day = 10
+        return components.date.map { Calendar.current.startOfDay(for: $0) } ?? .distantPast
+    }
+
     static func latestSelectableRankingDate() -> Date {
         let calendar = Calendar.current
         let today = calendar.startOfDay(for: Date())
@@ -897,7 +916,9 @@ final class KeiPixStore {
     }
 
     static func clampedRankingDate(_ date: Date) -> Date {
-        min(date, latestSelectableRankingDate())
+        let calendar = Calendar.current
+        let normalizedDate = calendar.startOfDay(for: date)
+        return min(max(normalizedDate, earliestSelectableRankingDate()), latestSelectableRankingDate())
     }
 
     private static func loadRankingDate() -> Date {

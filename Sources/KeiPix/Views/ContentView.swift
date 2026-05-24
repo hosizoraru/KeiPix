@@ -4,6 +4,7 @@ struct ContentView: View {
     @Bindable var store: KeiPixStore
     @State private var columnVisibility: NavigationSplitViewVisibility = .all
     @State private var isSidebarPresented = true
+    @Environment(\.undoManager) private var undoManager
 
     var body: some View {
         NavigationSplitView(columnVisibility: $columnVisibility) {
@@ -165,6 +166,9 @@ struct ContentView: View {
             }
         }
         .animation(.snappy(duration: 0.18), value: store.undoAction?.id)
+        .onChange(of: store.undoAction?.id) { _, _ in
+            registerCurrentUndoAction()
+        }
         .alert(L10n.errorTitle, isPresented: errorBinding) {
             Button("OK") { store.errorMessage = nil }
         } message: {
@@ -199,6 +203,16 @@ struct ContentView: View {
     private func toggleSidebar() {
         isSidebarPresented.toggle()
         columnVisibility = isSidebarPresented ? .all : .doubleColumn
+    }
+
+    private func registerCurrentUndoAction() {
+        guard let action = store.undoAction else { return }
+        undoManager?.registerUndo(withTarget: store) { store in
+            Task { @MainActor in
+                await store.performUndo(action)
+            }
+        }
+        undoManager?.setActionName(L10n.undo)
     }
 
     private var minimumWindowWidth: CGFloat {

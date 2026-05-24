@@ -477,6 +477,7 @@ private struct FeedHeaderView: View {
     }
 
     private func applyRankingDate() {
+        draftRankingDate = KeiPixStore.clampedRankingDate(draftRankingDate)
         store.setRankingDate(draftRankingDate)
         store.setUseRankingDate(draftUseRankingDate)
         isRankingDatePopoverPresented = false
@@ -486,6 +487,7 @@ private struct FeedHeaderView: View {
     private func useLatestRanking() {
         draftUseRankingDate = false
         draftRankingDate = KeiPixStore.latestSelectableRankingDate()
+        store.setRankingDate(draftRankingDate)
         store.setUseRankingDate(false)
         isRankingDatePopoverPresented = false
         Task { await store.reloadCurrentFeed() }
@@ -551,7 +553,7 @@ private struct RankingDatePopover: View {
             DatePicker(
                 L10n.rankingDate,
                 selection: $rankingDate,
-                in: ...KeiPixStore.latestSelectableRankingDate(),
+                in: KeiPixStore.rankingDateRange(),
                 displayedComponents: .date
             )
             .datePickerStyle(.graphical)
