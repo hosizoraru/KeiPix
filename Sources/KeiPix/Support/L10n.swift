@@ -179,6 +179,7 @@ enum L10n {
     static var openCreatorNetwork: String { text("Open creator network") }
     static var creatorFilter: String { text("Creator Filter") }
     static var creatorSort: String { text("Creator Sort") }
+    static var resetCreatorFilters: String { text("Reset Creator Filters") }
     static var allCreators: String { text("All Creators") }
     static var unfollowed: String { text("Unfollowed") }
     static var defaultOrder: String { text("Default Order") }

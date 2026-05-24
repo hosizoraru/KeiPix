@@ -175,6 +175,7 @@
 "Open creator network" = "打开作者关系";
 "Creator Filter" = "作者筛选";
 "Creator Sort" = "作者排序";
+"Reset Creator Filters" = "重置作者筛选";
 "All Creators" = "全部作者";
 "Unfollowed" = "未关注";
 "Default Order" = "默认顺序";
@@ -201,7 +202,7 @@
 "Checked follow visibility for %d creators, %d failed" = "已检查 %d 位作者的关注可见性，%d 位失败";
 "Works Count" = "作品数";
 "Public Saves" = "公开收藏";
-"Followers" = "关注中";
+"Followers" = "粉丝";
 "Region" = "地区";
 "Job" = "职业";
 "Links" = "链接";

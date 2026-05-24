@@ -275,6 +275,15 @@ struct UserPreviewListView: View {
                     Divider()
 
                     Button {
+                        resetCreatorListState()
+                    } label: {
+                        Label(L10n.resetCreatorFilters, systemImage: "arrow.counterclockwise")
+                    }
+                    .disabled(hasActiveCreatorListState == false)
+
+                    Divider()
+
+                    Button {
                         copyVisibleCreatorLinks()
                     } label: {
                         Label(L10n.copyVisibleCreatorLinks, systemImage: "link")
@@ -422,6 +431,12 @@ struct UserPreviewListView: View {
         visiblePreviews.filter(\.user.isFollowed)
     }
 
+    private var hasActiveCreatorListState: Bool {
+        creatorSearchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false
+            || creatorFilter != .all
+            || creatorSort != .defaultOrder
+    }
+
     private var visiblePreviews: [PixivUserPreview] {
         let normalizedQuery = creatorSearchText.trimmingCharacters(in: .whitespacesAndNewlines)
         let filtered = previews.filter { preview in
@@ -543,6 +558,12 @@ struct UserPreviewListView: View {
     private func requestBulkAction(_ action: CreatorBulkAction) {
         pendingBulkAction = action
         isShowingBulkConfirmation = true
+    }
+
+    private func resetCreatorListState() {
+        creatorSearchText = ""
+        creatorFilter = .all
+        creatorSort = .defaultOrder
     }
 
     private func bulkActionTargetCount(_ action: CreatorBulkAction) -> Int {
