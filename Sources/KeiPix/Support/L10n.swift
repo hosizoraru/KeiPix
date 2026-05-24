@@ -140,6 +140,7 @@ enum L10n {
     static var clearedDownloadsFormat: String { text("Cleared %d downloads") }
     static var copiedLinksFormat: String { text("Copied %d links") }
     static var copiedArtworkLinksFormat: String { text("Copied %d artwork links") }
+    static var noArtworkLinksToCopy: String { text("No artwork links to copy") }
     static var deletedDownloadsFormat: String { text("Removed %d download records") }
     static var retriedDownloadsFormat: String { text("Retried %d downloads") }
     static var noRetryableDownloads: String { text("No retryable downloads") }

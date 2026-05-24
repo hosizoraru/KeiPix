@@ -141,6 +141,7 @@
 "Cleared %d downloads" = "已清理 %d 个下载";
 "Copied %d links" = "已复制 %d 个链接";
 "Copied %d artwork links" = "已复制 %d 个作品链接";
+"No artwork links to copy" = "没有可复制的作品链接";
 "Deleted %d downloads" = "已删除 %d 个下载";
 "Removed %d download records" = "已移除 %d 条下载记录";
 "Retried %d downloads" = "已重试 %d 个下载";

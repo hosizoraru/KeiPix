@@ -422,18 +422,17 @@ private struct FeedHeaderView: View {
                 Label(L10n.copyLoadedArtworkLinks, systemImage: "link")
             }
             .disabled(loadedArtworkLinks.isEmpty)
+
+            Button {
+                presentBatchDownload()
+            } label: {
+                Label(L10n.batchDownload, systemImage: "square.and.arrow.down.on.square")
+            }
+            .disabled(store.artworks.isEmpty)
         } label: {
             Label(L10n.moreActions, systemImage: "ellipsis.circle")
         }
         .menuStyle(.button)
-        .buttonStyle(.bordered)
-
-        Button {
-            batchDownloadLimit = min(max(1, batchDownloadLimit), maxBatchDownloadLimit)
-            isBatchDownloadPresented = true
-        } label: {
-            Label(L10n.batchDownload, systemImage: "square.and.arrow.down.on.square")
-        }
         .buttonStyle(.bordered)
         .popover(isPresented: $isBatchDownloadPresented, arrowEdge: .bottom) {
             BatchDownloadPopover(
@@ -453,6 +452,15 @@ private struct FeedHeaderView: View {
             }
             .buttonStyle(.bordered)
         }
+    }
+
+    private func presentBatchDownload() {
+        guard store.artworks.isEmpty == false else {
+            actionMessage = L10n.noArtworkTitle
+            return
+        }
+        batchDownloadLimit = min(max(1, batchDownloadLimit), maxBatchDownloadLimit)
+        isBatchDownloadPresented = true
     }
 
     private var maxBatchDownloadLimit: Int {
@@ -562,6 +570,11 @@ private struct FeedHeaderView: View {
     }
 
     private func queueBatchDownload() {
+        guard store.artworks.isEmpty == false else {
+            lastQueuedDownloadCount = 0
+            actionMessage = L10n.noArtworkTitle
+            return
+        }
         let count = store.enqueueDownloads(
             store.artworks,
             limit: min(batchDownloadLimit, maxBatchDownloadLimit),
@@ -569,13 +582,17 @@ private struct FeedHeaderView: View {
         )
         lastQueuedDownloadCount = count
         if count > 0 {
+            actionMessage = String(format: L10n.queuedDownloadsFormat, count)
             isBatchDownloadPresented = false
         }
     }
 
     private func copyLoadedArtworkLinks() {
         let links = loadedArtworkLinks
-        guard links.isEmpty == false else { return }
+        guard links.isEmpty == false else {
+            actionMessage = L10n.noArtworkLinksToCopy
+            return
+        }
         PasteboardWriter.copy(links.joined(separator: "\n"))
         actionMessage = String(format: L10n.copiedArtworkLinksFormat, links.count)
     }

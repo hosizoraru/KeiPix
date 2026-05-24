@@ -141,6 +141,7 @@
 "Cleared %d downloads" = "Cleared %d downloads";
 "Copied %d links" = "Copied %d links";
 "Copied %d artwork links" = "Copied %d artwork links";
+"No artwork links to copy" = "No artwork links to copy";
 "Deleted %d downloads" = "Deleted %d downloads";
 "Removed %d download records" = "Removed %d download records";
 "Retried %d downloads" = "Retried %d downloads";
