@@ -9,6 +9,7 @@ struct TrendingTagsView: View {
     private let columns = [
         GridItem(.adaptive(minimum: 190, maximum: 260), spacing: 14)
     ]
+    private let cardImageHeight: CGFloat = 210
 
     var body: some View {
         Group {
@@ -28,6 +29,7 @@ struct TrendingTagsView: View {
                                 ForEach(tags) { tag in
                                     TrendingTagCard(
                                         tag: tag,
+                                        imageHeight: cardImageHeight,
                                         showTranslatedName: store.showTranslatedTags,
                                         showContentBadges: store.showContentBadges,
                                         search: { search(tag) },
@@ -112,6 +114,7 @@ struct TrendingTagsView: View {
 
 private struct TrendingTagCard: View {
     let tag: PixivTrendingTag
+    let imageHeight: CGFloat
     let showTranslatedName: Bool
     let showContentBadges: Bool
     let search: () -> Void
@@ -123,9 +126,9 @@ private struct TrendingTagCard: View {
     var body: some View {
         Button(action: search) {
             ZStack(alignment: .bottomLeading) {
-                RemoteImageView(url: tag.artwork.thumbnailURL)
-                    .aspectRatio(1.1, contentMode: .fill)
+                RemoteImageView(url: tag.artwork.thumbnailURL, contentMode: .fill)
                     .frame(maxWidth: .infinity)
+                    .frame(height: imageHeight)
                     .clipped()
                     .overlay(alignment: .bottom) {
                         LinearGradient(
@@ -159,6 +162,8 @@ private struct TrendingTagCard: View {
             }
         }
         .buttonStyle(.plain)
+        .frame(minHeight: imageHeight)
+        .contentShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         .overlay {
             RoundedRectangle(cornerRadius: 18, style: .continuous)

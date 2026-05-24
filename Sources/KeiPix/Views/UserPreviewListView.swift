@@ -104,114 +104,6 @@ struct UserPreviewListView: View {
             }
         }
         .navigationTitle(mode.title)
-        .searchable(text: $creatorSearchText, placement: .toolbar, prompt: L10n.searchCreatorsInList)
-        .toolbar {
-            ToolbarItem(placement: .primaryAction) {
-                Menu {
-                    Button {
-                        Task { await checkVisibleFollowVisibility() }
-                    } label: {
-                        Label(L10n.checkFollowVisibility, systemImage: "checkmark.seal")
-                    }
-                    .disabled(isCheckingFollowVisibility || visibleFollowedPreviews.isEmpty)
-
-                    Divider()
-
-                    Button {
-                        resetCreatorListState()
-                    } label: {
-                        Label(L10n.resetCreatorFilters, systemImage: "arrow.counterclockwise")
-                    }
-                    .disabled(hasActiveCreatorListState == false)
-
-                    Divider()
-
-                    Button {
-                        copyVisibleCreatorLinks()
-                    } label: {
-                        Label(L10n.copyVisibleCreatorLinks, systemImage: "link")
-                    }
-                    .disabled(visiblePreviews.isEmpty)
-
-                    Button {
-                        copyVisibleCreatorSummary()
-                    } label: {
-                        Label(L10n.copyVisibleCreatorSummary, systemImage: "doc.text")
-                    }
-                    .disabled(visiblePreviews.isEmpty)
-
-                    Divider()
-
-                    Button {
-                        requestBulkAction(.followPublic)
-                    } label: {
-                        Label(L10n.followVisiblePublicly, systemImage: "person.crop.circle.badge.plus")
-                    }
-                    .disabled(isRunningBulkAction || bulkActionTargetCount(.followPublic) == 0)
-
-                    Button {
-                        requestBulkAction(.followPrivate)
-                    } label: {
-                        Label(L10n.followVisiblePrivately, systemImage: "lock.circle")
-                    }
-                    .disabled(isRunningBulkAction || bulkActionTargetCount(.followPrivate) == 0)
-
-                    Divider()
-
-                    Button(role: .destructive) {
-                        requestBulkAction(.mute)
-                    } label: {
-                        Label(L10n.muteVisibleCreators, systemImage: "eye.slash")
-                    }
-                    .disabled(isRunningBulkAction || bulkActionTargetCount(.mute) == 0)
-
-                    Button(role: .destructive) {
-                        requestBulkAction(.unfollow)
-                    } label: {
-                        Label(L10n.unfollowVisibleCreators, systemImage: "person.crop.circle.badge.minus")
-                    }
-                    .disabled(isRunningBulkAction || bulkActionTargetCount(.unfollow) == 0)
-                } label: {
-                    if isRunningBulkAction {
-                        ProgressView()
-                            .controlSize(.small)
-                    } else {
-                        Label(L10n.creatorActions, systemImage: "slider.horizontal.3")
-                    }
-                }
-                .help(L10n.creatorActions)
-                .disabled(visiblePreviews.isEmpty)
-            }
-
-            ToolbarItem(placement: .primaryAction) {
-                Picker(L10n.creatorFilter, selection: $creatorFilter) {
-                    ForEach(CreatorListFilter.allCases) { filter in
-                        Text(filter.title).tag(filter)
-                    }
-                }
-                .pickerStyle(.menu)
-                .help(L10n.creatorFilter)
-            }
-
-            ToolbarItem(placement: .primaryAction) {
-                Picker(L10n.creatorSort, selection: $creatorSort) {
-                    ForEach(CreatorListSort.allCases) { sort in
-                        Text(sort.title).tag(sort)
-                    }
-                }
-                .pickerStyle(.menu)
-                .help(L10n.creatorSort)
-            }
-
-            ToolbarItem(placement: .primaryAction) {
-                Button {
-                    Task { await loadInitial() }
-                } label: {
-                    Label(L10n.refresh, systemImage: "arrow.clockwise")
-                }
-                .disabled(isLoading)
-            }
-        }
         .safeAreaInset(edge: .bottom) {
             if errorMessage != nil || bulkStatusText != nil || isRunningBulkAction || isCheckingFollowVisibility {
                 VStack(alignment: .leading, spacing: 6) {
@@ -338,31 +230,148 @@ struct UserPreviewListView: View {
     }
 
     private var header: some View {
-        HStack(spacing: 12) {
-            VStack(alignment: .leading, spacing: 3) {
-                Text(mode.title)
-                    .font(.headline)
-                Text(headerSubtitle)
-                    .font(.caption)
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 12) {
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(mode.title)
+                        .font(.headline)
+                    Text(headerSubtitle)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+
+                    if visiblePreviews.isEmpty == false {
+                        CreatorListSummaryStrip(previews: visiblePreviews)
+                    }
+                }
+
+                Spacer()
+
+                if mode.usesRestrictPicker {
+                    Picker(L10n.followingCreators, selection: restrictBinding) {
+                        Text(L10n.publicRestrict).tag(BookmarkRestrict.public)
+                        Text(L10n.privateRestrict).tag(BookmarkRestrict.private)
+                    }
+                    .pickerStyle(.segmented)
+                    .controlSize(.small)
+                    .frame(width: 160)
+                }
+            }
+
+            HStack(spacing: 10) {
+                Image(systemName: "magnifyingglass")
                     .foregroundStyle(.secondary)
 
-                if visiblePreviews.isEmpty == false {
-                    CreatorListSummaryStrip(previews: visiblePreviews)
-                }
-            }
+                TextField(L10n.searchCreatorsInList, text: $creatorSearchText)
+                    .textFieldStyle(.roundedBorder)
+                    .frame(width: 240)
 
-            Spacer()
-
-            if mode.usesRestrictPicker {
-                Picker(L10n.followingCreators, selection: restrictBinding) {
-                    Text(L10n.publicRestrict).tag(BookmarkRestrict.public)
-                    Text(L10n.privateRestrict).tag(BookmarkRestrict.private)
+                Picker(L10n.creatorFilter, selection: $creatorFilter) {
+                    ForEach(CreatorListFilter.allCases) { filter in
+                        Text(filter.title).tag(filter)
+                    }
                 }
-                .pickerStyle(.segmented)
-                .controlSize(.small)
-                .frame(width: 160)
+                .pickerStyle(.menu)
+                .help(L10n.creatorFilter)
+
+                Picker(L10n.creatorSort, selection: $creatorSort) {
+                    ForEach(CreatorListSort.allCases) { sort in
+                        Text(sort.title).tag(sort)
+                    }
+                }
+                .pickerStyle(.menu)
+                .help(L10n.creatorSort)
+
+                creatorActionsMenu
+
+                Button {
+                    Task { await loadInitial() }
+                } label: {
+                    Label(L10n.refresh, systemImage: "arrow.clockwise")
+                }
+                .labelStyle(.iconOnly)
+                .help(L10n.refresh)
+                .disabled(isLoading)
+
+                Spacer(minLength: 0)
             }
         }
+    }
+
+    private var creatorActionsMenu: some View {
+        Menu {
+            Button {
+                Task { await checkVisibleFollowVisibility() }
+            } label: {
+                Label(L10n.checkFollowVisibility, systemImage: "checkmark.seal")
+            }
+            .disabled(isCheckingFollowVisibility || visibleFollowedPreviews.isEmpty)
+
+            Divider()
+
+            Button {
+                resetCreatorListState()
+            } label: {
+                Label(L10n.resetCreatorFilters, systemImage: "arrow.counterclockwise")
+            }
+            .disabled(hasActiveCreatorListState == false)
+
+            Divider()
+
+            Button {
+                copyVisibleCreatorLinks()
+            } label: {
+                Label(L10n.copyVisibleCreatorLinks, systemImage: "link")
+            }
+            .disabled(visiblePreviews.isEmpty)
+
+            Button {
+                copyVisibleCreatorSummary()
+            } label: {
+                Label(L10n.copyVisibleCreatorSummary, systemImage: "doc.text")
+            }
+            .disabled(visiblePreviews.isEmpty)
+
+            Divider()
+
+            Button {
+                requestBulkAction(.followPublic)
+            } label: {
+                Label(L10n.followVisiblePublicly, systemImage: "person.crop.circle.badge.plus")
+            }
+            .disabled(isRunningBulkAction || bulkActionTargetCount(.followPublic) == 0)
+
+            Button {
+                requestBulkAction(.followPrivate)
+            } label: {
+                Label(L10n.followVisiblePrivately, systemImage: "lock.circle")
+            }
+            .disabled(isRunningBulkAction || bulkActionTargetCount(.followPrivate) == 0)
+
+            Divider()
+
+            Button(role: .destructive) {
+                requestBulkAction(.mute)
+            } label: {
+                Label(L10n.muteVisibleCreators, systemImage: "eye.slash")
+            }
+            .disabled(isRunningBulkAction || bulkActionTargetCount(.mute) == 0)
+
+            Button(role: .destructive) {
+                requestBulkAction(.unfollow)
+            } label: {
+                Label(L10n.unfollowVisibleCreators, systemImage: "person.crop.circle.badge.minus")
+            }
+            .disabled(isRunningBulkAction || bulkActionTargetCount(.unfollow) == 0)
+        } label: {
+            if isRunningBulkAction {
+                ProgressView()
+                    .controlSize(.small)
+            } else {
+                Label(L10n.creatorActions, systemImage: "slider.horizontal.3")
+            }
+        }
+        .help(L10n.creatorActions)
+        .disabled(visiblePreviews.isEmpty)
     }
 
     private var headerSubtitle: String {
@@ -807,12 +816,14 @@ private struct UserPreviewCard: View {
 private struct ArtworkPreviewThumb: View {
     let artwork: PixivArtwork
     let showContentBadges: Bool
+    private let thumbnailHeight: CGFloat = 132
 
     var body: some View {
         ZStack(alignment: .topLeading) {
-            RemoteImageView(url: artwork.thumbnailURL)
-                .aspectRatio(1, contentMode: .fill)
+            RemoteImageView(url: artwork.thumbnailURL, contentMode: .fill)
                 .frame(maxWidth: .infinity)
+                .frame(height: thumbnailHeight)
+                .clipped()
                 .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
 
             if showContentBadges {
@@ -821,5 +832,6 @@ private struct ArtworkPreviewThumb: View {
             }
         }
         .frame(maxWidth: .infinity)
+        .frame(height: thumbnailHeight)
     }
 }

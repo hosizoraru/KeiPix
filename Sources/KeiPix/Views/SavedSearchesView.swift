@@ -8,6 +8,19 @@ struct SavedSearchesView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
+                HStack(spacing: 10) {
+                    Image(systemName: "magnifyingglass")
+                        .foregroundStyle(.secondary)
+
+                    TextField(L10n.searchSavedSearches, text: $librarySearchText)
+                        .textFieldStyle(.roundedBorder)
+                        .frame(maxWidth: 360)
+
+                    Spacer(minLength: 0)
+                }
+                .padding(12)
+                .keiPanel(14)
+
                 if let actionMessage {
                     Text(actionMessage)
                         .font(.caption)
@@ -113,7 +126,6 @@ struct SavedSearchesView: View {
         }
         .scrollEdgeEffectStyle(.soft, for: .top)
         .navigationTitle(L10n.savedSearches)
-        .searchable(text: $librarySearchText, placement: .toolbar, prompt: L10n.searchSavedSearches)
     }
 
     private var normalizedLibrarySearchText: String {
