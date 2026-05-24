@@ -20,6 +20,7 @@ struct SavedSearchesView: View {
                     hasUnfilteredContent: store.savedSearchPresets.isEmpty == false,
                     rowAction: runPreset,
                     copyAction: copyPresetKeyword,
+                    copyPixivWebAction: copyPresetPixivWebLink,
                     removeAction: store.removeSavedSearchPreset
                 )
 
@@ -32,6 +33,10 @@ struct SavedSearchesView: View {
                     rowAction: runSearch,
                     trailingAction: { keyword in
                         Menu {
+                            pixivWebSearchActions(keyword: keyword, options: .defaultValue)
+
+                            Divider()
+
                             Button {
                                 copyKeyword(keyword)
                             } label: {
@@ -75,6 +80,10 @@ struct SavedSearchesView: View {
                     },
                     trailingAction: { keyword in
                         Menu {
+                            pixivWebSearchActions(keyword: keyword, options: .defaultValue)
+
+                            Divider()
+
                             Button {
                                 copyKeyword(keyword)
                             } label: {
@@ -154,6 +163,31 @@ struct SavedSearchesView: View {
     private func copyPresetKeyword(_ preset: SavedSearchPreset) {
         copyKeyword(preset.keyword)
     }
+
+    private func copyPresetPixivWebLink(_ preset: SavedSearchPreset) {
+        copyPixivWebLink(keyword: preset.keyword, options: preset.options)
+    }
+
+    private func copyPixivWebLink(keyword: String, options: SearchOptions) {
+        guard let url = PixivWebURLBuilder.searchURL(keyword: keyword, options: options) else { return }
+        PasteboardWriter.copy(url.absoluteString)
+        actionMessage = L10n.copiedPixivWebSearchLink
+    }
+
+    @ViewBuilder
+    private func pixivWebSearchActions(keyword: String, options: SearchOptions) -> some View {
+        if let url = PixivWebURLBuilder.searchURL(keyword: keyword, options: options) {
+            Link(destination: url) {
+                Label(L10n.openPixivWebSearch, systemImage: "safari")
+            }
+
+            Button {
+                copyPixivWebLink(keyword: keyword, options: options)
+            } label: {
+                Label(L10n.copyPixivWebSearchLink, systemImage: "link")
+            }
+        }
+    }
 }
 
 private struct SavedSearchPresetSection: View {
@@ -161,6 +195,7 @@ private struct SavedSearchPresetSection: View {
     let hasUnfilteredContent: Bool
     let rowAction: (SavedSearchPreset) -> Void
     let copyAction: (SavedSearchPreset) -> Void
+    let copyPixivWebAction: (SavedSearchPreset) -> Void
     let removeAction: (SavedSearchPreset) -> Void
 
     var body: some View {
@@ -194,10 +229,26 @@ private struct SavedSearchPresetSection: View {
                             }
                             .buttonStyle(.plain)
 
+                            if let url = PixivWebURLBuilder.searchURL(keyword: preset.keyword, options: preset.options) {
+                                Link(destination: url) {
+                                    Label(L10n.openPixivWebSearch, systemImage: "safari")
+                                }
+                                .labelStyle(.iconOnly)
+                                .buttonStyle(.bordered)
+                            }
+
                             Button {
                                 copyAction(preset)
                             } label: {
                                 Label(L10n.copyKeyword, systemImage: "doc.on.doc")
+                            }
+                            .labelStyle(.iconOnly)
+                            .buttonStyle(.bordered)
+
+                            Button {
+                                copyPixivWebAction(preset)
+                            } label: {
+                                Label(L10n.copyPixivWebSearchLink, systemImage: "link")
                             }
                             .labelStyle(.iconOnly)
                             .buttonStyle(.bordered)
