@@ -16,7 +16,23 @@ APP_BINARY="$APP_MACOS/$APP_NAME"
 INFO_PLIST="$APP_CONTENTS/Info.plist"
 
 cd "$ROOT_DIR"
-pkill -x "$APP_NAME" >/dev/null 2>&1 || true
+
+case "$MODE" in
+  run|--debug|debug|--logs|logs|--telemetry|telemetry|--verify|verify|--package|package)
+    ;;
+  *)
+    echo "usage: $0 [run|--debug|--logs|--telemetry|--verify|--package]" >&2
+    exit 2
+    ;;
+esac
+
+case "$MODE" in
+  --package|package)
+    ;;
+  *)
+    pkill -x "$APP_NAME" >/dev/null 2>&1 || true
+    ;;
+esac
 
 swift build
 BUILD_DIR="$(swift build --show-bin-path)"
@@ -85,8 +101,13 @@ case "$MODE" in
     sleep 1
     pgrep -x "$APP_NAME" >/dev/null
     ;;
+  --package|package)
+    plutil -lint "$INFO_PLIST"
+    test -x "$APP_BINARY"
+    echo "$APP_BUNDLE"
+    ;;
   *)
-    echo "usage: $0 [run|--debug|--logs|--telemetry|--verify]" >&2
+    echo "usage: $0 [run|--debug|--logs|--telemetry|--verify|--package]" >&2
     exit 2
     ;;
 esac
