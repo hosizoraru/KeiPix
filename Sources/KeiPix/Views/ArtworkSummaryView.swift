@@ -258,11 +258,13 @@ private struct ArtworkActionStrip: View {
                             }
                         }
 
-                        if let currentPageURL {
-                            ShareLink(item: currentPageURL) {
+                        if let sharePageURL {
+                            ShareLink(item: sharePageURL) {
                                 Label(L10n.shareCurrentPage, systemImage: "photo")
                             }
+                        }
 
+                        if let currentPageURL {
                             Button {
                                 PasteboardWriter.copy(currentPageURL.absoluteString)
                                 showActionMessage(L10n.copied)
@@ -279,6 +281,14 @@ private struct ArtworkActionStrip: View {
                                 showActionMessage(L10n.queuedCurrentPage)
                             } label: {
                                 Label(L10n.downloadCurrentPage, systemImage: "arrow.down.circle")
+                            }
+                        }
+
+                        if let currentLocalPageURL {
+                            Button {
+                                NSWorkspace.shared.activateFileViewerSelecting([currentLocalPageURL])
+                            } label: {
+                                Label(L10n.revealCurrentPage, systemImage: "folder")
                             }
                         }
 
@@ -337,6 +347,14 @@ private struct ArtworkActionStrip: View {
 
     private var currentPageURL: URL? {
         artwork.imageURL(at: pageIndex, preferOriginal: store.useOriginalImagesInDetail)
+    }
+
+    private var currentLocalPageURL: URL? {
+        store.downloads.downloadedImageURL(artworkID: artwork.id, pageIndex: pageIndex)
+    }
+
+    private var sharePageURL: URL? {
+        currentLocalPageURL ?? currentPageURL
     }
 
     private var artworkSummaryText: String {

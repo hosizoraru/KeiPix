@@ -381,12 +381,7 @@ final class ArtworkDownloadStore {
         guard item.resolvedArtifactKind == .imagePages else { return [] }
 
         if let filePaths = item.downloadedFilePaths, filePaths.isEmpty == false {
-            return filePaths
-                .map { URL(fileURLWithPath: $0, isDirectory: false) }
-                .filter { fileManager.fileExists(atPath: $0.path(percentEncoded: false)) && $0.pathExtension.isImageExtension }
-                .sorted { first, second in
-                    first.lastPathComponent.localizedStandardCompare(second.lastPathComponent) == .orderedAscending
-                }
+            return validImageURLs(from: filePaths)
         }
 
         guard item.status == .completed, let folderPath = item.folderPath else { return [] }
@@ -404,6 +399,32 @@ final class ArtworkDownloadStore {
             .sorted { first, second in
                 first.lastPathComponent.localizedStandardCompare(second.lastPathComponent) == .orderedAscending
             }
+    }
+
+    func downloadedImageURL(artworkID: Int, pageIndex: Int) -> URL? {
+        let candidates = items
+            .filter { item in
+                item.artworkID == artworkID
+                    && item.status == .completed
+                    && item.resolvedArtifactKind == .imagePages
+                    && hasReadableImages(for: item)
+            }
+            .sorted { first, second in
+                first.updatedAt > second.updatedAt
+            }
+
+        for item in candidates {
+            if let url = downloadedImageURL(in: item, pageIndex: pageIndex) {
+                return url
+            }
+        }
+        return nil
+    }
+
+    func downloadedImageURLs(artworkID: Int, expectedPageCount: Int) -> [URL] {
+        (0..<max(expectedPageCount, 1)).compactMap { pageIndex in
+            downloadedImageURL(artworkID: artworkID, pageIndex: pageIndex)
+        }
     }
 
     func hasReadableImages(for item: ArtworkDownloadItem) -> Bool {
@@ -434,6 +455,34 @@ final class ArtworkDownloadStore {
         let byteCount = downloadedByteCount(for: item)
         guard byteCount > 0 else { return nil }
         return Self.fileSizeFormatter.string(fromByteCount: byteCount)
+    }
+
+    private func downloadedImageURL(in item: ArtworkDownloadItem, pageIndex: Int) -> URL? {
+        let urls = validImageURLs(from: item.downloadedFilePaths ?? [])
+        guard urls.isEmpty == false else { return nil }
+
+        if let sourcePageIndexes = item.sourcePageIndexes {
+            guard let localIndex = sourcePageIndexes.firstIndex(of: pageIndex),
+                  urls.indices.contains(localIndex) else {
+                return nil
+            }
+            return urls[localIndex]
+        }
+
+        if urls.indices.contains(pageIndex) {
+            return urls[pageIndex]
+        }
+
+        if pageIndex == 0, urls.count == 1 {
+            return urls[0]
+        }
+        return nil
+    }
+
+    private func validImageURLs(from filePaths: [String]) -> [URL] {
+        filePaths
+            .map { URL(fileURLWithPath: $0, isDirectory: false) }
+            .filter { fileManager.fileExists(atPath: $0.path(percentEncoded: false)) && $0.pathExtension.isImageExtension }
     }
 
     @discardableResult

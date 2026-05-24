@@ -39,6 +39,7 @@ struct ArtworkReaderView: View {
             case .index:
                 ArtworkPageIndexGrid(
                     artwork: artwork,
+                    store: store,
                     selectedPage: pageIndex,
                     selectPage: { index in
                         readingMode = .singlePage
@@ -227,6 +228,7 @@ private struct ArtworkSinglePageReader: View {
             ZStack {
                 RemoteImageView(
                     url: artwork.imageURL(at: currentPageIndex, preferOriginal: store.useOriginalImagesInDetail),
+                    localURL: store.downloads.downloadedImageURL(artworkID: artwork.id, pageIndex: currentPageIndex),
                     contentMode: .fit,
                     onImageLoaded: { image in
                         onImageLoaded(image, currentPageIndex)
@@ -345,6 +347,7 @@ private struct ArtworkContinuousReader: View {
                 VStack(spacing: 8) {
                     RemoteImageView(
                         url: artwork.imageURL(at: index, preferOriginal: store.useOriginalImagesInDetail),
+                        localURL: store.downloads.downloadedImageURL(artworkID: artwork.id, pageIndex: index),
                         contentMode: .fit,
                         onImageLoaded: { image in
                             onImageLoaded(image, index)
@@ -390,6 +393,7 @@ private struct ArtworkContinuousReader: View {
 
 private struct ArtworkPageIndexGrid: View {
     let artwork: PixivArtwork
+    @Bindable var store: KeiPixStore
     let selectedPage: Int
     let selectPage: (Int) -> Void
     let handlePageSwipe: (TrackpadScrollEvent) -> Bool
@@ -404,6 +408,7 @@ private struct ArtworkPageIndexGrid: View {
                 } label: {
                     PageThumbnail(
                         url: artwork.thumbnailURL(at: index),
+                        localURL: store.downloads.downloadedImageURL(artworkID: artwork.id, pageIndex: index),
                         index: index,
                         isSelected: index == selectedPage
                     )
@@ -432,12 +437,13 @@ private struct ArtworkPageIndexGrid: View {
 
 private struct PageThumbnail: View {
     let url: URL?
+    let localURL: URL?
     let index: Int
     let isSelected: Bool
 
     var body: some View {
         ZStack(alignment: .topTrailing) {
-            RemoteImageView(url: url)
+            RemoteImageView(url: url, localURL: localURL)
                 .frame(height: 72)
                 .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
 

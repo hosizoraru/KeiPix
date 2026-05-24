@@ -3,6 +3,7 @@ import SwiftUI
 
 struct RemoteImageView: View {
     let url: URL?
+    var localURL: URL? = nil
     var contentMode: ContentMode = .fill
     var onImageLoaded: ((NSImage) -> Void)? = nil
     @State private var image: NSImage?
@@ -28,13 +29,24 @@ struct RemoteImageView: View {
                     }
             }
         }
-        .task(id: url) {
+        .task(id: loadKey) {
             await load()
         }
         .clipped()
     }
 
+    private var loadKey: String {
+        "\(localURL?.path(percentEncoded: false) ?? "")|\(url?.absoluteString ?? "")"
+    }
+
     private func load() async {
+        if let localURL, let localImage = NSImage(contentsOf: localURL) {
+            failed = false
+            image = localImage
+            onImageLoaded?(localImage)
+            return
+        }
+
         guard let url else {
             failed = true
             return
