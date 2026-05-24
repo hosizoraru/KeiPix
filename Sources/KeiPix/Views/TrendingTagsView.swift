@@ -295,25 +295,69 @@ private struct TrendingTagArtworkImage: View {
 private struct TrendingTagFillImageView: NSViewRepresentable {
     let image: NSImage
 
-    func makeNSView(context: Context) -> NSView {
-        let view = NSView()
-        view.wantsLayer = true
-        view.layer?.contentsGravity = .resizeAspectFill
-        view.layer?.masksToBounds = true
-        view.layer?.backgroundColor = NSColor.textBackgroundColor.cgColor
+    func makeNSView(context: Context) -> AspectFillImageView {
+        let view = AspectFillImageView()
+        view.image = image
         return view
     }
 
-    func updateNSView(_ nsView: NSView, context: Context) {
-        nsView.layer?.contentsGravity = .resizeAspectFill
-        nsView.layer?.masksToBounds = true
-        nsView.layer?.backgroundColor = NSColor.textBackgroundColor.cgColor
-        nsView.layer?.contentsScale = nsView.window?.screen?.backingScaleFactor ?? NSScreen.main?.backingScaleFactor ?? 2
-        nsView.layer?.contents = cgImage(from: image)
+    func updateNSView(_ nsView: AspectFillImageView, context: Context) {
+        nsView.image = image
+    }
+}
+
+private final class AspectFillImageView: NSView {
+    var image: NSImage? {
+        didSet { needsDisplay = true }
     }
 
-    private func cgImage(from image: NSImage) -> CGImage? {
+    override var isOpaque: Bool { false }
+    override var isFlipped: Bool { true }
+
+    override func draw(_ dirtyRect: NSRect) {
+        super.draw(dirtyRect)
+
+        guard let image,
+              let imageSize = effectiveImageSize(for: image),
+              bounds.width > 0,
+              bounds.height > 0 else {
+            return
+        }
+
+        NSGraphicsContext.current?.imageInterpolation = .high
+
+        let scale = max(bounds.width / imageSize.width, bounds.height / imageSize.height)
+        let drawSize = CGSize(width: imageSize.width * scale, height: imageSize.height * scale)
+        let backingScale = window?.screen?.backingScaleFactor ?? NSScreen.main?.backingScaleFactor ?? 2
+        let bleed = max(1 / backingScale, 0.5)
+        let drawRect = CGRect(
+            x: (bounds.width - drawSize.width) / 2 - bleed,
+            y: (bounds.height - drawSize.height) / 2 - bleed,
+            width: drawSize.width + bleed * 2,
+            height: drawSize.height + bleed * 2
+        )
+
+        image.draw(
+            in: drawRect,
+            from: CGRect(origin: .zero, size: imageSize),
+            operation: .copy,
+            fraction: 1,
+            respectFlipped: true,
+            hints: [.interpolation: NSImageInterpolation.high]
+        )
+    }
+
+    private func effectiveImageSize(for image: NSImage) -> CGSize? {
+        if image.size.width > 0, image.size.height > 0 {
+            return image.size
+        }
+
         var rect = CGRect(origin: .zero, size: image.size)
-        return image.cgImage(forProposedRect: &rect, context: nil, hints: nil)
+        guard let cgImage = image.cgImage(forProposedRect: &rect, context: nil, hints: nil),
+              cgImage.width > 0,
+              cgImage.height > 0 else {
+            return nil
+        }
+        return CGSize(width: cgImage.width, height: cgImage.height)
     }
 }
