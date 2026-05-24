@@ -149,6 +149,7 @@
 "Removed %d download records" = "Removed %d download records";
 "Retried %d downloads" = "Retried %d downloads";
 "No retryable downloads" = "No retryable downloads";
+"No download records changed" = "No download records changed";
 "Revealed download in Finder" = "Revealed download in Finder";
 "Opened download folder" = "Opened download folder";
 "Unable to open downloaded artwork" = "Unable to open downloaded artwork";
@@ -192,6 +193,10 @@
 "Add Tag" = "Add Tag";
 "Tag Name" = "Tag Name";
 "No bookmark tags" = "No bookmark tags";
+"No matching bookmark tags" = "No matching bookmark tags";
+"No bookmark tags to copy" = "No bookmark tags to copy";
+"Copied %d bookmark tags" = "Copied %d bookmark tags";
+"Refreshed %d bookmark tags" = "Refreshed %d bookmark tags";
 "Select All" = "Select All";
 "Clear Selection" = "Clear Selection";
 "Selected %d bookmark tags" = "Selected %d bookmark tags";

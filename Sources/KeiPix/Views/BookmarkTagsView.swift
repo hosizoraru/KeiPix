@@ -60,7 +60,7 @@ struct BookmarkTagsView: View {
                             .padding(.top, 14)
 
                             if filteredTags.isEmpty {
-                                Text(L10n.noBookmarkTags)
+                                Text(tags.isEmpty ? L10n.noBookmarkTags : L10n.noMatchingBookmarkTags)
                                     .font(.callout)
                                     .foregroundStyle(.secondary)
                                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -162,6 +162,24 @@ struct BookmarkTagsView: View {
             .pickerStyle(.segmented)
             .labelsHidden()
             .frame(minWidth: 150, idealWidth: 180, maxWidth: 220)
+
+            Menu {
+                Button {
+                    Task { await load(showFeedback: true) }
+                } label: {
+                    Label(L10n.refresh, systemImage: "arrow.clockwise")
+                }
+                .disabled(isLoading)
+
+                Button {
+                    copyVisibleTags()
+                } label: {
+                    Label(L10n.copyTag, systemImage: "doc.on.doc")
+                }
+                .disabled(filteredTags.isEmpty)
+            } label: {
+                Label(L10n.moreActions, systemImage: "ellipsis.circle")
+            }
         }
         .controlSize(.small)
     }
@@ -182,7 +200,7 @@ struct BookmarkTagsView: View {
         return total > 0 ? total : nil
     }
 
-    private func load() async {
+    private func load(showFeedback: Bool = false) async {
         guard store.session != nil else { return }
         isLoading = true
         errorMessage = nil
@@ -192,6 +210,9 @@ struct BookmarkTagsView: View {
             let response = try await store.bookmarkTagPage(restrict: selectedRestrict)
             tags = response.bookmarkTags
             nextURL = response.nextURL
+            if showFeedback {
+                showActionMessage(String(format: L10n.refreshedBookmarkTagsFormat, tags.count))
+            }
         } catch {
             tags = []
             nextURL = nil
@@ -212,6 +233,16 @@ struct BookmarkTagsView: View {
         } catch {
             errorMessage = error.localizedDescription
         }
+    }
+
+    private func copyVisibleTags() {
+        let names = filteredTags.map(\.name)
+        guard names.isEmpty == false else {
+            showActionMessage(L10n.noBookmarkTagsToCopy)
+            return
+        }
+        PasteboardWriter.copy(names.map { "#\($0)" }.joined(separator: "\n"))
+        showActionMessage(String(format: L10n.copiedBookmarkTagsFormat, names.count))
     }
 
     private func showActionMessage(_ message: String) {

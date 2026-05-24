@@ -149,6 +149,7 @@
 "Removed %d download records" = "已移除 %d 条下载记录";
 "Retried %d downloads" = "已重试 %d 个下载";
 "No retryable downloads" = "没有可重试的下载";
+"No download records changed" = "没有下载记录发生变化";
 "Revealed download in Finder" = "已在 Finder 中显示下载";
 "Opened download folder" = "已打开下载文件夹";
 "Unable to open downloaded artwork" = "无法打开已下载作品";
@@ -192,6 +193,10 @@
 "Add Tag" = "添加标签";
 "Tag Name" = "标签名";
 "No bookmark tags" = "暂无收藏标签";
+"No matching bookmark tags" = "没有匹配的收藏标签";
+"No bookmark tags to copy" = "没有可复制的收藏标签";
+"Copied %d bookmark tags" = "已复制 %d 个收藏标签";
+"Refreshed %d bookmark tags" = "已刷新 %d 个收藏标签";
 "Select All" = "全选";
 "Clear Selection" = "清空选择";
 "Selected %d bookmark tags" = "已选择 %d 个收藏标签";

@@ -147,6 +147,7 @@ enum L10n {
     static var deletedDownloadsFormat: String { text("Removed %d download records") }
     static var retriedDownloadsFormat: String { text("Retried %d downloads") }
     static var noRetryableDownloads: String { text("No retryable downloads") }
+    static var noDownloadRecordsChanged: String { text("No download records changed") }
     static var revealedDownloadInFinder: String { text("Revealed download in Finder") }
     static var openedDownloadFolder: String { text("Opened download folder") }
     static var unableToOpenDownloadedArtwork: String { text("Unable to open downloaded artwork") }
@@ -190,6 +191,10 @@ enum L10n {
     static var addTag: String { text("Add Tag") }
     static var tagName: String { text("Tag Name") }
     static var noBookmarkTags: String { text("No bookmark tags") }
+    static var noMatchingBookmarkTags: String { text("No matching bookmark tags") }
+    static var noBookmarkTagsToCopy: String { text("No bookmark tags to copy") }
+    static var copiedBookmarkTagsFormat: String { text("Copied %d bookmark tags") }
+    static var refreshedBookmarkTagsFormat: String { text("Refreshed %d bookmark tags") }
     static var selectAll: String { text("Select All") }
     static var clearSelection: String { text("Clear Selection") }
     static var selectedBookmarkTagsFormat: String { text("Selected %d bookmark tags") }

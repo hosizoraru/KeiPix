@@ -214,6 +214,8 @@ struct DownloadQueueView: View {
             if count > 0 {
                 store.undoAction = AppUndoAction(kind: .restoreDownloads(items))
                 showActionMessage(String(format: L10n.deletedDownloadsFormat, count))
+            } else {
+                showActionMessage(L10n.noDownloadRecordsChanged)
             }
         case .clearFailed:
             let items = store.downloads.filteredItems.filter { $0.status == .failed }
@@ -221,6 +223,8 @@ struct DownloadQueueView: View {
             if count > 0 {
                 store.undoAction = AppUndoAction(kind: .restoreDownloads(items))
                 showActionMessage(String(format: L10n.deletedDownloadsFormat, count))
+            } else {
+                showActionMessage(L10n.noDownloadRecordsChanged)
             }
         case .clearInvalid:
             let items = store.downloads.invalidCompletedItems
@@ -228,6 +232,8 @@ struct DownloadQueueView: View {
             if count > 0 {
                 store.undoAction = AppUndoAction(kind: .restoreDownloads(items))
                 showActionMessage(String(format: L10n.clearedDownloadsFormat, count))
+            } else {
+                showActionMessage(L10n.noDownloadRecordsChanged)
             }
         case .clearCompleted:
             let items = store.downloads.completedItems
@@ -235,6 +241,8 @@ struct DownloadQueueView: View {
             if items.isEmpty == false {
                 store.undoAction = AppUndoAction(kind: .restoreDownloads(items))
                 showActionMessage(String(format: L10n.clearedDownloadsFormat, items.count))
+            } else {
+                showActionMessage(L10n.noDownloadRecordsChanged)
             }
         }
     }
