@@ -159,37 +159,42 @@ private struct TrendingTagCard: View {
 
     var body: some View {
         Button(action: search) {
-            ZStack(alignment: .bottomLeading) {
-                TrendingTagArtworkImage(url: tag.artwork.thumbnailURL, imageLoaded: imageLoaded)
+            GeometryReader { proxy in
+                ZStack(alignment: .bottomLeading) {
+                    TrendingTagArtworkImage(url: tag.artwork.thumbnailURL, imageLoaded: imageLoaded)
+                        .frame(width: proxy.size.width, height: proxy.size.height)
 
-                if showContentBadges {
-                    ArtworkContentBadgesView(badges: tag.artwork.contentBadges, style: .overlay)
-                        .padding(8)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-                }
-
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("#\(tag.name)")
-                        .font(.headline.weight(.semibold))
-                        .lineLimit(1)
-                        .trendingTagTextChip()
-
-                    if let translatedName {
-                        Text(translatedName)
-                            .font(.caption)
-                            .lineLimit(1)
-                            .trendingTagTextChip(opacity: 0.34)
+                    if showContentBadges {
+                        ArtworkContentBadgesView(badges: tag.artwork.contentBadges, style: .overlay)
+                            .padding(8)
+                            .frame(width: proxy.size.width, height: proxy.size.height, alignment: .topLeading)
                     }
+
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("#\(tag.name)")
+                            .font(.headline.weight(.semibold))
+                            .lineLimit(1)
+                            .trendingTagTextChip()
+
+                        if let translatedName {
+                            Text(translatedName)
+                                .font(.caption)
+                                .lineLimit(1)
+                                .trendingTagTextChip(opacity: 0.34)
+                        }
+                    }
+                    .foregroundStyle(.white)
+                    .shadow(color: .black.opacity(0.28), radius: 2, y: 1)
+                    .padding(8)
                 }
-                .foregroundStyle(.white)
-                .shadow(color: .black.opacity(0.28), radius: 2, y: 1)
-                .padding(8)
+                .frame(width: proxy.size.width, height: proxy.size.height)
             }
         }
         .buttonStyle(.plain)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .contentShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .compositingGroup()
         .overlay {
             RoundedRectangle(cornerRadius: 18, style: .continuous)
                 .stroke(.white.opacity(isHovering ? 0.32 : 0), lineWidth: 1)
@@ -257,16 +262,16 @@ private struct TrendingTagArtworkImage: View {
 
     var body: some View {
         GeometryReader { proxy in
+            let size = proxy.size
             ZStack {
                 if let image {
-                    Image(nsImage: image)
-                        .resizable()
-                        .interpolation(.high)
-                        .scaledToFill()
-                        .frame(width: proxy.size.width, height: proxy.size.height)
-                        .scaleEffect(1.012)
-                        .clipped()
-                        .allowsHitTesting(false)
+                    filledImage(image, size: size)
+                        .blur(radius: 16)
+                        .scaleEffect(1.12)
+                        .opacity(0.42)
+
+                    filledImage(image, size: size)
+                        .scaleEffect(1.025)
                 } else if failed {
                     Image(systemName: "photo")
                         .font(.title3)
@@ -278,13 +283,24 @@ private struct TrendingTagArtworkImage: View {
                         .background(.ultraThinMaterial, in: Circle())
                 }
             }
-            .frame(width: proxy.size.width, height: proxy.size.height)
+            .frame(width: size.width, height: size.height)
             .clipped()
+            .compositingGroup()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .task(id: url) {
             await load()
         }
+    }
+
+    private func filledImage(_ image: NSImage, size: CGSize) -> some View {
+        Image(nsImage: image)
+            .resizable()
+            .interpolation(.high)
+            .aspectRatio(contentMode: .fill)
+            .frame(width: size.width, height: size.height)
+            .clipped()
+            .allowsHitTesting(false)
     }
 
     private func load() async {
