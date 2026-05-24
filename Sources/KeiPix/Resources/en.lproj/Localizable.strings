@@ -145,6 +145,13 @@
 "Creator Manga" = "Creator Manga";
 "Creator Public Bookmarks" = "Creator Public Bookmarks";
 "Open Creator Profile" = "Open Creator Profile";
+"Creator Filter" = "Creator Filter";
+"Creator Sort" = "Creator Sort";
+"All Creators" = "All Creators";
+"Unfollowed" = "Unfollowed";
+"Default Order" = "Default Order";
+"Preview Works" = "Preview Works";
+"Search creators in this list" = "Search creators in this list";
 "Works Count" = "Works Count";
 "Public Saves" = "Public Saves";
 "Followers" = "Followers";
@@ -300,6 +307,7 @@
 "Load More Watchlist" = "Load More Watchlist";
 "Remove from Watchlist" = "Remove from Watchlist";
 "No creators" = "No creators";
+"No matching creators" = "No matching creators";
 "Load More Creators" = "Load More Creators";
 "Public" = "Public";
 "Private" = "Private";

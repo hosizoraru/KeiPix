@@ -57,6 +57,53 @@ enum UserPreviewListMode: Identifiable {
     var id: String { key }
 }
 
+private enum CreatorListFilter: String, CaseIterable, Identifiable {
+    case all
+    case followed
+    case unfollowed
+    case muted
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .all:
+            L10n.allCreators
+        case .followed:
+            L10n.following
+        case .unfollowed:
+            L10n.unfollowed
+        case .muted:
+            L10n.muted
+        }
+    }
+}
+
+private enum CreatorListSort: String, CaseIterable, Identifiable {
+    case defaultOrder
+    case name
+    case account
+    case previewWorks
+    case followState
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .defaultOrder:
+            L10n.defaultOrder
+        case .name:
+            L10n.creator
+        case .account:
+            L10n.account
+        case .previewWorks:
+            L10n.previewWorks
+        case .followState:
+            L10n.following
+        }
+    }
+}
+
 struct UserPreviewListView: View {
     @Bindable var store: KeiPixStore
     let mode: UserPreviewListMode
@@ -68,6 +115,9 @@ struct UserPreviewListView: View {
     @State private var isLoadingMore = false
     @State private var profileUser: PixivUser?
     @State private var errorMessage: String?
+    @State private var creatorSearchText = ""
+    @State private var creatorFilter: CreatorListFilter = .all
+    @State private var creatorSort: CreatorListSort = .defaultOrder
 
     private let columns = [
         GridItem(.adaptive(minimum: 360, maximum: 520), spacing: 14)
@@ -90,32 +140,47 @@ struct UserPreviewListView: View {
                 ScrollView {
                     LazyVStack(spacing: 0, pinnedViews: [.sectionHeaders]) {
                         Section {
-                            LazyVGrid(columns: columns, spacing: 14) {
-                                ForEach(previews) { preview in
-                                    UserPreviewCard(
-                                        preview: preview,
-                                        showContentBadges: store.showContentBadges,
-                                        openProfile: { profileUser = preview.user },
-                                        openIllustrations: {
-                                            Task { await store.openUserFeed(user: preview.user, route: .userIllustrations) }
-                                        },
-                                        openManga: {
-                                            Task { await store.openUserFeed(user: preview.user, route: .userManga) }
-                                        },
-                                        toggleFollow: { restrict in
-                                            Task { await toggleFollow(preview.user, restrict: restrict) }
-                                        },
-                                        muteCreator: {
-                                            store.muteUser(preview.user)
-                                        },
-                                        selectArtwork: { artwork in
-                                            store.selectedArtwork = artwork
-                                        }
-                                    )
-                                }
+                            Group {
+                                if visiblePreviews.isEmpty {
+                                    VStack(spacing: 14) {
+                                        ContentUnavailableView(L10n.noMatchingCreators, systemImage: "person.crop.circle.badge.questionmark")
+                                            .frame(maxWidth: .infinity)
+                                            .frame(minHeight: 260)
 
-                                if nextURL != nil {
-                                    loadMoreButton
+                                        if nextURL != nil {
+                                            loadMoreButton
+                                                .frame(maxWidth: 420)
+                                        }
+                                    }
+                                } else {
+                                    LazyVGrid(columns: columns, spacing: 14) {
+                                        ForEach(visiblePreviews) { preview in
+                                            UserPreviewCard(
+                                                preview: preview,
+                                                showContentBadges: store.showContentBadges,
+                                                openProfile: { profileUser = preview.user },
+                                                openIllustrations: {
+                                                    Task { await store.openUserFeed(user: preview.user, route: .userIllustrations) }
+                                                },
+                                                openManga: {
+                                                    Task { await store.openUserFeed(user: preview.user, route: .userManga) }
+                                                },
+                                                toggleFollow: { restrict in
+                                                    Task { await toggleFollow(preview.user, restrict: restrict) }
+                                                },
+                                                muteCreator: {
+                                                    store.muteUser(preview.user)
+                                                },
+                                                selectArtwork: { artwork in
+                                                    store.selectedArtwork = artwork
+                                                }
+                                            )
+                                        }
+
+                                        if nextURL != nil {
+                                            loadMoreButton
+                                        }
+                                    }
                                 }
                             }
                             .padding(.horizontal, 18)
@@ -133,7 +198,28 @@ struct UserPreviewListView: View {
             }
         }
         .navigationTitle(mode.title)
+        .searchable(text: $creatorSearchText, placement: .toolbar, prompt: L10n.searchCreatorsInList)
         .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Picker(L10n.creatorFilter, selection: $creatorFilter) {
+                    ForEach(CreatorListFilter.allCases) { filter in
+                        Text(filter.title).tag(filter)
+                    }
+                }
+                .pickerStyle(.menu)
+                .help(L10n.creatorFilter)
+            }
+
+            ToolbarItem(placement: .primaryAction) {
+                Picker(L10n.creatorSort, selection: $creatorSort) {
+                    ForEach(CreatorListSort.allCases) { sort in
+                        Text(sort.title).tag(sort)
+                    }
+                }
+                .pickerStyle(.menu)
+                .help(L10n.creatorSort)
+            }
+
             ToolbarItem(placement: .primaryAction) {
                 Button {
                     Task { await loadInitial() }
@@ -159,6 +245,48 @@ struct UserPreviewListView: View {
         }
         .task(id: modeKey) {
             await loadInitial()
+        }
+    }
+
+    private var visiblePreviews: [PixivUserPreview] {
+        let normalizedQuery = creatorSearchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        let filtered = previews.filter { preview in
+            let matchesQuery = normalizedQuery.isEmpty || preview.matchesCreatorQuery(normalizedQuery)
+            guard matchesQuery else { return false }
+
+            switch creatorFilter {
+            case .all:
+                return true
+            case .followed:
+                return preview.user.isFollowed
+            case .unfollowed:
+                return preview.user.isFollowed == false
+            case .muted:
+                return preview.isMuted
+            }
+        }
+
+        switch creatorSort {
+        case .defaultOrder:
+            return filtered
+        case .name:
+            return filtered.sorted { $0.user.name.localizedStandardCompare($1.user.name) == .orderedAscending }
+        case .account:
+            return filtered.sorted { $0.user.account.localizedStandardCompare($1.user.account) == .orderedAscending }
+        case .previewWorks:
+            return filtered.sorted { lhs, rhs in
+                if lhs.illusts.count == rhs.illusts.count {
+                    return lhs.user.name.localizedStandardCompare(rhs.user.name) == .orderedAscending
+                }
+                return lhs.illusts.count > rhs.illusts.count
+            }
+        case .followState:
+            return filtered.sorted { lhs, rhs in
+                if lhs.user.isFollowed == rhs.user.isFollowed {
+                    return lhs.user.name.localizedStandardCompare(rhs.user.name) == .orderedAscending
+                }
+                return lhs.user.isFollowed && rhs.user.isFollowed == false
+            }
         }
     }
 
@@ -196,10 +324,11 @@ struct UserPreviewListView: View {
 
     private var headerSubtitle: String {
         let pagingText = nextURL == nil ? L10n.noMorePages : L10n.nextPageAvailable
+        let shownText = "\(visiblePreviews.count.formatted()) / \(previews.count.formatted()) \(L10n.results)"
         if mode.requiresSearchKeyword, searchKeyword.isEmpty == false {
-            return "\(searchKeyword) · \(previews.count.formatted()) \(L10n.results) · \(pagingText)"
+            return "\(searchKeyword) · \(shownText) · \(pagingText)"
         }
-        return "\(previews.count.formatted()) \(L10n.results) · \(pagingText)"
+        return "\(shownText) · \(pagingText)"
     }
 
     private var restrictBinding: Binding<BookmarkRestrict> {
@@ -282,6 +411,19 @@ struct UserPreviewListView: View {
             var updatedUser = previews[index].user
             updatedUser.isFollowed.toggle()
             previews[index] = PixivUserPreview(user: updatedUser, illusts: previews[index].illusts, isMuted: previews[index].isMuted)
+        }
+    }
+}
+
+private extension PixivUserPreview {
+    func matchesCreatorQuery(_ query: String) -> Bool {
+        let fields = [
+            user.name,
+            user.account,
+            String(user.id)
+        ]
+        return fields.contains { field in
+            field.localizedCaseInsensitiveContains(query)
         }
     }
 }

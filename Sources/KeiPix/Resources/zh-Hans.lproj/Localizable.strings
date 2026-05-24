@@ -145,6 +145,13 @@
 "Creator Manga" = "作者漫画";
 "Creator Public Bookmarks" = "作者公开收藏";
 "Open Creator Profile" = "打开创作者资料";
+"Creator Filter" = "作者筛选";
+"Creator Sort" = "作者排序";
+"All Creators" = "全部作者";
+"Unfollowed" = "未关注";
+"Default Order" = "默认顺序";
+"Preview Works" = "预览作品数";
+"Search creators in this list" = "在当前列表搜索作者";
 "Works Count" = "作品数";
 "Public Saves" = "公开收藏";
 "Followers" = "关注中";
@@ -300,6 +307,7 @@
 "Load More Watchlist" = "加载更多追更";
 "Remove from Watchlist" = "取消追更";
 "No creators" = "暂无作者";
+"No matching creators" = "暂无匹配作者";
 "Load More Creators" = "加载更多作者";
 "Public" = "公开";
 "Private" = "私密";

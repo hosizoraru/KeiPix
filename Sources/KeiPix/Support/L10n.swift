@@ -106,6 +106,7 @@ enum L10n {
     static var sortDownloads: String { text("Sort Downloads") }
     static var recentlyUpdated: String { text("Recently Updated") }
     static var downloadSortTitle: String { text("Title") }
+    static var creator: String { text("Creator") }
     static var downloadSortCreator: String { text("Creator") }
     static var statusAndType: String { text("Status and Type") }
     static var allDownloads: String { text("All Downloads") }
@@ -148,6 +149,13 @@ enum L10n {
     static var creatorManga: String { text("Creator Manga") }
     static var creatorPublicBookmarks: String { text("Creator Public Bookmarks") }
     static var openCreatorProfile: String { text("Open Creator Profile") }
+    static var creatorFilter: String { text("Creator Filter") }
+    static var creatorSort: String { text("Creator Sort") }
+    static var allCreators: String { text("All Creators") }
+    static var unfollowed: String { text("Unfollowed") }
+    static var defaultOrder: String { text("Default Order") }
+    static var previewWorks: String { text("Preview Works") }
+    static var searchCreatorsInList: String { text("Search creators in this list") }
     static var worksCount: String { text("Works Count") }
     static var publicSaves: String { text("Public Saves") }
     static var followers: String { text("Followers") }
@@ -303,6 +311,7 @@ enum L10n {
     static var loadMoreWatchlist: String { text("Load More Watchlist") }
     static var removeFromWatchlist: String { text("Remove from Watchlist") }
     static var noCreators: String { text("No creators") }
+    static var noMatchingCreators: String { text("No matching creators") }
     static var loadMoreCreators: String { text("Load More Creators") }
     static var publicRestrict: String { text("Public") }
     static var privateRestrict: String { text("Private") }
