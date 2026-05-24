@@ -378,6 +378,9 @@
 "Latest Ranking" = "最新榜单";
 "Showing latest ranking" = "正在显示最新榜单";
 "Showing ranking for %@" = "正在显示 %@ 的榜单";
+"Available from %@ to %@" = "可选范围：%@ 至 %@";
+"Previous Day" = "前一天";
+"Next Day" = "后一天";
 "Daily" = "日榜";
 "Weekly" = "周榜";
 "Monthly" = "月榜";

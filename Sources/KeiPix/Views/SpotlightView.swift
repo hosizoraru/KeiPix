@@ -17,11 +17,24 @@ struct SpotlightView: View {
                 ProgressView(L10n.loading)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if articles.isEmpty {
-                ContentUnavailableView(L10n.noSpotlightArticles, systemImage: "newspaper")
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                ContentUnavailableView {
+                    Label(L10n.noSpotlightArticles, systemImage: "newspaper")
+                } description: {
+                    if let errorMessage {
+                        Text(errorMessage)
+                    }
+                } actions: {
+                    Button {
+                        Task { await load() }
+                    } label: {
+                        Label(L10n.retry, systemImage: "arrow.clockwise")
+                    }
+                    .buttonStyle(.borderedProminent)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 ScrollView {
-                    LazyVStack(spacing: 12) {
+                    LazyVGrid(columns: articleColumns, spacing: 14) {
                         ForEach(articles) { article in
                             SpotlightArticleCard(
                                 article: article,
@@ -42,6 +55,7 @@ struct SpotlightView: View {
                             }
                             .buttonStyle(.bordered)
                             .disabled(isLoadingMore)
+                            .gridCellColumns(2)
                         }
                     }
                     .padding(.horizontal, 18)
@@ -89,6 +103,16 @@ struct SpotlightView: View {
         .task(id: store.routeRefreshGeneration) {
             await load()
         }
+    }
+
+    private var articleColumns: [GridItem] {
+        [
+            GridItem(
+                .adaptive(minimum: 280, maximum: 390),
+                spacing: 14,
+                alignment: .top
+            )
+        ]
     }
 
     private var spotlightCountBadge: some View {
@@ -166,10 +190,11 @@ private struct SpotlightArticleCard: View {
 
     var body: some View {
         Button(action: select) {
-            HStack(alignment: .top, spacing: 14) {
+            VStack(alignment: .leading, spacing: 10) {
                 RemoteImageView(url: article.thumbnail)
                     .aspectRatio(16.0 / 9.0, contentMode: .fill)
-                    .frame(width: 220, height: 124)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 156)
                     .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
 
                 VStack(alignment: .leading, spacing: 8) {
@@ -188,7 +213,7 @@ private struct SpotlightArticleCard: View {
 
                     Spacer(minLength: 4)
 
-                    HStack(spacing: 8) {
+                    HStack(alignment: .firstTextBaseline, spacing: 8) {
                         Label(article.publishDate.formatted(date: .abbreviated, time: .omitted), systemImage: "calendar")
                             .lineLimit(1)
 
@@ -203,7 +228,7 @@ private struct SpotlightArticleCard: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
             .padding(12)
-            .frame(maxWidth: .infinity, minHeight: 148, alignment: .leading)
+            .frame(maxWidth: .infinity, minHeight: 286, alignment: .topLeading)
             .background(.quinary, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
             .overlay {
                 RoundedRectangle(cornerRadius: 10, style: .continuous)

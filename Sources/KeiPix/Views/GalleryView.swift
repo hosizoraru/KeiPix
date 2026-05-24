@@ -612,20 +612,46 @@ private struct RankingDatePopover: View {
     let useLatest: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text(L10n.rankingDate)
-                .font(.headline)
+        VStack(alignment: .leading, spacing: 14) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(L10n.rankingDate)
+                    .font(.headline)
+
+                Text(dateRangeText)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
 
             Toggle(L10n.useRankingDate, isOn: $useRankingDate)
 
             DatePicker(
                 L10n.rankingDate,
-                selection: $rankingDate,
+                selection: selectedDateBinding,
                 in: KeiPixStore.rankingDateRange(),
                 displayedComponents: .date
             )
             .datePickerStyle(.graphical)
             .labelsHidden()
+
+            HStack(spacing: 8) {
+                Button {
+                    shiftDate(by: -1)
+                } label: {
+                    Label(L10n.previousDay, systemImage: "chevron.left")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.bordered)
+                .disabled(canShiftDate(by: -1) == false)
+
+                Button {
+                    shiftDate(by: 1)
+                } label: {
+                    Label(L10n.nextDay, systemImage: "chevron.right")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.bordered)
+                .disabled(canShiftDate(by: 1) == false)
+            }
 
             Divider()
 
@@ -647,6 +673,35 @@ private struct RankingDatePopover: View {
                 .buttonStyle(.borderedProminent)
             }
         }
+    }
+
+    private var selectedDateBinding: Binding<Date> {
+        Binding {
+            rankingDate
+        } set: { newDate in
+            rankingDate = KeiPixStore.clampedRankingDate(newDate)
+            useRankingDate = true
+        }
+    }
+
+    private var dateRangeText: String {
+        let range = KeiPixStore.rankingDateRange()
+        return String(
+            format: L10n.rankingDateRangeFormat,
+            range.lowerBound.formatted(date: .abbreviated, time: .omitted),
+            range.upperBound.formatted(date: .abbreviated, time: .omitted)
+        )
+    }
+
+    private func shiftDate(by days: Int) {
+        let shifted = Calendar.current.date(byAdding: .day, value: days, to: rankingDate) ?? rankingDate
+        rankingDate = KeiPixStore.clampedRankingDate(shifted)
+        useRankingDate = true
+    }
+
+    private func canShiftDate(by days: Int) -> Bool {
+        let shifted = Calendar.current.date(byAdding: .day, value: days, to: rankingDate) ?? rankingDate
+        return KeiPixStore.clampedRankingDate(shifted) != rankingDate
     }
 }
 

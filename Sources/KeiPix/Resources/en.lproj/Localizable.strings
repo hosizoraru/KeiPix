@@ -378,6 +378,9 @@
 "Latest Ranking" = "Latest Ranking";
 "Showing latest ranking" = "Showing latest ranking";
 "Showing ranking for %@" = "Showing ranking for %@";
+"Available from %@ to %@" = "Available from %@ to %@";
+"Previous Day" = "Previous Day";
+"Next Day" = "Next Day";
 "Daily" = "Daily";
 "Weekly" = "Weekly";
 "Monthly" = "Monthly";
