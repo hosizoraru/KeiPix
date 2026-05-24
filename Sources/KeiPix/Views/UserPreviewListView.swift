@@ -743,12 +743,14 @@ struct UserPreviewListView: View {
     }
 
     private func performUndo(_ action: CreatorUndoAction) async {
+        var restoredCount = 0
         switch action.kind {
         case .restoreFollows(let restores):
             for restore in restores {
                 do {
                     try await store.setFollow(restore.user, isFollowed: true, restrict: restore.restrict)
                     updateFollowState(userID: restore.user.id, isFollowed: true, restrict: restore.restrict)
+                    restoredCount += 1
                 } catch {
                     errorMessage = error.localizedDescription
                 }
@@ -757,7 +759,11 @@ struct UserPreviewListView: View {
             for user in users {
                 store.unmuteUser(id: user.id)
                 updateMutedState(userID: user.id, isMuted: false)
+                restoredCount += 1
             }
+        }
+        if restoredCount > 0 {
+            bulkStatusText = String(format: L10n.restoredCreatorActionsFormat, restoredCount)
         }
         undoAction = nil
     }

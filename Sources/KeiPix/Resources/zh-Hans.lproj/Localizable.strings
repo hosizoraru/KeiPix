@@ -275,6 +275,7 @@
 "Checked follow visibility for %d creators, %d failed" = "已检查 %d 位作者的关注可见性，%d 位失败";
 "Followed %@" = "已关注 %@";
 "Updated follow visibility for %@" = "已更新 %@ 的关注可见性";
+"Restored %d creator actions" = "已恢复 %d 个作者操作";
 "Unfollow %@?" = "取消关注 %@？";
 "Mute %@?" = "屏蔽 %@？";
 "Unfollowed %@" = "已取消关注 %@";
