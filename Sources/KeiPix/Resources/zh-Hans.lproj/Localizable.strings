@@ -15,6 +15,11 @@
 "Saved Search Presets" = "搜索预设";
 "Save Search" = "保存搜索";
 "Save Search with Filters" = "保存搜索和筛选";
+"Search Summary" = "搜索摘要";
+"Search Actions" = "搜索操作";
+"Copy Search Summary" = "复制搜索摘要";
+"Copied Search Summary" = "已复制搜索摘要";
+"Reset Search Filters" = "重置搜索筛选";
 "Recent Searches" = "最近搜索";
 "No saved searches" = "暂无保存的搜索";
 "No saved search presets" = "暂无搜索预设";

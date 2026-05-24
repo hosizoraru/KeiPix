@@ -192,6 +192,20 @@ struct SearchOptions: Codable, Hashable, Sendable {
     var artworkType: SearchArtworkType
     var ugoiraFilter: SearchUgoiraFilter
 
+    static let defaultValue = SearchOptions(
+        matchType: .partialTags,
+        sort: .dateDescending,
+        ageLimit: .unlimited,
+        dateRange: .anytime,
+        minimumBookmarks: .none,
+        artworkType: .all,
+        ugoiraFilter: .all
+    )
+
+    var isDefault: Bool {
+        self == Self.defaultValue
+    }
+
     var summary: String {
         [
             matchType.title,

@@ -180,6 +180,7 @@ private struct FeedHeaderView: View {
     @State private var bookmarkTags: [PixivBookmarkTag] = []
     @State private var isLoadingBookmarkTags = false
     @State private var bookmarkTagErrorMessage: String?
+    @State private var searchActionMessage: String?
 
     var body: some View {
         HStack(spacing: 12) {
@@ -194,6 +195,26 @@ private struct FeedHeaderView: View {
                 Text("\(store.artworks.count.formatted()) \(L10n.results) · \(store.hasNextPage ? L10n.nextPageAvailable : L10n.noMorePages)")
                     .font(.caption)
                     .foregroundStyle(.secondary)
+
+                if store.selectedRoute == .search {
+                    HStack(spacing: 6) {
+                        Label(L10n.searchSummary, systemImage: "slider.horizontal.3")
+                            .labelStyle(.titleAndIcon)
+
+                        Text(searchSummary)
+                            .lineLimit(1)
+                            .truncationMode(.tail)
+
+                        if let searchActionMessage {
+                            Text("· \(searchActionMessage)")
+                                .foregroundStyle(.tertiary)
+                                .lineLimit(1)
+                        }
+                    }
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .help(searchSummary)
+                }
             }
 
             Spacer()
@@ -201,6 +222,21 @@ private struct FeedHeaderView: View {
             if store.selectedRoute == .search,
                store.searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false {
                 Menu {
+                    Button {
+                        copySearchSummary()
+                    } label: {
+                        Label(L10n.copySearchSummary, systemImage: "doc.on.doc")
+                    }
+
+                    Button {
+                        resetSearchFilters()
+                    } label: {
+                        Label(L10n.resetSearchFilters, systemImage: "arrow.counterclockwise")
+                    }
+                    .disabled(store.searchOptions.isDefault)
+
+                    Divider()
+
                     Button {
                         store.saveCurrentSearch()
                     } label: {
@@ -213,7 +249,7 @@ private struct FeedHeaderView: View {
                         Label(L10n.saveSearchWithFilters, systemImage: "slider.horizontal.3")
                     }
                 } label: {
-                    Label(L10n.saveSearch, systemImage: "star")
+                    Label(L10n.searchActions, systemImage: "ellipsis.circle")
                 }
                 .menuStyle(.button)
                 .buttonStyle(.bordered)
@@ -327,6 +363,14 @@ private struct FeedHeaderView: View {
         store.bookmarkTagFilter.map { "#\($0)" } ?? L10n.bookmarkTags
     }
 
+    private var searchSummary: String {
+        let keyword = store.searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard keyword.isEmpty == false else {
+            return store.searchOptions.summary
+        }
+        return "\(keyword) · \(store.searchOptions.summary)"
+    }
+
     private var bookmarkTagRouteKey: String {
         store.selectedRoute.isOwnBookmarkRoute ? store.selectedRoute.rawValue : ""
     }
@@ -391,6 +435,24 @@ private struct FeedHeaderView: View {
         if count > 0 {
             isBatchDownloadPresented = false
         }
+    }
+
+    private func copySearchSummary() {
+        PasteboardWriter.copy(searchSummary)
+        searchActionMessage = L10n.copiedSearchSummary
+
+        Task {
+            try? await Task.sleep(for: .seconds(2))
+            if searchActionMessage == L10n.copiedSearchSummary {
+                searchActionMessage = nil
+            }
+        }
+    }
+
+    private func resetSearchFilters() {
+        store.resetSearchOptions()
+        searchActionMessage = nil
+        Task { await store.runSearch() }
     }
 }
 

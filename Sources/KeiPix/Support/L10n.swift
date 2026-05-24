@@ -18,6 +18,11 @@ enum L10n {
     static var savedSearchPresets: String { text("Saved Search Presets") }
     static var saveSearch: String { text("Save Search") }
     static var saveSearchWithFilters: String { text("Save Search with Filters") }
+    static var searchSummary: String { text("Search Summary") }
+    static var searchActions: String { text("Search Actions") }
+    static var copySearchSummary: String { text("Copy Search Summary") }
+    static var copiedSearchSummary: String { text("Copied Search Summary") }
+    static var resetSearchFilters: String { text("Reset Search Filters") }
     static var recentSearches: String { text("Recent Searches") }
     static var noSavedSearches: String { text("No saved searches") }
     static var noSavedSearchPresets: String { text("No saved search presets") }
