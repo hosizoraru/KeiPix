@@ -12,6 +12,8 @@ final class KeiPixStore {
     var selectedRoute: PixivRoute = .illustrations
     var artworks: [PixivArtwork] = []
     var selectedArtwork: PixivArtwork?
+    var searchPopularPreviewArtworks: [PixivArtwork] = []
+    var isLoadingSearchPopularPreview = false
     var selectedSpotlightArticle: PixivSpotlightArticle?
     var readerWindowArtwork: PixivArtwork?
     var imageSourceSearchRequest: ImageSourceSearchRequest?
@@ -78,8 +80,10 @@ final class KeiPixStore {
 
     let api = PixivAPI()
     var allArtworks: [PixivArtwork] = []
+    private var allSearchPopularPreviewArtworks: [PixivArtwork] = []
     private var nextURL: URL?
     private var activeFeedRequestID: UUID?
+    private var activeSearchPopularPreviewRequestID: UUID?
     var mutedTags = Set(UserDefaults.standard.stringArray(forKey: "mutedTags") ?? [])
     var mutedUsers = KeiPixStore.loadIntStringDictionary("mutedUsers")
     var mutedArtworks = KeiPixStore.loadIntStringDictionary("mutedArtworks")
@@ -177,6 +181,8 @@ final class KeiPixStore {
         restrictedModeEnabled = nil
         allArtworks = []
         artworks = []
+        allSearchPopularPreviewArtworks = []
+        searchPopularPreviewArtworks = []
         selectedArtwork = nil
         selectedSpotlightArticle = nil
         readerWindowArtwork = nil
@@ -184,6 +190,7 @@ final class KeiPixStore {
         searchSuggestions = []
         nextURL = nil
         activeFeedRequestID = nil
+        activeSearchPopularPreviewRequestID = nil
         recordedBrowsingHistoryIDs.removeAll()
     }
 
@@ -203,6 +210,8 @@ final class KeiPixStore {
             activeFeedRequestID = nil
             allArtworks = []
             artworks = []
+            allSearchPopularPreviewArtworks = []
+            searchPopularPreviewArtworks = []
             nextURL = nil
             isLoading = false
         }
@@ -231,6 +240,8 @@ final class KeiPixStore {
             selectedRoute = .illustrations
             allArtworks = [artwork]
             artworks = [artwork]
+            allSearchPopularPreviewArtworks = []
+            searchPopularPreviewArtworks = []
             selectedArtwork = artwork
             await recordBrowsingHistory(for: artwork)
         } catch {
@@ -304,6 +315,8 @@ final class KeiPixStore {
             selectedArtwork = nil
             allArtworks = []
             artworks = []
+            allSearchPopularPreviewArtworks = []
+            searchPopularPreviewArtworks = []
             nextURL = nil
             selectedRoute = .spotlight
             selectedSpotlightArticle = .linkPlaceholder(id: id, url: normalizedPixivisionURL(id: id, sourceURL: url))
@@ -323,6 +336,8 @@ final class KeiPixStore {
         guard session != nil else {
             allArtworks = []
             artworks = []
+            allSearchPopularPreviewArtworks = []
+            searchPopularPreviewArtworks = []
             selectedArtwork = nil
             nextURL = nil
             return
@@ -330,9 +345,13 @@ final class KeiPixStore {
         guard context.route.usesArtworkFeed else {
             allArtworks = []
             artworks = []
+            allSearchPopularPreviewArtworks = []
+            searchPopularPreviewArtworks = []
             nextURL = nil
             return
         }
+
+        refreshSearchPopularPreviewIfNeeded(for: context)
 
         let requestID = UUID()
         activeFeedRequestID = requestID
@@ -407,6 +426,43 @@ final class KeiPixStore {
         }
     }
 
+    private func refreshSearchPopularPreviewIfNeeded(for context: FeedRequestContext) {
+        guard context.route == .search,
+              context.searchText.isEmpty == false,
+              context.searchOptions.sort != .popularPreview else {
+            activeSearchPopularPreviewRequestID = nil
+            isLoadingSearchPopularPreview = false
+            allSearchPopularPreviewArtworks = []
+            searchPopularPreviewArtworks = []
+            return
+        }
+
+        let requestID = UUID()
+        activeSearchPopularPreviewRequestID = requestID
+        isLoadingSearchPopularPreview = true
+
+        Task {
+            do {
+                let response = try await api.searchPopularPreview(keyword: context.searchText, options: context.searchOptions)
+                guard activeSearchPopularPreviewRequestID == requestID,
+                      currentFeedRequestContext() == context else { return }
+                allSearchPopularPreviewArtworks = response.illusts
+                searchPopularPreviewArtworks = response.illusts.filter(passesContentFilters)
+            } catch {
+                guard isCancellationLike(error) == false,
+                      activeSearchPopularPreviewRequestID == requestID,
+                      currentFeedRequestContext() == context else { return }
+                allSearchPopularPreviewArtworks = []
+                searchPopularPreviewArtworks = []
+            }
+
+            if activeSearchPopularPreviewRequestID == requestID {
+                isLoadingSearchPopularPreview = false
+                activeSearchPopularPreviewRequestID = nil
+            }
+        }
+    }
+
     func runSearch() async {
         searchSuggestions = []
         errorMessage = nil
@@ -416,6 +472,9 @@ final class KeiPixStore {
         }
         if selectedRoute == .searchUsers {
             searchSubmissionID += 1
+            allSearchPopularPreviewArtworks = []
+            searchPopularPreviewArtworks = []
+            isLoadingSearchPopularPreview = false
             return
         }
         focusedUser = nil
@@ -937,6 +996,7 @@ final class KeiPixStore {
     func applyContentFilters() {
         let selectedID = selectedArtwork?.id
         artworks = allArtworks.filter(passesContentFilters)
+        searchPopularPreviewArtworks = allSearchPopularPreviewArtworks.filter(passesContentFilters)
         if let selectedID, let selected = artworks.first(where: { $0.id == selectedID }) {
             selectedArtwork = selected
         } else {

@@ -351,13 +351,7 @@ actor PixivAPI {
     }
 
     func search(keyword: String, options: SearchOptions) async throws -> PixivFeedResponse {
-        var query = [
-            "filter": "for_android",
-            "include_translated_tag_results": "true",
-            "merge_plain_keyword_results": "true",
-            "word": (keyword + options.ageLimit.keywordSuffix).trimmingCharacters(in: .whitespacesAndNewlines),
-            "search_target": options.matchType.apiValue
-        ]
+        var query = searchQuery(keyword: keyword, options: options)
 
         if options.sort == .popularPreview {
             return try await requestFeed(path: "/v1/search/popular-preview/illust", query: query)
@@ -374,6 +368,10 @@ actor PixivAPI {
         return try await requestFeed(path: "/v1/search/illust", query: query)
     }
 
+    func searchPopularPreview(keyword: String, options: SearchOptions) async throws -> PixivFeedResponse {
+        try await requestFeed(path: "/v1/search/popular-preview/illust", query: searchQuery(keyword: keyword, options: options))
+    }
+
     func searchAutocomplete(keyword: String) async throws -> [PixivTag] {
         let trimmed = keyword.trimmingCharacters(in: .whitespacesAndNewlines)
         guard trimmed.isEmpty == false else { return [] }
@@ -386,6 +384,16 @@ actor PixivAPI {
         guard let url = components.url else { throw PixivAPIError.invalidResponse }
         let response: PixivSearchAutocompleteResponse = try await requestJSON(url, method: "GET", form: nil)
         return response.tags
+    }
+
+    private func searchQuery(keyword: String, options: SearchOptions) -> [String: String] {
+        [
+            "filter": "for_android",
+            "include_translated_tag_results": "true",
+            "merge_plain_keyword_results": "true",
+            "word": (keyword + options.ageLimit.keywordSuffix).trimmingCharacters(in: .whitespacesAndNewlines),
+            "search_target": options.matchType.apiValue
+        ]
     }
 
     func trendingIllustTags() async throws -> PixivTrendingTagResponse {
