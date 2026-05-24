@@ -3,11 +3,18 @@ import SwiftUI
 struct SpotlightArticleDetailView: View {
     @Bindable var store: KeiPixStore
     @State private var webProfileUser: PixivUser?
+    @State private var actionMessage: String?
 
     var body: some View {
         if let article = store.selectedSpotlightArticle {
             VStack(spacing: 0) {
-                SpotlightArticleHeader(article: article)
+                SpotlightArticleHeader(
+                    article: article,
+                    copyLink: {
+                        PasteboardWriter.copy(article.articleURL.absoluteString)
+                        showActionMessage(L10n.copiedArticleLink)
+                    }
+                )
                     .padding(16)
 
                 Divider()
@@ -22,6 +29,23 @@ struct SpotlightArticleDetailView: View {
             .navigationTitle(article.pureTitle.isEmpty ? L10n.spotlight : article.pureTitle)
             .sheet(item: $webProfileUser) { user in
                 UserProfileSheet(user: user, store: store)
+            }
+            .overlay(alignment: .bottom) {
+                if let actionMessage {
+                    FloatingStatusBanner(maxWidth: 420) {
+                        Text(actionMessage)
+                            .font(.callout)
+                            .foregroundStyle(.secondary)
+                            .textSelection(.enabled)
+                    }
+                    .padding(.horizontal, 18)
+                    .padding(.bottom, 14)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                }
+            }
+            .animation(.snappy(duration: 0.18), value: actionMessage)
+            .task(id: actionMessage) {
+                await dismissActionMessageIfNeeded(actionMessage)
             }
         } else {
             ContentUnavailableView(L10n.selectArticle, systemImage: "newspaper")
@@ -38,10 +62,27 @@ struct SpotlightArticleDetailView: View {
             store.errorMessage = error.localizedDescription
         }
     }
+
+    private func showActionMessage(_ message: String) {
+        actionMessage = message
+    }
+
+    private func dismissActionMessageIfNeeded(_ message: String?) async {
+        guard let message else { return }
+        do {
+            try await Task.sleep(for: .seconds(2.5))
+        } catch {
+            return
+        }
+        if actionMessage == message {
+            actionMessage = nil
+        }
+    }
 }
 
 private struct SpotlightArticleHeader: View {
     let article: PixivSpotlightArticle
+    let copyLink: () -> Void
 
     var body: some View {
         HStack(alignment: .center, spacing: 12) {
@@ -67,6 +108,12 @@ private struct SpotlightArticleHeader: View {
             }
             .labelStyle(.iconOnly)
             .help(L10n.share)
+
+            Button(action: copyLink) {
+                Label(L10n.copyLink, systemImage: "link")
+            }
+            .labelStyle(.iconOnly)
+            .help(L10n.copyLink)
 
             Link(destination: article.articleURL) {
                 Label(L10n.openInPixiv, systemImage: "safari")

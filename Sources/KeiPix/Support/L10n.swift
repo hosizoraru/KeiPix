@@ -13,6 +13,7 @@ enum L10n {
     static var loadMoreSpotlightArticles: String { text("Load More Spotlight Articles") }
     static var openArticle: String { text("Open Article") }
     static var selectArticle: String { text("Select an article") }
+    static var copiedArticleLink: String { text("Copied article link") }
     static var search: String { text("Search") }
     static var searchCreators: String { text("Search Creators") }
     static var savedSearches: String { text("Saved Searches") }
