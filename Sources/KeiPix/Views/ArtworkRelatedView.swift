@@ -200,14 +200,18 @@ struct ArtworkRelatedView: View {
         switch action.kind {
         case .removeBookmark(let artwork):
             updateRelatedArtwork(artwork.id) { $0.isBookmarked = false }
+            showStatus(String(format: L10n.removedBookmarkFormat, artwork.title))
         case .muteArtwork(let artwork):
             relatedArtworks.removeAll { $0.id == artwork.id }
+            showStatus(String(format: L10n.mutedArtworkFormat, artwork.title))
         case .muteCreator(let user):
             relatedArtworks.removeAll { $0.user.id == user.id }
+            showStatus(String(format: L10n.mutedCreatorFormat, user.name))
         case .muteTag(let tag):
             relatedArtworks.removeAll { artwork in
                 artwork.tags.contains { $0.name.localizedCaseInsensitiveCompare(tag.name) == .orderedSame }
             }
+            showStatus(String(format: L10n.mutedTagFormat, tag.name))
         case .unfollowCreator:
             break
         }

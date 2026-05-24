@@ -448,6 +448,7 @@ enum L10n {
     static var cancelReply: String { text("Cancel Reply") }
     static var viewReplies: String { text("View Replies") }
     static var hideReplies: String { text("Hide Replies") }
+    static var noReplies: String { text("No replies") }
     static var copyComment: String { text("Copy Comment") }
     static var copiedComment: String { text("Copied comment") }
     static var replies: String { text("Replies") }

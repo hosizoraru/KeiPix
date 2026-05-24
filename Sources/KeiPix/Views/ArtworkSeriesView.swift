@@ -14,6 +14,7 @@ struct ArtworkSeriesView: View {
     @State private var isUpdatingWatchlist = false
     @State private var errorMessage: String?
     @State private var statusMessage: String?
+    @State private var pendingDangerAction: AppDangerAction?
     @State private var pendingWatchlistRemoval: PixivArtworkSeriesDetail?
 
     private let columns = [
@@ -74,6 +75,22 @@ struct ArtworkSeriesView: View {
             .onChange(of: isExpanded) { _, value in
                 guard value, hasLoaded == false else { return }
                 Task { await loadInitial() }
+            }
+            .confirmationDialog(
+                pendingDangerAction?.title ?? L10n.moreActions,
+                isPresented: dangerActionBinding,
+                titleVisibility: .visible
+            ) {
+                if let pendingDangerAction {
+                    Button(pendingDangerAction.title, role: .destructive) {
+                        Task { await performDangerAction(pendingDangerAction) }
+                    }
+                }
+                Button(L10n.cancel, role: .cancel) {}
+            } message: {
+                if let pendingDangerAction {
+                    Text(pendingDangerAction.confirmationMessage)
+                }
             }
             .confirmationDialog(
                 L10n.removeFromWatchlist,
@@ -143,7 +160,7 @@ struct ArtworkSeriesView: View {
         .contextMenu {
             Button(seriesArtwork.isBookmarked ? L10n.removeBookmark : L10n.bookmark) {
                 if seriesArtwork.isBookmarked {
-                    store.requestDangerAction(AppDangerAction(kind: .removeBookmark(seriesArtwork)))
+                    pendingDangerAction = AppDangerAction(kind: .removeBookmark(seriesArtwork))
                 } else {
                     Task { await bookmark(seriesArtwork) }
                 }
@@ -154,16 +171,16 @@ struct ArtworkSeriesView: View {
             }
             Divider()
             Button(L10n.muteArtwork) {
-                store.requestDangerAction(AppDangerAction(kind: .muteArtwork(seriesArtwork)))
+                pendingDangerAction = AppDangerAction(kind: .muteArtwork(seriesArtwork))
             }
             Button(L10n.muteCreator) {
-                store.requestDangerAction(AppDangerAction(kind: .muteCreator(seriesArtwork.user)))
+                pendingDangerAction = AppDangerAction(kind: .muteCreator(seriesArtwork.user))
             }
             if seriesArtwork.tags.isEmpty == false {
                 Menu(L10n.muteTag) {
                     ForEach(seriesArtwork.tags.prefix(12), id: \.self) { tag in
                         Button("#\(tag.name)") {
-                            store.requestDangerAction(AppDangerAction(kind: .muteTag(tag)))
+                            pendingDangerAction = AppDangerAction(kind: .muteTag(tag))
                         }
                     }
                 }
@@ -263,6 +280,34 @@ struct ArtworkSeriesView: View {
         }
     }
 
+    private func performDangerAction(_ action: AppDangerAction) async {
+        defer { pendingDangerAction = nil }
+        let succeeded = await store.performDangerAction(action)
+        guard succeeded else {
+            errorMessage = store.errorMessage
+            return
+        }
+
+        switch action.kind {
+        case .removeBookmark(let artwork):
+            updateSeriesArtwork(artwork.id) { $0.isBookmarked = false }
+            showStatus(String(format: L10n.removedBookmarkFormat, artwork.title))
+        case .muteArtwork(let artwork):
+            seriesArtworks.removeAll { $0.id == artwork.id }
+            showStatus(String(format: L10n.mutedArtworkFormat, artwork.title))
+        case .muteCreator(let user):
+            seriesArtworks.removeAll { $0.user.id == user.id }
+            showStatus(String(format: L10n.mutedCreatorFormat, user.name))
+        case .muteTag(let tag):
+            seriesArtworks.removeAll { artwork in
+                artwork.tags.contains { $0.name.localizedCaseInsensitiveCompare(tag.name) == .orderedSame }
+            }
+            showStatus(String(format: L10n.mutedTagFormat, tag.name))
+        case .unfollowCreator:
+            break
+        }
+    }
+
     private func showStatus(_ message: String) {
         statusMessage = message
         Task {
@@ -285,6 +330,16 @@ struct ArtworkSeriesView: View {
         } set: { value in
             if value == false {
                 pendingWatchlistRemoval = nil
+            }
+        }
+    }
+
+    private var dangerActionBinding: Binding<Bool> {
+        Binding {
+            pendingDangerAction != nil
+        } set: { value in
+            if value == false {
+                pendingDangerAction = nil
             }
         }
     }

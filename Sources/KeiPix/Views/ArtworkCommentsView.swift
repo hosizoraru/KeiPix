@@ -54,10 +54,22 @@ struct ArtworkCommentsView: View {
                 }
 
                 if let errorMessage {
-                    Text(errorMessage)
-                        .font(.callout)
-                        .foregroundStyle(.red)
-                        .textSelection(.enabled)
+                    HStack(alignment: .firstTextBaseline, spacing: 10) {
+                        Text(errorMessage)
+                            .font(.callout)
+                            .foregroundStyle(.red)
+                            .textSelection(.enabled)
+
+                        Spacer(minLength: 0)
+
+                        Button {
+                            Task { await loadInitial() }
+                        } label: {
+                            Label(L10n.retry, systemImage: "arrow.clockwise")
+                        }
+                        .buttonStyle(.bordered)
+                        .controlSize(.small)
+                    }
                 }
 
                 if nextURL != nil {
@@ -240,6 +252,13 @@ private struct CommentThreadRow: View {
 
             if isExpanded {
                 VStack(alignment: .leading, spacing: 8) {
+                    if replies.isEmpty, isLoadingReplies == false {
+                        Text(L10n.noReplies)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .padding(.leading, 28)
+                    }
+
                     ForEach(replies) { replyComment in
                         CommentRow(comment: replyComment) {
                             reply(replyComment)
