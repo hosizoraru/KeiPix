@@ -152,6 +152,10 @@
 "No download records changed" = "没有下载记录发生变化";
 "Revealed download in Finder" = "已在 Finder 中显示下载";
 "Opened download folder" = "已打开下载文件夹";
+"Unable to open download folder" = "无法打开下载文件夹";
+"Download folder changed" = "已更改下载文件夹";
+"Download template reset" = "已重置下载模板";
+"Download template is already default" = "下载模板已经是默认值";
 "Unable to open downloaded artwork" = "无法打开已下载作品";
 "No download links to copy" = "没有可复制的下载链接";
 "Reveal in Finder" = "在 Finder 中显示";

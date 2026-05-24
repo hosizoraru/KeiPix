@@ -436,7 +436,8 @@ final class ArtworkDownloadStore {
         return Self.fileSizeFormatter.string(fromByteCount: byteCount)
     }
 
-    func chooseDownloadDirectory() {
+    @discardableResult
+    func chooseDownloadDirectory() -> Bool {
         let panel = NSOpenPanel()
         panel.canChooseFiles = false
         panel.canChooseDirectories = true
@@ -446,13 +447,20 @@ final class ArtworkDownloadStore {
         panel.prompt = L10n.choose
         if panel.runModal() == .OK, let url = panel.url {
             setDownloadDirectory(url)
+            return true
         }
+        return false
     }
 
-    func openDownloadDirectory() {
+    @discardableResult
+    func openDownloadDirectory() -> Bool {
         let url = URL(fileURLWithPath: downloadDirectoryPath, isDirectory: true)
-        try? fileManager.createDirectory(at: url, withIntermediateDirectories: true)
-        NSWorkspace.shared.open(url)
+        do {
+            try fileManager.createDirectory(at: url, withIntermediateDirectories: true)
+            return NSWorkspace.shared.open(url)
+        } catch {
+            return false
+        }
     }
 
     private func setDownloadDirectory(_ url: URL) {
@@ -465,8 +473,13 @@ final class ArtworkDownloadStore {
         UserDefaults.standard.set(downloadNamingTemplate, forKey: "downloadNamingTemplate")
     }
 
-    func resetDownloadNamingTemplate() {
+    @discardableResult
+    func resetDownloadNamingTemplate() -> Bool {
+        guard downloadNamingTemplate != DownloadNamingTemplate.defaultTemplate else {
+            return false
+        }
         setDownloadNamingTemplate(DownloadNamingTemplate.defaultTemplate)
+        return true
     }
 
     var downloadNamingTemplatePreview: String {

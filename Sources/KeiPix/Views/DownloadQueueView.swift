@@ -317,7 +317,11 @@ private struct DownloadQueueHeader: View {
             .help(summaryHelpText)
 
             Button {
-                downloads.openDownloadDirectory()
+                showActionMessage(
+                    downloads.openDownloadDirectory()
+                        ? L10n.openedDownloadFolder
+                        : L10n.unableToOpenDownloadFolder
+                )
             } label: {
                 Label(L10n.openFolder, systemImage: "folder")
             }
@@ -331,8 +335,11 @@ private struct DownloadQueueHeader: View {
 
                 Button {
                     if downloads.revealFirstFilteredDownload() == false {
-                        downloads.openDownloadDirectory()
-                        showActionMessage(L10n.openedDownloadFolder)
+                        showActionMessage(
+                            downloads.openDownloadDirectory()
+                                ? L10n.openedDownloadFolder
+                                : L10n.unableToOpenDownloadFolder
+                        )
                     } else {
                         showActionMessage(L10n.revealedDownloadInFinder)
                     }

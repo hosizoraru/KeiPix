@@ -152,6 +152,10 @@
 "No download records changed" = "No download records changed";
 "Revealed download in Finder" = "Revealed download in Finder";
 "Opened download folder" = "Opened download folder";
+"Unable to open download folder" = "Unable to open download folder";
+"Download folder changed" = "Download folder changed";
+"Download template reset" = "Download template reset";
+"Download template is already default" = "Download template is already default";
 "Unable to open downloaded artwork" = "Unable to open downloaded artwork";
 "No download links to copy" = "No download links to copy";
 "Reveal in Finder" = "Reveal in Finder";

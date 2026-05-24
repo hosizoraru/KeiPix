@@ -150,6 +150,10 @@ enum L10n {
     static var noDownloadRecordsChanged: String { text("No download records changed") }
     static var revealedDownloadInFinder: String { text("Revealed download in Finder") }
     static var openedDownloadFolder: String { text("Opened download folder") }
+    static var unableToOpenDownloadFolder: String { text("Unable to open download folder") }
+    static var downloadFolderChanged: String { text("Download folder changed") }
+    static var downloadTemplateReset: String { text("Download template reset") }
+    static var downloadTemplateAlreadyDefault: String { text("Download template is already default") }
     static var unableToOpenDownloadedArtwork: String { text("Unable to open downloaded artwork") }
     static var noDownloadLinksToCopy: String { text("No download links to copy") }
     static var revealInFinder: String { text("Reveal in Finder") }

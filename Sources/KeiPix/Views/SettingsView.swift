@@ -7,6 +7,7 @@ struct SettingsView: View {
     @State private var mutedContentSyncMessage: String?
     @State private var mutedContentSyncMessageIsError = false
     @State private var restrictedModeMessage: String?
+    @State private var settingsActionMessage: String?
     @State private var isLogoutConfirmationPresented = false
     @State private var isMutedContentSyncConfirmationPresented = false
     @State private var isMutedContentUploadConfirmationPresented = false
@@ -173,13 +174,19 @@ struct SettingsView: View {
 
                 FlowLayout(spacing: 8) {
                     Button {
-                        store.downloads.chooseDownloadDirectory()
+                        if store.downloads.chooseDownloadDirectory() {
+                            showSettingsActionMessage(L10n.downloadFolderChanged)
+                        }
                     } label: {
                         Label(L10n.chooseFolder, systemImage: "folder.badge.gearshape")
                     }
 
                     Button {
-                        store.downloads.openDownloadDirectory()
+                        showSettingsActionMessage(
+                            store.downloads.openDownloadDirectory()
+                                ? L10n.openedDownloadFolder
+                                : L10n.unableToOpenDownloadFolder
+                        )
                     } label: {
                         Label(L10n.openFolder, systemImage: "folder")
                     }
@@ -202,7 +209,11 @@ struct SettingsView: View {
                 }
 
                 Button {
-                    store.downloads.resetDownloadNamingTemplate()
+                    showSettingsActionMessage(
+                        store.downloads.resetDownloadNamingTemplate()
+                            ? L10n.downloadTemplateReset
+                            : L10n.downloadTemplateAlreadyDefault
+                    )
                 } label: {
                     Label(L10n.resetTemplate, systemImage: "arrow.counterclockwise")
                 }
@@ -259,18 +270,34 @@ struct SettingsView: View {
         }
         .formStyle(.grouped)
         .padding(24)
-        .frame(width: 520)
+        .frame(minWidth: 560, idealWidth: 620, maxWidth: 720)
         .overlay(alignment: .bottom) {
-            if let undoAction = store.undoAction {
-                AppUndoBar(action: undoAction) {
-                    Task { await store.performUndo(undoAction) }
+            VStack(spacing: 8) {
+                if let settingsActionMessage {
+                    FloatingStatusBanner(maxWidth: 520) {
+                        Text(settingsActionMessage)
+                            .font(.callout)
+                            .foregroundStyle(.secondary)
+                            .textSelection(.enabled)
+                    }
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
-                .padding(.horizontal, 18)
-                .padding(.bottom, 14)
-                .transition(.move(edge: .bottom).combined(with: .opacity))
+
+                if let undoAction = store.undoAction {
+                    AppUndoBar(action: undoAction) {
+                        Task { await store.performUndo(undoAction) }
+                    }
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                }
             }
+            .padding(.horizontal, 18)
+            .padding(.bottom, 14)
         }
+        .animation(.snappy(duration: 0.18), value: settingsActionMessage)
         .animation(.snappy(duration: 0.18), value: store.undoAction?.id)
+        .task(id: settingsActionMessage) {
+            await dismissSettingsActionMessageIfNeeded(settingsActionMessage)
+        }
         .confirmationDialog(
             L10n.logout,
             isPresented: $isLogoutConfirmationPresented,
@@ -559,6 +586,18 @@ struct SettingsView: View {
             try await store.setRestrictedModeEnabled(value)
         } catch {
             restrictedModeMessage = error.localizedDescription
+        }
+    }
+
+    private func showSettingsActionMessage(_ message: String) {
+        settingsActionMessage = message
+    }
+
+    private func dismissSettingsActionMessageIfNeeded(_ message: String?) async {
+        guard let message else { return }
+        try? await Task.sleep(for: .seconds(2.5))
+        if settingsActionMessage == message {
+            settingsActionMessage = nil
         }
     }
 }
