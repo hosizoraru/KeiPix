@@ -27,7 +27,7 @@ struct TrendingTagMasonryLayout: Layout {
     private func resolvedLayout(for proposal: ProposedViewSize, subviews: Subviews) -> TrendingTagResolvedLayout {
         let availableWidth = max(proposal.width ?? preferredColumnWidth, minColumnWidth)
         let columnCount = resolvedColumnCount(for: availableWidth)
-        let columnWidth = (availableWidth - CGFloat(columnCount - 1) * spacing) / CGFloat(columnCount)
+        let columnWidth = aligned((availableWidth - CGFloat(columnCount - 1) * spacing) / CGFloat(columnCount))
         var columnHeights = Array(repeating: CGFloat.zero, count: columnCount)
         var frames: [CGRect] = []
         frames.reserveCapacity(subviews.count)
@@ -35,13 +35,18 @@ struct TrendingTagMasonryLayout: Layout {
         for subview in subviews {
             let presentation = TrendingTagPresentation(aspectRatio: subview[TrendingTagAspectRatioKey.self])
             let span = min(presentation.span(for: columnCount), columnCount)
-            let spanWidth = CGFloat(span) * columnWidth + CGFloat(span - 1) * spacing
-            let height = presentation.height(for: spanWidth, span: span, columnCount: columnCount)
+            let spanWidth = aligned(CGFloat(span) * columnWidth + CGFloat(span - 1) * spacing)
+            let height = alignedUp(presentation.height(for: spanWidth, span: span, columnCount: columnCount))
             let origin = originForNextItem(span: span, columnWidth: columnWidth, columnHeights: columnHeights)
-            let frame = CGRect(x: origin.x, y: origin.y, width: spanWidth, height: height)
+            let frame = CGRect(
+                x: aligned(origin.x),
+                y: aligned(origin.y),
+                width: spanWidth,
+                height: height
+            )
             frames.append(frame)
 
-            let nextHeight = frame.maxY + spacing
+            let nextHeight = alignedUp(frame.maxY + spacing)
             if span >= columnCount {
                 columnHeights = Array(repeating: nextHeight, count: columnCount)
             } else {
@@ -92,6 +97,14 @@ struct TrendingTagMasonryLayout: Layout {
 
     private func columnWidth(for width: CGFloat, count: Int) -> CGFloat {
         (width - CGFloat(count - 1) * spacing) / CGFloat(count)
+    }
+
+    private func aligned(_ value: CGFloat) -> CGFloat {
+        value.rounded(.toNearestOrAwayFromZero)
+    }
+
+    private func alignedUp(_ value: CGFloat) -> CGFloat {
+        value.rounded(.up)
     }
 }
 

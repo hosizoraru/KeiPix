@@ -206,8 +206,6 @@ private extension View {
 }
 
 private struct TrendingTagArtworkImage: View {
-    private let cornerRadius: CGFloat = 18
-
     let url: URL?
     let imageLoaded: (CGFloat) -> Void
 
@@ -218,11 +216,8 @@ private struct TrendingTagArtworkImage: View {
         GeometryReader { proxy in
             ZStack {
                 if let image {
-                    Image(nsImage: image)
-                        .resizable()
-                        .interpolation(.high)
-                        .scaledToFill()
-                        .frame(width: proxy.size.width + 2, height: proxy.size.height + 2)
+                    TrendingTagFillImageView(image: image)
+                        .frame(width: ceil(proxy.size.width) + 2, height: ceil(proxy.size.height) + 2)
                         .clipped()
                         .allowsHitTesting(false)
                 } else if failed {
@@ -237,9 +232,9 @@ private struct TrendingTagArtworkImage: View {
                 }
             }
             .frame(width: proxy.size.width, height: proxy.size.height)
+            .clipped()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
         .task(id: url) {
             await load()
         }
@@ -264,5 +259,31 @@ private struct TrendingTagArtworkImage: View {
         } catch {
             failed = true
         }
+    }
+}
+
+private struct TrendingTagFillImageView: NSViewRepresentable {
+    let image: NSImage
+
+    func makeNSView(context: Context) -> NSView {
+        let view = NSView()
+        view.wantsLayer = true
+        view.layer?.contentsGravity = .resizeAspectFill
+        view.layer?.masksToBounds = true
+        view.layer?.backgroundColor = NSColor.textBackgroundColor.cgColor
+        return view
+    }
+
+    func updateNSView(_ nsView: NSView, context: Context) {
+        nsView.layer?.contentsGravity = .resizeAspectFill
+        nsView.layer?.masksToBounds = true
+        nsView.layer?.backgroundColor = NSColor.textBackgroundColor.cgColor
+        nsView.layer?.contentsScale = nsView.window?.screen?.backingScaleFactor ?? NSScreen.main?.backingScaleFactor ?? 2
+        nsView.layer?.contents = cgImage(from: image)
+    }
+
+    private func cgImage(from image: NSImage) -> CGImage? {
+        var rect = CGRect(origin: .zero, size: image.size)
+        return image.cgImage(forProposedRect: &rect, context: nil, hints: nil)
     }
 }
