@@ -8,13 +8,22 @@ struct SearchFilterButton: View {
         Button {
             isPresented.toggle()
         } label: {
-            Label(L10n.searchFilters, systemImage: "slider.horizontal.3")
+            Label(filterButtonTitle, systemImage: filterButtonImage)
         }
+        .help(store.searchOptions.summary)
         .popover(isPresented: $isPresented, arrowEdge: .bottom) {
             SearchFiltersView(store: store) {
                 isPresented = false
             }
         }
+    }
+
+    private var filterButtonTitle: String {
+        store.searchOptions.isDefault ? L10n.searchFilters : L10n.activeSearchFilters
+    }
+
+    private var filterButtonImage: String {
+        store.searchOptions.isDefault ? "slider.horizontal.3" : "line.3.horizontal.decrease.circle.fill"
     }
 }
 
