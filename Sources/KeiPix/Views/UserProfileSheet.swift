@@ -415,6 +415,9 @@ struct UserProfileSheet: View {
                                 toggleFollow: {
                                     restrict in
                                     Task { await toggleRelatedFollow(preview.user, restrict: restrict) }
+                                },
+                                muteCreator: {
+                                    muteRelatedCreator(preview.user)
                                 }
                             )
                         }
@@ -506,6 +509,17 @@ struct UserProfileSheet: View {
             )
         }
     }
+
+    private func muteRelatedCreator(_ user: PixivUser) {
+        store.muteUser(user)
+        for index in relatedUsers.indices where relatedUsers[index].user.id == user.id {
+            relatedUsers[index] = PixivUserPreview(
+                user: relatedUsers[index].user,
+                illusts: relatedUsers[index].illusts,
+                isMuted: true
+            )
+        }
+    }
 }
 
 private struct RelatedCreatorCard: View {
@@ -513,6 +527,7 @@ private struct RelatedCreatorCard: View {
     let openProfile: () -> Void
     let openIllustrations: () -> Void
     let toggleFollow: (BookmarkRestrict?) -> Void
+    let muteCreator: () -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -530,6 +545,12 @@ private struct RelatedCreatorCard: View {
                             .font(.caption)
                             .foregroundStyle(.secondary)
                             .lineLimit(1)
+
+                        if preview.isMuted {
+                            Label(L10n.muted, systemImage: "eye.slash")
+                                .font(.caption2.weight(.semibold))
+                                .foregroundStyle(.secondary)
+                        }
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -586,6 +607,43 @@ private struct RelatedCreatorCard: View {
         .frame(width: 170, alignment: .leading)
         .padding(12)
         .keiInteractiveGlass(14)
+        .contextMenu {
+            Button(L10n.creatorProfile) {
+                openProfile()
+            }
+            if let url = preview.user.pixivURL {
+                Link(L10n.openInPixiv, destination: url)
+                Button(L10n.copyLink) {
+                    PasteboardWriter.copy(url.absoluteString)
+                }
+            }
+
+            Divider()
+
+            if preview.user.isFollowed {
+                Button(L10n.unfollow) {
+                    toggleFollow(nil)
+                }
+            } else {
+                Button(L10n.followUsingDefault) {
+                    toggleFollow(nil)
+                }
+                Button(L10n.followPublicly) {
+                    toggleFollow(.public)
+                }
+                Button(L10n.followPrivately) {
+                    toggleFollow(.private)
+                }
+            }
+
+            Divider()
+
+            Button(role: .destructive) {
+                muteCreator()
+            } label: {
+                Label(L10n.muteCreator, systemImage: "eye.slash")
+            }
+        }
     }
 }
 
