@@ -19,33 +19,41 @@ struct ArtworkSummaryView: View {
                     ArtworkContentBadgesView(badges: artwork.contentBadges)
                 }
 
-                Button {
-                    isUserProfilePresented = true
-                } label: {
-                    HStack(spacing: 10) {
-                    RemoteImageView(url: artwork.user.avatarURL)
-                        .frame(width: 32, height: 32)
-                        .clipShape(Circle())
+                HStack(spacing: 10) {
+                    Button {
+                        isUserProfilePresented = true
+                    } label: {
+                        HStack(spacing: 10) {
+                            RemoteImageView(url: artwork.user.avatarURL)
+                                .frame(width: 32, height: 32)
+                                .clipShape(Circle())
 
-                    VStack(alignment: .leading, spacing: 1) {
-                        Text(artwork.user.name)
-                            .font(.headline)
-                            .lineLimit(1)
-                        Text("@\(artwork.user.account)")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                            .lineLimit(1)
+                            VStack(alignment: .leading, spacing: 1) {
+                                Text(artwork.user.name)
+                                    .font(.headline)
+                                    .lineLimit(1)
+                                Text("@\(artwork.user.account)")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                                    .lineLimit(1)
+                            }
+
+                            Spacer(minLength: 8)
+
+                            Image(systemName: "chevron.right")
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(.tertiary)
+                        }
+                        .contentShape(Rectangle())
                     }
+                    .buttonStyle(.plain)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .help(L10n.openCreatorProfile)
 
-                    Spacer(minLength: 8)
-
-                        Image(systemName: "chevron.right")
-                            .font(.caption.weight(.semibold))
-                            .foregroundStyle(.tertiary)
+                    CreatorQuickActionsMenu(artwork: artwork, store: store) {
+                        isUserProfilePresented = true
                     }
                 }
-                .buttonStyle(.plain)
-                .help(L10n.openCreatorProfile)
                 .sheet(isPresented: $isUserProfilePresented) {
                     UserProfileSheet(user: artwork.user, store: store)
                 }
@@ -55,6 +63,69 @@ struct ArtworkSummaryView: View {
         }
         .padding(14)
         .keiPanel(18)
+    }
+}
+
+private struct CreatorQuickActionsMenu: View {
+    let artwork: PixivArtwork
+    @Bindable var store: KeiPixStore
+    let openProfile: () -> Void
+
+    var body: some View {
+        Menu {
+            Button {
+                openProfile()
+            } label: {
+                Label(L10n.openCreatorProfile, systemImage: "person.crop.rectangle")
+            }
+
+            if let url = artwork.user.pixivURL {
+                Link(destination: url) {
+                    Label(L10n.openInPixiv, systemImage: "safari")
+                }
+
+                Button {
+                    PasteboardWriter.copy(url.absoluteString)
+                } label: {
+                    Label(L10n.copyLink, systemImage: "link")
+                }
+            }
+
+            Divider()
+
+            if artwork.user.isFollowed {
+                Button(role: .destructive) {
+                    Task { await store.toggleFollow(artwork.user) }
+                } label: {
+                    Label(L10n.unfollow, systemImage: "person.badge.minus")
+                }
+            } else {
+                Button {
+                    Task { await store.toggleFollow(artwork.user) }
+                } label: {
+                    Label(L10n.followUsingDefault, systemImage: "person.badge.plus")
+                }
+
+                Button {
+                    Task { await store.toggleFollow(artwork.user, restrict: .public) }
+                } label: {
+                    Label(L10n.followPublicly, systemImage: "person.2")
+                }
+
+                Button {
+                    Task { await store.toggleFollow(artwork.user, restrict: .private) }
+                } label: {
+                    Label(L10n.followPrivately, systemImage: "lock")
+                }
+            }
+        } label: {
+            Image(systemName: artwork.user.isFollowed ? "person.crop.circle.badge.checkmark" : "person.crop.circle.badge.plus")
+                .frame(width: 28, height: 28)
+        }
+        .menuStyle(.button)
+        .buttonStyle(.bordered)
+        .controlSize(.small)
+        .help(artwork.user.isFollowed ? L10n.unfollow : L10n.follow)
     }
 }
 
