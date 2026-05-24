@@ -384,7 +384,7 @@ struct UserPreviewListView: View {
                 }
                 .pickerStyle(.inline)
             } label: {
-                Label(creatorFilterSummary, systemImage: "line.3.horizontal.decrease.circle")
+                Label(L10n.creatorFilter, systemImage: "line.3.horizontal.decrease.circle")
                     .lineLimit(1)
             }
             .help("\(L10n.creatorFilter): \(creatorFilter.title) · \(L10n.creatorSort): \(creatorSort.title)")
@@ -610,10 +610,13 @@ struct UserPreviewListView: View {
             updatedCount = restores.count
             if restores.isEmpty == false {
                 presentUndo(CreatorUndoAction(kind: .restoreFollows(restores)))
+                await refreshCurrentAccountFollowingListIfNeeded()
             }
         }
 
-        bulkStatusText = String(format: L10n.creatorActionCompletedFormat, updatedCount)
+        bulkStatusText = updatedCount > 0
+            ? String(format: L10n.creatorActionCompletedFormat, updatedCount)
+            : L10n.noMatchingCreatorsForAction
     }
 
     private func followCreators(_ targets: [PixivUserPreview], restrict: BookmarkRestrict) async -> [PixivUser] {
@@ -766,6 +769,8 @@ struct UserPreviewListView: View {
                 presentUndo(CreatorUndoAction(kind: .restoreFollows([
                     CreatorFollowRestore(user: action.user, restrict: restrict)
                 ])))
+                bulkStatusText = String(format: L10n.unfollowedCreatorFormat, action.user.name)
+                await refreshCurrentAccountFollowingListIfNeeded()
             } catch {
                 errorMessage = error.localizedDescription
             }
@@ -773,6 +778,7 @@ struct UserPreviewListView: View {
             store.muteUser(action.user)
             updateMutedState(userID: action.user.id, isMuted: true)
             presentUndo(CreatorUndoAction(kind: .unmuteUsers([action.user])))
+            bulkStatusText = String(format: L10n.mutedCreatorFormat, action.user.name)
         }
     }
 
@@ -818,8 +824,15 @@ struct UserPreviewListView: View {
         }
         if restoredCount > 0 {
             bulkStatusText = String(format: L10n.restoredCreatorActionsFormat, restoredCount)
+            await refreshCurrentAccountFollowingListIfNeeded()
         }
         undoAction = nil
+    }
+
+    private func refreshCurrentAccountFollowingListIfNeeded() async {
+        guard isCurrentAccountFollowingList else { return }
+        try? await Task.sleep(for: .milliseconds(350))
+        await loadInitial()
     }
 
     private func presentUndo(_ action: CreatorUndoAction) {
