@@ -409,10 +409,11 @@ private struct FeedHeaderView: View {
                     Text(bookmarkTagErrorMessage)
                 }
             } label: {
-                Label(bookmarkTagTitle, systemImage: "tag")
+                Label(L10n.bookmarkTags, systemImage: "tag")
             }
             .menuStyle(.button)
             .buttonStyle(.bordered)
+            .help(bookmarkTagTitle)
         }
 
         if store.selectedRoute.isRankingRoute {

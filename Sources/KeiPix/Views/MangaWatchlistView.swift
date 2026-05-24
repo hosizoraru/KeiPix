@@ -274,18 +274,30 @@ private struct MangaWatchlistCard: View {
 
                 Spacer()
 
-                Button(role: .destructive) {
-                    remove()
+                Menu {
+                    if let url = series.pixivURL {
+                        Link(L10n.openSeriesInPixiv, destination: url)
+                    }
+
+                    Divider()
+
+                    Button(role: .destructive) {
+                        remove()
+                    } label: {
+                        Label(L10n.removeFromWatchlist, systemImage: "minus.circle")
+                    }
                 } label: {
                     if isRemoving {
                         ProgressView()
                             .controlSize(.small)
                     } else {
-                        Label(L10n.removeFromWatchlist, systemImage: "minus.circle")
+                        Label(L10n.moreActions, systemImage: "ellipsis.circle")
                     }
                 }
+                .labelStyle(.iconOnly)
                 .buttonStyle(.bordered)
                 .disabled(isRemoving)
+                .help(L10n.moreActions)
             }
         }
         .padding(12)
