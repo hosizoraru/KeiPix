@@ -24,6 +24,8 @@ struct UserPreviewListView: View {
     @State private var bulkStatusText: String?
     @State private var pendingDangerAction: CreatorDangerAction?
     @State private var undoAction: CreatorUndoAction?
+    @State private var feedbackRequest: FeedbackReportRequest?
+    @State private var feedbackMuteUser: PixivUser?
 
     var body: some View {
         Group {
@@ -95,6 +97,15 @@ struct UserPreviewListView: View {
         .sheet(item: $profileUser) { user in
             UserProfileSheet(user: user, store: store)
         }
+        .sheet(item: $feedbackRequest) { request in
+            FeedbackReportSheet(request: request) {
+                if let feedbackMuteUser {
+                    requestDangerAction(.mute, user: feedbackMuteUser)
+                }
+            } onComplete: { message in
+                bulkStatusText = message
+            }
+        }
         .task(id: listRefreshKey) {
             await loadInitial()
         }
@@ -150,6 +161,7 @@ struct UserPreviewListView: View {
                 followCreator: { user, restrict in Task { await follow(user, restrict: restrict) } },
                 requestUnfollow: { requestDangerAction(.unfollow, user: $0) },
                 requestMuteCreator: { requestDangerAction(.mute, user: $0) },
+                requestFeedback: presentFeedback,
                 copyCreatorLink: copyCreatorLink,
                 copyArtworkLink: copyArtworkLink,
                 selectArtwork: { store.selectedArtwork = $0 }
@@ -275,6 +287,11 @@ struct UserPreviewListView: View {
             user: user,
             restoreRestrict: followRestrictsByUserID[user.id] ?? store.defaultFollowRestrict
         )
+    }
+
+    private func presentFeedback(for user: PixivUser) {
+        feedbackMuteUser = user
+        feedbackRequest = .creator(user)
     }
 
     private func resetCreatorListState() {

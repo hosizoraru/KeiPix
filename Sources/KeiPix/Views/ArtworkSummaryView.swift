@@ -94,6 +94,7 @@ private struct CreatorQuickActionsMenu: View {
     let showActionMessage: (String) -> Void
     let openProfile: () -> Void
     @State private var isUpdatingFollow = false
+    @State private var feedbackRequest: FeedbackReportRequest?
 
     var body: some View {
         Menu {
@@ -148,6 +149,14 @@ private struct CreatorQuickActionsMenu: View {
                 }
                 .disabled(isUpdatingFollow)
             }
+
+            Divider()
+
+            Button {
+                feedbackRequest = .creator(artwork.user)
+            } label: {
+                Label(L10n.feedbackAndMute, systemImage: "exclamationmark.bubble")
+            }
         } label: {
             Image(systemName: artwork.user.isFollowed ? "person.crop.circle.badge.checkmark" : "person.crop.circle.badge.plus")
                 .frame(width: 28, height: 28)
@@ -157,6 +166,13 @@ private struct CreatorQuickActionsMenu: View {
         .controlSize(.small)
         .help(artwork.user.isFollowed ? L10n.unfollow : L10n.follow)
         .disabled(isUpdatingFollow)
+        .sheet(item: $feedbackRequest) { request in
+            FeedbackReportSheet(request: request) {
+                store.requestDangerAction(AppDangerAction(kind: .muteCreator(artwork.user)))
+            } onComplete: { message in
+                showActionMessage(message)
+            }
+        }
     }
 
     private func follow(_ user: PixivUser, restrict: BookmarkRestrict?) async {
@@ -182,6 +198,7 @@ private struct ArtworkActionStrip: View {
     @Environment(\.openWindow) private var openWindow
     @State private var isBookmarkEditorPresented = false
     @State private var actionMessage: String?
+    @State private var feedbackRequest: FeedbackReportRequest?
 
     var body: some View {
         GlassEffectContainer {
@@ -326,6 +343,12 @@ private struct ArtworkActionStrip: View {
                             Label(L10n.copyArtworkSummary, systemImage: "doc.text")
                         }
 
+                        Button {
+                            feedbackRequest = .artwork(artwork)
+                        } label: {
+                            Label(L10n.feedbackAndMute, systemImage: "exclamationmark.bubble")
+                        }
+
                         Divider()
 
                         Button(L10n.muteArtwork) {
@@ -349,6 +372,13 @@ private struct ArtworkActionStrip: View {
                     }
                     .buttonStyle(.bordered)
                     .controlSize(.small)
+                    .sheet(item: $feedbackRequest) { request in
+                        FeedbackReportSheet(request: request) {
+                            store.requestDangerAction(AppDangerAction(kind: .muteArtwork(artwork)))
+                        } onComplete: { message in
+                            showActionMessage(message)
+                        }
+                    }
                 }
 
             }

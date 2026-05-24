@@ -248,6 +248,7 @@ struct CreatorPreviewListContent: View {
     let followCreator: (PixivUser, BookmarkRestrict?) -> Void
     let requestUnfollow: (PixivUser) -> Void
     let requestMuteCreator: (PixivUser) -> Void
+    let requestFeedback: (PixivUser) -> Void
     let copyCreatorLink: (PixivUser) -> Void
     let copyArtworkLink: (PixivArtwork) -> Void
     let selectArtwork: (PixivArtwork) -> Void
@@ -328,6 +329,7 @@ struct CreatorPreviewListContent: View {
                     followCreator: { restrict in followCreator(preview.user, restrict) },
                     requestUnfollow: { requestUnfollow(preview.user) },
                     requestMuteCreator: { requestMuteCreator(preview.user) },
+                    requestFeedback: { requestFeedback(preview.user) },
                     copyCreatorLink: { copyCreatorLink(preview.user) },
                     copyArtworkLink: copyArtworkLink,
                     selectArtwork: selectArtwork

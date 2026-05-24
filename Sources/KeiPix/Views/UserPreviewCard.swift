@@ -11,6 +11,7 @@ struct UserPreviewCard: View {
     let followCreator: (BookmarkRestrict?) -> Void
     let requestUnfollow: () -> Void
     let requestMuteCreator: () -> Void
+    let requestFeedback: () -> Void
     let copyCreatorLink: () -> Void
     let copyArtworkLink: (PixivArtwork) -> Void
     let selectArtwork: (PixivArtwork) -> Void
@@ -181,6 +182,12 @@ struct UserPreviewCard: View {
                 } label: {
                     Label(L10n.muteCreator, systemImage: "eye.slash")
                 }
+
+                Button {
+                    requestFeedback()
+                } label: {
+                    Label(L10n.feedbackAndMute, systemImage: "exclamationmark.bubble")
+                }
             } label: {
                 Label(L10n.moreActions, systemImage: "ellipsis.circle")
             }
@@ -232,6 +239,11 @@ struct UserPreviewCard: View {
             requestMuteCreator()
         } label: {
             Label(L10n.muteCreator, systemImage: "eye.slash")
+        }
+        Button {
+            requestFeedback()
+        } label: {
+            Label(L10n.feedbackAndMute, systemImage: "exclamationmark.bubble")
         }
     }
 }

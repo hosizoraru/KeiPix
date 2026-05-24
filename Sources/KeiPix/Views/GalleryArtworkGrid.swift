@@ -3,29 +3,43 @@ import SwiftUI
 struct GalleryContentGrid: View {
     @Bindable var store: KeiPixStore
     @Binding var actionMessage: String?
+    @State private var feedbackRequest: FeedbackReportRequest?
+    @State private var feedbackArtwork: PixivArtwork?
 
     var body: some View {
-        if store.galleryLayoutMode.usesCompactGrid {
-            LazyVGrid(columns: compactColumns, spacing: 12) {
-                ForEach(store.artworks) { artwork in
-                    artworkTile(artwork)
-                }
+        Group {
+            if store.galleryLayoutMode.usesCompactGrid {
+                LazyVGrid(columns: compactColumns, spacing: 12) {
+                    ForEach(store.artworks) { artwork in
+                        artworkTile(artwork)
+                    }
 
-                if store.hasNextPage {
-                    LoadMoreTile(store: store)
+                    if store.hasNextPage {
+                        LoadMoreTile(store: store)
+                    }
+                }
+            } else {
+                VStack(spacing: 14) {
+                    MasonryArtworkGrid(
+                        store: store,
+                        actionMessage: $actionMessage,
+                        presentFeedback: presentFeedback,
+                        fixedColumnCount: store.galleryLayoutMode.fixedColumnCount
+                    )
+
+                    if store.hasNextPage {
+                        LoadMoreTile(store: store)
+                    }
                 }
             }
-        } else {
-            VStack(spacing: 14) {
-                MasonryArtworkGrid(
-                    store: store,
-                    actionMessage: $actionMessage,
-                    fixedColumnCount: store.galleryLayoutMode.fixedColumnCount
-                )
-
-                if store.hasNextPage {
-                    LoadMoreTile(store: store)
+        }
+        .sheet(item: $feedbackRequest) { request in
+            FeedbackReportSheet(request: request) {
+                if let feedbackArtwork {
+                    store.requestDangerAction(AppDangerAction(kind: .muteArtwork(feedbackArtwork)))
                 }
+            } onComplete: { message in
+                actionMessage = message
             }
         }
     }
@@ -60,6 +74,11 @@ struct GalleryContentGrid: View {
                 store.presentImageSourceSearch(for: artwork)
             }
             Divider()
+            Button {
+                presentFeedback(artwork)
+            } label: {
+                Label(L10n.feedbackAndMute, systemImage: "exclamationmark.bubble")
+            }
             Button(L10n.muteArtwork) {
                 store.requestDangerAction(AppDangerAction(kind: .muteArtwork(artwork)))
             }
@@ -97,11 +116,17 @@ struct GalleryContentGrid: View {
             store.errorMessage = error.localizedDescription
         }
     }
+
+    private func presentFeedback(_ artwork: PixivArtwork) {
+        feedbackArtwork = artwork
+        feedbackRequest = .artwork(artwork)
+    }
 }
 
 private struct MasonryArtworkGrid: View {
     @Bindable var store: KeiPixStore
     @Binding var actionMessage: String?
+    let presentFeedback: (PixivArtwork) -> Void
     let fixedColumnCount: Int?
 
     private let spacing: CGFloat = 12
@@ -147,6 +172,11 @@ private struct MasonryArtworkGrid: View {
                         store.presentImageSourceSearch(for: artwork)
                     }
                     Divider()
+                    Button {
+                        presentFeedback(artwork)
+                    } label: {
+                        Label(L10n.feedbackAndMute, systemImage: "exclamationmark.bubble")
+                    }
                     Button(L10n.muteArtwork) {
                         store.requestDangerAction(AppDangerAction(kind: .muteArtwork(artwork)))
                     }

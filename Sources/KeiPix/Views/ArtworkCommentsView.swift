@@ -38,6 +38,7 @@ struct ArtworkCommentsView: View {
                         ForEach(comments) { comment in
                             CommentThreadRow(
                                 comment: comment,
+                                artwork: artwork,
                                 store: store,
                                 reply: { target in replyTarget = target },
                                 copied: { showStatus(L10n.copiedComment) },
@@ -233,6 +234,7 @@ struct ArtworkCommentsView: View {
 
 private struct CommentThreadRow: View {
     let comment: PixivComment
+    let artwork: PixivArtwork
     @Bindable var store: KeiPixStore
     let reply: (PixivComment) -> Void
     let copied: () -> Void
@@ -261,6 +263,7 @@ private struct CommentThreadRow: View {
                 } status: { message in
                     status(message)
                 }
+                .environment(\.feedbackReportArtwork, artwork)
             }
 
             if isExpanded {
@@ -275,6 +278,7 @@ private struct CommentThreadRow: View {
                     ForEach(replies) { replyComment in
                         FilteredReplyCommentRow(
                             comment: replyComment,
+                            artwork: artwork,
                             store: store,
                             reply: {
                                 reply(replyComment)
@@ -370,6 +374,7 @@ private struct CommentThreadRow: View {
 
 private struct FilteredReplyCommentRow: View {
     let comment: PixivComment
+    let artwork: PixivArtwork
     @Bindable var store: KeiPixStore
     let reply: () -> Void
     let copied: () -> Void
@@ -392,6 +397,7 @@ private struct FilteredReplyCommentRow: View {
             } status: { message in
                 status(message)
             }
+            .environment(\.feedbackReportArtwork, artwork)
         }
     }
 }
@@ -434,6 +440,8 @@ private struct CommentRow: View {
     let reply: () -> Void
     let copied: () -> Void
     let status: (String) -> Void
+    @Environment(\.feedbackReportArtwork) private var artwork
+    @State private var feedbackRequest: FeedbackReportRequest?
 
     var body: some View {
         HStack(alignment: .top, spacing: 10) {
@@ -513,6 +521,17 @@ private struct CommentRow: View {
                     }
 
                     Menu {
+                        Button {
+                            if let artwork {
+                                feedbackRequest = .comment(comment, artwork: artwork)
+                            }
+                        } label: {
+                            Label(L10n.feedbackAndMute, systemImage: "exclamationmark.bubble")
+                        }
+                        .disabled(artwork == nil)
+
+                        Divider()
+
                         if let user = comment.user {
                             Button {
                                 muteCommenter(user)
@@ -542,6 +561,11 @@ private struct CommentRow: View {
         }
         .padding(10)
         .background(.quinary, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .sheet(item: $feedbackRequest) { request in
+            FeedbackReportSheet(request: request, localMuteAction: localMuteAction) { message in
+                status(message)
+            }
+        }
     }
 
     private var mutedPhraseCandidate: String? {
@@ -560,5 +584,26 @@ private struct CommentRow: View {
         store.muteCommentPhrase(phrase)
         store.undoAction = AppUndoAction(kind: .unmuteCommentPhrase(phrase))
         status(String(format: L10n.mutedCommentPhraseFormat, phrase))
+    }
+
+    private var localMuteAction: (() -> Void)? {
+        if let user = comment.user {
+            return { muteCommenter(user) }
+        }
+        if let phrase = mutedPhraseCandidate {
+            return { mutePhrase(phrase) }
+        }
+        return nil
+    }
+}
+
+private struct FeedbackReportArtworkKey: EnvironmentKey {
+    static let defaultValue: PixivArtwork? = nil
+}
+
+private extension EnvironmentValues {
+    var feedbackReportArtwork: PixivArtwork? {
+        get { self[FeedbackReportArtworkKey.self] }
+        set { self[FeedbackReportArtworkKey.self] = newValue }
     }
 }

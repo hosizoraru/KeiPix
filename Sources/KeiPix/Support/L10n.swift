@@ -120,6 +120,27 @@ enum L10n {
     static var openInPixiv: String { text("Open in Pixiv") }
     static var share: String { text("Share") }
     static var shareCurrentPage: String { text("Share Current Page") }
+    static var feedbackAndMute: String { text("Feedback / Mute") }
+    static var feedbackAndMuteHint: String { text("Copy a report summary, open Pixiv Web, or apply a local mute without submitting remote reports from KeiPix.") }
+    static var feedbackTarget: String { text("Feedback Target") }
+    static var reportReason: String { text("Report Reason") }
+    static var reportReasonSexualContent: String { text("Sexual Content and Profanity") }
+    static var reportReasonHateSpeech: String { text("Hate Speech") }
+    static var reportReasonTerroristContent: String { text("Terrorist Content") }
+    static var reportReasonDangerousOrganizations: String { text("Dangerous Organizations and Movements") }
+    static var reportReasonSensitiveEvents: String { text("Sensitive Events") }
+    static var reportReasonBullyingHarassment: String { text("Bullying and Harassment") }
+    static var reportReasonDangerousProducts: String { text("Dangerous Products") }
+    static var reportReasonMarijuana: String { text("Marijuana") }
+    static var reportReasonTobaccoAlcohol: String { text("Tobacco and Alcohol") }
+    static var reportReasonOther: String { text("Other") }
+    static var copyReportSummary: String { text("Copy Report Summary") }
+    static var copiedReportSummary: String { text("Copied Report Summary") }
+    static var openPixivWebReportPage: String { text("Open Pixiv Web") }
+    static var localMuteRequestedFormat: String { text("%@ requested locally") }
+    static var title: String { text("Title") }
+    static var note: String { text("Note") }
+    static var commentIDFormat: String { text("Comment #%d") }
     static var imageSourceSearch: String { text("Image Source Search") }
     static var searchImageSource: String { text("Search Image Source") }
     static var searchLocalImageSource: String { text("Search Local Image") }
@@ -693,6 +714,7 @@ enum L10n {
     static var allAges: String { text("All Ages") }
     static var yes: String { text("Yes") }
     static var no: String { text("No") }
+    static var done: String { text("Done") }
     static var playUgoira: String { text("Play Ugoira") }
     static var pauseUgoira: String { text("Pause Ugoira") }
     static var reloadUgoira: String { text("Reload Ugoira") }

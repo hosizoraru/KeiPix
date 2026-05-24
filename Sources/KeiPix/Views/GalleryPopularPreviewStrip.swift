@@ -3,6 +3,8 @@ import SwiftUI
 struct SearchPopularPreviewStrip: View {
     @Bindable var store: KeiPixStore
     @Binding var actionMessage: String?
+    @State private var feedbackRequest: FeedbackReportRequest?
+    @State private var feedbackArtwork: PixivArtwork?
 
     var body: some View {
         if store.selectedRoute == .search,
@@ -69,6 +71,11 @@ struct SearchPopularPreviewStrip: View {
                                     Button(L10n.searchImageSource) {
                                         store.presentImageSourceSearch(for: artwork)
                                     }
+                                    Button {
+                                        presentFeedback(artwork)
+                                    } label: {
+                                        Label(L10n.feedbackAndMute, systemImage: "exclamationmark.bubble")
+                                    }
                                     if let url = artwork.pixivURL {
                                         Divider()
                                         Link(L10n.openInPixiv, destination: url)
@@ -88,6 +95,15 @@ struct SearchPopularPreviewStrip: View {
             .padding(14)
             .keiPanel(18)
             .padding(.bottom, 14)
+            .sheet(item: $feedbackRequest) { request in
+                FeedbackReportSheet(request: request) {
+                    if let feedbackArtwork {
+                        store.requestDangerAction(AppDangerAction(kind: .muteArtwork(feedbackArtwork)))
+                    }
+                } onComplete: { message in
+                    actionMessage = message
+                }
+            }
         }
     }
 
@@ -102,5 +118,10 @@ struct SearchPopularPreviewStrip: View {
         } catch {
             store.errorMessage = error.localizedDescription
         }
+    }
+
+    private func presentFeedback(_ artwork: PixivArtwork) {
+        feedbackArtwork = artwork
+        feedbackRequest = .artwork(artwork)
     }
 }
