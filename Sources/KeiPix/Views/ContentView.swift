@@ -96,22 +96,26 @@ struct ContentView: View {
             }
 
             ToolbarItem(placement: .primaryAction) {
-                SearchFilterButton(store: store)
+                if showsSearchFilters {
+                    SearchFilterButton(store: store)
+                }
             }
 
             ToolbarItem(placement: .primaryAction) {
-                Menu {
-                    Picker(L10n.galleryLayout, selection: galleryLayoutBinding) {
-                        ForEach(GalleryLayoutMode.allCases) { mode in
-                            Label(mode.title, systemImage: mode.systemImage)
-                                .tag(mode)
+                if showsGalleryLayoutPicker {
+                    Menu {
+                        Picker(L10n.galleryLayout, selection: galleryLayoutBinding) {
+                            ForEach(GalleryLayoutMode.allCases) { mode in
+                                Label(mode.title, systemImage: mode.systemImage)
+                                    .tag(mode)
+                            }
                         }
+                        .pickerStyle(.inline)
+                    } label: {
+                        Label(store.galleryLayoutMode.title, systemImage: store.galleryLayoutMode.systemImage)
                     }
-                    .pickerStyle(.inline)
-                } label: {
-                    Label(store.galleryLayoutMode.title, systemImage: store.galleryLayoutMode.systemImage)
+                    .help(L10n.galleryLayout)
                 }
-                .help(L10n.galleryLayout)
             }
 
             ToolbarItem(placement: .primaryAction) {
@@ -203,6 +207,14 @@ struct ContentView: View {
         } else {
             840
         }
+    }
+
+    private var showsSearchFilters: Bool {
+        store.selectedRoute == .search
+    }
+
+    private var showsGalleryLayoutPicker: Bool {
+        store.selectedRoute.usesArtworkFeed
     }
 
     private var galleryLayoutBinding: Binding<GalleryLayoutMode> {
