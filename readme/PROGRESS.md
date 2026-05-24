@@ -1,5 +1,13 @@
 # KeiPix Progress
 
+## 2026-05-25
+
+| Area | Progress | Evidence | Notes |
+| --- | ---: | --- | --- |
+| Search | 93% | Added maximum bookmark filters, AI filters, Pixiv API query parameters, local result filtering, saved-preset compatible decoding, localized filter UI, and SwiftPM coverage for defaults, legacy decoding, summaries, and Pixiv Web URLs | 已消失：搜索过滤能力和回归保护缺口。仍存在：搜索排序里的 Pixiv premium popular result behavior still depends on Pixiv API access. 下一优先级：signed-in exploratory QA for saved preset editing and bulk exported search links. |
+| Store maintainability | 90% | Split artwork actions/download/follow helpers into `KeiPixStore+ArtworkActions.swift` and creator/comment/series/list API wrappers into `KeiPixStore+Social.swift`; `KeiPixStore.swift` is now 896 lines | 已消失：核心 Store 超 1000 行风险。仍存在：gallery and user-preview views are close to the local size ceiling. 下一优先级：split view-only subcomponents when those files receive feature edits. |
+| Signed-in runtime QA | 92% | `./script/build_and_run.sh --verify` launched the app, existing Keychain session loaded, feed/ranking/search/bookmarks/following creators/reader window/download queue/settings diagnostics were navigated through native UI, and network diagnostics passed Pixiv API plus image host checks | 已消失：non-novel signed-in runtime evidence gap for the primary routes checked today. 仍存在：mutating cloud actions such as follow/unfollow, bookmark add/remove, comment posting, and destructive download management were left untouched during this pass. 下一优先级：run those with a disposable Pixiv account or explicit manual approval. |
+
 ## 2026-05-24
 
 | Area | Progress | Evidence | Notes |
