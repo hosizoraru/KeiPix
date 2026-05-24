@@ -230,6 +230,7 @@
 "Copied %d creator summaries" = "已复制 %d 条作者摘要";
 "Checked follow visibility for %d creators" = "已检查 %d 位作者的关注可见性";
 "Checked follow visibility for %d creators, %d failed" = "已检查 %d 位作者的关注可见性，%d 位失败";
+"Followed %@" = "已关注 %@";
 "Unfollow %@?" = "取消关注 %@？";
 "Mute %@?" = "屏蔽 %@？";
 "Unfollowed %@" = "已取消关注 %@";

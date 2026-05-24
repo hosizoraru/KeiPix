@@ -20,6 +20,7 @@ struct UserPreviewListView: View {
     @State private var isRunningBulkAction = false
     @State private var isCheckingFollowVisibility = false
     @State private var followRestrictsByUserID: [Int: BookmarkRestrict] = [:]
+    @State private var updatingCreatorIDs = Set<Int>()
     @State private var bulkStatusText: String?
     @State private var pendingDangerAction: CreatorDangerAction?
     @State private var undoAction: CreatorUndoAction?
@@ -63,6 +64,7 @@ struct UserPreviewListView: View {
                                             UserPreviewCard(
                                                 preview: preview,
                                                 followRestrict: followRestrictsByUserID[preview.user.id],
+                                                isUpdating: updatingCreatorIDs.contains(preview.user.id),
                                                 showContentBadges: store.showContentBadges,
                                                 openProfile: { profileUser = preview.user },
                                                 openIllustrations: {
@@ -670,10 +672,15 @@ struct UserPreviewListView: View {
     }
 
     private func follow(_ user: PixivUser, restrict: BookmarkRestrict? = nil) async {
+        guard updatingCreatorIDs.contains(user.id) == false else { return }
+        updatingCreatorIDs.insert(user.id)
+        defer { updatingCreatorIDs.remove(user.id) }
+
         do {
             let appliedRestrict = restrict ?? store.defaultFollowRestrict
             try await store.setFollow(user, isFollowed: true, restrict: appliedRestrict)
             updateFollowState(userID: user.id, isFollowed: true, restrict: appliedRestrict)
+            bulkStatusText = String(format: L10n.followedCreatorFormat, user.name)
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -681,6 +688,9 @@ struct UserPreviewListView: View {
 
     private func performDangerAction(_ action: CreatorDangerAction) async {
         defer { pendingDangerAction = nil }
+        guard updatingCreatorIDs.contains(action.user.id) == false else { return }
+        updatingCreatorIDs.insert(action.user.id)
+        defer { updatingCreatorIDs.remove(action.user.id) }
 
         switch action.kind {
         case .unfollow:
@@ -796,6 +806,7 @@ struct UserPreviewListView: View {
 private struct UserPreviewCard: View {
     let preview: PixivUserPreview
     let followRestrict: BookmarkRestrict?
+    let isUpdating: Bool
     let showContentBadges: Bool
     let openProfile: () -> Void
     let openIllustrations: () -> Void
@@ -851,6 +862,7 @@ private struct UserPreviewCard: View {
                         requestUnfollow()
                     }
                     .buttonStyle(.bordered)
+                    .disabled(isUpdating)
                 } else {
                     Menu {
                         Button(L10n.followUsingDefault) {
@@ -866,9 +878,15 @@ private struct UserPreviewCard: View {
                             followCreator(.private)
                         }
                     } label: {
-                        Label(L10n.follow, systemImage: "person.crop.circle.badge.plus")
+                        if isUpdating {
+                            ProgressView()
+                                .controlSize(.small)
+                        } else {
+                            Label(L10n.follow, systemImage: "person.crop.circle.badge.plus")
+                        }
                     }
                     .buttonStyle(.bordered)
+                    .disabled(isUpdating)
                 }
             }
 
@@ -924,10 +942,16 @@ private struct UserPreviewCard: View {
                 Button(role: .destructive) {
                     requestMuteCreator()
                 } label: {
-                    Label(L10n.muteCreator, systemImage: "eye.slash")
+                    if isUpdating {
+                        ProgressView()
+                            .controlSize(.small)
+                    } else {
+                        Label(L10n.muteCreator, systemImage: "eye.slash")
+                    }
                 }
                 .labelStyle(.iconOnly)
                 .buttonStyle(.bordered)
+                .disabled(isUpdating)
                 .help(L10n.muteCreator)
             }
         }

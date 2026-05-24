@@ -230,6 +230,7 @@
 "Copied %d creator summaries" = "Copied %d creator summaries";
 "Checked follow visibility for %d creators" = "Checked follow visibility for %d creators";
 "Checked follow visibility for %d creators, %d failed" = "Checked follow visibility for %d creators, %d failed";
+"Followed %@" = "Followed %@";
 "Unfollow %@?" = "Unfollow %@?";
 "Mute %@?" = "Mute %@?";
 "Unfollowed %@" = "Unfollowed %@";
