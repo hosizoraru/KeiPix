@@ -11,6 +11,7 @@ final class KeiPixStore {
     var selectedRoute: PixivRoute = .illustrations
     var artworks: [PixivArtwork] = []
     var selectedArtwork: PixivArtwork?
+    var selectedSpotlightArticle: PixivSpotlightArticle?
     var readerWindowArtwork: PixivArtwork?
     var focusedUser: PixivUser?
     var searchText = ""
@@ -120,6 +121,7 @@ final class KeiPixStore {
             allArtworks = []
             artworks = []
             selectedArtwork = nil
+            selectedSpotlightArticle = nil
             readerWindowArtwork = nil
             searchSuggestions = []
             nextURL = nil
@@ -135,6 +137,9 @@ final class KeiPixStore {
             bookmarkTagFilter = nil
         }
         selectedRoute = route
+        if route != .spotlight {
+            selectedSpotlightArticle = nil
+        }
         if route.usesArtworkFeed {
             Task { await reloadCurrentFeed() }
         } else {

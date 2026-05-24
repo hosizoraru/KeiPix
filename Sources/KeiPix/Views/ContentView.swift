@@ -3,16 +3,23 @@ import SwiftUI
 struct ContentView: View {
     @Bindable var store: KeiPixStore
     @State private var columnVisibility: NavigationSplitViewVisibility = .all
+    @State private var isSidebarPresented = true
 
     var body: some View {
         NavigationSplitView(columnVisibility: $columnVisibility) {
             SidebarView(store: store)
+                .toolbar(removing: .sidebarToggle)
         } content: {
             ContentColumnView(store: store)
                 .navigationSplitViewColumnWidth(min: 460, ideal: 700)
         } detail: {
-            ArtworkDetailView(store: store)
-                .navigationSplitViewColumnWidth(min: 320, ideal: 460)
+            if store.selectedRoute == .spotlight {
+                SpotlightArticleDetailView(store: store)
+                    .navigationSplitViewColumnWidth(min: 360, ideal: 500)
+            } else {
+                ArtworkDetailView(store: store)
+                    .navigationSplitViewColumnWidth(min: 320, ideal: 460)
+            }
         }
         .frame(minWidth: minimumWindowWidth, minHeight: 700)
         .searchable(text: $store.searchText, prompt: L10n.searchPlaceholder)
@@ -36,13 +43,21 @@ struct ContentView: View {
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button {
+                    toggleSidebar()
+                } label: {
+                    Label(sidebarVisible ? L10n.hideSidebar : L10n.showSidebar, systemImage: "sidebar.leading")
+                }
+                .labelStyle(.iconOnly)
+                .help(sidebarVisible ? L10n.hideSidebar : L10n.showSidebar)
+            }
+
+            ToolbarItem(placement: .primaryAction) {
+                Button {
                     Task { await store.reloadCurrentFeed() }
                 } label: {
                     Label(L10n.refresh, systemImage: "arrow.clockwise")
                 }
             }
-
-            ToolbarSpacer(.fixed, placement: .primaryAction)
 
             ToolbarItem(placement: .primaryAction) {
                 Menu {
@@ -85,14 +100,18 @@ struct ContentView: View {
             }
 
             ToolbarItem(placement: .primaryAction) {
-                Picker(L10n.galleryLayout, selection: galleryLayoutBinding) {
-                    ForEach(GalleryLayoutMode.allCases) { mode in
-                        Text(mode.title).tag(mode)
+                Menu {
+                    Picker(L10n.galleryLayout, selection: galleryLayoutBinding) {
+                        ForEach(GalleryLayoutMode.allCases) { mode in
+                            Label(mode.title, systemImage: mode.systemImage)
+                                .tag(mode)
+                        }
                     }
+                    .pickerStyle(.inline)
+                } label: {
+                    Label(store.galleryLayoutMode.title, systemImage: store.galleryLayoutMode.systemImage)
                 }
-                .pickerStyle(.segmented)
-                .controlSize(.small)
-                .frame(width: 300)
+                .help(L10n.galleryLayout)
             }
 
             ToolbarItem(placement: .primaryAction) {
@@ -134,7 +153,12 @@ struct ContentView: View {
     }
 
     private var sidebarVisible: Bool {
-        columnVisibility == .all || columnVisibility == .automatic
+        isSidebarPresented
+    }
+
+    private func toggleSidebar() {
+        isSidebarPresented.toggle()
+        columnVisibility = isSidebarPresented ? .all : .doubleColumn
     }
 
     private var minimumWindowWidth: CGFloat {

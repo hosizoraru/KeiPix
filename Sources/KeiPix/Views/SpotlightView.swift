@@ -8,10 +8,6 @@ struct SpotlightView: View {
     @State private var isLoadingMore = false
     @State private var errorMessage: String?
 
-    private let columns = [
-        GridItem(.adaptive(minimum: 260, maximum: 360), spacing: 14)
-    ]
-
     var body: some View {
         Group {
             if store.session == nil {
@@ -26,9 +22,14 @@ struct SpotlightView: View {
                 ScrollView {
                     LazyVStack(spacing: 0, pinnedViews: [.sectionHeaders]) {
                         Section {
-                            LazyVGrid(columns: columns, spacing: 14) {
+                            LazyVStack(spacing: 12) {
                                 ForEach(articles) { article in
-                                    SpotlightArticleCard(article: article)
+                                    SpotlightArticleCard(
+                                        article: article,
+                                        isSelected: store.selectedSpotlightArticle?.id == article.id
+                                    ) {
+                                        store.selectedSpotlightArticle = article
+                                    }
                                 }
                             }
                             .padding(.horizontal, 18)
@@ -107,9 +108,11 @@ struct SpotlightView: View {
         do {
             let response = try await store.spotlightArticles()
             articles = response.articles
+            selectStableArticle()
             nextURL = response.nextURL
         } catch {
             articles = []
+            store.selectedSpotlightArticle = nil
             nextURL = nil
             errorMessage = error.localizedDescription
         }
@@ -124,34 +127,49 @@ struct SpotlightView: View {
         do {
             let response = try await store.nextSpotlightArticles(nextURL)
             articles.append(contentsOf: response.articles)
+            selectStableArticle()
             self.nextURL = response.nextURL
         } catch {
             errorMessage = error.localizedDescription
         }
     }
+
+    private func selectStableArticle() {
+        if let selected = store.selectedSpotlightArticle,
+           articles.contains(where: { $0.id == selected.id }) {
+            return
+        }
+        store.selectedSpotlightArticle = articles.first
+    }
 }
 
 private struct SpotlightArticleCard: View {
     let article: PixivSpotlightArticle
+    let isSelected: Bool
+    let select: () -> Void
     @State private var isHovering = false
 
     var body: some View {
-        Link(destination: article.articleURL) {
-            VStack(alignment: .leading, spacing: 0) {
+        Button(action: select) {
+            HStack(alignment: .top, spacing: 14) {
                 RemoteImageView(url: article.thumbnail)
-                    .aspectRatio(1.56, contentMode: .fill)
-                    .frame(maxWidth: .infinity)
-                    .clipped()
+                    .aspectRatio(16.0 / 9.0, contentMode: .fill)
+                    .frame(width: 220, height: 124)
+                    .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
 
                 VStack(alignment: .leading, spacing: 8) {
                     Text(article.pureTitle.isEmpty ? article.title : article.pureTitle)
                         .font(.headline)
                         .lineLimit(2)
+                        .multilineTextAlignment(.leading)
 
                     Text(article.title)
-                        .font(.caption)
+                        .font(.callout)
                         .foregroundStyle(.secondary)
                         .lineLimit(2)
+                        .multilineTextAlignment(.leading)
+
+                    Spacer(minLength: 4)
 
                     HStack(spacing: 8) {
                         Label(article.publishDate.formatted(date: .abbreviated, time: .omitted), systemImage: "calendar")
@@ -159,29 +177,33 @@ private struct SpotlightArticleCard: View {
 
                         Spacer()
 
-                        Label(L10n.openArticle, systemImage: "arrow.up.right.square")
+                        Label(L10n.openArticle, systemImage: "newspaper")
                             .lineLimit(1)
                     }
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 }
-                .padding(12)
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .background(.quinary, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .padding(12)
+            .frame(maxWidth: .infinity, minHeight: 148, alignment: .leading)
+            .background(.quinary, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
             .overlay {
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .stroke(Color.secondary.opacity(isHovering ? 0.32 : 0.1), lineWidth: 1)
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .stroke(isSelected ? Color.accentColor : Color.secondary.opacity(isHovering ? 0.28 : 0.1), lineWidth: isSelected ? 2 : 1)
             }
         }
         .buttonStyle(.plain)
-        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .shadow(color: .black.opacity(isHovering ? 0.16 : 0.06), radius: isHovering ? 10 : 4, y: isHovering ? 6 : 2)
-        .scaleEffect(isHovering ? 1.01 : 1)
+        .contentShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .shadow(color: .black.opacity(isHovering ? 0.12 : 0.04), radius: isHovering ? 8 : 2, y: isHovering ? 4 : 1)
         .animation(.snappy(duration: 0.16), value: isHovering)
         .onHover { isHovering = $0 }
         .help(article.pureTitle.isEmpty ? article.title : article.pureTitle)
         .contextMenu {
-            Link(L10n.openArticle, destination: article.articleURL)
+            Button(L10n.openArticle) {
+                select()
+            }
+            Link(L10n.openInPixiv, destination: article.articleURL)
             Button(L10n.copyLink) {
                 PasteboardWriter.copy(article.articleURL.absoluteString)
             }

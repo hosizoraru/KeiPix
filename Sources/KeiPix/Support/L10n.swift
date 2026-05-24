@@ -12,6 +12,7 @@ enum L10n {
     static var noSpotlightArticles: String { text("No spotlight articles") }
     static var loadMoreSpotlightArticles: String { text("Load More Spotlight Articles") }
     static var openArticle: String { text("Open Article") }
+    static var selectArticle: String { text("Select an article") }
     static var search: String { text("Search") }
     static var searchCreators: String { text("Search Creators") }
     static var savedSearches: String { text("Saved Searches") }
@@ -223,6 +224,8 @@ enum L10n {
     static var mouse: String { text("Mouse") }
     static var workspaceComment: String { text("Workspace Comment") }
     static var settings: String { text("Settings") }
+    static var showSidebar: String { text("Show Sidebar") }
+    static var hideSidebar: String { text("Hide Sidebar") }
     static var language: String { text("Language") }
     static var automatic: String { text("Automatic") }
     static var simplifiedChinese: String { text("Simplified Chinese") }

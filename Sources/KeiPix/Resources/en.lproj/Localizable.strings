@@ -9,6 +9,7 @@
 "No spotlight articles" = "No spotlight articles";
 "Load More Spotlight Articles" = "Load More Spotlight Articles";
 "Open Article" = "Open Article";
+"Select an article" = "Select an article";
 "Search" = "Search";
 "Search Creators" = "Search Creators";
 "Saved Searches" = "Saved Searches";
@@ -219,6 +220,8 @@
 "Mouse" = "Mouse";
 "Workspace Comment" = "Workspace Comment";
 "Settings" = "Settings";
+"Show Sidebar" = "Show Sidebar";
+"Hide Sidebar" = "Hide Sidebar";
 "Language" = "Language";
 "Automatic" = "Automatic";
 "Simplified Chinese" = "Simplified Chinese";

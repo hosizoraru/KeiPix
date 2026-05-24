@@ -9,6 +9,7 @@
 "No spotlight articles" = "暂无 Pixivision 文章";
 "Load More Spotlight Articles" = "加载更多 Pixivision 文章";
 "Open Article" = "打开文章";
+"Select an article" = "选择一篇文章";
 "Search" = "搜索";
 "Search Creators" = "搜索作者";
 "Saved Searches" = "保存的搜索";
@@ -219,6 +220,8 @@
 "Mouse" = "鼠标";
 "Workspace Comment" = "工作区说明";
 "Settings" = "设置";
+"Show Sidebar" = "显示边栏";
+"Hide Sidebar" = "隐藏边栏";
 "Language" = "语言";
 "Automatic" = "自动";
 "Simplified Chinese" = "简体中文";
