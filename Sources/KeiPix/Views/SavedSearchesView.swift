@@ -209,12 +209,14 @@ struct SavedSearchesView: View {
     }
 
     private func runSearch(_ keyword: String) {
+        actionMessage = String(format: L10n.runningSearchFormat, keyword)
         Task {
             await store.runSavedSearch(keyword)
         }
     }
 
     private func runPreset(_ preset: SavedSearchPreset) {
+        actionMessage = String(format: L10n.appliedSearchPresetFormat, preset.keyword)
         Task {
             await store.runSavedSearchPreset(preset)
         }
@@ -240,7 +242,10 @@ struct SavedSearchesView: View {
     }
 
     private func copyPixivWebLink(keyword: String, options: SearchOptions) {
-        guard let url = PixivWebURLBuilder.searchURL(keyword: keyword, options: options) else { return }
+        guard let url = PixivWebURLBuilder.searchURL(keyword: keyword, options: options) else {
+            actionMessage = L10n.noPixivWebSearchLink
+            return
+        }
         PasteboardWriter.copy(url.absoluteString)
         actionMessage = L10n.copiedPixivWebSearchLink
     }
@@ -285,6 +290,8 @@ struct SavedSearchesView: View {
             if keywords.isEmpty == false {
                 store.undoAction = AppUndoAction(kind: .restoreSearchHistory(keywords))
                 actionMessage = String(format: L10n.clearedSearchHistoryItemsFormat, keywords.count)
+            } else {
+                actionMessage = L10n.noRecentSearches
             }
         }
     }

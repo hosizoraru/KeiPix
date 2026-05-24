@@ -47,6 +47,9 @@ enum L10n {
     static var copiedKeywordFormat: String { text("Copied %@") }
     static var savedSearchFormat: String { text("Saved %@") }
     static var savedSearchPresetFormat: String { text("Saved %@ with filters") }
+    static var runningSearchFormat: String { text("Running search for %@") }
+    static var appliedSearchPresetFormat: String { text("Applied search preset %@") }
+    static var noPixivWebSearchLink: String { text("No Pixiv Web search link") }
     static var ranking: String { text("Ranking") }
     static var mangaRanking: String { text("Manga Ranking") }
     static var bookmarks: String { text("Bookmarks") }
@@ -241,6 +244,10 @@ enum L10n {
     static var copyVisibleCreatorLinks: String { text("Copy Visible Creator Links") }
     static var copyVisibleCreatorSummary: String { text("Copy Visible Creator Summary") }
     static var runningCreatorAction: String { text("Updating creators") }
+    static var noCreatorLinksToCopy: String { text("No creator links to copy") }
+    static var noCreatorSummariesToCopy: String { text("No creator summaries to copy") }
+    static var noFollowedCreatorsToCheck: String { text("No followed creators to check") }
+    static var noMatchingCreatorsForAction: String { text("No matching creators for this action") }
     static var publicFollow: String { text("Public Follow") }
     static var privateFollow: String { text("Private Follow") }
     static var followVisiblePubliclyConfirmationFormat: String { text("Follow %d visible creators publicly?") }

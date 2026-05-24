@@ -497,6 +497,10 @@ struct UserPreviewListView: View {
     }
 
     private func requestBulkAction(_ action: CreatorBulkAction) {
+        guard bulkActionTargetCount(action) > 0 else {
+            bulkStatusText = L10n.noMatchingCreatorsForAction
+            return
+        }
         pendingBulkAction = action
         isShowingBulkConfirmation = true
     }
@@ -534,6 +538,7 @@ struct UserPreviewListView: View {
     private func performBulkAction(_ action: CreatorBulkAction) async {
         let targets = bulkActionTargets(action)
         guard targets.isEmpty == false else {
+            bulkStatusText = L10n.noMatchingCreatorsForAction
             pendingBulkAction = nil
             return
         }
@@ -601,7 +606,10 @@ struct UserPreviewListView: View {
 
     private func checkVisibleFollowVisibility() async {
         let targets = visibleFollowedPreviews
-        guard targets.isEmpty == false else { return }
+        guard targets.isEmpty == false else {
+            bulkStatusText = L10n.noFollowedCreatorsToCheck
+            return
+        }
 
         isCheckingFollowVisibility = true
         bulkStatusText = nil
@@ -765,20 +773,29 @@ struct UserPreviewListView: View {
     }
 
     private func copyCreatorLink(_ user: PixivUser) {
-        guard let url = user.pixivURL else { return }
+        guard let url = user.pixivURL else {
+            bulkStatusText = L10n.noCreatorLinksToCopy
+            return
+        }
         PasteboardWriter.copy(url.absoluteString)
         bulkStatusText = String(format: L10n.copiedCreatorLinksFormat, 1)
     }
 
     private func copyArtworkLink(_ artwork: PixivArtwork) {
-        guard let url = artwork.pixivURL else { return }
+        guard let url = artwork.pixivURL else {
+            bulkStatusText = L10n.noArtworkLinksToCopy
+            return
+        }
         PasteboardWriter.copy(url.absoluteString)
         bulkStatusText = String(format: L10n.copiedArtworkLinksFormat, 1)
     }
 
     private func copyVisibleCreatorLinks() {
         let links = visiblePreviews.compactMap { $0.user.pixivURL?.absoluteString }
-        guard links.isEmpty == false else { return }
+        guard links.isEmpty == false else {
+            bulkStatusText = L10n.noCreatorLinksToCopy
+            return
+        }
         PasteboardWriter.copy(links.joined(separator: "\n"))
         bulkStatusText = String(format: L10n.copiedCreatorLinksFormat, links.count)
     }
@@ -789,7 +806,10 @@ struct UserPreviewListView: View {
             let url = user.pixivURL?.absoluteString ?? ""
             return "\(user.name)\t@\(user.account)\t\(user.id)\t\(url)"
         }
-        guard summaries.isEmpty == false else { return }
+        guard summaries.isEmpty == false else {
+            bulkStatusText = L10n.noCreatorSummariesToCopy
+            return
+        }
         PasteboardWriter.copy(summaries.joined(separator: "\n"))
         bulkStatusText = String(format: L10n.copiedCreatorSummaryFormat, summaries.count)
     }

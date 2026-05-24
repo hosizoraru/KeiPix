@@ -44,6 +44,9 @@
 "Copied %@" = "Copied %@";
 "Saved %@" = "Saved %@";
 "Saved %@ with filters" = "Saved %@ with filters";
+"Running search for %@" = "Running search for %@";
+"Applied search preset %@" = "Applied search preset %@";
+"No Pixiv Web search link" = "No Pixiv Web search link";
 "Ranking" = "Ranking";
 "Manga Ranking" = "Manga Ranking";
 "Bookmarks" = "Bookmarks";
@@ -243,6 +246,10 @@
 "Copy Visible Creator Links" = "Copy Visible Creator Links";
 "Copy Visible Creator Summary" = "Copy Visible Creator Summary";
 "Updating creators" = "Updating creators";
+"No creator links to copy" = "No creator links to copy";
+"No creator summaries to copy" = "No creator summaries to copy";
+"No followed creators to check" = "No followed creators to check";
+"No matching creators for this action" = "No matching creators for this action";
 "Public Follow" = "Public Follow";
 "Private Follow" = "Private Follow";
 "Follow %d visible creators publicly?" = "Follow %d visible creators publicly?";

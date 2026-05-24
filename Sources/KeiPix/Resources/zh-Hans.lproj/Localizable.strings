@@ -44,6 +44,9 @@
 "Copied %@" = "已复制 %@";
 "Saved %@" = "已保存 %@";
 "Saved %@ with filters" = "已保存 %@ 和当前筛选";
+"Running search for %@" = "正在搜索 %@";
+"Applied search preset %@" = "已应用搜索预设 %@";
+"No Pixiv Web search link" = "没有可复制的 Pixiv Web 搜索链接";
 "Ranking" = "排行榜";
 "Manga Ranking" = "漫画榜";
 "Bookmarks" = "收藏";
@@ -243,6 +246,10 @@
 "Copy Visible Creator Links" = "复制可见作者链接";
 "Copy Visible Creator Summary" = "复制可见作者摘要";
 "Updating creators" = "正在更新作者";
+"No creator links to copy" = "没有可复制的作者链接";
+"No creator summaries to copy" = "没有可复制的作者摘要";
+"No followed creators to check" = "没有可检查的已关注作者";
+"No matching creators for this action" = "没有符合此操作的作者";
 "Public Follow" = "公开关注";
 "Private Follow" = "私密关注";
 "Follow %d visible creators publicly?" = "公开关注 %d 位可见作者？";
