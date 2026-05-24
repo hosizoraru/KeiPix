@@ -43,6 +43,9 @@ struct DownloadQueueView: View {
                                 open: {
                                     openDownloadedItem(item)
                                 },
+                                copied: {
+                                    actionMessage = L10n.copied
+                                },
                                 delete: {
                                     pendingDangerAction = .deleteItem(item)
                                 }
@@ -376,6 +379,7 @@ private struct DownloadQueueRow: View {
     @Bindable var downloads: ArtworkDownloadStore
     let canOpen: Bool
     let open: () -> Void
+    let copied: () -> Void
     let delete: () -> Void
 
     var body: some View {
@@ -470,6 +474,7 @@ private struct DownloadQueueRow: View {
 
                     Button {
                         PasteboardWriter.copy(pixivURL.absoluteString)
+                        copied()
                     } label: {
                         Label(L10n.copyLink, systemImage: "link")
                     }
@@ -520,6 +525,7 @@ private struct DownloadQueueRow: View {
                 }
                 Button(L10n.copyLink) {
                     PasteboardWriter.copy(pixivURL.absoluteString)
+                    copied()
                 }
             }
             Button(role: .destructive, action: delete) {

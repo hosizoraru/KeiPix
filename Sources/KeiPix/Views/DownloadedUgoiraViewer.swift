@@ -157,6 +157,7 @@ struct DownloadedUgoiraViewer: View {
 
                     Button {
                         PasteboardWriter.copy(pixivURL.absoluteString)
+                        showTransientMessage(L10n.copied)
                     } label: {
                         Label(L10n.copyLink, systemImage: "link")
                     }
@@ -260,5 +261,15 @@ struct DownloadedUgoiraViewer: View {
 
     private func revealZip() {
         NSWorkspace.shared.activateFileViewerSelecting([zipURL])
+    }
+
+    private func showTransientMessage(_ value: String) {
+        message = value
+        Task {
+            try? await Task.sleep(for: .seconds(2.5))
+            if message == value {
+                message = nil
+            }
+        }
     }
 }

@@ -8,6 +8,7 @@ struct DownloadedArtworkViewer: View {
     @Environment(\.dismiss) private var dismiss
     @State private var pageIndex = 0
     @State private var isContinuous = true
+    @State private var actionMessage: String?
 
     var body: some View {
         VStack(spacing: 0) {
@@ -33,6 +34,23 @@ struct DownloadedArtworkViewer: View {
             }
         }
         .frame(minWidth: 900, minHeight: 680)
+        .overlay(alignment: .bottom) {
+            if let actionMessage {
+                FloatingStatusBanner {
+                    Text(actionMessage)
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                        .textSelection(.enabled)
+                }
+                .padding(.horizontal, 18)
+                .padding(.bottom, 14)
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+        }
+        .animation(.snappy(duration: 0.18), value: actionMessage)
+        .task(id: actionMessage) {
+            await dismissActionMessageIfNeeded(actionMessage)
+        }
         .toolbar {
             ToolbarItemGroup {
                 Button {
@@ -100,6 +118,7 @@ struct DownloadedArtworkViewer: View {
 
                     Button {
                         PasteboardWriter.copy(pixivURL.absoluteString)
+                        actionMessage = L10n.copied
                     } label: {
                         Label(L10n.copyLink, systemImage: "link")
                     }
@@ -245,6 +264,14 @@ struct DownloadedArtworkViewer: View {
 
     private func revealCurrentPage() {
         NSWorkspace.shared.activateFileViewerSelecting([currentImageURL])
+    }
+
+    private func dismissActionMessageIfNeeded(_ message: String?) async {
+        guard let message else { return }
+        try? await Task.sleep(for: .seconds(2.5))
+        if actionMessage == message {
+            actionMessage = nil
+        }
     }
 }
 
