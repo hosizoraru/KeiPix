@@ -514,10 +514,17 @@ private struct FeedHeaderView: View {
 
     private func applyRankingDate() {
         draftRankingDate = KeiPixStore.clampedRankingDate(draftRankingDate)
+        let requestedUseRankingDate = draftUseRankingDate
+        let requestedRankingDate = draftRankingDate
         store.setRankingDate(draftRankingDate)
         store.setUseRankingDate(draftUseRankingDate)
         isRankingDatePopoverPresented = false
-        Task { await store.reloadCurrentFeed() }
+        Task {
+            await reloadRankingFeed(
+                requestedUseRankingDate: requestedUseRankingDate,
+                requestedRankingDate: requestedRankingDate
+            )
+        }
     }
 
     private func useLatestRanking() {
@@ -526,7 +533,32 @@ private struct FeedHeaderView: View {
         store.setRankingDate(draftRankingDate)
         store.setUseRankingDate(false)
         isRankingDatePopoverPresented = false
-        Task { await store.reloadCurrentFeed() }
+        Task {
+            await reloadRankingFeed(requestedUseRankingDate: false, requestedRankingDate: draftRankingDate)
+        }
+    }
+
+    private func reloadRankingFeed(requestedUseRankingDate: Bool, requestedRankingDate: Date) async {
+        await store.reloadCurrentFeed()
+
+        if requestedUseRankingDate,
+           store.useRankingDate == false,
+           store.errorMessage == L10n.rankingDateFallbackMessage {
+            actionMessage = L10n.rankingDateFallbackMessage
+            store.errorMessage = nil
+            return
+        }
+
+        guard store.errorMessage == nil else { return }
+
+        if requestedUseRankingDate {
+            actionMessage = String(
+                format: L10n.rankingDateAppliedFormat,
+                requestedRankingDate.formatted(date: .abbreviated, time: .omitted)
+            )
+        } else {
+            actionMessage = L10n.latestRankingApplied
+        }
     }
 
     private func queueBatchDownload() {

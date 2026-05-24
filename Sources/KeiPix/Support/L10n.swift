@@ -386,6 +386,8 @@ enum L10n {
     static var rankingDate: String { text("Ranking Date") }
     static var useRankingDate: String { text("Use Ranking Date") }
     static var latestRanking: String { text("Latest Ranking") }
+    static var latestRankingApplied: String { text("Showing latest ranking") }
+    static var rankingDateAppliedFormat: String { text("Showing ranking for %@") }
     static var daily: String { text("Daily") }
     static var weekly: String { text("Weekly") }
     static var monthly: String { text("Monthly") }
