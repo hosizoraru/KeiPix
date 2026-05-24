@@ -11,25 +11,8 @@ struct GalleryView: View {
             } else if store.isLoading {
                 ProgressView(L10n.loading)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else if store.artworks.isEmpty {
-                EmptyStateView(title: L10n.noArtworkTitle, subtitle: L10n.noArtworkSubtitle, systemImage: "photo.on.rectangle.angled")
             } else {
-                ScrollView {
-                    LazyVStack(spacing: 0, pinnedViews: [.sectionHeaders]) {
-                        Section {
-                            GalleryContentGrid(store: store, actionMessage: $actionMessage)
-                                .padding(.horizontal, 18)
-                                .padding(.top, 14)
-                                .padding(.bottom, 20)
-                        } header: {
-                            FeedHeaderView(store: store, actionMessage: $actionMessage)
-                                .padding(.horizontal, 18)
-                                .padding(.vertical, 5)
-                                .background(.bar)
-                        }
-                    }
-                }
-                .scrollEdgeEffectStyle(.soft, for: .top)
+                GalleryFeedView(store: store, actionMessage: $actionMessage)
             }
         }
         .navigationTitle(navigationTitle)
@@ -48,7 +31,7 @@ struct GalleryView: View {
         }
         .animation(.snappy(duration: 0.18), value: actionMessage)
         .toolbar {
-            if store.session != nil, store.artworks.isEmpty == false {
+            if store.session != nil, store.selectedRoute.usesArtworkFeed {
                 ToolbarItem(placement: .status) {
                     Text(feedStatusText)
                         .font(.caption)
@@ -91,6 +74,42 @@ struct GalleryView: View {
             parts.append(store.searchOptions.summary)
         }
         return parts.joined(separator: " · ")
+    }
+}
+
+private struct GalleryFeedView: View {
+    @Bindable var store: KeiPixStore
+    @Binding var actionMessage: String?
+
+    var body: some View {
+        ScrollView {
+            LazyVStack(spacing: 0, pinnedViews: [.sectionHeaders]) {
+                Section {
+                    Group {
+                        if store.artworks.isEmpty {
+                            EmptyStateView(
+                                title: L10n.noArtworkTitle,
+                                subtitle: L10n.noArtworkSubtitle,
+                                systemImage: "photo.on.rectangle.angled"
+                            )
+                            .frame(maxWidth: .infinity)
+                            .frame(minHeight: 420)
+                        } else {
+                            GalleryContentGrid(store: store, actionMessage: $actionMessage)
+                        }
+                    }
+                    .padding(.horizontal, 18)
+                    .padding(.top, 14)
+                    .padding(.bottom, 20)
+                } header: {
+                    FeedHeaderView(store: store, actionMessage: $actionMessage)
+                        .padding(.horizontal, 18)
+                        .padding(.vertical, 5)
+                        .background(.bar)
+                }
+            }
+        }
+        .scrollEdgeEffectStyle(.soft, for: .top)
     }
 }
 
