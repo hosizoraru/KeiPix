@@ -313,7 +313,7 @@ struct UserPreviewListView: View {
 
                 TextField(L10n.searchCreatorsInList, text: $creatorSearchText)
                     .textFieldStyle(.roundedBorder)
-                    .frame(width: 240)
+                    .frame(width: 220)
             }
 
             Menu {
@@ -338,21 +338,19 @@ struct UserPreviewListView: View {
             .help("\(L10n.creatorFilter) / \(L10n.creatorSort)")
 
             creatorActionsMenu
-
-            Button {
-                Task { await loadInitial() }
-            } label: {
-                Label(L10n.refresh, systemImage: "arrow.clockwise")
-            }
-            .labelStyle(.iconOnly)
-            .help(L10n.refresh)
-            .disabled(isLoading)
         }
         .controlSize(.small)
     }
 
     private var creatorActionsMenu: some View {
         Menu {
+            Button {
+                Task { await loadInitial() }
+            } label: {
+                Label(L10n.refresh, systemImage: "arrow.clockwise")
+            }
+            .disabled(isLoading)
+
             Button {
                 Task { await checkVisibleFollowVisibility() }
             } label: {
