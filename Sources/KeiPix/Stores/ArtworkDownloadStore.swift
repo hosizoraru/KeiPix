@@ -13,9 +13,11 @@ final class ArtworkDownloadStore {
     var downloadQueueSort: DownloadQueueSort
     var downloadSearchText = ""
     var isPaused: Bool
+    var maxConcurrentDownloads: Int
 
     private let fileManager = FileManager.default
-    private var workerTask: Task<Void, Never>?
+    private var workerTasks: [UUID: Task<Void, Never>] = [:]
+    private var activeWorkerItemIDs: [UUID: UUID] = [:]
 
     init() {
         downloadDirectoryPath = UserDefaults.standard.string(forKey: "downloadDirectoryPath")
@@ -27,6 +29,9 @@ final class ArtworkDownloadStore {
         downloadQueueSort = UserDefaults.standard.string(forKey: "downloadQueueSort")
             .flatMap(DownloadQueueSort.init(rawValue:)) ?? .newest
         isPaused = UserDefaults.standard.bool(forKey: "downloadQueuePaused")
+        maxConcurrentDownloads = Self.clampedConcurrentDownloadCount(
+            UserDefaults.standard.object(forKey: "maxConcurrentDownloads") as? Int ?? 2
+        )
         items = ArtworkDownloadStore.loadItems()
         var restoredInterruptedItems = false
         for index in items.indices {
@@ -69,7 +74,7 @@ final class ArtworkDownloadStore {
             persistItems()
         }
 
-        workerTask?.cancel()
+        workerTasks.values.forEach { $0.cancel() }
         return true
     }
 
@@ -85,6 +90,21 @@ final class ArtworkDownloadStore {
 
     var hasQueuedItems: Bool {
         items.contains { $0.status == .queued }
+    }
+
+    var downloadingCount: Int {
+        items.filter { $0.status == .downloading }.count
+    }
+
+    var filteredCancellableCount: Int {
+        filteredItems.filter { $0.status == .queued || $0.status == .downloading }.count
+    }
+
+    func setMaxConcurrentDownloads(_ count: Int) {
+        let clampedCount = Self.clampedConcurrentDownloadCount(count)
+        maxConcurrentDownloads = clampedCount
+        UserDefaults.standard.set(clampedCount, forKey: "maxConcurrentDownloads")
+        startWorkerIfNeeded(preferOriginal: true)
     }
 
     func downloadState(for artworkID: Int) -> ArtworkDownloadArtworkState {
@@ -413,6 +433,19 @@ final class ArtworkDownloadStore {
         persistItems()
     }
 
+    @discardableResult
+    func cancel(_ item: ArtworkDownloadItem) -> ArtworkDownloadItem? {
+        guard item.status == .queued || item.status == .downloading,
+              let index = items.firstIndex(where: { $0.id == item.id }) else {
+            return nil
+        }
+
+        let removedItem = items.remove(at: index)
+        cancelWorkers(for: Set([removedItem.id]))
+        persistItems()
+        return restorableCancelledItem(removedItem)
+    }
+
     func restoreItems(_ restoredItems: [ArtworkDownloadItem]) {
         guard restoredItems.isEmpty == false else { return }
         let restoredIDs = Set(restoredItems.map(\.id))
@@ -430,6 +463,18 @@ final class ArtworkDownloadStore {
         items.removeAll { ids.contains($0.id) }
         persistItems()
         return targets.count
+    }
+
+    @discardableResult
+    func cancelFilteredActiveItems() -> [ArtworkDownloadItem] {
+        let targets = filteredItems.filter { $0.status == .queued || $0.status == .downloading }
+        guard targets.isEmpty == false else { return [] }
+
+        let ids = Set(targets.map(\.id))
+        items.removeAll { ids.contains($0.id) }
+        cancelWorkers(for: ids)
+        persistItems()
+        return targets.map(restorableCancelledItem)
     }
 
     @discardableResult
@@ -616,19 +661,25 @@ final class ArtworkDownloadStore {
     private func startWorkerIfNeeded(preferOriginal: Bool) {
         guard isPaused == false else { return }
         guard items.contains(where: { $0.status == .queued }) else { return }
-        guard workerTask == nil else { return }
-        workerTask = Task { [weak self] in
-            await self?.drainQueue(preferOriginal: preferOriginal)
+        let queuedCount = items.filter { $0.status == .queued }.count
+        let targetWorkerCount = min(maxConcurrentDownloads, queuedCount + workerTasks.count)
+        guard workerTasks.count < targetWorkerCount else { return }
+
+        for _ in workerTasks.count..<targetWorkerCount {
+            let workerID = UUID()
+            workerTasks[workerID] = Task { [weak self] in
+                await self?.drainQueue(workerID: workerID, preferOriginal: preferOriginal)
+            }
         }
+        isDownloading = workerTasks.isEmpty == false
     }
 
-    private func drainQueue(preferOriginal: Bool) async {
+    private func drainQueue(workerID: UUID, preferOriginal: Bool) async {
         guard isPaused == false else { return }
-        guard isDownloading == false else { return }
-        isDownloading = true
         defer {
-            isDownloading = false
-            workerTask = nil
+            activeWorkerItemIDs[workerID] = nil
+            workerTasks[workerID] = nil
+            isDownloading = workerTasks.isEmpty == false
         }
 
         while isPaused == false,
@@ -639,6 +690,7 @@ final class ArtworkDownloadStore {
                 markFailed(itemID: item.id, error: ArtworkDownloadError.missingSourceURLs)
                 continue
             }
+            activeWorkerItemIDs[workerID] = item.id
             item.status = .downloading
             item.errorMessage = nil
             item.updatedAt = Date()
@@ -653,7 +705,24 @@ final class ArtworkDownloadStore {
             } catch {
                 markFailed(itemID: item.id, error: error)
             }
+            activeWorkerItemIDs[workerID] = nil
         }
+    }
+
+    private func cancelWorkers(for itemIDs: Set<UUID>) {
+        guard itemIDs.isEmpty == false else { return }
+        for (workerID, itemID) in activeWorkerItemIDs where itemIDs.contains(itemID) {
+            workerTasks[workerID]?.cancel()
+        }
+    }
+
+    private func restorableCancelledItem(_ item: ArtworkDownloadItem) -> ArtworkDownloadItem {
+        var restoredItem = item
+        if restoredItem.status == .downloading {
+            restoredItem.status = .queued
+            restoredItem.errorMessage = nil
+        }
+        return restoredItem
     }
 
     private func download(_ item: ArtworkDownloadItem, sourceURLs: [URL]) async throws -> URL {
@@ -803,6 +872,10 @@ final class ArtworkDownloadStore {
             create: true
         )
         return root.appending(path: "KeiPix/Downloads/downloads.json")
+    }
+
+    private static func clampedConcurrentDownloadCount(_ count: Int) -> Int {
+        min(max(count, 1), 4)
     }
 
     private static var defaultDownloadDirectory: URL {

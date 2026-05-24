@@ -144,8 +144,12 @@ enum L10n {
     static var copyLoadedArtworkLinks: String { text("Copy Loaded Artwork Links") }
     static var revealFirstVisibleDownload: String { text("Reveal First Visible") }
     static var deleteVisibleDownloads: String { text("Remove Visible Download Records") }
+    static var cancelDownload: String { text("Cancel Download") }
+    static var cancelVisibleDownloads: String { text("Cancel Visible Active Downloads") }
     static var deleteVisibleDownloadsConfirmationFormat: String { text("Remove %d visible download records? Local files stay in the download folder.") }
     static var deleteDownloadConfirmationFormat: String { text("Remove %@ from the download queue? Local files stay in the download folder.") }
+    static var cancelDownloadConfirmationFormat: String { text("Cancel %@ and remove it from the queue? Local files stay in the download folder.") }
+    static var cancelVisibleDownloadsConfirmationFormat: String { text("Cancel %d visible active downloads and remove them from the queue? Local files stay in the download folder.") }
     static var clearFailedDownloadsConfirmationFormat: String { text("Clear %d failed download records? Local files stay in the download folder.") }
     static var clearInvalidDownloadsConfirmationFormat: String { text("Clear %d invalid download records?") }
     static var clearCompletedDownloadsConfirmationFormat: String { text("Clear %d completed download records?") }
@@ -155,6 +159,7 @@ enum L10n {
     static var copiedArtworkLinksFormat: String { text("Copied %d artwork links") }
     static var noArtworkLinksToCopy: String { text("No artwork links to copy") }
     static var deletedDownloadsFormat: String { text("Removed %d download records") }
+    static var cancelledDownloadsFormat: String { text("Cancelled %d downloads") }
     static var retriedDownloadsFormat: String { text("Retried %d downloads") }
     static var noRetryableDownloads: String { text("No retryable downloads") }
     static var noDownloadRecordsChanged: String { text("No download records changed") }
@@ -186,6 +191,8 @@ enum L10n {
     static var downloadedLocally: String { text("Downloaded Locally") }
     static var inDownloadQueue: String { text("In Download Queue") }
     static var downloadFailed: String { text("Download Failed") }
+    static var concurrentDownloads: String { text("Concurrent Downloads") }
+    static var concurrentDownloadsHint: String { text("Use fewer concurrent downloads for unstable proxies; use more when the connection is healthy.") }
     static var downloadFilter: String { text("Download Filter") }
     static var searchDownloads: String { text("Search downloads") }
     static var sortDownloads: String { text("Sort Downloads") }

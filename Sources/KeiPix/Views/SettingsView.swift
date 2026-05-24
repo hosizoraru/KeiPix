@@ -193,6 +193,22 @@ struct SettingsView: View {
                     }
                 }
 
+                Stepper(
+                    value: maxConcurrentDownloadsBinding,
+                    in: 1...4,
+                    step: 1
+                ) {
+                    LabeledContent(L10n.concurrentDownloads) {
+                        Text(store.downloads.maxConcurrentDownloads.formatted())
+                            .monospacedDigit()
+                            .foregroundStyle(.secondary)
+                    }
+                }
+
+                Text(L10n.concurrentDownloadsHint)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
                 Divider()
 
                 TextField(L10n.downloadNamingTemplate, text: downloadNamingTemplateBinding)
@@ -479,6 +495,14 @@ struct SettingsView: View {
             store.downloads.downloadNamingTemplate
         } set: { value in
             store.downloads.setDownloadNamingTemplate(value)
+        }
+    }
+
+    private var maxConcurrentDownloadsBinding: Binding<Int> {
+        Binding {
+            store.downloads.maxConcurrentDownloads
+        } set: { value in
+            store.downloads.setMaxConcurrentDownloads(value)
         }
     }
 

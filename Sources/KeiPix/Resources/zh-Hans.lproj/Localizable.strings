@@ -148,8 +148,12 @@
 "Delete %@ and move local files to Trash?" = "删除 %@ 并将本地文件移到废纸篓？";
 "Clear %d failed downloads and move partial local files to Trash?" = "清理 %d 个失败下载，并将残留本地文件移到废纸篓？";
 "Remove Visible Download Records" = "移除可见下载记录";
+"Cancel Download" = "取消下载";
+"Cancel Visible Active Downloads" = "取消可见进行中下载";
 "Remove %d visible download records? Local files stay in the download folder." = "移除 %d 条可见下载记录？本地文件会保留在下载文件夹中。";
 "Remove %@ from the download queue? Local files stay in the download folder." = "从下载队列移除 %@？本地文件会保留在下载文件夹中。";
+"Cancel %@ and remove it from the queue? Local files stay in the download folder." = "取消 %@ 并从队列移除？本地文件会保留在下载文件夹中。";
+"Cancel %d visible active downloads and remove them from the queue? Local files stay in the download folder." = "取消 %d 个可见进行中下载并从队列移除？本地文件会保留在下载文件夹中。";
 "Clear %d failed download records? Local files stay in the download folder." = "清理 %d 条失败下载记录？本地文件会保留在下载文件夹中。";
 "Clear %d invalid download records?" = "清理 %d 条无效下载记录？";
 "Clear %d completed download records?" = "清理 %d 条已完成下载记录？";
@@ -160,6 +164,7 @@
 "No artwork links to copy" = "没有可复制的作品链接";
 "Deleted %d downloads" = "已删除 %d 个下载";
 "Removed %d download records" = "已移除 %d 条下载记录";
+"Cancelled %d downloads" = "已取消 %d 个下载";
 "Retried %d downloads" = "已重试 %d 个下载";
 "No retryable downloads" = "没有可重试的下载";
 "No download records changed" = "没有下载记录发生变化";
@@ -192,6 +197,8 @@
 "Downloaded Locally" = "已本地下载";
 "In Download Queue" = "已在下载队列";
 "Download Failed" = "下载失败";
+"Concurrent Downloads" = "并发下载数";
+"Use fewer concurrent downloads for unstable proxies; use more when the connection is healthy." = "代理不稳定时减少并发数；连接健康时可以提高并发数。";
 "Download Filter" = "下载筛选";
 "Search downloads" = "搜索下载";
 "Sort Downloads" = "下载排序";

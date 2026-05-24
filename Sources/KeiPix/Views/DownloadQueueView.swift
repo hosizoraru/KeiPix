@@ -53,6 +53,9 @@ struct DownloadQueueView: View {
                                 copied: {
                                     showActionMessage(L10n.copied)
                                 },
+                                cancel: {
+                                    pendingDangerAction = .cancelItem(item)
+                                },
                                 delete: {
                                     pendingDangerAction = .deleteItem(item)
                                 }
@@ -211,6 +214,21 @@ struct DownloadQueueView: View {
             store.downloads.delete(item)
             store.undoAction = AppUndoAction(kind: .restoreDownloads([item]))
             showActionMessage(String(format: L10n.deletedDownloadsFormat, 1))
+        case .cancelItem(let item):
+            if let restoredItem = store.downloads.cancel(item) {
+                store.undoAction = AppUndoAction(kind: .restoreDownloads([restoredItem]))
+                showActionMessage(String(format: L10n.cancelledDownloadsFormat, 1))
+            } else {
+                showActionMessage(L10n.noDownloadRecordsChanged)
+            }
+        case .cancelVisible:
+            let items = store.downloads.cancelFilteredActiveItems()
+            if items.isEmpty == false {
+                store.undoAction = AppUndoAction(kind: .restoreDownloads(items))
+                showActionMessage(String(format: L10n.cancelledDownloadsFormat, items.count))
+            } else {
+                showActionMessage(L10n.noDownloadRecordsChanged)
+            }
         case .deleteVisible:
             let items = store.downloads.filteredItems.filter { $0.status != .downloading }
             let count = store.downloads.deleteFilteredItems()
@@ -381,6 +399,13 @@ private struct DownloadQueueHeader: View {
                 .disabled(downloads.filteredItems.isEmpty)
 
                 Button(role: .destructive) {
+                    requestDangerAction(.cancelVisible(count: downloads.filteredCancellableCount))
+                } label: {
+                    Label(L10n.cancelVisibleDownloads, systemImage: "xmark.circle")
+                }
+                .disabled(downloads.filteredCancellableCount == 0)
+
+                Button(role: .destructive) {
                     requestDangerAction(.deleteVisible(count: downloads.filteredDeletableCount))
                 } label: {
                     Label(L10n.deleteVisibleDownloads, systemImage: "trash")
@@ -482,6 +507,7 @@ private struct DownloadQueueRow: View {
     let retry: () -> Void
     let reveal: () -> Void
     let copied: () -> Void
+    let cancel: () -> Void
     let delete: () -> Void
 
     var body: some View {
@@ -547,6 +573,17 @@ private struct DownloadQueueRow: View {
                 .help(L10n.retry)
             }
 
+            if item.status == .queued || item.status == .downloading {
+                Button {
+                    cancel()
+                } label: {
+                    Label(L10n.cancelDownload, systemImage: "xmark.circle")
+                }
+                .labelStyle(.iconOnly)
+                .buttonStyle(.bordered)
+                .help(L10n.cancelDownload)
+            }
+
             Button {
                 open()
             } label: {
@@ -590,6 +627,12 @@ private struct DownloadQueueRow: View {
 
                 Divider()
 
+                if item.status == .queued || item.status == .downloading {
+                    Button(role: .destructive, action: cancel) {
+                        Label(L10n.cancelDownload, systemImage: "xmark.circle")
+                    }
+                }
+
                 Button(role: .destructive, action: delete) {
                     Label(L10n.deleteDownload, systemImage: "trash")
                 }
@@ -622,6 +665,11 @@ private struct DownloadQueueRow: View {
                     copied()
                 }
             }
+            if item.status == .queued || item.status == .downloading {
+                Button(role: .destructive, action: cancel) {
+                    Text(L10n.cancelDownload)
+                }
+            }
             Button(role: .destructive, action: delete) {
                 Text(L10n.deleteDownload)
             }
@@ -650,6 +698,8 @@ private struct DownloadQueueRow: View {
 
 private enum DownloadDangerAction: Identifiable {
     case deleteItem(ArtworkDownloadItem)
+    case cancelItem(ArtworkDownloadItem)
+    case cancelVisible(count: Int)
     case deleteVisible(count: Int)
     case clearFailed(count: Int)
     case clearInvalid(count: Int)
@@ -659,6 +709,10 @@ private enum DownloadDangerAction: Identifiable {
         switch self {
         case .deleteItem(let item):
             "delete-\(item.id.uuidString)"
+        case .cancelItem(let item):
+            "cancel-\(item.id.uuidString)"
+        case .cancelVisible(let count):
+            "cancel-visible-\(count)"
         case .deleteVisible(let count):
             "delete-visible-\(count)"
         case .clearFailed(let count):
@@ -674,6 +728,10 @@ private enum DownloadDangerAction: Identifiable {
         switch self {
         case .deleteItem:
             L10n.deleteDownload
+        case .cancelItem:
+            L10n.cancelDownload
+        case .cancelVisible:
+            L10n.cancelVisibleDownloads
         case .deleteVisible:
             L10n.deleteVisibleDownloads
         case .clearFailed:
@@ -691,6 +749,10 @@ private enum DownloadDangerAction: Identifiable {
         switch self {
         case .deleteItem(let item):
             String(format: L10n.deleteDownloadConfirmationFormat, item.title)
+        case .cancelItem(let item):
+            String(format: L10n.cancelDownloadConfirmationFormat, item.title)
+        case .cancelVisible(let count):
+            String(format: L10n.cancelVisibleDownloadsConfirmationFormat, count)
         case .deleteVisible(let count):
             String(format: L10n.deleteVisibleDownloadsConfirmationFormat, count)
         case .clearFailed(let count):
