@@ -507,6 +507,11 @@ enum L10n {
     static var copyComment: String { text("Copy Comment") }
     static var copiedComment: String { text("Copied comment") }
     static var replies: String { text("Replies") }
+    static var showComment: String { text("Show Comment") }
+    static var muteCommentPhrase: String { text("Mute Comment Phrase") }
+    static var hiddenCommentReasonFormat: String { text("Hidden comment: %@") }
+    static var mutedCommentUserReasonFormat: String { text("muted creator %@") }
+    static var mutedCommentPhraseReasonFormat: String { text("muted phrase %@") }
     static var relatedArtworks: String { text("Related Artworks") }
     static var noRelatedArtworks: String { text("No related artworks") }
     static var loadMoreRelatedArtworks: String { text("Load More Related Artworks") }
@@ -562,11 +567,15 @@ enum L10n {
     static var mutedTags: String { text("Muted Tags") }
     static var mutedCreators: String { text("Muted Creators") }
     static var mutedArtworks: String { text("Muted Artworks") }
+    static var mutedCommentPhrases: String { text("Muted Comment Phrases") }
     static var openMutedContentManager: String { text("Open Muted Content Manager") }
     static var searchMutedContent: String { text("Search muted content") }
     static var pixivMuteSync: String { text("Pixiv mute sync") }
     static var addMutedTag: String { text("Add muted tag") }
+    static var addMutedCommentPhrase: String { text("Add muted comment phrase") }
+    static var addPhrase: String { text("Add Phrase") }
     static var alreadyMutedTagFormat: String { text("#%@ is already muted") }
+    static var alreadyMutedCommentPhraseFormat: String { text("%@ is already muted") }
     static var deleteFromMutedContent: String { text("Delete from Muted Content") }
     static var syncFromPixiv: String { text("Sync from Pixiv") }
     static var uploadToPixiv: String { text("Upload to Pixiv") }
@@ -589,9 +598,12 @@ enum L10n {
     static var removeMutedTagConfirmationFormat: String { text("Remove muted tag #%@?") }
     static var removeMutedCreatorConfirmationFormat: String { text("Remove muted creator %@?") }
     static var removeMutedArtworkConfirmationFormat: String { text("Remove muted artwork %@?") }
+    static var removeMutedCommentPhraseConfirmationFormat: String { text("Remove muted comment phrase %@?") }
     static var removedMutedTagFormat: String { text("Removed muted tag #%@") }
     static var removedMutedCreatorFormat: String { text("Removed muted creator %@") }
     static var removedMutedArtworkFormat: String { text("Removed muted artwork %@") }
+    static var removedMutedCommentPhraseFormat: String { text("Removed muted comment phrase %@") }
+    static var mutedCommentPhraseFormat: String { text("Muted comment phrase %@") }
     static var mutedContentSnapshotChangedFormat: String { text("Changed muted content; previous snapshot had %d items") }
     static var noMutedContent: String { text("No muted content") }
     static var noMutedContentHint: String { text("Mute artworks, creators, or tags from artwork menus, or add tags here.") }

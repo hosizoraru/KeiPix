@@ -40,7 +40,8 @@ struct ArtworkCommentsView: View {
                                 comment: comment,
                                 store: store,
                                 reply: { target in replyTarget = target },
-                                copied: { showStatus(L10n.copiedComment) }
+                                copied: { showStatus(L10n.copiedComment) },
+                                status: showStatus
                             )
                         }
                     }
@@ -235,19 +236,31 @@ private struct CommentThreadRow: View {
     @Bindable var store: KeiPixStore
     let reply: (PixivComment) -> Void
     let copied: () -> Void
+    let status: (String) -> Void
 
     @State private var replies: [PixivComment] = []
     @State private var nextURL: URL?
     @State private var isLoadingReplies = false
     @State private var isExpanded = false
+    @State private var isMutedCommentRevealed = false
     @State private var errorMessage: String?
 
     var body: some View {
+        let muteReasons = store.commentMuteReasons(for: comment)
+
         VStack(alignment: .leading, spacing: 8) {
-            CommentRow(comment: comment) {
-                reply(comment)
-            } copied: {
-                copied()
+            if store.hideMutedContent, muteReasons.isEmpty == false, isMutedCommentRevealed == false {
+                MutedCommentPlaceholder(reasons: muteReasons) {
+                    isMutedCommentRevealed = true
+                }
+            } else {
+                CommentRow(comment: comment, store: store, muteReasons: muteReasons) {
+                    reply(comment)
+                } copied: {
+                    copied()
+                } status: { message in
+                    status(message)
+                }
             }
 
             if isExpanded {
@@ -260,11 +273,17 @@ private struct CommentThreadRow: View {
                     }
 
                     ForEach(replies) { replyComment in
-                        CommentRow(comment: replyComment) {
-                            reply(replyComment)
-                        } copied: {
-                            copied()
-                        }
+                        FilteredReplyCommentRow(
+                            comment: replyComment,
+                            store: store,
+                            reply: {
+                                reply(replyComment)
+                            },
+                            copied: {
+                                copied()
+                            },
+                            status: status
+                        )
                         .padding(.leading, 28)
                     }
 
@@ -282,7 +301,8 @@ private struct CommentThreadRow: View {
                 }
             }
 
-            if comment.hasReplies || replies.isEmpty == false {
+            if (store.hideMutedContent == false || muteReasons.isEmpty || isMutedCommentRevealed),
+               comment.hasReplies || replies.isEmpty == false {
                 Button {
                     Task { await toggleReplies() }
                 } label: {
@@ -348,10 +368,72 @@ private struct CommentThreadRow: View {
     }
 }
 
-private struct CommentRow: View {
+private struct FilteredReplyCommentRow: View {
     let comment: PixivComment
+    @Bindable var store: KeiPixStore
     let reply: () -> Void
     let copied: () -> Void
+    let status: (String) -> Void
+
+    @State private var isMutedCommentRevealed = false
+
+    var body: some View {
+        let muteReasons = store.commentMuteReasons(for: comment)
+
+        if store.hideMutedContent, muteReasons.isEmpty == false, isMutedCommentRevealed == false {
+            MutedCommentPlaceholder(reasons: muteReasons) {
+                isMutedCommentRevealed = true
+            }
+        } else {
+            CommentRow(comment: comment, store: store, muteReasons: muteReasons) {
+                reply()
+            } copied: {
+                copied()
+            } status: { message in
+                status(message)
+            }
+        }
+    }
+}
+
+private struct MutedCommentPlaceholder: View {
+    let reasons: [CommentMuteReason]
+    let reveal: () -> Void
+
+    var body: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 10) {
+            Label(reasonText, systemImage: "eye.slash")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .lineLimit(2)
+
+            Spacer(minLength: 8)
+
+            Button {
+                reveal()
+            } label: {
+                Label(L10n.showComment, systemImage: "eye")
+            }
+            .buttonStyle(.bordered)
+            .controlSize(.small)
+        }
+        .padding(10)
+        .background(.quinary, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .help(reasonText)
+    }
+
+    private var reasonText: String {
+        String(format: L10n.hiddenCommentReasonFormat, reasons.map(\.title).joined(separator: " · "))
+    }
+}
+
+private struct CommentRow: View {
+    let comment: PixivComment
+    @Bindable var store: KeiPixStore
+    let muteReasons: [CommentMuteReason]
+    let reply: () -> Void
+    let copied: () -> Void
+    let status: (String) -> Void
 
     var body: some View {
         HStack(alignment: .top, spacing: 10) {
@@ -399,6 +481,19 @@ private struct CommentRow: View {
                         .foregroundStyle(.secondary)
                 }
 
+                if muteReasons.isEmpty == false {
+                    FlowLayout(spacing: 6) {
+                        ForEach(muteReasons.map(\.title), id: \.self) { reason in
+                            Label(reason, systemImage: "eye.slash")
+                                .font(.caption2.weight(.semibold))
+                                .padding(.horizontal, 7)
+                                .padding(.vertical, 3)
+                                .foregroundStyle(.secondary)
+                                .background(.regularMaterial, in: Capsule())
+                        }
+                    }
+                }
+
                 HStack(spacing: 8) {
                     Button {
                         reply()
@@ -416,11 +511,54 @@ private struct CommentRow: View {
                         }
                         .buttonStyle(.borderless)
                     }
+
+                    Menu {
+                        if let user = comment.user {
+                            Button {
+                                muteCommenter(user)
+                            } label: {
+                                Label(L10n.muteCreator, systemImage: "person.slash")
+                            }
+                            .disabled(store.mutedUsers[user.id] != nil)
+                        }
+
+                        if let phrase = mutedPhraseCandidate {
+                            Button {
+                                mutePhrase(phrase)
+                            } label: {
+                                Label(L10n.muteCommentPhrase, systemImage: "text.quote")
+                            }
+                            .disabled(store.mutedCommentPhrases.contains(phrase))
+                        }
+                    } label: {
+                        Label(L10n.mute, systemImage: "eye.slash")
+                    }
+                    .menuStyle(.button)
+                    .buttonStyle(.borderless)
+                    .disabled(comment.user == nil && mutedPhraseCandidate == nil)
                 }
                 .font(.caption)
             }
         }
         .padding(10)
         .background(.quinary, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+    }
+
+    private var mutedPhraseCandidate: String? {
+        guard let text = comment.comment else { return nil }
+        let normalized = store.normalizedCommentPhrase(text)
+        return normalized.isEmpty ? nil : normalized
+    }
+
+    private func muteCommenter(_ user: PixivUser) {
+        store.muteUser(user)
+        store.undoAction = AppUndoAction(kind: .unmuteCreator(user))
+        status(String(format: L10n.mutedCreatorFormat, user.name))
+    }
+
+    private func mutePhrase(_ phrase: String) {
+        store.muteCommentPhrase(phrase)
+        store.undoAction = AppUndoAction(kind: .unmuteCommentPhrase(phrase))
+        status(String(format: L10n.mutedCommentPhraseFormat, phrase))
     }
 }

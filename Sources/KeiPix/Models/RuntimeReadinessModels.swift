@@ -204,7 +204,10 @@ extension KeiPixStore {
         RuntimeReadinessRow(
             id: "muted",
             title: L10n.mutedContent,
-            value: String(format: L10n.mutedContentCountFormat, mutedTags.count + mutedUsers.count + mutedArtworks.count),
+            value: String(
+                format: L10n.mutedContentCountFormat,
+                mutedTags.count + mutedUsers.count + mutedArtworks.count + mutedCommentPhrases.count
+            ),
             systemImage: "eye.slash",
             isReady: true
         )

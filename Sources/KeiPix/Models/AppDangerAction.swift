@@ -57,6 +57,8 @@ struct AppUndoAction: Identifiable {
         case restoreSearchHistory([String])
         case restoreMangaWatchlist(PixivMangaSeriesPreview)
         case remuteTag(String)
+        case unmuteCommentPhrase(String)
+        case remuteCommentPhrase(String)
         case remuteCreator(MutedUserEntry)
         case remuteArtwork(MutedArtworkEntry)
         case restoreMutedContent(MutedContentArchive)
@@ -92,6 +94,10 @@ struct AppUndoAction: Identifiable {
             String(format: L10n.removedFromWatchlistFormat, series.title)
         case .remuteTag(let tag):
             String(format: L10n.removedMutedTagFormat, tag)
+        case .unmuteCommentPhrase(let phrase):
+            String(format: L10n.mutedCommentPhraseFormat, phrase)
+        case .remuteCommentPhrase(let phrase):
+            String(format: L10n.removedMutedCommentPhraseFormat, phrase)
         case .remuteCreator(let user):
             String(format: L10n.removedMutedCreatorFormat, user.name)
         case .remuteArtwork(let artwork):

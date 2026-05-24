@@ -18,6 +18,10 @@ extension KeiPixStore {
             .sorted { $0.title.localizedStandardCompare($1.title) == .orderedAscending }
     }
 
+    var mutedCommentPhraseList: [String] {
+        mutedCommentPhrases.sorted { $0.localizedStandardCompare($1) == .orderedAscending }
+    }
+
     func muteArtwork(_ artwork: PixivArtwork) {
         mutedArtworks[artwork.id] = artwork.title
         persistMutedArtworks()
@@ -60,6 +64,13 @@ extension KeiPixStore {
         applyContentFilters()
     }
 
+    func muteCommentPhrase(_ phrase: String) {
+        let normalized = normalizedCommentPhrase(phrase)
+        guard normalized.isEmpty == false else { return }
+        mutedCommentPhrases.insert(normalized)
+        persistMutedCommentPhrases()
+    }
+
     func muteArtworkEntry(_ artwork: MutedArtworkEntry) {
         mutedArtworks[artwork.id] = artwork.title
         persistMutedArtworks()
@@ -72,13 +83,20 @@ extension KeiPixStore {
         applyContentFilters()
     }
 
+    func unmuteCommentPhrase(_ phrase: String) {
+        mutedCommentPhrases.remove(phrase)
+        persistMutedCommentPhrases()
+    }
+
     func clearMutedContent() {
         mutedTags.removeAll()
         mutedUsers.removeAll()
         mutedArtworks.removeAll()
+        mutedCommentPhrases.removeAll()
         persistMutedTags()
         persistMutedUsers()
         persistMutedArtworks()
+        persistMutedCommentPhrases()
         applyContentFilters()
     }
 
@@ -87,7 +105,8 @@ extension KeiPixStore {
             exportedAt: Date(),
             tags: mutedTagList,
             users: mutedUserList,
-            artworks: mutedArtworkList
+            artworks: mutedArtworkList,
+            commentPhrases: mutedCommentPhraseList
         )
     }
 
@@ -99,10 +118,12 @@ extension KeiPixStore {
         for artwork in archive.artworks {
             mutedArtworks[artwork.id] = artwork.title
         }
+        mutedCommentPhrases.formUnion(archive.commentPhrases.map(normalizedCommentPhrase).filter { $0.isEmpty == false })
 
         persistMutedTags()
         persistMutedUsers()
         persistMutedArtworks()
+        persistMutedCommentPhrases()
         applyContentFilters()
     }
 
@@ -114,10 +135,12 @@ extension KeiPixStore {
         mutedArtworks = archive.artworks.reduce(into: [:]) { result, artwork in
             result[artwork.id] = artwork.title
         }
+        mutedCommentPhrases = Set(archive.commentPhrases.map(normalizedCommentPhrase).filter { $0.isEmpty == false })
 
         persistMutedTags()
         persistMutedUsers()
         persistMutedArtworks()
+        persistMutedCommentPhrases()
         applyContentFilters()
     }
 
@@ -141,10 +164,12 @@ extension KeiPixStore {
         for artwork in archive.artworks {
             mutedArtworks[artwork.id] = artwork.title
         }
+        mutedCommentPhrases.formUnion(archive.commentPhrases.map(normalizedCommentPhrase).filter { $0.isEmpty == false })
 
         persistMutedTags()
         persistMutedUsers()
         persistMutedArtworks()
+        persistMutedCommentPhrases()
         applyContentFilters()
     }
 
@@ -183,6 +208,28 @@ extension KeiPixStore {
         return artwork.tags.contains { mutedTags.contains($0.name) }
     }
 
+    func commentMuteReasons(for comment: PixivComment) -> [CommentMuteReason] {
+        var reasons: [CommentMuteReason] = []
+        if let user = comment.user, mutedUsers[user.id] != nil {
+            reasons.append(.user(user.name))
+        }
+
+        let commentText = comment.comment ?? ""
+        for phrase in mutedCommentPhraseList where commentText.localizedCaseInsensitiveContains(phrase) {
+            reasons.append(.phrase(phrase))
+        }
+        return reasons
+    }
+
+    func normalizedCommentPhrase(_ phrase: String) -> String {
+        let normalized = phrase
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .components(separatedBy: .newlines)
+            .joined(separator: " ")
+            .replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
+        return String(normalized.prefix(80))
+    }
+
     private func persistMutedTags() {
         UserDefaults.standard.set(mutedTagList, forKey: "mutedTags")
     }
@@ -193,5 +240,9 @@ extension KeiPixStore {
 
     private func persistMutedArtworks() {
         UserDefaults.standard.set(Self.stringKeyedDictionary(mutedArtworks), forKey: "mutedArtworks")
+    }
+
+    private func persistMutedCommentPhrases() {
+        UserDefaults.standard.set(mutedCommentPhraseList, forKey: "mutedCommentPhrases")
     }
 }

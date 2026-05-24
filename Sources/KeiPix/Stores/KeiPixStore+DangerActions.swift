@@ -69,6 +69,10 @@ extension KeiPixStore {
             }
         case .remuteTag(let tag):
             muteTag(named: tag)
+        case .unmuteCommentPhrase(let phrase):
+            unmuteCommentPhrase(phrase)
+        case .remuteCommentPhrase(let phrase):
+            muteCommentPhrase(phrase)
         case .remuteCreator(let user):
             muteUserEntry(user)
         case .remuteArtwork(let artwork):

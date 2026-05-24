@@ -5,6 +5,7 @@ struct MutedContentView: View {
     @State private var category = MutedContentCategory.tags
     @State private var searchText = ""
     @State private var newTagText = ""
+    @State private var newCommentPhraseText = ""
     @State private var isSyncing = false
     @State private var statusMessage: String?
     @State private var statusMessageIsError = false
@@ -216,6 +217,8 @@ struct MutedContentView: View {
 
             if category == .tags {
                 addTagRow
+            } else if category == .commentPhrases {
+                addCommentPhraseRow
             }
 
             switch category {
@@ -225,6 +228,8 @@ struct MutedContentView: View {
                 mutedUsersList
             case .artworks:
                 mutedArtworksList
+            case .commentPhrases:
+                mutedCommentPhrasesGrid
             }
         }
         .padding(14)
@@ -254,6 +259,32 @@ struct MutedContentView: View {
                 Label(L10n.addTag, systemImage: "plus.circle")
             }
             .disabled(newTagText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+        }
+    }
+
+    private var addCommentPhraseRow: some View {
+        HStack(spacing: 10) {
+            TextField(L10n.addMutedCommentPhrase, text: $newCommentPhraseText)
+                .textFieldStyle(.roundedBorder)
+
+            Button {
+                let normalized = store.normalizedCommentPhrase(newCommentPhraseText)
+                let wasMuted = store.mutedCommentPhraseList.contains {
+                    $0.localizedCaseInsensitiveCompare(normalized) == .orderedSame
+                }
+                store.muteCommentPhrase(normalized)
+                statusMessageIsError = false
+                if wasMuted == false {
+                    store.undoAction = AppUndoAction(kind: .unmuteCommentPhrase(normalized))
+                    statusMessage = String(format: L10n.mutedCommentPhraseFormat, normalized)
+                } else {
+                    statusMessage = String(format: L10n.alreadyMutedCommentPhraseFormat, normalized)
+                }
+                newCommentPhraseText = ""
+            } label: {
+                Label(L10n.addPhrase, systemImage: "plus.circle")
+            }
+            .disabled(store.normalizedCommentPhrase(newCommentPhraseText).isEmpty)
         }
     }
 
@@ -306,6 +337,22 @@ struct MutedContentView: View {
                             systemImage: "photo.badge.exclamationmark"
                         ) {
                             pendingRemoval = .artwork(artwork)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private var mutedCommentPhrasesGrid: some View {
+        Group {
+            if filteredCommentPhrases.isEmpty {
+                emptyState
+            } else {
+                FlowLayout(spacing: 8) {
+                    ForEach(filteredCommentPhrases, id: \.self) { phrase in
+                        removableChip(title: phrase, systemImage: "text.quote") {
+                            pendingRemoval = .commentPhrase(phrase)
                         }
                     }
                 }
@@ -381,6 +428,10 @@ struct MutedContentView: View {
         store.mutedArtworkList.filter { matches($0.title) || matches("\($0.id)") }
     }
 
+    private var filteredCommentPhrases: [String] {
+        store.mutedCommentPhraseList.filter { matches($0) }
+    }
+
     private func matches(_ value: String) -> Bool {
         let normalized = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard normalized.isEmpty == false else { return true }
@@ -416,11 +467,19 @@ struct MutedContentView: View {
             store.undoAction = AppUndoAction(kind: .remuteArtwork(artwork))
             statusMessageIsError = false
             statusMessage = String(format: L10n.removedMutedArtworkFormat, artwork.title)
+        case .commentPhrase(let phrase):
+            store.unmuteCommentPhrase(phrase)
+            store.undoAction = AppUndoAction(kind: .remuteCommentPhrase(phrase))
+            statusMessageIsError = false
+            statusMessage = String(format: L10n.removedMutedCommentPhraseFormat, phrase)
         }
     }
 
     private var totalCount: Int {
-        store.mutedTagList.count + store.mutedUserList.count + store.mutedArtworkList.count
+        store.mutedTagList.count
+            + store.mutedUserList.count
+            + store.mutedArtworkList.count
+            + store.mutedCommentPhraseList.count
     }
 
     private var totalCountText: String {
@@ -448,6 +507,8 @@ struct MutedContentView: View {
             count = filteredUsers.count
         case .artworks:
             count = filteredArtworks.count
+        case .commentPhrases:
+            count = filteredCommentPhrases.count
         }
         return String(format: L10n.mutedContentCountFormat, count)
     }
@@ -517,6 +578,7 @@ private enum MutedContentRemovalAction: Identifiable {
     case tag(String)
     case creator(MutedUserEntry)
     case artwork(MutedArtworkEntry)
+    case commentPhrase(String)
 
     var id: String {
         switch self {
@@ -526,6 +588,8 @@ private enum MutedContentRemovalAction: Identifiable {
             "creator-\(user.id)"
         case .artwork(let artwork):
             "artwork-\(artwork.id)"
+        case .commentPhrase(let phrase):
+            "comment-phrase-\(phrase)"
         }
     }
 
@@ -541,6 +605,8 @@ private enum MutedContentRemovalAction: Identifiable {
             String(format: L10n.removeMutedCreatorConfirmationFormat, user.name)
         case .artwork(let artwork):
             String(format: L10n.removeMutedArtworkConfirmationFormat, artwork.title)
+        case .commentPhrase(let phrase):
+            String(format: L10n.removeMutedCommentPhraseConfirmationFormat, phrase)
         }
     }
 }
@@ -549,6 +615,7 @@ private enum MutedContentCategory: String, CaseIterable, Identifiable {
     case tags
     case creators
     case artworks
+    case commentPhrases
 
     var id: String { rawValue }
 
@@ -557,6 +624,7 @@ private enum MutedContentCategory: String, CaseIterable, Identifiable {
         case .tags: L10n.mutedTags
         case .creators: L10n.mutedCreators
         case .artworks: L10n.mutedArtworks
+        case .commentPhrases: L10n.mutedCommentPhrases
         }
     }
 
@@ -565,6 +633,7 @@ private enum MutedContentCategory: String, CaseIterable, Identifiable {
         case .tags: "tag"
         case .creators: "person.slash"
         case .artworks: "photo.badge.exclamationmark"
+        case .commentPhrases: "text.quote"
         }
     }
 }

@@ -16,9 +16,59 @@ struct MutedContentArchive: Codable, Sendable {
     let tags: [String]
     let users: [MutedUserEntry]
     let artworks: [MutedArtworkEntry]
+    let commentPhrases: [String]
+
+    init(
+        schemaVersion: Int = 1,
+        exportedAt: Date,
+        tags: [String],
+        users: [MutedUserEntry],
+        artworks: [MutedArtworkEntry],
+        commentPhrases: [String] = []
+    ) {
+        self.schemaVersion = schemaVersion
+        self.exportedAt = exportedAt
+        self.tags = tags
+        self.users = users
+        self.artworks = artworks
+        self.commentPhrases = commentPhrases
+    }
 
     var totalCount: Int {
-        tags.count + users.count + artworks.count
+        tags.count + users.count + artworks.count + commentPhrases.count
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case schemaVersion
+        case exportedAt
+        case tags
+        case users
+        case artworks
+        case commentPhrases
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        schemaVersion = try container.decodeIfPresent(Int.self, forKey: .schemaVersion) ?? 1
+        exportedAt = try container.decode(Date.self, forKey: .exportedAt)
+        tags = try container.decodeIfPresent([String].self, forKey: .tags) ?? []
+        users = try container.decodeIfPresent([MutedUserEntry].self, forKey: .users) ?? []
+        artworks = try container.decodeIfPresent([MutedArtworkEntry].self, forKey: .artworks) ?? []
+        commentPhrases = try container.decodeIfPresent([String].self, forKey: .commentPhrases) ?? []
+    }
+}
+
+enum CommentMuteReason: Hashable, Sendable {
+    case user(String)
+    case phrase(String)
+
+    var title: String {
+        switch self {
+        case .user(let name):
+            String(format: L10n.mutedCommentUserReasonFormat, name)
+        case .phrase(let phrase):
+            String(format: L10n.mutedCommentPhraseReasonFormat, phrase)
+        }
     }
 }
 
