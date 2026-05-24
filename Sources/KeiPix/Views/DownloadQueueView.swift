@@ -270,21 +270,23 @@ private struct DownloadQueueHeader: View {
 
     var body: some View {
         FlowLayout(spacing: 8) {
-            Label {
-                Text(downloads.downloadDirectoryPath)
-                    .lineLimit(1)
-                    .truncationMode(.middle)
-                    .textSelection(.enabled)
-                    .frame(minWidth: 180, idealWidth: 300, maxWidth: 360, alignment: .leading)
-            } icon: {
-                Image(systemName: "folder")
-                    .foregroundStyle(.secondary)
+            Menu {
+                Button {
+                    openDownloadFolder()
+                } label: {
+                    Label(L10n.openFolder, systemImage: "folder")
+                }
+
+                Button {
+                    PasteboardWriter.copy(downloads.downloadDirectoryPath)
+                    showActionMessage(L10n.copiedDownloadFolderPath)
+                } label: {
+                    Label(L10n.copyDownloadFolderPath, systemImage: "doc.on.doc")
+                }
+            } label: {
+                Label(L10n.downloadFolder, systemImage: "folder")
             }
-            .font(.caption)
-            .foregroundStyle(.secondary)
-            .padding(.horizontal, 9)
-            .padding(.vertical, 5)
-            .background(.regularMaterial, in: Capsule())
+            .buttonStyle(.bordered)
             .help(downloads.downloadDirectoryPath)
 
             TextField(L10n.searchDownloads, text: downloadSearchBinding)
@@ -315,17 +317,6 @@ private struct DownloadQueueHeader: View {
             }
             .buttonStyle(.bordered)
             .help(summaryHelpText)
-
-            Button {
-                showActionMessage(
-                    downloads.openDownloadDirectory()
-                        ? L10n.openedDownloadFolder
-                        : L10n.unableToOpenDownloadFolder
-                )
-            } label: {
-                Label(L10n.openFolder, systemImage: "folder")
-            }
-            .buttonStyle(.bordered)
 
             Menu {
                 Button(action: copyVisibleLinks) {
@@ -430,6 +421,14 @@ private struct DownloadQueueHeader: View {
             downloads.activeCount,
             downloads.completedCount,
             downloads.filteredDownloadedSizeText
+        )
+    }
+
+    private func openDownloadFolder() {
+        showActionMessage(
+            downloads.openDownloadDirectory()
+                ? L10n.openedDownloadFolder
+                : L10n.unableToOpenDownloadFolder
         )
     }
 }

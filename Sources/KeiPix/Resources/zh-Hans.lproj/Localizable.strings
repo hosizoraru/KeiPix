@@ -117,6 +117,8 @@
 "Export" = "导出";
 "Import" = "导入";
 "Download Folder" = "下载文件夹";
+"Copy Download Folder Path" = "复制下载文件夹路径";
+"Copied download folder path" = "已复制下载文件夹路径";
 "Choose Folder" = "选择文件夹";
 "Open Folder" = "打开文件夹";
 "Download Naming Template" = "下载命名模板";

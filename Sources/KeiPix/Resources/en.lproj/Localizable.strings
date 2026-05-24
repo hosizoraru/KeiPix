@@ -117,6 +117,8 @@
 "Export" = "Export";
 "Import" = "Import";
 "Download Folder" = "Download Folder";
+"Copy Download Folder Path" = "Copy Download Folder Path";
+"Copied download folder path" = "Copied download folder path";
 "Choose Folder" = "Choose Folder";
 "Open Folder" = "Open Folder";
 "Download Naming Template" = "Download Naming Template";

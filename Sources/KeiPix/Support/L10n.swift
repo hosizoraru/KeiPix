@@ -120,6 +120,8 @@ enum L10n {
     static var export: String { text("Export") }
     static var `import`: String { text("Import") }
     static var downloadFolder: String { text("Download Folder") }
+    static var copyDownloadFolderPath: String { text("Copy Download Folder Path") }
+    static var copiedDownloadFolderPath: String { text("Copied download folder path") }
     static var chooseFolder: String { text("Choose Folder") }
     static var openFolder: String { text("Open Folder") }
     static var downloadNamingTemplate: String { text("Download Naming Template") }
