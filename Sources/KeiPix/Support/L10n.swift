@@ -296,6 +296,24 @@ enum L10n {
     static var screenCaptureProtectionHint: String { text("R-18 and R-18G artwork windows are hidden from screenshots and screen sharing when possible.") }
     static var showAccountIdentity: String { text("Show account identity") }
     static var accountIdentityPrivacyHint: String { text("Hide your Pixiv name and ID in the sidebar for screenshots.") }
+    static var runtimeReadiness: String { text("Runtime Readiness") }
+    static var runtimeReadinessHint: String { text("Quick diagnostics for signed-in QA and screenshot-safe support reports.") }
+    static var copyDiagnostics: String { text("Copy Diagnostics") }
+    static var copiedDiagnostics: String { text("Copied Diagnostics") }
+    static var session: String { text("Session") }
+    static var signedIn: String { text("Signed In") }
+    static var signedOut: String { text("Signed Out") }
+    static var currentRoute: String { text("Current Route") }
+    static var feed: String { text("Feed") }
+    static var feedReadinessFormat: String { text("%d shown · %d loaded · %@") }
+    static var selectedArtwork: String { text("Selected Artwork") }
+    static var noSelection: String { text("No Selection") }
+    static var pageCountFormat: String { text("%d pages") }
+    static var downloadReadinessFormat: String { text("%d total · %d active · %d completed") }
+    static var accountIdentityHidden: String { text("Account identity hidden") }
+    static var screenProtection: String { text("Screen protection") }
+    static var enabled: String { text("Enabled") }
+    static var disabled: String { text("Disabled") }
     static var profile: String { text("Profile") }
     static var hidden: String { text("Hidden") }
     static var loginTitle: String { text("Login to Pixiv") }

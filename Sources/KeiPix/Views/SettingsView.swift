@@ -250,6 +250,8 @@ struct SettingsView: View {
                     }
                 }
             }
+
+            RuntimeReadinessView(store: store)
         }
         .formStyle(.grouped)
         .padding(24)
