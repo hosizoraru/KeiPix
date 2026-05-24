@@ -156,6 +156,17 @@ enum L10n {
     static var defaultOrder: String { text("Default Order") }
     static var previewWorks: String { text("Preview Works") }
     static var searchCreatorsInList: String { text("Search creators in this list") }
+    static var creatorActions: String { text("Creator Actions") }
+    static var followVisiblePublicly: String { text("Follow Visible Publicly") }
+    static var followVisiblePrivately: String { text("Follow Visible Privately") }
+    static var muteVisibleCreators: String { text("Mute Visible Creators") }
+    static var unfollowVisibleCreators: String { text("Unfollow Visible Creators") }
+    static var runningCreatorAction: String { text("Updating creators") }
+    static var followVisiblePubliclyConfirmationFormat: String { text("Follow %d visible creators publicly?") }
+    static var followVisiblePrivatelyConfirmationFormat: String { text("Follow %d visible creators privately?") }
+    static var muteVisibleCreatorsConfirmationFormat: String { text("Mute %d visible creators?") }
+    static var unfollowVisibleCreatorsConfirmationFormat: String { text("Unfollow %d visible creators?") }
+    static var creatorActionCompletedFormat: String { text("Updated %d creators") }
     static var worksCount: String { text("Works Count") }
     static var publicSaves: String { text("Public Saves") }
     static var followers: String { text("Followers") }

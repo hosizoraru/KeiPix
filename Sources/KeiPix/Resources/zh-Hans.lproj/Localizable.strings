@@ -152,6 +152,17 @@
 "Default Order" = "默认顺序";
 "Preview Works" = "预览作品数";
 "Search creators in this list" = "在当前列表搜索作者";
+"Creator Actions" = "作者操作";
+"Follow Visible Publicly" = "公开关注可见作者";
+"Follow Visible Privately" = "私密关注可见作者";
+"Mute Visible Creators" = "屏蔽可见作者";
+"Unfollow Visible Creators" = "取消关注可见作者";
+"Updating creators" = "正在更新作者";
+"Follow %d visible creators publicly?" = "公开关注 %d 位可见作者？";
+"Follow %d visible creators privately?" = "私密关注 %d 位可见作者？";
+"Mute %d visible creators?" = "屏蔽 %d 位可见作者？";
+"Unfollow %d visible creators?" = "取消关注 %d 位可见作者？";
+"Updated %d creators" = "已更新 %d 位作者";
 "Works Count" = "作品数";
 "Public Saves" = "公开收藏";
 "Followers" = "关注中";

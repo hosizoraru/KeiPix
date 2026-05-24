@@ -104,6 +104,50 @@ private enum CreatorListSort: String, CaseIterable, Identifiable {
     }
 }
 
+private enum CreatorBulkAction: String, Identifiable {
+    case followPublic
+    case followPrivate
+    case mute
+    case unfollow
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .followPublic:
+            L10n.followVisiblePublicly
+        case .followPrivate:
+            L10n.followVisiblePrivately
+        case .mute:
+            L10n.muteVisibleCreators
+        case .unfollow:
+            L10n.unfollowVisibleCreators
+        }
+    }
+
+    var role: ButtonRole? {
+        switch self {
+        case .mute, .unfollow:
+            .destructive
+        case .followPublic, .followPrivate:
+            nil
+        }
+    }
+
+    func confirmationMessage(count: Int) -> String {
+        switch self {
+        case .followPublic:
+            String(format: L10n.followVisiblePubliclyConfirmationFormat, count)
+        case .followPrivate:
+            String(format: L10n.followVisiblePrivatelyConfirmationFormat, count)
+        case .mute:
+            String(format: L10n.muteVisibleCreatorsConfirmationFormat, count)
+        case .unfollow:
+            String(format: L10n.unfollowVisibleCreatorsConfirmationFormat, count)
+        }
+    }
+}
+
 struct UserPreviewListView: View {
     @Bindable var store: KeiPixStore
     let mode: UserPreviewListMode
@@ -118,6 +162,10 @@ struct UserPreviewListView: View {
     @State private var creatorSearchText = ""
     @State private var creatorFilter: CreatorListFilter = .all
     @State private var creatorSort: CreatorListSort = .defaultOrder
+    @State private var pendingBulkAction: CreatorBulkAction?
+    @State private var isShowingBulkConfirmation = false
+    @State private var isRunningBulkAction = false
+    @State private var bulkStatusText: String?
 
     private let columns = [
         GridItem(.adaptive(minimum: 360, maximum: 520), spacing: 14)
@@ -169,7 +217,7 @@ struct UserPreviewListView: View {
                                                     Task { await toggleFollow(preview.user, restrict: restrict) }
                                                 },
                                                 muteCreator: {
-                                                    store.muteUser(preview.user)
+                                                    muteCreator(preview.user)
                                                 },
                                                 selectArtwork: { artwork in
                                                     store.selectedArtwork = artwork
@@ -201,6 +249,49 @@ struct UserPreviewListView: View {
         .searchable(text: $creatorSearchText, placement: .toolbar, prompt: L10n.searchCreatorsInList)
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
+                Menu {
+                    Button {
+                        requestBulkAction(.followPublic)
+                    } label: {
+                        Label(L10n.followVisiblePublicly, systemImage: "person.crop.circle.badge.plus")
+                    }
+                    .disabled(isRunningBulkAction || bulkActionTargetCount(.followPublic) == 0)
+
+                    Button {
+                        requestBulkAction(.followPrivate)
+                    } label: {
+                        Label(L10n.followVisiblePrivately, systemImage: "lock.circle")
+                    }
+                    .disabled(isRunningBulkAction || bulkActionTargetCount(.followPrivate) == 0)
+
+                    Divider()
+
+                    Button(role: .destructive) {
+                        requestBulkAction(.mute)
+                    } label: {
+                        Label(L10n.muteVisibleCreators, systemImage: "eye.slash")
+                    }
+                    .disabled(isRunningBulkAction || bulkActionTargetCount(.mute) == 0)
+
+                    Button(role: .destructive) {
+                        requestBulkAction(.unfollow)
+                    } label: {
+                        Label(L10n.unfollowVisibleCreators, systemImage: "person.crop.circle.badge.minus")
+                    }
+                    .disabled(isRunningBulkAction || bulkActionTargetCount(.unfollow) == 0)
+                } label: {
+                    if isRunningBulkAction {
+                        ProgressView()
+                            .controlSize(.small)
+                    } else {
+                        Label(L10n.creatorActions, systemImage: "slider.horizontal.3")
+                    }
+                }
+                .help(L10n.creatorActions)
+                .disabled(visiblePreviews.isEmpty)
+            }
+
+            ToolbarItem(placement: .primaryAction) {
                 Picker(L10n.creatorFilter, selection: $creatorFilter) {
                     ForEach(CreatorListFilter.allCases) { filter in
                         Text(filter.title).tag(filter)
@@ -230,15 +321,51 @@ struct UserPreviewListView: View {
             }
         }
         .safeAreaInset(edge: .bottom) {
-            if let errorMessage {
-                Text(errorMessage)
-                    .font(.callout)
-                    .foregroundStyle(.red)
-                    .textSelection(.enabled)
-                    .padding(12)
-                    .frame(maxWidth: .infinity)
-                    .background(.bar)
+            if errorMessage != nil || bulkStatusText != nil || isRunningBulkAction {
+                VStack(alignment: .leading, spacing: 6) {
+                    if isRunningBulkAction {
+                        HStack(spacing: 8) {
+                            ProgressView()
+                                .controlSize(.small)
+                            Text(L10n.runningCreatorAction)
+                        }
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                    }
+
+                    if let bulkStatusText {
+                        Text(bulkStatusText)
+                            .font(.callout)
+                            .foregroundStyle(.secondary)
+                            .textSelection(.enabled)
+                    }
+
+                    if let errorMessage {
+                        Text(errorMessage)
+                            .font(.callout)
+                            .foregroundStyle(.red)
+                            .textSelection(.enabled)
+                    }
+                }
+                .padding(12)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(.bar)
             }
+        }
+        .confirmationDialog(
+            pendingBulkAction?.title ?? L10n.creatorActions,
+            isPresented: $isShowingBulkConfirmation,
+            titleVisibility: .visible,
+            presenting: pendingBulkAction
+        ) { action in
+            Button(action.title, role: action.role) {
+                Task { await performBulkAction(action) }
+            }
+            Button(L10n.cancel, role: .cancel) {
+                pendingBulkAction = nil
+            }
+        } message: { action in
+            Text(action.confirmationMessage(count: bulkActionTargetCount(action)))
         }
         .sheet(item: $profileUser) { user in
             UserProfileSheet(user: user, store: store)
@@ -362,6 +489,75 @@ struct UserPreviewListView: View {
         .disabled(isLoadingMore)
     }
 
+    private func requestBulkAction(_ action: CreatorBulkAction) {
+        pendingBulkAction = action
+        isShowingBulkConfirmation = true
+    }
+
+    private func bulkActionTargetCount(_ action: CreatorBulkAction) -> Int {
+        bulkActionTargets(action).count
+    }
+
+    private func bulkActionTargets(_ action: CreatorBulkAction) -> [PixivUserPreview] {
+        switch action {
+        case .followPublic, .followPrivate:
+            visiblePreviews.filter { $0.user.isFollowed == false }
+        case .mute:
+            visiblePreviews.filter { $0.isMuted == false }
+        case .unfollow:
+            visiblePreviews.filter(\.user.isFollowed)
+        }
+    }
+
+    private func performBulkAction(_ action: CreatorBulkAction) async {
+        let targets = bulkActionTargets(action)
+        guard targets.isEmpty == false else {
+            pendingBulkAction = nil
+            return
+        }
+
+        isRunningBulkAction = true
+        bulkStatusText = nil
+        defer {
+            isRunningBulkAction = false
+            pendingBulkAction = nil
+        }
+
+        switch action {
+        case .followPublic:
+            await followCreators(targets, restrict: .public)
+        case .followPrivate:
+            await followCreators(targets, restrict: .private)
+        case .mute:
+            for target in targets {
+                store.muteUser(target.user)
+                updateMutedState(userID: target.user.id, isMuted: true)
+            }
+        case .unfollow:
+            await unfollowCreators(targets)
+        }
+
+        bulkStatusText = String(format: L10n.creatorActionCompletedFormat, targets.count)
+    }
+
+    private func followCreators(_ targets: [PixivUserPreview], restrict: BookmarkRestrict) async {
+        for target in targets {
+            var user = target.user
+            user.isFollowed = false
+            await store.toggleFollow(user, restrict: restrict)
+            updateFollowState(userID: user.id, isFollowed: true)
+        }
+    }
+
+    private func unfollowCreators(_ targets: [PixivUserPreview]) async {
+        for target in targets {
+            var user = target.user
+            user.isFollowed = true
+            await store.toggleFollow(user)
+            updateFollowState(userID: user.id, isFollowed: false)
+        }
+    }
+
     private func loadInitial() async {
         guard store.session != nil else { return }
         isLoading = true
@@ -407,10 +603,25 @@ struct UserPreviewListView: View {
 
     private func toggleFollow(_ user: PixivUser, restrict: BookmarkRestrict? = nil) async {
         await store.toggleFollow(user, restrict: restrict)
-        for index in previews.indices where previews[index].user.id == user.id {
+        updateFollowState(userID: user.id, isFollowed: !user.isFollowed)
+    }
+
+    private func muteCreator(_ user: PixivUser) {
+        store.muteUser(user)
+        updateMutedState(userID: user.id, isMuted: true)
+    }
+
+    private func updateFollowState(userID: Int, isFollowed: Bool) {
+        for index in previews.indices where previews[index].user.id == userID {
             var updatedUser = previews[index].user
-            updatedUser.isFollowed.toggle()
+            updatedUser.isFollowed = isFollowed
             previews[index] = PixivUserPreview(user: updatedUser, illusts: previews[index].illusts, isMuted: previews[index].isMuted)
+        }
+    }
+
+    private func updateMutedState(userID: Int, isMuted: Bool) {
+        for index in previews.indices where previews[index].user.id == userID {
+            previews[index] = PixivUserPreview(user: previews[index].user, illusts: previews[index].illusts, isMuted: isMuted)
         }
     }
 }

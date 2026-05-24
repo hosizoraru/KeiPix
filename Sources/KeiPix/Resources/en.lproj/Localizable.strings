@@ -152,6 +152,17 @@
 "Default Order" = "Default Order";
 "Preview Works" = "Preview Works";
 "Search creators in this list" = "Search creators in this list";
+"Creator Actions" = "Creator Actions";
+"Follow Visible Publicly" = "Follow Visible Publicly";
+"Follow Visible Privately" = "Follow Visible Privately";
+"Mute Visible Creators" = "Mute Visible Creators";
+"Unfollow Visible Creators" = "Unfollow Visible Creators";
+"Updating creators" = "Updating creators";
+"Follow %d visible creators publicly?" = "Follow %d visible creators publicly?";
+"Follow %d visible creators privately?" = "Follow %d visible creators privately?";
+"Mute %d visible creators?" = "Mute %d visible creators?";
+"Unfollow %d visible creators?" = "Unfollow %d visible creators?";
+"Updated %d creators" = "Updated %d creators";
 "Works Count" = "Works Count";
 "Public Saves" = "Public Saves";
 "Followers" = "Followers";
