@@ -23,7 +23,7 @@ struct GalleryView: View {
                         } header: {
                             FeedHeaderView(store: store)
                                 .padding(.horizontal, 18)
-                                .padding(.vertical, 10)
+                                .padding(.vertical, 6)
                                 .background(.bar)
                         }
                     }
@@ -190,48 +190,10 @@ private struct FeedHeaderView: View {
     @State private var feedActionMessage: String?
 
     var body: some View {
-        HStack(spacing: 12) {
-            VStack(alignment: .leading, spacing: 3) {
-                Text(store.selectedRoute.title)
-                    .font(.headline)
-                if let focusedUser = store.focusedUser {
-                    Text("@\(focusedUser.account)")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-                Text("\(store.artworks.count.formatted()) \(L10n.results) · \(store.hasNextPage ? L10n.nextPageAvailable : L10n.noMorePages)")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+        HStack(spacing: 10) {
+            feedStatus
 
-                if let feedActionMessage {
-                    Text(feedActionMessage)
-                        .font(.caption)
-                        .foregroundStyle(.tertiary)
-                        .lineLimit(1)
-                }
-
-                if store.selectedRoute == .search {
-                    HStack(spacing: 6) {
-                        Label(L10n.searchSummary, systemImage: "slider.horizontal.3")
-                            .labelStyle(.titleAndIcon)
-
-                        Text(searchSummary)
-                            .lineLimit(1)
-                            .truncationMode(.tail)
-
-                        if let searchActionMessage {
-                            Text("· \(searchActionMessage)")
-                                .foregroundStyle(.tertiary)
-                                .lineLimit(1)
-                        }
-                    }
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .help(searchSummary)
-                }
-            }
-
-            Spacer()
+            Spacer(minLength: 12)
 
             if store.selectedRoute == .search,
                store.searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false {
@@ -394,6 +356,46 @@ private struct FeedHeaderView: View {
         .task(id: bookmarkTagRouteKey) {
             await loadBookmarkTagsIfNeeded()
         }
+    }
+
+    private var feedStatus: some View {
+        HStack(spacing: 6) {
+            Label(resultSummary, systemImage: "photo.on.rectangle")
+                .labelStyle(.titleAndIcon)
+
+            if let focusedUser = store.focusedUser {
+                Text("@\(focusedUser.account)")
+                    .lineLimit(1)
+            }
+
+            if store.selectedRoute == .search {
+                Label(searchSummary, systemImage: "slider.horizontal.3")
+                    .labelStyle(.titleAndIcon)
+                    .lineLimit(1)
+                    .help(searchSummary)
+            }
+
+            if let feedActionMessage {
+                Text(feedActionMessage)
+                    .foregroundStyle(.tertiary)
+                    .lineLimit(1)
+            }
+
+            if let searchActionMessage, store.selectedRoute == .search {
+                Text(searchActionMessage)
+                    .foregroundStyle(.tertiary)
+                    .lineLimit(1)
+            }
+        }
+        .font(.caption.weight(.medium))
+        .foregroundStyle(.secondary)
+        .padding(.horizontal, 8)
+        .padding(.vertical, 4)
+        .background(.quaternary, in: Capsule())
+    }
+
+    private var resultSummary: String {
+        "\(store.artworks.count.formatted()) \(L10n.results) · \(store.hasNextPage ? L10n.nextPageAvailable : L10n.noMorePages)"
     }
 
     private var maxBatchDownloadLimit: Int {

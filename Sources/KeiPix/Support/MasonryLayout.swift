@@ -10,6 +10,9 @@ struct MasonryLayout: Layout {
     var minColumnWidth: CGFloat = 176
     var maxColumnWidth: CGFloat = 260
     var fixedColumnCount: Int? = nil
+    var singleColumnHeightRange: ClosedRange<CGFloat> = 150...430
+    var multiColumnHeightRange: ClosedRange<CGFloat> = 150...300
+    var fullRowHeightRange: ClosedRange<CGFloat> = 160...280
 
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
         resolvedLayout(for: proposal, subviews: subviews).size
@@ -37,7 +40,7 @@ struct MasonryLayout: Layout {
             let presentation = ArtworkMasonryPresentation(aspectRatio: subview[MasonryAspectRatioKey.self])
             let span = min(presentation.span(for: columnCount), columnCount)
             let spanWidth = CGFloat(span) * columnWidth + CGFloat(span - 1) * spacing
-            let height = presentation.height(for: spanWidth, span: span, columnCount: columnCount)
+            let height = height(for: presentation.aspectRatio, spanWidth: spanWidth, span: span, columnCount: columnCount)
             let origin = originForNextItem(span: span, columnWidth: columnWidth, columnHeights: columnHeights)
             let frame = CGRect(x: origin.x, y: origin.y, width: spanWidth, height: height)
             frames.append(frame)
@@ -77,6 +80,17 @@ struct MasonryLayout: Layout {
         return MasonryItemOrigin(column: bestColumn, x: x, y: bestHeight)
     }
 
+    private func height(for aspectRatio: CGFloat, spanWidth: CGFloat, span: Int, columnCount: Int) -> CGFloat {
+        let rawHeight = spanWidth / max(aspectRatio, 0.1)
+        if span >= columnCount, columnCount > 1 {
+            return rawHeight.clamped(to: fullRowHeightRange)
+        }
+        if span > 1 {
+            return rawHeight.clamped(to: multiColumnHeightRange)
+        }
+        return rawHeight.clamped(to: singleColumnHeightRange)
+    }
+
     private func resolvedColumnCount(for width: CGFloat) -> Int {
         if let fixedColumnCount {
             return min(max(1, fixedColumnCount), maximumColumnCount(for: width))
@@ -113,4 +127,10 @@ private struct MasonryItemOrigin {
     let column: Int
     let x: CGFloat
     let y: CGFloat
+}
+
+private extension Comparable {
+    func clamped(to range: ClosedRange<Self>) -> Self {
+        min(max(self, range.lowerBound), range.upperBound)
+    }
 }

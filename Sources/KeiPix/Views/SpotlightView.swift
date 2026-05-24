@@ -50,7 +50,7 @@ struct SpotlightView: View {
                         } header: {
                             header
                                 .padding(.horizontal, 18)
-                                .padding(.vertical, 10)
+                                .padding(.vertical, 6)
                                 .background(.bar)
                         }
                     }
@@ -86,15 +86,13 @@ struct SpotlightView: View {
     }
 
     private var header: some View {
-        HStack(spacing: 12) {
-            VStack(alignment: .leading, spacing: 3) {
-                Text(L10n.spotlight)
-                    .font(.headline)
-                Text("\(articles.count.formatted()) \(L10n.results) · \(nextURL == nil ? L10n.noMorePages : L10n.nextPageAvailable)")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-
+        HStack(spacing: 8) {
+            Label("\(articles.count.formatted()) \(L10n.results) · \(nextURL == nil ? L10n.noMorePages : L10n.nextPageAvailable)", systemImage: "newspaper")
+                .font(.caption.weight(.medium))
+                .foregroundStyle(.secondary)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(.quaternary, in: Capsule())
             Spacer()
         }
     }

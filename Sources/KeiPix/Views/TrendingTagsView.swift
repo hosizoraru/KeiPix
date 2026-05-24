@@ -6,10 +6,7 @@ struct TrendingTagsView: View {
     @State private var isLoading = false
     @State private var errorMessage: String?
 
-    private let columns = [
-        GridItem(.adaptive(minimum: 190, maximum: 260), spacing: 14)
-    ]
-    private let cardImageHeight: CGFloat = 210
+    private let spacing: CGFloat = 12
 
     var body: some View {
         Group {
@@ -23,31 +20,34 @@ struct TrendingTagsView: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 ScrollView {
-                    LazyVStack(spacing: 0, pinnedViews: [.sectionHeaders]) {
-                        Section {
-                            LazyVGrid(columns: columns, spacing: 14) {
-                                ForEach(tags) { tag in
-                                    TrendingTagCard(
-                                        tag: tag,
-                                        imageHeight: cardImageHeight,
-                                        showTranslatedName: store.showTranslatedTags,
-                                        showContentBadges: store.showContentBadges,
-                                        search: { search(tag) },
-                                        selectArtwork: { store.selectedArtwork = tag.artwork },
-                                        mute: { store.muteTag(tag.pixivTag) }
-                                    )
-                                }
+                    VStack(alignment: .leading, spacing: 10) {
+                        header
+
+                        MasonryLayout(
+                            spacing: spacing,
+                            preferredColumnWidth: 170,
+                            minColumnWidth: 140,
+                            maxColumnWidth: 220,
+                            singleColumnHeightRange: 132...238,
+                            multiColumnHeightRange: 132...190,
+                            fullRowHeightRange: 132...178
+                        ) {
+                            ForEach(tags) { tag in
+                                TrendingTagCard(
+                                    tag: tag,
+                                    showTranslatedName: store.showTranslatedTags,
+                                    showContentBadges: store.showContentBadges,
+                                    search: { search(tag) },
+                                    selectArtwork: { store.selectedArtwork = tag.artwork },
+                                    mute: { store.muteTag(tag.pixivTag) }
+                                )
+                                .layoutValue(key: MasonryAspectRatioKey.self, value: tag.artwork.aspectRatio)
                             }
-                            .padding(.horizontal, 18)
-                            .padding(.top, 14)
-                            .padding(.bottom, 20)
-                        } header: {
-                            header
-                                .padding(.horizontal, 18)
-                                .padding(.vertical, 10)
-                                .background(.bar)
                         }
                     }
+                    .padding(.horizontal, 18)
+                    .padding(.top, 8)
+                    .padding(.bottom, 20)
                 }
                 .scrollEdgeEffectStyle(.soft, for: .top)
             }
@@ -80,15 +80,13 @@ struct TrendingTagsView: View {
     }
 
     private var header: some View {
-        HStack(spacing: 12) {
-            VStack(alignment: .leading, spacing: 3) {
-                Text(L10n.trendingTags)
-                    .font(.headline)
-                Text("\(tags.count.formatted()) \(L10n.results)")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-
+        HStack(spacing: 8) {
+            Label("\(tags.count.formatted()) \(L10n.results)", systemImage: "number")
+                .font(.caption.weight(.medium))
+                .foregroundStyle(.secondary)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(.quaternary, in: Capsule())
             Spacer()
         }
     }
@@ -114,7 +112,6 @@ struct TrendingTagsView: View {
 
 private struct TrendingTagCard: View {
     let tag: PixivTrendingTag
-    let imageHeight: CGFloat
     let showTranslatedName: Bool
     let showContentBadges: Bool
     let search: () -> Void
@@ -128,7 +125,7 @@ private struct TrendingTagCard: View {
             ZStack(alignment: .bottomLeading) {
                 RemoteImageView(url: tag.artwork.thumbnailURL, contentMode: .fill)
                     .frame(maxWidth: .infinity)
-                    .frame(height: imageHeight)
+                    .frame(maxHeight: .infinity)
                     .clipped()
                     .overlay(alignment: .bottom) {
                         LinearGradient(
@@ -162,7 +159,7 @@ private struct TrendingTagCard: View {
             }
         }
         .buttonStyle(.plain)
-        .frame(minHeight: imageHeight)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .contentShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         .overlay {

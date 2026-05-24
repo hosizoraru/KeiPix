@@ -83,7 +83,7 @@ struct BookmarkTagsView: View {
                         } header: {
                             header
                                 .padding(.horizontal, 18)
-                                .padding(.vertical, 10)
+                                .padding(.vertical, 6)
                                 .background(.bar)
                         }
                     }
@@ -120,15 +120,12 @@ struct BookmarkTagsView: View {
 
     private var header: some View {
         HStack(spacing: 12) {
-            VStack(alignment: .leading, spacing: 3) {
-                Text(L10n.bookmarkTags)
-                    .font(.headline)
-                Text("\(filteredTags.count.formatted()) \(L10n.results)")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-
-            Spacer()
+            Label("\(filteredTags.count.formatted()) \(L10n.results)", systemImage: "tag")
+                .font(.caption.weight(.medium))
+                .foregroundStyle(.secondary)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(.quaternary, in: Capsule())
 
             TextField(L10n.searchBookmarkTags, text: $filterText)
                 .textFieldStyle(.roundedBorder)
@@ -141,6 +138,8 @@ struct BookmarkTagsView: View {
             }
             .pickerStyle(.segmented)
             .frame(width: 220)
+
+            Spacer(minLength: 0)
         }
     }
 

@@ -95,7 +95,7 @@ struct UserPreviewListView: View {
                         } header: {
                             header
                                 .padding(.horizontal, 18)
-                                .padding(.vertical, 10)
+                                .padding(.vertical, 6)
                                 .background(.bar)
                         }
                     }
@@ -232,17 +232,17 @@ struct UserPreviewListView: View {
     private var header: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 12) {
-                VStack(alignment: .leading, spacing: 3) {
-                    Text(mode.title)
-                        .font(.headline)
-                    Text(headerSubtitle)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                HStack(spacing: 8) {
+                    Label(headerSubtitle, systemImage: "person.2")
+                        .labelStyle(.titleAndIcon)
+                        .lineLimit(1)
 
                     if visiblePreviews.isEmpty == false {
                         CreatorListSummaryStrip(previews: visiblePreviews)
                     }
                 }
+                .font(.caption.weight(.medium))
+                .foregroundStyle(.secondary)
 
                 Spacer()
 
