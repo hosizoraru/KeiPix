@@ -23,6 +23,9 @@ enum L10n {
     static var copySearchSummary: String { text("Copy Search Summary") }
     static var copiedSearchSummary: String { text("Copied Search Summary") }
     static var resetSearchFilters: String { text("Reset Search Filters") }
+    static var openPixivWebSearch: String { text("Open Pixiv Web Search") }
+    static var copyPixivWebSearchLink: String { text("Copy Pixiv Web Search Link") }
+    static var copiedPixivWebSearchLink: String { text("Copied Pixiv Web Search Link") }
     static var recentSearches: String { text("Recent Searches") }
     static var noSavedSearches: String { text("No saved searches") }
     static var noSavedSearchPresets: String { text("No saved search presets") }

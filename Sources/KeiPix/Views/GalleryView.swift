@@ -222,6 +222,20 @@ private struct FeedHeaderView: View {
             if store.selectedRoute == .search,
                store.searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false {
                 Menu {
+                    if let pixivWebSearchURL {
+                        Link(destination: pixivWebSearchURL) {
+                            Label(L10n.openPixivWebSearch, systemImage: "safari")
+                        }
+
+                        Button {
+                            copyPixivWebSearchLink(pixivWebSearchURL)
+                        } label: {
+                            Label(L10n.copyPixivWebSearchLink, systemImage: "link")
+                        }
+
+                        Divider()
+                    }
+
                     Button {
                         copySearchSummary()
                     } label: {
@@ -371,6 +385,10 @@ private struct FeedHeaderView: View {
         return "\(keyword) · \(store.searchOptions.summary)"
     }
 
+    private var pixivWebSearchURL: URL? {
+        PixivWebURLBuilder.searchURL(keyword: store.searchText, options: store.searchOptions)
+    }
+
     private var bookmarkTagRouteKey: String {
         store.selectedRoute.isOwnBookmarkRoute ? store.selectedRoute.rawValue : ""
     }
@@ -444,6 +462,18 @@ private struct FeedHeaderView: View {
         Task {
             try? await Task.sleep(for: .seconds(2))
             if searchActionMessage == L10n.copiedSearchSummary {
+                searchActionMessage = nil
+            }
+        }
+    }
+
+    private func copyPixivWebSearchLink(_ url: URL) {
+        PasteboardWriter.copy(url.absoluteString)
+        searchActionMessage = L10n.copiedPixivWebSearchLink
+
+        Task {
+            try? await Task.sleep(for: .seconds(2))
+            if searchActionMessage == L10n.copiedPixivWebSearchLink {
                 searchActionMessage = nil
             }
         }
