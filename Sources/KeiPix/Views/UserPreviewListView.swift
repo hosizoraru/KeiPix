@@ -25,10 +25,6 @@ struct UserPreviewListView: View {
     @State private var pendingDangerAction: CreatorDangerAction?
     @State private var undoAction: CreatorUndoAction?
 
-    private let columns = [
-        GridItem(.adaptive(minimum: 360, maximum: 520), spacing: 14)
-    ]
-
     var body: some View {
         Group {
             if store.session == nil {
@@ -52,60 +48,14 @@ struct UserPreviewListView: View {
         }
         .overlay(alignment: .bottom) {
             if isStatusBannerVisible {
-                FloatingStatusBanner {
-                    VStack(alignment: .leading, spacing: 6) {
-                        if let undoAction {
-                            HStack(spacing: 10) {
-                                Text(undoAction.message)
-                                    .font(.callout)
-                                    .foregroundStyle(.secondary)
-                                    .lineLimit(1)
-
-                                Spacer()
-
-                                Button(L10n.undo) {
-                                    Task { await performUndo(undoAction) }
-                                }
-                                .buttonStyle(.bordered)
-                                .controlSize(.small)
-                            }
-                        }
-
-                        if isCheckingFollowVisibility {
-                            HStack(spacing: 8) {
-                                ProgressView()
-                                    .controlSize(.small)
-                                Text(L10n.checkingFollowVisibility)
-                            }
-                            .font(.callout)
-                            .foregroundStyle(.secondary)
-                        }
-
-                        if isRunningBulkAction {
-                            HStack(spacing: 8) {
-                                ProgressView()
-                                    .controlSize(.small)
-                                Text(L10n.runningCreatorAction)
-                            }
-                            .font(.callout)
-                            .foregroundStyle(.secondary)
-                        }
-
-                        if let bulkStatusText {
-                            Text(bulkStatusText)
-                                .font(.callout)
-                                .foregroundStyle(.secondary)
-                                .textSelection(.enabled)
-                        }
-
-                        if let errorMessage {
-                            Text(errorMessage)
-                                .font(.callout)
-                                .foregroundStyle(.red)
-                                .textSelection(.enabled)
-                        }
-                    }
-                }
+                CreatorListStatusBanner(
+                    errorMessage: errorMessage,
+                    bulkStatusText: bulkStatusText,
+                    isRunningBulkAction: isRunningBulkAction,
+                    isCheckingFollowVisibility: isCheckingFollowVisibility,
+                    undoAction: undoAction,
+                    performUndo: { action in Task { await performUndo(action) } }
+                )
                 .padding(.horizontal, 18)
                 .padding(.bottom, 14)
                 .transition(.move(edge: .bottom).combined(with: .opacity))
@@ -155,102 +105,55 @@ struct UserPreviewListView: View {
 
     private var creatorListSurface: some View {
         VStack(spacing: 0) {
-            header
+            CreatorListHeader(
+                mode: mode,
+                restrict: restrictBinding,
+                creatorSearchText: $creatorSearchText,
+                creatorFilter: $creatorFilter,
+                creatorSort: $creatorSort,
+                isLoading: isLoading,
+                isRunningBulkAction: isRunningBulkAction,
+                isCheckingFollowVisibility: isCheckingFollowVisibility,
+                hasActiveCreatorListState: hasActiveCreatorListState,
+                visiblePreviewsCount: visiblePreviews.count,
+                visibleFollowedPreviewsCount: visibleFollowedPreviews.count,
+                bulkActionTargetCount: bulkActionTargetCount,
+                refreshCreatorList: { Task { await refreshCreatorList() } },
+                checkVisibleFollowVisibility: { Task { await checkVisibleFollowVisibility() } },
+                resetCreatorListState: resetCreatorListState,
+                copyVisibleCreatorLinks: copyVisibleCreatorLinks,
+                copyVisibleCreatorSummary: copyVisibleCreatorSummary,
+                requestBulkAction: requestBulkAction
+            )
                 .padding(.horizontal, 18)
                 .padding(.vertical, 6)
                 .background(.bar)
 
             Divider()
 
-            creatorListContent
-        }
-    }
-
-    @ViewBuilder
-    private var creatorListContent: some View {
-        if mode.requiresSearchKeyword, searchKeyword.isEmpty {
-            ContentUnavailableView(L10n.enterSearchKeyword, systemImage: "magnifyingglass")
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-        } else if previews.isEmpty {
-            if let errorMessage {
-                ContentUnavailableView {
-                    Label(L10n.errorTitle, systemImage: "exclamationmark.triangle")
-                } description: {
-                    Text(errorMessage)
-                } actions: {
-                    Button {
-                        Task { await loadInitial() }
-                    } label: {
-                        Label(L10n.retry, systemImage: "arrow.clockwise")
-                    }
-                    .buttonStyle(.borderedProminent)
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else {
-                ContentUnavailableView(L10n.noCreators, systemImage: "person.2")
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-            }
-        } else {
-            ScrollView {
-                Group {
-                    if visiblePreviews.isEmpty {
-                        VStack(spacing: 14) {
-                            ContentUnavailableView(L10n.noMatchingCreators, systemImage: "person.crop.circle.badge.questionmark")
-                                .frame(maxWidth: .infinity)
-                                .frame(minHeight: 260)
-
-                            if nextURL != nil {
-                                loadMoreButton
-                                    .frame(maxWidth: 420)
-                            }
-                        }
-                    } else {
-                        LazyVGrid(columns: columns, spacing: 14) {
-                            ForEach(visiblePreviews) { preview in
-                                UserPreviewCard(
-                                    preview: preview,
-                                    followRestrict: followRestrictsByUserID[preview.user.id],
-                                    isUpdating: updatingCreatorIDs.contains(preview.user.id),
-                                    showContentBadges: store.showContentBadges,
-                                    openProfile: { profileUser = preview.user },
-                                    openIllustrations: {
-                                        Task { await store.openUserFeed(user: preview.user, route: .userIllustrations) }
-                                    },
-                                    openManga: {
-                                        Task { await store.openUserFeed(user: preview.user, route: .userManga) }
-                                    },
-                                    followCreator: { restrict in
-                                        Task { await follow(preview.user, restrict: restrict) }
-                                    },
-                                    requestUnfollow: {
-                                        requestDangerAction(.unfollow, user: preview.user)
-                                    },
-                                    requestMuteCreator: {
-                                        requestDangerAction(.mute, user: preview.user)
-                                    },
-                                    copyCreatorLink: {
-                                        copyCreatorLink(preview.user)
-                                    },
-                                    copyArtworkLink: { artwork in
-                                        copyArtworkLink(artwork)
-                                    },
-                                    selectArtwork: { artwork in
-                                        store.selectedArtwork = artwork
-                                    }
-                                )
-                            }
-
-                            if nextURL != nil {
-                                loadMoreButton
-                            }
-                        }
-                    }
-                }
-                .padding(.horizontal, 18)
-                .padding(.top, 14)
-                .padding(.bottom, 20)
-            }
-            .scrollEdgeEffectStyle(.soft, for: .top)
+            CreatorPreviewListContent(
+                mode: mode,
+                searchKeyword: searchKeyword,
+                previews: previews,
+                visiblePreviews: visiblePreviews,
+                nextURL: nextURL,
+                errorMessage: errorMessage,
+                isLoadingMore: isLoadingMore,
+                followRestrictsByUserID: followRestrictsByUserID,
+                updatingCreatorIDs: updatingCreatorIDs,
+                showContentBadges: store.showContentBadges,
+                retry: { Task { await loadInitial() } },
+                loadMore: { Task { await loadMore() } },
+                openProfile: { profileUser = $0 },
+                openIllustrations: { user in Task { await store.openUserFeed(user: user, route: .userIllustrations) } },
+                openManga: { user in Task { await store.openUserFeed(user: user, route: .userManga) } },
+                followCreator: { user, restrict in Task { await follow(user, restrict: restrict) } },
+                requestUnfollow: { requestDangerAction(.unfollow, user: $0) },
+                requestMuteCreator: { requestDangerAction(.mute, user: $0) },
+                copyCreatorLink: copyCreatorLink,
+                copyArtworkLink: copyArtworkLink,
+                selectArtwork: { store.selectedArtwork = $0 }
+            )
         }
     }
 
@@ -336,155 +239,6 @@ struct UserPreviewListView: View {
         "\(modeKey)-\(store.routeRefreshGeneration)"
     }
 
-    private var header: some View {
-        FlowLayout(spacing: 8) {
-            if mode.usesRestrictPicker {
-                Picker(L10n.followingCreators, selection: restrictBinding) {
-                    Text(L10n.publicRestrict).tag(BookmarkRestrict.public)
-                    Text(L10n.privateRestrict).tag(BookmarkRestrict.private)
-                }
-                .pickerStyle(.segmented)
-                .labelsHidden()
-                .frame(width: 88)
-                .accessibilityLabel(L10n.followingCreators)
-            }
-
-            HStack(spacing: 6) {
-                Image(systemName: "magnifyingglass")
-                    .foregroundStyle(.secondary)
-
-                TextField(L10n.searchCreatorsInList, text: $creatorSearchText)
-                    .textFieldStyle(.roundedBorder)
-                    .frame(minWidth: 180, idealWidth: 220, maxWidth: 260)
-            }
-
-            Button {
-                creatorSearchText = ""
-            } label: {
-                Label(L10n.clearSearch, systemImage: "xmark.circle")
-            }
-            .labelStyle(.iconOnly)
-            .disabled(creatorSearchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-            .help(L10n.clearSearch)
-
-            Menu {
-                Picker(L10n.creatorFilter, selection: $creatorFilter) {
-                    ForEach(CreatorListFilter.allCases) { filter in
-                        Text(filter.title).tag(filter)
-                    }
-                }
-                .pickerStyle(.inline)
-
-                Divider()
-
-                Picker(L10n.creatorSort, selection: $creatorSort) {
-                    ForEach(CreatorListSort.allCases) { sort in
-                        Text(sort.title).tag(sort)
-                    }
-                }
-                .pickerStyle(.inline)
-            } label: {
-                Label(L10n.creatorFilter, systemImage: "line.3.horizontal.decrease.circle")
-                    .lineLimit(1)
-            }
-            .help("\(L10n.creatorFilter): \(creatorFilter.title) · \(L10n.creatorSort): \(creatorSort.title)")
-
-            creatorActionsMenu
-        }
-        .controlSize(.small)
-    }
-
-    private var creatorFilterSummary: String {
-        if creatorFilter == .all, creatorSort == .defaultOrder {
-            return L10n.creatorFilter
-        }
-        return "\(creatorFilter.title) · \(creatorSort.title)"
-    }
-
-    private var creatorActionsMenu: some View {
-        Menu {
-            Button {
-                Task { await refreshCreatorList() }
-            } label: {
-                Label(L10n.refresh, systemImage: "arrow.clockwise")
-            }
-            .disabled(isLoading)
-
-            Button {
-                Task { await checkVisibleFollowVisibility() }
-            } label: {
-                Label(L10n.checkFollowVisibility, systemImage: "checkmark.seal")
-            }
-            .disabled(isCheckingFollowVisibility || visibleFollowedPreviews.isEmpty)
-
-            Divider()
-
-            Button {
-                resetCreatorListState()
-            } label: {
-                Label(L10n.resetCreatorFilters, systemImage: "arrow.counterclockwise")
-            }
-            .disabled(hasActiveCreatorListState == false)
-
-            Divider()
-
-            Button {
-                copyVisibleCreatorLinks()
-            } label: {
-                Label(L10n.copyVisibleCreatorLinks, systemImage: "link")
-            }
-            .disabled(visiblePreviews.isEmpty)
-
-            Button {
-                copyVisibleCreatorSummary()
-            } label: {
-                Label(L10n.copyVisibleCreatorSummary, systemImage: "doc.text")
-            }
-            .disabled(visiblePreviews.isEmpty)
-
-            Divider()
-
-            Button {
-                requestBulkAction(.followPublic)
-            } label: {
-                Label(L10n.followVisiblePublicly, systemImage: "person.crop.circle.badge.plus")
-            }
-            .disabled(isRunningBulkAction || bulkActionTargetCount(.followPublic) == 0)
-
-            Button {
-                requestBulkAction(.followPrivate)
-            } label: {
-                Label(L10n.followVisiblePrivately, systemImage: "lock.circle")
-            }
-            .disabled(isRunningBulkAction || bulkActionTargetCount(.followPrivate) == 0)
-
-            Divider()
-
-            Button(role: .destructive) {
-                requestBulkAction(.mute)
-            } label: {
-                Label(L10n.muteVisibleCreators, systemImage: "eye.slash")
-            }
-            .disabled(isRunningBulkAction || bulkActionTargetCount(.mute) == 0)
-
-            Button(role: .destructive) {
-                requestBulkAction(.unfollow)
-            } label: {
-                Label(L10n.unfollowVisibleCreators, systemImage: "person.crop.circle.badge.minus")
-            }
-            .disabled(isRunningBulkAction || bulkActionTargetCount(.unfollow) == 0)
-        } label: {
-            if isRunningBulkAction {
-                ProgressView()
-                    .controlSize(.small)
-            } else {
-                Label(L10n.creatorActions, systemImage: "slider.horizontal.3")
-                    .labelStyle(.iconOnly)
-            }
-        }
-        .help(L10n.creatorActions)
-    }
-
     private var headerSubtitle: String {
         "\(visiblePreviews.count.formatted()) / \(previews.count.formatted()) \(L10n.results)"
     }
@@ -504,29 +258,6 @@ struct UserPreviewListView: View {
         } set: { value in
             restrict = value
         }
-    }
-
-    private var loadMoreButton: some View {
-        Button {
-            Task { await loadMore() }
-        } label: {
-            VStack(spacing: 8) {
-                if isLoadingMore {
-                    ProgressView()
-                } else {
-                    Image(systemName: "arrow.down.circle")
-                        .font(.title3)
-                    Text(L10n.loadMoreCreators)
-                        .font(.caption.weight(.medium))
-                }
-            }
-            .frame(maxWidth: .infinity)
-            .frame(height: 160)
-            .contentShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-        }
-        .buttonStyle(.plain)
-        .keiInteractiveGlass(16)
-        .disabled(isLoadingMore)
     }
 
     private func requestBulkAction(_ action: CreatorBulkAction) {
