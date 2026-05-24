@@ -3,6 +3,8 @@ import SwiftUI
 struct SpotlightArticleDetailView: View {
     @Bindable var store: KeiPixStore
     @State private var webProfileUser: PixivUser?
+    @State private var webNavigationState = WebArticleNavigationState()
+    @State private var webCommand: WebArticleCommand?
     @State private var actionMessage: String?
 
     var body: some View {
@@ -10,6 +12,20 @@ struct SpotlightArticleDetailView: View {
             VStack(spacing: 0) {
                 SpotlightArticleHeader(
                     article: article,
+                    navigationState: webNavigationState,
+                    goBack: {
+                        webCommand = WebArticleCommand(action: .goBack)
+                    },
+                    goForward: {
+                        webCommand = WebArticleCommand(action: .goForward)
+                    },
+                    reload: {
+                        webCommand = WebArticleCommand(action: .reload)
+                    },
+                    copyCurrentPageLink: {
+                        PasteboardWriter.copy((webNavigationState.currentURL ?? article.articleURL).absoluteString)
+                        showActionMessage(L10n.copied)
+                    },
                     copyLink: {
                         PasteboardWriter.copy(article.articleURL.absoluteString)
                         showActionMessage(L10n.copiedArticleLink)
@@ -19,10 +35,22 @@ struct SpotlightArticleDetailView: View {
 
                 Divider()
 
-                WebArticleView(url: article.articleURL) { artworkID in
-                    Task { await store.openArtworkFromWebLink(artworkID) }
-                } openUserLink: { userID in
-                    Task { await openWebProfile(userID) }
+                ZStack {
+                    WebArticleView(
+                        url: article.articleURL,
+                        navigationState: $webNavigationState,
+                        command: webCommand
+                    ) { artworkID in
+                        Task { await store.openArtworkFromWebLink(artworkID) }
+                    } openUserLink: { userID in
+                        Task { await openWebProfile(userID) }
+                    }
+
+                    if let errorMessage = webNavigationState.errorMessage {
+                        WebArticleRecoveryView(errorMessage: errorMessage) {
+                            webCommand = WebArticleCommand(action: .reload)
+                        }
+                    }
                 }
                 .id(article.id)
             }
@@ -82,44 +110,104 @@ struct SpotlightArticleDetailView: View {
 
 private struct SpotlightArticleHeader: View {
     let article: PixivSpotlightArticle
+    let navigationState: WebArticleNavigationState
+    let goBack: () -> Void
+    let goForward: () -> Void
+    let reload: () -> Void
+    let copyCurrentPageLink: () -> Void
     let copyLink: () -> Void
 
     var body: some View {
-        HStack(alignment: .center, spacing: 12) {
-            RemoteImageView(url: article.thumbnail)
-                .aspectRatio(16.0 / 9.0, contentMode: .fill)
-                .frame(width: 96, height: 54)
-                .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .center, spacing: 10) {
+                RemoteImageView(url: article.thumbnail)
+                    .aspectRatio(16.0 / 9.0, contentMode: .fill)
+                    .frame(width: 86, height: 48)
+                    .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
 
-            VStack(alignment: .leading, spacing: 5) {
-                Text(article.pureTitle.isEmpty ? article.title : article.pureTitle)
-                    .font(.headline)
-                    .lineLimit(2)
-                    .textSelection(.enabled)
+                VStack(alignment: .leading, spacing: 5) {
+                    Text(article.pureTitle.isEmpty ? article.title : article.pureTitle)
+                        .font(.headline)
+                        .lineLimit(2)
+                        .textSelection(.enabled)
 
-                Label(article.publishDate.formatted(date: .abbreviated, time: .omitted), systemImage: "calendar")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                    Label(article.publishDate.formatted(date: .abbreviated, time: .omitted), systemImage: "calendar")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
 
-            ShareLink(item: article.articleURL) {
-                Label(L10n.share, systemImage: "square.and.arrow.up")
-            }
-            .labelStyle(.iconOnly)
-            .help(L10n.share)
+            HStack(spacing: 8) {
+                ControlGroup {
+                    Button(action: goBack) {
+                        Label(L10n.previousPage, systemImage: "chevron.left")
+                    }
+                    .disabled(navigationState.canGoBack == false)
 
-            Button(action: copyLink) {
-                Label(L10n.copyLink, systemImage: "link")
-            }
-            .labelStyle(.iconOnly)
-            .help(L10n.copyLink)
+                    Button(action: goForward) {
+                        Label(L10n.nextPage, systemImage: "chevron.right")
+                    }
+                    .disabled(navigationState.canGoForward == false)
 
-            Link(destination: article.articleURL) {
-                Label(L10n.openInPixiv, systemImage: "safari")
+                    Button(action: reload) {
+                        if navigationState.isLoading {
+                            ProgressView()
+                                .controlSize(.small)
+                        } else {
+                            Label(L10n.reloadPage, systemImage: "arrow.clockwise")
+                        }
+                    }
+                }
+                .labelStyle(.iconOnly)
+
+                Spacer(minLength: 8)
+
+                ShareLink(item: article.articleURL) {
+                    Label(L10n.share, systemImage: "square.and.arrow.up")
+                }
+                .labelStyle(.iconOnly)
+                .help(L10n.share)
+
+                Button(action: copyCurrentPageLink) {
+                    Label(L10n.copyCurrentPageLink, systemImage: "doc.on.doc")
+                }
+                .labelStyle(.iconOnly)
+                .help(L10n.copyCurrentPageLink)
+
+                Button(action: copyLink) {
+                    Label(L10n.copyLink, systemImage: "link")
+                }
+                .labelStyle(.iconOnly)
+                .help(L10n.copyLink)
+
+                Link(destination: article.articleURL) {
+                    Label(L10n.openInPixiv, systemImage: "safari")
+                }
+                .labelStyle(.iconOnly)
+                .help(L10n.openInPixiv)
             }
-            .labelStyle(.iconOnly)
-            .help(L10n.openInPixiv)
         }
+    }
+}
+
+private struct WebArticleRecoveryView: View {
+    let errorMessage: String
+    let retry: () -> Void
+
+    var body: some View {
+        ContentUnavailableView {
+            Label(L10n.errorTitle, systemImage: "exclamationmark.triangle")
+        } description: {
+            Text(errorMessage)
+        } actions: {
+            Button(action: retry) {
+                Label(L10n.retry, systemImage: "arrow.clockwise")
+            }
+            .buttonStyle(.borderedProminent)
+        }
+        .padding(24)
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .padding(24)
     }
 }

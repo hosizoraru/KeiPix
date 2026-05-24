@@ -94,6 +94,8 @@ enum L10n {
     static var copyCurrentPageLink: String { text("Copy Current Page Link") }
     static var downloadCurrentPage: String { text("Download Current Page") }
     static var queuedCurrentPage: String { text("Queued Current Page") }
+    static var reloadPage: String { text("Reload Page") }
+    static var webContentReloaded: String { text("Web content reloaded") }
     static var copyLink: String { text("Copy Link") }
     static var copyArtworkSummary: String { text("Copy Artwork Summary") }
     static var copiedArtworkSummary: String { text("Copied Artwork Summary") }

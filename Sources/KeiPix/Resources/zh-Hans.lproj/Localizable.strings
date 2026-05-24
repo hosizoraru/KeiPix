@@ -91,6 +91,8 @@
 "Copy Current Page Link" = "复制当前页链接";
 "Download Current Page" = "下载当前页";
 "Queued Current Page" = "已加入当前页下载";
+"Reload Page" = "重新加载页面";
+"Web content reloaded" = "网页内容已重新加载";
 "Copy Link" = "复制链接";
 "Copy Artwork Summary" = "复制作品摘要";
 "Copied Artwork Summary" = "已复制作品摘要";
