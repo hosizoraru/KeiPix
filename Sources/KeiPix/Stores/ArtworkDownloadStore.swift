@@ -189,6 +189,14 @@ final class ArtworkDownloadStore {
         Self.fileSizeFormatter.string(fromByteCount: filteredDownloadedByteCount)
     }
 
+    var filteredPixivLinks: [String] {
+        filteredItems.compactMap { $0.pixivURL?.absoluteString }
+    }
+
+    var filteredDeletableCount: Int {
+        filteredItems.filter { $0.status != .downloading }.count
+    }
+
     func setDownloadQueueFilter(_ filter: DownloadQueueFilter) {
         downloadQueueFilter = filter
         UserDefaults.standard.set(filter.rawValue, forKey: "downloadQueueFilter")
@@ -276,6 +284,21 @@ final class ArtworkDownloadStore {
         persistItems()
     }
 
+    @discardableResult
+    func deleteFilteredItems() -> Int {
+        let targets = filteredItems.filter { $0.status != .downloading }
+        guard targets.isEmpty == false else { return 0 }
+
+        for target in targets {
+            trashDownloadedFiles(for: target)
+        }
+
+        let ids = Set(targets.map(\.id))
+        items.removeAll { ids.contains($0.id) }
+        persistItems()
+        return targets.count
+    }
+
     func reveal(_ item: ArtworkDownloadItem) {
         if let filePath = item.downloadedFilePaths?.first {
             NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: filePath, isDirectory: false)])
@@ -286,6 +309,15 @@ final class ArtworkDownloadStore {
             return
         }
         NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: folderPath, isDirectory: true)])
+    }
+
+    @discardableResult
+    func revealFirstFilteredDownload() -> Bool {
+        guard let item = filteredItems.first(where: { hasReadableDownload(for: $0) || $0.folderPath != nil }) else {
+            return false
+        }
+        reveal(item)
+        return true
     }
 
     func imageFileURLs(for item: ArtworkDownloadItem) -> [URL] {

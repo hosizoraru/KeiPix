@@ -88,6 +88,12 @@
 "Clear Failed" = "清理失败";
 "Retry Failed" = "重试失败项";
 "Download Actions" = "下载操作";
+"Copy Visible Links" = "复制可见链接";
+"Reveal First Visible" = "显示首个可见下载";
+"Delete Visible Downloads" = "删除可见下载";
+"Delete %d visible downloads and move local files to Trash?" = "删除 %d 个可见下载并将本地文件移到废纸篓？";
+"Copied %d links" = "已复制 %d 个链接";
+"Deleted %d downloads" = "已删除 %d 个下载";
 "Reveal in Finder" = "在 Finder 中显示";
 "Open Downloaded Artwork" = "打开已下载作品";
 "Delete Download" = "删除下载";

@@ -91,6 +91,12 @@ enum L10n {
     static var clearFailedDownloads: String { text("Clear Failed") }
     static var retryFailedDownloads: String { text("Retry Failed") }
     static var downloadActions: String { text("Download Actions") }
+    static var copyVisibleDownloadLinks: String { text("Copy Visible Links") }
+    static var revealFirstVisibleDownload: String { text("Reveal First Visible") }
+    static var deleteVisibleDownloads: String { text("Delete Visible Downloads") }
+    static var deleteVisibleDownloadsConfirmationFormat: String { text("Delete %d visible downloads and move local files to Trash?") }
+    static var copiedLinksFormat: String { text("Copied %d links") }
+    static var deletedDownloadsFormat: String { text("Deleted %d downloads") }
     static var revealInFinder: String { text("Reveal in Finder") }
     static var openDownloadedArtwork: String { text("Open Downloaded Artwork") }
     static var deleteDownload: String { text("Delete Download") }

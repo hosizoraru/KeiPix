@@ -98,6 +98,8 @@ private enum DownloadedPreview: Identifiable {
 
 private struct DownloadQueueHeader: View {
     @Bindable var downloads: ArtworkDownloadStore
+    @State private var isConfirmingDeleteVisibleDownloads = false
+    @State private var actionMessage: String?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -134,6 +136,31 @@ private struct DownloadQueueHeader: View {
                 .buttonStyle(.bordered)
 
                 Menu {
+                    Button {
+                        copyVisibleLinks()
+                    } label: {
+                        Label(L10n.copyVisibleDownloadLinks, systemImage: "link")
+                    }
+                    .disabled(downloads.filteredPixivLinks.isEmpty)
+
+                    Button {
+                        if downloads.revealFirstFilteredDownload() == false {
+                            downloads.openDownloadDirectory()
+                        }
+                    } label: {
+                        Label(L10n.revealFirstVisibleDownload, systemImage: "folder")
+                    }
+                    .disabled(downloads.filteredItems.isEmpty)
+
+                    Button(role: .destructive) {
+                        isConfirmingDeleteVisibleDownloads = true
+                    } label: {
+                        Label(L10n.deleteVisibleDownloads, systemImage: "trash")
+                    }
+                    .disabled(downloads.filteredDeletableCount == 0)
+
+                    Divider()
+
                     Button {
                         downloads.retryFailedFilteredItems()
                     } label: {
@@ -189,6 +216,26 @@ private struct DownloadQueueHeader: View {
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
             }
+
+            if let actionMessage {
+                Text(actionMessage)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+            }
+        }
+        .confirmationDialog(
+            L10n.deleteVisibleDownloads,
+            isPresented: $isConfirmingDeleteVisibleDownloads,
+            titleVisibility: .visible
+        ) {
+            Button(L10n.deleteVisibleDownloads, role: .destructive) {
+                let count = downloads.deleteFilteredItems()
+                actionMessage = String(format: L10n.deletedDownloadsFormat, count)
+            }
+            Button(L10n.cancel, role: .cancel) {}
+        } message: {
+            Text(String(format: L10n.deleteVisibleDownloadsConfirmationFormat, downloads.filteredDeletableCount))
         }
     }
 
@@ -219,6 +266,13 @@ private struct DownloadQueueHeader: View {
 
     private var storageText: String {
         String(format: L10n.downloadStorageSummaryFormat, downloads.filteredDownloadedSizeText)
+    }
+
+    private func copyVisibleLinks() {
+        let links = downloads.filteredPixivLinks
+        guard links.isEmpty == false else { return }
+        PasteboardWriter.copy(links.joined(separator: "\n"))
+        actionMessage = String(format: L10n.copiedLinksFormat, links.count)
     }
 }
 
