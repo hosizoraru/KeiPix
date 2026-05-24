@@ -14,6 +14,7 @@ final class KeiPixStore {
     var selectedArtwork: PixivArtwork?
     var searchPopularPreviewArtworks: [PixivArtwork] = []
     var isLoadingSearchPopularPreview = false
+    var presentedUserProfile: PixivUser?
     var selectedSpotlightArticle: PixivSpotlightArticle?
     var readerWindowArtwork: PixivArtwork?
     var imageSourceSearchRequest: ImageSourceSearchRequest?
@@ -184,6 +185,7 @@ final class KeiPixStore {
         allSearchPopularPreviewArtworks = []
         searchPopularPreviewArtworks = []
         selectedArtwork = nil
+        presentedUserProfile = nil
         selectedSpotlightArticle = nil
         readerWindowArtwork = nil
         imageSourceSearchRequest = nil
@@ -659,6 +661,15 @@ final class KeiPixStore {
     func prepareSelectedReaderWindow() {
         guard let selectedArtwork else { return }
         prepareReaderWindow(for: selectedArtwork)
+    }
+
+    func presentSelectedArtworkCreatorProfile() {
+        presentedUserProfile = selectedArtwork?.user
+    }
+
+    func openSelectedArtworkCreatorFeed(_ route: PixivRoute) async {
+        guard let user = selectedArtwork?.user else { return }
+        await openUserFeed(user: user, route: route)
     }
 
     func selectPreviousArtwork() {

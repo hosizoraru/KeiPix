@@ -107,6 +107,9 @@ struct ContentView: View {
             ImageSourceSearchSheet(store: store, request: request)
                 .frame(width: 720, height: 560)
         }
+        .sheet(item: $store.presentedUserProfile) { user in
+            UserProfileSheet(user: user, store: store)
+        }
         .confirmationDialog(
             store.pendingDangerAction?.title ?? L10n.moreActions,
             isPresented: dangerActionBinding,

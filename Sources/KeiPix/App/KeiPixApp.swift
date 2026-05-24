@@ -79,6 +79,26 @@ struct KeiPixApp: App {
 
                 Divider()
 
+                Button(L10n.openCreatorProfile) {
+                    store.presentSelectedArtworkCreatorProfile()
+                }
+                .keyboardShortcut("u", modifiers: [.command])
+                .disabled(store.selectedArtwork == nil)
+
+                Button(L10n.creatorIllustrations) {
+                    Task { await store.openSelectedArtworkCreatorFeed(.userIllustrations) }
+                }
+                .keyboardShortcut("u", modifiers: [.command, .option])
+                .disabled(store.selectedArtwork == nil)
+
+                Button(L10n.creatorManga) {
+                    Task { await store.openSelectedArtworkCreatorFeed(.userManga) }
+                }
+                .keyboardShortcut("u", modifiers: [.command, .control])
+                .disabled(store.selectedArtwork == nil)
+
+                Divider()
+
                 Button(L10n.openReaderWindow) {
                     store.prepareSelectedReaderWindow()
                     openWindow(id: "artwork-reader")
