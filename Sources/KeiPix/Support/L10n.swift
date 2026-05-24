@@ -147,6 +147,7 @@ enum L10n {
     static var downloads: String { text("Downloads") }
     static var downloading: String { text("Downloading") }
     static var downloaded: String { text("Downloaded") }
+    static var openDownloads: String { text("Open Downloads") }
     static var queued: String { text("Queued") }
     static var failed: String { text("Failed") }
     static var imagePages: String { text("Image Pages") }
@@ -220,6 +221,7 @@ enum L10n {
     static var noMatchingDownloadsSubtitle: String { text("Change the download filter to see other queue items.") }
     static var downloadInterrupted: String { text("Download interrupted") }
     static var batchDownload: String { text("Batch Download") }
+    static var batchDownloadLoadedArtworks: String { text("Batch Download Loaded Artworks") }
     static var maximumDownloads: String { text("Maximum downloads") }
     static var addToDownloadQueue: String { text("Add to Download Queue") }
     static var queuedDownloadsFormat: String { text("Queued %d downloads") }

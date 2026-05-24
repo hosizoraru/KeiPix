@@ -147,6 +147,7 @@
 "Downloads" = "下载";
 "Downloading" = "下载中";
 "Downloaded" = "已下载";
+"Open Downloads" = "打开下载";
 "Queued" = "排队中";
 "Failed" = "失败";
 "Image Pages" = "图片页";
@@ -226,6 +227,7 @@
 "Change the download filter to see other queue items." = "切换下载筛选即可查看其他队列项目。";
 "Download interrupted" = "下载已中断";
 "Batch Download" = "批量下载";
+"Batch Download Loaded Artworks" = "批量下载已加载作品";
 "Maximum downloads" = "最大下载数";
 "Add to Download Queue" = "加入下载队列";
 "Queued %d downloads" = "已加入 %d 个下载";

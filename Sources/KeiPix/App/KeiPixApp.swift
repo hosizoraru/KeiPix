@@ -100,6 +100,45 @@ struct KeiPixApp: App {
                 .keyboardShortcut("c", modifiers: [.command, .shift])
                 .disabled(store.selectedArtwork?.pixivURL == nil)
             }
+
+            CommandMenu(L10n.downloads) {
+                Button(L10n.openDownloads) {
+                    openWindow(id: "main")
+                    store.select(.downloads)
+                }
+                .keyboardShortcut("d", modifiers: [.command, .option])
+
+                Button(L10n.batchDownloadLoadedArtworks) {
+                    let queuedCount = store.enqueueDownloads(
+                        store.artworks,
+                        limit: min(max(store.artworks.count, 1), 100),
+                        preferOriginal: true
+                    )
+                    if queuedCount > 0 {
+                        openWindow(id: "main")
+                        store.select(.downloads)
+                    }
+                }
+                .keyboardShortcut("d", modifiers: [.command, .control])
+                .disabled(store.selectedRoute.usesArtworkFeed == false || store.artworks.isEmpty)
+
+                Divider()
+
+                Button(store.downloads.isPaused ? L10n.resumeDownloads : L10n.pauseDownloads) {
+                    if store.downloads.isPaused {
+                        _ = store.downloads.resumeQueue()
+                    } else {
+                        _ = store.downloads.pauseQueue()
+                    }
+                }
+                .keyboardShortcut("p", modifiers: [.command, .option])
+                .disabled(store.downloads.isPaused ? store.downloads.hasQueuedItems == false : store.downloads.activeCount == 0)
+
+                Button(L10n.openFolder) {
+                    _ = store.downloads.openDownloadDirectory()
+                }
+                .keyboardShortcut("f", modifiers: [.command, .option])
+            }
         }
 
         Window(L10n.readerWindow, id: "artwork-reader") {
