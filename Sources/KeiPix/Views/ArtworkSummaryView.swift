@@ -6,6 +6,7 @@ struct ArtworkSummaryView: View {
     let pageIndex: Int
     let pageCount: Int
     @State private var isUserProfilePresented = false
+    @State private var creatorActionMessage: String?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
@@ -50,12 +51,23 @@ struct ArtworkSummaryView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .help(L10n.openCreatorProfile)
 
-                    CreatorQuickActionsMenu(artwork: artwork, store: store) {
+                    CreatorQuickActionsMenu(
+                        artwork: artwork,
+                        store: store,
+                        showActionMessage: showCreatorActionMessage
+                    ) {
                         isUserProfilePresented = true
                     }
                 }
                 .sheet(isPresented: $isUserProfilePresented) {
                     UserProfileSheet(user: artwork.user, store: store)
+                }
+
+                if let creatorActionMessage {
+                    Text(creatorActionMessage)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .textSelection(.enabled)
                 }
             }
 
@@ -64,12 +76,24 @@ struct ArtworkSummaryView: View {
         .padding(14)
         .keiPanel(18)
     }
+
+    private func showCreatorActionMessage(_ message: String) {
+        creatorActionMessage = message
+        Task {
+            try? await Task.sleep(for: .seconds(2.5))
+            if creatorActionMessage == message {
+                creatorActionMessage = nil
+            }
+        }
+    }
 }
 
 private struct CreatorQuickActionsMenu: View {
     let artwork: PixivArtwork
     @Bindable var store: KeiPixStore
+    let showActionMessage: (String) -> Void
     let openProfile: () -> Void
+    @State private var isUpdatingFollow = false
 
     var body: some View {
         Menu {
@@ -86,6 +110,7 @@ private struct CreatorQuickActionsMenu: View {
 
                 Button {
                     PasteboardWriter.copy(url.absoluteString)
+                    showActionMessage(L10n.copied)
                 } label: {
                     Label(L10n.copyLink, systemImage: "link")
                 }
@@ -103,22 +128,25 @@ private struct CreatorQuickActionsMenu: View {
                 }
             } else {
                 Button {
-                    Task { await store.toggleFollow(artwork.user) }
+                    Task { await follow(artwork.user, restrict: nil) }
                 } label: {
                     Label(L10n.followUsingDefault, systemImage: "person.badge.plus")
                 }
+                .disabled(isUpdatingFollow)
 
                 Button {
-                    Task { await store.toggleFollow(artwork.user, restrict: .public) }
+                    Task { await follow(artwork.user, restrict: .public) }
                 } label: {
                     Label(L10n.followPublicly, systemImage: "person.2")
                 }
+                .disabled(isUpdatingFollow)
 
                 Button {
-                    Task { await store.toggleFollow(artwork.user, restrict: .private) }
+                    Task { await follow(artwork.user, restrict: .private) }
                 } label: {
                     Label(L10n.followPrivately, systemImage: "lock")
                 }
+                .disabled(isUpdatingFollow)
             }
         } label: {
             Image(systemName: artwork.user.isFollowed ? "person.crop.circle.badge.checkmark" : "person.crop.circle.badge.plus")
@@ -128,6 +156,20 @@ private struct CreatorQuickActionsMenu: View {
         .buttonStyle(.bordered)
         .controlSize(.small)
         .help(artwork.user.isFollowed ? L10n.unfollow : L10n.follow)
+        .disabled(isUpdatingFollow)
+    }
+
+    private func follow(_ user: PixivUser, restrict: BookmarkRestrict?) async {
+        guard isUpdatingFollow == false else { return }
+        isUpdatingFollow = true
+        defer { isUpdatingFollow = false }
+
+        do {
+            try await store.setFollow(user, isFollowed: true, restrict: restrict ?? store.defaultFollowRestrict)
+            showActionMessage(String(format: L10n.followedCreatorFormat, user.name))
+        } catch {
+            store.errorMessage = error.localizedDescription
+        }
     }
 }
 

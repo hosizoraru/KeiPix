@@ -145,11 +145,12 @@ struct ArtworkSeriesView: View {
                 if seriesArtwork.isBookmarked {
                     store.requestDangerAction(AppDangerAction(kind: .removeBookmark(seriesArtwork)))
                 } else {
-                    Task { await store.toggleBookmark(seriesArtwork) }
+                    Task { await bookmark(seriesArtwork) }
                 }
             }
             Button(L10n.download) {
                 store.enqueueDownload(seriesArtwork)
+                showStatus(String(format: L10n.queuedDownloadsFormat, 1))
             }
             Divider()
             Button(L10n.muteArtwork) {
@@ -170,6 +171,20 @@ struct ArtworkSeriesView: View {
             if let url = seriesArtwork.pixivURL {
                 Link(L10n.openInPixiv, destination: url)
             }
+        }
+    }
+
+    private func bookmark(_ seriesArtwork: PixivArtwork) async {
+        do {
+            try await store.saveBookmark(
+                seriesArtwork,
+                restrict: store.defaultBookmarkRestrict,
+                tags: store.automaticBookmarkTags(for: seriesArtwork)
+            )
+            updateSeriesArtwork(seriesArtwork.id) { $0.isBookmarked = true }
+            showStatus(String(format: L10n.savedBookmarkFormat, seriesArtwork.title))
+        } catch {
+            errorMessage = error.localizedDescription
         }
     }
 
@@ -255,6 +270,12 @@ struct ArtworkSeriesView: View {
             if statusMessage == message {
                 statusMessage = nil
             }
+        }
+    }
+
+    private func updateSeriesArtwork(_ id: Int, update: (inout PixivArtwork) -> Void) {
+        for index in seriesArtworks.indices where seriesArtworks[index].id == id {
+            update(&seriesArtworks[index])
         }
     }
 
