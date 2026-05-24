@@ -559,14 +559,6 @@ private struct DownloadQueueRow: View {
             .labelStyle(.iconOnly)
             .buttonStyle(.bordered)
             .help(L10n.moreActions)
-
-            Button(role: .destructive, action: delete) {
-                Label(L10n.deleteDownload, systemImage: "trash")
-            }
-            .labelStyle(.iconOnly)
-            .buttonStyle(.bordered)
-            .disabled(item.status == .downloading)
-            .help(L10n.deleteDownload)
         }
         .padding(12)
         .keiPanel(16)
