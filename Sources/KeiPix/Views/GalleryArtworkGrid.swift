@@ -5,6 +5,7 @@ struct GalleryContentGrid: View {
     @Binding var actionMessage: String?
     @State private var feedbackRequest: FeedbackReportRequest?
     @State private var feedbackArtwork: PixivArtwork?
+    @State private var seriesArtwork: PixivArtwork?
 
     var body: some View {
         Group {
@@ -24,6 +25,7 @@ struct GalleryContentGrid: View {
                         store: store,
                         actionMessage: $actionMessage,
                         presentFeedback: presentFeedback,
+                        presentSeries: { seriesArtwork = $0 },
                         fixedColumnCount: store.galleryLayoutMode.fixedColumnCount
                     )
 
@@ -41,6 +43,9 @@ struct GalleryContentGrid: View {
             } onComplete: { message in
                 actionMessage = message
             }
+        }
+        .sheet(item: $seriesArtwork) { artwork in
+            ArtworkSeriesSheet(artwork: artwork, store: store)
         }
     }
 
@@ -74,6 +79,12 @@ struct GalleryContentGrid: View {
             Button(L10n.searchImageSource) {
                 store.presentImageSourceSearch(for: artwork)
             }
+            ArtworkSeriesContextMenuItems(
+                artwork: artwork,
+                store: store,
+                actionMessage: $actionMessage,
+                showSeries: { seriesArtwork = $0 }
+            )
             Divider()
             Button {
                 presentFeedback(artwork)
@@ -128,6 +139,7 @@ private struct MasonryArtworkGrid: View {
     @Bindable var store: KeiPixStore
     @Binding var actionMessage: String?
     let presentFeedback: (PixivArtwork) -> Void
+    let presentSeries: (PixivArtwork) -> Void
     let fixedColumnCount: Int?
 
     private let spacing: CGFloat = 12
@@ -173,6 +185,12 @@ private struct MasonryArtworkGrid: View {
                     Button(L10n.searchImageSource) {
                         store.presentImageSourceSearch(for: artwork)
                     }
+                    ArtworkSeriesContextMenuItems(
+                        artwork: artwork,
+                        store: store,
+                        actionMessage: $actionMessage,
+                        showSeries: presentSeries
+                    )
                     Divider()
                     Button {
                         presentFeedback(artwork)
@@ -216,6 +234,73 @@ private struct MasonryArtworkGrid: View {
             actionMessage = String(format: L10n.savedBookmarkFormat, artwork.title)
         } catch {
             store.errorMessage = error.localizedDescription
+        }
+    }
+}
+
+private struct ArtworkSeriesContextMenuItems: View {
+    let artwork: PixivArtwork
+    @Bindable var store: KeiPixStore
+    @Binding var actionMessage: String?
+    let showSeries: (PixivArtwork) -> Void
+
+    var body: some View {
+        if let series = artwork.series {
+            Divider()
+            Button {
+                showSeries(artwork)
+            } label: {
+                Label(L10n.showSeries, systemImage: "rectangle.stack")
+            }
+            Button {
+                Task { await addToWatchlist(series) }
+            } label: {
+                Label(L10n.addSeriesToWatchlist, systemImage: "rectangle.stack.badge.plus")
+            }
+            if let url = artwork.seriesPixivURL {
+                Link(destination: url) {
+                    Label(L10n.openSeriesInPixiv, systemImage: "safari")
+                }
+                Button {
+                    PasteboardWriter.copy(url.absoluteString)
+                    actionMessage = L10n.copied
+                } label: {
+                    Label(L10n.copySeriesLink, systemImage: "link")
+                }
+            }
+        }
+    }
+
+    private func addToWatchlist(_ series: PixivArtworkSeriesSummary) async {
+        do {
+            try await store.setMangaWatchlist(seriesID: series.id, isAdded: true)
+            actionMessage = String(format: L10n.addedToWatchlistFormat, series.title)
+        } catch {
+            store.errorMessage = error.localizedDescription
+        }
+    }
+}
+
+private struct ArtworkSeriesSheet: View {
+    let artwork: PixivArtwork
+    @Bindable var store: KeiPixStore
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                ArtworkSeriesView(artwork: artwork, store: store, startsExpanded: true)
+                    .padding(18)
+            }
+            .frame(minWidth: 560, idealWidth: 680, minHeight: 520, idealHeight: 700)
+            .navigationTitle(artwork.series?.title ?? L10n.artworkSeries)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button(L10n.done) {
+                        dismiss()
+                    }
+                }
+            }
         }
     }
 }

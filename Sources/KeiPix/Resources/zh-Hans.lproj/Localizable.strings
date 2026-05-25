@@ -636,10 +636,13 @@
 "Artwork Series" = "作品系列";
 "No series artworks" = "暂无系列作品";
 "Load More Series Artworks" = "加载更多系列作品";
+"Show Series" = "查看系列";
 "Add to Watchlist" = "添加到追更";
+"Add Series to Watchlist" = "将系列加入追更";
 "Watchlist Added" = "已追更";
 "Added %@ to watchlist" = "已追更 %@";
 "Open Series in Pixiv" = "在 Pixiv 打开系列";
+"Copy Series Link" = "复制系列链接";
 "Open Latest Artwork" = "打开最新作品";
 "Updated" = "有更新";
 "%d unread" = "%d 个未读";

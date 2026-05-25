@@ -636,10 +636,13 @@
 "Artwork Series" = "Artwork Series";
 "No series artworks" = "No series artworks";
 "Load More Series Artworks" = "Load More Series Artworks";
+"Show Series" = "Show Series";
 "Add to Watchlist" = "Add to Watchlist";
+"Add Series to Watchlist" = "Add Series to Watchlist";
 "Watchlist Added" = "Watchlist Added";
 "Added %@ to watchlist" = "Added %@ to watchlist";
 "Open Series in Pixiv" = "Open Series in Pixiv";
+"Copy Series Link" = "Copy Series Link";
 "Open Latest Artwork" = "Open Latest Artwork";
 "Updated" = "Updated";
 "%d unread" = "%d unread";

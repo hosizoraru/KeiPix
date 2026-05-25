@@ -3,8 +3,10 @@ import SwiftUI
 struct ArtworkSeriesView: View {
     let artwork: PixivArtwork
     @Bindable var store: KeiPixStore
+    var startsExpanded = false
 
     @State private var isExpanded = false
+    @State private var didApplyInitialExpansion = false
     @State private var hasLoaded = false
     @State private var detail: PixivArtworkSeriesDetail?
     @State private var seriesArtworks: [PixivArtwork] = []
@@ -72,9 +74,14 @@ struct ArtworkSeriesView: View {
             .disclosureGroupStyle(.automatic)
             .padding(14)
             .keiPanel(16)
-            .onChange(of: isExpanded) { _, value in
-                guard value, hasLoaded == false else { return }
-                Task { await loadInitial() }
+            .onAppear {
+                guard startsExpanded, didApplyInitialExpansion == false else { return }
+                didApplyInitialExpansion = true
+                isExpanded = true
+            }
+            .task(id: isExpanded) {
+                guard isExpanded, hasLoaded == false else { return }
+                await loadInitial()
             }
             .confirmationDialog(
                 pendingDangerAction?.title ?? L10n.moreActions,

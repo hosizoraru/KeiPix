@@ -222,6 +222,10 @@ struct PixivArtwork: Codable, Identifiable, Hashable, Sendable {
     var detailURL: URL? { images.first?.large ?? images.first?.medium }
     var originalURL: URL? { images.first?.original ?? detailURL }
     var pixivURL: URL? { URL(string: "https://www.pixiv.net/artworks/\(id)") }
+    var seriesPixivURL: URL? {
+        guard let series else { return nil }
+        return URL(string: "https://www.pixiv.net/user/\(user.id)/series/\(series.id)")
+    }
     var aspectRatio: CGFloat {
         guard width > 0, height > 0 else { return 0.75 }
         return CGFloat(width) / CGFloat(height)

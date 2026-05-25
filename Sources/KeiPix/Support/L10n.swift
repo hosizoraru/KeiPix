@@ -797,10 +797,13 @@ enum L10n {
     static var artworkSeries: String { text("Artwork Series") }
     static var noSeriesArtworks: String { text("No series artworks") }
     static var loadMoreSeriesArtworks: String { text("Load More Series Artworks") }
+    static var showSeries: String { text("Show Series") }
     static var addToWatchlist: String { text("Add to Watchlist") }
+    static var addSeriesToWatchlist: String { text("Add Series to Watchlist") }
     static var watchlistAdded: String { text("Watchlist Added") }
     static var addedToWatchlistFormat: String { text("Added %@ to watchlist") }
     static var openSeriesInPixiv: String { text("Open Series in Pixiv") }
+    static var copySeriesLink: String { text("Copy Series Link") }
     static var openLatestArtwork: String { text("Open Latest Artwork") }
     static var updatedSeries: String { text("Updated") }
     static var unreadUpdatesFormat: String { text("%d unread") }
