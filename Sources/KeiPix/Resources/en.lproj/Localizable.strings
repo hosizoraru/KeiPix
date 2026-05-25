@@ -633,6 +633,7 @@
 "Reply" = "Reply";
 "Reply to %@" = "Reply to %@";
 "Cancel Reply" = "Cancel Reply";
+"Comment Emoji" = "Comment Emoji";
 "View Replies" = "View Replies";
 "Hide Replies" = "Hide Replies";
 "No replies" = "No replies";
@@ -907,7 +908,7 @@
 "Run detail QA on the selected artwork." = "Run detail QA on the selected artwork.";
 "Comments and feedback" = "Comments and feedback";
 "Comments, replies, feedback summaries, and local comment mute flows remain reachable." = "Comments, replies, feedback summaries, and local comment mute flows remain reachable.";
-"Add stamp support only after endpoint verification." = "Add stamp support only after endpoint verification.";
+"Keep comment emoji, stamp, feedback, and local mute coverage current." = "Keep comment emoji, stamp, feedback, and local mute coverage current.";
 "Local cache and offline" = "Local cache and offline";
 "Image cache, history, downloads, and last successful surfaces support offline-friendly review." = "Image cache, history, downloads, and last successful surfaces support offline-friendly review.";
 "Keep feed snapshot cache in regression coverage." = "Keep feed snapshot cache in regression coverage.";

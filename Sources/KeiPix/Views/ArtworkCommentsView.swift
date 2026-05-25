@@ -11,6 +11,7 @@ struct ArtworkCommentsView: View {
     @State private var totalComments: Int?
     @State private var draft = ""
     @State private var replyTarget: PixivComment?
+    @State private var isEmojiPickerPresented = false
     @State private var isLoading = false
     @State private var isLoadingMore = false
     @State private var isPosting = false
@@ -137,6 +138,22 @@ struct ArtworkCommentsView: View {
                 .disabled(isPosting)
 
             HStack {
+                Button {
+                    isEmojiPickerPresented.toggle()
+                } label: {
+                    Label(L10n.commentEmoji, systemImage: "face.smiling")
+                }
+                .labelStyle(.iconOnly)
+                .buttonStyle(.borderless)
+                .help(L10n.commentEmoji)
+                .popover(isPresented: $isEmojiPickerPresented, arrowEdge: .bottom) {
+                    PixivCommentEmojiPicker { emoji in
+                        insertEmoji(emoji)
+                        isEmojiPickerPresented = false
+                    }
+                }
+                .disabled(isPosting)
+
                 Text("\(draft.count) / 140")
                     .font(.caption)
                     .foregroundStyle(draft.count > 140 ? .red : .secondary)
@@ -166,6 +183,10 @@ struct ArtworkCommentsView: View {
 
     private func replyTargetTitle(_ comment: PixivComment) -> String {
         String(format: L10n.replyToFormat, comment.user?.name ?? L10n.comments)
+    }
+
+    private func insertEmoji(_ emoji: PixivCommentEmoji) {
+        draft += emoji.token
     }
 
     private func loadInitial() async {
@@ -471,10 +492,7 @@ private struct CommentRow: View {
                 }
 
                 if let text = comment.comment, text.isEmpty == false {
-                    Text(text)
-                        .font(.callout)
-                        .textSelection(.enabled)
-                        .fixedSize(horizontal: false, vertical: true)
+                    PixivCommentEmojiTextView(text: text)
                 }
 
                 if let stampURL = comment.stamp?.stampURL {

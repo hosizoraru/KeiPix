@@ -633,6 +633,7 @@
 "Reply" = "回复";
 "Reply to %@" = "回复给 %@";
 "Cancel Reply" = "取消回复";
+"Comment Emoji" = "评论表情";
 "View Replies" = "查看回复";
 "Hide Replies" = "收起回复";
 "No replies" = "暂无回复";
@@ -907,7 +908,7 @@
 "Run detail QA on the selected artwork." = "对选中作品运行详情 QA。";
 "Comments and feedback" = "评论与反馈";
 "Comments, replies, feedback summaries, and local comment mute flows remain reachable." = "评论、回复、反馈摘要和本地评论屏蔽流程需要可访问。";
-"Add stamp support only after endpoint verification." = "仅在端点验证后新增表情评论支持。";
+"Keep comment emoji, stamp, feedback, and local mute coverage current." = "保持评论 emoji、stamp、反馈和本地屏蔽覆盖最新。";
 "Local cache and offline" = "本地缓存与离线";
 "Image cache, history, downloads, and last successful surfaces support offline-friendly review." = "图片缓存、历史、下载和最近成功页面需要支持离线友好浏览。";
 "Keep feed snapshot cache in regression coverage." = "将作品流快照缓存纳入回归覆盖。";

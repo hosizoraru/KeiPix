@@ -704,7 +704,7 @@ enum L10n {
     static var qaArtworkDetailSocialNext: String { text("Run detail QA on the selected artwork.") }
     static var qaCommentsFeedback: String { text("Comments and feedback") }
     static var qaCommentsFeedbackRequirement: String { text("Comments, replies, feedback summaries, and local comment mute flows remain reachable.") }
-    static var qaCommentsFeedbackNext: String { text("Add stamp support only after endpoint verification.") }
+    static var qaCommentsFeedbackNext: String { text("Keep comment emoji, stamp, feedback, and local mute coverage current.") }
     static var qaLocalCacheOffline: String { text("Local cache and offline") }
     static var qaLocalCacheOfflineRequirement: String { text("Image cache, history, downloads, and last successful surfaces support offline-friendly review.") }
     static var qaLocalCacheOfflineNext: String { text("Keep feed snapshot cache in regression coverage.") }
@@ -795,6 +795,7 @@ enum L10n {
     static var reply: String { text("Reply") }
     static var replyToFormat: String { text("Reply to %@") }
     static var cancelReply: String { text("Cancel Reply") }
+    static var commentEmoji: String { text("Comment Emoji") }
     static var viewReplies: String { text("View Replies") }
     static var hideReplies: String { text("Hide Replies") }
     static var noReplies: String { text("No replies") }
