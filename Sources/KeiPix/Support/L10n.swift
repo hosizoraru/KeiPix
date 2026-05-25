@@ -598,7 +598,7 @@ enum L10n {
     static var runAccountHealthDiagnostics: String { text("Run Account Health Check") }
     static var runningAccountHealthDiagnostics: String { text("Running account health check") }
     static var accountTokenRefresh: String { text("Account Token Refresh") }
-    static var keychainSession: String { text("Saved session") }
+    static var savedSession: String { text("Saved session") }
     static var runReadOnlyQA: String { text("Run Read-only QA") }
     static var runningReadOnlyQA: String { text("Running read-only QA") }
     static var runNonNovelQAMatrix: String { text("Run Non-Novel QA Matrix") }

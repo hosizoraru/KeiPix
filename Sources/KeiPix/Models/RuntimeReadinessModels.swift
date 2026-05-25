@@ -601,7 +601,7 @@ extension KeiPixStore {
 
     private func storeAccountHealthDetail(for session: PixivSession) -> String {
         let identity = showAccountIdentity ? "@\(session.user.account)" : L10n.hidden
-        return "\(L10n.keychainSession) · \(identity)"
+        return "\(L10n.savedSession) · \(identity)"
     }
 
     private func pixivAPIDiagnostic() async -> NetworkDiagnosticResult {
