@@ -45,7 +45,10 @@ struct GallerySelectionTests {
             2.35,
             2.55,
             2.7,
-            3.2
+            3.0,
+            3.2,
+            3.4,
+            4.0
         ]
 
         let regularSpans = realAccountLikeAspects.map {
@@ -55,8 +58,8 @@ struct GallerySelectionTests {
             ArtworkMasonryPresentation(aspectRatio: $0).span(for: 3, denseFixedColumns: true)
         }
 
-        #expect(regularSpans == [2, 2, 2, 2, 2, 3, 3, 3, 3, 3])
-        #expect(denseSpans == [1, 1, 1, 1, 1, 1, 1, 2, 2, 3])
+        #expect(regularSpans == [2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3])
+        #expect(denseSpans == [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 3])
     }
 
     @Test("Visual QA gallery samples include real-account wide-heavy ratios")
@@ -69,6 +72,19 @@ struct GallerySelectionTests {
         }
 
         #expect(wideHeavyArtworks.count >= 6)
+        #expect(denseSpans.allSatisfy { $0 == 1 })
+    }
+
+    @Test("Three-column masonry treats common panoramic works as single-column cards")
+    func threeColumnMasonryTreatsCommonPanoramasAsSingleColumnCards() {
+        let commonPanoramicArtworks = VisualQASampleData.galleryLayoutArtworks.filter { artwork in
+            (2.45..<3.4).contains(artwork.aspectRatio)
+        }
+        let denseSpans = commonPanoramicArtworks.map {
+            ArtworkMasonryPresentation(artwork: $0).span(for: 3, denseFixedColumns: true)
+        }
+
+        #expect(commonPanoramicArtworks.isEmpty == false)
         #expect(denseSpans.allSatisfy { $0 == 1 })
     }
 
