@@ -165,6 +165,8 @@ struct UserPreviewListView: View {
                 requestFeedback: presentFeedback,
                 copyCreatorLink: copyCreatorLink,
                 copyArtworkLink: copyArtworkLink,
+                isPinnedCreator: store.isPinnedCreator,
+                togglePinnedCreator: togglePinnedCreator,
                 selectArtwork: { store.selectedArtwork = $0 }
             )
         }
@@ -446,6 +448,8 @@ struct UserPreviewListView: View {
                 try await store.recommendedUsers()
             case .following:
                 try await store.followingUsers(restrict: restrict)
+            case .pinned:
+                PixivUserPreviewResponse(userPreviews: store.pinnedCreatorPreviews, nextURL: nil)
             case .search:
                 try await store.searchUsers(keyword: searchKeyword)
             case .userFollowing(let user):
@@ -612,6 +616,16 @@ struct UserPreviewListView: View {
         bulkStatusText = String(format: L10n.copiedArtworkLinksFormat, 1)
     }
 
+    private func togglePinnedCreator(_ user: PixivUser) {
+        let isPinned = store.togglePinnedCreator(user)
+        if case .pinned = mode, isPinned == false {
+            previews.removeAll { $0.user.id == user.id }
+        } else {
+            upsertPreview(user)
+        }
+        bulkStatusText = String(format: isPinned ? L10n.pinnedCreatorFormat : L10n.unpinnedCreatorFormat, user.name)
+    }
+
     private func copyVisibleCreatorLinks() {
         let links = visiblePreviews.compactMap { $0.user.pixivURL?.absoluteString }
         guard links.isEmpty == false else {
@@ -652,6 +666,13 @@ struct UserPreviewListView: View {
         for index in previews.indices where previews[index].user.id == userID {
             previews[index] = PixivUserPreview(user: previews[index].user, illusts: previews[index].illusts, isMuted: isMuted)
         }
+    }
+
+    private func upsertPreview(_ user: PixivUser) {
+        guard let index = previews.firstIndex(where: { $0.user.id == user.id }) else {
+            return
+        }
+        previews[index] = PixivUserPreview(user: user, illusts: previews[index].illusts, isMuted: previews[index].isMuted)
     }
 
     private func normalizedLoadedPreviews(_ userPreviews: [PixivUserPreview]) -> [PixivUserPreview] {

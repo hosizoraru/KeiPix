@@ -35,6 +35,7 @@ final class KeiPixStore {
     var readerProgressLibrary = KeiPixStore.loadReaderProgressLibrary()
     var downloadedReaderProgressLibrary = KeiPixStore.loadDownloadedReaderProgressLibrary()
     var mangaWatchlistReadStateLibrary = KeiPixStore.loadMangaWatchlistReadStateLibrary()
+    var pinnedCreatorLibrary = KeiPixStore.loadPinnedCreatorLibrary()
     var errorMessage: String?
     var isLoading = false
     var isLoadingMore = false
@@ -698,7 +699,7 @@ final class KeiPixStore {
             return try await api.browsingHistoryIllusts()
         case .mangaWatchlist, .downloads, .savedSearches, .trendingTags, .bookmarkTags, .mutedContent, .spotlight:
             return PixivFeedResponse(illusts: [], nextURL: nil)
-        case .followingCreators, .recommendedUsers, .searchUsers:
+        case .followingCreators, .pinnedCreators, .recommendedUsers, .searchUsers:
             return PixivFeedResponse(illusts: [], nextURL: nil)
         }
     }

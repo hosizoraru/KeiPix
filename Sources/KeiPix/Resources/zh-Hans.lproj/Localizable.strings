@@ -92,6 +92,7 @@
 "Library" = "书架";
 "Following" = "关注";
 "Following Creators" = "关注作者";
+"Pinned Creators" = "置顶作者";
 "History" = "浏览历史";
 "History Source" = "历史来源";
 "Local" = "本地";
@@ -401,6 +402,12 @@
 "Updated %d creators" = "已更新 %d 位作者";
 "Copied %d creator links" = "已复制 %d 个作者链接";
 "Copied %d creator summaries" = "已复制 %d 条作者摘要";
+"Pin Creator" = "置顶作者";
+"Unpin Creator" = "取消置顶作者";
+"Pinned %@" = "已置顶 %@";
+"Unpinned %@" = "已取消置顶 %@";
+"No pinned creators" = "暂无置顶作者";
+"Pin creators from recommended, search, following, or profile views to build a local creator collection." = "可从推荐、搜索、关注或作者资料里置顶作者，建立本地作者集合。";
 "Checked follow visibility for %d creators" = "已检查 %d 位作者的关注可见性";
 "Checked follow visibility for %d creators, %d failed" = "已检查 %d 位作者的关注可见性，%d 位失败";
 "Followed %@" = "已关注 %@";
@@ -858,7 +865,7 @@
 "Keep bookmark and download automation in regression coverage." = "保持收藏和下载自动化的回归覆盖。";
 "Following creators" = "关注作者";
 "Follow lists, recommended creators, creator search, and follow visibility stay usable." = "关注列表、推荐作者、搜索作者和关注可见性需要可用。";
-"Add pinned creator collections." = "新增置顶作者集合。";
+"Keep pinned creator collections in regression coverage." = "保持置顶作者集合的回归覆盖。";
 "Downloads" = "下载";
 "Queue, local library, naming templates, ugoira downloads, and batch actions stay usable." = "队列、本地库、命名模板、动图下载和批量操作需要可用。";
 "Keep download queue visual evidence in regression coverage." = "保持下载队列视觉证据的回归覆盖。";

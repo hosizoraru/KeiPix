@@ -92,6 +92,7 @@
 "Library" = "Library";
 "Following" = "Following";
 "Following Creators" = "Following Creators";
+"Pinned Creators" = "Pinned Creators";
 "History" = "History";
 "History Source" = "History Source";
 "Local" = "Local";
@@ -401,6 +402,12 @@
 "Updated %d creators" = "Updated %d creators";
 "Copied %d creator links" = "Copied %d creator links";
 "Copied %d creator summaries" = "Copied %d creator summaries";
+"Pin Creator" = "Pin Creator";
+"Unpin Creator" = "Unpin Creator";
+"Pinned %@" = "Pinned %@";
+"Unpinned %@" = "Unpinned %@";
+"No pinned creators" = "No pinned creators";
+"Pin creators from recommended, search, following, or profile views to build a local creator collection." = "Pin creators from recommended, search, following, or profile views to build a local creator collection.";
 "Checked follow visibility for %d creators" = "Checked follow visibility for %d creators";
 "Checked follow visibility for %d creators, %d failed" = "Checked follow visibility for %d creators, %d failed";
 "Followed %@" = "Followed %@";
@@ -858,7 +865,7 @@
 "Keep bookmark and download automation in regression coverage." = "Keep bookmark and download automation in regression coverage.";
 "Following creators" = "Following creators";
 "Follow lists, recommended creators, creator search, and follow visibility stay usable." = "Follow lists, recommended creators, creator search, and follow visibility stay usable.";
-"Add pinned creator collections." = "Add pinned creator collections.";
+"Keep pinned creator collections in regression coverage." = "Keep pinned creator collections in regression coverage.";
 "Downloads" = "Downloads";
 "Queue, local library, naming templates, ugoira downloads, and batch actions stay usable." = "Queue, local library, naming templates, ugoira downloads, and batch actions stay usable.";
 "Keep download queue visual evidence in regression coverage." = "Keep download queue visual evidence in regression coverage.";

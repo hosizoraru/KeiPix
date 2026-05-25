@@ -192,6 +192,7 @@ extension KeiPixStore {
         let followRestrict = restrict ?? defaultFollowRestrict
         try await api.setFollow(userID: user.id, isFollowed: isFollowed, restrict: followRestrict)
         updateFollowState(userID: user.id, isFollowed: isFollowed)
+        updatePinnedCreatorFollowState(user: user, isFollowed: isFollowed)
     }
 
     func loadUgoiraAnimation(for artwork: PixivArtwork) async throws -> UgoiraAnimation {

@@ -15,6 +15,8 @@ struct UserPreviewCard: View {
     let requestFeedback: () -> Void
     let copyCreatorLink: () -> Void
     let copyArtworkLink: (PixivArtwork) -> Void
+    let isPinned: Bool
+    let togglePinnedCreator: () -> Void
     let selectArtwork: (PixivArtwork) -> Void
 
     var body: some View {
@@ -174,6 +176,12 @@ struct UserPreviewCard: View {
                     Label(L10n.copyLink, systemImage: "link")
                 }
 
+                Button {
+                    togglePinnedCreator()
+                } label: {
+                    Label(isPinned ? L10n.unpinCreator : L10n.pinCreator, systemImage: isPinned ? "pin.slash" : "pin")
+                }
+
                 if let url = preview.user.pixivURL {
                     Link(destination: url) {
                         Label(L10n.openInPixiv, systemImage: "safari")
@@ -214,6 +222,11 @@ struct UserPreviewCard: View {
         }
         Button(L10n.copyLink) {
             copyCreatorLink()
+        }
+        Button {
+            togglePinnedCreator()
+        } label: {
+            Label(isPinned ? L10n.unpinCreator : L10n.pinCreator, systemImage: isPinned ? "pin.slash" : "pin")
         }
         if preview.user.isFollowed {
             Button(role: .destructive) {

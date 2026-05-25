@@ -589,6 +589,7 @@ struct SettingsView: View {
             L10n.followCreatorAfterBookmark,
             L10n.autoDownloadBookmarkedArtworks,
             L10n.followingCreators,
+            L10n.pinnedCreators,
             L10n.defaultFollowVisibility
         ]
     }

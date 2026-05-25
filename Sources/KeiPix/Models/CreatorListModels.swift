@@ -3,6 +3,7 @@ import SwiftUI
 enum UserPreviewListMode: Identifiable {
     case recommended
     case following
+    case pinned
     case search
     case userFollowing(PixivUser)
     case userFollowers(PixivUser)
@@ -12,6 +13,7 @@ enum UserPreviewListMode: Identifiable {
         switch self {
         case .recommended: L10n.recommendedCreators
         case .following: L10n.followingCreators
+        case .pinned: L10n.pinnedCreators
         case .search: L10n.searchCreators
         case .userFollowing(let user): "\(L10n.followingCreators) · \(user.name)"
         case .userFollowers(let user): "\(L10n.followers) · \(user.name)"
@@ -46,12 +48,23 @@ enum UserPreviewListMode: Identifiable {
         }
     }
 
+    var emptySystemImage: String {
+        switch self {
+        case .pinned:
+            "pin"
+        default:
+            "person.2"
+        }
+    }
+
     var key: String {
         switch self {
         case .recommended:
             "recommended"
         case .following:
             "following"
+        case .pinned:
+            "pinned"
         case .search:
             "search"
         case .userFollowing(let user):

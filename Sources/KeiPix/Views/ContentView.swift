@@ -409,7 +409,7 @@ private struct ContentColumnView: View {
             BrowsingHistoryView(store: store)
         } else if store.selectedRoute == .mutedContent {
             MutedContentView(store: store)
-        } else if store.selectedRoute == .followingCreators || store.selectedRoute == .recommendedUsers || store.selectedRoute == .searchUsers {
+        } else if store.selectedRoute == .followingCreators || store.selectedRoute == .pinnedCreators || store.selectedRoute == .recommendedUsers || store.selectedRoute == .searchUsers {
             UserPreviewListView(store: store, mode: userPreviewMode)
         } else {
             GalleryView(store: store)
@@ -420,6 +420,8 @@ private struct ContentColumnView: View {
         switch store.selectedRoute {
         case .followingCreators:
             .following
+        case .pinnedCreators:
+            .pinned
         case .searchUsers:
             .search
         default:

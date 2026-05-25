@@ -95,6 +95,7 @@ enum L10n {
     static var library: String { text("Library") }
     static var following: String { text("Following") }
     static var followingCreators: String { text("Following Creators") }
+    static var pinnedCreators: String { text("Pinned Creators") }
     static var history: String { text("History") }
     static var historySource: String { text("History Source") }
     static var localHistory: String { text("Local") }
@@ -396,6 +397,12 @@ enum L10n {
     static var creatorActionCompletedFormat: String { text("Updated %d creators") }
     static var copiedCreatorLinksFormat: String { text("Copied %d creator links") }
     static var copiedCreatorSummaryFormat: String { text("Copied %d creator summaries") }
+    static var pinCreator: String { text("Pin Creator") }
+    static var unpinCreator: String { text("Unpin Creator") }
+    static var pinnedCreatorFormat: String { text("Pinned %@") }
+    static var unpinnedCreatorFormat: String { text("Unpinned %@") }
+    static var noPinnedCreators: String { text("No pinned creators") }
+    static var noPinnedCreatorsHint: String { text("Pin creators from recommended, search, following, or profile views to build a local creator collection.") }
     static var followVisibilityUpdatedFormat: String { text("Checked follow visibility for %d creators") }
     static var followVisibilityPartiallyUpdatedFormat: String { text("Checked follow visibility for %d creators, %d failed") }
     static var followedCreatorFormat: String { text("Followed %@") }
@@ -658,7 +665,7 @@ enum L10n {
     static var qaBookmarksNext: String { text("Keep bookmark and download automation in regression coverage.") }
     static var qaFollowingCreators: String { text("Following creators") }
     static var qaFollowingCreatorsRequirement: String { text("Follow lists, recommended creators, creator search, and follow visibility stay usable.") }
-    static var qaFollowingCreatorsNext: String { text("Add pinned creator collections.") }
+    static var qaFollowingCreatorsNext: String { text("Keep pinned creator collections in regression coverage.") }
     static var qaDownloads: String { text("Downloads") }
     static var qaDownloadsRequirement: String { text("Queue, local library, naming templates, ugoira downloads, and batch actions stay usable.") }
     static var qaDownloadsNext: String { text("Keep download queue visual evidence in regression coverage.") }

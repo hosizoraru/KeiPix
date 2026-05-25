@@ -93,6 +93,22 @@ struct PixivUser: Decodable, Identifiable, Hashable, Sendable {
         case px170 = "px_170x170"
     }
 
+    init(
+        id: Int,
+        name: String,
+        account: String,
+        comment: String? = nil,
+        avatarURL: URL? = nil,
+        isFollowed: Bool = false
+    ) {
+        self.id = id
+        self.name = name
+        self.account = account
+        self.comment = comment
+        self.avatarURL = avatarURL
+        self.isFollowed = isFollowed
+    }
+
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         id = try container.decode(Int.self, forKey: .id)

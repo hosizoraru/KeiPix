@@ -302,6 +302,13 @@ struct UserProfileSheet: View {
                     showStatus(L10n.copied)
                 }
 
+                Button {
+                    let isPinned = store.togglePinnedCreator(currentUser)
+                    showStatus(String(format: isPinned ? L10n.pinnedCreatorFormat : L10n.unpinnedCreatorFormat, currentUser.name))
+                } label: {
+                    Label(store.isPinnedCreator(currentUser) ? L10n.unpinCreator : L10n.pinCreator, systemImage: store.isPinnedCreator(currentUser) ? "pin.slash" : "pin")
+                }
+
                 Divider()
 
                 Button {

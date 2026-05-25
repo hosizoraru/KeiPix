@@ -252,6 +252,8 @@ struct CreatorPreviewListContent: View {
     let requestFeedback: (PixivUser) -> Void
     let copyCreatorLink: (PixivUser) -> Void
     let copyArtworkLink: (PixivArtwork) -> Void
+    let isPinnedCreator: (PixivUser) -> Bool
+    let togglePinnedCreator: (PixivUser) -> Void
     let selectArtwork: (PixivArtwork) -> Void
 
     private let columns = [
@@ -298,9 +300,27 @@ struct CreatorPreviewListContent: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {
-            ContentUnavailableView(L10n.noCreators, systemImage: "person.2")
+            ContentUnavailableView(
+                emptyTitle,
+                systemImage: mode.emptySystemImage,
+                description: Text(emptyHint)
+            )
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
+    }
+
+    private var emptyTitle: String {
+        if case .pinned = mode {
+            return L10n.noPinnedCreators
+        }
+        return L10n.noCreators
+    }
+
+    private var emptyHint: String {
+        if case .pinned = mode {
+            return L10n.noPinnedCreatorsHint
+        }
+        return ""
     }
 
     private var noMatchingCreators: some View {
@@ -334,6 +354,8 @@ struct CreatorPreviewListContent: View {
                     requestFeedback: { requestFeedback(preview.user) },
                     copyCreatorLink: { copyCreatorLink(preview.user) },
                     copyArtworkLink: copyArtworkLink,
+                    isPinned: isPinnedCreator(preview.user),
+                    togglePinnedCreator: { togglePinnedCreator(preview.user) },
                     selectArtwork: selectArtwork
                 )
             }
