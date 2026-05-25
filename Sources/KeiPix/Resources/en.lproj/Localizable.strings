@@ -45,6 +45,12 @@
 "Copy Pixiv Web Search Link" = "Copy Pixiv Web Search Link";
 "Copied Pixiv Web Search Link" = "Copied Pixiv Web Search Link";
 "Open Pixiv Link from Clipboard" = "Open Pixiv Link from Clipboard";
+"Open Pixiv ID" = "Open Pixiv ID";
+"Pixiv ID Type" = "Pixiv ID Type";
+"Open an artwork or creator directly by numeric Pixiv ID." = "Open an artwork or creator directly by numeric Pixiv ID.";
+"Enter artwork ID" = "Enter artwork ID";
+"Enter creator ID" = "Enter creator ID";
+"Opened %@ %d" = "Opened %@ %d";
 "Opened Pixiv link %@" = "Opened Pixiv link %@";
 "No Pixiv link in clipboard" = "No Pixiv link in clipboard";
 "Unsupported Pixiv link" = "Unsupported Pixiv link";

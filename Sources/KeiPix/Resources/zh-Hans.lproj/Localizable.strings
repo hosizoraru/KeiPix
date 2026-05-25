@@ -45,6 +45,12 @@
 "Copy Pixiv Web Search Link" = "复制 Pixiv Web 搜索链接";
 "Copied Pixiv Web Search Link" = "已复制 Pixiv Web 搜索链接";
 "Open Pixiv Link from Clipboard" = "打开剪贴板里的 Pixiv 链接";
+"Open Pixiv ID" = "打开 Pixiv ID";
+"Pixiv ID Type" = "Pixiv ID 类型";
+"Open an artwork or creator directly by numeric Pixiv ID." = "通过数字 Pixiv ID 直接打开作品或创作者。";
+"Enter artwork ID" = "输入作品 ID";
+"Enter creator ID" = "输入创作者 ID";
+"Opened %@ %d" = "已打开 %@ %d";
 "Opened Pixiv link %@" = "已打开 Pixiv 链接 %@";
 "No Pixiv link in clipboard" = "剪贴板里没有 Pixiv 链接";
 "Unsupported Pixiv link" = "暂不支持这个 Pixiv 链接";

@@ -289,6 +289,27 @@ final class KeiPixStore {
         return await openPixivLink(url)
     }
 
+    @discardableResult
+    func openPixivID(_ id: Int, target: PixivIDOpenTarget) async -> String {
+        guard session != nil else {
+            isLoginPresented = true
+            return L10n.loginRequiredForPixivLink
+        }
+
+        do {
+            switch target {
+            case .artwork:
+                try await openPixivDestination(.artwork(id))
+            case .creator:
+                try await openPixivDestination(.user(id))
+            }
+            return String(format: L10n.openedPixivIDFormat, target.title, id)
+        } catch {
+            errorMessage = error.localizedDescription
+            return error.localizedDescription
+        }
+    }
+
     private func openPixivDestination(_ destination: PixivWebDestination) async throws {
         switch destination {
         case .artwork(let id):

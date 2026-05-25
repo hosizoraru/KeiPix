@@ -5,6 +5,7 @@ struct ContentView: View {
     @State private var columnVisibility: NavigationSplitViewVisibility = .all
     @State private var isSidebarPresented = true
     @State private var statusMessage: String?
+    @State private var isPixivIDOpenPresented = false
     @Environment(\.undoManager) private var undoManager
 
     var body: some View {
@@ -110,6 +111,9 @@ struct ContentView: View {
         .sheet(item: $store.presentedUserProfile) { user in
             UserProfileSheet(user: user, store: store)
         }
+        .sheet(isPresented: $isPixivIDOpenPresented) {
+            PixivIDOpenSheet(store: store, showStatus: showStatus)
+        }
         .confirmationDialog(
             store.pendingDangerAction?.title ?? L10n.moreActions,
             isPresented: dangerActionBinding,
@@ -177,6 +181,12 @@ struct ContentView: View {
                 Task { await openPixivLinkFromClipboard() }
             } label: {
                 Label(L10n.openPixivLinkFromClipboard, systemImage: "link.badge.plus")
+            }
+
+            Button {
+                isPixivIDOpenPresented = true
+            } label: {
+                Label(L10n.openPixivID, systemImage: "number")
             }
 
             Button {
