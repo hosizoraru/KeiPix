@@ -41,4 +41,17 @@ struct ArtworkReadingModeTests {
         #expect(library.restoredPageIndex(for: 10, pageCount: 1) == nil)
         #expect(library.items.isEmpty)
     }
+
+    @Test("Downloaded reader progress is scoped by download record")
+    func downloadedReaderProgressLibrary() {
+        let fullDownloadID = UUID()
+        let pageRangeDownloadID = UUID()
+        var library = DownloadedArtworkReaderProgressLibrary()
+        library.update(downloadID: fullDownloadID, pageIndex: 7, pageCount: 20)
+        library.update(downloadID: pageRangeDownloadID, pageIndex: 2, pageCount: 4)
+
+        #expect(library.restoredPageIndex(for: fullDownloadID, pageCount: 20) == 7)
+        #expect(library.restoredPageIndex(for: pageRangeDownloadID, pageCount: 4) == 2)
+        #expect(library.items.map(\.downloadID) == [pageRangeDownloadID, fullDownloadID])
+    }
 }

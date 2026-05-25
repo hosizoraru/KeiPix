@@ -4,6 +4,7 @@ import SwiftUI
 struct DownloadedArtworkViewer: View {
     let item: ArtworkDownloadItem
     let imageURLs: [URL]
+    @Bindable var store: KeiPixStore
 
     @Environment(\.dismiss) private var dismiss
     @State private var pageIndex = 0
@@ -48,8 +49,14 @@ struct DownloadedArtworkViewer: View {
             }
         }
         .animation(.snappy(duration: 0.18), value: actionMessage)
+        .task(id: item.id) {
+            pageIndex = store.restoredDownloadedReaderPageIndex(for: item, pageCount: imageURLs.count)
+        }
         .task(id: actionMessage) {
             await dismissActionMessageIfNeeded(actionMessage)
+        }
+        .onChange(of: pageIndex) { _, value in
+            store.saveDownloadedReaderPageIndex(value, for: item, pageCount: imageURLs.count)
         }
         .toolbar {
             ToolbarItemGroup {

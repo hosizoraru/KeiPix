@@ -227,8 +227,28 @@ extension KeiPixStore {
         persistReaderProgressLibrary()
     }
 
+    func restoredDownloadedReaderPageIndex(for item: ArtworkDownloadItem, pageCount: Int) -> Int {
+        guard restoreArtworkReaderProgress else { return 0 }
+        return downloadedReaderProgressLibrary.restoredPageIndex(for: item.id, pageCount: pageCount) ?? 0
+    }
+
+    func saveDownloadedReaderPageIndex(_ pageIndex: Int, for item: ArtworkDownloadItem, pageCount: Int) {
+        guard restoreArtworkReaderProgress else { return }
+        downloadedReaderProgressLibrary.update(
+            downloadID: item.id,
+            pageIndex: pageIndex,
+            pageCount: pageCount
+        )
+        persistDownloadedReaderProgressLibrary()
+    }
+
     private func persistReaderProgressLibrary() {
         guard let data = try? JSONEncoder().encode(readerProgressLibrary) else { return }
         UserDefaults.standard.set(data, forKey: "readerProgressLibrary")
+    }
+
+    private func persistDownloadedReaderProgressLibrary() {
+        guard let data = try? JSONEncoder().encode(downloadedReaderProgressLibrary) else { return }
+        UserDefaults.standard.set(data, forKey: "downloadedReaderProgressLibrary")
     }
 }
