@@ -19,7 +19,9 @@ struct SettingsView: View {
 
     var body: some View {
         Form {
-            settingsSearchSection
+            if usesSharingTemplatesVisualQA == false {
+                settingsSearchSection
+            }
             generalSettingsSection
             readingSettingsSection
             discoverySettingsSection
@@ -59,6 +61,11 @@ struct SettingsView: View {
         .animation(.snappy(duration: 0.18), value: store.undoAction?.id)
         .task(id: settingsActionMessage) {
             await dismissSettingsActionMessageIfNeeded(settingsActionMessage)
+        }
+        .task {
+            if VisualQALaunchArgument.contains(.sharingTemplates) {
+                settingsSearchText = L10n.sharing
+            }
         }
         .sheet(isPresented: $isAccountLoginPresented) {
             LoginSheetView(store: store)
@@ -146,6 +153,10 @@ struct SettingsView: View {
             TextField(L10n.searchSettings, text: $settingsSearchText)
                 .textFieldStyle(.roundedBorder)
         }
+    }
+
+    private var usesSharingTemplatesVisualQA: Bool {
+        VisualQALaunchArgument.contains(.sharingTemplates)
     }
 
     @ViewBuilder

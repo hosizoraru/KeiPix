@@ -10,6 +10,18 @@ struct CopyTemplateSettingsSection: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
 
+            HStack(alignment: .top, spacing: 18) {
+                templateEditorContent
+                    .frame(width: 380)
+                Divider()
+                templatePreviewContent
+                    .frame(maxWidth: .infinity)
+            }
+        }
+    }
+
+    private var templateEditorContent: some View {
+        VStack(alignment: .leading, spacing: 12) {
             VStack(alignment: .leading, spacing: 8) {
                 Text(L10n.artworkCopyTemplate)
                     .font(.subheadline.weight(.medium))
@@ -18,13 +30,6 @@ struct CopyTemplateSettingsSection: View {
                     .frame(minHeight: 110)
                     .scrollContentBackground(.hidden)
                     .background(.quaternary.opacity(0.35), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
-            }
-
-            LabeledContent(L10n.templatePreview) {
-                Text(store.artworkCopyTemplatePreview)
-                    .lineLimit(6)
-                    .truncationMode(.tail)
-                    .textSelection(.enabled)
             }
 
             Button {
@@ -37,20 +42,11 @@ struct CopyTemplateSettingsSection: View {
                 Label(L10n.resetArtworkCopyTemplate, systemImage: "arrow.counterclockwise")
             }
 
-            Divider()
-
             VStack(alignment: .leading, spacing: 8) {
                 Text(L10n.creatorCopyTemplate)
                     .font(.subheadline.weight(.medium))
                 TextField(L10n.creatorCopyTemplate, text: creatorCopyTemplateBinding)
                     .textFieldStyle(.roundedBorder)
-            }
-
-            LabeledContent(L10n.templatePreview) {
-                Text(store.creatorCopyTemplatePreview)
-                    .lineLimit(2)
-                    .truncationMode(.middle)
-                    .textSelection(.enabled)
             }
 
             Button {
@@ -62,6 +58,27 @@ struct CopyTemplateSettingsSection: View {
             } label: {
                 Label(L10n.resetCreatorCopyTemplate, systemImage: "arrow.counterclockwise")
             }
+        }
+    }
+
+    private var templatePreviewContent: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text(L10n.templatePreview)
+                .font(.subheadline.weight(.medium))
+
+            Text(store.artworkCopyTemplatePreview)
+                .lineLimit(8)
+                .truncationMode(.tail)
+                .textSelection(.enabled)
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            Divider()
+
+            Text(store.creatorCopyTemplatePreview)
+                .lineLimit(3)
+                .truncationMode(.middle)
+                .textSelection(.enabled)
+                .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 

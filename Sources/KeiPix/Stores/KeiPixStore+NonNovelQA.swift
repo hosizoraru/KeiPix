@@ -226,7 +226,16 @@ extension KeiPixStore {
             passed: visualEvidence.covers([.settingsWindow]),
             evidence: visualEvidence.summary(for: [.settingsWindow])
         )
-        return [nativeRoute, gallery, downloads, safety, offline, ugoira, settings]
+        let sharing = qaStaticItem(
+            id: "sharing-copy",
+            passed: visualEvidence.covers([.sharingTemplates]),
+            evidence: [
+                visualEvidence.summary(for: [.sharingTemplates]),
+                "\(L10n.artworkCopyTemplate): \(ArtworkCopyTemplate(rawValue: artworkCopyTemplate).render(context: .preview).visibleLineCount)",
+                "\(L10n.creatorCopyTemplate): \(CreatorCopyTemplate(rawValue: creatorCopyTemplate).render(context: .preview).visibleLineCount)"
+            ].joined(separator: " · ")
+        )
+        return [nativeRoute, gallery, downloads, safety, offline, ugoira, settings, sharing]
     }
 
     private func qaFeedItem(
@@ -415,12 +424,17 @@ private extension KeiPixStore {
         NonNovelQATemplate(id: "comments-feedback", priority: .p2, title: L10n.qaCommentsFeedback, requirement: L10n.qaCommentsFeedbackRequirement, nextAction: L10n.qaCommentsFeedbackNext, systemImage: "text.bubble"),
         NonNovelQATemplate(id: "local-cache-offline", priority: .p2, title: L10n.qaLocalCacheOffline, requirement: L10n.qaLocalCacheOfflineRequirement, nextAction: L10n.qaLocalCacheOfflineNext, systemImage: "externaldrive"),
         NonNovelQATemplate(id: "ugoira", priority: .p2, title: L10n.ugoira, requirement: L10n.qaUgoiraRequirement, nextAction: L10n.qaUgoiraNext, systemImage: "play.rectangle"),
-        NonNovelQATemplate(id: "settings-organization", priority: .p2, title: L10n.qaSettingsOrganization, requirement: L10n.qaSettingsOrganizationRequirement, nextAction: L10n.qaSettingsOrganizationNext, systemImage: "gearshape")
+        NonNovelQATemplate(id: "settings-organization", priority: .p2, title: L10n.qaSettingsOrganization, requirement: L10n.qaSettingsOrganizationRequirement, nextAction: L10n.qaSettingsOrganizationNext, systemImage: "gearshape"),
+        NonNovelQATemplate(id: "sharing-copy", priority: .p2, title: L10n.sharing, requirement: L10n.copyTemplateHint, nextAction: L10n.qaSettingsOrganizationNext, systemImage: "square.and.arrow.up")
     ]
 }
 
 private extension String {
     var nilIfEmpty: String? {
         isEmpty ? nil : self
+    }
+
+    var visibleLineCount: Int {
+        split(separator: "\n", omittingEmptySubsequences: true).count
     }
 }

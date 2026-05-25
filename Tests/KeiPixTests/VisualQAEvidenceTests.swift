@@ -92,6 +92,7 @@ struct VisualQAEvidenceTests {
         #expect(VisualQASurface(rawValue: "ranking") == .ranking)
         #expect(VisualQASurface(rawValue: "muted-content") == .mutedContent)
         #expect(VisualQASurface(rawValue: "settings-window") == .settingsWindow)
+        #expect(VisualQASurface(rawValue: "sharing-templates") == .sharingTemplates)
         #expect(VisualQASurface(rawValue: "ugoira-player") == .ugoiraPlayer)
         #expect(VisualQASurface(rawValue: "downloaded-reader") == .downloadedReader)
         #expect(VisualQASurface(rawValue: "feedback-sheet") == .feedbackSheet)
@@ -103,6 +104,7 @@ struct VisualQAEvidenceTests {
         #expect(VisualQALaunchArgument.ranking.surface == .ranking)
         #expect(VisualQALaunchArgument.mutedContent.surface == .mutedContent)
         #expect(VisualQALaunchArgument.settingsWindow.surface == .settingsWindow)
+        #expect(VisualQALaunchArgument.sharingTemplates.surface == .sharingTemplates)
         #expect(VisualQALaunchArgument.ugoiraPlayer.surface == .ugoiraPlayer)
         #expect(VisualQALaunchArgument.downloadedReader.surface == .downloadedReader)
         #expect(VisualQALaunchArgument.feedbackSheet.surface == .feedbackSheet)
@@ -115,6 +117,7 @@ struct VisualQAEvidenceTests {
         #expect(VisualQALaunchArgument.isActive(in: ["KeiPix", "--visual-qa-ranking"]))
         #expect(VisualQALaunchArgument.isActive(in: ["KeiPix", "--visual-qa-feedback-sheet"]))
         #expect(VisualQALaunchArgument.isActive(in: ["KeiPix", "--visual-qa-creator-profile"]))
+        #expect(VisualQALaunchArgument.isActive(in: ["KeiPix", "--visual-qa-sharing-templates"]))
         #expect(VisualQALaunchArgument.isActive(in: ["KeiPix"]) == false)
         #expect(VisualQALaunchArgument.activeGalleryLayoutMode(in: ["KeiPix", "--visual-qa-gallery-three-column"]) == .threeColumnMasonry)
     }
