@@ -42,8 +42,10 @@ struct GallerySelectionTests {
             1.88,
             1.91,
             2.2,
+            2.35,
             2.55,
-            2.7
+            2.7,
+            3.2
         ]
 
         let regularSpans = realAccountLikeAspects.map {
@@ -53,8 +55,8 @@ struct GallerySelectionTests {
             ArtworkMasonryPresentation(aspectRatio: $0).span(for: 3, denseFixedColumns: true)
         }
 
-        #expect(regularSpans == [2, 2, 2, 2, 2, 3, 3, 3])
-        #expect(denseSpans == [1, 1, 1, 1, 2, 2, 2, 3])
+        #expect(regularSpans == [2, 2, 2, 2, 2, 3, 3, 3, 3, 3])
+        #expect(denseSpans == [1, 1, 1, 1, 1, 1, 1, 2, 2, 3])
     }
 
     @Test("Visual QA gallery samples include real-account wide-heavy ratios")
