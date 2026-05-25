@@ -243,6 +243,11 @@ struct SettingsView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
 
+                Toggle(L10n.autoBookmarkDownloadedArtworks, isOn: autoBookmarkDownloadsBinding)
+                Text(L10n.autoBookmarkDownloadedArtworksHint)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
                 Divider()
 
                 TextField(L10n.downloadNamingTemplate, text: downloadNamingTemplateBinding)
@@ -576,6 +581,14 @@ struct SettingsView: View {
             store.autoDownloadBookmarkedArtworks
         } set: { value in
             store.setAutoDownloadBookmarkedArtworks(value)
+        }
+    }
+
+    private var autoBookmarkDownloadsBinding: Binding<Bool> {
+        Binding {
+            store.autoBookmarkDownloadedArtworks
+        } set: { value in
+            store.setAutoBookmarkDownloadedArtworks(value)
         }
     }
 

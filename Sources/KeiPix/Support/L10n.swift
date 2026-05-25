@@ -333,6 +333,8 @@ enum L10n {
     static var followCreatorAfterBookmarkHint: String { text("New bookmarks also follow the creator using your default follow visibility.") }
     static var autoDownloadBookmarkedArtworks: String { text("Download new bookmarks automatically") }
     static var autoDownloadBookmarkedArtworksHint: String { text("New bookmarks are added to the download queue using original images when available.") }
+    static var autoBookmarkDownloadedArtworks: String { text("Bookmark new downloads automatically") }
+    static var autoBookmarkDownloadedArtworksHint: String { text("Downloads add the artwork to your Pixiv bookmarks using the default bookmark visibility.") }
     static var followingPublicly: String { text("Following Publicly") }
     static var followingPrivately: String { text("Following Privately") }
     static var unfollow: String { text("Unfollow") }
@@ -629,7 +631,7 @@ enum L10n {
     static var qaSearchNext: String { text("Add saved preset import and export.") }
     static var qaBookmarks: String { text("Bookmarks") }
     static var qaBookmarksRequirement: String { text("Public/private bookmarks, bookmark tags, and bookmark automation remain reachable.") }
-    static var qaBookmarksNext: String { text("Add batch bookmark editing for visible works.") }
+    static var qaBookmarksNext: String { text("Keep bookmark and download automation in regression coverage.") }
     static var qaFollowingCreators: String { text("Following creators") }
     static var qaFollowingCreatorsRequirement: String { text("Follow lists, recommended creators, creator search, and follow visibility stay usable.") }
     static var qaFollowingCreatorsNext: String { text("Add pinned creator collections.") }

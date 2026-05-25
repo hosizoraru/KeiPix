@@ -338,6 +338,8 @@
 "New bookmarks also follow the creator using your default follow visibility." = "新增收藏时，会按默认关注可见性同时关注作者。";
 "Download new bookmarks automatically" = "新收藏自动下载";
 "New bookmarks are added to the download queue using original images when available." = "新增收藏会加入下载队列，并优先使用原图。";
+"Bookmark new downloads automatically" = "新下载自动收藏";
+"Downloads add the artwork to your Pixiv bookmarks using the default bookmark visibility." = "触发下载时，会按默认收藏可见性把作品加入 Pixiv 收藏。";
 "Following Publicly" = "公开关注中";
 "Following Privately" = "私密关注中";
 "Unfollow" = "取消关注";
@@ -826,7 +828,7 @@
 "Add saved preset import and export." = "新增保存搜索预设导入导出。";
 "Bookmarks" = "收藏";
 "Public/private bookmarks, bookmark tags, and bookmark automation remain reachable." = "公开/私密收藏、收藏标签和收藏自动化需要可访问。";
-"Add batch bookmark editing for visible works." = "为可见作品新增批量收藏编辑。";
+"Keep bookmark and download automation in regression coverage." = "保持收藏和下载自动化的回归覆盖。";
 "Following creators" = "关注作者";
 "Follow lists, recommended creators, creator search, and follow visibility stay usable." = "关注列表、推荐作者、搜索作者和关注可见性需要可用。";
 "Add pinned creator collections." = "新增置顶作者集合。";

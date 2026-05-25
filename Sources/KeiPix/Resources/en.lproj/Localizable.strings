@@ -338,6 +338,8 @@
 "New bookmarks also follow the creator using your default follow visibility." = "New bookmarks also follow the creator using your default follow visibility.";
 "Download new bookmarks automatically" = "Download new bookmarks automatically";
 "New bookmarks are added to the download queue using original images when available." = "New bookmarks are added to the download queue using original images when available.";
+"Bookmark new downloads automatically" = "Bookmark new downloads automatically";
+"Downloads add the artwork to your Pixiv bookmarks using the default bookmark visibility." = "Downloads add the artwork to your Pixiv bookmarks using the default bookmark visibility.";
 "Following Publicly" = "Following Publicly";
 "Following Privately" = "Following Privately";
 "Unfollow" = "Unfollow";
@@ -826,7 +828,7 @@
 "Add saved preset import and export." = "Add saved preset import and export.";
 "Bookmarks" = "Bookmarks";
 "Public/private bookmarks, bookmark tags, and bookmark automation remain reachable." = "Public/private bookmarks, bookmark tags, and bookmark automation remain reachable.";
-"Add batch bookmark editing for visible works." = "Add batch bookmark editing for visible works.";
+"Keep bookmark and download automation in regression coverage." = "Keep bookmark and download automation in regression coverage.";
 "Following creators" = "Following creators";
 "Follow lists, recommended creators, creator search, and follow visibility stay usable." = "Follow lists, recommended creators, creator search, and follow visibility stay usable.";
 "Add pinned creator collections." = "Add pinned creator collections.";

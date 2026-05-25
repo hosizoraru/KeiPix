@@ -101,6 +101,7 @@ extension KeiPixStore {
             Task { await enqueueUgoiraDownload(artwork) }
         } else {
             downloads.enqueue(artwork, preferOriginal: preferOriginal)
+            bookmarkDownloadedArtworkIfNeeded(artwork)
         }
     }
 
@@ -110,6 +111,7 @@ extension KeiPixStore {
             return
         }
         downloads.enqueuePage(artwork, pageIndex: pageIndex, preferOriginal: preferOriginal)
+        bookmarkDownloadedArtworkIfNeeded(artwork)
     }
 
     @discardableResult
@@ -118,7 +120,9 @@ extension KeiPixStore {
             enqueueDownload(artwork, preferOriginal: preferOriginal)
             return 1
         }
-        return downloads.enqueuePages(artwork, pageRange: pageRange, preferOriginal: preferOriginal)
+        let count = downloads.enqueuePages(artwork, pageRange: pageRange, preferOriginal: preferOriginal)
+        bookmarkDownloadedArtworkIfNeeded(artwork)
+        return count
     }
 
     @discardableResult
@@ -127,6 +131,7 @@ extension KeiPixStore {
         let imageArtworks = candidates.filter { $0.isUgoira == false }
         let ugoiraArtworks = candidates.filter(\.isUgoira)
         let imageCount = downloads.enqueue(imageArtworks, limit: imageArtworks.count, preferOriginal: preferOriginal)
+        bookmarkDownloadedArtworksIfNeeded(imageArtworks)
         for artwork in ugoiraArtworks {
             enqueueDownload(artwork, preferOriginal: preferOriginal)
         }
@@ -210,9 +215,41 @@ extension KeiPixStore {
                 zipURL: metadata.zipURLs.medium,
                 frames: metadata.frames
             )
+            bookmarkDownloadedArtworkIfNeeded(artwork)
         } catch {
             errorMessage = error.localizedDescription
         }
+    }
+
+    private func bookmarkDownloadedArtworksIfNeeded(_ artworks: [PixivArtwork]) {
+        for artwork in artworks {
+            bookmarkDownloadedArtworkIfNeeded(artwork)
+        }
+    }
+
+    private func bookmarkDownloadedArtworkIfNeeded(_ artwork: PixivArtwork) {
+        guard autoBookmarkDownloadedArtworks, isArtworkBookmarked(artwork) == false else { return }
+
+        Task {
+            do {
+                try await api.addBookmark(
+                    illustID: artwork.id,
+                    restrict: defaultBookmarkRestrict,
+                    tags: automaticBookmarkTags(for: artwork)
+                )
+                updateArtwork(artwork.id) { $0.isBookmarked = true }
+                await followCreatorAfterBookmarkIfNeeded(artwork)
+            } catch {
+                errorMessage = error.localizedDescription
+            }
+        }
+    }
+
+    private func isArtworkBookmarked(_ artwork: PixivArtwork) -> Bool {
+        allArtworks.first(where: { $0.id == artwork.id })?.isBookmarked
+            ?? artworks.first(where: { $0.id == artwork.id })?.isBookmarked
+            ?? selectedArtwork.flatMap { $0.id == artwork.id ? $0.isBookmarked : nil }
+            ?? artwork.isBookmarked
     }
 
     private func followCreatorAfterBookmarkIfNeeded(_ artwork: PixivArtwork) async {
