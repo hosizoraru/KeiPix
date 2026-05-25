@@ -116,8 +116,18 @@ struct SearchOptionsTests {
         #expect(regularSorts.contains(.popularFemale) == false)
         #expect(premiumSorts.contains(.popularMale))
         #expect(premiumSorts.contains(.popularFemale))
+        #expect(SearchSort.selectableCases(isPremium: false) == [.dateDescending, .dateAscending, .popularPreview])
+        #expect(SearchSort.premiumOnlyCases == [.popularMale, .popularFemale])
         #expect(SearchSort.popularMale.apiValue == "popular_male_desc")
         #expect(SearchSort.popularFemale.apiValue == "popular_female_desc")
+    }
+
+    @Test("Non premium popular sorting uses limited preview language")
+    func nonPremiumPopularSortingUsesLimitedPreviewLanguage() {
+        #expect(SearchSort.popularPreview.title(isPremium: false) == L10n.popularLimitedPreview)
+        #expect(SearchSort.popularPreview.title(isPremium: true) == L10n.popular)
+        #expect(SearchSort.popularPreview.requiresPixivPremium == false)
+        #expect(SearchSort.popularPreview.apiValue == "popular_desc")
     }
 
     @Test("Bookmark thresholds match high-popularity search ranges")

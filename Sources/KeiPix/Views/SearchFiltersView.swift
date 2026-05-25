@@ -48,7 +48,7 @@ private struct SearchFiltersView: View {
 
             VStack(alignment: .leading, spacing: 10) {
                 filterPicker(L10n.matchType, selection: matchTypeBinding, options: SearchMatchType.allCases)
-                filterPicker(L10n.sort, selection: sortBinding, options: SearchSort.availableCases(isPremium: store.session?.user.isPremium == true))
+                sortMenu
                 filterPicker(L10n.ageLimit, selection: ageLimitBinding, options: SearchAgeLimit.allCases)
                 filterPicker(L10n.dateRange, selection: dateRangeBinding, options: SearchDateRange.allCases)
                 filterPicker(L10n.minimumBookmarks, selection: minimumBookmarksBinding, options: SearchMinimumBookmarks.allCases)
@@ -104,6 +104,48 @@ private struct SearchFiltersView: View {
             .frame(maxWidth: 190, alignment: .trailing)
         }
         .font(.callout)
+    }
+
+    private var sortMenu: some View {
+        let isPremium = store.session?.user.isPremium == true
+        return VStack(alignment: .leading, spacing: 4) {
+            LabeledContent(L10n.sort) {
+                Menu {
+                    ForEach(SearchSort.selectableCases(isPremium: isPremium)) { sort in
+                        Button {
+                            store.setSearchSort(sort)
+                        } label: {
+                            Label(sort.title(isPremium: isPremium), systemImage: sort == store.effectiveSearchSort ? "checkmark" : "line.3.horizontal.decrease.circle")
+                        }
+                    }
+
+                    if isPremium == false {
+                        Divider()
+                        ForEach(SearchSort.premiumOnlyCases) { sort in
+                            Button {
+                                showStatus(L10n.pixivPremiumSortsRequirePremium)
+                            } label: {
+                                Label("\(sort.title) · \(L10n.pixivPremiumRequired)", systemImage: "lock")
+                            }
+                        }
+                    }
+                } label: {
+                    Text(store.effectiveSearchSort.title(isPremium: isPremium))
+                        .frame(width: 190, alignment: .trailing)
+                        .contentShape(Rectangle())
+                }
+                .menuStyle(.button)
+                .frame(maxWidth: 190, alignment: .trailing)
+            }
+            .font(.callout)
+
+            if isPremium == false {
+                Text(L10n.popularLimitedPreviewHint)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(2)
+            }
+        }
     }
 
     private func showStatus(_ message: String) {

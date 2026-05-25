@@ -502,8 +502,10 @@ enum L10n {
     static var popular: String { text("Popular") }
     static var popularMale: String { text("Popular (Male)") }
     static var popularFemale: String { text("Popular (Female)") }
+    static var popularLimitedPreview: String { text("Popular (limited preview)") }
     static var popularPreview: String { text("Popular Preview") }
     static var popularPreviewHint: String { text("Top works for this search") }
+    static var popularLimitedPreviewHint: String { text("Popular uses Pixiv's limited preview without Premium. Full gender popular sorting requires Pixiv Premium.") }
     static var showPopularResults: String { text("Show Popular Results") }
     static var ageLimit: String { text("Age Limit") }
     static var unlimited: String { text("Unlimited") }
@@ -622,6 +624,7 @@ enum L10n {
     static var runSearchDiagnostics: String { text("Run Search Diagnostics") }
     static var runningSearchDiagnostics: String { text("Running search diagnostics") }
     static var pixivPremiumRequired: String { text("Pixiv Premium required") }
+    static var pixivPremiumSortsRequirePremium: String { text("Full popular sorting requires Pixiv Premium") }
     static var searchDiagnosticResultFormat: String { text("%d results for %@") }
     static var runMutableActionQA: String { text("Run Reversible Mutable QA") }
     static var runningMutableActionQA: String { text("Running reversible mutable QA") }

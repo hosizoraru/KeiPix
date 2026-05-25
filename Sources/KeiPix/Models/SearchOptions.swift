@@ -58,6 +58,15 @@ enum SearchSort: String, CaseIterable, Identifiable, Codable, SearchFilterOption
         }
     }
 
+    func title(isPremium: Bool) -> String {
+        switch self {
+        case .popularPreview where isPremium == false:
+            L10n.popularLimitedPreview
+        case .dateDescending, .dateAscending, .popularPreview, .popularMale, .popularFemale:
+            title
+        }
+    }
+
     var apiValue: String {
         switch self {
         case .dateDescending:
@@ -84,6 +93,14 @@ enum SearchSort: String, CaseIterable, Identifiable, Codable, SearchFilterOption
 
     static func availableCases(isPremium: Bool) -> [SearchSort] {
         allCases.filter { isPremium || $0.requiresPixivPremium == false }
+    }
+
+    static func selectableCases(isPremium: Bool) -> [SearchSort] {
+        availableCases(isPremium: isPremium)
+    }
+
+    static var premiumOnlyCases: [SearchSort] {
+        allCases.filter(\.requiresPixivPremium)
     }
 }
 

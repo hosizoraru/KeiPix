@@ -506,8 +506,10 @@
 "Popular" = "热门";
 "Popular (Male)" = "热门（男性）";
 "Popular (Female)" = "热门（女性）";
+"Popular (limited preview)" = "热门（限量预览）";
 "Popular Preview" = "热门预览";
 "Top works for this search" = "当前搜索的热门作品";
+"Popular uses Pixiv's limited preview without Premium. Full gender popular sorting requires Pixiv Premium." = "未开通 Premium 时使用 Pixiv 限量热门预览；完整男女热门排序需要 Pixiv Premium。";
 "Show Popular Results" = "查看热门结果";
 "Age Limit" = "年龄限制";
 "Unlimited" = "不限";
@@ -825,6 +827,7 @@
 "Run Search Diagnostics" = "运行搜索诊断";
 "Running search diagnostics" = "正在运行搜索诊断";
 "Pixiv Premium required" = "需要 Pixiv Premium";
+"Full popular sorting requires Pixiv Premium" = "完整热门排序需要 Pixiv Premium";
 "%d results for %@" = "%d 个 %@ 结果";
 "Run Reversible Mutable QA" = "运行可逆变更 QA";
 "Running reversible mutable QA" = "正在运行可逆变更 QA";

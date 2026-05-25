@@ -506,8 +506,10 @@
 "Popular" = "Popular";
 "Popular (Male)" = "Popular (Male)";
 "Popular (Female)" = "Popular (Female)";
+"Popular (limited preview)" = "Popular (limited preview)";
 "Popular Preview" = "Popular Preview";
 "Top works for this search" = "Top works for this search";
+"Popular uses Pixiv's limited preview without Premium. Full gender popular sorting requires Pixiv Premium." = "Popular uses Pixiv's limited preview without Premium. Full gender popular sorting requires Pixiv Premium.";
 "Show Popular Results" = "Show Popular Results";
 "Age Limit" = "Age Limit";
 "Unlimited" = "Unlimited";
@@ -825,6 +827,7 @@
 "Run Search Diagnostics" = "Run Search Diagnostics";
 "Running search diagnostics" = "Running search diagnostics";
 "Pixiv Premium required" = "Pixiv Premium required";
+"Full popular sorting requires Pixiv Premium" = "Full popular sorting requires Pixiv Premium";
 "%d results for %@" = "%d results for %@";
 "Run Reversible Mutable QA" = "Run Reversible Mutable QA";
 "Running reversible mutable QA" = "Running reversible mutable QA";
