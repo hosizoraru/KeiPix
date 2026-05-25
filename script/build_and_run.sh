@@ -18,10 +18,10 @@ INFO_PLIST="$APP_CONTENTS/Info.plist"
 cd "$ROOT_DIR"
 
 case "$MODE" in
-  run|--debug|debug|--logs|logs|--telemetry|telemetry|--verify|verify|--package|package|--visual-qa-pixiv-link-drop|visual-qa-pixiv-link-drop|--visual-qa-manga-watchlist|visual-qa-manga-watchlist|--visual-qa-series-sheet|visual-qa-series-sheet|--visual-qa-cached-feed|visual-qa-cached-feed)
+  run|--debug|debug|--logs|logs|--telemetry|telemetry|--verify|verify|--package|package|--visual-qa-pixiv-link-drop|visual-qa-pixiv-link-drop|--visual-qa-manga-watchlist|visual-qa-manga-watchlist|--visual-qa-series-sheet|visual-qa-series-sheet|--visual-qa-cached-feed|visual-qa-cached-feed|--visual-qa-gallery-auto|visual-qa-gallery-auto|--visual-qa-gallery-two-column|visual-qa-gallery-two-column|--visual-qa-gallery-three-column|visual-qa-gallery-three-column|--visual-qa-gallery-compact|visual-qa-gallery-compact)
     ;;
   *)
-    echo "usage: $0 [run|--debug|--logs|--telemetry|--verify|--package|--visual-qa-pixiv-link-drop|--visual-qa-manga-watchlist|--visual-qa-series-sheet|--visual-qa-cached-feed]" >&2
+    echo "usage: $0 [run|--debug|--logs|--telemetry|--verify|--package|--visual-qa-pixiv-link-drop|--visual-qa-manga-watchlist|--visual-qa-series-sheet|--visual-qa-cached-feed|--visual-qa-gallery-auto|--visual-qa-gallery-two-column|--visual-qa-gallery-three-column|--visual-qa-gallery-compact]" >&2
     exit 2
     ;;
 esac
@@ -128,7 +128,7 @@ case "$MODE" in
     /usr/bin/log stream --info --style compact --predicate "subsystem == \"$BUNDLE_ID\""
     ;;
   --verify|verify)
-    open_app
+    open_app --visual-qa-cached-feed
     sleep 1
     pgrep -x "$APP_NAME" >/dev/null
     ;;
@@ -152,13 +152,33 @@ case "$MODE" in
     sleep 1
     pgrep -x "$APP_NAME" >/dev/null
     ;;
+  --visual-qa-gallery-auto|visual-qa-gallery-auto)
+    open_app --visual-qa-gallery-auto
+    sleep 1
+    pgrep -x "$APP_NAME" >/dev/null
+    ;;
+  --visual-qa-gallery-two-column|visual-qa-gallery-two-column)
+    open_app --visual-qa-gallery-two-column
+    sleep 1
+    pgrep -x "$APP_NAME" >/dev/null
+    ;;
+  --visual-qa-gallery-three-column|visual-qa-gallery-three-column)
+    open_app --visual-qa-gallery-three-column
+    sleep 1
+    pgrep -x "$APP_NAME" >/dev/null
+    ;;
+  --visual-qa-gallery-compact|visual-qa-gallery-compact)
+    open_app --visual-qa-gallery-compact
+    sleep 1
+    pgrep -x "$APP_NAME" >/dev/null
+    ;;
   --package|package)
     plutil -lint "$INFO_PLIST"
     test -x "$APP_BINARY"
     echo "$APP_BUNDLE"
     ;;
   *)
-    echo "usage: $0 [run|--debug|--logs|--telemetry|--verify|--package|--visual-qa-pixiv-link-drop|--visual-qa-manga-watchlist|--visual-qa-series-sheet|--visual-qa-cached-feed]" >&2
+    echo "usage: $0 [run|--debug|--logs|--telemetry|--verify|--package|--visual-qa-pixiv-link-drop|--visual-qa-manga-watchlist|--visual-qa-series-sheet|--visual-qa-cached-feed|--visual-qa-gallery-auto|--visual-qa-gallery-two-column|--visual-qa-gallery-three-column|--visual-qa-gallery-compact]" >&2
     exit 2
     ;;
 esac

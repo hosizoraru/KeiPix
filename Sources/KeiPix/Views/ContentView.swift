@@ -178,14 +178,19 @@ struct ContentView: View {
         }
         .task {
             if VisualQALaunchArgument.contains(.mangaWatchlist) {
-                store.select(.mangaWatchlist)
+                store.activateVisualQASampleSession()
+                store.selectedRoute = .mangaWatchlist
             }
             if VisualQALaunchArgument.contains(.seriesSheet) {
-                store.select(.mangaRecommended)
+                store.activateVisualQASampleSession()
+                store.selectedRoute = .mangaRecommended
                 isSeriesSheetVisualQAPresented = true
             }
             if VisualQALaunchArgument.contains(.cachedFeed) {
                 store.presentCachedFeedVisualQA()
+            }
+            if let visualQAGalleryLayoutMode = VisualQALaunchArgument.activeGalleryLayoutMode {
+                store.presentGalleryLayoutVisualQA(mode: visualQAGalleryLayoutMode)
             }
         }
         .alert(L10n.errorTitle, isPresented: errorBinding) {

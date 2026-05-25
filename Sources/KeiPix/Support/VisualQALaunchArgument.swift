@@ -5,6 +5,10 @@ enum VisualQALaunchArgument: String, CaseIterable {
     case mangaWatchlist = "--visual-qa-manga-watchlist"
     case seriesSheet = "--visual-qa-series-sheet"
     case cachedFeed = "--visual-qa-cached-feed"
+    case galleryAuto = "--visual-qa-gallery-auto"
+    case galleryTwoColumn = "--visual-qa-gallery-two-column"
+    case galleryThreeColumn = "--visual-qa-gallery-three-column"
+    case galleryCompact = "--visual-qa-gallery-compact"
 
     var surface: VisualQASurface {
         switch self {
@@ -16,10 +20,55 @@ enum VisualQALaunchArgument: String, CaseIterable {
             .seriesSheet
         case .cachedFeed:
             .cachedFeed
+        case .galleryAuto:
+            .galleryAuto
+        case .galleryTwoColumn:
+            .galleryTwoColumn
+        case .galleryThreeColumn:
+            .galleryThreeColumn
+        case .galleryCompact:
+            .galleryCompact
+        }
+    }
+
+    var galleryLayoutMode: GalleryLayoutMode? {
+        switch self {
+        case .galleryAuto:
+            .autoMasonry
+        case .galleryTwoColumn:
+            .twoColumnMasonry
+        case .galleryThreeColumn:
+            .threeColumnMasonry
+        case .galleryCompact:
+            .compactGrid
+        default:
+            nil
         }
     }
 
     static func contains(_ argument: VisualQALaunchArgument) -> Bool {
-        ProcessInfo.processInfo.arguments.contains(argument.rawValue)
+        contains(argument, in: ProcessInfo.processInfo.arguments)
+    }
+
+    static func contains(_ argument: VisualQALaunchArgument, in arguments: [String]) -> Bool {
+        arguments.contains(argument.rawValue)
+    }
+
+    static var isActive: Bool {
+        isActive(in: ProcessInfo.processInfo.arguments)
+    }
+
+    static func isActive(in arguments: [String]) -> Bool {
+        Self.allCases.contains { contains($0, in: arguments) }
+    }
+
+    static var activeGalleryLayoutMode: GalleryLayoutMode? {
+        activeGalleryLayoutMode(in: ProcessInfo.processInfo.arguments)
+    }
+
+    static func activeGalleryLayoutMode(in arguments: [String]) -> GalleryLayoutMode? {
+        Self.allCases.first { argument in
+            argument.galleryLayoutMode != nil && contains(argument, in: arguments)
+        }?.galleryLayoutMode
     }
 }

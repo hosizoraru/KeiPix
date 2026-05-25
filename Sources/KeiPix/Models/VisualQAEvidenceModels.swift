@@ -3,6 +3,10 @@ import Foundation
 enum VisualQASurface: String, CaseIterable, Identifiable, Sendable {
     case discoverDashboard = "discover-dashboard"
     case galleryFeed = "gallery-feed"
+    case galleryAuto = "gallery-auto"
+    case galleryTwoColumn = "gallery-two-column"
+    case galleryThreeColumn = "gallery-three-column"
+    case galleryCompact = "gallery-compact"
     case trendingTags = "trending-tags"
     case pixivision
     case pixivLinkDrop = "pixiv-link-drop"

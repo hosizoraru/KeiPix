@@ -142,6 +142,93 @@ enum VisualQASampleData {
         nextURL: URL(string: "https://app-api.pixiv.net/v1/illust/recommended?offset=30")
     )
 
+    static let galleryLayoutArtworks: [PixivArtwork] = [
+        decodeArtwork(
+            id: 94000,
+            title: "Panoramic city illustration",
+            createdAt: 1_779_552_000,
+            pageCount: 1,
+            width: 3600,
+            height: 1200,
+            tags: ["wide", "city"],
+            isBookmarked: false
+        ),
+        decodeArtwork(
+            id: 94001,
+            title: "Tall manga chapter",
+            createdAt: 1_779_465_600,
+            pageCount: 28,
+            width: 1100,
+            height: 3200,
+            tags: ["manga", "tall"],
+            isBookmarked: true
+        ),
+        decodeArtwork(
+            id: 94002,
+            title: "Square AI study",
+            createdAt: 1_779_379_200,
+            pageCount: 1,
+            width: 1800,
+            height: 1800,
+            tags: ["AI"],
+            isAI: true,
+            isBookmarked: false
+        ),
+        decodeArtwork(
+            id: 94003,
+            title: "Sensitive vertical sample",
+            createdAt: 1_779_292_800,
+            pageCount: 6,
+            width: 1300,
+            height: 2200,
+            tags: ["R-18"],
+            xRestrict: 1,
+            isBookmarked: false
+        ),
+        decodeArtwork(
+            id: 94004,
+            title: "Two-page spread",
+            createdAt: 1_779_206_400,
+            pageCount: 2,
+            width: 2600,
+            height: 1300,
+            tags: ["spread"],
+            isBookmarked: true
+        ),
+        decodeArtwork(
+            id: 94005,
+            title: "Compact card baseline",
+            createdAt: 1_779_120_000,
+            pageCount: 1,
+            width: 1500,
+            height: 2100,
+            tags: ["portrait"],
+            isBookmarked: false
+        ),
+        decodeArtwork(
+            id: 94006,
+            title: "Ugoira layout sample",
+            createdAt: 1_779_033_600,
+            pageCount: 1,
+            width: 1600,
+            height: 1200,
+            tags: ["ugoira"],
+            type: "ugoira",
+            isBookmarked: false
+        ),
+        decodeArtwork(
+            id: 94007,
+            title: "R-18G layout sample",
+            createdAt: 1_778_947_200,
+            pageCount: 4,
+            width: 1600,
+            height: 2400,
+            tags: ["R-18G"],
+            xRestrict: 2,
+            isBookmarked: true
+        )
+    ]
+
     private static func decodeArtwork(
         id: Int,
         title: String,
@@ -196,11 +283,33 @@ enum VisualQASampleData {
 
 @MainActor
 extension KeiPixStore {
+    func activateVisualQASampleSession() {
+        session = VisualQASampleData.sampleSession
+        storedAccounts = [PixivStoredAccount(session: VisualQASampleData.sampleSession)]
+        restrictedModeEnabled = false
+        isLoginPresented = false
+    }
+
+    func presentGalleryLayoutVisualQA(mode: GalleryLayoutMode) {
+        activateVisualQASampleSession()
+        selectedRoute = .illustrations
+        focusedUser = nil
+        bookmarkTagFilter = nil
+        selectedSpotlightArticle = nil
+        errorMessage = nil
+        isLoading = false
+        isLoadingMore = false
+        allArtworks = VisualQASampleData.galleryLayoutArtworks
+        artworks = VisualQASampleData.galleryLayoutArtworks
+        selectedArtwork = VisualQASampleData.galleryLayoutArtworks.first
+        searchPopularPreviewArtworks = []
+        nextURL = nil
+        activeFeedSnapshotRestoration = nil
+        galleryLayoutMode = mode
+    }
+
     func presentCachedFeedVisualQA() {
-        session = session ?? VisualQASampleData.sampleSession
-        storedAccounts = storedAccounts.isEmpty
-            ? [PixivStoredAccount(session: VisualQASampleData.sampleSession)]
-            : storedAccounts
+        activateVisualQASampleSession()
         selectedRoute = .illustrations
         focusedUser = nil
         bookmarkTagFilter = nil

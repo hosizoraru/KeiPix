@@ -119,9 +119,15 @@ final class KeiPixStore {
     var recordedBrowsingHistoryIDs = Set<Int>()
 
     init() {
-        if VisualQALaunchArgument.contains(.cachedFeed) {
+        if VisualQALaunchArgument.isActive {
+            activateVisualQASampleSession()
+        }
+
+        if let visualQAGalleryLayoutMode = VisualQALaunchArgument.activeGalleryLayoutMode {
+            presentGalleryLayoutVisualQA(mode: visualQAGalleryLayoutMode)
+        } else if VisualQALaunchArgument.contains(.cachedFeed) {
             presentCachedFeedVisualQA()
-        } else {
+        } else if VisualQALaunchArgument.isActive == false {
             Task { await bootstrap() }
         }
     }
