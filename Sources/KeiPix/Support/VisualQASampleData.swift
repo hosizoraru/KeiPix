@@ -174,6 +174,87 @@ enum VisualQASampleData {
         )
     )
 
+    static let creatorProfileDetail: PixivUserDetail = {
+        let payload = """
+        {
+          "user": {
+            "id": 5001,
+            "name": "Series QA Creator",
+            "account": "series_qa",
+            "comment": "Creates long manga chapters, wide spreads, and sample works for native macOS creator workflow QA.",
+            "is_followed": true
+          },
+          "profile": {
+            "webpage": "https://www.pixiv.net/users/5001",
+            "region": "Tokyo",
+            "job": "Illustrator",
+            "total_follow_users": 128,
+            "total_illusts": 42,
+            "total_manga": 18,
+            "total_illust_bookmarks_public": 320,
+            "background_image_url": null,
+            "twitter_url": "https://x.com/series_qa",
+            "pawoo_url": null,
+            "is_premium": false
+          },
+          "workspace": {
+            "tool": "SwiftUI QA Brush",
+            "tablet": "Trackpad",
+            "mouse": "Magic Mouse",
+            "comment": "Local fixture for profile metrics, links, relationship shortcuts, related creators, and recent works."
+          }
+        }
+        """
+        return try! JSONDecoder().decode(PixivUserDetail.self, from: Data(payload.utf8))
+    }()
+
+    static let creatorProfileRecentWorks: [PixivArtwork] = [
+        decodeArtwork(
+            id: 93610,
+            title: "Creator profile wide spread",
+            createdAt: 1_779_206_400,
+            pageCount: 2,
+            width: 2600,
+            height: 1300,
+            tags: ["creator", "wide"],
+            isBookmarked: true
+        ),
+        decodeArtwork(
+            id: 93611,
+            title: "Creator profile manga chapter",
+            createdAt: 1_779_120_000,
+            pageCount: 36,
+            width: 1200,
+            height: 2400,
+            tags: ["creator", "manga"],
+            isBookmarked: false
+        ),
+        decodeArtwork(
+            id: 93612,
+            title: "Creator profile AI badge",
+            createdAt: 1_779_033_600,
+            pageCount: 1,
+            width: 1800,
+            height: 1800,
+            tags: ["creator", "AI"],
+            isAI: true,
+            isBookmarked: false
+        )
+    ]
+
+    static let creatorProfileRelatedUsers: [PixivUserPreview] = [
+        PixivUserPreview(
+            user: PixivUser(id: 5101, name: "Related QA Artist", account: "related_qa", isFollowed: false),
+            illusts: Array(creatorProfileRecentWorks.prefix(2)),
+            isMuted: false
+        ),
+        PixivUserPreview(
+            user: PixivUser(id: 5102, name: "Muted QA Creator", account: "muted_qa", isFollowed: true),
+            illusts: Array(creatorProfileRecentWorks.suffix(2)),
+            isMuted: true
+        )
+    ]
+
     static let galleryLayoutArtworks: [PixivArtwork] = [
         decodeArtwork(
             id: 94000,

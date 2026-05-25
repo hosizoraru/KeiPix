@@ -3,6 +3,9 @@ import SwiftUI
 struct UserProfileSheet: View {
     let user: PixivUser
     @Bindable var store: KeiPixStore
+    private let visualQADetail: PixivUserDetail?
+    private let visualQARelatedUsers: [PixivUserPreview]?
+    private let visualQARecentWorks: [PixivArtwork]?
 
     @Environment(\.dismiss) private var dismiss
     @State private var detail: PixivUserDetail?
@@ -21,9 +24,18 @@ struct UserProfileSheet: View {
     @State private var pendingDangerAction: AppDangerAction?
     @State private var feedbackRequest: FeedbackReportRequest?
 
-    init(user: PixivUser, store: KeiPixStore) {
+    init(
+        user: PixivUser,
+        store: KeiPixStore,
+        visualQADetail: PixivUserDetail? = nil,
+        visualQARelatedUsers: [PixivUserPreview]? = nil,
+        visualQARecentWorks: [PixivArtwork]? = nil
+    ) {
         self.user = user
         self.store = store
+        self.visualQADetail = visualQADetail
+        self.visualQARelatedUsers = visualQARelatedUsers
+        self.visualQARecentWorks = visualQARecentWorks
         _isFollowed = State(initialValue: user.isFollowed)
     }
 
@@ -89,7 +101,8 @@ struct UserProfileSheet: View {
                                 store.selectedArtwork = artwork
                                 dismiss()
                             },
-                            showStatus: showStatus
+                            showStatus: showStatus,
+                            visualQAArtworks: visualQARecentWorks
                         )
                         UserProfileDescriptionSection(text: (detail?.user.comment ?? user.comment)?.htmlStripped)
                         UserProfileLinksSection(user: currentUser, profile: detail?.profile)
@@ -345,6 +358,15 @@ struct UserProfileSheet: View {
     }
 
     private func loadDetail() async {
+        if let visualQADetail {
+            detail = visualQADetail
+            isFollowed = visualQADetail.user.isFollowed
+            followRestrict = visualQADetail.user.isFollowed ? .public : nil
+            errorMessage = nil
+            isLoading = false
+            return
+        }
+
         isLoading = true
         errorMessage = nil
         defer { isLoading = false }
@@ -374,6 +396,13 @@ struct UserProfileSheet: View {
     }
 
     private func loadRelatedUsers() async {
+        if let visualQARelatedUsers {
+            relatedUsers = visualQARelatedUsers.filter { $0.user.id != user.id }
+            isLoadingRelatedUsers = false
+            relatedErrorMessage = nil
+            return
+        }
+
         isLoadingRelatedUsers = true
         relatedErrorMessage = nil
         defer { isLoadingRelatedUsers = false }

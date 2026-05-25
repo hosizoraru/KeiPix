@@ -66,7 +66,9 @@ extension KeiPixStore {
         async let spotlight = qaPixivisionItem(visualEvidence: visualEvidence)
         async let recommendedUsers = qaFeedItem(
             id: "creator-discovery",
-            count: { try await self.recommendedUsers().userPreviews.count }
+            count: { try await self.recommendedUsers().userPreviews.count },
+            visualSurface: .creatorProfile,
+            visualEvidence: visualEvidence
         )
         return await [trending, spotlight, recommendedUsers]
     }

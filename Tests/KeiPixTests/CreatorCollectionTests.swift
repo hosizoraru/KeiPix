@@ -36,6 +36,16 @@ struct CreatorCollectionTests {
         #expect(secondRemoval == false)
     }
 
+    @Test("Visual QA creator profile includes related creators and recent works")
+    func visualQACreatorProfileFixture() {
+        let detail = VisualQASampleData.creatorProfileDetail
+
+        #expect(detail.user.id == 5001)
+        #expect(detail.profile.totalIllusts > 0)
+        #expect(VisualQASampleData.creatorProfileRecentWorks.isEmpty == false)
+        #expect(VisualQASampleData.creatorProfileRelatedUsers.count >= 2)
+    }
+
     private static func user(id: Int, name: String, account: String? = nil) -> PixivUser {
         PixivUser(
             id: id,

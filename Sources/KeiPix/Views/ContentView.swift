@@ -9,6 +9,7 @@ struct ContentView: View {
     @State private var isPixivLinkDropTargeted = false
     @State private var isSeriesSheetVisualQAPresented = false
     @State private var feedbackVisualQARequest: FeedbackReportRequest?
+    @State private var creatorProfileVisualQAUser: PixivUser?
     @Environment(\.undoManager) private var undoManager
 
     var body: some View {
@@ -121,6 +122,15 @@ struct ContentView: View {
         .sheet(item: $store.presentedUserProfile) { user in
             UserProfileSheet(user: user, store: store)
         }
+        .sheet(item: $creatorProfileVisualQAUser) { user in
+            UserProfileSheet(
+                user: user,
+                store: store,
+                visualQADetail: VisualQASampleData.creatorProfileDetail,
+                visualQARelatedUsers: VisualQASampleData.creatorProfileRelatedUsers,
+                visualQARecentWorks: VisualQASampleData.creatorProfileRecentWorks
+            )
+        }
         .sheet(isPresented: $isPixivIDOpenPresented) {
             PixivIDOpenSheet(store: store, showStatus: showStatus)
         }
@@ -220,6 +230,11 @@ struct ContentView: View {
             if VisualQALaunchArgument.contains(.feedbackSheet) {
                 store.activateVisualQASampleSession()
                 feedbackVisualQARequest = VisualQASampleData.feedbackReportRequest
+            }
+            if VisualQALaunchArgument.contains(.creatorProfile) {
+                store.activateVisualQASampleSession()
+                store.selectedRoute = .recommendedUsers
+                creatorProfileVisualQAUser = VisualQASampleData.creatorProfileDetail.user
             }
             if let visualQAGalleryLayoutMode = VisualQALaunchArgument.activeGalleryLayoutMode {
                 store.presentGalleryLayoutVisualQA(mode: visualQAGalleryLayoutMode)

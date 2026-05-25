@@ -6,6 +6,7 @@ struct UserProfileRecentWorksSection: View {
     let openAllWorks: () -> Void
     let selectArtwork: (PixivArtwork) -> Void
     let showStatus: (String) -> Void
+    var visualQAArtworks: [PixivArtwork]? = nil
 
     @State private var artworks: [PixivArtwork] = []
     @State private var isLoading = false
@@ -123,6 +124,13 @@ struct UserProfileRecentWorksSection: View {
     }
 
     private func loadArtworks() async {
+        if let visualQAArtworks {
+            artworks = visualQAArtworks
+            isLoading = false
+            errorMessage = nil
+            return
+        }
+
         isLoading = true
         errorMessage = nil
         defer { isLoading = false }

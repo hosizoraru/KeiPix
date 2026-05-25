@@ -81,6 +81,7 @@ struct VisualQAEvidenceTests {
         #expect(VisualQASurface(rawValue: "batch-bookmark-preview") == .batchBookmarkPreview)
         #expect(VisualQASurface(rawValue: "pixiv-link-drop") == .pixivLinkDrop)
         #expect(VisualQASurface(rawValue: "pixiv-id-open") == .pixivIDOpen)
+        #expect(VisualQASurface(rawValue: "creator-profile") == .creatorProfile)
         #expect(VisualQASurface(rawValue: "manga-watchlist") == .mangaWatchlist)
         #expect(VisualQASurface(rawValue: "series-sheet") == .seriesSheet)
         #expect(VisualQASurface(rawValue: "cached-feed") == .cachedFeed)
@@ -96,6 +97,7 @@ struct VisualQAEvidenceTests {
         #expect(VisualQASurface(rawValue: "feedback-sheet") == .feedbackSheet)
         #expect(VisualQALaunchArgument.mangaWatchlist.surface == .mangaWatchlist)
         #expect(VisualQALaunchArgument.pixivIDOpen.surface == .pixivIDOpen)
+        #expect(VisualQALaunchArgument.creatorProfile.surface == .creatorProfile)
         #expect(VisualQALaunchArgument.seriesSheet.surface == .seriesSheet)
         #expect(VisualQALaunchArgument.cachedFeed.surface == .cachedFeed)
         #expect(VisualQALaunchArgument.ranking.surface == .ranking)
@@ -112,6 +114,7 @@ struct VisualQAEvidenceTests {
         #expect(VisualQALaunchArgument.isActive(in: ["KeiPix", "--visual-qa-pixiv-id-open"]))
         #expect(VisualQALaunchArgument.isActive(in: ["KeiPix", "--visual-qa-ranking"]))
         #expect(VisualQALaunchArgument.isActive(in: ["KeiPix", "--visual-qa-feedback-sheet"]))
+        #expect(VisualQALaunchArgument.isActive(in: ["KeiPix", "--visual-qa-creator-profile"]))
         #expect(VisualQALaunchArgument.isActive(in: ["KeiPix"]) == false)
         #expect(VisualQALaunchArgument.activeGalleryLayoutMode(in: ["KeiPix", "--visual-qa-gallery-three-column"]) == .threeColumnMasonry)
     }
