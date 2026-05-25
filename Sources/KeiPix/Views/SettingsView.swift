@@ -14,348 +14,19 @@ struct SettingsView: View {
     @State private var isMutedContentSyncConfirmationPresented = false
     @State private var isMutedContentUploadConfirmationPresented = false
     @State private var isMutedContentImportConfirmationPresented = false
+    @State private var settingsSearchText = ""
 
     var body: some View {
         Form {
-            Section(L10n.language) {
-                Picker(L10n.language, selection: languageBinding) {
-                    ForEach(AppLanguage.allCases) { language in
-                        Text(language.title).tag(language)
-                    }
-                }
-                .pickerStyle(.segmented)
-            }
-
-            Section(L10n.appearance) {
-                Toggle(L10n.useOriginalImages, isOn: originalBinding)
-                Toggle(L10n.showTranslatedTags, isOn: translatedTagsBinding)
-            }
-
-            Section(L10n.readingWindow) {
-                Picker(L10n.defaultArtworkReadingMode, selection: defaultArtworkReadingModeBinding) {
-                    ForEach(ArtworkReadingMode.allCases) { mode in
-                        Text(mode.title).tag(mode)
-                    }
-                }
-                .pickerStyle(.segmented)
-
-                Picker(L10n.defaultMangaReadingMode, selection: defaultMangaReadingModeBinding) {
-                    ForEach(ArtworkReadingMode.allCases) { mode in
-                        Text(mode.title).tag(mode)
-                    }
-                }
-                .pickerStyle(.segmented)
-
-                Text(L10n.defaultReadingModeHint)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-
-                Toggle(L10n.restoreLastReadPage, isOn: restoreReaderProgressBinding)
-                Text(L10n.restoreLastReadPageHint)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-
-            Section(L10n.contentFilters) {
-                Toggle(L10n.showContentBadges, isOn: showContentBadgesBinding)
-                Toggle(L10n.hideMutedContent, isOn: hideMutedBinding)
-                Toggle(L10n.hideAIArtworks, isOn: hideAIBinding)
-                Text(L10n.pixivAIDisplayHint)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                Toggle(L10n.hideR18Artworks, isOn: hideR18Binding)
-                Toggle(L10n.hideR18GArtworks, isOn: hideR18GBinding)
-                Toggle(L10n.maskSensitivePreviews, isOn: maskSensitivePreviewsBinding)
-                Text(L10n.maskSensitivePreviewsHint)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-
-                if store.session != nil {
-                    Divider()
-
-                    HStack(spacing: 8) {
-                        Toggle(L10n.pixivRestrictedMode, isOn: restrictedModeBinding)
-                            .disabled(store.restrictedModeEnabled == nil || isUpdatingRestrictedMode)
-
-                        if store.restrictedModeEnabled == nil || isUpdatingRestrictedMode {
-                            ProgressView()
-                                .controlSize(.small)
-                        }
-                    }
-
-                    Text(L10n.pixivRestrictedModeHint)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-
-                    if let restrictedModeMessage {
-                        Text(restrictedModeMessage)
-                            .font(.caption)
-                            .foregroundStyle(.red)
-                            .textSelection(.enabled)
-                    }
-                }
-            }
-
-            Section(L10n.bookmarks) {
-                Picker(L10n.defaultBookmarkVisibility, selection: defaultBookmarkRestrictBinding) {
-                    ForEach(BookmarkRestrict.allCases) { restrict in
-                        Text(restrict.title).tag(restrict)
-                    }
-                }
-                .pickerStyle(.segmented)
-
-                Toggle(L10n.autoTagBookmarksWithArtworkTags, isOn: autoTagBookmarksBinding)
-                Text(L10n.autoTagBookmarksWithArtworkTagsHint)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-
-                Toggle(L10n.followCreatorAfterBookmark, isOn: followCreatorAfterBookmarkBinding)
-                Text(L10n.followCreatorAfterBookmarkHint)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-
-                Toggle(L10n.autoDownloadBookmarkedArtworks, isOn: autoDownloadBookmarksBinding)
-                Text(L10n.autoDownloadBookmarkedArtworksHint)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-
-            Section(L10n.followingCreators) {
-                Picker(L10n.defaultFollowVisibility, selection: defaultFollowRestrictBinding) {
-                    ForEach(BookmarkRestrict.allCases) { restrict in
-                        Text(restrict.title).tag(restrict)
-                    }
-                }
-                .pickerStyle(.segmented)
-            }
-
-            Section(L10n.mutedContent) {
-                Text(L10n.muteSyncHint)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-
-                FlowLayout(spacing: 8) {
-                    Button {
-                        isMutedContentSyncConfirmationPresented = true
-                    } label: {
-                        Label(L10n.syncFromPixiv, systemImage: "arrow.down.circle")
-                    }
-                    .disabled(isSyncingMutedContent)
-
-                    Button {
-                        isMutedContentUploadConfirmationPresented = true
-                    } label: {
-                        Label(L10n.uploadToPixiv, systemImage: "arrow.up.circle")
-                    }
-                    .disabled(isSyncingMutedContent || (store.mutedTagList.isEmpty && store.mutedUserList.isEmpty))
-
-                    if isSyncingMutedContent {
-                        ProgressView()
-                            .controlSize(.small)
-                    }
-                }
-
-                FlowLayout(spacing: 8) {
-                    Button {
-                        exportLocalMutedContent()
-                    } label: {
-                        Label(L10n.exportMutedContent, systemImage: "square.and.arrow.up")
-                    }
-                    .disabled(isSyncingMutedContent || (store.mutedTagList.isEmpty && store.mutedUserList.isEmpty && store.mutedArtworkList.isEmpty))
-
-                    Button {
-                        isMutedContentImportConfirmationPresented = true
-                    } label: {
-                        Label(L10n.importMutedContent, systemImage: "square.and.arrow.down")
-                    }
-                    .disabled(isSyncingMutedContent)
-                }
-
-                if let mutedContentSyncMessage {
-                    Text(mutedContentSyncMessage)
-                        .font(.caption)
-                        .foregroundStyle(mutedContentSyncMessageIsError ? .red : .secondary)
-                        .textSelection(.enabled)
-                }
-
-                LabeledContent(L10n.mutedContent) {
-                    Text(String(format: L10n.mutedContentCountFormat, mutedContentCount))
-                        .foregroundStyle(.secondary)
-                }
-
-                Button {
-                    store.select(.mutedContent)
-                } label: {
-                    Label(L10n.openMutedContentManager, systemImage: "eye.slash")
-                }
-            }
-
-            Section(L10n.layout) {
-                Picker(L10n.galleryLayout, selection: galleryLayoutBinding) {
-                    ForEach(GalleryLayoutMode.allCases) { mode in
-                        Text(mode.title).tag(mode)
-                    }
-                }
-                .pickerStyle(.segmented)
-            }
-
-            Section(L10n.downloads) {
-                LabeledContent(L10n.downloadFolder) {
-                    Text(store.downloads.downloadDirectoryPath)
-                        .lineLimit(1)
-                        .truncationMode(.middle)
-                        .textSelection(.enabled)
-                }
-
-                FlowLayout(spacing: 8) {
-                    Button {
-                        if store.downloads.chooseDownloadDirectory() {
-                            showSettingsActionMessage(L10n.downloadFolderChanged)
-                        }
-                    } label: {
-                        Label(L10n.chooseFolder, systemImage: "folder.badge.gearshape")
-                    }
-
-                    Button {
-                        showSettingsActionMessage(
-                            store.downloads.openDownloadDirectory()
-                                ? L10n.openedDownloadFolder
-                                : L10n.unableToOpenDownloadFolder
-                        )
-                    } label: {
-                        Label(L10n.openFolder, systemImage: "folder")
-                    }
-                }
-
-                Stepper(
-                    value: maxConcurrentDownloadsBinding,
-                    in: 1...4,
-                    step: 1
-                ) {
-                    LabeledContent(L10n.concurrentDownloads) {
-                        Text(store.downloads.maxConcurrentDownloads.formatted())
-                            .monospacedDigit()
-                            .foregroundStyle(.secondary)
-                    }
-                }
-
-                Text(L10n.concurrentDownloadsHint)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-
-                Toggle(L10n.autoBookmarkDownloadedArtworks, isOn: autoBookmarkDownloadsBinding)
-                Text(L10n.autoBookmarkDownloadedArtworksHint)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-
-                Divider()
-
-                TextField(L10n.downloadNamingTemplate, text: downloadNamingTemplateBinding)
-                    .textFieldStyle(.roundedBorder)
-
-                Text(L10n.downloadNamingTemplateHint)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-
-                LabeledContent(L10n.templatePreview) {
-                    Text(store.downloads.downloadNamingTemplatePreview)
-                        .lineLimit(2)
-                        .truncationMode(.middle)
-                        .textSelection(.enabled)
-                }
-
-                Button {
-                    showSettingsActionMessage(
-                        store.downloads.resetDownloadNamingTemplate()
-                            ? L10n.downloadTemplateReset
-                            : L10n.downloadTemplateAlreadyDefault
-                    )
-                } label: {
-                    Label(L10n.resetTemplate, systemImage: "arrow.counterclockwise")
-                }
-            }
-
-            Section(L10n.trackpad) {
-                Toggle(L10n.enableTrackpadGestures, isOn: trackpadGesturesBinding)
-
-                Picker(L10n.twoFingerSwipeBehavior, selection: horizontalSwipeBehaviorBinding) {
-                    ForEach(TrackpadHorizontalSwipeBehavior.allCases) { behavior in
-                        Text(behavior.title).tag(behavior)
-                    }
-                }
-                .pickerStyle(.menu)
-            }
-
-            Section(L10n.privacy) {
-                Toggle(L10n.privacyMode, isOn: privacyModeBinding)
-                Text(L10n.privacyModeHint)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-
-                Divider()
-
-                Toggle(L10n.protectSensitiveContent, isOn: screenCaptureProtectionBinding)
-                Text(L10n.screenCaptureProtectionHint)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-
-                if store.session != nil {
-                    Toggle(L10n.showAccountIdentity, isOn: accountIdentityBinding)
-                    Text(L10n.accountIdentityPrivacyHint)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-            }
-
-            if let session = store.session {
-                Section(L10n.account) {
-                    LabeledContent(
-                        L10n.profile,
-                        value: store.showAccountIdentity ? "\(session.user.name) @\(session.user.account)" : L10n.hidden
-                    )
-
-                    if store.storedAccounts.isEmpty == false {
-                        ForEach(store.storedAccounts) { account in
-                            StoredAccountRow(
-                                account: account,
-                                isCurrent: account.id == session.user.id,
-                                showIdentity: store.showAccountIdentity,
-                                switchAccount: {
-                                    Task {
-                                        await store.switchAccount(userID: account.id)
-                                        showSettingsActionMessage(String(format: L10n.switchedAccountFormat, account.name))
-                                    }
-                                },
-                                removeAccount: {
-                                    accountRemovalCandidate = account
-                                }
-                            )
-                        }
-                    }
-
-                    Button {
-                        isAccountLoginPresented = true
-                    } label: {
-                        Label(L10n.addAccount, systemImage: "person.crop.circle.badge.plus")
-                    }
-
-                    Button(role: .destructive) {
-                        isLogoutConfirmationPresented = true
-                    } label: {
-                        Label(L10n.logout, systemImage: "rectangle.portrait.and.arrow.right")
-                    }
-                }
-            } else {
-                Section(L10n.account) {
-                    Button {
-                        isAccountLoginPresented = true
-                    } label: {
-                        Label(L10n.addAccount, systemImage: "person.crop.circle.badge.plus")
-                    }
-                }
-            }
-
-            RuntimeReadinessView(store: store)
+            settingsSearchSection
+            generalSettingsSection
+            readingSettingsSection
+            discoverySettingsSection
+            safetySettingsSection
+            downloadsSettingsSection
+            accountSettingsSection
+            advancedQASettingsSection
+            settingsNoResultsSection
         }
         .formStyle(.grouped)
         .padding(24)
@@ -462,6 +133,508 @@ struct SettingsView: View {
                 await store.refreshRestrictedModeSetting()
             }
         }
+    }
+
+    private var settingsSearchSection: some View {
+        Section {
+            TextField(L10n.searchSettings, text: $settingsSearchText)
+                .textFieldStyle(.roundedBorder)
+        }
+    }
+
+    @ViewBuilder
+    private var generalSettingsSection: some View {
+        if settingsMatches(generalSettingsTerms) {
+            Section(L10n.settingsGeneral) {
+                Picker(L10n.language, selection: languageBinding) {
+                    ForEach(AppLanguage.allCases) { language in
+                        Text(language.title).tag(language)
+                    }
+                }
+                .pickerStyle(.segmented)
+
+                Toggle(L10n.useOriginalImages, isOn: originalBinding)
+                Toggle(L10n.showTranslatedTags, isOn: translatedTagsBinding)
+
+                Divider()
+
+                Picker(L10n.galleryLayout, selection: galleryLayoutBinding) {
+                    ForEach(GalleryLayoutMode.allCases) { mode in
+                        Text(mode.title).tag(mode)
+                    }
+                }
+                .pickerStyle(.segmented)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var readingSettingsSection: some View {
+        if settingsMatches(readingSettingsTerms) {
+            Section(L10n.readingWindow) {
+                Picker(L10n.defaultArtworkReadingMode, selection: defaultArtworkReadingModeBinding) {
+                    ForEach(ArtworkReadingMode.allCases) { mode in
+                        Text(mode.title).tag(mode)
+                    }
+                }
+                .pickerStyle(.segmented)
+
+                Picker(L10n.defaultMangaReadingMode, selection: defaultMangaReadingModeBinding) {
+                    ForEach(ArtworkReadingMode.allCases) { mode in
+                        Text(mode.title).tag(mode)
+                    }
+                }
+                .pickerStyle(.segmented)
+
+                Text(L10n.defaultReadingModeHint)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
+                Toggle(L10n.restoreLastReadPage, isOn: restoreReaderProgressBinding)
+                Text(L10n.restoreLastReadPageHint)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
+                Divider()
+
+                Toggle(L10n.enableTrackpadGestures, isOn: trackpadGesturesBinding)
+
+                Picker(L10n.twoFingerSwipeBehavior, selection: horizontalSwipeBehaviorBinding) {
+                    ForEach(TrackpadHorizontalSwipeBehavior.allCases) { behavior in
+                        Text(behavior.title).tag(behavior)
+                    }
+                }
+                .pickerStyle(.menu)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var discoverySettingsSection: some View {
+        if settingsMatches(discoverySettingsTerms) {
+            Section(L10n.settingsDiscovery) {
+                Picker(L10n.defaultBookmarkVisibility, selection: defaultBookmarkRestrictBinding) {
+                    ForEach(BookmarkRestrict.allCases) { restrict in
+                        Text(restrict.title).tag(restrict)
+                    }
+                }
+                .pickerStyle(.segmented)
+
+                Toggle(L10n.autoTagBookmarksWithArtworkTags, isOn: autoTagBookmarksBinding)
+                Text(L10n.autoTagBookmarksWithArtworkTagsHint)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
+                Toggle(L10n.followCreatorAfterBookmark, isOn: followCreatorAfterBookmarkBinding)
+                Text(L10n.followCreatorAfterBookmarkHint)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
+                Toggle(L10n.autoDownloadBookmarkedArtworks, isOn: autoDownloadBookmarksBinding)
+                Text(L10n.autoDownloadBookmarkedArtworksHint)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
+                Divider()
+
+                Picker(L10n.defaultFollowVisibility, selection: defaultFollowRestrictBinding) {
+                    ForEach(BookmarkRestrict.allCases) { restrict in
+                        Text(restrict.title).tag(restrict)
+                    }
+                }
+                .pickerStyle(.segmented)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var safetySettingsSection: some View {
+        if settingsMatches(safetySettingsTerms) {
+            Section(L10n.settingsSafety) {
+                Toggle(L10n.showContentBadges, isOn: showContentBadgesBinding)
+                Toggle(L10n.hideMutedContent, isOn: hideMutedBinding)
+                Toggle(L10n.hideAIArtworks, isOn: hideAIBinding)
+                Text(L10n.pixivAIDisplayHint)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                Toggle(L10n.hideR18Artworks, isOn: hideR18Binding)
+                Toggle(L10n.hideR18GArtworks, isOn: hideR18GBinding)
+                Toggle(L10n.maskSensitivePreviews, isOn: maskSensitivePreviewsBinding)
+                Text(L10n.maskSensitivePreviewsHint)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
+                if store.session != nil {
+                    Divider()
+
+                    HStack(spacing: 8) {
+                        Toggle(L10n.pixivRestrictedMode, isOn: restrictedModeBinding)
+                            .disabled(store.restrictedModeEnabled == nil || isUpdatingRestrictedMode)
+
+                        if store.restrictedModeEnabled == nil || isUpdatingRestrictedMode {
+                            ProgressView()
+                                .controlSize(.small)
+                        }
+                    }
+
+                    Text(L10n.pixivRestrictedModeHint)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+
+                    if let restrictedModeMessage {
+                        Text(restrictedModeMessage)
+                            .font(.caption)
+                            .foregroundStyle(.red)
+                            .textSelection(.enabled)
+                    }
+                }
+
+                Divider()
+
+                Text(L10n.muteSyncHint)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
+                FlowLayout(spacing: 8) {
+                    Button {
+                        isMutedContentSyncConfirmationPresented = true
+                    } label: {
+                        Label(L10n.syncFromPixiv, systemImage: "arrow.down.circle")
+                    }
+                    .disabled(isSyncingMutedContent)
+
+                    Button {
+                        isMutedContentUploadConfirmationPresented = true
+                    } label: {
+                        Label(L10n.uploadToPixiv, systemImage: "arrow.up.circle")
+                    }
+                    .disabled(isSyncingMutedContent || (store.mutedTagList.isEmpty && store.mutedUserList.isEmpty))
+
+                    if isSyncingMutedContent {
+                        ProgressView()
+                            .controlSize(.small)
+                    }
+                }
+
+                FlowLayout(spacing: 8) {
+                    Button {
+                        exportLocalMutedContent()
+                    } label: {
+                        Label(L10n.exportMutedContent, systemImage: "square.and.arrow.up")
+                    }
+                    .disabled(isSyncingMutedContent || (store.mutedTagList.isEmpty && store.mutedUserList.isEmpty && store.mutedArtworkList.isEmpty))
+
+                    Button {
+                        isMutedContentImportConfirmationPresented = true
+                    } label: {
+                        Label(L10n.importMutedContent, systemImage: "square.and.arrow.down")
+                    }
+                    .disabled(isSyncingMutedContent)
+                }
+
+                if let mutedContentSyncMessage {
+                    Text(mutedContentSyncMessage)
+                        .font(.caption)
+                        .foregroundStyle(mutedContentSyncMessageIsError ? .red : .secondary)
+                        .textSelection(.enabled)
+                }
+
+                LabeledContent(L10n.mutedContent) {
+                    Text(String(format: L10n.mutedContentCountFormat, mutedContentCount))
+                        .foregroundStyle(.secondary)
+                }
+
+                Button {
+                    store.select(.mutedContent)
+                } label: {
+                    Label(L10n.openMutedContentManager, systemImage: "eye.slash")
+                }
+
+                Divider()
+
+                Toggle(L10n.privacyMode, isOn: privacyModeBinding)
+                Text(L10n.privacyModeHint)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
+                Toggle(L10n.protectSensitiveContent, isOn: screenCaptureProtectionBinding)
+                Text(L10n.screenCaptureProtectionHint)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
+                if store.session != nil {
+                    Toggle(L10n.showAccountIdentity, isOn: accountIdentityBinding)
+                    Text(L10n.accountIdentityPrivacyHint)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var downloadsSettingsSection: some View {
+        if settingsMatches(downloadsSettingsTerms) {
+            Section(L10n.downloads) {
+                LabeledContent(L10n.downloadFolder) {
+                    Text(store.downloads.downloadDirectoryPath)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                        .textSelection(.enabled)
+                }
+
+                FlowLayout(spacing: 8) {
+                    Button {
+                        if store.downloads.chooseDownloadDirectory() {
+                            showSettingsActionMessage(L10n.downloadFolderChanged)
+                        }
+                    } label: {
+                        Label(L10n.chooseFolder, systemImage: "folder.badge.gearshape")
+                    }
+
+                    Button {
+                        showSettingsActionMessage(
+                            store.downloads.openDownloadDirectory()
+                                ? L10n.openedDownloadFolder
+                                : L10n.unableToOpenDownloadFolder
+                        )
+                    } label: {
+                        Label(L10n.openFolder, systemImage: "folder")
+                    }
+                }
+
+                Stepper(
+                    value: maxConcurrentDownloadsBinding,
+                    in: 1...4,
+                    step: 1
+                ) {
+                    LabeledContent(L10n.concurrentDownloads) {
+                        Text(store.downloads.maxConcurrentDownloads.formatted())
+                            .monospacedDigit()
+                            .foregroundStyle(.secondary)
+                    }
+                }
+
+                Text(L10n.concurrentDownloadsHint)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
+                Toggle(L10n.autoBookmarkDownloadedArtworks, isOn: autoBookmarkDownloadsBinding)
+                Text(L10n.autoBookmarkDownloadedArtworksHint)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
+                Divider()
+
+                TextField(L10n.downloadNamingTemplate, text: downloadNamingTemplateBinding)
+                    .textFieldStyle(.roundedBorder)
+
+                Text(L10n.downloadNamingTemplateHint)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
+                LabeledContent(L10n.templatePreview) {
+                    Text(store.downloads.downloadNamingTemplatePreview)
+                        .lineLimit(2)
+                        .truncationMode(.middle)
+                        .textSelection(.enabled)
+                }
+
+                Button {
+                    showSettingsActionMessage(
+                        store.downloads.resetDownloadNamingTemplate()
+                            ? L10n.downloadTemplateReset
+                            : L10n.downloadTemplateAlreadyDefault
+                    )
+                } label: {
+                    Label(L10n.resetTemplate, systemImage: "arrow.counterclockwise")
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var accountSettingsSection: some View {
+        if settingsMatches(accountSettingsTerms) {
+            if let session = store.session {
+                Section(L10n.account) {
+                    LabeledContent(
+                        L10n.profile,
+                        value: store.showAccountIdentity ? "\(session.user.name) @\(session.user.account)" : L10n.hidden
+                    )
+
+                    if store.storedAccounts.isEmpty == false {
+                        ForEach(store.storedAccounts) { account in
+                            StoredAccountRow(
+                                account: account,
+                                isCurrent: account.id == session.user.id,
+                                showIdentity: store.showAccountIdentity,
+                                switchAccount: {
+                                    Task {
+                                        await store.switchAccount(userID: account.id)
+                                        showSettingsActionMessage(String(format: L10n.switchedAccountFormat, account.name))
+                                    }
+                                },
+                                removeAccount: {
+                                    accountRemovalCandidate = account
+                                }
+                            )
+                        }
+                    }
+
+                    Button {
+                        isAccountLoginPresented = true
+                    } label: {
+                        Label(L10n.addAccount, systemImage: "person.crop.circle.badge.plus")
+                    }
+
+                    Button(role: .destructive) {
+                        isLogoutConfirmationPresented = true
+                    } label: {
+                        Label(L10n.logout, systemImage: "rectangle.portrait.and.arrow.right")
+                    }
+                }
+            } else {
+                Section(L10n.account) {
+                    Button {
+                        isAccountLoginPresented = true
+                    } label: {
+                        Label(L10n.addAccount, systemImage: "person.crop.circle.badge.plus")
+                    }
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var advancedQASettingsSection: some View {
+        if settingsMatches(advancedQASettingsTerms) {
+            RuntimeReadinessView(store: store)
+        }
+    }
+
+    @ViewBuilder
+    private var settingsNoResultsSection: some View {
+        if hasVisibleSettingsSections == false {
+            Section {
+                ContentUnavailableView(
+                    L10n.noMatchingSettings,
+                    systemImage: "line.3.horizontal.decrease.circle",
+                    description: Text(L10n.noMatchingSettingsHint)
+                )
+            }
+        }
+    }
+
+    private var hasVisibleSettingsSections: Bool {
+        settingsMatches(generalSettingsTerms)
+            || settingsMatches(readingSettingsTerms)
+            || settingsMatches(discoverySettingsTerms)
+            || settingsMatches(safetySettingsTerms)
+            || settingsMatches(downloadsSettingsTerms)
+            || settingsMatches(accountSettingsTerms)
+            || settingsMatches(advancedQASettingsTerms)
+    }
+
+    private var settingsSearchQuery: String {
+        settingsSearchText.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private func settingsMatches(_ terms: [String]) -> Bool {
+        guard settingsSearchQuery.isEmpty == false else { return true }
+        return terms.contains { term in
+            term.localizedCaseInsensitiveContains(settingsSearchQuery)
+        }
+    }
+
+    private var generalSettingsTerms: [String] {
+        [
+            L10n.settingsGeneral,
+            L10n.language,
+            L10n.appearance,
+            L10n.useOriginalImages,
+            L10n.showTranslatedTags,
+            L10n.layout,
+            L10n.galleryLayout
+        ]
+    }
+
+    private var readingSettingsTerms: [String] {
+        [
+            L10n.readingWindow,
+            L10n.defaultArtworkReadingMode,
+            L10n.defaultMangaReadingMode,
+            L10n.restoreLastReadPage,
+            L10n.trackpad,
+            L10n.enableTrackpadGestures,
+            L10n.twoFingerSwipeBehavior
+        ]
+    }
+
+    private var discoverySettingsTerms: [String] {
+        [
+            L10n.settingsDiscovery,
+            L10n.bookmarks,
+            L10n.defaultBookmarkVisibility,
+            L10n.autoTagBookmarksWithArtworkTags,
+            L10n.followCreatorAfterBookmark,
+            L10n.autoDownloadBookmarkedArtworks,
+            L10n.followingCreators,
+            L10n.defaultFollowVisibility
+        ]
+    }
+
+    private var safetySettingsTerms: [String] {
+        [
+            L10n.settingsSafety,
+            L10n.contentFilters,
+            L10n.showContentBadges,
+            L10n.hideMutedContent,
+            L10n.hideAIArtworks,
+            L10n.hideR18Artworks,
+            L10n.hideR18GArtworks,
+            L10n.maskSensitivePreviews,
+            L10n.pixivRestrictedMode,
+            L10n.mutedContent,
+            L10n.syncFromPixiv,
+            L10n.uploadToPixiv,
+            L10n.privacy,
+            L10n.privacyMode,
+            L10n.protectSensitiveContent,
+            L10n.showAccountIdentity
+        ]
+    }
+
+    private var downloadsSettingsTerms: [String] {
+        [
+            L10n.downloads,
+            L10n.downloadFolder,
+            L10n.concurrentDownloads,
+            L10n.autoBookmarkDownloadedArtworks,
+            L10n.downloadNamingTemplate,
+            L10n.templatePreview
+        ]
+    }
+
+    private var accountSettingsTerms: [String] {
+        [
+            L10n.account,
+            L10n.profile,
+            L10n.addAccount,
+            L10n.switchAccount,
+            L10n.removeAccount,
+            L10n.logout
+        ]
+    }
+
+    private var advancedQASettingsTerms: [String] {
+        [
+            L10n.settingsAdvancedQA,
+            L10n.runtimeReadiness,
+            L10n.qaSettingsOrganization,
+            L10n.runSearchDiagnostics,
+            L10n.qaAccountHealth
+        ]
     }
 
     private var languageBinding: Binding<AppLanguage> {
@@ -780,55 +953,5 @@ struct SettingsView: View {
         if settingsActionMessage == message {
             settingsActionMessage = nil
         }
-    }
-}
-
-private struct StoredAccountRow: View {
-    let account: PixivStoredAccount
-    let isCurrent: Bool
-    let showIdentity: Bool
-    let switchAccount: () -> Void
-    let removeAccount: () -> Void
-
-    var body: some View {
-        HStack(spacing: 10) {
-            RemoteImageView(url: account.profileImageURL)
-                .frame(width: 30, height: 30)
-                .clipShape(Circle())
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text(showIdentity ? account.name : L10n.hidden)
-                    .font(.headline)
-                    .lineLimit(1)
-
-                Text(showIdentity ? "@\(account.account)" : L10n.accountIdentityHidden)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-            }
-
-            Spacer(minLength: 8)
-
-            if isCurrent {
-                Label(L10n.currentAccount, systemImage: "checkmark.circle.fill")
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(.green)
-            } else {
-                Button(action: switchAccount) {
-                    Label(L10n.switchAccount, systemImage: "arrow.triangle.2.circlepath")
-                }
-                .buttonStyle(.bordered)
-                .controlSize(.small)
-            }
-
-            Button(role: .destructive, action: removeAccount) {
-                Label(L10n.removeAccount, systemImage: "trash")
-            }
-            .labelStyle(.iconOnly)
-            .buttonStyle(.bordered)
-            .controlSize(.small)
-            .help(L10n.removeAccount)
-        }
-        .help(showIdentity ? "\(account.name) @\(account.account)" : L10n.accountIdentityHidden)
     }
 }

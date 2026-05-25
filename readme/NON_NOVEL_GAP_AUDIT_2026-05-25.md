@@ -37,7 +37,7 @@ KeiPix implementation route: native Swift + SwiftUI, with narrow AppKit/WebKit b
 | Local cache/offline | Pixez has glance/cache layers and local persistence for feed previews/history. | URLCache-backed image cache, download library, local browsing/search/spotlight history. | Add feed snapshot cache for last successful route load and offline-friendly read-only gallery. | P2 |
 | Deep links and Pixiv URLs | Pixes handles Pixiv URLs/app links for users, artworks, tags, novels. | Search prefixes and Pixiv web link resolver exist; ID open sheet exists. | Register macOS URL/document handlers and route pasted/dragged Pixiv URLs through one native resolver surface. | P1 |
 | Sharing/copy actions | Copy image, copy Pixiv link, copy metadata templates, share image. | Copy links, copy summaries, pasteboard support, current-page image actions, privacy option. | Add customizable copy template parity for artwork/creator info. | P2 |
-| Settings | Rich toggles for quality, layout, save behavior, AI/R18, language, network. | Layout, trackpad, privacy, language, downloads, filters, runtime readiness. | Group "Reading", "Discovery", "Safety", "Downloads", "Advanced QA" and add settings search. | P1 |
+| Settings | Rich toggles for quality, layout, save behavior, AI/R18, language, network. | General, Reading, Discovery, Safety, Downloads, Account, and Runtime Readiness groups with localized Settings search. | Keep settings search and grouping in regression coverage. | P2 QA |
 | QA/readiness | Reference projects rely more on manual flows. | Runtime readiness, search diagnostics, ID diagnostics, mutable QA authorization, build script, non-novel matrix, route status, skipped reasons, and screenshot evidence. | Extend screenshot evidence to downloads and reader windows. | P1 QA |
 
 ## Completion Snapshot
@@ -54,6 +54,7 @@ KeiPix implementation route: native Swift + SwiftUI, with narrow AppKit/WebKit b
 | Safety/filtering | 97% | AI/R18/mute foundations, optional NSFW masking, and visible-result bulk mute previews exist. | Keep remote sync behind explicit QA and authorization. |
 | Pixivision / Spotlight | 90% | Native list/detail exists, article content stays in app, and Pixiv links resolve through the native resolver. | Keep live article link routing in regression coverage. |
 | QA and diagnostics | 94% | Non-novel QA matrix exists and P0 visual surfaces read stored screenshot evidence. | Add download and reader manifests as P1 evidence. |
+| Settings | 97% | Settings controls are grouped by native macOS sections and searchable in Chinese/English. | Keep search and grouping in regression coverage. |
 
 ## Implementation Plan
 
@@ -66,4 +67,4 @@ KeiPix implementation route: native Swift + SwiftUI, with narrow AppKit/WebKit b
 | 5 | Deepen reader/download parity | Add optional auto-bookmark-after-download and per-artwork reader resume. | Done for online reader, downloaded local viewer, and download-to-bookmark automation. |
 | 6 | Polish power-user portability | Add import/export for saved search presets/history and customizable copy templates for artwork/creator metadata. | JSON import/export round-trips locally; copy templates support artwork ID, user ID, title, tags, URL, AI/R18 markers. |
 
-Recommended next implementation wave: Settings grouping/search polish, then download and reader visual evidence.
+Recommended next implementation wave: download and reader visual evidence, then richer Ugoira playback controls.

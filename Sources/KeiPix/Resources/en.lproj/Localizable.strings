@@ -420,6 +420,13 @@
 "Mouse" = "Mouse";
 "Workspace Comment" = "Workspace Comment";
 "Settings" = "Settings";
+"Search settings" = "Search settings";
+"General" = "General";
+"Discovery" = "Discovery";
+"Safety" = "Safety";
+"Advanced QA" = "Advanced QA";
+"No matching settings" = "No matching settings";
+"Change the settings search to show other controls." = "Change the settings search to show other controls.";
 "Show Sidebar" = "Show Sidebar";
 "Hide Sidebar" = "Hide Sidebar";
 "Language" = "Language";
@@ -865,7 +872,7 @@
 "Add feed snapshot cache." = "Add feed snapshot cache.";
 "Settings organization" = "Settings organization";
 "Reading, discovery, safety, downloads, privacy, and QA controls stay grouped in native Settings." = "Reading, discovery, safety, downloads, privacy, and QA controls stay grouped in native Settings.";
-"Add Settings search when the surface grows further." = "Add Settings search when the surface grows further.";
+"Keep Settings search and grouping in regression coverage." = "Keep Settings search and grouping in regression coverage.";
 "System Proxy" = "System Proxy";
 "Direct connection" = "Direct connection";
 "Pixiv API" = "Pixiv API";

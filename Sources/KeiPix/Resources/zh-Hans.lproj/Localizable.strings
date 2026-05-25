@@ -420,6 +420,13 @@
 "Mouse" = "鼠标";
 "Workspace Comment" = "工作区说明";
 "Settings" = "设置";
+"Search settings" = "搜索设置";
+"General" = "通用";
+"Discovery" = "发现";
+"Safety" = "安全";
+"Advanced QA" = "高级 QA";
+"No matching settings" = "没有匹配的设置";
+"Change the settings search to show other controls." = "修改设置搜索词以显示其他控制项。";
 "Show Sidebar" = "显示边栏";
 "Hide Sidebar" = "隐藏边栏";
 "Language" = "语言";
@@ -865,7 +872,7 @@
 "Add feed snapshot cache." = "新增作品流快照缓存。";
 "Settings organization" = "设置组织";
 "Reading, discovery, safety, downloads, privacy, and QA controls stay grouped in native Settings." = "阅读、发现、安全、下载、隐私和 QA 控制需要在原生设置中分组。";
-"Add Settings search when the surface grows further." = "设置继续增长后新增设置搜索。";
+"Keep Settings search and grouping in regression coverage." = "保持设置搜索与分组的回归覆盖。";
 "System Proxy" = "系统代理";
 "Direct connection" = "直连";
 "Pixiv API" = "Pixiv API";

@@ -415,6 +415,13 @@ enum L10n {
     static var mouse: String { text("Mouse") }
     static var workspaceComment: String { text("Workspace Comment") }
     static var settings: String { text("Settings") }
+    static var searchSettings: String { text("Search settings") }
+    static var settingsGeneral: String { text("General") }
+    static var settingsDiscovery: String { text("Discovery") }
+    static var settingsSafety: String { text("Safety") }
+    static var settingsAdvancedQA: String { text("Advanced QA") }
+    static var noMatchingSettings: String { text("No matching settings") }
+    static var noMatchingSettingsHint: String { text("Change the settings search to show other controls.") }
     static var showSidebar: String { text("Show Sidebar") }
     static var hideSidebar: String { text("Hide Sidebar") }
     static var language: String { text("Language") }
@@ -664,7 +671,7 @@ enum L10n {
     static var qaLocalCacheOfflineNext: String { text("Add feed snapshot cache.") }
     static var qaSettingsOrganization: String { text("Settings organization") }
     static var qaSettingsOrganizationRequirement: String { text("Reading, discovery, safety, downloads, privacy, and QA controls stay grouped in native Settings.") }
-    static var qaSettingsOrganizationNext: String { text("Add Settings search when the surface grows further.") }
+    static var qaSettingsOrganizationNext: String { text("Keep Settings search and grouping in regression coverage.") }
     static var systemProxy: String { text("System Proxy") }
     static var directConnection: String { text("Direct connection") }
     static var pixivAPI: String { text("Pixiv API") }
