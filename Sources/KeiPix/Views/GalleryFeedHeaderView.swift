@@ -10,6 +10,7 @@ struct FeedHeaderView: View {
     @State private var isLoadingBookmarkTags = false
     @State private var bookmarkTagErrorMessage: String?
     @State private var isRankingDatePopoverPresented = false
+    @State private var bulkMutePreview: BulkMutePreview?
     @State private var draftUseRankingDate = false
     @State private var draftRankingDate = KeiPixStore.latestSelectableRankingDate()
 
@@ -158,6 +159,22 @@ struct FeedHeaderView: View {
                 Label(L10n.batchDownload, systemImage: "square.and.arrow.down.on.square")
             }
             .disabled(store.artworks.isEmpty)
+
+            Divider()
+
+            Menu {
+                ForEach(BulkMuteTarget.allCases) { target in
+                    Button {
+                        presentBulkMutePreview(target)
+                    } label: {
+                        Label(target.title, systemImage: target.systemImage)
+                    }
+                    .disabled(store.artworks.isEmpty)
+                }
+            } label: {
+                Label(L10n.bulkMutePreview, systemImage: "eye.slash")
+            }
+            .disabled(store.artworks.isEmpty)
         } label: {
             Label(L10n.moreActions, systemImage: "ellipsis.circle")
         }
@@ -170,6 +187,17 @@ struct FeedHeaderView: View {
                 queuedCount: lastQueuedDownloadCount,
                 downloadDirectoryPath: store.downloads.downloadDirectoryPath,
                 action: queueBatchDownload
+            )
+        }
+        .popover(item: $bulkMutePreview, arrowEdge: .bottom) { preview in
+            BulkMutePreviewPopover(
+                preview: preview,
+                cancel: {
+                    bulkMutePreview = nil
+                },
+                apply: {
+                    applyBulkMutePreview(preview)
+                }
             )
         }
 
@@ -330,6 +358,24 @@ struct FeedHeaderView: View {
         }
         PasteboardWriter.copy(links.joined(separator: "\n"))
         actionMessage = String(format: L10n.copiedArtworkLinksFormat, links.count)
+    }
+
+    private func presentBulkMutePreview(_ target: BulkMuteTarget) {
+        let preview = store.bulkMutePreview(for: target, in: store.artworks)
+        bulkMutePreview = preview
+        if preview.canApply == false {
+            actionMessage = L10n.noBulkMuteCandidates
+        }
+    }
+
+    private func applyBulkMutePreview(_ preview: BulkMutePreview) {
+        let count = store.applyBulkMutePreview(preview)
+        bulkMutePreview = nil
+        if count > 0 {
+            actionMessage = String(format: L10n.bulkMutedItemsFormat, count)
+        } else {
+            actionMessage = L10n.noBulkMuteCandidates
+        }
     }
 
     private func copySearchSummary() {
@@ -501,5 +547,78 @@ private struct BatchDownloadPopover: View {
         .onAppear {
             limit = min(max(1, limit), maxLimit)
         }
+    }
+}
+
+private struct BulkMutePreviewPopover: View {
+    let preview: BulkMutePreview
+    let cancel: () -> Void
+    let apply: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            VStack(alignment: .leading, spacing: 4) {
+                Label(preview.target.title, systemImage: preview.target.systemImage)
+                    .font(.headline)
+
+                Text(String(format: L10n.bulkMuteAffectedArtworkFormat, preview.affectedArtworkCount))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            if preview.entries.isEmpty {
+                ContentUnavailableView(L10n.noBulkMuteCandidates, systemImage: "eye.slash")
+                    .frame(minHeight: 160)
+            } else {
+                ScrollView {
+                    LazyVStack(alignment: .leading, spacing: 8) {
+                        ForEach(preview.entries) { entry in
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(entry.title)
+                                    .font(.callout.weight(.medium))
+                                    .lineLimit(1)
+
+                                if let detail = entry.detail {
+                                    Text(detail)
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                        .lineLimit(1)
+                                }
+                            }
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 8)
+                            .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                        }
+
+                        if preview.omittedEntryCount > 0 {
+                            Text(String(format: L10n.moreBulkMuteItemsFormat, preview.omittedEntryCount))
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                                .padding(.horizontal, 10)
+                        }
+                    }
+                }
+                .frame(maxHeight: 280)
+            }
+
+            Divider()
+
+            HStack(spacing: 8) {
+                Button(L10n.cancel, action: cancel)
+
+                Spacer()
+
+                Button(role: .destructive) {
+                    apply()
+                } label: {
+                    Label(L10n.applyBulkMute, systemImage: "eye.slash")
+                }
+                .buttonStyle(.glassProminent)
+                .disabled(preview.canApply == false)
+            }
+        }
+        .padding(16)
+        .frame(width: 340)
     }
 }

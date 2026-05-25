@@ -634,6 +634,16 @@
 "Mute Artwork" = "屏蔽作品";
 "Mute Creator" = "屏蔽创作者";
 "Mute Tag" = "屏蔽标签";
+"Bulk Mute Preview" = "批量屏蔽预览";
+"Visible Artworks" = "可见作品";
+"Visible Creators" = "可见创作者";
+"Visible Tags" = "可见标签";
+"%d visible works" = "%d 个可见作品";
+"%d visible works will be affected" = "将影响 %d 个可见作品";
+"No new mute candidates" = "没有新的屏蔽候选";
+"+%d more candidates" = "另有 %d 个候选";
+"Apply Bulk Mute" = "应用批量屏蔽";
+"Muted %d items" = "已屏蔽 %d 项";
 "Muted Content" = "屏蔽内容";
 "Muted Tags" = "屏蔽标签";
 "Muted Creators" = "屏蔽创作者";

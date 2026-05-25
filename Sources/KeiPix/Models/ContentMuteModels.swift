@@ -58,6 +58,54 @@ struct MutedContentArchive: Codable, Sendable {
     }
 }
 
+enum BulkMuteTarget: String, CaseIterable, Identifiable, Hashable, Sendable {
+    case artworks
+    case creators
+    case tags
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .artworks:
+            L10n.visibleArtworks
+        case .creators:
+            L10n.visibleCreators
+        case .tags:
+            L10n.visibleTags
+        }
+    }
+
+    var systemImage: String {
+        switch self {
+        case .artworks:
+            "photo.badge.exclamationmark"
+        case .creators:
+            "person.crop.circle.badge.xmark"
+        case .tags:
+            "tag.slash"
+        }
+    }
+}
+
+struct BulkMutePreviewEntry: Identifiable, Hashable, Sendable {
+    let id: String
+    let title: String
+    let detail: String?
+}
+
+struct BulkMutePreview: Identifiable, Hashable, Sendable {
+    let id = UUID()
+    let target: BulkMuteTarget
+    let entries: [BulkMutePreviewEntry]
+    let affectedArtworkCount: Int
+    let omittedEntryCount: Int
+
+    var canApply: Bool {
+        entries.isEmpty == false
+    }
+}
+
 enum CommentMuteReason: Hashable, Sendable {
     case user(String)
     case phrase(String)

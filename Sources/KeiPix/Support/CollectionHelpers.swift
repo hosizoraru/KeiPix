@@ -6,6 +6,15 @@ extension Collection {
     }
 }
 
+extension Sequence {
+    func uniqued<Key: Hashable>(by key: (Element) -> Key) -> [Element] {
+        var seen = Set<Key>()
+        return filter { element in
+            seen.insert(key(element)).inserted
+        }
+    }
+}
+
 extension Array where Element == PixivTag {
     func uniquedByName() -> [PixivTag] {
         var seen = Set<String>()

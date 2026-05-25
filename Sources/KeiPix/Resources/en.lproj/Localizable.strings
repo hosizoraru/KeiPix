@@ -634,6 +634,16 @@
 "Mute Artwork" = "Mute Artwork";
 "Mute Creator" = "Mute Creator";
 "Mute Tag" = "Mute Tag";
+"Bulk Mute Preview" = "Bulk Mute Preview";
+"Visible Artworks" = "Visible Artworks";
+"Visible Creators" = "Visible Creators";
+"Visible Tags" = "Visible Tags";
+"%d visible works" = "%d visible works";
+"%d visible works will be affected" = "%d visible works will be affected";
+"No new mute candidates" = "No new mute candidates";
+"+%d more candidates" = "+%d more candidates";
+"Apply Bulk Mute" = "Apply Bulk Mute";
+"Muted %d items" = "Muted %d items";
 "Muted Content" = "Muted Content";
 "Muted Tags" = "Muted Tags";
 "Muted Creators" = "Muted Creators";

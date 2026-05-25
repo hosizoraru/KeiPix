@@ -790,6 +790,16 @@ enum L10n {
     static var muteArtwork: String { text("Mute Artwork") }
     static var muteCreator: String { text("Mute Creator") }
     static var muteTag: String { text("Mute Tag") }
+    static var bulkMutePreview: String { text("Bulk Mute Preview") }
+    static var visibleArtworks: String { text("Visible Artworks") }
+    static var visibleCreators: String { text("Visible Creators") }
+    static var visibleTags: String { text("Visible Tags") }
+    static var visibleArtworkCountFormat: String { text("%d visible works") }
+    static var bulkMuteAffectedArtworkFormat: String { text("%d visible works will be affected") }
+    static var noBulkMuteCandidates: String { text("No new mute candidates") }
+    static var moreBulkMuteItemsFormat: String { text("+%d more candidates") }
+    static var applyBulkMute: String { text("Apply Bulk Mute") }
+    static var bulkMutedItemsFormat: String { text("Muted %d items") }
     static var mutedContent: String { text("Muted Content") }
     static var mutedTags: String { text("Muted Tags") }
     static var mutedCreators: String { text("Muted Creators") }

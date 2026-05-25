@@ -110,6 +110,105 @@ extension KeiPixStore {
         )
     }
 
+    func bulkMutePreview(for target: BulkMuteTarget, in artworks: [PixivArtwork]) -> BulkMutePreview {
+        switch target {
+        case .artworks:
+            let entries = artworks
+                .uniqued { $0.id }
+                .filter { mutedArtworks[$0.id] == nil }
+                .map {
+                    BulkMutePreviewEntry(
+                        id: "\($0.id)",
+                        title: $0.title,
+                        detail: $0.user.name
+                    )
+                }
+            return BulkMutePreview(
+                target: target,
+                entries: entries,
+                affectedArtworkCount: entries.count,
+                omittedEntryCount: 0
+            )
+        case .creators:
+            let users = artworks
+                .map(\.user)
+                .uniqued { $0.id }
+                .filter { mutedUsers[$0.id] == nil }
+            let mutedUserIDs = Set(users.map(\.id))
+            let affectedCount = artworks.filter { mutedUserIDs.contains($0.user.id) }.count
+            return BulkMutePreview(
+                target: target,
+                entries: users.map {
+                    BulkMutePreviewEntry(
+                        id: "\($0.id)",
+                        title: $0.name,
+                        detail: "@\($0.account)"
+                    )
+                },
+                affectedArtworkCount: affectedCount,
+                omittedEntryCount: 0
+            )
+        case .tags:
+            let frequencies = artworks.reduce(into: [String: Int]()) { result, artwork in
+                for tag in artwork.tags where mutedTags.contains(tag.name) == false {
+                    result[tag.name, default: 0] += 1
+                }
+            }
+            let candidates = frequencies
+                .sorted {
+                    if $0.value == $1.value {
+                        return $0.key.localizedStandardCompare($1.key) == .orderedAscending
+                    }
+                    return $0.value > $1.value
+                }
+            let selected = Array(candidates.prefix(12))
+            let selectedTags = Set(selected.map(\.key))
+            let affectedCount = artworks.filter { artwork in
+                artwork.tags.contains { selectedTags.contains($0.name) }
+            }.count
+            return BulkMutePreview(
+                target: target,
+                entries: selected.map { tag, count in
+                    BulkMutePreviewEntry(
+                        id: tag,
+                        title: "#\(tag)",
+                        detail: String(format: L10n.visibleArtworkCountFormat, count)
+                    )
+                },
+                affectedArtworkCount: affectedCount,
+                omittedEntryCount: max(candidates.count - selected.count, 0)
+            )
+        }
+    }
+
+    @discardableResult
+    func applyBulkMutePreview(_ preview: BulkMutePreview) -> Int {
+        guard preview.canApply else { return 0 }
+
+        let snapshot = mutedContentArchiveSnapshot()
+        switch preview.target {
+        case .artworks:
+            for entry in preview.entries {
+                guard let id = Int(entry.id) else { continue }
+                mutedArtworks[id] = entry.title
+            }
+        case .creators:
+            for entry in preview.entries {
+                guard let id = Int(entry.id) else { continue }
+                mutedUsers[id] = entry.title
+            }
+        case .tags:
+            mutedTags.formUnion(preview.entries.map { $0.id })
+        }
+
+        persistMutedTags()
+        persistMutedUsers()
+        persistMutedArtworks()
+        applyContentFilters()
+        undoAction = AppUndoAction(kind: .restoreMutedContentSnapshot(snapshot))
+        return preview.entries.count
+    }
+
     func restoreMutedContent(_ archive: MutedContentArchive) {
         mutedTags.formUnion(archive.tags)
         for user in archive.users {
