@@ -56,6 +56,12 @@ actor PixivAPI {
         session
     }
 
+    func refreshCurrentSession() async throws -> PixivSession {
+        try await refreshToken()
+        guard let session else { throw PixivAPIError.missingSession }
+        return session
+    }
+
     func selectAccount(userID: String) throws -> PixivSession? {
         let selected = try tokenStore.select(userID: userID)
         session = selected

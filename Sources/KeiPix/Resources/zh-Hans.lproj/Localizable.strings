@@ -748,6 +748,10 @@
 "Unable to save diagnostics" = "无法保存诊断";
 "Run Network Diagnostics" = "运行网络诊断";
 "Running diagnostics" = "正在诊断";
+"Run Account Health Check" = "运行账号健康检查";
+"Running account health check" = "正在运行账号健康检查";
+"Account Token Refresh" = "账号 Token 刷新";
+"Keychain session" = "钥匙串登录态";
 "Run Read-only QA" = "运行只读 QA";
 "Running read-only QA" = "正在运行只读 QA";
 "Run Non-Novel QA Matrix" = "运行非小说 QA 矩阵";

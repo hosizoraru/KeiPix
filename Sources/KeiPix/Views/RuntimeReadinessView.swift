@@ -7,6 +7,7 @@ struct RuntimeReadinessView: View {
     @State private var didCopyDiagnostics = false
     @State private var didCopyChecklist = false
     @State private var isRunningReadOnlyQA = false
+    @State private var isRunningAccountHealthDiagnostics = false
     @State private var isRunningDiagnostics = false
     @State private var isRunningSearchDiagnostics = false
     @State private var isRunningNonNovelQA = false
@@ -16,6 +17,7 @@ struct RuntimeReadinessView: View {
     @State private var isLoadingCommentFeedbackPreview = false
     @State private var isMutableActionQAAuthorizationPresented = false
     @State private var feedbackPreviewRequest: FeedbackReportRequest?
+    @State private var accountHealthResults: [NetworkDiagnosticResult] = []
     @State private var networkResults: [NetworkDiagnosticResult] = []
     @State private var searchResults: [NetworkDiagnosticResult] = []
     @State private var mutableActionQAResults: [NetworkDiagnosticResult] = []
@@ -51,6 +53,14 @@ struct RuntimeReadinessView: View {
                 Divider()
 
                 ForEach(networkResults) { result in
+                    NetworkDiagnosticResultRow(result: result)
+                }
+            }
+
+            if accountHealthResults.isEmpty == false {
+                Divider()
+
+                ForEach(accountHealthResults) { result in
                     NetworkDiagnosticResultRow(result: result)
                 }
             }
@@ -146,6 +156,13 @@ struct RuntimeReadinessView: View {
                 .disabled(isRunningDiagnostics)
 
                 Button {
+                    Task { await runAccountHealthDiagnostics() }
+                } label: {
+                    Label(L10n.runAccountHealthDiagnostics, systemImage: "person.crop.circle.badge.checkmark")
+                }
+                .disabled(isRunningAccountHealthDiagnostics)
+
+                Button {
                     Task { await runSearchDiagnostics() }
                 } label: {
                     Label(L10n.runSearchDiagnostics, systemImage: "magnifyingglass.circle")
@@ -198,6 +215,16 @@ struct RuntimeReadinessView: View {
                     ProgressView()
                         .controlSize(.small)
                     Text(L10n.runningDiagnostics)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            if isRunningAccountHealthDiagnostics {
+                HStack(spacing: 8) {
+                    ProgressView()
+                        .controlSize(.small)
+                    Text(L10n.runningAccountHealthDiagnostics)
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -346,6 +373,12 @@ struct RuntimeReadinessView: View {
         await refreshCacheStatus()
     }
 
+    private func runAccountHealthDiagnostics() async {
+        isRunningAccountHealthDiagnostics = true
+        defer { isRunningAccountHealthDiagnostics = false }
+        accountHealthResults = await store.runAccountHealthDiagnostics()
+    }
+
     private func runSearchDiagnostics() async {
         isRunningSearchDiagnostics = true
         defer { isRunningSearchDiagnostics = false }
@@ -424,6 +457,11 @@ struct RuntimeReadinessView: View {
             lines.append("")
             lines.append("Network Diagnostics")
             lines += networkResults.map(\.diagnosticsLine)
+        }
+        if accountHealthResults.isEmpty == false {
+            lines.append("")
+            lines.append("Account Health Diagnostics")
+            lines += accountHealthResults.map(\.diagnosticsLine)
         }
         if searchResults.isEmpty == false {
             lines.append("")

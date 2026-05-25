@@ -114,6 +114,46 @@ extension KeiPixStore {
         return [proxyResult, apiResult, imageResult]
     }
 
+    func runAccountHealthDiagnostics() async -> [NetworkDiagnosticResult] {
+        guard session != nil else {
+            return [
+                NetworkDiagnosticResult(
+                    id: "account-token-refresh",
+                    title: L10n.accountTokenRefresh,
+                    status: .skipped,
+                    detail: L10n.signedOut,
+                    duration: nil
+                )
+            ]
+        }
+
+        let startedAt = Date()
+        do {
+            let refreshedSession = try await api.refreshCurrentSession()
+            session = refreshedSession
+            storedAccounts = try await api.storedAccounts()
+            return [
+                NetworkDiagnosticResult(
+                    id: "account-token-refresh",
+                    title: L10n.accountTokenRefresh,
+                    status: .passed,
+                    detail: storeAccountHealthDetail(for: refreshedSession),
+                    duration: Date().timeIntervalSince(startedAt)
+                )
+            ]
+        } catch {
+            return [
+                NetworkDiagnosticResult(
+                    id: "account-token-refresh",
+                    title: L10n.accountTokenRefresh,
+                    status: .failed,
+                    detail: error.localizedDescription,
+                    duration: Date().timeIntervalSince(startedAt)
+                )
+            ]
+        }
+    }
+
     func runSearchDiagnostics() async -> [NetworkDiagnosticResult] {
         guard session != nil else {
             return SearchDiagnosticProbe.defaultProbes.map { probe in
@@ -298,6 +338,7 @@ extension KeiPixStore {
     private var runtimeReadinessRows: [RuntimeReadinessRow] {
         [
             sessionReadinessRow,
+            accountHealthReadinessRow,
             routeReadinessRow,
             feedReadinessRow,
             selectionReadinessRow,
@@ -370,6 +411,23 @@ extension KeiPixStore {
             id: "session",
             title: L10n.session,
             value: session == nil ? value : "\(L10n.signedIn) · \(value)",
+            systemImage: "person.crop.circle.badge.checkmark",
+            isReady: session != nil
+        )
+    }
+
+    private var accountHealthReadinessRow: RuntimeReadinessRow {
+        let value: String
+        if let session {
+            value = storeAccountHealthDetail(for: session)
+        } else {
+            value = L10n.signedOut
+        }
+
+        return RuntimeReadinessRow(
+            id: "account-health",
+            title: L10n.qaAccountHealth,
+            value: value,
             systemImage: "person.crop.circle.badge.checkmark",
             isReady: session != nil
         )
@@ -539,6 +597,11 @@ extension KeiPixStore {
             "System Proxy: \(systemProxySummary)"
         ]
         return lines.joined(separator: "\n")
+    }
+
+    private func storeAccountHealthDetail(for session: PixivSession) -> String {
+        let identity = showAccountIdentity ? "@\(session.user.account)" : L10n.hidden
+        return "\(L10n.keychainSession) · \(identity)"
     }
 
     private func pixivAPIDiagnostic() async -> NetworkDiagnosticResult {

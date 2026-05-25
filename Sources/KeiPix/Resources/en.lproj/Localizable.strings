@@ -748,6 +748,10 @@
 "Unable to save diagnostics" = "Unable to save diagnostics";
 "Run Network Diagnostics" = "Run Network Diagnostics";
 "Running diagnostics" = "Running diagnostics";
+"Run Account Health Check" = "Run Account Health Check";
+"Running account health check" = "Running account health check";
+"Account Token Refresh" = "Account Token Refresh";
+"Keychain session" = "Keychain session";
 "Run Read-only QA" = "Run Read-only QA";
 "Running read-only QA" = "Running read-only QA";
 "Run Non-Novel QA Matrix" = "Run Non-Novel QA Matrix";
