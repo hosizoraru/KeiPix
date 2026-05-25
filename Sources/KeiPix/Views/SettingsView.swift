@@ -22,6 +22,7 @@ struct SettingsView: View {
             generalSettingsSection
             readingSettingsSection
             discoverySettingsSection
+            copyTemplateSettingsSection
             safetySettingsSection
             downloadsSettingsSection
             accountSettingsSection
@@ -244,6 +245,13 @@ struct SettingsView: View {
                 }
                 .pickerStyle(.segmented)
             }
+        }
+    }
+
+    @ViewBuilder
+    private var copyTemplateSettingsSection: some View {
+        if settingsMatches(copyTemplateSettingsTerms) {
+            CopyTemplateSettingsSection(store: store, showMessage: showSettingsActionMessage)
         }
     }
 
@@ -530,6 +538,7 @@ struct SettingsView: View {
         settingsMatches(generalSettingsTerms)
             || settingsMatches(readingSettingsTerms)
             || settingsMatches(discoverySettingsTerms)
+            || settingsMatches(copyTemplateSettingsTerms)
             || settingsMatches(safetySettingsTerms)
             || settingsMatches(downloadsSettingsTerms)
             || settingsMatches(accountSettingsTerms)
@@ -602,6 +611,16 @@ struct SettingsView: View {
             L10n.privacyMode,
             L10n.protectSensitiveContent,
             L10n.showAccountIdentity
+        ]
+    }
+
+    private var copyTemplateSettingsTerms: [String] {
+        [
+            L10n.sharing,
+            L10n.artworkCopyTemplate,
+            L10n.creatorCopyTemplate,
+            L10n.copyTemplateHint,
+            L10n.templatePreview
         ]
     }
 

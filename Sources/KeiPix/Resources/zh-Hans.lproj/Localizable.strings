@@ -186,6 +186,14 @@
 "Copy Link" = "复制链接";
 "Copy Artwork Summary" = "复制作品摘要";
 "Copied Artwork Summary" = "已复制作品摘要";
+"Sharing" = "分享";
+"Artwork Copy Template" = "作品复制模板";
+"Creator Copy Template" = "作者复制模板";
+"Use placeholders like ${id}, ${title}, ${creator}, ${account}, ${userId}, ${pages}, ${views}, ${bookmarks}, ${comments}, ${badges}, ${tags}, ${url}, ${AI}, ${R18}, and ${R18G}." = "可使用 ${id}、${title}、${creator}、${account}、${userId}、${pages}、${views}、${bookmarks}、${comments}、${badges}、${tags}、${url}、${AI}、${R18}、${R18G} 等占位符。";
+"Reset Artwork Copy Template" = "重置作品复制模板";
+"Reset Creator Copy Template" = "重置作者复制模板";
+"Copy template reset" = "已重置复制模板";
+"Copy template is already default" = "复制模板已经是默认值";
 "More Actions" = "更多操作";
 "Download" = "下载";
 "Downloads" = "下载";

@@ -60,6 +60,10 @@ final class KeiPixStore {
     var autoDownloadBookmarkedArtworks = UserDefaults.standard.object(forKey: "autoDownloadBookmarkedArtworks") as? Bool ?? false
     var autoBookmarkDownloadedArtworks = UserDefaults.standard.object(forKey: "autoBookmarkDownloadedArtworks") as? Bool ?? false
     var autoTagBookmarksWithArtworkTags = UserDefaults.standard.object(forKey: "autoTagBookmarksWithArtworkTags") as? Bool ?? false
+    var artworkCopyTemplate = UserDefaults.standard.string(forKey: "artworkCopyTemplate")
+        ?? ArtworkCopyTemplate.defaultTemplate
+    var creatorCopyTemplate = UserDefaults.standard.string(forKey: "creatorCopyTemplate")
+        ?? CreatorCopyTemplate.defaultTemplate
     var restoreArtworkReaderProgress = UserDefaults.standard.object(forKey: "restoreArtworkReaderProgress") as? Bool ?? true
     var searchMatchType = KeiPixStore.loadEnum("searchMatchType", defaultValue: SearchMatchType.partialTags)
     var searchSort = KeiPixStore.loadEnum("searchSort", defaultValue: SearchSort.dateDescending)

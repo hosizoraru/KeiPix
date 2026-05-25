@@ -186,6 +186,14 @@ enum L10n {
     static var copyLink: String { text("Copy Link") }
     static var copyArtworkSummary: String { text("Copy Artwork Summary") }
     static var copiedArtworkSummary: String { text("Copied Artwork Summary") }
+    static var sharing: String { text("Sharing") }
+    static var artworkCopyTemplate: String { text("Artwork Copy Template") }
+    static var creatorCopyTemplate: String { text("Creator Copy Template") }
+    static var copyTemplateHint: String { text("Use placeholders like ${id}, ${title}, ${creator}, ${account}, ${userId}, ${pages}, ${views}, ${bookmarks}, ${comments}, ${badges}, ${tags}, ${url}, ${AI}, ${R18}, and ${R18G}.") }
+    static var resetArtworkCopyTemplate: String { text("Reset Artwork Copy Template") }
+    static var resetCreatorCopyTemplate: String { text("Reset Creator Copy Template") }
+    static var copyTemplateReset: String { text("Copy template reset") }
+    static var copyTemplateAlreadyDefault: String { text("Copy template is already default") }
     static var moreActions: String { text("More Actions") }
     static var download: String { text("Download") }
     static var downloads: String { text("Downloads") }

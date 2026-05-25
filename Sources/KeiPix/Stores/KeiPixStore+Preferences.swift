@@ -32,6 +32,32 @@ extension KeiPixStore {
         UserDefaults.standard.set(value, forKey: "autoTagBookmarksWithArtworkTags")
     }
 
+    func setArtworkCopyTemplate(_ template: String) {
+        artworkCopyTemplate = template
+        UserDefaults.standard.set(template, forKey: "artworkCopyTemplate")
+    }
+
+    func resetArtworkCopyTemplate() -> Bool {
+        guard artworkCopyTemplate != ArtworkCopyTemplate.defaultTemplate else {
+            return false
+        }
+        setArtworkCopyTemplate(ArtworkCopyTemplate.defaultTemplate)
+        return true
+    }
+
+    func setCreatorCopyTemplate(_ template: String) {
+        creatorCopyTemplate = template
+        UserDefaults.standard.set(template, forKey: "creatorCopyTemplate")
+    }
+
+    func resetCreatorCopyTemplate() -> Bool {
+        guard creatorCopyTemplate != CreatorCopyTemplate.defaultTemplate else {
+            return false
+        }
+        setCreatorCopyTemplate(CreatorCopyTemplate.defaultTemplate)
+        return true
+    }
+
     func setRestoreArtworkReaderProgress(_ value: Bool) {
         restoreArtworkReaderProgress = value
         UserDefaults.standard.set(value, forKey: "restoreArtworkReaderProgress")

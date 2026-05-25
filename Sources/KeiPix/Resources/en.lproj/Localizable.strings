@@ -186,6 +186,14 @@
 "Copy Link" = "Copy Link";
 "Copy Artwork Summary" = "Copy Artwork Summary";
 "Copied Artwork Summary" = "Copied Artwork Summary";
+"Sharing" = "Sharing";
+"Artwork Copy Template" = "Artwork Copy Template";
+"Creator Copy Template" = "Creator Copy Template";
+"Use placeholders like ${id}, ${title}, ${creator}, ${account}, ${userId}, ${pages}, ${views}, ${bookmarks}, ${comments}, ${badges}, ${tags}, ${url}, ${AI}, ${R18}, and ${R18G}." = "Use placeholders like ${id}, ${title}, ${creator}, ${account}, ${userId}, ${pages}, ${views}, ${bookmarks}, ${comments}, ${badges}, ${tags}, ${url}, ${AI}, ${R18}, and ${R18G}.";
+"Reset Artwork Copy Template" = "Reset Artwork Copy Template";
+"Reset Creator Copy Template" = "Reset Creator Copy Template";
+"Copy template reset" = "Copy template reset";
+"Copy template is already default" = "Copy template is already default";
 "More Actions" = "More Actions";
 "Download" = "Download";
 "Downloads" = "Downloads";

@@ -461,25 +461,7 @@ private struct ArtworkActionStrip: View {
     }
 
     private var artworkSummaryText: String {
-        let url = artwork.pixivURL?.absoluteString ?? ""
-        let tags = artwork.tags.map { "#\($0.name)" }.joined(separator: " ")
-        let badges = artwork.contentBadges.map(\.title).joined(separator: ", ")
-
-        return [
-            artwork.title,
-            "\(L10n.creator): \(artwork.user.name) (@\(artwork.user.account))",
-            "\(L10n.artworkID): \(artwork.id)",
-            "\(L10n.creatorID): \(artwork.user.id)",
-            "\(L10n.pages): \(pageCount)",
-            "\(L10n.views): \(artwork.totalView.formatted())",
-            "\(L10n.saves): \(artwork.totalBookmarks.formatted())",
-            "\(L10n.comments): \(artwork.totalComments.formatted())",
-            badges.isEmpty ? nil : "\(L10n.contentRating): \(badges)",
-            tags.isEmpty ? nil : "\(L10n.tags): \(tags)",
-            url.isEmpty ? nil : "\(L10n.openInPixiv): \(url)"
-        ]
-        .compactMap { $0 }
-        .joined(separator: "\n")
+        store.renderArtworkCopySummary(artwork, pageCount: pageCount)
     }
 }
 

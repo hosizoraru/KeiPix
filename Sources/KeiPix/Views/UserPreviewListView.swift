@@ -624,9 +624,7 @@ struct UserPreviewListView: View {
 
     private func copyVisibleCreatorSummary() {
         let summaries = visiblePreviews.map { preview in
-            let user = preview.user
-            let url = user.pixivURL?.absoluteString ?? ""
-            return "\(user.name)\t@\(user.account)\t\(user.id)\t\(url)"
+            store.renderCreatorCopySummary(preview.user)
         }
         guard summaries.isEmpty == false else {
             bulkStatusText = L10n.noCreatorSummariesToCopy
