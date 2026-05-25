@@ -113,10 +113,11 @@ private struct StandaloneArtworkReader: View {
             }
             .task(id: artwork.id) {
                 resetForArtwork()
-                prefetchAround(0)
+                prefetchAround(pageIndex)
                 await store.recordBrowsingHistory(for: artwork)
             }
             .onChange(of: pageIndex) { _, value in
+                store.saveReaderPageIndex(value, for: artwork, pageCount: pageCount)
                 prefetchAround(value)
             }
         }
@@ -231,9 +232,10 @@ private struct StandaloneArtworkReader: View {
     }
 
     private func resetForArtwork() {
-        pageIndex = 0
-        scrollTarget = nil
         readingMode = store.defaultReadingMode(for: artwork, pageCount: pageCount)
+        let restoredPageIndex = store.restoredReaderPageIndex(for: artwork, pageCount: pageCount)
+        pageIndex = restoredPageIndex
+        scrollTarget = readingMode == .singlePage ? nil : restoredPageIndex
     }
 
     private func scrollToPage(_ index: Int, proxy: ScrollViewProxy) {

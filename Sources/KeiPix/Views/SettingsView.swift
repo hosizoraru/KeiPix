@@ -49,6 +49,11 @@ struct SettingsView: View {
                 Text(L10n.defaultReadingModeHint)
                     .font(.caption)
                     .foregroundStyle(.secondary)
+
+                Toggle(L10n.restoreLastReadPage, isOn: restoreReaderProgressBinding)
+                Text(L10n.restoreLastReadPageHint)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
 
             Section(L10n.contentFilters) {
@@ -627,6 +632,14 @@ struct SettingsView: View {
             store.defaultMangaReadingMode
         } set: { value in
             store.setDefaultMangaReadingMode(value)
+        }
+    }
+
+    private var restoreReaderProgressBinding: Binding<Bool> {
+        Binding {
+            store.restoreArtworkReaderProgress
+        } set: { value in
+            store.setRestoreArtworkReaderProgress(value)
         }
     }
 

@@ -93,6 +93,7 @@ private struct ArtworkInspectorView: View {
             .scrollPosition(id: $scrollTarget, anchor: .top)
             .scrollEdgeEffectStyle(.soft, for: .top)
             .onChange(of: pageIndex) { _, value in
+                store.saveReaderPageIndex(value, for: artwork, pageCount: pageCount)
                 prefetchAround(value)
             }
             .onChange(of: scrollTarget) { _, value in
@@ -106,7 +107,7 @@ private struct ArtworkInspectorView: View {
             }
             .task(id: artwork.id) {
                 resetForArtwork()
-                prefetchAround(0)
+                prefetchAround(pageIndex)
                 await store.recordBrowsingHistory(for: artwork)
             }
         }
@@ -120,9 +121,10 @@ private struct ArtworkInspectorView: View {
         captionExpanded = false
         tagsExpanded = false
         metadataExpanded = false
-        pageIndex = 0
-        scrollTarget = nil
         readingMode = store.defaultReadingMode(for: artwork, pageCount: pageCount)
+        let restoredPageIndex = store.restoredReaderPageIndex(for: artwork, pageCount: pageCount)
+        pageIndex = restoredPageIndex
+        scrollTarget = readingMode == .singlePage ? nil : restoredPageIndex
     }
 
     private func scrollToPage(_ index: Int, proxy: ScrollViewProxy) {

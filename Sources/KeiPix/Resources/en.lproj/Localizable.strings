@@ -505,6 +505,8 @@
 "Default Artwork Reading Mode" = "Default Artwork Reading Mode";
 "Default Manga Reading Mode" = "Default Manga Reading Mode";
 "Changing the reader mode in an artwork updates the matching default for future works." = "Changing the reader mode in an artwork updates the matching default for future works.";
+"Restore Last Read Page" = "Restore Last Read Page";
+"Reopen multi-page artworks on the last page read on this Mac." = "Reopen multi-page artworks on the last page read on this Mac.";
 "Trackpad" = "Trackpad";
 "Enable trackpad gestures" = "Enable trackpad gestures";
 "Two-finger swipe behavior" = "Two-finger swipe behavior";
@@ -818,7 +820,7 @@
 "Add update badges and stronger series/watchlist routing." = "Add update badges and stronger series/watchlist routing.";
 "Reader" = "Reader";
 "Multi-page reader supports per-page aspect ratio, continuous reading, keyboard, and trackpad gestures." = "Multi-page reader supports per-page aspect ratio, continuous reading, keyboard, and trackpad gestures.";
-"Add optional per-artwork last-page restoration." = "Add optional per-artwork last-page restoration.";
+"Keep per-artwork reader resume in regression coverage." = "Keep per-artwork reader resume in regression coverage.";
 "Search" = "Search";
 "Artwork search covers match mode, sort, AI/R18, bookmark counts, saved searches, and autocomplete." = "Artwork search covers match mode, sort, AI/R18, bookmark counts, saved searches, and autocomplete.";
 "Add saved preset import and export." = "Add saved preset import and export.";

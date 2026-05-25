@@ -27,6 +27,11 @@ extension KeiPixStore {
         UserDefaults.standard.set(value, forKey: "autoTagBookmarksWithArtworkTags")
     }
 
+    func setRestoreArtworkReaderProgress(_ value: Bool) {
+        restoreArtworkReaderProgress = value
+        UserDefaults.standard.set(value, forKey: "restoreArtworkReaderProgress")
+    }
+
     func setUseOriginalImagesInDetail(_ value: Bool) {
         useOriginalImagesInDetail = value
         UserDefaults.standard.set(value, forKey: "useOriginalImagesInDetail")
@@ -199,5 +204,26 @@ extension KeiPixStore {
     func setDefaultMangaReadingMode(_ mode: ArtworkReadingMode) {
         defaultMangaReadingMode = mode
         UserDefaults.standard.set(mode.rawValue, forKey: ArtworkReadingModePreferenceKind.manga.storageKey)
+    }
+
+    func restoredReaderPageIndex(for artwork: PixivArtwork, pageCount: Int? = nil) -> Int {
+        guard restoreArtworkReaderProgress else { return 0 }
+        let resolvedPageCount = pageCount ?? artwork.displayPageCount
+        return readerProgressLibrary.restoredPageIndex(for: artwork.id, pageCount: resolvedPageCount) ?? 0
+    }
+
+    func saveReaderPageIndex(_ pageIndex: Int, for artwork: PixivArtwork, pageCount: Int? = nil) {
+        guard restoreArtworkReaderProgress else { return }
+        readerProgressLibrary.update(
+            artworkID: artwork.id,
+            pageIndex: pageIndex,
+            pageCount: pageCount ?? artwork.displayPageCount
+        )
+        persistReaderProgressLibrary()
+    }
+
+    private func persistReaderProgressLibrary() {
+        guard let data = try? JSONEncoder().encode(readerProgressLibrary) else { return }
+        UserDefaults.standard.set(data, forKey: "readerProgressLibrary")
     }
 }

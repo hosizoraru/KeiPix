@@ -32,6 +32,7 @@ final class KeiPixStore {
     var localBrowsingHistory = KeiPixStore.loadLocalBrowsingHistory()
     var spotlightFavoriteArticles = KeiPixStore.loadSpotlightArticles(key: "spotlightFavoriteArticles")
     var spotlightArticleHistory = KeiPixStore.loadSpotlightArticles(key: "spotlightArticleHistory")
+    var readerProgressLibrary = KeiPixStore.loadReaderProgressLibrary()
     var errorMessage: String?
     var isLoading = false
     var isLoadingMore = false
@@ -56,6 +57,7 @@ final class KeiPixStore {
     var followCreatorAfterBookmark = UserDefaults.standard.object(forKey: "followCreatorAfterBookmark") as? Bool ?? false
     var autoDownloadBookmarkedArtworks = UserDefaults.standard.object(forKey: "autoDownloadBookmarkedArtworks") as? Bool ?? false
     var autoTagBookmarksWithArtworkTags = UserDefaults.standard.object(forKey: "autoTagBookmarksWithArtworkTags") as? Bool ?? false
+    var restoreArtworkReaderProgress = UserDefaults.standard.object(forKey: "restoreArtworkReaderProgress") as? Bool ?? true
     var searchMatchType = KeiPixStore.loadEnum("searchMatchType", defaultValue: SearchMatchType.partialTags)
     var searchSort = KeiPixStore.loadEnum("searchSort", defaultValue: SearchSort.dateDescending)
     var searchAgeLimit = KeiPixStore.loadEnum("searchAgeLimit", defaultValue: SearchAgeLimit.unlimited)
@@ -841,6 +843,13 @@ final class KeiPixStore {
             return []
         }
         return (try? JSONDecoder().decode([PixivSpotlightArticle].self, from: data)) ?? []
+    }
+
+    private static func loadReaderProgressLibrary() -> ArtworkReaderProgressLibrary {
+        guard let data = UserDefaults.standard.data(forKey: "readerProgressLibrary") else {
+            return ArtworkReaderProgressLibrary()
+        }
+        return (try? JSONDecoder().decode(ArtworkReaderProgressLibrary.self, from: data)) ?? ArtworkReaderProgressLibrary()
     }
 
     func persistSavedSearchPresets() {
