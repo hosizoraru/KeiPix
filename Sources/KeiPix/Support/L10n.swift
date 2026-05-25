@@ -776,9 +776,11 @@ enum L10n {
     static var allFollowing: String { text("All Following") }
     static var privateFollowing: String { text("Private Following") }
     static var rankingDate: String { text("Ranking Date") }
+    static var rankingMode: String { text("Ranking Mode") }
     static var useRankingDate: String { text("Use Ranking Date") }
     static var latestRanking: String { text("Latest Ranking") }
     static var latestRankingApplied: String { text("Showing latest ranking") }
+    static var rankingModeAppliedFormat: String { text("Showing ranking: %@") }
     static var rankingDateAppliedFormat: String { text("Showing ranking for %@") }
     static var rankingDateRangeFormat: String { text("Available from %@ to %@") }
     static var previousDay: String { text("Previous Day") }

@@ -69,6 +69,11 @@ enum PixivRouteSection: Identifiable {
     }
 }
 
+enum PixivRankingFamily: String, CaseIterable {
+    case illustration
+    case manga
+}
+
 enum PixivRoute: String, CaseIterable, Identifiable, Codable {
     case home
     case illustrations = "explore"
@@ -191,26 +196,51 @@ enum PixivRoute: String, CaseIterable, Identifiable, Codable {
     }
 
     var isRankingRoute: Bool {
-        switch self {
-        case .rankingDaily,
-             .rankingWeekly,
-             .rankingMonthly,
-             .rankingDailyMale,
-             .rankingDailyFemale,
-             .rankingWeeklyOriginal,
-             .rankingWeeklyRookie,
-             .rankingDailyR18,
-             .rankingDailyAI,
-             .rankingDailyR18AI,
-             .rankingWeeklyR18,
-             .rankingWeeklyR18G,
-             .mangaRankingDaily,
-             .mangaRankingWeekly,
-             .mangaRankingMonthly,
-             .mangaRankingDailyR18:
-            true
-        default:
-            false
+        rankingFamily != nil
+    }
+
+    var rankingFamily: PixivRankingFamily? {
+        if Self.illustrationRankingRoutes.contains(self) {
+            return .illustration
+        }
+        if Self.mangaRankingRoutes.contains(self) {
+            return .manga
+        }
+        return nil
+    }
+
+    static var illustrationRankingRoutes: [PixivRoute] {
+        [
+            .rankingDaily,
+            .rankingWeekly,
+            .rankingMonthly,
+            .rankingDailyMale,
+            .rankingDailyFemale,
+            .rankingWeeklyOriginal,
+            .rankingWeeklyRookie,
+            .rankingDailyAI,
+            .rankingDailyR18AI,
+            .rankingDailyR18,
+            .rankingWeeklyR18,
+            .rankingWeeklyR18G
+        ]
+    }
+
+    static var mangaRankingRoutes: [PixivRoute] {
+        [
+            .mangaRankingDaily,
+            .mangaRankingWeekly,
+            .mangaRankingMonthly,
+            .mangaRankingDailyR18
+        ]
+    }
+
+    static func rankingRoutes(for family: PixivRankingFamily) -> [PixivRoute] {
+        switch family {
+        case .illustration:
+            illustrationRankingRoutes
+        case .manga:
+            mangaRankingRoutes
         }
     }
 

@@ -1,3 +1,4 @@
+import CoreGraphics
 import Testing
 @testable import KeiPix
 
@@ -30,5 +31,29 @@ struct GallerySelectionTests {
         selection.clear()
         #expect(selection.selectedIDs.isEmpty)
         #expect(selection.isSelectionMode == false)
+    }
+
+    @Test("Three-column masonry keeps real-account wide works dense")
+    func threeColumnMasonryKeepsRealAccountWideWorksDense() {
+        let realAccountLikeAspects: [CGFloat] = [
+            1.46,
+            1.58,
+            1.72,
+            1.88,
+            1.91,
+            2.2,
+            2.55,
+            2.7
+        ]
+
+        let regularSpans = realAccountLikeAspects.map {
+            ArtworkMasonryPresentation(aspectRatio: $0).span(for: 3)
+        }
+        let denseSpans = realAccountLikeAspects.map {
+            ArtworkMasonryPresentation(aspectRatio: $0).span(for: 3, denseFixedColumns: true)
+        }
+
+        #expect(regularSpans == [2, 2, 2, 2, 2, 3, 3, 3])
+        #expect(denseSpans == [1, 1, 1, 1, 2, 2, 2, 3])
     }
 }

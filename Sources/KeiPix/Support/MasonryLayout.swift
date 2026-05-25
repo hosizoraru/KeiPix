@@ -10,6 +10,7 @@ struct MasonryLayout: Layout {
     var minColumnWidth: CGFloat = 176
     var maxColumnWidth: CGFloat = 260
     var fixedColumnCount: Int? = nil
+    var denseFixedColumns: Bool = false
 
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
         resolvedLayout(for: proposal, subviews: subviews).size
@@ -35,7 +36,7 @@ struct MasonryLayout: Layout {
 
         for subview in subviews {
             let presentation = ArtworkMasonryPresentation(aspectRatio: subview[MasonryAspectRatioKey.self])
-            let span = min(presentation.span(for: columnCount), columnCount)
+            let span = min(presentation.span(for: columnCount, denseFixedColumns: denseFixedColumns), columnCount)
             let spanWidth = CGFloat(span) * columnWidth + CGFloat(span - 1) * spacing
             let height = presentation.height(for: spanWidth, span: span, columnCount: columnCount)
             let origin = originForNextItem(span: span, columnWidth: columnWidth, columnHeights: columnHeights)

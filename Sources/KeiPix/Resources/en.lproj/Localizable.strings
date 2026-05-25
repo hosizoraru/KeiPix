@@ -599,9 +599,11 @@
 "All Following" = "All Following";
 "Private Following" = "Private Following";
 "Ranking Date" = "Ranking Date";
+"Ranking Mode" = "Ranking Mode";
 "Use Ranking Date" = "Use Ranking Date";
 "Latest Ranking" = "Latest Ranking";
 "Showing latest ranking" = "Showing latest ranking";
+"Showing ranking: %@" = "Showing ranking: %@";
 "Showing ranking for %@" = "Showing ranking for %@";
 "Available from %@ to %@" = "Available from %@ to %@";
 "Previous Day" = "Previous Day";

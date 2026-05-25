@@ -174,9 +174,10 @@ private struct MasonryArtworkGrid: View {
     let fixedColumnCount: Int?
 
     private let spacing: CGFloat = 12
-    private let preferredColumnWidth: CGFloat = 224
-    private let minColumnWidth: CGFloat = 176
+    private var preferredColumnWidth: CGFloat { usesDenseThreeColumnLayout ? 180 : 224 }
+    private var minColumnWidth: CGFloat { usesDenseThreeColumnLayout ? 132 : 176 }
     private let maxColumnWidth: CGFloat = 260
+    private var usesDenseThreeColumnLayout: Bool { fixedColumnCount == 3 }
 
     var body: some View {
         MasonryLayout(
@@ -184,7 +185,8 @@ private struct MasonryArtworkGrid: View {
             preferredColumnWidth: preferredColumnWidth,
             minColumnWidth: minColumnWidth,
             maxColumnWidth: maxColumnWidth,
-            fixedColumnCount: fixedColumnCount
+            fixedColumnCount: fixedColumnCount,
+            denseFixedColumns: usesDenseThreeColumnLayout
         ) {
             ForEach(store.artworks) { artwork in
                 let presentation = ArtworkMasonryPresentation(artwork: artwork)

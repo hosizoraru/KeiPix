@@ -49,7 +49,17 @@ struct ArtworkMasonryPresentation {
         aspectRatio >= 1.45 ? .wide : .regular
     }
 
-    func span(for columnCount: Int) -> Int {
+    func span(for columnCount: Int, denseFixedColumns: Bool = false) -> Int {
+        if denseFixedColumns, columnCount >= 3 {
+            if aspectRatio >= 2.6 {
+                return columnCount
+            }
+            if aspectRatio >= 1.9 {
+                return 2
+            }
+            return 1
+        }
+
         if aspectRatio >= 2.2, columnCount >= 3 {
             return columnCount
         }

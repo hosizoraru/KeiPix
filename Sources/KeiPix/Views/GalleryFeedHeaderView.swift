@@ -133,6 +133,8 @@ struct FeedHeaderView: View {
         }
 
         if store.selectedRoute.isRankingRoute {
+            rankingModeMenu
+
             Button {
                 draftUseRankingDate = store.useRankingDate
                 draftRankingDate = store.rankingDate
@@ -298,6 +300,27 @@ struct FeedHeaderView: View {
                 Label(L10n.search, systemImage: "magnifyingglass")
             }
             .buttonStyle(.bordered)
+        }
+    }
+
+    @ViewBuilder
+    private var rankingModeMenu: some View {
+        if let family = store.selectedRoute.rankingFamily {
+            Menu {
+                ForEach(PixivRoute.rankingRoutes(for: family)) { route in
+                    Button {
+                        store.select(route)
+                        actionMessage = String(format: L10n.rankingModeAppliedFormat, route.title)
+                    } label: {
+                        Label(route.title, systemImage: route == store.selectedRoute ? "checkmark" : route.systemImage)
+                    }
+                }
+            } label: {
+                Label(store.selectedRoute.title, systemImage: "chart.bar")
+            }
+            .menuStyle(.button)
+            .buttonStyle(.bordered)
+            .help(L10n.rankingMode)
         }
     }
 
