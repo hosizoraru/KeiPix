@@ -816,6 +816,15 @@ enum L10n {
     static var loadMoreRelatedArtworks: String { text("Load More Related Artworks") }
     static var artworkSeries: String { text("Artwork Series") }
     static var noSeriesArtworks: String { text("No series artworks") }
+    static var noMatchingSeriesArtworks: String { text("No matching series artworks") }
+    static var seriesSort: String { text("Series Sort") }
+    static var seriesFilter: String { text("Series Filter") }
+    static var seriesOrder: String { text("Series Order") }
+    static var newestFirst: String { text("Newest First") }
+    static var oldestFirst: String { text("Oldest First") }
+    static var unreadWorks: String { text("Unread Works") }
+    static var viewedWorks: String { text("Viewed Works") }
+    static var seriesVisibleCountFormat: String { text("%d of %d shown") }
     static var loadMoreSeriesArtworks: String { text("Load More Series Artworks") }
     static var showSeries: String { text("Show Series") }
     static var addToWatchlist: String { text("Add to Watchlist") }

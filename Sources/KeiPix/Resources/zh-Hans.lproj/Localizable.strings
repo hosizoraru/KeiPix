@@ -650,6 +650,15 @@
 "Load More Related Artworks" = "加载更多相关作品";
 "Artwork Series" = "作品系列";
 "No series artworks" = "暂无系列作品";
+"No matching series artworks" = "暂无匹配的系列作品";
+"Series Sort" = "系列排序";
+"Series Filter" = "系列筛选";
+"Series Order" = "系列顺序";
+"Newest First" = "最新优先";
+"Oldest First" = "最早优先";
+"Unread Works" = "未读作品";
+"Viewed Works" = "已看作品";
+"%d of %d shown" = "显示 %d / %d";
 "Load More Series Artworks" = "加载更多系列作品";
 "Show Series" = "查看系列";
 "Add to Watchlist" = "添加到追更";

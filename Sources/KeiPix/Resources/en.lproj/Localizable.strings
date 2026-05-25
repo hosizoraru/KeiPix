@@ -650,6 +650,15 @@
 "Load More Related Artworks" = "Load More Related Artworks";
 "Artwork Series" = "Artwork Series";
 "No series artworks" = "No series artworks";
+"No matching series artworks" = "No matching series artworks";
+"Series Sort" = "Series Sort";
+"Series Filter" = "Series Filter";
+"Series Order" = "Series Order";
+"Newest First" = "Newest First";
+"Oldest First" = "Oldest First";
+"Unread Works" = "Unread Works";
+"Viewed Works" = "Viewed Works";
+"%d of %d shown" = "%d of %d shown";
 "Load More Series Artworks" = "Load More Series Artworks";
 "Show Series" = "Show Series";
 "Add to Watchlist" = "Add to Watchlist";

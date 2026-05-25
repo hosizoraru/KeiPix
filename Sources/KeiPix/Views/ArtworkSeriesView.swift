@@ -18,6 +18,8 @@ struct ArtworkSeriesView: View {
     @State private var statusMessage: String?
     @State private var pendingDangerAction: AppDangerAction?
     @State private var pendingWatchlistRemoval: PixivArtworkSeriesDetail?
+    @State private var sortMode = ArtworkSeriesSortMode.seriesOrder
+    @State private var readFilter = ArtworkSeriesReadFilter.all
 
     private let columns = [
         GridItem(.adaptive(minimum: 140, maximum: 210), spacing: 12)
@@ -135,13 +137,38 @@ struct ArtworkSeriesView: View {
                 ContentUnavailableView(L10n.noSeriesArtworks, systemImage: "rectangle.stack")
                     .frame(maxWidth: .infinity)
             } else {
-                LazyVGrid(columns: columns, spacing: 12) {
-                    ForEach(seriesArtworks) { seriesArtwork in
-                        seriesTile(seriesArtwork)
+                SeriesControlsView(
+                    sortMode: $sortMode,
+                    readFilter: $readFilter,
+                    visibleCount: displayedSeriesArtworks.count,
+                    totalCount: seriesArtworks.count
+                )
+
+                if displayedSeriesArtworks.isEmpty {
+                    ContentUnavailableView(
+                        L10n.noMatchingSeriesArtworks,
+                        systemImage: "line.3.horizontal.decrease.circle"
+                    )
+                    .frame(maxWidth: .infinity)
+                    .frame(minHeight: 160)
+                } else {
+                    LazyVGrid(columns: columns, spacing: 12) {
+                        ForEach(displayedSeriesArtworks) { seriesArtwork in
+                            seriesTile(seriesArtwork)
+                        }
                     }
                 }
             }
         }
+    }
+
+    private var displayedSeriesArtworks: [PixivArtwork] {
+        ArtworkSeriesPresentation.displayedArtworks(
+            seriesArtworks,
+            sortMode: sortMode,
+            readFilter: readFilter,
+            viewedArtworkIDs: Set(store.localBrowsingHistory.map(\.id))
+        )
     }
 
     private var title: String {
@@ -164,6 +191,7 @@ struct ArtworkSeriesView: View {
             preferredHeight: 156
         ) {
             store.selectedArtwork = seriesArtwork
+            Task { await store.recordBrowsingHistory(for: seriesArtwork) }
         }
         .contextMenu {
             Button(seriesArtwork.isBookmarked ? L10n.removeBookmark : L10n.bookmark) {
@@ -363,6 +391,45 @@ struct ArtworkSeriesView: View {
             coverURL: detail.coverImageURLs?.medium ?? detail.coverImageURLs?.large ?? artwork.thumbnailURL,
             maskText: nil
         )
+    }
+}
+
+private struct SeriesControlsView: View {
+    @Binding var sortMode: ArtworkSeriesSortMode
+    @Binding var readFilter: ArtworkSeriesReadFilter
+    let visibleCount: Int
+    let totalCount: Int
+
+    var body: some View {
+        HStack(spacing: 10) {
+            Picker(L10n.seriesSort, selection: $sortMode) {
+                ForEach(ArtworkSeriesSortMode.allCases) { mode in
+                    Text(mode.title).tag(mode)
+                }
+            }
+            .pickerStyle(.menu)
+            .controlSize(.small)
+            .frame(maxWidth: 180)
+
+            Picker(L10n.seriesFilter, selection: $readFilter) {
+                ForEach(ArtworkSeriesReadFilter.allCases) { filter in
+                    Text(filter.title).tag(filter)
+                }
+            }
+            .pickerStyle(.segmented)
+            .controlSize(.small)
+            .frame(maxWidth: 260)
+
+            Spacer(minLength: 8)
+
+            Text(String(format: L10n.seriesVisibleCountFormat, visibleCount, totalCount))
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 8)
+        .background(.quinary, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
     }
 }
 
