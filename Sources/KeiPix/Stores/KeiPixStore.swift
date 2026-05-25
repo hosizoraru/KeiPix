@@ -34,6 +34,7 @@ final class KeiPixStore {
     var spotlightArticleHistory = KeiPixStore.loadSpotlightArticles(key: "spotlightArticleHistory")
     var readerProgressLibrary = KeiPixStore.loadReaderProgressLibrary()
     var downloadedReaderProgressLibrary = KeiPixStore.loadDownloadedReaderProgressLibrary()
+    var mangaWatchlistReadStateLibrary = KeiPixStore.loadMangaWatchlistReadStateLibrary()
     var errorMessage: String?
     var isLoading = false
     var isLoadingMore = false
@@ -859,6 +860,13 @@ final class KeiPixStore {
             return DownloadedArtworkReaderProgressLibrary()
         }
         return (try? JSONDecoder().decode(DownloadedArtworkReaderProgressLibrary.self, from: data)) ?? DownloadedArtworkReaderProgressLibrary()
+    }
+
+    private static func loadMangaWatchlistReadStateLibrary() -> MangaWatchlistReadStateLibrary {
+        guard let data = UserDefaults.standard.data(forKey: "mangaWatchlistReadStateLibrary") else {
+            return MangaWatchlistReadStateLibrary()
+        }
+        return (try? JSONDecoder().decode(MangaWatchlistReadStateLibrary.self, from: data)) ?? MangaWatchlistReadStateLibrary()
     }
 
     func persistSavedSearchPresets() {

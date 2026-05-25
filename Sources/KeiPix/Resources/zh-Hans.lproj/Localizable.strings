@@ -614,6 +614,9 @@
 "Added %@ to watchlist" = "已追更 %@";
 "Open Series in Pixiv" = "在 Pixiv 打开系列";
 "Open Latest Artwork" = "打开最新作品";
+"Updated" = "有更新";
+"%d unread" = "%d 个未读";
+"Mark as Read" = "标记为已读";
 "No watchlist series" = "暂无追更系列";
 "Load More Watchlist" = "加载更多追更";
 "Loaded %d watchlist series" = "已加载 %d 个追更系列";
@@ -819,7 +822,7 @@
 "Run account health QA after sign-in." = "登录后运行账号健康 QA。";
 "Manga feeds and watchlist" = "漫画作品流与追更";
 "Recommended manga, manga rankings, series, and watchlist remain reachable." = "推荐漫画、漫画榜、系列和漫画追更需要可访问。";
-"Add update badges and stronger series/watchlist routing." = "新增更新标识，并强化系列/追更路由。";
+"Keep watchlist update badges in regression coverage." = "保持追更更新标识的回归覆盖。";
 "Reader" = "阅读器";
 "Multi-page reader supports per-page aspect ratio, continuous reading, keyboard, and trackpad gestures." = "多 P 阅读器需要支持逐页比例、连续阅读、键盘和触控板手势。";
 "Keep per-artwork reader resume in regression coverage." = "保持按作品恢复阅读进度的回归覆盖。";

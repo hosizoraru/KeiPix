@@ -127,13 +127,16 @@ extension KeiPixStore {
         try await api.nextMangaWatchlist(url)
     }
 
-    func openLatestArtwork(in series: PixivMangaSeriesPreview) async {
+    @discardableResult
+    func openLatestArtwork(in series: PixivMangaSeriesPreview) async -> Bool {
         do {
             let response = try await api.illustSeries(seriesID: series.id)
             let filtered = filteredArtworkSeriesResponse(response)
             selectedArtwork = filtered.illusts.first(where: { $0.id == series.latestContentID }) ?? filtered.illusts.first
+            return selectedArtwork != nil
         } catch {
             errorMessage = error.localizedDescription
+            return false
         }
     }
 }

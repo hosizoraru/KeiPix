@@ -242,6 +242,25 @@ extension KeiPixStore {
         persistDownloadedReaderProgressLibrary()
     }
 
+    func mangaWatchlistUpdateStatus(for series: PixivMangaSeriesPreview) -> MangaWatchlistUpdateStatus {
+        mangaWatchlistReadStateLibrary.status(for: series)
+    }
+
+    func registerMangaWatchlistSnapshot(_ series: [PixivMangaSeriesPreview]) {
+        mangaWatchlistReadStateLibrary.registerSnapshot(series)
+        persistMangaWatchlistReadStateLibrary()
+    }
+
+    func markMangaWatchlistSeriesRead(_ series: PixivMangaSeriesPreview) {
+        mangaWatchlistReadStateLibrary.markRead(series)
+        persistMangaWatchlistReadStateLibrary()
+    }
+
+    func removeMangaWatchlistReadState(seriesID: Int) {
+        mangaWatchlistReadStateLibrary.remove(seriesID: seriesID)
+        persistMangaWatchlistReadStateLibrary()
+    }
+
     private func persistReaderProgressLibrary() {
         guard let data = try? JSONEncoder().encode(readerProgressLibrary) else { return }
         UserDefaults.standard.set(data, forKey: "readerProgressLibrary")
@@ -250,5 +269,10 @@ extension KeiPixStore {
     private func persistDownloadedReaderProgressLibrary() {
         guard let data = try? JSONEncoder().encode(downloadedReaderProgressLibrary) else { return }
         UserDefaults.standard.set(data, forKey: "downloadedReaderProgressLibrary")
+    }
+
+    private func persistMangaWatchlistReadStateLibrary() {
+        guard let data = try? JSONEncoder().encode(mangaWatchlistReadStateLibrary) else { return }
+        UserDefaults.standard.set(data, forKey: "mangaWatchlistReadStateLibrary")
     }
 }

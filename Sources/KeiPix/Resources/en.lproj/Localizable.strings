@@ -614,6 +614,9 @@
 "Added %@ to watchlist" = "Added %@ to watchlist";
 "Open Series in Pixiv" = "Open Series in Pixiv";
 "Open Latest Artwork" = "Open Latest Artwork";
+"Updated" = "Updated";
+"%d unread" = "%d unread";
+"Mark as Read" = "Mark as Read";
 "No watchlist series" = "No watchlist series";
 "Load More Watchlist" = "Load More Watchlist";
 "Loaded %d watchlist series" = "Loaded %d watchlist series";
@@ -819,7 +822,7 @@
 "Run account health QA after sign-in." = "Run account health QA after sign-in.";
 "Manga feeds and watchlist" = "Manga feeds and watchlist";
 "Recommended manga, manga rankings, series, and watchlist remain reachable." = "Recommended manga, manga rankings, series, and watchlist remain reachable.";
-"Add update badges and stronger series/watchlist routing." = "Add update badges and stronger series/watchlist routing.";
+"Keep watchlist update badges in regression coverage." = "Keep watchlist update badges in regression coverage.";
 "Reader" = "Reader";
 "Multi-page reader supports per-page aspect ratio, continuous reading, keyboard, and trackpad gestures." = "Multi-page reader supports per-page aspect ratio, continuous reading, keyboard, and trackpad gestures.";
 "Keep per-artwork reader resume in regression coverage." = "Keep per-artwork reader resume in regression coverage.";

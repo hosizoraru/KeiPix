@@ -195,9 +195,17 @@ struct MangaWatchlistView: View {
                     ForEach(filteredSeries) { item in
                         MangaWatchlistCard(
                             series: item,
+                            updateStatus: store.mangaWatchlistUpdateStatus(for: item),
                             isRemoving: removingSeriesIDs.contains(item.id),
                             openLatest: {
-                                Task { await store.openLatestArtwork(in: item) }
+                                Task {
+                                    if await store.openLatestArtwork(in: item) {
+                                        store.markMangaWatchlistSeriesRead(item)
+                                    }
+                                }
+                            },
+                            markRead: {
+                                store.markMangaWatchlistSeriesRead(item)
                             },
                             remove: {
                                 pendingRemoval = item
@@ -246,6 +254,7 @@ struct MangaWatchlistView: View {
         do {
             let response = try await store.mangaWatchlist()
             series = response.series
+            store.registerMangaWatchlistSnapshot(response.series)
             nextURL = response.nextURL
             if showFeedback {
                 actionMessage = String(format: L10n.refreshedWatchlistSeriesFormat, series.count)
@@ -264,6 +273,7 @@ struct MangaWatchlistView: View {
         do {
             let response = try await store.nextMangaWatchlist(nextURL)
             series.append(contentsOf: response.series)
+            store.registerMangaWatchlistSnapshot(response.series)
             self.nextURL = response.nextURL
             if response.series.isEmpty {
                 actionMessage = L10n.noMorePages
@@ -283,6 +293,7 @@ struct MangaWatchlistView: View {
         do {
             try await store.setMangaWatchlist(seriesID: item.id, isAdded: false)
             series.removeAll { $0.id == item.id }
+            store.removeMangaWatchlistReadState(seriesID: item.id)
             pendingRemoval = nil
             store.undoAction = AppUndoAction(kind: .restoreMangaWatchlist(item))
             actionMessage = String(format: L10n.removedFromWatchlistFormat, item.title)
@@ -312,8 +323,10 @@ struct MangaWatchlistView: View {
 
 private struct MangaWatchlistCard: View {
     let series: PixivMangaSeriesPreview
+    let updateStatus: MangaWatchlistUpdateStatus
     let isRemoving: Bool
     let openLatest: () -> Void
+    let markRead: () -> Void
     let remove: () -> Void
 
     var body: some View {
@@ -321,9 +334,20 @@ private struct MangaWatchlistCard: View {
             cover
 
             VStack(alignment: .leading, spacing: 5) {
-                Text(series.title)
-                    .font(.headline)
-                    .lineLimit(2)
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                    Text(series.title)
+                        .font(.headline)
+                        .lineLimit(2)
+
+                    if updateStatus.hasUpdate {
+                        Text(updateBadgeText)
+                            .font(.caption2.weight(.semibold))
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 7)
+                            .padding(.vertical, 3)
+                            .background(.orange.gradient, in: Capsule())
+                    }
+                }
 
                 if let user = series.user {
                     Text(user.name)
@@ -357,6 +381,14 @@ private struct MangaWatchlistCard: View {
                         Link(L10n.openSeriesInPixiv, destination: url)
                     }
 
+                    if updateStatus.hasUpdate {
+                        Button {
+                            markRead()
+                        } label: {
+                            Label(L10n.markWatchlistRead, systemImage: "checkmark.circle")
+                        }
+                    }
+
                     Divider()
 
                     Button(role: .destructive) {
@@ -384,6 +416,11 @@ private struct MangaWatchlistCard: View {
             Button(L10n.openLatestArtwork) {
                 openLatest()
             }
+            if updateStatus.hasUpdate {
+                Button(L10n.markWatchlistRead) {
+                    markRead()
+                }
+            }
             if let url = series.pixivURL {
                 Link(L10n.openSeriesInPixiv, destination: url)
             }
@@ -394,6 +431,12 @@ private struct MangaWatchlistCard: View {
                 Text(L10n.removeFromWatchlist)
             }
         }
+    }
+
+    private var updateBadgeText: String {
+        updateStatus.unreadCount > 1
+            ? String(format: L10n.unreadUpdatesFormat, updateStatus.unreadCount)
+            : L10n.updatedSeries
     }
 
     @ViewBuilder

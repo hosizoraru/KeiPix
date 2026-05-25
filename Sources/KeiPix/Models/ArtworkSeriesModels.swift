@@ -118,6 +118,8 @@ struct PixivMangaSeriesPreview: Decodable, Identifiable, Hashable, Sendable {
     let publishedContentCount: Int
     let coverURL: URL?
     let maskText: String?
+    let apiUnreadContentCount: Int?
+    let apiIsUnread: Bool?
 
     var pixivURL: URL? {
         guard let user else { return nil }
@@ -133,6 +135,10 @@ struct PixivMangaSeriesPreview: Decodable, Identifiable, Hashable, Sendable {
         case publishedContentCount = "published_content_count"
         case coverURL = "url"
         case maskText = "mask_text"
+        case unreadContentCount = "unread_content_count"
+        case unreadCount = "unread_count"
+        case isUnread = "is_unread"
+        case isUpdated = "is_updated"
     }
 
     init(
@@ -143,7 +149,9 @@ struct PixivMangaSeriesPreview: Decodable, Identifiable, Hashable, Sendable {
         lastPublishedContentDate: Date?,
         publishedContentCount: Int,
         coverURL: URL?,
-        maskText: String?
+        maskText: String?,
+        apiUnreadContentCount: Int? = nil,
+        apiIsUnread: Bool? = nil
     ) {
         self.id = id
         self.title = title
@@ -153,6 +161,8 @@ struct PixivMangaSeriesPreview: Decodable, Identifiable, Hashable, Sendable {
         self.publishedContentCount = publishedContentCount
         self.coverURL = coverURL
         self.maskText = maskText
+        self.apiUnreadContentCount = apiUnreadContentCount
+        self.apiIsUnread = apiIsUnread
     }
 
     init(from decoder: Decoder) throws {
@@ -165,6 +175,10 @@ struct PixivMangaSeriesPreview: Decodable, Identifiable, Hashable, Sendable {
         publishedContentCount = try container.decodeIfPresent(Int.self, forKey: .publishedContentCount) ?? 0
         coverURL = container.decodeCleanURLIfPresent(forKey: .coverURL)
         maskText = try container.decodeIfPresent(String.self, forKey: .maskText)
+        apiUnreadContentCount = try container.decodeIfPresent(Int.self, forKey: .unreadContentCount)
+            ?? container.decodeIfPresent(Int.self, forKey: .unreadCount)
+        apiIsUnread = try container.decodeIfPresent(Bool.self, forKey: .isUnread)
+            ?? container.decodeIfPresent(Bool.self, forKey: .isUpdated)
     }
 }
 

@@ -622,7 +622,7 @@ enum L10n {
     static var qaAccountHealthNext: String { text("Run account health QA after sign-in.") }
     static var qaMangaFeeds: String { text("Manga feeds and watchlist") }
     static var qaMangaFeedsRequirement: String { text("Recommended manga, manga rankings, series, and watchlist remain reachable.") }
-    static var qaMangaFeedsNext: String { text("Add update badges and stronger series/watchlist routing.") }
+    static var qaMangaFeedsNext: String { text("Keep watchlist update badges in regression coverage.") }
     static var qaReader: String { text("Reader") }
     static var qaReaderRequirement: String { text("Multi-page reader supports per-page aspect ratio, continuous reading, keyboard, and trackpad gestures.") }
     static var qaReaderNext: String { text("Keep per-artwork reader resume in regression coverage.") }
@@ -770,6 +770,9 @@ enum L10n {
     static var addedToWatchlistFormat: String { text("Added %@ to watchlist") }
     static var openSeriesInPixiv: String { text("Open Series in Pixiv") }
     static var openLatestArtwork: String { text("Open Latest Artwork") }
+    static var updatedSeries: String { text("Updated") }
+    static var unreadUpdatesFormat: String { text("%d unread") }
+    static var markWatchlistRead: String { text("Mark as Read") }
     static var noWatchlistSeries: String { text("No watchlist series") }
     static var noMatchingWatchlistSeries: String { text("No matching watchlist series") }
     static var noMatchingWatchlistSeriesSubtitle: String { text("Change the watchlist search to see other series.") }
