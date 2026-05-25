@@ -56,4 +56,17 @@ struct GallerySelectionTests {
         #expect(regularSpans == [2, 2, 2, 2, 2, 3, 3, 3])
         #expect(denseSpans == [1, 1, 1, 1, 2, 2, 2, 3])
     }
+
+    @Test("Visual QA gallery samples include real-account wide-heavy ratios")
+    func visualQAGallerySamplesIncludeRealAccountWideHeavyRatios() {
+        let wideHeavyArtworks = VisualQASampleData.galleryLayoutArtworks.filter { artwork in
+            (1.45..<1.9).contains(artwork.aspectRatio)
+        }
+        let denseSpans = wideHeavyArtworks.map {
+            ArtworkMasonryPresentation(artwork: $0).span(for: 3, denseFixedColumns: true)
+        }
+
+        #expect(wideHeavyArtworks.count >= 6)
+        #expect(denseSpans.allSatisfy { $0 == 1 })
+    }
 }

@@ -170,6 +170,66 @@ enum VisualQASampleData {
             isBookmarked: false
         ),
         decodeArtwork(
+            id: 94008,
+            title: "Wide feed regular landscape A",
+            createdAt: 1_779_508_800,
+            pageCount: 1,
+            width: 1800,
+            height: 1200,
+            tags: ["landscape", "wide"],
+            isBookmarked: false
+        ),
+        decodeArtwork(
+            id: 94009,
+            title: "Wide feed regular landscape B",
+            createdAt: 1_779_506_400,
+            pageCount: 1,
+            width: 1920,
+            height: 1200,
+            tags: ["landscape", "wide"],
+            isBookmarked: true
+        ),
+        decodeArtwork(
+            id: 94010,
+            title: "Wide feed illustration crop",
+            createdAt: 1_779_504_000,
+            pageCount: 1,
+            width: 2100,
+            height: 1300,
+            tags: ["illustration", "wide"],
+            isBookmarked: false
+        ),
+        decodeArtwork(
+            id: 94011,
+            title: "Wide feed character scene",
+            createdAt: 1_779_501_600,
+            pageCount: 1,
+            width: 2400,
+            height: 1400,
+            tags: ["character", "wide"],
+            isBookmarked: false
+        ),
+        decodeArtwork(
+            id: 94012,
+            title: "Wide feed group scene",
+            createdAt: 1_779_499_200,
+            pageCount: 2,
+            width: 2560,
+            height: 1440,
+            tags: ["group", "wide"],
+            isBookmarked: true
+        ),
+        decodeArtwork(
+            id: 94013,
+            title: "Wide feed near spread",
+            createdAt: 1_779_496_800,
+            pageCount: 1,
+            width: 2200,
+            height: 1200,
+            tags: ["spread", "wide"],
+            isBookmarked: false
+        ),
+        decodeArtwork(
             id: 94001,
             title: "Tall manga chapter",
             createdAt: 1_779_465_600,
