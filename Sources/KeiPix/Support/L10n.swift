@@ -497,6 +497,9 @@ enum L10n {
     static var balancedWindow: String { text("Balanced") }
     static var wideWindow: String { text("Wide") }
     static var readingWindow: String { text("Reading") }
+    static var defaultArtworkReadingMode: String { text("Default Artwork Reading Mode") }
+    static var defaultMangaReadingMode: String { text("Default Manga Reading Mode") }
+    static var defaultReadingModeHint: String { text("Changing the reader mode in an artwork updates the matching default for future works.") }
     static var trackpad: String { text("Trackpad") }
     static var enableTrackpadGestures: String { text("Enable trackpad gestures") }
     static var twoFingerSwipeBehavior: String { text("Two-finger swipe behavior") }
@@ -616,7 +619,7 @@ enum L10n {
     static var qaMangaFeedsNext: String { text("Add update badges and stronger series/watchlist routing.") }
     static var qaReader: String { text("Reader") }
     static var qaReaderRequirement: String { text("Multi-page reader supports per-page aspect ratio, continuous reading, keyboard, and trackpad gestures.") }
-    static var qaReaderNext: String { text("Add full-screen preset and persisted reading defaults.") }
+    static var qaReaderNext: String { text("Add full-screen preset and page jump overlay.") }
     static var qaSearch: String { text("Search") }
     static var qaSearchRequirement: String { text("Artwork search covers match mode, sort, AI/R18, bookmark counts, saved searches, and autocomplete.") }
     static var qaSearchNext: String { text("Add saved preset import and export.") }

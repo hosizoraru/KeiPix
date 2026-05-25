@@ -502,6 +502,9 @@
 "Balanced" = "Balanced";
 "Wide" = "Wide";
 "Reading" = "Reading";
+"Default Artwork Reading Mode" = "Default Artwork Reading Mode";
+"Default Manga Reading Mode" = "Default Manga Reading Mode";
+"Changing the reader mode in an artwork updates the matching default for future works." = "Changing the reader mode in an artwork updates the matching default for future works.";
 "Trackpad" = "Trackpad";
 "Enable trackpad gestures" = "Enable trackpad gestures";
 "Two-finger swipe behavior" = "Two-finger swipe behavior";
@@ -809,7 +812,7 @@
 "Add update badges and stronger series/watchlist routing." = "Add update badges and stronger series/watchlist routing.";
 "Reader" = "Reader";
 "Multi-page reader supports per-page aspect ratio, continuous reading, keyboard, and trackpad gestures." = "Multi-page reader supports per-page aspect ratio, continuous reading, keyboard, and trackpad gestures.";
-"Add full-screen preset and persisted reading defaults." = "Add full-screen preset and persisted reading defaults.";
+"Add full-screen preset and page jump overlay." = "Add full-screen preset and page jump overlay.";
 "Search" = "Search";
 "Artwork search covers match mode, sort, AI/R18, bookmark counts, saved searches, and autocomplete." = "Artwork search covers match mode, sort, AI/R18, bookmark counts, saved searches, and autocomplete.";
 "Add saved preset import and export." = "Add saved preset import and export.";

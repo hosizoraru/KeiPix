@@ -31,7 +31,7 @@ private struct StandaloneArtworkReader: View {
     init(artwork: PixivArtwork, store: KeiPixStore) {
         self.artwork = artwork
         self.store = store
-        _readingMode = State(initialValue: ArtworkReadingMode.defaultMode(for: artwork.displayPageCount))
+        _readingMode = State(initialValue: store.defaultReadingMode(for: artwork))
     }
 
     var body: some View {
@@ -82,6 +82,7 @@ private struct StandaloneArtworkReader: View {
                 pageIndex = min(max(value, 0), pageCount - 1)
             }
             .onChange(of: readingMode) { _, mode in
+                store.setDefaultReadingMode(mode, for: artwork, pageCount: pageCount)
                 guard mode != .singlePage else { return }
                 scrollToPage(pageIndex, proxy: proxy)
             }
@@ -137,7 +138,7 @@ private struct StandaloneArtworkReader: View {
     private func resetForArtwork() {
         pageIndex = 0
         scrollTarget = nil
-        readingMode = ArtworkReadingMode.defaultMode(for: pageCount)
+        readingMode = store.defaultReadingMode(for: artwork, pageCount: pageCount)
     }
 
     private func scrollToPage(_ index: Int, proxy: ScrollViewProxy) {

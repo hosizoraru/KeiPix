@@ -170,4 +170,34 @@ extension KeiPixStore {
         horizontalSwipeBehavior = behavior
         UserDefaults.standard.set(behavior.rawValue, forKey: "horizontalSwipeBehavior")
     }
+
+    func defaultReadingMode(for artwork: PixivArtwork, pageCount: Int? = nil) -> ArtworkReadingMode {
+        switch ArtworkReadingModePreferenceKind.kind(for: artwork, pageCount: pageCount ?? artwork.displayPageCount) {
+        case .artwork:
+            defaultArtworkReadingMode
+        case .manga:
+            defaultMangaReadingMode
+        }
+    }
+
+    func setDefaultReadingMode(_ mode: ArtworkReadingMode, for artwork: PixivArtwork, pageCount: Int? = nil) {
+        let kind = ArtworkReadingModePreferenceKind.kind(for: artwork, pageCount: pageCount ?? artwork.displayPageCount)
+        switch kind {
+        case .artwork:
+            defaultArtworkReadingMode = mode
+        case .manga:
+            defaultMangaReadingMode = mode
+        }
+        UserDefaults.standard.set(mode.rawValue, forKey: kind.storageKey)
+    }
+
+    func setDefaultArtworkReadingMode(_ mode: ArtworkReadingMode) {
+        defaultArtworkReadingMode = mode
+        UserDefaults.standard.set(mode.rawValue, forKey: ArtworkReadingModePreferenceKind.artwork.storageKey)
+    }
+
+    func setDefaultMangaReadingMode(_ mode: ArtworkReadingMode) {
+        defaultMangaReadingMode = mode
+        UserDefaults.standard.set(mode.rawValue, forKey: ArtworkReadingModePreferenceKind.manga.storageKey)
+    }
 }

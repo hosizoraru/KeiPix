@@ -33,3 +33,30 @@ enum ArtworkReadingMode: String, CaseIterable, Identifiable {
         pageCount >= 12 ? .continuous : .singlePage
     }
 }
+
+enum ArtworkReadingModePreferenceKind: String {
+    case artwork
+    case manga
+
+    var storageKey: String {
+        switch self {
+        case .artwork:
+            "defaultArtworkReadingMode"
+        case .manga:
+            "defaultMangaReadingMode"
+        }
+    }
+
+    var fallbackMode: ArtworkReadingMode {
+        switch self {
+        case .artwork:
+            .singlePage
+        case .manga:
+            .continuous
+        }
+    }
+
+    static func kind(for artwork: PixivArtwork, pageCount: Int) -> ArtworkReadingModePreferenceKind {
+        artwork.type == "manga" || pageCount >= 12 ? .manga : .artwork
+    }
+}

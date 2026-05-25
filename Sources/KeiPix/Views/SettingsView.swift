@@ -31,6 +31,26 @@ struct SettingsView: View {
                 Toggle(L10n.showTranslatedTags, isOn: translatedTagsBinding)
             }
 
+            Section(L10n.readingWindow) {
+                Picker(L10n.defaultArtworkReadingMode, selection: defaultArtworkReadingModeBinding) {
+                    ForEach(ArtworkReadingMode.allCases) { mode in
+                        Text(mode.title).tag(mode)
+                    }
+                }
+                .pickerStyle(.segmented)
+
+                Picker(L10n.defaultMangaReadingMode, selection: defaultMangaReadingModeBinding) {
+                    ForEach(ArtworkReadingMode.allCases) { mode in
+                        Text(mode.title).tag(mode)
+                    }
+                }
+                .pickerStyle(.segmented)
+
+                Text(L10n.defaultReadingModeHint)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
             Section(L10n.contentFilters) {
                 Toggle(L10n.showContentBadges, isOn: showContentBadgesBinding)
                 Toggle(L10n.hideMutedContent, isOn: hideMutedBinding)
@@ -591,6 +611,22 @@ struct SettingsView: View {
             store.horizontalSwipeBehavior
         } set: { value in
             store.setHorizontalSwipeBehavior(value)
+        }
+    }
+
+    private var defaultArtworkReadingModeBinding: Binding<ArtworkReadingMode> {
+        Binding {
+            store.defaultArtworkReadingMode
+        } set: { value in
+            store.setDefaultArtworkReadingMode(value)
+        }
+    }
+
+    private var defaultMangaReadingModeBinding: Binding<ArtworkReadingMode> {
+        Binding {
+            store.defaultMangaReadingMode
+        } set: { value in
+            store.setDefaultMangaReadingMode(value)
         }
     }
 

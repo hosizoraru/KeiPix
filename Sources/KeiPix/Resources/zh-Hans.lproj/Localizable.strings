@@ -502,6 +502,9 @@
 "Balanced" = "均衡";
 "Wide" = "宽屏";
 "Reading" = "阅读";
+"Default Artwork Reading Mode" = "普通作品默认阅读模式";
+"Default Manga Reading Mode" = "漫画/长多 P 默认阅读模式";
+"Changing the reader mode in an artwork updates the matching default for future works." = "在作品里切换阅读模式后，同类作品会沿用这个默认值。";
 "Trackpad" = "触控板";
 "Enable trackpad gestures" = "启用触控板手势";
 "Two-finger swipe behavior" = "双指横扫行为";
@@ -809,7 +812,7 @@
 "Add update badges and stronger series/watchlist routing." = "新增更新标识，并强化系列/追更路由。";
 "Reader" = "阅读器";
 "Multi-page reader supports per-page aspect ratio, continuous reading, keyboard, and trackpad gestures." = "多 P 阅读器需要支持逐页比例、连续阅读、键盘和触控板手势。";
-"Add full-screen preset and persisted reading defaults." = "新增全屏预设和阅读默认偏好持久化。";
+"Add full-screen preset and page jump overlay." = "新增全屏预设和页码跳转浮层。";
 "Search" = "搜索";
 "Artwork search covers match mode, sort, AI/R18, bookmark counts, saved searches, and autocomplete." = "作品搜索需要覆盖匹配模式、排序、AI/R18、收藏数、保存搜索和自动补全。";
 "Add saved preset import and export." = "新增保存搜索预设导入导出。";

@@ -74,6 +74,14 @@ final class KeiPixStore {
     var trackpadGesturesEnabled = UserDefaults.standard.object(forKey: "trackpadGesturesEnabled") as? Bool ?? true
     var horizontalSwipeBehavior = UserDefaults.standard.string(forKey: "horizontalSwipeBehavior")
         .flatMap(TrackpadHorizontalSwipeBehavior.init(rawValue:)) ?? .pageOnly
+    var defaultArtworkReadingMode = KeiPixStore.loadEnum(
+        ArtworkReadingModePreferenceKind.artwork.storageKey,
+        defaultValue: ArtworkReadingModePreferenceKind.artwork.fallbackMode
+    )
+    var defaultMangaReadingMode = KeiPixStore.loadEnum(
+        ArtworkReadingModePreferenceKind.manga.storageKey,
+        defaultValue: ArtworkReadingModePreferenceKind.manga.fallbackMode
+    )
     var hasNextPage: Bool { nextURL != nil }
     var compactArtworkCards: Bool { galleryLayoutMode.usesCompactGrid }
     var showsSidebarAccountIdentity: Bool { showAccountIdentity && privacyModeEnabled == false }
