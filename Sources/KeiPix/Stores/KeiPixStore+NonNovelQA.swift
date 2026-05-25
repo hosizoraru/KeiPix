@@ -136,7 +136,9 @@ extension KeiPixStore {
             count: {
                 _ = try await self.api.illustDetail(illustID: selectedArtwork.id)
                 return 1
-            }
+            },
+            visualSurface: .artworkDetailSocial,
+            visualEvidence: visualEvidence
         )
         async let comments = qaFeedItem(
             id: "comments-feedback",

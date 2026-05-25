@@ -34,6 +34,19 @@ enum VisualQASampleData {
         return try! JSONDecoder().decode(PixivSession.self, from: Data(payload.utf8))
     }()
 
+    static let artworkDetailSocialArtwork = decodeArtwork(
+        id: 93700,
+        title: "Detail social QA wide illustration",
+        createdAt: 1_779_638_400,
+        pageCount: 1,
+        width: 2600,
+        height: 1200,
+        tags: ["wide", "AI", "series", "comments"],
+        isAI: true,
+        isBookmarked: true,
+        caption: "A local visual QA fixture that keeps the native detail inspector, series section, comments, related works, tags, and metadata visible without touching a real Pixiv account."
+    )
+
     static let seriesParentArtwork = decodeArtwork(
         id: 92000,
         title: "Sample long manga series",
@@ -172,6 +185,75 @@ enum VisualQASampleData {
             xRestrict: 1,
             isBookmarked: false
         )
+    )
+
+    static let artworkDetailSocialComments = PixivCommentResponse(
+        totalComments: 3,
+        comments: decodeComments("""
+        {
+          "comments": [
+            {
+              "id": 73001,
+              "comment": "The wide composition reads cleanly in the native inspector (happy)",
+              "date": null,
+              "user": {
+                "id": 6101,
+                "name": "Comment QA Artist",
+                "account": "comment_qa",
+                "profile_image_urls": {
+                  "medium": "https://example.com/comment-qa-avatar.jpg"
+                }
+              },
+              "has_replies": true,
+              "stamp": null
+            },
+            {
+              "id": 73002,
+              "comment": "Series, related works, emoji tokens, and feedback menus stay inside KeiPix.",
+              "date": null,
+              "user": {
+                "id": 6102,
+                "name": "Native Route QA",
+                "account": "native_route_qa"
+              },
+              "parent_comment": {
+                "id": 73001,
+                "comment": "The wide composition reads cleanly in the native inspector (happy)",
+                "user": {
+                  "id": 6101,
+                  "name": "Comment QA Artist",
+                  "account": "comment_qa"
+                }
+              },
+              "has_replies": false,
+              "stamp": null
+            },
+            {
+              "id": 73003,
+              "comment": null,
+              "date": null,
+              "user": {
+                "id": 6103,
+                "name": "Stamp QA",
+                "account": "stamp_qa"
+              },
+              "has_replies": false,
+              "stamp": {
+                "stamp_id": 101,
+                "stamp_url": "https://example.com/comment-stamp.png"
+              }
+            }
+          ],
+          "next_url": null,
+          "total_comments": 3
+        }
+        """),
+        nextURL: nil
+    )
+
+    static let artworkDetailSocialRelatedResponse = PixivFeedResponse(
+        illusts: Array(galleryLayoutArtworks.prefix(6)),
+        nextURL: nil
     )
 
     static let creatorProfileDetail: PixivUserDetail = {
@@ -476,7 +558,8 @@ enum VisualQASampleData {
         type: String = "manga",
         isAI: Bool = false,
         xRestrict: Int = 0,
-        isBookmarked: Bool
+        isBookmarked: Bool,
+        caption: String = ""
     ) -> PixivArtwork {
         let tagPayload = tags.map { #"{"name":"\#($0)","translated_name":null}"# }.joined(separator: ",")
         let payload = """
@@ -488,7 +571,7 @@ enum VisualQASampleData {
             "medium": "https://example.com/\(id)-medium.jpg",
             "large": "https://example.com/\(id)-large.jpg"
           },
-          "caption": "",
+          "caption": "\(caption)",
           "create_date": \(createdAt),
           "user": {
             "id": 5001,
@@ -514,6 +597,10 @@ enum VisualQASampleData {
         }
         """
         return try! JSONDecoder().decode(PixivArtwork.self, from: Data(payload.utf8))
+    }
+
+    private static func decodeComments(_ payload: String) -> [PixivComment] {
+        try! JSONDecoder().decode(PixivCommentResponse.self, from: Data(payload.utf8)).comments
     }
 
     private static var downloadedReaderSampleDirectory: URL {
@@ -723,6 +810,36 @@ extension KeiPixStore {
         downloads.downloadQueueFilter = .all
         downloads.downloadQueueSort = .newest
         downloads.items = [item]
+    }
+
+    func presentArtworkDetailSocialVisualQA() {
+        activateVisualQASampleSession()
+        let artwork = VisualQASampleData.artworkDetailSocialArtwork
+        selectedRoute = .illustrations
+        focusedUser = nil
+        bookmarkTagFilter = nil
+        selectedSpotlightArticle = nil
+        errorMessage = nil
+        isLoading = false
+        isLoadingMore = false
+        activeFeedSnapshotRestoration = nil
+        searchPopularPreviewArtworks = []
+        allArtworks = [artwork] + VisualQASampleData.artworkDetailSocialRelatedResponse.illusts
+        artworks = allArtworks
+        selectedArtwork = artwork
+        nextURL = nil
+        galleryLayoutMode = .twoColumnMasonry
+        saveArtworkDetailExpansionState(
+            ArtworkDetailExpansionState(
+                isCaptionExpanded: true,
+                isSeriesExpanded: true,
+                isCommentsExpanded: true,
+                isRelatedExpanded: true,
+                isTagsExpanded: true,
+                isMetadataExpanded: true
+            ),
+            for: artwork
+        )
     }
 
     func presentLocalSampleFeed(for route: PixivRoute) {

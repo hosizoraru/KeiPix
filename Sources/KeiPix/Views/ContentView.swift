@@ -223,6 +223,9 @@ struct ContentView: View {
             if VisualQALaunchArgument.contains(.downloadedReader) {
                 store.presentDownloadedReaderVisualQA()
             }
+            if VisualQALaunchArgument.contains(.artworkDetailSocial) {
+                store.presentArtworkDetailSocialVisualQA()
+            }
             if VisualQALaunchArgument.contains(.pixivIDOpen) {
                 store.activateVisualQASampleSession()
                 isPixivIDOpenPresented = true

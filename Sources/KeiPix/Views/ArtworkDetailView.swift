@@ -70,7 +70,8 @@ private struct ArtworkInspectorView: View {
                     ArtworkSeriesView(
                         artwork: artwork,
                         store: store,
-                        isExpanded: detailExpansionBinding(\.isSeriesExpanded)
+                        isExpanded: detailExpansionBinding(\.isSeriesExpanded),
+                        visualQAResponse: visualQASeriesResponse
                     )
                         .id(artwork.id)
                         .padding(.horizontal, 18)
@@ -78,14 +79,17 @@ private struct ArtworkInspectorView: View {
                     ArtworkCommentsView(
                         artwork: artwork,
                         store: store,
-                        isExpanded: detailExpansionBinding(\.isCommentsExpanded)
+                        isExpanded: detailExpansionBinding(\.isCommentsExpanded),
+                        visualQAResponse: visualQACommentsResponse
                     )
+                        .id(Self.commentsAnchorID)
                         .padding(.horizontal, 18)
 
                     ArtworkRelatedView(
                         artwork: artwork,
                         store: store,
-                        isExpanded: detailExpansionBinding(\.isRelatedExpanded)
+                        isExpanded: detailExpansionBinding(\.isRelatedExpanded),
+                        visualQAResponse: visualQARelatedResponse
                     )
                         .id(artwork.id)
                         .padding(.horizontal, 18)
@@ -120,12 +124,31 @@ private struct ArtworkInspectorView: View {
                 resetForArtwork()
                 prefetchAround(pageIndex)
                 await store.recordBrowsingHistory(for: artwork)
+                await scrollForVisualQA(proxy: proxy)
             }
         }
     }
 
+    private static let commentsAnchorID = "artwork-detail-comments"
+
     private var pageCount: Int {
         artwork.displayPageCount
+    }
+
+    private var usesArtworkDetailSocialVisualQA: Bool {
+        VisualQALaunchArgument.contains(.artworkDetailSocial)
+    }
+
+    private var visualQASeriesResponse: PixivArtworkSeriesResponse? {
+        usesArtworkDetailSocialVisualQA ? VisualQASampleData.seriesResponse : nil
+    }
+
+    private var visualQACommentsResponse: PixivCommentResponse? {
+        usesArtworkDetailSocialVisualQA ? VisualQASampleData.artworkDetailSocialComments : nil
+    }
+
+    private var visualQARelatedResponse: PixivFeedResponse? {
+        usesArtworkDetailSocialVisualQA ? VisualQASampleData.artworkDetailSocialRelatedResponse : nil
     }
 
     private func resetForArtwork() {
@@ -151,6 +174,14 @@ private struct ArtworkInspectorView: View {
         guard readingMode != .singlePage else { return }
         withAnimation(.snappy(duration: 0.22)) {
             proxy.scrollTo(clamped, anchor: .top)
+        }
+    }
+
+    private func scrollForVisualQA(proxy: ScrollViewProxy) async {
+        guard usesArtworkDetailSocialVisualQA else { return }
+        try? await Task.sleep(for: .milliseconds(650))
+        withAnimation(.snappy(duration: 0.22)) {
+            proxy.scrollTo(Self.commentsAnchorID, anchor: .top)
         }
     }
 

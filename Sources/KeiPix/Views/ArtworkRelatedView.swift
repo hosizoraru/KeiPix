@@ -4,6 +4,7 @@ struct ArtworkRelatedView: View {
     let artwork: PixivArtwork
     @Bindable var store: KeiPixStore
     @Binding var isExpanded: Bool
+    var visualQAResponse: PixivFeedResponse?
 
     @State private var hasLoaded = false
     @State private var relatedArtworks: [PixivArtwork] = []
@@ -116,9 +117,9 @@ struct ArtworkRelatedView: View {
         .disclosureGroupStyle(.automatic)
         .padding(14)
         .keiPanel(16)
-        .onChange(of: isExpanded) { _, value in
-            guard value, hasLoaded == false else { return }
-            Task { await loadInitial() }
+        .task(id: isExpanded) {
+            guard isExpanded, hasLoaded == false else { return }
+            await loadInitial()
         }
         .confirmationDialog(
             pendingDangerAction?.title ?? L10n.moreActions,
@@ -153,7 +154,12 @@ struct ArtworkRelatedView: View {
         }
 
         do {
-            let response = try await store.relatedArtworks(for: artwork)
+            let response: PixivFeedResponse
+            if let visualQAResponse {
+                response = visualQAResponse
+            } else {
+                response = try await store.relatedArtworks(for: artwork)
+            }
             relatedArtworks = response.illusts
             nextURL = response.nextURL
         } catch {

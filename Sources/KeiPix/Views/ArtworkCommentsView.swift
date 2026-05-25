@@ -4,6 +4,7 @@ struct ArtworkCommentsView: View {
     let artwork: PixivArtwork
     @Bindable var store: KeiPixStore
     @Binding var isExpanded: Bool
+    var visualQAResponse: PixivCommentResponse?
 
     @State private var hasLoaded = false
     @State private var comments: [PixivComment] = []
@@ -100,9 +101,9 @@ struct ArtworkCommentsView: View {
         .disclosureGroupStyle(.automatic)
         .padding(14)
         .keiPanel(16)
-        .onChange(of: isExpanded) { _, value in
-            guard value, hasLoaded == false else { return }
-            Task { await loadInitial() }
+        .task(id: isExpanded) {
+            guard isExpanded, hasLoaded == false else { return }
+            await loadInitial()
         }
     }
 
@@ -198,7 +199,12 @@ struct ArtworkCommentsView: View {
         }
 
         do {
-            let response = try await store.comments(for: artwork)
+            let response: PixivCommentResponse
+            if let visualQAResponse {
+                response = visualQAResponse
+            } else {
+                response = try await store.comments(for: artwork)
+            }
             comments = response.comments
             nextURL = response.nextURL
             totalComments = response.totalComments

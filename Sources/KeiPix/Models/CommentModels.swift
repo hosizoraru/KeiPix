@@ -11,6 +11,12 @@ struct PixivCommentResponse: Decodable, Sendable {
         case nextURL = "next_url"
     }
 
+    init(totalComments: Int?, comments: [PixivComment], nextURL: URL?) {
+        self.totalComments = totalComments
+        self.comments = comments
+        self.nextURL = nextURL
+    }
+
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         totalComments = try container.decodeIfPresent(Int.self, forKey: .totalComments)
