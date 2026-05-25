@@ -48,6 +48,7 @@
 "Open Pixiv ID" = "Open Pixiv ID";
 "Pixiv ID Type" = "Pixiv ID Type";
 "Open an artwork or creator directly by numeric Pixiv ID." = "Open an artwork or creator directly by numeric Pixiv ID.";
+"Search also accepts illust:123 and user:123." = "Search also accepts illust:123 and user:123.";
 "Enter artwork ID" = "Enter artwork ID";
 "Enter creator ID" = "Enter creator ID";
 "Opened %@ %d" = "Opened %@ %d";
@@ -509,7 +510,7 @@
 "Complete login in the embedded Pixiv page. KeiPix captures only the authorization code." = "Complete login in the embedded Pixiv page. KeiPix captures only the authorization code.";
 "Sign in to load Pixiv feeds" = "Sign in to load Pixiv feeds";
 "KeiPix stores tokens in the macOS Keychain and uses Pixiv app API requests from the native client." = "KeiPix stores tokens in the macOS Keychain and uses Pixiv app API requests from the native client.";
-"Search artworks, tags, creators" = "Search artworks, tags, creators";
+"Search artworks, tags, creators, or illust:123" = "Search artworks, tags, creators, or illust:123";
 "No artworks loaded" = "No artworks loaded";
 "Refresh the current section or start a search." = "Refresh the current section or start a search.";
 "Request failed" = "Request failed";

@@ -51,6 +51,7 @@ enum L10n {
     static var openPixivID: String { text("Open Pixiv ID") }
     static var openPixivIDTarget: String { text("Pixiv ID Type") }
     static var openPixivIDHint: String { text("Open an artwork or creator directly by numeric Pixiv ID.") }
+    static var pixivIDQuickOpenHint: String { text("Search also accepts illust:123 and user:123.") }
     static var artworkIDPlaceholder: String { text("Enter artwork ID") }
     static var creatorIDPlaceholder: String { text("Enter creator ID") }
     static var openedPixivIDFormat: String { text("Opened %@ %d") }
@@ -585,7 +586,7 @@ enum L10n {
     static var loginHint: String { text("Complete login in the embedded Pixiv page. KeiPix captures only the authorization code.") }
     static var signedOutTitle: String { text("Sign in to load Pixiv feeds") }
     static var signedOutSubtitle: String { text("KeiPix stores tokens in the macOS Keychain and uses Pixiv app API requests from the native client.") }
-    static var searchPlaceholder: String { text("Search artworks, tags, creators") }
+    static var searchPlaceholder: String { text("Search artworks, tags, creators, or illust:123") }
     static var noArtworkTitle: String { text("No artworks loaded") }
     static var noArtworkSubtitle: String { text("Refresh the current section or start a search.") }
     static var errorTitle: String { text("Request failed") }

@@ -51,6 +51,9 @@ struct PixivIDOpenSheet: View {
             Text(L10n.openPixivIDHint)
                 .font(.callout)
                 .foregroundStyle(.secondary)
+            Text(L10n.pixivIDQuickOpenHint)
+                .font(.caption)
+                .foregroundStyle(.tertiary)
         }
     }
 
