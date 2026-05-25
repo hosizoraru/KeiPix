@@ -19,9 +19,9 @@ struct MangaWatchlistView: View {
 
     var body: some View {
         Group {
-            if store.session == nil {
+            if showsSignedOutState {
                 EmptyStateView(title: L10n.signedOutTitle, subtitle: L10n.signedOutSubtitle, systemImage: "person.crop.circle.badge.exclamationmark")
-            } else if isLoading {
+            } else if isLoading && usesVisualQASample == false {
                 ProgressView(L10n.loading)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
@@ -30,7 +30,7 @@ struct MangaWatchlistView: View {
         }
         .navigationTitle(L10n.mangaWatchlist)
         .toolbar {
-            if store.session != nil {
+            if showsSignedOutState == false {
                 ToolbarItem(placement: .status) {
                     Text(watchlistStatusText)
                         .font(.caption)
@@ -94,7 +94,11 @@ struct MangaWatchlistView: View {
             await dismissActionMessageIfNeeded(actionMessage)
         }
         .task(id: store.routeRefreshGeneration) {
-            await loadInitial()
+            if usesVisualQASample {
+                registerVisualQABaselines()
+            } else {
+                await loadInitial()
+            }
         }
     }
 
@@ -167,7 +171,7 @@ struct MangaWatchlistView: View {
 
     @ViewBuilder
     private var watchlistContent: some View {
-        if series.isEmpty {
+        if visibleSeries.isEmpty {
             ContentUnavailableView {
                 Label(L10n.noWatchlistSeries, systemImage: "rectangle.stack.badge.person.crop")
             } description: {
@@ -213,7 +217,7 @@ struct MangaWatchlistView: View {
                         )
                     }
 
-                    if nextURL != nil {
+                    if showsLoadMoreEntry {
                         loadMoreButton
                     }
                 }
@@ -224,11 +228,11 @@ struct MangaWatchlistView: View {
     }
 
     private var watchlistStatusText: String {
-        let paging = nextURL == nil ? L10n.noMorePages : L10n.nextPageAvailable
+        let paging = showsLoadMoreEntry ? L10n.nextPageAvailable : L10n.noMorePages
         if normalizedWatchlistSearchText.isEmpty {
-            return "\(series.count.formatted()) \(L10n.results) · \(paging)"
+            return "\(visibleSeries.count.formatted()) \(L10n.results) · \(paging)"
         }
-        return "\(filteredSeries.count.formatted()) / \(series.count.formatted()) \(L10n.results) · \(paging)"
+        return "\(filteredSeries.count.formatted()) / \(visibleSeries.count.formatted()) \(L10n.results) · \(paging)"
     }
 
     private var normalizedWatchlistSearchText: String {
@@ -237,13 +241,68 @@ struct MangaWatchlistView: View {
 
     private var filteredSeries: [PixivMangaSeriesPreview] {
         let query = normalizedWatchlistSearchText
-        guard query.isEmpty == false else { return series }
-        return series.filter { item in
+        guard query.isEmpty == false else { return visibleSeries }
+        return visibleSeries.filter { item in
             item.title.localizedCaseInsensitiveContains(query)
                 || item.user?.name.localizedCaseInsensitiveContains(query) == true
                 || item.user?.account?.localizedCaseInsensitiveContains(query) == true
         }
     }
+
+    private var visibleSeries: [PixivMangaSeriesPreview] {
+        usesVisualQASample ? Self.visualQASampleSeries : series
+    }
+
+    private var showsSignedOutState: Bool {
+        store.session == nil && usesVisualQASample == false
+    }
+
+    private var showsLoadMoreEntry: Bool {
+        nextURL != nil || usesVisualQASample
+    }
+
+    private var usesVisualQASample: Bool {
+        VisualQALaunchArgument.contains(.mangaWatchlist)
+    }
+
+    private func registerVisualQABaselines() {
+        store.registerMangaWatchlistSnapshot(Self.visualQASampleSeries)
+    }
+
+    private static let visualQASampleSeries: [PixivMangaSeriesPreview] = [
+        PixivMangaSeriesPreview(
+            id: 91001,
+            title: "Long-running weekend manga with a very long title",
+            user: PixivMangaSeriesUser(user: PixivUser(id: 401, name: "Series Creator", account: "series_creator")),
+            latestContentID: 81001,
+            lastPublishedContentDate: Date(timeIntervalSince1970: 1_779_552_000),
+            publishedContentCount: 64,
+            coverURL: nil,
+            maskText: nil,
+            apiUnreadContentCount: 7,
+            apiIsUnread: true
+        ),
+        PixivMangaSeriesPreview(
+            id: 91002,
+            title: "Wide panel study",
+            user: PixivMangaSeriesUser(user: PixivUser(id: 402, name: "Panel Artist", account: "panel_artist")),
+            latestContentID: 81002,
+            lastPublishedContentDate: Date(timeIntervalSince1970: 1_779_465_600),
+            publishedContentCount: 18,
+            coverURL: nil,
+            maskText: "MASKED"
+        ),
+        PixivMangaSeriesPreview(
+            id: 91003,
+            title: "Finished short series",
+            user: PixivMangaSeriesUser(user: PixivUser(id: 403, name: "Compact Studio", account: "compact_studio")),
+            latestContentID: 81003,
+            lastPublishedContentDate: Date(timeIntervalSince1970: 1_778_947_200),
+            publishedContentCount: 5,
+            coverURL: nil,
+            maskText: nil
+        )
+    ]
 
     private func loadInitial(showFeedback: Bool = false) async {
         guard store.session != nil else { return }
@@ -441,20 +500,44 @@ private struct MangaWatchlistCard: View {
 
     @ViewBuilder
     private var cover: some View {
+        coverContent
+            .frame(maxWidth: .infinity)
+            .aspectRatio(1.9, contentMode: .fit)
+            .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+            .overlay(alignment: .topTrailing) {
+                if let maskText = series.maskText, maskText.isEmpty == false {
+                    Text(maskText)
+                        .font(.caption2.weight(.semibold))
+                        .foregroundStyle(.primary)
+                        .padding(.horizontal, 7)
+                        .padding(.vertical, 4)
+                        .background(.regularMaterial, in: Capsule())
+                        .padding(8)
+                }
+            }
+    }
+
+    @ViewBuilder
+    private var coverContent: some View {
         if let coverURL = series.coverURL {
             RemoteImageView(url: coverURL)
-                .frame(maxWidth: .infinity)
-                .aspectRatio(1.9, contentMode: .fit)
-                .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
         } else {
-            RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .fill(.quaternary)
-                .aspectRatio(1.9, contentMode: .fit)
-                .overlay {
-                    Image(systemName: "rectangle.stack")
-                        .font(.title2)
-                        .foregroundStyle(.secondary)
-                }
+            ZStack {
+                LinearGradient(
+                    colors: [
+                        Color(nsColor: .controlAccentColor).opacity(0.24),
+                        Color(nsColor: .systemMint).opacity(0.18),
+                        Color(nsColor: .controlBackgroundColor).opacity(0.36)
+                    ],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+
+                Image(systemName: "rectangle.stack")
+                    .font(.title2)
+                    .foregroundStyle(.secondary)
+            }
+            .background(.quaternary)
         }
     }
 }

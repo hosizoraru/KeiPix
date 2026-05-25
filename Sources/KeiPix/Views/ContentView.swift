@@ -172,6 +172,11 @@ struct ContentView: View {
         .onChange(of: store.undoAction?.id) { _, _ in
             registerCurrentUndoAction()
         }
+        .task {
+            if VisualQALaunchArgument.contains(.mangaWatchlist) {
+                store.select(.mangaWatchlist)
+            }
+        }
         .alert(L10n.errorTitle, isPresented: errorBinding) {
             if store.selectedRoute.isRankingRoute {
                 Button(L10n.latestRanking) {
@@ -192,7 +197,7 @@ struct ContentView: View {
     }
 
     private var showsPixivLinkDropOverlayForVisualQA: Bool {
-        ProcessInfo.processInfo.arguments.contains("--visual-qa-pixiv-link-drop")
+        VisualQALaunchArgument.contains(.pixivLinkDrop)
     }
 
     private var appControlsMenu: some View {

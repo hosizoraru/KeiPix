@@ -31,13 +31,16 @@ extension KeiPixStore {
     }
 
     private func qaFeedSurfaces() async -> [NonNovelQAItem] {
+        let visualEvidence = Self.visualQAEvidenceIndex()
         async let recommended = qaFeedItem(
             id: "illust-feeds",
             count: { try await self.api.recommendedIllusts().illusts.count }
         )
         async let manga = qaFeedItem(
             id: "manga-feeds",
-            count: { try await self.api.recommendedMangas().illusts.count }
+            count: { try await self.api.recommendedMangas().illusts.count },
+            visualSurface: .mangaWatchlist,
+            visualEvidence: visualEvidence
         )
         async let ranking = qaFeedItem(
             id: "ranking",
