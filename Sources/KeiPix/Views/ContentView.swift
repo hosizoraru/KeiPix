@@ -205,6 +205,10 @@ struct ContentView: View {
             if VisualQALaunchArgument.contains(.downloadedReader) {
                 store.presentDownloadedReaderVisualQA()
             }
+            if VisualQALaunchArgument.contains(.pixivIDOpen) {
+                store.activateVisualQASampleSession()
+                isPixivIDOpenPresented = true
+            }
             if let visualQAGalleryLayoutMode = VisualQALaunchArgument.activeGalleryLayoutMode {
                 store.presentGalleryLayoutVisualQA(mode: visualQAGalleryLayoutMode)
             }
