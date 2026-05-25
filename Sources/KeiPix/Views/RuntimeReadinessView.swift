@@ -14,6 +14,7 @@ struct RuntimeReadinessView: View {
     @State private var isRunningMutableActionQA = false
     @State private var isRunningDirectNavigationDiagnostics = false
     @State private var isRunningCommentFeedbackDiagnostics = false
+    @State private var isRunningMuteSyncDiagnostics = false
     @State private var isLoadingCommentFeedbackPreview = false
     @State private var isMutableActionQAAuthorizationPresented = false
     @State private var feedbackPreviewRequest: FeedbackReportRequest?
@@ -23,6 +24,7 @@ struct RuntimeReadinessView: View {
     @State private var mutableActionQAResults: [NetworkDiagnosticResult] = []
     @State private var directNavigationResults: [NetworkDiagnosticResult] = []
     @State private var commentFeedbackResults: [NetworkDiagnosticResult] = []
+    @State private var muteSyncResults: [NetworkDiagnosticResult] = []
     @State private var cacheStatus: ImageCacheStatus?
     @State private var cacheMessage: String?
 
@@ -130,6 +132,14 @@ struct RuntimeReadinessView: View {
                 }
             }
 
+            if muteSyncResults.isEmpty == false {
+                Divider()
+
+                ForEach(muteSyncResults) { result in
+                    NetworkDiagnosticResultRow(result: result)
+                }
+            }
+
             Divider()
 
             if usesRuntimeReadinessVisualQA == false {
@@ -219,6 +229,13 @@ struct RuntimeReadinessView: View {
                     Label(L10n.runCommentFeedbackDiagnostics, systemImage: "text.bubble")
                 }
                 .disabled(isRunningCommentFeedbackDiagnostics)
+
+                Button {
+                    Task { await runMuteSyncDiagnostics() }
+                } label: {
+                    Label(L10n.runMuteSyncDiagnostics, systemImage: "eye.slash")
+                }
+                .disabled(isRunningMuteSyncDiagnostics)
 
                 Button {
                     Task { await previewCommentFeedback() }
@@ -320,6 +337,16 @@ struct RuntimeReadinessView: View {
                 }
             }
 
+            if isRunningMuteSyncDiagnostics {
+                HStack(spacing: 8) {
+                    ProgressView()
+                        .controlSize(.small)
+                    Text(L10n.runningMuteSyncDiagnostics)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+
             if isLoadingCommentFeedbackPreview {
                 HStack(spacing: 8) {
                     ProgressView()
@@ -382,11 +409,13 @@ struct RuntimeReadinessView: View {
         async let search = store.runSearchDiagnostics()
         async let directNavigation = store.runDirectNavigationDiagnostics()
         async let commentFeedback = store.runCommentFeedbackDiagnostics()
+        async let muteSync = store.runMuteSyncDiagnostics()
         _ = await nonNovelQA
         networkResults = await network
         searchResults = await search
         directNavigationResults = await directNavigation
         commentFeedbackResults = await commentFeedback
+        muteSyncResults = await muteSync
         await refreshCacheStatus()
     }
 
@@ -435,6 +464,12 @@ struct RuntimeReadinessView: View {
         isRunningCommentFeedbackDiagnostics = true
         defer { isRunningCommentFeedbackDiagnostics = false }
         commentFeedbackResults = await store.runCommentFeedbackDiagnostics()
+    }
+
+    private func runMuteSyncDiagnostics() async {
+        isRunningMuteSyncDiagnostics = true
+        defer { isRunningMuteSyncDiagnostics = false }
+        muteSyncResults = await store.runMuteSyncDiagnostics()
     }
 
     private func previewCommentFeedback() async {
@@ -516,6 +551,11 @@ struct RuntimeReadinessView: View {
             lines.append("")
             lines.append("Comment Feedback Diagnostics")
             lines += commentFeedbackResults.map(\.diagnosticsLine)
+        }
+        if muteSyncResults.isEmpty == false {
+            lines.append("")
+            lines.append("Mute Sync Diagnostics")
+            lines += muteSyncResults.map(\.diagnosticsLine)
         }
         if let nonNovelQASnapshot = store.lastNonNovelQAMatrixSnapshot {
             lines.append("")

@@ -668,7 +668,7 @@ enum L10n {
     static var qaDownloadDelete: String { text("Download deletion") }
     static var qaDownloadDeleteDetail: String { text("Requires explicit approval before deleting local files.") }
     static var qaMuteSync: String { text("Mute sync") }
-    static var qaMuteSyncDetail: String { text("Requires explicit approval before syncing mute changes.") }
+    static var qaMuteSyncDetail: String { text("Read-only remote diagnostics are available. Import and upload still require explicit approval.") }
     static var qaNativeAppleRoute: String { text("Native Apple route") }
     static var qaNativeAppleRouteRequirement: String { text("KeiPix stays a SwiftPM macOS app built with Swift, SwiftUI, and narrow AppKit/WebKit bridges.") }
     static var qaNativeAppleRouteNext: String { text("Keep source-boundary tests current when referencing Pixez or Pixes behavior.") }

@@ -983,3 +983,10 @@
 "Import Token" = "Import Token";
 "Paste a Pixiv refresh token exported from another client. KeiPix refreshes it once, stores the new session in Keychain, and switches to the imported account." = "Paste a Pixiv refresh token exported from another client. KeiPix refreshes it once, stores the new session in Keychain, and switches to the imported account.";
 "Refresh Token" = "Refresh Token";
+"Read-only remote diagnostics are available. Import and upload still require explicit approval." = "Read-only remote diagnostics are available. Import and upload still require explicit approval.";
+"Run Mute Sync Diagnostics" = "Run Mute Sync Diagnostics";
+"Running mute sync diagnostics" = "Running mute sync diagnostics";
+"Mute sync read-only check" = "Mute sync read-only check";
+"Remote %d tags / %d creators · Local %d tags / %d creators · Missing locally %d tags / %d creators · Local-only %d tags / %d creators · Pixiv limit %d" = "Remote %d tags / %d creators · Local %d tags / %d creators · Missing locally %d tags / %d creators · Local-only %d tags / %d creators · Pixiv limit %d";
+"Local-only artwork mutes %d · comment phrases %d" = "Local-only artwork mutes %d · comment phrases %d";
+"Real account required" = "Real account required";

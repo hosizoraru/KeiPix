@@ -294,6 +294,57 @@ extension KeiPixStore {
         )
     }
 
+    func muteSyncDiagnosticSummary(from accountMuteList: PixivMuteList) -> MuteSyncDiagnosticSummary {
+        MuteSyncDiagnosticSummary(
+            localTags: mutedTags,
+            localUsers: mutedUsers,
+            localArtworks: mutedArtworks,
+            localCommentPhrases: mutedCommentPhrases,
+            remoteTags: accountMuteList.mutedTags.map(\.tag),
+            remoteUserIDs: accountMuteList.mutedUsers.map(\.id),
+            muteLimitCount: accountMuteList.muteLimitCount
+        )
+    }
+
+    func runMuteSyncDiagnostics() async -> [NetworkDiagnosticResult] {
+        guard session != nil, usesLocalSampleAccount == false else {
+            return [
+                NetworkDiagnosticResult(
+                    id: "mute-sync-readonly",
+                    title: L10n.muteSyncReadOnlyDiagnostic,
+                    status: .skipped,
+                    detail: session == nil ? L10n.signedOut : L10n.realAccountRequired,
+                    duration: nil
+                )
+            ]
+        }
+
+        let startedAt = Date()
+        do {
+            let accountMuteList = try await api.muteList()
+            let summary = muteSyncDiagnosticSummary(from: accountMuteList)
+            return [
+                NetworkDiagnosticResult(
+                    id: "mute-sync-readonly",
+                    title: L10n.muteSyncReadOnlyDiagnostic,
+                    status: .passed,
+                    detail: "\(summary.detailText) · \(summary.localOnlyDetailText)",
+                    duration: Date().timeIntervalSince(startedAt)
+                )
+            ]
+        } catch {
+            return [
+                NetworkDiagnosticResult(
+                    id: "mute-sync-readonly",
+                    title: L10n.muteSyncReadOnlyDiagnostic,
+                    status: .failed,
+                    detail: error.localizedDescription,
+                    duration: Date().timeIntervalSince(startedAt)
+                )
+            ]
+        }
+    }
+
     func isMutedLocally(_ artwork: PixivArtwork) -> Bool {
         if artwork.isMuted {
             return true

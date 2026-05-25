@@ -47,6 +47,28 @@ struct RuntimeReadinessTests {
         #expect(MutableActionQAAuthorization.isAuthorized("") == false)
     }
 
+    @Test("Mute sync diagnostics compare remote and local read-only state")
+    func muteSyncDiagnosticsSummary() {
+        let summary = MuteSyncDiagnosticSummary(
+            localTags: ["cat", "Landscape", "local-only"],
+            localUsers: [10: "Local shared", 11: "Local only"],
+            localArtworks: [100: "Local muted artwork"],
+            localCommentPhrases: ["spoiler"],
+            remoteTags: ["CAT", "remote-only"],
+            remoteUserIDs: [10, 12],
+            muteLimitCount: 500
+        )
+
+        #expect(summary.localTagCount == 3)
+        #expect(summary.remoteTagCount == 2)
+        #expect(summary.remoteTagCountMissingLocally == 1)
+        #expect(summary.remoteUserCountMissingLocally == 1)
+        #expect(summary.localTagCountMissingRemotely == 2)
+        #expect(summary.localUserCountMissingRemotely == 1)
+        #expect(summary.detailText.contains("500"))
+        #expect(summary.localOnlyDetailText.contains("1"))
+    }
+
     @Test("Non-novel QA matrix covers P0 through P2")
     @MainActor
     func nonNovelQAMatrixBaseline() {

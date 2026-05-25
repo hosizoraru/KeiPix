@@ -106,6 +106,74 @@ struct BulkMutePreview: Identifiable, Hashable, Sendable {
     }
 }
 
+struct MuteSyncDiagnosticSummary: Hashable, Sendable {
+    let localTagCount: Int
+    let localUserCount: Int
+    let localArtworkCount: Int
+    let localCommentPhraseCount: Int
+    let remoteTagCount: Int
+    let remoteUserCount: Int
+    let muteLimitCount: Int
+    let remoteTagCountMissingLocally: Int
+    let remoteUserCountMissingLocally: Int
+    let localTagCountMissingRemotely: Int
+    let localUserCountMissingRemotely: Int
+
+    var detailText: String {
+        String(
+            format: L10n.muteSyncReadOnlyDetailFormat,
+            remoteTagCount,
+            remoteUserCount,
+            localTagCount,
+            localUserCount,
+            remoteTagCountMissingLocally,
+            remoteUserCountMissingLocally,
+            localTagCountMissingRemotely,
+            localUserCountMissingRemotely,
+            muteLimitCount
+        )
+    }
+
+    var localOnlyDetailText: String {
+        String(
+            format: L10n.muteSyncLocalOnlyDetailFormat,
+            localArtworkCount,
+            localCommentPhraseCount
+        )
+    }
+
+    init(
+        localTags: Set<String>,
+        localUsers: [Int: String],
+        localArtworks: [Int: String],
+        localCommentPhrases: Set<String>,
+        remoteTags: [String],
+        remoteUserIDs: [Int],
+        muteLimitCount: Int
+    ) {
+        let normalizedLocalTags = Set(localTags.map(Self.normalizedTag))
+        let normalizedRemoteTags = Set(remoteTags.map(Self.normalizedTag))
+        let localUserIDs = Set(localUsers.keys)
+        let remoteUserIDSet = Set(remoteUserIDs)
+
+        localTagCount = localTags.count
+        localUserCount = localUsers.count
+        localArtworkCount = localArtworks.count
+        localCommentPhraseCount = localCommentPhrases.count
+        remoteTagCount = remoteTags.count
+        remoteUserCount = remoteUserIDs.count
+        self.muteLimitCount = muteLimitCount
+        remoteTagCountMissingLocally = normalizedRemoteTags.subtracting(normalizedLocalTags).count
+        remoteUserCountMissingLocally = remoteUserIDSet.subtracting(localUserIDs).count
+        localTagCountMissingRemotely = normalizedLocalTags.subtracting(normalizedRemoteTags).count
+        localUserCountMissingRemotely = localUserIDs.subtracting(remoteUserIDSet).count
+    }
+
+    private static func normalizedTag(_ tag: String) -> String {
+        tag.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+    }
+}
+
 enum CommentMuteReason: Hashable, Sendable {
     case user(String)
     case phrase(String)

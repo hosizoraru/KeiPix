@@ -983,3 +983,10 @@
 "Import Token" = "导入 Token";
 "Paste a Pixiv refresh token exported from another client. KeiPix refreshes it once, stores the new session in Keychain, and switches to the imported account." = "粘贴从其他客户端导出的 Pixiv refresh token。KeiPix 会刷新一次，保存新的登录态到钥匙串，并切换到导入账号。";
 "Refresh Token" = "Refresh Token";
+"Read-only remote diagnostics are available. Import and upload still require explicit approval." = "已提供只读远端诊断。导入和上传仍然需要显式确认。";
+"Run Mute Sync Diagnostics" = "运行屏蔽同步诊断";
+"Running mute sync diagnostics" = "正在运行屏蔽同步诊断";
+"Mute sync read-only check" = "屏蔽同步只读检查";
+"Remote %d tags / %d creators · Local %d tags / %d creators · Missing locally %d tags / %d creators · Local-only %d tags / %d creators · Pixiv limit %d" = "远端 %d 个标签 / %d 个作者 · 本地 %d 个标签 / %d 个作者 · 本地缺少 %d 个标签 / %d 个作者 · 仅本地 %d 个标签 / %d 个作者 · Pixiv 上限 %d";
+"Local-only artwork mutes %d · comment phrases %d" = "仅本地作品屏蔽 %d · 评论短语 %d";
+"Real account required" = "需要真实账号";
