@@ -103,4 +103,28 @@ struct GallerySelectionTests {
         #expect(layout.resolvedColumnCount(for: 372) == 3)
         #expect(layout.resolvedColumnCount(for: 371) == 2)
     }
+
+    @Test("Auto masonry restores three columns in balanced real-account windows")
+    func autoMasonryRestoresThreeColumnsInBalancedRealAccountWindows() {
+        let layout = MasonryLayout(
+            spacing: 12,
+            preferredColumnWidth: 224,
+            minColumnWidth: 176,
+            maxColumnWidth: 260
+        )
+
+        let visibleIdentityMasonryWidth = WindowSizePreset.balanced.size(
+            sidebarVisible: true,
+            accountIdentityVisible: true
+        ).width - 184 - 420 - 36
+        let hiddenIdentityMasonryWidth = WindowSizePreset.balanced.size(
+            sidebarVisible: true,
+            accountIdentityVisible: false
+        ).width - 144 - 420 - 36
+
+        #expect(visibleIdentityMasonryWidth >= 640)
+        #expect(hiddenIdentityMasonryWidth >= 640)
+        #expect(layout.resolvedColumnCount(for: visibleIdentityMasonryWidth) == 3)
+        #expect(layout.resolvedColumnCount(for: hiddenIdentityMasonryWidth) == 3)
+    }
 }

@@ -25,11 +25,11 @@ enum WindowSizePreset: String, CaseIterable, Identifiable {
     func size(sidebarVisible: Bool, accountIdentityVisible: Bool = true) -> CGSize {
         switch (self, sidebarVisible) {
         case (.small, true):
-            CGSize(width: accountIdentityVisible ? 970 : 930, height: 720)
+            CGSize(width: accountIdentityVisible ? 970 : 940, height: 720)
         case (.balanced, true):
-            CGSize(width: accountIdentityVisible ? 1180 : 1140, height: 800)
+            CGSize(width: accountIdentityVisible ? 1280 : 1240, height: 800)
         case (.wide, true):
-            CGSize(width: accountIdentityVisible ? 1340 : 1300, height: 860)
+            CGSize(width: accountIdentityVisible ? 1400 : 1360, height: 860)
         case (.reading, true):
             CGSize(width: accountIdentityVisible ? 1260 : 1220, height: 860)
         case (.small, false):

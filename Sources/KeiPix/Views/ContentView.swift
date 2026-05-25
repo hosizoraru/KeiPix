@@ -18,7 +18,7 @@ struct ContentView: View {
                 .toolbar(removing: .sidebarToggle)
         } content: {
             ContentColumnView(store: store)
-                .navigationSplitViewColumnWidth(min: 460, ideal: 700)
+                .navigationSplitViewColumnWidth(min: 500, ideal: 720)
         } detail: {
             if store.selectedRoute == .home {
                 DiscoveryDashboardDetailPlaceholder()
@@ -28,7 +28,7 @@ struct ContentView: View {
                     .navigationSplitViewColumnWidth(min: 360, ideal: 500)
             } else {
                 ArtworkDetailView(store: store)
-                    .navigationSplitViewColumnWidth(min: 320, ideal: 460)
+                    .navigationSplitViewColumnWidth(min: 300, ideal: 420)
             }
         }
         .frame(minWidth: minimumWindowWidth, minHeight: 700)
@@ -402,7 +402,7 @@ struct ContentView: View {
 
     private var minimumWindowWidth: CGFloat {
         if sidebarVisible {
-            store.showsSidebarAccountIdentity ? 970 : 930
+            store.showsSidebarAccountIdentity ? 970 : 940
         } else {
             840
         }

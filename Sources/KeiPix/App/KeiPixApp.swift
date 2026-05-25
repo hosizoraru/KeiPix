@@ -23,7 +23,7 @@ struct KeiPixApp: App {
                     }
                 }
         }
-        .defaultSize(width: 1180, height: 800)
+        .defaultSize(width: 1280, height: 800)
         .commands {
             CommandGroup(after: .newItem) {
                 Button(L10n.refresh) {
