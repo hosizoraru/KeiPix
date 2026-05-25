@@ -55,12 +55,20 @@ struct VisualQAEvidenceTests {
                 capturedAt: "20260525T103329Z",
                 screenshotPath: "reader-window.png",
                 manifestPath: "/tmp/reader-window.md"
+            ),
+            VisualQAEvidenceManifest(
+                id: "settings",
+                surface: .settingsWindow,
+                capturedAt: "20260525T123900Z",
+                screenshotPath: "settings-window.png",
+                manifestPath: "/tmp/settings-window.md"
             )
         ])
 
         #expect(index.covers([.discoverDashboard, .galleryFeed]))
         #expect(index.covers([.galleryFeed, .pixivision]) == false)
         #expect(index.covers([.downloadQueue, .readerWindow]))
+        #expect(index.covers([.settingsWindow]))
         #expect(index.summary(for: [.galleryFeed]).contains("1/1"))
     }
 

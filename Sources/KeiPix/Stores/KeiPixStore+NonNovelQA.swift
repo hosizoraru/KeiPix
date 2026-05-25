@@ -187,8 +187,8 @@ extension KeiPixStore {
         )
         let settings = qaStaticItem(
             id: "settings-organization",
-            passed: true,
-            evidence: L10n.availableInDiagnostics
+            passed: visualEvidence.covers([.settingsWindow]),
+            evidence: visualEvidence.summary(for: [.settingsWindow])
         )
         return [gallery, downloads, safety, offline, settings]
     }

@@ -8,6 +8,7 @@ enum VisualQASurface: String, CaseIterable, Identifiable, Sendable {
     case narrowWindow = "narrow-window"
     case downloadQueue = "download-queue"
     case readerWindow = "reader-window"
+    case settingsWindow = "settings-window"
 
     var id: String { rawValue }
 }
