@@ -4,6 +4,7 @@ import SwiftUI
 struct KeiPixApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @Environment(\.openWindow) private var openWindow
+    @Environment(\.openSettings) private var openSettings
     @FocusedValue(\.gallerySelectionCommandActions) private var gallerySelectionCommandActions
     @State private var store = KeiPixStore()
 
@@ -15,6 +16,11 @@ struct KeiPixApp: App {
                 .environment(\.locale, store.appLanguage.locale ?? .current)
                 .onOpenURL { url in
                     Task { await store.openPixivLink(url) }
+                }
+                .task {
+                    if VisualQALaunchArgument.contains(.settingsWindow) {
+                        openSettings()
+                    }
                 }
         }
         .defaultSize(width: 1180, height: 800)
