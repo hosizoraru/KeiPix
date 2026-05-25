@@ -1,4 +1,6 @@
+import AppKit
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct SavedSearchesView: View {
     @Bindable var store: KeiPixStore
@@ -168,6 +170,19 @@ struct SavedSearchesView: View {
             .labelStyle(.iconOnly)
             .disabled(librarySearchText.isEmpty)
             .help(L10n.clearSearch)
+
+            Button {
+                importSearchLibrary()
+            } label: {
+                Label(L10n.importSearchLibrary, systemImage: "square.and.arrow.down")
+            }
+
+            Button {
+                exportSearchLibrary()
+            } label: {
+                Label(L10n.exportSearchLibrary, systemImage: "square.and.arrow.up")
+            }
+            .disabled(store.savedSearchPresets.isEmpty && store.savedSearches.isEmpty && store.searchHistory.isEmpty)
         }
         .controlSize(.small)
     }
@@ -250,6 +265,56 @@ struct SavedSearchesView: View {
         actionMessage = L10n.copiedPixivWebSearchLink
     }
 
+    private func exportSearchLibrary() {
+        let panel = NSSavePanel()
+        panel.title = L10n.exportSearchLibrary
+        panel.nameFieldStringValue = "keipix-search-library-\(Self.fileDateFormatter.string(from: Date())).json"
+        panel.allowedContentTypes = [.json]
+
+        guard panel.runModal() == .OK, let url = panel.url else {
+            return
+        }
+
+        do {
+            let encoder = JSONEncoder()
+            encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+            encoder.dateEncodingStrategy = .iso8601
+            let data = try encoder.encode(store.savedSearchLibraryExport())
+            try data.write(to: url, options: [.atomic])
+            actionMessage = L10n.exportedSearchLibrary
+        } catch {
+            actionMessage = "\(L10n.unableToExportSearchLibrary): \(error.localizedDescription)"
+        }
+    }
+
+    private func importSearchLibrary() {
+        let panel = NSOpenPanel()
+        panel.title = L10n.importSearchLibrary
+        panel.allowedContentTypes = [.json]
+        panel.allowsMultipleSelection = false
+        panel.canChooseDirectories = false
+
+        guard panel.runModal() == .OK, let url = panel.url else {
+            return
+        }
+
+        do {
+            let data = try Data(contentsOf: url)
+            let decoder = JSONDecoder()
+            decoder.dateDecodingStrategy = .iso8601
+            let library = try decoder.decode(SavedSearchLibraryExport.self, from: data)
+            let summary = store.importSavedSearchLibrary(library)
+            actionMessage = String(
+                format: L10n.importedSearchLibraryFormat,
+                summary.presetCount,
+                summary.savedSearchCount,
+                summary.historyCount
+            )
+        } catch {
+            actionMessage = "\(L10n.unableToImportSearchLibrary): \(error.localizedDescription)"
+        }
+    }
+
     private func dismissActionMessageIfNeeded(_ message: String?) async {
         guard let message else { return }
         do {
@@ -310,6 +375,14 @@ struct SavedSearchesView: View {
             }
         }
     }
+
+    private static let fileDateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.calendar = Calendar(identifier: .gregorian)
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "yyyyMMdd-HHmmss"
+        return formatter
+    }()
 }
 
 private enum SavedSearchDangerAction: Identifiable {

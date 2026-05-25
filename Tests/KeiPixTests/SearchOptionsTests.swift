@@ -47,6 +47,45 @@ struct SearchOptionsTests {
         #expect(options.ugoiraFilter == .onlyUgoira)
     }
 
+    @Test("Saved search library export round trips")
+    func savedSearchLibraryExportRoundTrips() throws {
+        let preset = SavedSearchPreset(
+            id: UUID(uuidString: "11111111-1111-1111-1111-111111111111")!,
+            keyword: "landscape",
+            options: SearchOptions(
+                matchType: .exactTags,
+                sort: .dateAscending,
+                ageLimit: .allAges,
+                dateRange: .pastMonth,
+                minimumBookmarks: .oneThousand,
+                maximumBookmarks: .tenThousand,
+                artworkType: .illustrations,
+                aiFilter: .excludeAI,
+                ugoiraFilter: .noUgoira
+            ),
+            createdAt: Date(timeIntervalSince1970: 1),
+            updatedAt: Date(timeIntervalSince1970: 2)
+        )
+        let library = SavedSearchLibraryExport(
+            exportedAt: Date(timeIntervalSince1970: 3),
+            presets: [preset],
+            savedSearches: ["landscape", "blue archive"],
+            searchHistory: ["cat"]
+        )
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        let data = try encoder.encode(library)
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let decoded = try decoder.decode(SavedSearchLibraryExport.self, from: data)
+
+        #expect(decoded.schemaVersion == 1)
+        #expect(decoded.presets.first?.keyword == "landscape")
+        #expect(decoded.presets.first?.options.maximumBookmarks == .tenThousand)
+        #expect(decoded.savedSearches == ["landscape", "blue archive"])
+        #expect(decoded.searchHistory == ["cat"])
+    }
+
     @Test("Summary includes advanced filter state")
     func summaryIncludesAdvancedFilters() {
         let options = SearchOptions(

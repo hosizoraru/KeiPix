@@ -91,6 +91,35 @@ extension KeiPixStore {
         UserDefaults.standard.set(searchHistory, forKey: "searchHistory")
     }
 
+    func savedSearchLibraryExport() -> SavedSearchLibraryExport {
+        SavedSearchLibraryExport(
+            presets: savedSearchPresets,
+            savedSearches: savedSearches,
+            searchHistory: searchHistory
+        )
+    }
+
+    @discardableResult
+    func importSavedSearchLibrary(_ library: SavedSearchLibraryExport) -> SavedSearchLibraryImportSummary {
+        let presets = library.presets.filter { $0.keyword.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false }
+        let saved = library.savedSearches
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { $0.isEmpty == false }
+        let history = library.searchHistory
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { $0.isEmpty == false }
+
+        restoreSavedSearchPresets(presets)
+        restoreSavedSearches(saved)
+        restoreSearchHistory(history)
+
+        return SavedSearchLibraryImportSummary(
+            presetCount: presets.count,
+            savedSearchCount: saved.count,
+            historyCount: history.count
+        )
+    }
+
     func runSavedSearch(_ keyword: String) async {
         searchText = keyword
         selectedRoute = .search

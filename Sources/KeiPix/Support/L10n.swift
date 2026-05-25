@@ -81,6 +81,12 @@ enum L10n {
     static var savedSearchPresetFormat: String { text("Saved %@ with filters") }
     static var runningSearchFormat: String { text("Running search for %@") }
     static var appliedSearchPresetFormat: String { text("Applied search preset %@") }
+    static var importSearchLibrary: String { text("Import Search Library") }
+    static var exportSearchLibrary: String { text("Export Search Library") }
+    static var importedSearchLibraryFormat: String { text("Imported %d presets · %d saved · %d history") }
+    static var exportedSearchLibrary: String { text("Exported search library") }
+    static var unableToImportSearchLibrary: String { text("Unable to import search library") }
+    static var unableToExportSearchLibrary: String { text("Unable to export search library") }
     static var noPixivWebSearchLink: String { text("No Pixiv Web search link") }
     static var ranking: String { text("Ranking") }
     static var mangaRanking: String { text("Manga Ranking") }

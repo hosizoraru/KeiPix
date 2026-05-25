@@ -78,6 +78,12 @@
 "Saved %@ with filters" = "Saved %@ with filters";
 "Running search for %@" = "Running search for %@";
 "Applied search preset %@" = "Applied search preset %@";
+"Import Search Library" = "Import Search Library";
+"Export Search Library" = "Export Search Library";
+"Imported %d presets · %d saved · %d history" = "Imported %d presets · %d saved · %d history";
+"Exported search library" = "Exported search library";
+"Unable to import search library" = "Unable to import search library";
+"Unable to export search library" = "Unable to export search library";
 "No Pixiv Web search link" = "No Pixiv Web search link";
 "Ranking" = "Ranking";
 "Manga Ranking" = "Manga Ranking";

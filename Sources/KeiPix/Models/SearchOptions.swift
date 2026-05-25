@@ -371,3 +371,35 @@ struct SavedSearchPreset: Identifiable, Codable, Hashable, Sendable {
         self.updatedAt = updatedAt
     }
 }
+
+struct SavedSearchLibraryExport: Codable, Hashable, Sendable {
+    var schemaVersion: Int
+    var exportedAt: Date
+    var presets: [SavedSearchPreset]
+    var savedSearches: [String]
+    var searchHistory: [String]
+
+    init(
+        schemaVersion: Int = 1,
+        exportedAt: Date = Date(),
+        presets: [SavedSearchPreset],
+        savedSearches: [String],
+        searchHistory: [String]
+    ) {
+        self.schemaVersion = schemaVersion
+        self.exportedAt = exportedAt
+        self.presets = presets
+        self.savedSearches = savedSearches
+        self.searchHistory = searchHistory
+    }
+}
+
+struct SavedSearchLibraryImportSummary: Hashable, Sendable {
+    let presetCount: Int
+    let savedSearchCount: Int
+    let historyCount: Int
+
+    var totalCount: Int {
+        presetCount + savedSearchCount + historyCount
+    }
+}

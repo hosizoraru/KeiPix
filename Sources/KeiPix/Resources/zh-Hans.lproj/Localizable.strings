@@ -78,6 +78,12 @@
 "Saved %@ with filters" = "已保存 %@ 和当前筛选";
 "Running search for %@" = "正在搜索 %@";
 "Applied search preset %@" = "已应用搜索预设 %@";
+"Import Search Library" = "导入搜索库";
+"Export Search Library" = "导出搜索库";
+"Imported %d presets · %d saved · %d history" = "已导入 %d 个预设 · %d 个保存搜索 · %d 条历史";
+"Exported search library" = "已导出搜索库";
+"Unable to import search library" = "无法导入搜索库";
+"Unable to export search library" = "无法导出搜索库";
 "No Pixiv Web search link" = "没有可复制的 Pixiv Web 搜索链接";
 "Ranking" = "排行榜";
 "Manga Ranking" = "漫画榜";
