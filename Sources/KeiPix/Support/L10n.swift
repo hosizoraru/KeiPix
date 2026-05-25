@@ -678,6 +678,8 @@ enum L10n {
     static var qaPixivision: String { text("Pixivision") }
     static var qaPixivisionRequirement: String { text("Articles open in-app and Pixiv artwork/user/tag links route natively.") }
     static var qaPixivisionNext: String { text("Open an article and verify native link routing.") }
+    static var pixivisionNativeLinkAuditFormat: String { text("Native article links: %@") }
+    static var noNativeArticleLinks: String { text("No native article links found") }
     static var qaPixivURLRouting: String { text("Pixiv URL routing") }
     static var qaPixivURLRoutingRequirement: String { text("Artwork, creator, tag, search, and Pixivision URLs resolve to native destinations.") }
     static var qaPixivURLRoutingNext: String { text("Keep resolver tests and in-app link checks current.") }

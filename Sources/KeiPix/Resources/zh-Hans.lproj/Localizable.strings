@@ -882,6 +882,8 @@
 "Pixivision" = "Pixivision";
 "Articles open in-app and Pixiv artwork/user/tag links route natively." = "文章需要在 App 内打开，Pixiv 作品、用户、标签链接走原生路由。";
 "Open an article and verify native link routing." = "打开文章并验证原生链接路由。";
+"Native article links: %@" = "文章原生链接：%@";
+"No native article links found" = "未找到文章原生链接";
 "Pixiv URL routing" = "Pixiv URL 路由";
 "Artwork, creator, tag, search, and Pixivision URLs resolve to native destinations." = "作品、作者、标签、搜索和 Pixivision URL 需要解析到原生目标。";
 "Keep resolver tests and in-app link checks current." = "保持解析器测试和 App 内链接检查。";

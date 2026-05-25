@@ -882,6 +882,8 @@
 "Pixivision" = "Pixivision";
 "Articles open in-app and Pixiv artwork/user/tag links route natively." = "Articles open in-app and Pixiv artwork/user/tag links route natively.";
 "Open an article and verify native link routing." = "Open an article and verify native link routing.";
+"Native article links: %@" = "Native article links: %@";
+"No native article links found" = "No native article links found";
 "Pixiv URL routing" = "Pixiv URL routing";
 "Artwork, creator, tag, search, and Pixivision URLs resolve to native destinations." = "Artwork, creator, tag, search, and Pixivision URLs resolve to native destinations.";
 "Keep resolver tests and in-app link checks current." = "Keep resolver tests and in-app link checks current.";

@@ -63,12 +63,7 @@ extension KeiPixStore {
             visualSurface: .trendingTags,
             visualEvidence: visualEvidence
         )
-        async let spotlight = qaFeedItem(
-            id: "pixivision",
-            count: { try await self.spotlightArticles().articles.count },
-            visualSurface: .pixivision,
-            visualEvidence: visualEvidence
-        )
+        async let spotlight = qaPixivisionItem(visualEvidence: visualEvidence)
         async let recommendedUsers = qaFeedItem(
             id: "creator-discovery",
             count: { try await self.recommendedUsers().userPreviews.count }
@@ -247,6 +242,39 @@ extension KeiPixStore {
                 status: status,
                 evidence: evidence,
                 nextAction: nextAction
+            )
+        } catch {
+            return template.item(status: .actionRequired, evidence: error.localizedDescription, nextAction: template.nextAction)
+        }
+    }
+
+    private func qaPixivisionItem(visualEvidence: VisualQAEvidenceIndex) async -> NonNovelQAItem {
+        guard let template = Self.nonNovelQABaseline.first(where: { $0.id == "pixivision" }) else {
+            return NonNovelQATemplate.unknown(id: "pixivision").item(status: .actionRequired, evidence: L10n.unknown, nextAction: L10n.reviewImplementation)
+        }
+
+        do {
+            let response = try await spotlightArticles()
+            guard let article = response.articles.first else {
+                return template.item(
+                    status: .needsEvidence,
+                    evidence: String(format: L10n.qaLoadedCountFormat, 0),
+                    nextAction: template.nextAction
+                )
+            }
+
+            let audit = try await PixivisionArticleLinkAuditor.audit(article: article)
+            let hasVisualEvidence = visualEvidence.covers([.pixivision])
+            let passed = audit.hasNativeLinks && hasVisualEvidence
+            let evidence = [
+                String(format: L10n.qaLoadedCountFormat, response.articles.count),
+                audit.evidence,
+                visualEvidence.summary(for: [.pixivision])
+            ].joined(separator: " · ")
+            return template.item(
+                status: passed ? .passed : .needsEvidence,
+                evidence: evidence,
+                nextAction: passed ? L10n.keepRegressionCoverage : template.nextAction
             )
         } catch {
             return template.item(status: .actionRequired, evidence: error.localizedDescription, nextAction: template.nextAction)

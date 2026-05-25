@@ -1,6 +1,6 @@
 import Foundation
 
-enum PixivWebDestination: Equatable {
+enum PixivWebDestination: Hashable, Sendable {
     case artwork(Int)
     case user(Int)
     case tag(String)
