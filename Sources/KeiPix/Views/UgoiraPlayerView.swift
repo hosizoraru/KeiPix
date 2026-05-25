@@ -227,7 +227,9 @@ struct UgoiraPlayerView: View {
         currentFrameIndex = 0
 
         do {
-            let package = try await store.loadUgoiraExportPackage(for: artwork)
+            let package = VisualQALaunchArgument.contains(.ugoiraPlayer)
+                ? UgoiraExportPackage.visualQASample
+                : try await store.loadUgoiraExportPackage(for: artwork)
             exportPackage = package
             animation = package.animation
             isLoading = false

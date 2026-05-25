@@ -908,6 +908,8 @@
 "Downloads" = "Downloads";
 "Queue, local library, naming templates, ugoira downloads, and batch actions stay usable." = "Queue, local library, naming templates, ugoira downloads, and batch actions stay usable.";
 "Keep download queue visual evidence in regression coverage." = "Keep download queue visual evidence in regression coverage.";
+"Ugoira playback, speed controls, ZIP/GIF export, and frame export stay reachable." = "Ugoira playback, speed controls, ZIP/GIF export, and frame export stay reachable.";
+"Keep Ugoira player visual evidence in regression coverage." = "Keep Ugoira player visual evidence in regression coverage.";
 "Safety and filtering" = "Safety and filtering";
 "AI/R18/R18G badges, filters, mute sync, and privacy controls remain visible." = "AI/R18/R18G badges, filters, mute sync, and privacy controls remain visible.";
 "Add optional NSFW blur and bulk mute previews." = "Add optional NSFW blur and bulk mute previews.";

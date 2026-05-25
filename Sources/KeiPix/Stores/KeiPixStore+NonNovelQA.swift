@@ -208,12 +208,18 @@ extension KeiPixStore {
                 visualEvidence.summary(for: cachedFeedSurfaces)
             ].joined(separator: " · ")
         )
+        let ugoiraSurfaces: [VisualQASurface] = [.ugoiraPlayer]
+        let ugoira = qaStaticItem(
+            id: "ugoira",
+            passed: visualEvidence.covers(ugoiraSurfaces),
+            evidence: visualEvidence.summary(for: ugoiraSurfaces)
+        )
         let settings = qaStaticItem(
             id: "settings-organization",
             passed: visualEvidence.covers([.settingsWindow]),
             evidence: visualEvidence.summary(for: [.settingsWindow])
         )
-        return [gallery, downloads, safety, offline, settings]
+        return [gallery, downloads, safety, offline, ugoira, settings]
     }
 
     private func qaFeedItem(
@@ -400,6 +406,7 @@ private extension KeiPixStore {
         NonNovelQATemplate(id: "artwork-detail-social", priority: .p2, title: L10n.qaArtworkDetailSocial, requirement: L10n.qaArtworkDetailSocialRequirement, nextAction: L10n.qaArtworkDetailSocialNext, systemImage: "sidebar.right"),
         NonNovelQATemplate(id: "comments-feedback", priority: .p2, title: L10n.qaCommentsFeedback, requirement: L10n.qaCommentsFeedbackRequirement, nextAction: L10n.qaCommentsFeedbackNext, systemImage: "text.bubble"),
         NonNovelQATemplate(id: "local-cache-offline", priority: .p2, title: L10n.qaLocalCacheOffline, requirement: L10n.qaLocalCacheOfflineRequirement, nextAction: L10n.qaLocalCacheOfflineNext, systemImage: "externaldrive"),
+        NonNovelQATemplate(id: "ugoira", priority: .p2, title: L10n.ugoira, requirement: L10n.qaUgoiraRequirement, nextAction: L10n.qaUgoiraNext, systemImage: "play.rectangle"),
         NonNovelQATemplate(id: "settings-organization", priority: .p2, title: L10n.qaSettingsOrganization, requirement: L10n.qaSettingsOrganizationRequirement, nextAction: L10n.qaSettingsOrganizationNext, systemImage: "gearshape")
     ]
 }

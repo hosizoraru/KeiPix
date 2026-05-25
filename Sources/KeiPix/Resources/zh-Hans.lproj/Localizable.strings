@@ -908,6 +908,8 @@
 "Downloads" = "下载";
 "Queue, local library, naming templates, ugoira downloads, and batch actions stay usable." = "队列、本地库、命名模板、动图下载和批量操作需要可用。";
 "Keep download queue visual evidence in regression coverage." = "保持下载队列视觉证据的回归覆盖。";
+"Ugoira playback, speed controls, ZIP/GIF export, and frame export stay reachable." = "动图播放、倍速控制、ZIP/GIF 导出和单帧导出需要可访问。";
+"Keep Ugoira player visual evidence in regression coverage." = "保持动图播放器视觉证据的回归覆盖。";
 "Safety and filtering" = "安全与过滤";
 "AI/R18/R18G badges, filters, mute sync, and privacy controls remain visible." = "AI/R18/R18G 标识、过滤、屏蔽同步和隐私控制需要可见。";
 "Add optional NSFW blur and bulk mute previews." = "新增可选 NSFW 模糊和批量屏蔽预览。";

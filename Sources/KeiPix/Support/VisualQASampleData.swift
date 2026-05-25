@@ -491,6 +491,25 @@ extension KeiPixStore {
         ]
     }
 
+    func presentUgoiraPlayerVisualQA() {
+        activateVisualQASampleSession()
+        selectedRoute = .illustrations
+        focusedUser = nil
+        bookmarkTagFilter = nil
+        selectedSpotlightArticle = nil
+        errorMessage = nil
+        isLoading = false
+        isLoadingMore = false
+        activeFeedSnapshotRestoration = nil
+        searchPopularPreviewArtworks = []
+        let works = VisualQASampleData.galleryLayoutArtworks
+        allArtworks = works
+        artworks = works
+        selectedArtwork = works.first { $0.isUgoira } ?? works.first
+        nextURL = nil
+        galleryLayoutMode = .threeColumnMasonry
+    }
+
     func presentLocalSampleFeed(for route: PixivRoute) {
         focusedUser = nil
         bookmarkTagFilter = nil

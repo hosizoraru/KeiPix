@@ -56,6 +56,7 @@ struct RuntimeReadinessTests {
         #expect(items.contains { $0.priority == .p0 && $0.id == "gallery-visual" })
         #expect(items.contains { $0.priority == .p1 && $0.id == "reader" })
         #expect(items.contains { $0.priority == .p2 && $0.id == "creator-discovery" })
+        #expect(items.contains { $0.priority == .p2 && $0.id == "ugoira" })
         #expect(snapshot.progressRows().count == NonNovelQAPriority.allCases.count)
         #expect(snapshot.diagnosticsText.contains("KeiPix Non-Novel QA Matrix"))
         #expect(snapshot.diagnosticsText.contains("Swift + SwiftUI"))

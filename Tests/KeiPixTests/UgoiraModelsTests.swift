@@ -11,4 +11,14 @@ struct UgoiraModelsTests {
         #expect(UgoiraPlaybackSpeed.double.adjustedDelayMilliseconds(100) == 50)
         #expect(UgoiraPlaybackSpeed.double.adjustedDelayMilliseconds(1) == 1)
     }
+
+    @Test("Visual QA animation has exportable local frames")
+    func visualQAAnimationFrames() {
+        let package = UgoiraExportPackage.visualQASample
+
+        #expect(package.animation.frameCount == 4)
+        #expect(package.animation.totalDurationMilliseconds == 560)
+        #expect(package.metadata.frames.map(\.delay) == [140, 140, 140, 140])
+        #expect(package.zipData.isEmpty == false)
+    }
 }

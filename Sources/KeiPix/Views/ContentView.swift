@@ -199,6 +199,9 @@ struct ContentView: View {
             if VisualQALaunchArgument.contains(.mutedContent) {
                 store.presentMutedContentVisualQA()
             }
+            if VisualQALaunchArgument.contains(.ugoiraPlayer) {
+                store.presentUgoiraPlayerVisualQA()
+            }
             if let visualQAGalleryLayoutMode = VisualQALaunchArgument.activeGalleryLayoutMode {
                 store.presentGalleryLayoutVisualQA(mode: visualQAGalleryLayoutMode)
             }

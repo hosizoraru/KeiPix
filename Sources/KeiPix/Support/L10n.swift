@@ -704,6 +704,8 @@ enum L10n {
     static var qaDownloads: String { text("Downloads") }
     static var qaDownloadsRequirement: String { text("Queue, local library, naming templates, ugoira downloads, and batch actions stay usable.") }
     static var qaDownloadsNext: String { text("Keep download queue visual evidence in regression coverage.") }
+    static var qaUgoiraRequirement: String { text("Ugoira playback, speed controls, ZIP/GIF export, and frame export stay reachable.") }
+    static var qaUgoiraNext: String { text("Keep Ugoira player visual evidence in regression coverage.") }
     static var qaSafetyFiltering: String { text("Safety and filtering") }
     static var qaSafetyFilteringRequirement: String { text("AI/R18/R18G badges, filters, mute sync, and privacy controls remain visible.") }
     static var qaSafetyFilteringNext: String { text("Add bulk mute previews.") }

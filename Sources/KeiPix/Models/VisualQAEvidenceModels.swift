@@ -20,6 +20,7 @@ enum VisualQASurface: String, CaseIterable, Identifiable, Sendable {
     case batchBookmarkPreview = "batch-bookmark-preview"
     case settingsWindow = "settings-window"
     case mutedContent = "muted-content"
+    case ugoiraPlayer = "ugoira-player"
 
     var id: String { rawValue }
 }
