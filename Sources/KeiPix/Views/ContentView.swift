@@ -202,6 +202,9 @@ struct ContentView: View {
             if VisualQALaunchArgument.contains(.ugoiraPlayer) {
                 store.presentUgoiraPlayerVisualQA()
             }
+            if VisualQALaunchArgument.contains(.downloadedReader) {
+                store.presentDownloadedReaderVisualQA()
+            }
             if let visualQAGalleryLayoutMode = VisualQALaunchArgument.activeGalleryLayoutMode {
                 store.presentGalleryLayoutVisualQA(mode: visualQAGalleryLayoutMode)
             }

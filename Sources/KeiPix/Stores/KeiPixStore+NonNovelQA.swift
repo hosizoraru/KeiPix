@@ -171,7 +171,7 @@ extension KeiPixStore {
             passed: visualEvidence.covers(requiredGallerySurfaces),
             evidence: visualEvidence.summary(for: requiredGallerySurfaces)
         )
-        let downloadSurfaces: [VisualQASurface] = [.downloadQueue]
+        let downloadSurfaces: [VisualQASurface] = [.downloadQueue, .downloadedReader]
         let downloads = qaStaticItem(
             id: "downloads",
             passed: visualEvidence.covers(downloadSurfaces),

@@ -12,6 +12,7 @@ enum VisualQALaunchArgument: String, CaseIterable {
     case ranking = "--visual-qa-ranking"
     case mutedContent = "--visual-qa-muted-content"
     case ugoiraPlayer = "--visual-qa-ugoira-player"
+    case downloadedReader = "--visual-qa-downloaded-reader"
 
     var surface: VisualQASurface {
         switch self {
@@ -37,6 +38,8 @@ enum VisualQALaunchArgument: String, CaseIterable {
             .mutedContent
         case .ugoiraPlayer:
             .ugoiraPlayer
+        case .downloadedReader:
+            .downloadedReader
         }
     }
 

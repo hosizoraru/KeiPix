@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 
 enum VisualQASampleData {
@@ -337,6 +338,37 @@ enum VisualQASampleData {
         return PixivFeedResponse(illusts: works, nextURL: nil)
     }
 
+    @MainActor
+    static func downloadedReaderItem() -> ArtworkDownloadItem {
+        let pageURLs = writeDownloadedReaderSamplePages()
+        let createdAt = Date(timeIntervalSince1970: 1_779_638_400)
+        return ArtworkDownloadItem(
+            id: UUID(uuidString: "9D14D638-1F6E-4B18-9BC5-7E4D94A51234") ?? UUID(),
+            artworkID: 96_000,
+            title: "Downloaded reader QA manga",
+            creatorName: "Local QA Creator",
+            creatorID: 5_001,
+            tags: ["manga", "wide", "downloaded"],
+            isAI: false,
+            isR18: false,
+            isR18G: false,
+            artifactKind: .imagePages,
+            pageCount: pageURLs.count,
+            completedPages: pageURLs.count,
+            status: .completed,
+            folderPath: downloadedReaderSampleDirectory.path(percentEncoded: false),
+            sourceImageURLs: pageURLs.enumerated().map { index, _ in
+                URL(string: "https://example.com/downloaded-reader-\(index + 1).png")!
+            },
+            sourcePageIndexes: Array(pageURLs.indices),
+            sourceTotalPageCount: pageURLs.count,
+            downloadedFilePaths: pageURLs.map { $0.path(percentEncoded: false) },
+            errorMessage: nil,
+            createdAt: createdAt,
+            updatedAt: createdAt
+        )
+    }
+
     private static func decodeArtwork(
         id: Int,
         title: String,
@@ -386,6 +418,70 @@ enum VisualQASampleData {
         }
         """
         return try! JSONDecoder().decode(PixivArtwork.self, from: Data(payload.utf8))
+    }
+
+    private static var downloadedReaderSampleDirectory: URL {
+        FileManager.default.temporaryDirectory
+            .appending(path: "KeiPixVisualQA/downloaded-reader", directoryHint: .isDirectory)
+    }
+
+    private static func writeDownloadedReaderSamplePages() -> [URL] {
+        let directory = downloadedReaderSampleDirectory
+        try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        let pages: [(CGSize, NSColor, String)] = [
+            (CGSize(width: 1100, height: 1500), NSColor.systemBlue, "01 Portrait"),
+            (CGSize(width: 2200, height: 1100), NSColor.systemPurple, "02 Wide Spread"),
+            (CGSize(width: 1200, height: 2400), NSColor.systemGreen, "03 Tall Manga"),
+            (CGSize(width: 1800, height: 1800), NSColor.systemOrange, "04 Square")
+        ]
+
+        return pages.enumerated().compactMap { index, page in
+            let url = directory.appending(path: String(format: "page-%02d.png", index + 1))
+            do {
+                try writeSampleImage(size: page.0, color: page.1, label: page.2, to: url)
+                return url
+            } catch {
+                return nil
+            }
+        }
+    }
+
+    private static func writeSampleImage(size: CGSize, color: NSColor, label: String, to url: URL) throws {
+        let image = NSImage(size: size)
+        image.lockFocus()
+        color.withAlphaComponent(0.86).setFill()
+        NSBezierPath(rect: CGRect(origin: .zero, size: size)).fill()
+
+        NSColor.black.withAlphaComponent(0.18).setStroke()
+        let stripe = NSBezierPath()
+        stripe.move(to: CGPoint(x: size.width * 0.12, y: size.height * 0.12))
+        stripe.line(to: CGPoint(x: size.width * 0.88, y: size.height * 0.88))
+        stripe.lineWidth = max(18, min(size.width, size.height) * 0.035)
+        stripe.stroke()
+
+        let text = NSString(string: label)
+        let paragraph = NSMutableParagraphStyle()
+        paragraph.alignment = .center
+        let attributes: [NSAttributedString.Key: Any] = [
+            .font: NSFont.systemFont(ofSize: max(54, min(size.width, size.height) * 0.08), weight: .semibold),
+            .foregroundColor: NSColor.white,
+            .paragraphStyle: paragraph
+        ]
+        let textRect = CGRect(
+            x: size.width * 0.08,
+            y: size.height * 0.44,
+            width: size.width * 0.84,
+            height: size.height * 0.18
+        )
+        text.draw(in: textRect, withAttributes: attributes)
+        image.unlockFocus()
+
+        guard let tiff = image.tiffRepresentation,
+              let rep = NSBitmapImageRep(data: tiff),
+              let data = rep.representation(using: .png, properties: [:]) else {
+            throw CocoaError(.fileWriteUnknown)
+        }
+        try data.write(to: url, options: .atomic)
     }
 }
 
@@ -508,6 +604,29 @@ extension KeiPixStore {
         selectedArtwork = works.first { $0.isUgoira } ?? works.first
         nextURL = nil
         galleryLayoutMode = .threeColumnMasonry
+    }
+
+    func presentDownloadedReaderVisualQA() {
+        activateVisualQASampleSession()
+        selectedRoute = .downloads
+        focusedUser = nil
+        bookmarkTagFilter = nil
+        selectedSpotlightArticle = nil
+        selectedArtwork = nil
+        errorMessage = nil
+        isLoading = false
+        isLoadingMore = false
+        activeFeedSnapshotRestoration = nil
+        allArtworks = []
+        artworks = []
+        searchPopularPreviewArtworks = []
+        nextURL = nil
+        let item = VisualQASampleData.downloadedReaderItem()
+        downloads.downloadDirectoryPath = item.folderPath ?? downloads.downloadDirectoryPath
+        downloads.downloadSearchText = ""
+        downloads.downloadQueueFilter = .all
+        downloads.downloadQueueSort = .newest
+        downloads.items = [item]
     }
 
     func presentLocalSampleFeed(for route: PixivRoute) {

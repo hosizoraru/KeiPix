@@ -6,6 +6,7 @@ struct DownloadQueueView: View {
     @State private var selectedPreview: DownloadedPreview?
     @State private var pendingDangerAction: DownloadDangerAction?
     @State private var actionMessage: String?
+    @State private var didPresentVisualQAPreview = false
 
     var body: some View {
         let visibleItems = store.downloads.filteredItems
@@ -90,6 +91,9 @@ struct DownloadQueueView: View {
         .task(id: actionMessage) {
             await dismissActionMessageIfNeeded(actionMessage)
         }
+        .task {
+            presentDownloadedReaderVisualQAIfNeeded()
+        }
         .confirmationDialog(
             pendingDangerAction?.title ?? L10n.downloadActions,
             isPresented: downloadDangerActionBinding,
@@ -156,6 +160,17 @@ struct DownloadQueueView: View {
             }
             selectedPreview = .ugoira(item: item, zipURL: URL(fileURLWithPath: filePath))
         }
+    }
+
+    private func presentDownloadedReaderVisualQAIfNeeded() {
+        guard VisualQALaunchArgument.contains(.downloadedReader),
+              didPresentVisualQAPreview == false,
+              let item = store.downloads.filteredItems.first(where: { store.downloads.hasReadableImages(for: $0) })
+        else {
+            return
+        }
+        didPresentVisualQAPreview = true
+        openDownloadedItem(item)
     }
 
     private var downloadDangerActionBinding: Binding<Bool> {

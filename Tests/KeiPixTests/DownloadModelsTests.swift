@@ -21,6 +21,19 @@ struct DownloadModelsTests {
         #expect(DownloadRetryBackoff.delay(forRetryIndex: 999) == 60)
     }
 
+    @MainActor
+    @Test("Downloaded reader visual QA fixture writes readable local pages")
+    func downloadedReaderVisualQAFixture() {
+        let item = VisualQASampleData.downloadedReaderItem()
+
+        #expect(item.status == .completed)
+        #expect(item.resolvedArtifactKind == .imagePages)
+        #expect(item.pageCount == 4)
+        #expect(item.completedPages == 4)
+        #expect(item.downloadedFilePaths?.count == 4)
+        #expect(item.downloadedFilePaths?.allSatisfy { FileManager.default.fileExists(atPath: $0) } == true)
+    }
+
     private func downloadItem(sourcePageIndexes: [Int]) -> ArtworkDownloadItem {
         ArtworkDownloadItem(
             id: UUID(),

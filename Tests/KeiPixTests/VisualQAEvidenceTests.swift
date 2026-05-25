@@ -50,6 +50,13 @@ struct VisualQAEvidenceTests {
                 manifestPath: "/tmp/download-queue.md"
             ),
             VisualQAEvidenceManifest(
+                id: "downloaded-reader",
+                surface: .downloadedReader,
+                capturedAt: "20260525T103320Z",
+                screenshotPath: "downloaded-reader.png",
+                manifestPath: "/tmp/downloaded-reader.md"
+            ),
+            VisualQAEvidenceManifest(
                 id: "reader",
                 surface: .readerWindow,
                 capturedAt: "20260525T103329Z",
@@ -68,6 +75,7 @@ struct VisualQAEvidenceTests {
         #expect(index.covers([.discoverDashboard, .galleryFeed]))
         #expect(index.covers([.galleryFeed, .pixivision]) == false)
         #expect(index.covers([.downloadQueue, .readerWindow]))
+        #expect(index.covers([.downloadQueue, .downloadedReader]))
         #expect(index.covers([.settingsWindow]))
         #expect(index.summary(for: [.galleryFeed]).contains("1/1"))
         #expect(VisualQASurface(rawValue: "batch-bookmark-preview") == .batchBookmarkPreview)
@@ -82,12 +90,14 @@ struct VisualQAEvidenceTests {
         #expect(VisualQASurface(rawValue: "ranking") == .ranking)
         #expect(VisualQASurface(rawValue: "muted-content") == .mutedContent)
         #expect(VisualQASurface(rawValue: "ugoira-player") == .ugoiraPlayer)
+        #expect(VisualQASurface(rawValue: "downloaded-reader") == .downloadedReader)
         #expect(VisualQALaunchArgument.mangaWatchlist.surface == .mangaWatchlist)
         #expect(VisualQALaunchArgument.seriesSheet.surface == .seriesSheet)
         #expect(VisualQALaunchArgument.cachedFeed.surface == .cachedFeed)
         #expect(VisualQALaunchArgument.ranking.surface == .ranking)
         #expect(VisualQALaunchArgument.mutedContent.surface == .mutedContent)
         #expect(VisualQALaunchArgument.ugoiraPlayer.surface == .ugoiraPlayer)
+        #expect(VisualQALaunchArgument.downloadedReader.surface == .downloadedReader)
         #expect(VisualQALaunchArgument.galleryAuto.galleryLayoutMode == .autoMasonry)
         #expect(VisualQALaunchArgument.galleryTwoColumn.galleryLayoutMode == .twoColumnMasonry)
         #expect(VisualQALaunchArgument.galleryThreeColumn.galleryLayoutMode == .threeColumnMasonry)

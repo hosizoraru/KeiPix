@@ -16,6 +16,7 @@ enum VisualQASurface: String, CaseIterable, Identifiable, Sendable {
     case cachedFeed = "cached-feed"
     case narrowWindow = "narrow-window"
     case downloadQueue = "download-queue"
+    case downloadedReader = "downloaded-reader"
     case readerWindow = "reader-window"
     case batchBookmarkPreview = "batch-bookmark-preview"
     case settingsWindow = "settings-window"
