@@ -4,6 +4,7 @@ import SwiftUI
 struct KeiPixApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @Environment(\.openWindow) private var openWindow
+    @FocusedValue(\.gallerySelectionCommandActions) private var gallerySelectionCommandActions
     @State private var store = KeiPixStore()
 
     var body: some Scene {
@@ -124,6 +125,31 @@ struct KeiPixApp: App {
                 }
                 .keyboardShortcut("c", modifiers: [.command, .shift])
                 .disabled(store.selectedArtwork?.pixivURL == nil)
+
+                Divider()
+
+                Button(L10n.selectAll) {
+                    gallerySelectionCommandActions?.selectAllVisible()
+                }
+                .keyboardShortcut("a", modifiers: [.command])
+                .disabled(gallerySelectionCommandActions?.canSelectAll != true)
+
+                Button(L10n.clearSelection) {
+                    gallerySelectionCommandActions?.clearSelection()
+                }
+                .keyboardShortcut("a", modifiers: [.command, .shift])
+                .disabled(gallerySelectionCommandActions?.canClear != true)
+
+                Button(L10n.copySelectedArtworkLinks) {
+                    gallerySelectionCommandActions?.copySelectedLinks()
+                }
+                .keyboardShortcut("c", modifiers: [.command, .option])
+                .disabled(gallerySelectionCommandActions?.canCopyLinks != true)
+
+                Button(L10n.batchDownload) {
+                    gallerySelectionCommandActions?.downloadSelected()
+                }
+                .disabled(gallerySelectionCommandActions?.canDownload != true)
             }
 
             CommandMenu(L10n.downloads) {

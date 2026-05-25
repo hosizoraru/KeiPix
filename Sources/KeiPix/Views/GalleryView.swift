@@ -81,6 +81,7 @@ private struct GalleryFeedView: View {
     @Bindable var store: KeiPixStore
     @Binding var actionMessage: String?
     @State private var artworkSelection = GalleryArtworkSelection()
+    @Environment(\.openWindow) private var openWindow
 
     var body: some View {
         ScrollView {
@@ -127,6 +128,55 @@ private struct GalleryFeedView: View {
         .onChange(of: store.selectedRoute) { _, _ in
             artworkSelection.clear()
         }
+        .focusedSceneValue(\.gallerySelectionCommandActions, gallerySelectionCommandActions)
+    }
+
+    private var gallerySelectionCommandActions: GallerySelectionCommandActions? {
+        guard store.selectedRoute.usesArtworkFeed, store.artworks.isEmpty == false else { return nil }
+        let selectedWorks = selectedArtworks
+        let selectedArtworkLinks = selectedWorks.compactMap { $0.pixivURL?.absoluteString }
+        return GallerySelectionCommandActions(
+            canSelectAll: store.artworks.isEmpty == false,
+            canClear: artworkSelection.hasSelection,
+            canCopyLinks: selectedArtworkLinks.isEmpty == false,
+            canDownload: selectedWorks.isEmpty == false,
+            selectAllVisible: {
+                artworkSelection.selectAll(store.artworks.map(\.id))
+                artworkSelection.isSelectionMode = true
+            },
+            clearSelection: {
+                artworkSelection.clear()
+            },
+            copySelectedLinks: {
+                copySelectedArtworkLinks(selectedArtworkLinks)
+            },
+            downloadSelected: {
+                downloadSelectedArtworks(selectedWorks)
+            }
+        )
+    }
+
+    private var selectedArtworks: [PixivArtwork] {
+        store.artworks.filter { artworkSelection.contains($0.id) }
+    }
+
+    private func copySelectedArtworkLinks(_ links: [String]) {
+        guard links.isEmpty == false else { return }
+        PasteboardWriter.copy(links.joined(separator: "\n"))
+        actionMessage = String(format: L10n.copiedArtworkLinksFormat, links.count)
+    }
+
+    private func downloadSelectedArtworks(_ artworks: [PixivArtwork]) {
+        guard artworks.isEmpty == false else { return }
+        let queuedCount = store.enqueueDownloads(
+            artworks,
+            limit: min(max(artworks.count, 1), 100),
+            preferOriginal: true
+        )
+        guard queuedCount > 0 else { return }
+        actionMessage = String(format: L10n.queuedDownloadsFormat, queuedCount)
+        openWindow(id: "main")
+        store.select(.downloads)
     }
 }
 
