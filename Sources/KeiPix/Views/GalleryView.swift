@@ -278,12 +278,26 @@ private struct SignedOutView: View {
                     .frame(maxWidth: 480)
             }
 
-            Button {
-                store.isLoginPresented = true
-            } label: {
-                Label(L10n.login, systemImage: "person.crop.circle.badge.plus")
+            HStack(spacing: 10) {
+                Button {
+                    store.activateGuestMode()
+                } label: {
+                    Label(L10n.guestAccount, systemImage: "sparkles.rectangle.stack")
+                }
+
+                Button {
+                    store.isLoginPresented = true
+                } label: {
+                    Label(L10n.login, systemImage: "person.crop.circle.badge.plus")
+                }
+                .buttonStyle(.borderedProminent)
+
+                Button {
+                    store.isTokenLoginPresented = true
+                } label: {
+                    Label(L10n.importToken, systemImage: "key")
+                }
             }
-            .buttonStyle(.borderedProminent)
             .controlSize(.large)
         }
         .padding(28)

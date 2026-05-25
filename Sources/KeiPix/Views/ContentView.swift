@@ -109,6 +109,10 @@ struct ContentView: View {
             LoginSheetView(store: store)
                 .frame(width: 900, height: 680)
         }
+        .sheet(isPresented: $store.isTokenLoginPresented) {
+            TokenLoginSheetView(store: store)
+                .frame(width: 460, height: 300)
+        }
         .sheet(item: $store.imageSourceSearchRequest) { request in
             ImageSourceSearchSheet(store: store, request: request)
                 .frame(width: 720, height: 560)

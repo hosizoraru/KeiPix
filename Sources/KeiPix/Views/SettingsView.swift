@@ -10,6 +10,7 @@ struct SettingsView: View {
     @State private var settingsActionMessage: String?
     @State private var isLogoutConfirmationPresented = false
     @State private var isAccountLoginPresented = false
+    @State private var isTokenLoginPresented = false
     @State private var accountRemovalCandidate: PixivStoredAccount?
     @State private var isMutedContentSyncConfirmationPresented = false
     @State private var isMutedContentUploadConfirmationPresented = false
@@ -62,6 +63,10 @@ struct SettingsView: View {
         .sheet(isPresented: $isAccountLoginPresented) {
             LoginSheetView(store: store)
                 .frame(width: 900, height: 680)
+        }
+        .sheet(isPresented: $isTokenLoginPresented) {
+            TokenLoginSheetView(store: store)
+                .frame(width: 460, height: 300)
         }
         .confirmationDialog(
             L10n.logout,
@@ -464,50 +469,58 @@ struct SettingsView: View {
     @ViewBuilder
     private var accountSettingsSection: some View {
         if settingsMatches(accountSettingsTerms) {
-            if let session = store.session {
-                Section(L10n.account) {
+            Section(L10n.account) {
+                Picker(L10n.accountMode, selection: accountSessionModeBinding) {
+                    ForEach(AccountSessionMode.allCases) { mode in
+                        Label(mode.title, systemImage: mode.systemImage)
+                            .tag(mode)
+                    }
+                }
+                .pickerStyle(.segmented)
+
+                if let session = store.session {
                     LabeledContent(
                         L10n.profile,
                         value: store.showAccountIdentity ? "\(session.user.name) @\(session.user.account)" : L10n.hidden
                     )
+                }
 
-                    if store.storedAccounts.isEmpty == false {
-                        ForEach(store.storedAccounts) { account in
-                            StoredAccountRow(
-                                account: account,
-                                isCurrent: account.id == session.user.id,
-                                showIdentity: store.showAccountIdentity,
-                                switchAccount: {
-                                    Task {
-                                        await store.switchAccount(userID: account.id)
-                                        showSettingsActionMessage(String(format: L10n.switchedAccountFormat, account.name))
-                                    }
-                                },
-                                removeAccount: {
-                                    accountRemovalCandidate = account
+                if store.storedAccounts.isEmpty == false {
+                    ForEach(store.storedAccounts) { account in
+                        StoredAccountRow(
+                            account: account,
+                            isCurrent: store.accountSessionMode == .real && account.id == store.session?.user.id,
+                            showIdentity: store.showAccountIdentity,
+                            switchAccount: {
+                                Task {
+                                    await store.switchAccount(userID: account.id)
+                                    showSettingsActionMessage(String(format: L10n.switchedAccountFormat, account.name))
                                 }
-                            )
-                        }
+                            },
+                            removeAccount: {
+                                accountRemovalCandidate = account
+                            }
+                        )
                     }
+                }
 
-                    Button {
-                        isAccountLoginPresented = true
-                    } label: {
-                        Label(L10n.addAccount, systemImage: "person.crop.circle.badge.plus")
-                    }
+                Button {
+                    isAccountLoginPresented = true
+                } label: {
+                    Label(L10n.addAccount, systemImage: "person.crop.circle.badge.plus")
+                }
 
+                Button {
+                    isTokenLoginPresented = true
+                } label: {
+                    Label(L10n.importToken, systemImage: "key")
+                }
+
+                if store.accountSessionMode == .real, store.session != nil {
                     Button(role: .destructive) {
                         isLogoutConfirmationPresented = true
                     } label: {
                         Label(L10n.logout, systemImage: "rectangle.portrait.and.arrow.right")
-                    }
-                }
-            } else {
-                Section(L10n.account) {
-                    Button {
-                        isAccountLoginPresented = true
-                    } label: {
-                        Label(L10n.addAccount, systemImage: "person.crop.circle.badge.plus")
                     }
                 }
             }
@@ -639,12 +652,35 @@ struct SettingsView: View {
     private var accountSettingsTerms: [String] {
         [
             L10n.account,
+            L10n.accountMode,
+            L10n.guestAccount,
+            L10n.testModeAccount,
             L10n.profile,
             L10n.addAccount,
+            L10n.importToken,
             L10n.switchAccount,
             L10n.removeAccount,
             L10n.logout
         ]
+    }
+
+    private var accountSessionModeBinding: Binding<AccountSessionMode> {
+        Binding {
+            store.accountSessionMode
+        } set: { mode in
+            switch mode {
+            case .real:
+                if let account = store.storedAccounts.first {
+                    Task { await store.switchAccount(userID: account.id) }
+                } else {
+                    isAccountLoginPresented = true
+                }
+            case .guest:
+                store.activateGuestMode()
+            case .visualQA:
+                store.activateVisualQATestMode()
+            }
+        }
     }
 
     private var advancedQASettingsTerms: [String] {

@@ -558,7 +558,17 @@ enum L10n {
     static var pageThenArtworkSwipe: String { text("Switch artwork at edges") }
     static var privacy: String { text("Privacy") }
     static var account: String { text("Account") }
+    static var accountMode: String { text("Account Mode") }
+    static var realAccount: String { text("Real Account") }
+    static var realAccountSubtitle: String { text("Use saved Pixiv sessions from Keychain.") }
+    static var guestAccount: String { text("Guest Account") }
+    static var guestAccountSubtitle: String { text("Preview KeiPix with local sample artworks.") }
+    static var testModeAccount: String { text("Test Mode Account") }
+    static var testModeAccountSubtitle: String { text("Run repeatable QA surfaces with local fixtures.") }
     static var addAccount: String { text("Add Account") }
+    static var importToken: String { text("Import Token") }
+    static var importTokenHint: String { text("Paste a Pixiv refresh token exported from another client. KeiPix refreshes it once, stores the new session in Keychain, and switches to the imported account.") }
+    static var refreshToken: String { text("Refresh Token") }
     static var currentAccount: String { text("Current Account") }
     static var switchAccount: String { text("Switch Account") }
     static var removeAccount: String { text("Remove Account") }

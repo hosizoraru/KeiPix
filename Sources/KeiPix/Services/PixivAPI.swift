@@ -118,6 +118,20 @@ actor PixivAPI {
         return newSession
     }
 
+    func login(refreshToken: String) async throws -> PixivSession {
+        let response: PixivAuthResponse = try await oauthToken(parameters: [
+            "client_id": Self.clientID,
+            "client_secret": Self.clientSecret,
+            "grant_type": "refresh_token",
+            "refresh_token": refreshToken.trimmingCharacters(in: .whitespacesAndNewlines),
+            "include_policy": "true"
+        ])
+        let newSession = response.session
+        session = newSession
+        try tokenStore.save(newSession)
+        return newSession
+    }
+
     func recommendedIllusts() async throws -> PixivFeedResponse {
         try await requestFeed(path: "/v1/illust/recommended", query: [
             "include_privacy_policy": "true",

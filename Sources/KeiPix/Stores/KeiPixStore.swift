@@ -44,6 +44,8 @@ final class KeiPixStore {
     var isLoading = false
     var isLoadingMore = false
     var isLoginPresented = false
+    var isTokenLoginPresented = false
+    var accountSessionMode = KeiPixStore.loadAccountSessionMode()
     var appLanguage = UserDefaults.standard.string(forKey: "appLanguage")
         .flatMap(AppLanguage.init(rawValue:)) ?? .automatic
     var useOriginalImagesInDetail = UserDefaults.standard.bool(forKey: "useOriginalImagesInDetail")
@@ -99,6 +101,7 @@ final class KeiPixStore {
     var hasNextPage: Bool { nextURL != nil }
     var compactArtworkCards: Bool { galleryLayoutMode.usesCompactGrid }
     var showsSidebarAccountIdentity: Bool { showAccountIdentity && privacyModeEnabled == false }
+    var usesLocalSampleAccount: Bool { accountSessionMode.usesLocalSampleData }
     var isMainWindowCaptureProtected: Bool {
         screenCaptureProtectionEnabled && selectedArtwork?.requiresScreenCaptureProtection == true
     }
@@ -121,13 +124,23 @@ final class KeiPixStore {
     init() {
         if VisualQALaunchArgument.isActive {
             activateVisualQASampleSession()
+        } else if accountSessionMode == .guest {
+            Task { @MainActor in
+                storedAccounts = (try? await api.storedAccounts()) ?? []
+                activateGuestMode()
+            }
+        } else if accountSessionMode == .visualQA {
+            Task { @MainActor in
+                storedAccounts = (try? await api.storedAccounts()) ?? []
+                activateVisualQATestMode()
+            }
         }
 
         if let visualQAGalleryLayoutMode = VisualQALaunchArgument.activeGalleryLayoutMode {
             presentGalleryLayoutVisualQA(mode: visualQAGalleryLayoutMode)
         } else if VisualQALaunchArgument.contains(.cachedFeed) {
             presentCachedFeedVisualQA()
-        } else if VisualQALaunchArgument.isActive == false {
+        } else if VisualQALaunchArgument.isActive == false, accountSessionMode == .real {
             Task { await bootstrap() }
         }
     }
@@ -156,6 +169,9 @@ final class KeiPixStore {
         defer { isLoading = false }
 
         do {
+            accountSessionMode = .real
+            UserDefaults.standard.set(AccountSessionMode.real.rawValue, forKey: "accountSessionMode")
+            UserDefaults.standard.set(true, forKey: "accountSessionModeUserSelected")
             session = try await api.login(code: code)
             storedAccounts = try await api.storedAccounts()
             isLoginPresented = false
@@ -167,8 +183,33 @@ final class KeiPixStore {
         }
     }
 
+    func completeTokenLogin(refreshToken: String) async -> Bool {
+        isLoading = true
+        errorMessage = nil
+        defer { isLoading = false }
+
+        do {
+            accountSessionMode = .real
+            UserDefaults.standard.set(AccountSessionMode.real.rawValue, forKey: "accountSessionMode")
+            UserDefaults.standard.set(true, forKey: "accountSessionModeUserSelected")
+            session = try await api.login(refreshToken: refreshToken)
+            storedAccounts = try await api.storedAccounts()
+            isTokenLoginPresented = false
+            selectedRoute = .home
+            await refreshRestrictedModeSetting()
+            await reloadCurrentFeed()
+            return true
+        } catch {
+            errorMessage = error.localizedDescription
+            return false
+        }
+    }
+
     func logout() async {
         do {
+            accountSessionMode = .real
+            UserDefaults.standard.set(AccountSessionMode.real.rawValue, forKey: "accountSessionMode")
+            UserDefaults.standard.set(true, forKey: "accountSessionModeUserSelected")
             session = try await api.clearSession()
             storedAccounts = try await api.storedAccounts()
             resetLoadedSessionContent()
@@ -188,6 +229,9 @@ final class KeiPixStore {
         defer { isLoading = false }
 
         do {
+            accountSessionMode = .real
+            UserDefaults.standard.set(AccountSessionMode.real.rawValue, forKey: "accountSessionMode")
+            UserDefaults.standard.set(true, forKey: "accountSessionModeUserSelected")
             session = try await api.selectAccount(userID: userID)
             storedAccounts = try await api.storedAccounts()
             resetLoadedSessionContent()
@@ -245,6 +289,10 @@ final class KeiPixStore {
             selectedSpotlightArticle = nil
         }
         if route.usesArtworkFeed {
+            if usesLocalSampleAccount {
+                presentLocalSampleFeed(for: route)
+                return
+            }
             Task { await reloadCurrentFeed() }
         } else {
             activeFeedRequestID = nil
@@ -268,7 +316,7 @@ final class KeiPixStore {
     }
 
     func openArtworkFromWebLink(_ artworkID: Int) async {
-        guard session != nil else {
+        guard session != nil, usesLocalSampleAccount == false else {
             isLoginPresented = true
             return
         }
@@ -298,7 +346,7 @@ final class KeiPixStore {
             return L10n.unsupportedPixivLink
         }
 
-        guard session != nil else {
+        guard session != nil, usesLocalSampleAccount == false else {
             isLoginPresented = true
             return L10n.loginRequiredForPixivLink
         }
@@ -327,7 +375,7 @@ final class KeiPixStore {
 
     @discardableResult
     func openPixivID(_ id: Int, target: PixivIDOpenTarget) async -> String {
-        guard session != nil else {
+        guard session != nil, usesLocalSampleAccount == false else {
             isLoginPresented = true
             return L10n.loginRequiredForPixivLink
         }
@@ -398,6 +446,10 @@ final class KeiPixStore {
 
     func reloadCurrentFeed() async {
         let context = currentFeedRequestContext()
+        if usesLocalSampleAccount {
+            presentLocalSampleFeed(for: context.route)
+            return
+        }
         guard session != nil else {
             allArtworks = []
             artworks = []
@@ -568,7 +620,7 @@ final class KeiPixStore {
     }
 
     func refreshSearchSuggestions() async {
-        guard session != nil else {
+        guard session != nil, usesLocalSampleAccount == false else {
             searchSuggestions = []
             return
         }
@@ -624,7 +676,7 @@ final class KeiPixStore {
     }
 
     func refreshRestrictedModeSetting() async {
-        guard session != nil else {
+        guard session != nil, usesLocalSampleAccount == false else {
             restrictedModeEnabled = nil
             return
         }
@@ -962,6 +1014,16 @@ final class KeiPixStore {
             return defaultValue
         }
         return value
+    }
+
+    private static func loadAccountSessionMode() -> AccountSessionMode {
+        let mode = UserDefaults.standard.string(forKey: "accountSessionMode")
+            .flatMap(AccountSessionMode.init(rawValue:)) ?? .real
+        let userSelected = UserDefaults.standard.bool(forKey: "accountSessionModeUserSelected")
+        if mode == .visualQA, userSelected == false {
+            return .real
+        }
+        return mode
     }
 
     private static func loadIntStringDictionary(_ key: String) -> [Int: String] {

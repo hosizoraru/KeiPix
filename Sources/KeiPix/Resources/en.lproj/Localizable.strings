@@ -960,3 +960,13 @@
 "Results" = "results";
 "More available" = "More available";
 "End of feed" = "End of feed";
+"Account Mode" = "Account Mode";
+"Real Account" = "Real Account";
+"Use saved Pixiv sessions from Keychain." = "Use saved Pixiv sessions from Keychain.";
+"Guest Account" = "Guest Account";
+"Preview KeiPix with local sample artworks." = "Preview KeiPix with local sample artworks.";
+"Test Mode Account" = "Test Mode Account";
+"Run repeatable QA surfaces with local fixtures." = "Run repeatable QA surfaces with local fixtures.";
+"Import Token" = "Import Token";
+"Paste a Pixiv refresh token exported from another client. KeiPix refreshes it once, stores the new session in Keychain, and switches to the imported account." = "Paste a Pixiv refresh token exported from another client. KeiPix refreshes it once, stores the new session in Keychain, and switches to the imported account.";
+"Refresh Token" = "Refresh Token";

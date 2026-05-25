@@ -1,6 +1,22 @@
 import Foundation
 
 enum VisualQASampleData {
+    static let guestSession: PixivSession = {
+        let payload = """
+        {
+          "accessToken": "guest-preview-access-token",
+          "refreshToken": "guest-preview-refresh-token",
+          "user": {
+            "id": "5000",
+            "name": "Guest Preview",
+            "account": "guest_preview",
+            "is_premium": false
+          }
+        }
+        """
+        return try! JSONDecoder().decode(PixivSession.self, from: Data(payload.utf8))
+    }()
+
     static let sampleSession: PixivSession = {
         let payload = """
         {
@@ -229,6 +245,38 @@ enum VisualQASampleData {
         )
     ]
 
+    static func localFeed(for route: PixivRoute, searchText: String = "") -> PixivFeedResponse {
+        var works = galleryLayoutArtworks
+        switch route {
+        case .search:
+            let normalized = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+            if normalized.isEmpty == false {
+                works = works.filter { artwork in
+                    artwork.title.localizedCaseInsensitiveContains(normalized)
+                        || artwork.user.name.localizedCaseInsensitiveContains(normalized)
+                        || artwork.tags.contains { tag in
+                            tag.name.localizedCaseInsensitiveContains(normalized)
+                        }
+                }
+            }
+        case .mangaRecommended, .newManga, .mangaRankingDaily, .mangaRankingWeekly, .mangaRankingMonthly, .mangaRankingDailyR18:
+            works = works.filter { $0.type == "manga" || $0.pageCount > 1 }
+        case .rankingDailyAI:
+            works = works.filter(\.isAI)
+        case .rankingDailyR18, .rankingWeeklyR18:
+            works = works.filter(\.isR18)
+        case .rankingDailyR18AI:
+            works = works.filter { $0.isR18 && $0.isAI }
+        case .rankingWeeklyR18G:
+            works = works.filter(\.isR18G)
+        case .history:
+            works = Array(works.reversed())
+        default:
+            break
+        }
+        return PixivFeedResponse(illusts: works, nextURL: nil)
+    }
+
     private static func decodeArtwork(
         id: Int,
         title: String,
@@ -283,11 +331,33 @@ enum VisualQASampleData {
 
 @MainActor
 extension KeiPixStore {
-    func activateVisualQASampleSession() {
-        session = VisualQASampleData.sampleSession
-        storedAccounts = [PixivStoredAccount(session: VisualQASampleData.sampleSession)]
+    func activateGuestMode() {
+        accountSessionMode = .guest
+        UserDefaults.standard.set(AccountSessionMode.guest.rawValue, forKey: "accountSessionMode")
+        UserDefaults.standard.set(true, forKey: "accountSessionModeUserSelected")
+        session = VisualQASampleData.guestSession
         restrictedModeEnabled = false
         isLoginPresented = false
+        presentLocalSampleFeed(for: selectedRoute.usesArtworkFeed ? selectedRoute : .illustrations)
+    }
+
+    func activateVisualQATestMode(preserveStoredAccounts: Bool = true, persist: Bool = true) {
+        accountSessionMode = .visualQA
+        if persist {
+            UserDefaults.standard.set(AccountSessionMode.visualQA.rawValue, forKey: "accountSessionMode")
+            UserDefaults.standard.set(true, forKey: "accountSessionModeUserSelected")
+        }
+        session = VisualQASampleData.sampleSession
+        if preserveStoredAccounts == false {
+            storedAccounts = [PixivStoredAccount(session: VisualQASampleData.sampleSession)]
+        }
+        restrictedModeEnabled = false
+        isLoginPresented = false
+        presentLocalSampleFeed(for: selectedRoute.usesArtworkFeed ? selectedRoute : .illustrations)
+    }
+
+    func activateVisualQASampleSession() {
+        activateVisualQATestMode(preserveStoredAccounts: false, persist: false)
     }
 
     func presentGalleryLayoutVisualQA(mode: GalleryLayoutMode) {
@@ -306,6 +376,22 @@ extension KeiPixStore {
         nextURL = nil
         activeFeedSnapshotRestoration = nil
         galleryLayoutMode = mode
+    }
+
+    func presentLocalSampleFeed(for route: PixivRoute) {
+        focusedUser = nil
+        bookmarkTagFilter = nil
+        selectedSpotlightArticle = nil
+        selectedRoute = route
+        errorMessage = nil
+        isLoading = false
+        isLoadingMore = false
+        activeFeedSnapshotRestoration = nil
+        searchPopularPreviewArtworks = []
+        let response = VisualQASampleData.localFeed(for: route, searchText: searchText)
+        allArtworks = response.illusts
+        nextURL = response.nextURL
+        applyContentFilters()
     }
 
     func presentCachedFeedVisualQA() {

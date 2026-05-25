@@ -960,3 +960,13 @@
 "Results" = "个结果";
 "More available" = "可继续加载";
 "End of feed" = "已到末尾";
+"Account Mode" = "账号模式";
+"Real Account" = "真实账号";
+"Use saved Pixiv sessions from Keychain." = "使用钥匙串里保存的 Pixiv 登录态。";
+"Guest Account" = "游客账号";
+"Preview KeiPix with local sample artworks." = "使用本地样本作品预览 KeiPix。";
+"Test Mode Account" = "测试模式账号";
+"Run repeatable QA surfaces with local fixtures." = "使用本地固定样本运行可重复 QA 页面。";
+"Import Token" = "导入 Token";
+"Paste a Pixiv refresh token exported from another client. KeiPix refreshes it once, stores the new session in Keychain, and switches to the imported account." = "粘贴从其他客户端导出的 Pixiv refresh token。KeiPix 会刷新一次，保存新的登录态到钥匙串，并切换到导入账号。";
+"Refresh Token" = "Refresh Token";
