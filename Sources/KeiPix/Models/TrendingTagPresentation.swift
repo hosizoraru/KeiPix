@@ -1,49 +1,28 @@
 import CoreGraphics
 
 struct TrendingTagPresentation {
-    static let fallbackAspectRatio: CGFloat = 1
+    static let fallbackAspectRatio = DiscoveryCardPresentation.fallbackArtworkAspectRatio
 
-    let aspectRatio: CGFloat
+    private let presentation: DiscoveryCardPresentation
 
     init(tag: PixivTrendingTag) {
         let artworkRatio = tag.artwork.aspectRatio
-        aspectRatio = artworkRatio.isFinite && artworkRatio > 0 ? artworkRatio : Self.fallbackAspectRatio
+        presentation = DiscoveryCardPresentation(kind: .trendingTag, aspectRatio: artworkRatio)
     }
 
     init(aspectRatio: CGFloat) {
-        self.aspectRatio = aspectRatio.isFinite && aspectRatio > 0 ? aspectRatio : Self.fallbackAspectRatio
+        presentation = DiscoveryCardPresentation(kind: .trendingTag, aspectRatio: aspectRatio)
+    }
+
+    var aspectRatio: CGFloat {
+        presentation.aspectRatio
     }
 
     func span(for columnCount: Int) -> Int {
-        if aspectRatio >= 2.35, columnCount >= 3 {
-            return min(3, columnCount)
-        }
-        if aspectRatio >= 1.48, columnCount >= 2 {
-            return 2
-        }
-        return 1
+        presentation.span(for: columnCount)
     }
 
     func height(for width: CGFloat, span: Int, columnCount: Int) -> CGFloat {
-        let naturalHeight = width / max(aspectRatio, 0.1)
-        if span >= 3, columnCount >= 3 {
-            return naturalHeight.clamped(to: 118...240)
-        }
-        if span == 2 {
-            return naturalHeight.clamped(to: 118...230)
-        }
-        if aspectRatio < 0.72 {
-            return naturalHeight.clamped(to: 220...360)
-        }
-        if aspectRatio >= 1.48 {
-            return naturalHeight.clamped(to: 118...260)
-        }
-        return naturalHeight.clamped(to: 150...260)
-    }
-}
-
-private extension Comparable {
-    func clamped(to range: ClosedRange<Self>) -> Self {
-        min(max(self, range.lowerBound), range.upperBound)
+        presentation.height(for: width, span: span, columnCount: columnCount)
     }
 }

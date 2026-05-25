@@ -323,13 +323,14 @@ private struct SpotlightArticleCard: View {
     @State private var isHovering = false
 
     var body: some View {
+        let presentation = DiscoveryCardPresentation(kind: .spotlightArticle, aspectRatio: nil)
+
         Button(action: select) {
             VStack(alignment: .leading, spacing: 10) {
-                RemoteImageView(url: article.thumbnail)
-                    .aspectRatio(16.0 / 9.0, contentMode: .fill)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 156)
-                    .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                SpotlightArticleThumbnail(
+                    url: article.thumbnail,
+                    aspectRatio: presentation.spotlightImageAspectRatio
+                )
 
                 VStack(alignment: .leading, spacing: 8) {
                     Text(primaryTitle)
@@ -374,15 +375,15 @@ private struct SpotlightArticleCard: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
             .padding(12)
-            .frame(maxWidth: .infinity, minHeight: 286, alignment: .topLeading)
-            .background(.quinary, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+            .frame(maxWidth: .infinity, minHeight: presentation.height(for: 320, span: 1, columnCount: 1), alignment: .topLeading)
+            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
             .overlay {
-                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
                     .stroke(isSelected ? Color.accentColor : Color.secondary.opacity(isHovering ? 0.28 : 0.1), lineWidth: isSelected ? 2 : 1)
             }
         }
         .buttonStyle(.plain)
-        .contentShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .contentShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
         .shadow(color: .black.opacity(isHovering ? 0.12 : 0.04), radius: isHovering ? 8 : 2, y: isHovering ? 4 : 1)
         .animation(.snappy(duration: 0.16), value: isHovering)
         .onHover { isHovering = $0 }
@@ -422,5 +423,34 @@ private struct SpotlightArticleCard: View {
             return nil
         }
         return normalizedTitle
+    }
+}
+
+private struct SpotlightArticleThumbnail: View {
+    let url: URL?
+    let aspectRatio: CGFloat
+
+    var body: some View {
+        ZStack {
+            Color.black.opacity(0.82)
+
+            RemoteImageView(url: url, contentMode: .fill)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+            LinearGradient(
+                colors: [.black.opacity(0), .black.opacity(0.18)],
+                startPoint: .center,
+                endPoint: .bottom
+            )
+            .allowsHitTesting(false)
+        }
+        .aspectRatio(aspectRatio, contentMode: .fit)
+        .frame(maxWidth: .infinity)
+        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .stroke(.white.opacity(0.08), lineWidth: 1)
+        }
+        .clipped()
     }
 }

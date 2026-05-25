@@ -159,59 +159,54 @@ private struct TrendingTagCard: View {
 
     var body: some View {
         Button(action: search) {
-            GeometryReader { proxy in
-                ZStack(alignment: .bottomLeading) {
-                    Color.black.opacity(0.82)
+            ZStack(alignment: .bottomLeading) {
+                Color.black
 
-                    TrendingTagArtworkImage(url: tag.artwork.thumbnailURL, imageLoaded: imageLoaded)
-                        .frame(width: proxy.size.width, height: proxy.size.height)
+                TrendingTagArtworkImage(url: tag.artwork.thumbnailURL, imageLoaded: imageLoaded)
 
-                    LinearGradient(
-                        stops: [
-                            .init(color: .black.opacity(0), location: 0),
-                            .init(color: .black.opacity(0.18), location: 0.46),
-                            .init(color: .black.opacity(0.68), location: 1)
-                        ],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                    .frame(width: proxy.size.width, height: max(72, proxy.size.height * 0.48))
-                    .frame(width: proxy.size.width, height: proxy.size.height, alignment: .bottom)
-                    .allowsHitTesting(false)
+                LinearGradient(
+                    stops: [
+                        .init(color: .black.opacity(0), location: 0),
+                        .init(color: .black.opacity(0.18), location: 0.48),
+                        .init(color: .black.opacity(0.72), location: 1)
+                    ],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+                .frame(maxHeight: .infinity, alignment: .bottom)
+                .allowsHitTesting(false)
 
-                    if showContentBadges {
-                        ArtworkContentBadgesView(badges: tag.artwork.contentBadges, style: .overlay)
-                            .padding(8)
-                            .frame(width: proxy.size.width, height: proxy.size.height, alignment: .topLeading)
-                    }
-
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("#\(tag.name)")
-                            .font(.headline.weight(.semibold))
-                            .lineLimit(1)
-                            .trendingTagTextChip()
-
-                        if let translatedName {
-                            Text(translatedName)
-                                .font(.caption)
-                                .lineLimit(1)
-                                .trendingTagTextChip(opacity: 0.34)
-                        }
-                    }
-                    .foregroundStyle(.white)
-                    .shadow(color: .black.opacity(0.28), radius: 2, y: 1)
-                    .padding(8)
+                if showContentBadges {
+                    ArtworkContentBadgesView(badges: tag.artwork.contentBadges, style: .overlay)
+                        .padding(8)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
                 }
-                .frame(width: proxy.size.width, height: proxy.size.height)
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("#\(tag.name)")
+                        .font(.headline.weight(.semibold))
+                        .lineLimit(1)
+                        .trendingTagTextChip()
+
+                    if let translatedName {
+                        Text(translatedName)
+                            .font(.caption)
+                            .lineLimit(1)
+                            .trendingTagTextChip(opacity: 0.34)
+                    }
+                }
+                .foregroundStyle(.white)
+                .shadow(color: .black.opacity(0.28), radius: 2, y: 1)
+                .padding(8)
             }
         }
         .buttonStyle(.plain)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .contentShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .contentShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
         .compositingGroup()
         .overlay {
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
                 .stroke(.white.opacity(isHovering ? 0.32 : 0), lineWidth: 1)
         }
         .shadow(color: .black.opacity(isHovering ? 0.16 : 0), radius: isHovering ? 12 : 0, y: isHovering ? 8 : 0)
@@ -276,52 +271,48 @@ private struct TrendingTagArtworkImage: View {
     @State private var failed = false
 
     var body: some View {
-        GeometryReader { proxy in
-            let size = proxy.size
-            ZStack {
-                if let image {
-                    filledImage(image, size: size)
-                } else if failed {
-                    Rectangle()
-                        .fill(
-                            LinearGradient(
-                                colors: [.black.opacity(0.72), .black.opacity(0.92)],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
+        ZStack {
+            if let image {
+                filledImage(image)
+            } else if failed {
+                Rectangle()
+                    .fill(
+                        LinearGradient(
+                            colors: [.black.opacity(0.72), .black.opacity(0.92)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
                         )
-                        .overlay {
-                            Image(systemName: "photo")
-                                .font(.title3)
-                                .foregroundStyle(.white.opacity(0.58))
-                        }
-                } else {
-                    Rectangle()
-                        .fill(.black.opacity(0.78))
-                        .overlay {
-                            ProgressView()
-                                .controlSize(.small)
-                                .padding(8)
-                                .background(.thinMaterial, in: Circle())
-                        }
-                }
+                    )
+                    .overlay {
+                        Image(systemName: "photo")
+                            .font(.title3)
+                            .foregroundStyle(.white.opacity(0.58))
+                    }
+            } else {
+                Rectangle()
+                    .fill(.black.opacity(0.78))
+                    .overlay {
+                        ProgressView()
+                            .controlSize(.small)
+                            .padding(8)
+                            .background(.thinMaterial, in: Circle())
+                    }
             }
-            .frame(width: size.width, height: size.height)
-            .clipped()
-            .compositingGroup()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .clipped()
+        .compositingGroup()
         .task(id: url) {
             await load()
         }
     }
 
-    private func filledImage(_ image: NSImage, size: CGSize) -> some View {
+    private func filledImage(_ image: NSImage) -> some View {
         Image(nsImage: image)
             .resizable()
             .interpolation(.high)
             .aspectRatio(contentMode: .fill)
-            .frame(width: size.width, height: size.height)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
             .clipped()
             .allowsHitTesting(false)
     }

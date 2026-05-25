@@ -27,12 +27,14 @@ struct WebArticleView: NSViewRepresentable {
     var command: WebArticleCommand?
     var openArtworkLink: (Int) -> Void = { _ in }
     var openUserLink: (Int) -> Void = { _ in }
+    var openPixivLink: (URL) -> Void = { _ in }
 
     func makeCoordinator() -> Coordinator {
         Coordinator(
             navigationState: $navigationState,
             openArtworkLink: openArtworkLink,
-            openUserLink: openUserLink
+            openUserLink: openUserLink,
+            openPixivLink: openPixivLink
         )
     }
 
@@ -54,6 +56,7 @@ struct WebArticleView: NSViewRepresentable {
         context.coordinator.navigationState = $navigationState
         context.coordinator.openArtworkLink = openArtworkLink
         context.coordinator.openUserLink = openUserLink
+        context.coordinator.openPixivLink = openPixivLink
         context.coordinator.run(command, in: webView, homeURL: url)
         guard webView.url != url else { return }
         webView.load(URLRequest(url: url))
@@ -69,16 +72,19 @@ struct WebArticleView: NSViewRepresentable {
         var navigationState: Binding<WebArticleNavigationState>
         var openArtworkLink: (Int) -> Void
         var openUserLink: (Int) -> Void
+        var openPixivLink: (URL) -> Void
         private var lastCommandID: WebArticleCommand.ID?
 
         init(
             navigationState: Binding<WebArticleNavigationState>,
             openArtworkLink: @escaping (Int) -> Void,
-            openUserLink: @escaping (Int) -> Void
+            openUserLink: @escaping (Int) -> Void,
+            openPixivLink: @escaping (URL) -> Void
         ) {
             self.navigationState = navigationState
             self.openArtworkLink = openArtworkLink
             self.openUserLink = openUserLink
+            self.openPixivLink = openPixivLink
         }
 
         func run(_ command: WebArticleCommand?, in webView: WKWebView, homeURL: URL) {
@@ -112,7 +118,7 @@ struct WebArticleView: NSViewRepresentable {
             windowFeatures: WKWindowFeatures
         ) -> WKWebView? {
             if navigationAction.targetFrame == nil, let url = navigationAction.request.url {
-                if openNativeArtworkIfPossible(url) {
+                if openNativeDestinationIfPossible(url) {
                     return nil
                 }
                 configuration.userContentController.addUserScript(WebArticleView.readerStyleScript)
@@ -126,7 +132,7 @@ struct WebArticleView: NSViewRepresentable {
             decidePolicyFor navigationAction: WKNavigationAction
         ) async -> WKNavigationActionPolicy {
             if let url = navigationAction.request.url {
-                if openNativeArtworkIfPossible(url) {
+                if openNativeDestinationIfPossible(url) {
                     return .cancel
                 }
 
@@ -166,16 +172,24 @@ struct WebArticleView: NSViewRepresentable {
             webView.reload()
         }
 
-        private func openNativeArtworkIfPossible(_ url: URL) -> Bool {
-            guard let artworkID = PixivWebLinkResolver.artworkID(from: url) else {
-                if let userID = PixivWebLinkResolver.userID(from: url) {
-                    openUserLink(userID)
-                    return true
-                }
+        private func openNativeDestinationIfPossible(_ url: URL) -> Bool {
+            guard let destination = PixivWebLinkResolver.destination(from: url) else {
                 return false
             }
-            openArtworkLink(artworkID)
-            return true
+
+            switch destination {
+            case .artwork(let id):
+                openArtworkLink(id)
+                return true
+            case .user(let id):
+                openUserLink(id)
+                return true
+            case .tag, .search, .creatorSearch:
+                openPixivLink(url)
+                return true
+            case .pixivisionArticle:
+                return false
+            }
         }
 
         private func publishState(

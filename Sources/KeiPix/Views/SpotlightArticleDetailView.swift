@@ -49,6 +49,11 @@ struct SpotlightArticleDetailView: View {
                         Task { await store.openArtworkFromWebLink(artworkID) }
                     } openUserLink: { userID in
                         Task { await openWebProfile(userID) }
+                    } openPixivLink: { url in
+                        Task {
+                            let result = await store.openPixivLink(url)
+                            showActionMessage(result)
+                        }
                     }
 
                     if let errorMessage = webNavigationState.errorMessage {
