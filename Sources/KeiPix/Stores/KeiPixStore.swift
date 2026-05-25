@@ -516,7 +516,7 @@ final class KeiPixStore {
     var searchOptions: SearchOptions {
         SearchOptions(
             matchType: searchMatchType,
-            sort: searchSort,
+            sort: effectiveSearchSort,
             ageLimit: searchAgeLimit,
             dateRange: searchDateRange,
             minimumBookmarks: searchMinimumBookmarks,
@@ -525,6 +525,13 @@ final class KeiPixStore {
             aiFilter: searchAIFilter,
             ugoiraFilter: searchUgoiraFilter
         )
+    }
+
+    var effectiveSearchSort: SearchSort {
+        if searchSort.requiresPixivPremium, session?.user.isPremium != true {
+            return .popularPreview
+        }
+        return searchSort
     }
 
     func resetSearchOptions() {

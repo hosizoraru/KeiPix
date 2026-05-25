@@ -419,6 +419,8 @@ enum L10n {
     static var newest: String { text("Newest") }
     static var oldest: String { text("Oldest") }
     static var popular: String { text("Popular") }
+    static var popularMale: String { text("Popular (Male)") }
+    static var popularFemale: String { text("Popular (Female)") }
     static var popularPreview: String { text("Popular Preview") }
     static var popularPreviewHint: String { text("Top works for this search") }
     static var showPopularResults: String { text("Show Popular Results") }

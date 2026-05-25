@@ -53,6 +53,10 @@ private extension SearchSort {
             "date"
         case .popularPreview:
             "popular_d"
+        case .popularMale:
+            "popular_male_d"
+        case .popularFemale:
+            "popular_female_d"
         }
     }
 }

@@ -51,7 +51,7 @@ struct SearchOptionsTests {
     func summaryIncludesAdvancedFilters() {
         let options = SearchOptions(
             matchType: .titleAndCaption,
-            sort: .popularPreview,
+            sort: .popularFemale,
             ageLimit: .allAges,
             dateRange: .pastMonth,
             minimumBookmarks: .oneHundred,
@@ -62,8 +62,31 @@ struct SearchOptionsTests {
         )
 
         #expect(options.summary.contains(SearchMaximumBookmarks.fiveThousand.title))
+        #expect(options.summary.contains(SearchSort.popularFemale.title))
         #expect(options.summary.contains(SearchAIFilter.excludeAI.title))
         #expect(options.summary.contains(SearchUgoiraFilter.noUgoira.title))
+    }
+
+    @Test("Premium search sorts are gated")
+    func premiumSearchSortsAreGated() {
+        let regularSorts = SearchSort.availableCases(isPremium: false)
+        let premiumSorts = SearchSort.availableCases(isPremium: true)
+
+        #expect(regularSorts.contains(.popularPreview))
+        #expect(regularSorts.contains(.popularMale) == false)
+        #expect(regularSorts.contains(.popularFemale) == false)
+        #expect(premiumSorts.contains(.popularMale))
+        #expect(premiumSorts.contains(.popularFemale))
+        #expect(SearchSort.popularMale.apiValue == "popular_male_desc")
+        #expect(SearchSort.popularFemale.apiValue == "popular_female_desc")
+    }
+
+    @Test("Bookmark thresholds match high-popularity search ranges")
+    func bookmarkThresholdsIncludeHighPopularityRanges() {
+        #expect(SearchMinimumBookmarks.allCases.contains(.twentyThousand))
+        #expect(SearchMinimumBookmarks.allCases.contains(.fiftyThousand))
+        #expect(SearchMinimumBookmarks.allCases.contains(.oneHundredThousand))
+        #expect(SearchMaximumBookmarks.oneHundredThousand.title.contains("100,000"))
     }
 
     @Test("Pixiv Web links preserve searchable options")
@@ -72,7 +95,7 @@ struct SearchOptionsTests {
             keyword: "landscape",
             options: SearchOptions(
                 matchType: .titleAndCaption,
-                sort: .dateAscending,
+                sort: .popularMale,
                 ageLimit: .allAges,
                 dateRange: .anytime,
                 minimumBookmarks: .none,
@@ -92,6 +115,6 @@ struct SearchOptionsTests {
         #expect(components.host == "www.pixiv.net")
         #expect(components.path == "/tags/landscape -R-18/artworks")
         #expect(queryItems["s_mode"] == "s_tc")
-        #expect(queryItems["order"] == "date")
+        #expect(queryItems["order"] == "popular_male_d")
     }
 }

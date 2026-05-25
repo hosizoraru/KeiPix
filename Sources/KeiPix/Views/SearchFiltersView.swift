@@ -48,7 +48,7 @@ private struct SearchFiltersView: View {
 
             VStack(alignment: .leading, spacing: 10) {
                 filterPicker(L10n.matchType, selection: matchTypeBinding, options: SearchMatchType.allCases)
-                filterPicker(L10n.sort, selection: sortBinding, options: SearchSort.allCases)
+                filterPicker(L10n.sort, selection: sortBinding, options: SearchSort.availableCases(isPremium: store.session?.user.isPremium == true))
                 filterPicker(L10n.ageLimit, selection: ageLimitBinding, options: SearchAgeLimit.allCases)
                 filterPicker(L10n.dateRange, selection: dateRangeBinding, options: SearchDateRange.allCases)
                 filterPicker(L10n.minimumBookmarks, selection: minimumBookmarksBinding, options: SearchMinimumBookmarks.allCases)
@@ -88,11 +88,11 @@ private struct SearchFiltersView: View {
         .frame(width: 390)
     }
 
-    private func filterPicker<Option: CaseIterable & Identifiable>(
+    private func filterPicker<Option: Identifiable, Options: RandomAccessCollection>(
         _ title: String,
         selection: Binding<Option>,
-        options: Option.AllCases
-    ) -> some View where Option: Hashable, Option: SearchFilterOptionTitle, Option.AllCases: RandomAccessCollection {
+        options: Options
+    ) -> some View where Option: Hashable, Option: SearchFilterOptionTitle, Options.Element == Option {
         LabeledContent(title) {
             Picker(title, selection: selection) {
                 ForEach(options) { option in
@@ -126,7 +126,7 @@ private struct SearchFiltersView: View {
 
     private var sortBinding: Binding<SearchSort> {
         Binding {
-            store.searchSort
+            store.effectiveSearchSort
         } set: { value in
             store.setSearchSort(value)
         }

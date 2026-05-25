@@ -38,6 +38,8 @@ enum SearchSort: String, CaseIterable, Identifiable, Codable, SearchFilterOption
     case dateDescending
     case dateAscending
     case popularPreview
+    case popularMale
+    case popularFemale
 
     var id: String { rawValue }
 
@@ -49,6 +51,10 @@ enum SearchSort: String, CaseIterable, Identifiable, Codable, SearchFilterOption
             L10n.oldest
         case .popularPreview:
             L10n.popular
+        case .popularMale:
+            L10n.popularMale
+        case .popularFemale:
+            L10n.popularFemale
         }
     }
 
@@ -60,7 +66,24 @@ enum SearchSort: String, CaseIterable, Identifiable, Codable, SearchFilterOption
             "date_asc"
         case .popularPreview:
             "popular_desc"
+        case .popularMale:
+            "popular_male_desc"
+        case .popularFemale:
+            "popular_female_desc"
         }
+    }
+
+    var requiresPixivPremium: Bool {
+        switch self {
+        case .popularMale, .popularFemale:
+            true
+        case .dateDescending, .dateAscending, .popularPreview:
+            false
+        }
+    }
+
+    static func availableCases(isPremium: Bool) -> [SearchSort] {
+        allCases.filter { isPremium || $0.requiresPixivPremium == false }
     }
 }
 
@@ -141,6 +164,9 @@ enum SearchMinimumBookmarks: Int, CaseIterable, Identifiable, Codable, SearchFil
     case oneThousand = 1000
     case fiveThousand = 5000
     case tenThousand = 10000
+    case twentyThousand = 20000
+    case fiftyThousand = 50000
+    case oneHundredThousand = 100000
 
     var id: Int { rawValue }
 
@@ -156,6 +182,9 @@ enum SearchMaximumBookmarks: Int, CaseIterable, Identifiable, Codable, SearchFil
     case oneThousand = 1000
     case fiveThousand = 5000
     case tenThousand = 10000
+    case twentyThousand = 20000
+    case fiftyThousand = 50000
+    case oneHundredThousand = 100000
 
     var id: Int { rawValue }
 
