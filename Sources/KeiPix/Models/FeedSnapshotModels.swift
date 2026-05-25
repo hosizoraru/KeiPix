@@ -29,3 +29,25 @@ struct FeedSnapshot: Codable, Sendable {
     let artworks: [PixivArtwork]
     let nextURL: URL?
 }
+
+struct FeedSnapshotRestoration: Hashable, Sendable {
+    let snapshotKey: String
+    let routeRawValue: String
+    let title: String
+    let savedAt: Date
+    let restoredAt: Date
+    let artworkCount: Int
+    let hasNextPage: Bool
+    let errorDescription: String
+
+    init(snapshot: FeedSnapshot, error: Error, restoredAt: Date = Date()) {
+        snapshotKey = snapshot.key
+        routeRawValue = snapshot.routeRawValue
+        title = snapshot.title
+        savedAt = snapshot.savedAt
+        self.restoredAt = restoredAt
+        artworkCount = snapshot.artworks.count
+        hasNextPage = snapshot.nextURL != nil
+        errorDescription = error.localizedDescription
+    }
+}

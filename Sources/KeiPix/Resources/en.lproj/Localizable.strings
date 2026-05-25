@@ -931,6 +931,10 @@
 "Feed" = "Feed";
 "%d shown · %d loaded · %@" = "%d shown · %d loaded · %@";
 "Loaded cached feed %@ · %d works · %@" = "Loaded cached feed %@ · %d works · %@";
+"Cached Feed" = "Cached Feed";
+"Showing cached feed %@ · %d works · saved %@" = "Showing cached feed %@ · %d works · saved %@";
+"This feed is restored from the last successful load and stays read-only until refresh succeeds." = "This feed is restored from the last successful load and stays read-only until refresh succeeds.";
+"Refresh Live Feed" = "Refresh Live Feed";
 "Selected Artwork" = "Selected Artwork";
 "No Selection" = "No Selection";
 "%d pages" = "%d pages";

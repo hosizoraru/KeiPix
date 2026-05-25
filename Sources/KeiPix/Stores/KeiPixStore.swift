@@ -37,6 +37,7 @@ final class KeiPixStore {
     var mangaWatchlistReadStateLibrary = KeiPixStore.loadMangaWatchlistReadStateLibrary()
     var pinnedCreatorLibrary = KeiPixStore.loadPinnedCreatorLibrary()
     var feedSnapshotLibrary = KeiPixStore.loadFeedSnapshotLibrary()
+    var activeFeedSnapshotRestoration: FeedSnapshotRestoration?
     var artworkDetailStateLibrary = KeiPixStore.loadArtworkDetailStateLibrary()
     var lastNonNovelQAMatrixSnapshot = KeiPixStore.loadLastNonNovelQAMatrixSnapshot()
     var errorMessage: String?
@@ -208,6 +209,7 @@ final class KeiPixStore {
         restrictedModeEnabled = nil
         allArtworks = []
         artworks = []
+        activeFeedSnapshotRestoration = nil
         allSearchPopularPreviewArtworks = []
         searchPopularPreviewArtworks = []
         selectedArtwork = nil
@@ -238,6 +240,7 @@ final class KeiPixStore {
             activeFeedRequestID = nil
             allArtworks = []
             artworks = []
+            activeFeedSnapshotRestoration = nil
             allSearchPopularPreviewArtworks = []
             searchPopularPreviewArtworks = []
             nextURL = nil
@@ -268,6 +271,7 @@ final class KeiPixStore {
             selectedRoute = .illustrations
             allArtworks = [artwork]
             artworks = [artwork]
+            activeFeedSnapshotRestoration = nil
             allSearchPopularPreviewArtworks = []
             searchPopularPreviewArtworks = []
             selectedArtwork = artwork
@@ -342,6 +346,7 @@ final class KeiPixStore {
             selectedRoute = .illustrations
             allArtworks = [artwork]
             artworks = [artwork]
+            activeFeedSnapshotRestoration = nil
             selectedArtwork = artwork
             nextURL = nil
             await recordBrowsingHistory(for: artwork)
@@ -364,6 +369,7 @@ final class KeiPixStore {
             selectedArtwork = nil
             allArtworks = []
             artworks = []
+            activeFeedSnapshotRestoration = nil
             allSearchPopularPreviewArtworks = []
             searchPopularPreviewArtworks = []
             nextURL = nil
@@ -385,6 +391,7 @@ final class KeiPixStore {
         guard session != nil else {
             allArtworks = []
             artworks = []
+            activeFeedSnapshotRestoration = nil
             allSearchPopularPreviewArtworks = []
             searchPopularPreviewArtworks = []
             selectedArtwork = nil
@@ -394,6 +401,7 @@ final class KeiPixStore {
         guard context.route.usesArtworkFeed else {
             allArtworks = []
             artworks = []
+            activeFeedSnapshotRestoration = nil
             allSearchPopularPreviewArtworks = []
             searchPopularPreviewArtworks = []
             nextURL = nil
@@ -406,6 +414,7 @@ final class KeiPixStore {
         activeFeedRequestID = requestID
         isLoading = true
         errorMessage = nil
+        activeFeedSnapshotRestoration = nil
         defer {
             if activeFeedRequestID == requestID {
                 isLoading = false
@@ -419,6 +428,7 @@ final class KeiPixStore {
             allArtworks = response.illusts
             nextURL = response.nextURL
             applyContentFilters()
+            activeFeedSnapshotRestoration = nil
             storeFeedSnapshot(response, for: context)
         } catch {
             guard isCancellationLike(error) == false else { return }
@@ -432,6 +442,7 @@ final class KeiPixStore {
                     allArtworks = response.illusts
                     nextURL = response.nextURL
                     applyContentFilters()
+                    activeFeedSnapshotRestoration = nil
                     storeFeedSnapshot(response, for: currentFeedRequestContext())
                     errorMessage = L10n.rankingDateFallbackMessage
                 } catch {
@@ -464,7 +475,7 @@ final class KeiPixStore {
     }
 
     func loadMore() async {
-        guard let nextURL, isLoadingMore == false else { return }
+        guard let nextURL, isLoadingMore == false, activeFeedSnapshotRestoration == nil else { return }
         let context = currentFeedRequestContext()
         isLoadingMore = true
         errorMessage = nil
@@ -476,6 +487,7 @@ final class KeiPixStore {
             allArtworks.append(contentsOf: response.illusts)
             self.nextURL = response.nextURL
             applyContentFilters()
+            activeFeedSnapshotRestoration = nil
             storeFeedSnapshot(PixivFeedResponse(illusts: allArtworks, nextURL: response.nextURL), for: context)
         } catch {
             guard isCancellationLike(error) == false else { return }

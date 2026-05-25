@@ -931,6 +931,10 @@
 "Feed" = "作品流";
 "%d shown · %d loaded · %@" = "显示 %d · 已载入 %d · %@";
 "Loaded cached feed %@ · %d works · %@" = "已载入缓存作品流 %@ · %d 个作品 · %@";
+"Cached Feed" = "缓存作品流";
+"Showing cached feed %@ · %d works · saved %@" = "正在显示缓存作品流 %@ · %d 个作品 · 保存于 %@";
+"This feed is restored from the last successful load and stays read-only until refresh succeeds." = "当前作品流来自上次成功载入的缓存；刷新成功前保持只读浏览。";
+"Refresh Live Feed" = "刷新实时作品流";
 "Selected Artwork" = "选中作品";
 "No Selection" = "未选择";
 "%d pages" = "%d 页";

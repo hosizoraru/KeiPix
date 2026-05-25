@@ -17,7 +17,7 @@ struct GalleryContentGrid: View {
                         artworkTile(artwork)
                     }
 
-                    if store.hasNextPage {
+                    if store.hasNextPage, store.activeFeedSnapshotRestoration == nil {
                         LoadMoreTile(store: store)
                     }
                 }
@@ -32,7 +32,7 @@ struct GalleryContentGrid: View {
                         fixedColumnCount: store.galleryLayoutMode.fixedColumnCount
                     )
 
-                    if store.hasNextPage {
+                    if store.hasNextPage, store.activeFeedSnapshotRestoration == nil {
                         LoadMoreTile(store: store)
                     }
                 }

@@ -26,6 +26,7 @@ extension KeiPixStore {
         allArtworks = snapshot.artworks
         nextURL = snapshot.nextURL
         applyContentFilters()
+        activeFeedSnapshotRestoration = FeedSnapshotRestoration(snapshot: snapshot, error: error)
         errorMessage = String(
             format: L10n.loadedCachedFeedFormat,
             snapshot.title,

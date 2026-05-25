@@ -727,6 +727,10 @@ enum L10n {
     static var feed: String { text("Feed") }
     static var feedReadinessFormat: String { text("%d shown · %d loaded · %@") }
     static var loadedCachedFeedFormat: String { text("Loaded cached feed %@ · %d works · %@") }
+    static var cachedFeed: String { text("Cached Feed") }
+    static var showingCachedFeedFormat: String { text("Showing cached feed %@ · %d works · saved %@") }
+    static var cachedFeedReadOnlyHint: String { text("This feed is restored from the last successful load and stays read-only until refresh succeeds.") }
+    static var refreshLiveFeed: String { text("Refresh Live Feed") }
     static var selectedArtwork: String { text("Selected Artwork") }
     static var noSelection: String { text("No Selection") }
     static var pageCountFormat: String { text("%d pages") }

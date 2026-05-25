@@ -97,6 +97,13 @@ private struct GalleryFeedView: View {
                             .frame(maxWidth: .infinity)
                             .frame(minHeight: 420)
                         } else {
+                            if let restoration = store.activeFeedSnapshotRestoration {
+                                CachedFeedStatusStrip(restoration: restoration) {
+                                    store.requestRouteRefresh()
+                                }
+                                .padding(.bottom, 12)
+                            }
+
                             SearchPopularPreviewStrip(store: store, actionMessage: $actionMessage)
 
                             GalleryContentGrid(
@@ -177,6 +184,65 @@ private struct GalleryFeedView: View {
         actionMessage = String(format: L10n.queuedDownloadsFormat, queuedCount)
         openWindow(id: "main")
         store.select(.downloads)
+    }
+}
+
+private struct CachedFeedStatusStrip: View {
+    let restoration: FeedSnapshotRestoration
+    let refresh: () -> Void
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Label {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(L10n.cachedFeed)
+                        .font(.subheadline.weight(.semibold))
+                    Text(statusText)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(2)
+                }
+            } icon: {
+                Image(systemName: "externaldrive.badge.icloud")
+                    .symbolRenderingMode(.hierarchical)
+                    .foregroundStyle(.secondary)
+            }
+
+            Spacer(minLength: 12)
+
+            Button {
+                refresh()
+            } label: {
+                Label(L10n.refreshLiveFeed, systemImage: "arrow.clockwise")
+            }
+            .controlSize(.small)
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 9)
+        .background(.quinary, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .stroke(.secondary.opacity(0.14), lineWidth: 1)
+        }
+        .help(helpText)
+    }
+
+    private var statusText: String {
+        let savedAtText = restoration.savedAt.formatted(date: .abbreviated, time: .shortened)
+        return String(
+            format: L10n.showingCachedFeedFormat,
+            restoration.title,
+            restoration.artworkCount,
+            savedAtText
+        )
+    }
+
+    private var helpText: String {
+        [
+            L10n.cachedFeedReadOnlyHint,
+            restoration.errorDescription
+        ]
+        .joined(separator: " · ")
     }
 }
 
