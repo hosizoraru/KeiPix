@@ -38,6 +38,36 @@ struct RuntimeReadinessView: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
 
+            if usesRuntimeReadinessVisualQA {
+                NonNovelQAMatrixView(
+                    snapshot: qaSnapshot,
+                    runQA: {
+                        Task { await runNonNovelQA() }
+                    },
+                    copyQA: {
+                        PasteboardWriter.copy(qaSnapshot.diagnosticsText)
+                        cacheMessage = L10n.copiedQAMatrix
+                    },
+                    isRunning: isRunningNonNovelQA
+                )
+
+                Divider()
+
+                MutableActionReadinessView(
+                    items: snapshot.mutableActionItems,
+                    didCopyChecklist: didCopyChecklist,
+                    copyChecklist: {
+                        PasteboardWriter.copy(snapshot.mutableActionChecklistText)
+                        didCopyChecklist = true
+                    }
+                )
+                .task(id: didCopyChecklist) {
+                    await dismissChecklistCopyStatusIfNeeded()
+                }
+
+                Divider()
+            }
+
             ForEach(snapshot.rows) { row in
                 RuntimeReadinessRowView(row: row)
             }
@@ -102,31 +132,35 @@ struct RuntimeReadinessView: View {
 
             Divider()
 
-            MutableActionReadinessView(
-                items: snapshot.mutableActionItems,
-                didCopyChecklist: didCopyChecklist,
-                copyChecklist: {
-                    PasteboardWriter.copy(snapshot.mutableActionChecklistText)
-                    didCopyChecklist = true
+            if usesRuntimeReadinessVisualQA == false {
+                MutableActionReadinessView(
+                    items: snapshot.mutableActionItems,
+                    didCopyChecklist: didCopyChecklist,
+                    copyChecklist: {
+                        PasteboardWriter.copy(snapshot.mutableActionChecklistText)
+                        didCopyChecklist = true
+                    }
+                )
+                .task(id: didCopyChecklist) {
+                    await dismissChecklistCopyStatusIfNeeded()
                 }
-            )
-            .task(id: didCopyChecklist) {
-                await dismissChecklistCopyStatusIfNeeded()
+
+                Divider()
             }
 
-            Divider()
-
-            NonNovelQAMatrixView(
-                snapshot: qaSnapshot,
-                runQA: {
-                    Task { await runNonNovelQA() }
-                },
-                copyQA: {
-                    PasteboardWriter.copy(qaSnapshot.diagnosticsText)
-                    cacheMessage = L10n.copiedQAMatrix
-                },
-                isRunning: isRunningNonNovelQA
-            )
+            if usesRuntimeReadinessVisualQA == false {
+                NonNovelQAMatrixView(
+                    snapshot: qaSnapshot,
+                    runQA: {
+                        Task { await runNonNovelQA() }
+                    },
+                    copyQA: {
+                        PasteboardWriter.copy(qaSnapshot.diagnosticsText)
+                        cacheMessage = L10n.copiedQAMatrix
+                    },
+                    isRunning: isRunningNonNovelQA
+                )
+            }
 
             FlowLayout(spacing: 8) {
                 Button {
@@ -354,6 +388,10 @@ struct RuntimeReadinessView: View {
         directNavigationResults = await directNavigation
         commentFeedbackResults = await commentFeedback
         await refreshCacheStatus()
+    }
+
+    private var usesRuntimeReadinessVisualQA: Bool {
+        VisualQALaunchArgument.contains(.runtimeReadiness)
     }
 
     private func runNonNovelQA() async {

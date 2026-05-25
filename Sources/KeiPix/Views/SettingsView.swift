@@ -65,6 +65,8 @@ struct SettingsView: View {
         .task {
             if VisualQALaunchArgument.contains(.sharingTemplates) {
                 settingsSearchText = L10n.sharing
+            } else if VisualQALaunchArgument.contains(.runtimeReadiness) {
+                settingsSearchText = L10n.runtimeReadiness
             }
         }
         .sheet(isPresented: $isAccountLoginPresented) {

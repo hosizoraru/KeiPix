@@ -225,8 +225,8 @@ extension KeiPixStore {
         )
         let settings = qaStaticItem(
             id: "settings-organization",
-            passed: visualEvidence.covers([.settingsWindow]),
-            evidence: visualEvidence.summary(for: [.settingsWindow])
+            passed: visualEvidence.covers([.settingsWindow, .runtimeReadiness]),
+            evidence: visualEvidence.summary(for: [.settingsWindow, .runtimeReadiness])
         )
         let sharing = qaStaticItem(
             id: "sharing-copy",

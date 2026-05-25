@@ -18,7 +18,9 @@ struct KeiPixApp: App {
                     Task { await store.openPixivLink(url) }
                 }
                 .task {
-                    if VisualQALaunchArgument.contains(.settingsWindow) || VisualQALaunchArgument.contains(.sharingTemplates) {
+                    if VisualQALaunchArgument.contains(.settingsWindow)
+                        || VisualQALaunchArgument.contains(.runtimeReadiness)
+                        || VisualQALaunchArgument.contains(.sharingTemplates) {
                         openSettings()
                     }
                 }
