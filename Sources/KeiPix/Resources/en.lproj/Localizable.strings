@@ -832,7 +832,7 @@
 "Keep watchlist update badges in regression coverage." = "Keep watchlist update badges in regression coverage.";
 "Reader" = "Reader";
 "Multi-page reader supports per-page aspect ratio, continuous reading, keyboard, and trackpad gestures." = "Multi-page reader supports per-page aspect ratio, continuous reading, keyboard, and trackpad gestures.";
-"Keep per-artwork reader resume in regression coverage." = "Keep per-artwork reader resume in regression coverage.";
+"Keep reader window visual evidence and resume in regression coverage." = "Keep reader window visual evidence and resume in regression coverage.";
 "Search" = "Search";
 "Artwork search covers match mode, sort, AI/R18, bookmark counts, saved searches, and autocomplete." = "Artwork search covers match mode, sort, AI/R18, bookmark counts, saved searches, and autocomplete.";
 "Add saved preset import and export." = "Add saved preset import and export.";
@@ -844,7 +844,7 @@
 "Add pinned creator collections." = "Add pinned creator collections.";
 "Downloads" = "Downloads";
 "Queue, local library, naming templates, ugoira downloads, and batch actions stay usable." = "Queue, local library, naming templates, ugoira downloads, and batch actions stay usable.";
-"Add page-range downloads and retry-all-failed." = "Add page-range downloads and retry-all-failed.";
+"Keep download queue visual evidence in regression coverage." = "Keep download queue visual evidence in regression coverage.";
 "Safety and filtering" = "Safety and filtering";
 "AI/R18/R18G badges, filters, mute sync, and privacy controls remain visible." = "AI/R18/R18G badges, filters, mute sync, and privacy controls remain visible.";
 "Add optional NSFW blur and bulk mute previews." = "Add optional NSFW blur and bulk mute previews.";

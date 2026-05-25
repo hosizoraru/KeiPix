@@ -121,6 +121,7 @@ extension KeiPixStore {
             ]
         }
 
+        let visualEvidence = Self.visualQAEvidenceIndex()
         async let detail = qaFeedItem(
             id: "artwork-detail-social",
             count: {
@@ -134,8 +135,13 @@ extension KeiPixStore {
         )
         let reader = qaStaticItem(
             id: "reader",
-            passed: selectedArtwork.images.isEmpty == false && selectedArtwork.pageCount > 0,
-            evidence: String(format: L10n.pageCountFormat, selectedArtwork.pageCount)
+            passed: selectedArtwork.images.isEmpty == false
+                && selectedArtwork.pageCount > 0
+                && visualEvidence.covers([.readerWindow]),
+            evidence: [
+                String(format: L10n.pageCountFormat, selectedArtwork.pageCount),
+                visualEvidence.summary(for: [.readerWindow])
+            ].joined(separator: " · ")
         )
         return await [reader, detail, comments]
     }
@@ -148,15 +154,19 @@ extension KeiPixStore {
             passed: visualEvidence.covers(requiredGallerySurfaces),
             evidence: visualEvidence.summary(for: requiredGallerySurfaces)
         )
+        let downloadSurfaces: [VisualQASurface] = [.downloadQueue]
         let downloads = qaStaticItem(
             id: "downloads",
-            passed: true,
-            evidence: String(
-                format: L10n.downloadReadinessFormat,
-                self.downloads.items.count,
-                self.downloads.activeCount,
-                self.downloads.completedCount
-            )
+            passed: visualEvidence.covers(downloadSurfaces),
+            evidence: [
+                String(
+                    format: L10n.downloadReadinessFormat,
+                    self.downloads.items.count,
+                    self.downloads.activeCount,
+                    self.downloads.completedCount
+                ),
+                visualEvidence.summary(for: downloadSurfaces)
+            ].joined(separator: " · ")
         )
         let safety = qaStaticItem(
             id: "safety-filtering",

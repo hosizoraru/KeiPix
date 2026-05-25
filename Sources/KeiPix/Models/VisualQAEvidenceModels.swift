@@ -5,6 +5,8 @@ enum VisualQASurface: String, CaseIterable, Identifiable, Sendable {
     case trendingTags = "trending-tags"
     case pixivision
     case narrowWindow = "narrow-window"
+    case downloadQueue = "download-queue"
+    case readerWindow = "reader-window"
 
     var id: String { rawValue }
 }

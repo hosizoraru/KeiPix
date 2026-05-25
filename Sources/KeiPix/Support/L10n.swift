@@ -632,7 +632,7 @@ enum L10n {
     static var qaMangaFeedsNext: String { text("Keep watchlist update badges in regression coverage.") }
     static var qaReader: String { text("Reader") }
     static var qaReaderRequirement: String { text("Multi-page reader supports per-page aspect ratio, continuous reading, keyboard, and trackpad gestures.") }
-    static var qaReaderNext: String { text("Keep per-artwork reader resume in regression coverage.") }
+    static var qaReaderNext: String { text("Keep reader window visual evidence and resume in regression coverage.") }
     static var qaSearch: String { text("Search") }
     static var qaSearchRequirement: String { text("Artwork search covers match mode, sort, AI/R18, bookmark counts, saved searches, and autocomplete.") }
     static var qaSearchNext: String { text("Add saved preset import and export.") }
@@ -644,7 +644,7 @@ enum L10n {
     static var qaFollowingCreatorsNext: String { text("Add pinned creator collections.") }
     static var qaDownloads: String { text("Downloads") }
     static var qaDownloadsRequirement: String { text("Queue, local library, naming templates, ugoira downloads, and batch actions stay usable.") }
-    static var qaDownloadsNext: String { text("Add page-range downloads and retry-all-failed.") }
+    static var qaDownloadsNext: String { text("Keep download queue visual evidence in regression coverage.") }
     static var qaSafetyFiltering: String { text("Safety and filtering") }
     static var qaSafetyFilteringRequirement: String { text("AI/R18/R18G badges, filters, mute sync, and privacy controls remain visible.") }
     static var qaSafetyFilteringNext: String { text("Add bulk mute previews.") }

@@ -34,11 +34,26 @@ struct VisualQAEvidenceTests {
                 capturedAt: "20260525T085911Z",
                 screenshotPath: "gallery-feed.png",
                 manifestPath: "/tmp/gallery-feed.md"
+            ),
+            VisualQAEvidenceManifest(
+                id: "downloads",
+                surface: .downloadQueue,
+                capturedAt: "20260525T103312Z",
+                screenshotPath: "download-queue.png",
+                manifestPath: "/tmp/download-queue.md"
+            ),
+            VisualQAEvidenceManifest(
+                id: "reader",
+                surface: .readerWindow,
+                capturedAt: "20260525T103329Z",
+                screenshotPath: "reader-window.png",
+                manifestPath: "/tmp/reader-window.md"
             )
         ])
 
         #expect(index.covers([.galleryFeed]))
         #expect(index.covers([.galleryFeed, .pixivision]) == false)
+        #expect(index.covers([.downloadQueue, .readerWindow]))
         #expect(index.summary(for: [.galleryFeed]).contains("1/1"))
     }
 

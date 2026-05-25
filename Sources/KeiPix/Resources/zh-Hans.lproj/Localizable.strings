@@ -832,7 +832,7 @@
 "Keep watchlist update badges in regression coverage." = "保持追更更新标识的回归覆盖。";
 "Reader" = "阅读器";
 "Multi-page reader supports per-page aspect ratio, continuous reading, keyboard, and trackpad gestures." = "多 P 阅读器需要支持逐页比例、连续阅读、键盘和触控板手势。";
-"Keep per-artwork reader resume in regression coverage." = "保持按作品恢复阅读进度的回归覆盖。";
+"Keep reader window visual evidence and resume in regression coverage." = "保持阅读窗口视觉证据与阅读进度恢复的回归覆盖。";
 "Search" = "搜索";
 "Artwork search covers match mode, sort, AI/R18, bookmark counts, saved searches, and autocomplete." = "作品搜索需要覆盖匹配模式、排序、AI/R18、收藏数、保存搜索和自动补全。";
 "Add saved preset import and export." = "新增保存搜索预设导入导出。";
@@ -844,7 +844,7 @@
 "Add pinned creator collections." = "新增置顶作者集合。";
 "Downloads" = "下载";
 "Queue, local library, naming templates, ugoira downloads, and batch actions stay usable." = "队列、本地库、命名模板、动图下载和批量操作需要可用。";
-"Add page-range downloads and retry-all-failed." = "新增页码范围下载和重试全部失败项。";
+"Keep download queue visual evidence in regression coverage." = "保持下载队列视觉证据的回归覆盖。";
 "Safety and filtering" = "安全与过滤";
 "AI/R18/R18G badges, filters, mute sync, and privacy controls remain visible." = "AI/R18/R18G 标识、过滤、屏蔽同步和隐私控制需要可见。";
 "Add optional NSFW blur and bulk mute previews." = "新增可选 NSFW 模糊和批量屏蔽预览。";

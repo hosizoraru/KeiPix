@@ -23,7 +23,7 @@ let numberKey = kCGWindowNumber as String
 let layerKey = kCGWindowLayer as String
 let boundsKey = kCGWindowBounds as String
 
-let candidates = windows.compactMap { window -> (id: Int, area: Double)? in
+let candidates = windows.compactMap { window -> Int? in
     guard window[ownerKey] as? String == appName,
           (window[layerKey] as? Int) == 0,
           let id = window[numberKey] as? Int,
@@ -35,11 +35,11 @@ let candidates = windows.compactMap { window -> (id: Int, area: Double)? in
     else {
         return nil
     }
-    return (id, width * height)
+    return id
 }
 
-if let window = candidates.sorted(by: { $0.area > $1.area }).first {
-    print(window.id)
+if let window = candidates.first {
+    print(window)
 }
 SWIFT
 )"
