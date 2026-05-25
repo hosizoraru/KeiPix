@@ -8,7 +8,7 @@ options:
   generateEmptyDirectories: true
   groupSortPosition: top
   defaultConfig: Debug
-  xcodeVersion: "26.0"
+  xcodeVersion: "26.3"
 
 settings:
   base:
