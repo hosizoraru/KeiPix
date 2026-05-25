@@ -750,6 +750,8 @@
 "Review implementation" = "Review implementation";
 "Keep regression coverage" = "Keep regression coverage";
 "%d loaded" = "%d loaded";
+"Visual QA %d/%d · latest %@" = "Visual QA %d/%d · latest %@";
+"Visual QA missing" = "Visual QA missing";
 "Run Search Diagnostics" = "Run Search Diagnostics";
 "Running search diagnostics" = "Running search diagnostics";
 "Pixiv Premium required" = "Pixiv Premium required";

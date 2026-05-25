@@ -51,13 +51,18 @@ extension KeiPixStore {
     }
 
     private func qaDiscoverySurfaces() async -> [NonNovelQAItem] {
+        let visualEvidence = Self.visualQAEvidenceIndex()
         async let trending = qaFeedItem(
             id: "trending-tags",
-            count: { try await self.trendingTags().count }
+            count: { try await self.trendingTags().count },
+            visualSurface: .trendingTags,
+            visualEvidence: visualEvidence
         )
         async let spotlight = qaFeedItem(
             id: "pixivision",
-            count: { try await self.spotlightArticles().articles.count }
+            count: { try await self.spotlightArticles().articles.count },
+            visualSurface: .pixivision,
+            visualEvidence: visualEvidence
         )
         async let recommendedUsers = qaFeedItem(
             id: "creator-discovery",
@@ -136,10 +141,12 @@ extension KeiPixStore {
     }
 
     private func qaLocalSurfaces() async -> [NonNovelQAItem] {
+        let visualEvidence = Self.visualQAEvidenceIndex()
+        let requiredGallerySurfaces: [VisualQASurface] = [.galleryFeed, .trendingTags, .pixivision, .narrowWindow]
         let gallery = qaStaticItem(
             id: "gallery-visual",
-            passed: galleryLayoutMode != .compactGrid || artworks.isEmpty == false,
-            evidence: "\(galleryLayoutMode.title) · \(artworks.count.formatted())"
+            passed: visualEvidence.covers(requiredGallerySurfaces),
+            evidence: visualEvidence.summary(for: requiredGallerySurfaces)
         )
         let downloads = qaStaticItem(
             id: "downloads",
@@ -178,7 +185,9 @@ extension KeiPixStore {
 
     private func qaFeedItem(
         id: String,
-        count: @escaping @Sendable () async throws -> Int
+        count: @escaping @Sendable () async throws -> Int,
+        visualSurface: VisualQASurface? = nil,
+        visualEvidence: VisualQAEvidenceIndex? = nil
     ) async -> NonNovelQAItem {
         guard let template = Self.nonNovelQABaseline.first(where: { $0.id == id }) else {
             return NonNovelQATemplate.unknown(id: id).item(status: .actionRequired, evidence: L10n.unknown, nextAction: L10n.reviewImplementation)
@@ -186,11 +195,20 @@ extension KeiPixStore {
 
         do {
             let value = try await count()
-            let status: NonNovelQAStatus = value > 0 ? .passed : .needsEvidence
-            let nextAction = value > 0 ? L10n.keepRegressionCoverage : template.nextAction
+            let resolvedVisualEvidence = visualEvidence ?? Self.visualQAEvidenceIndex()
+            let hasVisualEvidence = visualSurface.flatMap { resolvedVisualEvidence.latestManifest(for: $0) } != nil
+            let passed = value > 0 && (visualSurface == nil || hasVisualEvidence)
+            let status: NonNovelQAStatus = passed ? .passed : .needsEvidence
+            let nextAction = passed ? L10n.keepRegressionCoverage : template.nextAction
+            let evidence = [
+                String(format: L10n.qaLoadedCountFormat, value),
+                visualSurface.map { surface in
+                    resolvedVisualEvidence.latestManifest(for: surface)?.capturedAt ?? L10n.visualQAMissing
+                }
+            ].compactMap(\.self).joined(separator: " · ")
             return template.item(
                 status: status,
-                evidence: String(format: L10n.qaLoadedCountFormat, value),
+                evidence: evidence,
                 nextAction: nextAction
             )
         } catch {
@@ -255,6 +273,27 @@ private struct NonNovelQATemplate {
 }
 
 private extension KeiPixStore {
+    static func visualQAEvidenceIndex() -> VisualQAEvidenceIndex {
+        return VisualQAEvidenceIndex(rootURLs: visualQAEvidenceRootCandidates())
+    }
+
+    static func visualQAEvidenceRootCandidates() -> [URL] {
+        var roots: [URL] = []
+        if let explicitRoot = ProcessInfo.processInfo.environment["KEIPIX_REPO_ROOT"], explicitRoot.isEmpty == false {
+            roots.append(URL(fileURLWithPath: explicitRoot, isDirectory: true))
+        }
+        roots.append(URL(fileURLWithPath: FileManager.default.currentDirectoryPath, isDirectory: true))
+        roots.append(Bundle.main.bundleURL.deletingLastPathComponent().deletingLastPathComponent())
+
+        var seen = Set<String>()
+        return roots.map {
+            $0.appending(path: "artifacts", directoryHint: .isDirectory)
+                .appending(path: "visual-qa", directoryHint: .isDirectory)
+        }.filter { root in
+            seen.insert(root.standardizedFileURL.path(percentEncoded: false)).inserted
+        }
+    }
+
     static let nonNovelQABaseline: [NonNovelQATemplate] = [
         NonNovelQATemplate(id: "gallery-visual", priority: .p0, title: L10n.qaGalleryVisual, requirement: L10n.qaGalleryVisualRequirement, nextAction: L10n.qaGalleryVisualNext, systemImage: "rectangle.grid.2x2"),
         NonNovelQATemplate(id: "trending-tags", priority: .p0, title: L10n.qaTrendingTags, requirement: L10n.qaTrendingTagsRequirement, nextAction: L10n.qaTrendingTagsNext, systemImage: "number"),

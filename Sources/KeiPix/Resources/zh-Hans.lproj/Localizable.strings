@@ -750,6 +750,8 @@
 "Review implementation" = "审查实现";
 "Keep regression coverage" = "保持回归覆盖";
 "%d loaded" = "已加载 %d 个";
+"Visual QA %d/%d · latest %@" = "视觉 QA %d/%d · 最新 %@";
+"Visual QA missing" = "缺少视觉 QA";
 "Run Search Diagnostics" = "运行搜索诊断";
 "Running search diagnostics" = "正在运行搜索诊断";
 "Pixiv Premium required" = "需要 Pixiv Premium";

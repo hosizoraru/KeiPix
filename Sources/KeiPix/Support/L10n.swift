@@ -552,6 +552,8 @@ enum L10n {
     static var reviewImplementation: String { text("Review implementation") }
     static var keepRegressionCoverage: String { text("Keep regression coverage") }
     static var qaLoadedCountFormat: String { text("%d loaded") }
+    static var visualQAEvidenceFormat: String { text("Visual QA %d/%d · latest %@") }
+    static var visualQAMissing: String { text("Visual QA missing") }
     static var runSearchDiagnostics: String { text("Run Search Diagnostics") }
     static var runningSearchDiagnostics: String { text("Running search diagnostics") }
     static var pixivPremiumRequired: String { text("Pixiv Premium required") }
