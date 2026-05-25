@@ -1,6 +1,22 @@
 import Foundation
 
 enum VisualQASampleData {
+    static let sampleSession: PixivSession = {
+        let payload = """
+        {
+          "accessToken": "visual-qa-access-token",
+          "refreshToken": "visual-qa-refresh-token",
+          "user": {
+            "id": "5001",
+            "name": "Visual QA",
+            "account": "visual_qa",
+            "is_premium": false
+          }
+        }
+        """
+        return try! JSONDecoder().decode(PixivSession.self, from: Data(payload.utf8))
+    }()
+
     static let seriesParentArtwork = decodeArtwork(
         id: 92000,
         title: "Sample long manga series",
@@ -74,6 +90,58 @@ enum VisualQASampleData {
         nextURL: URL(string: "https://app-api.pixiv.net/v1/illust/series/next")
     )
 
+    static let cachedFeedSnapshot = FeedSnapshot(
+        key: "visual-qa|cached-feed",
+        routeRawValue: PixivRoute.illustrations.rawValue,
+        title: "Cached Illustrations",
+        savedAt: Date(timeIntervalSince1970: 1_779_379_200),
+        artworks: [
+            decodeArtwork(
+                id: 93000,
+                title: "Cached wide illustration",
+                createdAt: 1_779_379_200,
+                pageCount: 1,
+                width: 2600,
+                height: 1200,
+                tags: ["wide", "cached"],
+                isBookmarked: false
+            ),
+            decodeArtwork(
+                id: 93001,
+                title: "Cached multi-page manga",
+                createdAt: 1_779_292_800,
+                pageCount: 32,
+                width: 1200,
+                height: 2400,
+                tags: ["manga", "cached"],
+                isBookmarked: true
+            ),
+            decodeArtwork(
+                id: 93002,
+                title: "Cached R-18 sample",
+                createdAt: 1_779_206_400,
+                pageCount: 4,
+                width: 1600,
+                height: 2200,
+                tags: ["R-18", "cached"],
+                xRestrict: 1,
+                isBookmarked: false
+            ),
+            decodeArtwork(
+                id: 93003,
+                title: "Cached AI square sample",
+                createdAt: 1_779_120_000,
+                pageCount: 1,
+                width: 1800,
+                height: 1800,
+                tags: ["AI", "cached"],
+                isAI: true,
+                isBookmarked: false
+            )
+        ],
+        nextURL: URL(string: "https://app-api.pixiv.net/v1/illust/recommended?offset=30")
+    )
+
     private static func decodeArtwork(
         id: Int,
         title: String,
@@ -123,5 +191,32 @@ enum VisualQASampleData {
         }
         """
         return try! JSONDecoder().decode(PixivArtwork.self, from: Data(payload.utf8))
+    }
+}
+
+@MainActor
+extension KeiPixStore {
+    func presentCachedFeedVisualQA() {
+        session = session ?? VisualQASampleData.sampleSession
+        storedAccounts = storedAccounts.isEmpty
+            ? [PixivStoredAccount(session: VisualQASampleData.sampleSession)]
+            : storedAccounts
+        selectedRoute = .illustrations
+        focusedUser = nil
+        bookmarkTagFilter = nil
+        selectedSpotlightArticle = nil
+        errorMessage = nil
+        isLoading = false
+        isLoadingMore = false
+        allArtworks = VisualQASampleData.cachedFeedSnapshot.artworks
+        artworks = VisualQASampleData.cachedFeedSnapshot.artworks
+        selectedArtwork = VisualQASampleData.cachedFeedSnapshot.artworks.first
+        searchPopularPreviewArtworks = []
+        nextURL = VisualQASampleData.cachedFeedSnapshot.nextURL
+        activeFeedSnapshotRestoration = FeedSnapshotRestoration(
+            snapshot: VisualQASampleData.cachedFeedSnapshot,
+            error: NSError(domain: NSURLErrorDomain, code: NSURLErrorNotConnectedToInternet),
+            restoredAt: Date(timeIntervalSince1970: 1_779_465_600)
+        )
     }
 }

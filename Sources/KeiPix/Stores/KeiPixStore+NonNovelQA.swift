@@ -190,10 +190,14 @@ extension KeiPixStore {
             ].compactMap(\.self).joined(separator: " · ").nilIfEmpty ?? L10n.availableInDiagnostics
         )
         let cache = await imageCacheStatus()
+        let cachedFeedSurfaces: [VisualQASurface] = [.cachedFeed]
         let offline = qaStaticItem(
             id: "local-cache-offline",
-            passed: cache.diskCapacity > 0,
-            evidence: cache.summaryText
+            passed: cache.diskCapacity > 0 && visualEvidence.covers(cachedFeedSurfaces),
+            evidence: [
+                cache.summaryText,
+                visualEvidence.summary(for: cachedFeedSurfaces)
+            ].joined(separator: " · ")
         )
         let settings = qaStaticItem(
             id: "settings-organization",

@@ -184,6 +184,9 @@ struct ContentView: View {
                 store.select(.mangaRecommended)
                 isSeriesSheetVisualQAPresented = true
             }
+            if VisualQALaunchArgument.contains(.cachedFeed) {
+                store.presentCachedFeedVisualQA()
+            }
         }
         .alert(L10n.errorTitle, isPresented: errorBinding) {
             if store.selectedRoute.isRankingRoute {

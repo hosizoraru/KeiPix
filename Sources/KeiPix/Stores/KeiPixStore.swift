@@ -119,7 +119,11 @@ final class KeiPixStore {
     var recordedBrowsingHistoryIDs = Set<Int>()
 
     init() {
-        Task { await bootstrap() }
+        if VisualQALaunchArgument.contains(.cachedFeed) {
+            presentCachedFeedVisualQA()
+        } else {
+            Task { await bootstrap() }
+        }
     }
 
     func bootstrap() async {

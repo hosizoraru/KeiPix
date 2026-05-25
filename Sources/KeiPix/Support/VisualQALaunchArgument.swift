@@ -4,6 +4,7 @@ enum VisualQALaunchArgument: String, CaseIterable {
     case pixivLinkDrop = "--visual-qa-pixiv-link-drop"
     case mangaWatchlist = "--visual-qa-manga-watchlist"
     case seriesSheet = "--visual-qa-series-sheet"
+    case cachedFeed = "--visual-qa-cached-feed"
 
     var surface: VisualQASurface {
         switch self {
@@ -13,6 +14,8 @@ enum VisualQALaunchArgument: String, CaseIterable {
             .mangaWatchlist
         case .seriesSheet:
             .seriesSheet
+        case .cachedFeed:
+            .cachedFeed
         }
     }
 

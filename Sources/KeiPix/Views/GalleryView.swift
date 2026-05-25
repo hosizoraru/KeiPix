@@ -52,6 +52,9 @@ struct GalleryView: View {
 
     private var feedStatusText: String {
         var parts = ["\(store.artworks.count.formatted()) \(L10n.results)"]
+        if store.activeFeedSnapshotRestoration != nil {
+            parts.append(L10n.cachedFeed)
+        }
         if store.selectedRoute == .search, store.searchOptions.isDefault == false {
             parts.append(L10n.activeSearchFilters)
         }
@@ -61,7 +64,7 @@ struct GalleryView: View {
     private var feedDetailSummary: String {
         var parts = [
             feedStatusText,
-            store.hasNextPage ? L10n.nextPageAvailable : L10n.noMorePages
+            store.activeFeedSnapshotRestoration == nil && store.hasNextPage ? L10n.nextPageAvailable : L10n.noMorePages
         ]
         if let focusedUser = store.focusedUser {
             parts.append("\(focusedUser.name) @\(focusedUser.account)")

@@ -74,8 +74,10 @@ struct VisualQAEvidenceTests {
         #expect(VisualQASurface(rawValue: "pixiv-link-drop") == .pixivLinkDrop)
         #expect(VisualQASurface(rawValue: "manga-watchlist") == .mangaWatchlist)
         #expect(VisualQASurface(rawValue: "series-sheet") == .seriesSheet)
+        #expect(VisualQASurface(rawValue: "cached-feed") == .cachedFeed)
         #expect(VisualQALaunchArgument.mangaWatchlist.surface == .mangaWatchlist)
         #expect(VisualQALaunchArgument.seriesSheet.surface == .seriesSheet)
+        #expect(VisualQALaunchArgument.cachedFeed.surface == .cachedFeed)
     }
 
     @Test("Evidence index scans multiple candidate roots")
