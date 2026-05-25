@@ -85,7 +85,9 @@ extension KeiPixStore {
         )
         async let bookmarks = qaFeedItem(
             id: "bookmarks",
-            count: { try await self.api.bookmarks(restrict: "public", userID: rawUserID).illusts.count }
+            count: { try await self.api.bookmarks(restrict: "public", userID: rawUserID).illusts.count },
+            visualSurface: .batchBookmarkPreview,
+            visualEvidence: Self.visualQAEvidenceIndex()
         )
         async let followingCreators = qaFeedItem(
             id: "following-creators",

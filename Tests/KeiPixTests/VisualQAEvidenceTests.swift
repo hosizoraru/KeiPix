@@ -70,6 +70,7 @@ struct VisualQAEvidenceTests {
         #expect(index.covers([.downloadQueue, .readerWindow]))
         #expect(index.covers([.settingsWindow]))
         #expect(index.summary(for: [.galleryFeed]).contains("1/1"))
+        #expect(VisualQASurface(rawValue: "batch-bookmark-preview") == .batchBookmarkPreview)
     }
 
     @Test("Evidence index scans multiple candidate roots")
