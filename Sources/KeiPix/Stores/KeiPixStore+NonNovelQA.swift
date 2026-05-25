@@ -108,8 +108,8 @@ extension KeiPixStore {
         )
         async let urlResolver = qaStaticItem(
             id: "pixiv-url-routing",
-            passed: PixivWebLinkResolver.destination(from: URL(string: "https://www.pixiv.net/artworks/123")!) == .artwork(123)
-                && PixivWebLinkResolver.destination(from: URL(string: "https://www.pixiv.net/tags/OC")!) == .tag("OC")
+            passed: PixivURLRoutingCoverage.passes,
+            evidence: PixivURLRoutingCoverage.summary
         )
         return await [search, urlResolver]
     }

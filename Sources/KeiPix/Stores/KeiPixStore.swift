@@ -307,7 +307,7 @@ final class KeiPixStore {
         guard let rawText = NSPasteboard.general.string(forType: .string)?
             .trimmingCharacters(in: .whitespacesAndNewlines),
               rawText.isEmpty == false,
-              let url = URL(string: rawText) else {
+              let url = PixivWebLinkResolver.firstSupportedURL(in: rawText) else {
             errorMessage = L10n.noPixivLinkInClipboard
             return L10n.noPixivLinkInClipboard
         }
