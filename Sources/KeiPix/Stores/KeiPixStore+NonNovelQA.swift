@@ -190,7 +190,7 @@ extension KeiPixStore {
                 visualEvidence.summary(for: downloadSurfaces)
             ].joined(separator: " · ")
         )
-        let safetySurfaces: [VisualQASurface] = [.mutedContent]
+        let safetySurfaces: [VisualQASurface] = [.mutedContent, .feedbackSheet]
         let safety = qaStaticItem(
             id: "safety-filtering",
             passed: visualEvidence.covers(safetySurfaces),

@@ -159,6 +159,21 @@ enum VisualQASampleData {
         nextURL: URL(string: "https://app-api.pixiv.net/v1/illust/recommended?offset=30")
     )
 
+    static let feedbackReportRequest = FeedbackReportRequest.artwork(
+        decodeArtwork(
+            id: 93600,
+            title: "Feedback and local mute QA sample",
+            createdAt: 1_779_292_800,
+            pageCount: 3,
+            width: 1800,
+            height: 2400,
+            tags: ["R-18", "AI", "feedback"],
+            isAI: true,
+            xRestrict: 1,
+            isBookmarked: false
+        )
+    )
+
     static let galleryLayoutArtworks: [PixivArtwork] = [
         decodeArtwork(
             id: 94000,

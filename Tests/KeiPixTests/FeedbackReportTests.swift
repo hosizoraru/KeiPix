@@ -33,4 +33,13 @@ struct FeedbackReportTests {
         #expect(summary.contains("needs review"))
         #expect(summary.contains(url.absoluteString))
     }
+
+    @Test("Visual QA feedback request keeps local mute action visible")
+    func visualQAFeedbackRequest() {
+        let request = VisualQASampleData.feedbackReportRequest
+
+        #expect(request.kind == .artwork)
+        #expect(request.localMuteTitle == L10n.muteArtwork)
+        #expect(request.targetURL?.absoluteString.contains("/artworks/93600") == true)
+    }
 }

@@ -93,6 +93,7 @@ struct VisualQAEvidenceTests {
         #expect(VisualQASurface(rawValue: "settings-window") == .settingsWindow)
         #expect(VisualQASurface(rawValue: "ugoira-player") == .ugoiraPlayer)
         #expect(VisualQASurface(rawValue: "downloaded-reader") == .downloadedReader)
+        #expect(VisualQASurface(rawValue: "feedback-sheet") == .feedbackSheet)
         #expect(VisualQALaunchArgument.mangaWatchlist.surface == .mangaWatchlist)
         #expect(VisualQALaunchArgument.pixivIDOpen.surface == .pixivIDOpen)
         #expect(VisualQALaunchArgument.seriesSheet.surface == .seriesSheet)
@@ -102,6 +103,7 @@ struct VisualQAEvidenceTests {
         #expect(VisualQALaunchArgument.settingsWindow.surface == .settingsWindow)
         #expect(VisualQALaunchArgument.ugoiraPlayer.surface == .ugoiraPlayer)
         #expect(VisualQALaunchArgument.downloadedReader.surface == .downloadedReader)
+        #expect(VisualQALaunchArgument.feedbackSheet.surface == .feedbackSheet)
         #expect(VisualQALaunchArgument.galleryAuto.galleryLayoutMode == .autoMasonry)
         #expect(VisualQALaunchArgument.galleryTwoColumn.galleryLayoutMode == .twoColumnMasonry)
         #expect(VisualQALaunchArgument.galleryThreeColumn.galleryLayoutMode == .threeColumnMasonry)
@@ -109,6 +111,7 @@ struct VisualQAEvidenceTests {
         #expect(VisualQALaunchArgument.isActive(in: ["KeiPix", "--visual-qa-cached-feed"]))
         #expect(VisualQALaunchArgument.isActive(in: ["KeiPix", "--visual-qa-pixiv-id-open"]))
         #expect(VisualQALaunchArgument.isActive(in: ["KeiPix", "--visual-qa-ranking"]))
+        #expect(VisualQALaunchArgument.isActive(in: ["KeiPix", "--visual-qa-feedback-sheet"]))
         #expect(VisualQALaunchArgument.isActive(in: ["KeiPix"]) == false)
         #expect(VisualQALaunchArgument.activeGalleryLayoutMode(in: ["KeiPix", "--visual-qa-gallery-three-column"]) == .threeColumnMasonry)
     }

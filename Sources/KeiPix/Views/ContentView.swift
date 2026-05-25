@@ -8,6 +8,7 @@ struct ContentView: View {
     @State private var isPixivIDOpenPresented = false
     @State private var isPixivLinkDropTargeted = false
     @State private var isSeriesSheetVisualQAPresented = false
+    @State private var feedbackVisualQARequest: FeedbackReportRequest?
     @Environment(\.undoManager) private var undoManager
 
     var body: some View {
@@ -126,6 +127,13 @@ struct ContentView: View {
         .sheet(isPresented: $isSeriesSheetVisualQAPresented) {
             ArtworkSeriesVisualQASheetView(store: store)
         }
+        .sheet(item: $feedbackVisualQARequest) { request in
+            FeedbackReportSheet(request: request, localMuteAction: {
+                showStatus(L10n.muteArtwork)
+            }) { message in
+                showStatus(message)
+            }
+        }
         .confirmationDialog(
             store.pendingDangerAction?.title ?? L10n.moreActions,
             isPresented: dangerActionBinding,
@@ -208,6 +216,10 @@ struct ContentView: View {
             if VisualQALaunchArgument.contains(.pixivIDOpen) {
                 store.activateVisualQASampleSession()
                 isPixivIDOpenPresented = true
+            }
+            if VisualQALaunchArgument.contains(.feedbackSheet) {
+                store.activateVisualQASampleSession()
+                feedbackVisualQARequest = VisualQASampleData.feedbackReportRequest
             }
             if let visualQAGalleryLayoutMode = VisualQALaunchArgument.activeGalleryLayoutMode {
                 store.presentGalleryLayoutVisualQA(mode: visualQAGalleryLayoutMode)
