@@ -294,12 +294,17 @@
 "Deselect Artwork" = "Deselect Artwork";
 "Copy Selected Artwork Links" = "Copy Selected Artwork Links";
 "Batch Bookmark" = "Batch Bookmark";
+"Batch Bookmark Selected" = "Batch Bookmark Selected";
 "Apply Bookmarks" = "Apply Bookmarks";
+"Loaded Feed" = "Loaded Feed";
 "No unbookmarked works in the loaded feed" = "No unbookmarked works in the loaded feed";
+"No unbookmarked works in the selection" = "No unbookmarked works in the selection";
+"%@ · %d works checked" = "%@ · %d works checked";
 "%d will be bookmarked · %d already bookmarked · %@" = "%d will be bookmarked · %d already bookmarked · %@";
 "%d already bookmarked works will be skipped to avoid remote tag conflicts." = "%d already bookmarked works will be skipped to avoid remote tag conflicts.";
 "Bookmarked %d works · %d failed" = "Bookmarked %d works · %d failed";
 "%d more works will be bookmarked" = "%d more works will be bookmarked";
+"%d more already-bookmarked works skipped" = "%d more already-bookmarked works skipped";
 "Maximum downloads" = "Maximum downloads";
 "Add to Download Queue" = "Add to Download Queue";
 "Queued %d downloads" = "Queued %d downloads";

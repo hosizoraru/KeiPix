@@ -290,12 +290,17 @@ enum L10n {
     static var deselectArtwork: String { text("Deselect Artwork") }
     static var copySelectedArtworkLinks: String { text("Copy Selected Artwork Links") }
     static var batchBookmark: String { text("Batch Bookmark") }
+    static var batchBookmarkSelected: String { text("Batch Bookmark Selected") }
     static var applyBookmarks: String { text("Apply Bookmarks") }
+    static var loadedFeed: String { text("Loaded Feed") }
     static var noBatchBookmarkCandidates: String { text("No unbookmarked works in the loaded feed") }
+    static var noSelectedBatchBookmarkCandidates: String { text("No unbookmarked works in the selection") }
+    static var batchBookmarkScopeFormat: String { text("%@ · %d works checked") }
     static var batchBookmarkPreviewFormat: String { text("%d will be bookmarked · %d already bookmarked · %@") }
     static var batchBookmarkSkippedFormat: String { text("%d already bookmarked works will be skipped to avoid remote tag conflicts.") }
     static var batchBookmarkedResultFormat: String { text("Bookmarked %d works · %d failed") }
     static var moreBatchBookmarkItemsFormat: String { text("%d more works will be bookmarked") }
+    static var moreSkippedBatchBookmarkItemsFormat: String { text("%d more already-bookmarked works skipped") }
     static var maximumDownloads: String { text("Maximum downloads") }
     static var addToDownloadQueue: String { text("Add to Download Queue") }
     static var queuedDownloadsFormat: String { text("Queued %d downloads") }

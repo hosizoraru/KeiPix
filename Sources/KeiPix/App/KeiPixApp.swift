@@ -150,6 +150,11 @@ struct KeiPixApp: App {
                     gallerySelectionCommandActions?.downloadSelected()
                 }
                 .disabled(gallerySelectionCommandActions?.canDownload != true)
+
+                Button(L10n.batchBookmarkSelected) {
+                    gallerySelectionCommandActions?.batchBookmarkSelected()
+                }
+                .disabled(gallerySelectionCommandActions?.canBatchBookmark != true)
             }
 
             CommandMenu(L10n.downloads) {

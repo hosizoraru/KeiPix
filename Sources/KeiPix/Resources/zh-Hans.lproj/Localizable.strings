@@ -294,12 +294,17 @@
 "Deselect Artwork" = "取消选择作品";
 "Copy Selected Artwork Links" = "复制选中作品链接";
 "Batch Bookmark" = "批量收藏";
+"Batch Bookmark Selected" = "批量收藏选中作品";
 "Apply Bookmarks" = "应用收藏";
+"Loaded Feed" = "已加载作品流";
 "No unbookmarked works in the loaded feed" = "当前已加载作品里没有未收藏作品";
+"No unbookmarked works in the selection" = "当前选中作品里没有未收藏作品";
+"%@ · %d works checked" = "%@ · 已检查 %d 个作品";
 "%d will be bookmarked · %d already bookmarked · %@" = "%d 个将收藏 · %d 个已收藏 · %@";
 "%d already bookmarked works will be skipped to avoid remote tag conflicts." = "%d 个已收藏作品将跳过，以避免覆盖远端标签。";
 "Bookmarked %d works · %d failed" = "已收藏 %d 个 · %d 个失败";
 "%d more works will be bookmarked" = "还有 %d 个作品将收藏";
+"%d more already-bookmarked works skipped" = "还有 %d 个已收藏作品已跳过";
 "Maximum downloads" = "最大下载数";
 "Add to Download Queue" = "加入下载队列";
 "Queued %d downloads" = "已加入 %d 个下载";

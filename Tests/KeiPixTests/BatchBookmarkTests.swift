@@ -13,16 +13,36 @@ struct BatchBookmarkTests {
 
         let preview = BatchBookmarkPreview.make(
             artworks: artworks,
+            scope: .selectedWorks,
             restrict: .private,
             tags: ["favorite"],
             limit: 1
         )
 
+        #expect(preview.scope == .selectedWorks)
         #expect(preview.applyArtworks.map(\.id) == [1])
         #expect(preview.omittedCandidateCount == 1)
         #expect(preview.skippedBookmarked.map(\.id) == [2])
         #expect(preview.restrict == .private)
         #expect(preview.tags == ["favorite"])
+        #expect(preview.sourceArtworkCount == 3)
+    }
+
+    @Test("Batch bookmark preview caps skipped bookmark samples")
+    func batchBookmarkPreviewCapsSkippedSamples() throws {
+        let artworks = try (1...7).map { try artwork(id: $0, isBookmarked: $0 <= 5) }
+
+        let preview = BatchBookmarkPreview.make(
+            artworks: artworks,
+            restrict: .public,
+            tags: [],
+            limit: 30
+        )
+
+        #expect(preview.scope == .loadedFeed)
+        #expect(preview.skippedBookmarkedPreview.map(\.id) == [1, 2, 3, 4])
+        #expect(preview.omittedSkippedBookmarkedCount == 1)
+        #expect(preview.applyArtworks.map(\.id) == [6, 7])
     }
 
     private func artwork(id: Int, isBookmarked: Bool) throws -> PixivArtwork {

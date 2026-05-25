@@ -81,6 +81,7 @@ private struct GalleryFeedView: View {
     @Bindable var store: KeiPixStore
     @Binding var actionMessage: String?
     @State private var artworkSelection = GalleryArtworkSelection()
+    @State private var batchBookmarkCommandRequest: BatchBookmarkCommandRequest?
     @Environment(\.openWindow) private var openWindow
 
     var body: some View {
@@ -120,7 +121,8 @@ private struct GalleryFeedView: View {
                     FeedHeaderView(
                         store: store,
                         actionMessage: $actionMessage,
-                        artworkSelection: $artworkSelection
+                        artworkSelection: $artworkSelection,
+                        batchBookmarkCommandRequest: $batchBookmarkCommandRequest
                     )
                         .padding(.horizontal, 18)
                         .padding(.vertical, 5)
@@ -147,6 +149,7 @@ private struct GalleryFeedView: View {
             canClear: artworkSelection.hasSelection,
             canCopyLinks: selectedArtworkLinks.isEmpty == false,
             canDownload: selectedWorks.isEmpty == false,
+            canBatchBookmark: selectedWorks.isEmpty == false,
             selectAllVisible: {
                 artworkSelection.selectAll(store.artworks.map(\.id))
                 artworkSelection.isSelectionMode = true
@@ -159,6 +162,12 @@ private struct GalleryFeedView: View {
             },
             downloadSelected: {
                 downloadSelectedArtworks(selectedWorks)
+            },
+            batchBookmarkSelected: {
+                batchBookmarkCommandRequest = BatchBookmarkCommandRequest(
+                    scope: .selectedWorks,
+                    artworkIDs: selectedWorks.map(\.id)
+                )
             }
         )
     }

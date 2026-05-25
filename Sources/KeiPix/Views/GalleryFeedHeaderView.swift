@@ -4,6 +4,7 @@ struct FeedHeaderView: View {
     @Bindable var store: KeiPixStore
     @Binding var actionMessage: String?
     @Binding var artworkSelection: GalleryArtworkSelection
+    @Binding var batchBookmarkCommandRequest: BatchBookmarkCommandRequest?
     @State private var isBatchDownloadPresented = false
     @State private var batchDownloadLimit = 30
     @State private var batchActionArtworks: [PixivArtwork] = []
@@ -28,6 +29,9 @@ struct FeedHeaderView: View {
         }
         .task(id: actionMessage) {
             await dismissActionMessageIfNeeded(actionMessage)
+        }
+        .onChange(of: batchBookmarkCommandRequest) { _, request in
+            handleBatchBookmarkCommandRequest(request)
         }
     }
 
@@ -185,9 +189,9 @@ struct FeedHeaderView: View {
                 .disabled(selectedArtworks.isEmpty)
 
                 Button {
-                    presentBatchBookmarkPreview(artworks: selectedArtworks)
+                    presentBatchBookmarkPreview(artworks: selectedArtworks, scope: .selectedWorks)
                 } label: {
-                    Label(L10n.batchBookmark, systemImage: "bookmark")
+                    Label(L10n.batchBookmarkSelected, systemImage: "bookmark")
                 }
                 .disabled(selectedArtworks.isEmpty)
 
@@ -228,7 +232,7 @@ struct FeedHeaderView: View {
             .disabled(store.artworks.isEmpty)
 
             Button {
-                presentBatchBookmarkPreview(artworks: store.artworks)
+                presentBatchBookmarkPreview(artworks: store.artworks, scope: .loadedFeed)
             } label: {
                 Label(L10n.batchBookmark, systemImage: "bookmark")
             }
@@ -497,16 +501,27 @@ struct FeedHeaderView: View {
         }
     }
 
-    private func presentBatchBookmarkPreview(artworks: [PixivArtwork]) {
+    private func handleBatchBookmarkCommandRequest(_ request: BatchBookmarkCommandRequest?) {
+        guard let request else { return }
+        let requestedIDs = Set(request.artworkIDs)
+        presentBatchBookmarkPreview(
+            artworks: store.artworks.filter { requestedIDs.contains($0.id) },
+            scope: request.scope
+        )
+        batchBookmarkCommandRequest = nil
+    }
+
+    private func presentBatchBookmarkPreview(artworks: [PixivArtwork], scope: BatchBookmarkScope) {
         let preview = BatchBookmarkPreview.make(
             artworks: artworks,
+            scope: scope,
             restrict: store.defaultBookmarkRestrict,
             tags: commonAutomaticBookmarkTags(artworks: artworks),
             limit: 30
         )
         batchBookmarkPreview = preview
         if preview.canApply == false {
-            actionMessage = L10n.noBatchBookmarkCandidates
+            actionMessage = preview.scope.emptyStateTitle
         }
     }
 
@@ -789,116 +804,5 @@ private struct BulkMutePreviewPopover: View {
         }
         .padding(16)
         .frame(width: 340)
-    }
-}
-
-private struct BatchBookmarkPreviewPopover: View {
-    let preview: BatchBookmarkPreview
-    let isApplying: Bool
-    let cancel: () -> Void
-    let apply: () -> Void
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            VStack(alignment: .leading, spacing: 4) {
-                Label(L10n.batchBookmark, systemImage: "bookmark")
-                    .font(.headline)
-
-                Text(
-                    String(
-                        format: L10n.batchBookmarkPreviewFormat,
-                        preview.applyArtworks.count,
-                        preview.skippedBookmarked.count,
-                        preview.restrict.title
-                    )
-                )
-                .font(.caption)
-                .foregroundStyle(.secondary)
-            }
-
-            if preview.tags.isEmpty == false {
-                FlowLayout(spacing: 6) {
-                    ForEach(preview.tags, id: \.self) { tag in
-                        Text("#\(tag)")
-                            .font(.caption.weight(.medium))
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 4)
-                            .background(.thinMaterial, in: Capsule())
-                    }
-                }
-            }
-
-            if preview.applyArtworks.isEmpty {
-                ContentUnavailableView(L10n.noBatchBookmarkCandidates, systemImage: "bookmark")
-                    .frame(minHeight: 150)
-            } else {
-                ScrollView {
-                    LazyVStack(alignment: .leading, spacing: 8) {
-                        ForEach(preview.applyArtworks.prefix(10)) { artwork in
-                            HStack(spacing: 8) {
-                                RemoteImageView(url: artwork.thumbnailURL)
-                                    .frame(width: 34, height: 34)
-                                    .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
-
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text(artwork.title)
-                                        .font(.callout.weight(.medium))
-                                        .lineLimit(1)
-                                    Text(artwork.user.name)
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
-                                        .lineLimit(1)
-                                }
-                            }
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 8)
-                            .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
-                        }
-
-                        if preview.omittedCandidateCount > 0 {
-                            Text(String(format: L10n.moreBatchBookmarkItemsFormat, preview.omittedCandidateCount))
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                                .padding(.horizontal, 10)
-                        }
-                    }
-                }
-                .frame(maxHeight: 280)
-            }
-
-            if preview.skippedBookmarked.isEmpty == false {
-                Label(
-                    String(format: L10n.batchBookmarkSkippedFormat, preview.skippedBookmarked.count),
-                    systemImage: "exclamationmark.triangle"
-                )
-                .font(.caption)
-                .foregroundStyle(.secondary)
-            }
-
-            Divider()
-
-            HStack(spacing: 8) {
-                Button(L10n.cancel, action: cancel)
-                    .disabled(isApplying)
-
-                Spacer()
-
-                Button {
-                    apply()
-                } label: {
-                    if isApplying {
-                        ProgressView()
-                            .controlSize(.small)
-                    } else {
-                        Label(L10n.applyBookmarks, systemImage: "bookmark.fill")
-                    }
-                }
-                .buttonStyle(.glassProminent)
-                .disabled(preview.canApply == false || isApplying)
-            }
-        }
-        .padding(16)
-        .frame(width: 380)
     }
 }
