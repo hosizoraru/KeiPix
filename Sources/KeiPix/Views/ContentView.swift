@@ -6,6 +6,7 @@ struct ContentView: View {
     @State private var isSidebarPresented = true
     @State private var statusMessage: String?
     @State private var isPixivIDOpenPresented = false
+    @State private var isPixivLinkDropTargeted = false
     @Environment(\.undoManager) private var undoManager
 
     var body: some View {
@@ -151,6 +152,17 @@ struct ContentView: View {
             .padding(.horizontal, 18)
             .padding(.bottom, 14)
         }
+        .modifier(
+            PixivLinkDropTargetModifier(
+                isTargeted: $isPixivLinkDropTargeted,
+                openURL: { url in
+                    Task { await openPixivLink(url) }
+                },
+                rejectDrop: {
+                    showStatus(L10n.unsupportedPixivLink)
+                }
+            )
+        )
         .animation(.snappy(duration: 0.18), value: statusMessage)
         .animation(.snappy(duration: 0.18), value: store.undoAction?.id)
         .onChange(of: store.undoAction?.id) { _, _ in
@@ -294,6 +306,11 @@ struct ContentView: View {
 
     private func openPixivLinkFromClipboard() async {
         let message = await store.openPixivLinkFromClipboard()
+        showStatus(message)
+    }
+
+    private func openPixivLink(_ url: URL) async {
+        let message = await store.openPixivLink(url)
         showStatus(message)
     }
 

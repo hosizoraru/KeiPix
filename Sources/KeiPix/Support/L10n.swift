@@ -59,6 +59,7 @@ enum L10n {
     static var noPixivLinkInClipboard: String { text("No Pixiv link in clipboard") }
     static var unsupportedPixivLink: String { text("Unsupported Pixiv link") }
     static var loginRequiredForPixivLink: String { text("Login to open Pixiv links") }
+    static var dropPixivLinkToOpen: String { text("Drop Pixiv link to open in KeiPix") }
     static var pixivisionArticleFormat: String { text("Pixivision Article #%d") }
     static var recentSearches: String { text("Recent Searches") }
     static var noSavedSearches: String { text("No saved searches") }

@@ -56,6 +56,7 @@
 "No Pixiv link in clipboard" = "剪贴板里没有 Pixiv 链接";
 "Unsupported Pixiv link" = "暂不支持这个 Pixiv 链接";
 "Login to open Pixiv links" = "登录后可打开 Pixiv 链接";
+"Drop Pixiv link to open in KeiPix" = "拖入 Pixiv 链接即可在 KeiPix 打开";
 "Pixivision Article #%d" = "Pixivision 文章 #%d";
 "Recent Searches" = "最近搜索";
 "No saved searches" = "暂无保存的搜索";

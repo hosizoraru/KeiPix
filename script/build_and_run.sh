@@ -78,6 +78,22 @@ cat >"$INFO_PLIST" <<PLIST
       </array>
     </dict>
   </array>
+  <key>CFBundleDocumentTypes</key>
+  <array>
+    <dict>
+      <key>CFBundleTypeName</key>
+      <string>Web Internet Location</string>
+      <key>CFBundleTypeRole</key>
+      <string>Viewer</string>
+      <key>LSHandlerRank</key>
+      <string>Alternate</string>
+      <key>LSItemContentTypes</key>
+      <array>
+        <string>com.apple.web-internet-location</string>
+        <string>public.url</string>
+      </array>
+    </dict>
+  </array>
   <key>LSMinimumSystemVersion</key>
   <string>$MIN_SYSTEM_VERSION</string>
   <key>NSHighResolutionCapable</key>

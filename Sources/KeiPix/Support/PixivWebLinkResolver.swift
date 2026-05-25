@@ -11,6 +11,10 @@ enum PixivWebDestination: Equatable {
 
 enum PixivWebLinkResolver {
     static func destination(from url: URL) -> PixivWebDestination? {
+        if url.isFileURL, let nestedURL = webLocationURL(from: url) {
+            return destination(from: nestedURL)
+        }
+
         if url.scheme?.localizedCaseInsensitiveCompare("keipix") == .orderedSame {
             return keipixDestination(from: url)
         }
@@ -37,6 +41,14 @@ enum PixivWebLinkResolver {
         }
 
         return nil
+    }
+
+    static func firstSupportedURL(in rawText: String) -> URL? {
+        candidateURLs(in: rawText).first { destination(from: $0) != nil }
+    }
+
+    static func firstDestination(in rawText: String) -> PixivWebDestination? {
+        candidateURLs(in: rawText).lazy.compactMap { destination(from: $0) }.first
     }
 
     static func artworkID(from url: URL) -> Int? {
@@ -200,6 +212,70 @@ enum PixivWebLinkResolver {
         let loweredNames = Set(names.map { $0.lowercased() })
         return queryItems.first { loweredNames.contains($0.name.lowercased()) }?.value?
             .trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private static func candidateURLs(in rawText: String) -> [URL] {
+        let trimmed = rawText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard trimmed.isEmpty == false else { return [] }
+
+        var values: [String] = [trimmed]
+        values.append(contentsOf: detectedLinkStrings(in: trimmed))
+        values.append(contentsOf: trimmed.components(separatedBy: .whitespacesAndNewlines))
+
+        var urls: [URL] = []
+        var seen = Set<String>()
+        for value in values {
+            let candidate = trimmedURLCandidate(value)
+            guard candidate.isEmpty == false,
+                  seen.insert(candidate).inserted,
+                  let url = URL(string: candidate) else {
+                continue
+            }
+            urls.append(url)
+        }
+        return urls
+    }
+
+    private static func detectedLinkStrings(in rawText: String) -> [String] {
+        guard let detector = try? NSDataDetector(types: NSTextCheckingResult.CheckingType.link.rawValue) else {
+            return []
+        }
+        let range = NSRange(rawText.startIndex..<rawText.endIndex, in: rawText)
+        return detector.matches(in: rawText, range: range).compactMap { match in
+            guard let range = Range(match.range, in: rawText) else { return nil }
+            return String(rawText[range])
+        }
+    }
+
+    private static func trimmedURLCandidate(_ rawValue: String) -> String {
+        rawValue.trimmingCharacters(in: CharacterSet(charactersIn: " \n\t\r\"'`<>[](){}.,;"))
+    }
+
+    private static func webLocationURL(from fileURL: URL) -> URL? {
+        switch fileURL.pathExtension.lowercased() {
+        case "webloc":
+            guard let data = try? Data(contentsOf: fileURL),
+                  let plist = try? PropertyListSerialization.propertyList(from: data, options: [], format: nil),
+                  let dictionary = plist as? [String: Any],
+                  let rawURL = dictionary["URL"] as? String else {
+                return nil
+            }
+            return URL(string: rawURL.trimmingCharacters(in: .whitespacesAndNewlines))
+        case "url":
+            guard let text = try? String(contentsOf: fileURL, encoding: .utf8) else {
+                return nil
+            }
+            return text
+                .components(separatedBy: .newlines)
+                .compactMap { line -> URL? in
+                    guard line.lowercased().hasPrefix("url=") else { return nil }
+                    let rawURL = line.dropFirst(4).trimmingCharacters(in: .whitespacesAndNewlines)
+                    return URL(string: rawURL)
+                }
+                .first
+        default:
+            return nil
+        }
     }
 }
 
