@@ -18,10 +18,10 @@ INFO_PLIST="$APP_CONTENTS/Info.plist"
 cd "$ROOT_DIR"
 
 case "$MODE" in
-  run|--debug|debug|--logs|logs|--telemetry|telemetry|--verify|verify|--package|package|--visual-qa-pixiv-link-drop|visual-qa-pixiv-link-drop|--visual-qa-manga-watchlist|visual-qa-manga-watchlist)
+  run|--debug|debug|--logs|logs|--telemetry|telemetry|--verify|verify|--package|package|--visual-qa-pixiv-link-drop|visual-qa-pixiv-link-drop|--visual-qa-manga-watchlist|visual-qa-manga-watchlist|--visual-qa-series-sheet|visual-qa-series-sheet)
     ;;
   *)
-    echo "usage: $0 [run|--debug|--logs|--telemetry|--verify|--package|--visual-qa-pixiv-link-drop|--visual-qa-manga-watchlist]" >&2
+    echo "usage: $0 [run|--debug|--logs|--telemetry|--verify|--package|--visual-qa-pixiv-link-drop|--visual-qa-manga-watchlist|--visual-qa-series-sheet]" >&2
     exit 2
     ;;
 esac
@@ -142,13 +142,18 @@ case "$MODE" in
     sleep 1
     pgrep -x "$APP_NAME" >/dev/null
     ;;
+  --visual-qa-series-sheet|visual-qa-series-sheet)
+    open_app --visual-qa-series-sheet
+    sleep 1
+    pgrep -x "$APP_NAME" >/dev/null
+    ;;
   --package|package)
     plutil -lint "$INFO_PLIST"
     test -x "$APP_BINARY"
     echo "$APP_BUNDLE"
     ;;
   *)
-    echo "usage: $0 [run|--debug|--logs|--telemetry|--verify|--package|--visual-qa-pixiv-link-drop|--visual-qa-manga-watchlist]" >&2
+    echo "usage: $0 [run|--debug|--logs|--telemetry|--verify|--package|--visual-qa-pixiv-link-drop|--visual-qa-manga-watchlist|--visual-qa-series-sheet]" >&2
     exit 2
     ;;
 esac

@@ -39,7 +39,7 @@ extension KeiPixStore {
         async let manga = qaFeedItem(
             id: "manga-feeds",
             count: { try await self.api.recommendedMangas().illusts.count },
-            visualSurface: .mangaWatchlist,
+            visualSurfaces: [.mangaWatchlist, .seriesSheet],
             visualEvidence: visualEvidence
         )
         async let ranking = qaFeedItem(
@@ -207,6 +207,7 @@ extension KeiPixStore {
         id: String,
         count: @escaping @Sendable () async throws -> Int,
         visualSurface: VisualQASurface? = nil,
+        visualSurfaces: [VisualQASurface] = [],
         visualEvidence: VisualQAEvidenceIndex? = nil
     ) async -> NonNovelQAItem {
         guard let template = Self.nonNovelQABaseline.first(where: { $0.id == id }) else {
@@ -216,15 +217,15 @@ extension KeiPixStore {
         do {
             let value = try await count()
             let resolvedVisualEvidence = visualEvidence ?? Self.visualQAEvidenceIndex()
-            let hasVisualEvidence = visualSurface.flatMap { resolvedVisualEvidence.latestManifest(for: $0) } != nil
-            let passed = value > 0 && (visualSurface == nil || hasVisualEvidence)
+            let singleVisualSurfaces = visualSurface.map { [$0] } ?? []
+            let requiredVisualSurfaces = visualSurfaces + singleVisualSurfaces
+            let hasVisualEvidence = resolvedVisualEvidence.covers(requiredVisualSurfaces)
+            let passed = value > 0 && (requiredVisualSurfaces.isEmpty || hasVisualEvidence)
             let status: NonNovelQAStatus = passed ? .passed : .needsEvidence
             let nextAction = passed ? L10n.keepRegressionCoverage : template.nextAction
             let evidence = [
                 String(format: L10n.qaLoadedCountFormat, value),
-                visualSurface.map { surface in
-                    resolvedVisualEvidence.latestManifest(for: surface)?.capturedAt ?? L10n.visualQAMissing
-                }
+                requiredVisualSurfaces.isEmpty ? nil : resolvedVisualEvidence.summary(for: requiredVisualSurfaces)
             ].compactMap(\.self).joined(separator: " · ")
             return template.item(
                 status: status,

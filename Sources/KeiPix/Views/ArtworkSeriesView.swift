@@ -5,6 +5,7 @@ struct ArtworkSeriesView: View {
     @Bindable var store: KeiPixStore
     @Binding var isExpanded: Bool
     var startsExpanded = false
+    var visualQAResponse: PixivArtworkSeriesResponse?
 
     @State private var didApplyInitialExpansion = false
     @State private var hasLoaded = false
@@ -22,7 +23,7 @@ struct ArtworkSeriesView: View {
     @State private var readFilter = ArtworkSeriesReadFilter.all
 
     private let columns = [
-        GridItem(.adaptive(minimum: 140, maximum: 210), spacing: 12)
+        GridItem(.adaptive(minimum: 164, maximum: 220), spacing: 12)
     ]
 
     var body: some View {
@@ -250,7 +251,13 @@ struct ArtworkSeriesView: View {
         }
 
         do {
-            guard let response = try await store.artworkSeries(for: artwork) else { return }
+            let response: PixivArtworkSeriesResponse
+            if let visualQAResponse {
+                response = visualQAResponse
+            } else {
+                guard let loadedResponse = try await store.artworkSeries(for: artwork) else { return }
+                response = loadedResponse
+            }
             detail = response.detail
             seriesArtworks = response.illusts
             nextURL = response.nextURL
@@ -391,6 +398,26 @@ struct ArtworkSeriesView: View {
             coverURL: detail.coverImageURLs?.medium ?? detail.coverImageURLs?.large ?? artwork.thumbnailURL,
             maskText: nil
         )
+    }
+}
+
+struct ArtworkSeriesVisualQASheetView: View {
+    @Bindable var store: KeiPixStore
+    @State private var isExpanded = true
+
+    var body: some View {
+        ScrollView {
+            ArtworkSeriesView(
+                artwork: VisualQASampleData.seriesParentArtwork,
+                store: store,
+                isExpanded: $isExpanded,
+                startsExpanded: true,
+                visualQAResponse: VisualQASampleData.seriesResponse
+            )
+            .padding(20)
+        }
+        .frame(width: 860, height: 680)
+        .navigationTitle(L10n.artworkSeries)
     }
 }
 

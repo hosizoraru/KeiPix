@@ -7,6 +7,7 @@ struct ContentView: View {
     @State private var statusMessage: String?
     @State private var isPixivIDOpenPresented = false
     @State private var isPixivLinkDropTargeted = false
+    @State private var isSeriesSheetVisualQAPresented = false
     @Environment(\.undoManager) private var undoManager
 
     var body: some View {
@@ -118,6 +119,9 @@ struct ContentView: View {
         .sheet(isPresented: $isPixivIDOpenPresented) {
             PixivIDOpenSheet(store: store, showStatus: showStatus)
         }
+        .sheet(isPresented: $isSeriesSheetVisualQAPresented) {
+            ArtworkSeriesVisualQASheetView(store: store)
+        }
         .confirmationDialog(
             store.pendingDangerAction?.title ?? L10n.moreActions,
             isPresented: dangerActionBinding,
@@ -175,6 +179,10 @@ struct ContentView: View {
         .task {
             if VisualQALaunchArgument.contains(.mangaWatchlist) {
                 store.select(.mangaWatchlist)
+            }
+            if VisualQALaunchArgument.contains(.seriesSheet) {
+                store.select(.mangaRecommended)
+                isSeriesSheetVisualQAPresented = true
             }
         }
         .alert(L10n.errorTitle, isPresented: errorBinding) {

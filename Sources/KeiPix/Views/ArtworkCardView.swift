@@ -85,11 +85,14 @@ struct ArtworkCardView: View {
 
                 HStack(spacing: 10) {
                     Label(artwork.totalView.formatted(), systemImage: "eye")
+                        .lineLimit(1)
                     Label(artwork.totalBookmarks.formatted(), systemImage: artwork.isBookmarked ? "bookmark.fill" : "bookmark")
+                        .lineLimit(1)
                 }
                 .font(.caption2)
                 .foregroundStyle(.white.opacity(0.74))
                 .labelStyle(.titleAndIcon)
+                .minimumScaleFactor(0.76)
             }
             .padding(10)
         }

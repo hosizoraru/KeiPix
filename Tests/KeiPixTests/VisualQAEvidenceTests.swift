@@ -73,7 +73,9 @@ struct VisualQAEvidenceTests {
         #expect(VisualQASurface(rawValue: "batch-bookmark-preview") == .batchBookmarkPreview)
         #expect(VisualQASurface(rawValue: "pixiv-link-drop") == .pixivLinkDrop)
         #expect(VisualQASurface(rawValue: "manga-watchlist") == .mangaWatchlist)
+        #expect(VisualQASurface(rawValue: "series-sheet") == .seriesSheet)
         #expect(VisualQALaunchArgument.mangaWatchlist.surface == .mangaWatchlist)
+        #expect(VisualQALaunchArgument.seriesSheet.surface == .seriesSheet)
     }
 
     @Test("Evidence index scans multiple candidate roots")
