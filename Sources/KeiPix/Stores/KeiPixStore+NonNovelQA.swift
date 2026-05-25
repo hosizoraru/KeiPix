@@ -185,15 +185,17 @@ extension KeiPixStore {
                 visualEvidence.summary(for: downloadSurfaces)
             ].joined(separator: " · ")
         )
+        let safetySurfaces: [VisualQASurface] = [.mutedContent]
         let safety = qaStaticItem(
             id: "safety-filtering",
-            passed: true,
+            passed: visualEvidence.covers(safetySurfaces),
             evidence: [
                 hideAIArtworks ? L10n.aiGenerated : nil,
                 hideR18Artworks ? L10n.r18 : nil,
                 hideR18GArtworks ? L10n.r18g : nil,
                 maskSensitivePreviews ? L10n.maskSensitivePreviews : nil,
-                hideMutedContent ? L10n.muted : nil
+                hideMutedContent ? L10n.muted : nil,
+                visualEvidence.summary(for: safetySurfaces)
             ].compactMap(\.self).joined(separator: " · ").nilIfEmpty ?? L10n.availableInDiagnostics
         )
         let cache = await imageCacheStatus()

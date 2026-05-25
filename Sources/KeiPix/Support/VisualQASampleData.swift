@@ -458,6 +458,39 @@ extension KeiPixStore {
         setRankingDate(Self.latestSelectableRankingDate())
     }
 
+    func presentMutedContentVisualQA() {
+        activateVisualQASampleSession()
+        selectedRoute = .mutedContent
+        focusedUser = nil
+        bookmarkTagFilter = nil
+        selectedSpotlightArticle = nil
+        selectedArtwork = nil
+        errorMessage = nil
+        isLoading = false
+        isLoadingMore = false
+        activeFeedSnapshotRestoration = nil
+        searchPopularPreviewArtworks = []
+        allArtworks = []
+        artworks = []
+        nextURL = nil
+        mutedTags = ["R-18", "AI", "spoiler", "horror"]
+        mutedUsers = [
+            81001: "Muted QA Creator",
+            81002: "Private Preview Artist",
+            81003: "Long Name Creator For Sidebar Density"
+        ]
+        mutedArtworks = [
+            91001: "Muted wide artwork sample",
+            91002: "Muted manga chapter sample",
+            91003: "Muted R-18G sample"
+        ]
+        mutedCommentPhrases = [
+            "spoiler phrase",
+            "sales bot",
+            "machine translated bait"
+        ]
+    }
+
     func presentLocalSampleFeed(for route: PixivRoute) {
         focusedUser = nil
         bookmarkTagFilter = nil

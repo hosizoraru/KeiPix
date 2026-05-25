@@ -10,6 +10,7 @@ enum VisualQALaunchArgument: String, CaseIterable {
     case galleryThreeColumn = "--visual-qa-gallery-three-column"
     case galleryCompact = "--visual-qa-gallery-compact"
     case ranking = "--visual-qa-ranking"
+    case mutedContent = "--visual-qa-muted-content"
 
     var surface: VisualQASurface {
         switch self {
@@ -31,6 +32,8 @@ enum VisualQALaunchArgument: String, CaseIterable {
             .galleryCompact
         case .ranking:
             .ranking
+        case .mutedContent:
+            .mutedContent
         }
     }
 

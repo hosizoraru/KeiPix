@@ -196,6 +196,9 @@ struct ContentView: View {
             if VisualQALaunchArgument.contains(.ranking) {
                 store.presentRankingVisualQA()
             }
+            if VisualQALaunchArgument.contains(.mutedContent) {
+                store.presentMutedContentVisualQA()
+            }
             if let visualQAGalleryLayoutMode = VisualQALaunchArgument.activeGalleryLayoutMode {
                 store.presentGalleryLayoutVisualQA(mode: visualQAGalleryLayoutMode)
             }
