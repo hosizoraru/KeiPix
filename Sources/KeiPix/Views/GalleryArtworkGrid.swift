@@ -174,8 +174,8 @@ private struct MasonryArtworkGrid: View {
     let fixedColumnCount: Int?
 
     private let spacing: CGFloat = 12
-    private var preferredColumnWidth: CGFloat { usesDenseThreeColumnLayout ? 180 : 224 }
-    private var minColumnWidth: CGFloat { usesDenseThreeColumnLayout ? 132 : 176 }
+    private var preferredColumnWidth: CGFloat { usesDenseThreeColumnLayout ? 168 : 224 }
+    private var minColumnWidth: CGFloat { usesDenseThreeColumnLayout ? 116 : 176 }
     private let maxColumnWidth: CGFloat = 260
     private var usesDenseThreeColumnLayout: Bool { fixedColumnCount == 3 }
 

@@ -78,7 +78,7 @@ struct MasonryLayout: Layout {
         return MasonryItemOrigin(column: bestColumn, x: x, y: bestHeight)
     }
 
-    private func resolvedColumnCount(for width: CGFloat) -> Int {
+    func resolvedColumnCount(for width: CGFloat) -> Int {
         if let fixedColumnCount {
             return min(max(1, fixedColumnCount), maximumColumnCount(for: width))
         }

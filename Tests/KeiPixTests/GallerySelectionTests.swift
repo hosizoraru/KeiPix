@@ -69,4 +69,20 @@ struct GallerySelectionTests {
         #expect(wideHeavyArtworks.count >= 6)
         #expect(denseSpans.allSatisfy { $0 == 1 })
     }
+
+    @Test("Three-column masonry survives narrow real-account content panes")
+    func threeColumnMasonrySurvivesNarrowRealAccountContentPanes() {
+        let layout = MasonryLayout(
+            spacing: 12,
+            preferredColumnWidth: 168,
+            minColumnWidth: 116,
+            maxColumnWidth: 260,
+            fixedColumnCount: 3,
+            denseFixedColumns: true
+        )
+
+        #expect(layout.resolvedColumnCount(for: 390) == 3)
+        #expect(layout.resolvedColumnCount(for: 372) == 3)
+        #expect(layout.resolvedColumnCount(for: 371) == 2)
+    }
 }
