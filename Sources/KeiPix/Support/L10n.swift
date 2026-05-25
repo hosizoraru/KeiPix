@@ -692,7 +692,7 @@ enum L10n {
     static var qaCommentsFeedbackNext: String { text("Add stamp support only after endpoint verification.") }
     static var qaLocalCacheOffline: String { text("Local cache and offline") }
     static var qaLocalCacheOfflineRequirement: String { text("Image cache, history, downloads, and last successful surfaces support offline-friendly review.") }
-    static var qaLocalCacheOfflineNext: String { text("Add feed snapshot cache.") }
+    static var qaLocalCacheOfflineNext: String { text("Keep feed snapshot cache in regression coverage.") }
     static var qaSettingsOrganization: String { text("Settings organization") }
     static var qaSettingsOrganizationRequirement: String { text("Reading, discovery, safety, downloads, privacy, and QA controls stay grouped in native Settings.") }
     static var qaSettingsOrganizationNext: String { text("Keep Settings search and grouping in regression coverage.") }
@@ -711,6 +711,7 @@ enum L10n {
     static var currentRoute: String { text("Current Route") }
     static var feed: String { text("Feed") }
     static var feedReadinessFormat: String { text("%d shown · %d loaded · %@") }
+    static var loadedCachedFeedFormat: String { text("Loaded cached feed %@ · %d works · %@") }
     static var selectedArtwork: String { text("Selected Artwork") }
     static var noSelection: String { text("No Selection") }
     static var pageCountFormat: String { text("%d pages") }

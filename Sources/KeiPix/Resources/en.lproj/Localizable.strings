@@ -893,7 +893,7 @@
 "Add stamp support only after endpoint verification." = "Add stamp support only after endpoint verification.";
 "Local cache and offline" = "Local cache and offline";
 "Image cache, history, downloads, and last successful surfaces support offline-friendly review." = "Image cache, history, downloads, and last successful surfaces support offline-friendly review.";
-"Add feed snapshot cache." = "Add feed snapshot cache.";
+"Keep feed snapshot cache in regression coverage." = "Keep feed snapshot cache in regression coverage.";
 "Settings organization" = "Settings organization";
 "Reading, discovery, safety, downloads, privacy, and QA controls stay grouped in native Settings." = "Reading, discovery, safety, downloads, privacy, and QA controls stay grouped in native Settings.";
 "Keep Settings search and grouping in regression coverage." = "Keep Settings search and grouping in regression coverage.";
@@ -912,6 +912,7 @@
 "Current Route" = "Current Route";
 "Feed" = "Feed";
 "%d shown · %d loaded · %@" = "%d shown · %d loaded · %@";
+"Loaded cached feed %@ · %d works · %@" = "Loaded cached feed %@ · %d works · %@";
 "Selected Artwork" = "Selected Artwork";
 "No Selection" = "No Selection";
 "%d pages" = "%d pages";

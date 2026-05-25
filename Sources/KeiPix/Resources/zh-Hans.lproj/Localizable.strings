@@ -893,7 +893,7 @@
 "Add stamp support only after endpoint verification." = "仅在端点验证后新增表情评论支持。";
 "Local cache and offline" = "本地缓存与离线";
 "Image cache, history, downloads, and last successful surfaces support offline-friendly review." = "图片缓存、历史、下载和最近成功页面需要支持离线友好浏览。";
-"Add feed snapshot cache." = "新增作品流快照缓存。";
+"Keep feed snapshot cache in regression coverage." = "将作品流快照缓存纳入回归覆盖。";
 "Settings organization" = "设置组织";
 "Reading, discovery, safety, downloads, privacy, and QA controls stay grouped in native Settings." = "阅读、发现、安全、下载、隐私和 QA 控制需要在原生设置中分组。";
 "Keep Settings search and grouping in regression coverage." = "保持设置搜索与分组的回归覆盖。";
@@ -912,6 +912,7 @@
 "Current Route" = "当前页面";
 "Feed" = "作品流";
 "%d shown · %d loaded · %@" = "显示 %d · 已载入 %d · %@";
+"Loaded cached feed %@ · %d works · %@" = "已载入缓存作品流 %@ · %d 个作品 · %@";
 "Selected Artwork" = "选中作品";
 "No Selection" = "未选择";
 "%d pages" = "%d 页";

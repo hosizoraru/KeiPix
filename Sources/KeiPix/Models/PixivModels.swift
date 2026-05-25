@@ -70,7 +70,7 @@ struct PixivAccountUser: Codable, Equatable, Sendable {
     }
 }
 
-struct PixivUser: Decodable, Identifiable, Hashable, Sendable {
+struct PixivUser: Codable, Identifiable, Hashable, Sendable {
     let id: Int
     let name: String
     let account: String
@@ -121,9 +121,20 @@ struct PixivUser: Decodable, Identifiable, Hashable, Sendable {
         avatarURL = profile?.decodeCleanURLIfPresent(forKey: .medium)
             ?? profile?.decodeCleanURLIfPresent(forKey: .px170)
     }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        try container.encode(name, forKey: .name)
+        try container.encode(account, forKey: .account)
+        try container.encodeIfPresent(comment, forKey: .comment)
+        try container.encode(isFollowed, forKey: .isFollowed)
+        var profile = container.nestedContainer(keyedBy: ProfileKeys.self, forKey: .profileImageURLs)
+        try profile.encodeIfPresent(avatarURL?.absoluteString, forKey: .medium)
+    }
 }
 
-struct PixivTag: Decodable, Hashable, Sendable {
+struct PixivTag: Codable, Hashable, Sendable {
     let name: String
     let translatedName: String?
 
@@ -138,7 +149,7 @@ struct PixivTag: Decodable, Hashable, Sendable {
     }
 }
 
-struct PixivImageSet: Decodable, Hashable, Sendable {
+struct PixivImageSet: Codable, Hashable, Sendable {
     let squareMedium: URL?
     let medium: URL?
     let large: URL?
@@ -170,14 +181,22 @@ struct PixivImageSet: Decodable, Hashable, Sendable {
         large = container.decodeCleanURLIfPresent(forKey: .large)
         original = container.decodeCleanURLIfPresent(forKey: .original)
     }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encodeIfPresent(squareMedium?.absoluteString, forKey: .squareMedium)
+        try container.encodeIfPresent(medium?.absoluteString, forKey: .medium)
+        try container.encodeIfPresent(large?.absoluteString, forKey: .large)
+        try container.encodeIfPresent(original?.absoluteString, forKey: .original)
+    }
 }
 
-struct PixivArtworkSeriesSummary: Decodable, Hashable, Sendable {
+struct PixivArtworkSeriesSummary: Codable, Hashable, Sendable {
     let id: Int
     let title: String
 }
 
-struct PixivArtwork: Decodable, Identifiable, Hashable, Sendable {
+struct PixivArtwork: Codable, Identifiable, Hashable, Sendable {
     let id: Int
     let title: String
     let type: String
@@ -307,6 +326,31 @@ struct PixivArtwork: Decodable, Identifiable, Hashable, Sendable {
             }
         }
         images = decodedImages
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        try container.encode(title, forKey: .title)
+        try container.encode(type, forKey: .type)
+        try container.encode(images.first, forKey: .imageURLs)
+        try container.encode(images.map { [MetaPageKeys.imageURLs.rawValue: $0] }, forKey: .metaPages)
+        try container.encode(caption, forKey: .caption)
+        try container.encode(user, forKey: .user)
+        try container.encode(tags, forKey: .tags)
+        try container.encode(createDate, forKey: .createDate)
+        try container.encode(pageCount, forKey: .pageCount)
+        try container.encode(width, forKey: .width)
+        try container.encode(height, forKey: .height)
+        try container.encode(totalView, forKey: .totalView)
+        try container.encode(totalBookmarks, forKey: .totalBookmarks)
+        try container.encode(totalComments, forKey: .totalComments)
+        try container.encode(isBookmarked, forKey: .isBookmarked)
+        try container.encode(isMuted, forKey: .isMuted)
+        try container.encode(isAI ? 2 : 0, forKey: .illustAIType)
+        try container.encode(sanityLevel, forKey: .sanityLevel)
+        try container.encode(xRestrict, forKey: .xRestrict)
+        try container.encodeIfPresent(series, forKey: .series)
     }
 }
 

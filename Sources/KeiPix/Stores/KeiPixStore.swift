@@ -36,6 +36,7 @@ final class KeiPixStore {
     var downloadedReaderProgressLibrary = KeiPixStore.loadDownloadedReaderProgressLibrary()
     var mangaWatchlistReadStateLibrary = KeiPixStore.loadMangaWatchlistReadStateLibrary()
     var pinnedCreatorLibrary = KeiPixStore.loadPinnedCreatorLibrary()
+    var feedSnapshotLibrary = KeiPixStore.loadFeedSnapshotLibrary()
     var errorMessage: String?
     var isLoading = false
     var isLoadingMore = false
@@ -105,7 +106,7 @@ final class KeiPixStore {
     let api = PixivAPI()
     var allArtworks: [PixivArtwork] = []
     private var allSearchPopularPreviewArtworks: [PixivArtwork] = []
-    private var nextURL: URL?
+    var nextURL: URL?
     private var activeFeedRequestID: UUID?
     private var activeSearchPopularPreviewRequestID: UUID?
     var mutedTags = Set(UserDefaults.standard.stringArray(forKey: "mutedTags") ?? [])
@@ -416,6 +417,7 @@ final class KeiPixStore {
             allArtworks = response.illusts
             nextURL = response.nextURL
             applyContentFilters()
+            storeFeedSnapshot(response, for: context)
         } catch {
             guard isCancellationLike(error) == false else { return }
             guard currentFeedRequestContext() == context else { return }
@@ -428,13 +430,16 @@ final class KeiPixStore {
                     allArtworks = response.illusts
                     nextURL = response.nextURL
                     applyContentFilters()
+                    storeFeedSnapshot(response, for: currentFeedRequestContext())
                     errorMessage = L10n.rankingDateFallbackMessage
                 } catch {
                     guard isCancellationLike(error) == false else { return }
                     guard selectedRoute == context.route else { return }
+                    if restoreFeedSnapshot(for: currentFeedRequestContext(), error: error) { return }
                     errorMessage = error.localizedDescription
                 }
             } else {
+                if restoreFeedSnapshot(for: context, error: error) { return }
                 errorMessage = error.localizedDescription
             }
         }
@@ -458,16 +463,20 @@ final class KeiPixStore {
 
     func loadMore() async {
         guard let nextURL, isLoadingMore == false else { return }
+        let context = currentFeedRequestContext()
         isLoadingMore = true
         errorMessage = nil
         defer { isLoadingMore = false }
 
         do {
             let response = try await api.nextFeed(nextURL)
+            guard currentFeedRequestContext() == context else { return }
             allArtworks.append(contentsOf: response.illusts)
             self.nextURL = response.nextURL
             applyContentFilters()
+            storeFeedSnapshot(PixivFeedResponse(illusts: allArtworks, nextURL: response.nextURL), for: context)
         } catch {
+            guard isCancellationLike(error) == false else { return }
             errorMessage = error.localizedDescription
         }
     }
@@ -956,7 +965,7 @@ final class KeiPixStore {
     }()
 }
 
-private struct FeedRequestContext: Equatable {
+struct FeedRequestContext: Equatable {
     let route: PixivRoute
     let focusedUserID: Int?
     let searchText: String
