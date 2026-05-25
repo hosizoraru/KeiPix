@@ -8,7 +8,7 @@ KeiPix 整体是一款 SwiftPM 单 target 的 macOS 应用，UI 全部基于 Swi
 Sources/KeiPix/
 ├── App/             # SwiftUI App 入口、AppDelegate、URL scheme 路由
 ├── Models/          # Pixiv API 模型、本地 UI 模型、QA / 可视化 QA 模型
-├── Services/        # PixivAPI、KeychainTokenStore、ImagePipeline、Ugoira 解码与导出、SauceNAO
+├── Services/        # PixivAPI、PixivSessionStore、ImagePipeline、Ugoira 解码与导出、SauceNAO
 ├── Stores/          # KeiPixStore 主体 + 按领域切分的 extension
 │   ├── KeiPixStore.swift                       # 主状态、feed/route 调度
 │   ├── KeiPixStore+Accounts.swift              # 登录 / 切号 / token 健康检查
@@ -49,10 +49,12 @@ Sources/KeiPix/
 - 401 自动 refresh 一次后重试；表单 POST、JSON 反序列化、可重入诊断接口
 - 路由族覆盖：推荐 / 排行榜 / 关注 / 收藏 / 评论 / 标签 / 系列 / 用户 / 搜索 / mute / popular-preview
 
-### `KeychainTokenStore`
+### `PixivSessionStore`
 
-- 多账户 token 存储，按 user id 做 key 区分
-- 暴露当前活跃账户、可枚举的存储账户、删除 / 切换 / 标记健康度等 API
+- 文件型 token store：把 access / refresh token 写到沙盒容器内 `~/Library/Containers/com.keipix.client/Data/Library/Application Support/KeiPix/pixiv-sessions.json`
+- 不依赖 macOS Login Keychain：避开 ad-hoc 开发签名每次构建都变化导致的 ACL 重新授权弹窗
+- 仍然支持多账户：按 user id 分键，`select` / `delete` / `deleteCurrent` 都不污染其他账户
+- 兼容旧版单账户 `pixiv-session.json` 文件，首次启动时自动迁移到多账户库
 
 ### `ImagePipeline`
 
@@ -74,7 +76,7 @@ Sources/KeiPix/
 ### Visual QA 启动参数
 
 - `VisualQALaunchArgument` 解析 23 个独立 surface 的命令行旗标
-- `VisualQASampleData` 注入本地化样本数据，避免触碰真实 Keychain 账号
+- `VisualQASampleData` 注入本地化样本数据，避免触碰真实账户存储
 - 当任一 visual-qa 旗标存在时，`KeiPixStore` 会切换到隔离的 "Visual QA" 模式
 
 ## 与 Pixez / Pixes 的边界
@@ -90,10 +92,10 @@ Sources/KeiPix/
 
 - `SWIFT_STRICT_CONCURRENCY: complete`（Swift 6 严格并发）
 - 主线程隔离用 `@MainActor`；Task 边界都标注隔离状态
-- I/O（Keychain、网络、磁盘）走 actor 或后台 task，UI 更新统一切回 `@MainActor`
+- I/O（网络、磁盘、token 文件）走 actor 或后台 task，UI 更新统一切回 `@MainActor`
 
 ## 本地数据层
 
 - `UserDefaults` 持久化：UI 偏好、QA 矩阵快照、已置顶作者、搜索预设、复制模板、详情折叠状态、阅读进度、下载完成记录索引
 - 文件系统：图片 URLCache、下载库（沙盒 Downloads 区域）、Ugoira ZIP 缓存、可视化 QA 输出
-- Keychain：Pixiv access / refresh token、账户元数据
+- 沙盒应用容器：Pixiv access / refresh token（`pixiv-sessions.json`）、账户元数据，写入时使用 `.completeFileProtectionUnlessOpen`

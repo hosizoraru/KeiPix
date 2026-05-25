@@ -11,7 +11,7 @@ KeiPix 是一款面向 macOS 26+ 的原生 Swift + SwiftUI Pixiv 客户端。所
 ## 主要特性
 
 - **原生体验**：`NavigationSplitView` 侧边栏 + 自适应 masonry 画廊 + 详情 inspector，AppKit 仅做触控板、窗口、剪贴板、URL 拖放等窄桥接
-- **登录与账户**：Pixiv OAuth PKCE（嵌入式 `WKWebView`）、Keychain 持久化、token 自动刷新、refresh-token 一键导入（Pixez 迁移）、多账号切换、访客 / 测试模式
+- **登录与账户**：Pixiv OAuth PKCE（嵌入式 `WKWebView`）、沙盒容器内的本地安全存储、token 自动刷新、refresh-token 一键导入（Pixez 迁移）、多账号切换、访客 / 测试模式
 - **完整的非小说浏览**：推荐 / 排行榜 / 关注 / 收藏 / 标签搜索 / Pixivision，原生发现仪表盘聚合所有侧边栏入口
 - **画廊与阅读器**：自定义 `MasonryLayout`、四档密度、连续 / 单页 / 索引模式、触控板手势、跳页面板、独立阅读器窗口、专注全屏、按作品续读
 - **下载与本地库**：队列 / 模板命名 / 多 P 范围下载 / 失败退避重试 / 自动收藏联动 / 本地阅读器 / Finder 联动

@@ -25,7 +25,7 @@ actor PixivAPI {
         static let oauthBase = URL(string: "https://oauth.secure.pixiv.net")!
     }
 
-    private let tokenStore = KeychainTokenStore()
+    private let tokenStore = PixivSessionStore()
     private let urlSession: URLSession
     private let jsonDecoder: JSONDecoder
     private var codeVerifier: String?

@@ -39,7 +39,7 @@ swift test --filter <TestSuiteName>
 
 ## 视觉 QA
 
-每个 surface 都通过专门的 launch mode 切换到隔离的 Visual QA Sample 会话（不会读真实 Keychain），再用 `screencapture` 抓窗口出图。
+每个 surface 都通过专门的 launch mode 切换到隔离的 Visual QA Sample 会话（不会读真实账户存储），再用 `screencapture` 抓窗口出图。
 
 启动 surface：
 
@@ -110,7 +110,7 @@ swift test --filter <TestSuiteName>
 
 ## 签入运行验证
 
-`--verify` 模式启动的是 Visual QA Sample，不会触碰用户 Keychain。CI / 本地最小活性检查：
+`--verify` 模式启动的是 Visual QA Sample，不会触碰用户的真实 token 文件。CI / 本地最小活性检查：
 
 ```bash
 ./script/build_and_run.sh --verify

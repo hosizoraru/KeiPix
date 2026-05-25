@@ -562,14 +562,14 @@ enum L10n {
     static var account: String { text("Account") }
     static var accountMode: String { text("Account Mode") }
     static var realAccount: String { text("Real Account") }
-    static var realAccountSubtitle: String { text("Use saved Pixiv sessions from Keychain.") }
+    static var realAccountSubtitle: String { text("Use Pixiv sessions saved in this app's secure storage.") }
     static var guestAccount: String { text("Guest Account") }
     static var guestAccountSubtitle: String { text("Preview KeiPix with local sample artworks.") }
     static var testModeAccount: String { text("Test Mode Account") }
     static var testModeAccountSubtitle: String { text("Run repeatable QA surfaces with local fixtures.") }
     static var addAccount: String { text("Add Account") }
     static var importToken: String { text("Import Token") }
-    static var importTokenHint: String { text("Paste a Pixiv refresh token exported from another client. KeiPix refreshes it once, stores the new session in Keychain, and switches to the imported account.") }
+    static var importTokenHint: String { text("Paste a Pixiv refresh token exported from another client. KeiPix refreshes it once, saves the new session in secure local storage, and switches to the imported account.") }
     static var refreshToken: String { text("Refresh Token") }
     static var currentAccount: String { text("Current Account") }
     static var switchAccount: String { text("Switch Account") }
@@ -598,7 +598,7 @@ enum L10n {
     static var runAccountHealthDiagnostics: String { text("Run Account Health Check") }
     static var runningAccountHealthDiagnostics: String { text("Running account health check") }
     static var accountTokenRefresh: String { text("Account Token Refresh") }
-    static var keychainSession: String { text("Keychain session") }
+    static var keychainSession: String { text("Saved session") }
     static var runReadOnlyQA: String { text("Run Read-only QA") }
     static var runningReadOnlyQA: String { text("Running read-only QA") }
     static var runNonNovelQAMatrix: String { text("Run Non-Novel QA Matrix") }
@@ -770,7 +770,7 @@ enum L10n {
     static var loginTitle: String { text("Login to Pixiv") }
     static var loginHint: String { text("Complete login in the embedded Pixiv page. KeiPix captures only the authorization code.") }
     static var signedOutTitle: String { text("Sign in to load Pixiv feeds") }
-    static var signedOutSubtitle: String { text("KeiPix stores tokens in the macOS Keychain and uses Pixiv app API requests from the native client.") }
+    static var signedOutSubtitle: String { text("KeiPix saves Pixiv tokens inside the sandboxed app container and uses native Pixiv app API requests.") }
     static var searchPlaceholder: String { text("Search artworks, tags, creators, or illust:123") }
     static var noArtworkTitle: String { text("No artworks loaded") }
     static var noArtworkSubtitle: String { text("Refresh the current section or start a search.") }

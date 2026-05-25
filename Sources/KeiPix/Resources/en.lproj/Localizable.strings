@@ -585,7 +585,7 @@
 "Login to Pixiv" = "Login to Pixiv";
 "Complete login in the embedded Pixiv page. KeiPix captures only the authorization code." = "Complete login in the embedded Pixiv page. KeiPix captures only the authorization code.";
 "Sign in to load Pixiv feeds" = "Sign in to load Pixiv feeds";
-"KeiPix stores tokens in the macOS Keychain and uses Pixiv app API requests from the native client." = "KeiPix stores tokens in the macOS Keychain and uses Pixiv app API requests from the native client.";
+"KeiPix stores tokens in the macOS Keychain and uses Pixiv app API requests from the native client." = "KeiPix saves Pixiv tokens inside the sandboxed app container and uses native Pixiv app API requests.";
 "Search artworks, tags, creators, or illust:123" = "Search artworks, tags, creators, or illust:123";
 "No artworks loaded" = "No artworks loaded";
 "Refresh the current section or start a search." = "Refresh the current section or start a search.";
@@ -803,7 +803,7 @@
 "Run Account Health Check" = "Run Account Health Check";
 "Running account health check" = "Running account health check";
 "Account Token Refresh" = "Account Token Refresh";
-"Keychain session" = "Keychain session";
+"Keychain session" = "Saved session";
 "Run Read-only QA" = "Run Read-only QA";
 "Running read-only QA" = "Running read-only QA";
 "Run Non-Novel QA Matrix" = "Run Non-Novel QA Matrix";
@@ -975,13 +975,13 @@
 "End of feed" = "End of feed";
 "Account Mode" = "Account Mode";
 "Real Account" = "Real Account";
-"Use saved Pixiv sessions from Keychain." = "Use saved Pixiv sessions from Keychain.";
+"Use saved Pixiv sessions from Keychain." = "Use Pixiv sessions saved in this app's secure storage.";
 "Guest Account" = "Guest Account";
 "Preview KeiPix with local sample artworks." = "Preview KeiPix with local sample artworks.";
 "Test Mode Account" = "Test Mode Account";
 "Run repeatable QA surfaces with local fixtures." = "Run repeatable QA surfaces with local fixtures.";
 "Import Token" = "Import Token";
-"Paste a Pixiv refresh token exported from another client. KeiPix refreshes it once, stores the new session in Keychain, and switches to the imported account." = "Paste a Pixiv refresh token exported from another client. KeiPix refreshes it once, stores the new session in Keychain, and switches to the imported account.";
+"Paste a Pixiv refresh token exported from another client. KeiPix refreshes it once, stores the new session in Keychain, and switches to the imported account." = "Paste a Pixiv refresh token exported from another client. KeiPix refreshes it once, saves the new session in secure local storage, and switches to the imported account.";
 "Refresh Token" = "Refresh Token";
 "Read-only remote diagnostics are available. Import and upload still require explicit approval." = "Read-only remote diagnostics are available. Import and upload still require explicit approval.";
 "Run Mute Sync Diagnostics" = "Run Mute Sync Diagnostics";
