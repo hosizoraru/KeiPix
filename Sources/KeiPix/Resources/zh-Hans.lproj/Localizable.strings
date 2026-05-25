@@ -691,6 +691,8 @@
 "Unable to save diagnostics" = "无法保存诊断";
 "Run Network Diagnostics" = "运行网络诊断";
 "Running diagnostics" = "正在诊断";
+"Run Read-only QA" = "运行只读 QA";
+"Running read-only QA" = "正在运行只读 QA";
 "Run Search Diagnostics" = "运行搜索诊断";
 "Running search diagnostics" = "正在运行搜索诊断";
 "Pixiv Premium required" = "需要 Pixiv Premium";
@@ -708,6 +710,8 @@
 "Running ID navigation diagnostics" = "正在运行 ID 直达诊断";
 "Run Comment Feedback Diagnostics" = "运行评论反馈诊断";
 "Running comment feedback diagnostics" = "正在运行评论反馈诊断";
+"Preview Comment Feedback" = "预览评论反馈";
+"Loading comment feedback preview" = "正在加载评论反馈预览";
 "Comment feedback" = "评论反馈";
 "Comment #%d feedback ready" = "评论 #%d 反馈已就绪";
 "Invalid response" = "响应无效";

@@ -256,6 +256,17 @@ extension KeiPixStore {
         }
     }
 
+    func commentFeedbackPreviewRequest() async throws -> FeedbackReportRequest {
+        guard session != nil else { throw PixivAPIError.serverMessage(L10n.signedOut) }
+        guard let selectedArtwork else { throw PixivAPIError.serverMessage(L10n.noSelection) }
+
+        let response = try await api.illustComments(illustID: selectedArtwork.id)
+        guard let comment = response.comments.first else {
+            throw PixivAPIError.serverMessage(L10n.noComments)
+        }
+        return FeedbackReportRequest.comment(comment, artwork: selectedArtwork)
+    }
+
     func imageCacheStatus() async -> ImageCacheStatus {
         await ImagePipeline.shared.cacheStatus()
     }

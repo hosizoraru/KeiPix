@@ -507,6 +507,8 @@ enum L10n {
     static var unableToSaveDiagnostics: String { text("Unable to save diagnostics") }
     static var runNetworkDiagnostics: String { text("Run Network Diagnostics") }
     static var runningDiagnostics: String { text("Running diagnostics") }
+    static var runReadOnlyQA: String { text("Run Read-only QA") }
+    static var runningReadOnlyQA: String { text("Running read-only QA") }
     static var runSearchDiagnostics: String { text("Run Search Diagnostics") }
     static var runningSearchDiagnostics: String { text("Running search diagnostics") }
     static var pixivPremiumRequired: String { text("Pixiv Premium required") }
@@ -524,6 +526,8 @@ enum L10n {
     static var runningIDNavigationDiagnostics: String { text("Running ID navigation diagnostics") }
     static var runCommentFeedbackDiagnostics: String { text("Run Comment Feedback Diagnostics") }
     static var runningCommentFeedbackDiagnostics: String { text("Running comment feedback diagnostics") }
+    static var previewCommentFeedback: String { text("Preview Comment Feedback") }
+    static var loadingCommentFeedbackPreview: String { text("Loading comment feedback preview") }
     static var commentFeedbackDiagnostic: String { text("Comment feedback") }
     static var commentFeedbackReadyFormat: String { text("Comment #%d feedback ready") }
     static var invalidResponse: String { text("Invalid response") }

@@ -691,6 +691,8 @@
 "Unable to save diagnostics" = "Unable to save diagnostics";
 "Run Network Diagnostics" = "Run Network Diagnostics";
 "Running diagnostics" = "Running diagnostics";
+"Run Read-only QA" = "Run Read-only QA";
+"Running read-only QA" = "Running read-only QA";
 "Run Search Diagnostics" = "Run Search Diagnostics";
 "Running search diagnostics" = "Running search diagnostics";
 "Pixiv Premium required" = "Pixiv Premium required";
@@ -708,6 +710,8 @@
 "Running ID navigation diagnostics" = "Running ID navigation diagnostics";
 "Run Comment Feedback Diagnostics" = "Run Comment Feedback Diagnostics";
 "Running comment feedback diagnostics" = "Running comment feedback diagnostics";
+"Preview Comment Feedback" = "Preview Comment Feedback";
+"Loading comment feedback preview" = "Loading comment feedback preview";
 "Comment feedback" = "Comment feedback";
 "Comment #%d feedback ready" = "Comment #%d feedback ready";
 "Invalid response" = "Invalid response";

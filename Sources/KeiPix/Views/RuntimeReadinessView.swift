@@ -6,12 +6,15 @@ struct RuntimeReadinessView: View {
     let store: KeiPixStore
     @State private var didCopyDiagnostics = false
     @State private var didCopyChecklist = false
+    @State private var isRunningReadOnlyQA = false
     @State private var isRunningDiagnostics = false
     @State private var isRunningSearchDiagnostics = false
     @State private var isRunningMutableActionQA = false
     @State private var isRunningDirectNavigationDiagnostics = false
     @State private var isRunningCommentFeedbackDiagnostics = false
+    @State private var isLoadingCommentFeedbackPreview = false
     @State private var isMutableActionQAAuthorizationPresented = false
+    @State private var feedbackPreviewRequest: FeedbackReportRequest?
     @State private var networkResults: [NetworkDiagnosticResult] = []
     @State private var searchResults: [NetworkDiagnosticResult] = []
     @State private var mutableActionQAResults: [NetworkDiagnosticResult] = []
@@ -98,6 +101,14 @@ struct RuntimeReadinessView: View {
 
             FlowLayout(spacing: 8) {
                 Button {
+                    Task { await runReadOnlyQA() }
+                } label: {
+                    Label(L10n.runReadOnlyQA, systemImage: "checklist.checked")
+                }
+                .buttonStyle(.glassProminent)
+                .disabled(isRunningReadOnlyQA)
+
+                Button {
                     Task { await runDiagnostics() }
                 } label: {
                     Label(L10n.runNetworkDiagnostics, systemImage: "network.badge.shield.half.filled")
@@ -133,6 +144,13 @@ struct RuntimeReadinessView: View {
                 .disabled(isRunningCommentFeedbackDiagnostics)
 
                 Button {
+                    Task { await previewCommentFeedback() }
+                } label: {
+                    Label(L10n.previewCommentFeedback, systemImage: "exclamationmark.bubble")
+                }
+                .disabled(isLoadingCommentFeedbackPreview)
+
+                Button {
                     Task { await refreshCacheStatus() }
                 } label: {
                     Label(L10n.refreshCacheStatus, systemImage: "externaldrive.badge.magnifyingglass")
@@ -150,6 +168,16 @@ struct RuntimeReadinessView: View {
                     ProgressView()
                         .controlSize(.small)
                     Text(L10n.runningDiagnostics)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            if isRunningReadOnlyQA {
+                HStack(spacing: 8) {
+                    ProgressView()
+                        .controlSize(.small)
+                    Text(L10n.runningReadOnlyQA)
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -195,6 +223,16 @@ struct RuntimeReadinessView: View {
                 }
             }
 
+            if isLoadingCommentFeedbackPreview {
+                HStack(spacing: 8) {
+                    ProgressView()
+                        .controlSize(.small)
+                    Text(L10n.loadingCommentFeedbackPreview)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+
             if let cacheMessage {
                 Text(cacheMessage)
                     .font(.caption)
@@ -232,6 +270,25 @@ struct RuntimeReadinessView: View {
                 Task { await runMutableActionQA() }
             }
         }
+        .sheet(item: $feedbackPreviewRequest) { request in
+            FeedbackReportSheet(request: request, localMuteAction: nil) { message in
+                cacheMessage = message
+            }
+        }
+    }
+
+    private func runReadOnlyQA() async {
+        isRunningReadOnlyQA = true
+        defer { isRunningReadOnlyQA = false }
+        async let network = store.runNetworkDiagnostics()
+        async let search = store.runSearchDiagnostics()
+        async let directNavigation = store.runDirectNavigationDiagnostics()
+        async let commentFeedback = store.runCommentFeedbackDiagnostics()
+        networkResults = await network
+        searchResults = await search
+        directNavigationResults = await directNavigation
+        commentFeedbackResults = await commentFeedback
+        await refreshCacheStatus()
     }
 
     private func runDiagnostics() async {
@@ -263,6 +320,16 @@ struct RuntimeReadinessView: View {
         isRunningCommentFeedbackDiagnostics = true
         defer { isRunningCommentFeedbackDiagnostics = false }
         commentFeedbackResults = await store.runCommentFeedbackDiagnostics()
+    }
+
+    private func previewCommentFeedback() async {
+        isLoadingCommentFeedbackPreview = true
+        defer { isLoadingCommentFeedbackPreview = false }
+        do {
+            feedbackPreviewRequest = try await store.commentFeedbackPreviewRequest()
+        } catch {
+            cacheMessage = error.localizedDescription
+        }
     }
 
     private func refreshCacheStatus() async {
