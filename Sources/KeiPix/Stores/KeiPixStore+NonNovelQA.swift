@@ -148,7 +148,7 @@ extension KeiPixStore {
 
     private func qaLocalSurfaces() async -> [NonNovelQAItem] {
         let visualEvidence = Self.visualQAEvidenceIndex()
-        let requiredGallerySurfaces: [VisualQASurface] = [.galleryFeed, .trendingTags, .pixivision, .narrowWindow]
+        let requiredGallerySurfaces: [VisualQASurface] = [.discoverDashboard, .galleryFeed, .trendingTags, .pixivision, .narrowWindow]
         let gallery = qaStaticItem(
             id: "gallery-visual",
             passed: visualEvidence.covers(requiredGallerySurfaces),

@@ -1,6 +1,7 @@
 import Foundation
 
 enum VisualQASurface: String, CaseIterable, Identifiable, Sendable {
+    case discoverDashboard = "discover-dashboard"
     case galleryFeed = "gallery-feed"
     case trendingTags = "trending-tags"
     case pixivision

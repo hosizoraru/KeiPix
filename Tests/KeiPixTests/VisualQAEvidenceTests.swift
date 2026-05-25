@@ -36,6 +36,13 @@ struct VisualQAEvidenceTests {
                 manifestPath: "/tmp/gallery-feed.md"
             ),
             VisualQAEvidenceManifest(
+                id: "discover",
+                surface: .discoverDashboard,
+                capturedAt: "20260525T103000Z",
+                screenshotPath: "discover-dashboard.png",
+                manifestPath: "/tmp/discover-dashboard.md"
+            ),
+            VisualQAEvidenceManifest(
                 id: "downloads",
                 surface: .downloadQueue,
                 capturedAt: "20260525T103312Z",
@@ -51,7 +58,7 @@ struct VisualQAEvidenceTests {
             )
         ])
 
-        #expect(index.covers([.galleryFeed]))
+        #expect(index.covers([.discoverDashboard, .galleryFeed]))
         #expect(index.covers([.galleryFeed, .pixivision]) == false)
         #expect(index.covers([.downloadQueue, .readerWindow]))
         #expect(index.summary(for: [.galleryFeed]).contains("1/1"))
