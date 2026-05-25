@@ -8,8 +8,11 @@ struct RuntimeReadinessView: View {
     @State private var didCopyChecklist = false
     @State private var isRunningDiagnostics = false
     @State private var isRunningSearchDiagnostics = false
+    @State private var isRunningMutableActionQA = false
+    @State private var isMutableActionQAAuthorizationPresented = false
     @State private var networkResults: [NetworkDiagnosticResult] = []
     @State private var searchResults: [NetworkDiagnosticResult] = []
+    @State private var mutableActionQAResults: [NetworkDiagnosticResult] = []
     @State private var cacheStatus: ImageCacheStatus?
     @State private var cacheMessage: String?
 
@@ -51,6 +54,14 @@ struct RuntimeReadinessView: View {
                 }
             }
 
+            if mutableActionQAResults.isEmpty == false {
+                Divider()
+
+                ForEach(mutableActionQAResults) { result in
+                    NetworkDiagnosticResultRow(result: result)
+                }
+            }
+
             Divider()
 
             MutableActionReadinessView(
@@ -80,6 +91,13 @@ struct RuntimeReadinessView: View {
                 }
                 .disabled(isRunningSearchDiagnostics)
 
+                Button(role: .destructive) {
+                    isMutableActionQAAuthorizationPresented = true
+                } label: {
+                    Label(L10n.runMutableActionQA, systemImage: "checkmark.shield")
+                }
+                .disabled(isRunningMutableActionQA)
+
                 Button {
                     Task { await refreshCacheStatus() }
                 } label: {
@@ -108,6 +126,16 @@ struct RuntimeReadinessView: View {
                     ProgressView()
                         .controlSize(.small)
                     Text(L10n.runningSearchDiagnostics)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            if isRunningMutableActionQA {
+                HStack(spacing: 8) {
+                    ProgressView()
+                        .controlSize(.small)
+                    Text(L10n.runningMutableActionQA)
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -145,6 +173,11 @@ struct RuntimeReadinessView: View {
         .task {
             await refreshCacheStatus()
         }
+        .sheet(isPresented: $isMutableActionQAAuthorizationPresented) {
+            MutableActionQAAuthorizationSheet {
+                Task { await runMutableActionQA() }
+            }
+        }
     }
 
     private func runDiagnostics() async {
@@ -158,6 +191,12 @@ struct RuntimeReadinessView: View {
         isRunningSearchDiagnostics = true
         defer { isRunningSearchDiagnostics = false }
         searchResults = await store.runSearchDiagnostics()
+    }
+
+    private func runMutableActionQA() async {
+        isRunningMutableActionQA = true
+        defer { isRunningMutableActionQA = false }
+        mutableActionQAResults = await store.runReversibleMutableActionQA()
     }
 
     private func refreshCacheStatus() async {
@@ -209,6 +248,11 @@ struct RuntimeReadinessView: View {
             lines.append("")
             lines.append("Search Diagnostics")
             lines += searchResults.map(\.diagnosticsLine)
+        }
+        if mutableActionQAResults.isEmpty == false {
+            lines.append("")
+            lines.append("Mutable Action QA Results")
+            lines += mutableActionQAResults.map(\.diagnosticsLine)
         }
         return lines.joined(separator: "\n")
     }

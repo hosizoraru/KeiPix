@@ -163,6 +163,20 @@ extension KeiPixStore {
         return results
     }
 
+    func runReversibleMutableActionQA() async -> [NetworkDiagnosticResult] {
+        guard session != nil else {
+            return reversibleMutableActionSkippedResults(detail: L10n.signedOut)
+        }
+
+        guard let selectedArtwork else {
+            return reversibleMutableActionSkippedResults(detail: L10n.noSelection)
+        }
+
+        async let bookmarkResult = runReversibleBookmarkQA(artwork: selectedArtwork)
+        async let followResult = runReversibleFollowQA(user: selectedArtwork.user)
+        return await [bookmarkResult, followResult]
+    }
+
     func imageCacheStatus() async -> ImageCacheStatus {
         await ImagePipeline.shared.cacheStatus()
     }
@@ -485,6 +499,103 @@ extension KeiPixStore {
                 duration: Date().timeIntervalSince(startedAt)
             )
         }
+    }
+
+    private func runReversibleBookmarkQA(artwork: PixivArtwork) async -> NetworkDiagnosticResult {
+        guard artwork.isBookmarked == false else {
+            return NetworkDiagnosticResult(
+                id: "mutable-bookmark",
+                title: L10n.qaBookmarkToggle,
+                status: .skipped,
+                detail: L10n.selectUnbookmarkedArtworkForQA,
+                duration: nil
+            )
+        }
+
+        let startedAt = Date()
+        do {
+            try await api.addBookmark(illustID: artwork.id, restrict: .private, tags: [])
+            do {
+                try await api.deleteBookmark(illustID: artwork.id)
+            } catch {
+                updateArtwork(artwork.id) { $0.isBookmarked = true }
+                throw error
+            }
+            updateArtwork(artwork.id) { $0.isBookmarked = false }
+            return NetworkDiagnosticResult(
+                id: "mutable-bookmark",
+                title: L10n.qaBookmarkToggle,
+                status: .passed,
+                detail: L10n.privateBookmarkRoundTripCompleted,
+                duration: Date().timeIntervalSince(startedAt)
+            )
+        } catch {
+            return NetworkDiagnosticResult(
+                id: "mutable-bookmark",
+                title: L10n.qaBookmarkToggle,
+                status: .failed,
+                detail: error.localizedDescription,
+                duration: Date().timeIntervalSince(startedAt)
+            )
+        }
+    }
+
+    private func runReversibleFollowQA(user: PixivUser) async -> NetworkDiagnosticResult {
+        guard user.isFollowed == false else {
+            return NetworkDiagnosticResult(
+                id: "mutable-follow",
+                title: L10n.qaFollowToggle,
+                status: .skipped,
+                detail: L10n.selectUnfollowedCreatorForQA,
+                duration: nil
+            )
+        }
+
+        let startedAt = Date()
+        do {
+            try await api.setFollow(userID: user.id, isFollowed: true, restrict: .private)
+            do {
+                try await api.setFollow(userID: user.id, isFollowed: false)
+            } catch {
+                updateFollowState(userID: user.id, isFollowed: true)
+                throw error
+            }
+            updateFollowState(userID: user.id, isFollowed: false)
+            return NetworkDiagnosticResult(
+                id: "mutable-follow",
+                title: L10n.qaFollowToggle,
+                status: .passed,
+                detail: L10n.privateFollowRoundTripCompleted,
+                duration: Date().timeIntervalSince(startedAt)
+            )
+        } catch {
+            return NetworkDiagnosticResult(
+                id: "mutable-follow",
+                title: L10n.qaFollowToggle,
+                status: .failed,
+                detail: error.localizedDescription,
+                duration: Date().timeIntervalSince(startedAt)
+            )
+        }
+    }
+
+    private func reversibleMutableActionSkippedResults(detail: String) -> [NetworkDiagnosticResult] {
+        [
+            NetworkDiagnosticResult(
+                id: "mutable-bookmark",
+                title: L10n.qaBookmarkToggle,
+                status: .skipped,
+                detail: detail,
+                duration: nil
+            ),
+            NetworkDiagnosticResult(
+                id: "mutable-follow",
+                title: L10n.qaFollowToggle,
+                status: .skipped,
+                detail: detail,
+                duration: nil
+            )
+        ]
     }
 
     private func proxyDescription(label: String, hostKey: String, portKey: String, settings: [String: Any]) -> String {

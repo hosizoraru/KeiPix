@@ -217,7 +217,7 @@ extension KeiPixStore {
         }
     }
 
-    private func updateArtwork(_ id: Int, mutate: (inout PixivArtwork) -> Void) {
+    func updateArtwork(_ id: Int, mutate: (inout PixivArtwork) -> Void) {
         if let index = allArtworks.firstIndex(where: { $0.id == id }) {
             mutate(&allArtworks[index])
         }
@@ -229,7 +229,7 @@ extension KeiPixStore {
         }
     }
 
-    private func updateFollowState(userID: Int, isFollowed: Bool) {
+    func updateFollowState(userID: Int, isFollowed: Bool) {
         for index in allArtworks.indices where allArtworks[index].user.id == userID {
             allArtworks[index].user.isFollowed = isFollowed
         }

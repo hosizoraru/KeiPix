@@ -37,4 +37,12 @@ struct RuntimeReadinessTests {
         #expect(checklist.contains(L10n.needsExplicitApproval))
         #expect(checklist.contains(L10n.qaCommentPostDetail))
     }
+
+    @Test("Mutable action QA authorization requires exact test-account phrase")
+    func mutableActionQAAuthorizationPhrase() {
+        #expect(MutableActionQAAuthorization.isAuthorized("TEST ACCOUNT"))
+        #expect(MutableActionQAAuthorization.isAuthorized(" TEST ACCOUNT "))
+        #expect(MutableActionQAAuthorization.isAuthorized("test account") == false)
+        #expect(MutableActionQAAuthorization.isAuthorized("") == false)
+    }
 }

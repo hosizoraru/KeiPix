@@ -507,6 +507,15 @@ enum L10n {
     static var runningSearchDiagnostics: String { text("Running search diagnostics") }
     static var pixivPremiumRequired: String { text("Pixiv Premium required") }
     static var searchDiagnosticResultFormat: String { text("%d results for %@") }
+    static var runMutableActionQA: String { text("Run Reversible Mutable QA") }
+    static var runningMutableActionQA: String { text("Running reversible mutable QA") }
+    static var mutableActionQAAuthorization: String { text("Authorize Mutable QA") }
+    static var mutableActionQAAuthorizationHint: String { text("Runs private bookmark add/remove and private follow/unfollow on the selected artwork and creator. Use a disposable Pixiv test account.") }
+    static var mutableActionQAAuthorizationPrompt: String { text("Type TEST ACCOUNT to continue") }
+    static var selectUnbookmarkedArtworkForQA: String { text("Select an unbookmarked artwork for reversible QA") }
+    static var selectUnfollowedCreatorForQA: String { text("Select an artwork by an unfollowed creator for reversible QA") }
+    static var privateBookmarkRoundTripCompleted: String { text("Private bookmark add/remove completed") }
+    static var privateFollowRoundTripCompleted: String { text("Private follow/unfollow completed") }
     static var refreshCacheStatus: String { text("Refresh Cache Status") }
     static var clearImageCache: String { text("Clear Image Cache") }
     static var imageCacheCleared: String { text("Image cache cleared") }

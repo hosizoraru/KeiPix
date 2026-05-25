@@ -691,6 +691,15 @@
 "Running search diagnostics" = "Running search diagnostics";
 "Pixiv Premium required" = "Pixiv Premium required";
 "%d results for %@" = "%d results for %@";
+"Run Reversible Mutable QA" = "Run Reversible Mutable QA";
+"Running reversible mutable QA" = "Running reversible mutable QA";
+"Authorize Mutable QA" = "Authorize Mutable QA";
+"Runs private bookmark add/remove and private follow/unfollow on the selected artwork and creator. Use a disposable Pixiv test account." = "Runs private bookmark add/remove and private follow/unfollow on the selected artwork and creator. Use a disposable Pixiv test account.";
+"Type TEST ACCOUNT to continue" = "Type TEST ACCOUNT to continue";
+"Select an unbookmarked artwork for reversible QA" = "Select an unbookmarked artwork for reversible QA";
+"Select an artwork by an unfollowed creator for reversible QA" = "Select an artwork by an unfollowed creator for reversible QA";
+"Private bookmark add/remove completed" = "Private bookmark add/remove completed";
+"Private follow/unfollow completed" = "Private follow/unfollow completed";
 "Refresh Cache Status" = "Refresh Cache Status";
 "Clear Image Cache" = "Clear Image Cache";
 "Image cache cleared" = "Image cache cleared";

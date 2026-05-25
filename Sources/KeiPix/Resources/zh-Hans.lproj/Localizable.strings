@@ -691,6 +691,15 @@
 "Running search diagnostics" = "正在运行搜索诊断";
 "Pixiv Premium required" = "需要 Pixiv Premium";
 "%d results for %@" = "%d 个 %@ 结果";
+"Run Reversible Mutable QA" = "运行可逆变更 QA";
+"Running reversible mutable QA" = "正在运行可逆变更 QA";
+"Authorize Mutable QA" = "授权变更 QA";
+"Runs private bookmark add/remove and private follow/unfollow on the selected artwork and creator. Use a disposable Pixiv test account." = "对选中的作品和作者执行私密收藏添加/移除、私密关注/取消关注；请使用可丢弃的 Pixiv 测试账号。";
+"Type TEST ACCOUNT to continue" = "输入 TEST ACCOUNT 后继续";
+"Select an unbookmarked artwork for reversible QA" = "选择一个尚未收藏的作品用于可逆 QA";
+"Select an artwork by an unfollowed creator for reversible QA" = "选择一个尚未关注作者的作品用于可逆 QA";
+"Private bookmark add/remove completed" = "私密收藏添加/移除已完成";
+"Private follow/unfollow completed" = "私密关注/取消关注已完成";
 "Refresh Cache Status" = "刷新缓存状态";
 "Clear Image Cache" = "清理图片缓存";
 "Image cache cleared" = "图片缓存已清理";
