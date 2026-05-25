@@ -20,6 +20,8 @@ extension ArtworkDownloadStore {
         }
 
         workerTasks.values.forEach { $0.cancel() }
+        queueWakeTask?.cancel()
+        queueWakeTask = nil
         return true
     }
 
@@ -284,13 +286,17 @@ extension ArtworkDownloadStore {
 
     @discardableResult
     func retryFailedFilteredItems() -> Int {
-        let ids = Set(filteredItems.filter {
+        let retryableItems = filteredItems.filter {
             $0.status == .failed && $0.sourceImageURLs?.isEmpty == false
-        }.map(\.id))
+        }
+        let ids = Set(retryableItems.map(\.id))
         guard ids.isEmpty == false else { return 0 }
 
-        for index in items.indices where ids.contains(items[index].id) {
-            resetFailedItem(at: index)
+        let now = Date()
+        for (retryIndex, item) in retryableItems.enumerated() {
+            guard let index = items.firstIndex(where: { $0.id == item.id }) else { continue }
+            let retryDate = now.addingTimeInterval(DownloadRetryBackoff.delay(forRetryIndex: retryIndex))
+            resetFailedItem(at: index, queuedAfter: retryDate)
         }
         persistItems()
         startWorkerIfNeeded(preferOriginal: true)
@@ -382,11 +388,12 @@ extension ArtworkDownloadStore {
         return targets.map(restorableCancelledItem)
     }
 
-    private func resetFailedItem(at index: Int) {
+    private func resetFailedItem(at index: Int, queuedAfter: Date? = nil) {
         items[index].status = .queued
         items[index].completedPages = 0
         items[index].folderPath = nil
         items[index].downloadedFilePaths = nil
+        items[index].queuedAfter = queuedAfter
         items[index].errorMessage = nil
         items[index].updatedAt = Date()
     }

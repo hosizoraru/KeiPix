@@ -418,7 +418,7 @@ private struct DownloadQueueHeader: View {
                     let count = downloads.retryFailedFilteredItems()
                     showActionMessage(
                         count > 0
-                            ? String(format: L10n.retriedDownloadsFormat, count)
+                            ? String(format: L10n.retriedDownloadsWithBackoffFormat, count)
                             : L10n.noRetryableDownloads
                     )
                 } label: {
@@ -545,6 +545,12 @@ private struct DownloadQueueRow: View {
                     Text(item.progressLabel)
                     if let sourcePageLabel = item.sourcePageLabel {
                         Text(sourcePageLabel)
+                    }
+                    if let queuedAfter = item.queuedAfter, queuedAfter > Date() {
+                        Text(String(
+                            format: L10n.retryScheduledFormat,
+                            queuedAfter.formatted(date: .omitted, time: .standard)
+                        ))
                     }
                     if let downloadedSize = downloads.downloadedSizeText(for: item) {
                         Text(downloadedSize)

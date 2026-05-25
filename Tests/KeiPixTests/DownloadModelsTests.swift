@@ -13,6 +13,14 @@ struct DownloadModelsTests {
         #expect(contiguous.sourcePageLabel?.contains("1, 3, 5") == true)
     }
 
+    @Test("Retry backoff staggers failed download recovery")
+    func retryBackoff() {
+        #expect(DownloadRetryBackoff.delay(forRetryIndex: 0) == 0)
+        #expect(DownloadRetryBackoff.delay(forRetryIndex: 1) == 2)
+        #expect(DownloadRetryBackoff.delay(forRetryIndex: 30) == 60)
+        #expect(DownloadRetryBackoff.delay(forRetryIndex: 999) == 60)
+    }
+
     private func downloadItem(sourcePageIndexes: [Int]) -> ArtworkDownloadItem {
         ArtworkDownloadItem(
             id: UUID(),

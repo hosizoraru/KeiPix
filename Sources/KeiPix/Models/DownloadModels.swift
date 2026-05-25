@@ -232,6 +232,7 @@ struct ArtworkDownloadItem: Identifiable, Codable, Sendable {
     var sourceImageURLs: [URL]?
     var sourcePageIndexes: [Int]? = nil
     var sourceTotalPageCount: Int? = nil
+    var queuedAfter: Date? = nil
     var downloadedFilePaths: [String]? = nil
     var errorMessage: String?
     let createdAt: Date
@@ -301,5 +302,18 @@ struct ArtworkDownloadItem: Identifiable, Codable, Sendable {
         case .completed:
             3
         }
+    }
+
+    func isQueuedAndReady(at date: Date) -> Bool {
+        status == .queued && (queuedAfter ?? .distantPast) <= date
+    }
+}
+
+enum DownloadRetryBackoff {
+    static let stepSeconds: TimeInterval = 2
+    static let maximumSeconds: TimeInterval = 60
+
+    static func delay(forRetryIndex index: Int) -> TimeInterval {
+        min(max(TimeInterval(index), 0) * stepSeconds, maximumSeconds)
     }
 }

@@ -18,6 +18,7 @@ final class ArtworkDownloadStore {
     let fileManager = FileManager.default
     var workerTasks: [UUID: Task<Void, Never>] = [:]
     var activeWorkerItemIDs: [UUID: UUID] = [:]
+    var queueWakeTask: Task<Void, Never>?
 
     init() {
         downloadDirectoryPath = UserDefaults.standard.string(forKey: "downloadDirectoryPath")
@@ -327,10 +328,18 @@ final class ArtworkDownloadStore {
     func startWorkerIfNeeded(preferOriginal: Bool) {
         guard isPaused == false else { return }
         guard items.contains(where: { $0.status == .queued }) else { return }
-        let queuedCount = items.filter { $0.status == .queued }.count
+        let now = Date()
+        let queuedCount = items.filter { $0.isQueuedAndReady(at: now) }.count
+        guard queuedCount > 0 else {
+            scheduleQueueWake(preferOriginal: preferOriginal)
+            return
+        }
+
         let targetWorkerCount = min(maxConcurrentDownloads, queuedCount + workerTasks.count)
         guard workerTasks.count < targetWorkerCount else { return }
 
+        queueWakeTask?.cancel()
+        queueWakeTask = nil
         for _ in workerTasks.count..<targetWorkerCount {
             let workerID = UUID()
             workerTasks[workerID] = Task { [weak self] in
@@ -346,11 +355,12 @@ final class ArtworkDownloadStore {
             activeWorkerItemIDs[workerID] = nil
             workerTasks[workerID] = nil
             isDownloading = workerTasks.isEmpty == false
+            scheduleQueueWake(preferOriginal: preferOriginal)
         }
 
         while isPaused == false,
               Task.isCancelled == false,
-              let index = items.firstIndex(where: { $0.status == .queued }) {
+              let index = items.firstIndex(where: { $0.isQueuedAndReady(at: Date()) }) {
             var item = items[index]
             guard let sourceURLs = item.sourceImageURLs, sourceURLs.isEmpty == false else {
                 markFailed(itemID: item.id, error: ArtworkDownloadError.missingSourceURLs)
@@ -358,6 +368,7 @@ final class ArtworkDownloadStore {
             }
             activeWorkerItemIDs[workerID] = item.id
             item.status = .downloading
+            item.queuedAfter = nil
             item.errorMessage = nil
             item.updatedAt = Date()
             items[index] = item
@@ -372,6 +383,25 @@ final class ArtworkDownloadStore {
                 markFailed(itemID: item.id, error: error)
             }
             activeWorkerItemIDs[workerID] = nil
+        }
+    }
+
+    private func scheduleQueueWake(preferOriginal: Bool) {
+        guard isPaused == false, queueWakeTask == nil, workerTasks.isEmpty else { return }
+        let nextDate = items
+            .filter { $0.status == .queued }
+            .compactMap(\.queuedAfter)
+            .filter { $0 > Date() }
+            .min()
+        guard let nextDate else { return }
+
+        let delay = max(nextDate.timeIntervalSinceNow, 0)
+        queueWakeTask = Task { [weak self] in
+            try? await Task.sleep(for: .seconds(delay))
+            await MainActor.run {
+                self?.queueWakeTask = nil
+                self?.startWorkerIfNeeded(preferOriginal: preferOriginal)
+            }
         }
     }
 

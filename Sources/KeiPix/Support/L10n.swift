@@ -244,6 +244,8 @@ enum L10n {
     static var deletedDownloadsFormat: String { text("Removed %d download records") }
     static var cancelledDownloadsFormat: String { text("Cancelled %d downloads") }
     static var retriedDownloadsFormat: String { text("Retried %d downloads") }
+    static var retriedDownloadsWithBackoffFormat: String { text("Scheduled %d downloads for retry") }
+    static var retryScheduledFormat: String { text("Retry at %@") }
     static var noRetryableDownloads: String { text("No retryable downloads") }
     static var noDownloadRecordsChanged: String { text("No download records changed") }
     static var revealedDownloadInFinder: String { text("Revealed download in Finder") }

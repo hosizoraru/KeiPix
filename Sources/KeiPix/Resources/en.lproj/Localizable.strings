@@ -249,6 +249,8 @@
 "Removed %d download records" = "Removed %d download records";
 "Cancelled %d downloads" = "Cancelled %d downloads";
 "Retried %d downloads" = "Retried %d downloads";
+"Scheduled %d downloads for retry" = "Scheduled %d downloads for retry";
+"Retry at %@" = "Retry at %@";
 "No retryable downloads" = "No retryable downloads";
 "No download records changed" = "No download records changed";
 "Revealed download in Finder" = "Revealed download in Finder";

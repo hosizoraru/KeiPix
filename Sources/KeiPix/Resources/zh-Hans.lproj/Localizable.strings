@@ -249,6 +249,8 @@
 "Removed %d download records" = "已移除 %d 条下载记录";
 "Cancelled %d downloads" = "已取消 %d 个下载";
 "Retried %d downloads" = "已重试 %d 个下载";
+"Scheduled %d downloads for retry" = "已安排 %d 个下载重试";
+"Retry at %@" = "%@ 重试";
 "No retryable downloads" = "没有可重试的下载";
 "No download records changed" = "没有下载记录发生变化";
 "Revealed download in Finder" = "已在 Finder 中显示下载";
