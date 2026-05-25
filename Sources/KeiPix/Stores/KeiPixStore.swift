@@ -38,6 +38,7 @@ final class KeiPixStore {
     var pinnedCreatorLibrary = KeiPixStore.loadPinnedCreatorLibrary()
     var feedSnapshotLibrary = KeiPixStore.loadFeedSnapshotLibrary()
     var artworkDetailStateLibrary = KeiPixStore.loadArtworkDetailStateLibrary()
+    var lastNonNovelQAMatrixSnapshot = KeiPixStore.loadLastNonNovelQAMatrixSnapshot()
     var errorMessage: String?
     var isLoading = false
     var isLoadingMore = false

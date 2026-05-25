@@ -60,4 +60,31 @@ struct RuntimeReadinessTests {
         #expect(snapshot.diagnosticsText.contains("KeiPix Non-Novel QA Matrix"))
         #expect(snapshot.diagnosticsText.contains("Swift + SwiftUI"))
     }
+
+    @Test("Non-novel QA matrix snapshot is codable for persistence")
+    @MainActor
+    func nonNovelQAMatrixSnapshotRoundTrips() throws {
+        let snapshot = NonNovelQAMatrixSnapshot(
+            checkedAt: Date(timeIntervalSince1970: 1_771_830_000),
+            items: [
+                NonNovelQAItem(
+                    id: "settings-organization",
+                    priority: .p2,
+                    title: L10n.qaSettingsOrganization,
+                    requirement: L10n.qaSettingsOrganizationRequirement,
+                    status: .passed,
+                    evidence: "Visual QA 1/1",
+                    nextAction: L10n.keepRegressionCoverage,
+                    systemImage: "gearshape"
+                )
+            ]
+        )
+
+        let data = try JSONEncoder().encode(snapshot)
+        let decoded = try JSONDecoder().decode(NonNovelQAMatrixSnapshot.self, from: data)
+
+        #expect(decoded.checkedAt == snapshot.checkedAt)
+        #expect(decoded.items == snapshot.items)
+        #expect(decoded.progressRows().first { $0.priority == .p2 }?.passed == 1)
+    }
 }

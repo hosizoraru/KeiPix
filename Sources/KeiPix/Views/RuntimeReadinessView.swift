@@ -23,12 +23,15 @@ struct RuntimeReadinessView: View {
     @State private var mutableActionQAResults: [NetworkDiagnosticResult] = []
     @State private var directNavigationResults: [NetworkDiagnosticResult] = []
     @State private var commentFeedbackResults: [NetworkDiagnosticResult] = []
-    @State private var nonNovelQASnapshot: NonNovelQAMatrixSnapshot?
     @State private var cacheStatus: ImageCacheStatus?
     @State private var cacheMessage: String?
 
     var body: some View {
         let snapshot = store.runtimeReadinessSnapshot
+        let qaSnapshot = store.lastNonNovelQAMatrixSnapshot ?? NonNovelQAMatrixSnapshot(
+            checkedAt: snapshot.checkedAt,
+            items: KeiPixStore.nonNovelQABaselineItems
+        )
 
         Section(L10n.runtimeReadiness) {
             Text(L10n.runtimeReadinessHint)
@@ -114,18 +117,11 @@ struct RuntimeReadinessView: View {
             Divider()
 
             NonNovelQAMatrixView(
-                snapshot: nonNovelQASnapshot ?? NonNovelQAMatrixSnapshot(
-                    checkedAt: snapshot.checkedAt,
-                    items: KeiPixStore.nonNovelQABaselineItems
-                ),
+                snapshot: qaSnapshot,
                 runQA: {
                     Task { await runNonNovelQA() }
                 },
                 copyQA: {
-                    let qaSnapshot = nonNovelQASnapshot ?? NonNovelQAMatrixSnapshot(
-                        checkedAt: snapshot.checkedAt,
-                        items: KeiPixStore.nonNovelQABaselineItems
-                    )
                     PasteboardWriter.copy(qaSnapshot.diagnosticsText)
                     cacheMessage = L10n.copiedQAMatrix
                 },
@@ -352,7 +348,7 @@ struct RuntimeReadinessView: View {
         async let search = store.runSearchDiagnostics()
         async let directNavigation = store.runDirectNavigationDiagnostics()
         async let commentFeedback = store.runCommentFeedbackDiagnostics()
-        nonNovelQASnapshot = await nonNovelQA
+        _ = await nonNovelQA
         networkResults = await network
         searchResults = await search
         directNavigationResults = await directNavigation
@@ -363,7 +359,7 @@ struct RuntimeReadinessView: View {
     private func runNonNovelQA() async {
         isRunningNonNovelQA = true
         defer { isRunningNonNovelQA = false }
-        nonNovelQASnapshot = await store.runNonNovelQAMatrix()
+        _ = await store.runNonNovelQAMatrix()
     }
 
     private func runDiagnostics() async {
@@ -483,7 +479,7 @@ struct RuntimeReadinessView: View {
             lines.append("Comment Feedback Diagnostics")
             lines += commentFeedbackResults.map(\.diagnosticsLine)
         }
-        if let nonNovelQASnapshot {
+        if let nonNovelQASnapshot = store.lastNonNovelQAMatrixSnapshot {
             lines.append("")
             lines.append(nonNovelQASnapshot.diagnosticsText)
         }

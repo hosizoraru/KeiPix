@@ -5,12 +5,12 @@ extension KeiPixStore {
     func runNonNovelQAMatrix() async -> NonNovelQAMatrixSnapshot {
         let checkedAt = Date()
         guard session != nil else {
-            return NonNovelQAMatrixSnapshot(
+            return recordNonNovelQAMatrixSnapshot(NonNovelQAMatrixSnapshot(
                 checkedAt: checkedAt,
                 items: Self.nonNovelQABaseline.map {
                     $0.item(status: .skipped, evidence: L10n.signedOut, nextAction: L10n.signInAndRunQA)
                 }
-            )
+            ))
         }
 
         async let feeds = qaFeedSurfaces()
@@ -21,7 +21,7 @@ extension KeiPixStore {
         async let local = qaLocalSurfaces()
 
         let groups = await [feeds, discovery, account, search, selected, local]
-        return NonNovelQAMatrixSnapshot(checkedAt: checkedAt, items: groups.flatMap { $0 })
+        return recordNonNovelQAMatrixSnapshot(NonNovelQAMatrixSnapshot(checkedAt: checkedAt, items: groups.flatMap { $0 }))
     }
 
     static var nonNovelQABaselineItems: [NonNovelQAItem] {
@@ -246,6 +246,25 @@ extension KeiPixStore {
             return NonNovelQATemplate.unknown(id: id).item(status: .skipped, evidence: detail, nextAction: L10n.reviewImplementation)
         }
         return template.item(status: .skipped, evidence: detail, nextAction: template.nextAction)
+    }
+
+    @discardableResult
+    private func recordNonNovelQAMatrixSnapshot(_ snapshot: NonNovelQAMatrixSnapshot) -> NonNovelQAMatrixSnapshot {
+        lastNonNovelQAMatrixSnapshot = snapshot
+        persistLastNonNovelQAMatrixSnapshot()
+        return snapshot
+    }
+
+    static func loadLastNonNovelQAMatrixSnapshot() -> NonNovelQAMatrixSnapshot? {
+        guard let data = UserDefaults.standard.data(forKey: "lastNonNovelQAMatrixSnapshot") else {
+            return nil
+        }
+        return try? JSONDecoder().decode(NonNovelQAMatrixSnapshot.self, from: data)
+    }
+
+    private func persistLastNonNovelQAMatrixSnapshot() {
+        guard let data = try? JSONEncoder().encode(lastNonNovelQAMatrixSnapshot) else { return }
+        UserDefaults.standard.set(data, forKey: "lastNonNovelQAMatrixSnapshot")
     }
 }
 

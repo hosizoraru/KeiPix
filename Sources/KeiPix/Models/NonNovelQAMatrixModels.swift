@@ -1,6 +1,6 @@
 import Foundation
 
-enum NonNovelQAPriority: String, CaseIterable, Hashable {
+enum NonNovelQAPriority: String, CaseIterable, Codable, Hashable {
     case p0 = "P0"
     case p1 = "P1"
     case p2 = "P2"
@@ -8,7 +8,7 @@ enum NonNovelQAPriority: String, CaseIterable, Hashable {
     var title: String { rawValue }
 }
 
-enum NonNovelQAStatus: String, CaseIterable, Hashable {
+enum NonNovelQAStatus: String, CaseIterable, Codable, Hashable {
     case passed
     case needsEvidence
     case actionRequired
@@ -41,7 +41,7 @@ enum NonNovelQAStatus: String, CaseIterable, Hashable {
     }
 }
 
-struct NonNovelQAItem: Identifiable, Hashable {
+struct NonNovelQAItem: Identifiable, Codable, Hashable {
     let id: String
     let priority: NonNovelQAPriority
     let title: String
@@ -56,7 +56,7 @@ struct NonNovelQAItem: Identifiable, Hashable {
     }
 }
 
-struct NonNovelQAMatrixSnapshot: Hashable {
+struct NonNovelQAMatrixSnapshot: Codable, Hashable {
     let checkedAt: Date
     let items: [NonNovelQAItem]
 
