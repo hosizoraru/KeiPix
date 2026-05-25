@@ -9,6 +9,7 @@ struct RuntimeReadinessView: View {
     @State private var isRunningReadOnlyQA = false
     @State private var isRunningDiagnostics = false
     @State private var isRunningSearchDiagnostics = false
+    @State private var isRunningNonNovelQA = false
     @State private var isRunningMutableActionQA = false
     @State private var isRunningDirectNavigationDiagnostics = false
     @State private var isRunningCommentFeedbackDiagnostics = false
@@ -20,6 +21,7 @@ struct RuntimeReadinessView: View {
     @State private var mutableActionQAResults: [NetworkDiagnosticResult] = []
     @State private var directNavigationResults: [NetworkDiagnosticResult] = []
     @State private var commentFeedbackResults: [NetworkDiagnosticResult] = []
+    @State private var nonNovelQASnapshot: NonNovelQAMatrixSnapshot?
     @State private var cacheStatus: ImageCacheStatus?
     @State private var cacheMessage: String?
 
@@ -99,6 +101,27 @@ struct RuntimeReadinessView: View {
                 await dismissChecklistCopyStatusIfNeeded()
             }
 
+            Divider()
+
+            NonNovelQAMatrixView(
+                snapshot: nonNovelQASnapshot ?? NonNovelQAMatrixSnapshot(
+                    checkedAt: snapshot.checkedAt,
+                    items: KeiPixStore.nonNovelQABaselineItems
+                ),
+                runQA: {
+                    Task { await runNonNovelQA() }
+                },
+                copyQA: {
+                    let qaSnapshot = nonNovelQASnapshot ?? NonNovelQAMatrixSnapshot(
+                        checkedAt: snapshot.checkedAt,
+                        items: KeiPixStore.nonNovelQABaselineItems
+                    )
+                    PasteboardWriter.copy(qaSnapshot.diagnosticsText)
+                    cacheMessage = L10n.copiedQAMatrix
+                },
+                isRunning: isRunningNonNovelQA
+            )
+
             FlowLayout(spacing: 8) {
                 Button {
                     Task { await runReadOnlyQA() }
@@ -107,6 +130,13 @@ struct RuntimeReadinessView: View {
                 }
                 .buttonStyle(.glassProminent)
                 .disabled(isRunningReadOnlyQA)
+
+                Button {
+                    Task { await runNonNovelQA() }
+                } label: {
+                    Label(L10n.runNonNovelQAMatrix, systemImage: "tablecells")
+                }
+                .disabled(isRunningNonNovelQA)
 
                 Button {
                     Task { await runDiagnostics() }
@@ -178,6 +208,16 @@ struct RuntimeReadinessView: View {
                     ProgressView()
                         .controlSize(.small)
                     Text(L10n.runningReadOnlyQA)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            if isRunningNonNovelQA {
+                HStack(spacing: 8) {
+                    ProgressView()
+                        .controlSize(.small)
+                    Text(L10n.runningNonNovelQAMatrix)
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -280,15 +320,23 @@ struct RuntimeReadinessView: View {
     private func runReadOnlyQA() async {
         isRunningReadOnlyQA = true
         defer { isRunningReadOnlyQA = false }
+        async let nonNovelQA = store.runNonNovelQAMatrix()
         async let network = store.runNetworkDiagnostics()
         async let search = store.runSearchDiagnostics()
         async let directNavigation = store.runDirectNavigationDiagnostics()
         async let commentFeedback = store.runCommentFeedbackDiagnostics()
+        nonNovelQASnapshot = await nonNovelQA
         networkResults = await network
         searchResults = await search
         directNavigationResults = await directNavigation
         commentFeedbackResults = await commentFeedback
         await refreshCacheStatus()
+    }
+
+    private func runNonNovelQA() async {
+        isRunningNonNovelQA = true
+        defer { isRunningNonNovelQA = false }
+        nonNovelQASnapshot = await store.runNonNovelQAMatrix()
     }
 
     private func runDiagnostics() async {
@@ -397,6 +445,10 @@ struct RuntimeReadinessView: View {
             lines.append("Comment Feedback Diagnostics")
             lines += commentFeedbackResults.map(\.diagnosticsLine)
         }
+        if let nonNovelQASnapshot {
+            lines.append("")
+            lines.append(nonNovelQASnapshot.diagnosticsText)
+        }
         return lines.joined(separator: "\n")
     }
 
@@ -463,6 +515,156 @@ struct MutableActionReadinessView: View {
             }
         }
         .padding(.vertical, 4)
+    }
+}
+
+private struct NonNovelQAMatrixView: View {
+    let snapshot: NonNovelQAMatrixSnapshot
+    let runQA: () -> Void
+    let copyQA: () -> Void
+    let isRunning: Bool
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .firstTextBaseline, spacing: 10) {
+                Label(L10n.nonNovelQAMatrix, systemImage: "tablecells")
+                    .font(.headline)
+
+                Spacer()
+
+                Button(action: runQA) {
+                    Label(L10n.runNonNovelQAMatrix, systemImage: "play.circle")
+                }
+                .controlSize(.small)
+                .disabled(isRunning)
+
+                Button(action: copyQA) {
+                    Label(L10n.copyQAMatrix, systemImage: "doc.on.doc")
+                }
+                .controlSize(.small)
+            }
+
+            Text(L10n.nonNovelQAMatrixHint)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
+            FlowLayout(spacing: 8) {
+                ForEach(snapshot.progressRows(), id: \.priority) { row in
+                    Label("\(row.priority.title) \(row.passed)/\(row.total)", systemImage: row.passed == row.total ? "checkmark.circle" : "clock.badge.questionmark")
+                        .font(.caption.weight(.medium))
+                        .foregroundStyle(row.passed == row.total ? .green : .orange)
+                        .padding(.horizontal, 9)
+                        .padding(.vertical, 5)
+                        .background(.thinMaterial, in: Capsule())
+                }
+            }
+
+            VStack(alignment: .leading, spacing: 12) {
+                ForEach(NonNovelQAPriority.allCases, id: \.self) { priority in
+                    let items = snapshot.items(for: priority)
+                    if items.isEmpty == false {
+                        NonNovelQAPrioritySection(priority: priority, items: items)
+                    }
+                }
+            }
+            .font(.caption)
+            .textSelection(.enabled)
+        }
+        .padding(.vertical, 4)
+    }
+}
+
+private struct NonNovelQAPrioritySection: View {
+    let priority: NonNovelQAPriority
+    let items: [NonNovelQAItem]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(priority.title)
+                .font(.caption.weight(.bold))
+                .foregroundStyle(priorityColor)
+                .textCase(.uppercase)
+
+            VStack(spacing: 0) {
+                ForEach(items) { item in
+                    NonNovelQAMatrixRow(item: item)
+
+                    if item.id != items.last?.id {
+                        Divider()
+                            .padding(.leading, 28)
+                    }
+                }
+            }
+            .padding(.vertical, 2)
+            .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+        }
+    }
+
+    private var priorityColor: Color {
+        switch priority {
+        case .p0:
+            .red
+        case .p1:
+            .orange
+        case .p2:
+            .secondary
+        }
+    }
+}
+
+private struct NonNovelQAMatrixRow: View {
+    let item: NonNovelQAItem
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 10) {
+            Image(systemName: item.systemImage)
+                .foregroundStyle(.secondary)
+                .frame(width: 18)
+                .padding(.top, 2)
+
+            VStack(alignment: .leading, spacing: 5) {
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                    Text(item.title)
+                        .font(.caption.weight(.semibold))
+                        .lineLimit(1)
+
+                    Spacer(minLength: 8)
+
+                    Label(item.status.title, systemImage: item.status.systemImage)
+                        .labelStyle(.titleAndIcon)
+                        .foregroundStyle(statusColor)
+                        .lineLimit(1)
+                        .fixedSize(horizontal: true, vertical: false)
+                }
+
+                Text(item.evidence)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(2)
+                    .help(item.evidence)
+
+                if item.status != .passed {
+                    Text(item.nextAction)
+                        .foregroundStyle(.tertiary)
+                        .lineLimit(2)
+                        .help(item.requirement)
+                }
+            }
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 8)
+    }
+
+    private var statusColor: Color {
+        switch item.status {
+        case .passed:
+            .green
+        case .needsEvidence:
+            .orange
+        case .actionRequired:
+            .red
+        case .skipped:
+            .secondary
+        }
     }
 }
 

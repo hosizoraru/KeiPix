@@ -510,6 +510,24 @@ enum L10n {
     static var runningDiagnostics: String { text("Running diagnostics") }
     static var runReadOnlyQA: String { text("Run Read-only QA") }
     static var runningReadOnlyQA: String { text("Running read-only QA") }
+    static var runNonNovelQAMatrix: String { text("Run Non-Novel QA Matrix") }
+    static var runningNonNovelQAMatrix: String { text("Running non-novel QA matrix") }
+    static var nonNovelQAMatrix: String { text("Non-Novel QA Matrix") }
+    static var nonNovelQAMatrixHint: String { text("Tracks the P0/P1/P2 non-novel gaps from the Pixez and Pixes comparison with current evidence.") }
+    static var copyQAMatrix: String { text("Copy QA Matrix") }
+    static var copiedQAMatrix: String { text("Copied QA Matrix") }
+    static var needsEvidence: String { text("Needs Evidence") }
+    static var actionRequired: String { text("Action Required") }
+    static var priority: String { text("Priority") }
+    static var area: String { text("Area") }
+    static var status: String { text("Status") }
+    static var evidence: String { text("Evidence") }
+    static var nextAction: String { text("Next Action") }
+    static var notRun: String { text("Not run") }
+    static var signInAndRunQA: String { text("Sign in and run QA") }
+    static var reviewImplementation: String { text("Review implementation") }
+    static var keepRegressionCoverage: String { text("Keep regression coverage") }
+    static var qaLoadedCountFormat: String { text("%d loaded") }
     static var runSearchDiagnostics: String { text("Run Search Diagnostics") }
     static var runningSearchDiagnostics: String { text("Running search diagnostics") }
     static var pixivPremiumRequired: String { text("Pixiv Premium required") }
@@ -557,6 +575,66 @@ enum L10n {
     static var qaDownloadDeleteDetail: String { text("Requires explicit approval before deleting local files.") }
     static var qaMuteSync: String { text("Mute sync") }
     static var qaMuteSyncDetail: String { text("Requires explicit approval before syncing mute changes.") }
+    static var qaGalleryVisual: String { text("Gallery visual surfaces") }
+    static var qaGalleryVisualRequirement: String { text("Masonry, hot tags, Pixivision, and wide/tall mixed cards render without overlap, gray gutters, or clipped text.") }
+    static var qaGalleryVisualNext: String { text("Capture visual QA screenshots for hot tags and wide feeds.") }
+    static var qaTrendingTags: String { text("Trending tags") }
+    static var qaTrendingTagsRequirement: String { text("Hot tag cards load preview artwork and route searches in-app.") }
+    static var qaTrendingTagsNext: String { text("Run hot tag route and visual QA.") }
+    static var qaPixivision: String { text("Pixivision") }
+    static var qaPixivisionRequirement: String { text("Articles open in-app and Pixiv artwork/user/tag links route natively.") }
+    static var qaPixivisionNext: String { text("Open an article and verify native link routing.") }
+    static var qaPixivURLRouting: String { text("Pixiv URL routing") }
+    static var qaPixivURLRoutingRequirement: String { text("Artwork, creator, tag, search, and Pixivision URLs resolve to native destinations.") }
+    static var qaPixivURLRoutingNext: String { text("Keep resolver tests and in-app link checks current.") }
+    static var qaAccountHealth: String { text("Account health") }
+    static var qaAccountHealthRequirement: String { text("Stored session can refresh account data without repeated authorization prompts.") }
+    static var qaAccountHealthNext: String { text("Run account health QA after sign-in.") }
+    static var qaMangaFeeds: String { text("Manga feeds and watchlist") }
+    static var qaMangaFeedsRequirement: String { text("Recommended manga, manga rankings, series, and watchlist remain reachable.") }
+    static var qaMangaFeedsNext: String { text("Add update badges and stronger series/watchlist routing.") }
+    static var qaReader: String { text("Reader") }
+    static var qaReaderRequirement: String { text("Multi-page reader supports per-page aspect ratio, continuous reading, keyboard, and trackpad gestures.") }
+    static var qaReaderNext: String { text("Add full-screen preset and persisted reading defaults.") }
+    static var qaSearch: String { text("Search") }
+    static var qaSearchRequirement: String { text("Artwork search covers match mode, sort, AI/R18, bookmark counts, saved searches, and autocomplete.") }
+    static var qaSearchNext: String { text("Add saved preset import and export.") }
+    static var qaBookmarks: String { text("Bookmarks") }
+    static var qaBookmarksRequirement: String { text("Public/private bookmarks, bookmark tags, and bookmark automation remain reachable.") }
+    static var qaBookmarksNext: String { text("Add batch bookmark editing for visible works.") }
+    static var qaFollowingCreators: String { text("Following creators") }
+    static var qaFollowingCreatorsRequirement: String { text("Follow lists, recommended creators, creator search, and follow visibility stay usable.") }
+    static var qaFollowingCreatorsNext: String { text("Add pinned creator collections.") }
+    static var qaDownloads: String { text("Downloads") }
+    static var qaDownloadsRequirement: String { text("Queue, local library, naming templates, ugoira downloads, and batch actions stay usable.") }
+    static var qaDownloadsNext: String { text("Add page-range downloads and retry-all-failed.") }
+    static var qaSafetyFiltering: String { text("Safety and filtering") }
+    static var qaSafetyFilteringRequirement: String { text("AI/R18/R18G badges, filters, mute sync, and privacy controls remain visible.") }
+    static var qaSafetyFilteringNext: String { text("Add optional NSFW blur and bulk mute previews.") }
+    static var qaIllustFeeds: String { text("Illustration feeds") }
+    static var qaIllustFeedsRequirement: String { text("Recommended illustrations and latest illustrations load through native feeds.") }
+    static var qaIllustFeedsNext: String { text("Keep feed QA evidence current.") }
+    static var qaRanking: String { text("Ranking") }
+    static var qaRankingRequirement: String { text("Illustration and manga ranking routes load and support date/mode switching.") }
+    static var qaRankingNext: String { text("Keep ranking route QA evidence current.") }
+    static var qaFollowingFeed: String { text("Following feed") }
+    static var qaFollowingFeedRequirement: String { text("Public/private/all following artwork feeds remain reachable.") }
+    static var qaFollowingFeedNext: String { text("Run following-feed QA with a signed-in account.") }
+    static var qaCreatorDiscovery: String { text("Creator discovery") }
+    static var qaCreatorDiscoveryRequirement: String { text("Recommended creators, search creators, related creators, and creator previews remain reachable.") }
+    static var qaCreatorDiscoveryNext: String { text("Keep creator route QA evidence current.") }
+    static var qaArtworkDetailSocial: String { text("Artwork detail and social") }
+    static var qaArtworkDetailSocialRequirement: String { text("Detail inspector, tags, creator actions, comments, related works, feedback, and local mute actions remain reachable.") }
+    static var qaArtworkDetailSocialNext: String { text("Run detail QA on the selected artwork.") }
+    static var qaCommentsFeedback: String { text("Comments and feedback") }
+    static var qaCommentsFeedbackRequirement: String { text("Comments, replies, feedback summaries, and local comment mute flows remain reachable.") }
+    static var qaCommentsFeedbackNext: String { text("Add stamp support only after endpoint verification.") }
+    static var qaLocalCacheOffline: String { text("Local cache and offline") }
+    static var qaLocalCacheOfflineRequirement: String { text("Image cache, history, downloads, and last successful surfaces support offline-friendly review.") }
+    static var qaLocalCacheOfflineNext: String { text("Add feed snapshot cache.") }
+    static var qaSettingsOrganization: String { text("Settings organization") }
+    static var qaSettingsOrganizationRequirement: String { text("Reading, discovery, safety, downloads, privacy, and QA controls stay grouped in native Settings.") }
+    static var qaSettingsOrganizationNext: String { text("Add Settings search when the surface grows further.") }
     static var systemProxy: String { text("System Proxy") }
     static var directConnection: String { text("Direct connection") }
     static var pixivAPI: String { text("Pixiv API") }

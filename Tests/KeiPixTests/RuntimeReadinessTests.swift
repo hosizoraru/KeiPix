@@ -1,3 +1,4 @@
+import Foundation
 import Testing
 @testable import KeiPix
 
@@ -44,5 +45,19 @@ struct RuntimeReadinessTests {
         #expect(MutableActionQAAuthorization.isAuthorized(" TEST ACCOUNT "))
         #expect(MutableActionQAAuthorization.isAuthorized("test account") == false)
         #expect(MutableActionQAAuthorization.isAuthorized("") == false)
+    }
+
+    @Test("Non-novel QA matrix covers P0 through P2")
+    @MainActor
+    func nonNovelQAMatrixBaseline() {
+        let items = KeiPixStore.nonNovelQABaselineItems
+        let snapshot = NonNovelQAMatrixSnapshot(checkedAt: Date(timeIntervalSince1970: 0), items: items)
+
+        #expect(items.contains { $0.priority == .p0 && $0.id == "gallery-visual" })
+        #expect(items.contains { $0.priority == .p1 && $0.id == "reader" })
+        #expect(items.contains { $0.priority == .p2 && $0.id == "creator-discovery" })
+        #expect(snapshot.progressRows().count == NonNovelQAPriority.allCases.count)
+        #expect(snapshot.diagnosticsText.contains("KeiPix Non-Novel QA Matrix"))
+        #expect(snapshot.diagnosticsText.contains("Swift + SwiftUI"))
     }
 }
