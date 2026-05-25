@@ -619,7 +619,7 @@ enum L10n {
     static var qaMangaFeedsNext: String { text("Add update badges and stronger series/watchlist routing.") }
     static var qaReader: String { text("Reader") }
     static var qaReaderRequirement: String { text("Multi-page reader supports per-page aspect ratio, continuous reading, keyboard, and trackpad gestures.") }
-    static var qaReaderNext: String { text("Add full-screen preset and page jump overlay.") }
+    static var qaReaderNext: String { text("Add optional per-artwork last-page restoration.") }
     static var qaSearch: String { text("Search") }
     static var qaSearchRequirement: String { text("Artwork search covers match mode, sort, AI/R18, bookmark counts, saved searches, and autocomplete.") }
     static var qaSearchNext: String { text("Add saved preset import and export.") }
@@ -791,6 +791,10 @@ enum L10n {
     static var continuousReading: String { text("Continuous Reading") }
     static var pageIndex: String { text("Page Index") }
     static var jumpToPage: String { text("Jump to Page") }
+    static var pageJump: String { text("Page Jump") }
+    static var goToPage: String { text("Go to Page") }
+    static var fullScreenReading: String { text("Full Screen Reading") }
+    static var exitFocusReading: String { text("Exit Focus Reading") }
     static var resetZoom: String { text("Reset Zoom") }
     static var toggleZoom: String { text("Toggle Zoom") }
     static var toggleReadingMode: String { text("Toggle Reading Mode") }

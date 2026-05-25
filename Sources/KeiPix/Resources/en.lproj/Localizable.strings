@@ -634,6 +634,10 @@
 "Continuous Reading" = "Continuous Reading";
 "Page Index" = "Page Index";
 "Jump to Page" = "Jump to Page";
+"Page Jump" = "Page Jump";
+"Go to Page" = "Go to Page";
+"Full Screen Reading" = "Full Screen Reading";
+"Exit Focus Reading" = "Exit Focus Reading";
 "Reset Zoom" = "Reset Zoom";
 "Toggle Zoom" = "Toggle Zoom";
 "Toggle Reading Mode" = "Toggle Reading Mode";
@@ -812,7 +816,7 @@
 "Add update badges and stronger series/watchlist routing." = "Add update badges and stronger series/watchlist routing.";
 "Reader" = "Reader";
 "Multi-page reader supports per-page aspect ratio, continuous reading, keyboard, and trackpad gestures." = "Multi-page reader supports per-page aspect ratio, continuous reading, keyboard, and trackpad gestures.";
-"Add full-screen preset and page jump overlay." = "Add full-screen preset and page jump overlay.";
+"Add optional per-artwork last-page restoration." = "Add optional per-artwork last-page restoration.";
 "Search" = "Search";
 "Artwork search covers match mode, sort, AI/R18, bookmark counts, saved searches, and autocomplete." = "Artwork search covers match mode, sort, AI/R18, bookmark counts, saved searches, and autocomplete.";
 "Add saved preset import and export." = "Add saved preset import and export.";

@@ -634,6 +634,10 @@
 "Continuous Reading" = "连续阅读";
 "Page Index" = "页码索引";
 "Jump to Page" = "跳转页码";
+"Page Jump" = "页码跳转";
+"Go to Page" = "跳转";
+"Full Screen Reading" = "全屏阅读";
+"Exit Focus Reading" = "退出专注阅读";
 "Reset Zoom" = "重置缩放";
 "Toggle Zoom" = "切换缩放";
 "Toggle Reading Mode" = "切换阅读模式";
@@ -812,7 +816,7 @@
 "Add update badges and stronger series/watchlist routing." = "新增更新标识，并强化系列/追更路由。";
 "Reader" = "阅读器";
 "Multi-page reader supports per-page aspect ratio, continuous reading, keyboard, and trackpad gestures." = "多 P 阅读器需要支持逐页比例、连续阅读、键盘和触控板手势。";
-"Add full-screen preset and page jump overlay." = "新增全屏预设和页码跳转浮层。";
+"Add optional per-artwork last-page restoration." = "新增可选的按作品恢复上次阅读页码。";
 "Search" = "搜索";
 "Artwork search covers match mode, sort, AI/R18, bookmark counts, saved searches, and autocomplete." = "作品搜索需要覆盖匹配模式、排序、AI/R18、收藏数、保存搜索和自动补全。";
 "Add saved preset import and export." = "新增保存搜索预设导入导出。";
