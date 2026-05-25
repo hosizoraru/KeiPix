@@ -497,6 +497,10 @@ final class KeiPixStore {
         if keyword.isEmpty == false {
             recordSearch(keyword)
         }
+        if let request = PixivIDQuickOpenParser.request(from: keyword) {
+            _ = await openPixivID(request.id, target: request.target)
+            return
+        }
         if selectedRoute == .searchUsers {
             searchSubmissionID += 1
             allSearchPopularPreviewArtworks = []
