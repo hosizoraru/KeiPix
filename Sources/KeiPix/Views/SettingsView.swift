@@ -35,6 +35,9 @@ struct SettingsView: View {
                 Toggle(L10n.showContentBadges, isOn: showContentBadgesBinding)
                 Toggle(L10n.hideMutedContent, isOn: hideMutedBinding)
                 Toggle(L10n.hideAIArtworks, isOn: hideAIBinding)
+                Text(L10n.pixivAIDisplayHint)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
                 Toggle(L10n.hideR18Artworks, isOn: hideR18Binding)
                 Toggle(L10n.hideR18GArtworks, isOn: hideR18GBinding)
 

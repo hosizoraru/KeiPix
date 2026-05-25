@@ -413,6 +413,10 @@
 "Show content badges" = "Show content badges";
 "Hide muted content" = "Hide muted content";
 "Hide AI-generated artworks" = "Hide AI-generated artworks";
+"Pixiv AI Display" = "Pixiv AI Display";
+"KeiPix applies AI visibility locally and through search filters. Pixiv account-wide AI display has no verified App API endpoint in this build." = "KeiPix applies AI visibility locally and through search filters. Pixiv account-wide AI display has no verified App API endpoint in this build.";
+"Local AI artworks hidden" = "Local AI artworks hidden";
+"Local AI artworks visible" = "Local AI artworks visible";
 "Hide R-18 artworks" = "Hide R-18 artworks";
 "Hide R-18G artworks" = "Hide R-18G artworks";
 "Pixiv Restricted Mode" = "Pixiv Restricted Mode";

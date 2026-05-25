@@ -413,6 +413,10 @@
 "Show content badges" = "显示内容标识";
 "Hide muted content" = "隐藏已屏蔽内容";
 "Hide AI-generated artworks" = "隐藏 AI 生成作品";
+"Pixiv AI Display" = "Pixiv AI 显示";
+"KeiPix applies AI visibility locally and through search filters. Pixiv account-wide AI display has no verified App API endpoint in this build." = "KeiPix 通过本地可见性和搜索过滤处理 AI 显示；当前构建没有已验证的 Pixiv 账号级 AI 显示 App API 端点。";
+"Local AI artworks hidden" = "本地隐藏 AI 作品";
+"Local AI artworks visible" = "本地显示 AI 作品";
 "Hide R-18 artworks" = "隐藏 R-18 作品";
 "Hide R-18G artworks" = "隐藏 R-18G 作品";
 "Pixiv Restricted Mode" = "Pixiv 限制模式";

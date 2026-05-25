@@ -293,6 +293,7 @@ extension KeiPixStore {
             downloadReadinessRow,
             proxyReadinessRow,
             filterReadinessRow,
+            aiVisibilityReadinessRow,
             mutedReadinessRow,
             privacyReadinessRow,
             trackpadReadinessRow
@@ -445,6 +446,19 @@ extension KeiPixStore {
             title: L10n.contentFilters,
             value: activeFilters.isEmpty ? L10n.allAges : activeFilters.joined(separator: " · "),
             systemImage: "line.3.horizontal.decrease.circle",
+            isReady: true
+        )
+    }
+
+    private var aiVisibilityReadinessRow: RuntimeReadinessRow {
+        let value = hideAIArtworks
+            ? L10n.aiVisibilityLocalHidden
+            : L10n.aiVisibilityLocalVisible
+        return RuntimeReadinessRow(
+            id: "ai-visibility",
+            title: L10n.pixivAIDisplay,
+            value: value,
+            systemImage: "sparkles",
             isReady: true
         )
     }
