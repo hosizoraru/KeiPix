@@ -1,0 +1,100 @@
+name: KeiPix
+options:
+  bundleIdPrefix: com.keipix
+  deploymentTarget:
+    macOS: "26.0"
+  developmentLanguage: en
+  createIntermediateGroups: true
+  generateEmptyDirectories: true
+  groupSortPosition: top
+  defaultConfig: Debug
+  xcodeVersion: "26.0"
+
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    SWIFT_STRICT_CONCURRENCY: complete
+    CLANG_ENABLE_MODULES: YES
+    ENABLE_USER_SCRIPT_SANDBOXING: YES
+    ENABLE_HARDENED_RUNTIME: YES
+    DEAD_CODE_STRIPPING: YES
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+  configs:
+    Debug:
+      SWIFT_OPTIMIZATION_LEVEL: "-Onone"
+      SWIFT_ACTIVE_COMPILATION_CONDITIONS: DEBUG
+      ONLY_ACTIVE_ARCH: YES
+    Release:
+      SWIFT_OPTIMIZATION_LEVEL: "-O"
+      SWIFT_COMPILATION_MODE: wholemodule
+
+targets:
+  KeiPix:
+    type: application
+    platform: macOS
+    deploymentTarget: "26.0"
+    sources:
+      - path: Sources/KeiPix
+        excludes:
+          - "**/.DS_Store"
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.keipix.client
+        PRODUCT_NAME: KeiPix
+        INFOPLIST_FILE: App/Info.plist
+        CODE_SIGN_ENTITLEMENTS: App/KeiPix.entitlements
+        CODE_SIGN_STYLE: Automatic
+        CODE_SIGN_IDENTITY: "-"
+        ENABLE_APP_SANDBOX: YES
+        COMBINE_HIDPI_IMAGES: YES
+        ENABLE_PREVIEWS: YES
+        LD_RUNPATH_SEARCH_PATHS:
+          - "$(inherited)"
+          - "@executable_path/../Frameworks"
+    scheme:
+      testTargets:
+        - KeiPixTests
+      gatherCoverageData: false
+      commandLineArguments: {}
+      environmentVariables: []
+
+  KeiPixTests:
+    type: bundle.unit-test
+    platform: macOS
+    deploymentTarget: "26.0"
+    sources:
+      - path: Tests/KeiPixTests
+        excludes:
+          - "**/.DS_Store"
+    dependencies:
+      - target: KeiPix
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.keipix.client.tests
+        PRODUCT_NAME: KeiPixTests
+        BUNDLE_LOADER: "$(TEST_HOST)"
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/KeiPix.app/Contents/MacOS/KeiPix"
+        GENERATE_INFOPLIST_FILE: YES
+        SWIFT_STRICT_CONCURRENCY: minimal
+
+schemes:
+  KeiPix:
+    build:
+      targets:
+        KeiPix: all
+        KeiPixTests: [test]
+    run:
+      config: Debug
+      executable: KeiPix
+    test:
+      config: Debug
+      gatherCoverageData: false
+      targets:
+        - KeiPixTests
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+    archive:
+      config: Release

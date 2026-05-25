@@ -3,3 +3,10 @@
 dist/
 tmp/
 artifacts/
+
+# Xcode generated artifacts (project is regeneratable from project.yml)
+KeiPix.xcodeproj/
+*.xcworkspace/
+xcuserdata/
+DerivedData/
+*.xcuserstate

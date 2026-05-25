@@ -37,3 +37,26 @@ Useful modes:
 ./script/build_and_run.sh --logs
 ./script/build_and_run.sh --debug
 ```
+
+## Xcode
+
+The Xcode project is generated from `project.yml` via [XcodeGen](https://github.com/yonaskolb/XcodeGen) so the source layout in `Sources/KeiPix` and `Tests/KeiPixTests` stays canonical and the `.xcodeproj` itself is reproducible (and gitignored).
+
+```bash
+brew install xcodegen          # one-time
+xcodegen generate              # writes KeiPix.xcodeproj
+open KeiPix.xcodeproj
+```
+
+Build and test from the command line:
+
+```bash
+xcodebuild -project KeiPix.xcodeproj -scheme KeiPix -configuration Debug \
+  -destination 'platform=macOS' build
+xcodebuild -project KeiPix.xcodeproj -scheme KeiPix -configuration Debug \
+  -destination 'platform=macOS' test
+```
+
+App metadata for the Xcode build lives in `App/Info.plist` and `App/KeiPix.entitlements`. The SwiftPM `Package.swift` route is still supported for `swift build` / `swift test`; both routes share the same sources.
+
+When adding an iPadOS target later, declare a second `target` in `project.yml` (`platform: iOS`, point at `Sources/KeiPix` with the same source path), regenerate, and Xcode will pick up the new scheme.

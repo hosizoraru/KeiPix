@@ -80,6 +80,16 @@ struct NativeBoundaryTests {
             }
             candidate.deleteLastPathComponent()
         }
+        // Fallback: walk up from this test file's on-disk location so the suite
+        // works under both SwiftPM (`swift test`) and Xcode (`xcodebuild test`),
+        // since the latter sets the current directory inside DerivedData.
+        var fileBased = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
+        for _ in 0..<10 {
+            if FileManager.default.fileExists(atPath: fileBased.appending(path: "Package.swift").path(percentEncoded: false)) {
+                return fileBased
+            }
+            fileBased.deleteLastPathComponent()
+        }
         throw NativeBoundaryError.packageRootNotFound
     }
 

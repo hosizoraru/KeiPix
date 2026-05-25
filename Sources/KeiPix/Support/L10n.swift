@@ -989,11 +989,25 @@ enum L10n {
     static func text(_ key: String) -> String {
         let selected = UserDefaults.standard.string(forKey: "appLanguage")
             .flatMap(AppLanguage.init(rawValue:)) ?? .automatic
+        let resourceBundle = Bundle.keipixResources
         if let lprojName = selected.lprojName,
-           let path = Bundle.module.path(forResource: lprojName.lowercased(), ofType: "lproj") ?? Bundle.module.path(forResource: lprojName, ofType: "lproj"),
+           let path = resourceBundle.path(forResource: lprojName.lowercased(), ofType: "lproj") ?? resourceBundle.path(forResource: lprojName, ofType: "lproj"),
            let bundle = Bundle(path: path) {
             return bundle.localizedString(forKey: key, value: key, table: nil)
         }
-        return Bundle.module.localizedString(forKey: key, value: key, table: nil)
+        return resourceBundle.localizedString(forKey: key, value: key, table: nil)
+    }
+}
+
+extension Bundle {
+    /// Resource bundle that holds `Localizable.strings` regardless of whether the
+    /// app is built via Swift Package Manager (where `Bundle.module` is generated)
+    /// or Xcode (where resources live in the main app bundle).
+    static var keipixResources: Bundle {
+        #if SWIFT_PACKAGE
+        return .module
+        #else
+        return .main
+        #endif
     }
 }
