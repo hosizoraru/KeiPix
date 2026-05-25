@@ -5,6 +5,7 @@ enum VisualQASurface: String, CaseIterable, Identifiable, Sendable {
     case galleryFeed = "gallery-feed"
     case trendingTags = "trending-tags"
     case pixivision
+    case pixivLinkDrop = "pixiv-link-drop"
     case narrowWindow = "narrow-window"
     case downloadQueue = "download-queue"
     case readerWindow = "reader-window"

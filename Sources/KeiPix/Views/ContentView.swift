@@ -158,6 +158,7 @@ struct ContentView: View {
         .modifier(
             PixivLinkDropTargetModifier(
                 isTargeted: $isPixivLinkDropTargeted,
+                forceOverlayVisible: showsPixivLinkDropOverlayForVisualQA,
                 openURL: { url in
                     Task { await openPixivLink(url) }
                 },
@@ -188,6 +189,10 @@ struct ContentView: View {
         } message: {
             Text(store.errorMessage ?? "")
         }
+    }
+
+    private var showsPixivLinkDropOverlayForVisualQA: Bool {
+        ProcessInfo.processInfo.arguments.contains("--visual-qa-pixiv-link-drop")
     }
 
     private var appControlsMenu: some View {

@@ -71,6 +71,7 @@ struct VisualQAEvidenceTests {
         #expect(index.covers([.settingsWindow]))
         #expect(index.summary(for: [.galleryFeed]).contains("1/1"))
         #expect(VisualQASurface(rawValue: "batch-bookmark-preview") == .batchBookmarkPreview)
+        #expect(VisualQASurface(rawValue: "pixiv-link-drop") == .pixivLinkDrop)
     }
 
     @Test("Evidence index scans multiple candidate roots")

@@ -106,10 +106,15 @@ extension KeiPixStore {
                 ).illusts.count
             }
         )
+        let visualEvidence = Self.visualQAEvidenceIndex()
+        let pixivLinkDropSurfaces: [VisualQASurface] = [.pixivLinkDrop]
         async let urlResolver = qaStaticItem(
             id: "pixiv-url-routing",
-            passed: PixivURLRoutingCoverage.passes,
-            evidence: PixivURLRoutingCoverage.summary
+            passed: PixivURLRoutingCoverage.passes && visualEvidence.covers(pixivLinkDropSurfaces),
+            evidence: [
+                PixivURLRoutingCoverage.summary,
+                visualEvidence.summary(for: pixivLinkDropSurfaces)
+            ].joined(separator: " · ")
         )
         return await [search, urlResolver]
     }

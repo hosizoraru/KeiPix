@@ -3,6 +3,7 @@ import UniformTypeIdentifiers
 
 struct PixivLinkDropTargetModifier: ViewModifier {
     @Binding var isTargeted: Bool
+    var forceOverlayVisible = false
     var openURL: (URL) -> Void
     var rejectDrop: () -> Void
 
@@ -19,12 +20,13 @@ struct PixivLinkDropTargetModifier: ViewModifier {
                 return true
             }
             .overlay {
-                if isTargeted {
+                if isTargeted || forceOverlayVisible {
                     PixivLinkDropOverlay()
                         .transition(.opacity.combined(with: .scale(scale: 0.98)))
                 }
             }
             .animation(.snappy(duration: 0.16), value: isTargeted)
+            .animation(.snappy(duration: 0.16), value: forceOverlayVisible)
     }
 
     private var supportedTypeIdentifiers: [String] {

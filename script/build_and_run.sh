@@ -18,10 +18,10 @@ INFO_PLIST="$APP_CONTENTS/Info.plist"
 cd "$ROOT_DIR"
 
 case "$MODE" in
-  run|--debug|debug|--logs|logs|--telemetry|telemetry|--verify|verify|--package|package)
+  run|--debug|debug|--logs|logs|--telemetry|telemetry|--verify|verify|--package|package|--visual-qa-pixiv-link-drop|visual-qa-pixiv-link-drop)
     ;;
   *)
-    echo "usage: $0 [run|--debug|--logs|--telemetry|--verify|--package]" >&2
+    echo "usage: $0 [run|--debug|--logs|--telemetry|--verify|--package|--visual-qa-pixiv-link-drop]" >&2
     exit 2
     ;;
 esac
@@ -105,7 +105,11 @@ cat >"$INFO_PLIST" <<PLIST
 PLIST
 
 open_app() {
-  /usr/bin/open -n "$APP_BUNDLE"
+  if [ "$#" -gt 0 ]; then
+    /usr/bin/open -n "$APP_BUNDLE" --args "$@"
+  else
+    /usr/bin/open -n "$APP_BUNDLE"
+  fi
 }
 
 case "$MODE" in
@@ -128,13 +132,18 @@ case "$MODE" in
     sleep 1
     pgrep -x "$APP_NAME" >/dev/null
     ;;
+  --visual-qa-pixiv-link-drop|visual-qa-pixiv-link-drop)
+    open_app --visual-qa-pixiv-link-drop
+    sleep 1
+    pgrep -x "$APP_NAME" >/dev/null
+    ;;
   --package|package)
     plutil -lint "$INFO_PLIST"
     test -x "$APP_BINARY"
     echo "$APP_BUNDLE"
     ;;
   *)
-    echo "usage: $0 [run|--debug|--logs|--telemetry|--verify|--package]" >&2
+    echo "usage: $0 [run|--debug|--logs|--telemetry|--verify|--package|--visual-qa-pixiv-link-drop]" >&2
     exit 2
     ;;
 esac
