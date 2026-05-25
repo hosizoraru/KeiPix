@@ -36,6 +36,7 @@ struct ArtworkRelatedView: View {
                                 isSelected: store.selectedArtwork?.id == related.id,
                                 isCompact: true,
                                 showContentBadges: store.showContentBadges,
+                                maskSensitivePreview: store.maskSensitivePreviews,
                                 preferredHeight: 156
                             ) {
                                 store.selectedArtwork = related

@@ -420,6 +420,10 @@
 "Local AI artworks visible" = "本地显示 AI 作品";
 "Hide R-18 artworks" = "隐藏 R-18 作品";
 "Hide R-18G artworks" = "隐藏 R-18G 作品";
+"Mask R-18 previews" = "遮罩 R-18 预览";
+"Blur R-18 and R-18G thumbnails while keeping metadata and actions visible." = "模糊 R-18 和 R-18G 缩略图，同时保留标题、标识和操作。";
+"R-18 preview hidden" = "R-18 预览已隐藏";
+"R-18G preview hidden" = "R-18G 预览已隐藏";
 "Pixiv Restricted Mode" = "Pixiv 限制模式";
 "Syncs Pixiv account restricted mode for adult content visibility across clients." = "同步 Pixiv 账号的限制模式，影响各客户端成人内容可见性。";
 "Search Filters" = "搜索筛选";
@@ -794,6 +798,7 @@
 "Safety and filtering" = "安全与过滤";
 "AI/R18/R18G badges, filters, mute sync, and privacy controls remain visible." = "AI/R18/R18G 标识、过滤、屏蔽同步和隐私控制需要可见。";
 "Add optional NSFW blur and bulk mute previews." = "新增可选 NSFW 模糊和批量屏蔽预览。";
+"Add bulk mute previews." = "新增批量屏蔽预览。";
 "Illustration feeds" = "插画作品流";
 "Recommended illustrations and latest illustrations load through native feeds." = "推荐插画和最新插画需要通过原生作品流加载。";
 "Keep feed QA evidence current." = "保持作品流 QA 证据最新。";

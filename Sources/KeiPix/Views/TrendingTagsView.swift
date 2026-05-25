@@ -42,6 +42,7 @@ struct TrendingTagsView: View {
                                 tag: tag,
                                 showTranslatedName: store.showTranslatedTags,
                                 showContentBadges: store.showContentBadges,
+                                maskSensitivePreview: store.maskSensitivePreviews,
                                 search: { search(tag) },
                                 selectArtwork: { store.selectedArtwork = tag.artwork },
                                 mute: { store.requestDangerAction(AppDangerAction(kind: .muteTag(tag.pixivTag))) },
@@ -149,6 +150,7 @@ private struct TrendingTagCard: View {
     let tag: PixivTrendingTag
     let showTranslatedName: Bool
     let showContentBadges: Bool
+    let maskSensitivePreview: Bool
     let search: () -> Void
     let selectArtwork: () -> Void
     let mute: () -> Void
@@ -163,6 +165,7 @@ private struct TrendingTagCard: View {
                 Color.black
 
                 TrendingTagArtworkImage(url: tag.artwork.thumbnailURL, imageLoaded: imageLoaded)
+                    .sensitiveArtworkPreviewMasked(maskSensitivePreview && tag.artwork.requiresScreenCaptureProtection, badges: tag.artwork.contentBadges)
 
                 LinearGradient(
                     stops: [

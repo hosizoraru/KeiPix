@@ -225,6 +225,7 @@ struct ContentView: View {
             Toggle(L10n.hideAIArtworks, isOn: hideAIBinding)
             Toggle(L10n.hideR18Artworks, isOn: hideR18Binding)
             Toggle(L10n.hideR18GArtworks, isOn: hideR18GBinding)
+            Toggle(L10n.maskSensitivePreviews, isOn: maskSensitivePreviewsBinding)
 
             Divider()
 
@@ -359,6 +360,14 @@ struct ContentView: View {
             store.hideR18GArtworks
         } set: { value in
             store.setHideR18GArtworks(value)
+        }
+    }
+
+    private var maskSensitivePreviewsBinding: Binding<Bool> {
+        Binding {
+            store.maskSensitivePreviews
+        } set: { value in
+            store.setMaskSensitivePreviews(value)
         }
     }
 }

@@ -40,6 +40,10 @@ struct SettingsView: View {
                     .foregroundStyle(.secondary)
                 Toggle(L10n.hideR18Artworks, isOn: hideR18Binding)
                 Toggle(L10n.hideR18GArtworks, isOn: hideR18GBinding)
+                Toggle(L10n.maskSensitivePreviews, isOn: maskSensitivePreviewsBinding)
+                Text(L10n.maskSensitivePreviewsHint)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
 
                 if store.session != nil {
                     Divider()
@@ -491,6 +495,14 @@ struct SettingsView: View {
             store.hideR18GArtworks
         } set: { value in
             store.setHideR18GArtworks(value)
+        }
+    }
+
+    private var maskSensitivePreviewsBinding: Binding<Bool> {
+        Binding {
+            store.maskSensitivePreviews
+        } set: { value in
+            store.setMaskSensitivePreviews(value)
         }
     }
 

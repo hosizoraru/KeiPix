@@ -5,6 +5,7 @@ struct ArtworkCardView: View {
     let isSelected: Bool
     let isCompact: Bool
     var showContentBadges = true
+    var maskSensitivePreview = false
     var downloadState: ArtworkDownloadArtworkState = .none
     var displayStyle: ArtworkCardDisplayStyle = .regular
     var preferredHeight: CGFloat? = nil
@@ -38,6 +39,7 @@ struct ArtworkCardView: View {
     private func cardContent(height: CGFloat) -> some View {
         ZStack(alignment: .bottomLeading) {
             RemoteImageView(url: artwork.thumbnailURL)
+                .sensitiveArtworkPreviewMasked(shouldMaskSensitivePreview, badges: artwork.contentBadges)
                 .frame(height: height)
                 .frame(maxWidth: .infinity)
                 .overlay(alignment: .bottom) {
@@ -99,6 +101,10 @@ struct ArtworkCardView: View {
 
     private var resolvedDisplayStyle: ArtworkCardDisplayStyle {
         isCompact ? .compact : displayStyle
+    }
+
+    private var shouldMaskSensitivePreview: Bool {
+        maskSensitivePreview && artwork.requiresScreenCaptureProtection
     }
 }
 

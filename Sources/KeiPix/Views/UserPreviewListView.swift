@@ -153,6 +153,7 @@ struct UserPreviewListView: View {
                 followRestrictsByUserID: followRestrictsByUserID,
                 updatingCreatorIDs: updatingCreatorIDs,
                 showContentBadges: store.showContentBadges,
+                maskSensitivePreviews: store.maskSensitivePreviews,
                 retry: { Task { await loadInitial() } },
                 loadMore: { Task { await loadMore() } },
                 openProfile: { profileUser = $0 },

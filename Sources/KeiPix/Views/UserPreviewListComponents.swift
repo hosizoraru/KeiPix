@@ -240,6 +240,7 @@ struct CreatorPreviewListContent: View {
     let followRestrictsByUserID: [Int: BookmarkRestrict]
     let updatingCreatorIDs: Set<Int>
     let showContentBadges: Bool
+    let maskSensitivePreviews: Bool
     let retry: () -> Void
     let loadMore: () -> Void
     let openProfile: (PixivUser) -> Void
@@ -323,6 +324,7 @@ struct CreatorPreviewListContent: View {
                     followRestrict: followRestrictsByUserID[preview.user.id],
                     isUpdating: updatingCreatorIDs.contains(preview.user.id),
                     showContentBadges: showContentBadges,
+                    maskSensitivePreviews: maskSensitivePreviews,
                     openProfile: { openProfile(preview.user) },
                     openIllustrations: { openIllustrations(preview.user) },
                     openManga: { openManga(preview.user) },

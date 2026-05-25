@@ -415,6 +415,10 @@ enum L10n {
     static var aiVisibilityLocalVisible: String { text("Local AI artworks visible") }
     static var hideR18Artworks: String { text("Hide R-18 artworks") }
     static var hideR18GArtworks: String { text("Hide R-18G artworks") }
+    static var maskSensitivePreviews: String { text("Mask R-18 previews") }
+    static var maskSensitivePreviewsHint: String { text("Blur R-18 and R-18G thumbnails while keeping metadata and actions visible.") }
+    static var r18PreviewHidden: String { text("R-18 preview hidden") }
+    static var r18gPreviewHidden: String { text("R-18G preview hidden") }
     static var pixivRestrictedMode: String { text("Pixiv Restricted Mode") }
     static var pixivRestrictedModeHint: String { text("Syncs Pixiv account restricted mode for adult content visibility across clients.") }
     static var searchFilters: String { text("Search Filters") }
@@ -610,7 +614,7 @@ enum L10n {
     static var qaDownloadsNext: String { text("Add page-range downloads and retry-all-failed.") }
     static var qaSafetyFiltering: String { text("Safety and filtering") }
     static var qaSafetyFilteringRequirement: String { text("AI/R18/R18G badges, filters, mute sync, and privacy controls remain visible.") }
-    static var qaSafetyFilteringNext: String { text("Add optional NSFW blur and bulk mute previews.") }
+    static var qaSafetyFilteringNext: String { text("Add bulk mute previews.") }
     static var qaIllustFeeds: String { text("Illustration feeds") }
     static var qaIllustFeedsRequirement: String { text("Recommended illustrations and latest illustrations load through native feeds.") }
     static var qaIllustFeedsNext: String { text("Keep feed QA evidence current.") }

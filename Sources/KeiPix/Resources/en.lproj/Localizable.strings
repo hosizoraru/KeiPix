@@ -420,6 +420,10 @@
 "Local AI artworks visible" = "Local AI artworks visible";
 "Hide R-18 artworks" = "Hide R-18 artworks";
 "Hide R-18G artworks" = "Hide R-18G artworks";
+"Mask R-18 previews" = "Mask R-18 previews";
+"Blur R-18 and R-18G thumbnails while keeping metadata and actions visible." = "Blur R-18 and R-18G thumbnails while keeping metadata and actions visible.";
+"R-18 preview hidden" = "R-18 preview hidden";
+"R-18G preview hidden" = "R-18G preview hidden";
 "Pixiv Restricted Mode" = "Pixiv Restricted Mode";
 "Syncs Pixiv account restricted mode for adult content visibility across clients." = "Syncs Pixiv account restricted mode for adult content visibility across clients.";
 "Search Filters" = "Search Filters";
@@ -794,6 +798,7 @@
 "Safety and filtering" = "Safety and filtering";
 "AI/R18/R18G badges, filters, mute sync, and privacy controls remain visible." = "AI/R18/R18G badges, filters, mute sync, and privacy controls remain visible.";
 "Add optional NSFW blur and bulk mute previews." = "Add optional NSFW blur and bulk mute previews.";
+"Add bulk mute previews." = "Add bulk mute previews.";
 "Illustration feeds" = "Illustration feeds";
 "Recommended illustrations and latest illustrations load through native feeds." = "Recommended illustrations and latest illustrations load through native feeds.";
 "Keep feed QA evidence current." = "Keep feed QA evidence current.";

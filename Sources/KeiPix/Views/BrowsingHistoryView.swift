@@ -208,7 +208,8 @@ struct BrowsingHistoryView: View {
                                 artwork: artwork,
                                 isSelected: store.selectedArtwork?.id == artwork.id,
                                 isCompact: true,
-                                showContentBadges: store.showContentBadges
+                                showContentBadges: store.showContentBadges,
+                                maskSensitivePreview: store.maskSensitivePreviews
                             ) {
                                 store.selectedArtwork = artwork
                             }

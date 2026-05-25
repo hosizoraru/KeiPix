@@ -81,6 +81,11 @@ extension KeiPixStore {
         applyContentFilters()
     }
 
+    func setMaskSensitivePreviews(_ value: Bool) {
+        maskSensitivePreviews = value
+        UserDefaults.standard.set(value, forKey: "maskSensitivePreviews")
+    }
+
     func setSearchMatchType(_ value: SearchMatchType) {
         searchMatchType = value
         UserDefaults.standard.set(value.rawValue, forKey: "searchMatchType")

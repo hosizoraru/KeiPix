@@ -153,6 +153,7 @@ struct ArtworkSeriesView: View {
             isSelected: store.selectedArtwork?.id == seriesArtwork.id,
             isCompact: true,
             showContentBadges: store.showContentBadges,
+            maskSensitivePreview: store.maskSensitivePreviews,
             preferredHeight: 156
         ) {
             store.selectedArtwork = seriesArtwork

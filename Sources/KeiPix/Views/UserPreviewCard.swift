@@ -5,6 +5,7 @@ struct UserPreviewCard: View {
     let followRestrict: BookmarkRestrict?
     let isUpdating: Bool
     let showContentBadges: Bool
+    let maskSensitivePreviews: Bool
     let openProfile: () -> Void
     let openIllustrations: () -> Void
     let openManga: () -> Void
@@ -117,7 +118,11 @@ struct UserPreviewCard: View {
                     Button {
                         selectArtwork(artwork)
                     } label: {
-                        ArtworkPreviewThumb(artwork: artwork, showContentBadges: showContentBadges)
+                        ArtworkPreviewThumb(
+                            artwork: artwork,
+                            showContentBadges: showContentBadges,
+                            maskSensitivePreview: maskSensitivePreviews
+                        )
                     }
                     .buttonStyle(.plain)
                     .contextMenu {
@@ -251,11 +256,13 @@ struct UserPreviewCard: View {
 private struct ArtworkPreviewThumb: View {
     let artwork: PixivArtwork
     let showContentBadges: Bool
+    let maskSensitivePreview: Bool
     private let thumbnailHeight: CGFloat = 132
 
     var body: some View {
         ZStack(alignment: .topLeading) {
             RemoteImageView(url: artwork.thumbnailURL, contentMode: .fill)
+                .sensitiveArtworkPreviewMasked(maskSensitivePreview && artwork.requiresScreenCaptureProtection, badges: artwork.contentBadges)
                 .frame(maxWidth: .infinity)
                 .frame(height: thumbnailHeight)
                 .clipped()

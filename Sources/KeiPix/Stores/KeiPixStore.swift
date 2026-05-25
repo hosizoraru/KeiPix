@@ -49,6 +49,7 @@ final class KeiPixStore {
     var hideAIArtworks = UserDefaults.standard.bool(forKey: "hideAIArtworks")
     var hideR18Artworks = UserDefaults.standard.bool(forKey: "hideR18Artworks")
     var hideR18GArtworks = UserDefaults.standard.bool(forKey: "hideR18GArtworks")
+    var maskSensitivePreviews = UserDefaults.standard.object(forKey: "maskSensitivePreviews") as? Bool ?? false
     var restrictedModeEnabled: Bool?
     var defaultBookmarkRestrict = KeiPixStore.loadEnum("defaultBookmarkRestrict", defaultValue: BookmarkRestrict.public)
     var defaultFollowRestrict = KeiPixStore.loadEnum("defaultFollowRestrict", defaultValue: BookmarkRestrict.public)
