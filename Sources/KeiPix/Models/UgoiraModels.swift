@@ -47,6 +47,24 @@ struct UgoiraAnimation {
     }
 }
 
+enum UgoiraPlaybackSpeed: Double, CaseIterable, Identifiable, Sendable {
+    case half = 0.5
+    case normal = 1.0
+    case fast = 1.5
+    case double = 2.0
+
+    var id: Double { rawValue }
+    var multiplier: Double { rawValue }
+
+    var title: String {
+        "\(rawValue.formatted(.number.precision(.fractionLength(rawValue == 1.0 ? 0 : 1))))x"
+    }
+
+    func adjustedDelayMilliseconds(_ milliseconds: Int) -> Int {
+        max(Int((Double(milliseconds) / multiplier).rounded()), 1)
+    }
+}
+
 struct UgoiraExportPackage {
     let metadata: PixivUgoiraMetadata
     let zipData: Data

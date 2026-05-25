@@ -15,6 +15,7 @@ struct UgoiraPlayerView: View {
     @State private var exportedGIFURL: URL?
     @State private var exportPackage: UgoiraExportPackage?
     @State private var playbackTask: Task<Void, Never>?
+    @State private var playbackSpeed: UgoiraPlaybackSpeed = .normal
 
     var body: some View {
         GeometryReader { proxy in
@@ -89,6 +90,11 @@ struct UgoiraPlayerView: View {
         .onDisappear {
             stopPlayback()
         }
+        .onChange(of: playbackSpeed) {
+            if isPlaying {
+                startPlayback()
+            }
+        }
     }
 
     @ViewBuilder
@@ -131,6 +137,31 @@ struct UgoiraPlayerView: View {
             Spacer()
 
             Menu {
+                Picker(L10n.playbackSpeed, selection: $playbackSpeed) {
+                    ForEach(UgoiraPlaybackSpeed.allCases) { speed in
+                        Text(speed.title).tag(speed)
+                    }
+                }
+            } label: {
+                Label(playbackSpeed.title, systemImage: "speedometer")
+            }
+            .menuStyle(.button)
+            .buttonStyle(.plain)
+            .controlSize(.small)
+            .keiInteractiveGlass(12)
+            .disabled(animation == nil || isLoading)
+            .help(L10n.playbackSpeed)
+
+            Menu {
+                Button {
+                    Task { await exportCurrentFrame() }
+                } label: {
+                    Label(L10n.exportCurrentFrame, systemImage: "photo")
+                }
+                .disabled(animation == nil || isLoading || isExporting)
+
+                Divider()
+
                 Button {
                     Task { await exportGIF() }
                 } label: {
@@ -252,6 +283,25 @@ struct UgoiraPlayerView: View {
         }
     }
 
+    private func exportCurrentFrame() async {
+        guard let animation, animation.frames.indices.contains(currentFrameIndex) else { return }
+        guard let url = savePanelURL(extension: "png", contentType: .png, title: L10n.exportCurrentFrame) else { return }
+
+        isExporting = true
+        defer { isExporting = false }
+
+        do {
+            guard let data = animation.frames[currentFrameIndex].image.pngData() else {
+                showStatus(L10n.unableToExportFrame)
+                return
+            }
+            try data.write(to: url, options: .atomic)
+            showStatus(String(format: L10n.exportedFrameFormat, url.lastPathComponent))
+        } catch {
+            showStatus(error.localizedDescription)
+        }
+    }
+
     private func loadedExportPackage() async throws -> UgoiraExportPackage {
         if let exportPackage {
             return exportPackage
@@ -303,7 +353,7 @@ struct UgoiraPlayerView: View {
         playbackTask = Task {
             while Task.isCancelled == false {
                 let frame = animation.frames[currentFrameIndex]
-                try? await Task.sleep(for: frame.delay)
+                try? await Task.sleep(for: .milliseconds(playbackSpeed.adjustedDelayMilliseconds(frame.delayMilliseconds)))
                 guard Task.isCancelled == false else { return }
                 currentFrameIndex = (currentFrameIndex + 1) % animation.frameCount
             }
@@ -314,6 +364,16 @@ struct UgoiraPlayerView: View {
         playbackTask?.cancel()
         playbackTask = nil
         isPlaying = false
+    }
+}
+
+private extension NSImage {
+    func pngData() -> Data? {
+        guard let tiffRepresentation,
+              let bitmap = NSBitmapImageRep(data: tiffRepresentation) else {
+            return nil
+        }
+        return bitmap.representation(using: .png, properties: [:])
     }
 }
 

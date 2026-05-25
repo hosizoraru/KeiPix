@@ -197,6 +197,9 @@ enum L10n {
     static var ugoiraZip: String { text("Ugoira ZIP") }
     static var ugoiraFrameCountFormat: String { text("%d frames") }
     static var exportGIF: String { text("Export GIF") }
+    static var exportCurrentFrame: String { text("Export Current Frame") }
+    static var exportedFrameFormat: String { text("Exported frame %@") }
+    static var unableToExportFrame: String { text("Unable to export frame") }
     static var exportUgoiraZip: String { text("Export Ugoira ZIP") }
     static var ugoiraExportActions: String { text("Ugoira Export Actions") }
     static var shareUgoiraZip: String { text("Share Ugoira ZIP") }
@@ -206,6 +209,7 @@ enum L10n {
     static var exportedZipFormat: String { text("Exported ZIP %@") }
     static var previewUgoira: String { text("Preview Ugoira") }
     static var ugoiraMetadataMissing: String { text("Ugoira metadata is missing. Re-download this item to enable in-app preview and GIF export.") }
+    static var playbackSpeed: String { text("Playback Speed") }
     static var export: String { text("Export") }
     static var `import`: String { text("Import") }
     static var downloadFolder: String { text("Download Folder") }
