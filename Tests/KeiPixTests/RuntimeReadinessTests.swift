@@ -53,6 +53,7 @@ struct RuntimeReadinessTests {
         let items = KeiPixStore.nonNovelQABaselineItems
         let snapshot = NonNovelQAMatrixSnapshot(checkedAt: Date(timeIntervalSince1970: 0), items: items)
 
+        #expect(items.contains { $0.priority == .p0 && $0.id == "native-apple-route" })
         #expect(items.contains { $0.priority == .p0 && $0.id == "gallery-visual" })
         #expect(items.contains { $0.priority == .p1 && $0.id == "reader" })
         #expect(items.contains { $0.priority == .p2 && $0.id == "creator-discovery" })

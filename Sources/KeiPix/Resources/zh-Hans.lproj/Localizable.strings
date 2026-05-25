@@ -873,6 +873,10 @@
 "Requires explicit approval before deleting local files." = "删除本地文件前需要明确授权。";
 "Mute sync" = "屏蔽同步";
 "Requires explicit approval before syncing mute changes." = "同步屏蔽变更前需要明确授权。";
+"Native Apple route" = "Apple 原生路线";
+"KeiPix stays a SwiftPM macOS app built with Swift, SwiftUI, and narrow AppKit/WebKit bridges." = "KeiPix 保持 SwiftPM macOS App，以 Swift、SwiftUI 和少量 AppKit/WebKit 桥接构建。";
+"Keep source-boundary tests current when referencing Pixez or Pixes behavior." = "参考 Pixez 或 Pixes 行为时，保持源码边界测试同步。";
+"SwiftPM macOS 26 · Swift + SwiftUI · no Flutter/Dart source in KeiPix" = "SwiftPM macOS 26 · Swift + SwiftUI · KeiPix 内无 Flutter/Dart 源码";
 "Gallery visual surfaces" = "画廊视觉表面";
 "Masonry, hot tags, Pixivision, and wide/tall mixed cards render without overlap, gray gutters, or clipped text." = "瀑布流、热门标签、Pixivision 与宽高混排卡片需要无重叠、无灰边、无文字截断。";
 "Capture visual QA screenshots for hot tags and wide feeds." = "为热门标签和宽图作品流捕获视觉 QA 截图。";

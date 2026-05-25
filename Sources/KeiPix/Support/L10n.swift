@@ -669,6 +669,10 @@ enum L10n {
     static var qaDownloadDeleteDetail: String { text("Requires explicit approval before deleting local files.") }
     static var qaMuteSync: String { text("Mute sync") }
     static var qaMuteSyncDetail: String { text("Requires explicit approval before syncing mute changes.") }
+    static var qaNativeAppleRoute: String { text("Native Apple route") }
+    static var qaNativeAppleRouteRequirement: String { text("KeiPix stays a SwiftPM macOS app built with Swift, SwiftUI, and narrow AppKit/WebKit bridges.") }
+    static var qaNativeAppleRouteNext: String { text("Keep source-boundary tests current when referencing Pixez or Pixes behavior.") }
+    static var qaNativeAppleRouteEvidence: String { text("SwiftPM macOS 26 · Swift + SwiftUI · no Flutter/Dart source in KeiPix") }
     static var qaGalleryVisual: String { text("Gallery visual surfaces") }
     static var qaGalleryVisualRequirement: String { text("Masonry, hot tags, Pixivision, and wide/tall mixed cards render without overlap, gray gutters, or clipped text.") }
     static var qaGalleryVisualNext: String { text("Capture visual QA screenshots for hot tags and wide feeds.") }

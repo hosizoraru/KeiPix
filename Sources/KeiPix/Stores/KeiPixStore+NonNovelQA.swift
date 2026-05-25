@@ -155,6 +155,11 @@ extension KeiPixStore {
 
     private func qaLocalSurfaces() async -> [NonNovelQAItem] {
         let visualEvidence = Self.visualQAEvidenceIndex()
+        let nativeRoute = qaStaticItem(
+            id: "native-apple-route",
+            passed: true,
+            evidence: L10n.qaNativeAppleRouteEvidence
+        )
         let requiredGallerySurfaces: [VisualQASurface] = [
             .discoverDashboard,
             .galleryFeed,
@@ -219,7 +224,7 @@ extension KeiPixStore {
             passed: visualEvidence.covers([.settingsWindow]),
             evidence: visualEvidence.summary(for: [.settingsWindow])
         )
-        return [gallery, downloads, safety, offline, ugoira, settings]
+        return [nativeRoute, gallery, downloads, safety, offline, ugoira, settings]
     }
 
     private func qaFeedItem(
@@ -387,6 +392,7 @@ private extension KeiPixStore {
     }
 
     static let nonNovelQABaseline: [NonNovelQATemplate] = [
+        NonNovelQATemplate(id: "native-apple-route", priority: .p0, title: L10n.qaNativeAppleRoute, requirement: L10n.qaNativeAppleRouteRequirement, nextAction: L10n.qaNativeAppleRouteNext, systemImage: "swift"),
         NonNovelQATemplate(id: "gallery-visual", priority: .p0, title: L10n.qaGalleryVisual, requirement: L10n.qaGalleryVisualRequirement, nextAction: L10n.qaGalleryVisualNext, systemImage: "rectangle.grid.2x2"),
         NonNovelQATemplate(id: "trending-tags", priority: .p0, title: L10n.qaTrendingTags, requirement: L10n.qaTrendingTagsRequirement, nextAction: L10n.qaTrendingTagsNext, systemImage: "number"),
         NonNovelQATemplate(id: "pixivision", priority: .p0, title: L10n.qaPixivision, requirement: L10n.qaPixivisionRequirement, nextAction: L10n.qaPixivisionNext, systemImage: "newspaper"),

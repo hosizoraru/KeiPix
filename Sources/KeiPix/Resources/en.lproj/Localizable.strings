@@ -873,6 +873,10 @@
 "Requires explicit approval before deleting local files." = "Requires explicit approval before deleting local files.";
 "Mute sync" = "Mute sync";
 "Requires explicit approval before syncing mute changes." = "Requires explicit approval before syncing mute changes.";
+"Native Apple route" = "Native Apple route";
+"KeiPix stays a SwiftPM macOS app built with Swift, SwiftUI, and narrow AppKit/WebKit bridges." = "KeiPix stays a SwiftPM macOS app built with Swift, SwiftUI, and narrow AppKit/WebKit bridges.";
+"Keep source-boundary tests current when referencing Pixez or Pixes behavior." = "Keep source-boundary tests current when referencing Pixez or Pixes behavior.";
+"SwiftPM macOS 26 · Swift + SwiftUI · no Flutter/Dart source in KeiPix" = "SwiftPM macOS 26 · Swift + SwiftUI · no Flutter/Dart source in KeiPix";
 "Gallery visual surfaces" = "Gallery visual surfaces";
 "Masonry, hot tags, Pixivision, and wide/tall mixed cards render without overlap, gray gutters, or clipped text." = "Masonry, hot tags, Pixivision, and wide/tall mixed cards render without overlap, gray gutters, or clipped text.";
 "Capture visual QA screenshots for hot tags and wide feeds." = "Capture visual QA screenshots for hot tags and wide feeds.";
