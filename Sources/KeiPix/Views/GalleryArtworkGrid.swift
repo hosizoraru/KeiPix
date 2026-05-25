@@ -1,8 +1,10 @@
+import AppKit
 import SwiftUI
 
 struct GalleryContentGrid: View {
     @Bindable var store: KeiPixStore
     @Binding var actionMessage: String?
+    @Binding var artworkSelection: GalleryArtworkSelection
     @State private var feedbackRequest: FeedbackReportRequest?
     @State private var feedbackArtwork: PixivArtwork?
     @State private var seriesArtwork: PixivArtwork?
@@ -24,6 +26,7 @@ struct GalleryContentGrid: View {
                     MasonryArtworkGrid(
                         store: store,
                         actionMessage: $actionMessage,
+                        artworkSelection: $artworkSelection,
                         presentFeedback: presentFeedback,
                         presentSeries: { seriesArtwork = $0 },
                         fixedColumnCount: store.galleryLayoutMode.fixedColumnCount
@@ -62,9 +65,17 @@ struct GalleryContentGrid: View {
             maskSensitivePreview: store.maskSensitivePreviews,
             downloadState: store.downloads.downloadState(for: artwork.id)
         ) {
-            store.selectedArtwork = artwork
+            activate(artwork)
+        }
+        .overlay(alignment: .topTrailing) {
+            if artworkSelection.contains(artwork.id) {
+                GallerySelectionBadge()
+                    .padding(8)
+            }
         }
         .contextMenu {
+            selectionContextButton(for: artwork)
+            Divider()
             Button(artwork.isBookmarked ? L10n.removeBookmark : L10n.bookmark) {
                 if artwork.isBookmarked {
                     store.requestDangerAction(AppDangerAction(kind: .removeBookmark(artwork)))
@@ -116,6 +127,25 @@ struct GalleryContentGrid: View {
         }
     }
 
+    private func activate(_ artwork: PixivArtwork) {
+        if artworkSelection.isSelectionMode || NSEvent.modifierFlags.contains(.command) {
+            artworkSelection.toggle(artwork.id)
+        } else {
+            store.selectedArtwork = artwork
+        }
+    }
+
+    private func selectionContextButton(for artwork: PixivArtwork) -> some View {
+        Button {
+            artworkSelection.toggle(artwork.id)
+        } label: {
+            Label(
+                artworkSelection.contains(artwork.id) ? L10n.deselectArtwork : L10n.selectArtwork,
+                systemImage: artworkSelection.contains(artwork.id) ? "checkmark.circle.fill" : "checkmark.circle"
+            )
+        }
+    }
+
     private func bookmark(_ artwork: PixivArtwork) async {
         do {
             try await store.saveBookmark(
@@ -138,6 +168,7 @@ struct GalleryContentGrid: View {
 private struct MasonryArtworkGrid: View {
     @Bindable var store: KeiPixStore
     @Binding var actionMessage: String?
+    @Binding var artworkSelection: GalleryArtworkSelection
     let presentFeedback: (PixivArtwork) -> Void
     let presentSeries: (PixivArtwork) -> Void
     let fixedColumnCount: Int?
@@ -167,10 +198,18 @@ private struct MasonryArtworkGrid: View {
                     displayStyle: presentation.cardStyle,
                     fillsAvailableHeight: true
                 ) {
-                    store.selectedArtwork = artwork
+                    activate(artwork)
                 }
                 .layoutValue(key: MasonryAspectRatioKey.self, value: presentation.aspectRatio)
+                .overlay(alignment: .topTrailing) {
+                    if artworkSelection.contains(artwork.id) {
+                        GallerySelectionBadge()
+                            .padding(8)
+                    }
+                }
                 .contextMenu {
+                    selectionContextButton(for: artwork)
+                    Divider()
                     Button(artwork.isBookmarked ? L10n.removeBookmark : L10n.bookmark) {
                         if artwork.isBookmarked {
                             store.requestDangerAction(AppDangerAction(kind: .removeBookmark(artwork)))
@@ -235,6 +274,42 @@ private struct MasonryArtworkGrid: View {
         } catch {
             store.errorMessage = error.localizedDescription
         }
+    }
+
+    private func activate(_ artwork: PixivArtwork) {
+        if artworkSelection.isSelectionMode || NSEvent.modifierFlags.contains(.command) {
+            artworkSelection.toggle(artwork.id)
+        } else {
+            store.selectedArtwork = artwork
+        }
+    }
+
+    private func selectionContextButton(for artwork: PixivArtwork) -> some View {
+        Button {
+            artworkSelection.toggle(artwork.id)
+        } label: {
+            Label(
+                artworkSelection.contains(artwork.id) ? L10n.deselectArtwork : L10n.selectArtwork,
+                systemImage: artworkSelection.contains(artwork.id) ? "checkmark.circle.fill" : "checkmark.circle"
+            )
+        }
+    }
+}
+
+private struct GallerySelectionBadge: View {
+    var body: some View {
+        Image(systemName: "checkmark.circle.fill")
+            .font(.title3.weight(.semibold))
+            .symbolRenderingMode(.palette)
+            .foregroundStyle(.white, Color.accentColor)
+            .padding(5)
+            .background(.regularMaterial, in: Circle())
+            .overlay {
+                Circle()
+                    .stroke(.white.opacity(0.65), lineWidth: 1)
+            }
+            .shadow(color: .black.opacity(0.22), radius: 4, y: 2)
+            .accessibilityLabel(L10n.selectedWorks)
     }
 }
 

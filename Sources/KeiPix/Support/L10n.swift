@@ -283,6 +283,12 @@ enum L10n {
     static var downloadInterrupted: String { text("Download interrupted") }
     static var batchDownload: String { text("Batch Download") }
     static var batchDownloadLoadedArtworks: String { text("Batch Download Loaded Artworks") }
+    static var selectedWorks: String { text("Selected Works") }
+    static var selectedWorksFormat: String { text("%d selected works") }
+    static var noSelectedWorks: String { text("No selected works") }
+    static var selectionMode: String { text("Selection Mode") }
+    static var deselectArtwork: String { text("Deselect Artwork") }
+    static var copySelectedArtworkLinks: String { text("Copy Selected Artwork Links") }
     static var batchBookmark: String { text("Batch Bookmark") }
     static var applyBookmarks: String { text("Apply Bookmarks") }
     static var noBatchBookmarkCandidates: String { text("No unbookmarked works in the loaded feed") }

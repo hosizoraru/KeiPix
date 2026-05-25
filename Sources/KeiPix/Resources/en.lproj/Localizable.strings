@@ -287,6 +287,12 @@
 "Download interrupted" = "Download interrupted";
 "Batch Download" = "Batch Download";
 "Batch Download Loaded Artworks" = "Batch Download Loaded Artworks";
+"Selected Works" = "Selected Works";
+"%d selected works" = "%d selected works";
+"No selected works" = "No selected works";
+"Selection Mode" = "Selection Mode";
+"Deselect Artwork" = "Deselect Artwork";
+"Copy Selected Artwork Links" = "Copy Selected Artwork Links";
 "Batch Bookmark" = "Batch Bookmark";
 "Apply Bookmarks" = "Apply Bookmarks";
 "No unbookmarked works in the loaded feed" = "No unbookmarked works in the loaded feed";

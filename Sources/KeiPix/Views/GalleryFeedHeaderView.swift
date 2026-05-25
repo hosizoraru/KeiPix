@@ -3,8 +3,10 @@ import SwiftUI
 struct FeedHeaderView: View {
     @Bindable var store: KeiPixStore
     @Binding var actionMessage: String?
+    @Binding var artworkSelection: GalleryArtworkSelection
     @State private var isBatchDownloadPresented = false
     @State private var batchDownloadLimit = 30
+    @State private var batchActionArtworks: [PixivArtwork] = []
     @State private var lastQueuedDownloadCount: Int?
     @State private var bookmarkTags: [PixivBookmarkTag] = []
     @State private var isLoadingBookmarkTags = false
@@ -147,6 +149,69 @@ struct FeedHeaderView: View {
             }
         }
 
+        if store.artworks.isEmpty == false {
+            Menu {
+                Toggle(isOn: selectionModeBinding) {
+                    Label(L10n.selectionMode, systemImage: "checkmark.circle")
+                }
+
+                Button {
+                    artworkSelection.selectAll(store.artworks.map(\.id))
+                } label: {
+                    Label(L10n.selectAll, systemImage: "checkmark.circle.fill")
+                }
+
+                Button {
+                    artworkSelection.clear()
+                } label: {
+                    Label(L10n.clearSelection, systemImage: "xmark.circle")
+                }
+                .disabled(artworkSelection.hasSelection == false)
+
+                Divider()
+
+                Button {
+                    copySelectedArtworkLinks()
+                } label: {
+                    Label(L10n.copySelectedArtworkLinks, systemImage: "link")
+                }
+                .disabled(selectedArtworkLinks.isEmpty)
+
+                Button {
+                    presentBatchDownload(artworks: selectedArtworks)
+                } label: {
+                    Label(L10n.batchDownload, systemImage: "square.and.arrow.down.on.square")
+                }
+                .disabled(selectedArtworks.isEmpty)
+
+                Button {
+                    presentBatchBookmarkPreview(artworks: selectedArtworks)
+                } label: {
+                    Label(L10n.batchBookmark, systemImage: "bookmark")
+                }
+                .disabled(selectedArtworks.isEmpty)
+
+                Menu {
+                    ForEach(BulkMuteTarget.allCases) { target in
+                        Button {
+                            presentBulkMutePreview(target, artworks: selectedArtworks)
+                        } label: {
+                            Label(target.title, systemImage: target.systemImage)
+                        }
+                        .disabled(selectedArtworks.isEmpty)
+                    }
+                } label: {
+                    Label(L10n.bulkMutePreview, systemImage: "eye.slash")
+                }
+                .disabled(selectedArtworks.isEmpty)
+            } label: {
+                Label(selectionTitle, systemImage: artworkSelection.hasSelection ? "checkmark.circle.fill" : "checkmark.circle")
+            }
+            .menuStyle(.button)
+            .buttonStyle(.bordered)
+            .tint(artworkSelection.hasSelection || artworkSelection.isSelectionMode ? .accentColor : nil)
+        }
+
         Menu {
             Button {
                 copyLoadedArtworkLinks()
@@ -156,14 +221,14 @@ struct FeedHeaderView: View {
             .disabled(loadedArtworkLinks.isEmpty)
 
             Button {
-                presentBatchDownload()
+                presentBatchDownload(artworks: store.artworks)
             } label: {
                 Label(L10n.batchDownload, systemImage: "square.and.arrow.down.on.square")
             }
             .disabled(store.artworks.isEmpty)
 
             Button {
-                presentBatchBookmarkPreview()
+                presentBatchBookmarkPreview(artworks: store.artworks)
             } label: {
                 Label(L10n.batchBookmark, systemImage: "bookmark")
             }
@@ -174,7 +239,7 @@ struct FeedHeaderView: View {
             Menu {
                 ForEach(BulkMuteTarget.allCases) { target in
                     Button {
-                        presentBulkMutePreview(target)
+                        presentBulkMutePreview(target, artworks: store.artworks)
                     } label: {
                         Label(target.title, systemImage: target.systemImage)
                     }
@@ -232,17 +297,40 @@ struct FeedHeaderView: View {
         }
     }
 
-    private func presentBatchDownload() {
-        guard store.artworks.isEmpty == false else {
+    private var selectionModeBinding: Binding<Bool> {
+        Binding {
+            artworkSelection.isSelectionMode
+        } set: { value in
+            artworkSelection.isSelectionMode = value
+        }
+    }
+
+    private var selectionTitle: String {
+        artworkSelection.hasSelection
+            ? String(format: L10n.selectedWorksFormat, artworkSelection.count)
+            : L10n.selectedWorks
+    }
+
+    private var selectedArtworks: [PixivArtwork] {
+        store.artworks.filter { artworkSelection.contains($0.id) }
+    }
+
+    private var selectedArtworkLinks: [String] {
+        selectedArtworks.compactMap { $0.pixivURL?.absoluteString }
+    }
+
+    private func presentBatchDownload(artworks: [PixivArtwork]) {
+        guard artworks.isEmpty == false else {
             actionMessage = L10n.noArtworkTitle
             return
         }
+        batchActionArtworks = artworks
         batchDownloadLimit = min(max(1, batchDownloadLimit), maxBatchDownloadLimit)
         isBatchDownloadPresented = true
     }
 
     private var maxBatchDownloadLimit: Int {
-        min(max(store.artworks.count, 1), 100)
+        min(max(batchActionArtworks.count, 1), 100)
     }
 
     private var loadedArtworkLinks: [String] {
@@ -354,13 +442,13 @@ struct FeedHeaderView: View {
     }
 
     private func queueBatchDownload() {
-        guard store.artworks.isEmpty == false else {
+        guard batchActionArtworks.isEmpty == false else {
             lastQueuedDownloadCount = 0
             actionMessage = L10n.noArtworkTitle
             return
         }
         let count = store.enqueueDownloads(
-            store.artworks,
+            batchActionArtworks,
             limit: min(batchDownloadLimit, maxBatchDownloadLimit),
             preferOriginal: true
         )
@@ -369,6 +457,16 @@ struct FeedHeaderView: View {
             actionMessage = String(format: L10n.queuedDownloadsFormat, count)
             isBatchDownloadPresented = false
         }
+    }
+
+    private func copySelectedArtworkLinks() {
+        let links = selectedArtworkLinks
+        guard links.isEmpty == false else {
+            actionMessage = L10n.noSelectedWorks
+            return
+        }
+        PasteboardWriter.copy(links.joined(separator: "\n"))
+        actionMessage = String(format: L10n.copiedArtworkLinksFormat, links.count)
     }
 
     private func copyLoadedArtworkLinks() {
@@ -381,8 +479,8 @@ struct FeedHeaderView: View {
         actionMessage = String(format: L10n.copiedArtworkLinksFormat, links.count)
     }
 
-    private func presentBulkMutePreview(_ target: BulkMuteTarget) {
-        let preview = store.bulkMutePreview(for: target, in: store.artworks)
+    private func presentBulkMutePreview(_ target: BulkMuteTarget, artworks: [PixivArtwork]) {
+        let preview = store.bulkMutePreview(for: target, in: artworks)
         bulkMutePreview = preview
         if preview.canApply == false {
             actionMessage = L10n.noBulkMuteCandidates
@@ -399,11 +497,11 @@ struct FeedHeaderView: View {
         }
     }
 
-    private func presentBatchBookmarkPreview() {
+    private func presentBatchBookmarkPreview(artworks: [PixivArtwork]) {
         let preview = BatchBookmarkPreview.make(
-            artworks: store.artworks,
+            artworks: artworks,
             restrict: store.defaultBookmarkRestrict,
-            tags: commonAutomaticBookmarkTags,
+            tags: commonAutomaticBookmarkTags(artworks: artworks),
             limit: 30
         )
         batchBookmarkPreview = preview
@@ -412,9 +510,9 @@ struct FeedHeaderView: View {
         }
     }
 
-    private var commonAutomaticBookmarkTags: [String] {
+    private func commonAutomaticBookmarkTags(artworks: [PixivArtwork]) -> [String] {
         guard store.autoTagBookmarksWithArtworkTags else { return [] }
-        let tagCounts = store.artworks
+        let tagCounts = artworks
             .flatMap { $0.tags.map(\.name) }
             .reduce(into: [String: Int]()) { counts, tag in
                 counts[tag, default: 0] += 1

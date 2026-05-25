@@ -287,6 +287,12 @@
 "Download interrupted" = "下载已中断";
 "Batch Download" = "批量下载";
 "Batch Download Loaded Artworks" = "批量下载已加载作品";
+"Selected Works" = "选中作品";
+"%d selected works" = "已选中 %d 个作品";
+"No selected works" = "没有选中的作品";
+"Selection Mode" = "选择模式";
+"Deselect Artwork" = "取消选择作品";
+"Copy Selected Artwork Links" = "复制选中作品链接";
 "Batch Bookmark" = "批量收藏";
 "Apply Bookmarks" = "应用收藏";
 "No unbookmarked works in the loaded feed" = "当前已加载作品里没有未收藏作品";
@@ -522,7 +528,7 @@
 "Reset" = "重置";
 "Apply" = "应用";
 "Artwork" = "作品";
-"Select Artwork" = "选中作品";
+"Select Artwork" = "选择作品";
 "Previous Artwork" = "上一个作品";
 "Next Artwork" = "下一个作品";
 "Reader Window" = "阅读窗口";

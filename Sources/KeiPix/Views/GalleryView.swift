@@ -80,6 +80,7 @@ struct GalleryView: View {
 private struct GalleryFeedView: View {
     @Bindable var store: KeiPixStore
     @Binding var actionMessage: String?
+    @State private var artworkSelection = GalleryArtworkSelection()
 
     var body: some View {
         ScrollView {
@@ -97,14 +98,22 @@ private struct GalleryFeedView: View {
                         } else {
                             SearchPopularPreviewStrip(store: store, actionMessage: $actionMessage)
 
-                            GalleryContentGrid(store: store, actionMessage: $actionMessage)
+                            GalleryContentGrid(
+                                store: store,
+                                actionMessage: $actionMessage,
+                                artworkSelection: $artworkSelection
+                            )
                         }
                     }
                     .padding(.horizontal, 18)
                     .padding(.top, 14)
                     .padding(.bottom, 20)
                 } header: {
-                    FeedHeaderView(store: store, actionMessage: $actionMessage)
+                    FeedHeaderView(
+                        store: store,
+                        actionMessage: $actionMessage,
+                        artworkSelection: $artworkSelection
+                    )
                         .padding(.horizontal, 18)
                         .padding(.vertical, 5)
                         .background(.bar)
@@ -112,6 +121,12 @@ private struct GalleryFeedView: View {
             }
         }
         .scrollEdgeEffectStyle(.soft, for: .top)
+        .onChange(of: store.artworks.map(\.id)) { _, visibleArtworkIDs in
+            artworkSelection.prune(visibleArtworkIDs: visibleArtworkIDs)
+        }
+        .onChange(of: store.selectedRoute) { _, _ in
+            artworkSelection.clear()
+        }
     }
 }
 
