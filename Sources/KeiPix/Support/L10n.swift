@@ -516,6 +516,13 @@ enum L10n {
     static var selectUnfollowedCreatorForQA: String { text("Select an artwork by an unfollowed creator for reversible QA") }
     static var privateBookmarkRoundTripCompleted: String { text("Private bookmark add/remove completed") }
     static var privateFollowRoundTripCompleted: String { text("Private follow/unfollow completed") }
+    static var runIDNavigationDiagnostics: String { text("Run ID Navigation Diagnostics") }
+    static var runningIDNavigationDiagnostics: String { text("Running ID navigation diagnostics") }
+    static var runCommentFeedbackDiagnostics: String { text("Run Comment Feedback Diagnostics") }
+    static var runningCommentFeedbackDiagnostics: String { text("Running comment feedback diagnostics") }
+    static var commentFeedbackDiagnostic: String { text("Comment feedback") }
+    static var commentFeedbackReadyFormat: String { text("Comment #%d feedback ready") }
+    static var invalidResponse: String { text("Invalid response") }
     static var refreshCacheStatus: String { text("Refresh Cache Status") }
     static var clearImageCache: String { text("Clear Image Cache") }
     static var imageCacheCleared: String { text("Image cache cleared") }

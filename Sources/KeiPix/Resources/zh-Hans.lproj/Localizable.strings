@@ -700,6 +700,13 @@
 "Select an artwork by an unfollowed creator for reversible QA" = "选择一个尚未关注作者的作品用于可逆 QA";
 "Private bookmark add/remove completed" = "私密收藏添加/移除已完成";
 "Private follow/unfollow completed" = "私密关注/取消关注已完成";
+"Run ID Navigation Diagnostics" = "运行 ID 直达诊断";
+"Running ID navigation diagnostics" = "正在运行 ID 直达诊断";
+"Run Comment Feedback Diagnostics" = "运行评论反馈诊断";
+"Running comment feedback diagnostics" = "正在运行评论反馈诊断";
+"Comment feedback" = "评论反馈";
+"Comment #%d feedback ready" = "评论 #%d 反馈已就绪";
+"Invalid response" = "响应无效";
 "Refresh Cache Status" = "刷新缓存状态";
 "Clear Image Cache" = "清理图片缓存";
 "Image cache cleared" = "图片缓存已清理";

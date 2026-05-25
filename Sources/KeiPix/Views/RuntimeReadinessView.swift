@@ -9,10 +9,14 @@ struct RuntimeReadinessView: View {
     @State private var isRunningDiagnostics = false
     @State private var isRunningSearchDiagnostics = false
     @State private var isRunningMutableActionQA = false
+    @State private var isRunningDirectNavigationDiagnostics = false
+    @State private var isRunningCommentFeedbackDiagnostics = false
     @State private var isMutableActionQAAuthorizationPresented = false
     @State private var networkResults: [NetworkDiagnosticResult] = []
     @State private var searchResults: [NetworkDiagnosticResult] = []
     @State private var mutableActionQAResults: [NetworkDiagnosticResult] = []
+    @State private var directNavigationResults: [NetworkDiagnosticResult] = []
+    @State private var commentFeedbackResults: [NetworkDiagnosticResult] = []
     @State private var cacheStatus: ImageCacheStatus?
     @State private var cacheMessage: String?
 
@@ -62,6 +66,22 @@ struct RuntimeReadinessView: View {
                 }
             }
 
+            if directNavigationResults.isEmpty == false {
+                Divider()
+
+                ForEach(directNavigationResults) { result in
+                    NetworkDiagnosticResultRow(result: result)
+                }
+            }
+
+            if commentFeedbackResults.isEmpty == false {
+                Divider()
+
+                ForEach(commentFeedbackResults) { result in
+                    NetworkDiagnosticResultRow(result: result)
+                }
+            }
+
             Divider()
 
             MutableActionReadinessView(
@@ -97,6 +117,20 @@ struct RuntimeReadinessView: View {
                     Label(L10n.runMutableActionQA, systemImage: "checkmark.shield")
                 }
                 .disabled(isRunningMutableActionQA)
+
+                Button {
+                    Task { await runDirectNavigationDiagnostics() }
+                } label: {
+                    Label(L10n.runIDNavigationDiagnostics, systemImage: "number.circle")
+                }
+                .disabled(isRunningDirectNavigationDiagnostics)
+
+                Button {
+                    Task { await runCommentFeedbackDiagnostics() }
+                } label: {
+                    Label(L10n.runCommentFeedbackDiagnostics, systemImage: "text.bubble")
+                }
+                .disabled(isRunningCommentFeedbackDiagnostics)
 
                 Button {
                     Task { await refreshCacheStatus() }
@@ -136,6 +170,26 @@ struct RuntimeReadinessView: View {
                     ProgressView()
                         .controlSize(.small)
                     Text(L10n.runningMutableActionQA)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            if isRunningDirectNavigationDiagnostics {
+                HStack(spacing: 8) {
+                    ProgressView()
+                        .controlSize(.small)
+                    Text(L10n.runningIDNavigationDiagnostics)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            if isRunningCommentFeedbackDiagnostics {
+                HStack(spacing: 8) {
+                    ProgressView()
+                        .controlSize(.small)
+                    Text(L10n.runningCommentFeedbackDiagnostics)
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -199,6 +253,18 @@ struct RuntimeReadinessView: View {
         mutableActionQAResults = await store.runReversibleMutableActionQA()
     }
 
+    private func runDirectNavigationDiagnostics() async {
+        isRunningDirectNavigationDiagnostics = true
+        defer { isRunningDirectNavigationDiagnostics = false }
+        directNavigationResults = await store.runDirectNavigationDiagnostics()
+    }
+
+    private func runCommentFeedbackDiagnostics() async {
+        isRunningCommentFeedbackDiagnostics = true
+        defer { isRunningCommentFeedbackDiagnostics = false }
+        commentFeedbackResults = await store.runCommentFeedbackDiagnostics()
+    }
+
     private func refreshCacheStatus() async {
         cacheStatus = await store.imageCacheStatus()
     }
@@ -253,6 +319,16 @@ struct RuntimeReadinessView: View {
             lines.append("")
             lines.append("Mutable Action QA Results")
             lines += mutableActionQAResults.map(\.diagnosticsLine)
+        }
+        if directNavigationResults.isEmpty == false {
+            lines.append("")
+            lines.append("ID Navigation Diagnostics")
+            lines += directNavigationResults.map(\.diagnosticsLine)
+        }
+        if commentFeedbackResults.isEmpty == false {
+            lines.append("")
+            lines.append("Comment Feedback Diagnostics")
+            lines += commentFeedbackResults.map(\.diagnosticsLine)
         }
         return lines.joined(separator: "\n")
     }

@@ -177,6 +177,85 @@ extension KeiPixStore {
         return await [bookmarkResult, followResult]
     }
 
+    func runDirectNavigationDiagnostics() async -> [NetworkDiagnosticResult] {
+        guard session != nil else {
+            return directNavigationSkippedResults(detail: L10n.signedOut)
+        }
+
+        guard let selectedArtwork else {
+            return directNavigationSkippedResults(detail: L10n.noSelection)
+        }
+
+        async let artworkResult = runArtworkIDNavigationDiagnostic(id: selectedArtwork.id)
+        async let creatorResult = runCreatorIDNavigationDiagnostic(id: selectedArtwork.user.id)
+        return await [artworkResult, creatorResult]
+    }
+
+    func runCommentFeedbackDiagnostics() async -> [NetworkDiagnosticResult] {
+        guard session != nil else {
+            return [
+                NetworkDiagnosticResult(
+                    id: "comment-feedback",
+                    title: L10n.commentFeedbackDiagnostic,
+                    status: .skipped,
+                    detail: L10n.signedOut,
+                    duration: nil
+                )
+            ]
+        }
+
+        guard let selectedArtwork else {
+            return [
+                NetworkDiagnosticResult(
+                    id: "comment-feedback",
+                    title: L10n.commentFeedbackDiagnostic,
+                    status: .skipped,
+                    detail: L10n.noSelection,
+                    duration: nil
+                )
+            ]
+        }
+
+        let startedAt = Date()
+        do {
+            let response = try await api.illustComments(illustID: selectedArtwork.id)
+            guard let comment = response.comments.first else {
+                return [
+                    NetworkDiagnosticResult(
+                        id: "comment-feedback",
+                        title: L10n.commentFeedbackDiagnostic,
+                        status: .skipped,
+                        detail: L10n.noComments,
+                        duration: Date().timeIntervalSince(startedAt)
+                    )
+                ]
+            }
+
+            let request = FeedbackReportRequest.comment(comment, artwork: selectedArtwork)
+            let summary = request.summary(reason: .other, note: "")
+            let passed = summary.contains(request.targetTitle) && request.targetURL != nil
+            return [
+                NetworkDiagnosticResult(
+                    id: "comment-feedback",
+                    title: L10n.commentFeedbackDiagnostic,
+                    status: passed ? .passed : .failed,
+                    detail: passed ? String(format: L10n.commentFeedbackReadyFormat, comment.id) : L10n.unsupportedPixivLink,
+                    duration: Date().timeIntervalSince(startedAt)
+                )
+            ]
+        } catch {
+            return [
+                NetworkDiagnosticResult(
+                    id: "comment-feedback",
+                    title: L10n.commentFeedbackDiagnostic,
+                    status: .failed,
+                    detail: error.localizedDescription,
+                    duration: Date().timeIntervalSince(startedAt)
+                )
+            ]
+        }
+    }
+
     func imageCacheStatus() async -> ImageCacheStatus {
         await ImagePipeline.shared.cacheStatus()
     }
@@ -540,6 +619,50 @@ extension KeiPixStore {
         }
     }
 
+    private func runArtworkIDNavigationDiagnostic(id: Int) async -> NetworkDiagnosticResult {
+        let startedAt = Date()
+        do {
+            let artwork = try await api.illustDetail(illustID: id)
+            return NetworkDiagnosticResult(
+                id: "direct-artwork-id",
+                title: L10n.artworkID,
+                status: artwork.id == id ? .passed : .failed,
+                detail: artwork.id == id ? String(format: L10n.openedPixivIDFormat, L10n.artworkID, id) : L10n.invalidResponse,
+                duration: Date().timeIntervalSince(startedAt)
+            )
+        } catch {
+            return NetworkDiagnosticResult(
+                id: "direct-artwork-id",
+                title: L10n.artworkID,
+                status: .failed,
+                detail: error.localizedDescription,
+                duration: Date().timeIntervalSince(startedAt)
+            )
+        }
+    }
+
+    private func runCreatorIDNavigationDiagnostic(id: Int) async -> NetworkDiagnosticResult {
+        let startedAt = Date()
+        do {
+            let detail = try await api.userDetail(userID: id)
+            return NetworkDiagnosticResult(
+                id: "direct-creator-id",
+                title: L10n.creatorID,
+                status: detail.user.id == id ? .passed : .failed,
+                detail: detail.user.id == id ? String(format: L10n.openedPixivIDFormat, L10n.creatorID, id) : L10n.invalidResponse,
+                duration: Date().timeIntervalSince(startedAt)
+            )
+        } catch {
+            return NetworkDiagnosticResult(
+                id: "direct-creator-id",
+                title: L10n.creatorID,
+                status: .failed,
+                detail: error.localizedDescription,
+                duration: Date().timeIntervalSince(startedAt)
+            )
+        }
+    }
+
     private func runReversibleFollowQA(user: PixivUser) async -> NetworkDiagnosticResult {
         guard user.isFollowed == false else {
             return NetworkDiagnosticResult(
@@ -591,6 +714,25 @@ extension KeiPixStore {
             NetworkDiagnosticResult(
                 id: "mutable-follow",
                 title: L10n.qaFollowToggle,
+                status: .skipped,
+                detail: detail,
+                duration: nil
+            )
+        ]
+    }
+
+    private func directNavigationSkippedResults(detail: String) -> [NetworkDiagnosticResult] {
+        [
+            NetworkDiagnosticResult(
+                id: "direct-artwork-id",
+                title: L10n.artworkID,
+                status: .skipped,
+                detail: detail,
+                duration: nil
+            ),
+            NetworkDiagnosticResult(
+                id: "direct-creator-id",
+                title: L10n.creatorID,
                 status: .skipped,
                 detail: detail,
                 duration: nil

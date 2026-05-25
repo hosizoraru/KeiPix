@@ -700,6 +700,13 @@
 "Select an artwork by an unfollowed creator for reversible QA" = "Select an artwork by an unfollowed creator for reversible QA";
 "Private bookmark add/remove completed" = "Private bookmark add/remove completed";
 "Private follow/unfollow completed" = "Private follow/unfollow completed";
+"Run ID Navigation Diagnostics" = "Run ID Navigation Diagnostics";
+"Running ID navigation diagnostics" = "Running ID navigation diagnostics";
+"Run Comment Feedback Diagnostics" = "Run Comment Feedback Diagnostics";
+"Running comment feedback diagnostics" = "Running comment feedback diagnostics";
+"Comment feedback" = "Comment feedback";
+"Comment #%d feedback ready" = "Comment #%d feedback ready";
+"Invalid response" = "Invalid response";
 "Refresh Cache Status" = "Refresh Cache Status";
 "Clear Image Cache" = "Clear Image Cache";
 "Image cache cleared" = "Image cache cleared";
