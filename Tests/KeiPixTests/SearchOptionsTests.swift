@@ -89,6 +89,16 @@ struct SearchOptionsTests {
         #expect(SearchMaximumBookmarks.oneHundredThousand.title.contains("100,000"))
     }
 
+    @Test("Search diagnostics cover premium popularity probes")
+    func searchDiagnosticsCoverPremiumPopularityProbes() {
+        let probes = SearchDiagnosticProbe.defaultProbes
+
+        #expect(probes.map(\.options.sort) == [.popularPreview, .popularMale, .popularFemale])
+        #expect(probes.allSatisfy { $0.keyword == SearchDiagnosticProbe.defaultKeyword })
+        #expect(probes.first?.options.ageLimit == .allAges)
+        #expect(probes.filter { $0.options.sort.requiresPixivPremium }.count == 2)
+    }
+
     @Test("Pixiv Web links preserve searchable options")
     func pixivWebSearchURL() throws {
         let url = try #require(PixivWebURLBuilder.searchURL(

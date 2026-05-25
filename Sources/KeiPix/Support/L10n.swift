@@ -503,6 +503,10 @@ enum L10n {
     static var unableToSaveDiagnostics: String { text("Unable to save diagnostics") }
     static var runNetworkDiagnostics: String { text("Run Network Diagnostics") }
     static var runningDiagnostics: String { text("Running diagnostics") }
+    static var runSearchDiagnostics: String { text("Run Search Diagnostics") }
+    static var runningSearchDiagnostics: String { text("Running search diagnostics") }
+    static var pixivPremiumRequired: String { text("Pixiv Premium required") }
+    static var searchDiagnosticResultFormat: String { text("%d results for %@") }
     static var refreshCacheStatus: String { text("Refresh Cache Status") }
     static var clearImageCache: String { text("Clear Image Cache") }
     static var imageCacheCleared: String { text("Image cache cleared") }

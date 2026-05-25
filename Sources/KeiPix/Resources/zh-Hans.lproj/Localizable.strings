@@ -687,6 +687,10 @@
 "Unable to save diagnostics" = "无法保存诊断";
 "Run Network Diagnostics" = "运行网络诊断";
 "Running diagnostics" = "正在诊断";
+"Run Search Diagnostics" = "运行搜索诊断";
+"Running search diagnostics" = "正在运行搜索诊断";
+"Pixiv Premium required" = "需要 Pixiv Premium";
+"%d results for %@" = "%d 个 %@ 结果";
 "Refresh Cache Status" = "刷新缓存状态";
 "Clear Image Cache" = "清理图片缓存";
 "Image cache cleared" = "图片缓存已清理";

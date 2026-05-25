@@ -7,7 +7,9 @@ struct RuntimeReadinessView: View {
     @State private var didCopyDiagnostics = false
     @State private var didCopyChecklist = false
     @State private var isRunningDiagnostics = false
+    @State private var isRunningSearchDiagnostics = false
     @State private var networkResults: [NetworkDiagnosticResult] = []
+    @State private var searchResults: [NetworkDiagnosticResult] = []
     @State private var cacheStatus: ImageCacheStatus?
     @State private var cacheMessage: String?
 
@@ -41,6 +43,14 @@ struct RuntimeReadinessView: View {
                 }
             }
 
+            if searchResults.isEmpty == false {
+                Divider()
+
+                ForEach(searchResults) { result in
+                    NetworkDiagnosticResultRow(result: result)
+                }
+            }
+
             Divider()
 
             MutableActionReadinessView(
@@ -64,6 +74,13 @@ struct RuntimeReadinessView: View {
                 .disabled(isRunningDiagnostics)
 
                 Button {
+                    Task { await runSearchDiagnostics() }
+                } label: {
+                    Label(L10n.runSearchDiagnostics, systemImage: "magnifyingglass.circle")
+                }
+                .disabled(isRunningSearchDiagnostics)
+
+                Button {
                     Task { await refreshCacheStatus() }
                 } label: {
                     Label(L10n.refreshCacheStatus, systemImage: "externaldrive.badge.magnifyingglass")
@@ -81,6 +98,16 @@ struct RuntimeReadinessView: View {
                     ProgressView()
                         .controlSize(.small)
                     Text(L10n.runningDiagnostics)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            if isRunningSearchDiagnostics {
+                HStack(spacing: 8) {
+                    ProgressView()
+                        .controlSize(.small)
+                    Text(L10n.runningSearchDiagnostics)
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -127,6 +154,12 @@ struct RuntimeReadinessView: View {
         await refreshCacheStatus()
     }
 
+    private func runSearchDiagnostics() async {
+        isRunningSearchDiagnostics = true
+        defer { isRunningSearchDiagnostics = false }
+        searchResults = await store.runSearchDiagnostics()
+    }
+
     private func refreshCacheStatus() async {
         cacheStatus = await store.imageCacheStatus()
     }
@@ -171,6 +204,11 @@ struct RuntimeReadinessView: View {
             lines.append("")
             lines.append("Network Diagnostics")
             lines += networkResults.map(\.diagnosticsLine)
+        }
+        if searchResults.isEmpty == false {
+            lines.append("")
+            lines.append("Search Diagnostics")
+            lines += searchResults.map(\.diagnosticsLine)
         }
         return lines.joined(separator: "\n")
     }

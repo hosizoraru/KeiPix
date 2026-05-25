@@ -687,6 +687,10 @@
 "Unable to save diagnostics" = "Unable to save diagnostics";
 "Run Network Diagnostics" = "Run Network Diagnostics";
 "Running diagnostics" = "Running diagnostics";
+"Run Search Diagnostics" = "Run Search Diagnostics";
+"Running search diagnostics" = "Running search diagnostics";
+"Pixiv Premium required" = "Pixiv Premium required";
+"%d results for %@" = "%d results for %@";
 "Refresh Cache Status" = "Refresh Cache Status";
 "Clear Image Cache" = "Clear Image Cache";
 "Image cache cleared" = "Image cache cleared";

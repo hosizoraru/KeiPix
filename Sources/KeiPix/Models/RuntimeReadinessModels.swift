@@ -114,6 +114,55 @@ extension KeiPixStore {
         return [proxyResult, apiResult, imageResult]
     }
 
+    func runSearchDiagnostics() async -> [NetworkDiagnosticResult] {
+        guard session != nil else {
+            return SearchDiagnosticProbe.defaultProbes.map { probe in
+                NetworkDiagnosticResult(
+                    id: "search-\(probe.id)",
+                    title: "\(L10n.search) · \(probe.title)",
+                    status: .skipped,
+                    detail: L10n.signedOut,
+                    duration: nil
+                )
+            }
+        }
+
+        var results: [NetworkDiagnosticResult] = []
+        for probe in SearchDiagnosticProbe.defaultProbes {
+            if probe.options.sort.requiresPixivPremium, session?.user.isPremium != true {
+                results.append(NetworkDiagnosticResult(
+                    id: "search-\(probe.id)",
+                    title: "\(L10n.search) · \(probe.title)",
+                    status: .skipped,
+                    detail: L10n.pixivPremiumRequired,
+                    duration: nil
+                ))
+                continue
+            }
+
+            let startedAt = Date()
+            do {
+                let response = try await api.search(keyword: probe.keyword, options: probe.options)
+                results.append(NetworkDiagnosticResult(
+                    id: "search-\(probe.id)",
+                    title: "\(L10n.search) · \(probe.title)",
+                    status: .passed,
+                    detail: String(format: L10n.searchDiagnosticResultFormat, response.illusts.count, probe.keyword),
+                    duration: Date().timeIntervalSince(startedAt)
+                ))
+            } catch {
+                results.append(NetworkDiagnosticResult(
+                    id: "search-\(probe.id)",
+                    title: "\(L10n.search) · \(probe.title)",
+                    status: .failed,
+                    detail: error.localizedDescription,
+                    duration: Date().timeIntervalSince(startedAt)
+                ))
+            }
+        }
+        return results
+    }
+
     func imageCacheStatus() async -> ImageCacheStatus {
         await ImagePipeline.shared.cacheStatus()
     }
