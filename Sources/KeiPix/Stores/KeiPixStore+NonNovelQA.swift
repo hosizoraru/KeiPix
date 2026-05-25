@@ -44,7 +44,9 @@ extension KeiPixStore {
         )
         async let ranking = qaFeedItem(
             id: "ranking",
-            count: { try await self.api.ranking(mode: "day").illusts.count }
+            count: { try await self.api.ranking(mode: "day").illusts.count },
+            visualSurface: .ranking,
+            visualEvidence: visualEvidence
         )
         async let following = qaFeedItem(
             id: "following-feed",

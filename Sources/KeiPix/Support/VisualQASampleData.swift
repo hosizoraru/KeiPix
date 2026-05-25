@@ -438,6 +438,26 @@ extension KeiPixStore {
         galleryLayoutMode = mode
     }
 
+    func presentRankingVisualQA() {
+        activateVisualQASampleSession()
+        selectedRoute = .rankingDaily
+        focusedUser = nil
+        bookmarkTagFilter = nil
+        selectedSpotlightArticle = nil
+        errorMessage = nil
+        isLoading = false
+        isLoadingMore = false
+        allArtworks = VisualQASampleData.galleryLayoutArtworks
+        artworks = VisualQASampleData.galleryLayoutArtworks
+        selectedArtwork = VisualQASampleData.galleryLayoutArtworks.first
+        searchPopularPreviewArtworks = []
+        nextURL = nil
+        activeFeedSnapshotRestoration = nil
+        galleryLayoutMode = .threeColumnMasonry
+        setUseRankingDate(false)
+        setRankingDate(Self.latestSelectableRankingDate())
+    }
+
     func presentLocalSampleFeed(for route: PixivRoute) {
         focusedUser = nil
         bookmarkTagFilter = nil
