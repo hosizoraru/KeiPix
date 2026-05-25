@@ -9,7 +9,7 @@ final class KeiPixStore {
 
     var session: PixivSession?
     var storedAccounts: [PixivStoredAccount] = []
-    var selectedRoute: PixivRoute = .illustrations
+    var selectedRoute: PixivRoute = .home
     var artworks: [PixivArtwork] = []
     var selectedArtwork: PixivArtwork?
     var searchPopularPreviewArtworks: [PixivArtwork] = []
@@ -147,7 +147,7 @@ final class KeiPixStore {
             session = try await api.login(code: code)
             storedAccounts = try await api.storedAccounts()
             isLoginPresented = false
-            selectedRoute = .illustrations
+            selectedRoute = .home
             await refreshRestrictedModeSetting()
             await reloadCurrentFeed()
         } catch {
@@ -179,7 +179,7 @@ final class KeiPixStore {
             session = try await api.selectAccount(userID: userID)
             storedAccounts = try await api.storedAccounts()
             resetLoadedSessionContent()
-            selectedRoute = .illustrations
+            selectedRoute = .home
             if session != nil {
                 await refreshRestrictedModeSetting()
                 await reloadCurrentFeed()
@@ -707,7 +707,7 @@ final class KeiPixStore {
             return try await api.following(restrict: "private")
         case .history:
             return try await api.browsingHistoryIllusts()
-        case .mangaWatchlist, .downloads, .savedSearches, .trendingTags, .bookmarkTags, .mutedContent, .spotlight:
+        case .home, .mangaWatchlist, .downloads, .savedSearches, .trendingTags, .bookmarkTags, .mutedContent, .spotlight:
             return PixivFeedResponse(illusts: [], nextURL: nil)
         case .followingCreators, .pinnedCreators, .recommendedUsers, .searchUsers:
             return PixivFeedResponse(illusts: [], nextURL: nil)

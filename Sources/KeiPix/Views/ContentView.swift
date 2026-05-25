@@ -17,7 +17,10 @@ struct ContentView: View {
             ContentColumnView(store: store)
                 .navigationSplitViewColumnWidth(min: 460, ideal: 700)
         } detail: {
-            if store.selectedRoute == .spotlight {
+            if store.selectedRoute == .home {
+                DiscoveryDashboardDetailPlaceholder()
+                    .navigationSplitViewColumnWidth(min: 320, ideal: 420)
+            } else if store.selectedRoute == .spotlight {
                 SpotlightArticleDetailView(store: store)
                     .navigationSplitViewColumnWidth(min: 360, ideal: 500)
             } else {
@@ -389,11 +392,23 @@ struct ContentView: View {
     }
 }
 
+private struct DiscoveryDashboardDetailPlaceholder: View {
+    var body: some View {
+        EmptyStateView(
+            title: L10n.discover,
+            subtitle: L10n.discoverDetailHint,
+            systemImage: "square.grid.2x2"
+        )
+    }
+}
+
 private struct ContentColumnView: View {
     @Bindable var store: KeiPixStore
 
     var body: some View {
-        if store.selectedRoute == .mangaWatchlist {
+        if store.selectedRoute == .home {
+            DiscoveryDashboardView(store: store)
+        } else if store.selectedRoute == .mangaWatchlist {
             MangaWatchlistView(store: store)
         } else if store.selectedRoute == .downloads {
             DownloadQueueView(store: store)

@@ -1,6 +1,8 @@
 import Foundation
 
 enum L10n {
+    static var discover: String { text("Discovery") }
+    static var discoverDetailHint: String { text("Pick a Discover card to open a feed, creator list, ranking, or library view.") }
     static var explore: String { text("Explore") }
     static var works: String { text("Works") }
     static var illustrations: String { text("Illustrations") }

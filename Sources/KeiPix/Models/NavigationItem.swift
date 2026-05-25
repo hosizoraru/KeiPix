@@ -21,6 +21,7 @@ enum PixivRouteSection: Identifiable {
         switch self {
         case .works:
             [
+                .home,
                 .illustrations,
                 .mangaRecommended,
                 .newIllustrations,
@@ -69,6 +70,7 @@ enum PixivRouteSection: Identifiable {
 }
 
 enum PixivRoute: String, CaseIterable, Identifiable, Codable {
+    case home
     case illustrations = "explore"
     case mangaRecommended
     case newIllustrations
@@ -123,6 +125,7 @@ enum PixivRoute: String, CaseIterable, Identifiable, Codable {
 
     var title: String {
         switch self {
+        case .home: L10n.discover
         case .illustrations: L10n.illustrations
         case .mangaRecommended: L10n.manga
         case .newIllustrations: L10n.newIllustrations
@@ -169,7 +172,8 @@ enum PixivRoute: String, CaseIterable, Identifiable, Codable {
 
     var usesArtworkFeed: Bool {
         switch self {
-        case .mangaWatchlist,
+        case .home,
+             .mangaWatchlist,
              .downloads,
              .followingCreators,
              .pinnedCreators,
@@ -216,6 +220,7 @@ enum PixivRoute: String, CaseIterable, Identifiable, Codable {
 
     var systemImage: String {
         switch self {
+        case .home: "square.grid.2x2"
         case .illustrations: "photo.on.rectangle"
         case .mangaRecommended: "book.closed"
         case .newIllustrations: "sparkle.magnifyingglass"
