@@ -287,6 +287,13 @@
 "Download interrupted" = "Download interrupted";
 "Batch Download" = "Batch Download";
 "Batch Download Loaded Artworks" = "Batch Download Loaded Artworks";
+"Batch Bookmark" = "Batch Bookmark";
+"Apply Bookmarks" = "Apply Bookmarks";
+"No unbookmarked works in the loaded feed" = "No unbookmarked works in the loaded feed";
+"%d will be bookmarked · %d already bookmarked · %@" = "%d will be bookmarked · %d already bookmarked · %@";
+"%d already bookmarked works will be skipped to avoid remote tag conflicts." = "%d already bookmarked works will be skipped to avoid remote tag conflicts.";
+"Bookmarked %d works · %d failed" = "Bookmarked %d works · %d failed";
+"%d more works will be bookmarked" = "%d more works will be bookmarked";
 "Maximum downloads" = "Maximum downloads";
 "Add to Download Queue" = "Add to Download Queue";
 "Queued %d downloads" = "Queued %d downloads";

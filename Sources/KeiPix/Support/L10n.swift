@@ -281,6 +281,13 @@ enum L10n {
     static var downloadInterrupted: String { text("Download interrupted") }
     static var batchDownload: String { text("Batch Download") }
     static var batchDownloadLoadedArtworks: String { text("Batch Download Loaded Artworks") }
+    static var batchBookmark: String { text("Batch Bookmark") }
+    static var applyBookmarks: String { text("Apply Bookmarks") }
+    static var noBatchBookmarkCandidates: String { text("No unbookmarked works in the loaded feed") }
+    static var batchBookmarkPreviewFormat: String { text("%d will be bookmarked · %d already bookmarked · %@") }
+    static var batchBookmarkSkippedFormat: String { text("%d already bookmarked works will be skipped to avoid remote tag conflicts.") }
+    static var batchBookmarkedResultFormat: String { text("Bookmarked %d works · %d failed") }
+    static var moreBatchBookmarkItemsFormat: String { text("%d more works will be bookmarked") }
     static var maximumDownloads: String { text("Maximum downloads") }
     static var addToDownloadQueue: String { text("Add to Download Queue") }
     static var queuedDownloadsFormat: String { text("Queued %d downloads") }

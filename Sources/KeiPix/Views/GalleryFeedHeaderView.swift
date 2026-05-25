@@ -11,6 +11,8 @@ struct FeedHeaderView: View {
     @State private var bookmarkTagErrorMessage: String?
     @State private var isRankingDatePopoverPresented = false
     @State private var bulkMutePreview: BulkMutePreview?
+    @State private var batchBookmarkPreview: BatchBookmarkPreview?
+    @State private var isApplyingBatchBookmark = false
     @State private var draftUseRankingDate = false
     @State private var draftRankingDate = KeiPixStore.latestSelectableRankingDate()
 
@@ -160,6 +162,13 @@ struct FeedHeaderView: View {
             }
             .disabled(store.artworks.isEmpty)
 
+            Button {
+                presentBatchBookmarkPreview()
+            } label: {
+                Label(L10n.batchBookmark, systemImage: "bookmark")
+            }
+            .disabled(store.artworks.isEmpty)
+
             Divider()
 
             Menu {
@@ -197,6 +206,18 @@ struct FeedHeaderView: View {
                 },
                 apply: {
                     applyBulkMutePreview(preview)
+                }
+            )
+        }
+        .popover(item: $batchBookmarkPreview, arrowEdge: .bottom) { preview in
+            BatchBookmarkPreviewPopover(
+                preview: preview,
+                isApplying: isApplyingBatchBookmark,
+                cancel: {
+                    batchBookmarkPreview = nil
+                },
+                apply: {
+                    applyBatchBookmarkPreview(preview)
                 }
             )
         }
@@ -375,6 +396,56 @@ struct FeedHeaderView: View {
             actionMessage = String(format: L10n.bulkMutedItemsFormat, count)
         } else {
             actionMessage = L10n.noBulkMuteCandidates
+        }
+    }
+
+    private func presentBatchBookmarkPreview() {
+        let preview = BatchBookmarkPreview.make(
+            artworks: store.artworks,
+            restrict: store.defaultBookmarkRestrict,
+            tags: commonAutomaticBookmarkTags,
+            limit: 30
+        )
+        batchBookmarkPreview = preview
+        if preview.canApply == false {
+            actionMessage = L10n.noBatchBookmarkCandidates
+        }
+    }
+
+    private var commonAutomaticBookmarkTags: [String] {
+        guard store.autoTagBookmarksWithArtworkTags else { return [] }
+        let tagCounts = store.artworks
+            .flatMap { $0.tags.map(\.name) }
+            .reduce(into: [String: Int]()) { counts, tag in
+                counts[tag, default: 0] += 1
+            }
+        return tagCounts
+            .sorted {
+                if $0.value != $1.value {
+                    return $0.value > $1.value
+                }
+                return $0.key.localizedStandardCompare($1.key) == .orderedAscending
+            }
+            .prefix(8)
+            .map(\.key)
+    }
+
+    private func applyBatchBookmarkPreview(_ preview: BatchBookmarkPreview) {
+        guard isApplyingBatchBookmark == false else { return }
+        isApplyingBatchBookmark = true
+        Task {
+            let result = await store.batchSaveBookmarks(
+                preview.applyArtworks,
+                restrict: preview.restrict,
+                tags: preview.tags
+            )
+            isApplyingBatchBookmark = false
+            batchBookmarkPreview = nil
+            actionMessage = String(
+                format: L10n.batchBookmarkedResultFormat,
+                result.savedCount,
+                result.failedCount
+            )
         }
     }
 
@@ -620,5 +691,116 @@ private struct BulkMutePreviewPopover: View {
         }
         .padding(16)
         .frame(width: 340)
+    }
+}
+
+private struct BatchBookmarkPreviewPopover: View {
+    let preview: BatchBookmarkPreview
+    let isApplying: Bool
+    let cancel: () -> Void
+    let apply: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            VStack(alignment: .leading, spacing: 4) {
+                Label(L10n.batchBookmark, systemImage: "bookmark")
+                    .font(.headline)
+
+                Text(
+                    String(
+                        format: L10n.batchBookmarkPreviewFormat,
+                        preview.applyArtworks.count,
+                        preview.skippedBookmarked.count,
+                        preview.restrict.title
+                    )
+                )
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            }
+
+            if preview.tags.isEmpty == false {
+                FlowLayout(spacing: 6) {
+                    ForEach(preview.tags, id: \.self) { tag in
+                        Text("#\(tag)")
+                            .font(.caption.weight(.medium))
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(.thinMaterial, in: Capsule())
+                    }
+                }
+            }
+
+            if preview.applyArtworks.isEmpty {
+                ContentUnavailableView(L10n.noBatchBookmarkCandidates, systemImage: "bookmark")
+                    .frame(minHeight: 150)
+            } else {
+                ScrollView {
+                    LazyVStack(alignment: .leading, spacing: 8) {
+                        ForEach(preview.applyArtworks.prefix(10)) { artwork in
+                            HStack(spacing: 8) {
+                                RemoteImageView(url: artwork.thumbnailURL)
+                                    .frame(width: 34, height: 34)
+                                    .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(artwork.title)
+                                        .font(.callout.weight(.medium))
+                                        .lineLimit(1)
+                                    Text(artwork.user.name)
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                        .lineLimit(1)
+                                }
+                            }
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 8)
+                            .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                        }
+
+                        if preview.omittedCandidateCount > 0 {
+                            Text(String(format: L10n.moreBatchBookmarkItemsFormat, preview.omittedCandidateCount))
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                                .padding(.horizontal, 10)
+                        }
+                    }
+                }
+                .frame(maxHeight: 280)
+            }
+
+            if preview.skippedBookmarked.isEmpty == false {
+                Label(
+                    String(format: L10n.batchBookmarkSkippedFormat, preview.skippedBookmarked.count),
+                    systemImage: "exclamationmark.triangle"
+                )
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            }
+
+            Divider()
+
+            HStack(spacing: 8) {
+                Button(L10n.cancel, action: cancel)
+                    .disabled(isApplying)
+
+                Spacer()
+
+                Button {
+                    apply()
+                } label: {
+                    if isApplying {
+                        ProgressView()
+                            .controlSize(.small)
+                    } else {
+                        Label(L10n.applyBookmarks, systemImage: "bookmark.fill")
+                    }
+                }
+                .buttonStyle(.glassProminent)
+                .disabled(preview.canApply == false || isApplying)
+            }
+        }
+        .padding(16)
+        .frame(width: 380)
     }
 }

@@ -287,6 +287,13 @@
 "Download interrupted" = "下载已中断";
 "Batch Download" = "批量下载";
 "Batch Download Loaded Artworks" = "批量下载已加载作品";
+"Batch Bookmark" = "批量收藏";
+"Apply Bookmarks" = "应用收藏";
+"No unbookmarked works in the loaded feed" = "当前已加载作品里没有未收藏作品";
+"%d will be bookmarked · %d already bookmarked · %@" = "%d 个将收藏 · %d 个已收藏 · %@";
+"%d already bookmarked works will be skipped to avoid remote tag conflicts." = "%d 个已收藏作品将跳过，以避免覆盖远端标签。";
+"Bookmarked %d works · %d failed" = "已收藏 %d 个 · %d 个失败";
+"%d more works will be bookmarked" = "还有 %d 个作品将收藏";
 "Maximum downloads" = "最大下载数";
 "Add to Download Queue" = "加入下载队列";
 "Queued %d downloads" = "已加入 %d 个下载";

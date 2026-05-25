@@ -55,6 +55,23 @@ extension KeiPixStore {
         }
     }
 
+    func batchSaveBookmarks(_ artworks: [PixivArtwork], restrict: BookmarkRestrict, tags: [String]) async -> BatchBookmarkResult {
+        var savedCount = 0
+        var failedCount = 0
+
+        for artwork in artworks where isArtworkBookmarked(artwork) == false {
+            do {
+                try await saveBookmark(artwork, restrict: restrict, tags: tags)
+                savedCount += 1
+            } catch {
+                failedCount += 1
+                errorMessage = error.localizedDescription
+            }
+        }
+
+        return BatchBookmarkResult(savedCount: savedCount, failedCount: failedCount)
+    }
+
     func setBookmarkTagFilter(_ tag: String?) {
         bookmarkTagFilter = tag
         Task { await reloadCurrentFeed() }
