@@ -171,6 +171,15 @@ enum L10n {
     static var copyCurrentPageLink: String { text("Copy Current Page Link") }
     static var downloadCurrentPage: String { text("Download Current Page") }
     static var queuedCurrentPage: String { text("Queued Current Page") }
+    static var downloadPageRange: String { text("Download Page Range") }
+    static var startPage: String { text("Start Page") }
+    static var endPage: String { text("End Page") }
+    static var currentPageToEnd: String { text("Current Page to End") }
+    static var allPages: String { text("All Pages") }
+    static var downloadPageRangeSummaryFormat: String { text("Pages %d-%d · %d selected · %d total") }
+    static var queuedPageRangeFormat: String { text("Queued pages %d-%d (%d pages)") }
+    static var sourcePagesRangeFormat: String { text("Source pages %d-%d") }
+    static var sourcePagesListFormat: String { text("Source pages %@") }
     static var reloadPage: String { text("Reload Page") }
     static var webContentReloaded: String { text("Web content reloaded") }
     static var copyLink: String { text("Copy Link") }

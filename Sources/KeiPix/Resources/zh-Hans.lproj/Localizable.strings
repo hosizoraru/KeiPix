@@ -171,6 +171,15 @@
 "Copy Current Page Link" = "复制当前页链接";
 "Download Current Page" = "下载当前页";
 "Queued Current Page" = "已加入当前页下载";
+"Download Page Range" = "下载页码范围";
+"Start Page" = "起始页";
+"End Page" = "结束页";
+"Current Page to End" = "当前页到末页";
+"All Pages" = "全部页面";
+"Pages %d-%d · %d selected · %d total" = "第 %d-%d 页 · 已选 %d 页 · 共 %d 页";
+"Queued pages %d-%d (%d pages)" = "已加入第 %d-%d 页下载（%d 页）";
+"Source pages %d-%d" = "源页码 %d-%d";
+"Source pages %@" = "源页码 %@";
 "Reload Page" = "重新加载页面";
 "Web content reloaded" = "网页内容已重新加载";
 "Copy Link" = "复制链接";

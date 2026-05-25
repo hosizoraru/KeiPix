@@ -199,6 +199,7 @@ private struct ArtworkActionStrip: View {
     @State private var isBookmarkEditorPresented = false
     @State private var actionMessage: String?
     @State private var feedbackRequest: FeedbackReportRequest?
+    @State private var isPageRangeDownloadPresented = false
 
     var body: some View {
         GlassEffectContainer {
@@ -318,6 +319,14 @@ private struct ArtworkActionStrip: View {
                             }
                         }
 
+                        if artwork.isUgoira == false && pageCount > 1 {
+                            Button {
+                                isPageRangeDownloadPresented = true
+                            } label: {
+                                Label(L10n.downloadPageRange, systemImage: "text.page.badge.magnifyingglass")
+                            }
+                        }
+
                         if let currentLocalPageURL {
                             Button {
                                 NSWorkspace.shared.activateFileViewerSelecting([currentLocalPageURL])
@@ -383,6 +392,15 @@ private struct ArtworkActionStrip: View {
 
             }
         }
+        .sheet(isPresented: $isPageRangeDownloadPresented) {
+            DownloadPageRangeSheet(
+                artwork: artwork,
+                store: store,
+                initialPageIndex: pageIndex,
+                pageCount: pageCount,
+                onComplete: showPageRangeDownloadMessage
+            )
+        }
     }
 
     private func copyArtworkSummary() {
@@ -398,6 +416,19 @@ private struct ArtworkActionStrip: View {
             if actionMessage == message {
                 actionMessage = nil
             }
+        }
+    }
+
+    private func showPageRangeDownloadMessage(_ queuedCount: Int, _ oneBasedRange: ClosedRange<Int>) {
+        if queuedCount > 0 {
+            showActionMessage(String(
+                format: L10n.queuedPageRangeFormat,
+                oneBasedRange.lowerBound,
+                oneBasedRange.upperBound,
+                queuedCount
+            ))
+        } else {
+            showActionMessage(L10n.noDownloadRecordsChanged)
         }
     }
 

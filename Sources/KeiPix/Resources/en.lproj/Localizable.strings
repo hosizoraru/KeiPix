@@ -171,6 +171,15 @@
 "Copy Current Page Link" = "Copy Current Page Link";
 "Download Current Page" = "Download Current Page";
 "Queued Current Page" = "Queued Current Page";
+"Download Page Range" = "Download Page Range";
+"Start Page" = "Start Page";
+"End Page" = "End Page";
+"Current Page to End" = "Current Page to End";
+"All Pages" = "All Pages";
+"Pages %d-%d · %d selected · %d total" = "Pages %d-%d · %d selected · %d total";
+"Queued pages %d-%d (%d pages)" = "Queued pages %d-%d (%d pages)";
+"Source pages %d-%d" = "Source pages %d-%d";
+"Source pages %@" = "Source pages %@";
 "Reload Page" = "Reload Page";
 "Web content reloaded" = "Web content reloaded";
 "Copy Link" = "Copy Link";

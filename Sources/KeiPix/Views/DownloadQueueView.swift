@@ -543,6 +543,9 @@ private struct DownloadQueueRow: View {
 
                 HStack(spacing: 8) {
                     Text(item.progressLabel)
+                    if let sourcePageLabel = item.sourcePageLabel {
+                        Text(sourcePageLabel)
+                    }
                     if let downloadedSize = downloads.downloadedSizeText(for: item) {
                         Text(downloadedSize)
                     }

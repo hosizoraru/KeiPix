@@ -249,6 +249,18 @@ struct ArtworkDownloadItem: Identifiable, Codable, Sendable {
         return "\(completedPages) / \(pageCount)"
     }
 
+    var sourcePageLabel: String? {
+        guard let sourcePageIndexes, sourcePageIndexes.isEmpty == false else { return nil }
+        let pages = sourcePageIndexes.map { $0 + 1 }
+        if let first = pages.first, let last = pages.last, first <= last, pages == Array(first...last) {
+            return String(format: L10n.sourcePagesRangeFormat, first, last)
+        }
+        return String(
+            format: L10n.sourcePagesListFormat,
+            pages.map(String.init).joined(separator: ", ")
+        )
+    }
+
     var resolvedArtifactKind: ArtworkDownloadArtifactKind {
         artifactKind ?? .imagePages
     }

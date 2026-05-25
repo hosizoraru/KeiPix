@@ -127,6 +127,62 @@ extension ArtworkDownloadStore {
     }
 
     @discardableResult
+    func enqueuePages(_ artwork: PixivArtwork, pageRange: ClosedRange<Int>, preferOriginal: Bool = true) -> Int {
+        let displayPageCount = max(artwork.displayPageCount, 1)
+        let lowerBound = min(max(pageRange.lowerBound, 0), displayPageCount - 1)
+        let upperBound = min(max(pageRange.upperBound, 0), displayPageCount - 1)
+        guard lowerBound <= upperBound else { return 0 }
+
+        let sourcePairs = (lowerBound...upperBound).compactMap { pageIndex -> (Int, URL)? in
+            guard let sourceURL = artwork.imageURL(at: pageIndex, preferOriginal: preferOriginal) else { return nil }
+            return (pageIndex, sourceURL)
+        }
+        guard sourcePairs.isEmpty == false else { return 0 }
+
+        let sourcePageIndexes = sourcePairs.map(\.0)
+        if let existingIndex = items.firstIndex(where: {
+            $0.artworkID == artwork.id
+                && $0.resolvedArtifactKind == .imagePages
+                && $0.sourcePageIndexes == sourcePageIndexes
+                && ($0.status == .queued || $0.status == .downloading)
+        }) {
+            items[existingIndex].updatedAt = Date()
+            persistItems()
+            return 0
+        }
+
+        let item = ArtworkDownloadItem(
+            id: UUID(),
+            artworkID: artwork.id,
+            title: artwork.title,
+            creatorName: artwork.user.name,
+            creatorID: artwork.user.id,
+            tags: artwork.tags.map(\.name),
+            isAI: artwork.isAI,
+            isR18: artwork.isR18,
+            isR18G: artwork.isR18G,
+            artifactKind: .imagePages,
+            ugoiraFrameCount: nil,
+            ugoiraFrames: nil,
+            pageCount: sourcePairs.count,
+            completedPages: 0,
+            status: .queued,
+            folderPath: nil,
+            sourceImageURLs: sourcePairs.map(\.1),
+            sourcePageIndexes: sourcePageIndexes,
+            sourceTotalPageCount: displayPageCount,
+            downloadedFilePaths: nil,
+            errorMessage: nil,
+            createdAt: Date(),
+            updatedAt: Date()
+        )
+        items.insert(item, at: 0)
+        persistItems()
+        startWorkerIfNeeded(preferOriginal: preferOriginal)
+        return sourcePairs.count
+    }
+
+    @discardableResult
     func enqueue(_ artworks: [PixivArtwork], limit: Int, preferOriginal: Bool = true) -> Int {
         let existingArtworkIDs = Set(items.filter {
             $0.status != .failed && $0.resolvedArtifactKind == .imagePages && $0.sourcePageIndexes == nil

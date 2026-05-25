@@ -113,6 +113,15 @@ extension KeiPixStore {
     }
 
     @discardableResult
+    func enqueueDownloadPages(_ artwork: PixivArtwork, pageRange: ClosedRange<Int>, preferOriginal: Bool = true) -> Int {
+        guard artwork.isUgoira == false else {
+            enqueueDownload(artwork, preferOriginal: preferOriginal)
+            return 1
+        }
+        return downloads.enqueuePages(artwork, pageRange: pageRange, preferOriginal: preferOriginal)
+    }
+
+    @discardableResult
     func enqueueDownloads(_ artworks: [PixivArtwork], limit: Int, preferOriginal: Bool = true) -> Int {
         let candidates = Array(artworks.prefix(max(limit, 0)))
         let imageArtworks = candidates.filter { $0.isUgoira == false }
