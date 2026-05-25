@@ -285,11 +285,17 @@ private struct ArtworkSeriesSheet: View {
     let artwork: PixivArtwork
     @Bindable var store: KeiPixStore
     @Environment(\.dismiss) private var dismiss
+    @State private var isExpanded = true
 
     var body: some View {
         NavigationStack {
             ScrollView {
-                ArtworkSeriesView(artwork: artwork, store: store, startsExpanded: true)
+                ArtworkSeriesView(
+                    artwork: artwork,
+                    store: store,
+                    isExpanded: $isExpanded,
+                    startsExpanded: true
+                )
                     .padding(18)
             }
             .frame(minWidth: 560, idealWidth: 680, minHeight: 520, idealHeight: 700)

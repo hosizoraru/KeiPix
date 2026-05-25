@@ -37,6 +37,7 @@ final class KeiPixStore {
     var mangaWatchlistReadStateLibrary = KeiPixStore.loadMangaWatchlistReadStateLibrary()
     var pinnedCreatorLibrary = KeiPixStore.loadPinnedCreatorLibrary()
     var feedSnapshotLibrary = KeiPixStore.loadFeedSnapshotLibrary()
+    var artworkDetailStateLibrary = KeiPixStore.loadArtworkDetailStateLibrary()
     var errorMessage: String?
     var isLoading = false
     var isLoadingMore = false

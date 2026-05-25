@@ -20,9 +20,7 @@ private struct ArtworkInspectorView: View {
     let artwork: PixivArtwork
     @Bindable var store: KeiPixStore
 
-    @State private var captionExpanded = false
-    @State private var tagsExpanded = false
-    @State private var metadataExpanded = false
+    @State private var expansionState: ArtworkDetailExpansionState
     @State private var pageIndex = 0
     @State private var readingMode: ArtworkReadingMode
     @State private var scrollTarget: Int?
@@ -30,6 +28,7 @@ private struct ArtworkInspectorView: View {
     init(artwork: PixivArtwork, store: KeiPixStore) {
         self.artwork = artwork
         self.store = store
+        _expansionState = State(initialValue: store.artworkDetailExpansionState(for: artwork))
         _readingMode = State(initialValue: store.defaultReadingMode(for: artwork))
     }
 
@@ -68,23 +67,35 @@ private struct ArtworkInspectorView: View {
                     ArtworkSummaryView(artwork: artwork, store: store, pageIndex: pageIndex, pageCount: pageCount)
                         .padding(.horizontal, 18)
 
-                    ArtworkSeriesView(artwork: artwork, store: store)
+                    ArtworkSeriesView(
+                        artwork: artwork,
+                        store: store,
+                        isExpanded: detailExpansionBinding(\.isSeriesExpanded)
+                    )
                         .id(artwork.id)
                         .padding(.horizontal, 18)
 
-                    ArtworkCommentsView(artwork: artwork, store: store)
+                    ArtworkCommentsView(
+                        artwork: artwork,
+                        store: store,
+                        isExpanded: detailExpansionBinding(\.isCommentsExpanded)
+                    )
                         .padding(.horizontal, 18)
 
-                    ArtworkRelatedView(artwork: artwork, store: store)
+                    ArtworkRelatedView(
+                        artwork: artwork,
+                        store: store,
+                        isExpanded: detailExpansionBinding(\.isRelatedExpanded)
+                    )
                         .id(artwork.id)
                         .padding(.horizontal, 18)
 
                     ArtworkInformationSections(
                         artwork: artwork,
                         store: store,
-                        captionExpanded: $captionExpanded,
-                        tagsExpanded: $tagsExpanded,
-                        metadataExpanded: $metadataExpanded
+                        captionExpanded: detailExpansionBinding(\.isCaptionExpanded),
+                        tagsExpanded: detailExpansionBinding(\.isTagsExpanded),
+                        metadataExpanded: detailExpansionBinding(\.isMetadataExpanded)
                     )
                     .padding(.horizontal, 18)
                     .padding(.bottom, 18)
@@ -118,13 +129,20 @@ private struct ArtworkInspectorView: View {
     }
 
     private func resetForArtwork() {
-        captionExpanded = false
-        tagsExpanded = false
-        metadataExpanded = false
+        expansionState = store.artworkDetailExpansionState(for: artwork)
         readingMode = store.defaultReadingMode(for: artwork, pageCount: pageCount)
         let restoredPageIndex = store.restoredReaderPageIndex(for: artwork, pageCount: pageCount)
         pageIndex = restoredPageIndex
         scrollTarget = readingMode == .singlePage ? nil : restoredPageIndex
+    }
+
+    private func detailExpansionBinding(_ keyPath: WritableKeyPath<ArtworkDetailExpansionState, Bool>) -> Binding<Bool> {
+        Binding {
+            expansionState[keyPath: keyPath]
+        } set: { value in
+            expansionState[keyPath: keyPath] = value
+            store.saveArtworkDetailExpansionState(expansionState, for: artwork)
+        }
     }
 
     private func scrollToPage(_ index: Int, proxy: ScrollViewProxy) {

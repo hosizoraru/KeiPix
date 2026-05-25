@@ -3,8 +3,8 @@ import SwiftUI
 struct ArtworkCommentsView: View {
     let artwork: PixivArtwork
     @Bindable var store: KeiPixStore
+    @Binding var isExpanded: Bool
 
-    @State private var isExpanded = false
     @State private var hasLoaded = false
     @State private var comments: [PixivComment] = []
     @State private var nextURL: URL?

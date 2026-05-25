@@ -3,9 +3,9 @@ import SwiftUI
 struct ArtworkSeriesView: View {
     let artwork: PixivArtwork
     @Bindable var store: KeiPixStore
+    @Binding var isExpanded: Bool
     var startsExpanded = false
 
-    @State private var isExpanded = false
     @State private var didApplyInitialExpansion = false
     @State private var hasLoaded = false
     @State private var detail: PixivArtworkSeriesDetail?
