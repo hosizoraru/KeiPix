@@ -227,6 +227,9 @@ private struct ArtworkActionStrip: View {
                 }
 
                 HStack(spacing: 10) {
+                    // Bookmark stays text + icon — it's the primary
+                    // CTA and the most-asked-for action on a detail
+                    // pane (matches Pixiv Web's prominent ❤ button).
                     Button {
                         isBookmarkEditorPresented = true
                     } label: {
@@ -242,6 +245,11 @@ private struct ArtworkActionStrip: View {
                         .iPadFriendlySheet()
                     }
 
+                    // Download / Open in Window / More are icon-only
+                    // so the action row stays compact in the inspector
+                    // pane. `.help(...)` covers tooltip + VoiceOver
+                    // labels, matching Apple Mail / Photos toolbars
+                    // where every glyph reads as text on hover.
                     Button {
                         if downloadState == .downloaded {
                             store.prepareReaderWindow(for: artwork)
@@ -252,20 +260,24 @@ private struct ArtworkActionStrip: View {
                         }
                     } label: {
                         Label(downloadPrimaryTitle, systemImage: downloadPrimarySystemImage)
-                            .frame(maxWidth: .infinity)
                     }
+                    .labelStyle(.iconOnly)
                     .buttonStyle(.bordered)
                     .controlSize(.small)
+                    .help(downloadPrimaryTitle)
+                    .accessibilityLabel(downloadPrimaryTitle)
 
                     Button {
                         store.prepareReaderWindow(for: artwork)
                         openWindow(id: "artwork-reader")
                     } label: {
                         Label(L10n.openReaderWindow, systemImage: "rectangle.inset.filled")
-                            .frame(maxWidth: .infinity)
                     }
+                    .labelStyle(.iconOnly)
                     .buttonStyle(.bordered)
                     .controlSize(.small)
+                    .help(L10n.openReaderWindow)
+                    .accessibilityLabel(L10n.openReaderWindow)
 
                     Menu {
                         Button {
@@ -410,10 +422,12 @@ private struct ArtworkActionStrip: View {
                         }
                     } label: {
                         Label(L10n.moreActions, systemImage: "ellipsis.circle")
-                            .frame(maxWidth: .infinity)
                     }
+                    .labelStyle(.iconOnly)
                     .buttonStyle(.bordered)
                     .controlSize(.small)
+                    .help(L10n.moreActions)
+                    .accessibilityLabel(L10n.moreActions)
                     .sheet(item: $feedbackRequest) { request in
                         FeedbackReportSheet(request: request) {
                             store.requestDangerAction(AppDangerAction(kind: .muteArtwork(artwork)))

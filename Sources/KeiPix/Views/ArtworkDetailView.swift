@@ -67,6 +67,21 @@ private struct ArtworkInspectorView: View {
                     ArtworkSummaryView(artwork: artwork, store: store, pageIndex: pageIndex, pageCount: pageCount)
                         .padding(.horizontal, 18)
 
+                    // Information (caption / tags / metadata) sits
+                    // right under the summary so the most-used
+                    // metadata — translated tags, mute targets,
+                    // artwork ID — is the first thing the user
+                    // reaches after the action strip. Pixiv Web's
+                    // own desktop layout follows the same ordering.
+                    ArtworkInformationSections(
+                        artwork: artwork,
+                        store: store,
+                        captionExpanded: detailExpansionBinding(\.isCaptionExpanded),
+                        tagsExpanded: detailExpansionBinding(\.isTagsExpanded),
+                        metadataExpanded: detailExpansionBinding(\.isMetadataExpanded)
+                    )
+                    .padding(.horizontal, 18)
+
                     ArtworkSeriesView(
                         artwork: artwork,
                         store: store,
@@ -76,6 +91,11 @@ private struct ArtworkInspectorView: View {
                         .id(artwork.id)
                         .padding(.horizontal, 18)
 
+                    // Comments and related stay below the
+                    // metadata so the artwork-centric reading flow
+                    // (look at the work → read what the artist
+                    // said → see related works) lands before the
+                    // social fold.
                     ArtworkCommentsView(
                         artwork: artwork,
                         store: store,
@@ -93,16 +113,7 @@ private struct ArtworkInspectorView: View {
                     )
                         .id(artwork.id)
                         .padding(.horizontal, 18)
-
-                    ArtworkInformationSections(
-                        artwork: artwork,
-                        store: store,
-                        captionExpanded: detailExpansionBinding(\.isCaptionExpanded),
-                        tagsExpanded: detailExpansionBinding(\.isTagsExpanded),
-                        metadataExpanded: detailExpansionBinding(\.isMetadataExpanded)
-                    )
-                    .padding(.horizontal, 18)
-                    .padding(.bottom, 18)
+                        .padding(.bottom, 18)
                 }
             }
             .scrollPosition(id: $scrollTarget, anchor: .top)
