@@ -190,7 +190,8 @@ struct ArtworkSeriesView: View {
             showContentBadges: store.showContentBadges,
             maskSensitivePreview: store.maskSensitivePreviews,
             preferredHeight: 156,
-            feedPreviewTier: store.feedPreviewImageQualityTier
+            feedPreviewTier: store.feedPreviewImageQualityTier,
+            emphasizeFollowing: store.emphasizeFollowingArtists
         ) {
             store.selectedArtwork = seriesArtwork
             Task { await store.recordBrowsingHistory(for: seriesArtwork) }

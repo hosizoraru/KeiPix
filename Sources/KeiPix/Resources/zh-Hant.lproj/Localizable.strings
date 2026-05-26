@@ -588,6 +588,9 @@
 "Open Reader Window" = "開啟閱讀窗口";
 "Layout" = "布局";
 "Gallery Layout" = "畫廊布局";
+"Emphasize artworks from following artists" = "强調已追蹤畫师的作品";
+"Adds an accent border and a Following badge so artists you follow stand out in mixed feeds." = "為已追蹤畫师的作品加上强調色邊框與「已追蹤」徽標，讓其在混合 feed 中一目了然。";
+"You follow this artist" = "你已追蹤此畫师";
 "Auto" = "自動";
 "Two Columns" = "兩列";
 "Three Columns" = "三列";
@@ -1001,6 +1004,9 @@
 "Apple's system translation sheet stays reachable on artwork captions and comments, gated to skip empty / emoji-only text." = "在作品簡介與留言中保留 Apple 系統翻譯面板入口，並跳過空文本與纯表情。";
 "Keep the translatable-text gate in regression coverage so we never surface a no-op Translate button." = "在回歸覆盖中保留可翻譯文本的門控，避免出現無意義的翻譯按钮。";
 "CaptionTranslationAvailability accepts Pixiv caption shapes and rejects emoji-only blurbs." = "CaptionTranslationAvailability 接受 Pixiv 簡介格式並拒绝纯表情短文本。";
+"Following-artist emphasis" = "已追蹤畫师强調";
+"Cards from artists the user follows pick up an accent border and a Following badge in mixed feeds, and the toggle round-trips through UserDefaults." = "已追蹤畫师的作品在混合 feed 中呈現强調色邊框與「已追蹤」徽標，開關狀態通過 UserDefaults 持久化。";
+"Keep emphasizeFollowingArtists in lock-step with its persisted value so a profile sync never loses the visual treatment." = "保持 emphasizeFollowingArtists 與其持久化值同步，避免資料同步導致視覺强調丟失。";
 "System Proxy" = "系統代理";
 "Direct connection" = "直連";
 "Pixiv API" = "Pixiv API";

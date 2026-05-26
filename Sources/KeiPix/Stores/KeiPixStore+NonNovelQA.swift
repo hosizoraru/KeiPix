@@ -266,7 +266,33 @@ extension KeiPixStore {
             passed: translationSamplesPassed,
             evidence: L10n.qaCaptionTranslationEvidence
         )
-        return [nativeRoute, gallery, downloads, safety, offline, ugoira, settings, sharing, imageQuality, captionTranslation]
+        // Following-artist emphasis — passes when the persisted toggle
+        // is in sync with what `ArtworkCardView` reads on render.
+        // Mirrors Pixes' `emphasizeArtworksFromFollowingArtists`
+        // preference; we anchor on the toggle round-tripping rather
+        // than on any specific artwork because the visual treatment
+        // is gated behind `user.is_followed`, which a clean install
+        // can't yet evaluate without a session.
+        let storedEmphasizeFollowing = (UserDefaults.standard.object(forKey: "emphasizeFollowingArtists") as? Bool)
+            ?? true
+        let followingEmphasis = qaStaticItem(
+            id: "following-emphasis",
+            passed: storedEmphasizeFollowing == emphasizeFollowingArtists,
+            evidence: storedEmphasizeFollowing ? L10n.enabled : L10n.disabled
+        )
+        return [
+            nativeRoute,
+            gallery,
+            downloads,
+            safety,
+            offline,
+            ugoira,
+            settings,
+            sharing,
+            imageQuality,
+            captionTranslation,
+            followingEmphasis
+        ]
     }
 
     private func qaFeedItem(
@@ -458,7 +484,8 @@ private extension KeiPixStore {
         NonNovelQATemplate(id: "settings-organization", priority: .p2, title: L10n.qaSettingsOrganization, requirement: L10n.qaSettingsOrganizationRequirement, nextAction: L10n.qaSettingsOrganizationNext, systemImage: "gearshape"),
         NonNovelQATemplate(id: "sharing-copy", priority: .p2, title: L10n.sharing, requirement: L10n.copyTemplateHint, nextAction: L10n.qaSettingsOrganizationNext, systemImage: "square.and.arrow.up"),
         NonNovelQATemplate(id: "image-quality-tier", priority: .p1, title: L10n.qaImageQualityTier, requirement: L10n.qaImageQualityTierRequirement, nextAction: L10n.qaImageQualityTierNext, systemImage: "photo.stack"),
-        NonNovelQATemplate(id: "caption-translation", priority: .p1, title: L10n.qaCaptionTranslation, requirement: L10n.qaCaptionTranslationRequirement, nextAction: L10n.qaCaptionTranslationNext, systemImage: "character.bubble")
+        NonNovelQATemplate(id: "caption-translation", priority: .p1, title: L10n.qaCaptionTranslation, requirement: L10n.qaCaptionTranslationRequirement, nextAction: L10n.qaCaptionTranslationNext, systemImage: "character.bubble"),
+        NonNovelQATemplate(id: "following-emphasis", priority: .p2, title: L10n.qaFollowingEmphasis, requirement: L10n.qaFollowingEmphasisRequirement, nextAction: L10n.qaFollowingEmphasisNext, systemImage: "checkmark.seal")
     ]
 }
 

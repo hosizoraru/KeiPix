@@ -66,8 +66,14 @@ struct GeneralSettingsPage: View {
                     }
                 }
                 .pickerStyle(.segmented)
+
+                Toggle(L10n.emphasizeFollowingArtists, isOn: store.settings_emphasizeFollowingArtistsBinding)
             } header: {
                 Text(L10n.layout)
+            } footer: {
+                Text(L10n.emphasizeFollowingArtistsHint)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
 
             Section {

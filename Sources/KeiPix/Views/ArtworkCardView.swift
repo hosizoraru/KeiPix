@@ -15,6 +15,13 @@ struct ArtworkCardView: View {
     /// keep their previous behaviour without code changes; the gallery
     /// surfaces forward `KeiPixStore.feedPreviewImageQualityTier`.
     var feedPreviewTier: ArtworkImageQualityTier = .medium
+    /// When true and the artwork's author is followed, the card draws a
+    /// thicker accent-tinted border so the user can spot following-artist
+    /// works inside mixed feeds (search, ranking, recommendation). Mirrors
+    /// Pixes' `emphasizeArtworksFromFollowingArtists` preference. Default
+    /// `false` so legacy call sites stay untouched; the gallery wires this
+    /// from `KeiPixStore.emphasizeFollowingArtists`.
+    var emphasizeFollowing = false
     let action: () -> Void
     @State private var isHovering = false
 
@@ -32,13 +39,37 @@ struct ArtworkCardView: View {
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         .overlay {
             RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .stroke(isSelected ? Color.accentColor : Color.secondary.opacity(isHovering ? 0.45 : 0.16), lineWidth: isSelected ? 2 : 1)
+                .stroke(borderColor, lineWidth: borderLineWidth)
         }
         .shadow(color: .black.opacity(isHovering ? 0.18 : 0.08), radius: isHovering ? 12 : 5, y: isHovering ? 8 : 3)
         .scaleEffect(isHovering ? 1.012 : 1)
         .animation(.snappy(duration: 0.16), value: isHovering)
         .animation(.snappy(duration: 0.16), value: isSelected)
         .onHover { isHovering = $0 }
+    }
+
+    /// Selection wins over follow-emphasis (selection is a transient user
+    /// action, follow-emphasis is a steady-state hint). Hover stays as the
+    /// faint secondary tint we had before.
+    private var borderColor: Color {
+        if isSelected {
+            return .accentColor
+        }
+        if shouldEmphasizeFollowing {
+            return .accentColor.opacity(isHovering ? 0.78 : 0.6)
+        }
+        return .secondary.opacity(isHovering ? 0.45 : 0.16)
+    }
+
+    private var borderLineWidth: CGFloat {
+        if isSelected {
+            return 2
+        }
+        return shouldEmphasizeFollowing ? 1.5 : 1
+    }
+
+    private var shouldEmphasizeFollowing: Bool {
+        emphasizeFollowing && artwork.user.isFollowed
     }
 
     private func cardContent(height: CGFloat) -> some View {
@@ -87,6 +118,17 @@ struct ArtworkCardView: View {
                     .font(.caption2)
                     .foregroundStyle(.white.opacity(0.78))
                     .lineLimit(1)
+
+                if shouldEmphasizeFollowing {
+                    Label(L10n.following, systemImage: "checkmark.seal.fill")
+                        .font(.caption2.weight(.semibold))
+                        .labelStyle(.titleAndIcon)
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 7)
+                        .padding(.vertical, 3)
+                        .background(Color.accentColor.opacity(0.78), in: Capsule())
+                        .help(L10n.followingArtistEmphasizedHelp)
+                }
 
                 HStack(spacing: 10) {
                     Label(artwork.totalView.formatted(), systemImage: "eye")

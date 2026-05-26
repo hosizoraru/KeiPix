@@ -173,6 +173,11 @@ extension KeiPixStore {
         UserDefaults.standard.set(value, forKey: "showAccountIdentity")
     }
 
+    func setEmphasizeFollowingArtists(_ value: Bool) {
+        emphasizeFollowingArtists = value
+        UserDefaults.standard.set(value, forKey: "emphasizeFollowingArtists")
+    }
+
     func setPrivacyModeEnabled(_ value: Bool) {
         privacyModeEnabled = value
         UserDefaults.standard.set(value, forKey: "privacyModeEnabled")

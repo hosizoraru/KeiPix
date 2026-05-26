@@ -572,6 +572,9 @@
 "Open Reader Window" = "Open Reader Window";
 "Layout" = "Layout";
 "Gallery Layout" = "Gallery Layout";
+"Emphasize artworks from following artists" = "Emphasize artworks from following artists";
+"Adds an accent border and a Following badge so artists you follow stand out in mixed feeds." = "Adds an accent border and a Following badge so artists you follow stand out in mixed feeds.";
+"You follow this artist" = "You follow this artist";
 "Auto" = "Auto";
 "Two Columns" = "Two Columns";
 "Three Columns" = "Three Columns";
@@ -980,6 +983,9 @@
 "Apple's system translation sheet stays reachable on artwork captions and comments, gated to skip empty / emoji-only text." = "Apple's system translation sheet stays reachable on artwork captions and comments, gated to skip empty / emoji-only text.";
 "Keep the translatable-text gate in regression coverage so we never surface a no-op Translate button." = "Keep the translatable-text gate in regression coverage so we never surface a no-op Translate button.";
 "CaptionTranslationAvailability accepts Pixiv caption shapes and rejects emoji-only blurbs." = "CaptionTranslationAvailability accepts Pixiv caption shapes and rejects emoji-only blurbs.";
+"Following-artist emphasis" = "Following-artist emphasis";
+"Cards from artists the user follows pick up an accent border and a Following badge in mixed feeds, and the toggle round-trips through UserDefaults." = "Cards from artists the user follows pick up an accent border and a Following badge in mixed feeds, and the toggle round-trips through UserDefaults.";
+"Keep emphasizeFollowingArtists in lock-step with its persisted value so a profile sync never loses the visual treatment." = "Keep emphasizeFollowingArtists in lock-step with its persisted value so a profile sync never loses the visual treatment.";
 "System Proxy" = "System Proxy";
 "Direct connection" = "Direct connection";
 "Pixiv API" = "Pixiv API";

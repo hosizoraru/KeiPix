@@ -66,7 +66,8 @@ struct GalleryContentGrid: View {
             showContentBadges: store.showContentBadges,
             maskSensitivePreview: store.maskSensitivePreviews,
             downloadState: store.downloads.downloadState(for: artwork.id),
-            feedPreviewTier: store.feedPreviewImageQualityTier
+            feedPreviewTier: store.feedPreviewImageQualityTier,
+            emphasizeFollowing: store.emphasizeFollowingArtists
         ) {
             activate(artwork)
         }
@@ -202,7 +203,8 @@ private struct MasonryArtworkGrid: View {
                     downloadState: store.downloads.downloadState(for: artwork.id),
                     displayStyle: presentation.cardStyle,
                     fillsAvailableHeight: true,
-                    feedPreviewTier: store.feedPreviewImageQualityTier
+                    feedPreviewTier: store.feedPreviewImageQualityTier,
+                    emphasizeFollowing: store.emphasizeFollowingArtists
                 ) {
                     activate(artwork)
                 }

@@ -107,6 +107,12 @@ final class KeiPixStore {
     var showTranslatedTags = UserDefaults.standard.object(forKey: "showTranslatedTags") as? Bool ?? true
     var showContentBadges = UserDefaults.standard.object(forKey: "showContentBadges") as? Bool ?? true
     var showAccountIdentity = UserDefaults.standard.object(forKey: "showAccountIdentity") as? Bool ?? true
+    /// Whether artworks from artists the user follows get a stronger card
+    /// treatment in mixed feeds (search, recommendation, ranking, etc.).
+    /// Mirrors Pixes' `emphasizeArtworksFromFollowingArtists` — defaulting on
+    /// because the affordance only shows up when `user.is_followed` is true,
+    /// so it never adds noise on first launch.
+    var emphasizeFollowingArtists = UserDefaults.standard.object(forKey: "emphasizeFollowingArtists") as? Bool ?? true
     var privacyModeEnabled = UserDefaults.standard.object(forKey: "privacyModeEnabled") as? Bool ?? false
     var screenCaptureProtectionEnabled = UserDefaults.standard.object(forKey: "screenCaptureProtectionEnabled") as? Bool ?? true
     var hideMutedContent = UserDefaults.standard.object(forKey: "hideMutedContent") as? Bool ?? true

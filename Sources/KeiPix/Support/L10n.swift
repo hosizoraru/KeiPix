@@ -605,6 +605,11 @@ enum L10n {
     static var openReaderWindow: String { text("Open Reader Window") }
     static var layout: String { text("Layout") }
     static var galleryLayout: String { text("Gallery Layout") }
+    static var emphasizeFollowingArtists: String { text("Emphasize artworks from following artists") }
+    static var emphasizeFollowingArtistsHint: String {
+        text("Adds an accent border and a Following badge so artists you follow stand out in mixed feeds.")
+    }
+    static var followingArtistEmphasizedHelp: String { text("You follow this artist") }
     static var auto: String { text("Auto") }
     static var twoColumns: String { text("Two Columns") }
     static var threeColumns: String { text("Three Columns") }
@@ -851,6 +856,13 @@ enum L10n {
     static var qaCaptionTranslationRequirement: String { text("Apple's system translation sheet stays reachable on artwork captions and comments, gated to skip empty / emoji-only text.") }
     static var qaCaptionTranslationNext: String { text("Keep the translatable-text gate in regression coverage so we never surface a no-op Translate button.") }
     static var qaCaptionTranslationEvidence: String { text("CaptionTranslationAvailability accepts Pixiv caption shapes and rejects emoji-only blurbs.") }
+    static var qaFollowingEmphasis: String { text("Following-artist emphasis") }
+    static var qaFollowingEmphasisRequirement: String {
+        text("Cards from artists the user follows pick up an accent border and a Following badge in mixed feeds, and the toggle round-trips through UserDefaults.")
+    }
+    static var qaFollowingEmphasisNext: String {
+        text("Keep emphasizeFollowingArtists in lock-step with its persisted value so a profile sync never loses the visual treatment.")
+    }
     static var systemProxy: String { text("System Proxy") }
     static var directConnection: String { text("Direct connection") }
     static var pixivAPI: String { text("Pixiv API") }

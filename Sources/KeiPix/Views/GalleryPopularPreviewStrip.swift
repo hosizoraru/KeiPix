@@ -53,7 +53,8 @@ struct SearchPopularPreviewStrip: View {
                                     maskSensitivePreview: store.maskSensitivePreviews,
                                     downloadState: store.downloads.downloadState(for: artwork.id),
                                     preferredHeight: 178,
-                                    feedPreviewTier: store.feedPreviewImageQualityTier
+                                    feedPreviewTier: store.feedPreviewImageQualityTier,
+                                    emphasizeFollowing: store.emphasizeFollowingArtists
                                 ) {
                                     store.selectedArtwork = artwork
                                 }

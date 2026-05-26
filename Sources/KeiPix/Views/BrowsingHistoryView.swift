@@ -202,7 +202,8 @@ struct BrowsingHistoryView: View {
                                 isCompact: true,
                                 showContentBadges: store.showContentBadges,
                                 maskSensitivePreview: store.maskSensitivePreviews,
-                                feedPreviewTier: store.feedPreviewImageQualityTier
+                                feedPreviewTier: store.feedPreviewImageQualityTier,
+                                emphasizeFollowing: store.emphasizeFollowingArtists
                             ) {
                                 store.selectedArtwork = artwork
                             }

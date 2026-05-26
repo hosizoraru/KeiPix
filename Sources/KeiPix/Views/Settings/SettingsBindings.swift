@@ -182,6 +182,14 @@ extension KeiPixStore {
         }
     }
 
+    var settings_emphasizeFollowingArtistsBinding: Binding<Bool> {
+        Binding {
+            self.emphasizeFollowingArtists
+        } set: { value in
+            self.setEmphasizeFollowingArtists(value)
+        }
+    }
+
     var settings_hideAIBinding: Binding<Bool> {
         Binding {
             self.hideAIArtworks
