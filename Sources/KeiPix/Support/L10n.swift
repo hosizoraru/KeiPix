@@ -471,6 +471,9 @@ enum L10n {
     static var english: String { text("English") }
     static var appearance: String { text("Appearance") }
     static var useOriginalImages: String { text("Use original images in detail") }
+    static var imageQualityOriginal: String { text("Original Quality") }
+    static var imageQualityStandard: String { text("Standard Quality") }
+    static var imageQualityToggleHint: String { text("Toggle between Pixiv's original image and the standard preview while reading.") }
     static var showTranslatedTags: String { text("Show translated tag names") }
     static var contentFilters: String { text("Content Filters") }
     static var showContentBadges: String { text("Show content badges") }

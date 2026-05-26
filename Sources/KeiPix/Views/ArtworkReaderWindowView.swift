@@ -140,6 +140,21 @@ private struct StandaloneArtworkReader: View {
 
             Spacer()
 
+            // Inline quality toggle — flips `useOriginalImagesInDetail` so the
+            // user can switch between original and standard previews without
+            // diving into Settings. The button reflects the current state with
+            // a filled/outline glyph and updates label text, mirroring the
+            // HD-style affordance Pixez/Pixes ship.
+            Button {
+                store.setUseOriginalImagesInDetail(!store.useOriginalImagesInDetail)
+            } label: {
+                Label(
+                    store.useOriginalImagesInDetail ? L10n.imageQualityOriginal : L10n.imageQualityStandard,
+                    systemImage: store.useOriginalImagesInDetail ? "photo.badge.checkmark.fill" : "photo"
+                )
+            }
+            .help(L10n.imageQualityToggleHint)
+
             Button {
                 isPageJumpPresented = true
             } label: {
