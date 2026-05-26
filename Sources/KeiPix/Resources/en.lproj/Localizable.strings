@@ -530,6 +530,11 @@
 "No limit" = "No limit";
 "Custom value" = "Custom value";
 "Maximum must be greater than minimum." = "Maximum must be greater than minimum.";
+"SauceNAO" = "SauceNAO";
+"Ascii2D" = "Ascii2D";
+"Image Source Engine" = "Image Source Engine";
+"Open Ascii2D" = "Open Ascii2D";
+"Copy Ascii2D Link" = "Copy Ascii2D Link";
 "Work Type" = "Work Type";
 "All Works" = "All Works";
 "AI Filter" = "AI Filter";

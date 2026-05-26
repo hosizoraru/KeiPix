@@ -121,6 +121,7 @@ final class KeiPixStore {
     var searchArtworkType = KeiPixStore.loadEnum("searchArtworkType", defaultValue: SearchArtworkType.all)
     var searchAIFilter = KeiPixStore.loadEnum("searchAIFilter", defaultValue: SearchAIFilter.all)
     var searchUgoiraFilter = KeiPixStore.loadEnum("searchUgoiraFilter", defaultValue: SearchUgoiraFilter.all)
+    var imageSourceSearchEngine = KeiPixStore.loadEnum("imageSourceSearchEngine", defaultValue: ImageSourceSearchEngineKind.sauceNAO)
     var useRankingDate = UserDefaults.standard.object(forKey: "useRankingDate") as? Bool ?? false
     var rankingDate = KeiPixStore.loadRankingDate()
     var trackpadGesturesEnabled = UserDefaults.standard.object(forKey: "trackpadGesturesEnabled") as? Bool ?? true

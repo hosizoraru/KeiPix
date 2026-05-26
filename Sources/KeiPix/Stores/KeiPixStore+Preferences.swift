@@ -200,6 +200,11 @@ extension KeiPixStore {
         applyContentFilters()
     }
 
+    func setImageSourceSearchEngine(_ value: ImageSourceSearchEngineKind) {
+        imageSourceSearchEngine = value
+        UserDefaults.standard.set(value.rawValue, forKey: "imageSourceSearchEngine")
+    }
+
     func setUseRankingDate(_ value: Bool) {
         useRankingDate = value
         UserDefaults.standard.set(value, forKey: "useRankingDate")

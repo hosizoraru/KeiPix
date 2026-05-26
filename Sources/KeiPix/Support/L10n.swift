@@ -568,6 +568,11 @@ enum L10n {
     static var bookmarkPresetUnlimited: String { text("No limit") }
     static var bookmarkCustomValue: String { text("Custom value") }
     static var bookmarkInvalidRange: String { text("Maximum must be greater than minimum.") }
+    static var engineSauceNAO: String { text("SauceNAO") }
+    static var engineAscii2D: String { text("Ascii2D") }
+    static var imageSourceSearchEngine: String { text("Image Source Engine") }
+    static var openInAscii2D: String { text("Open Ascii2D") }
+    static var copyAscii2DLink: String { text("Copy Ascii2D Link") }
     static var workType: String { text("Work Type") }
     static var allWorks: String { text("All Works") }
     static var aiFilter: String { text("AI Filter") }

@@ -1,11 +1,25 @@
 import SwiftUI
 
+/// Reverse-image-search sheet. Drives a state machine for one engine
+/// at a time and lets the user flip between SauceNAO and Ascii2D
+/// without dismissing the sheet — Pixez ships both because each
+/// catches what the other misses (SauceNAO is bag-of-features-strong
+/// for Pixiv illustrations; Ascii2D's colour search wins on doujin
+/// covers, manga panels, and subtle redraws).
+///
+/// The engine selection is persisted on the store so the user's last
+/// preference survives across sheet invocations.
 struct ImageSourceSearchSheet: View {
     @Bindable var store: KeiPixStore
     let request: ImageSourceSearchRequest
 
     @Environment(\.dismiss) private var dismiss
     @State private var state = SearchState.idle
+    @State private var lastSearchedEngine: ImageSourceSearchEngineKind?
+
+    private var engine: any ImageSourceSearchEngine {
+        store.imageSourceSearchEngine.engine
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -21,22 +35,8 @@ struct ImageSourceSearchSheet: View {
                     )
                 },
                 trailing: {
-                    if let imageURL = request.imageURL,
-                       let webSearchURL = SauceNAOClient.webSearchURL(imageURL: imageURL) {
-                        SheetHeaderActionButton(
-                            title: L10n.openInSauceNAO,
-                            systemImage: "safari"
-                        ) {
-                            NSWorkspace.shared.open(webSearchURL)
-                        }
-
-                        SheetHeaderActionButton(
-                            title: L10n.copySauceNAOLink,
-                            systemImage: "link"
-                        ) {
-                            PasteboardWriter.copy(webSearchURL.absoluteString)
-                        }
-                    }
+                    enginePicker
+                    webFallbackActions
                 }
             )
 
@@ -48,7 +48,70 @@ struct ImageSourceSearchSheet: View {
         .task(id: request.id) {
             await search()
         }
+        .onChange(of: store.imageSourceSearchEngine) { _, _ in
+            // Switching engines mid-sheet: clear the previous results
+            // and re-run against the freshly selected engine so the
+            // panel reflects the user's intent within one click.
+            Task { await search() }
+        }
     }
+
+    // MARK: - Engine picker
+
+    private var enginePicker: some View {
+        Picker(L10n.imageSourceSearchEngine, selection: engineBinding) {
+            ForEach(ImageSourceSearchEngineKind.allCases) { kind in
+                Label(kind.title, systemImage: kind.systemImage).tag(kind)
+            }
+        }
+        .pickerStyle(.menu)
+        .labelsHidden()
+        .fixedSize()
+        .help(L10n.imageSourceSearchEngine)
+        .accessibilityLabel(L10n.imageSourceSearchEngine)
+    }
+
+    private var engineBinding: Binding<ImageSourceSearchEngineKind> {
+        Binding(
+            get: { store.imageSourceSearchEngine },
+            set: { store.setImageSourceSearchEngine($0) }
+        )
+    }
+
+    @ViewBuilder
+    private var webFallbackActions: some View {
+        if let webSearchURL = engine.webSearchURL(imageURL: request.imageURL) {
+            SheetHeaderActionButton(
+                title: openInTitle,
+                systemImage: "safari"
+            ) {
+                NSWorkspace.shared.open(webSearchURL)
+            }
+
+            SheetHeaderActionButton(
+                title: copyTitle,
+                systemImage: "link"
+            ) {
+                PasteboardWriter.copy(webSearchURL.absoluteString)
+            }
+        }
+    }
+
+    private var openInTitle: String {
+        switch store.imageSourceSearchEngine {
+        case .sauceNAO: L10n.openInSauceNAO
+        case .ascii2d: L10n.openInAscii2D
+        }
+    }
+
+    private var copyTitle: String {
+        switch store.imageSourceSearchEngine {
+        case .sauceNAO: L10n.copySauceNAOLink
+        case .ascii2d: L10n.copyAscii2DLink
+        }
+    }
+
+    // MARK: - Content
 
     @ViewBuilder
     private var content: some View {
@@ -117,20 +180,28 @@ struct ImageSourceSearchSheet: View {
         .buttonStyle(.borderedProminent)
     }
 
+    // MARK: - Search
+
     private func search() async {
-        guard case .loading = state else {
-            state = .loading
-            do {
-                let data = try await imageData()
-                let results = try await SauceNAOClient.search(
-                    imageData: data,
-                    filename: request.filename
-                )
-                state = .loaded(results)
-            } catch {
-                state = .failed(error.localizedDescription)
-            }
-            return
+        state = .loading
+        let activeKind = store.imageSourceSearchEngine
+        let activeEngine = activeKind.engine
+        do {
+            let data = try await imageData()
+            let results = try await activeEngine.search(
+                imageData: data,
+                filename: request.filename
+            )
+            // Guard against a stale completion clobbering a fresher
+            // engine swap: if the user picked a different engine while
+            // we were waiting on the network, drop this result on the
+            // floor and let the newer task win.
+            guard activeKind == store.imageSourceSearchEngine else { return }
+            state = .loaded(results)
+            lastSearchedEngine = activeKind
+        } catch {
+            guard activeKind == store.imageSourceSearchEngine else { return }
+            state = .failed(error.localizedDescription)
         }
     }
 

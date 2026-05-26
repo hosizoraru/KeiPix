@@ -542,6 +542,11 @@
 "No limit" = "不限";
 "Custom value" = "自定义";
 "Maximum must be greater than minimum." = "上限必须大于下限。";
+"SauceNAO" = "SauceNAO";
+"Ascii2D" = "Ascii2D";
+"Image Source Engine" = "图源引擎";
+"Open Ascii2D" = "在 Ascii2D 中打开";
+"Copy Ascii2D Link" = "复制 Ascii2D 链接";
 "Work Type" = "作品类型";
 "All Works" = "全部作品";
 "AI Filter" = "AI 过滤";
