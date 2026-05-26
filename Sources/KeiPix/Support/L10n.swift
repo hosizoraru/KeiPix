@@ -616,6 +616,21 @@ enum L10n {
     static var pinnedTags: String { text("Pinned Tags") }
     static var pinnedTagFormat: String { text("Pinned %@") }
     static var unpinnedTagFormat: String { text("Unpinned %@") }
+
+    // Bookmark editor tag-source sections
+    static var bookmarkTagSectionRecommended: String { text("Recommended") }
+    static var bookmarkTagSectionRecommendedHint: String { text("Tags this artwork shares with your bookmark library — usually the safest picks.") }
+    static var bookmarkTagSectionArtwork: String { text("From This Artwork") }
+    static var bookmarkTagSectionArtworkHint: String { text("Tags Pixiv attached to the artwork that you have not used in your bookmarks before.") }
+    static var bookmarkTagSectionLibrary: String { text("From Your Library") }
+    static var bookmarkTagSectionLibraryHint: String { text("Tags you've used elsewhere — pick one to file this artwork under an existing category.") }
+    static var bookmarkTagSectionCustom: String { text("Custom Tags") }
+    static var bookmarkTagSectionCustomHint: String { text("Free-form tags you typed in this session.") }
+    static var bookmarkTagAddAll: String { text("Add All") }
+    static var bookmarkTagRemoveAll: String { text("Remove All") }
+    static var bookmarkTagSelectionSummaryFormat: String { text("%d selected") }
+    static var bookmarkTagNoCandidates: String { text("No tags from this source. Type your own below.") }
+    static var bookmarkTagFilterPlaceholder: String { text("Filter tags") }
     static var refreshToken: String { text("Refresh Token") }
     static var currentAccount: String { text("Current Account") }
     static var switchAccount: String { text("Switch Account") }
