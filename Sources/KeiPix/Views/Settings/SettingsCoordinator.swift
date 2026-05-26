@@ -37,9 +37,21 @@ final class SettingsCoordinator {
     var isMutedContentUploadConfirmationPresented = false
     var isMutedContentImportConfirmationPresented = false
 
+    /// Long-lived state for the Advanced QA page. Lives on the coordinator so
+    /// diagnostic results survive when the user switches between sidebar
+    /// destinations and comes back. The page itself is torn down on every
+    /// switch (NavigationSplitView rebuilds the detail when selection
+    /// changes), but the coordinator outlives the window.
+    let runtimeReadinessState = RuntimeReadinessState()
+
     init(initialSelection: SettingsCategory? = nil) {
         if let initialSelection {
             self.selection = initialSelection
+        } else if let visualQASelection = SettingsCategory.visualQAOverride {
+            // Apply visual-QA overrides synchronously so the correct page
+            // appears on the very first frame instead of flashing the last
+            // persisted destination.
+            self.selection = visualQASelection
         } else if
             let raw = UserDefaults.standard.string(forKey: Self.lastCategoryKey),
             let restored = SettingsCategory(rawValue: raw)

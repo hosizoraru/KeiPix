@@ -2,31 +2,147 @@ import AppKit
 import SwiftUI
 import UniformTypeIdentifiers
 
+/// Long-lived state for the Advanced QA page.
+///
+/// Each detail page in the Settings sidebar is rebuilt every time the user
+/// switches sidebar selection (NavigationSplitView destroys and recreates the
+/// `detail` view), so any `@State` declared on the page is wiped. Lifting the
+/// runtime-readiness state into an `@Observable` lets it survive those
+/// transitions — diagnostic results, cache info and copy banners stay put when
+/// the user navigates to General and back.
+@MainActor
+@Observable
+final class RuntimeReadinessState {
+    var didCopyDiagnostics = false
+    var didCopyChecklist = false
+    var isRunningReadOnlyQA = false
+    var isRunningAccountHealthDiagnostics = false
+    var isRunningDiagnostics = false
+    var isRunningSearchDiagnostics = false
+    var isRunningNonNovelQA = false
+    var isRunningMutableActionQA = false
+    var isRunningDirectNavigationDiagnostics = false
+    var isRunningCommentFeedbackDiagnostics = false
+    var isRunningMuteSyncDiagnostics = false
+    var isLoadingCommentFeedbackPreview = false
+    var isMutableActionQAAuthorizationPresented = false
+    var feedbackPreviewRequest: FeedbackReportRequest?
+    var accountHealthResults: [NetworkDiagnosticResult] = []
+    var networkResults: [NetworkDiagnosticResult] = []
+    var searchResults: [NetworkDiagnosticResult] = []
+    var mutableActionQAResults: [NetworkDiagnosticResult] = []
+    var directNavigationResults: [NetworkDiagnosticResult] = []
+    var commentFeedbackResults: [NetworkDiagnosticResult] = []
+    var muteSyncResults: [NetworkDiagnosticResult] = []
+    var cacheStatus: ImageCacheStatus?
+    var cacheMessage: String?
+}
+
 struct RuntimeReadinessView: View {
     let store: KeiPixStore
-    @State private var didCopyDiagnostics = false
-    @State private var didCopyChecklist = false
-    @State private var isRunningReadOnlyQA = false
-    @State private var isRunningAccountHealthDiagnostics = false
-    @State private var isRunningDiagnostics = false
-    @State private var isRunningSearchDiagnostics = false
-    @State private var isRunningNonNovelQA = false
-    @State private var isRunningMutableActionQA = false
-    @State private var isRunningDirectNavigationDiagnostics = false
-    @State private var isRunningCommentFeedbackDiagnostics = false
-    @State private var isRunningMuteSyncDiagnostics = false
-    @State private var isLoadingCommentFeedbackPreview = false
-    @State private var isMutableActionQAAuthorizationPresented = false
-    @State private var feedbackPreviewRequest: FeedbackReportRequest?
-    @State private var accountHealthResults: [NetworkDiagnosticResult] = []
-    @State private var networkResults: [NetworkDiagnosticResult] = []
-    @State private var searchResults: [NetworkDiagnosticResult] = []
-    @State private var mutableActionQAResults: [NetworkDiagnosticResult] = []
-    @State private var directNavigationResults: [NetworkDiagnosticResult] = []
-    @State private var commentFeedbackResults: [NetworkDiagnosticResult] = []
-    @State private var muteSyncResults: [NetworkDiagnosticResult] = []
-    @State private var cacheStatus: ImageCacheStatus?
-    @State private var cacheMessage: String?
+    @Bindable var state: RuntimeReadinessState
+
+    // MARK: - State forwarders
+    //
+    // The runtime-readiness state was lifted onto `SettingsCoordinator` so the
+    // page can survive sidebar switches in `NavigationSplitView`. The body and
+    // helper methods below predate that move and still reference the values by
+    // their bare names. Rather than touch every site, expose thin
+    // get/`nonmutating set` forwarders that proxy through to `state`. The
+    // setters are `nonmutating` because `state` is a reference type — mutating
+    // its stored properties does not mutate the View struct itself.
+    private var didCopyDiagnostics: Bool {
+        get { state.didCopyDiagnostics }
+        nonmutating set { state.didCopyDiagnostics = newValue }
+    }
+    private var didCopyChecklist: Bool {
+        get { state.didCopyChecklist }
+        nonmutating set { state.didCopyChecklist = newValue }
+    }
+    private var isRunningReadOnlyQA: Bool {
+        get { state.isRunningReadOnlyQA }
+        nonmutating set { state.isRunningReadOnlyQA = newValue }
+    }
+    private var isRunningAccountHealthDiagnostics: Bool {
+        get { state.isRunningAccountHealthDiagnostics }
+        nonmutating set { state.isRunningAccountHealthDiagnostics = newValue }
+    }
+    private var isRunningDiagnostics: Bool {
+        get { state.isRunningDiagnostics }
+        nonmutating set { state.isRunningDiagnostics = newValue }
+    }
+    private var isRunningSearchDiagnostics: Bool {
+        get { state.isRunningSearchDiagnostics }
+        nonmutating set { state.isRunningSearchDiagnostics = newValue }
+    }
+    private var isRunningNonNovelQA: Bool {
+        get { state.isRunningNonNovelQA }
+        nonmutating set { state.isRunningNonNovelQA = newValue }
+    }
+    private var isRunningMutableActionQA: Bool {
+        get { state.isRunningMutableActionQA }
+        nonmutating set { state.isRunningMutableActionQA = newValue }
+    }
+    private var isRunningDirectNavigationDiagnostics: Bool {
+        get { state.isRunningDirectNavigationDiagnostics }
+        nonmutating set { state.isRunningDirectNavigationDiagnostics = newValue }
+    }
+    private var isRunningCommentFeedbackDiagnostics: Bool {
+        get { state.isRunningCommentFeedbackDiagnostics }
+        nonmutating set { state.isRunningCommentFeedbackDiagnostics = newValue }
+    }
+    private var isRunningMuteSyncDiagnostics: Bool {
+        get { state.isRunningMuteSyncDiagnostics }
+        nonmutating set { state.isRunningMuteSyncDiagnostics = newValue }
+    }
+    private var isLoadingCommentFeedbackPreview: Bool {
+        get { state.isLoadingCommentFeedbackPreview }
+        nonmutating set { state.isLoadingCommentFeedbackPreview = newValue }
+    }
+    private var isMutableActionQAAuthorizationPresented: Bool {
+        get { state.isMutableActionQAAuthorizationPresented }
+        nonmutating set { state.isMutableActionQAAuthorizationPresented = newValue }
+    }
+    private var feedbackPreviewRequest: FeedbackReportRequest? {
+        get { state.feedbackPreviewRequest }
+        nonmutating set { state.feedbackPreviewRequest = newValue }
+    }
+    private var accountHealthResults: [NetworkDiagnosticResult] {
+        get { state.accountHealthResults }
+        nonmutating set { state.accountHealthResults = newValue }
+    }
+    private var networkResults: [NetworkDiagnosticResult] {
+        get { state.networkResults }
+        nonmutating set { state.networkResults = newValue }
+    }
+    private var searchResults: [NetworkDiagnosticResult] {
+        get { state.searchResults }
+        nonmutating set { state.searchResults = newValue }
+    }
+    private var mutableActionQAResults: [NetworkDiagnosticResult] {
+        get { state.mutableActionQAResults }
+        nonmutating set { state.mutableActionQAResults = newValue }
+    }
+    private var directNavigationResults: [NetworkDiagnosticResult] {
+        get { state.directNavigationResults }
+        nonmutating set { state.directNavigationResults = newValue }
+    }
+    private var commentFeedbackResults: [NetworkDiagnosticResult] {
+        get { state.commentFeedbackResults }
+        nonmutating set { state.commentFeedbackResults = newValue }
+    }
+    private var muteSyncResults: [NetworkDiagnosticResult] {
+        get { state.muteSyncResults }
+        nonmutating set { state.muteSyncResults = newValue }
+    }
+    private var cacheStatus: ImageCacheStatus? {
+        get { state.cacheStatus }
+        nonmutating set { state.cacheStatus = newValue }
+    }
+    private var cacheMessage: String? {
+        get { state.cacheMessage }
+        nonmutating set { state.cacheMessage = newValue }
+    }
 
     var body: some View {
         let snapshot = store.runtimeReadinessSnapshot
@@ -389,12 +505,12 @@ struct RuntimeReadinessView: View {
         .task {
             await refreshCacheStatus()
         }
-        .sheet(isPresented: $isMutableActionQAAuthorizationPresented) {
+        .sheet(isPresented: $state.isMutableActionQAAuthorizationPresented) {
             MutableActionQAAuthorizationSheet {
                 Task { await runMutableActionQA() }
             }
         }
-        .sheet(item: $feedbackPreviewRequest) { request in
+        .sheet(item: $state.feedbackPreviewRequest) { request in
             FeedbackReportSheet(request: request, localMuteAction: nil) { message in
                 cacheMessage = message
             }

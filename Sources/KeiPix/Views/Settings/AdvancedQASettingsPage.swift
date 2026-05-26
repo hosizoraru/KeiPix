@@ -2,12 +2,17 @@ import SwiftUI
 
 struct AdvancedQASettingsPage: View {
     @Bindable var store: KeiPixStore
+    var coordinator: SettingsCoordinator
 
     var body: some View {
-        // RuntimeReadinessView already provides its own Form/Section layout and
-        // is too heavy to refactor in this pass. Embed it directly so the page
-        // still composes cleanly under the sidebar shell.
-        RuntimeReadinessView(store: store)
-            .navigationTitle(L10n.settingsAdvancedQA)
+        // `RuntimeReadinessView.body` returns a `Section`, which only renders
+        // properly inside a `Form`. Wrap it the same way every other Settings
+        // page does so the section chrome (header, dividers, grouped material)
+        // matches the rest of the sidebar destinations.
+        Form {
+            RuntimeReadinessView(store: store, state: coordinator.runtimeReadinessState)
+        }
+        .formStyle(.grouped)
+        .navigationTitle(L10n.settingsAdvancedQA)
     }
 }

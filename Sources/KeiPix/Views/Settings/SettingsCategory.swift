@@ -145,4 +145,17 @@ enum SettingsCategory: String, CaseIterable, Identifiable, Hashable {
             term.localizedCaseInsensitiveContains(trimmed)
         }
     }
+
+    /// Visual-QA launch arguments override the persisted selection so the
+    /// snapshot lands on the right page. Computed synchronously at coordinator
+    /// init time so the first frame already shows the requested destination.
+    static var visualQAOverride: SettingsCategory? {
+        if VisualQALaunchArgument.contains(.runtimeReadiness) {
+            return .advancedQA
+        }
+        if VisualQALaunchArgument.contains(.sharingTemplates) {
+            return .sharing
+        }
+        return nil
+    }
 }

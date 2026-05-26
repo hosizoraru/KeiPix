@@ -177,7 +177,7 @@ struct SettingsView: View {
         case .account:
             AccountSettingsPage(store: store, coordinator: coordinator)
         case .advancedQA:
-            AdvancedQASettingsPage(store: store)
+            AdvancedQASettingsPage(store: store, coordinator: coordinator)
         }
     }
 
