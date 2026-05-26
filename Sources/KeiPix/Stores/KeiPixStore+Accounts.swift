@@ -11,6 +11,7 @@ extension KeiPixStore {
                 await refreshRestrictedModeSetting()
                 await refreshAIShowSetting()
                 await reloadCurrentFeed()
+                await syncBrowsingHistoryFromPixiv()
             }
         } catch {
             errorMessage = error.localizedDescription
@@ -35,6 +36,7 @@ extension KeiPixStore {
             await refreshRestrictedModeSetting()
             await refreshAIShowSetting()
             await reloadCurrentFeed()
+            await syncBrowsingHistoryFromPixiv()
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -54,6 +56,7 @@ extension KeiPixStore {
             await refreshRestrictedModeSetting()
             await refreshAIShowSetting()
             await reloadCurrentFeed()
+            await syncBrowsingHistoryFromPixiv()
             return true
         } catch {
             errorMessage = error.localizedDescription
@@ -93,6 +96,7 @@ extension KeiPixStore {
                 await refreshRestrictedModeSetting()
                 await refreshAIShowSetting()
                 await reloadCurrentFeed()
+                await syncBrowsingHistoryFromPixiv()
             }
         } catch {
             errorMessage = error.localizedDescription
