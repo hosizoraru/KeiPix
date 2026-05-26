@@ -18,7 +18,7 @@ struct ArtworkDetailStateTests {
         library.setExpansionState(expanded, for: 10, now: Date(timeIntervalSince1970: 10))
 
         #expect(library.expansionState(for: 10) == expanded)
-        #expect(library.expansionState(for: 11) == .defaultValue)
+        #expect(library.expansionState(for: 11) == .designDefault)
     }
 
     @Test("Artwork detail state library keeps recent entries bounded")
@@ -26,12 +26,12 @@ struct ArtworkDetailStateTests {
         var library = ArtworkDetailStateLibrary()
 
         for id in 1...4 {
-            var state = ArtworkDetailExpansionState.defaultValue
+            var state = ArtworkDetailExpansionState.designDefault
             state.isTagsExpanded = id.isMultiple(of: 2)
             library.setExpansionState(state, for: id, now: Date(timeIntervalSince1970: TimeInterval(id)), limit: 3)
         }
 
         #expect(library.entries.map(\.artworkID) == [4, 3, 2])
-        #expect(library.expansionState(for: 1) == .defaultValue)
+        #expect(library.expansionState(for: 1) == .designDefault)
     }
 }

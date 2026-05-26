@@ -41,9 +41,6 @@ struct ArtworkDetailExpansionState: Codable, Equatable, Sendable {
         isTagsExpanded: true,
         isMetadataExpanded: false
     )
-
-    @available(*, deprecated, renamed: "designDefault")
-    static let defaultValue = designDefault
 }
 
 struct ArtworkDetailStateEntry: Codable, Equatable, Sendable {
