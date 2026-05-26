@@ -147,6 +147,9 @@ struct DownloadedUgoiraViewer: View {
                 Label(L10n.revealInFinder, systemImage: "folder")
             }
             .buttonStyle(.bordered)
+            .labelStyle(.iconOnly)
+            .help(L10n.revealInFinder)
+            .accessibilityLabel(L10n.revealInFinder)
 
             Menu {
                 Button {
@@ -198,6 +201,9 @@ struct DownloadedUgoiraViewer: View {
                 Label(L10n.moreActions, systemImage: "ellipsis.circle")
             }
             .buttonStyle(.bordered)
+            .labelStyle(.iconOnly)
+            .help(L10n.moreActions)
+            .accessibilityLabel(L10n.moreActions)
         }
     }
 

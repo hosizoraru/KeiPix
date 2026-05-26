@@ -148,9 +148,11 @@ struct UgoiraPlayerView: View {
             .menuStyle(.button)
             .buttonStyle(.plain)
             .controlSize(.small)
+            .labelStyle(.iconOnly)
             .keiInteractiveGlass(12)
             .disabled(animation == nil || isLoading)
-            .help(L10n.playbackSpeed)
+            .help("\(L10n.playbackSpeed) · \(playbackSpeed.title)")
+            .accessibilityLabel(L10n.playbackSpeed)
 
             Menu {
                 Button {
@@ -200,8 +202,11 @@ struct UgoiraPlayerView: View {
             .menuStyle(.button)
             .buttonStyle(.plain)
             .controlSize(.small)
+            .labelStyle(.iconOnly)
             .keiInteractiveGlass(12)
             .disabled(isLoading)
+            .help(L10n.ugoiraExportActions)
+            .accessibilityLabel(L10n.ugoiraExportActions)
 
             Button {
                 Task { await loadAndPlay(forceReload: true) }
@@ -210,8 +215,11 @@ struct UgoiraPlayerView: View {
             }
             .buttonStyle(.plain)
             .controlSize(.small)
+            .labelStyle(.iconOnly)
             .keiInteractiveGlass(12)
             .disabled(isLoading)
+            .help(L10n.reloadUgoira)
+            .accessibilityLabel(L10n.reloadUgoira)
         }
     }
 
