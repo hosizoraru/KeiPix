@@ -218,26 +218,59 @@ enum PixivisionArticleParser {
         return results
     }
 
-    /// Scans a prose-only chunk (no work cards inside) for `<h2>` /
-    /// `<h3>` / `<p>` blocks and appends them in order.
+    /// Scans a prose-only chunk (no work cards inside) for the prose
+    /// blocks Pixivision uses across both article styles:
+    ///
+    ///   * Interview / spotlight pages: bare `<h2>` / `<h3>` headings
+    ///     and `<p>` paragraphs.
+    ///   * Feature pages: `<div class="article-item
+    ///     _feature-article-body__heading">…</div>` and
+    ///     `<div class="article-item _feature-article-body__paragraph">…</div>`
+    ///     wrappers whose inner markup is a plain heading or
+    ///     `<div class="fab__paragraph _medium-editor-text">…</div>`
+    ///     wrapper rather than a top-level `<p>`.
+    ///
+    /// We try the feature-style wrapper first (regex anchored on the
+    /// `_feature-article-body__` class fragment) so a paragraph that
+    /// uses a `<div>` wrapper still becomes a `.paragraph` block in
+    /// document order. Anything left over falls through to the
+    /// interview-style scan.
     private static func appendProseBlocks(from chunk: String, into blocks: inout [PixivisionArticleBlock]) {
         guard chunk.isEmpty == false else { return }
-        let pattern = #"(?s)(<h[23][^>]*>.*?</h[23]>)|(<p[^>]*>.*?</p>)"#
+        let pattern = #"(?s)(<div\b[^>]*class="[^"]*_feature-article-body__heading[^"]*"[^>]*>.*?</div>)|(<div\b[^>]*class="[^"]*_feature-article-body__paragraph[^"]*"[^>]*>.*?</div>\s*</div>)|(<h[23][^>]*>.*?</h[23]>)|(<p[^>]*>.*?</p>)"#
         guard let regex = try? NSRegularExpression(pattern: pattern, options: []) else { return }
 
         let nsRange = NSRange(chunk.startIndex..<chunk.endIndex, in: chunk)
         regex.enumerateMatches(in: chunk, options: [], range: nsRange) { match, _, _ in
             guard let match else { return }
 
-            if let headingRange = Range(match.range(at: 1), in: chunk) {
-                let text = stripTags(String(chunk[headingRange]))
+            // Feature-style heading wrapper.
+            if let r = Range(match.range(at: 1), in: chunk) {
+                let text = stripTags(String(chunk[r]))
                 if text.isEmpty == false {
                     blocks.append(.heading(text: text))
                 }
                 return
             }
-            if let paragraphRange = Range(match.range(at: 2), in: chunk) {
-                let text = stripTags(String(chunk[paragraphRange]))
+            // Feature-style paragraph wrapper.
+            if let r = Range(match.range(at: 2), in: chunk) {
+                let text = stripTags(String(chunk[r]))
+                if text.isEmpty == false {
+                    blocks.append(.paragraph(text: text))
+                }
+                return
+            }
+            // Interview-style heading.
+            if let r = Range(match.range(at: 3), in: chunk) {
+                let text = stripTags(String(chunk[r]))
+                if text.isEmpty == false {
+                    blocks.append(.heading(text: text))
+                }
+                return
+            }
+            // Interview-style paragraph.
+            if let r = Range(match.range(at: 4), in: chunk) {
+                let text = stripTags(String(chunk[r]))
                 if text.isEmpty == false {
                     blocks.append(.paragraph(text: text))
                 }
@@ -329,12 +362,48 @@ enum PixivisionArticleParser {
     // MARK: - HTML helpers
 
     private static func extractBodyHTML(in html: String) -> String {
-        // Pixivision wraps the prose in `am__article-body-container`.
-        // Stop at the share-buttons block; everything below that is
-        // the social/related-articles footer that we render with our
-        // own controls.
-        let pattern = #"(?s)class="am__article-body-container"(.*?)<div class="am__share-buttons""#
-        return extractFirstString(in: html, pattern: pattern, decodeAsText: false) ?? ""
+        // Pixivision wraps the prose in an `<article ...
+        // class="am__article-body-container">…</article>` regardless of
+        // article style (interview, spotlight, feature). We walk the
+        // markup with balanced `<article>` open/close counts so we get
+        // the entire body even when the document nests further article
+        // tags inside (related-article cards, schema fragments, etc.).
+        //
+        // The previous implementation looked for a trailing
+        // `<div class="am__share-buttons">` sentinel — which only ships
+        // on interview-style pages. Feature articles like
+        // `球体关节插画特辑` omit the share block entirely, so the regex
+        // never matched and the body came back empty. That made the
+        // reader collapse to title + hero only, hiding the 14+ work
+        // cards the article actually contains.
+        let opener = "<article"
+        guard let openTagRange = html.range(of: #"<article[^>]*class="[^"]*am__article-body-container[^"]*"[^>]*>"#,
+                                           options: .regularExpression) else {
+            return ""
+        }
+
+        var depth = 1
+        var cursor = openTagRange.upperBound
+        let closeTag = "</article>"
+
+        while depth > 0, cursor < html.endIndex {
+            let nextOpen = html.range(of: opener, range: cursor..<html.endIndex)
+            let nextClose = html.range(of: closeTag, range: cursor..<html.endIndex)
+            guard let close = nextClose else { break }
+
+            if let open = nextOpen, open.lowerBound < close.lowerBound {
+                depth += 1
+                cursor = open.upperBound
+            } else {
+                depth -= 1
+                if depth == 0 {
+                    return String(html[openTagRange.upperBound..<close.lowerBound])
+                }
+                cursor = close.upperBound
+            }
+        }
+
+        return ""
     }
 
     private static func extractMetaContent(

@@ -93,6 +93,40 @@ struct PixivisionArticleParserTests {
         #expect(parsed.tags.isEmpty)
     }
 
+    @Test("Feature article with many work cards parses every card and its caption")
+    func parsesFeatureArticleWithManyCards() {
+        let parsed = PixivisionArticleParser.parse(
+            html: Self.featureArticleHTML,
+            articleID: 10338,
+            sourceURL: URL(string: "https://www.pixivision.net/zh/a/10338")!
+        )
+
+        // Each work card should land in document order, not just the
+        // first one. The previous body extractor stopped at the
+        // `am__share-buttons` sentinel which feature articles omit, so
+        // the body came back empty and only the seed (hero + title)
+        // rendered. With balanced `<article>` matching the renderer
+        // gets all three cards back from this fixture.
+        let workIDs = parsed.blocks.compactMap { block -> Int? in
+            if case .work(let w) = block { return w.artworkID } else { return nil }
+        }
+        #expect(workIDs == [101, 102, 103])
+
+        // Feature-style heading + paragraph wrappers (`article-item
+        // _feature-article-body__heading|paragraph`) need to render as
+        // .heading and .paragraph blocks even though the inner markup
+        // uses <div> wrappers instead of bare <h3>/<p> tags.
+        let headingTexts = parsed.blocks.compactMap { block -> String? in
+            if case .heading(let t) = block { return t } else { return nil }
+        }
+        let paragraphTexts = parsed.blocks.compactMap { block -> String? in
+            if case .paragraph(let t) = block { return t } else { return nil }
+        }
+        #expect(headingTexts.contains("Section A"))
+        #expect(paragraphTexts.contains { $0.contains("Caption alpha") })
+        #expect(paragraphTexts.contains { $0.contains("Caption beta") })
+    }
+
     // MARK: - Fixtures
 
     /// Trimmed, real-world Pixivision article HTML with one heading,
@@ -113,7 +147,7 @@ struct PixivisionArticleParserTests {
     <li><a href="/en/t/71" class="_tag">interview</a></li>
     <li><a href="/en/t/149" class="_tag">illustrator interviews</a></li>
     </ul>
-    <section class="am__body"><div class="am__article-body-container">
+    <section class="am__body"><article class="am__article-body-container">
     <h3 class="am__article-headline">Graduated from art school this spring, now a freelance illustrator</h3>
     <p>Illustrator MON's first solo exhibition, SIGNAL 414, is happening now until Wednesday, July 24th, 2024.</p>
     <div class="am__work"><div class="am__work__info">
@@ -131,7 +165,7 @@ struct PixivisionArticleParserTests {
     <img src="https://i.pximg.net/c/768x1200_80/img-master/img/2018/02/17/19/40/29/67323816_p0_master1200.jpg" class="am__work__illust ">
     </div></a></div></div>
     <p>Final closing paragraph that wraps up the interview.</p>
-    </div></section>
+    </article></section>
     <div class="am__share-buttons"></div>
     </body></html>
     """
@@ -151,4 +185,52 @@ struct PixivisionArticleParserTests {
         </a></div></div>
         """
     }
+
+    /// Mirror of a Pixivision feature article (`球体关节插画特辑`-style)
+    /// where the body contains many work cards, each preceded by a
+    /// feature-style heading + paragraph wrapper, and the body ends
+    /// without an `am__share-buttons` block. We use synthetic IDs
+    /// (101/102/103) so the assertions are stable regardless of which
+    /// real article the parser was prototyped against.
+    private static let featureArticleHTML: String = {
+        var html = """
+        <html><head>
+        <meta property="og:title" content="球体关节插画特辑">
+        <meta property="og:description" content="精彩特辑摘要。">
+        <meta property="og:image" content="https://embed.pixiv.net/cover.jpg">
+        </head><body>
+        <a class="_category type-bg-color" href="/zh/c/illustration">插画</a>
+        <time class="_date am__sub-info__date">2024.10.01</time>
+        <h1 class="am__title">球体关节插画特辑</h1>
+        <article class="am__article-body-container" data-gtm-category="Article">
+        <header class="am__header">
+        <ul class="am__header-tags _tag-list">
+        <li><a href="/zh/t/100" class="_tag">人偶</a></li>
+        <li><a href="/zh/t/101" class="_tag">球形关节</a></li>
+        </ul>
+        </header>
+        <div class="article-item _feature-article-body__heading"><h3>Section A</h3></div>
+        <div class="article-item _feature-article-body__paragraph">
+        <div class="fab__paragraph _medium-editor-text"><div>Caption alpha — describes the next work.</div></div>
+        </div>
+        """
+        html += workCardHTML(artworkID: 101, creatorID: 1001, title: "Alpha", creator: "Anon1")
+        html += """
+
+        <div class="article-item _feature-article-body__heading"><h3>Section B</h3></div>
+        <div class="article-item _feature-article-body__paragraph">
+        <div class="fab__paragraph _medium-editor-text"><div>Caption beta sits between two illustrations.</div></div>
+        </div>
+        """
+        html += workCardHTML(artworkID: 102, creatorID: 1002, title: "Beta", creator: "Anon2")
+        html += workCardHTML(artworkID: 103, creatorID: 1003, title: "Gamma", creator: "Anon3")
+        html += """
+
+        </article>
+        <div class="am__footer"></div>
+        </body></html>
+        """
+        return html
+    }()
 }
+
