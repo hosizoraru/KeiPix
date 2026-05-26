@@ -100,6 +100,8 @@ struct UserProfileSheet: View {
                 togglePin: togglePinnedCreator,
                 openInPixivURL: currentUser.pixivURL,
                 copyLink: copyProfileLink,
+                isMuted: store.mutedUsers[currentUser.id] != nil,
+                toggleMute: toggleCreatorMute,
                 requestFeedback: {
                     feedbackRequest = .creator(currentUser)
                 }
@@ -552,6 +554,20 @@ struct UserProfileSheet: View {
             format: isPinned ? L10n.pinnedCreatorFormat : L10n.unpinnedCreatorFormat,
             currentUser.name
         ))
+    }
+
+    /// Quick mute toggle on the profile chrome. Mute routes through the
+    /// shared danger-action confirmation (parity with the related-creators
+    /// list and the bulk-block sheet); unmute is reversible so it fires
+    /// immediately and surfaces a status banner.
+    private func toggleCreatorMute() {
+        let target = currentUser
+        if store.mutedUsers[target.id] != nil {
+            store.unmuteUser(id: target.id)
+            showStatus(String(format: L10n.removedMutedCreatorFormat, target.name))
+        } else {
+            pendingDangerAction = AppDangerAction(kind: .muteCreator(target))
+        }
     }
 
     private func showStatus(_ message: String) {

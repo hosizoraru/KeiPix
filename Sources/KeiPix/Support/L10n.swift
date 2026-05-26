@@ -1004,6 +1004,7 @@ enum L10n {
     static var mute: String { text("Mute") }
     static var muteArtwork: String { text("Mute Artwork") }
     static var muteCreator: String { text("Mute Creator") }
+    static var unmuteCreator: String { text("Unmute Creator") }
     static var muteTag: String { text("Mute Tag") }
     static var bulkMutePreview: String { text("Bulk Mute Preview") }
     static var visibleArtworks: String { text("Visible Artworks") }

@@ -40,6 +40,12 @@ struct UserProfileSheetHeader: View {
     let openInPixivURL: URL?
     let copyLink: () -> Void
 
+    // Mute state — surfaced as a toggle in the overflow menu so the
+    // creator can be hushed without going through the full feedback
+    // report flow.
+    let isMuted: Bool
+    let toggleMute: () -> Void
+
     // Truly low-frequency items live in the overflow menu.
     let requestFeedback: () -> Void
 
@@ -238,6 +244,17 @@ struct UserProfileSheetHeader: View {
     @ViewBuilder
     private var overflowMenu: some View {
         Menu {
+            Button {
+                toggleMute()
+            } label: {
+                Label(
+                    isMuted ? L10n.unmuteCreator : L10n.muteCreator,
+                    systemImage: isMuted ? "speaker.wave.2" : "speaker.slash"
+                )
+            }
+
+            Divider()
+
             Button {
                 requestFeedback()
             } label: {

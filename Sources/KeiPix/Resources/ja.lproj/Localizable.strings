@@ -740,6 +740,7 @@
 "Mute" = "非表示";
 "Mute Artwork" = "作品を非表示";
 "Mute Creator" = "投稿者をブロック";
+"Unmute Creator" = "ブロックを解除";
 "Mute Tag" = "タグを非表示";
 "Bulk Mute Preview" = "Bulk Mute Preview";
 "Visible Artworks" = "Visible Artworks";

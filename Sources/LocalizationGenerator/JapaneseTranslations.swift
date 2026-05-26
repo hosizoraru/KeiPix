@@ -242,6 +242,7 @@ enum JapaneseTranslations {
         "Muted": "非表示",
         "Mute": "非表示",
         "Mute Creator": "投稿者をブロック",
+        "Unmute Creator": "ブロックを解除",
         "Bookmark": "ブックマーク",
         "Remove Bookmark": "ブックマークを解除",
         "Edit Bookmark": "ブックマークを編集",

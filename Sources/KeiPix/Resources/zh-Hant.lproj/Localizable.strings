@@ -756,6 +756,7 @@
 "Mute" = "封鎖";
 "Mute Artwork" = "封鎖作品";
 "Mute Creator" = "封鎖創作者";
+"Unmute Creator" = "取消封鎖";
 "Mute Tag" = "封鎖標籤";
 "Bulk Mute Preview" = "批量封鎖預覽";
 "Visible Artworks" = "可見作品";

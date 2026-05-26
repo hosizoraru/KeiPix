@@ -752,6 +752,7 @@
 "Mute" = "屏蔽";
 "Mute Artwork" = "屏蔽作品";
 "Mute Creator" = "屏蔽创作者";
+"Unmute Creator" = "取消屏蔽";
 "Mute Tag" = "屏蔽标签";
 "Bulk Mute Preview" = "批量屏蔽预览";
 "Visible Artworks" = "可见作品";
