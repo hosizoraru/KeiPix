@@ -90,6 +90,12 @@ final class KeiPixStore {
     var aiShowEnabled: Bool?
     var defaultBookmarkRestrict = KeiPixStore.loadEnum("defaultBookmarkRestrict", defaultValue: BookmarkRestrict.public)
     var defaultFollowRestrict = KeiPixStore.loadEnum("defaultFollowRestrict", defaultValue: BookmarkRestrict.public)
+    /// Tags the user has pinned in `BookmarkTagsView` so the tags they jump
+    /// to most often surface at the top of the list. Stored as a single set
+    /// instead of per-restrict because Pixiv's tag namespace is shared across
+    /// public/private bookmarks — a pinned `風景` should follow the user
+    /// regardless of which restrict they're browsing.
+    var pinnedBookmarkTags = Set(UserDefaults.standard.stringArray(forKey: "pinnedBookmarkTags") ?? [])
     var followCreatorAfterBookmark = UserDefaults.standard.object(forKey: "followCreatorAfterBookmark") as? Bool ?? false
     var autoDownloadBookmarkedArtworks = UserDefaults.standard.object(forKey: "autoDownloadBookmarkedArtworks") as? Bool ?? false
     var autoBookmarkDownloadedArtworks = UserDefaults.standard.object(forKey: "autoBookmarkDownloadedArtworks") as? Bool ?? false

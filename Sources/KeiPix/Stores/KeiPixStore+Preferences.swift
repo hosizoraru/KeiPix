@@ -225,6 +225,28 @@ extension KeiPixStore {
         UserDefaults.standard.set(destination.rawValue, forKey: "launchDestination")
     }
 
+    /// Toggles whether a bookmark tag is pinned. Returns `true` when the tag
+    /// is pinned after the call so callers can show appropriate feedback.
+    @discardableResult
+    func togglePinnedBookmarkTag(_ tag: String) -> Bool {
+        let trimmed = tag.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard trimmed.isEmpty == false else { return false }
+        let pinned: Bool
+        if pinnedBookmarkTags.contains(trimmed) {
+            pinnedBookmarkTags.remove(trimmed)
+            pinned = false
+        } else {
+            pinnedBookmarkTags.insert(trimmed)
+            pinned = true
+        }
+        UserDefaults.standard.set(Array(pinnedBookmarkTags), forKey: "pinnedBookmarkTags")
+        return pinned
+    }
+
+    func isBookmarkTagPinned(_ tag: String) -> Bool {
+        pinnedBookmarkTags.contains(tag.trimmingCharacters(in: .whitespacesAndNewlines))
+    }
+
     func setCompactArtworkCards(_ value: Bool) {
         setGalleryLayoutMode(value ? .compactGrid : .autoMasonry)
     }

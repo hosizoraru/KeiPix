@@ -611,6 +611,11 @@ enum L10n {
     static var shareSummaryHint: String { text("Share a formatted title, author, and link using your Sharing copy template.") }
     static var openAtLaunch: String { text("Open at Launch") }
     static var openAtLaunchHint: String { text("KeiPix opens to this destination after launch. Sign-in flows still send you home until a session is restored.") }
+    static var pinTag: String { text("Pin Tag") }
+    static var unpinTag: String { text("Unpin Tag") }
+    static var pinnedTags: String { text("Pinned Tags") }
+    static var pinnedTagFormat: String { text("Pinned %@") }
+    static var unpinnedTagFormat: String { text("Unpinned %@") }
     static var refreshToken: String { text("Refresh Token") }
     static var currentAccount: String { text("Current Account") }
     static var switchAccount: String { text("Switch Account") }

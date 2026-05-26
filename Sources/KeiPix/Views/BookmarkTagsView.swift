@@ -49,6 +49,7 @@ struct BookmarkTagsView: View {
                                         title: L10n.allBookmarkTags,
                                         count: totalVisibleCount,
                                         systemImage: "tray.full",
+                                        isPinned: false,
                                         action: { store.openBookmarks(restrict: selectedRestrict, tag: nil) }
                                     )
 
@@ -56,6 +57,7 @@ struct BookmarkTagsView: View {
                                         title: L10n.unclassified,
                                         count: nil,
                                         systemImage: "tag.slash",
+                                        isPinned: false,
                                         action: { store.openBookmarks(restrict: selectedRestrict, tag: "未分類") }
                                     )
 
@@ -63,10 +65,20 @@ struct BookmarkTagsView: View {
                                         BookmarkTagCard(
                                             title: tag.name,
                                             count: tag.count,
-                                            systemImage: "tag",
+                                            systemImage: store.isBookmarkTagPinned(tag.name) ? "pin.fill" : "tag",
+                                            isPinned: store.isBookmarkTagPinned(tag.name),
                                             action: { store.openBookmarks(restrict: selectedRestrict, tag: tag.name) }
                                         )
                                         .contextMenu {
+                                            Button {
+                                                togglePin(tag.name)
+                                            } label: {
+                                                Label(
+                                                    store.isBookmarkTagPinned(tag.name) ? L10n.unpinTag : L10n.pinTag,
+                                                    systemImage: store.isBookmarkTagPinned(tag.name) ? "pin.slash" : "pin"
+                                                )
+                                            }
+
                                             Button(L10n.copyTag) {
                                                 PasteboardWriter.copy(tag.name)
                                                 showActionMessage(String(format: L10n.copiedKeywordFormat, "#\(tag.name)"))
@@ -213,8 +225,18 @@ struct BookmarkTagsView: View {
 
     private var filteredTags: [PixivBookmarkTag] {
         let query = filterText.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard query.isEmpty == false else { return tags }
-        return tags.filter { $0.name.localizedStandardContains(query) }
+        let matched: [PixivBookmarkTag]
+        if query.isEmpty {
+            matched = tags
+        } else {
+            matched = tags.filter { $0.name.localizedStandardContains(query) }
+        }
+        // Float pinned tags to the top so the user's most-used tags stay
+        // one click away as the list grows. Stable sort within each group
+        // by preserving the API's original order.
+        let pinned = matched.filter { store.isBookmarkTagPinned($0.name) }
+        let rest = matched.filter { store.isBookmarkTagPinned($0.name) == false }
+        return pinned + rest
     }
 
     private var totalVisibleCount: Int? {
@@ -272,6 +294,14 @@ struct BookmarkTagsView: View {
         showActionMessage(String(format: L10n.copiedBookmarkTagsFormat, names.count))
     }
 
+    private func togglePin(_ tagName: String) {
+        let isPinned = store.togglePinnedBookmarkTag(tagName)
+        showActionMessage(String(
+            format: isPinned ? L10n.pinnedTagFormat : L10n.unpinnedTagFormat,
+            "#\(tagName)"
+        ))
+    }
+
     private func showActionMessage(_ message: String) {
         actionMessage = message
         Task {
@@ -287,6 +317,7 @@ private struct BookmarkTagCard: View {
     let title: String
     let count: Int?
     let systemImage: String
+    let isPinned: Bool
     let action: () -> Void
 
     @State private var isHovering = false
@@ -296,7 +327,7 @@ private struct BookmarkTagCard: View {
             HStack(spacing: 12) {
                 Image(systemName: systemImage)
                     .font(.title3)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(isPinned ? Color.accentColor : .secondary)
                     .frame(width: 24)
 
                 VStack(alignment: .leading, spacing: 4) {
@@ -323,7 +354,12 @@ private struct BookmarkTagCard: View {
             .keiPanel(14)
             .overlay {
                 RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .stroke(Color.secondary.opacity(isHovering ? 0.3 : 0.08), lineWidth: 1)
+                    .stroke(
+                        isPinned
+                            ? Color.accentColor.opacity(0.45)
+                            : Color.secondary.opacity(isHovering ? 0.3 : 0.08),
+                        lineWidth: isPinned ? 1.5 : 1
+                    )
             }
         }
         .buttonStyle(.plain)
