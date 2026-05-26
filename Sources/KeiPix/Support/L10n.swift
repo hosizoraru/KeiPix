@@ -363,6 +363,9 @@ enum L10n {
     static var defaultFollowVisibility: String { text("Default Follow Visibility") }
     static var autoTagBookmarksWithArtworkTags: String { text("Use artwork tags for new bookmarks") }
     static var autoTagBookmarksWithArtworkTagsHint: String { text("Quick bookmarks use the artwork tags, and the bookmark editor preselects them for new bookmarks.") }
+    static var premium: String { text("Premium") }
+    static var showMore: String { text("Show More") }
+    static var showLess: String { text("Show Less") }
     static var followCreatorAfterBookmark: String { text("Follow creator after bookmarking") }
     static var followCreatorAfterBookmarkHint: String { text("New bookmarks also follow the creator using your default follow visibility.") }
     static var autoDownloadBookmarkedArtworks: String { text("Download new bookmarks automatically") }

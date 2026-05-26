@@ -1005,3 +1005,6 @@
 "%d selected" = "已选 %d";
 "No tags from this source. Type your own below." = "这一类暂无候选标签，可在上方输入自定义。";
 "Filter tags" = "筛选标签";
+"Premium" = "高级会员";
+"Show More" = "展开";
+"Show Less" = "收起";

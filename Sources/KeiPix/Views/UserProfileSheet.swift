@@ -46,11 +46,11 @@ struct UserProfileSheet: View {
             Divider()
 
             ScrollView {
-                VStack(alignment: .leading, spacing: 16) {
+                VStack(alignment: .leading, spacing: 18) {
                     if isLoading {
                         ProgressView()
                             .frame(maxWidth: .infinity, alignment: .center)
-                            .padding(40)
+                            .padding(48)
                     } else if detail == nil, let errorMessage {
                         ContentUnavailableView {
                             Label(L10n.errorTitle, systemImage: "exclamationmark.triangle")
@@ -155,11 +155,12 @@ struct UserProfileSheet: View {
                             .textSelection(.enabled)
                     }
                 }
-                .padding(20)
+                .padding(.horizontal, 22)
+                .padding(.vertical, 20)
             }
         }
-        .frame(width: 580)
-        .frame(minHeight: 520)
+        .frame(width: 760)
+        .frame(minHeight: 620, idealHeight: 760, maxHeight: .infinity)
         .task(id: user.id) {
             await loadDetail()
             await loadRelatedUsers()
@@ -241,31 +242,54 @@ struct UserProfileSheet: View {
                     )
                 }
             }
-            .frame(height: 138)
+            .frame(height: 168)
             .frame(maxWidth: .infinity)
             .clipped()
             .overlay(alignment: .bottom) {
                 LinearGradient(
-                    colors: [.black.opacity(0), .black.opacity(0.55)],
+                    colors: [.black.opacity(0), .black.opacity(0.6)],
                     startPoint: .top,
                     endPoint: .bottom
                 )
-                .frame(height: 88)
+                .frame(height: 110)
                 .allowsHitTesting(false)
             }
 
-            HStack(alignment: .bottom, spacing: 14) {
+            // Close button is parked on the very top edge so it sits above
+            // the gradient — keeps it reachable without competing with the
+            // follow / actions controls anchored at the bottom of the
+            // banner. Mirrors Maps and App Store sheet chrome.
+            VStack(alignment: .trailing, spacing: 0) {
+                HStack {
+                    Spacer()
+                    SheetCloseButton(style: .plain)
+                        .padding(.top, 10)
+                        .padding(.trailing, 12)
+                }
+                Spacer(minLength: 0)
+            }
+
+            HStack(alignment: .bottom, spacing: 16) {
                 RemoteImageView(url: detail?.user.avatarURL ?? user.avatarURL)
-                    .frame(width: 74, height: 74)
+                    .frame(width: 88, height: 88)
                     .clipShape(Circle())
                     .overlay {
-                        Circle().stroke(.quaternary, lineWidth: 1)
+                        Circle().stroke(.white.opacity(0.6), lineWidth: 1.5)
                     }
+                    .shadow(color: .black.opacity(0.18), radius: 6, y: 2)
 
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(detail?.user.name ?? user.name)
-                        .font(.title2.weight(.semibold))
-                        .lineLimit(1)
+                    HStack(alignment: .center, spacing: 6) {
+                        Text(detail?.user.name ?? user.name)
+                            .font(.title2.weight(.semibold))
+                            .lineLimit(1)
+                        if detail?.profile.isPremium == true {
+                            Image(systemName: "checkmark.seal.fill")
+                                .foregroundStyle(.yellow)
+                                .help(L10n.premium)
+                                .accessibilityLabel(L10n.premium)
+                        }
+                    }
                     Text("@\(detail?.user.account ?? user.account)")
                         .font(.callout)
                         .foregroundStyle(.secondary)
@@ -276,9 +300,9 @@ struct UserProfileSheet: View {
 
                 followMenu
                 profileActionsMenu
-                SheetCloseButton(style: .bordered)
             }
-            .padding(20)
+            .padding(.horizontal, 22)
+            .padding(.bottom, 18)
         }
     }
 

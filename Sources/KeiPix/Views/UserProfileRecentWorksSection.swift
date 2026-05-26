@@ -1,5 +1,15 @@
 import SwiftUI
 
+/// Horizontal carousel of the creator's most recent works.
+///
+/// Tunes the layout to feel like the carousels Apple ships in App Store
+/// "More From This Developer" / Music "Latest Releases" sections:
+///   * larger card thumbnails so the work is the hero, not the chrome,
+///   * a subtle leading/trailing fade mask so users get a hint there's
+///     more content off-screen,
+///   * the visible card count is capped (the sheet is already a busy
+///     view) and a "View All" button hands the user off to the dedicated
+///     feed for deeper browsing.
 struct UserProfileRecentWorksSection: View {
     let user: PixivUser
     @Bindable var store: KeiPixStore
@@ -12,114 +22,180 @@ struct UserProfileRecentWorksSection: View {
     @State private var isLoading = false
     @State private var errorMessage: String?
 
+    private let cardWidth: CGFloat = 168
+    private let cardHeight: CGFloat = 218
+    private let visibleCap = 12
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack(alignment: .firstTextBaseline, spacing: 10) {
-                Label(L10n.recentCreatorWorks, systemImage: "rectangle.stack")
-                    .font(.headline)
+        VStack(alignment: .leading, spacing: 12) {
+            header
 
-                Spacer()
+            if isLoading {
+                placeholderRow
+            } else if artworks.isEmpty {
+                emptyState
+            } else {
+                carousel
+            }
+        }
+        .padding(16)
+        .keiPanel(16)
+        .task(id: user.id) {
+            await loadArtworks()
+        }
+    }
 
-                if errorMessage != nil {
-                    Button {
-                        Task { await loadArtworks() }
-                    } label: {
-                        Label(L10n.retry, systemImage: "arrow.clockwise")
-                    }
-                    .buttonStyle(.bordered)
-                    .controlSize(.small)
-                }
+    private var header: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 10) {
+            Label(L10n.recentCreatorWorks, systemImage: "rectangle.stack")
+                .font(.headline)
 
+            if artworks.isEmpty == false {
+                Text("\(min(artworks.count, visibleCap))")
+                    .font(.caption.monospacedDigit())
+                    .foregroundStyle(.secondary)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 1)
+                    .background(.quaternary, in: Capsule())
+            }
+
+            Spacer()
+
+            if errorMessage != nil {
                 Button {
-                    openAllWorks()
+                    Task { await loadArtworks() }
                 } label: {
-                    Label(L10n.viewAllWorks, systemImage: "arrow.right.circle")
+                    Label(L10n.retry, systemImage: "arrow.clockwise")
                 }
                 .buttonStyle(.bordered)
                 .controlSize(.small)
             }
 
-            if isLoading {
-                HStack(spacing: 8) {
-                    ProgressView()
-                        .controlSize(.small)
-                    Text(L10n.loading)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-                .frame(height: 178)
-                .frame(maxWidth: .infinity)
-            } else if artworks.isEmpty {
-                if let errorMessage {
-                    Text(errorMessage)
-                        .font(.callout)
-                        .foregroundStyle(.red)
-                        .textSelection(.enabled)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                } else {
-                    Text(L10n.noRecentCreatorWorks)
-                        .font(.callout)
-                        .foregroundStyle(.secondary)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                }
-            } else {
-                ScrollView(.horizontal) {
-                    LazyHStack(spacing: 12) {
-                        ForEach(artworks.prefix(12)) { artwork in
-                            ArtworkCardView(
-                                artwork: artwork,
-                                isSelected: store.selectedArtwork?.id == artwork.id,
-                                isCompact: true,
-                                showContentBadges: store.showContentBadges,
-                                maskSensitivePreview: store.maskSensitivePreviews,
-                                downloadState: store.downloads.downloadState(for: artwork.id),
-                                preferredHeight: 178
-                            ) {
-                                selectArtwork(artwork)
-                            }
-                            .frame(width: 150)
-                            .contextMenu {
-                                Button(L10n.selectArtwork) {
-                                    selectArtwork(artwork)
-                                }
+            Button {
+                openAllWorks()
+            } label: {
+                Label(L10n.viewAllWorks, systemImage: "arrow.right.circle")
+            }
+            .buttonStyle(.bordered)
+            .controlSize(.small)
+        }
+    }
 
-                                Button(artwork.isBookmarked ? L10n.removeBookmark : L10n.bookmark) {
-                                    if artwork.isBookmarked {
-                                        store.requestDangerAction(AppDangerAction(kind: .removeBookmark(artwork)))
-                                    } else {
-                                        Task { await bookmark(artwork) }
-                                    }
-                                }
-
-                                Button(L10n.download) {
-                                    store.enqueueDownload(artwork)
-                                    showStatus(String(format: L10n.queuedDownloadsFormat, 1))
-                                }
-
-                                Button(L10n.searchImageSource) {
-                                    store.presentImageSourceSearch(for: artwork)
-                                }
-
-                                if let url = artwork.pixivURL {
-                                    Divider()
-                                    Link(L10n.openInPixiv, destination: url)
-                                    Button(L10n.copyLink) {
-                                        PasteboardWriter.copy(url.absoluteString)
-                                        showStatus(L10n.copied)
-                                    }
-                                }
-                            }
-                        }
+    private var placeholderRow: some View {
+        HStack(spacing: 12) {
+            ForEach(0..<5, id: \.self) { _ in
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .fill(.quaternary)
+                    .frame(width: cardWidth, height: cardHeight)
+                    .overlay(alignment: .center) {
+                        ProgressView()
+                            .controlSize(.small)
                     }
-                    .padding(.vertical, 2)
-                }
-                .scrollIndicators(.hidden)
             }
         }
-        .padding(14)
-        .keiPanel(14)
-        .task(id: user.id) {
-            await loadArtworks()
+        .frame(height: cardHeight)
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    @ViewBuilder
+    private var emptyState: some View {
+        if let errorMessage {
+            Text(errorMessage)
+                .font(.callout)
+                .foregroundStyle(.red)
+                .textSelection(.enabled)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        } else {
+            ContentUnavailableView(
+                L10n.noRecentCreatorWorks,
+                systemImage: "photo.on.rectangle.angled"
+            )
+            .frame(maxWidth: .infinity)
+            .frame(height: cardHeight)
+        }
+    }
+
+    private var carousel: some View {
+        ScrollView(.horizontal) {
+            LazyHStack(spacing: 12) {
+                ForEach(artworks.prefix(visibleCap)) { artwork in
+                    artworkCard(artwork)
+                        .frame(width: cardWidth)
+                }
+            }
+            .padding(.vertical, 2)
+            .padding(.horizontal, 1)
+        }
+        .scrollIndicators(.hidden)
+        // Fade the leading + trailing edges so users get a visual cue that
+        // the carousel scrolls. Lifted from Apple's Music shelves.
+        .mask {
+            HStack(spacing: 0) {
+                LinearGradient(colors: [.clear, .black], startPoint: .leading, endPoint: .trailing)
+                    .frame(width: 14)
+                Rectangle()
+                LinearGradient(colors: [.black, .clear], startPoint: .leading, endPoint: .trailing)
+                    .frame(width: 14)
+            }
+        }
+    }
+
+    private func artworkCard(_ artwork: PixivArtwork) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            ArtworkCardView(
+                artwork: artwork,
+                isSelected: store.selectedArtwork?.id == artwork.id,
+                isCompact: true,
+                showContentBadges: store.showContentBadges,
+                maskSensitivePreview: store.maskSensitivePreviews,
+                downloadState: store.downloads.downloadState(for: artwork.id),
+                preferredHeight: 178
+            ) {
+                selectArtwork(artwork)
+            }
+
+            Text(artwork.title)
+                .font(.caption.weight(.medium))
+                .lineLimit(1)
+                .foregroundStyle(.primary)
+
+            if artwork.pageCount > 1 {
+                Label("\(artwork.pageCount)P", systemImage: "square.stack")
+                    .labelStyle(.titleAndIcon)
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .contextMenu {
+            Button(L10n.selectArtwork) {
+                selectArtwork(artwork)
+            }
+
+            Button(artwork.isBookmarked ? L10n.removeBookmark : L10n.bookmark) {
+                if artwork.isBookmarked {
+                    store.requestDangerAction(AppDangerAction(kind: .removeBookmark(artwork)))
+                } else {
+                    Task { await bookmark(artwork) }
+                }
+            }
+
+            Button(L10n.download) {
+                store.enqueueDownload(artwork)
+                showStatus(String(format: L10n.queuedDownloadsFormat, 1))
+            }
+
+            Button(L10n.searchImageSource) {
+                store.presentImageSourceSearch(for: artwork)
+            }
+
+            if let url = artwork.pixivURL {
+                Divider()
+                Link(L10n.openInPixiv, destination: url)
+                Button(L10n.copyLink) {
+                    PasteboardWriter.copy(url.absoluteString)
+                    showStatus(L10n.copied)
+                }
+            }
         }
     }
 

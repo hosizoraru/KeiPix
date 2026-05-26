@@ -1,86 +1,225 @@
 import SwiftUI
 
+/// Hero stats strip at the top of the profile sheet.
+///
+/// Apple's own creator-style profiles (Music, App Store, TV) lead with a
+/// horizontal strip of large numerical stats separated by hairline rules.
+/// We mirror that here so totals are scannable at a glance — readable
+/// numbers, secondary labels, no chart-junk.
 struct UserProfileMetricsSection: View {
     let profile: PixivUserProfile?
 
+    private var entries: [Entry] {
+        [
+            Entry(title: L10n.illustrations, value: profile?.totalIllusts ?? 0, systemImage: "photo"),
+            Entry(title: L10n.manga, value: profile?.totalManga ?? 0, systemImage: "book.pages"),
+            Entry(title: L10n.publicSaves, value: profile?.totalIllustBookmarksPublic ?? 0, systemImage: "bookmark"),
+            Entry(title: L10n.followingCreators, value: profile?.totalFollowUsers ?? 0, systemImage: "person.2")
+        ]
+    }
+
     var body: some View {
-        Grid(alignment: .leading, horizontalSpacing: 16, verticalSpacing: 10) {
-            GridRow {
-                ProfileMetric(title: L10n.illustrations, value: profile?.totalIllusts ?? 0, systemImage: "photo")
-                ProfileMetric(title: L10n.manga, value: profile?.totalManga ?? 0, systemImage: "book.pages")
-                ProfileMetric(title: L10n.publicSaves, value: profile?.totalIllustBookmarksPublic ?? 0, systemImage: "bookmark")
-                ProfileMetric(title: L10n.followingCreators, value: profile?.totalFollowUsers ?? 0, systemImage: "person.2")
+        HStack(alignment: .center, spacing: 0) {
+            ForEach(entries) { entry in
+                if entry.id != entries.first?.id {
+                    Divider()
+                        .frame(height: 36)
+                        .padding(.horizontal, 4)
+                }
+                ProfileMetricCell(entry: entry)
+                    .frame(maxWidth: .infinity)
             }
         }
-        .padding(14)
+        .padding(.horizontal, 18)
+        .padding(.vertical, 14)
         .keiPanel(14)
+    }
+
+    fileprivate struct Entry: Identifiable {
+        let title: String
+        let value: Int
+        let systemImage: String
+
+        var id: String { title }
     }
 }
 
+private struct ProfileMetricCell: View {
+    let entry: UserProfileMetricsSection.Entry
+
+    var body: some View {
+        VStack(spacing: 4) {
+            HStack(alignment: .firstTextBaseline, spacing: 6) {
+                Image(systemName: entry.systemImage)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                Text(entry.value.formatted(.number.notation(.compactName)))
+                    .font(.title3.weight(.semibold).monospacedDigit())
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+            }
+            Text(entry.title)
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+        }
+        .frame(maxWidth: .infinity)
+        .help("\(entry.title) · \(entry.value.formatted())")
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(entry.title): \(entry.value.formatted())")
+    }
+}
+
+/// Long-form bio with an "expand" affordance.
+///
+/// Pixiv bios run from a single line to many paragraphs of HTML; the old
+/// version always rendered the full thing, which pushed the busy
+/// recent-works carousel out of the first viewport. We collapse to four
+/// lines and let users tap "Show more" — same pattern App Store uses for
+/// app descriptions.
 struct UserProfileDescriptionSection: View {
     let text: String?
+
+    @State private var isExpanded = false
+
+    private let collapsedLineLimit = 4
 
     var body: some View {
         if let text, text.isEmpty == false {
             VStack(alignment: .leading, spacing: 8) {
-                Label(L10n.description, systemImage: "text.alignleft")
-                    .font(.headline)
+                HStack(alignment: .firstTextBaseline) {
+                    Label(L10n.description, systemImage: "text.alignleft")
+                        .font(.headline)
+                    Spacer(minLength: 0)
+                    if shouldOfferToggle(for: text) {
+                        Button(isExpanded ? L10n.showLess : L10n.showMore) {
+                            withAnimation(.snappy(duration: 0.18)) {
+                                isExpanded.toggle()
+                            }
+                        }
+                        .buttonStyle(.borderless)
+                        .controlSize(.small)
+                    }
+                }
+
                 Text(text)
                     .font(.callout)
                     .foregroundStyle(.secondary)
+                    .lineLimit(isExpanded ? nil : collapsedLineLimit)
                     .fixedSize(horizontal: false, vertical: true)
                     .textSelection(.enabled)
             }
-            .padding(14)
-            .keiPanel(14)
+            .padding(16)
+            .keiPanel(16)
         }
+    }
+
+    /// Show the toggle when the text is *probably* longer than the
+    /// collapsed limit. We can't measure the rendered height without
+    /// reaching for `GeometryReader`, so we approximate: ~52 chars per
+    /// line on the sheet width is a reasonable cut-off for Pixiv bios
+    /// that mix CJK and Latin text.
+    private func shouldOfferToggle(for text: String) -> Bool {
+        text.contains("\n") || text.count > collapsedLineLimit * 52
     }
 }
 
+/// Links chip rail.
+///
+/// Originally each link was a `.bordered` button which made every entry
+/// look like an action that needed clicking. Switching to chip-style
+/// links + a single inline "region · job" footer keeps the eye on what
+/// the section is actually about: contact + locale.
 struct UserProfileLinksSection: View {
     let user: PixivUser
     let profile: PixivUserProfile?
 
     var body: some View {
-        if visibleEntries.isEmpty == false || profile?.region != nil || profile?.job != nil {
+        if hasContent {
             VStack(alignment: .leading, spacing: 10) {
                 Label(L10n.links, systemImage: "link")
                     .font(.headline)
 
-                FlowLayout(spacing: 8) {
-                    ForEach(visibleEntries, id: \.0) { title, url in
-                        Link(destination: url) {
-                            Label(title, systemImage: title == "Pixiv" ? "safari" : "link")
+                if visibleEntries.isEmpty == false {
+                    FlowLayout(spacing: 8) {
+                        ForEach(visibleEntries, id: \.title) { entry in
+                            Link(destination: entry.url) {
+                                HStack(spacing: 6) {
+                                    Image(systemName: entry.systemImage)
+                                        .imageScale(.small)
+                                    Text(entry.title)
+                                }
+                                .font(.caption.weight(.medium))
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 5)
+                                .background(.quinary, in: Capsule())
+                                .overlay {
+                                    Capsule().stroke(.quaternary, lineWidth: 1)
+                                }
+                            }
+                            .buttonStyle(.plain)
+                            .help(entry.url.absoluteString)
                         }
-                        .buttonStyle(.bordered)
-                        .controlSize(.small)
                     }
                 }
 
-                if let region = profile?.region, region.isEmpty == false {
-                    ProfileInfoLine(title: L10n.region, value: region)
-                }
-                if let job = profile?.job, job.isEmpty == false {
-                    ProfileInfoLine(title: L10n.job, value: job)
+                if regionAndJobLine.isEmpty == false {
+                    HStack(spacing: 6) {
+                        Image(systemName: "mappin.and.ellipse")
+                            .font(.caption2)
+                            .foregroundStyle(.tertiary)
+                        Text(regionAndJobLine)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                    }
                 }
             }
-            .padding(14)
-            .keiPanel(14)
+            .padding(16)
+            .keiPanel(16)
         }
     }
 
-    private var visibleEntries: [(String, URL)] {
-        [
-            ("Pixiv", user.pixivURL),
-            ("Web", profile?.webpage),
-            ("X", profile?.twitterURL),
-            ("Pawoo", profile?.pawooURL)
-        ].compactMap { title, url in
-            url.map { (title, $0) }
+    private struct LinkEntry {
+        let title: String
+        let systemImage: String
+        let url: URL
+    }
+
+    private var visibleEntries: [LinkEntry] {
+        var entries: [LinkEntry] = []
+        if let url = user.pixivURL {
+            entries.append(LinkEntry(title: "Pixiv", systemImage: "safari", url: url))
         }
+        if let url = profile?.webpage {
+            entries.append(LinkEntry(title: "Web", systemImage: "globe", url: url))
+        }
+        if let url = profile?.twitterURL {
+            entries.append(LinkEntry(title: "X", systemImage: "bird", url: url))
+        }
+        if let url = profile?.pawooURL {
+            entries.append(LinkEntry(title: "Pawoo", systemImage: "at", url: url))
+        }
+        return entries
+    }
+
+    private var regionAndJobLine: String {
+        let region = profile?.region?.trimmedNonEmpty
+        let job = profile?.job?.trimmedNonEmpty
+        return [region, job].compactMap { $0 }.joined(separator: " · ")
+    }
+
+    private var hasContent: Bool {
+        visibleEntries.isEmpty == false || regionAndJobLine.isEmpty == false
     }
 }
 
+/// Workspace section.
+///
+/// Most Pixiv creators leave this empty, so we hide the panel entirely
+/// when there's nothing to render. When there *is* content, render
+/// title/value pairs in a Grid so columns align even when values vary
+/// in length.
 struct UserProfileWorkspaceSection: View {
     let workspace: PixivUserWorkspace?
 
@@ -94,8 +233,22 @@ struct UserProfileWorkspaceSection: View {
                     Label(L10n.workspace, systemImage: "paintbrush.pointed")
                         .font(.headline)
 
-                    ForEach(entries, id: \.title) { entry in
-                        ProfileInfoLine(title: entry.title, value: entry.value)
+                    if entries.isEmpty == false {
+                        Grid(alignment: .leading, horizontalSpacing: 12, verticalSpacing: 6) {
+                            ForEach(entries, id: \.title) { entry in
+                                GridRow {
+                                    Text(entry.title)
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                        .gridColumnAlignment(.leading)
+                                    Text(entry.value)
+                                        .font(.callout)
+                                        .foregroundStyle(.primary)
+                                        .textSelection(.enabled)
+                                        .lineLimit(2)
+                                }
+                            }
+                        }
                     }
 
                     if let comment {
@@ -111,33 +264,10 @@ struct UserProfileWorkspaceSection: View {
                         }
                     }
                 }
-                .padding(14)
-                .keiPanel(14)
+                .padding(16)
+                .keiPanel(16)
             }
         }
-    }
-}
-
-private struct ProfileMetric: View {
-    let title: String
-    let value: Int
-    let systemImage: String
-
-    var body: some View {
-        Label {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(value.formatted())
-                    .font(.headline)
-                Text(title)
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-            }
-        } icon: {
-            Image(systemName: systemImage)
-                .foregroundStyle(.secondary)
-        }
-        .frame(minWidth: 100, alignment: .leading)
     }
 }
 
