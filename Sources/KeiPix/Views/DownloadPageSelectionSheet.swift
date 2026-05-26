@@ -148,7 +148,7 @@ struct DownloadPageSelectionSheet: View {
         let queuedCount = store.enqueueDownloadPages(
             artwork,
             pageIndexes: indexes,
-            preferOriginal: store.useOriginalImagesInDetail
+            preferOriginal: store.preferOriginalImages(for: artwork, pageCount: pageCount)
         )
         onComplete(queuedCount, indexes)
         dismiss()

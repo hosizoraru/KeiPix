@@ -313,7 +313,7 @@ private struct ArtworkActionStrip: View {
                                 store.enqueueDownloadPage(
                                     artwork,
                                     pageIndex: pageIndex,
-                                    preferOriginal: store.useOriginalImagesInDetail
+                                    preferOriginal: store.preferOriginalImages(for: artwork, pageCount: pageCount)
                                 )
                                 showActionMessage(L10n.queuedCurrentPage)
                             } label: {
@@ -479,7 +479,7 @@ private struct ArtworkActionStrip: View {
     }
 
     private var currentPageURL: URL? {
-        artwork.imageURL(at: pageIndex, preferOriginal: store.useOriginalImagesInDetail)
+        artwork.imageURL(at: pageIndex, preferOriginal: store.preferOriginalImages(for: artwork, pageCount: pageCount))
     }
 
     private var currentLocalPageURL: URL? {

@@ -51,6 +51,15 @@ final class KeiPixStore {
     var appColorScheme = UserDefaults.standard.string(forKey: "appColorScheme")
         .flatMap(AppColorScheme.init(rawValue:)) ?? .system
     var useOriginalImagesInDetail = UserDefaults.standard.bool(forKey: "useOriginalImagesInDetail")
+    /// Per-content quality default for manga / multi-page reads.
+    ///
+    /// Pixez exposes `pictureQuality` and `mangaQuality` separately so users
+    /// can keep illust details on original quality while paging through a
+    /// long manga at the lighter standard preview. Defaults to the same
+    /// value as the illust knob so existing users see no behaviour change
+    /// until they explicitly diverge the two presets.
+    var useOriginalImagesForManga = UserDefaults.standard.object(forKey: "useOriginalImagesForManga") as? Bool
+        ?? UserDefaults.standard.bool(forKey: "useOriginalImagesInDetail")
     var galleryLayoutMode = KeiPixStore.loadGalleryLayoutMode()
     var showTranslatedTags = UserDefaults.standard.object(forKey: "showTranslatedTags") as? Bool ?? true
     var showContentBadges = UserDefaults.standard.object(forKey: "showContentBadges") as? Bool ?? true

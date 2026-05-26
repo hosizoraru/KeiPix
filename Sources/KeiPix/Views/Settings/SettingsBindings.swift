@@ -30,6 +30,14 @@ extension KeiPixStore {
         }
     }
 
+    var settings_useOriginalImagesForMangaBinding: Binding<Bool> {
+        Binding {
+            self.useOriginalImagesForManga
+        } set: { value in
+            self.setUseOriginalImagesForManga(value)
+        }
+    }
+
     var settings_showTranslatedTagsBinding: Binding<Bool> {
         Binding {
             self.showTranslatedTags

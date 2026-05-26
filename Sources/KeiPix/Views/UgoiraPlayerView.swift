@@ -106,7 +106,7 @@ struct UgoiraPlayerView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {
             RemoteImageView(
-                url: artwork.imageURL(at: 0, preferOriginal: store.useOriginalImagesInDetail),
+                url: artwork.imageURL(at: 0, preferOriginal: store.preferOriginalImages(for: artwork)),
                 contentMode: .fit
             )
         }

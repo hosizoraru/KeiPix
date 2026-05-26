@@ -68,6 +68,34 @@ extension KeiPixStore {
         UserDefaults.standard.set(value, forKey: "useOriginalImagesInDetail")
     }
 
+    func setUseOriginalImagesForManga(_ value: Bool) {
+        useOriginalImagesForManga = value
+        UserDefaults.standard.set(value, forKey: "useOriginalImagesForManga")
+    }
+
+    /// Returns the preferred-original flag for an artwork based on the
+    /// per-content quality presets. Mirrors `ArtworkReadingModePreferenceKind`
+    /// so the picture/manga split lines up with how reading modes are split.
+    func preferOriginalImages(for artwork: PixivArtwork, pageCount: Int? = nil) -> Bool {
+        let resolvedCount = pageCount ?? artwork.displayPageCount
+        switch ArtworkReadingModePreferenceKind.kind(for: artwork, pageCount: resolvedCount) {
+        case .artwork: return useOriginalImagesInDetail
+        case .manga: return useOriginalImagesForManga
+        }
+    }
+
+    /// Counterpart to `preferOriginalImages(for:)` that flips the preset
+    /// matching the artwork's kind. Powers the in-viewer HD/Standard toggle
+    /// so the user's per-artwork choice persists into the right preset
+    /// instead of leaking across illust/manga categories.
+    func setPreferOriginalImages(_ value: Bool, for artwork: PixivArtwork, pageCount: Int? = nil) {
+        let resolvedCount = pageCount ?? artwork.displayPageCount
+        switch ArtworkReadingModePreferenceKind.kind(for: artwork, pageCount: resolvedCount) {
+        case .artwork: setUseOriginalImagesInDetail(value)
+        case .manga: setUseOriginalImagesForManga(value)
+        }
+    }
+
     func setShowTranslatedTags(_ value: Bool) {
         showTranslatedTags = value
         UserDefaults.standard.set(value, forKey: "showTranslatedTags")

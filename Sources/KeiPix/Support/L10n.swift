@@ -476,6 +476,8 @@ enum L10n {
     static var themeDark: String { text("Dark") }
     static var themeHint: String { text("Apply a fixed light or dark mode inside KeiPix while leaving macOS appearance unchanged.") }
     static var useOriginalImages: String { text("Use original images in detail") }
+    static var useOriginalImagesForManga: String { text("Use original images for manga") }
+    static var imageQualityHint: String { text("Pick a default per content type — illust details and multi-page manga can use different quality presets.") }
     static var imageQualityOriginal: String { text("Original Quality") }
     static var imageQualityStandard: String { text("Standard Quality") }
     static var imageQualityToggleHint: String { text("Toggle between Pixiv's original image and the standard preview while reading.") }

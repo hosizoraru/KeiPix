@@ -140,17 +140,23 @@ private struct StandaloneArtworkReader: View {
 
             Spacer()
 
-            // Inline quality toggle — flips `useOriginalImagesInDetail` so the
-            // user can switch between original and standard previews without
-            // diving into Settings. The button reflects the current state with
-            // a filled/outline glyph and updates label text, mirroring the
-            // HD-style affordance Pixez/Pixes ship.
+            // Inline quality toggle — flips the per-content quality preset
+            // so the user can switch between original and standard previews
+            // without diving into Settings. The button reads/writes the
+            // illust or manga preset based on the artwork's kind, so a
+            // user reading manga doesn't accidentally flip the illust
+            // default. Mirrors the HD-style affordance Pixez/Pixes ship.
             Button {
-                store.setUseOriginalImagesInDetail(!store.useOriginalImagesInDetail)
+                store.setPreferOriginalImages(
+                    !store.preferOriginalImages(for: artwork, pageCount: pageCount),
+                    for: artwork,
+                    pageCount: pageCount
+                )
             } label: {
+                let isOriginal = store.preferOriginalImages(for: artwork, pageCount: pageCount)
                 Label(
-                    store.useOriginalImagesInDetail ? L10n.imageQualityOriginal : L10n.imageQualityStandard,
-                    systemImage: store.useOriginalImagesInDetail ? "photo.badge.checkmark.fill" : "photo"
+                    isOriginal ? L10n.imageQualityOriginal : L10n.imageQualityStandard,
+                    systemImage: isOriginal ? "photo.badge.checkmark.fill" : "photo"
                 )
             }
             .help(L10n.imageQualityToggleHint)
@@ -279,7 +285,7 @@ private struct StandaloneArtworkReader: View {
     }
 
     private func prefetchAround(_ index: Int) {
-        let urls = artwork.prefetchURLs(around: index, preferOriginal: store.useOriginalImagesInDetail)
+        let urls = artwork.prefetchURLs(around: index, preferOriginal: store.preferOriginalImages(for: artwork, pageCount: pageCount))
         Task {
             await ImagePipeline.shared.prefetch(urls)
         }

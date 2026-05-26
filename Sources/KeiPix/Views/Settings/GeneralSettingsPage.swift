@@ -30,7 +30,12 @@ struct GeneralSettingsPage: View {
 
             Section {
                 Toggle(L10n.useOriginalImages, isOn: store.settings_useOriginalImagesBinding)
+                Toggle(L10n.useOriginalImagesForManga, isOn: store.settings_useOriginalImagesForMangaBinding)
                 Toggle(L10n.showTranslatedTags, isOn: store.settings_showTranslatedTagsBinding)
+            } footer: {
+                Text(L10n.imageQualityHint)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
 
             Section {

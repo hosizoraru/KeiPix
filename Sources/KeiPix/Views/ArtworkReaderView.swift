@@ -227,7 +227,7 @@ private struct ArtworkSinglePageReader: View {
         GeometryReader { proxy in
             ZStack {
                 RemoteImageView(
-                    url: artwork.imageURL(at: currentPageIndex, preferOriginal: store.useOriginalImagesInDetail),
+                    url: artwork.imageURL(at: currentPageIndex, preferOriginal: store.preferOriginalImages(for: artwork)),
                     localURL: store.downloads.downloadedImageURL(artworkID: artwork.id, pageIndex: currentPageIndex),
                     contentMode: .fit,
                     onImageLoaded: { image in
@@ -346,7 +346,7 @@ private struct ArtworkContinuousReader: View {
 
                 VStack(spacing: 8) {
                     RemoteImageView(
-                        url: artwork.imageURL(at: index, preferOriginal: store.useOriginalImagesInDetail),
+                        url: artwork.imageURL(at: index, preferOriginal: store.preferOriginalImages(for: artwork)),
                         localURL: store.downloads.downloadedImageURL(artworkID: artwork.id, pageIndex: index),
                         contentMode: .fit,
                         onImageLoaded: { image in
