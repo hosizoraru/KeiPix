@@ -459,6 +459,7 @@ enum L10n {
     static var settingsGeneral: String { text("General") }
     static var settingsDiscovery: String { text("Discovery") }
     static var settingsSafety: String { text("Safety") }
+    static var settingsPrivacy: String { text("Privacy") }
     static var settingsAdvancedQA: String { text("Advanced QA") }
     static var noMatchingSettings: String { text("No matching settings") }
     static var noMatchingSettingsHint: String { text("Change the settings search to show other controls.") }
@@ -559,6 +560,10 @@ enum L10n {
     static var pageOnlySwipe: String { text("Page within artwork") }
     static var pageThenArtworkSwipe: String { text("Switch artwork at edges") }
     static var privacy: String { text("Privacy") }
+    static var privacyHint: String { text("Manage how KeiPix handles your account identity, screen capture, and Pixiv visibility on this Mac.") }
+    static var openPrivacySettings: String { text("Open Privacy Settings") }
+    static var privacyAndIdentity: String { text("Privacy & Identity") }
+    static var relatedSettings: String { text("Related Settings") }
     static var account: String { text("Account") }
     static var accountMode: String { text("Account Mode") }
     static var realAccount: String { text("Real Account") }

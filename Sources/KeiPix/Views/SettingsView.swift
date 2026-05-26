@@ -172,6 +172,8 @@ struct SettingsView: View {
                 importLocalFile: { importLocalMutedContent() },
                 exportLocalFile: { exportLocalMutedContent() }
             )
+        case .privacy:
+            PrivacySettingsPage(store: store, coordinator: coordinator)
         case .downloads:
             DownloadsSettingsPage(store: store, coordinator: coordinator)
         case .account:

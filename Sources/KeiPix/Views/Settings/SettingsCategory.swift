@@ -5,14 +5,22 @@ import Foundation
 /// Each case owns its title, SF Symbol, and the localized search terms used to
 /// filter the sidebar. Mirrors the structure of System Settings on macOS 26 so
 /// users can navigate by category rather than scroll one tall column.
+///
+/// Ordering follows Apple's grouping conventions: identity-adjacent
+/// destinations (Account) sit near the top, then content/behavior categories
+/// (General, Reading, Discovery), then safety/privacy boundaries (Safety,
+/// Privacy), then on-disk concerns (Downloads, Sharing), with specialized
+/// tooling (Advanced QA) at the bottom — matching how System Settings layers
+/// "Apple ID" → user-facing controls → privacy → power-user surfaces.
 enum SettingsCategory: String, CaseIterable, Identifiable, Hashable {
+    case account
     case general
     case reading
     case discovery
-    case sharing
     case safety
+    case privacy
     case downloads
-    case account
+    case sharing
     case advancedQA
 
     var id: String { rawValue }
@@ -24,6 +32,7 @@ enum SettingsCategory: String, CaseIterable, Identifiable, Hashable {
         case .discovery: L10n.settingsDiscovery
         case .sharing: L10n.sharing
         case .safety: L10n.settingsSafety
+        case .privacy: L10n.settingsPrivacy
         case .downloads: L10n.downloads
         case .account: L10n.account
         case .advancedQA: L10n.settingsAdvancedQA
@@ -37,6 +46,7 @@ enum SettingsCategory: String, CaseIterable, Identifiable, Hashable {
         case .discovery: "sparkles.rectangle.stack"
         case .sharing: "square.and.arrow.up"
         case .safety: "lock.shield"
+        case .privacy: "hand.raised"
         case .downloads: "tray.and.arrow.down"
         case .account: "person.crop.circle"
         case .advancedQA: "wrench.and.screwdriver"
@@ -100,10 +110,25 @@ enum SettingsCategory: String, CaseIterable, Identifiable, Hashable {
                 L10n.mutedContent,
                 L10n.syncFromPixiv,
                 L10n.uploadToPixiv,
+                // Cross-listed so users searching for privacy still find the
+                // related controls — same as Apple's System Settings linking
+                // Privacy & Security to specific app permissions.
                 L10n.privacy,
                 L10n.privacyMode,
                 L10n.protectSensitiveContent,
                 L10n.showAccountIdentity
+            ]
+        case .privacy:
+            return [
+                title,
+                L10n.privacyMode,
+                L10n.protectSensitiveContent,
+                L10n.showAccountIdentity,
+                L10n.privacyHint,
+                L10n.privacyAndIdentity,
+                L10n.pixivRestrictedMode,
+                L10n.account,
+                L10n.maskSensitivePreviews
             ]
         case .downloads:
             return [
@@ -125,7 +150,13 @@ enum SettingsCategory: String, CaseIterable, Identifiable, Hashable {
                 L10n.importToken,
                 L10n.switchAccount,
                 L10n.removeAccount,
-                L10n.logout
+                L10n.logout,
+                // Account-adjacent privacy controls live on the Account page
+                // too, so people searching for "privacy" or "identity" while
+                // browsing accounts still find them.
+                L10n.privacyAndIdentity,
+                L10n.privacyMode,
+                L10n.showAccountIdentity
             ]
         case .advancedQA:
             return [

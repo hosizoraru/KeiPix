@@ -16,7 +16,7 @@ struct SafetySettingsPage: View {
             if store.session != nil {
                 pixivSafetySection
             }
-            privacySection
+            privacyShortcutSection
         }
         .formStyle(.grouped)
         .navigationTitle(L10n.settingsSafety)
@@ -138,25 +138,23 @@ struct SafetySettingsPage: View {
         }
     }
 
-    private var privacySection: some View {
+    private var privacyShortcutSection: some View {
+        // Privacy controls live on their own page now (mirroring macOS System
+        // Settings → Privacy & Security). Keep a deep-link here so users
+        // looking for "Privacy Mode" or "Show account identity" while
+        // browsing Safety can pivot one click away.
         Section {
-            Toggle(L10n.privacyMode, isOn: store.settings_privacyModeBinding)
-            Toggle(L10n.protectSensitiveContent, isOn: store.settings_screenCaptureProtectionBinding)
-            if store.session != nil {
-                Toggle(L10n.showAccountIdentity, isOn: store.settings_accountIdentityBinding)
+            Button {
+                coordinator.selection = .privacy
+            } label: {
+                Label(L10n.openPrivacySettings, systemImage: SettingsCategory.privacy.systemImage)
             }
         } header: {
             Text(L10n.privacy)
         } footer: {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(L10n.privacyModeHint)
-                Text(L10n.screenCaptureProtectionHint)
-                if store.session != nil {
-                    Text(L10n.accountIdentityPrivacyHint)
-                }
-            }
-            .font(.caption)
-            .foregroundStyle(.secondary)
+            Text(L10n.privacyHint)
+                .font(.caption)
+                .foregroundStyle(.secondary)
         }
     }
 

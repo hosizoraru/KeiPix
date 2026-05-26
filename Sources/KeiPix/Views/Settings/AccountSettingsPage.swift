@@ -76,9 +76,43 @@ struct AccountSettingsPage: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
+
+            // Mirror the privacy controls that touch account identity here so
+            // users who land on Account looking for "Privacy Mode" or
+            // "Show account identity" find them in context. The bindings are
+            // shared with `PrivacySettingsPage`, so toggling either page keeps
+            // both in sync — the same UX Apple uses for surfacing privacy
+            // toggles inside the Apple ID section of System Settings.
+            privacyAndIdentitySection
         }
         .formStyle(.grouped)
         .navigationTitle(L10n.account)
+    }
+
+    private var privacyAndIdentitySection: some View {
+        Section {
+            Toggle(L10n.privacyMode, isOn: store.settings_privacyModeBinding)
+            if store.session != nil {
+                Toggle(L10n.showAccountIdentity, isOn: store.settings_accountIdentityBinding)
+            }
+
+            Button {
+                coordinator.selection = .privacy
+            } label: {
+                Label(L10n.openPrivacySettings, systemImage: SettingsCategory.privacy.systemImage)
+            }
+        } header: {
+            Text(L10n.privacyAndIdentity)
+        } footer: {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(L10n.privacyModeHint)
+                if store.session != nil {
+                    Text(L10n.accountIdentityPrivacyHint)
+                }
+            }
+            .font(.caption)
+            .foregroundStyle(.secondary)
+        }
     }
 
     private var accountSessionModeBinding: Binding<AccountSessionMode> {
