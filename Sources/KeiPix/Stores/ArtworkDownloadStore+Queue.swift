@@ -130,12 +130,23 @@ extension ArtworkDownloadStore {
 
     @discardableResult
     func enqueuePages(_ artwork: PixivArtwork, pageRange: ClosedRange<Int>, preferOriginal: Bool = true) -> Int {
-        let displayPageCount = max(artwork.displayPageCount, 1)
-        let lowerBound = min(max(pageRange.lowerBound, 0), displayPageCount - 1)
-        let upperBound = min(max(pageRange.upperBound, 0), displayPageCount - 1)
-        guard lowerBound <= upperBound else { return 0 }
+        enqueuePages(artwork, pageIndexes: Array(pageRange), preferOriginal: preferOriginal)
+    }
 
-        let sourcePairs = (lowerBound...upperBound).compactMap { pageIndex -> (Int, URL)? in
+    /// Queues an arbitrary subset of pages from a multi-page artwork.
+    ///
+    /// Mirrors `enqueuePages(_:pageRange:)` but accepts a non-contiguous
+    /// set of indexes so the selective-save sheet can hand over whichever
+    /// pages the user ticked. Indexes are clamped, deduped and sorted
+    /// before being enqueued, so callers can pass anything resembling a
+    /// page list without first sanitising it.
+    @discardableResult
+    func enqueuePages(_ artwork: PixivArtwork, pageIndexes: [Int], preferOriginal: Bool = true) -> Int {
+        let displayPageCount = max(artwork.displayPageCount, 1)
+        let normalized = Array(Set(pageIndexes.map { min(max($0, 0), displayPageCount - 1) })).sorted()
+        guard normalized.isEmpty == false else { return 0 }
+
+        let sourcePairs = normalized.compactMap { pageIndex -> (Int, URL)? in
             guard let sourceURL = artwork.imageURL(at: pageIndex, preferOriginal: preferOriginal) else { return nil }
             return (pageIndex, sourceURL)
         }

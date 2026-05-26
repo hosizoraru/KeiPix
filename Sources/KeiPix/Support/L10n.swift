@@ -479,6 +479,11 @@ enum L10n {
     static var imageQualityOriginal: String { text("Original Quality") }
     static var imageQualityStandard: String { text("Standard Quality") }
     static var imageQualityToggleHint: String { text("Toggle between Pixiv's original image and the standard preview while reading.") }
+    static var downloadSelectedPages: String { text("Save Selected Pages…") }
+    static var selectPagesToSave: String { text("Select Pages to Save") }
+    static var selectAllPages: String { text("Select All") }
+    static var clearPageSelection: String { text("Clear Selection") }
+    static var pagesSelectedFormat: String { text("%d of %d pages selected") }
     static var showTranslatedTags: String { text("Show translated tag names") }
     static var contentFilters: String { text("Content Filters") }
     static var showContentBadges: String { text("Show content badges") }

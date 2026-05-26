@@ -142,6 +142,20 @@ extension KeiPixStore {
         return count
     }
 
+    /// Queues an arbitrary subset of pages from a multi-page artwork.
+    /// Backs `DownloadPageSelectionSheet` so users can tick the exact pages
+    /// they want to save instead of being limited to a contiguous range.
+    @discardableResult
+    func enqueueDownloadPages(_ artwork: PixivArtwork, pageIndexes: [Int], preferOriginal: Bool = true) -> Int {
+        guard artwork.isUgoira == false else {
+            enqueueDownload(artwork, preferOriginal: preferOriginal)
+            return 1
+        }
+        let count = downloads.enqueuePages(artwork, pageIndexes: pageIndexes, preferOriginal: preferOriginal)
+        bookmarkDownloadedArtworkIfNeeded(artwork)
+        return count
+    }
+
     @discardableResult
     func enqueueDownloads(_ artworks: [PixivArtwork], limit: Int, preferOriginal: Bool = true) -> Int {
         let candidates = Array(artworks.prefix(max(limit, 0)))

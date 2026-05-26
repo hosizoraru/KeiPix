@@ -200,6 +200,7 @@ private struct ArtworkActionStrip: View {
     @State private var actionMessage: String?
     @State private var feedbackRequest: FeedbackReportRequest?
     @State private var isPageRangeDownloadPresented = false
+    @State private var isPageSelectionDownloadPresented = false
 
     var body: some View {
         GlassEffectContainer {
@@ -325,6 +326,12 @@ private struct ArtworkActionStrip: View {
                             } label: {
                                 Label(L10n.downloadPageRange, systemImage: "text.page.badge.magnifyingglass")
                             }
+
+                            Button {
+                                isPageSelectionDownloadPresented = true
+                            } label: {
+                                Label(L10n.downloadSelectedPages, systemImage: "checklist")
+                            }
                         }
 
                         if let currentLocalPageURL {
@@ -401,6 +408,15 @@ private struct ArtworkActionStrip: View {
                 onComplete: showPageRangeDownloadMessage
             )
         }
+        .sheet(isPresented: $isPageSelectionDownloadPresented) {
+            DownloadPageSelectionSheet(
+                artwork: artwork,
+                store: store,
+                initialPageIndex: pageIndex,
+                pageCount: pageCount,
+                onComplete: showPageSelectionDownloadMessage
+            )
+        }
     }
 
     private func copyArtworkSummary() {
@@ -430,6 +446,17 @@ private struct ArtworkActionStrip: View {
         } else {
             showActionMessage(L10n.noDownloadRecordsChanged)
         }
+    }
+
+    private func showPageSelectionDownloadMessage(_ queuedCount: Int, _ pageIndexes: [Int]) {
+        // The bulk-queue API returns 0 when the same selection is already in
+        // flight; mirror the page-range message so the UI feels consistent
+        // and tells the user something either way.
+        guard queuedCount > 0, pageIndexes.isEmpty == false else {
+            showActionMessage(L10n.noDownloadRecordsChanged)
+            return
+        }
+        showActionMessage(String(format: L10n.pagesSelectedFormat, queuedCount, pageCount))
     }
 
     private var currentPageURL: URL? {
