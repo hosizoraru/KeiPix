@@ -148,10 +148,18 @@ struct ArtworkCommentsView: View {
                 .buttonStyle(.borderless)
                 .help(L10n.commentEmoji)
                 .popover(isPresented: $isEmojiPickerPresented, arrowEdge: .bottom) {
-                    PixivCommentEmojiPicker { emoji in
-                        insertEmoji(emoji)
-                        isEmojiPickerPresented = false
-                    }
+                    PixivCommentEmojiPicker(
+                        insert: { emoji in
+                            insertEmoji(emoji)
+                            // Stay open so the user can stack emojis in
+                            // one go, matching Pixiv Web. The popover
+                            // dismisses via the Done button below or by
+                            // clicking outside.
+                        },
+                        dismiss: {
+                            isEmojiPickerPresented = false
+                        }
+                    )
                 }
                 .disabled(isPosting)
 
