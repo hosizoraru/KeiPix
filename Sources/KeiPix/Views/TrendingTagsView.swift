@@ -163,57 +163,21 @@ private struct TrendingTagCard: View {
 
     var body: some View {
         Button(action: search) {
-            ZStack(alignment: .bottomLeading) {
-                Color.black
-
-                RemoteImageView(
-                    url: tag.artwork.thumbnailURL,
-                    contentMode: .fill
-                )
-                .sensitiveArtworkPreviewMasked(
-                    maskSensitivePreview && tag.artwork.requiresScreenCaptureProtection,
-                    badges: tag.artwork.contentBadges
-                )
-
-                LinearGradient(
-                    stops: [
-                        .init(color: .black.opacity(0), location: 0),
-                        .init(color: .black.opacity(0.18), location: 0.48),
-                        .init(color: .black.opacity(0.72), location: 1)
-                    ],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-                .frame(maxHeight: .infinity, alignment: .bottom)
-                .allowsHitTesting(false)
-
-                if showContentBadges {
-                    ArtworkContentBadgesView(badges: tag.artwork.contentBadges, style: .overlay)
-                        .padding(8)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-                }
-
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("#\(tag.name)")
-                        .font(.headline.weight(.semibold))
-                        .lineLimit(1)
-                        .trendingTagTextChip()
-
-                    if let translatedName {
-                        Text(translatedName)
-                            .font(.caption)
-                            .lineLimit(1)
-                            .trendingTagTextChip(opacity: 0.34)
-                    }
-                }
-                .foregroundStyle(.white)
-                .shadow(color: .black.opacity(0.28), radius: 2, y: 1)
-                .padding(8)
+            // ArtworkCardView solved the same "image bleeds past its
+            // masonry frame" symptom by capturing the placed size via
+            // GeometryReader and pinning the thumbnail to it. Without
+            // an explicit height, `RemoteImageView`'s underlying
+            // `Image.resizable().aspectRatio(contentMode: .fill)` is
+            // flexible enough to exceed the proposed size and visually
+            // overlap neighbouring cards in the column. We mirror that
+            // pattern here so the rendered card never escapes its
+            // layout frame.
+            GeometryReader { proxy in
+                cardContent(size: proxy.size)
             }
         }
         .buttonStyle(.plain)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .contentShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
         .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
         .compositingGroup()
         .overlay {
@@ -246,6 +210,64 @@ private struct TrendingTagCard: View {
 
             Button(L10n.muteTag, action: mute)
         }
+    }
+
+    private func cardContent(size: CGSize) -> some View {
+        ZStack(alignment: .bottomLeading) {
+            // Black backstop matches the placed frame so the card has a
+            // stable, opaque base even before the image arrives or when
+            // it fails to load.
+            Color.black
+                .frame(width: size.width, height: size.height)
+
+            RemoteImageView(
+                url: tag.artwork.thumbnailURL,
+                contentMode: .fill
+            )
+            .sensitiveArtworkPreviewMasked(
+                maskSensitivePreview && tag.artwork.requiresScreenCaptureProtection,
+                badges: tag.artwork.contentBadges
+            )
+            .frame(width: size.width, height: size.height)
+            .clipped()
+
+            LinearGradient(
+                stops: [
+                    .init(color: .black.opacity(0), location: 0),
+                    .init(color: .black.opacity(0.18), location: 0.48),
+                    .init(color: .black.opacity(0.72), location: 1)
+                ],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            .frame(width: size.width, height: size.height)
+            .allowsHitTesting(false)
+
+            if showContentBadges {
+                ArtworkContentBadgesView(badges: tag.artwork.contentBadges, style: .overlay)
+                    .padding(8)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            }
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text("#\(tag.name)")
+                    .font(.headline.weight(.semibold))
+                    .lineLimit(1)
+                    .trendingTagTextChip()
+
+                if let translatedName {
+                    Text(translatedName)
+                        .font(.caption)
+                        .lineLimit(1)
+                        .trendingTagTextChip(opacity: 0.34)
+                }
+            }
+            .foregroundStyle(.white)
+            .shadow(color: .black.opacity(0.28), radius: 2, y: 1)
+            .padding(8)
+        }
+        .frame(width: size.width, height: size.height)
+        .contentShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
     }
 
     private var translatedName: String? {
