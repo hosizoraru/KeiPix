@@ -247,7 +247,7 @@
 "Choose Folder" = "選擇資料夾";
 "Open Folder" = "開啟資料夾";
 "Download Naming Template" = "下載命名模板";
-"Use placeholders like ${id}, ${title}, ${user}, ${userId}, ${page}, ${page1}, ${pages}, ${ext}, ${AI}, ${R18}, ${R18G}, ${tag1}, ${tag2}, ${tag(name)}. Paths stay inside the download folder." = "可使用 ${id}、${title}、${user}、${userId}、${page}、${page1}、${pages}、${ext}、${AI}、${R18}、${R18G}、${tag1}、${tag2}、${tag(name)} 等佔位符。路徑會限制在下載資料夾內。";
+"Use placeholders like ${id}, ${title}, ${user}, ${userId}, ${series}, ${seriesId}, ${page}, ${page1}, ${pages}, ${ext}, ${AI}, ${R18}, ${R18G}, ${tag1}, ${tag2}, ${tag(name)}. Paths stay inside the download folder." = "可使用 ${id}、${title}、${user}、${userId}、${series}、${seriesId}、${page}、${page1}、${pages}、${ext}、${AI}、${R18}、${R18G}、${tag1}、${tag2}、${tag(name)} 等佔位符。路徑會限制在下載資料夾內。";
 "Template Preview" = "模板預覽";
 "Reset Template" = "重置模板";
 "Choose" = "選擇";

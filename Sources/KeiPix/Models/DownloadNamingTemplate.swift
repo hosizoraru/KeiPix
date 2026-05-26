@@ -59,6 +59,10 @@ struct DownloadNamingTemplate: Sendable {
             return context.creatorName
         case "userId":
             return context.creatorID.map(String.init) ?? ""
+        case "series":
+            return context.seriesTitle ?? ""
+        case "seriesId":
+            return context.seriesID.map(String.init) ?? ""
         case "page":
             return String(context.pageIndex)
         case "page1":
@@ -137,6 +141,8 @@ struct DownloadNamingTemplate: Sendable {
         let title: String
         let creatorName: String
         let creatorID: Int?
+        let seriesTitle: String?
+        let seriesID: Int?
         let tags: [String]
         let isAI: Bool
         let isR18: Bool
@@ -150,6 +156,8 @@ struct DownloadNamingTemplate: Sendable {
             title = item.title
             creatorName = item.creatorName
             creatorID = item.creatorID
+            seriesTitle = item.seriesTitle
+            seriesID = item.seriesID
             tags = item.tags ?? []
             isAI = item.isAI ?? false
             isR18 = item.isR18 ?? false
@@ -164,6 +172,8 @@ struct DownloadNamingTemplate: Sendable {
             title = artwork.title
             creatorName = artwork.user.name
             creatorID = artwork.user.id
+            seriesTitle = artwork.series?.title
+            seriesID = artwork.series?.id
             tags = artwork.tags.map(\.name)
             isAI = artwork.isAI
             isR18 = artwork.isR18
@@ -178,6 +188,8 @@ struct DownloadNamingTemplate: Sendable {
             title: "Blue Morning",
             creatorName: "kei",
             creatorID: 424242,
+            seriesTitle: "Morning Series",
+            seriesID: 9001,
             tags: ["landscape", "original"],
             isAI: false,
             isR18: false,
@@ -192,6 +204,8 @@ struct DownloadNamingTemplate: Sendable {
             title: String,
             creatorName: String,
             creatorID: Int?,
+            seriesTitle: String?,
+            seriesID: Int?,
             tags: [String],
             isAI: Bool,
             isR18: Bool,
@@ -204,6 +218,8 @@ struct DownloadNamingTemplate: Sendable {
             self.title = title
             self.creatorName = creatorName
             self.creatorID = creatorID
+            self.seriesTitle = seriesTitle
+            self.seriesID = seriesID
             self.tags = tags
             self.isAI = isAI
             self.isR18 = isR18

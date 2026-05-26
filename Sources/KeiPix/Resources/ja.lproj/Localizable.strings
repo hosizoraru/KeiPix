@@ -236,7 +236,7 @@
 "Choose Folder" = "フォルダーを選択";
 "Open Folder" = "フォルダーを開く";
 "Download Naming Template" = "ダウンロード命名テンプレート";
-"Use placeholders like ${id}, ${title}, ${user}, ${userId}, ${page}, ${page1}, ${pages}, ${ext}, ${AI}, ${R18}, ${R18G}, ${tag1}, ${tag2}, ${tag(name)}. Paths stay inside the download folder." = "Use placeholders like ${id}, ${title}, ${user}, ${userId}, ${page}, ${page1}, ${pages}, ${ext}, ${AI}, ${R18}, ${R18G}, ${tag1}, ${tag2}, ${tag(name)}. Paths stay inside the download folder.";
+"Use placeholders like ${id}, ${title}, ${user}, ${userId}, ${series}, ${seriesId}, ${page}, ${page1}, ${pages}, ${ext}, ${AI}, ${R18}, ${R18G}, ${tag1}, ${tag2}, ${tag(name)}. Paths stay inside the download folder." = "Use placeholders like ${id}, ${title}, ${user}, ${userId}, ${series}, ${seriesId}, ${page}, ${page1}, ${pages}, ${ext}, ${AI}, ${R18}, ${R18G}, ${tag1}, ${tag2}, ${tag(name)}. Paths stay inside the download folder.";
 "Template Preview" = "テンプレートプレビュー";
 "Reset Template" = "テンプレートをリセット";
 "Choose" = "選択";

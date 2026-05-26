@@ -218,6 +218,8 @@ struct ArtworkDownloadItem: Identifiable, Codable, Sendable {
     let title: String
     let creatorName: String
     var creatorID: Int? = nil
+    var seriesTitle: String? = nil
+    var seriesID: Int? = nil
     var tags: [String]? = nil
     var isAI: Bool? = nil
     var isR18: Bool? = nil
