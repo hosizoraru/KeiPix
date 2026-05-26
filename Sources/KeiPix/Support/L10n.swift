@@ -400,6 +400,7 @@ enum L10n {
     static var recentCreatorWorks: String { text("Recent Creator Works") }
     static var noRecentCreatorWorks: String { text("No recent creator works") }
     static var viewAllWorks: String { text("View All Works") }
+    static var viewAll: String { text("View All") }
     static var creatorFilter: String { text("Creator Filter") }
     static var creatorSort: String { text("Creator Sort") }
     static var resetCreatorFilters: String { text("Reset Creator Filters") }

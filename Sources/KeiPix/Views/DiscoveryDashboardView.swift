@@ -20,6 +20,13 @@ struct DiscoveryDashboardView: View {
             LazyVStack(alignment: .leading, spacing: 18) {
                 header
 
+                // Inline trending-tags rail mirrors Pixiv Web's
+                // 急上昇タグ preview on the discovery surface — a
+                // glanceable shortcut that links into the dedicated
+                // trending-tags route. The strip hides itself when the
+                // user is signed-out or the API yields no tags.
+                DiscoveryTrendingTagsStrip(store: store)
+
                 ForEach(DiscoveryDashboardSection.all) { section in
                     DiscoveryDashboardRouteSection(section: section, store: store)
                 }

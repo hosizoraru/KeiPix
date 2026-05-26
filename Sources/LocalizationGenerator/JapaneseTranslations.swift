@@ -367,6 +367,7 @@ enum JapaneseTranslations {
         "Open Creator Profile": "投稿者プロフィールを開く",
         "Recent Creator Works": "最近の作品",
         "View All Works": "すべての作品を表示",
+        "View All": "すべて表示",
         "Pin Creator": "投稿者をピン留め",
         "Unpin Creator": "ピン留めを解除",
         "No pinned creators": "ピン留めした投稿者はありません",
