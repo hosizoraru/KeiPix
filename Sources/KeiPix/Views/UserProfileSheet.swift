@@ -222,11 +222,34 @@ struct UserProfileSheet: View {
 
     private var header: some View {
         ZStack(alignment: .bottomLeading) {
-            RemoteImageView(url: detail?.profile.backgroundImageURL)
-                .frame(height: 138)
-                .frame(maxWidth: .infinity)
-                .clipped()
-                .overlay(.ultraThinMaterial)
+            // Banner image renders crisply with a soft gradient at the
+            // bottom to keep the avatar / name overlay legible — mirrors
+            // Apple's profile layout in Music and the App Store. Falls back
+            // to a tinted placeholder when no background image exists or
+            // the user detail is still loading.
+            Group {
+                if let backgroundURL = detail?.profile.backgroundImageURL {
+                    RemoteImageView(url: backgroundURL)
+                } else {
+                    LinearGradient(
+                        colors: [.accentColor.opacity(0.45), .accentColor.opacity(0.18)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                }
+            }
+            .frame(height: 138)
+            .frame(maxWidth: .infinity)
+            .clipped()
+            .overlay(alignment: .bottom) {
+                LinearGradient(
+                    colors: [.black.opacity(0), .black.opacity(0.55)],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+                .frame(height: 88)
+                .allowsHitTesting(false)
+            }
 
             HStack(alignment: .bottom, spacing: 14) {
                 RemoteImageView(url: detail?.user.avatarURL ?? user.avatarURL)
