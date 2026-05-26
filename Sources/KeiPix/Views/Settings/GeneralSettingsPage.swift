@@ -12,8 +12,20 @@ struct GeneralSettingsPage: View {
                     }
                 }
                 .pickerStyle(.segmented)
+
+                Picker(L10n.theme, selection: store.settings_appColorSchemeBinding) {
+                    ForEach(AppColorScheme.allCases) { scheme in
+                        Label(scheme.title, systemImage: scheme.systemImage)
+                            .tag(scheme)
+                    }
+                }
+                .pickerStyle(.segmented)
             } header: {
                 Text(L10n.appearance)
+            } footer: {
+                Text(L10n.themeHint)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
 
             Section {

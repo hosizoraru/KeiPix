@@ -14,6 +14,14 @@ extension KeiPixStore {
         }
     }
 
+    var settings_appColorSchemeBinding: Binding<AppColorScheme> {
+        Binding {
+            self.appColorScheme
+        } set: { value in
+            self.setAppColorScheme(value)
+        }
+    }
+
     var settings_useOriginalImagesBinding: Binding<Bool> {
         Binding {
             self.useOriginalImagesInDetail

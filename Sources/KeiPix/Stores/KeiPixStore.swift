@@ -48,6 +48,8 @@ final class KeiPixStore {
     var accountSessionMode = KeiPixStore.loadAccountSessionMode()
     var appLanguage = UserDefaults.standard.string(forKey: "appLanguage")
         .flatMap(AppLanguage.init(rawValue:)) ?? .automatic
+    var appColorScheme = UserDefaults.standard.string(forKey: "appColorScheme")
+        .flatMap(AppColorScheme.init(rawValue:)) ?? .system
     var useOriginalImagesInDetail = UserDefaults.standard.bool(forKey: "useOriginalImagesInDetail")
     var galleryLayoutMode = KeiPixStore.loadGalleryLayoutMode()
     var showTranslatedTags = UserDefaults.standard.object(forKey: "showTranslatedTags") as? Bool ?? true

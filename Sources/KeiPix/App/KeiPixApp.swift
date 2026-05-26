@@ -14,6 +14,7 @@ struct KeiPixApp: App {
                 .frame(minWidth: 840, minHeight: 700)
                 .background(WindowCaptureProtectionBridge(isProtected: store.isMainWindowCaptureProtected))
                 .environment(\.locale, store.appLanguage.locale ?? .current)
+                .preferredColorScheme(store.appColorScheme.preferredColorScheme)
                 .onOpenURL { url in
                     Task { await store.openPixivLink(url) }
                 }
@@ -210,6 +211,7 @@ struct KeiPixApp: App {
                 .frame(minWidth: 900, minHeight: 680)
                 .background(WindowCaptureProtectionBridge(isProtected: store.isReaderWindowCaptureProtected))
                 .environment(\.locale, store.appLanguage.locale ?? .current)
+                .preferredColorScheme(store.appColorScheme.preferredColorScheme)
         }
         .defaultSize(width: 1180, height: 860)
         .restorationBehavior(.disabled)
@@ -217,6 +219,7 @@ struct KeiPixApp: App {
         Settings {
             SettingsView(store: store)
                 .environment(\.locale, store.appLanguage.locale ?? .current)
+                .preferredColorScheme(store.appColorScheme.preferredColorScheme)
         }
     }
 }

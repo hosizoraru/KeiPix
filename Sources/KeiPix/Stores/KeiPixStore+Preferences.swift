@@ -187,6 +187,11 @@ extension KeiPixStore {
         UserDefaults.standard.set(language.rawValue, forKey: "appLanguage")
     }
 
+    func setAppColorScheme(_ scheme: AppColorScheme) {
+        appColorScheme = scheme
+        UserDefaults.standard.set(scheme.rawValue, forKey: "appColorScheme")
+    }
+
     func setCompactArtworkCards(_ value: Bool) {
         setGalleryLayoutMode(value ? .compactGrid : .autoMasonry)
     }

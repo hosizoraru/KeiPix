@@ -470,6 +470,11 @@ enum L10n {
     static var simplifiedChinese: String { text("Simplified Chinese") }
     static var english: String { text("English") }
     static var appearance: String { text("Appearance") }
+    static var theme: String { text("Theme") }
+    static var themeSystem: String { text("System") }
+    static var themeLight: String { text("Light") }
+    static var themeDark: String { text("Dark") }
+    static var themeHint: String { text("Apply a fixed light or dark mode inside KeiPix while leaving macOS appearance unchanged.") }
     static var useOriginalImages: String { text("Use original images in detail") }
     static var imageQualityOriginal: String { text("Original Quality") }
     static var imageQualityStandard: String { text("Standard Quality") }
