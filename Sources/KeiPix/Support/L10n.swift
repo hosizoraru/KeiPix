@@ -607,6 +607,8 @@ enum L10n {
     static var spotlightCategoryIllust: String { text("Illust") }
     static var spotlightCategoryManga: String { text("Manga") }
     static var spotlightCategoryCosplay: String { text("Cosplay") }
+    static var shareSummary: String { text("Share Summary") }
+    static var shareSummaryHint: String { text("Share a formatted title, author, and link using your Sharing copy template.") }
     static var refreshToken: String { text("Refresh Token") }
     static var currentAccount: String { text("Current Account") }
     static var switchAccount: String { text("Switch Account") }

@@ -279,6 +279,20 @@ private struct ArtworkActionStrip: View {
                                 Label(L10n.share, systemImage: "square.and.arrow.up")
                             }
 
+                            // Pixez and Pixes ship a "share with text" entry
+                            // that bundles the title, author, and link using
+                            // the user's copy template. We piggy-back on the
+                            // same renderer so the format stays in sync with
+                            // the Sharing settings preview.
+                            ShareLink(
+                                item: artworkSummaryText,
+                                subject: Text(artwork.title),
+                                message: Text(artworkSummaryText)
+                            ) {
+                                Label(L10n.shareSummary, systemImage: "text.bubble")
+                            }
+                            .help(L10n.shareSummaryHint)
+
                             Button {
                                 PasteboardWriter.copy(url.absoluteString)
                                 showActionMessage(L10n.copied)
