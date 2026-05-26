@@ -9,7 +9,14 @@ final class KeiPixStore {
 
     var session: PixivSession?
     var storedAccounts: [PixivStoredAccount] = []
-    var selectedRoute: PixivRoute = .home
+    var selectedRoute: PixivRoute = {
+        // Honor the user's launch destination preference at first init —
+        // KeiPixStore is created on app launch, so this single call keeps
+        // the initial route in sync with what they picked in General.
+        let raw = UserDefaults.standard.string(forKey: "launchDestination") ?? ""
+        let destination = LaunchDestination(rawValue: raw) ?? .home
+        return destination.route
+    }()
     var artworks: [PixivArtwork] = []
     var selectedArtwork: PixivArtwork?
     var searchPopularPreviewArtworks: [PixivArtwork] = []
@@ -50,6 +57,11 @@ final class KeiPixStore {
         .flatMap(AppLanguage.init(rawValue:)) ?? .automatic
     var appColorScheme = UserDefaults.standard.string(forKey: "appColorScheme")
         .flatMap(AppColorScheme.init(rawValue:)) ?? .system
+    /// User-chosen destination to land on at launch. Mirrors the "open at
+    /// launch" preference Mail / Notes / Music ship and Pixes exposes
+    /// under its initial-page setting.
+    var launchDestination = UserDefaults.standard.string(forKey: "launchDestination")
+        .flatMap(LaunchDestination.init(rawValue:)) ?? .home
     var useOriginalImagesInDetail = UserDefaults.standard.bool(forKey: "useOriginalImagesInDetail")
     /// Per-content quality default for manga / multi-page reads.
     ///

@@ -22,6 +22,14 @@ extension KeiPixStore {
         }
     }
 
+    var settings_launchDestinationBinding: Binding<LaunchDestination> {
+        Binding {
+            self.launchDestination
+        } set: { value in
+            self.setLaunchDestination(value)
+        }
+    }
+
     var settings_useOriginalImagesBinding: Binding<Bool> {
         Binding {
             self.useOriginalImagesInDetail

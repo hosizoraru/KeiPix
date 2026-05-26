@@ -220,6 +220,11 @@ extension KeiPixStore {
         UserDefaults.standard.set(scheme.rawValue, forKey: "appColorScheme")
     }
 
+    func setLaunchDestination(_ destination: LaunchDestination) {
+        launchDestination = destination
+        UserDefaults.standard.set(destination.rawValue, forKey: "launchDestination")
+    }
+
     func setCompactArtworkCards(_ value: Bool) {
         setGalleryLayoutMode(value ? .compactGrid : .autoMasonry)
     }

@@ -48,6 +48,20 @@ struct GeneralSettingsPage: View {
             } header: {
                 Text(L10n.layout)
             }
+
+            Section {
+                Picker(L10n.openAtLaunch, selection: store.settings_launchDestinationBinding) {
+                    ForEach(LaunchDestination.allCases) { destination in
+                        Label(destination.title, systemImage: destination.systemImage)
+                            .tag(destination)
+                    }
+                }
+                .pickerStyle(.menu)
+            } footer: {
+                Text(L10n.openAtLaunchHint)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
         }
         .formStyle(.grouped)
         .navigationTitle(L10n.settingsGeneral)
