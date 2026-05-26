@@ -166,10 +166,12 @@ struct UserProfileSheet: View {
         }
         .sheet(item: $selectedRelatedUser) { relatedUser in
             UserProfileSheet(user: relatedUser, store: store)
+                .iPadFriendlySheet()
         }
         .sheet(item: $relationshipListMode) { mode in
             UserPreviewListView(store: store, mode: mode)
                 .frame(width: 920, height: 680)
+                .iPadFriendlySheet()
         }
         .sheet(item: $feedbackRequest) { request in
             FeedbackReportSheet(request: request) {
@@ -177,6 +179,7 @@ struct UserProfileSheet: View {
             } onComplete: { message in
                 showStatus(message)
             }
+            .iPadFriendlySheet()
         }
         .overlay(alignment: .bottom) {
             VStack(spacing: 8) {
@@ -273,6 +276,7 @@ struct UserProfileSheet: View {
 
                 followMenu
                 profileActionsMenu
+                SheetCloseButton(style: .bordered)
             }
             .padding(20)
         }

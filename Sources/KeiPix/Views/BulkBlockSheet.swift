@@ -19,12 +19,16 @@ struct BulkBlockSheet: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            VStack(alignment: .leading, spacing: 6) {
-                Text(L10n.blockFromArtwork)
-                    .font(.title3.weight(.semibold))
-                Text(L10n.blockSelectedHint)
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
+            HStack(alignment: .top, spacing: 12) {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(L10n.blockFromArtwork)
+                        .font(.title3.weight(.semibold))
+                    Text(L10n.blockSelectedHint)
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                }
+                Spacer(minLength: 0)
+                SheetCloseButton(style: .plain)
             }
 
             Form {
@@ -65,12 +69,15 @@ struct BulkBlockSheet: View {
                 Button(L10n.cancel) {
                     dismiss()
                 }
+                .keyboardShortcut(.cancelAction)
+
                 Button(role: .destructive) {
                     applyBlocks()
                 } label: {
                     Label(L10n.blockSelected, systemImage: "hand.raised.fill")
                 }
                 .buttonStyle(.borderedProminent)
+                .keyboardShortcut(.defaultAction)
                 .disabled(totalSelectedCount == 0)
             }
         }

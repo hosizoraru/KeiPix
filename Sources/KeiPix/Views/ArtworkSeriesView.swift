@@ -418,6 +418,11 @@ struct ArtworkSeriesVisualQASheetView: View {
         }
         .frame(width: 860, height: 680)
         .navigationTitle(L10n.artworkSeries)
+        .toolbar {
+            ToolbarItem(placement: .confirmationAction) {
+                SheetCloseButton(style: .bordered)
+            }
+        }
     }
 }
 

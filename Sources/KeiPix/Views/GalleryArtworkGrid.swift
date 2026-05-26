@@ -46,9 +46,11 @@ struct GalleryContentGrid: View {
             } onComplete: { message in
                 actionMessage = message
             }
+            .iPadFriendlySheet()
         }
         .sheet(item: $seriesArtwork) { artwork in
             ArtworkSeriesSheet(artwork: artwork, store: store)
+                .iPadFriendlySheet()
         }
     }
 

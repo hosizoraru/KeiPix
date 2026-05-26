@@ -110,12 +110,15 @@ struct DownloadQueueView: View {
             Text(action.message)
         }
         .sheet(item: $selectedPreview) { preview in
-            switch preview {
-            case .images(let item, let imageURLs):
-                DownloadedArtworkViewer(item: item, imageURLs: imageURLs, store: store)
-            case .ugoira(let item, let zipURL):
-                DownloadedUgoiraViewer(item: item, zipURL: zipURL)
+            Group {
+                switch preview {
+                case .images(let item, let imageURLs):
+                    DownloadedArtworkViewer(item: item, imageURLs: imageURLs, store: store)
+                case .ugoira(let item, let zipURL):
+                    DownloadedUgoiraViewer(item: item, zipURL: zipURL)
+                }
             }
+            .iPadFriendlySheet()
         }
     }
 

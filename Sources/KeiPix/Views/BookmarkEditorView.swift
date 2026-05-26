@@ -49,18 +49,24 @@ struct BookmarkEditorView: View {
 
             Divider()
 
-            Form {
-                visibilitySection
-                addCustomSection
-                if filteredGrouping.totalCount == 0 && isLoading == false {
-                    emptyStateSection
-                } else {
-                    ForEach(filteredGrouping.orderedSections, id: \.source) { section in
-                        tagSection(for: section.source, candidates: section.candidates)
+            ScrollView {
+                VStack(alignment: .leading, spacing: 14) {
+                    visibilityRow
+                    customTagRow
+                    if customChips.isEmpty == false {
+                        customChipsRow
+                    }
+                    if filteredGrouping.totalSectionCount == 0 && isLoading == false {
+                        emptyStatePanel
+                    } else {
+                        ForEach(filteredGrouping.orderedSections, id: \.source) { section in
+                            tagSectionPanel(for: section.source, candidates: section.candidates)
+                        }
                     }
                 }
+                .padding(.horizontal, 18)
+                .padding(.vertical, 14)
             }
-            .formStyle(.grouped)
 
             if let errorMessage {
                 Text(errorMessage)
@@ -74,8 +80,8 @@ struct BookmarkEditorView: View {
             Divider()
             footer
         }
-        .frame(width: 560)
-        .frame(minHeight: 560, idealHeight: 640)
+        .frame(width: 720)
+        .frame(minHeight: 720, idealHeight: 820, maxHeight: 980)
         .overlay(alignment: .bottom) {
             if let actionMessage {
                 FloatingStatusBanner(maxWidth: 460) {
@@ -144,6 +150,8 @@ struct BookmarkEditorView: View {
             }
 
             Spacer()
+
+            SheetCloseButton(style: .plain)
         }
         .padding(20)
     }
@@ -180,15 +188,23 @@ struct BookmarkEditorView: View {
                 }
             }
             .buttonStyle(.glassProminent)
+            .keyboardShortcut(.defaultAction)
             .disabled(isSaving || isLoading || canSave == false)
         }
         .padding(20)
     }
 
-    // MARK: - Form sections
+    // MARK: - Form rows (panel-styled, replaces Form/Section grouping so the
+    // sheet renders all three tag buckets without nested scroll views).
 
-    private var visibilitySection: some View {
-        Section(L10n.bookmarks) {
+    private var visibilityRow: some View {
+        HStack(spacing: 12) {
+            Label(L10n.bookmarks, systemImage: "lock")
+                .labelStyle(.titleAndIcon)
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(.secondary)
+                .frame(width: 110, alignment: .leading)
+
             Picker(L10n.bookmarks, selection: $restrict) {
                 ForEach(BookmarkRestrict.allCases) { option in
                     Text(option.title).tag(option)
@@ -201,10 +217,13 @@ struct BookmarkEditorView: View {
                 Task { await loadLibraryTags(for: value) }
             }
         }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
+        .keiPanel(12)
     }
 
-    private var addCustomSection: some View {
-        Section {
+    private var customTagRow: some View {
+        VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 8) {
                 TextField(L10n.tagName, text: $customTagInput)
                     .textFieldStyle(.roundedBorder)
@@ -214,13 +233,14 @@ struct BookmarkEditorView: View {
                     Label(L10n.addTag, systemImage: "plus")
                 }
                 .disabled(trimmedCustomTag.isEmpty || isSaving)
+
+                if libraryTags.isEmpty == false || artwork.tags.isEmpty == false {
+                    TextField(L10n.bookmarkTagFilterPlaceholder, text: $filterText)
+                        .textFieldStyle(.roundedBorder)
+                        .frame(maxWidth: 220)
+                }
             }
 
-            if libraryTags.isEmpty == false || artwork.tags.isEmpty == false {
-                TextField(L10n.bookmarkTagFilterPlaceholder, text: $filterText)
-                    .textFieldStyle(.roundedBorder)
-            }
-        } footer: {
             if isLoading {
                 HStack(spacing: 8) {
                     ProgressView().controlSize(.small)
@@ -230,25 +250,30 @@ struct BookmarkEditorView: View {
                 }
             }
         }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
+        .keiPanel(12)
     }
 
-    private var emptyStateSection: some View {
-        Section {
-            ContentUnavailableView(
-                L10n.noBookmarkTags,
-                systemImage: "tag",
-                description: Text(L10n.bookmarkTagNoCandidates)
-            )
-        }
-    }
-
-    private func tagSection(
-        for source: BookmarkTagSource,
-        candidates: [BookmarkTagCandidate]
-    ) -> some View {
-        Section {
-            FlowLayout(spacing: 8) {
-                ForEach(candidates) { candidate in
+    /// Custom chips live above the three primary buckets so the user can
+    /// see what they've typed without it counting as a section header.
+    private var customChipsRow: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                Label(L10n.bookmarkTagSectionCustom, systemImage: "plus.circle")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.secondary)
+                    .labelStyle(.titleAndIcon)
+                Text("\(customChips.count)")
+                    .font(.caption2.monospacedDigit())
+                    .foregroundStyle(.secondary)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 1)
+                    .background(.quaternary, in: Capsule())
+                Spacer()
+            }
+            FlowLayout(spacing: 6) {
+                ForEach(customChips) { candidate in
                     BookmarkTagChip(
                         candidate: candidate,
                         isSelected: selectedTags.contains(candidate.name),
@@ -257,7 +282,28 @@ struct BookmarkEditorView: View {
                     .disabled(isSaving)
                 }
             }
-        } header: {
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
+        .keiPanel(12)
+    }
+
+    private var emptyStatePanel: some View {
+        ContentUnavailableView(
+            L10n.noBookmarkTags,
+            systemImage: "tag",
+            description: Text(L10n.bookmarkTagNoCandidates)
+        )
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 20)
+        .keiPanel(12)
+    }
+
+    private func tagSectionPanel(
+        for source: BookmarkTagSource,
+        candidates: [BookmarkTagCandidate]
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
             HStack(alignment: .firstTextBaseline, spacing: 8) {
                 Label(source.title, systemImage: source.systemImage)
                     .font(.subheadline.weight(.semibold))
@@ -274,11 +320,25 @@ struct BookmarkEditorView: View {
 
                 bulkActionButtons(for: source, candidates: candidates)
             }
-        } footer: {
+
+            FlowLayout(spacing: 6) {
+                ForEach(candidates) { candidate in
+                    BookmarkTagChip(
+                        candidate: candidate,
+                        isSelected: selectedTags.contains(candidate.name),
+                        toggle: { toggleTag(candidate.name) }
+                    )
+                    .disabled(isSaving)
+                }
+            }
+
             Text(source.subtitle)
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 12)
+        .keiPanel(12)
     }
 
     @ViewBuilder
@@ -341,6 +401,13 @@ struct BookmarkEditorView: View {
             library: apply(g.library),
             custom: apply(g.custom)
         )
+    }
+
+    /// Custom chips render in their own panel above the three primary
+    /// sections — pulled from `filteredGrouping` so the live filter still
+    /// applies.
+    private var customChips: [BookmarkTagCandidate] {
+        filteredGrouping.custom
     }
 
     private var trimmedCustomTag: String {

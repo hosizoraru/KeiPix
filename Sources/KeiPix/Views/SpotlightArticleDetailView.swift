@@ -70,6 +70,7 @@ struct SpotlightArticleDetailView: View {
             }
             .sheet(item: $webProfileUser) { user in
                 UserProfileSheet(user: user, store: store)
+                    .iPadFriendlySheet()
             }
             .overlay(alignment: .bottom) {
                 if let actionMessage {

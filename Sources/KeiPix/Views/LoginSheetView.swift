@@ -24,6 +24,9 @@ struct LoginSheetView: View {
                     Image(systemName: "xmark")
                 }
                 .buttonStyle(.borderless)
+                .keyboardShortcut(.cancelAction)
+                .help(L10n.close)
+                .accessibilityLabel(L10n.close)
             }
             .padding(14)
             .background(.bar)

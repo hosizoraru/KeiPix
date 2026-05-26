@@ -11,14 +11,18 @@ struct FeedbackReportSheet: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            VStack(alignment: .leading, spacing: 6) {
-                Label(L10n.feedbackAndMute, systemImage: "exclamationmark.bubble")
-                    .font(.title3.weight(.semibold))
+            HStack(alignment: .top, spacing: 12) {
+                VStack(alignment: .leading, spacing: 6) {
+                    Label(L10n.feedbackAndMute, systemImage: "exclamationmark.bubble")
+                        .font(.title3.weight(.semibold))
 
-                Text(L10n.feedbackAndMuteHint)
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
+                    Text(L10n.feedbackAndMuteHint)
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                Spacer(minLength: 0)
+                SheetCloseButton(style: .plain)
             }
 
             VStack(alignment: .leading, spacing: 4) {
@@ -74,11 +78,18 @@ struct FeedbackReportSheet: View {
             }
 
             HStack {
+                Button(L10n.cancel) {
+                    dismiss()
+                }
+                .keyboardShortcut(.cancelAction)
+
                 Spacer()
+
                 Button(L10n.done) {
                     dismiss()
                 }
                 .buttonStyle(.glassProminent)
+                .keyboardShortcut(.defaultAction)
             }
         }
         .padding(20)

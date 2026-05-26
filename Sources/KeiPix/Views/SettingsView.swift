@@ -58,10 +58,12 @@ struct SettingsView: View {
         .sheet(isPresented: $coordinator.isAccountLoginPresented) {
             LoginSheetView(store: store)
                 .frame(width: 900, height: 680)
+                .iPadFriendlySheet()
         }
         .sheet(isPresented: $coordinator.isTokenLoginPresented) {
             TokenLoginSheetView(store: store)
                 .frame(width: 460, height: 300)
+                .iPadFriendlySheet()
         }
         .confirmationDialog(
             L10n.logout,

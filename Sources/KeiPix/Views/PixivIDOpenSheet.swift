@@ -9,7 +9,11 @@ struct PixivIDOpenSheet: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
-            header
+            HStack(alignment: .top, spacing: 12) {
+                header
+                Spacer(minLength: 0)
+                SheetCloseButton(style: .plain)
+            }
 
             Picker(L10n.openPixivIDTarget, selection: $target) {
                 ForEach(PixivIDOpenTarget.allCases) { option in
@@ -28,6 +32,7 @@ struct PixivIDOpenSheet: View {
                 Button(L10n.cancel) {
                     dismiss()
                 }
+                .keyboardShortcut(.cancelAction)
 
                 Spacer()
 
@@ -37,6 +42,7 @@ struct PixivIDOpenSheet: View {
                     Label(L10n.open, systemImage: target.systemImage)
                 }
                 .buttonStyle(.glassProminent)
+                .keyboardShortcut(.defaultAction)
                 .disabled(normalizedID == nil)
             }
         }

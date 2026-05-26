@@ -47,6 +47,9 @@ struct UserPreviewListView: View {
                     .lineLimit(1)
                     .help(headerDetail)
             }
+            ToolbarItem(placement: .confirmationAction) {
+                SheetCloseButton(style: .bordered)
+            }
         }
         .overlay(alignment: .bottom) {
             if isStatusBannerVisible {
@@ -96,6 +99,7 @@ struct UserPreviewListView: View {
         }
         .sheet(item: $profileUser) { user in
             UserProfileSheet(user: user, store: store)
+                .iPadFriendlySheet()
         }
         .sheet(item: $feedbackRequest) { request in
             FeedbackReportSheet(request: request) {
@@ -105,6 +109,7 @@ struct UserPreviewListView: View {
             } onComplete: { message in
                 bulkStatusText = message
             }
+            .iPadFriendlySheet()
         }
         .task(id: listRefreshKey) {
             await loadInitial()

@@ -110,17 +110,21 @@ struct ContentView: View {
         .sheet(isPresented: $store.isLoginPresented) {
             LoginSheetView(store: store)
                 .frame(width: 900, height: 680)
+                .iPadFriendlySheet()
         }
         .sheet(isPresented: $store.isTokenLoginPresented) {
             TokenLoginSheetView(store: store)
                 .frame(width: 460, height: 300)
+                .iPadFriendlySheet()
         }
         .sheet(item: $store.imageSourceSearchRequest) { request in
             ImageSourceSearchSheet(store: store, request: request)
                 .frame(width: 720, height: 560)
+                .iPadFriendlySheet()
         }
         .sheet(item: $store.presentedUserProfile) { user in
             UserProfileSheet(user: user, store: store)
+                .iPadFriendlySheet()
         }
         .sheet(item: $creatorProfileVisualQAUser) { user in
             UserProfileSheet(
@@ -130,12 +134,15 @@ struct ContentView: View {
                 visualQARelatedUsers: VisualQASampleData.creatorProfileRelatedUsers,
                 visualQARecentWorks: VisualQASampleData.creatorProfileRecentWorks
             )
+            .iPadFriendlySheet()
         }
         .sheet(isPresented: $isPixivIDOpenPresented) {
             PixivIDOpenSheet(store: store, showStatus: showStatus)
+                .iPadFriendlySheet()
         }
         .sheet(isPresented: $isSeriesSheetVisualQAPresented) {
             ArtworkSeriesVisualQASheetView(store: store)
+                .iPadFriendlySheet()
         }
         .sheet(item: $feedbackVisualQARequest) { request in
             FeedbackReportSheet(request: request, localMuteAction: {
@@ -143,6 +150,7 @@ struct ContentView: View {
             }) { message in
                 showStatus(message)
             }
+            .iPadFriendlySheet()
         }
         .confirmationDialog(
             store.pendingDangerAction?.title ?? L10n.moreActions,

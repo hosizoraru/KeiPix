@@ -61,6 +61,7 @@ struct ArtworkSummaryView: View {
                 }
                 .sheet(isPresented: $isUserProfilePresented) {
                     UserProfileSheet(user: artwork.user, store: store)
+                        .iPadFriendlySheet()
                 }
 
                 if let creatorActionMessage {
@@ -172,6 +173,7 @@ private struct CreatorQuickActionsMenu: View {
             } onComplete: { message in
                 showActionMessage(message)
             }
+            .iPadFriendlySheet()
         }
     }
 
@@ -237,6 +239,7 @@ private struct ArtworkActionStrip: View {
                         BookmarkEditorView(artwork: artwork, store: store) {
                             showActionMessage(String(format: L10n.savedBookmarkFormat, artwork.title))
                         }
+                        .iPadFriendlySheet()
                     }
 
                     Button {
@@ -417,6 +420,7 @@ private struct ArtworkActionStrip: View {
                         } onComplete: { message in
                             showActionMessage(message)
                         }
+                        .iPadFriendlySheet()
                     }
                 }
 
@@ -430,6 +434,7 @@ private struct ArtworkActionStrip: View {
                 pageCount: pageCount,
                 onComplete: showPageRangeDownloadMessage
             )
+            .iPadFriendlySheet()
         }
         .sheet(isPresented: $isPageSelectionDownloadPresented) {
             DownloadPageSelectionSheet(
@@ -439,11 +444,13 @@ private struct ArtworkActionStrip: View {
                 pageCount: pageCount,
                 onComplete: showPageSelectionDownloadMessage
             )
+            .iPadFriendlySheet()
         }
         .sheet(isPresented: $isBulkBlockPresented) {
             BulkBlockSheet(artwork: artwork, store: store) { applied in
                 showBulkBlockMessage(applied)
             }
+            .iPadFriendlySheet()
         }
     }
 

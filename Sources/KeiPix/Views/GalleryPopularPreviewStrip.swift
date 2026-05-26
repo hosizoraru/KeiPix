@@ -104,6 +104,7 @@ struct SearchPopularPreviewStrip: View {
                 } onComplete: { message in
                     actionMessage = message
                 }
+                .iPadFriendlySheet()
             }
         }
     }

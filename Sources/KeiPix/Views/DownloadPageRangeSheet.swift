@@ -31,12 +31,16 @@ struct DownloadPageRangeSheet: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
-            VStack(alignment: .leading, spacing: 6) {
-                Text(L10n.downloadPageRange)
-                    .font(.title3.weight(.semibold))
-                Text(rangeSummary)
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
+            HStack(alignment: .top, spacing: 12) {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(L10n.downloadPageRange)
+                        .font(.title3.weight(.semibold))
+                    Text(rangeSummary)
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                }
+                Spacer(minLength: 0)
+                SheetCloseButton(style: .plain)
             }
 
             VStack(alignment: .leading, spacing: 12) {
@@ -65,12 +69,15 @@ struct DownloadPageRangeSheet: View {
                 Button(L10n.cancel) {
                     dismiss()
                 }
+                .keyboardShortcut(.cancelAction)
+
                 Button {
                     enqueueRange()
                 } label: {
                     Label(L10n.addToDownloadQueue, systemImage: "arrow.down.circle")
                 }
                 .buttonStyle(.borderedProminent)
+                .keyboardShortcut(.defaultAction)
             }
         }
         .padding(22)

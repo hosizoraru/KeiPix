@@ -7,12 +7,16 @@ struct MutableActionQAAuthorizationSheet: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
-            VStack(alignment: .leading, spacing: 6) {
-                Label(L10n.mutableActionQAAuthorization, systemImage: "hand.raised.circle")
-                    .font(.title2.weight(.semibold))
-                Text(L10n.mutableActionQAAuthorizationHint)
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
+            HStack(alignment: .top, spacing: 12) {
+                VStack(alignment: .leading, spacing: 6) {
+                    Label(L10n.mutableActionQAAuthorization, systemImage: "hand.raised.circle")
+                        .font(.title2.weight(.semibold))
+                    Text(L10n.mutableActionQAAuthorizationHint)
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                }
+                Spacer(minLength: 0)
+                SheetCloseButton(style: .plain)
             }
 
             TextField(L10n.mutableActionQAAuthorizationPrompt, text: $confirmationText)
@@ -23,6 +27,7 @@ struct MutableActionQAAuthorizationSheet: View {
                 Button(L10n.cancel) {
                     dismiss()
                 }
+                .keyboardShortcut(.cancelAction)
 
                 Spacer()
 
@@ -32,6 +37,7 @@ struct MutableActionQAAuthorizationSheet: View {
                     Label(L10n.runMutableActionQA, systemImage: "checkmark.shield")
                 }
                 .buttonStyle(.glassProminent)
+                .keyboardShortcut(.defaultAction)
                 .disabled(MutableActionQAAuthorization.isAuthorized(confirmationText) == false)
             }
         }

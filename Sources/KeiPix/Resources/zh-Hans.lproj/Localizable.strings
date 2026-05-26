@@ -990,3 +990,18 @@
 "Remote %d tags / %d creators · Local %d tags / %d creators · Missing locally %d tags / %d creators · Local-only %d tags / %d creators · Pixiv limit %d" = "远端 %d 个标签 / %d 个作者 · 本地 %d 个标签 / %d 个作者 · 本地缺少 %d 个标签 / %d 个作者 · 仅本地 %d 个标签 / %d 个作者 · Pixiv 上限 %d";
 "Local-only artwork mutes %d · comment phrases %d" = "仅本地作品屏蔽 %d · 评论短语 %d";
 "Real account required" = "需要真实账号";
+
+// Bookmark editor — tag sections
+"Recommended" = "推荐标签";
+"Tags this artwork shares with your bookmark library — usually the safest picks." = "你常用且作品也带的标签，最安全的快速选项。";
+"From This Artwork" = "作品标签";
+"Tags Pixiv attached to the artwork that you have not used in your bookmarks before." = "Pixiv 给这幅作品打的标签。";
+"From Your Library" = "已收藏标签";
+"Tags you've used elsewhere — pick one to file this artwork under an existing category." = "你在其他收藏中用过的标签，可用来归入已有分类。";
+"Custom Tags" = "自定义标签";
+"Free-form tags you typed in this session." = "本次会话里你手动输入的标签。";
+"Add All" = "全部添加";
+"Remove All" = "全部移除";
+"%d selected" = "已选 %d";
+"No tags from this source. Type your own below." = "这一类暂无候选标签，可在上方输入自定义。";
+"Filter tags" = "筛选标签";

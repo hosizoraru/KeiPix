@@ -61,6 +61,9 @@ struct ImageSourceSearchSheet: View {
                 } label: {
                     Label(L10n.close, systemImage: "xmark")
                 }
+                .keyboardShortcut(.cancelAction)
+                .help(L10n.close)
+                .accessibilityLabel(L10n.close)
             }
             .labelStyle(.iconOnly)
             .controlSize(.small)

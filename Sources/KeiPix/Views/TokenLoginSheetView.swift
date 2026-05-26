@@ -25,6 +25,8 @@ struct TokenLoginSheetView: View {
                 }
 
                 Spacer(minLength: 0)
+
+                SheetCloseButton(action: closeSheet, style: .plain)
             }
 
             SecureField(L10n.refreshToken, text: $refreshToken)
@@ -45,10 +47,10 @@ struct TokenLoginSheetView: View {
 
             HStack {
                 Button(L10n.cancel) {
-                    store.errorMessage = nil
-                    store.isTokenLoginPresented = false
-                    dismiss()
+                    closeSheet()
                 }
+                .keyboardShortcut(.cancelAction)
+
                 Spacer()
                 Button {
                     importToken()
@@ -61,10 +63,17 @@ struct TokenLoginSheetView: View {
                     }
                 }
                 .buttonStyle(.borderedProminent)
+                .keyboardShortcut(.defaultAction)
                 .disabled(trimmedToken.isEmpty || isImporting)
             }
         }
         .padding(20)
+    }
+
+    private func closeSheet() {
+        store.errorMessage = nil
+        store.isTokenLoginPresented = false
+        dismiss()
     }
 
     private var trimmedToken: String {

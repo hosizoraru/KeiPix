@@ -589,6 +589,7 @@ private struct CommentRow: View {
             FeedbackReportSheet(request: request, localMuteAction: localMuteAction) { message in
                 status(message)
             }
+            .iPadFriendlySheet()
         }
     }
 

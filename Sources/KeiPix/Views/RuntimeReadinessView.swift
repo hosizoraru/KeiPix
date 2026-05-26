@@ -509,11 +509,13 @@ struct RuntimeReadinessView: View {
             MutableActionQAAuthorizationSheet {
                 Task { await runMutableActionQA() }
             }
+            .iPadFriendlySheet()
         }
         .sheet(item: $state.feedbackPreviewRequest) { request in
             FeedbackReportSheet(request: request, localMuteAction: nil) { message in
                 cacheMessage = message
             }
+            .iPadFriendlySheet()
         }
     }
 

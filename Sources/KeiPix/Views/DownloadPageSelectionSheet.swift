@@ -37,12 +37,16 @@ struct DownloadPageSelectionSheet: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            VStack(alignment: .leading, spacing: 6) {
-                Text(L10n.selectPagesToSave)
-                    .font(.title3.weight(.semibold))
-                Text(String(format: L10n.pagesSelectedFormat, selectedPages.count, pageCount))
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
+            HStack(alignment: .top, spacing: 12) {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(L10n.selectPagesToSave)
+                        .font(.title3.weight(.semibold))
+                    Text(String(format: L10n.pagesSelectedFormat, selectedPages.count, pageCount))
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                }
+                Spacer(minLength: 0)
+                SheetCloseButton(style: .plain)
             }
 
             HStack(spacing: 8) {
@@ -76,12 +80,15 @@ struct DownloadPageSelectionSheet: View {
                 Button(L10n.cancel) {
                     dismiss()
                 }
+                .keyboardShortcut(.cancelAction)
+
                 Button {
                     enqueueSelection()
                 } label: {
                     Label(L10n.addToDownloadQueue, systemImage: "arrow.down.circle")
                 }
                 .buttonStyle(.borderedProminent)
+                .keyboardShortcut(.defaultAction)
                 .disabled(selectedPages.isEmpty)
             }
         }
