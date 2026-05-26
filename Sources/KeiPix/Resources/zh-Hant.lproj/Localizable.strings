@@ -506,6 +506,8 @@
 "Illust detail quality" = "插畫詳情畫质";
 "Manga detail quality" = "漫畫詳情畫质";
 "Pixiv ships every illust at three sizes. Pick the rung that matches your bandwidth — Medium loads fastest, Original is the source asset." = "Pixiv 為每张作品提供三档尺寸，按帶寬與畫质需求選擇 — 中等載入最快，原圖為原始素材。";
+"Translate" = "翻譯";
+"Open the system translation sheet for this text. Lets you pick a target language, copy the result, or flip back to the original." = "為该文本開啟系統翻譯面板，可選擇目標語言、複製譯文，或切換回原文。";
 "Show translated tag names" = "顯示標籤翻譯名";
 "Content Filters" = "內容過濾";
 "Show content badges" = "顯示內容標示";
@@ -992,6 +994,13 @@
 "Settings organization" = "設定組織";
 "Reading, discovery, safety, downloads, privacy, and QA controls stay grouped in native Settings." = "閱讀、發現、安全、下載、隱私和 QA 控制需要在原生設定中分組。";
 "Keep Settings search and grouping in regression coverage." = "保持設定搜尋與分組的回歸覆盖。";
+"Image quality tiers" = "圖像畫质档位";
+"Feed preview, illust detail, and manga detail each persist a Medium / Large / Original tier and stay aligned with the legacy HD/Standard toggle." = "資訊流預覽、插畫詳情和漫畫詳情各自持久化中等 / 较大 / 原圖档位，並與原有的高清/標准開關保持一致。";
+"Keep the lock-step between the tier picker and the legacy preferOriginal flag in regression coverage." = "在回歸覆盖中保持档位選擇器與原有 preferOriginal 標志的同步。";
+"Caption translation" = "簡介翻譯";
+"Apple's system translation sheet stays reachable on artwork captions and comments, gated to skip empty / emoji-only text." = "在作品簡介與留言中保留 Apple 系統翻譯面板入口，並跳過空文本與纯表情。";
+"Keep the translatable-text gate in regression coverage so we never surface a no-op Translate button." = "在回歸覆盖中保留可翻譯文本的門控，避免出現無意義的翻譯按钮。";
+"CaptionTranslationAvailability accepts Pixiv caption shapes and rejects emoji-only blurbs." = "CaptionTranslationAvailability 接受 Pixiv 簡介格式並拒绝纯表情短文本。";
 "System Proxy" = "系統代理";
 "Direct connection" = "直連";
 "Pixiv API" = "Pixiv API";

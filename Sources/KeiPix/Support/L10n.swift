@@ -508,6 +508,8 @@ enum L10n {
     static var illustDetailQuality: String { text("Illust detail quality") }
     static var mangaDetailQuality: String { text("Manga detail quality") }
     static var imageQualityTierHint: String { text("Pixiv ships every illust at three sizes. Pick the rung that matches your bandwidth — Medium loads fastest, Original is the source asset.") }
+    static var translate: String { text("Translate") }
+    static var translateCaptionHelp: String { text("Open the system translation sheet for this text. Lets you pick a target language, copy the result, or flip back to the original.") }
     static var downloadSelectedPages: String { text("Save Selected Pages…") }
     static var selectPagesToSave: String { text("Select Pages to Save") }
     static var selectAllPages: String { text("Select All") }
@@ -842,6 +844,13 @@ enum L10n {
     static var qaSettingsOrganization: String { text("Settings organization") }
     static var qaSettingsOrganizationRequirement: String { text("Reading, discovery, safety, downloads, privacy, and QA controls stay grouped in native Settings.") }
     static var qaSettingsOrganizationNext: String { text("Keep Settings search and grouping in regression coverage.") }
+    static var qaImageQualityTier: String { text("Image quality tiers") }
+    static var qaImageQualityTierRequirement: String { text("Feed preview, illust detail, and manga detail each persist a Medium / Large / Original tier and stay aligned with the legacy HD/Standard toggle.") }
+    static var qaImageQualityTierNext: String { text("Keep the lock-step between the tier picker and the legacy preferOriginal flag in regression coverage.") }
+    static var qaCaptionTranslation: String { text("Caption translation") }
+    static var qaCaptionTranslationRequirement: String { text("Apple's system translation sheet stays reachable on artwork captions and comments, gated to skip empty / emoji-only text.") }
+    static var qaCaptionTranslationNext: String { text("Keep the translatable-text gate in regression coverage so we never surface a no-op Translate button.") }
+    static var qaCaptionTranslationEvidence: String { text("CaptionTranslationAvailability accepts Pixiv caption shapes and rejects emoji-only blurbs.") }
     static var systemProxy: String { text("System Proxy") }
     static var directConnection: String { text("Direct connection") }
     static var pixivAPI: String { text("Pixiv API") }

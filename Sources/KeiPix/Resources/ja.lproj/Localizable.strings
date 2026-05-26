@@ -495,6 +495,8 @@
 "Illust detail quality" = "イラスト詳細画質";
 "Manga detail quality" = "マンガ詳細画質";
 "Pixiv ships every illust at three sizes. Pick the rung that matches your bandwidth — Medium loads fastest, Original is the source asset." = "Pixiv は各作品を 3 段階のサイズで配信しています。回線に合わせて選んでください — 中が最速、オリジナルが原本です。";
+"Translate" = "翻訳";
+"Open the system translation sheet for this text. Lets you pick a target language, copy the result, or flip back to the original." = "システムの翻訳シートを開きます。翻訳先の言語を選んだり、訳文をコピーしたり、原文に戻したりできます。";
 "Show translated tag names" = "タグの翻訳名を表示";
 "Content Filters" = "コンテンツフィルター";
 "Show content badges" = "コンテンツバッジを表示";
@@ -976,6 +978,13 @@
 "Settings organization" = "Settings organization";
 "Reading, discovery, safety, downloads, privacy, and QA controls stay grouped in native Settings." = "Reading, discovery, safety, downloads, privacy, and QA controls stay grouped in native Settings.";
 "Keep Settings search and grouping in regression coverage." = "Keep Settings search and grouping in regression coverage.";
+"Image quality tiers" = "画質ティア";
+"Feed preview, illust detail, and manga detail each persist a Medium / Large / Original tier and stay aligned with the legacy HD/Standard toggle." = "フィードプレビュー、イラスト詳細、マンガ詳細はそれぞれ「中 / 大 / オリジナル」のティアを保持し、従来の HD/標準 トグルと整合します。";
+"Keep the lock-step between the tier picker and the legacy preferOriginal flag in regression coverage." = "ティアピッカーと従来の preferOriginal フラグの同期をリグレッションで担保してください。";
+"Caption translation" = "キャプション翻訳";
+"Apple's system translation sheet stays reachable on artwork captions and comments, gated to skip empty / emoji-only text." = "作品キャプションとコメントから Apple の翻訳シートにアクセスでき、空文や絵文字のみの文はスキップします。";
+"Keep the translatable-text gate in regression coverage so we never surface a no-op Translate button." = "意味のない「翻訳」ボタンが出ないよう、翻訳対象判定をリグレッションで担保してください。";
+"CaptionTranslationAvailability accepts Pixiv caption shapes and rejects emoji-only blurbs." = "CaptionTranslationAvailability は Pixiv のキャプション形式を受け付け、絵文字のみの短文は除外します。";
 "System Proxy" = "System Proxy";
 "Direct connection" = "Direct connection";
 "Pixiv API" = "Pixiv API";

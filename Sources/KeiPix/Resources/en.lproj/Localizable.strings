@@ -490,6 +490,8 @@
 "Illust detail quality" = "Illust detail quality";
 "Manga detail quality" = "Manga detail quality";
 "Pixiv ships every illust at three sizes. Pick the rung that matches your bandwidth — Medium loads fastest, Original is the source asset." = "Pixiv ships every illust at three sizes. Pick the rung that matches your bandwidth — Medium loads fastest, Original is the source asset.";
+"Translate" = "Translate";
+"Open the system translation sheet for this text. Lets you pick a target language, copy the result, or flip back to the original." = "Open the system translation sheet for this text. Lets you pick a target language, copy the result, or flip back to the original.";
 "Show translated tag names" = "Show translated tag names";
 "Content Filters" = "Content Filters";
 "Show content badges" = "Show content badges";
@@ -971,6 +973,13 @@
 "Settings organization" = "Settings organization";
 "Reading, discovery, safety, downloads, privacy, and QA controls stay grouped in native Settings." = "Reading, discovery, safety, downloads, privacy, and QA controls stay grouped in native Settings.";
 "Keep Settings search and grouping in regression coverage." = "Keep Settings search and grouping in regression coverage.";
+"Image quality tiers" = "Image quality tiers";
+"Feed preview, illust detail, and manga detail each persist a Medium / Large / Original tier and stay aligned with the legacy HD/Standard toggle." = "Feed preview, illust detail, and manga detail each persist a Medium / Large / Original tier and stay aligned with the legacy HD/Standard toggle.";
+"Keep the lock-step between the tier picker and the legacy preferOriginal flag in regression coverage." = "Keep the lock-step between the tier picker and the legacy preferOriginal flag in regression coverage.";
+"Caption translation" = "Caption translation";
+"Apple's system translation sheet stays reachable on artwork captions and comments, gated to skip empty / emoji-only text." = "Apple's system translation sheet stays reachable on artwork captions and comments, gated to skip empty / emoji-only text.";
+"Keep the translatable-text gate in regression coverage so we never surface a no-op Translate button." = "Keep the translatable-text gate in regression coverage so we never surface a no-op Translate button.";
+"CaptionTranslationAvailability accepts Pixiv caption shapes and rejects emoji-only blurbs." = "CaptionTranslationAvailability accepts Pixiv caption shapes and rejects emoji-only blurbs.";
 "System Proxy" = "System Proxy";
 "Direct connection" = "Direct connection";
 "Pixiv API" = "Pixiv API";

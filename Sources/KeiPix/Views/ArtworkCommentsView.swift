@@ -550,6 +550,12 @@ private struct CommentRow: View {
                             Label(L10n.copyComment, systemImage: "doc.on.doc")
                         }
                         .buttonStyle(.borderless)
+
+                        // Per-comment translate via the Apple Translation
+                        // sheet. Gated by `CaptionTranslationAvailability`
+                        // so emoji-only / stamp-only comments don't get
+                        // a noisy "Translate" affordance.
+                        ArtworkTranslateButton(text: text, style: .compact)
                     }
 
                     Menu {

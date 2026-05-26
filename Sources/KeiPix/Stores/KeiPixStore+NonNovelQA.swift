@@ -237,7 +237,36 @@ extension KeiPixStore {
                 "\(L10n.creatorCopyTemplate): \(CreatorCopyTemplate(rawValue: creatorCopyTemplate).render(context: .preview).visibleLineCount)"
             ].joined(separator: " · ")
         )
-        return [nativeRoute, gallery, downloads, safety, offline, ugoira, settings, sharing]
+        // Image quality tiers — passes once all three surfaces (feed,
+        // illust, manga) have a persisted tier and the legacy
+        // `useOriginalImagesInDetail` bridge stays in lock-step. The
+        // matrix can't run the picker visually so we anchor the
+        // regression on the resolved enum / legacy-Bool agreement,
+        // which is what would silently drift if a future refactor
+        // forgot to touch the lock-step setter.
+        let imageQuality = qaStaticItem(
+            id: "image-quality-tier",
+            passed: illustDetailImageQualityTier.prefersOriginal == useOriginalImagesInDetail
+                && mangaDetailImageQualityTier.prefersOriginal == useOriginalImagesForManga,
+            evidence: [
+                "\(L10n.feedPreviewQuality): \(feedPreviewImageQualityTier.title)",
+                "\(L10n.illustDetailQuality): \(illustDetailImageQualityTier.title)",
+                "\(L10n.mangaDetailQuality): \(mangaDetailImageQualityTier.title)"
+            ].joined(separator: " · ")
+        )
+        // Caption translation — passes when the gate helper agrees on
+        // the canonical Pixiv caption shapes (typical mixed-script
+        // post + emoji-only blurb). Mirrors the unit test floor so
+        // both production code and runtime QA stay aligned.
+        let translationSamplesPassed = CaptionTranslationAvailability.canTranslate("可愛いイラストです🌸")
+            && CaptionTranslationAvailability.canTranslate("Hello world") == true
+            && CaptionTranslationAvailability.canTranslate("🌸🌸🌸") == false
+        let captionTranslation = qaStaticItem(
+            id: "caption-translation",
+            passed: translationSamplesPassed,
+            evidence: L10n.qaCaptionTranslationEvidence
+        )
+        return [nativeRoute, gallery, downloads, safety, offline, ugoira, settings, sharing, imageQuality, captionTranslation]
     }
 
     private func qaFeedItem(
@@ -427,7 +456,9 @@ private extension KeiPixStore {
         NonNovelQATemplate(id: "local-cache-offline", priority: .p2, title: L10n.qaLocalCacheOffline, requirement: L10n.qaLocalCacheOfflineRequirement, nextAction: L10n.qaLocalCacheOfflineNext, systemImage: "externaldrive"),
         NonNovelQATemplate(id: "ugoira", priority: .p2, title: L10n.ugoira, requirement: L10n.qaUgoiraRequirement, nextAction: L10n.qaUgoiraNext, systemImage: "play.rectangle"),
         NonNovelQATemplate(id: "settings-organization", priority: .p2, title: L10n.qaSettingsOrganization, requirement: L10n.qaSettingsOrganizationRequirement, nextAction: L10n.qaSettingsOrganizationNext, systemImage: "gearshape"),
-        NonNovelQATemplate(id: "sharing-copy", priority: .p2, title: L10n.sharing, requirement: L10n.copyTemplateHint, nextAction: L10n.qaSettingsOrganizationNext, systemImage: "square.and.arrow.up")
+        NonNovelQATemplate(id: "sharing-copy", priority: .p2, title: L10n.sharing, requirement: L10n.copyTemplateHint, nextAction: L10n.qaSettingsOrganizationNext, systemImage: "square.and.arrow.up"),
+        NonNovelQATemplate(id: "image-quality-tier", priority: .p1, title: L10n.qaImageQualityTier, requirement: L10n.qaImageQualityTierRequirement, nextAction: L10n.qaImageQualityTierNext, systemImage: "photo.stack"),
+        NonNovelQATemplate(id: "caption-translation", priority: .p1, title: L10n.qaCaptionTranslation, requirement: L10n.qaCaptionTranslationRequirement, nextAction: L10n.qaCaptionTranslationNext, systemImage: "character.bubble")
     ]
 }
 
