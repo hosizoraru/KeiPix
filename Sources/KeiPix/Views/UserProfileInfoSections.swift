@@ -1,20 +1,52 @@
 import SwiftUI
 
-/// Hero stats strip at the top of the profile sheet.
+/// Tappable stats strip — the sheet's primary navigation hub.
 ///
-/// Apple's own creator-style profiles (Music, App Store, TV) lead with a
-/// horizontal strip of large numerical stats separated by hairline rules.
-/// We mirror that here so totals are scannable at a glance — readable
-/// numbers, secondary labels, no chart-junk.
-struct UserProfileMetricsSection: View {
+/// In the previous layout the same four totals (illustrations, manga,
+/// public saves, following) were rendered twice: once as a static hero
+/// strip, then again as a 6-cell "Collection Shortcuts" grid that
+/// duplicated each number under a tappable card. That wasted ~120 pt of
+/// vertical space on every sheet without adding new information.
+///
+/// Pixiv Web's profile collapses the duplication by making the **stats
+/// themselves** the navigation: tapping `1.2K Illustrations` opens the
+/// illustrations feed; tapping `3.4K Following` opens the following
+/// list. Apple's Music artist sheet does the same for `Songs` /
+/// `Albums` / `Followers`. We follow that pattern here so the numbers
+/// stay scannable *and* every cell does double duty as a routing hub.
+struct UserProfileStatsSection: View {
     let profile: PixivUserProfile?
+    let openIllustrations: () -> Void
+    let openManga: () -> Void
+    let openPublicBookmarks: () -> Void
+    let openFollowing: () -> Void
 
     private var entries: [Entry] {
         [
-            Entry(title: L10n.illustrations, value: profile?.totalIllusts ?? 0, systemImage: "photo"),
-            Entry(title: L10n.manga, value: profile?.totalManga ?? 0, systemImage: "book.pages"),
-            Entry(title: L10n.publicSaves, value: profile?.totalIllustBookmarksPublic ?? 0, systemImage: "bookmark"),
-            Entry(title: L10n.followingCreators, value: profile?.totalFollowUsers ?? 0, systemImage: "person.2")
+            Entry(
+                title: L10n.illustrations,
+                value: profile?.totalIllusts ?? 0,
+                systemImage: "photo",
+                action: openIllustrations
+            ),
+            Entry(
+                title: L10n.manga,
+                value: profile?.totalManga ?? 0,
+                systemImage: "book.pages",
+                action: openManga
+            ),
+            Entry(
+                title: L10n.publicSaves,
+                value: profile?.totalIllustBookmarksPublic ?? 0,
+                systemImage: "bookmark",
+                action: openPublicBookmarks
+            ),
+            Entry(
+                title: L10n.followingCreators,
+                value: profile?.totalFollowUsers ?? 0,
+                systemImage: "person.2",
+                action: openFollowing
+            )
         ]
     }
 
@@ -24,14 +56,13 @@ struct UserProfileMetricsSection: View {
                 if entry.id != entries.first?.id {
                     Divider()
                         .frame(height: 36)
-                        .padding(.horizontal, 4)
                 }
-                ProfileMetricCell(entry: entry)
+                ProfileStatCell(entry: entry)
                     .frame(maxWidth: .infinity)
             }
         }
-        .padding(.horizontal, 18)
-        .padding(.vertical, 14)
+        .padding(.horizontal, 6)
+        .padding(.vertical, 8)
         .keiPanel(14)
     }
 
@@ -39,34 +70,120 @@ struct UserProfileMetricsSection: View {
         let title: String
         let value: Int
         let systemImage: String
+        let action: () -> Void
 
         var id: String { title }
     }
 }
 
-private struct ProfileMetricCell: View {
-    let entry: UserProfileMetricsSection.Entry
+private struct ProfileStatCell: View {
+    let entry: UserProfileStatsSection.Entry
+    @State private var isHovering = false
 
     var body: some View {
-        VStack(spacing: 4) {
-            HStack(alignment: .firstTextBaseline, spacing: 6) {
-                Image(systemName: entry.systemImage)
-                    .font(.caption)
+        Button(action: entry.action) {
+            VStack(spacing: 4) {
+                HStack(alignment: .firstTextBaseline, spacing: 6) {
+                    Image(systemName: entry.systemImage)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Text(entry.value.formatted(.number.notation(.compactName)))
+                        .font(.title3.weight(.semibold).monospacedDigit())
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
+                }
+                Text(entry.title)
+                    .font(.caption2)
                     .foregroundStyle(.secondary)
-                Text(entry.value.formatted(.number.notation(.compactName)))
-                    .font(.title3.weight(.semibold).monospacedDigit())
                     .lineLimit(1)
-                    .minimumScaleFactor(0.8)
             }
-            Text(entry.title)
-                .font(.caption2)
-                .foregroundStyle(.secondary)
-                .lineLimit(1)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 8)
+            .padding(.horizontal, 6)
+            .contentShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+            .background {
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .fill(Color.primary.opacity(isHovering ? 0.06 : 0))
+            }
         }
-        .frame(maxWidth: .infinity)
+        .buttonStyle(.plain)
+        .onHover { isHovering = $0 }
         .help("\(entry.title) · \(entry.value.formatted())")
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(entry.title): \(entry.value.formatted())")
+        .accessibilityAddTraits(.isButton)
+    }
+}
+
+/// Compact "network" rail: followers + related creators.
+///
+/// These two routes don't have a numerical hero stat (we don't get a
+/// follower count from Pixiv's app API, and "related" is dynamic), so
+/// they don't fit into `UserProfileStatsSection`. Splitting them off
+/// into a chip rail mirrors Pixiv Web's `Following / Followers / 朋友`
+/// sub-row right under the main stats.
+struct UserProfileNetworkLinks: View {
+    let relatedUsersCount: Int
+    let isLoadingRelatedUsers: Bool
+    let openFollowers: () -> Void
+    let openRelated: () -> Void
+
+    var body: some View {
+        HStack(spacing: 8) {
+            networkChip(
+                title: L10n.followers,
+                badge: nil,
+                systemImage: "person.2",
+                isLoading: false,
+                action: openFollowers
+            )
+
+            networkChip(
+                title: L10n.relatedCreators,
+                badge: relatedUsersCount > 0
+                    ? "\(relatedUsersCount.formatted())+"
+                    : nil,
+                systemImage: "person.3",
+                isLoading: isLoadingRelatedUsers,
+                action: openRelated
+            )
+            .disabled(isLoadingRelatedUsers)
+
+            Spacer(minLength: 0)
+        }
+    }
+
+    private func networkChip(
+        title: String,
+        badge: String?,
+        systemImage: String,
+        isLoading: Bool,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            HStack(spacing: 6) {
+                Image(systemName: systemImage)
+                    .imageScale(.small)
+                Text(title)
+                    .font(.caption.weight(.medium))
+                if let badge {
+                    Text(badge)
+                        .font(.caption2.monospacedDigit().weight(.semibold))
+                        .padding(.horizontal, 5)
+                        .padding(.vertical, 1)
+                        .background(.quaternary, in: Capsule())
+                }
+                if isLoading {
+                    ProgressView().controlSize(.small)
+                }
+                Image(systemName: "chevron.forward")
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
+            }
+        }
+        .buttonStyle(.bordered)
+        .controlSize(.small)
+        .help(title)
     }
 }
 

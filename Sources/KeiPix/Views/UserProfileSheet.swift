@@ -96,10 +96,10 @@ struct UserProfileSheet: View {
                 requestUnfollow: {
                     pendingDangerAction = AppDangerAction(kind: .unfollowCreator(currentUser, followRestrict))
                 },
+                isPinned: store.isPinnedCreator(currentUser),
+                togglePin: togglePinnedCreator,
                 openInPixivURL: currentUser.pixivURL,
                 copyLink: copyProfileLink,
-                togglePin: togglePinnedCreator,
-                isPinned: store.isPinnedCreator(currentUser),
                 requestFeedback: {
                     feedbackRequest = .creator(currentUser)
                 }
@@ -192,18 +192,24 @@ struct UserProfileSheet: View {
     private var loadedScroll: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                UserProfileMetricsSection(profile: detail?.profile)
-
-                UserProfileCollectionShortcutsSection(
+                // Stats strip + network rail collapse the old hero +
+                // collection-shortcuts duplication into a single compact
+                // navigation hub. Each stat number is itself a tappable
+                // route into the matching feed/list, mirroring Pixiv
+                // Web's profile stats row.
+                UserProfileStatsSection(
                     profile: detail?.profile,
-                    relatedUsersCount: relatedUsers.count,
-                    isLoadingRelatedUsers: isLoadingRelatedUsers,
                     openIllustrations: { openFeed(.userIllustrations) },
                     openManga: { openFeed(.userManga) },
                     openPublicBookmarks: { openFeed(.userPublicBookmarks) },
                     openFollowing: {
                         relationshipListMode = .userFollowing(currentUser)
-                    },
+                    }
+                )
+
+                UserProfileNetworkLinks(
+                    relatedUsersCount: relatedUsers.count,
+                    isLoadingRelatedUsers: isLoadingRelatedUsers,
                     openFollowers: {
                         relationshipListMode = .userFollowers(currentUser)
                     },

@@ -381,9 +381,6 @@ enum L10n {
     static var creatorManga: String { text("Creator Manga") }
     static var creatorPublicBookmarks: String { text("Creator Public Bookmarks") }
     static var openCreatorProfile: String { text("Open Creator Profile") }
-    static var creatorCollections: String { text("Creator Collections") }
-    static var openCreatorCollection: String { text("Open creator collection") }
-    static var openCreatorNetwork: String { text("Open creator network") }
     static var recentCreatorWorks: String { text("Recent Creator Works") }
     static var noRecentCreatorWorks: String { text("No recent creator works") }
     static var viewAllWorks: String { text("View All Works") }

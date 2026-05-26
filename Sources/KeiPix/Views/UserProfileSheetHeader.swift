@@ -1,35 +1,30 @@
 import SwiftUI
 
-/// Compact, single-row header for `UserProfileSheet`.
+/// Compact header for `UserProfileSheet`.
 ///
-/// The previous header rendered a 168 pt banner image with the avatar,
-/// name and actions floating at the bottom of a `ZStack`. That worked
-/// when Pixiv users had set a custom background, but the vast majority
-/// haven't — leaving the sheet with a tall slab of accent-colored
-/// gradient that pushes every meaningful row below the fold.
+/// The previous header rendered a 168 pt banner image; the redesigned
+/// version mirrors Pixiv Web's profile chrome: a tight identity row
+/// (avatar, name, subtitle, premium badge) above a horizontal action
+/// rail with the high-traffic affordances surfaced as standalone
+/// buttons rather than buried in an overflow menu.
 ///
-/// Apple's own profile *sheets* (Contacts card, Photos people sheet,
-/// AppKit's `NSPersonPhotoView` — not the App Store / Music **page**
-/// chrome) use a tight one-row header instead: avatar on the leading
-/// edge, identity in the center, action buttons trailing. We follow
-/// that pattern here so the sheet leads with content.
+/// Surfacing follow / pin / copy link / open-in-Pixiv on the front
+/// page matches the way users actually use the sheet: most visits are
+/// to a creator they want to keep tabs on (pin), share to someone (copy
+/// link), or open the official page for context (Pixiv Web). Apple's
+/// HIG guidance is consistent — primary destructive / one-shot actions
+/// stay in the menu, but **frequently used reversible actions** belong
+/// in plain sight.
 ///
-/// The header is intentionally a **pure presentation** struct: every
-/// piece of state and every action comes in via the initializer. This
-/// keeps the parent sheet's body short and makes the component easy to
-/// preview / unit-test in isolation.
+/// Pure presentation: every piece of state and every callback comes in
+/// via the initializer. The parent sheet owns the truth.
 struct UserProfileSheetHeader: View {
-    /// Resolved user — falls back to the `PixivUser` the sheet was
-    /// opened with when the detail response hasn't arrived yet.
     let user: PixivUser
-    /// Loaded profile detail. `nil` while loading; the layout adapts
-    /// gracefully so the header height never jumps when detail lands.
     let detail: PixivUserDetail?
     let isLoading: Bool
 
-    // Follow state and follow-related callbacks. The follow control is
-    // the only part of the header that mutates remote state, so it
-    // gets richer inputs than the rest of the chrome.
+    // Follow state — used by both the prominent Follow CTA and the
+    // visibility toggle in the same row.
     let isFollowed: Bool
     let isUpdatingFollow: Bool
     let followRestrict: BookmarkRestrict?
@@ -37,34 +32,38 @@ struct UserProfileSheetHeader: View {
     let updateFollowVisibility: (BookmarkRestrict) -> Void
     let requestUnfollow: () -> Void
 
-    // Overflow menu actions. Every action takes the resolved user via
-    // the parent — keeps the menu logic out of this component.
+    // Pin / share / open. Pinning is reversible and frequent; copy and
+    // open are one-tap routines users reach for constantly. All three
+    // get standalone buttons.
+    let isPinned: Bool
+    let togglePin: () -> Void
     let openInPixivURL: URL?
     let copyLink: () -> Void
-    let togglePin: () -> Void
-    let isPinned: Bool
+
+    // Truly low-frequency items live in the overflow menu.
     let requestFeedback: () -> Void
 
     var body: some View {
-        HStack(alignment: .center, spacing: 14) {
-            avatar
-
-            identity
-
-            Spacer(minLength: 12)
-
-            HStack(spacing: 8) {
-                followButton
-                profileActionsMenu
-                SheetCloseButton(style: .bordered)
-            }
+        VStack(alignment: .leading, spacing: 12) {
+            identityRow
+            actionRail
         }
         .padding(.horizontal, 18)
-        .padding(.vertical, 14)
+        .padding(.top, 16)
+        .padding(.bottom, 14)
         .background(.bar)
     }
 
-    // MARK: - Pieces
+    // MARK: - Identity row
+
+    private var identityRow: some View {
+        HStack(alignment: .center, spacing: 14) {
+            avatar
+            identity
+            Spacer(minLength: 12)
+            SheetCloseButton(style: .plain)
+        }
+    }
 
     private var avatar: some View {
         RemoteImageView(url: user.avatarURL)
@@ -87,6 +86,13 @@ struct UserProfileSheetHeader: View {
                         .foregroundStyle(.yellow)
                         .help(L10n.premium)
                         .accessibilityLabel(L10n.premium)
+                }
+                if isPinned {
+                    Image(systemName: "pin.fill")
+                        .imageScale(.small)
+                        .foregroundStyle(Color.accentColor)
+                        .help(L10n.pinnedCreators)
+                        .accessibilityLabel(L10n.pinnedCreators)
                 }
             }
 
@@ -111,25 +117,52 @@ struct UserProfileSheetHeader: View {
 
     /// Optional secondary status line shown next to `@account`. Adds
     /// just enough context to make the row feel "filled in" without a
-    /// banner: region · job, the muted-creator flag, or the loading
-    /// state. Kept short so the row never wraps.
+    /// banner: region · job, or the loading state. Kept short so the
+    /// row never wraps.
     private var secondaryLine: String? {
         if isLoading {
             return L10n.loading
         }
-        if let region = detail?.profile.region?.trimmingCharacters(in: .whitespacesAndNewlines),
-           region.isEmpty == false {
-            if let job = detail?.profile.job?.trimmingCharacters(in: .whitespacesAndNewlines),
-               job.isEmpty == false {
-                return "\(region) · \(job)"
+        let region = detail?.profile.region?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let job = detail?.profile.job?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let parts = [region, job].compactMap { value -> String? in
+            guard let value, value.isEmpty == false else { return nil }
+            return value
+        }
+        return parts.isEmpty ? nil : parts.joined(separator: " · ")
+    }
+
+    // MARK: - Action rail
+
+    private var actionRail: some View {
+        HStack(spacing: 8) {
+            followButton
+
+            pinButton
+
+            if let openInPixivURL {
+                Link(destination: openInPixivURL) {
+                    Label(L10n.openInPixiv, systemImage: "safari")
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
+                .help(L10n.openInPixiv)
+
+                Button {
+                    copyLink()
+                } label: {
+                    Label(L10n.copyLink, systemImage: "link")
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
+                .help(L10n.copyLink)
+                .accessibilityLabel(L10n.copyLink)
             }
-            return region
+
+            Spacer(minLength: 0)
+
+            overflowMenu
         }
-        if let job = detail?.profile.job?.trimmingCharacters(in: .whitespacesAndNewlines),
-           job.isEmpty == false {
-            return job
-        }
-        return nil
     }
 
     @ViewBuilder
@@ -184,28 +217,27 @@ struct UserProfileSheetHeader: View {
         }
     }
 
+    /// Pinning is reversible and the most-used "save for later" action,
+    /// so it lives outside the overflow menu. The button's appearance
+    /// flips between pin / pin.slash so users can read the state at a
+    /// glance.
+    private var pinButton: some View {
+        Button {
+            togglePin()
+        } label: {
+            Label(
+                isPinned ? L10n.unpinCreator : L10n.pinCreator,
+                systemImage: isPinned ? "pin.slash" : "pin"
+            )
+        }
+        .buttonStyle(.bordered)
+        .controlSize(.small)
+        .help(isPinned ? L10n.unpinCreator : L10n.pinCreator)
+    }
+
     @ViewBuilder
-    private var profileActionsMenu: some View {
+    private var overflowMenu: some View {
         Menu {
-            if let url = openInPixivURL {
-                Link(L10n.openInPixiv, destination: url)
-
-                Button(L10n.copyLink) {
-                    copyLink()
-                }
-            }
-
-            Button {
-                togglePin()
-            } label: {
-                Label(
-                    isPinned ? L10n.unpinCreator : L10n.pinCreator,
-                    systemImage: isPinned ? "pin.slash" : "pin"
-                )
-            }
-
-            Divider()
-
             Button {
                 requestFeedback()
             } label: {
