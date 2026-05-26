@@ -257,7 +257,12 @@ struct CreatorPreviewListContent: View {
     let selectArtwork: (PixivArtwork) -> Void
 
     private let columns = [
-        GridItem(.adaptive(minimum: 360, maximum: 520), spacing: 14)
+        // The previous `minimum: 360, maximum: 520` cap left wide windows
+        // with 100+ pt of gutter on each side — three 520-pt cards in a
+        // 1700-pt window stop short of the right edge. Drop the maximum
+        // entirely so cards stretch to fill the available width, and
+        // tighten the minimum so dense layouts can pack 4 cards in.
+        GridItem(.adaptive(minimum: 320), spacing: 14)
     ]
 
     var body: some View {
