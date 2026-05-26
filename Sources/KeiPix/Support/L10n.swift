@@ -568,6 +568,10 @@ enum L10n {
     static var auto: String { text("Auto") }
     static var twoColumns: String { text("Two Columns") }
     static var threeColumns: String { text("Three Columns") }
+    static var creatorListLayout: String { text("Creator Layout") }
+    static var creatorLayoutAuto: String { text("Auto Fit") }
+    static var creatorLayoutSingle: String { text("Single Card") }
+    static var creatorLayoutTwoUp: String { text("Two Cards") }
     static var compact: String { text("Compact") }
     static var compactCards: String { text("Compact artwork cards") }
     static var windowSize: String { text("Window Size") }

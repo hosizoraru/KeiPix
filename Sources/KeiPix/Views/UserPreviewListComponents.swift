@@ -72,6 +72,7 @@ struct CreatorListHeader: View {
     @Binding var creatorSearchText: String
     @Binding var creatorFilter: CreatorListFilter
     @Binding var creatorSort: CreatorListSort
+    @Binding var layoutMode: CreatorListLayoutMode
     let isLoading: Bool
     let isRunningBulkAction: Bool
     let isCheckingFollowVisibility: Bool
@@ -139,9 +140,29 @@ struct CreatorListHeader: View {
             }
             .help("\(L10n.creatorFilter): \(creatorFilter.title) · \(L10n.creatorSort): \(creatorSort.title)")
 
+            layoutModeMenu
+
             creatorActionsMenu
         }
         .controlSize(.small)
+    }
+
+    /// Layout switcher mirrors the gallery's pattern (Menu → inline
+    /// Picker) so users get the same affordance on both surfaces.
+    private var layoutModeMenu: some View {
+        Menu {
+            Picker(L10n.creatorListLayout, selection: $layoutMode) {
+                ForEach(CreatorListLayoutMode.allCases) { mode in
+                    Label(mode.title, systemImage: mode.systemImage)
+                        .tag(mode)
+                }
+            }
+            .pickerStyle(.inline)
+        } label: {
+            Label(layoutMode.title, systemImage: layoutMode.systemImage)
+                .lineLimit(1)
+        }
+        .help(L10n.creatorListLayout)
     }
 
     private var creatorActionsMenu: some View {
@@ -231,6 +252,7 @@ struct CreatorListHeader: View {
 
 struct CreatorPreviewListContent: View {
     let mode: UserPreviewListMode
+    let layoutMode: CreatorListLayoutMode
     let searchKeyword: String
     let previews: [PixivUserPreview]
     let visiblePreviews: [PixivUserPreview]
@@ -256,14 +278,28 @@ struct CreatorPreviewListContent: View {
     let togglePinnedCreator: (PixivUser) -> Void
     let selectArtwork: (PixivArtwork) -> Void
 
-    private let columns = [
-        // The previous `minimum: 360, maximum: 520` cap left wide windows
-        // with 100+ pt of gutter on each side — three 520-pt cards in a
-        // 1700-pt window stop short of the right edge. Drop the maximum
-        // entirely so cards stretch to fill the available width, and
-        // tighten the minimum so dense layouts can pack 4 cards in.
-        GridItem(.adaptive(minimum: 320), spacing: 14)
-    ]
+    /// Column descriptors driven by the user-selected layout mode.
+    /// `.auto` uses an adaptive grid that fills the window; `.single`
+    /// pins to one column so the card can host a horizontally
+    /// scrollable preview shelf; `.twoUp` forces exactly two columns
+    /// regardless of width.
+    private var columns: [GridItem] {
+        switch layoutMode {
+        case .auto:
+            // The previous `minimum: 360, maximum: 520` cap left wide
+            // windows with 100+ pt of gutter on each side. Drop the max
+            // entirely so cards stretch to fill the available width,
+            // and tighten the minimum so dense layouts pack 4 cards in.
+            return [GridItem(.adaptive(minimum: 320), spacing: 14)]
+        case .single:
+            return [GridItem(.flexible(), spacing: 14)]
+        case .twoUp:
+            return [
+                GridItem(.flexible(), spacing: 14),
+                GridItem(.flexible(), spacing: 14)
+            ]
+        }
+    }
 
     var body: some View {
         if mode.requiresSearchKeyword, searchKeyword.isEmpty {
@@ -350,6 +386,7 @@ struct CreatorPreviewListContent: View {
                     isUpdating: updatingCreatorIDs.contains(preview.user.id),
                     showContentBadges: showContentBadges,
                     maskSensitivePreviews: maskSensitivePreviews,
+                    expandedPreview: layoutMode.usesExpandedPreview,
                     openProfile: { openProfile(preview.user) },
                     openIllustrations: { openIllustrations(preview.user) },
                     openManga: { openManga(preview.user) },

@@ -127,6 +127,7 @@ struct UserPreviewListView: View {
                 creatorSearchText: $creatorSearchText,
                 creatorFilter: $creatorFilter,
                 creatorSort: $creatorSort,
+                layoutMode: creatorLayoutBinding,
                 isLoading: isLoading,
                 isRunningBulkAction: isRunningBulkAction,
                 isCheckingFollowVisibility: isCheckingFollowVisibility,
@@ -149,6 +150,7 @@ struct UserPreviewListView: View {
 
             CreatorPreviewListContent(
                 mode: mode,
+                layoutMode: store.creatorListLayoutMode,
                 searchKeyword: searchKeyword,
                 previews: previews,
                 visiblePreviews: visiblePreviews,
@@ -174,6 +176,17 @@ struct UserPreviewListView: View {
                 togglePinnedCreator: togglePinnedCreator,
                 selectArtwork: { store.selectedArtwork = $0 }
             )
+        }
+    }
+
+    /// Two-way bridge between the header's segmented Picker and the
+    /// store-owned setting. The setter persists to UserDefaults so the
+    /// preference survives relaunches.
+    private var creatorLayoutBinding: Binding<CreatorListLayoutMode> {
+        Binding {
+            store.creatorListLayoutMode
+        } set: { newValue in
+            store.setCreatorListLayoutMode(newValue)
         }
     }
 

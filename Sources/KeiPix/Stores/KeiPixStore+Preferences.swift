@@ -257,6 +257,11 @@ extension KeiPixStore {
         UserDefaults.standard.set(mode.usesCompactGrid, forKey: "compactArtworkCards")
     }
 
+    func setCreatorListLayoutMode(_ mode: CreatorListLayoutMode) {
+        creatorListLayoutMode = mode
+        UserDefaults.standard.set(mode.rawValue, forKey: "creatorListLayoutMode")
+    }
+
     func setTrackpadGesturesEnabled(_ value: Bool) {
         trackpadGesturesEnabled = value
         UserDefaults.standard.set(value, forKey: "trackpadGesturesEnabled")

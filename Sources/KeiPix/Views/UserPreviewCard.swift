@@ -31,6 +31,11 @@ struct UserPreviewCard: View {
     let isUpdating: Bool
     let showContentBadges: Bool
     let maskSensitivePreviews: Bool
+    /// When true the preview strip renders as a horizontally scrolling
+    /// shelf with bigger thumbnails — the layout single-column mode
+    /// switches into. Defaults to false so the existing 3-up grid
+    /// behaviour stays unchanged.
+    var expandedPreview: Bool = false
     let openProfile: () -> Void
     let openIllustrations: () -> Void
     let openManga: () -> Void
@@ -203,45 +208,90 @@ struct UserPreviewCard: View {
     @ViewBuilder
     private var previewStrip: some View {
         if preview.illusts.isEmpty == false {
-            // GeometryReader hands us the card's placed width so the
-            // three (or fewer) thumbnails can scale together as the
-            // grid widens, instead of staying pinned to a static
-            // 132-pt tile. Aspect is held at 4:5 so the row reads as a
-            // consistent shelf regardless of card width.
-            GeometryReader { proxy in
-                let count = min(preview.illusts.count, 3)
-                let spacing: CGFloat = 8
-                let totalSpacing = spacing * CGFloat(max(0, count - 1))
-                let tileWidth = max((proxy.size.width - totalSpacing) / CGFloat(count), 64)
-
-                HStack(spacing: spacing) {
-                    ForEach(preview.illusts.prefix(count)) { artwork in
-                        Button {
-                            selectArtwork(artwork)
-                        } label: {
-                            ArtworkPreviewThumb(
-                                artwork: artwork,
-                                tileWidth: tileWidth,
-                                showContentBadges: showContentBadges,
-                                maskSensitivePreview: maskSensitivePreviews
-                            )
-                        }
-                        .buttonStyle(.plain)
-                        .contextMenu {
-                            Button(L10n.selectArtwork) { selectArtwork(artwork) }
-                            if let url = artwork.pixivURL {
-                                Link(L10n.openInPixiv, destination: url)
-                                Button(L10n.copyLink) { copyArtworkLink(artwork) }
-                            }
-                        }
-                    }
-                }
-                .frame(width: proxy.size.width, height: proxy.size.height, alignment: .leading)
+            if expandedPreview {
+                expandedPreviewStrip
+            } else {
+                compactPreviewStrip
             }
-            // Match the strip aspect to the tile aspect so the
-            // GeometryReader receives a height that the thumbnails can
-            // honour — ~5/4 of tile width for the 4:5 portrait shelf.
-            .aspectRatio(previewStripAspect, contentMode: .fit)
+        }
+    }
+
+    /// Three thumbnails packed across the full card width. Used in the
+    /// `auto` and `twoUp` layouts where each card already fits ~2 to
+    /// 4 per row and a fixed three-up shelf reads cleanly.
+    private var compactPreviewStrip: some View {
+        // GeometryReader hands us the card's placed width so the
+        // three (or fewer) thumbnails can scale together as the
+        // grid widens, instead of staying pinned to a static
+        // 132-pt tile. Aspect is held at 4:5 so the row reads as a
+        // consistent shelf regardless of card width.
+        GeometryReader { proxy in
+            let count = min(preview.illusts.count, 3)
+            let spacing: CGFloat = 8
+            let totalSpacing = spacing * CGFloat(max(0, count - 1))
+            let tileWidth = max((proxy.size.width - totalSpacing) / CGFloat(count), 64)
+
+            HStack(spacing: spacing) {
+                ForEach(preview.illusts.prefix(count)) { artwork in
+                    artworkThumbButton(artwork, tileWidth: tileWidth)
+                }
+            }
+            .frame(width: proxy.size.width, height: proxy.size.height, alignment: .leading)
+        }
+        // Match the strip aspect to the tile aspect so the
+        // GeometryReader receives a height that the thumbnails can
+        // honour — ~5/4 of tile width for the 4:5 portrait shelf.
+        .aspectRatio(previewStripAspect, contentMode: .fit)
+    }
+
+    /// Horizontally scrollable shelf used by the single-column layout.
+    /// Thumbnails are sized to a fixed height so trackpad users can
+    /// swipe through more recent works without the card growing taller
+    /// every time another illust loads, mirroring Apple Music's
+    /// "Latest Releases" carousel.
+    private var expandedPreviewStrip: some View {
+        let tileHeight: CGFloat = 200
+        let tileWidth: CGFloat = tileHeight * 4.0 / 5.0
+
+        return ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 10) {
+                ForEach(preview.illusts.prefix(8)) { artwork in
+                    artworkThumbButton(artwork, tileWidth: tileWidth)
+                }
+            }
+        }
+        .frame(height: tileHeight)
+        // Same edge-fade treatment as Apple's shelves so the user gets
+        // a visual cue that the rail scrolls horizontally.
+        .mask {
+            HStack(spacing: 0) {
+                LinearGradient(colors: [.clear, .black], startPoint: .leading, endPoint: .trailing)
+                    .frame(width: 14)
+                Rectangle()
+                LinearGradient(colors: [.black, .clear], startPoint: .leading, endPoint: .trailing)
+                    .frame(width: 14)
+            }
+        }
+    }
+
+    private func artworkThumbButton(_ artwork: PixivArtwork, tileWidth: CGFloat) -> some View {
+        Button {
+            selectArtwork(artwork)
+        } label: {
+            ArtworkPreviewThumb(
+                artwork: artwork,
+                tileWidth: tileWidth,
+                showContentBadges: showContentBadges,
+                maskSensitivePreview: maskSensitivePreviews
+            )
+        }
+        .buttonStyle(.plain)
+        .contextMenu {
+            Button(L10n.selectArtwork) { selectArtwork(artwork) }
+            if let url = artwork.pixivURL {
+                Link(L10n.openInPixiv, destination: url)
+                Button(L10n.copyLink) { copyArtworkLink(artwork) }
+            }
         }
     }
 

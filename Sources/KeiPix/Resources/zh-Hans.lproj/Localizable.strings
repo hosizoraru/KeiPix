@@ -542,6 +542,10 @@
 "Auto" = "自动";
 "Two Columns" = "两列";
 "Three Columns" = "三列";
+"Creator Layout" = "作者布局";
+"Auto Fit" = "自适应";
+"Single Card" = "单列";
+"Two Cards" = "双列";
 "Compact" = "紧凑";
 "Compact artwork cards" = "紧凑作品卡片";
 "Window Size" = "窗口尺寸";

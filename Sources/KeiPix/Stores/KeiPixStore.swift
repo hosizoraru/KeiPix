@@ -73,6 +73,7 @@ final class KeiPixStore {
     var useOriginalImagesForManga = UserDefaults.standard.object(forKey: "useOriginalImagesForManga") as? Bool
         ?? UserDefaults.standard.bool(forKey: "useOriginalImagesInDetail")
     var galleryLayoutMode = KeiPixStore.loadGalleryLayoutMode()
+    var creatorListLayoutMode = KeiPixStore.loadCreatorListLayoutMode()
     var showTranslatedTags = UserDefaults.standard.object(forKey: "showTranslatedTags") as? Bool ?? true
     var showContentBadges = UserDefaults.standard.object(forKey: "showContentBadges") as? Bool ?? true
     var showAccountIdentity = UserDefaults.standard.object(forKey: "showAccountIdentity") as? Bool ?? true
@@ -870,6 +871,15 @@ final class KeiPixStore {
             : .autoMasonry
         defaults.set(mode.rawValue, forKey: "galleryLayoutMode")
         return mode
+    }
+
+    private static func loadCreatorListLayoutMode() -> CreatorListLayoutMode {
+        let defaults = UserDefaults.standard
+        if let rawValue = defaults.string(forKey: "creatorListLayoutMode"),
+           let mode = CreatorListLayoutMode(rawValue: rawValue) {
+            return mode
+        }
+        return .auto
     }
 
     private static func loadSavedSearchPresets() -> [SavedSearchPreset] {
