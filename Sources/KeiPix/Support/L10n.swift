@@ -484,6 +484,8 @@ enum L10n {
     static var language: String { text("Language") }
     static var automatic: String { text("Automatic") }
     static var simplifiedChinese: String { text("Simplified Chinese") }
+    static var traditionalChinese: String { text("Traditional Chinese") }
+    static var japanese: String { text("Japanese") }
     static var english: String { text("English") }
     static var appearance: String { text("Appearance") }
     static var theme: String { text("Theme") }
