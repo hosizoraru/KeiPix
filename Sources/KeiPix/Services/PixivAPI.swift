@@ -400,11 +400,11 @@ actor PixivAPI {
         }
 
         query["sort"] = options.sort.apiValue
-        if options.minimumBookmarks.rawValue > 0 {
-            query["bookmark_num_min"] = "\(options.minimumBookmarks.rawValue)"
+        if options.minimumBookmarks.value > 0 {
+            query["bookmark_num_min"] = "\(options.minimumBookmarks.value)"
         }
-        if options.maximumBookmarks.rawValue > 0 {
-            query["bookmark_num_max"] = "\(options.maximumBookmarks.rawValue)"
+        if options.maximumBookmarks.value > 0 {
+            query["bookmark_num_max"] = "\(options.maximumBookmarks.value)"
         }
         if let startDate = options.dateRange.startDate() {
             query["start_date"] = Self.searchDateFormatter.string(from: startDate)

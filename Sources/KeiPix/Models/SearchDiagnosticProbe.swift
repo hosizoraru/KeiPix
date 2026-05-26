@@ -26,8 +26,8 @@ struct SearchDiagnosticProbe: Identifiable, Hashable {
                 sort: sort,
                 ageLimit: .allAges,
                 dateRange: .anytime,
-                minimumBookmarks: .none,
-                maximumBookmarks: .none,
+                minimumBookmarks: .unlimited,
+                maximumBookmarks: .unlimited,
                 artworkType: .all,
                 aiFilter: .all,
                 ugoiraFilter: .all

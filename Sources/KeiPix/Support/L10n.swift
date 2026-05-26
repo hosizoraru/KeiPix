@@ -561,6 +561,13 @@ enum L10n {
     static var maximumBookmarks: String { text("Maximum Bookmarks") }
     static var noMinimum: String { text("No minimum") }
     static var noMaximum: String { text("No maximum") }
+    static var noBookmarkLimit: String { text("No bookmark limit") }
+    static var bookmarkAtLeastFormat: String { text("≥ %@ bookmarks") }
+    static var bookmarkAtMostFormat: String { text("≤ %@ bookmarks") }
+    static var bookmarkBetweenFormat: String { text("%@ – %@ bookmarks") }
+    static var bookmarkPresetUnlimited: String { text("No limit") }
+    static var bookmarkCustomValue: String { text("Custom value") }
+    static var bookmarkInvalidRange: String { text("Maximum must be greater than minimum.") }
     static var workType: String { text("Work Type") }
     static var allWorks: String { text("All Works") }
     static var aiFilter: String { text("AI Filter") }

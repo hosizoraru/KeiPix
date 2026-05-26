@@ -523,6 +523,13 @@
 "Maximum Bookmarks" = "Maximum Bookmarks";
 "No minimum" = "No minimum";
 "No maximum" = "No maximum";
+"No bookmark limit" = "No bookmark limit";
+"≥ %@ bookmarks" = "≥ %@ bookmarks";
+"≤ %@ bookmarks" = "≤ %@ bookmarks";
+"%@ – %@ bookmarks" = "%@ – %@ bookmarks";
+"No limit" = "No limit";
+"Custom value" = "Custom value";
+"Maximum must be greater than minimum." = "Maximum must be greater than minimum.";
 "Work Type" = "Work Type";
 "All Works" = "All Works";
 "AI Filter" = "AI Filter";

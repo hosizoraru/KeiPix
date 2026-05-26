@@ -170,15 +170,15 @@ extension KeiPixStore {
         UserDefaults.standard.set(value.rawValue, forKey: "searchDateRange")
     }
 
-    func setSearchMinimumBookmarks(_ value: SearchMinimumBookmarks) {
+    func setSearchMinimumBookmarks(_ value: SearchBookmarkThreshold) {
         searchMinimumBookmarks = value
-        UserDefaults.standard.set(value.rawValue, forKey: "searchMinimumBookmarks")
+        UserDefaults.standard.set(value.value, forKey: "searchMinimumBookmarks")
         applyContentFilters()
     }
 
-    func setSearchMaximumBookmarks(_ value: SearchMaximumBookmarks) {
+    func setSearchMaximumBookmarks(_ value: SearchBookmarkThreshold) {
         searchMaximumBookmarks = value
-        UserDefaults.standard.set(value.rawValue, forKey: "searchMaximumBookmarks")
+        UserDefaults.standard.set(value.value, forKey: "searchMaximumBookmarks")
         applyContentFilters()
     }
 

@@ -65,8 +65,8 @@ extension FeedRequestContext {
             searchOptions.sort.rawValue,
             searchOptions.ageLimit.rawValue,
             searchOptions.dateRange.rawValue,
-            String(searchOptions.minimumBookmarks.rawValue),
-            String(searchOptions.maximumBookmarks.rawValue),
+            String(searchOptions.minimumBookmarks.value),
+            String(searchOptions.maximumBookmarks.value),
             searchOptions.artworkType.rawValue,
             searchOptions.aiFilter.rawValue,
             searchOptions.ugoiraFilter.rawValue

@@ -12,16 +12,20 @@ struct SearchOptionsTests {
         #expect(options.sort == .dateDescending)
         #expect(options.ageLimit == .unlimited)
         #expect(options.dateRange == .anytime)
-        #expect(options.minimumBookmarks == .none)
-        #expect(options.maximumBookmarks == .none)
+        #expect(options.minimumBookmarks.isUnlimited)
+        #expect(options.maximumBookmarks.isUnlimited)
         #expect(options.artworkType == .all)
         #expect(options.aiFilter == .all)
         #expect(options.ugoiraFilter == .all)
         #expect(options.isDefault)
     }
 
-    @Test("Saved search presets decode older payloads")
+    @Test("Saved search presets decode legacy raw-int bookmark thresholds")
     func decodesLegacySavedSearchPresetOptions() throws {
+        // Pre-refactor presets serialised the threshold as a raw `Int`
+        // because `SearchMinimumBookmarks` / `SearchMaximumBookmarks`
+        // were `Int`-backed enums. The new keyed `SearchBookmarkThreshold`
+        // accepts both shapes so existing libraries keep working.
         let json = """
         {
           "matchType": "exactTags",
@@ -29,6 +33,7 @@ struct SearchOptionsTests {
           "ageLimit": "r18",
           "dateRange": "pastWeek",
           "minimumBookmarks": 500,
+          "maximumBookmarks": 12345,
           "artworkType": "manga",
           "ugoiraFilter": "onlyUgoira"
         }
@@ -40,14 +45,14 @@ struct SearchOptionsTests {
         #expect(options.sort == .dateAscending)
         #expect(options.ageLimit == .r18)
         #expect(options.dateRange == .pastWeek)
-        #expect(options.minimumBookmarks == .fiveHundred)
-        #expect(options.maximumBookmarks == .none)
+        #expect(options.minimumBookmarks.value == 500)
+        #expect(options.maximumBookmarks.value == 12_345)
         #expect(options.artworkType == .manga)
         #expect(options.aiFilter == .all)
         #expect(options.ugoiraFilter == .onlyUgoira)
     }
 
-    @Test("Saved search library export round trips")
+    @Test("Saved search library export round trips with custom thresholds")
     func savedSearchLibraryExportRoundTrips() throws {
         let preset = SavedSearchPreset(
             id: UUID(uuidString: "11111111-1111-1111-1111-111111111111")!,
@@ -57,8 +62,8 @@ struct SearchOptionsTests {
                 sort: .dateAscending,
                 ageLimit: .allAges,
                 dateRange: .pastMonth,
-                minimumBookmarks: .oneThousand,
-                maximumBookmarks: .tenThousand,
+                minimumBookmarks: SearchBookmarkThreshold(value: 1_337),
+                maximumBookmarks: SearchBookmarkThreshold(value: 9_876),
                 artworkType: .illustrations,
                 aiFilter: .excludeAI,
                 ugoiraFilter: .noUgoira
@@ -81,29 +86,55 @@ struct SearchOptionsTests {
 
         #expect(decoded.schemaVersion == 1)
         #expect(decoded.presets.first?.keyword == "landscape")
-        #expect(decoded.presets.first?.options.maximumBookmarks == .tenThousand)
+        #expect(decoded.presets.first?.options.minimumBookmarks.value == 1_337)
+        #expect(decoded.presets.first?.options.maximumBookmarks.value == 9_876)
         #expect(decoded.savedSearches == ["landscape", "blue archive"])
         #expect(decoded.searchHistory == ["cat"])
     }
 
-    @Test("Summary includes advanced filter state")
-    func summaryIncludesAdvancedFilters() {
-        let options = SearchOptions(
-            matchType: .titleAndCaption,
-            sort: .popularFemale,
-            ageLimit: .allAges,
-            dateRange: .pastMonth,
-            minimumBookmarks: .oneHundred,
-            maximumBookmarks: .fiveThousand,
-            artworkType: .illustrations,
-            aiFilter: .excludeAI,
-            ugoiraFilter: .noUgoira
-        )
+    @Test("Summary collapses bookmark thresholds into a single human range")
+    func summaryFormatsBookmarkThresholds() {
+        let unlimited = SearchOptions.defaultValue
+        #expect(unlimited.summary.contains(L10n.noBookmarkLimit))
 
-        #expect(options.summary.contains(SearchMaximumBookmarks.fiveThousand.title))
-        #expect(options.summary.contains(SearchSort.popularFemale.title))
-        #expect(options.summary.contains(SearchAIFilter.excludeAI.title))
-        #expect(options.summary.contains(SearchUgoiraFilter.noUgoira.title))
+        let lower = SearchOptions(
+            matchType: .partialTags,
+            sort: .dateDescending,
+            ageLimit: .unlimited,
+            dateRange: .anytime,
+            minimumBookmarks: SearchBookmarkThreshold(value: 500),
+            maximumBookmarks: .unlimited,
+            artworkType: .all,
+            aiFilter: .all,
+            ugoiraFilter: .all
+        )
+        #expect(lower.summary.contains("≥") && lower.summary.contains("500"))
+
+        let upper = SearchOptions(
+            matchType: .partialTags,
+            sort: .dateDescending,
+            ageLimit: .unlimited,
+            dateRange: .anytime,
+            minimumBookmarks: .unlimited,
+            maximumBookmarks: SearchBookmarkThreshold(value: 5_000),
+            artworkType: .all,
+            aiFilter: .all,
+            ugoiraFilter: .all
+        )
+        #expect(upper.summary.contains("≤") && upper.summary.contains("5,000"))
+
+        let both = SearchOptions(
+            matchType: .partialTags,
+            sort: .dateDescending,
+            ageLimit: .unlimited,
+            dateRange: .anytime,
+            minimumBookmarks: SearchBookmarkThreshold(value: 100),
+            maximumBookmarks: SearchBookmarkThreshold(value: 1_000),
+            artworkType: .all,
+            aiFilter: .all,
+            ugoiraFilter: .all
+        )
+        #expect(both.summary.contains("100") && both.summary.contains("1,000"))
     }
 
     @Test("Premium search sorts are gated")
@@ -122,7 +153,7 @@ struct SearchOptionsTests {
         #expect(SearchSort.popularFemale.apiValue == "popular_female_desc")
     }
 
-    @Test("Non premium popular sorting uses limited preview language")
+    @Test("Non-premium popular sorting uses limited preview language")
     func nonPremiumPopularSortingUsesLimitedPreviewLanguage() {
         #expect(SearchSort.popularPreview.title(isPremium: false) == L10n.popularLimitedPreview)
         #expect(SearchSort.popularPreview.title(isPremium: true) == L10n.popular)
@@ -130,12 +161,21 @@ struct SearchOptionsTests {
         #expect(SearchSort.popularPreview.apiValue == "popular_desc")
     }
 
-    @Test("Bookmark thresholds match high-popularity search ranges")
-    func bookmarkThresholdsIncludeHighPopularityRanges() {
-        #expect(SearchMinimumBookmarks.allCases.contains(.twentyThousand))
-        #expect(SearchMinimumBookmarks.allCases.contains(.fiftyThousand))
-        #expect(SearchMinimumBookmarks.allCases.contains(.oneHundredThousand))
-        #expect(SearchMaximumBookmarks.oneHundredThousand.title.contains("100,000"))
+    @Test("Bookmark threshold tolerates negative input by clamping to unlimited")
+    func bookmarkThresholdClampsNegative() {
+        let clamped = SearchBookmarkThreshold(value: -42)
+        #expect(clamped.isUnlimited)
+        #expect(clamped.title == L10n.noBookmarkLimit)
+    }
+
+    @Test("Bookmark threshold preset rungs match Pixez ladder")
+    func bookmarkThresholdPresetRungs() {
+        #expect(SearchBookmarkThreshold.presetRungs.contains(100))
+        #expect(SearchBookmarkThreshold.presetRungs.contains(500))
+        #expect(SearchBookmarkThreshold.presetRungs.contains(1_000))
+        #expect(SearchBookmarkThreshold.presetRungs.contains(5_000))
+        #expect(SearchBookmarkThreshold.presetRungs.contains(100_000))
+        #expect(SearchBookmarkThreshold.presetRungs.first == 0)
     }
 
     @Test("Search diagnostics cover premium popularity probes")
@@ -157,8 +197,8 @@ struct SearchOptionsTests {
                 sort: .popularMale,
                 ageLimit: .allAges,
                 dateRange: .anytime,
-                minimumBookmarks: .none,
-                maximumBookmarks: .none,
+                minimumBookmarks: .unlimited,
+                maximumBookmarks: .unlimited,
                 artworkType: .all,
                 aiFilter: .all,
                 ugoiraFilter: .all

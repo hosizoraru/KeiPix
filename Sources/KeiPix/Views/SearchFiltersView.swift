@@ -51,8 +51,26 @@ private struct SearchFiltersView: View {
                 sortMenu
                 filterPicker(L10n.ageLimit, selection: ageLimitBinding, options: SearchAgeLimit.allCases)
                 filterPicker(L10n.dateRange, selection: dateRangeBinding, options: SearchDateRange.allCases)
-                filterPicker(L10n.minimumBookmarks, selection: minimumBookmarksBinding, options: SearchMinimumBookmarks.allCases)
-                filterPicker(L10n.maximumBookmarks, selection: maximumBookmarksBinding, options: SearchMaximumBookmarks.allCases)
+
+                BookmarkThresholdField(
+                    label: L10n.minimumBookmarks,
+                    value: minimumBookmarksBinding,
+                    showStatus: showStatus
+                )
+
+                BookmarkThresholdField(
+                    label: L10n.maximumBookmarks,
+                    value: maximumBookmarksBinding,
+                    showStatus: showStatus
+                )
+
+                if isThresholdRangeInvalid {
+                    Text(L10n.bookmarkInvalidRange)
+                        .font(.caption)
+                        .foregroundStyle(.red)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+
                 filterPicker(L10n.workType, selection: artworkTypeBinding, options: SearchArtworkType.allCases)
                 filterPicker(L10n.aiFilter, selection: aiFilterBinding, options: SearchAIFilter.allCases)
                 filterPicker(L10n.ugoiraFilter, selection: ugoiraFilterBinding, options: SearchUgoiraFilter.allCases)
@@ -190,7 +208,7 @@ private struct SearchFiltersView: View {
         }
     }
 
-    private var minimumBookmarksBinding: Binding<SearchMinimumBookmarks> {
+    private var minimumBookmarksBinding: Binding<SearchBookmarkThreshold> {
         Binding {
             store.searchMinimumBookmarks
         } set: { value in
@@ -198,12 +216,18 @@ private struct SearchFiltersView: View {
         }
     }
 
-    private var maximumBookmarksBinding: Binding<SearchMaximumBookmarks> {
+    private var maximumBookmarksBinding: Binding<SearchBookmarkThreshold> {
         Binding {
             store.searchMaximumBookmarks
         } set: { value in
             store.setSearchMaximumBookmarks(value)
         }
+    }
+
+    private var isThresholdRangeInvalid: Bool {
+        let minValue = store.searchMinimumBookmarks.value
+        let maxValue = store.searchMaximumBookmarks.value
+        return minValue > 0 && maxValue > 0 && maxValue < minValue
     }
 
     private var artworkTypeBinding: Binding<SearchArtworkType> {
@@ -228,5 +252,111 @@ private struct SearchFiltersView: View {
         } set: { value in
             store.setSearchUgoiraFilter(value)
         }
+    }
+}
+
+/// Compact row that pairs a numeric text field with a preset menu so the
+/// user can either type an exact bookmark count or pick a Pixez-style
+/// rung (100 / 500 / 1k / 5k / 10k / …). Designed to look like one
+/// `LabeledContent` row to stay aligned with the surrounding pickers.
+///
+/// **Why a custom field instead of a raw `TextField`.** SwiftUI's
+/// number formatter posts every keystroke through the binding, which
+/// would re-fire `applyContentFilters()` on the store mid-typing —
+/// noisy, and it makes the typed value drop to `0` while the user
+/// finishes the number. We hold the in-flight string locally and
+/// commit on submit / focus loss / preset selection, which matches the
+/// behaviour of Pixiv Web's own search filter input.
+private struct BookmarkThresholdField: View {
+    let label: String
+    @Binding var value: SearchBookmarkThreshold
+    let showStatus: (String) -> Void
+
+    @State private var draftText: String = ""
+    @FocusState private var isFocused: Bool
+
+    var body: some View {
+        LabeledContent(label) {
+            HStack(spacing: 6) {
+                TextField(L10n.bookmarkPresetUnlimited, text: $draftText)
+                    .textFieldStyle(.roundedBorder)
+                    .multilineTextAlignment(.trailing)
+                    .frame(width: 110)
+                    .focused($isFocused)
+                    .onSubmit(commit)
+                    .onChange(of: isFocused) { _, focused in
+                        if focused == false {
+                            commit()
+                        }
+                    }
+                    .accessibilityLabel(label)
+
+                Menu {
+                    ForEach(SearchBookmarkThreshold.presetRungs, id: \.self) { rung in
+                        Button {
+                            apply(rung)
+                        } label: {
+                            Label(presetTitle(for: rung), systemImage: rung == value.value ? "checkmark" : "")
+                        }
+                    }
+                } label: {
+                    Image(systemName: "list.number")
+                        .frame(width: 22, height: 22)
+                }
+                .menuStyle(.borderlessButton)
+                .menuIndicator(.hidden)
+                .fixedSize()
+                .help(L10n.bookmarkPresetUnlimited)
+                .accessibilityLabel(L10n.bookmarkCustomValue)
+            }
+        }
+        .font(.callout)
+        .onAppear { syncDraft() }
+        .onChange(of: value) { _, _ in syncDraft() }
+    }
+
+    private func presetTitle(for rung: Int) -> String {
+        rung == 0 ? L10n.bookmarkPresetUnlimited : rung.formatted()
+    }
+
+    private func syncDraft() {
+        draftText = value.isUnlimited ? "" : "\(value.value)"
+    }
+
+    private func apply(_ rung: Int) {
+        value = SearchBookmarkThreshold(value: rung)
+        // The binding mutation triggers `onChange` which re-syncs the
+        // draft, but if the rung equals the current value the binding
+        // doesn't fire — sync manually so the field stays in lockstep.
+        syncDraft()
+    }
+
+    private func commit() {
+        let trimmed = draftText.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmed.isEmpty {
+            value = .unlimited
+            return
+        }
+        // Tolerate "1,234" / "1k" / "5w" so power users can fly through
+        // common rungs without a keyboard switch.
+        let normalized = trimmed
+            .replacingOccurrences(of: ",", with: "")
+            .replacingOccurrences(of: "_", with: "")
+        let parsed: Int?
+        if normalized.hasSuffix("k") || normalized.hasSuffix("K") {
+            parsed = Int(normalized.dropLast()).map { $0 * 1_000 }
+        } else if normalized.hasSuffix("w") || normalized.hasSuffix("W") {
+            parsed = Int(normalized.dropLast()).map { $0 * 10_000 }
+        } else {
+            parsed = Int(normalized)
+        }
+
+        guard let parsed, parsed >= 0 else {
+            syncDraft()
+            showStatus(L10n.bookmarkInvalidRange)
+            return
+        }
+        value = SearchBookmarkThreshold(value: parsed)
+        syncDraft()
     }
 }

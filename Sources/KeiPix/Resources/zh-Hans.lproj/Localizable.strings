@@ -535,6 +535,13 @@
 "Maximum Bookmarks" = "最高收藏";
 "No minimum" = "不限制";
 "No maximum" = "不限制";
+"No bookmark limit" = "不限收藏数";
+"≥ %@ bookmarks" = "收藏数 ≥ %@";
+"≤ %@ bookmarks" = "收藏数 ≤ %@";
+"%@ – %@ bookmarks" = "收藏数 %@ – %@";
+"No limit" = "不限";
+"Custom value" = "自定义";
+"Maximum must be greater than minimum." = "上限必须大于下限。";
 "Work Type" = "作品类型";
 "All Works" = "全部作品";
 "AI Filter" = "AI 过滤";

@@ -112,12 +112,12 @@ final class KeiPixStore {
     var searchSort = KeiPixStore.loadEnum("searchSort", defaultValue: SearchSort.dateDescending)
     var searchAgeLimit = KeiPixStore.loadEnum("searchAgeLimit", defaultValue: SearchAgeLimit.unlimited)
     var searchDateRange = KeiPixStore.loadEnum("searchDateRange", defaultValue: SearchDateRange.anytime)
-    var searchMinimumBookmarks = SearchMinimumBookmarks(
-        rawValue: UserDefaults.standard.integer(forKey: "searchMinimumBookmarks")
-    ) ?? .none
-    var searchMaximumBookmarks = SearchMaximumBookmarks(
-        rawValue: UserDefaults.standard.integer(forKey: "searchMaximumBookmarks")
-    ) ?? .none
+    var searchMinimumBookmarks = SearchBookmarkThreshold(
+        value: UserDefaults.standard.integer(forKey: "searchMinimumBookmarks")
+    )
+    var searchMaximumBookmarks = SearchBookmarkThreshold(
+        value: UserDefaults.standard.integer(forKey: "searchMaximumBookmarks")
+    )
     var searchArtworkType = KeiPixStore.loadEnum("searchArtworkType", defaultValue: SearchArtworkType.all)
     var searchAIFilter = KeiPixStore.loadEnum("searchAIFilter", defaultValue: SearchAIFilter.all)
     var searchUgoiraFilter = KeiPixStore.loadEnum("searchUgoiraFilter", defaultValue: SearchUgoiraFilter.all)
@@ -590,8 +590,8 @@ final class KeiPixStore {
         setSearchSort(.dateDescending)
         setSearchAgeLimit(.unlimited)
         setSearchDateRange(.anytime)
-        setSearchMinimumBookmarks(.none)
-        setSearchMaximumBookmarks(.none)
+        setSearchMinimumBookmarks(.unlimited)
+        setSearchMaximumBookmarks(.unlimited)
         setSearchArtworkType(.all)
         setSearchAIFilter(.all)
         setSearchUgoiraFilter(.all)
@@ -827,10 +827,10 @@ final class KeiPixStore {
                     return false
                 }
             }
-            if searchMinimumBookmarks.rawValue > 0, artwork.totalBookmarks < searchMinimumBookmarks.rawValue {
+            if searchMinimumBookmarks.value > 0, artwork.totalBookmarks < searchMinimumBookmarks.value {
                 return false
             }
-            if searchMaximumBookmarks.rawValue > 0, artwork.totalBookmarks > searchMaximumBookmarks.rawValue {
+            if searchMaximumBookmarks.value > 0, artwork.totalBookmarks > searchMaximumBookmarks.value {
                 return false
             }
             switch searchAIFilter {
