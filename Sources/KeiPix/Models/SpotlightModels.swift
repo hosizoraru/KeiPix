@@ -67,6 +67,8 @@ struct PixivSpotlightArticle: Codable, Identifiable, Hashable, Sendable {
 
 enum SpotlightArticleCollectionMode: String, CaseIterable, Identifiable {
     case latest
+    case monthlyRanking
+    case recommend
     case favorites
     case history
 
@@ -76,6 +78,10 @@ enum SpotlightArticleCollectionMode: String, CaseIterable, Identifiable {
         switch self {
         case .latest:
             L10n.latestArticles
+        case .monthlyRanking:
+            L10n.monthlyRankingArticles
+        case .recommend:
+            L10n.recommendedArticles
         case .favorites:
             L10n.savedArticles
         case .history:
@@ -87,10 +93,44 @@ enum SpotlightArticleCollectionMode: String, CaseIterable, Identifiable {
         switch self {
         case .latest:
             "newspaper"
+        case .monthlyRanking:
+            "trophy"
+        case .recommend:
+            "sparkles"
         case .favorites:
             "star.fill"
         case .history:
             "clock.arrow.circlepath"
+        }
+    }
+
+    /// True when the user can pick a category filter (illust / manga
+    /// / cosplay) for this collection. The category filter goes
+    /// through the Pixiv app API, which only accepts the four enum
+    /// values; ranking and recommend pull a fixed list from
+    /// Pixivision Web instead, and favorites / history are local
+    /// state.
+    var supportsCategoryFilter: Bool {
+        self == .latest
+    }
+
+    /// True when the collection paginates via Pixiv's
+    /// `next_url` token. Only `.latest` does — every other mode is a
+    /// one-shot HTML scrape or a local list.
+    var supportsPagination: Bool {
+        self == .latest
+    }
+
+    /// True when entering the collection performs a network fetch
+    /// (latest / recommend through the Pixiv app API, monthly
+    /// ranking through Pixivision Web). Drives the loading spinner
+    /// and the retry button on the empty state.
+    var fetchesFromNetwork: Bool {
+        switch self {
+        case .latest, .recommend, .monthlyRanking:
+            return true
+        case .favorites, .history:
+            return false
         }
     }
 }

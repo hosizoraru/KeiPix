@@ -15,7 +15,7 @@ struct SpotlightView: View {
         Group {
             if store.session == nil {
                 EmptyStateView(title: L10n.signedOutTitle, subtitle: L10n.signedOutSubtitle, systemImage: "person.crop.circle.badge.exclamationmark")
-            } else if isLoading, collectionMode == .latest {
+            } else if isLoading, collectionMode.fetchesFromNetwork {
                 ProgressView(L10n.loading)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if displayedArticles.isEmpty {
@@ -28,7 +28,7 @@ struct SpotlightView: View {
                         Text(emptySubtitle)
                     }
                 } actions: {
-                    if collectionMode == .latest {
+                    if collectionMode.fetchesFromNetwork {
                         Button {
                             Task { await load() }
                         } label: {
@@ -82,7 +82,7 @@ struct SpotlightView: View {
                                 mode: $collectionMode,
                                 category: $category,
                                 layoutMode: spotlightLayoutBinding,
-                                showCategoryPicker: collectionMode == .latest,
+                                showCategoryPicker: collectionMode.supportsCategoryFilter,
                                 countText: collectionSummary,
                                 canClearHistory: store.spotlightArticleHistory.isEmpty == false,
                                 clearHistory: clearHistory
@@ -135,12 +135,24 @@ struct SpotlightView: View {
         .task(id: store.routeRefreshGeneration) {
             await load()
         }
-        .onChange(of: collectionMode) { _, _ in
-            selectStableArticle()
+        .onChange(of: collectionMode) { previous, next in
+            // Switching to a network-backed collection (.latest /
+            // .recommend / .monthlyRanking) requires a fresh fetch
+            // because each one populates `articles` from a different
+            // source. Local-only collections (.favorites / .history)
+            // just need the selection re-anchored to a still-visible
+            // article.
+            if previous.fetchesFromNetwork || next.fetchesFromNetwork {
+                Task { await load() }
+            } else {
+                selectStableArticle()
+            }
         }
         .onChange(of: category) { _, _ in
-            // Server-side filter — refetch from page 1 so the user sees the
-            // freshest articles for the chosen category.
+            // Category filter only applies to the live "latest" feed.
+            // Skip the refetch on other modes so we don't accidentally
+            // overwrite a freshly-fetched ranking or recommend list.
+            guard collectionMode.supportsCategoryFilter else { return }
             Task { await load() }
         }
     }
@@ -204,7 +216,7 @@ struct SpotlightView: View {
 
     private var displayedArticles: [PixivSpotlightArticle] {
         switch collectionMode {
-        case .latest:
+        case .latest, .monthlyRanking, .recommend:
             articles
         case .favorites:
             store.spotlightFavoriteArticles
@@ -217,6 +229,8 @@ struct SpotlightView: View {
         switch collectionMode {
         case .latest:
             "\(articles.count.formatted()) · \(nextURL == nil ? L10n.noMorePages : L10n.nextPageAvailable)"
+        case .monthlyRanking, .recommend:
+            "\(articles.count.formatted())"
         case .favorites:
             String(format: L10n.savedArticleCountFormat, store.spotlightFavoriteArticles.count)
         case .history:
@@ -228,6 +242,10 @@ struct SpotlightView: View {
         switch collectionMode {
         case .latest:
             L10n.noSpotlightArticles
+        case .monthlyRanking:
+            L10n.noMonthlyRankingArticles
+        case .recommend:
+            L10n.noRecommendedArticles
         case .favorites:
             L10n.noSavedArticles
         case .history:
@@ -239,6 +257,10 @@ struct SpotlightView: View {
         switch collectionMode {
         case .latest:
             L10n.noSpotlightArticles
+        case .monthlyRanking:
+            L10n.monthlyRankingHint
+        case .recommend:
+            L10n.recommendedHint
         case .favorites:
             L10n.saveArticlesHint
         case .history:
@@ -253,10 +275,29 @@ struct SpotlightView: View {
         defer { isLoading = false }
 
         do {
-            let response = try await store.spotlightArticles(category: category.apiValue)
-            articles = response.articles
+            switch collectionMode {
+            case .latest:
+                let response = try await store.spotlightArticles(category: category.apiValue)
+                articles = response.articles
+                nextURL = response.nextURL
+            case .recommend:
+                // Pixiv app API accepts `recommend` as a `category`
+                // value the same way it accepts illust/manga/cosplay,
+                // so we route it through the same RPC even though the
+                // collection picker treats it as a top-level mode.
+                let response = try await store.spotlightArticles(category: "recommend")
+                articles = response.articles
+                nextURL = nil
+            case .monthlyRanking:
+                articles = try await store.pixivisionMonthlyRanking()
+                nextURL = nil
+            case .favorites, .history:
+                // Local-only collections; the picker just changes the
+                // backing source the view reads from.
+                articles = []
+                nextURL = nil
+            }
             selectStableArticle()
-            nextURL = response.nextURL
         } catch {
             articles = []
             store.selectedSpotlightArticle = nil
@@ -332,6 +373,10 @@ private struct SpotlightCollectionHeader: View {
 
     var body: some View {
         FlowLayout(spacing: 8) {
+            // 5 segments fit cleanly at ~480 pt — keep it segmented so
+            // the active source is always visible at a glance, the way
+            // Apple Music's library tabs (Library / Listen Now / Browse
+            // / Radio / Search) read across the top of the window.
             Picker(L10n.spotlightCollection, selection: $mode) {
                 ForEach(SpotlightArticleCollectionMode.allCases) { mode in
                     Label(mode.title, systemImage: mode.systemImage).tag(mode)
@@ -339,7 +384,7 @@ private struct SpotlightCollectionHeader: View {
             }
             .pickerStyle(.segmented)
             .labelsHidden()
-            .frame(minWidth: 300, idealWidth: 360, maxWidth: 420)
+            .frame(minWidth: 420, idealWidth: 480, maxWidth: 560)
 
             // Category filter only applies to the live "latest" collection;
             // favorites and history are local state, so a server-side

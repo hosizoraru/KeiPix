@@ -19,6 +19,12 @@ enum L10n {
     static var copiedArticleLink: String { text("Copied article link") }
     static var spotlightCollection: String { text("Spotlight Collection") }
     static var latestArticles: String { text("Latest Articles") }
+    static var monthlyRankingArticles: String { text("Monthly Ranking") }
+    static var recommendedArticles: String { text("Recommended") }
+    static var noMonthlyRankingArticles: String { text("No ranking articles") }
+    static var noRecommendedArticles: String { text("No recommended articles") }
+    static var monthlyRankingHint: String { text("Pixivision's most-read articles this month.") }
+    static var recommendedHint: String { text("Editorial picks Pixivision is highlighting right now.") }
     static var savedArticles: String { text("Saved Articles") }
     static var articleHistory: String { text("Article History") }
     static var saveArticle: String { text("Save Article") }

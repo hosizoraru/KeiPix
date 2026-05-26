@@ -61,26 +61,47 @@ extension KeiPixStore {
         try await api.nextSpotlightArticles(url)
     }
 
+    /// Pixivision's "本月排行榜" / Monthly Ranking widget only ships
+    /// on the locale homepage; there's no app-API equivalent. Download
+    /// the homepage and run it through `PixivisionMonthlyRankingParser`.
+    /// Returns an empty array on parse failure so the spotlight surface
+    /// degrades gracefully (empty state, no error banner) rather than
+    /// breaking the whole tab.
+    func pixivisionMonthlyRanking() async throws -> [PixivSpotlightArticle] {
+        let homepageURL = URL(string: "https://www.pixivision.net/zh/")!
+        let html = try await fetchPixivisionHTML(at: homepageURL)
+        return PixivisionMonthlyRankingParser.parse(html: html, sourceURL: homepageURL)
+    }
+
     /// Downloads the live Pixivision page for an article and parses it
     /// into a `PixivisionArticleContent` the native reader can render.
     /// Falls back to the seed metadata Pixivision's app API already
     /// shipped if the HTML can't be parsed (private articles, network
     /// hiccups, etc.) so the surface degrades gracefully.
     func pixivisionArticleContent(for article: PixivSpotlightArticle) async throws -> PixivisionArticleContent {
-        var request = URLRequest(url: article.articleURL)
-        request.setValue(
-            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15 KeiPix/1.0",
-            forHTTPHeaderField: "User-Agent"
-        )
-        let (data, _) = try await URLSession.shared.data(for: request)
-        let html = String(data: data, encoding: .utf8)
-            ?? String(data: data, encoding: .shiftJIS)
-            ?? ""
+        let html = try await fetchPixivisionHTML(at: article.articleURL)
         return PixivisionArticleParser.parse(
             html: html,
             articleID: article.id,
             sourceURL: article.articleURL
         )
+    }
+
+    /// Shared HTML fetcher for Pixivision Web. Pixivision serves
+    /// locale-specific bodies based on the User-Agent + Accept-Language
+    /// pair, so we send a desktop Safari UA the page already optimises
+    /// for. Falls back to Shift-JIS if UTF-8 decoding fails — the few
+    /// archived articles that still run on the legacy CMS use it.
+    private func fetchPixivisionHTML(at url: URL) async throws -> String {
+        var request = URLRequest(url: url)
+        request.setValue(
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15 KeiPix/1.0",
+            forHTTPHeaderField: "User-Agent"
+        )
+        let (data, _) = try await URLSession.shared.data(for: request)
+        return String(data: data, encoding: .utf8)
+            ?? String(data: data, encoding: .shiftJIS)
+            ?? ""
     }
 
     func followingUsers(restrict: BookmarkRestrict) async throws -> PixivUserPreviewResponse {
