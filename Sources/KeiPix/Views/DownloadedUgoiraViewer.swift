@@ -2,19 +2,19 @@ import AppKit
 import SwiftUI
 import UniformTypeIdentifiers
 
+/// Standalone sheet viewer for an already-downloaded ugoira ZIP. Shares
+/// `UgoiraPlayer` + `UgoiraPlaybackBar` with the inline reader so both
+/// surfaces stay visually and behaviourally consistent — same play
+/// button, same scrubber, same speed picker.
 struct DownloadedUgoiraViewer: View {
     let item: ArtworkDownloadItem
     let zipURL: URL
 
     @Environment(\.dismiss) private var dismiss
-    @State private var animation: UgoiraAnimation?
-    @State private var currentFrameIndex = 0
-    @State private var isPlaying = false
-    @State private var isLoading = false
-    @State private var isExporting = false
-    @State private var message: String?
+    @State private var player = UgoiraPlayer()
     @State private var exportedGIFURL: URL?
-    @State private var playbackTask: Task<Void, Never>?
+    @State private var isExporting = false
+    @State private var statusMessage: String?
 
     var body: some View {
         VStack(spacing: 0) {
@@ -23,41 +23,34 @@ struct DownloadedUgoiraViewer: View {
                 .padding(.vertical, 12)
                 .background(.bar)
 
-            ZStack {
-                if let animation, animation.frames.indices.contains(currentFrameIndex) {
-                    Image(nsImage: animation.frames[currentFrameIndex].image)
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .padding(18)
-                } else if isLoading {
-                    ProgressView(L10n.loadingUgoira)
-                        .padding(16)
-                        .keiPanel(16)
-                } else if let message {
-                    ContentUnavailableView(message, systemImage: "play.rectangle")
-                } else {
-                    ContentUnavailableView(L10n.previewUgoira, systemImage: "play.rectangle")
-                }
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(.quaternary)
+            canvas
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background(.quaternary)
 
-            controls
-                .padding(.horizontal, 18)
-                .padding(.vertical, 12)
-                .background(.bar)
+            UgoiraPlaybackBar(player: player) {
+                trailingActions
+            }
+
+            if let statusMessage {
+                statusRow(statusMessage)
+            }
         }
         .frame(minWidth: 760, minHeight: 560)
         .toolbar {
-            ToolbarItemGroup {
+            ToolbarItem(placement: .confirmationAction) {
                 Button {
-                    togglePlayback()
+                    player.togglePlayback()
                 } label: {
-                    Label(isPlaying ? L10n.pauseUgoira : L10n.playUgoira, systemImage: isPlaying ? "pause.fill" : "play.fill")
+                    Label(
+                        player.isPlaying ? L10n.pauseUgoira : L10n.playUgoira,
+                        systemImage: player.isPlaying ? "pause.fill" : "play.fill"
+                    )
                 }
                 .keyboardShortcut(.space, modifiers: [])
-                .disabled(animation == nil || isLoading)
+                .disabled(player.hasContent == false)
+            }
 
+            ToolbarItem(placement: .secondaryAction) {
                 Button {
                     revealZip()
                 } label: {
@@ -69,9 +62,11 @@ struct DownloadedUgoiraViewer: View {
             await load()
         }
         .onDisappear {
-            stopPlayback()
+            player.pause()
         }
     }
+
+    // MARK: - Header
 
     private var header: some View {
         HStack(spacing: 12) {
@@ -102,139 +97,173 @@ struct DownloadedUgoiraViewer: View {
             .labelStyle(.iconOnly)
             .buttonStyle(.bordered)
             .keyboardShortcut(.cancelAction)
+            .help(L10n.close)
         }
     }
 
-    private var controls: some View {
-        HStack(spacing: 12) {
-            Button {
-                togglePlayback()
-            } label: {
-                Label(
-                    isPlaying ? L10n.pauseUgoira : L10n.playUgoira,
-                    systemImage: isPlaying ? "pause.fill" : "play.fill"
-                )
-            }
-            .buttonStyle(.glassProminent)
-            .disabled(animation == nil || isLoading)
+    // MARK: - Canvas
 
-            if let animation {
-                Text(ugoiraSummary(animation))
-                    .font(.caption.monospacedDigit())
-                    .foregroundStyle(.secondary)
-                    .padding(.horizontal, 9)
-                    .padding(.vertical, 5)
-                    .keiGlass(12)
-            }
-
-            if isExporting {
-                ProgressView()
+    private var canvas: some View {
+        ZStack {
+            if let frame = currentFrame {
+                Image(nsImage: frame)
+                    .resizable()
+                    .interpolation(.medium)
+                    .aspectRatio(contentMode: .fit)
+                    .padding(18)
+                    .id(player.currentFrameIndex)
+            } else if player.isLoading {
+                ProgressView(L10n.loadingUgoira)
                     .controlSize(.small)
+                    .padding(14)
+                    .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+            } else if let message = player.failureMessage {
+                ContentUnavailableView {
+                    Label(L10n.ugoiraFailedToLoad, systemImage: "exclamationmark.triangle")
+                } description: {
+                    Text(message)
+                } actions: {
+                    Button(L10n.retry) {
+                        Task { await load(force: true) }
+                    }
+                    .buttonStyle(.borderedProminent)
+                }
+            } else {
+                ContentUnavailableView(L10n.previewUgoira, systemImage: "play.rectangle")
             }
+        }
+        .contentShape(Rectangle())
+        .onTapGesture {
+            player.togglePlayback()
+        }
+    }
 
-            if let message, animation != nil {
-                Text(message)
-                    .font(.caption)
+    private var currentFrame: NSImage? {
+        guard let animation = player.animation,
+              animation.frames.indices.contains(player.currentFrameIndex) else {
+            return nil
+        }
+        return animation.frames[player.currentFrameIndex].image
+    }
+
+    // MARK: - Status row
+
+    private func statusRow(_ message: String) -> some View {
+        HStack(spacing: 8) {
+            if isExporting {
+                ProgressView().controlSize(.small)
+            } else {
+                Image(systemName: "info.circle")
                     .foregroundStyle(.secondary)
-                    .lineLimit(1)
+            }
+            Text(message)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .lineLimit(2)
+            Spacer()
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 8)
+        .background(.bar)
+        .transition(.opacity)
+    }
+
+    // MARK: - Trailing actions
+
+    @ViewBuilder
+    private var trailingActions: some View {
+        Menu {
+            Button {
+                Task { await exportGIF() }
+            } label: {
+                Label(L10n.exportGIF, systemImage: "film")
+            }
+            .disabled(player.hasContent == false || isExporting)
+
+            ShareLink(item: zipURL) {
+                Label(L10n.shareUgoiraZip, systemImage: "archivebox")
             }
 
-            Spacer()
+            if let exportedGIFURL {
+                ShareLink(item: exportedGIFURL) {
+                    Label(L10n.shareExportedGIF, systemImage: "square.and.arrow.up")
+                }
+
+                Button {
+                    NSWorkspace.shared.activateFileViewerSelecting([exportedGIFURL])
+                } label: {
+                    Label(L10n.revealExportedGIF, systemImage: "folder")
+                }
+            }
+
+            Divider()
+
+            if let pixivURL = item.pixivURL {
+                Button {
+                    NSWorkspace.shared.open(pixivURL)
+                } label: {
+                    Label(L10n.openInPixiv, systemImage: "safari")
+                }
+
+                Button {
+                    PasteboardWriter.copy(pixivURL.absoluteString)
+                    showStatus(L10n.copied)
+                } label: {
+                    Label(L10n.copyLink, systemImage: "link")
+                }
+            }
 
             Button {
                 revealZip()
             } label: {
                 Label(L10n.revealInFinder, systemImage: "folder")
             }
-            .buttonStyle(.bordered)
-            .labelStyle(.iconOnly)
-            .help(L10n.revealInFinder)
-            .accessibilityLabel(L10n.revealInFinder)
-
-            Menu {
-                Button {
-                    Task { await exportGIF() }
-                } label: {
-                    Label(L10n.exportGIF, systemImage: "film")
-                }
-                .disabled(animation == nil || isLoading || isExporting)
-
-                ShareLink(item: zipURL) {
-                    Label(L10n.shareUgoiraZip, systemImage: "archivebox")
-                }
-
-                if let exportedGIFURL {
-                    ShareLink(item: exportedGIFURL) {
-                        Label(L10n.shareExportedGIF, systemImage: "square.and.arrow.up")
-                    }
-
-                    Button {
-                        NSWorkspace.shared.activateFileViewerSelecting([exportedGIFURL])
-                    } label: {
-                        Label(L10n.revealExportedGIF, systemImage: "folder")
-                    }
-                }
-
-                Divider()
-
-                if let pixivURL = item.pixivURL {
-                    Button {
-                        NSWorkspace.shared.open(pixivURL)
-                    } label: {
-                        Label(L10n.openInPixiv, systemImage: "safari")
-                    }
-
-                    Button {
-                        PasteboardWriter.copy(pixivURL.absoluteString)
-                        showTransientMessage(L10n.copied)
-                    } label: {
-                        Label(L10n.copyLink, systemImage: "link")
-                    }
-                }
-
-                Button {
-                    revealZip()
-                } label: {
-                    Label(L10n.revealInFinder, systemImage: "folder")
-                }
-            } label: {
+        } label: {
+            if isExporting {
+                ProgressView().controlSize(.small)
+            } else {
                 Label(L10n.moreActions, systemImage: "ellipsis.circle")
             }
-            .buttonStyle(.bordered)
-            .labelStyle(.iconOnly)
-            .help(L10n.moreActions)
-            .accessibilityLabel(L10n.moreActions)
         }
+        .menuStyle(.borderlessButton)
+        .menuIndicator(.hidden)
+        .labelStyle(.iconOnly)
+        .fixedSize()
+        .help(L10n.moreActions)
+        .accessibilityLabel(L10n.moreActions)
     }
 
-    private func load() async {
+    // MARK: - Loading
+
+    private func load(force: Bool = false) async {
         guard let frames = item.ugoiraFrames, frames.isEmpty == false else {
-            message = L10n.ugoiraMetadataMissing
+            player.reportFailure(L10n.ugoiraMetadataMissing)
             return
         }
 
-        stopPlayback()
-        isLoading = true
-        message = nil
-        currentFrameIndex = 0
+        if force == false, player.hasContent {
+            player.play()
+            return
+        }
+
+        player.beginLoading()
 
         do {
             let data = try Data(contentsOf: zipURL)
-            animation = try UgoiraFrameDecoder.decode(zipData: data, frames: frames)
-            isLoading = false
-            startPlayback()
+            let animation = try UgoiraFrameDecoder.decode(zipData: data, frames: frames)
+            player.install(animation)
         } catch {
-            isLoading = false
-            message = error.localizedDescription
+            player.reportFailure(error.localizedDescription)
         }
     }
 
+    // MARK: - Export
+
     private func exportGIF() async {
-        guard let animation else { return }
+        guard let animation = player.animation else { return }
         guard let url = saveGIFURL() else { return }
 
         isExporting = true
-        message = nil
         defer { isExporting = false }
 
         do {
@@ -242,9 +271,9 @@ struct DownloadedUgoiraViewer: View {
                 try UgoiraGIFExporter.export(animation: animation, to: url)
             }.value
             exportedGIFURL = url
-            message = String(format: L10n.exportedGIFFormat, url.lastPathComponent)
+            showStatus(String(format: L10n.exportedGIFFormat, url.lastPathComponent))
         } catch {
-            message = error.localizedDescription
+            showStatus(error.localizedDescription)
         }
     }
 
@@ -256,49 +285,16 @@ struct DownloadedUgoiraViewer: View {
         return panel.runModal() == .OK ? panel.url : nil
     }
 
-    private func ugoiraSummary(_ animation: UgoiraAnimation) -> String {
-        let seconds = Double(animation.totalDurationMilliseconds) / 1000.0
-        return "\(currentFrameIndex + 1) / \(animation.frameCount) · \(seconds.formatted(.number.precision(.fractionLength(1))))s"
-    }
-
-    private func togglePlayback() {
-        if isPlaying {
-            stopPlayback()
-        } else {
-            startPlayback()
-        }
-    }
-
-    private func startPlayback() {
-        guard let animation, animation.frames.isEmpty == false else { return }
-        stopPlayback()
-        isPlaying = true
-        playbackTask = Task {
-            while Task.isCancelled == false {
-                let frame = animation.frames[currentFrameIndex]
-                try? await Task.sleep(for: frame.delay)
-                guard Task.isCancelled == false else { return }
-                currentFrameIndex = (currentFrameIndex + 1) % animation.frameCount
-            }
-        }
-    }
-
-    private func stopPlayback() {
-        playbackTask?.cancel()
-        playbackTask = nil
-        isPlaying = false
-    }
-
     private func revealZip() {
         NSWorkspace.shared.activateFileViewerSelecting([zipURL])
     }
 
-    private func showTransientMessage(_ value: String) {
-        message = value
+    private func showStatus(_ message: String) {
+        statusMessage = message
         Task {
             try? await Task.sleep(for: .seconds(2.5))
-            if message == value {
-                message = nil
+            if statusMessage == message {
+                statusMessage = nil
             }
         }
     }

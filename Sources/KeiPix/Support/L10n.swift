@@ -234,6 +234,9 @@ enum L10n {
     static var previewUgoira: String { text("Preview Ugoira") }
     static var ugoiraMetadataMissing: String { text("Ugoira metadata is missing. Re-download this item to enable in-app preview and GIF export.") }
     static var playbackSpeed: String { text("Playback Speed") }
+    static var ugoiraSeek: String { text("Seek Frame") }
+    static var ugoiraTimeline: String { text("Ugoira Timeline") }
+    static var ugoiraFailedToLoad: String { text("Couldn't load this ugoira.") }
     static var export: String { text("Export") }
     static var `import`: String { text("Import") }
     static var downloadFolder: String { text("Download Folder") }

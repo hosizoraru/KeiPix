@@ -220,6 +220,9 @@
 "Preview Ugoira" = "Preview Ugoira";
 "Ugoira metadata is missing. Re-download this item to enable in-app preview and GIF export." = "Ugoira metadata is missing. Re-download this item to enable in-app preview and GIF export.";
 "Playback Speed" = "Playback Speed";
+"Seek Frame" = "Seek Frame";
+"Ugoira Timeline" = "Ugoira Timeline";
+"Couldn't load this ugoira." = "Couldn't load this ugoira.";
 "Export" = "Export";
 "Import" = "Import";
 "Download Folder" = "Download Folder";

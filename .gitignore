@@ -13,3 +13,5 @@ DerivedData/
 
 # Local Claude harness config
 .claude/
+.vscode/
+.codex/
