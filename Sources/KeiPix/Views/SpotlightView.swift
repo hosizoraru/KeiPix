@@ -281,12 +281,12 @@ struct SpotlightView: View {
                 articles = response.articles
                 nextURL = response.nextURL
             case .recommend:
-                // Pixiv app API accepts `recommend` as a `category`
-                // value the same way it accepts illust/manga/cosplay,
-                // so we route it through the same RPC even though the
-                // collection picker treats it as a top-level mode.
-                let response = try await store.spotlightArticles(category: "recommend")
-                articles = response.articles
+                // The Pixiv app API rejects `category=recommend` with
+                // HTTP 400 — Recommended is a Pixivision-Web-only
+                // shelf exposed at /{lang}/c/recommend, so we scrape
+                // the category landing page the same way Monthly
+                // Ranking scrapes the homepage.
+                articles = try await store.pixivisionRecommended()
                 nextURL = nil
             case .monthlyRanking:
                 articles = try await store.pixivisionMonthlyRanking()

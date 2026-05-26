@@ -1,68 +1,76 @@
 import Foundation
 
 /// Pure HTML → `[PixivSpotlightArticle]` parser for Pixivision's
-/// "本月排行榜" / "Monthly Ranking" sidebar widget.
+/// summary-card lists.
 ///
-/// Pixiv's app API only exposes the latest articles feed (`/v1/spotlight
+/// Pixiv's app API exposes only the latest articles feed (`/v1/spotlight
 /// /articles`), and its `category` query parameter is limited to the
-/// four enum values shipped in `SpotlightArticleCategory`. The monthly
-/// ranking and the "Recommended" landing page are products of
-/// Pixivision's web layer, so we mirror what
-/// `PixivisionArticleParser` does for individual articles: download
-/// the locale-specific homepage HTML and walk Pixivision's stable CSS
-/// class anchors (`alc__articles-list-group--ranking`, `_article-
-/// summary-card`, etc.).
+/// four `SpotlightArticleCategory` values. Two extra collections users
+/// expect from the spotlight tab — Monthly Ranking and Recommended —
+/// only exist in Pixivision's web layer:
 ///
-/// The parser deliberately avoids touching any locale-specific copy
-/// (`本月排行榜` / `Monthly Ranking` / `매월 인기 기사`) so the same
-/// regex set works for every language variant Pixivision ships
-/// without per-locale branches.
-enum PixivisionMonthlyRankingParser {
-    /// Parse the ranking entries out of the given homepage HTML.
-    /// Returns an empty array when the widget can't be found — the
-    /// store layer treats that as a soft failure (the surface stays
-    /// blank, no error banner) so a temporary Pixivision outage
-    /// doesn't take down the whole spotlight tab.
-    static func parse(html: String, sourceURL: URL) -> [PixivSpotlightArticle] {
+/// * `本月排行榜` / Monthly Ranking lives in the homepage sidebar as
+///   a `<section data-gtm-category="Ranking Area">` widget.
+/// * `推荐` / Recommended is a category landing page at
+///   `/{lang}/c/recommend` that lists the same `_article-summary-card`
+///   blocks the homepage uses.
+///
+/// Both pages share the same per-item markup (the
+/// `<article class="_article-summary-card">` block carrying the
+/// thumbnail, title, and `/{lang}/a/{id}` href). We extract that
+/// shared row into `parseSummaryCards(in:sourceURL:)` and let the two
+/// callers pick the right outer-region anchor. CSS-class anchors are
+/// language-agnostic so the same regex set works for every locale
+/// Pixivision ships.
+enum PixivisionArticleListParser {
+    /// Pulls the Monthly Ranking widget out of the locale homepage.
+    /// Anchors on `data-gtm-category="Ranking Area"` so we don't
+    /// accidentally match the homepage's regular "latest articles"
+    /// list, which uses the same outer `_articles-list-card` class.
+    static func parseHomepageRanking(html: String, sourceURL: URL) -> [PixivSpotlightArticle] {
         guard html.isEmpty == false else { return [] }
 
-        // The "Ranking Area" section ships in the right-hand sidebar
-        // alongside other `_articles-list-card` widgets; anchor on
-        // the GTM category attribute so we don't accidentally pick
-        // up the regular "Latest articles" list (which uses the same
-        // CSS class). `decodeAsText: false` is critical — without it
-        // `firstMatchedGroup` would strip every HTML tag from the
-        // section body, leaving plain prose for `parseRankingItems`
-        // to walk and zero items to extract.
+        // `decodeAsText: false` matters — without it the section body
+        // would have its HTML stripped before per-item scanning, so
+        // every regex would fail.
         let sectionPattern = #"<section[^>]*class="[^"]*_articles-list-card[^"]*"[^>]*data-gtm-category="Ranking Area"[^>]*>([\s\S]*?)</section>"#
         guard let sectionBody = firstMatchedGroup(in: html, pattern: sectionPattern, decodeAsText: false) else {
             return []
         }
-
-        return parseRankingItems(in: sectionBody, sourceURL: sourceURL)
+        return parseSummaryCards(in: sectionBody, sourceURL: sourceURL)
     }
 
-    /// Exposed for tests and for re-using the per-item parser when
-    /// the surrounding section was already extracted by another step
-    /// (e.g. when scraping a localised "View More" landing page that
-    /// drops the outer `<section>` wrapper).
-    static func parseRankingItems(in sectionBody: String, sourceURL: URL) -> [PixivSpotlightArticle] {
-        let itemPattern = #"<li[^>]*class="alc__articles-list-item"[^>]*>([\s\S]*?)</li>"#
-        guard let regex = try? NSRegularExpression(pattern: itemPattern, options: []) else {
+    /// Pulls every article card out of a category landing page (e.g.
+    /// `/zh/c/recommend`, `/en/c/illustration`). Pixivision wraps the
+    /// listing in `<div class="_medium-wide-container ...">` but the
+    /// rows themselves are the same `<article class=
+    /// "_article-summary-card">` blocks the homepage uses, so we
+    /// scan the whole document — `_article-summary-card` doesn't
+    /// appear outside the listing on these pages.
+    static func parseCategoryListing(html: String, sourceURL: URL) -> [PixivSpotlightArticle] {
+        guard html.isEmpty == false else { return [] }
+        return parseSummaryCards(in: html, sourceURL: sourceURL)
+    }
+
+    /// Exposed for tests and for callers that already have the
+    /// surrounding region extracted.
+    static func parseSummaryCards(in html: String, sourceURL: URL) -> [PixivSpotlightArticle] {
+        let cardPattern = #"<article[^>]*class="_article-summary-card"[^>]*>([\s\S]*?)</article>"#
+        guard let regex = try? NSRegularExpression(pattern: cardPattern, options: []) else {
             return []
         }
 
         var articles: [PixivSpotlightArticle] = []
         var seenIDs = Set<Int>()
-        let nsRange = NSRange(sectionBody.startIndex..<sectionBody.endIndex, in: sectionBody)
+        let nsRange = NSRange(html.startIndex..<html.endIndex, in: html)
 
-        regex.enumerateMatches(in: sectionBody, options: [], range: nsRange) { match, _, _ in
+        regex.enumerateMatches(in: html, options: [], range: nsRange) { match, _, _ in
             guard let match,
-                  let itemRange = Range(match.range(at: 1), in: sectionBody) else {
+                  let cardRange = Range(match.range(at: 1), in: html) else {
                 return
             }
-            let itemHTML = String(sectionBody[itemRange])
-            guard let article = parseRankingArticle(in: itemHTML, sourceURL: sourceURL),
+            let cardHTML = String(html[cardRange])
+            guard let article = parseSummaryCard(in: cardHTML, sourceURL: sourceURL),
                   seenIDs.insert(article.id).inserted else {
                 return
             }
@@ -72,40 +80,35 @@ enum PixivisionMonthlyRankingParser {
         return articles
     }
 
-    private static func parseRankingArticle(in itemHTML: String, sourceURL: URL) -> PixivSpotlightArticle? {
-        // Article ID: every item carries the canonical `/{lang}/a/{id}`
-        // path on at least two anchors (thumbnail + title link). The
-        // first match is enough because `seenIDs` upstream guards
-        // against duplicates.
+    private static func parseSummaryCard(in cardHTML: String, sourceURL: URL) -> PixivSpotlightArticle? {
+        // Article ID — both the thumbnail anchor and the title anchor
+        // carry `/{lang}/a/{id}`. First match is enough; `seenIDs`
+        // upstream guards against the dupe between the two.
         guard let articleID = firstCapturedInt(
-            in: itemHTML,
+            in: cardHTML,
             pattern: #"href="[^"]*/a/(\d+)""#
         ) else { return nil }
 
-        // Pixivision puts the title inside `<p class="asc__title">`,
-        // which can wrap onto two lines via `<br>`. We strip tags so
-        // the user sees a single-line title in the card.
+        // Title sits inside `<p class="asc__title">` and may contain
+        // inline tags or HTML entities. `stripTags` collapses both.
         let title = firstMatchedGroup(
-            in: itemHTML,
+            in: cardHTML,
             pattern: #"<p[^>]*class="asc__title"[^>]*>([\s\S]*?)</p>"#
         ).flatMap { stripTags($0) } ?? ""
 
-        // The thumbnail comes through as `style="background-image:
+        // Thumbnail comes through as `style="background-image:
         // url(...)"` inside `<div class="_thumbnail">`. This is a
-        // stylesheet pattern Pixivision has used for years; both
-        // Pixivision Web and Pixivision iOS use the same shape.
+        // long-standing Pixivision pattern that survives across
+        // homepage / category / tag landing pages.
         let thumbnailURL = firstMatchedGroup(
-            in: itemHTML,
+            in: cardHTML,
             pattern: #"<div[^>]*class="_thumbnail"[^>]*style="[^"]*url\(([^)]+)\)[^"]*"[^>]*>"#,
             decodeAsText: false
         )
         .flatMap { absoluteURL(from: $0, sourceURL: sourceURL) }
 
-        // `data-gtm-label` on the title anchor doubles as the
-        // article href; use it as a defensive fallback for the
-        // canonical URL when the relative link can't be resolved.
         let articleHref = firstMatchedGroup(
-            in: itemHTML,
+            in: cardHTML,
             pattern: #"<a[^>]*href="([^"]*/a/\d+)""#,
             decodeAsText: false
         )
@@ -119,9 +122,9 @@ enum PixivisionMonthlyRankingParser {
             pureTitle: title,
             thumbnail: thumbnailURL,
             articleURL: articleURL,
-            // Pixivision doesn't expose a publish date on the ranking
-            // card. Use `now` so the card sorts naturally if the
-            // collection is later mixed with date-aware lists.
+            // No publish date on the summary card. Use `now` so the
+            // ordering matches Pixivision's own (page-order = curated
+            // order) when the list is mixed with date-aware feeds.
             publishDate: Date()
         )
     }

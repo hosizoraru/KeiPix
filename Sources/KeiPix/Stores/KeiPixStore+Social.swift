@@ -63,14 +63,27 @@ extension KeiPixStore {
 
     /// Pixivision's "本月排行榜" / Monthly Ranking widget only ships
     /// on the locale homepage; there's no app-API equivalent. Download
-    /// the homepage and run it through `PixivisionMonthlyRankingParser`.
+    /// the homepage and run it through `PixivisionArticleListParser`.
     /// Returns an empty array on parse failure so the spotlight surface
     /// degrades gracefully (empty state, no error banner) rather than
     /// breaking the whole tab.
     func pixivisionMonthlyRanking() async throws -> [PixivSpotlightArticle] {
         let homepageURL = URL(string: "https://www.pixivision.net/zh/")!
         let html = try await fetchPixivisionHTML(at: homepageURL)
-        return PixivisionMonthlyRankingParser.parse(html: html, sourceURL: homepageURL)
+        return PixivisionArticleListParser.parseHomepageRanking(html: html, sourceURL: homepageURL)
+    }
+
+    /// Pixivision's `推荐 / Recommended` shelf is exposed as a
+    /// category landing page (`/{lang}/c/recommend`) on the web —
+    /// there's no app-API equivalent. The Pixiv app endpoint
+    /// `/v1/spotlight/articles?category=recommend` returns HTTP 400.
+    /// Scrape the category listing the same way Monthly Ranking
+    /// scrapes the homepage; both pages share the
+    /// `<article class="_article-summary-card">` building block.
+    func pixivisionRecommended() async throws -> [PixivSpotlightArticle] {
+        let listingURL = URL(string: "https://www.pixivision.net/zh/c/recommend")!
+        let html = try await fetchPixivisionHTML(at: listingURL)
+        return PixivisionArticleListParser.parseCategoryListing(html: html, sourceURL: listingURL)
     }
 
     /// Downloads the live Pixivision page for an article and parses it
