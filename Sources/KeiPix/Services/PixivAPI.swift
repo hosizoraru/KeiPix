@@ -393,19 +393,12 @@ actor PixivAPI {
     }
 
     func search(keyword: String, options: SearchOptions) async throws -> PixivFeedResponse {
-        var query = searchQuery(keyword: keyword, options: options)
+        var query = Self.illustSearchQuery(keyword: keyword, options: options)
 
         if options.sort == .popularPreview {
             return try await requestFeed(path: "/v1/search/popular-preview/illust", query: query)
         }
 
-        query["sort"] = options.sort.apiValue
-        if options.minimumBookmarks.value > 0 {
-            query["bookmark_num_min"] = "\(options.minimumBookmarks.value)"
-        }
-        if options.maximumBookmarks.value > 0 {
-            query["bookmark_num_max"] = "\(options.maximumBookmarks.value)"
-        }
         if let startDate = options.dateRange.startDate() {
             query["start_date"] = Self.searchDateFormatter.string(from: startDate)
             query["end_date"] = Self.searchDateFormatter.string(from: Date())
@@ -432,6 +425,15 @@ actor PixivAPI {
     }
 
     private func searchQuery(keyword: String, options: SearchOptions) -> [String: String] {
+        Self.searchQuery(keyword: keyword, options: options)
+    }
+
+    /// Static query builder shared between the live `search(_:)`
+    /// endpoint and the regression test for `bookmark_num_min` /
+    /// `bookmark_num_max` wiring. Exposed `internal` so the test
+    /// target can build an exact query map without spinning up the
+    /// authenticated client.
+    static func searchQuery(keyword: String, options: SearchOptions) -> [String: String] {
         var query = [
             "filter": "for_android",
             "include_translated_tag_results": "true",
@@ -441,6 +443,24 @@ actor PixivAPI {
         ]
         if let searchAIType = options.aiFilter.apiValue {
             query["search_ai_type"] = searchAIType
+        }
+        return query
+    }
+
+    /// Full query for the `/v1/search/illust` endpoint, including the
+    /// numeric bookmark-count thresholds that fan out to
+    /// `bookmark_num_min` / `bookmark_num_max`. Used by the live
+    /// search call and pinned by `IllustSearchQueryWiringTests` so we
+    /// catch any regression where one of the two thresholds gets
+    /// dropped.
+    static func illustSearchQuery(keyword: String, options: SearchOptions) -> [String: String] {
+        var query = searchQuery(keyword: keyword, options: options)
+        query["sort"] = options.sort.apiValue
+        if options.minimumBookmarks.value > 0 {
+            query["bookmark_num_min"] = "\(options.minimumBookmarks.value)"
+        }
+        if options.maximumBookmarks.value > 0 {
+            query["bookmark_num_max"] = "\(options.maximumBookmarks.value)"
         }
         return query
     }
