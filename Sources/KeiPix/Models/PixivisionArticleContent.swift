@@ -182,7 +182,18 @@ enum PixivisionArticleParser {
                 .flatMap { URL(string: $0) }
 
         let bodyHTML = extractBodyHTML(in: html)
-        let blocks = parseBlocks(in: bodyHTML)
+        // Pixivision occasionally nests one or more `_related-articles`
+        // shelves *inside* the article body container instead of below
+        // it. Their `<h3 class="rla__heading">` matches the prose
+        // heading regex, so without this strip step the shelf headings
+        // ("XXX相关最新文章" / "喜欢XXX的人也喜欢这些") render twice —
+        // once as bare prose blocks at the bottom of the article body
+        // and again as the headers of `RelatedArticlesShelf`. We
+        // already extract those shelves separately via
+        // `parseRelatedSections`, so removing them from the body
+        // before block parsing keeps each heading rendered once.
+        let prunedBody = removeRelatedShelves(from: bodyHTML)
+        let blocks = parseBlocks(in: prunedBody)
         let tags = parseTags(in: html, sourceURL: sourceURL)
         let relatedSections = parseRelatedSections(in: html, sourceURL: sourceURL)
 
@@ -449,6 +460,60 @@ enum PixivisionArticleParser {
     /// We use the `data-gtm-category` attribute to decide which `Kind`
     /// the shelf belongs to so the reader can decorate it with the
     /// right localized label and SF symbol.
+    /// Removes every `<div class="_related-articles" ...>...</div>`
+    /// block from the body HTML. Used by `parse(...)` so the prose
+    /// scanner doesn't mistake a related-shelf `<h3 class="rla__heading">`
+    /// for an article-body heading. Walks balanced `<div>` open/close
+    /// counts the same way `extractBodyHTML` walks `<article>`, so the
+    /// trailing `<div class="rla__more-container">` and any nested
+    /// `<article>` cards inside the shelf get removed in one go.
+    private static func removeRelatedShelves(from html: String) -> String {
+        guard html.isEmpty == false else { return html }
+        let opener = #"<div\b[^>]*class="_related-articles"[^>]*>"#
+        guard let regex = try? NSRegularExpression(pattern: opener, options: []) else {
+            return html
+        }
+
+        var result = html
+        let openTag = "<div"
+        let closeTag = "</div>"
+
+        while true {
+            let range = NSRange(result.startIndex..<result.endIndex, in: result)
+            guard let match = regex.firstMatch(in: result, options: [], range: range),
+                  let openTagRange = Range(match.range, in: result) else {
+                break
+            }
+
+            var depth = 1
+            var cursor = openTagRange.upperBound
+
+            while depth > 0, cursor < result.endIndex {
+                let nextOpen = result.range(of: openTag, range: cursor..<result.endIndex)
+                let nextClose = result.range(of: closeTag, range: cursor..<result.endIndex)
+                guard let close = nextClose else { break }
+
+                if let open = nextOpen, open.lowerBound < close.lowerBound {
+                    depth += 1
+                    cursor = open.upperBound
+                } else {
+                    depth -= 1
+                    cursor = close.upperBound
+                }
+            }
+
+            if depth == 0 {
+                result.replaceSubrange(openTagRange.lowerBound..<cursor, with: "")
+            } else {
+                // Unbalanced — bail to avoid an infinite loop. The
+                // body still renders correctly without this strip.
+                break
+            }
+        }
+
+        return result
+    }
+
     private static func parseRelatedSections(in html: String, sourceURL: URL) -> [PixivisionRelatedArticlesSection] {
         let pattern = #"<div\b[^>]*class="_related-articles"[^>]*data-gtm-category="([^"]+)"[^>]*>([\s\S]*?)</ul>\s*(?:<div[^>]*class="rla__more-container"[^>]*>([\s\S]*?)</div>\s*)?</div>"#
         guard let regex = try? NSRegularExpression(pattern: pattern, options: []) else {

@@ -176,6 +176,58 @@ struct PixivisionArticleParserTests {
         #expect(emptyParsed.relatedSections.isEmpty)
     }
 
+    @Test("Related-shelves nested inside the article body don't double-render their headings")
+    func stripsRelatedShelvesFromBodyBlocks() {
+        // Pixivision occasionally renders the first one or two
+        // related-articles shelves *inside* the
+        // `am__article-body-container` wrapper instead of below it.
+        // Their `<h3 class="rla__heading">` looks identical to a body
+        // heading to the prose scanner, so without the strip step the
+        // shelf headings ("XX相关最新文章" / "喜欢XX的人也喜欢这些")
+        // render twice — once as bare text in the prose flow, then
+        // again as the headers of `RelatedArticlesShelf`.
+        var html = """
+        <html><body>
+        <article class="am__article-body-container">
+        <p>Body paragraph.</p>
+        <div class="_related-articles" data-gtm-category="Related Article Latest">
+        <h3 class="rla__heading yellow"><a href="/zh/t/255">腿部相关最新文章</a></h3>
+        <ul class="_article-related-card-test-list">
+        <li class="arrctl__list-item"><article>
+        <a href="/zh/a/12345" class="arrct__thumbnail-container">
+        <div class="_thumbnail"><img class="thm__image" src="https://example.com/cover.jpg" alt="cover"></div>
+        </a>
+        <div class="arrct__title-container">
+        <h4 class="arrct__title"><a href="/zh/a/12345">A nested shelf article</a></h4>
+        </div></article></li>
+        </ul></div>
+        </article>
+        </body></html>
+        """
+        let parsed = PixivisionArticleParser.parse(
+            html: html,
+            articleID: 1,
+            sourceURL: URL(string: "https://www.pixivision.net/zh/a/1")!
+        )
+
+        // The body should yield exactly one paragraph block — the
+        // shelf heading must not bleed into prose.
+        let headingTexts = parsed.blocks.compactMap { block -> String? in
+            if case .heading(let t) = block { return t } else { return nil }
+        }
+        let paragraphTexts = parsed.blocks.compactMap { block -> String? in
+            if case .paragraph(let t) = block { return t } else { return nil }
+        }
+        #expect(paragraphTexts == ["Body paragraph."])
+        #expect(headingTexts.contains("腿部相关最新文章") == false)
+        #expect(headingTexts.contains("A nested shelf article") == false)
+
+        // The shelf still surfaces in `relatedSections` exactly once.
+        #expect(parsed.relatedSections.count == 1)
+        #expect(parsed.relatedSections.first?.heading == "腿部相关最新文章")
+        #expect(parsed.relatedSections.first?.articles.first?.articleID == 12345)
+    }
+
     // MARK: - Fixtures
 
     /// Trimmed, real-world Pixivision article HTML with one heading,
