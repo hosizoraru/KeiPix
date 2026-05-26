@@ -511,8 +511,14 @@ private struct SpotlightArticleCard: View {
                     .multilineTextAlignment(.leading)
             }
 
-            Spacer(minLength: 2)
-
+            // No `Spacer` here on purpose. The previous version pushed
+            // the date footer to the bottom of the available space
+            // with `Spacer(minLength: 2)`, which combined with the
+            // grid's adaptive sizing meant a card with a short
+            // 2-line title still grew to fit the tallest card on its
+            // row — leaving a big gap between the title and the
+            // date. Letting the metadata block hug its content keeps
+            // every card the height of its actual text.
             HStack(alignment: .firstTextBaseline, spacing: 8) {
                 Label(article.publishDate.formatted(date: .abbreviated, time: .omitted), systemImage: "calendar")
                     .lineLimit(1)

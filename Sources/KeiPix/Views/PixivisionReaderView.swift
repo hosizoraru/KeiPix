@@ -32,7 +32,20 @@ struct PixivisionReaderView: View {
 
     var body: some View {
         ScrollView {
-            LazyVStack(alignment: .leading, spacing: 22) {
+            // VStack instead of LazyVStack on purpose. Pixivision
+            // articles top out at ~40 children (1 hero + 1 title + ~30
+            // prose/work blocks + 1 tags row + 3 related shelves);
+            // SwiftUI's lazy machinery is for thousands of items, and
+            // when child intrinsic sizes change as images decode, its
+            // _LazyLayoutViewCache.withMutableCacheState path re-runs
+            // sizeThatFits in a recursive loop (caught in the macOS
+            // cpu_resource diagnostic at 100% CPU for 90 s, with RAM
+            // ballooning past 400 MB on what should be a static page).
+            // Switching to a regular VStack keeps every cell mounted
+            // for the lifetime of the article: cells never get torn
+            // down, RemoteImageView state survives scroll-up, and the
+            // layout cache settles in one frame.
+            VStack(alignment: .leading, spacing: 22) {
                 hero
 
                 titleBlock
