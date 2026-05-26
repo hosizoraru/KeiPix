@@ -33,6 +33,16 @@
                 <string>keipix</string>
             </array>
         </dict>
+        <dict>
+            <key>CFBundleURLName</key>
+            <string>net.pixiv.deeplink</string>
+            <key>CFBundleTypeRole</key>
+            <string>Viewer</string>
+            <key>CFBundleURLSchemes</key>
+            <array>
+                <string>pixiv</string>
+            </array>
+        </dict>
     </array>
     <key>CFBundleDocumentTypes</key>
     <array>

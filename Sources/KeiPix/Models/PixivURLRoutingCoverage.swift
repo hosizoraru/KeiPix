@@ -33,6 +33,21 @@ enum PixivURLRoutingCoverage {
             expectedDestination: .artwork(345)
         ),
         PixivURLRoutingSample(
+            id: "pixiv-scheme-artworks-host",
+            input: "pixiv://artworks/678",
+            expectedDestination: .artwork(678)
+        ),
+        PixivURLRoutingSample(
+            id: "pixiv-scheme-users-host",
+            input: "pixiv://users/901",
+            expectedDestination: .user(901)
+        ),
+        PixivURLRoutingSample(
+            id: "pixiv-scheme-illust-query",
+            input: "pixiv://illust?illust_id=234",
+            expectedDestination: .artwork(234)
+        ),
+        PixivURLRoutingSample(
             id: "keipix-nested",
             input: "keipix://open?url=https://www.pixiv.net/tags/OC",
             expectedDestination: .tag("OC")
