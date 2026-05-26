@@ -287,6 +287,28 @@ actor PixivAPI {
         ) as EmptyResponse
     }
 
+    /// Pulls the current account-wide AI display preference.
+    /// Mirrors the verified Pixiv app endpoint Pixez uses.
+    func aiShowSettings() async throws -> PixivAIShowSettings {
+        try await requestJSON(
+            URL(string: "/v1/user/ai-show-settings", relativeTo: Endpoint.apiBase)!,
+            method: "GET",
+            form: nil
+        )
+    }
+
+    /// Updates the account-wide AI display preference. Pixiv echoes the new
+    /// value back, so we decode the response and return it for the caller
+    /// to confirm the round-trip.
+    @discardableResult
+    func setAIShowEnabled(_ isEnabled: Bool) async throws -> PixivAIShowSettings {
+        try await requestJSON(
+            URL(string: "/v1/user/ai-show-settings/edit", relativeTo: Endpoint.apiBase)!,
+            method: "POST",
+            form: ["show_ai": isEnabled ? "true" : "false"]
+        )
+    }
+
     func userDetail(userID: Int) async throws -> PixivUserDetail {
         try await requestJSON(
             URL(string: "/v1/user/detail?filter=for_android&user_id=\(userID)", relativeTo: Endpoint.apiBase)!,

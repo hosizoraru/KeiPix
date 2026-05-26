@@ -51,6 +51,9 @@ struct SettingsView: View {
             if store.session != nil, store.restrictedModeEnabled == nil {
                 await store.refreshRestrictedModeSetting()
             }
+            if store.session != nil, store.aiShowEnabled == nil {
+                await store.refreshAIShowSetting()
+            }
         }
         .sheet(isPresented: $coordinator.isAccountLoginPresented) {
             LoginSheetView(store: store)
@@ -167,6 +170,7 @@ struct SettingsView: View {
                 store: store,
                 coordinator: coordinator,
                 updateRestrictedMode: { value in await updateRestrictedMode(value) },
+                updateAIShow: { value in await updateAIShow(value) },
                 syncFromPixiv: { await syncMutedContentFromPixiv() },
                 uploadToPixiv: { await uploadMutedContentToPixiv() },
                 importLocalFile: { importLocalMutedContent() },
@@ -285,6 +289,18 @@ struct SettingsView: View {
             try await store.setRestrictedModeEnabled(value)
         } catch {
             coordinator.restrictedModeMessage = error.localizedDescription
+        }
+    }
+
+    private func updateAIShow(_ value: Bool) async {
+        coordinator.isUpdatingAIShow = true
+        coordinator.aiShowMessage = nil
+        defer { coordinator.isUpdatingAIShow = false }
+
+        do {
+            try await store.setAIShowEnabled(value)
+        } catch {
+            coordinator.aiShowMessage = error.localizedDescription
         }
     }
 }

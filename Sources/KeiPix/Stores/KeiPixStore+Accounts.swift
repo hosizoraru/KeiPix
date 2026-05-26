@@ -9,6 +9,7 @@ extension KeiPixStore {
             storedAccounts = try await api.storedAccounts()
             if session != nil {
                 await refreshRestrictedModeSetting()
+                await refreshAIShowSetting()
                 await reloadCurrentFeed()
             }
         } catch {
@@ -32,6 +33,7 @@ extension KeiPixStore {
             isLoginPresented = false
             selectedRoute = .home
             await refreshRestrictedModeSetting()
+            await refreshAIShowSetting()
             await reloadCurrentFeed()
         } catch {
             errorMessage = error.localizedDescription
@@ -50,6 +52,7 @@ extension KeiPixStore {
             isTokenLoginPresented = false
             selectedRoute = .home
             await refreshRestrictedModeSetting()
+            await refreshAIShowSetting()
             await reloadCurrentFeed()
             return true
         } catch {
@@ -66,6 +69,7 @@ extension KeiPixStore {
             resetLoadedSessionContent()
             if session != nil {
                 await refreshRestrictedModeSetting()
+                await refreshAIShowSetting()
                 await reloadCurrentFeed()
             }
         } catch {
@@ -87,6 +91,7 @@ extension KeiPixStore {
             selectedRoute = .home
             if session != nil {
                 await refreshRestrictedModeSetting()
+                await refreshAIShowSetting()
                 await reloadCurrentFeed()
             }
         } catch {
@@ -101,6 +106,7 @@ extension KeiPixStore {
             resetLoadedSessionContent()
             if session != nil {
                 await refreshRestrictedModeSetting()
+                await refreshAIShowSetting()
                 await reloadCurrentFeed()
             }
         } catch {

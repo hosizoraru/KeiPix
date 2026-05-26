@@ -247,3 +247,17 @@ struct PixivRestrictedModeSettings: Decodable, Sendable {
         case isRestrictedModeEnabled = "is_restricted_mode_enabled"
     }
 }
+
+/// Response shape for `/v1/user/ai-show-settings(/edit)`.
+///
+/// `show_ai = true` means the account-wide preference asks Pixiv to keep
+/// AI-generated artworks visible across clients; `false` is Pixiv's
+/// "partially hidden" mode. Pixez ships the same toggle under "AI work
+/// display settings" and reads/writes the same field.
+struct PixivAIShowSettings: Decodable, Sendable {
+    let showAI: Bool
+
+    enum CodingKeys: String, CodingKey {
+        case showAI = "show_ai"
+    }
+}

@@ -72,6 +72,10 @@ final class KeiPixStore {
     var hideR18GArtworks = UserDefaults.standard.bool(forKey: "hideR18GArtworks")
     var maskSensitivePreviews = UserDefaults.standard.object(forKey: "maskSensitivePreviews") as? Bool ?? false
     var restrictedModeEnabled: Bool?
+    /// Account-wide AI display preference (Pixiv `show_ai`). `nil` until the
+    /// store has either no session, a guest/test session, or a successful
+    /// fetch — same lifecycle as `restrictedModeEnabled`.
+    var aiShowEnabled: Bool?
     var defaultBookmarkRestrict = KeiPixStore.loadEnum("defaultBookmarkRestrict", defaultValue: BookmarkRestrict.public)
     var defaultFollowRestrict = KeiPixStore.loadEnum("defaultFollowRestrict", defaultValue: BookmarkRestrict.public)
     var followCreatorAfterBookmark = UserDefaults.standard.object(forKey: "followCreatorAfterBookmark") as? Bool ?? false
@@ -592,6 +596,35 @@ final class KeiPixStore {
             try await api.setRestrictedModeEnabled(value)
         } catch {
             restrictedModeEnabled = previous
+            throw error
+        }
+    }
+
+    /// Pulls the account-wide AI display setting (Pixiv `show_ai`) into the
+    /// store. Mirrors `refreshRestrictedModeSetting()` — keeps the value `nil`
+    /// when no live session is available so the Settings UI knows to show
+    /// "unknown" rather than a stale boolean.
+    func refreshAIShowSetting() async {
+        guard session != nil, usesLocalSampleAccount == false else {
+            aiShowEnabled = nil
+            return
+        }
+
+        do {
+            aiShowEnabled = try await api.aiShowSettings().showAI
+        } catch {
+            aiShowEnabled = nil
+        }
+    }
+
+    func setAIShowEnabled(_ value: Bool) async throws {
+        let previous = aiShowEnabled
+        aiShowEnabled = value
+        do {
+            let response = try await api.setAIShowEnabled(value)
+            aiShowEnabled = response.showAI
+        } catch {
+            aiShowEnabled = previous
             throw error
         }
     }

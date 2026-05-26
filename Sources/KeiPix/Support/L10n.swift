@@ -501,7 +501,8 @@ enum L10n {
     static var hideMutedContent: String { text("Hide muted content") }
     static var hideAIArtworks: String { text("Hide AI-generated artworks") }
     static var pixivAIDisplay: String { text("Pixiv AI Display") }
-    static var pixivAIDisplayHint: String { text("KeiPix applies AI visibility locally and through search filters. Pixiv account-wide AI display has no verified App API endpoint in this build.") }
+    static var pixivAIDisplayHint: String { text("Toggles the account-wide AI display on Pixiv. When off, Pixiv hides AI-generated artworks across every client signed into the account.") }
+    static var pixivAIDisplayUnknownHint: String { text("Sign in with a real Pixiv account to manage account-wide AI visibility.") }
     static var aiVisibilityLocalHidden: String { text("Local AI artworks hidden") }
     static var aiVisibilityLocalVisible: String { text("Local AI artworks visible") }
     static var hideR18Artworks: String { text("Hide R-18 artworks") }

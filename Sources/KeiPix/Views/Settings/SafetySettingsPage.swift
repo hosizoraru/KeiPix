@@ -4,6 +4,7 @@ struct SafetySettingsPage: View {
     @Bindable var store: KeiPixStore
     var coordinator: SettingsCoordinator
     var updateRestrictedMode: (Bool) async -> Void
+    var updateAIShow: (Bool) async -> Void
     var syncFromPixiv: () async -> Void
     var uploadToPixiv: () async -> Void
     var importLocalFile: () -> Void
@@ -33,12 +34,9 @@ struct SafetySettingsPage: View {
         } header: {
             Text(L10n.contentFilters)
         } footer: {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(L10n.pixivAIDisplayHint)
-                Text(L10n.maskSensitivePreviewsHint)
-            }
-            .font(.caption)
-            .foregroundStyle(.secondary)
+            Text(L10n.maskSensitivePreviewsHint)
+                .font(.caption)
+                .foregroundStyle(.secondary)
         }
     }
 
@@ -60,12 +58,32 @@ struct SafetySettingsPage: View {
                     .foregroundStyle(.red)
                     .textSelection(.enabled)
             }
+
+            HStack(spacing: 8) {
+                Toggle(L10n.pixivAIDisplay, isOn: aiShowBinding)
+                    .disabled(store.aiShowEnabled == nil || coordinator.isUpdatingAIShow)
+
+                if store.aiShowEnabled == nil || coordinator.isUpdatingAIShow {
+                    ProgressView()
+                        .controlSize(.small)
+                }
+            }
+
+            if let aiShowMessage = coordinator.aiShowMessage {
+                Text(aiShowMessage)
+                    .font(.caption)
+                    .foregroundStyle(.red)
+                    .textSelection(.enabled)
+            }
         } header: {
             Text("Pixiv")
         } footer: {
-            Text(L10n.pixivRestrictedModeHint)
-                .font(.caption)
-                .foregroundStyle(.secondary)
+            VStack(alignment: .leading, spacing: 4) {
+                Text(L10n.pixivRestrictedModeHint)
+                Text(L10n.pixivAIDisplayHint)
+            }
+            .font(.caption)
+            .foregroundStyle(.secondary)
         }
     }
 
@@ -167,6 +185,14 @@ struct SafetySettingsPage: View {
             store.restrictedModeEnabled ?? false
         } set: { value in
             Task { await updateRestrictedMode(value) }
+        }
+    }
+
+    private var aiShowBinding: Binding<Bool> {
+        Binding {
+            store.aiShowEnabled ?? false
+        } set: { value in
+            Task { await updateAIShow(value) }
         }
     }
 }

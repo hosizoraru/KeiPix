@@ -29,6 +29,9 @@ final class SettingsCoordinator {
     var isUpdatingRestrictedMode = false
     var restrictedModeMessage: String?
 
+    var isUpdatingAIShow = false
+    var aiShowMessage: String?
+
     var isLogoutConfirmationPresented = false
     var isAccountLoginPresented = false
     var isTokenLoginPresented = false
