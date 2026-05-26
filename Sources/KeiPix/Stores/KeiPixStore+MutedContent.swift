@@ -365,10 +365,42 @@ extension KeiPixStore {
         }
 
         let commentText = comment.comment ?? ""
-        for phrase in mutedCommentPhraseList where commentText.localizedCaseInsensitiveContains(phrase) {
+        for phrase in mutedCommentPhraseList where Self.commentPhraseMatches(phrase, in: commentText) {
             reasons.append(.phrase(phrase))
         }
         return reasons
+    }
+
+    /// Returns whether a stored mute phrase matches the comment text.
+    ///
+    /// Supports two formats, mirroring Pixez's `BanTagPersist.isRegexMatch`:
+    /// - Plain phrases match case-insensitively as substrings.
+    /// - Phrases wrapped in `/.../` are treated as ICU regular expressions
+    ///   (case-insensitive, multiline). Invalid patterns silently fall back
+    ///   to substring matching so a malformed entry never hides nothing or
+    ///   crashes the comment list.
+    nonisolated static func commentPhraseMatches(_ phrase: String, in text: String) -> Bool {
+        guard let regex = regexFromPhrase(phrase) else {
+            return text.localizedCaseInsensitiveContains(phrase)
+        }
+        let range = NSRange(text.startIndex..., in: text)
+        return regex.firstMatch(in: text, options: [], range: range) != nil
+    }
+
+    /// Parses a stored phrase into an `NSRegularExpression` if it uses the
+    /// `/pattern/` regex syntax. Returns `nil` for plain phrases or for
+    /// patterns that fail to compile.
+    nonisolated static func regexFromPhrase(_ phrase: String) -> NSRegularExpression? {
+        let trimmed = phrase.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard trimmed.count >= 2, trimmed.hasPrefix("/"), trimmed.hasSuffix("/") else {
+            return nil
+        }
+        let pattern = String(trimmed.dropFirst().dropLast())
+        guard pattern.isEmpty == false else { return nil }
+        return try? NSRegularExpression(
+            pattern: pattern,
+            options: [.caseInsensitive, .dotMatchesLineSeparators]
+        )
     }
 
     func normalizedCommentPhrase(_ phrase: String) -> String {

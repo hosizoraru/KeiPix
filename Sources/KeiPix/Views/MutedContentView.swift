@@ -263,28 +263,37 @@ struct MutedContentView: View {
     }
 
     private var addCommentPhraseRow: some View {
-        HStack(spacing: 10) {
-            TextField(L10n.addMutedCommentPhrase, text: $newCommentPhraseText)
-                .textFieldStyle(.roundedBorder)
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 10) {
+                TextField(L10n.addMutedCommentPhrase, text: $newCommentPhraseText)
+                    .textFieldStyle(.roundedBorder)
 
-            Button {
-                let normalized = store.normalizedCommentPhrase(newCommentPhraseText)
-                let wasMuted = store.mutedCommentPhraseList.contains {
-                    $0.localizedCaseInsensitiveCompare(normalized) == .orderedSame
+                Button {
+                    let normalized = store.normalizedCommentPhrase(newCommentPhraseText)
+                    let wasMuted = store.mutedCommentPhraseList.contains {
+                        $0.localizedCaseInsensitiveCompare(normalized) == .orderedSame
+                    }
+                    store.muteCommentPhrase(normalized)
+                    statusMessageIsError = false
+                    if wasMuted == false {
+                        store.undoAction = AppUndoAction(kind: .unmuteCommentPhrase(normalized))
+                        statusMessage = String(format: L10n.mutedCommentPhraseFormat, normalized)
+                    } else {
+                        statusMessage = String(format: L10n.alreadyMutedCommentPhraseFormat, normalized)
+                    }
+                    newCommentPhraseText = ""
+                } label: {
+                    Label(L10n.addPhrase, systemImage: "plus.circle")
                 }
-                store.muteCommentPhrase(normalized)
-                statusMessageIsError = false
-                if wasMuted == false {
-                    store.undoAction = AppUndoAction(kind: .unmuteCommentPhrase(normalized))
-                    statusMessage = String(format: L10n.mutedCommentPhraseFormat, normalized)
-                } else {
-                    statusMessage = String(format: L10n.alreadyMutedCommentPhraseFormat, normalized)
-                }
-                newCommentPhraseText = ""
-            } label: {
-                Label(L10n.addPhrase, systemImage: "plus.circle")
+                .disabled(store.normalizedCommentPhrase(newCommentPhraseText).isEmpty)
             }
-            .disabled(store.normalizedCommentPhrase(newCommentPhraseText).isEmpty)
+
+            // Surfaces the /pattern/ regex syntax matching Pixez's BanTag
+            // behaviour. Plain phrases keep working as substring matches —
+            // the slash convention only opts a single entry into regex mode.
+            Text(L10n.commentRegexHint)
+                .font(.caption)
+                .foregroundStyle(.secondary)
         }
     }
 

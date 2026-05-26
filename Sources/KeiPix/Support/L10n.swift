@@ -492,6 +492,7 @@ enum L10n {
     static var blockTagsHeader: String { text("Block Tags") }
     static var bulkBlockNothingSelected: String { text("Pick at least one item to block.") }
     static var bulkBlockSummaryFormat: String { text("Blocked %d item(s).") }
+    static var commentRegexHint: String { text("Wrap a phrase in /slashes/ to match as a regular expression — e.g. /^spam.*/i.") }
     static var showTranslatedTags: String { text("Show translated tag names") }
     static var contentFilters: String { text("Content Filters") }
     static var showContentBadges: String { text("Show content badges") }
