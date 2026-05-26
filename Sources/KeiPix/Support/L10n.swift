@@ -500,6 +500,14 @@ enum L10n {
     static var imageQualityOriginal: String { text("Original Quality") }
     static var imageQualityStandard: String { text("Standard Quality") }
     static var imageQualityToggleHint: String { text("Toggle between Pixiv's original image and the standard preview while reading.") }
+    static var imageQualityTierMedium: String { text("Medium") }
+    static var imageQualityTierLarge: String { text("Large") }
+    static var imageQualityTierOriginal: String { text("Original") }
+    static var imageQualityTierSection: String { text("Image Quality") }
+    static var feedPreviewQuality: String { text("Feed preview quality") }
+    static var illustDetailQuality: String { text("Illust detail quality") }
+    static var mangaDetailQuality: String { text("Manga detail quality") }
+    static var imageQualityTierHint: String { text("Pixiv ships every illust at three sizes. Pick the rung that matches your bandwidth — Medium loads fastest, Original is the source asset.") }
     static var downloadSelectedPages: String { text("Save Selected Pages…") }
     static var selectPagesToSave: String { text("Select Pages to Save") }
     static var selectAllPages: String { text("Select All") }

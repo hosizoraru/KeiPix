@@ -38,7 +38,8 @@ struct ArtworkRelatedView: View {
                                 isCompact: true,
                                 showContentBadges: store.showContentBadges,
                                 maskSensitivePreview: store.maskSensitivePreviews,
-                                preferredHeight: 156
+                                preferredHeight: 156,
+                                feedPreviewTier: store.feedPreviewImageQualityTier
                             ) {
                                 store.selectedArtwork = related
                             }

@@ -29,11 +29,32 @@ struct GeneralSettingsPage: View {
             }
 
             Section {
-                Toggle(L10n.useOriginalImages, isOn: store.settings_useOriginalImagesBinding)
-                Toggle(L10n.useOriginalImagesForManga, isOn: store.settings_useOriginalImagesForMangaBinding)
+                Picker(L10n.feedPreviewQuality, selection: store.settings_feedPreviewImageQualityTierBinding) {
+                    ForEach(ArtworkImageQualityTier.allCases) { tier in
+                        Label(tier.title, systemImage: tier.systemImage).tag(tier)
+                    }
+                }
+                .pickerStyle(.menu)
+
+                Picker(L10n.illustDetailQuality, selection: store.settings_illustDetailImageQualityTierBinding) {
+                    ForEach(ArtworkImageQualityTier.allCases) { tier in
+                        Label(tier.title, systemImage: tier.systemImage).tag(tier)
+                    }
+                }
+                .pickerStyle(.menu)
+
+                Picker(L10n.mangaDetailQuality, selection: store.settings_mangaDetailImageQualityTierBinding) {
+                    ForEach(ArtworkImageQualityTier.allCases) { tier in
+                        Label(tier.title, systemImage: tier.systemImage).tag(tier)
+                    }
+                }
+                .pickerStyle(.menu)
+
                 Toggle(L10n.showTranslatedTags, isOn: store.settings_showTranslatedTagsBinding)
+            } header: {
+                Text(L10n.imageQualityTierSection)
             } footer: {
-                Text(L10n.imageQualityHint)
+                Text(L10n.imageQualityTierHint)
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }

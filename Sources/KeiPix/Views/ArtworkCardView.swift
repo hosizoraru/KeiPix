@@ -10,6 +10,11 @@ struct ArtworkCardView: View {
     var displayStyle: ArtworkCardDisplayStyle = .regular
     var preferredHeight: CGFloat? = nil
     var fillsAvailableHeight = false
+    /// Feed preview tier — controls which `image_urls` rung the
+    /// thumbnail fetches. Defaults to `.medium` so legacy call sites
+    /// keep their previous behaviour without code changes; the gallery
+    /// surfaces forward `KeiPixStore.feedPreviewImageQualityTier`.
+    var feedPreviewTier: ArtworkImageQualityTier = .medium
     let action: () -> Void
     @State private var isHovering = false
 
@@ -38,7 +43,7 @@ struct ArtworkCardView: View {
 
     private func cardContent(height: CGFloat) -> some View {
         ZStack(alignment: .bottomLeading) {
-            RemoteImageView(url: artwork.thumbnailURL)
+            RemoteImageView(url: artwork.feedPreviewURL(tier: feedPreviewTier) ?? artwork.thumbnailURL)
                 .sensitiveArtworkPreviewMasked(shouldMaskSensitivePreview, badges: artwork.contentBadges)
                 .frame(height: height)
                 .frame(maxWidth: .infinity)

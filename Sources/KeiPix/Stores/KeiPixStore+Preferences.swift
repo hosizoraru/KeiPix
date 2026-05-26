@@ -66,11 +66,73 @@ extension KeiPixStore {
     func setUseOriginalImagesInDetail(_ value: Bool) {
         useOriginalImagesInDetail = value
         UserDefaults.standard.set(value, forKey: "useOriginalImagesInDetail")
+        // Keep the legacy Bool and the new tier in lock-step so the
+        // reader's HD/Standard chip and the settings tier picker can't
+        // disagree. Flipping HD off only downgrades to `.large` (not
+        // `.medium`) so users who never visit settings keep the old
+        // resolver behaviour.
+        setIllustDetailImageQualityTier(.legacy(preferOriginal: value))
     }
 
     func setUseOriginalImagesForManga(_ value: Bool) {
         useOriginalImagesForManga = value
         UserDefaults.standard.set(value, forKey: "useOriginalImagesForManga")
+        setMangaDetailImageQualityTier(.legacy(preferOriginal: value))
+    }
+
+    /// Tier setter for illust detail. Keeps the legacy `useOriginalImagesInDetail`
+    /// Bool aligned so existing readers / downloads / sharing call sites
+    /// that still consult the Bool stay consistent with the picker.
+    func setIllustDetailImageQualityTier(_ tier: ArtworkImageQualityTier) {
+        guard illustDetailImageQualityTier != tier else { return }
+        illustDetailImageQualityTier = tier
+        UserDefaults.standard.set(tier.rawValue, forKey: "illustDetailImageQualityTier")
+        let legacyValue = tier.prefersOriginal
+        if useOriginalImagesInDetail != legacyValue {
+            useOriginalImagesInDetail = legacyValue
+            UserDefaults.standard.set(legacyValue, forKey: "useOriginalImagesInDetail")
+        }
+    }
+
+    func setMangaDetailImageQualityTier(_ tier: ArtworkImageQualityTier) {
+        guard mangaDetailImageQualityTier != tier else { return }
+        mangaDetailImageQualityTier = tier
+        UserDefaults.standard.set(tier.rawValue, forKey: "mangaDetailImageQualityTier")
+        let legacyValue = tier.prefersOriginal
+        if useOriginalImagesForManga != legacyValue {
+            useOriginalImagesForManga = legacyValue
+            UserDefaults.standard.set(legacyValue, forKey: "useOriginalImagesForManga")
+        }
+    }
+
+    func setFeedPreviewImageQualityTier(_ tier: ArtworkImageQualityTier) {
+        guard feedPreviewImageQualityTier != tier else { return }
+        feedPreviewImageQualityTier = tier
+        UserDefaults.standard.set(tier.rawValue, forKey: "feedPreviewImageQualityTier")
+    }
+
+    /// Tier resolver mirroring `preferOriginalImages(for:)` so call
+    /// sites can pick illust vs manga without re-implementing the
+    /// content-kind switch. The reader, downloads, and ugoira surfaces
+    /// all funnel through this helper.
+    func imageQualityTier(for artwork: PixivArtwork, pageCount: Int? = nil) -> ArtworkImageQualityTier {
+        let resolvedCount = pageCount ?? artwork.displayPageCount
+        switch ArtworkReadingModePreferenceKind.kind(for: artwork, pageCount: resolvedCount) {
+        case .artwork: return illustDetailImageQualityTier
+        case .manga: return mangaDetailImageQualityTier
+        }
+    }
+
+    func setImageQualityTier(
+        _ tier: ArtworkImageQualityTier,
+        for artwork: PixivArtwork,
+        pageCount: Int? = nil
+    ) {
+        let resolvedCount = pageCount ?? artwork.displayPageCount
+        switch ArtworkReadingModePreferenceKind.kind(for: artwork, pageCount: resolvedCount) {
+        case .artwork: setIllustDetailImageQualityTier(tier)
+        case .manga: setMangaDetailImageQualityTier(tier)
+        }
     }
 
     /// Returns the preferred-original flag for an artwork based on the

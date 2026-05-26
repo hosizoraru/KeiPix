@@ -52,7 +52,8 @@ struct SearchPopularPreviewStrip: View {
                                     showContentBadges: store.showContentBadges,
                                     maskSensitivePreview: store.maskSensitivePreviews,
                                     downloadState: store.downloads.downloadState(for: artwork.id),
-                                    preferredHeight: 178
+                                    preferredHeight: 178,
+                                    feedPreviewTier: store.feedPreviewImageQualityTier
                                 ) {
                                     store.selectedArtwork = artwork
                                 }

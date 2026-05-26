@@ -73,6 +73,34 @@ final class KeiPixStore {
     /// until they explicitly diverge the two presets.
     var useOriginalImagesForManga = UserDefaults.standard.object(forKey: "useOriginalImagesForManga") as? Bool
         ?? UserDefaults.standard.bool(forKey: "useOriginalImagesInDetail")
+    /// Three-step image quality tier (medium / large / original) for
+    /// illust detail. Mirrors Pixez's `pictureQuality` picker. The
+    /// legacy `useOriginalImagesInDetail` Bool seeds the initial tier so
+    /// existing installs upgrade in place — `true` lands on `.original`,
+    /// `false` lands on `.large` (the previous resolver default).
+    var illustDetailImageQualityTier = KeiPixStore.loadEnum(
+        "illustDetailImageQualityTier",
+        defaultValue: ArtworkImageQualityTier.legacy(
+            preferOriginal: UserDefaults.standard.bool(forKey: "useOriginalImagesInDetail")
+        )
+    )
+    /// Manga detail counterpart. Seeded from `useOriginalImagesForManga`
+    /// when no tier preference exists yet so the upgrade is invisible.
+    var mangaDetailImageQualityTier = KeiPixStore.loadEnum(
+        "mangaDetailImageQualityTier",
+        defaultValue: ArtworkImageQualityTier.legacy(
+            preferOriginal: UserDefaults.standard.object(forKey: "useOriginalImagesForManga") as? Bool
+                ?? UserDefaults.standard.bool(forKey: "useOriginalImagesInDetail")
+        )
+    )
+    /// Feed preview tier — controls what `ArtworkCardView` /
+    /// `RemoteImageView` request when rendering thumbnails. Pixez's
+    /// `feedPreviewQuality` defaults to `medium` (the cheapest) since
+    /// most users browse on flaky mobile data; we follow suit.
+    var feedPreviewImageQualityTier = KeiPixStore.loadEnum(
+        "feedPreviewImageQualityTier",
+        defaultValue: ArtworkImageQualityTier.medium
+    )
     var galleryLayoutMode = KeiPixStore.loadGalleryLayoutMode()
     var creatorListLayoutMode = KeiPixStore.loadCreatorListLayoutMode()
     var spotlightListLayoutMode = KeiPixStore.loadSpotlightListLayoutMode()

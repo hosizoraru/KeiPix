@@ -65,7 +65,8 @@ struct GalleryContentGrid: View {
             isCompact: store.compactArtworkCards,
             showContentBadges: store.showContentBadges,
             maskSensitivePreview: store.maskSensitivePreviews,
-            downloadState: store.downloads.downloadState(for: artwork.id)
+            downloadState: store.downloads.downloadState(for: artwork.id),
+            feedPreviewTier: store.feedPreviewImageQualityTier
         ) {
             activate(artwork)
         }
@@ -200,7 +201,8 @@ private struct MasonryArtworkGrid: View {
                     maskSensitivePreview: store.maskSensitivePreviews,
                     downloadState: store.downloads.downloadState(for: artwork.id),
                     displayStyle: presentation.cardStyle,
-                    fillsAvailableHeight: true
+                    fillsAvailableHeight: true,
+                    feedPreviewTier: store.feedPreviewImageQualityTier
                 ) {
                     activate(artwork)
                 }

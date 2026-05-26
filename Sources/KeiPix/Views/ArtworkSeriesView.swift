@@ -189,7 +189,8 @@ struct ArtworkSeriesView: View {
             isCompact: true,
             showContentBadges: store.showContentBadges,
             maskSensitivePreview: store.maskSensitivePreviews,
-            preferredHeight: 156
+            preferredHeight: 156,
+            feedPreviewTier: store.feedPreviewImageQualityTier
         ) {
             store.selectedArtwork = seriesArtwork
             Task { await store.recordBrowsingHistory(for: seriesArtwork) }

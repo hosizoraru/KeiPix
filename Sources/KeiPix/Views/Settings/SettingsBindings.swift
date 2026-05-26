@@ -46,6 +46,30 @@ extension KeiPixStore {
         }
     }
 
+    var settings_feedPreviewImageQualityTierBinding: Binding<ArtworkImageQualityTier> {
+        Binding {
+            self.feedPreviewImageQualityTier
+        } set: { value in
+            self.setFeedPreviewImageQualityTier(value)
+        }
+    }
+
+    var settings_illustDetailImageQualityTierBinding: Binding<ArtworkImageQualityTier> {
+        Binding {
+            self.illustDetailImageQualityTier
+        } set: { value in
+            self.setIllustDetailImageQualityTier(value)
+        }
+    }
+
+    var settings_mangaDetailImageQualityTierBinding: Binding<ArtworkImageQualityTier> {
+        Binding {
+            self.mangaDetailImageQualityTier
+        } set: { value in
+            self.setMangaDetailImageQualityTier(value)
+        }
+    }
+
     var settings_showTranslatedTagsBinding: Binding<Bool> {
         Binding {
             self.showTranslatedTags
