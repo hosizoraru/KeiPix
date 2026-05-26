@@ -1,10 +1,8 @@
-import AppKit
 import SwiftUI
 
 struct TrendingTagsView: View {
     @Bindable var store: KeiPixStore
     @State private var tags: [PixivTrendingTag] = []
-    @State private var thumbnailAspectRatios: [String: CGFloat] = [:]
     @State private var isLoading = false
     @State private var errorMessage: String?
     @State private var actionMessage: String?
@@ -36,8 +34,14 @@ struct TrendingTagsView: View {
                 ScrollView {
                     TrendingTagMasonryLayout(spacing: 12) {
                         ForEach(tags) { tag in
-                            let presentation = TrendingTagPresentation(tag: tag)
-                            let aspectRatio = thumbnailAspectRatios[tag.id] ?? presentation.aspectRatio
+                            // Use the artwork's reported aspect ratio as the
+                            // single source of truth for layout. The previous
+                            // implementation also accepted a post-load aspect
+                            // override from `imageLoaded`, which re-ran the
+                            // masonry pass every time a thumbnail decoded —
+                            // making cards swap columns and visually overlap
+                            // mid-flow. Sticking to one stable value rules
+                            // out that whole class of glitches.
                             TrendingTagCard(
                                 tag: tag,
                                 showTranslatedName: store.showTranslatedTags,
@@ -48,12 +52,12 @@ struct TrendingTagsView: View {
                                 mute: { store.requestDangerAction(AppDangerAction(kind: .muteTag(tag.pixivTag))) },
                                 copied: { copiedText in
                                     showActionMessage(String(format: L10n.copiedKeywordFormat, copiedText))
-                                },
-                                imageLoaded: { aspectRatio in
-                                    thumbnailAspectRatios[tag.id] = aspectRatio
                                 }
                             )
-                            .layoutValue(key: TrendingTagAspectRatioKey.self, value: aspectRatio)
+                            .layoutValue(
+                                key: TrendingTagAspectRatioKey.self,
+                                value: TrendingTagPresentation(tag: tag).aspectRatio
+                            )
                         }
                     }
                     .padding(.horizontal, 18)
@@ -120,7 +124,6 @@ struct TrendingTagsView: View {
         guard store.session != nil else { return }
         isLoading = true
         errorMessage = nil
-        thumbnailAspectRatios = [:]
         defer { isLoading = false }
 
         do {
@@ -155,7 +158,6 @@ private struct TrendingTagCard: View {
     let selectArtwork: () -> Void
     let mute: () -> Void
     let copied: (String) -> Void
-    let imageLoaded: (CGFloat) -> Void
 
     @State private var isHovering = false
 
@@ -164,8 +166,14 @@ private struct TrendingTagCard: View {
             ZStack(alignment: .bottomLeading) {
                 Color.black
 
-                TrendingTagArtworkImage(url: tag.artwork.thumbnailURL, imageLoaded: imageLoaded)
-                    .sensitiveArtworkPreviewMasked(maskSensitivePreview && tag.artwork.requiresScreenCaptureProtection, badges: tag.artwork.contentBadges)
+                RemoteImageView(
+                    url: tag.artwork.thumbnailURL,
+                    contentMode: .fill
+                )
+                .sensitiveArtworkPreviewMasked(
+                    maskSensitivePreview && tag.artwork.requiresScreenCaptureProtection,
+                    badges: tag.artwork.contentBadges
+                )
 
                 LinearGradient(
                     stops: [
@@ -263,81 +271,5 @@ private extension View {
         padding(.horizontal, 7)
             .padding(.vertical, 3)
             .background(.black.opacity(opacity), in: Capsule())
-    }
-}
-
-private struct TrendingTagArtworkImage: View {
-    let url: URL?
-    let imageLoaded: (CGFloat) -> Void
-
-    @State private var image: NSImage?
-    @State private var failed = false
-
-    var body: some View {
-        ZStack {
-            if let image {
-                filledImage(image)
-            } else if failed {
-                Rectangle()
-                    .fill(
-                        LinearGradient(
-                            colors: [.black.opacity(0.72), .black.opacity(0.92)],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-                    .overlay {
-                        Image(systemName: "photo")
-                            .font(.title3)
-                            .foregroundStyle(.white.opacity(0.58))
-                    }
-            } else {
-                Rectangle()
-                    .fill(.black.opacity(0.78))
-                    .overlay {
-                        ProgressView()
-                            .controlSize(.small)
-                            .padding(8)
-                            .background(.thinMaterial, in: Circle())
-                    }
-            }
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .clipped()
-        .compositingGroup()
-        .task(id: url) {
-            await load()
-        }
-    }
-
-    private func filledImage(_ image: NSImage) -> some View {
-        Image(nsImage: image)
-            .resizable()
-            .interpolation(.high)
-            .aspectRatio(contentMode: .fill)
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .clipped()
-            .allowsHitTesting(false)
-    }
-
-    private func load() async {
-        guard let url else {
-            image = nil
-            failed = true
-            return
-        }
-
-        image = nil
-        failed = false
-
-        do {
-            let loadedImage = try await ImagePipeline.shared.image(for: url)
-            image = loadedImage
-            if let aspectRatio = ReaderPagePresentation.aspectRatio(from: loadedImage) {
-                imageLoaded(aspectRatio)
-            }
-        } catch {
-            failed = true
-        }
     }
 }
