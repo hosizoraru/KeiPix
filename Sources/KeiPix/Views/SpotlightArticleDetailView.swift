@@ -40,7 +40,11 @@ struct SpotlightArticleDetailView: View {
                     openCreator: { userID in
                         await openWebProfile(userID)
                     },
-                    showStatus: showActionMessage
+                    showStatus: showActionMessage,
+                    selectArticle: { nextArticle in
+                        store.recordSpotlightArticleHistory(nextArticle)
+                        store.selectedSpotlightArticle = nextArticle
+                    }
                 )
                 .id(article.id)
             }

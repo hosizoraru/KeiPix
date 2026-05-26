@@ -127,6 +127,55 @@ struct PixivisionArticleParserTests {
         #expect(paragraphTexts.contains { $0.contains("Caption beta") })
     }
 
+    @Test("Related-articles shelves parse with kind, heading, cards, and view-more URL")
+    func parsesRelatedArticleShelves() {
+        let parsed = PixivisionArticleParser.parse(
+            html: Self.featureArticleHTML,
+            articleID: 10338,
+            sourceURL: URL(string: "https://www.pixivision.net/zh/a/10338")!
+        )
+
+        // The fixture ships three shelves matching the live Pixivision
+        // structure: tag latest, tag popular, category latest. Each
+        // should land with its own kind, heading, and cards.
+        #expect(parsed.relatedSections.count == 3)
+        #expect(parsed.relatedSections.map(\.kind) == [.tagLatest, .tagPopular, .categoryLatest])
+
+        let tagLatest = parsed.relatedSections[0]
+        #expect(tagLatest.heading?.contains("最新") == true)
+        #expect(tagLatest.articles.count == 2)
+        #expect(tagLatest.articles[0].articleID == 11556)
+        #expect(tagLatest.articles[0].coverURL?.absoluteString.contains("133650043") == true)
+        #expect(tagLatest.viewMoreURL?.absoluteString.contains("/zh/t/255") == true)
+
+        let tagPopular = parsed.relatedSections[1]
+        #expect(tagPopular.heading?.contains("喜欢") == true)
+        #expect(tagPopular.articles.map(\.articleID) == [11600])
+
+        let categoryLatest = parsed.relatedSections[2]
+        #expect(categoryLatest.kind == .categoryLatest)
+        #expect(categoryLatest.articles.map(\.articleID) == [11700])
+        #expect(categoryLatest.viewMoreURL?.absoluteString.contains("/zh/c/illustration") == true)
+
+        // Empty shelves should be filtered out (a shelf with zero
+        // cards isn't useful to the reader).
+        let emptyShelfHTML = """
+        <html><body>
+        <article class="am__article-body-container"></article>
+        <div class="_related-articles" data-gtm-category="Article Latest">
+        <h3 class="rla__heading">Empty heading</h3>
+        <ul class="_article-related-card-test-list"></ul>
+        </div>
+        </body></html>
+        """
+        let emptyParsed = PixivisionArticleParser.parse(
+            html: emptyShelfHTML,
+            articleID: 1,
+            sourceURL: URL(string: "https://www.pixivision.net/zh/a/1")!
+        )
+        #expect(emptyParsed.relatedSections.isEmpty)
+    }
+
     // MARK: - Fixtures
 
     /// Trimmed, real-world Pixivision article HTML with one heading,
@@ -227,6 +276,54 @@ struct PixivisionArticleParserTests {
         html += """
 
         </article>
+        <div class="_related-articles" data-gtm-category="Related Article Latest">
+        <h3 class="rla__heading yellow"><a href="/zh/t/255" class="rla__heading-link"><span class="_article-heading-tag-name">腿部</span>相关最新文章</a></h3>
+        <ul class="_article-related-card-test-list">
+        <li class="arrctl__list-item"><article class="_article-related-card-test">
+        <a href="/zh/a/11556" class="arrct__thumbnail-container">
+        <div class="_thumbnail"><img class="thm__image" src="https://i.pximg.net/c/1200x630/img-original/img/2025/08/09/01/36/52/133650043_p0.jpg" alt="柔美的曲线 - 大腿插画特辑 -" loading="lazy"></div>
+        </a>
+        <div class="arrct__title-container">
+        <h4 class="arrct__title"><a href="/zh/a/11556">柔美的曲线 - 大腿插画特辑 -</a></h4>
+        </div></article></li>
+        <li class="arrctl__list-item"><article class="_article-related-card-test">
+        <a href="/zh/a/11600" class="arrct__thumbnail-container">
+        <div class="_thumbnail"><img class="thm__image" src="https://i.pximg.net/cover2.jpg" alt="cover2"></div>
+        </a>
+        <div class="arrct__title-container">
+        <h4 class="arrct__title"><a href="/zh/a/11600">第二个相关文章</a></h4>
+        </div></article></li>
+        </ul>
+        <div class="rla__more-container"><span class="rla__more"><a href="/zh/t/255" class="rla__more__link">查看更多▶︎</a></span></div>
+        </div>
+
+        <div class="_related-articles" data-gtm-category="Related Article Popular">
+        <h3 class="rla__heading yellow"><a href="/zh/t/255" class="rla__heading-link">喜欢<span class="_article-heading-tag-name">腿部</span>的人也喜欢这些</a></h3>
+        <ul class="_article-related-card-test-list">
+        <li class="arrctl__list-item"><article class="_article-related-card-test">
+        <a href="/zh/a/11600" class="arrct__thumbnail-container">
+        <div class="_thumbnail"><img class="thm__image" src="https://i.pximg.net/cover3.jpg" alt="cover3"></div>
+        </a>
+        <div class="arrct__title-container">
+        <h4 class="arrct__title"><a href="/zh/a/11600">人气文章</a></h4>
+        </div></article></li>
+        </ul>
+        </div>
+
+        <div class="_related-articles" data-gtm-category="Article Latest">
+        <h3 class="rla__heading spotlight"><a href="/zh/c/illustration">插画相关最新文章</a></h3>
+        <ul class="_article-related-card-test-list">
+        <li class="arrctl__list-item"><article class="_article-related-card-test">
+        <a href="/zh/a/11700" class="arrct__thumbnail-container">
+        <div class="_thumbnail"><img class="thm__image" src="https://i.pximg.net/cover4.jpg" alt="cover4"></div>
+        </a>
+        <div class="arrct__title-container">
+        <h4 class="arrct__title"><a href="/zh/a/11700">分类最新</a></h4>
+        </div></article></li>
+        </ul>
+        <div class="rla__more-container"><span class="rla__more"><a href="/zh/c/illustration" class="rla__more__link">查看更多▶︎</a></span></div>
+        </div>
+
         <div class="am__footer"></div>
         </body></html>
         """

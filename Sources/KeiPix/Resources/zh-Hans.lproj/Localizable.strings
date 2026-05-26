@@ -58,6 +58,11 @@
 "Login to open Pixiv links" = "登录后可打开 Pixiv 链接";
 "Drop Pixiv link to open in KeiPix" = "拖入 Pixiv 链接即可在 KeiPix 打开";
 "Pixivision Article #%d" = "Pixivision 文章 #%d";
+"Related Articles" = "相关文章";
+"Latest in this tag" = "标签最新";
+"People also liked" = "也喜欢这些";
+"Latest in this category" = "分类最新";
+"View More" = "查看更多";
 "Recent Searches" = "最近搜索";
 "No saved searches" = "暂无保存的搜索";
 "No saved search presets" = "暂无搜索预设";

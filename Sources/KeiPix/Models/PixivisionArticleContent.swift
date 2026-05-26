@@ -7,7 +7,10 @@ import Foundation
 /// way Apple News / Reader Mode does. Each article has a hero, an
 /// optional category + date overline, a title, and a sequential block
 /// list — interleaved paragraphs, section headings, and pixiv work
-/// cards exactly as Pixivision arranges them.
+/// cards exactly as Pixivision arranges them. Trailing metadata
+/// (related-article shelves Pixivision shows under the prose) ride
+/// alongside `blocks` so the reader can render Apple-Music-style
+/// horizontal carousels at the bottom of the page.
 struct PixivisionArticleContent: Sendable, Equatable {
     let articleID: Int
     let title: String
@@ -17,6 +20,7 @@ struct PixivisionArticleContent: Sendable, Equatable {
     let heroImageURL: URL?
     let blocks: [PixivisionArticleBlock]
     let tags: [PixivisionArticleTag]
+    let relatedSections: [PixivisionRelatedArticlesSection]
 }
 
 /// Body block discovered in document order. The reader renders each
@@ -59,6 +63,77 @@ struct PixivisionArticleTag: Sendable, Equatable, Identifiable {
     let label: String
 
     var id: String { tagID }
+}
+
+/// One of the related-article shelves Pixivision renders below the
+/// article body — "Latest articles tagged X", "People who liked X also
+/// liked", "Latest in category". Each shelf has a heading and an
+/// ordered list of cards routing back to other Pixivision articles.
+struct PixivisionRelatedArticlesSection: Sendable, Equatable, Identifiable {
+    /// The categories Pixivision groups its related shelves into. We
+    /// surface them in the reader so users can tell why each carousel
+    /// was suggested.
+    enum Kind: String, Sendable, Equatable {
+        case tagLatest
+        case tagPopular
+        case categoryLatest
+        case other
+
+        var localizedTitle: String {
+            switch self {
+            case .tagLatest: L10n.pixivisionRelatedTagLatest
+            case .tagPopular: L10n.pixivisionRelatedTagPopular
+            case .categoryLatest: L10n.pixivisionRelatedCategoryLatest
+            case .other: L10n.pixivisionRelatedArticles
+            }
+        }
+
+        var systemImage: String {
+            switch self {
+            case .tagLatest: "tag"
+            case .tagPopular: "heart.fill"
+            case .categoryLatest: "newspaper"
+            case .other: "doc.text"
+            }
+        }
+    }
+
+    let kind: Kind
+    /// Human-readable shelf heading scraped from Pixivision (e.g.
+    /// "腿部相关最新文章"). May be `nil` if the heading couldn't be
+    /// parsed; the reader falls back to `kind.localizedTitle`.
+    let heading: String?
+    let articles: [PixivisionRelatedArticle]
+    /// Pixivision exposes a "查看更多 ▶︎" link below each shelf that
+    /// points to the tag landing page or category index. We expose
+    /// that here so the reader can render a "View More" affordance
+    /// without re-deriving the URL from the heading.
+    let viewMoreURL: URL?
+
+    var id: String { "\(kind.rawValue)|\(heading ?? "")" }
+
+    var resolvedHeading: String {
+        let trimmed = heading?.trimmingCharacters(in: .whitespacesAndNewlines)
+        if let trimmed, trimmed.isEmpty == false {
+            return trimmed
+        }
+        return kind.localizedTitle
+    }
+}
+
+/// One card inside a related-articles shelf. The reader uses
+/// `articleID` to route back into the native spotlight surface — the
+/// click ends up calling `store.selectedSpotlightArticle = ...` so the
+/// detail view re-renders with parsed content for the new article.
+struct PixivisionRelatedArticle: Sendable, Equatable, Identifiable {
+    let articleID: Int
+    let title: String
+    let coverURL: URL?
+    /// The full Pixivision URL (e.g. `https://www.pixivision.net/zh/a/11556`)
+    /// so users can fall back to the web view via "Open in Pixiv".
+    let articleURL: URL
+
+    var id: Int { articleID }
 }
 
 /// Pure HTML → `PixivisionArticleContent` parser.
@@ -109,6 +184,7 @@ enum PixivisionArticleParser {
         let bodyHTML = extractBodyHTML(in: html)
         let blocks = parseBlocks(in: bodyHTML)
         let tags = parseTags(in: html, sourceURL: sourceURL)
+        let relatedSections = parseRelatedSections(in: html, sourceURL: sourceURL)
 
         return PixivisionArticleContent(
             articleID: articleID,
@@ -118,7 +194,8 @@ enum PixivisionArticleParser {
             publishDateText: publishDate,
             heroImageURL: heroImage,
             blocks: blocks,
-            tags: tags
+            tags: tags,
+            relatedSections: relatedSections
         )
     }
 
@@ -357,6 +434,155 @@ enum PixivisionArticleParser {
         }
 
         return tags
+    }
+
+    // MARK: - Related-articles parsing
+
+    /// Walks every `<div class="_related-articles" ...>` shelf below
+    /// the article body and returns one section per shelf. Pixivision
+    /// renders three of these on most articles:
+    ///
+    ///   * Tag-based latest — "腿部相关最新文章" / "Latest in <tag>"
+    ///   * Tag-based popular — "喜欢腿部的人也喜欢这些"
+    ///   * Category-based latest — "插画相关最新文章" / "Latest in <category>"
+    ///
+    /// We use the `data-gtm-category` attribute to decide which `Kind`
+    /// the shelf belongs to so the reader can decorate it with the
+    /// right localized label and SF symbol.
+    private static func parseRelatedSections(in html: String, sourceURL: URL) -> [PixivisionRelatedArticlesSection] {
+        let pattern = #"<div\b[^>]*class="_related-articles"[^>]*data-gtm-category="([^"]+)"[^>]*>([\s\S]*?)</ul>\s*(?:<div[^>]*class="rla__more-container"[^>]*>([\s\S]*?)</div>\s*)?</div>"#
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: []) else {
+            return []
+        }
+
+        var sections: [PixivisionRelatedArticlesSection] = []
+        let nsRange = NSRange(html.startIndex..<html.endIndex, in: html)
+
+        regex.enumerateMatches(in: html, options: [], range: nsRange) { match, _, _ in
+            guard let match,
+                  let kindRange = Range(match.range(at: 1), in: html),
+                  let bodyRange = Range(match.range(at: 2), in: html) else {
+                return
+            }
+            let kind = relatedSectionKind(from: String(html[kindRange]))
+            let body = String(html[bodyRange])
+            let heading = extractFirstString(
+                in: body,
+                pattern: #"<h3[^>]*class="rla__heading[^"]*"[^>]*>([\s\S]*?)</h3>"#
+            )
+            let articles = parseRelatedArticleCards(in: body, sourceURL: sourceURL)
+
+            // The optional `rla__more-container` group sits *outside*
+            // the closing `</ul>` and may not be present on every
+            // shelf — pull it lazily.
+            var viewMoreURL: URL?
+            if match.numberOfRanges > 3, let moreRange = Range(match.range(at: 3), in: html) {
+                let moreSnippet = String(html[moreRange])
+                if let href = extractFirstString(
+                    in: moreSnippet,
+                    pattern: #"<a[^>]*class="rla__more__link"[^>]*href="([^"]+)""#,
+                    decodeAsText: false
+                ) ?? extractFirstString(
+                    in: moreSnippet,
+                    pattern: #"<a[^>]*href="([^"]+)"[^>]*class="rla__more__link""#,
+                    decodeAsText: false
+                ) {
+                    viewMoreURL = absoluteURL(from: href, sourceURL: sourceURL)
+                }
+            }
+
+            // Skip empty shelves so the reader doesn't render a
+            // header for a section the network filtered down to zero
+            // cards (rare but possible).
+            guard articles.isEmpty == false else { return }
+            sections.append(
+                PixivisionRelatedArticlesSection(
+                    kind: kind,
+                    heading: heading,
+                    articles: articles,
+                    viewMoreURL: viewMoreURL
+                )
+            )
+        }
+
+        return sections
+    }
+
+    private static func relatedSectionKind(from gtmCategory: String) -> PixivisionRelatedArticlesSection.Kind {
+        switch gtmCategory.lowercased() {
+        case "related article latest": return .tagLatest
+        case "related article popular": return .tagPopular
+        case "article latest": return .categoryLatest
+        default: return .other
+        }
+    }
+
+    private static func parseRelatedArticleCards(in shelfHTML: String, sourceURL: URL) -> [PixivisionRelatedArticle] {
+        let pattern = #"<li\b[^>]*class="arrctl__list-item"[^>]*>([\s\S]*?)</li>"#
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: []) else {
+            return []
+        }
+
+        var cards: [PixivisionRelatedArticle] = []
+        var seenIDs = Set<Int>()
+        let nsRange = NSRange(shelfHTML.startIndex..<shelfHTML.endIndex, in: shelfHTML)
+
+        regex.enumerateMatches(in: shelfHTML, options: [], range: nsRange) { match, _, _ in
+            guard let match,
+                  let itemRange = Range(match.range(at: 1), in: shelfHTML) else {
+                return
+            }
+            let item = String(shelfHTML[itemRange])
+
+            // The card shows up twice — once as the thumbnail anchor
+            // and once as the title anchor. Either anchor carries the
+            // canonical `/zh/a/{id}` (or `/en/a/{id}`, etc.) path, so
+            // grab the first match.
+            guard let articleID = firstCapturedInt(in: item, pattern: #"href="[^"]*/a/(\d+)"#) else {
+                return
+            }
+            guard seenIDs.insert(articleID).inserted else { return }
+
+            let title = extractFirstString(
+                in: item,
+                pattern: #"<h4[^>]*class="arrct__title"[^>]*>[\s\S]*?<a[^>]*>([\s\S]*?)</a>"#
+            ) ?? extractFirstString(
+                in: item,
+                pattern: #"<img[^>]*class="thm__image"[^>]*alt="([^"]+)""#
+            ) ?? ""
+
+            let coverURL = extractImageSource(in: item, classAnchor: "thm__image")
+                .flatMap(URL.init(string:))
+            let articleHref = extractFirstString(
+                in: item,
+                pattern: #"<a[^>]*href="([^"]*/a/\d+)"#,
+                decodeAsText: false
+            )
+            let articleURL = articleHref.flatMap { absoluteURL(from: $0, sourceURL: sourceURL) }
+                ?? URL(string: "https://www.pixivision.net/a/\(articleID)")!
+
+            cards.append(
+                PixivisionRelatedArticle(
+                    articleID: articleID,
+                    title: title,
+                    coverURL: coverURL,
+                    articleURL: articleURL
+                )
+            )
+        }
+
+        return cards
+    }
+
+    /// Resolve a possibly relative href against the article's source
+    /// URL so callers always have an absolute URL to navigate to.
+    private static func absoluteURL(from href: String, sourceURL: URL) -> URL? {
+        let trimmed = href.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard trimmed.isEmpty == false else { return nil }
+        if trimmed.hasPrefix("//") {
+            return URL(string: "https:" + trimmed)
+        }
+        return URL(string: trimmed, relativeTo: sourceURL)?.absoluteURL
     }
 
     // MARK: - HTML helpers

@@ -63,6 +63,11 @@ enum L10n {
     static var loginRequiredForPixivLink: String { text("Login to open Pixiv links") }
     static var dropPixivLinkToOpen: String { text("Drop Pixiv link to open in KeiPix") }
     static var pixivisionArticleFormat: String { text("Pixivision Article #%d") }
+    static var pixivisionRelatedArticles: String { text("Related Articles") }
+    static var pixivisionRelatedTagLatest: String { text("Latest in this tag") }
+    static var pixivisionRelatedTagPopular: String { text("People also liked") }
+    static var pixivisionRelatedCategoryLatest: String { text("Latest in this category") }
+    static var viewMore: String { text("View More") }
     static var recentSearches: String { text("Recent Searches") }
     static var noSavedSearches: String { text("No saved searches") }
     static var noSavedSearchPresets: String { text("No saved search presets") }

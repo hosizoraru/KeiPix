@@ -21,6 +21,10 @@ struct PixivisionReaderView: View {
     @Bindable var store: KeiPixStore
     let openCreator: (Int) async -> Void
     let showStatus: (String) -> Void
+    /// Called when the user picks a related article carousel card.
+    /// The detail view rebinds `store.selectedSpotlightArticle` and the
+    /// reader re-renders for the new article via `task(id: article.id)`.
+    let selectArticle: (PixivSpotlightArticle) -> Void
 
     @State private var content: PixivisionArticleContent?
     @State private var isLoading = false
@@ -36,6 +40,8 @@ struct PixivisionReaderView: View {
                 contentBlocks
 
                 tagsRow
+
+                relatedSections
             }
             .padding(.horizontal, 28)
             .padding(.vertical, 22)
@@ -203,6 +209,44 @@ struct PixivisionReaderView: View {
         }
     }
 
+    // MARK: - Related articles
+
+    @ViewBuilder
+    private var relatedSections: some View {
+        if let sections = content?.relatedSections, sections.isEmpty == false {
+            VStack(alignment: .leading, spacing: 18) {
+                ForEach(sections) { section in
+                    RelatedArticlesShelf(
+                        section: section,
+                        selectArticle: { related in
+                            selectArticle(spotlightArticle(from: related))
+                        },
+                        copyLink: { url in
+                            PasteboardWriter.copy(url.absoluteString)
+                            showStatus(L10n.copied)
+                        }
+                    )
+                }
+            }
+            .padding(.top, 12)
+        }
+    }
+
+    /// Promotes a parsed related-article card into the seed
+    /// `PixivSpotlightArticle` the rest of the app expects. When the
+    /// reader navigates to it the parser fires again and replaces the
+    /// seed metadata with the freshly-fetched content.
+    private func spotlightArticle(from related: PixivisionRelatedArticle) -> PixivSpotlightArticle {
+        PixivSpotlightArticle(
+            id: related.articleID,
+            title: related.title,
+            pureTitle: related.title,
+            thumbnail: related.coverURL,
+            articleURL: related.articleURL,
+            publishDate: Date()
+        )
+    }
+
     // MARK: - Error banner
 
     private func errorBanner(_ message: String) -> some View {
@@ -259,6 +303,12 @@ private struct PixivisionWorkCard: View {
     let copyArtworkLink: (Int) -> Void
 
     @State private var isHovering = false
+    /// Once the thumbnail decodes we learn its real aspect ratio; the
+    /// illustration frame uses that so portrait, square, and panorama
+    /// images all render fully instead of getting cropped to a fixed
+    /// 360 pt slab. Pixivision serves a mix of `768x1200_80` portraits
+    /// and landscape spreads, so a static height was never right.
+    @State private var illustAspectRatio: CGFloat = 4.0 / 5.0
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -302,19 +352,42 @@ private struct PixivisionWorkCard: View {
     }
 
     private var illustration: some View {
+        // Pixivision feature articles mix portrait, square, and
+        // landscape illustrations in the same shelf. The previous fixed
+        // `frame(height: 360)` + `contentMode: .fill` cropped landscapes
+        // and squashed portraits. Instead we ride the aspect ratio:
+        // `contentMode: .fit` keeps the full image visible, and the
+        // outer `aspectRatio` modifier reserves the right amount of
+        // vertical space so the layout doesn't reflow when the image
+        // arrives. The aspect ratio is updated once the bitmap decodes
+        // (via `onImageLoaded`) so every shelf settles to the natural
+        // shape Pixiv shipped.
         Button {
             openArtwork(work.artworkID)
         } label: {
-            RemoteImageView(url: work.illustImageURL, contentMode: .fill)
-                .frame(maxWidth: .infinity)
-                .frame(height: 360)
-                .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
-                .overlay {
-                    RoundedRectangle(cornerRadius: 10, style: .continuous)
-                        .stroke(.quaternary, lineWidth: 1)
-                }
-                .scaleEffect(isHovering ? 1.005 : 1)
-                .animation(.snappy(duration: 0.16), value: isHovering)
+            ZStack {
+                Color.clear
+                RemoteImageView(
+                    url: work.illustImageURL,
+                    contentMode: .fit,
+                    onImageLoaded: { image in
+                        let size = image.size
+                        guard size.width > 0, size.height > 0 else { return }
+                        illustAspectRatio = CGFloat(size.width / size.height)
+                    }
+                )
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
+            .frame(maxWidth: .infinity)
+            .aspectRatio(illustAspectRatio, contentMode: .fit)
+            .frame(maxHeight: 720)
+            .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+            .overlay {
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .stroke(.quaternary, lineWidth: 1)
+            }
+            .scaleEffect(isHovering ? 1.005 : 1)
+            .animation(.snappy(duration: 0.16), value: isHovering)
         }
         .buttonStyle(.plain)
         .onHover { isHovering = $0 }
@@ -350,6 +423,112 @@ private struct PixivisionWorkCard: View {
                 .controlSize(.small)
                 .help(L10n.openInPixiv)
             }
+        }
+    }
+}
+
+/// Horizontally scrolling shelf of related articles (one per Pixivision
+/// "Related Articles" section). Each card carries the article cover,
+/// title, and a tap target that hands the article back to the parent
+/// so it can swap the active spotlight detail.
+///
+/// Mirrors Apple Music's "More Like This" carousels: large-but-not-
+/// huge cards (220 pt wide, 16:9 cover), prominent title underneath,
+/// and an edge fade so the user gets a visual cue that the rail
+/// scrolls.
+private struct RelatedArticlesShelf: View {
+    let section: PixivisionRelatedArticlesSection
+    let selectArticle: (PixivisionRelatedArticle) -> Void
+    let copyLink: (URL) -> Void
+
+    private let cardWidth: CGFloat = 220
+    private let coverHeight: CGFloat = 124
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            header
+
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 12) {
+                    ForEach(section.articles) { related in
+                        relatedCard(related)
+                    }
+                }
+            }
+            .mask {
+                HStack(spacing: 0) {
+                    LinearGradient(colors: [.clear, .black], startPoint: .leading, endPoint: .trailing)
+                        .frame(width: 14)
+                    Rectangle()
+                    LinearGradient(colors: [.black, .clear], startPoint: .leading, endPoint: .trailing)
+                        .frame(width: 14)
+                }
+            }
+        }
+    }
+
+    private var header: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 8) {
+            Label(section.resolvedHeading, systemImage: section.kind.systemImage)
+                .font(.headline)
+                .labelStyle(.titleAndIcon)
+
+            Text("\(section.articles.count)")
+                .font(.caption.monospacedDigit())
+                .foregroundStyle(.secondary)
+                .padding(.horizontal, 6)
+                .padding(.vertical, 1)
+                .background(.quaternary, in: Capsule())
+
+            Spacer(minLength: 0)
+
+            if let url = section.viewMoreURL {
+                Link(destination: url) {
+                    Label(L10n.viewMore, systemImage: "chevron.right")
+                        .labelStyle(.titleAndIcon)
+                }
+                .buttonStyle(.borderless)
+                .controlSize(.small)
+                .help(url.absoluteString)
+            }
+        }
+    }
+
+    private func relatedCard(_ related: PixivisionRelatedArticle) -> some View {
+        Button {
+            selectArticle(related)
+        } label: {
+            VStack(alignment: .leading, spacing: 8) {
+                cover(for: related)
+
+                Text(related.title)
+                    .font(.subheadline.weight(.medium))
+                    .lineLimit(2)
+                    .multilineTextAlignment(.leading)
+                    .foregroundStyle(.primary)
+                    .frame(width: cardWidth, alignment: .leading)
+            }
+        }
+        .buttonStyle(.plain)
+        .contextMenu {
+            Button(L10n.openArticle) { selectArticle(related) }
+            Divider()
+            Link(L10n.openInPixiv, destination: related.articleURL)
+            Button(L10n.copyLink) { copyLink(related.articleURL) }
+        }
+        .help(related.title)
+    }
+
+    private func cover(for related: PixivisionRelatedArticle) -> some View {
+        ZStack {
+            Color.black.opacity(0.82)
+            RemoteImageView(url: related.coverURL, contentMode: .fill)
+        }
+        .frame(width: cardWidth, height: coverHeight)
+        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .stroke(.quaternary, lineWidth: 1)
         }
     }
 }
