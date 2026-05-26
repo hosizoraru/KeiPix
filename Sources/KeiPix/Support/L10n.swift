@@ -484,6 +484,14 @@ enum L10n {
     static var selectAllPages: String { text("Select All") }
     static var clearPageSelection: String { text("Clear Selection") }
     static var pagesSelectedFormat: String { text("%d of %d pages selected") }
+    static var blockFromArtwork: String { text("Block From This Artwork…") }
+    static var blockSelected: String { text("Block Selected") }
+    static var blockSelectedHint: String { text("Mute the artwork, its creator, or any of its tags in one step. Each entry stays in your local mute list until you remove it.") }
+    static var blockArtworkOption: String { text("Block this artwork") }
+    static var blockCreatorOption: String { text("Block creator") }
+    static var blockTagsHeader: String { text("Block Tags") }
+    static var bulkBlockNothingSelected: String { text("Pick at least one item to block.") }
+    static var bulkBlockSummaryFormat: String { text("Blocked %d item(s).") }
     static var showTranslatedTags: String { text("Show translated tag names") }
     static var contentFilters: String { text("Content Filters") }
     static var showContentBadges: String { text("Show content badges") }

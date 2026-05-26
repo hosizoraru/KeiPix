@@ -201,6 +201,7 @@ private struct ArtworkActionStrip: View {
     @State private var feedbackRequest: FeedbackReportRequest?
     @State private var isPageRangeDownloadPresented = false
     @State private var isPageSelectionDownloadPresented = false
+    @State private var isBulkBlockPresented = false
 
     var body: some View {
         GlassEffectContainer {
@@ -382,6 +383,14 @@ private struct ArtworkActionStrip: View {
                                 }
                             }
                         }
+
+                        Divider()
+
+                        Button {
+                            isBulkBlockPresented = true
+                        } label: {
+                            Label(L10n.blockFromArtwork, systemImage: "hand.raised")
+                        }
                     } label: {
                         Label(L10n.moreActions, systemImage: "ellipsis.circle")
                             .frame(maxWidth: .infinity)
@@ -416,6 +425,11 @@ private struct ArtworkActionStrip: View {
                 pageCount: pageCount,
                 onComplete: showPageSelectionDownloadMessage
             )
+        }
+        .sheet(isPresented: $isBulkBlockPresented) {
+            BulkBlockSheet(artwork: artwork, store: store) { applied in
+                showBulkBlockMessage(applied)
+            }
         }
     }
 
@@ -457,6 +471,11 @@ private struct ArtworkActionStrip: View {
             return
         }
         showActionMessage(String(format: L10n.pagesSelectedFormat, queuedCount, pageCount))
+    }
+
+    private func showBulkBlockMessage(_ applied: Int) {
+        guard applied > 0 else { return }
+        showActionMessage(String(format: L10n.bulkBlockSummaryFormat, applied))
     }
 
     private var currentPageURL: URL? {
