@@ -53,6 +53,10 @@ extension KeiPixStore {
         try await api.spotlightArticles()
     }
 
+    func spotlightArticles(category: String) async throws -> PixivSpotlightResponse {
+        try await api.spotlightArticles(category: category)
+    }
+
     func nextSpotlightArticles(_ url: URL) async throws -> PixivSpotlightResponse {
         try await api.nextSpotlightArticles(url)
     }

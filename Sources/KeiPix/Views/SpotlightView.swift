@@ -9,6 +9,7 @@ struct SpotlightView: View {
     @State private var errorMessage: String?
     @State private var actionMessage: String?
     @State private var collectionMode = SpotlightArticleCollectionMode.latest
+    @State private var category = SpotlightArticleCategory.all
 
     var body: some View {
         Group {
@@ -78,6 +79,8 @@ struct SpotlightView: View {
                         } header: {
                             SpotlightCollectionHeader(
                                 mode: $collectionMode,
+                                category: $category,
+                                showCategoryPicker: collectionMode == .latest,
                                 countText: collectionSummary,
                                 canClearHistory: store.spotlightArticleHistory.isEmpty == false,
                                 clearHistory: clearHistory
@@ -132,6 +135,11 @@ struct SpotlightView: View {
         }
         .onChange(of: collectionMode) { _, _ in
             selectStableArticle()
+        }
+        .onChange(of: category) { _, _ in
+            // Server-side filter — refetch from page 1 so the user sees the
+            // freshest articles for the chosen category.
+            Task { await load() }
         }
     }
 
@@ -208,7 +216,7 @@ struct SpotlightView: View {
         defer { isLoading = false }
 
         do {
-            let response = try await store.spotlightArticles()
+            let response = try await store.spotlightArticles(category: category.apiValue)
             articles = response.articles
             selectStableArticle()
             nextURL = response.nextURL
@@ -278,6 +286,8 @@ struct SpotlightView: View {
 
 private struct SpotlightCollectionHeader: View {
     @Binding var mode: SpotlightArticleCollectionMode
+    @Binding var category: SpotlightArticleCategory
+    let showCategoryPicker: Bool
     let countText: String
     let canClearHistory: Bool
     let clearHistory: () -> Void
@@ -292,6 +302,20 @@ private struct SpotlightCollectionHeader: View {
             .pickerStyle(.segmented)
             .labelsHidden()
             .frame(minWidth: 300, idealWidth: 360, maxWidth: 420)
+
+            // Category filter only applies to the live "latest" collection;
+            // favorites and history are local state, so a server-side
+            // category query wouldn't change anything.
+            if showCategoryPicker {
+                Picker("", selection: $category) {
+                    ForEach(SpotlightArticleCategory.allCases) { category in
+                        Label(category.title, systemImage: category.systemImage).tag(category)
+                    }
+                }
+                .pickerStyle(.menu)
+                .labelsHidden()
+                .frame(minWidth: 110, idealWidth: 130)
+            }
 
             Text(countText)
                 .font(.caption)

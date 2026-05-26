@@ -603,6 +603,10 @@ enum L10n {
     static var editProfileOnPixiv: String { text("Edit Profile on Pixiv") }
     static var manageAccountOnPixiv: String { text("Manage Account on Pixiv") }
     static var accountWebSettingsHint: String { text("Profile, password, and email changes happen on the Pixiv website. KeiPix opens the relevant page in your browser.") }
+    static var spotlightCategoryAll: String { text("All") }
+    static var spotlightCategoryIllust: String { text("Illust") }
+    static var spotlightCategoryManga: String { text("Manga") }
+    static var spotlightCategoryCosplay: String { text("Cosplay") }
     static var refreshToken: String { text("Refresh Token") }
     static var currentAccount: String { text("Current Account") }
     static var switchAccount: String { text("Switch Account") }

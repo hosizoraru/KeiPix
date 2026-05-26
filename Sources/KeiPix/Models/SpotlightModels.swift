@@ -94,3 +94,35 @@ enum SpotlightArticleCollectionMode: String, CaseIterable, Identifiable {
         }
     }
 }
+
+/// Pixiv spotlight article category. Maps to the `category` query parameter
+/// the Pixiv app endpoint accepts and Pixez exposes via its spotlight UI.
+enum SpotlightArticleCategory: String, CaseIterable, Identifiable {
+    case all
+    case illust
+    case manga
+    case cosplay
+
+    var id: String { rawValue }
+
+    /// Pixiv expects the raw enum value as the `category` form parameter.
+    var apiValue: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .all: L10n.spotlightCategoryAll
+        case .illust: L10n.spotlightCategoryIllust
+        case .manga: L10n.spotlightCategoryManga
+        case .cosplay: L10n.spotlightCategoryCosplay
+        }
+    }
+
+    var systemImage: String {
+        switch self {
+        case .all: "square.grid.2x2"
+        case .illust: "photo.artframe"
+        case .manga: "book"
+        case .cosplay: "person.crop.rectangle"
+        }
+    }
+}
