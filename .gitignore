@@ -10,3 +10,6 @@ KeiPix.xcodeproj/
 xcuserdata/
 DerivedData/
 *.xcuserstate
+
+# Local Claude harness config
+.claude/
