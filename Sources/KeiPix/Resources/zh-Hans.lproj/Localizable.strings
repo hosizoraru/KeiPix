@@ -1003,6 +1003,10 @@
 "Following-artist emphasis" = "已关注画师强调";
 "Cards from artists the user follows pick up an accent border and a Following badge in mixed feeds, and the toggle round-trips through UserDefaults." = "已关注画师的作品在混合 feed 中呈现强调色边框与「已关注」徽标，开关状态通过 UserDefaults 持久化。";
 "Keep emphasizeFollowingArtists in lock-step with its persisted value so a profile sync never loses the visual treatment." = "保持 emphasizeFollowingArtists 与其持久化值同步，避免资料同步导致视觉强调丢失。";
+"Transferable drag and drop" = "Transferable 拖放";
+"Pixiv-link drops resolve through Transferable on every drop surface, and completed downloads + artwork cards drag out as native file or URL payloads." = "所有放置区均通过 Transferable 解析 Pixiv 链接，已完成的下载与作品卡也能以原生文件或链接形式拖出。";
+"Keep PixivLinkDropPayload and the artwork drag URL covered so a future ProxyRepresentation refactor doesn't silently break Finder drops." = "在覆盖中保留 PixivLinkDropPayload 与作品拖拽 URL，避免未来的 ProxyRepresentation 重构悄然破坏访达拖放。";
+"PixivLinkDropPayload resolves URL and text shapes; download rows and artwork cards expose Transferable drag sources." = "PixivLinkDropPayload 解析 URL 与文本两种形态，下载行与作品卡均提供 Transferable 拖拽源。";
 "System Proxy" = "系统代理";
 "Direct connection" = "直连";
 "Pixiv API" = "Pixiv API";

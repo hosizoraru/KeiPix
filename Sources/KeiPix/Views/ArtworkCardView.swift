@@ -46,6 +46,15 @@ struct ArtworkCardView: View {
         .animation(.snappy(duration: 0.16), value: isHovering)
         .animation(.snappy(duration: 0.16), value: isSelected)
         .onHover { isHovering = $0 }
+        // Drag the artwork's Pixiv URL out of the card. macOS turns a
+        // URL drop on Finder into a `.webloc` bookmark, while drops
+        // into Safari, Notes, or Messages paste the link verbatim —
+        // matches the affordance Pixes/Pixez expose through their
+        // "Copy link" action but without the round-trip through the
+        // pasteboard. Falls back to the canonical
+        // `https://www.pixiv.net/artworks/<id>` URL if the artwork
+        // payload didn't carry one.
+        .draggable(artworkPixivURL)
     }
 
     /// Selection wins over follow-emphasis (selection is a transient user
@@ -70,6 +79,14 @@ struct ArtworkCardView: View {
 
     private var shouldEmphasizeFollowing: Bool {
         emphasizeFollowing && artwork.user.isFollowed
+    }
+
+    /// Canonical Pixiv URL for this artwork. We always rebuild the URL
+    /// from the artwork ID (rather than trusting whatever
+    /// `artwork.pixivURL` returns) so a stale or test-fixture artwork
+    /// still drags as a valid `.webloc` bookmark.
+    private var artworkPixivURL: URL {
+        artwork.pixivURL ?? URL(string: "https://www.pixiv.net/artworks/\(artwork.id)")!
     }
 
     private func cardContent(height: CGFloat) -> some View {

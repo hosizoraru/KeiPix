@@ -1,6 +1,16 @@
 import SwiftUI
 import UniformTypeIdentifiers
 
+/// Modifier that turns any view into a Pixiv-link drop target. Built on
+/// SwiftUI's `dropDestination(for:)` (Transferable) instead of legacy
+/// `NSItemProvider` plumbing — Apple's modern API auto-handles `URL`,
+/// `String`, and Apple-style web internet locations and gives us a typed
+/// payload with no continuation dance.
+///
+/// We accept either `URL` or `String` because Safari, Notes, and Messages
+/// each prefer different transferred shapes (URL vs. selected text), and
+/// older Pixiv links are sometimes pasted as raw text. The first viable
+/// payload that passes `PixivWebLinkResolver` wins; the rest are ignored.
 struct PixivLinkDropTargetModifier: ViewModifier {
     @Binding var isTargeted: Bool
     var forceOverlayVisible = false
@@ -9,15 +19,17 @@ struct PixivLinkDropTargetModifier: ViewModifier {
 
     func body(content: Content) -> some View {
         content
-            .onDrop(of: supportedTypeIdentifiers, isTargeted: $isTargeted) { providers in
-                Task {
-                    if let url = await PixivDroppedLinkReader.firstSupportedURL(from: providers) {
-                        await MainActor.run { openURL(url) }
+            .dropDestination(for: PixivLinkDropPayload.self) { payloads, _ in
+                Task { @MainActor in
+                    if let url = PixivDroppedLinkReader.firstSupportedURL(from: payloads) {
+                        openURL(url)
                     } else {
-                        await MainActor.run { rejectDrop() }
+                        rejectDrop()
                     }
                 }
                 return true
+            } isTargeted: { value in
+                isTargeted = value
             }
             .overlay {
                 if isTargeted || forceOverlayVisible {
@@ -27,16 +39,6 @@ struct PixivLinkDropTargetModifier: ViewModifier {
             }
             .animation(.snappy(duration: 0.16), value: isTargeted)
             .animation(.snappy(duration: 0.16), value: forceOverlayVisible)
-    }
-
-    private var supportedTypeIdentifiers: [String] {
-        [
-            UTType.url.identifier,
-            UTType.fileURL.identifier,
-            UTType.plainText.identifier,
-            UTType.text.identifier,
-            "com.apple.web-internet-location"
-        ]
     }
 }
 
@@ -67,64 +69,50 @@ private struct PixivLinkDropOverlay: View {
     }
 }
 
+/// Transferable payload that captures whatever the source app handed us
+/// — a real `URL`, plain text, or an Apple web internet location — so
+/// the drop handler can normalise everything into one place.
+///
+/// `Transferable` lets us declare each shape via `ProxyRepresentation`
+/// and let the framework run the legwork (type negotiation, async
+/// loading, sandbox-aware reads) that we used to hand-roll with
+/// `NSItemProvider.loadItem`.
+struct PixivLinkDropPayload: Transferable, Sendable {
+    var rawText: String
+
+    static var transferRepresentation: some TransferRepresentation {
+        // URL first — Safari address bar drags surface as `public.url`.
+        ProxyRepresentation { (url: URL) in
+            PixivLinkDropPayload(rawText: url.absoluteString)
+        }
+        // Plain text — Notes / Messages selections come through as
+        // `public.utf8-plain-text`.
+        ProxyRepresentation { (text: String) in
+            PixivLinkDropPayload(rawText: text)
+        }
+    }
+}
+
 @MainActor
 enum PixivDroppedLinkReader {
-    static func firstSupportedURL(from providers: [NSItemProvider]) async -> URL? {
-        for provider in providers {
-            if let url = await loadURL(from: provider),
+    /// Returns the first transferred payload that resolves to a known
+    /// Pixiv destination. Tries the payload as a literal URL first, then
+    /// scans embedded text — mirrors how a Pixiv link can hide inside a
+    /// tweet, a Discord paste, or an email signature.
+    static func firstSupportedURL(from payloads: [PixivLinkDropPayload]) -> URL? {
+        for payload in payloads {
+            let trimmed = payload.rawText.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard trimmed.isEmpty == false else { continue }
+
+            if let url = URL(string: trimmed),
                PixivWebLinkResolver.destination(from: url) != nil {
                 return url
             }
 
-            if let text = await loadText(from: provider),
-               let url = PixivWebLinkResolver.firstSupportedURL(in: text) {
+            if let url = PixivWebLinkResolver.firstSupportedURL(in: trimmed) {
                 return url
             }
         }
         return nil
-    }
-
-    private static func loadURL(from provider: NSItemProvider) async -> URL? {
-        let identifiers = [
-            UTType.url.identifier,
-            UTType.fileURL.identifier,
-            "com.apple.web-internet-location"
-        ]
-        guard let identifier = identifiers.first(where: { provider.hasItemConformingToTypeIdentifier($0) }) else {
-            return nil
-        }
-        return await withCheckedContinuation { continuation in
-            provider.loadItem(forTypeIdentifier: identifier, options: nil) { item, _ in
-                if let url = item as? URL {
-                    continuation.resume(returning: url)
-                } else if let data = item as? Data,
-                          let text = String(data: data, encoding: .utf8) {
-                    continuation.resume(returning: URL(string: text.trimmingCharacters(in: .whitespacesAndNewlines)))
-                } else if let text = item as? String {
-                    continuation.resume(returning: URL(string: text.trimmingCharacters(in: .whitespacesAndNewlines)))
-                } else {
-                    continuation.resume(returning: nil)
-                }
-            }
-        }
-    }
-
-    private static func loadText(from provider: NSItemProvider) async -> String? {
-        let identifiers = [UTType.plainText.identifier, UTType.text.identifier]
-        guard let identifier = identifiers.first(where: { provider.hasItemConformingToTypeIdentifier($0) }) else {
-            return nil
-        }
-
-        return await withCheckedContinuation { continuation in
-            provider.loadItem(forTypeIdentifier: identifier, options: nil) { item, _ in
-                if let text = item as? String {
-                    continuation.resume(returning: text)
-                } else if let data = item as? Data {
-                    continuation.resume(returning: String(data: data, encoding: .utf8))
-                } else {
-                    continuation.resume(returning: nil)
-                }
-            }
-        }
     }
 }

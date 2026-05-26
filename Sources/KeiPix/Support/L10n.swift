@@ -863,6 +863,16 @@ enum L10n {
     static var qaFollowingEmphasisNext: String {
         text("Keep emphasizeFollowingArtists in lock-step with its persisted value so a profile sync never loses the visual treatment.")
     }
+    static var qaTransferableDragDrop: String { text("Transferable drag and drop") }
+    static var qaTransferableDragDropRequirement: String {
+        text("Pixiv-link drops resolve through Transferable on every drop surface, and completed downloads + artwork cards drag out as native file or URL payloads.")
+    }
+    static var qaTransferableDragDropNext: String {
+        text("Keep PixivLinkDropPayload and the artwork drag URL covered so a future ProxyRepresentation refactor doesn't silently break Finder drops.")
+    }
+    static var qaTransferableDragDropEvidence: String {
+        text("PixivLinkDropPayload resolves URL and text shapes; download rows and artwork cards expose Transferable drag sources.")
+    }
     static var systemProxy: String { text("System Proxy") }
     static var directConnection: String { text("Direct connection") }
     static var pixivAPI: String { text("Pixiv API") }

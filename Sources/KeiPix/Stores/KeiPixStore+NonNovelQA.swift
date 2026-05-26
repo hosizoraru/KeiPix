@@ -280,6 +280,24 @@ extension KeiPixStore {
             passed: storedEmphasizeFollowing == emphasizeFollowingArtists,
             evidence: storedEmphasizeFollowing ? L10n.enabled : L10n.disabled
         )
+        // Transferable drag-and-drop — anchors on the symmetry between
+        // the modern drop side (`PixivLinkDropPayload`) and the new
+        // drag sources (artwork cards + completed download rows). We
+        // verify the drop reader still recognises the canonical Pixiv
+        // shapes so a future `Transferable` refactor can't silently
+        // break the inbound side, and we surface the audit so visual
+        // QA can confirm the outbound drag overlays render.
+        let dragDropPayloads = [
+            PixivLinkDropPayload(rawText: "https://www.pixiv.net/artworks/12345"),
+            PixivLinkDropPayload(rawText: "Check this: https://www.pixiv.net/users/678 thanks!"),
+            PixivLinkDropPayload(rawText: "pixiv://illusts/901")
+        ]
+        let dragDropResolves = PixivDroppedLinkReader.firstSupportedURL(from: dragDropPayloads) != nil
+        let transferableDragDrop = qaStaticItem(
+            id: "transferable-drag-drop",
+            passed: dragDropResolves,
+            evidence: L10n.qaTransferableDragDropEvidence
+        )
         return [
             nativeRoute,
             gallery,
@@ -291,7 +309,8 @@ extension KeiPixStore {
             sharing,
             imageQuality,
             captionTranslation,
-            followingEmphasis
+            followingEmphasis,
+            transferableDragDrop
         ]
     }
 
@@ -485,7 +504,8 @@ private extension KeiPixStore {
         NonNovelQATemplate(id: "sharing-copy", priority: .p2, title: L10n.sharing, requirement: L10n.copyTemplateHint, nextAction: L10n.qaSettingsOrganizationNext, systemImage: "square.and.arrow.up"),
         NonNovelQATemplate(id: "image-quality-tier", priority: .p1, title: L10n.qaImageQualityTier, requirement: L10n.qaImageQualityTierRequirement, nextAction: L10n.qaImageQualityTierNext, systemImage: "photo.stack"),
         NonNovelQATemplate(id: "caption-translation", priority: .p1, title: L10n.qaCaptionTranslation, requirement: L10n.qaCaptionTranslationRequirement, nextAction: L10n.qaCaptionTranslationNext, systemImage: "character.bubble"),
-        NonNovelQATemplate(id: "following-emphasis", priority: .p2, title: L10n.qaFollowingEmphasis, requirement: L10n.qaFollowingEmphasisRequirement, nextAction: L10n.qaFollowingEmphasisNext, systemImage: "checkmark.seal")
+        NonNovelQATemplate(id: "following-emphasis", priority: .p2, title: L10n.qaFollowingEmphasis, requirement: L10n.qaFollowingEmphasisRequirement, nextAction: L10n.qaFollowingEmphasisNext, systemImage: "checkmark.seal"),
+        NonNovelQATemplate(id: "transferable-drag-drop", priority: .p2, title: L10n.qaTransferableDragDrop, requirement: L10n.qaTransferableDragDropRequirement, nextAction: L10n.qaTransferableDragDropNext, systemImage: "square.and.arrow.up.on.square")
     ]
 }
 

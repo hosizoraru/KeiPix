@@ -669,6 +669,7 @@ private struct DownloadQueueRow: View {
         }
         .padding(12)
         .keiPanel(16)
+        .modifier(DownloadRowDraggableModifier(fileURL: draggableFileURL))
         .contextMenu {
             if item.status == .failed {
                 Button(L10n.retry) {
@@ -716,6 +717,71 @@ private struct DownloadQueueRow: View {
             Image(systemName: "exclamationmark.triangle.fill")
                 .foregroundStyle(.orange)
         }
+    }
+
+    /// File URL that should be promised to Finder when the user starts
+    /// dragging the row. For image-page artworks we pick the folder so
+    /// the whole multi-page set drags as one bundle (Finder will surface
+    /// it as a folder copy, which is the same shape the Reveal-in-Finder
+    /// command opens). For Ugoira we pick the .zip file. Returns `nil`
+    /// for queued / failed / cancelled rows so SwiftUI hides the drag
+    /// affordance entirely.
+    private var draggableFileURL: URL? {
+        guard item.status == .completed else { return nil }
+        switch item.resolvedArtifactKind {
+        case .imagePages:
+            // Prefer the folder so multi-page artworks drag as one
+            // selection. Fall back to the first written file when the
+            // folder path got pruned (older queue entries from before
+            // we persisted `folderPath`).
+            if let folderPath = item.folderPath {
+                let folderURL = URL(fileURLWithPath: folderPath, isDirectory: true)
+                if downloads.fileManager.fileExists(atPath: folderURL.path(percentEncoded: false)) {
+                    return folderURL
+                }
+            }
+            return downloads.imageFileURLs(for: item).first
+        case .ugoiraZip:
+            guard let filePath = item.downloadedFilePaths?.first else { return nil }
+            let url = URL(fileURLWithPath: filePath, isDirectory: false)
+            return downloads.fileManager.fileExists(atPath: url.path(percentEncoded: false)) ? url : nil
+        }
+    }
+}
+
+/// Wraps `.draggable(...)` so a row with no readable file renders as a
+/// plain row instead of an empty drag source. SwiftUI's `.draggable`
+/// always installs a drag recogniser, even when the closure returns an
+/// empty payload — we'd rather skip the modifier entirely so the user
+/// can't start a phantom drag from a queued or failed row.
+private struct DownloadRowDraggableModifier: ViewModifier {
+    let fileURL: URL?
+
+    func body(content: Content) -> some View {
+        if let fileURL {
+            content
+                .draggable(fileURL) {
+                    DownloadDragPreview(fileURL: fileURL)
+                }
+        } else {
+            content
+        }
+    }
+}
+
+private struct DownloadDragPreview: View {
+    let fileURL: URL
+
+    var body: some View {
+        let isDirectory = (try? fileURL.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) ?? false
+        Label(
+            fileURL.lastPathComponent,
+            systemImage: isDirectory ? "folder" : "doc"
+        )
+        .font(.callout.weight(.semibold))
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .background(.regularMaterial, in: Capsule())
     }
 }
 

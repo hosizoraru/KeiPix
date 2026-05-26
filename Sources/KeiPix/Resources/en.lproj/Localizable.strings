@@ -986,6 +986,10 @@
 "Following-artist emphasis" = "Following-artist emphasis";
 "Cards from artists the user follows pick up an accent border and a Following badge in mixed feeds, and the toggle round-trips through UserDefaults." = "Cards from artists the user follows pick up an accent border and a Following badge in mixed feeds, and the toggle round-trips through UserDefaults.";
 "Keep emphasizeFollowingArtists in lock-step with its persisted value so a profile sync never loses the visual treatment." = "Keep emphasizeFollowingArtists in lock-step with its persisted value so a profile sync never loses the visual treatment.";
+"Transferable drag and drop" = "Transferable drag and drop";
+"Pixiv-link drops resolve through Transferable on every drop surface, and completed downloads + artwork cards drag out as native file or URL payloads." = "Pixiv-link drops resolve through Transferable on every drop surface, and completed downloads + artwork cards drag out as native file or URL payloads.";
+"Keep PixivLinkDropPayload and the artwork drag URL covered so a future ProxyRepresentation refactor doesn't silently break Finder drops." = "Keep PixivLinkDropPayload and the artwork drag URL covered so a future ProxyRepresentation refactor doesn't silently break Finder drops.";
+"PixivLinkDropPayload resolves URL and text shapes; download rows and artwork cards expose Transferable drag sources." = "PixivLinkDropPayload resolves URL and text shapes; download rows and artwork cards expose Transferable drag sources.";
 "System Proxy" = "System Proxy";
 "Direct connection" = "Direct connection";
 "Pixiv API" = "Pixiv API";
