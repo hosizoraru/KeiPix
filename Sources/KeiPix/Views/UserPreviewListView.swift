@@ -174,7 +174,10 @@ struct UserPreviewListView: View {
                 copyArtworkLink: copyArtworkLink,
                 isPinnedCreator: store.isPinnedCreator,
                 togglePinnedCreator: togglePinnedCreator,
-                selectArtwork: { store.selectedArtwork = $0 }
+                selectArtwork: { store.selectedArtwork = $0 },
+                loadCreatorPreviewArtworks: { user in
+                    try await store.creatorPreviewArtworks(for: user)
+                }
             )
         }
     }

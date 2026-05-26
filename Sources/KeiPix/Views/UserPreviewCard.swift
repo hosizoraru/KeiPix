@@ -48,6 +48,12 @@ struct UserPreviewCard: View {
     let isPinned: Bool
     let togglePinnedCreator: () -> Void
     let selectArtwork: (PixivArtwork) -> Void
+    /// Lazily fetches the creator's recent works for the expanded
+    /// shelf. The Pixiv recommended/related-users endpoints only ship
+    /// 3 illustrations per user, so when the user picks the single-card
+    /// layout we go fetch the rest. Optional so the auto / twoUp paths
+    /// can leave it `nil`.
+    var loadExpandedArtworks: (() async throws -> [PixivArtwork])? = nil
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -245,33 +251,19 @@ struct UserPreviewCard: View {
     }
 
     /// Horizontally scrollable shelf used by the single-column layout.
-    /// Thumbnails are sized to a fixed height so trackpad users can
-    /// swipe through more recent works without the card growing taller
-    /// every time another illust loads, mirroring Apple Music's
-    /// "Latest Releases" carousel.
+    /// The shelf is its own subview so it can own the lazy-fetch state
+    /// (loaded artworks + isLoading + error) without the rest of the
+    /// card growing more `@State`.
     private var expandedPreviewStrip: some View {
-        let tileHeight: CGFloat = 200
-        let tileWidth: CGFloat = tileHeight * 4.0 / 5.0
-
-        return ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 10) {
-                ForEach(preview.illusts.prefix(8)) { artwork in
-                    artworkThumbButton(artwork, tileWidth: tileWidth)
-                }
-            }
-        }
-        .frame(height: tileHeight)
-        // Same edge-fade treatment as Apple's shelves so the user gets
-        // a visual cue that the rail scrolls horizontally.
-        .mask {
-            HStack(spacing: 0) {
-                LinearGradient(colors: [.clear, .black], startPoint: .leading, endPoint: .trailing)
-                    .frame(width: 14)
-                Rectangle()
-                LinearGradient(colors: [.black, .clear], startPoint: .leading, endPoint: .trailing)
-                    .frame(width: 14)
-            }
-        }
+        ExpandedCreatorPreviewShelf(
+            seedArtworks: preview.illusts,
+            userID: preview.user.id,
+            showContentBadges: showContentBadges,
+            maskSensitivePreviews: maskSensitivePreviews,
+            selectArtwork: selectArtwork,
+            copyArtworkLink: copyArtworkLink,
+            loadArtworks: loadExpandedArtworks
+        )
     }
 
     private func artworkThumbButton(_ artwork: PixivArtwork, tileWidth: CGFloat) -> some View {
@@ -518,3 +510,109 @@ private struct ArtworkPreviewThumb: View {
         .frame(width: tileWidth, height: tileHeight)
     }
 }
+
+/// Horizontally scrollable artwork shelf used by the single-card
+/// layout. Owns its own fetch state (`artworks`, `isLoading`, error
+/// banner) so the parent `UserPreviewCard` doesn't have to grow more
+/// `@State` slots for the lazy-load lifecycle.
+///
+/// The shelf seeds itself with the 3 illustrations Pixiv ships in the
+/// recommended-users / related-users response, then asynchronously
+/// fetches the creator's full recent works. Once they arrive the merged
+/// list (de-duped, sorted newest first by the store) replaces the seed
+/// — same call shape `UserProfileRecentWorksSection` uses, so we share
+/// the cache the API layer keeps internally.
+private struct ExpandedCreatorPreviewShelf: View {
+    let seedArtworks: [PixivArtwork]
+    let userID: Int
+    let showContentBadges: Bool
+    let maskSensitivePreviews: Bool
+    let selectArtwork: (PixivArtwork) -> Void
+    let copyArtworkLink: (PixivArtwork) -> Void
+    let loadArtworks: (() async throws -> [PixivArtwork])?
+
+    private let tileHeight: CGFloat = 200
+    private var tileWidth: CGFloat { tileHeight * 4.0 / 5.0 }
+    private let visibleCap = 24
+
+    @State private var fetchedArtworks: [PixivArtwork] = []
+    @State private var isLoading = false
+    @State private var didAttemptLoad = false
+
+    private var renderedArtworks: [PixivArtwork] {
+        fetchedArtworks.isEmpty ? seedArtworks : fetchedArtworks
+    }
+
+    var body: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 10) {
+                ForEach(renderedArtworks.prefix(visibleCap)) { artwork in
+                    Button {
+                        selectArtwork(artwork)
+                    } label: {
+                        ArtworkPreviewThumb(
+                            artwork: artwork,
+                            tileWidth: tileWidth,
+                            showContentBadges: showContentBadges,
+                            maskSensitivePreview: maskSensitivePreviews
+                        )
+                    }
+                    .buttonStyle(.plain)
+                    .contextMenu {
+                        Button(L10n.selectArtwork) { selectArtwork(artwork) }
+                        if let url = artwork.pixivURL {
+                            Link(L10n.openInPixiv, destination: url)
+                            Button(L10n.copyLink) { copyArtworkLink(artwork) }
+                        }
+                    }
+                }
+
+                if isLoading {
+                    ProgressView()
+                        .controlSize(.small)
+                        .frame(width: tileWidth, height: tileHeight)
+                }
+            }
+        }
+        .frame(height: tileHeight)
+        // Same edge-fade treatment as Apple's shelves so the user gets
+        // a visual cue that the rail scrolls horizontally.
+        .mask {
+            HStack(spacing: 0) {
+                LinearGradient(colors: [.clear, .black], startPoint: .leading, endPoint: .trailing)
+                    .frame(width: 14)
+                Rectangle()
+                LinearGradient(colors: [.black, .clear], startPoint: .leading, endPoint: .trailing)
+                    .frame(width: 14)
+            }
+        }
+        // `.task(id:)` keys the load to userID so switching cards
+        // (when SwiftUI recycles a view) re-fires the fetch for the
+        // new creator instead of stale data.
+        .task(id: userID) {
+            await loadIfNeeded()
+        }
+    }
+
+    private func loadIfNeeded() async {
+        guard let loadArtworks, didAttemptLoad == false else { return }
+        didAttemptLoad = true
+        isLoading = true
+        defer { isLoading = false }
+
+        do {
+            let loaded = try await loadArtworks()
+            // Some accounts return zero artworks (private feeds, muted,
+            // etc.) — preserve the seed in that case so we don't end
+            // up with an empty shelf.
+            if loaded.isEmpty == false {
+                fetchedArtworks = loaded
+            }
+        } catch {
+            // Silent failure on the shelf is intentional: the seed
+            // illustrations are still rendered, and the rest of the
+            // card surfaces error reporting via the bulk-status banner.
+        }
+    }
+}
+

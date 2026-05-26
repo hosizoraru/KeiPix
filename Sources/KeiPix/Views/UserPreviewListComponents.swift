@@ -277,6 +277,10 @@ struct CreatorPreviewListContent: View {
     let isPinnedCreator: (PixivUser) -> Bool
     let togglePinnedCreator: (PixivUser) -> Void
     let selectArtwork: (PixivArtwork) -> Void
+    /// Lazy fetcher used when `layoutMode == .single`. The single-card
+    /// shelf calls into this to surface more than the 3 illustrations
+    /// Pixiv ships in the recommended-users / related-users response.
+    let loadCreatorPreviewArtworks: (PixivUser) async throws -> [PixivArtwork]
 
     /// Column descriptors driven by the user-selected layout mode.
     /// `.auto` uses an adaptive grid that fills the window; `.single`
@@ -398,7 +402,10 @@ struct CreatorPreviewListContent: View {
                     copyArtworkLink: copyArtworkLink,
                     isPinned: isPinnedCreator(preview.user),
                     togglePinnedCreator: { togglePinnedCreator(preview.user) },
-                    selectArtwork: selectArtwork
+                    selectArtwork: selectArtwork,
+                    loadExpandedArtworks: layoutMode.usesExpandedPreview
+                        ? { try await loadCreatorPreviewArtworks(preview.user) }
+                        : nil
                 )
             }
 
