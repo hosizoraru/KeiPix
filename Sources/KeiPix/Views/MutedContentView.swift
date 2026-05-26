@@ -33,15 +33,7 @@ struct MutedContentView: View {
             .scrollEdgeEffectStyle(.soft, for: .top)
         }
         .navigationTitle(L10n.mutedContent)
-        .toolbar {
-            ToolbarItem(placement: .status) {
-                Text(totalCountText)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-                    .help(totalCountText)
-            }
-        }
+        .navigationSubtitle(totalCountText)
         .overlay(alignment: .bottom) {
             if let statusMessage {
                 FloatingStatusBanner(maxWidth: 520) {

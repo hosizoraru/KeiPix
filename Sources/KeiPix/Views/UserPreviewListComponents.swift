@@ -66,29 +66,22 @@ struct CreatorListStatusBanner: View {
     }
 }
 
-struct CreatorListHeader: View {
+/// Thin search bar that lives at the top of the creator list body.
+///
+/// The previous `CreatorListHeader` mixed the search field with five
+/// other controls (filter / sort / layout / bulk actions / refresh)
+/// in a `FlowLayout` band. Apple's HIG and stock surfaces (Mail, Music,
+/// Photos) keep search at the body edge but push view options /
+/// destructive bulk actions into the toolbar so the body stays
+/// scannable. `CreatorListSearchBar` is the slim body half — the rest
+/// moved into `UserPreviewListView.toolbar`.
+struct CreatorListSearchBar: View {
     let mode: UserPreviewListMode
     @Binding var restrict: BookmarkRestrict
     @Binding var creatorSearchText: String
-    @Binding var creatorFilter: CreatorListFilter
-    @Binding var creatorSort: CreatorListSort
-    @Binding var layoutMode: CreatorListLayoutMode
-    let isLoading: Bool
-    let isRunningBulkAction: Bool
-    let isCheckingFollowVisibility: Bool
-    let hasActiveCreatorListState: Bool
-    let visiblePreviewsCount: Int
-    let visibleFollowedPreviewsCount: Int
-    let bulkActionTargetCount: (CreatorBulkAction) -> Int
-    let refreshCreatorList: () -> Void
-    let checkVisibleFollowVisibility: () -> Void
-    let resetCreatorListState: () -> Void
-    let copyVisibleCreatorLinks: () -> Void
-    let copyVisibleCreatorSummary: () -> Void
-    let requestBulkAction: (CreatorBulkAction) -> Void
 
     var body: some View {
-        FlowLayout(spacing: 8) {
+        HStack(spacing: 10) {
             if mode.usesRestrictPicker {
                 Picker(L10n.followingCreators, selection: $restrict) {
                     Text(L10n.publicRestrict).tag(BookmarkRestrict.public)
@@ -96,7 +89,7 @@ struct CreatorListHeader: View {
                 }
                 .pickerStyle(.segmented)
                 .labelsHidden()
-                .frame(width: 88)
+                .frame(width: 96)
                 .accessibilityLabel(L10n.followingCreators)
             }
 
@@ -106,89 +99,92 @@ struct CreatorListHeader: View {
 
                 TextField(L10n.searchCreatorsInList, text: $creatorSearchText)
                     .textFieldStyle(.roundedBorder)
-                    .frame(minWidth: 180, idealWidth: 220, maxWidth: 260)
+                    .frame(maxWidth: .infinity)
             }
+            .frame(maxWidth: 360)
 
-            Button {
-                creatorSearchText = ""
-            } label: {
-                Label(L10n.clearSearch, systemImage: "xmark.circle")
-            }
-            .labelStyle(.iconOnly)
-            .disabled(creatorSearchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-            .help(L10n.clearSearch)
-
-            Menu {
-                Picker(L10n.creatorFilter, selection: $creatorFilter) {
-                    ForEach(CreatorListFilter.allCases) { filter in
-                        Text(filter.title).tag(filter)
-                    }
+            if creatorSearchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false {
+                Button {
+                    creatorSearchText = ""
+                } label: {
+                    Label(L10n.clearSearch, systemImage: "xmark.circle.fill")
                 }
-                .pickerStyle(.inline)
-
-                Divider()
-
-                Picker(L10n.creatorSort, selection: $creatorSort) {
-                    ForEach(CreatorListSort.allCases) { sort in
-                        Text(sort.title).tag(sort)
-                    }
-                }
-                .pickerStyle(.inline)
-            } label: {
-                Label(L10n.creatorFilter, systemImage: "line.3.horizontal.decrease.circle")
-                    .lineLimit(1)
+                .labelStyle(.iconOnly)
+                .buttonStyle(.borderless)
+                .help(L10n.clearSearch)
             }
-            .help("\(L10n.creatorFilter): \(creatorFilter.title) · \(L10n.creatorSort): \(creatorSort.title)")
 
-            layoutModeMenu
-
-            creatorActionsMenu
+            Spacer(minLength: 0)
         }
         .controlSize(.small)
     }
+}
 
-    /// Layout switcher mirrors the gallery's pattern (Menu → inline
-    /// Picker) so users get the same affordance on both surfaces.
-    private var layoutModeMenu: some View {
+/// View-options menu rendered in the creator list's toolbar. Combines
+/// the filter and sort pickers in one dropdown — Apple Mail's "Sort"
+/// menu, Photos's "View Options" menu, and Music's "Sort By" menu all
+/// share this Picker(.inline) inside a Menu pattern.
+struct CreatorListViewOptionsMenu: View {
+    @Binding var creatorFilter: CreatorListFilter
+    @Binding var creatorSort: CreatorListSort
+    @Binding var layoutMode: CreatorListLayoutMode
+
+    var body: some View {
         Menu {
             Picker(L10n.creatorListLayout, selection: $layoutMode) {
                 ForEach(CreatorListLayoutMode.allCases) { mode in
-                    Label(mode.title, systemImage: mode.systemImage)
-                        .tag(mode)
+                    Label(mode.title, systemImage: mode.systemImage).tag(mode)
+                }
+            }
+            .pickerStyle(.inline)
+
+            Divider()
+
+            Picker(L10n.creatorFilter, selection: $creatorFilter) {
+                ForEach(CreatorListFilter.allCases) { filter in
+                    Text(filter.title).tag(filter)
+                }
+            }
+            .pickerStyle(.inline)
+
+            Divider()
+
+            Picker(L10n.creatorSort, selection: $creatorSort) {
+                ForEach(CreatorListSort.allCases) { sort in
+                    Text(sort.title).tag(sort)
                 }
             }
             .pickerStyle(.inline)
         } label: {
-            Label(layoutMode.title, systemImage: layoutMode.systemImage)
-                .lineLimit(1)
+            Label(L10n.viewOptions, systemImage: "slider.horizontal.3")
         }
-        .help(L10n.creatorListLayout)
+        .help(L10n.viewOptions)
     }
+}
 
-    private var creatorActionsMenu: some View {
+/// Bulk-action menu rendered in the creator list's toolbar. The menu
+/// includes verification (Check follow visibility), copy helpers, and
+/// destructive bulk operations. Empty rows disable themselves so the
+/// menu is always shown but never lies about what it can do.
+struct CreatorListBulkActionsMenu: View {
+    let isRunningBulkAction: Bool
+    let isCheckingFollowVisibility: Bool
+    let visiblePreviewsCount: Int
+    let visibleFollowedPreviewsCount: Int
+    let bulkActionTargetCount: (CreatorBulkAction) -> Int
+    let checkVisibleFollowVisibility: () -> Void
+    let copyVisibleCreatorLinks: () -> Void
+    let copyVisibleCreatorSummary: () -> Void
+    let requestBulkAction: (CreatorBulkAction) -> Void
+
+    var body: some View {
         Menu {
-            Button {
-                refreshCreatorList()
-            } label: {
-                Label(L10n.refresh, systemImage: "arrow.clockwise")
-            }
-            .disabled(isLoading)
-
             Button {
                 checkVisibleFollowVisibility()
             } label: {
                 Label(L10n.checkFollowVisibility, systemImage: "checkmark.seal")
             }
             .disabled(isCheckingFollowVisibility || visibleFollowedPreviewsCount == 0)
-
-            Divider()
-
-            Button {
-                resetCreatorListState()
-            } label: {
-                Label(L10n.resetCreatorFilters, systemImage: "arrow.counterclockwise")
-            }
-            .disabled(hasActiveCreatorListState == false)
 
             Divider()
 
@@ -239,11 +235,9 @@ struct CreatorListHeader: View {
             .disabled(isRunningBulkAction || bulkActionTargetCount(.unfollow) == 0)
         } label: {
             if isRunningBulkAction {
-                ProgressView()
-                    .controlSize(.small)
+                ProgressView().controlSize(.small)
             } else {
-                Label(L10n.creatorActions, systemImage: "slider.horizontal.3")
-                    .labelStyle(.iconOnly)
+                Label(L10n.creatorActions, systemImage: "ellipsis.circle")
             }
         }
         .help(L10n.creatorActions)

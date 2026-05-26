@@ -69,11 +69,7 @@ struct DownloadQueueView: View {
             }
         }
         .navigationTitle(L10n.downloads)
-        .toolbar {
-            ToolbarItem(placement: .status) {
-                downloadStatusBadge
-            }
-        }
+        .navigationSubtitle(downloadStatusText)
         .overlay(alignment: .bottom) {
             if let actionMessage {
                 FloatingStatusBanner(maxWidth: 520) {

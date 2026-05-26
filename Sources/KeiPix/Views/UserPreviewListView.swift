@@ -39,14 +39,56 @@ struct UserPreviewListView: View {
             }
         }
         .navigationTitle(mode.title)
+        .navigationSubtitle(navigationSubtitle)
         .toolbar {
-            ToolbarItem(placement: .status) {
-                Text(headerSubtitle)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-                    .help(headerDetail)
+            // macOS HIG keeps refresh / view-options / bulk-action
+            // entry points in the toolbar so the body stays focused on
+            // content. The previous version crammed all five into a
+            // FlowLayout band below the title — replaced with the
+            // standard pattern used by Mail / Photos / Music.
+            ToolbarItem(placement: .secondaryAction) {
+                Button {
+                    Task { await refreshCreatorList() }
+                } label: {
+                    Label(L10n.refresh, systemImage: "arrow.clockwise")
+                }
+                .help(L10n.refresh)
+                .disabled(isLoading)
             }
+
+            ToolbarItem(placement: .secondaryAction) {
+                CreatorListViewOptionsMenu(
+                    creatorFilter: $creatorFilter,
+                    creatorSort: $creatorSort,
+                    layoutMode: creatorLayoutBinding
+                )
+            }
+
+            ToolbarItem(placement: .secondaryAction) {
+                if hasActiveCreatorListState {
+                    Button {
+                        resetCreatorListState()
+                    } label: {
+                        Label(L10n.resetCreatorFilters, systemImage: "arrow.counterclockwise")
+                    }
+                    .help(L10n.resetCreatorFilters)
+                }
+            }
+
+            ToolbarItem(placement: .secondaryAction) {
+                CreatorListBulkActionsMenu(
+                    isRunningBulkAction: isRunningBulkAction,
+                    isCheckingFollowVisibility: isCheckingFollowVisibility,
+                    visiblePreviewsCount: visiblePreviews.count,
+                    visibleFollowedPreviewsCount: visibleFollowedPreviews.count,
+                    bulkActionTargetCount: bulkActionTargetCount,
+                    checkVisibleFollowVisibility: { Task { await checkVisibleFollowVisibility() } },
+                    copyVisibleCreatorLinks: copyVisibleCreatorLinks,
+                    copyVisibleCreatorSummary: copyVisibleCreatorSummary,
+                    requestBulkAction: requestBulkAction
+                )
+            }
+
             ToolbarItem(placement: .confirmationAction) {
                 SheetCloseButton(style: .bordered)
             }
@@ -121,30 +163,14 @@ struct UserPreviewListView: View {
 
     private var creatorListSurface: some View {
         VStack(spacing: 0) {
-            CreatorListHeader(
+            CreatorListSearchBar(
                 mode: mode,
                 restrict: restrictBinding,
-                creatorSearchText: $creatorSearchText,
-                creatorFilter: $creatorFilter,
-                creatorSort: $creatorSort,
-                layoutMode: creatorLayoutBinding,
-                isLoading: isLoading,
-                isRunningBulkAction: isRunningBulkAction,
-                isCheckingFollowVisibility: isCheckingFollowVisibility,
-                hasActiveCreatorListState: hasActiveCreatorListState,
-                visiblePreviewsCount: visiblePreviews.count,
-                visibleFollowedPreviewsCount: visibleFollowedPreviews.count,
-                bulkActionTargetCount: bulkActionTargetCount,
-                refreshCreatorList: { Task { await refreshCreatorList() } },
-                checkVisibleFollowVisibility: { Task { await checkVisibleFollowVisibility() } },
-                resetCreatorListState: resetCreatorListState,
-                copyVisibleCreatorLinks: copyVisibleCreatorLinks,
-                copyVisibleCreatorSummary: copyVisibleCreatorSummary,
-                requestBulkAction: requestBulkAction
+                creatorSearchText: $creatorSearchText
             )
-                .padding(.horizontal, 18)
-                .padding(.vertical, 6)
-                .background(.bar)
+            .padding(.horizontal, 18)
+            .padding(.vertical, 8)
+            .background(.bar)
 
             Divider()
 
@@ -275,17 +301,17 @@ struct UserPreviewListView: View {
         "\(modeKey)-\(store.routeRefreshGeneration)"
     }
 
-    private var headerSubtitle: String {
-        "\(visiblePreviews.count.formatted()) / \(previews.count.formatted()) \(L10n.results)"
-    }
-
-    private var headerDetail: String {
-        let pagingText = nextURL == nil ? L10n.noMorePages : L10n.nextPageAvailable
-        let shownText = "\(visiblePreviews.count.formatted()) / \(previews.count.formatted()) \(L10n.results)"
+    /// Subtitle shown beneath the navigation title — the visible /
+    /// total count plus pagination state, plus the search keyword
+    /// when relevant. Replaces the old toolbar `.status` chip which
+    /// HIG would expect to read more like an inline metadata strip.
+    private var navigationSubtitle: String {
+        let counts = "\(visiblePreviews.count.formatted()) / \(previews.count.formatted()) \(L10n.results)"
+        let pagination = nextURL == nil ? L10n.noMorePages : L10n.nextPageAvailable
         if mode.requiresSearchKeyword, searchKeyword.isEmpty == false {
-            return "\(searchKeyword) · \(shownText) · \(pagingText)"
+            return "\(searchKeyword) · \(counts) · \(pagination)"
         }
-        return "\(shownText) · \(pagingText)"
+        return "\(counts) · \(pagination)"
     }
 
     private var restrictBinding: Binding<BookmarkRestrict> {

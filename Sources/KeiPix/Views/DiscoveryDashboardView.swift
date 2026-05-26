@@ -12,26 +12,7 @@ struct DiscoveryDashboardView: View {
             }
         }
         .navigationTitle(L10n.discover)
-        .toolbar {
-            ToolbarItem(placement: .status) {
-                if store.session != nil {
-                    HStack(spacing: 6) {
-                        Image(systemName: "checkmark.seal")
-                            .symbolRenderingMode(.hierarchical)
-                        Text(L10n.signedIn)
-                    }
-                    .font(.caption.weight(.medium))
-                    .foregroundStyle(.secondary)
-                    .padding(.horizontal, 9)
-                    .padding(.vertical, 5)
-                    .background(.regularMaterial, in: Capsule())
-                    .overlay {
-                        Capsule()
-                            .stroke(Color.secondary.opacity(0.14), lineWidth: 1)
-                    }
-                }
-            }
-        }
+        .navigationSubtitle(store.session != nil ? L10n.signedIn : "")
     }
 
     private var dashboardContent: some View {

@@ -30,17 +30,17 @@ struct GalleryView: View {
             }
         }
         .animation(.snappy(duration: 0.18), value: actionMessage)
-        .toolbar {
-            if store.session != nil, store.selectedRoute.usesArtworkFeed {
-                ToolbarItem(placement: .status) {
-                    Text(feedStatusText)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
-                        .help(feedDetailSummary)
-                }
-            }
+        .navigationSubtitle(gallerySubtitle)
+    }
+
+    /// Subtitle string shown beneath the navigation title (replaces
+    /// the old `.status` toolbar chip). Empty string for surfaces that
+    /// don't render an artwork feed so the title stays uncluttered.
+    private var gallerySubtitle: String {
+        guard store.session != nil, store.selectedRoute.usesArtworkFeed else {
+            return ""
         }
+        return feedDetailSummary
     }
 
     private var navigationTitle: String {

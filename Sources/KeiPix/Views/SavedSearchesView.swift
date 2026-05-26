@@ -113,15 +113,7 @@ struct SavedSearchesView: View {
         }
         .scrollEdgeEffectStyle(.soft, for: .top)
         .navigationTitle(L10n.savedSearches)
-        .toolbar {
-            ToolbarItem(placement: .status) {
-                Text(savedSearchStatusText)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-                    .help(savedSearchStatusHelp)
-            }
-        }
+        .navigationSubtitle(savedSearchStatusText)
         .overlay(alignment: .bottom) {
             if let actionMessage {
                 FloatingStatusBanner(maxWidth: 520) {

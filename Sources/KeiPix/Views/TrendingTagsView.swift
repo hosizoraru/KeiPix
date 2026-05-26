@@ -68,10 +68,21 @@ struct TrendingTagsView: View {
             }
         }
         .navigationTitle(L10n.trendingTags)
+        .navigationSubtitle("\(tags.count.formatted()) \(L10n.results)")
         .toolbar {
             if store.session != nil {
-                ToolbarItem(placement: .status) {
-                    resultCountBadge
+                // Single-source surface: just a refresh action. Empty
+                // status badges live on the navigation subtitle now,
+                // following the macOS HIG pattern Mail / Music use for
+                // single-list views.
+                ToolbarItem(placement: .secondaryAction) {
+                    Button {
+                        Task { await load() }
+                    } label: {
+                        Label(L10n.refresh, systemImage: "arrow.clockwise")
+                    }
+                    .help(L10n.refresh)
+                    .disabled(isLoading)
                 }
             }
         }
@@ -105,19 +116,6 @@ struct TrendingTagsView: View {
         .task(id: store.routeRefreshGeneration) {
             await load()
         }
-    }
-
-    private var resultCountBadge: some View {
-        Label("\(tags.count.formatted()) \(L10n.results)", systemImage: "number")
-            .font(.caption.weight(.medium))
-            .foregroundStyle(.secondary)
-            .padding(.horizontal, 9)
-            .padding(.vertical, 5)
-            .background(.regularMaterial, in: Capsule())
-            .overlay {
-                Capsule()
-                    .stroke(Color.secondary.opacity(0.14), lineWidth: 1)
-            }
     }
 
     private func load() async {

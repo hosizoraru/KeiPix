@@ -40,68 +40,96 @@ struct SpotlightView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 ScrollView {
-                    LazyVStack(spacing: 14, pinnedViews: [.sectionHeaders]) {
-                        Section {
-                            LazyVGrid(columns: articleColumns, spacing: 12) {
-                                ForEach(displayedArticles) { article in
-                                    SpotlightArticleCard(
-                                        article: article,
-                                        isSelected: store.selectedSpotlightArticle?.id == article.id,
-                                        isSaved: store.isSpotlightArticleSaved(article),
-                                        isInHistory: store.spotlightArticleHistory.contains { $0.id == article.id },
-                                        layoutMode: store.spotlightListLayoutMode
-                                    ) {
-                                        store.recordSpotlightArticleHistory(article)
-                                        store.selectedSpotlightArticle = article
-                                    } copied: {
-                                        showActionMessage(L10n.copied)
-                                    } toggleSaved: {
-                                        toggleSaved(article)
-                                    } removeFromHistory: {
-                                        store.removeSpotlightArticleHistory(article)
-                                        showActionMessage(L10n.removedArticleHistory)
-                                    }
-                                }
-
-                                if collectionMode == .latest, nextURL != nil {
-                                    Button {
-                                        Task { await loadMore() }
-                                    } label: {
-                                        Label(isLoadingMore ? L10n.loading : L10n.loadMoreSpotlightArticles, systemImage: "arrow.down.circle")
-                                            .frame(maxWidth: .infinity)
-                                    }
-                                    .buttonStyle(.bordered)
-                                    .disabled(isLoadingMore)
-                                    .gridCellColumns(loadMoreSpan)
-                                }
+                    LazyVGrid(columns: articleColumns, spacing: 12) {
+                        ForEach(displayedArticles) { article in
+                            SpotlightArticleCard(
+                                article: article,
+                                isSelected: store.selectedSpotlightArticle?.id == article.id,
+                                isSaved: store.isSpotlightArticleSaved(article),
+                                isInHistory: store.spotlightArticleHistory.contains { $0.id == article.id },
+                                layoutMode: store.spotlightListLayoutMode
+                            ) {
+                                store.recordSpotlightArticleHistory(article)
+                                store.selectedSpotlightArticle = article
+                            } copied: {
+                                showActionMessage(L10n.copied)
+                            } toggleSaved: {
+                                toggleSaved(article)
+                            } removeFromHistory: {
+                                store.removeSpotlightArticleHistory(article)
+                                showActionMessage(L10n.removedArticleHistory)
                             }
-                            .padding(.horizontal, 18)
-                            .padding(.top, 14)
-                        } header: {
-                            SpotlightCollectionHeader(
-                                mode: $collectionMode,
-                                category: $category,
-                                layoutMode: spotlightLayoutBinding,
-                                showCategoryPicker: collectionMode.supportsCategoryFilter,
-                                countText: collectionSummary,
-                                canClearHistory: store.spotlightArticleHistory.isEmpty == false,
-                                clearHistory: clearHistory
-                            )
-                            .padding(.horizontal, 18)
-                            .padding(.vertical, 6)
-                            .background(.bar)
+                        }
+
+                        if collectionMode == .latest, nextURL != nil {
+                            Button {
+                                Task { await loadMore() }
+                            } label: {
+                                Label(isLoadingMore ? L10n.loading : L10n.loadMoreSpotlightArticles, systemImage: "arrow.down.circle")
+                                    .frame(maxWidth: .infinity)
+                            }
+                            .buttonStyle(.bordered)
+                            .disabled(isLoadingMore)
+                            .gridCellColumns(loadMoreSpan)
                         }
                     }
+                    .padding(.horizontal, 18)
+                    .padding(.top, 14)
                     .padding(.bottom, 18)
                 }
                 .scrollEdgeEffectStyle(.soft, for: .top)
             }
         }
         .navigationTitle(L10n.spotlight)
+        .navigationSubtitle(navigationSubtitle)
         .toolbar {
             if store.session != nil {
-                ToolbarItem(placement: .status) {
-                    spotlightCountBadge
+                // Principal placement on macOS centers the segmented
+                // picker beneath the title — exactly the chrome
+                // pattern Apple Mail uses for its mailbox tabs and
+                // Music uses for Library / Listen Now / Browse.
+                ToolbarItem(placement: .principal) {
+                    Picker(L10n.spotlightCollection, selection: $collectionMode) {
+                        ForEach(SpotlightArticleCollectionMode.allCases) { mode in
+                            Label(mode.title, systemImage: mode.systemImage).tag(mode)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                    .labelsHidden()
+                    .frame(minWidth: 360, idealWidth: 440)
+                    .help(L10n.spotlightCollection)
+                }
+
+                // Secondary toolbar: refresh + a single "view options"
+                // Menu that consolidates filter/sort/layout, plus a
+                // destructive "clear history" entry that only shows up
+                // for the History collection. Matching the Photos /
+                // Mail "View Options" affordance keeps the tab bar
+                // uncluttered while leaving every option discoverable.
+                if collectionMode.fetchesFromNetwork {
+                    ToolbarItem(placement: .secondaryAction) {
+                        Button {
+                            Task { await load() }
+                        } label: {
+                            Label(L10n.refresh, systemImage: "arrow.clockwise")
+                        }
+                        .help(L10n.refresh)
+                        .disabled(isLoading)
+                    }
+                }
+
+                ToolbarItem(placement: .secondaryAction) {
+                    viewOptionsMenu
+                }
+
+                if collectionMode == .history {
+                    ToolbarItem(placement: .secondaryAction) {
+                        Button(role: .destructive, action: clearHistory) {
+                            Label(L10n.clearArticleHistory, systemImage: "trash")
+                        }
+                        .help(L10n.clearArticleHistory)
+                        .disabled(store.spotlightArticleHistory.isEmpty)
+                    }
                 }
             }
         }
@@ -202,16 +230,57 @@ struct SpotlightView: View {
         }
     }
 
-    private var spotlightCountBadge: some View {
-        Text(spotlightSummary)
-            .font(.caption)
-            .foregroundStyle(.secondary)
-            .lineLimit(1)
-            .help(spotlightSummary)
+    /// Subtitle shown beneath the navigation title (replaces the old
+    /// inline body header strip). Combines the displayed-article count
+    /// with whatever pagination / collection-specific status string
+    /// reads naturally for the active mode.
+    private var navigationSubtitle: String {
+        let count = displayedArticles.count.formatted()
+        switch collectionMode {
+        case .latest:
+            let pagination = nextURL == nil ? L10n.noMorePages : L10n.nextPageAvailable
+            return "\(count) · \(pagination)"
+        case .monthlyRanking, .recommend:
+            return count
+        case .favorites:
+            return String(format: L10n.savedArticleCountFormat, store.spotlightFavoriteArticles.count)
+        case .history:
+            return String(format: L10n.articleHistoryCountFormat, store.spotlightArticleHistory.count)
+        }
     }
 
-    private var spotlightSummary: String {
-        "\(displayedArticles.count.formatted()) \(L10n.results) · \(collectionMode.title)"
+    /// View-options dropdown that consolidates filter / layout pickers
+    /// the way Apple Mail's "Sort" menu and Photos's "View Options"
+    /// menu do — one trailing-edge entry point, every option visible
+    /// inline as a Picker, no nested submenus.
+    private var viewOptionsMenu: some View {
+        Menu {
+            Picker(L10n.spotlightListLayout, selection: spotlightLayoutBinding) {
+                ForEach(SpotlightListLayoutMode.allCases) { mode in
+                    Label(mode.title, systemImage: mode.systemImage).tag(mode)
+                }
+            }
+            .pickerStyle(.inline)
+
+            // Category filter only applies to the live "latest" feed
+            // (the Pixiv app API only accepts illust/manga/cosplay,
+            // and the local + Pixivision-Web collections don't take
+            // a category). Hide it for collections where it would be
+            // a no-op.
+            if collectionMode.supportsCategoryFilter {
+                Divider()
+
+                Picker(L10n.spotlightCategoryAll, selection: $category) {
+                    ForEach(SpotlightArticleCategory.allCases) { category in
+                        Label(category.title, systemImage: category.systemImage).tag(category)
+                    }
+                }
+                .pickerStyle(.inline)
+            }
+        } label: {
+            Label(L10n.viewOptions, systemImage: "slider.horizontal.3")
+        }
+        .help(L10n.viewOptions)
     }
 
     private var displayedArticles: [PixivSpotlightArticle] {
@@ -222,19 +291,6 @@ struct SpotlightView: View {
             store.spotlightFavoriteArticles
         case .history:
             store.spotlightArticleHistory
-        }
-    }
-
-    private var collectionSummary: String {
-        switch collectionMode {
-        case .latest:
-            "\(articles.count.formatted()) · \(nextURL == nil ? L10n.noMorePages : L10n.nextPageAvailable)"
-        case .monthlyRanking, .recommend:
-            "\(articles.count.formatted())"
-        case .favorites:
-            String(format: L10n.savedArticleCountFormat, store.spotlightFavoriteArticles.count)
-        case .history:
-            String(format: L10n.articleHistoryCountFormat, store.spotlightArticleHistory.count)
         }
     }
 
@@ -359,78 +415,6 @@ struct SpotlightView: View {
             store.selectedSpotlightArticle = displayedArticles.first
         }
         showActionMessage(L10n.clearedArticleHistory)
-    }
-}
-
-private struct SpotlightCollectionHeader: View {
-    @Binding var mode: SpotlightArticleCollectionMode
-    @Binding var category: SpotlightArticleCategory
-    @Binding var layoutMode: SpotlightListLayoutMode
-    let showCategoryPicker: Bool
-    let countText: String
-    let canClearHistory: Bool
-    let clearHistory: () -> Void
-
-    var body: some View {
-        FlowLayout(spacing: 8) {
-            // 5 segments fit cleanly at ~480 pt — keep it segmented so
-            // the active source is always visible at a glance, the way
-            // Apple Music's library tabs (Library / Listen Now / Browse
-            // / Radio / Search) read across the top of the window.
-            Picker(L10n.spotlightCollection, selection: $mode) {
-                ForEach(SpotlightArticleCollectionMode.allCases) { mode in
-                    Label(mode.title, systemImage: mode.systemImage).tag(mode)
-                }
-            }
-            .pickerStyle(.segmented)
-            .labelsHidden()
-            .frame(minWidth: 420, idealWidth: 480, maxWidth: 560)
-
-            // Category filter only applies to the live "latest" collection;
-            // favorites and history are local state, so a server-side
-            // category query wouldn't change anything.
-            if showCategoryPicker {
-                Picker("", selection: $category) {
-                    ForEach(SpotlightArticleCategory.allCases) { category in
-                        Label(category.title, systemImage: category.systemImage).tag(category)
-                    }
-                }
-                .pickerStyle(.menu)
-                .labelsHidden()
-                .frame(minWidth: 110, idealWidth: 130)
-            }
-
-            // Layout switcher mirrors the gallery + creator-list pattern
-            // (Menu → inline Picker) so the affordance is consistent
-            // across every browse-style surface.
-            Menu {
-                Picker(L10n.spotlightListLayout, selection: $layoutMode) {
-                    ForEach(SpotlightListLayoutMode.allCases) { mode in
-                        Label(mode.title, systemImage: mode.systemImage).tag(mode)
-                    }
-                }
-                .pickerStyle(.inline)
-            } label: {
-                Label(layoutMode.title, systemImage: layoutMode.systemImage)
-                    .lineLimit(1)
-            }
-            .help(L10n.spotlightListLayout)
-
-            Text(countText)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .lineLimit(1)
-
-            if mode == .history {
-                Button(role: .destructive, action: clearHistory) {
-                    Label(L10n.clearArticleHistory, systemImage: "trash")
-                }
-                .buttonStyle(.bordered)
-                .disabled(canClearHistory == false)
-            }
-        }
-        .controlSize(.small)
-        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 

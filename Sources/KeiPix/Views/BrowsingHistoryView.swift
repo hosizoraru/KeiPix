@@ -25,15 +25,7 @@ struct BrowsingHistoryView: View {
             }
         }
         .navigationTitle(L10n.history)
-        .toolbar {
-            ToolbarItem(placement: .status) {
-                Text(historyStatusText)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-                    .help(historyStatusText)
-            }
-        }
+        .navigationSubtitle(historyStatusText)
         .confirmationDialog(
             L10n.clearHistoryConfirmation,
             isPresented: $isClearConfirmationPresented,

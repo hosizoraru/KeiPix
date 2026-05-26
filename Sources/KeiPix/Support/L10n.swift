@@ -142,6 +142,7 @@ enum L10n {
     static var logout: String { text("Logout") }
     static var logoutConfirmation: String { text("Logout from this Pixiv account?") }
     static var refresh: String { text("Refresh") }
+    static var viewOptions: String { text("View Options") }
     static var loading: String { text("Loading") }
     static var cancel: String { text("Cancel") }
     static var open: String { text("Open") }

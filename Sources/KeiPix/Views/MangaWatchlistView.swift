@@ -29,17 +29,7 @@ struct MangaWatchlistView: View {
             }
         }
         .navigationTitle(L10n.mangaWatchlist)
-        .toolbar {
-            if showsSignedOutState == false {
-                ToolbarItem(placement: .status) {
-                    Text(watchlistStatusText)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
-                        .help(watchlistStatusText)
-                }
-            }
-        }
+        .navigationSubtitle(showsSignedOutState ? "" : watchlistStatusText)
         .confirmationDialog(
             L10n.removeFromWatchlist,
             isPresented: removalBinding,

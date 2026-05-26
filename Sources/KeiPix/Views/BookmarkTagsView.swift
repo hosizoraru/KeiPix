@@ -125,15 +125,7 @@ struct BookmarkTagsView: View {
             }
         }
         .navigationTitle(L10n.bookmarkTags)
-        .toolbar {
-            ToolbarItem(placement: .status) {
-                Text(bookmarkTagSummary)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-                    .help(bookmarkTagSummary)
-            }
-        }
+        .navigationSubtitle(bookmarkTagSummary)
         .overlay(alignment: .bottom) {
             VStack(spacing: 8) {
                 if let actionMessage {
