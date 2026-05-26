@@ -600,6 +600,9 @@ enum L10n {
     static var addAccount: String { text("Add Account") }
     static var importToken: String { text("Import Token") }
     static var importTokenHint: String { text("Paste a Pixiv refresh token exported from another client. KeiPix refreshes it once, saves the new session in secure local storage, and switches to the imported account.") }
+    static var editProfileOnPixiv: String { text("Edit Profile on Pixiv") }
+    static var manageAccountOnPixiv: String { text("Manage Account on Pixiv") }
+    static var accountWebSettingsHint: String { text("Profile, password, and email changes happen on the Pixiv website. KeiPix opens the relevant page in your browser.") }
     static var refreshToken: String { text("Refresh Token") }
     static var currentAccount: String { text("Current Account") }
     static var switchAccount: String { text("Switch Account") }

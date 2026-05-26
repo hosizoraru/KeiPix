@@ -77,6 +77,28 @@ struct AccountSettingsPage: View {
                     .foregroundStyle(.secondary)
             }
 
+            // Apple-style deep-link section for things only the website can
+            // change (display name, email, password, profile picture). Pixez
+            // opens the same page in a webview; on macOS we hand off to the
+            // user's browser so they can authenticate with cookies, password
+            // managers, and 2FA they already trust.
+            if let profileURL = pixivProfileSettingsURL,
+               let accountURL = pixivAccountSettingsURL {
+                Section {
+                    Link(destination: profileURL) {
+                        Label(L10n.editProfileOnPixiv, systemImage: "pencil")
+                    }
+
+                    Link(destination: accountURL) {
+                        Label(L10n.manageAccountOnPixiv, systemImage: "safari")
+                    }
+                } footer: {
+                    Text(L10n.accountWebSettingsHint)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+
             // Mirror the privacy controls that touch account identity here so
             // users who land on Account looking for "Privacy Mode" or
             // "Show account identity" find them in context. The bindings are
@@ -132,5 +154,15 @@ struct AccountSettingsPage: View {
                 store.activateVisualQATestMode()
             }
         }
+    }
+
+    /// Pixiv's "edit profile" page where display name, bio, and avatar live.
+    private var pixivProfileSettingsURL: URL? {
+        URL(string: "https://www.pixiv.net/setting_profile.php")
+    }
+
+    /// Pixiv's "account" page where email, password, and 2FA live.
+    private var pixivAccountSettingsURL: URL? {
+        URL(string: "https://www.pixiv.net/setting_user.php")
     }
 }
