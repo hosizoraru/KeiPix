@@ -1,5 +1,32 @@
 import SwiftUI
 
+/// Sheet that surfaces a creator's full profile: hero stats, collection
+/// shortcuts, recent works, bio, links, workspace, and related creators.
+///
+/// The view is organised as four cleanly separated layers so each piece
+/// of the sheet has one obvious owner:
+///
+///   1. **Header** — chrome row built by `UserProfileSheetHeader`.
+///      Identity + the three top-level controls (follow / actions /
+///      close). Pure presentation; this view feeds it state and
+///      callbacks.
+///   2. **Body** — `bodyContent` switches between `.loading`, `.error`,
+///      and `.loaded` so the parent body never branches inline.
+///   3. **Loaded sections** — every panel (metrics, shortcuts, recent
+///      works, bio, links, workspace, related creators) is its own
+///      `View`. The sheet does no layout of its own beyond stacking them
+///      with consistent spacing.
+///   4. **Side effects & overlays** — task lifecycle, child sheets
+///      (related-user profile, list view, feedback report),
+///      confirmation dialogs, status banner, undo bar — all attached at
+///      the root with explicit modifiers, no nesting inside the body.
+///
+/// The previous version cooked the avatar / banner / actions into a
+/// 168-pt `ZStack` slab and folded loading + error + loaded states
+/// directly into the `ScrollView`. It accumulated a lot of patches over
+/// time. This rewrite keeps the rendering linear and source-of-truth
+/// minimal so the sheet behaves predictably regardless of which fields
+/// Pixiv returns.
 struct UserProfileSheet: View {
     let user: PixivUser
     @Bindable var store: KeiPixStore
@@ -8,21 +35,31 @@ struct UserProfileSheet: View {
     private let visualQARecentWorks: [PixivArtwork]?
 
     @Environment(\.dismiss) private var dismiss
+
+    // Detail loading
     @State private var detail: PixivUserDetail?
     @State private var isLoading = true
-    @State private var isLoadingRelatedUsers = false
-    @State private var isFollowed: Bool
-    @State private var relatedUsers: [PixivUserPreview] = []
     @State private var errorMessage: String?
-    @State private var relatedErrorMessage: String?
-    @State private var statusMessage: String?
+
+    // Follow state
+    @State private var isFollowed: Bool
     @State private var followRestrict: BookmarkRestrict?
     @State private var isUpdatingFollow = false
+
+    // Related users
+    @State private var relatedUsers: [PixivUserPreview] = []
+    @State private var isLoadingRelatedUsers = false
+    @State private var relatedErrorMessage: String?
     @State private var updatingRelatedUserIDs: Set<Int> = []
+
+    // Sheets / dialogs
     @State private var selectedRelatedUser: PixivUser?
     @State private var relationshipListMode: UserPreviewListMode?
     @State private var pendingDangerAction: AppDangerAction?
     @State private var feedbackRequest: FeedbackReportRequest?
+
+    // Status banner
+    @State private var statusMessage: String?
 
     init(
         user: PixivUser,
@@ -39,171 +76,57 @@ struct UserProfileSheet: View {
         _isFollowed = State(initialValue: user.isFollowed)
     }
 
+    // MARK: - Body
+
     var body: some View {
         VStack(spacing: 0) {
-            header
+            UserProfileSheetHeader(
+                user: currentUser,
+                detail: detail,
+                isLoading: isLoading,
+                isFollowed: isFollowed,
+                isUpdatingFollow: isUpdatingFollow,
+                followRestrict: followRestrict,
+                toggleFollow: { restrict in
+                    Task { await toggleFollow(restrict: restrict) }
+                },
+                updateFollowVisibility: { restrict in
+                    Task { await updateFollowVisibility(restrict) }
+                },
+                requestUnfollow: {
+                    pendingDangerAction = AppDangerAction(kind: .unfollowCreator(currentUser, followRestrict))
+                },
+                openInPixivURL: currentUser.pixivURL,
+                copyLink: copyProfileLink,
+                togglePin: togglePinnedCreator,
+                isPinned: store.isPinnedCreator(currentUser),
+                requestFeedback: {
+                    feedbackRequest = .creator(currentUser)
+                }
+            )
 
             Divider()
 
-            ScrollView {
-                VStack(alignment: .leading, spacing: 18) {
-                    if isLoading {
-                        ProgressView()
-                            .frame(maxWidth: .infinity, alignment: .center)
-                            .padding(48)
-                    } else if detail == nil, let errorMessage {
-                        ContentUnavailableView {
-                            Label(L10n.errorTitle, systemImage: "exclamationmark.triangle")
-                        } description: {
-                            Text(errorMessage)
-                        } actions: {
-                            Button {
-                                Task { await loadDetail() }
-                            } label: {
-                                Label(L10n.retry, systemImage: "arrow.clockwise")
-                            }
-                            .buttonStyle(.borderedProminent)
-                        }
-                        .frame(maxWidth: .infinity)
-                        .frame(minHeight: 260)
-                    } else {
-                        UserProfileMetricsSection(profile: detail?.profile)
-                        UserProfileCollectionShortcutsSection(
-                            profile: detail?.profile,
-                            relatedUsersCount: relatedUsers.count,
-                            isLoadingRelatedUsers: isLoadingRelatedUsers,
-                            openIllustrations: {
-                                openFeed(.userIllustrations)
-                            },
-                            openManga: {
-                                openFeed(.userManga)
-                            },
-                            openPublicBookmarks: {
-                                openFeed(.userPublicBookmarks)
-                            },
-                            openFollowing: {
-                                relationshipListMode = .userFollowing(detail?.user ?? user)
-                            },
-                            openFollowers: {
-                                relationshipListMode = .userFollowers(detail?.user ?? user)
-                            },
-                            openRelated: {
-                                relationshipListMode = .related(detail?.user ?? user)
-                            }
-                        )
-                        UserProfileRecentWorksSection(
-                            user: currentUser,
-                            store: store,
-                            openAllWorks: {
-                                openFeed(.userIllustrations)
-                            },
-                            selectArtwork: { artwork in
-                                store.selectedArtwork = artwork
-                                dismiss()
-                            },
-                            showStatus: showStatus,
-                            visualQAArtworks: visualQARecentWorks
-                        )
-                        UserProfileDescriptionSection(text: (detail?.user.comment ?? user.comment)?.htmlStripped)
-                        UserProfileLinksSection(user: currentUser, profile: detail?.profile)
-                        UserProfileWorkspaceSection(workspace: detail?.workspace)
-                        UserProfileRelatedCreatorsSection(
-                            relatedUsers: relatedUsers,
-                            isLoadingRelatedUsers: isLoadingRelatedUsers,
-                            relatedErrorMessage: relatedErrorMessage,
-                            updatingRelatedUserIDs: updatingRelatedUserIDs,
-                            reload: {
-                                Task { await loadRelatedUsers() }
-                            },
-                            viewAll: {
-                                relationshipListMode = .related(detail?.user ?? user)
-                            },
-                            openProfile: { relatedUser in
-                                selectedRelatedUser = relatedUser
-                            },
-                            openIllustrations: { relatedUser in
-                                Task {
-                                    await store.openUserFeed(user: relatedUser, route: .userIllustrations)
-                                    dismiss()
-                                }
-                            },
-                            toggleFollow: { relatedUser, restrict in
-                                Task { await toggleRelatedFollow(relatedUser, restrict: restrict) }
-                            },
-                            requestUnfollow: { relatedUser in
-                                pendingDangerAction = AppDangerAction(
-                                    kind: .unfollowCreator(relatedUser, nil)
-                                )
-                            },
-                            requestMuteCreator: { relatedUser in
-                                pendingDangerAction = AppDangerAction(kind: .muteCreator(relatedUser))
-                            },
-                            copied: {
-                                showStatus(L10n.copied)
-                            },
-                            selectArtwork: { artwork in
-                                store.selectedArtwork = artwork
-                                dismiss()
-                            }
-                        )
-                    }
-
-                    if let errorMessage {
-                        Text(errorMessage)
-                            .font(.callout)
-                            .foregroundStyle(.red)
-                            .textSelection(.enabled)
-                    }
-                }
-                .padding(.horizontal, 22)
-                .padding(.vertical, 20)
-            }
+            bodyContent
         }
         .frame(width: 760)
-        .frame(minHeight: 620, idealHeight: 760, maxHeight: .infinity)
+        .frame(minHeight: 560, idealHeight: 720, maxHeight: .infinity)
         .task(id: user.id) {
             await loadDetail()
             await loadRelatedUsers()
         }
-        .sheet(item: $selectedRelatedUser) { relatedUser in
-            UserProfileSheet(user: relatedUser, store: store)
-                .iPadFriendlySheet()
-        }
-        .sheet(item: $relationshipListMode) { mode in
-            UserPreviewListView(store: store, mode: mode)
-                .frame(width: 920, height: 680)
-                .iPadFriendlySheet()
-        }
-        .sheet(item: $feedbackRequest) { request in
-            FeedbackReportSheet(request: request) {
-                pendingDangerAction = AppDangerAction(kind: .muteCreator(currentUser))
-            } onComplete: { message in
-                showStatus(message)
-            }
-            .iPadFriendlySheet()
-        }
-        .overlay(alignment: .bottom) {
-            VStack(spacing: 8) {
-                if let statusMessage {
-                    FloatingStatusBanner {
-                        Text(statusMessage)
-                            .font(.callout)
-                            .foregroundStyle(.secondary)
-                            .textSelection(.enabled)
-                    }
-                    .transition(.move(edge: .bottom).combined(with: .opacity))
-                }
-
-                if let undoAction = store.undoAction {
-                    AppUndoBar(action: undoAction) {
-                        Task { await performUndo(undoAction) }
-                    }
-                    .transition(.move(edge: .bottom).combined(with: .opacity))
-                }
-            }
-            .padding(.horizontal, 18)
-            .padding(.bottom, 14)
-        }
+        // Side effects and overlays are stacked at the root so the body
+        // tree above stays purely structural.
+        .modifier(ChildSheetsModifier(
+            selectedRelatedUser: $selectedRelatedUser,
+            relationshipListMode: $relationshipListMode,
+            feedbackRequest: $feedbackRequest,
+            store: store,
+            currentUser: currentUser,
+            pendingDangerAction: $pendingDangerAction,
+            showStatus: showStatus
+        ))
+        .overlay(alignment: .bottom) { statusOverlay }
         .animation(.snappy(duration: 0.18), value: statusMessage)
         .animation(.snappy(duration: 0.18), value: store.undoAction?.id)
         .confirmationDialog(
@@ -224,189 +147,198 @@ struct UserProfileSheet: View {
         }
     }
 
-    private var header: some View {
-        ZStack(alignment: .bottomLeading) {
-            // Banner image renders crisply with a soft gradient at the
-            // bottom to keep the avatar / name overlay legible — mirrors
-            // Apple's profile layout in Music and the App Store. Falls back
-            // to a tinted placeholder when no background image exists or
-            // the user detail is still loading.
-            Group {
-                if let backgroundURL = detail?.profile.backgroundImageURL {
-                    RemoteImageView(url: backgroundURL)
-                } else {
-                    LinearGradient(
-                        colors: [.accentColor.opacity(0.45), .accentColor.opacity(0.18)],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                }
-            }
-            .frame(height: 168)
-            .frame(maxWidth: .infinity)
-            .clipped()
-            .overlay(alignment: .bottom) {
-                LinearGradient(
-                    colors: [.black.opacity(0), .black.opacity(0.6)],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-                .frame(height: 110)
-                .allowsHitTesting(false)
-            }
+    // MARK: - Body content states
 
-            // Close button is parked on the very top edge so it sits above
-            // the gradient — keeps it reachable without competing with the
-            // follow / actions controls anchored at the bottom of the
-            // banner. Mirrors Maps and App Store sheet chrome.
-            VStack(alignment: .trailing, spacing: 0) {
-                HStack {
-                    Spacer()
-                    SheetCloseButton(style: .plain)
-                        .padding(.top, 10)
-                        .padding(.trailing, 12)
-                }
-                Spacer(minLength: 0)
-            }
-
-            HStack(alignment: .bottom, spacing: 16) {
-                RemoteImageView(url: detail?.user.avatarURL ?? user.avatarURL)
-                    .frame(width: 88, height: 88)
-                    .clipShape(Circle())
-                    .overlay {
-                        Circle().stroke(.white.opacity(0.6), lineWidth: 1.5)
-                    }
-                    .shadow(color: .black.opacity(0.18), radius: 6, y: 2)
-
-                VStack(alignment: .leading, spacing: 4) {
-                    HStack(alignment: .center, spacing: 6) {
-                        Text(detail?.user.name ?? user.name)
-                            .font(.title2.weight(.semibold))
-                            .lineLimit(1)
-                        if detail?.profile.isPremium == true {
-                            Image(systemName: "checkmark.seal.fill")
-                                .foregroundStyle(.yellow)
-                                .help(L10n.premium)
-                                .accessibilityLabel(L10n.premium)
-                        }
-                    }
-                    Text("@\(detail?.user.account ?? user.account)")
-                        .font(.callout)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
-                }
-
-                Spacer()
-
-                followMenu
-                profileActionsMenu
-            }
-            .padding(.horizontal, 22)
-            .padding(.bottom, 18)
+    @ViewBuilder
+    private var bodyContent: some View {
+        switch contentState {
+        case .loading:
+            loadingState
+        case .error(let message):
+            errorState(message: message)
+        case .loaded:
+            loadedScroll
         }
     }
 
-    private var followMenu: some View {
-        Group {
-            if isFollowed {
-                Menu {
-                    Button(L10n.followPublicly) {
-                        Task { await updateFollowVisibility(.public) }
-                    }
-                    .disabled(followRestrict == .public)
-
-                    Button(L10n.followPrivately) {
-                        Task { await updateFollowVisibility(.private) }
-                    }
-                    .disabled(followRestrict == .private)
-
-                    Divider()
-
-                    Button(role: .destructive) {
-                        pendingDangerAction = AppDangerAction(kind: .unfollowCreator(currentUser, followRestrict))
-                    } label: {
-                        Label(L10n.unfollow, systemImage: "person.crop.circle.badge.minus")
-                    }
-                } label: {
-                    Label(followStatusTitle, systemImage: followStatusImage)
-                }
-                .buttonStyle(.bordered)
-            } else {
-                Menu {
-                    Button(L10n.followUsingDefault) {
-                        Task { await toggleFollow() }
-                    }
-
-                    Divider()
-
-                    Button(L10n.followPublicly) {
-                        Task { await toggleFollow(restrict: .public) }
-                    }
-                    Button(L10n.followPrivately) {
-                        Task { await toggleFollow(restrict: .private) }
-                    }
-                } label: {
-                    Label(L10n.follow, systemImage: "person.crop.circle.badge.plus")
-                }
-                .buttonStyle(.glassProminent)
-            }
+    private var loadingState: some View {
+        VStack(spacing: 12) {
+            ProgressView()
+            Text(L10n.loading)
+                .font(.callout)
+                .foregroundStyle(.secondary)
         }
-        .disabled(isLoading || isUpdatingFollow)
-        .help(L10n.followVisibility)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding(40)
+    }
+
+    private func errorState(message: String) -> some View {
+        ContentUnavailableView {
+            Label(L10n.errorTitle, systemImage: "exclamationmark.triangle")
+        } description: {
+            Text(message)
+                .textSelection(.enabled)
+        } actions: {
+            Button {
+                Task { await loadDetail() }
+            } label: {
+                Label(L10n.retry, systemImage: "arrow.clockwise")
+            }
+            .buttonStyle(.borderedProminent)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    private var loadedScroll: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                UserProfileMetricsSection(profile: detail?.profile)
+
+                UserProfileCollectionShortcutsSection(
+                    profile: detail?.profile,
+                    relatedUsersCount: relatedUsers.count,
+                    isLoadingRelatedUsers: isLoadingRelatedUsers,
+                    openIllustrations: { openFeed(.userIllustrations) },
+                    openManga: { openFeed(.userManga) },
+                    openPublicBookmarks: { openFeed(.userPublicBookmarks) },
+                    openFollowing: {
+                        relationshipListMode = .userFollowing(currentUser)
+                    },
+                    openFollowers: {
+                        relationshipListMode = .userFollowers(currentUser)
+                    },
+                    openRelated: {
+                        relationshipListMode = .related(currentUser)
+                    }
+                )
+
+                UserProfileRecentWorksSection(
+                    user: currentUser,
+                    store: store,
+                    openAllWorks: { openFeed(.userIllustrations) },
+                    selectArtwork: selectArtwork,
+                    showStatus: showStatus,
+                    visualQAArtworks: visualQARecentWorks
+                )
+
+                UserProfileDescriptionSection(text: bioText)
+
+                UserProfileLinksSection(user: currentUser, profile: detail?.profile)
+
+                UserProfileWorkspaceSection(workspace: detail?.workspace)
+
+                UserProfileRelatedCreatorsSection(
+                    relatedUsers: relatedUsers,
+                    isLoadingRelatedUsers: isLoadingRelatedUsers,
+                    relatedErrorMessage: relatedErrorMessage,
+                    updatingRelatedUserIDs: updatingRelatedUserIDs,
+                    reload: { Task { await loadRelatedUsers() } },
+                    viewAll: {
+                        relationshipListMode = .related(currentUser)
+                    },
+                    openProfile: { selectedRelatedUser = $0 },
+                    openIllustrations: { relatedUser in
+                        Task {
+                            await store.openUserFeed(user: relatedUser, route: .userIllustrations)
+                            dismiss()
+                        }
+                    },
+                    toggleFollow: { related, restrict in
+                        Task { await toggleRelatedFollow(related, restrict: restrict) }
+                    },
+                    requestUnfollow: { related in
+                        pendingDangerAction = AppDangerAction(kind: .unfollowCreator(related, nil))
+                    },
+                    requestMuteCreator: { related in
+                        pendingDangerAction = AppDangerAction(kind: .muteCreator(related))
+                    },
+                    copied: { showStatus(L10n.copied) },
+                    selectArtwork: selectArtwork
+                )
+
+                if let inlineErrorMessage {
+                    Text(inlineErrorMessage)
+                        .font(.callout)
+                        .foregroundStyle(.red)
+                        .textSelection(.enabled)
+                }
+            }
+            .padding(.horizontal, 20)
+            .padding(.vertical, 18)
+        }
     }
 
     @ViewBuilder
-    private var profileActionsMenu: some View {
-        if let url = currentUser.pixivURL {
-            Menu {
-                Link(L10n.openInPixiv, destination: url)
-
-                Button(L10n.copyLink) {
-                    PasteboardWriter.copy(url.absoluteString)
-                    showStatus(L10n.copied)
+    private var statusOverlay: some View {
+        VStack(spacing: 8) {
+            if let statusMessage {
+                FloatingStatusBanner {
+                    Text(statusMessage)
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                        .textSelection(.enabled)
                 }
-
-                Button {
-                    let isPinned = store.togglePinnedCreator(currentUser)
-                    showStatus(String(format: isPinned ? L10n.pinnedCreatorFormat : L10n.unpinnedCreatorFormat, currentUser.name))
-                } label: {
-                    Label(store.isPinnedCreator(currentUser) ? L10n.unpinCreator : L10n.pinCreator, systemImage: store.isPinnedCreator(currentUser) ? "pin.slash" : "pin")
-                }
-
-                Divider()
-
-                Button {
-                    feedbackRequest = .creator(currentUser)
-                } label: {
-                    Label(L10n.feedbackAndMute, systemImage: "exclamationmark.bubble")
-                }
-            } label: {
-                Label(L10n.moreActions, systemImage: "ellipsis.circle")
+                .transition(.move(edge: .bottom).combined(with: .opacity))
             }
-            .labelStyle(.iconOnly)
-            .buttonStyle(.bordered)
-            .help(L10n.moreActions)
+
+            if let undoAction = store.undoAction {
+                AppUndoBar(action: undoAction) {
+                    Task { await performUndo(undoAction) }
+                }
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
         }
+        .padding(.horizontal, 18)
+        .padding(.bottom, 14)
     }
 
-    private var followStatusTitle: String {
-        followRestrict == .private ? L10n.followingPrivately : L10n.followingPublicly
+    // MARK: - Derived state
+
+    /// Three-way content state. `error` only fires when we have nothing
+    /// to show — once `detail` lands successfully, transient errors fall
+    /// through to `inlineErrorMessage` instead of replacing the body.
+    private enum ContentState: Equatable {
+        case loading
+        case error(String)
+        case loaded
     }
 
-    private var followStatusImage: String {
-        followRestrict == .private ? "lock.circle" : "person.crop.circle.badge.checkmark"
+    private var contentState: ContentState {
+        if isLoading && detail == nil {
+            return .loading
+        }
+        if detail == nil, let errorMessage {
+            return .error(errorMessage)
+        }
+        return .loaded
+    }
+
+    /// Error message shown inline at the bottom of the loaded state — for
+    /// errors that happen *after* we already have detail data.
+    private var inlineErrorMessage: String? {
+        guard detail != nil else { return nil }
+        return errorMessage
+    }
+
+    private var bioText: String? {
+        (detail?.user.comment ?? user.comment)?.htmlStripped
     }
 
     private var currentUser: PixivUser {
         detail?.user ?? user
     }
 
-    private func openFeed(_ route: PixivRoute) {
-        Task {
-            await store.openUserFeed(user: currentUser, route: route)
-            dismiss()
+    private var dangerActionBinding: Binding<Bool> {
+        Binding {
+            pendingDangerAction != nil
+        } set: { value in
+            if value == false {
+                pendingDangerAction = nil
+            }
         }
     }
+
+    // MARK: - Loading
 
     private func loadDetail() async {
         if let visualQADetail {
@@ -466,9 +398,11 @@ struct UserProfileSheet: View {
         }
     }
 
+    // MARK: - Follow actions
+
     private func toggleFollow(restrict: BookmarkRestrict? = nil) async {
         guard isUpdatingFollow == false else { return }
-        let target = detail?.user ?? user
+        let target = currentUser
         let nextValue = isFollowed == false
         let appliedRestrict = restrict ?? store.defaultFollowRestrict
         isUpdatingFollow = true
@@ -487,7 +421,7 @@ struct UserProfileSheet: View {
 
     private func updateFollowVisibility(_ restrict: BookmarkRestrict) async {
         guard isUpdatingFollow == false else { return }
-        let target = detail?.user ?? user
+        let target = currentUser
         isUpdatingFollow = true
         defer { isUpdatingFollow = false }
         do {
@@ -517,6 +451,8 @@ struct UserProfileSheet: View {
             showStatus(String(format: L10n.followedCreatorFormat, user.name))
         }
     }
+
+    // MARK: - Danger / undo
 
     private func performDangerAction(_ action: AppDangerAction) async {
         defer { pendingDangerAction = nil }
@@ -560,15 +496,7 @@ struct UserProfileSheet: View {
         }
     }
 
-    private var dangerActionBinding: Binding<Bool> {
-        Binding {
-            pendingDangerAction != nil
-        } set: { value in
-            if value == false {
-                pendingDangerAction = nil
-            }
-        }
-    }
+    // MARK: - Related-user mutation helpers
 
     private func updateRelatedFollowState(userID: Int, isFollowed: Bool) {
         for index in relatedUsers.indices where relatedUsers[index].user.id == userID {
@@ -592,6 +520,34 @@ struct UserProfileSheet: View {
         }
     }
 
+    // MARK: - Misc actions
+
+    private func openFeed(_ route: PixivRoute) {
+        Task {
+            await store.openUserFeed(user: currentUser, route: route)
+            dismiss()
+        }
+    }
+
+    private func selectArtwork(_ artwork: PixivArtwork) {
+        store.selectedArtwork = artwork
+        dismiss()
+    }
+
+    private func copyProfileLink() {
+        guard let url = currentUser.pixivURL else { return }
+        PasteboardWriter.copy(url.absoluteString)
+        showStatus(L10n.copied)
+    }
+
+    private func togglePinnedCreator() {
+        let isPinned = store.togglePinnedCreator(currentUser)
+        showStatus(String(
+            format: isPinned ? L10n.pinnedCreatorFormat : L10n.unpinnedCreatorFormat,
+            currentUser.name
+        ))
+    }
+
     private func showStatus(_ message: String) {
         statusMessage = message
         Task {
@@ -600,5 +556,41 @@ struct UserProfileSheet: View {
                 statusMessage = nil
             }
         }
+    }
+}
+
+// MARK: - Child sheets
+
+/// Bundles the three child sheets the profile presents (related-user
+/// profile, relationship list, feedback report) so the main view body
+/// stays linear and doesn't grow a tower of `.sheet(item:)` modifiers.
+private struct ChildSheetsModifier: ViewModifier {
+    @Binding var selectedRelatedUser: PixivUser?
+    @Binding var relationshipListMode: UserPreviewListMode?
+    @Binding var feedbackRequest: FeedbackReportRequest?
+    @Bindable var store: KeiPixStore
+    let currentUser: PixivUser
+    @Binding var pendingDangerAction: AppDangerAction?
+    let showStatus: (String) -> Void
+
+    func body(content: Content) -> some View {
+        content
+            .sheet(item: $selectedRelatedUser) { relatedUser in
+                UserProfileSheet(user: relatedUser, store: store)
+                    .iPadFriendlySheet()
+            }
+            .sheet(item: $relationshipListMode) { mode in
+                UserPreviewListView(store: store, mode: mode)
+                    .frame(width: 920, height: 680)
+                    .iPadFriendlySheet()
+            }
+            .sheet(item: $feedbackRequest) { request in
+                FeedbackReportSheet(request: request) {
+                    pendingDangerAction = AppDangerAction(kind: .muteCreator(currentUser))
+                } onComplete: { message in
+                    showStatus(message)
+                }
+                .iPadFriendlySheet()
+            }
     }
 }
