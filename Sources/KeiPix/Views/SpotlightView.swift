@@ -42,7 +42,7 @@ struct SpotlightView: View {
                 ScrollView {
                     LazyVStack(spacing: 14, pinnedViews: [.sectionHeaders]) {
                         Section {
-                            LazyVGrid(columns: articleColumns, spacing: 14) {
+                            LazyVGrid(columns: articleColumns, spacing: 12) {
                                 ForEach(displayedArticles) { article in
                                     SpotlightArticleCard(
                                         article: article,
@@ -148,19 +148,23 @@ struct SpotlightView: View {
     private var articleColumns: [GridItem] {
         switch store.spotlightListLayoutMode {
         case .auto:
+            // Tightened from `minimum: 280, maximum: 390` so wide
+            // windows pack 4-5 cards per row instead of stretching
+            // each card to ~390 pt. Cards are now content-sized
+            // (no 302 pt minHeight floor), so denser is fine.
             return [
                 GridItem(
-                    .adaptive(minimum: 280, maximum: 390),
-                    spacing: 14,
+                    .adaptive(minimum: 240),
+                    spacing: 12,
                     alignment: .top
                 )
             ]
         case .single:
-            return [GridItem(.flexible(), spacing: 14, alignment: .top)]
+            return [GridItem(.flexible(), spacing: 12, alignment: .top)]
         case .twoUp:
             return [
-                GridItem(.flexible(), spacing: 14, alignment: .top),
-                GridItem(.flexible(), spacing: 14, alignment: .top)
+                GridItem(.flexible(), spacing: 12, alignment: .top),
+                GridItem(.flexible(), spacing: 12, alignment: .top)
             ]
         }
     }
@@ -433,22 +437,24 @@ private struct SpotlightArticleCard: View {
     /// Stacked (portrait) layout — thumbnail on top, text underneath.
     /// Used in `.auto` and `.twoUp` modes.
     private var stackedLayout: some View {
-        let presentation = DiscoveryCardPresentation(kind: .spotlightArticle, aspectRatio: nil)
-
-        return VStack(alignment: .leading, spacing: 10) {
+        // Drop the 302 pt `minHeight` we used to inherit from
+        // `DiscoveryCardPresentation`. That floor padded every card up
+        // to the height of the worst case (a 16:9 thumbnail + 4 lines
+        // of metadata) even when the content was shorter, so a wall of
+        // cards looked vertically wasteful. The thumbnail's aspect
+        // ratio already locks its height; the metadata block adds the
+        // rest. Letting the card hug its content shrinks busy lists by
+        // ~30 pt per row.
+        VStack(alignment: .leading, spacing: 10) {
             SpotlightArticleThumbnail(
                 url: article.thumbnail,
-                aspectRatio: presentation.spotlightImageAspectRatio
+                aspectRatio: 16.0 / 9.0
             )
 
             metadataBlock
         }
-        .padding(12)
-        .frame(
-            maxWidth: .infinity,
-            minHeight: presentation.height(for: 320, span: 1, columnCount: 1),
-            alignment: .topLeading
-        )
+        .padding(10)
+        .frame(maxWidth: .infinity, alignment: .topLeading)
         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
         .overlay {
             RoundedRectangle(cornerRadius: 8, style: .continuous)
@@ -466,17 +472,17 @@ private struct SpotlightArticleCard: View {
     /// one-card row doesn't stretch a portrait thumbnail to a giant
     /// banner. Mirrors Pixivision Web's desktop article hero.
     private var heroLayout: some View {
-        HStack(alignment: .top, spacing: 16) {
+        HStack(alignment: .top, spacing: 14) {
             SpotlightArticleThumbnail(
                 url: article.thumbnail,
                 aspectRatio: 16.0 / 9.0
             )
-            .frame(maxWidth: 360)
+            .frame(maxWidth: 280)
 
             metadataBlock
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .padding(14)
+        .padding(12)
         .frame(maxWidth: .infinity, alignment: .topLeading)
         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
         .overlay {
@@ -491,21 +497,21 @@ private struct SpotlightArticleCard: View {
     }
 
     private var metadataBlock: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 6) {
             Text(primaryTitle)
-                .font(layoutMode.usesHeroCardLayout ? .title3.weight(.semibold) : .headline)
+                .font(layoutMode.usesHeroCardLayout ? .title3.weight(.semibold) : .subheadline.weight(.semibold))
                 .lineLimit(layoutMode.usesHeroCardLayout ? 3 : 2)
                 .multilineTextAlignment(.leading)
 
             if let secondaryTitle {
                 Text(secondaryTitle)
-                    .font(.callout)
+                    .font(layoutMode.usesHeroCardLayout ? .callout : .caption)
                     .foregroundStyle(.secondary)
-                    .lineLimit(layoutMode.usesHeroCardLayout ? 4 : 2)
+                    .lineLimit(layoutMode.usesHeroCardLayout ? 3 : 2)
                     .multilineTextAlignment(.leading)
             }
 
-            Spacer(minLength: 4)
+            Spacer(minLength: 2)
 
             HStack(alignment: .firstTextBaseline, spacing: 8) {
                 Label(article.publishDate.formatted(date: .abbreviated, time: .omitted), systemImage: "calendar")

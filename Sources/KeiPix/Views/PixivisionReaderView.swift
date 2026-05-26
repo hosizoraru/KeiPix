@@ -57,16 +57,25 @@ struct PixivisionReaderView: View {
 
     @ViewBuilder
     private var hero: some View {
+        // Pixivision's `og:image` is a 16:9 share-card render, so a
+        // 16:9 letterbox is the right shape. Fit (not fill) so the
+        // cover never crops away part of the artwork — and the slot's
+        // height is derived from the aspect ratio, not a hardcoded
+        // `frame(height:)`, so the layout never has to re-publish
+        // when the image decodes.
         let heroURL = content?.heroImageURL ?? article.thumbnail
         if let heroURL {
-            RemoteImageView(url: heroURL, contentMode: .fill)
-                .frame(maxWidth: .infinity)
-                .frame(height: 320)
-                .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-                .overlay {
-                    RoundedRectangle(cornerRadius: 18, style: .continuous)
-                        .stroke(.quaternary, lineWidth: 1)
-                }
+            ZStack {
+                Color.black.opacity(0.06)
+                RemoteImageView(url: heroURL, contentMode: .fit)
+            }
+            .aspectRatio(16.0 / 9.0, contentMode: .fit)
+            .frame(maxWidth: .infinity)
+            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .overlay {
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .stroke(.quaternary, lineWidth: 1)
+            }
         }
     }
 
@@ -303,12 +312,6 @@ private struct PixivisionWorkCard: View {
     let copyArtworkLink: (Int) -> Void
 
     @State private var isHovering = false
-    /// Once the thumbnail decodes we learn its real aspect ratio; the
-    /// illustration frame uses that so portrait, square, and panorama
-    /// images all render fully instead of getting cropped to a fixed
-    /// 360 pt slab. Pixivision serves a mix of `768x1200_80` portraits
-    /// and landscape spreads, so a static height was never right.
-    @State private var illustAspectRatio: CGFloat = 4.0 / 5.0
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -353,34 +356,31 @@ private struct PixivisionWorkCard: View {
 
     private var illustration: some View {
         // Pixivision feature articles mix portrait, square, and
-        // landscape illustrations in the same shelf. The previous fixed
-        // `frame(height: 360)` + `contentMode: .fill` cropped landscapes
-        // and squashed portraits. Instead we ride the aspect ratio:
-        // `contentMode: .fit` keeps the full image visible, and the
-        // outer `aspectRatio` modifier reserves the right amount of
-        // vertical space so the layout doesn't reflow when the image
-        // arrives. The aspect ratio is updated once the bitmap decodes
-        // (via `onImageLoaded`) so every shelf settles to the natural
-        // shape Pixiv shipped.
+        // landscape illustrations in the same shelf. The previous
+        // approach drove the slot height from a `@State` aspect ratio
+        // that updated when the bitmap decoded — that made every cell
+        // republish layout when the image arrived, and scrolling back
+        // up through a long article kept dispatching `onImageLoaded`
+        // callbacks as cells came back into view. The result was the
+        // 55%-CPU SwiftUI layout-engine spin we saw in the
+        // microstackshot (NSHostingView.beginTransaction →
+        // ScrollViewLayoutComputer.sizeThatFits → StackLayout.resize
+        // looping forever).
+        //
+        // Drop the reactive ratio. Use a fixed 4:5 portrait slot (the
+        // canonical Pixiv `768x1200_80` aspect) and render the image
+        // with `.fit`. Wide landscapes letterbox inside the slot
+        // instead of cropping; portraits fill it edge to edge; there
+        // is no per-cell state to re-publish during scroll-up.
         Button {
             openArtwork(work.artworkID)
         } label: {
             ZStack {
-                Color.clear
-                RemoteImageView(
-                    url: work.illustImageURL,
-                    contentMode: .fit,
-                    onImageLoaded: { image in
-                        let size = image.size
-                        guard size.width > 0, size.height > 0 else { return }
-                        illustAspectRatio = CGFloat(size.width / size.height)
-                    }
-                )
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                Color.black.opacity(0.04)
+                RemoteImageView(url: work.illustImageURL, contentMode: .fit)
             }
-            .frame(maxWidth: .infinity)
-            .aspectRatio(illustAspectRatio, contentMode: .fit)
-            .frame(maxHeight: 720)
+            .aspectRatio(4.0 / 5.0, contentMode: .fit)
+            .frame(maxWidth: .infinity, maxHeight: 720)
             .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
             .overlay {
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
