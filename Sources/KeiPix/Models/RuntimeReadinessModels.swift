@@ -308,11 +308,11 @@ extension KeiPixStore {
     }
 
     func imageCacheStatus() async -> ImageCacheStatus {
-        await ImagePipeline.shared.cacheStatus()
+        ImagePipeline.shared.cacheStatus()
     }
 
     func clearImageCache() async -> ImageCacheStatus {
-        await ImagePipeline.shared.clearCaches()
+        ImagePipeline.shared.clearCaches()
     }
 
     var runtimeReadinessSnapshot: RuntimeReadinessSnapshot {
