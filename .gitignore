@@ -11,7 +11,7 @@ xcuserdata/
 DerivedData/
 *.xcuserstate
 
-# Local Claude harness config
+# Local editor / agent harness config
 .claude/
 .vscode/
 .codex/
