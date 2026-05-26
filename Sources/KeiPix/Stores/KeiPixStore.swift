@@ -74,6 +74,7 @@ final class KeiPixStore {
         ?? UserDefaults.standard.bool(forKey: "useOriginalImagesInDetail")
     var galleryLayoutMode = KeiPixStore.loadGalleryLayoutMode()
     var creatorListLayoutMode = KeiPixStore.loadCreatorListLayoutMode()
+    var spotlightListLayoutMode = KeiPixStore.loadSpotlightListLayoutMode()
     var showTranslatedTags = UserDefaults.standard.object(forKey: "showTranslatedTags") as? Bool ?? true
     var showContentBadges = UserDefaults.standard.object(forKey: "showContentBadges") as? Bool ?? true
     var showAccountIdentity = UserDefaults.standard.object(forKey: "showAccountIdentity") as? Bool ?? true
@@ -877,6 +878,15 @@ final class KeiPixStore {
         let defaults = UserDefaults.standard
         if let rawValue = defaults.string(forKey: "creatorListLayoutMode"),
            let mode = CreatorListLayoutMode(rawValue: rawValue) {
+            return mode
+        }
+        return .auto
+    }
+
+    private static func loadSpotlightListLayoutMode() -> SpotlightListLayoutMode {
+        let defaults = UserDefaults.standard
+        if let rawValue = defaults.string(forKey: "spotlightListLayoutMode"),
+           let mode = SpotlightListLayoutMode(rawValue: rawValue) {
             return mode
         }
         return .auto

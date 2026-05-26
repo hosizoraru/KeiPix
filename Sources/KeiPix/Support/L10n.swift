@@ -572,6 +572,7 @@ enum L10n {
     static var creatorLayoutAuto: String { text("Auto Fit") }
     static var creatorLayoutSingle: String { text("Single Card") }
     static var creatorLayoutTwoUp: String { text("Two Cards") }
+    static var spotlightListLayout: String { text("Article Layout") }
     static var compact: String { text("Compact") }
     static var compactCards: String { text("Compact artwork cards") }
     static var windowSize: String { text("Window Size") }

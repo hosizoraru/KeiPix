@@ -48,7 +48,8 @@ struct SpotlightView: View {
                                         article: article,
                                         isSelected: store.selectedSpotlightArticle?.id == article.id,
                                         isSaved: store.isSpotlightArticleSaved(article),
-                                        isInHistory: store.spotlightArticleHistory.contains { $0.id == article.id }
+                                        isInHistory: store.spotlightArticleHistory.contains { $0.id == article.id },
+                                        layoutMode: store.spotlightListLayoutMode
                                     ) {
                                         store.recordSpotlightArticleHistory(article)
                                         store.selectedSpotlightArticle = article
@@ -71,7 +72,7 @@ struct SpotlightView: View {
                                     }
                                     .buttonStyle(.bordered)
                                     .disabled(isLoadingMore)
-                                    .gridCellColumns(2)
+                                    .gridCellColumns(loadMoreSpan)
                                 }
                             }
                             .padding(.horizontal, 18)
@@ -80,6 +81,7 @@ struct SpotlightView: View {
                             SpotlightCollectionHeader(
                                 mode: $collectionMode,
                                 category: $category,
+                                layoutMode: spotlightLayoutBinding,
                                 showCategoryPicker: collectionMode == .latest,
                                 countText: collectionSummary,
                                 canClearHistory: store.spotlightArticleHistory.isEmpty == false,
@@ -144,13 +146,44 @@ struct SpotlightView: View {
     }
 
     private var articleColumns: [GridItem] {
-        [
-            GridItem(
-                .adaptive(minimum: 280, maximum: 390),
-                spacing: 14,
-                alignment: .top
-            )
-        ]
+        switch store.spotlightListLayoutMode {
+        case .auto:
+            return [
+                GridItem(
+                    .adaptive(minimum: 280, maximum: 390),
+                    spacing: 14,
+                    alignment: .top
+                )
+            ]
+        case .single:
+            return [GridItem(.flexible(), spacing: 14, alignment: .top)]
+        case .twoUp:
+            return [
+                GridItem(.flexible(), spacing: 14, alignment: .top),
+                GridItem(.flexible(), spacing: 14, alignment: .top)
+            ]
+        }
+    }
+
+    /// `gridCellColumns` value for the trailing "Load More" button so
+    /// it spans the full row regardless of the current layout mode.
+    private var loadMoreSpan: Int {
+        switch store.spotlightListLayoutMode {
+        case .auto: return 2
+        case .single: return 1
+        case .twoUp: return 2
+        }
+    }
+
+    /// Two-way bridge between the collection header's picker and the
+    /// store-owned setting; setter persists to UserDefaults so the
+    /// preference survives relaunches.
+    private var spotlightLayoutBinding: Binding<SpotlightListLayoutMode> {
+        Binding {
+            store.spotlightListLayoutMode
+        } set: { newValue in
+            store.setSpotlightListLayoutMode(newValue)
+        }
     }
 
     private var spotlightCountBadge: some View {
@@ -287,6 +320,7 @@ struct SpotlightView: View {
 private struct SpotlightCollectionHeader: View {
     @Binding var mode: SpotlightArticleCollectionMode
     @Binding var category: SpotlightArticleCategory
+    @Binding var layoutMode: SpotlightListLayoutMode
     let showCategoryPicker: Bool
     let countText: String
     let canClearHistory: Bool
@@ -317,6 +351,22 @@ private struct SpotlightCollectionHeader: View {
                 .frame(minWidth: 110, idealWidth: 130)
             }
 
+            // Layout switcher mirrors the gallery + creator-list pattern
+            // (Menu → inline Picker) so the affordance is consistent
+            // across every browse-style surface.
+            Menu {
+                Picker(L10n.spotlightListLayout, selection: $layoutMode) {
+                    ForEach(SpotlightListLayoutMode.allCases) { mode in
+                        Label(mode.title, systemImage: mode.systemImage).tag(mode)
+                    }
+                }
+                .pickerStyle(.inline)
+            } label: {
+                Label(layoutMode.title, systemImage: layoutMode.systemImage)
+                    .lineLimit(1)
+            }
+            .help(L10n.spotlightListLayout)
+
             Text(countText)
                 .font(.caption)
                 .foregroundStyle(.secondary)
@@ -340,6 +390,7 @@ private struct SpotlightArticleCard: View {
     let isSelected: Bool
     let isSaved: Bool
     let isInHistory: Bool
+    let layoutMode: SpotlightListLayoutMode
     let select: () -> Void
     let copied: () -> Void
     let toggleSaved: () -> Void
@@ -347,63 +398,11 @@ private struct SpotlightArticleCard: View {
     @State private var isHovering = false
 
     var body: some View {
-        let presentation = DiscoveryCardPresentation(kind: .spotlightArticle, aspectRatio: nil)
-
         Button(action: select) {
-            VStack(alignment: .leading, spacing: 10) {
-                SpotlightArticleThumbnail(
-                    url: article.thumbnail,
-                    aspectRatio: presentation.spotlightImageAspectRatio
-                )
-
-                VStack(alignment: .leading, spacing: 8) {
-                    Text(primaryTitle)
-                        .font(.headline)
-                        .lineLimit(2)
-                        .multilineTextAlignment(.leading)
-
-                    if let secondaryTitle {
-                        Text(secondaryTitle)
-                            .font(.callout)
-                            .foregroundStyle(.secondary)
-                            .lineLimit(2)
-                            .multilineTextAlignment(.leading)
-                    }
-
-                    Spacer(minLength: 4)
-
-                    HStack(alignment: .firstTextBaseline, spacing: 8) {
-                        Label(article.publishDate.formatted(date: .abbreviated, time: .omitted), systemImage: "calendar")
-                            .lineLimit(1)
-
-                        if isSaved {
-                            Image(systemName: "star.fill")
-                                .foregroundStyle(.yellow)
-                                .help(L10n.savedArticle)
-                        }
-
-                        if isInHistory {
-                            Image(systemName: "clock.arrow.circlepath")
-                                .foregroundStyle(.secondary)
-                                .help(L10n.articleHistory)
-                        }
-
-                        Spacer()
-
-                        Label(L10n.openArticle, systemImage: "newspaper")
-                            .lineLimit(1)
-                    }
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-            }
-            .padding(12)
-            .frame(maxWidth: .infinity, minHeight: presentation.height(for: 320, span: 1, columnCount: 1), alignment: .topLeading)
-            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
-            .overlay {
-                RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .stroke(isSelected ? Color.accentColor : Color.secondary.opacity(isHovering ? 0.28 : 0.1), lineWidth: isSelected ? 2 : 1)
+            if layoutMode.usesHeroCardLayout {
+                heroLayout
+            } else {
+                stackedLayout
             }
         }
         .buttonStyle(.plain)
@@ -413,12 +412,8 @@ private struct SpotlightArticleCard: View {
         .onHover { isHovering = $0 }
         .help(primaryTitle)
         .contextMenu {
-            Button(L10n.openArticle) {
-                select()
-            }
-            Button(isSaved ? L10n.removeSavedArticle : L10n.saveArticle) {
-                toggleSaved()
-            }
+            Button(L10n.openArticle) { select() }
+            Button(isSaved ? L10n.removeSavedArticle : L10n.saveArticle) { toggleSaved() }
             if isInHistory {
                 Button(role: .destructive) {
                     removeFromHistory()
@@ -433,6 +428,110 @@ private struct SpotlightArticleCard: View {
                 copied()
             }
         }
+    }
+
+    /// Stacked (portrait) layout — thumbnail on top, text underneath.
+    /// Used in `.auto` and `.twoUp` modes.
+    private var stackedLayout: some View {
+        let presentation = DiscoveryCardPresentation(kind: .spotlightArticle, aspectRatio: nil)
+
+        return VStack(alignment: .leading, spacing: 10) {
+            SpotlightArticleThumbnail(
+                url: article.thumbnail,
+                aspectRatio: presentation.spotlightImageAspectRatio
+            )
+
+            metadataBlock
+        }
+        .padding(12)
+        .frame(
+            maxWidth: .infinity,
+            minHeight: presentation.height(for: 320, span: 1, columnCount: 1),
+            alignment: .topLeading
+        )
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .stroke(
+                    isSelected
+                        ? Color.accentColor
+                        : Color.secondary.opacity(isHovering ? 0.28 : 0.1),
+                    lineWidth: isSelected ? 2 : 1
+                )
+        }
+    }
+
+    /// Wide hero layout — thumbnail leading + metadata trailing, the
+    /// full row spanning the card width. Used in `.single` mode so a
+    /// one-card row doesn't stretch a portrait thumbnail to a giant
+    /// banner. Mirrors Pixivision Web's desktop article hero.
+    private var heroLayout: some View {
+        HStack(alignment: .top, spacing: 16) {
+            SpotlightArticleThumbnail(
+                url: article.thumbnail,
+                aspectRatio: 16.0 / 9.0
+            )
+            .frame(maxWidth: 360)
+
+            metadataBlock
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .topLeading)
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .stroke(
+                    isSelected
+                        ? Color.accentColor
+                        : Color.secondary.opacity(isHovering ? 0.28 : 0.1),
+                    lineWidth: isSelected ? 2 : 1
+                )
+        }
+    }
+
+    private var metadataBlock: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(primaryTitle)
+                .font(layoutMode.usesHeroCardLayout ? .title3.weight(.semibold) : .headline)
+                .lineLimit(layoutMode.usesHeroCardLayout ? 3 : 2)
+                .multilineTextAlignment(.leading)
+
+            if let secondaryTitle {
+                Text(secondaryTitle)
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(layoutMode.usesHeroCardLayout ? 4 : 2)
+                    .multilineTextAlignment(.leading)
+            }
+
+            Spacer(minLength: 4)
+
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                Label(article.publishDate.formatted(date: .abbreviated, time: .omitted), systemImage: "calendar")
+                    .lineLimit(1)
+
+                if isSaved {
+                    Image(systemName: "star.fill")
+                        .foregroundStyle(.yellow)
+                        .help(L10n.savedArticle)
+                }
+
+                if isInHistory {
+                    Image(systemName: "clock.arrow.circlepath")
+                        .foregroundStyle(.secondary)
+                        .help(L10n.articleHistory)
+                }
+
+                Spacer()
+
+                Label(L10n.openArticle, systemImage: "newspaper")
+                    .lineLimit(1)
+            }
+            .font(.caption)
+            .foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private var primaryTitle: String {

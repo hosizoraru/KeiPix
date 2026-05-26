@@ -61,6 +61,28 @@ extension KeiPixStore {
         try await api.nextSpotlightArticles(url)
     }
 
+    /// Downloads the live Pixivision page for an article and parses it
+    /// into a `PixivisionArticleContent` the native reader can render.
+    /// Falls back to the seed metadata Pixivision's app API already
+    /// shipped if the HTML can't be parsed (private articles, network
+    /// hiccups, etc.) so the surface degrades gracefully.
+    func pixivisionArticleContent(for article: PixivSpotlightArticle) async throws -> PixivisionArticleContent {
+        var request = URLRequest(url: article.articleURL)
+        request.setValue(
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15 KeiPix/1.0",
+            forHTTPHeaderField: "User-Agent"
+        )
+        let (data, _) = try await URLSession.shared.data(for: request)
+        let html = String(data: data, encoding: .utf8)
+            ?? String(data: data, encoding: .shiftJIS)
+            ?? ""
+        return PixivisionArticleParser.parse(
+            html: html,
+            articleID: article.id,
+            sourceURL: article.articleURL
+        )
+    }
+
     func followingUsers(restrict: BookmarkRestrict) async throws -> PixivUserPreviewResponse {
         guard let userID = session?.user.id else { throw PixivAPIError.missingSession }
         let response = try await api.followingUsers(userID: userID, restrict: restrict.rawValue)

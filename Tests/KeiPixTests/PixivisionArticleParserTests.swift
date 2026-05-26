@@ -1,0 +1,154 @@
+import Foundation
+import Testing
+@testable import KeiPix
+
+/// Verifies the Pixivision HTML → structured-content parser produces
+/// the right blocks against representative real-world fixtures. The
+/// fixtures are kept inline so the test suite is hermetic — no network,
+/// no on-disk fixture file to drift out of sync with the parser.
+struct PixivisionArticleParserTests {
+    @Test("Parser extracts title, hero, body blocks, and tag chips")
+    func parsesEndToEnd() {
+        let parsed = PixivisionArticleParser.parse(
+            html: Self.sampleHTML,
+            articleID: 9988,
+            sourceURL: URL(string: "https://www.pixivision.net/en/a/9988")!
+        )
+
+        #expect(parsed.articleID == 9988)
+        #expect(parsed.title.contains("MON"))
+        #expect(parsed.category == "Interviews")
+        #expect(parsed.publishDateText == "2024.07.10")
+        #expect(parsed.heroImageURL?.absoluteString.contains("ogimage.jpg") == true)
+
+        // Tag chips include the canonical Pixivision tag IDs.
+        #expect(parsed.tags.map(\.tagID) == ["71", "149"])
+        #expect(parsed.tags.map(\.label) == ["interview", "illustrator interviews"])
+
+        // Document order is preserved: heading → paragraph → work
+        // card → paragraph in the fixture.
+        #expect(parsed.blocks.count == 4)
+        if case .heading(let text) = parsed.blocks[0] {
+            #expect(text.contains("Graduated from art school"))
+        } else {
+            Issue.record("First block was not a heading")
+        }
+        if case .paragraph(let text) = parsed.blocks[1] {
+            #expect(text.contains("first solo exhibition"))
+        } else {
+            Issue.record("Second block was not a paragraph")
+        }
+        if case .work(let work) = parsed.blocks[2] {
+            #expect(work.artworkID == 67323816)
+            #expect(work.creatorID == 25915682)
+            #expect(work.title == "Reaper")
+            #expect(work.creatorName == "MON")
+            #expect(work.creatorAvatarURL != nil)
+            #expect(work.illustImageURL != nil)
+        } else {
+            Issue.record("Third block was not a work card")
+        }
+        if case .paragraph = parsed.blocks[3] {} else {
+            Issue.record("Fourth block was not a paragraph")
+        }
+    }
+
+    @Test("Duplicate work cards in the same article are deduplicated by artwork ID")
+    func dedupesRepeatedWorkCards() {
+        let html = Self.workCardHTML(artworkID: 1234, creatorID: 5678, title: "Alpha", creator: "Anon")
+            + Self.workCardHTML(artworkID: 1234, creatorID: 5678, title: "Alpha", creator: "Anon")
+            + Self.workCardHTML(artworkID: 9876, creatorID: 5432, title: "Beta", creator: "Other")
+        let bodyWrapped = #"class="am__article-body-container">"# + html
+            + #"<div class="am__share-buttons">"#
+        let blocks = PixivisionArticleParser.parseBlocks(in: bodyWrapped)
+        let workIDs = blocks.compactMap { block -> Int? in
+            if case .work(let w) = block { return w.artworkID } else { return nil }
+        }
+        #expect(workIDs == [1234, 9876])
+    }
+
+    @Test("HTML entities and tags are stripped from extracted text")
+    func decodesEntities() {
+        let raw = "Hi &amp; <em>welcome</em> to &quot;pixivision&quot;"
+        #expect(PixivisionArticleParser.stripTags(raw) == "Hi & welcome to \"pixivision\"")
+        #expect(PixivisionArticleParser.decodeEntities("&#039;quoted&#039;") == "'quoted'")
+    }
+
+    @Test("Article without recognised body returns title-only content")
+    func handlesEmptyBody() {
+        let html = """
+        <html><head>
+        <meta property="og:title" content="Fallback title">
+        <meta property="og:description" content="Description here.">
+        </head><body><h1 class="am__title">Fallback title</h1></body></html>
+        """
+        let parsed = PixivisionArticleParser.parse(
+            html: html,
+            articleID: 1,
+            sourceURL: URL(string: "https://www.pixivision.net/en/a/1")!
+        )
+        #expect(parsed.title == "Fallback title")
+        #expect(parsed.summary == "Description here.")
+        #expect(parsed.blocks.isEmpty)
+        #expect(parsed.tags.isEmpty)
+    }
+
+    // MARK: - Fixtures
+
+    /// Trimmed, real-world Pixivision article HTML with one heading,
+    /// one paragraph, one work card, and one trailing paragraph,
+    /// followed by the share-buttons sentinel that closes the body.
+    private static let sampleHTML = """
+    <html><head>
+    <meta property="og:title" content="Illustrator MON straddles the line between eeriness and beauty with their art">
+    <meta property="og:description" content="Illustrator MON's first solo exhibition.">
+    <meta property="og:image" content="https://embed.pixiv.net/pixivision/en/a/9988/ogimage.jpg">
+    </head><body>
+    <a class="_category type-bg-color" href="/en/c/interview">Interviews</a>
+    <time class="_date am__sub-info__date large light-gray">2024.07.10</time>
+    <h1 class="am__title">Illustrator MON straddles the line</h1>
+    <div class="am__eyecatch-container"><div class="_article-illust-eyecatch">
+    <img class="aie__image" src="https://embed.pixiv.net/pixivision/en/a/9988/ogimage.jpg" alt="MON"></div></div>
+    <ul class="am__header-tags _tag-list">
+    <li><a href="/en/t/71" class="_tag">interview</a></li>
+    <li><a href="/en/t/149" class="_tag">illustrator interviews</a></li>
+    </ul>
+    <section class="am__body"><div class="am__article-body-container">
+    <h3 class="am__article-headline">Graduated from art school this spring, now a freelance illustrator</h3>
+    <p>Illustrator MON's first solo exhibition, SIGNAL 414, is happening now until Wednesday, July 24th, 2024.</p>
+    <div class="am__work"><div class="am__work__info">
+    <a href="https://www.pixiv.net/users/25915682?utm_source=pixivision" class="am__work__user-icon-container inner-link" target="_blank">
+    <div class="_clickable-image-container">
+    <img src="https://i.pximg.net/user-profile/img/2020/01/19/21/49/01/16876892_avatar.jpg" class="am__work__uesr-icon">
+    </div></a>
+    <div class="am__work__title-container">
+    <h3 class="am__work__title"><a href="https://www.pixiv.net/artworks/67323816?utm_source=pixivision" class="inner-link" target="_blank">Reaper</a></h3>
+    <p class="am__work__user-name">by <a href="https://www.pixiv.net/users/25915682?utm_source=pixivision" class="author-img-container inner-link" target="_blank">MON</a></p>
+    </div></div>
+    <div class="am__work__main">
+    <a href="https://www.pixiv.net/artworks/67323816?utm_source=pixivision" class="inner-link" target="_blank">
+    <div class="_clickable-image-container fit-inner">
+    <img src="https://i.pximg.net/c/768x1200_80/img-master/img/2018/02/17/19/40/29/67323816_p0_master1200.jpg" class="am__work__illust ">
+    </div></a></div></div>
+    <p>Final closing paragraph that wraps up the interview.</p>
+    </div></section>
+    <div class="am__share-buttons"></div>
+    </body></html>
+    """
+
+    private static func workCardHTML(artworkID: Int, creatorID: Int, title: String, creator: String) -> String {
+        """
+        <div class="am__work"><div class="am__work__info">
+        <a href="https://www.pixiv.net/users/\(creatorID)" class="am__work__user-icon-container inner-link" target="_blank">
+        <img src="https://example.com/avatar.jpg" class="am__work__uesr-icon"></a>
+        <div class="am__work__title-container">
+        <h3 class="am__work__title"><a href="https://www.pixiv.net/artworks/\(artworkID)" class="inner-link" target="_blank">\(title)</a></h3>
+        <p class="am__work__user-name">by <a href="https://www.pixiv.net/users/\(creatorID)" class="inner-link" target="_blank">\(creator)</a></p>
+        </div></div>
+        <div class="am__work__main">
+        <a href="https://www.pixiv.net/artworks/\(artworkID)" class="inner-link" target="_blank">
+        <img src="https://example.com/illust.jpg" class="am__work__illust ">
+        </a></div></div>
+        """
+    }
+}

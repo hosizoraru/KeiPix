@@ -262,6 +262,11 @@ extension KeiPixStore {
         UserDefaults.standard.set(mode.rawValue, forKey: "creatorListLayoutMode")
     }
 
+    func setSpotlightListLayoutMode(_ mode: SpotlightListLayoutMode) {
+        spotlightListLayoutMode = mode
+        UserDefaults.standard.set(mode.rawValue, forKey: "spotlightListLayoutMode")
+    }
+
     func setTrackpadGesturesEnabled(_ value: Bool) {
         trackpadGesturesEnabled = value
         UserDefaults.standard.set(value, forKey: "trackpadGesturesEnabled")
