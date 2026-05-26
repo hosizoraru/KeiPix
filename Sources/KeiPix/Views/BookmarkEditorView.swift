@@ -45,7 +45,32 @@ struct BookmarkEditorView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            header
+            SheetHeaderRail(
+                overline: artwork.isBookmarked ? L10n.editBookmark : L10n.bookmark,
+                title: artwork.title,
+                subtitle: String(format: L10n.bookmarkTagSelectionSummaryFormat, selectedTags.count),
+                leading: {
+                    SheetHeaderThumbnail(url: artwork.thumbnailURL)
+                },
+                trailing: {
+                    if let url = artwork.pixivURL {
+                        SheetHeaderActionButton(
+                            title: L10n.openInPixiv,
+                            systemImage: "safari"
+                        ) {
+                            NSWorkspace.shared.open(url)
+                        }
+
+                        SheetHeaderActionButton(
+                            title: L10n.copyLink,
+                            systemImage: "link"
+                        ) {
+                            PasteboardWriter.copy(url.absoluteString)
+                            showActionMessage(L10n.copied)
+                        }
+                    }
+                }
+            )
 
             Divider()
 
@@ -128,33 +153,7 @@ struct BookmarkEditorView: View {
         }
     }
 
-    // MARK: - Header & footer
-
-    private var header: some View {
-        HStack(alignment: .top, spacing: 12) {
-            RemoteImageView(url: artwork.thumbnailURL)
-                .frame(width: 56, height: 56)
-                .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
-
-            VStack(alignment: .leading, spacing: 4) {
-                Text(artwork.isBookmarked ? L10n.editBookmark : L10n.bookmark)
-                    .font(.title3.weight(.semibold))
-                Text(artwork.title)
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(2)
-
-                Text(String(format: L10n.bookmarkTagSelectionSummaryFormat, selectedTags.count))
-                    .font(.caption.monospacedDigit())
-                    .foregroundStyle(.tertiary)
-            }
-
-            Spacer()
-
-            SheetCloseButton(style: .plain)
-        }
-        .padding(20)
-    }
+    // MARK: - Footer
 
     private var footer: some View {
         HStack(spacing: 10) {

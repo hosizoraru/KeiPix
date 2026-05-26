@@ -12,8 +12,8 @@ import SwiftUI
 /// header (e.g. a profile banner) and just needs an X tucked into a
 /// corner. Use `sheetCloseButton(_:)` on a `View` to overlay the standard
 /// top-trailing close button for sheets that don't already pad a corner
-/// with controls. Use `SheetHeaderBar` when the sheet wants a stock
-/// header row (icon + title + close button).
+/// with controls. For the standard "title + actions + close" header
+/// layout most sheets want, reach for `SheetHeaderRail` instead.
 struct SheetCloseButton: View {
     /// Optional explicit dismiss handler for cases where the sheet owns
     /// extra cleanup (e.g. clearing a presentation flag on the store) on
@@ -90,50 +90,10 @@ extension View {
     /// the system grabber + drag-to-dismiss for free, matching every
     /// other modal sheet on the platform.
     ///
-    /// Pair this with a `SheetCloseButton` (or `SheetHeaderBar`) inside
+    /// Pair this with a `SheetCloseButton` (or `SheetHeaderRail`) inside
     /// the sheet body so pointer users always have a visible escape
     /// hatch, even on platforms where there's no Esc key handy.
     func iPadFriendlySheet() -> some View {
         self.presentationDragIndicator(.visible)
-    }
-}
-
-/// Stock header row for sheets: optional system image, title, optional
-/// subtitle, and the standard close button on the trailing edge.
-///
-/// Sheets that need a richer header (banner image, avatar, embedded
-/// segmented control) keep their custom layout but should still drop in
-/// a `SheetCloseButton` for the dismiss affordance.
-struct SheetHeaderBar: View {
-    let title: String
-    var subtitle: String? = nil
-    var systemImage: String? = nil
-    var closeAction: (() -> Void)? = nil
-
-    var body: some View {
-        HStack(alignment: .top, spacing: 12) {
-            if let systemImage {
-                Image(systemName: systemImage)
-                    .font(.title2)
-                    .symbolRenderingMode(.hierarchical)
-                    .foregroundStyle(.secondary)
-                    .frame(width: 28)
-            }
-
-            VStack(alignment: .leading, spacing: 4) {
-                Text(title)
-                    .font(.headline)
-                if let subtitle {
-                    Text(subtitle)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-            }
-
-            Spacer(minLength: 0)
-
-            SheetCloseButton(action: closeAction, style: .plain)
-        }
     }
 }

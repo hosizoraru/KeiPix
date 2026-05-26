@@ -10,72 +10,83 @@ struct FeedbackReportSheet: View {
     @State private var note = ""
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            HStack(alignment: .top, spacing: 12) {
-                VStack(alignment: .leading, spacing: 6) {
-                    Label(L10n.feedbackAndMute, systemImage: "exclamationmark.bubble")
-                        .font(.title3.weight(.semibold))
+        VStack(alignment: .leading, spacing: 0) {
+            SheetHeaderRail(
+                overline: L10n.feedbackAndMute,
+                title: request.targetTitle,
+                subtitle: request.kind.title,
+                leading: {
+                    SheetHeaderIcon(
+                        systemImage: "exclamationmark.bubble",
+                        tint: .orange
+                    )
+                },
+                trailing: {
+                    SheetHeaderActionButton(
+                        title: L10n.copyReportSummary,
+                        systemImage: "doc.on.doc"
+                    ) {
+                        PasteboardWriter.copy(reportSummary)
+                        onComplete(L10n.copiedReportSummary)
+                    }
 
-                    Text(L10n.feedbackAndMuteHint)
-                        .font(.callout)
-                        .foregroundStyle(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
+                    if let url = request.targetURL {
+                        SheetHeaderActionButton(
+                            title: L10n.openPixivWebReportPage,
+                            systemImage: "safari"
+                        ) {
+                            NSWorkspace.shared.open(url)
+                        }
+                    }
                 }
-                Spacer(minLength: 0)
-                SheetCloseButton(style: .plain)
-            }
+            )
 
-            VStack(alignment: .leading, spacing: 4) {
-                Text(request.kind.title)
-                    .font(.caption)
+            Divider()
+
+            VStack(alignment: .leading, spacing: 14) {
+                Text(L10n.feedbackAndMuteHint)
+                    .font(.callout)
                     .foregroundStyle(.secondary)
-                Text(request.targetTitle)
-                    .font(.headline)
-                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
+
                 Text(request.targetSubtitle)
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .lineLimit(2)
-            }
-            .padding(12)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(.quinary, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    .textSelection(.enabled)
 
-            Picker(L10n.reportReason, selection: $reason) {
-                ForEach(FeedbackReportReason.allCases) { reason in
-                    Text(reason.title).tag(reason)
-                }
-            }
-            .pickerStyle(.menu)
-
-            TextField(L10n.note, text: $note, axis: .vertical)
-                .textFieldStyle(.roundedBorder)
-                .lineLimit(2...5)
-
-            FlowLayout(spacing: 8) {
-                Button {
-                    PasteboardWriter.copy(reportSummary)
-                    onComplete(L10n.copiedReportSummary)
-                } label: {
-                    Label(L10n.copyReportSummary, systemImage: "doc.on.doc")
-                }
-
-                if let url = request.targetURL {
-                    Link(destination: url) {
-                        Label(L10n.openPixivWebReportPage, systemImage: "safari")
+                Picker(L10n.reportReason, selection: $reason) {
+                    ForEach(FeedbackReportReason.allCases) { reason in
+                        Text(reason.title).tag(reason)
                     }
                 }
+                .pickerStyle(.menu)
+
+                TextField(L10n.note, text: $note, axis: .vertical)
+                    .textFieldStyle(.roundedBorder)
+                    .lineLimit(2...5)
 
                 if let localMuteAction, let localMuteTitle = request.localMuteTitle {
+                    // Destructive local mute is intentionally kept in
+                    // the body (not the header rail) so users have to
+                    // pause and read what they're about to silence.
                     Button(role: .destructive) {
                         localMuteAction()
                         onComplete(String(format: L10n.localMuteRequestedFormat, localMuteTitle))
                         dismiss()
                     } label: {
                         Label(localMuteTitle, systemImage: "eye.slash")
+                            .frame(maxWidth: .infinity)
                     }
+                    .buttonStyle(.bordered)
+                    .controlSize(.regular)
                 }
             }
+            .padding(20)
+
+            Spacer(minLength: 0)
+
+            Divider()
 
             HStack {
                 Button(L10n.cancel) {
@@ -91,9 +102,10 @@ struct FeedbackReportSheet: View {
                 .buttonStyle(.glassProminent)
                 .keyboardShortcut(.defaultAction)
             }
+            .padding(.horizontal, 20)
+            .padding(.vertical, 14)
         }
-        .padding(20)
-        .frame(width: 460)
+        .frame(width: 480)
     }
 
     private var reportSummary: String {

@@ -9,8 +9,36 @@ struct ImageSourceSearchSheet: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            header
-                .padding(18)
+            SheetHeaderRail(
+                overline: L10n.imageSourceSearch,
+                title: request.title,
+                subtitle: request.detail,
+                leading: {
+                    SheetHeaderThumbnail(
+                        url: request.thumbnailURL,
+                        size: 56,
+                        cornerRadius: 10
+                    )
+                },
+                trailing: {
+                    if let imageURL = request.imageURL,
+                       let webSearchURL = SauceNAOClient.webSearchURL(imageURL: imageURL) {
+                        SheetHeaderActionButton(
+                            title: L10n.openInSauceNAO,
+                            systemImage: "safari"
+                        ) {
+                            NSWorkspace.shared.open(webSearchURL)
+                        }
+
+                        SheetHeaderActionButton(
+                            title: L10n.copySauceNAOLink,
+                            systemImage: "link"
+                        ) {
+                            PasteboardWriter.copy(webSearchURL.absoluteString)
+                        }
+                    }
+                }
+            )
 
             Divider()
 
@@ -19,54 +47,6 @@ struct ImageSourceSearchSheet: View {
         }
         .task(id: request.id) {
             await search()
-        }
-    }
-
-    private var header: some View {
-        HStack(alignment: .top, spacing: 14) {
-            RemoteImageView(url: request.thumbnailURL, localURL: request.localImageURL)
-                .aspectRatio(1, contentMode: .fill)
-                .frame(width: 72, height: 72)
-                .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
-
-            VStack(alignment: .leading, spacing: 6) {
-                Text(L10n.imageSourceSearch)
-                    .font(.title3.weight(.semibold))
-                Text(request.title)
-                    .font(.headline)
-                    .lineLimit(2)
-                    .textSelection(.enabled)
-                Text(request.detail)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-
-            ControlGroup {
-                if let imageURL = request.imageURL,
-                   let webSearchURL = SauceNAOClient.webSearchURL(imageURL: imageURL) {
-                    Link(destination: webSearchURL) {
-                        Label(L10n.openInSauceNAO, systemImage: "safari")
-                    }
-
-                    Button {
-                        PasteboardWriter.copy(webSearchURL.absoluteString)
-                    } label: {
-                        Label(L10n.copySauceNAOLink, systemImage: "link")
-                    }
-                }
-
-                Button {
-                    dismiss()
-                } label: {
-                    Label(L10n.close, systemImage: "xmark")
-                }
-                .keyboardShortcut(.cancelAction)
-                .help(L10n.close)
-                .accessibilityLabel(L10n.close)
-            }
-            .labelStyle(.iconOnly)
-            .controlSize(.small)
         }
     }
 

@@ -366,6 +366,7 @@ enum L10n {
     static var premium: String { text("Premium") }
     static var showMore: String { text("Show More") }
     static var showLess: String { text("Show Less") }
+    static var pasteFromClipboard: String { text("Paste from Clipboard") }
     static var followCreatorAfterBookmark: String { text("Follow creator after bookmarking") }
     static var followCreatorAfterBookmarkHint: String { text("New bookmarks also follow the creator using your default follow visibility.") }
     static var autoDownloadBookmarkedArtworks: String { text("Download new bookmarks automatically") }
