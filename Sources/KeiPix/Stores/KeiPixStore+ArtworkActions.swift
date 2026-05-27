@@ -180,7 +180,7 @@ extension KeiPixStore {
     }
 
     func prepareReaderWindow(for artwork: PixivArtwork) {
-        readerWindowArtwork = artwork
+        registerReaderWindowArtwork(artwork)
     }
 
     func prepareSelectedReaderWindow() {

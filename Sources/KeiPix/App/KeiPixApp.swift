@@ -126,8 +126,10 @@ struct KeiPixApp: App {
                 Divider()
 
                 Button(L10n.openReaderWindow) {
-                    store.prepareSelectedReaderWindow()
-                    openWindow(id: "artwork-reader")
+                    if let artwork = store.selectedArtwork {
+                        store.prepareReaderWindow(for: artwork)
+                        openWindow(id: "artwork-reader", value: artwork.id)
+                    }
                 }
                 .shortcut(.openReaderWindow)
                 .disabled(store.selectedArtwork == nil)
@@ -260,15 +262,34 @@ struct KeiPixApp: App {
         .defaultSize(width: 880, height: 560)
         .restorationBehavior(.disabled)
 
-        Window(L10n.readerWindow, id: "artwork-reader") {
-            ArtworkReaderWindowView(store: store)
+        // Reader windows are scene-per-artwork, keyed by the artwork
+        // ID. Using a value-typed WindowGroup gives Stage Manager and
+        // Mission Control independent surfaces to arrange, lets users
+        // open multiple artworks side-by-side without one closing the
+        // other, and lets SwiftUI restore the open set after relaunch
+        // automatically — the IDs round-trip through the system's
+        // scene restoration store. Inside the window the view falls
+        // back to a network fetch when the in-memory registry doesn't
+        // have a hit (the path post-restoration windows take).
+        WindowGroup(L10n.readerWindow, id: "artwork-reader", for: Int.self) { $artworkID in
+            if let artworkID {
+                ArtworkReaderWindowView(store: store, artworkID: artworkID)
+                    .frame(minWidth: 900, minHeight: 680)
+                    .background(WindowCaptureProtectionBridge(isProtected: store.isReaderWindowCaptureProtected))
+                    .environment(\.locale, store.appLanguage.locale ?? .current)
+                    .preferredColorScheme(store.appColorScheme.preferredColorScheme)
+            } else {
+                EmptyStateView(
+                    title: L10n.noArtworkTitle,
+                    subtitle: L10n.noArtworkSubtitle,
+                    systemImage: "rectangle.inset.filled"
+                )
                 .frame(minWidth: 900, minHeight: 680)
-                .background(WindowCaptureProtectionBridge(isProtected: store.isReaderWindowCaptureProtected))
                 .environment(\.locale, store.appLanguage.locale ?? .current)
                 .preferredColorScheme(store.appColorScheme.preferredColorScheme)
+            }
         }
         .defaultSize(width: 1180, height: 860)
-        .restorationBehavior(.disabled)
 
         Settings {
             SettingsView(store: store)

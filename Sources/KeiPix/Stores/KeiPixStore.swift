@@ -24,6 +24,13 @@ final class KeiPixStore {
     var presentedUserProfile: PixivUser?
     var selectedSpotlightArticle: PixivSpotlightArticle?
     var readerWindowArtwork: PixivArtwork?
+    /// Bounded registry mapping artwork ID → `PixivArtwork` for
+    /// windows opened via the multi-window reader scene. Lets a
+    /// value-typed `WindowGroup(for: Int.self)` hand off ID-only
+    /// restoration data while still resolving the full payload on
+    /// appear. See `KeiPixStore+ReaderWindows.swift` for the registry
+    /// type and helpers.
+    var readerWindowRegistry = ReaderWindowArtworkRegistry()
     var imageSourceSearchRequest: ImageSourceSearchRequest?
     var pendingDangerAction: AppDangerAction?
     var undoAction: AppUndoAction?

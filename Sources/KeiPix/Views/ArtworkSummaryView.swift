@@ -253,7 +253,7 @@ private struct ArtworkActionStrip: View {
                     Button {
                         if downloadState == .downloaded {
                             store.prepareReaderWindow(for: artwork)
-                            openWindow(id: "artwork-reader")
+                            openWindow(id: "artwork-reader", value: artwork.id)
                         } else {
                             store.enqueueDownload(artwork)
                             showActionMessage(String(format: L10n.queuedDownloadsFormat, 1))
@@ -269,7 +269,7 @@ private struct ArtworkActionStrip: View {
 
                     Button {
                         store.prepareReaderWindow(for: artwork)
-                        openWindow(id: "artwork-reader")
+                        openWindow(id: "artwork-reader", value: artwork.id)
                     } label: {
                         Label(L10n.openReaderWindow, systemImage: "rectangle.inset.filled")
                     }
@@ -282,7 +282,7 @@ private struct ArtworkActionStrip: View {
                     Menu {
                         Button {
                             store.prepareReaderWindow(for: artwork)
-                            openWindow(id: "artwork-reader")
+                            openWindow(id: "artwork-reader", value: artwork.id)
                         } label: {
                             Label(L10n.openReaderWindow, systemImage: "rectangle.inset.filled")
                         }
