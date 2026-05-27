@@ -252,6 +252,10 @@ enum L10n {
     static var exportedZipFormat: String { text("Exported ZIP %@") }
     static var previewUgoira: String { text("Preview Ugoira") }
     static var ugoiraMetadataMissing: String { text("Ugoira metadata is missing. Re-download this item to enable in-app preview and GIF export.") }
+    static var exportAsPDF: String { text("Export as PDF") }
+    static var exportAsCollage: String { text("Export as Collage") }
+    static var exportFailed: String { text("Export failed") }
+    static func exportedTo(_ name: String) -> String { String(format: text("Exported %@"), locale: Locale.current, name) }
     static var playbackSpeed: String { text("Playback Speed") }
     static var ugoiraSeek: String { text("Seek Frame") }
     static var ugoiraTimeline: String { text("Ugoira Timeline") }

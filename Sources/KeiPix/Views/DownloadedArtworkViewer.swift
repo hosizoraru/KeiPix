@@ -136,6 +136,22 @@ struct DownloadedArtworkViewer: View {
                 } label: {
                     Label(L10n.revealCurrentPage, systemImage: "folder")
                 }
+
+                Divider()
+
+                Button {
+                    exportAsPDF()
+                } label: {
+                    Label(L10n.exportAsPDF, systemImage: "doc.richtext")
+                }
+                .help(L10n.exportAsPDF)
+
+                Button {
+                    exportAsCollage()
+                } label: {
+                    Label(L10n.exportAsCollage, systemImage: "square.grid.3x3")
+                }
+                .help(L10n.exportAsCollage)
             } label: {
                 Label(L10n.moreActions, systemImage: "ellipsis.circle")
             }
@@ -271,6 +287,24 @@ struct DownloadedArtworkViewer: View {
 
     private func revealCurrentPage() {
         PlatformWorkspace.revealInFiles(currentImageURL)
+    }
+
+    private func exportAsPDF() {
+        guard let url = BatchExportService.exportPDF(from: imageURLs, title: item.title) else {
+            actionMessage = L10n.exportFailed
+            return
+        }
+        actionMessage = L10n.exportedTo(url.lastPathComponent)
+        PlatformWorkspace.revealInFiles(url)
+    }
+
+    private func exportAsCollage() {
+        guard let url = BatchExportService.exportCollage(from: imageURLs, title: item.title) else {
+            actionMessage = L10n.exportFailed
+            return
+        }
+        actionMessage = L10n.exportedTo(url.lastPathComponent)
+        PlatformWorkspace.revealInFiles(url)
     }
 
     private func dismissActionMessageIfNeeded(_ message: String?) async {
