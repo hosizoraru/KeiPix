@@ -11,7 +11,35 @@ struct GalleryContentGrid: View {
 
     var body: some View {
         Group {
-            if store.galleryLayoutMode.usesCompactGrid {
+            if store.galleryLayoutMode.usesListRow {
+                LazyVStack(spacing: 10) {
+                    ForEach(store.artworks) { artwork in
+                        ListRowArtworkCard(
+                            artwork: artwork,
+                            store: store,
+                            isSelected: store.selectedArtwork?.id == artwork.id,
+                            isInSelection: artworkSelection.contains(artwork.id)
+                        ) {
+                            activate(artwork)
+                        }
+                        .overlay(alignment: .topTrailing) {
+                            if artworkSelection.contains(artwork.id) {
+                                GallerySelectionBadge()
+                                    .padding(8)
+                            }
+                        }
+                        .contextMenu {
+                            selectionContextButton(for: artwork)
+                            Divider()
+                            artworkContextMenu(artwork)
+                        }
+                    }
+
+                    if store.hasNextPage, store.activeFeedSnapshotRestoration == nil {
+                        LoadMoreTile(store: store)
+                    }
+                }
+            } else if store.galleryLayoutMode.usesCompactGrid {
                 LazyVGrid(columns: compactColumns, spacing: 12) {
                     ForEach(store.artworks) { artwork in
                         artworkTile(artwork)
@@ -56,6 +84,58 @@ struct GalleryContentGrid: View {
 
     private var compactColumns: [GridItem] {
         [GridItem(.adaptive(minimum: 148, maximum: 210), spacing: 12)]
+    }
+
+    @ViewBuilder
+    private func artworkContextMenu(_ artwork: PixivArtwork) -> some View {
+        Button(artwork.isBookmarked ? L10n.removeBookmark : L10n.bookmark) {
+            if artwork.isBookmarked {
+                store.requestDangerAction(AppDangerAction(kind: .removeBookmark(artwork)))
+            } else {
+                Task { await bookmark(artwork) }
+            }
+        }
+        Button(L10n.download) {
+            store.enqueueDownload(artwork)
+            actionMessage = String(format: L10n.queuedDownloadsFormat, 1)
+        }
+        Button(L10n.searchImageSource) {
+            store.presentImageSourceSearch(for: artwork)
+        }
+        ArtworkSeriesContextMenuItems(
+            artwork: artwork,
+            store: store,
+            actionMessage: $actionMessage,
+            showSeries: { seriesArtwork = $0 }
+        )
+        Divider()
+        Button {
+            presentFeedback(artwork)
+        } label: {
+            Label(L10n.feedbackAndMute, systemImage: "exclamationmark.bubble")
+        }
+        Button(L10n.muteArtwork) {
+            store.requestDangerAction(AppDangerAction(kind: .muteArtwork(artwork)))
+        }
+        Button(L10n.muteCreator) {
+            store.requestDangerAction(AppDangerAction(kind: .muteCreator(artwork.user)))
+        }
+        if artwork.tags.isEmpty == false {
+            Menu(L10n.muteTag) {
+                ForEach(artwork.tags.prefix(12), id: \.self) { tag in
+                    Button("#\(tag.name)") {
+                        store.requestDangerAction(AppDangerAction(kind: .muteTag(tag)))
+                    }
+                }
+            }
+        }
+        if let url = artwork.pixivURL {
+            Link(L10n.openInPixiv, destination: url)
+            Button(L10n.copyLink) {
+                PasteboardWriter.copy(url.absoluteString)
+                actionMessage = L10n.copied
+            }
+        }
     }
 
     private func artworkTile(_ artwork: PixivArtwork) -> some View {
@@ -417,5 +497,80 @@ private struct LoadMoreTile: View {
         }
         .buttonStyle(.plain)
         .keiInteractiveGlass(18)
+    }
+}
+
+private struct ListRowArtworkCard: View {
+    let artwork: PixivArtwork
+    @Bindable var store: KeiPixStore
+    let isSelected: Bool
+    let isInSelection: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 14) {
+                RemoteImageView(url: artwork.feedPreviewURL(tier: store.feedPreviewImageQualityTier) ?? artwork.thumbnailURL)
+                    .frame(width: 140, height: 100)
+                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+
+                VStack(alignment: .leading, spacing: 5) {
+                    Text(artwork.title)
+                        .font(.callout.weight(.semibold))
+                        .lineLimit(2)
+
+                    Text(artwork.user.name)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+
+                    HStack(spacing: 10) {
+                        Label("\(artwork.displayPageCount) \(L10n.pages)", systemImage: "square.stack")
+                        Label("\(artwork.totalView.formatted())", systemImage: "eye")
+                        Label("\(artwork.totalBookmarks.formatted())", systemImage: "heart")
+                        if artwork.isBookmarked {
+                            Image(systemName: "heart.fill")
+                                .foregroundStyle(.red)
+                        }
+                        if artwork.isAI {
+                            Text("AI")
+                                .font(.caption2.weight(.bold))
+                                .padding(.horizontal, 5)
+                                .padding(.vertical, 2)
+                                .background(.quaternary, in: Capsule())
+                        }
+                    }
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+
+                    if artwork.tags.isEmpty == false {
+                        FlowLayout(spacing: 4) {
+                            ForEach(artwork.tags.prefix(5), id: \.self) { tag in
+                                Text("#\(tag.name)")
+                                    .font(.caption2)
+                                    .foregroundStyle(.tertiary)
+                            }
+                        }
+                    }
+                }
+
+                Spacer()
+
+                if store.showContentBadges {
+                    ArtworkContentBadgesView(badges: artwork.contentBadges, style: .compact)
+                }
+            }
+            .padding(10)
+            .contentShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .keiInteractiveGlass(16)
+        .overlay {
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .strokeBorder(
+                    isSelected ? AnyShapeStyle(.tint) : AnyShapeStyle(.separator.opacity(0.35)),
+                    lineWidth: isSelected ? 2 : 1
+                )
+        }
     }
 }

@@ -653,6 +653,7 @@ enum L10n {
     static var spotlightListLayout: String { text("Article Layout") }
     static var compact: String { text("Compact") }
     static var compactCards: String { text("Compact artwork cards") }
+    static var listRow: String { text("List") }
     static var windowSize: String { text("Window Size") }
     static var smallWindow: String { text("Small") }
     static var balancedWindow: String { text("Balanced") }

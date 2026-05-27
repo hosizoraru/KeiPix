@@ -5,6 +5,7 @@ enum GalleryLayoutMode: String, CaseIterable, Identifiable {
     case twoColumnMasonry
     case threeColumnMasonry
     case compactGrid
+    case listRow
 
     var id: String { rawValue }
 
@@ -18,6 +19,8 @@ enum GalleryLayoutMode: String, CaseIterable, Identifiable {
             L10n.threeColumns
         case .compactGrid:
             L10n.compact
+        case .listRow:
+            L10n.listRow
         }
     }
 
@@ -31,12 +34,14 @@ enum GalleryLayoutMode: String, CaseIterable, Identifiable {
             "rectangle.split.3x1"
         case .compactGrid:
             "square.grid.3x3"
+        case .listRow:
+            "list.bullet"
         }
     }
 
     var fixedColumnCount: Int? {
         switch self {
-        case .autoMasonry, .compactGrid:
+        case .autoMasonry, .compactGrid, .listRow:
             nil
         case .twoColumnMasonry:
             2
@@ -47,5 +52,9 @@ enum GalleryLayoutMode: String, CaseIterable, Identifiable {
 
     var usesCompactGrid: Bool {
         self == .compactGrid
+    }
+
+    var usesListRow: Bool {
+        self == .listRow
     }
 }
