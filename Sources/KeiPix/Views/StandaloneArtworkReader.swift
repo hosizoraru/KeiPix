@@ -15,6 +15,9 @@ struct StandaloneArtworkReader: View {
     @State private var scrollTarget: Int?
     @State private var isFocusPresetEnabled = false
     @State private var isPageJumpPresented = false
+    @State private var imageRotation: Double = 0
+    @State private var isImageFlippedHorizontally = false
+    @State private var isImageFlippedVertically = false
 
     init(artwork: PixivArtwork, store: KeiPixStore) {
         self.artwork = artwork
@@ -60,6 +63,11 @@ struct StandaloneArtworkReader: View {
                                     scrollToPage: { index in
                                         scrollToPage(index, proxy: proxy)
                                     }
+                                )
+                                .rotationEffect(.degrees(imageRotation))
+                                .scaleEffect(
+                                    x: isImageFlippedHorizontally ? -1 : 1,
+                                    y: isImageFlippedVertically ? -1 : 1
                                 )
                             }
                         }
@@ -145,6 +153,41 @@ struct StandaloneArtworkReader: View {
                 )
             }
             .help(L10n.imageQualityToggleHint)
+
+            Menu {
+                Button {
+                    imageRotation -= 90
+                } label: {
+                    Label(L10n.rotateLeft, systemImage: "rotate.left")
+                }
+                Button {
+                    imageRotation += 90
+                } label: {
+                    Label(L10n.rotateRight, systemImage: "rotate.right")
+                }
+                Divider()
+                Button {
+                    isImageFlippedHorizontally.toggle()
+                } label: {
+                    Label(L10n.flipHorizontal, systemImage: "arrow.left.and.right.righttriangle.left.righttriangle.right")
+                }
+                Button {
+                    isImageFlippedVertically.toggle()
+                } label: {
+                    Label(L10n.flipVertical, systemImage: "arrow.up.and.down.righttriangle.up.righttriangle.down")
+                }
+                Divider()
+                Button {
+                    imageRotation = 0
+                    isImageFlippedHorizontally = false
+                    isImageFlippedVertically = false
+                } label: {
+                    Label(L10n.resetTransform, systemImage: "arrow.counterclockwise")
+                }
+            } label: {
+                Label(L10n.imageTransform, systemImage: "crop.rotate")
+            }
+            .help(L10n.imageTransform)
 
             Button {
                 isPageJumpPresented = true

@@ -535,6 +535,12 @@ enum L10n {
     static var illustDetailQuality: String { text("Illust detail quality") }
     static var mangaDetailQuality: String { text("Manga detail quality") }
     static var imageQualityTierHint: String { text("Pixiv ships every illust at three sizes. Pick the rung that matches your bandwidth — Medium loads fastest, Original is the source asset.") }
+    static var imageTransform: String { text("Image Transform") }
+    static var rotateLeft: String { text("Rotate Left") }
+    static var rotateRight: String { text("Rotate Right") }
+    static var flipHorizontal: String { text("Flip Horizontal") }
+    static var flipVertical: String { text("Flip Vertical") }
+    static var resetTransform: String { text("Reset Transform") }
     static var translate: String { text("Translate") }
     static var translateCaptionHelp: String { text("Open the system translation sheet for this text. Lets you pick a target language, copy the result, or flip back to the original.") }
     static var downloadSelectedPages: String { text("Save Selected Pages…") }
