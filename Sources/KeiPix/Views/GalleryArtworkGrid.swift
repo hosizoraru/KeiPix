@@ -147,6 +147,7 @@ struct GalleryContentGrid: View {
             maskSensitivePreview: store.maskSensitivePreviews,
             downloadState: store.downloads.downloadState(for: artwork.id),
             feedPreviewTier: store.feedPreviewImageQualityTier,
+            downloadedFileURL: store.downloads.downloadedImageURL(artworkID: artwork.id, pageIndex: 0),
             emphasizeFollowing: store.emphasizeFollowingArtists
         ) {
             activate(artwork)
@@ -284,6 +285,7 @@ private struct MasonryArtworkGrid: View {
                     displayStyle: presentation.cardStyle,
                     fillsAvailableHeight: true,
                     feedPreviewTier: store.feedPreviewImageQualityTier,
+                    downloadedFileURL: store.downloads.downloadedImageURL(artworkID: artwork.id, pageIndex: 0),
                     emphasizeFollowing: store.emphasizeFollowingArtists
                 ) {
                     activate(artwork)
@@ -565,6 +567,7 @@ private struct ListRowArtworkCard: View {
         }
         .buttonStyle(.plain)
         .keiInteractiveGlass(16)
+        .draggable(artwork.pixivURL ?? URL(string: "https://www.pixiv.net/artworks/\(artwork.id)")!)
         .overlay {
             RoundedRectangle(cornerRadius: 16, style: .continuous)
                 .strokeBorder(

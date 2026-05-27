@@ -15,6 +15,7 @@ struct ArtworkCardView: View {
     /// keep their previous behaviour without code changes; the gallery
     /// surfaces forward `KeiPixStore.feedPreviewImageQualityTier`.
     var feedPreviewTier: ArtworkImageQualityTier = .medium
+    var downloadedFileURL: URL? = nil
     /// When true and the artwork's author is followed, the card draws a
     /// thicker accent-tinted border so the user can spot following-artist
     /// works inside mixed feeds (search, ranking, recommendation). Mirrors
@@ -54,7 +55,7 @@ struct ArtworkCardView: View {
         // pasteboard. Falls back to the canonical
         // `https://www.pixiv.net/artworks/<id>` URL if the artwork
         // payload didn't carry one.
-        .draggable(artworkPixivURL)
+        .draggable(dragContent)
     }
 
     /// Selection wins over follow-emphasis (selection is a transient user
@@ -85,6 +86,10 @@ struct ArtworkCardView: View {
     /// from the artwork ID (rather than trusting whatever
     /// `artwork.pixivURL` returns) so a stale or test-fixture artwork
     /// still drags as a valid `.webloc` bookmark.
+    private var dragContent: URL {
+        downloadedFileURL ?? artworkPixivURL
+    }
+
     private var artworkPixivURL: URL {
         artwork.pixivURL ?? URL(string: "https://www.pixiv.net/artworks/\(artwork.id)")!
     }
