@@ -102,19 +102,25 @@ extension KeiPixStore {
         }
 
         let current = currentReleaseSemanticVersion
+        let mode = isManual ? "manual" : "auto"
+        let version = current.displayString
+        KeiPixLog.releaseUpdate.info(
+            "Checking GitHub releases (mode=\(mode, privacy: .public), current=\(version, privacy: .public))"
+        )
         do {
             let result = try await checker.latestRelease(forCurrent: current)
             lastUpdateCheckAt = now
             UserDefaults.standard.set(now, forKey: "lastUpdateCheckAt")
             switch result {
             case .upToDate:
+                KeiPixLog.releaseUpdate.info("GitHub reports up-to-date")
                 // Don't clobber a stale `latestReleaseUpdate` snapshot —
                 // it's still useful as a "last release we observed"
                 // anchor for Settings, and clearing it would also drop
                 // the user's skip memory matching a release that's now
                 // equal to current.
-                break
             case .update(let release):
+                KeiPixLog.releaseUpdate.notice("New release available: \(release.tagName, privacy: .public)")
                 latestReleaseUpdate = release
                 persistLatestReleaseUpdate()
                 if isManual == false, release.tagName != skippedReleaseTagName {
@@ -131,6 +137,7 @@ extension KeiPixStore {
                 }
             }
         } catch {
+            KeiPixLog.releaseUpdate.error("Update check failed: \(error.localizedDescription, privacy: .public)")
             if isManual {
                 manualUpdateCheckError = error.localizedDescription
                 presentingUpdateCheckFailed = true

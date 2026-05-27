@@ -246,6 +246,20 @@ struct KeiPixApp: App {
         .windowResizability(.contentSize)
         .restorationBehavior(.disabled)
 
+        // In-app log tail backed by `OSLogStore`. Surfaced as a dedicated
+        // window scene so users can keep it visible alongside the main
+        // window while reproducing an issue, and so the menu command can
+        // route to it via `openWindow`. Restoration is disabled — the
+        // viewer reads from the current process scope and isn't useful
+        // after a relaunch.
+        Window(L10n.logs, id: "logs") {
+            LogViewerView()
+                .environment(\.locale, store.appLanguage.locale ?? .current)
+                .preferredColorScheme(store.appColorScheme.preferredColorScheme)
+        }
+        .defaultSize(width: 880, height: 560)
+        .restorationBehavior(.disabled)
+
         Window(L10n.readerWindow, id: "artwork-reader") {
             ArtworkReaderWindowView(store: store)
                 .frame(minWidth: 900, minHeight: 680)

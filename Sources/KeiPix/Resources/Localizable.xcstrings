@@ -1920,6 +1920,35 @@
         }
       }
     },
+    "All Categories": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All Categories"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "すべてのカテゴリ"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "所有分类"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "所有分類"
+          }
+        }
+      }
+    },
     "All Creators": {
       "extractionState": "manual",
       "localizations": {
@@ -6589,6 +6618,35 @@
         }
       }
     },
+    "Copy Visible Logs": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy Visible Logs"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "表示中のログをコピー"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "复制可见日志"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "複製可見日誌"
+          }
+        }
+      }
+    },
     "Copy a report summary, open Pixiv Web, or apply a local mute without submitting remote reports from KeiPix.": {
       "extractionState": "manual",
       "localizations": {
@@ -7488,6 +7546,64 @@
         }
       }
     },
+    "Debug": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Debug"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "デバッグ"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "调试"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "除錯"
+          }
+        }
+      }
+    },
+    "Default": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Default"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "デフォルト"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "默认"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "預設"
+          }
+        }
+      }
+    },
     "Default Artwork Reading Mode": {
       "extractionState": "manual",
       "localizations": {
@@ -8006,6 +8122,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "詳情"
+          }
+        }
+      }
+    },
+    "Diagnostics": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diagnostics"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "診断"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "诊断"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "診斷"
           }
         }
       }
@@ -9373,6 +9518,35 @@
         }
       }
     },
+    "Error": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Error"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "エラー"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "错误"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "錯誤"
+          }
+        }
+      }
+    },
     "Every menu and reader keyboard shortcut routes through KeyboardShortcutCatalog so the Settings → Keyboard page never drifts from the bindings the menu bar actually fires.": {
       "extractionState": "manual",
       "localizations": {
@@ -9953,6 +10127,35 @@
         }
       }
     },
+    "Fault": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fault"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "障害"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "故障"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "故障"
+          }
+        }
+      }
+    },
     "Feed": {
       "extractionState": "manual",
       "localizations": {
@@ -10123,6 +10326,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "篩選摘要"
+          }
+        }
+      }
+    },
+    "Filter logs": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Filter logs"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ログをフィルタ"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "过滤日志"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "過濾日誌"
           }
         }
       }
@@ -12186,6 +12418,35 @@
         }
       }
     },
+    "Info": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Info"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "情報"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "信息"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "資訊"
+          }
+        }
+      }
+    },
     "Inline reader keys aren't menu items, so macOS can't rebind them. They're listed for reference only.": {
       "extractionState": "manual",
       "localizations": {
@@ -13139,6 +13400,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "KeiPix 無法連接 GitHub，請檢查網路或代理設定後重試。"
+          }
+        }
+      }
+    },
+    "KeiPix hasn't emitted any matching log entries since launch.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "KeiPix hasn't emitted any matching log entries since launch."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "KeiPix の起動以降、一致するログエントリはありません。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "KeiPix 启动以来没有匹配的日志条目。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "KeiPix 啟動以來沒有匹配的日誌條目。"
           }
         }
       }
@@ -14274,6 +14564,35 @@
         }
       }
     },
+    "Log access unavailable": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Log access unavailable"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ログへのアクセスができません"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法访问日志"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "無法存取日誌"
+          }
+        }
+      }
+    },
     "Login": {
       "extractionState": "manual",
       "localizations": {
@@ -14415,6 +14734,64 @@
           "stringUnit": {
             "state": "translated",
             "value": "結束當前 Pixiv 帳號？"
+          }
+        }
+      }
+    },
+    "Logs": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Logs"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ログ"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "日志"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "日誌"
+          }
+        }
+      }
+    },
+    "Logs copied": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Logs copied"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ログをコピーしました"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "日志已复制"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "日誌已複製"
           }
         }
       }
@@ -14850,6 +15227,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "中等"
+          }
+        }
+      }
+    },
+    "Min Level": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Min Level"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最小レベル"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最低级别"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最低等級"
           }
         }
       }
@@ -16971,6 +17377,35 @@
         }
       }
     },
+    "No log entries": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No log entries"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ログエントリがありません"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无日志条目"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "沒有日誌條目"
+          }
+        }
+      }
+    },
     "No matching bookmark tags": {
       "extractionState": "manual",
       "localizations": {
@@ -17986,6 +18421,35 @@
         }
       }
     },
+    "Notice": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notice"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "通知"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "提示"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "提示"
+          }
+        }
+      }
+    },
     "Notification Center banner on download finish": {
       "extractionState": "manual",
       "localizations": {
@@ -18127,6 +18591,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "確定"
+          }
+        }
+      }
+    },
+    "OSLogStore couldn't be opened. This usually means the app needs to be relaunched after install or that the system log database is sealed.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OSLogStore couldn't be opened. This usually means the app needs to be relaunched after install or that the system log database is sealed."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OSLogStore を開けませんでした。通常はインストール後の再起動が必要か、システムログのデータベースがシールされています。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法打开 OSLogStore。通常意味着 App 安装后需要重启，或系统日志数据库已封存。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "無法開啟 OSLogStore。通常意味著 App 安裝後需要重新啟動，或系統日誌資料庫已封存。"
           }
         }
       }
@@ -18562,6 +19055,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "開啟最新作品"
+          }
+        }
+      }
+    },
+    "Open Log Viewer": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Log Viewer"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ログビューアを開く"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "打开日志查看器"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "開啟日誌檢視器"
           }
         }
       }
@@ -22742,6 +23264,35 @@
         }
       }
     },
+    "Refresh Logs": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refresh Logs"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ログを更新"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "刷新日志"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重新整理日誌"
+          }
+        }
+      }
+    },
     "Refresh Pixiv history after opening artworks from this account.": {
       "extractionState": "manual",
       "localizations": {
@@ -25029,6 +25580,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "顯示首個可見下載"
+          }
+        }
+      }
+    },
+    "Reveal in Console": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reveal in Console"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "コンソールで表示"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在控制台中查看"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在主控台中查看"
           }
         }
       }
@@ -31757,6 +32337,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "查看回覆"
+          }
+        }
+      }
+    },
+    "View runtime diagnostics emitted by KeiPix's subsystem (com.keipix.client). Useful for filing bug reports without leaving the app.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "View runtime diagnostics emitted by KeiPix's subsystem (com.keipix.client). Useful for filing bug reports without leaving the app."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "KeiPix のサブシステム (com.keipix.client) が出力するランタイム診断情報を表示します。アプリを離れずにバグレポートを作成するのに便利です。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "查看 KeiPix 子系统 (com.keipix.client) 在运行时输出的诊断信息。便于在不离开 App 的情况下提交问题报告。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "查看 KeiPix 子系統 (com.keipix.client) 在執行階段輸出的診斷資訊。便於在不離開 App 的情況下提交問題回報。"
           }
         }
       }

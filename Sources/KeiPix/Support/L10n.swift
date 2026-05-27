@@ -1045,6 +1045,36 @@ enum L10n {
     }
     static var aboutCopyDiagnostics: String { text("Copy Diagnostics Bundle") }
     static var aboutDiagnosticsCopied: String { text("Diagnostics copied") }
+
+    // MARK: - Log viewer
+
+    static var logs: String { text("Logs") }
+    static var openLogViewer: String { text("Open Log Viewer") }
+    static var refreshLogs: String { text("Refresh Logs") }
+    static var filterLogs: String { text("Filter logs") }
+    static var allCategories: String { text("All Categories") }
+    static var minLevel: String { text("Min Level") }
+    static var logLevelDebug: String { text("Debug") }
+    static var logLevelInfo: String { text("Info") }
+    static var logLevelNotice: String { text("Notice") }
+    static var logLevelDefault: String { text("Default") }
+    static var logLevelError: String { text("Error") }
+    static var logLevelFault: String { text("Fault") }
+    static var noLogEntries: String { text("No log entries") }
+    static var noLogEntriesHint: String {
+        text("KeiPix hasn't emitted any matching log entries since launch.")
+    }
+    static var logAccessUnavailable: String { text("Log access unavailable") }
+    static var logAccessUnavailableHint: String {
+        text("OSLogStore couldn't be opened. This usually means the app needs to be relaunched after install or that the system log database is sealed.")
+    }
+    static var copyVisibleLogs: String { text("Copy Visible Logs") }
+    static var revealInConsole: String { text("Reveal in Console") }
+    static var logsCopied: String { text("Logs copied") }
+    static var diagnostics: String { text("Diagnostics") }
+    static var logViewerSummary: String {
+        text("View runtime diagnostics emitted by KeiPix's subsystem (com.keipix.client). Useful for filing bug reports without leaving the app.")
+    }
     static var systemProxy: String { text("System Proxy") }
     static var directConnection: String { text("Direct connection") }
     static var pixivAPI: String { text("Pixiv API") }

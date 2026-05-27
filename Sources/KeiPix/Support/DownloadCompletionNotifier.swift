@@ -79,7 +79,10 @@ final class DownloadCompletionNotifier {
         coalesceTask = nil
         guard titles.isEmpty == false else { return }
 
-        guard await center.isAuthorizedToPost() else { return }
+        guard await center.isAuthorizedToPost() else {
+            KeiPixLog.downloads.info("Download finish banner suppressed: notifications not authorized")
+            return
+        }
 
         let content = UNMutableNotificationContent()
         if titles.count == 1 {
@@ -96,7 +99,14 @@ final class DownloadCompletionNotifier {
             content: content,
             trigger: nil
         )
-        try? await center.add(request)
+        do {
+            try await center.add(request)
+            KeiPixLog.downloads.info("Posted download finish banner for \(titles.count, privacy: .public) item(s)")
+        } catch {
+            KeiPixLog.downloads.error(
+                "Failed to post download finish banner: \(error.localizedDescription, privacy: .public)"
+            )
+        }
     }
 }
 
