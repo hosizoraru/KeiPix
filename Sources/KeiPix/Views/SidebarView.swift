@@ -2,6 +2,7 @@ import SwiftUI
 
 struct SidebarView: View {
     @Bindable var store: KeiPixStore
+    @State private var expansion = SidebarSectionExpansion()
 
     var body: some View {
         List(selection: $store.selectedRoute) {
@@ -10,10 +11,12 @@ struct SidebarView: View {
             }
 
             ForEach(PixivRoute.sidebarSections) { section in
-                Section(section.title) {
+                Section(isExpanded: expansion.binding(for: section)) {
                     ForEach(section.routes) { route in
                         sidebarRow(route)
                     }
+                } header: {
+                    Text(section.title)
                 }
             }
         }
@@ -40,6 +43,52 @@ struct SidebarView: View {
         }
             .tag(route)
             .help(route.title)
+    }
+}
+
+/// Tracks which sidebar sections are expanded and persists the state to
+/// `UserDefaults` so the layout survives relaunches. Sections default to
+/// expanded on first run, matching the previous always-open behavior.
+@MainActor
+@Observable
+final class SidebarSectionExpansion {
+    private static let storageKey = "sidebarSectionCollapsedIDs"
+
+    /// We persist the *collapsed* set rather than the expanded one. That way
+    /// any newly introduced sidebar section is expanded by default without
+    /// having to migrate stored state.
+    private var collapsedIDs: Set<String>
+
+    init(defaults: UserDefaults = .standard) {
+        let stored = defaults.stringArray(forKey: Self.storageKey) ?? []
+        self.collapsedIDs = Set(stored)
+    }
+
+    func isExpanded(_ section: PixivRouteSection) -> Bool {
+        collapsedIDs.contains(section.storageID) == false
+    }
+
+    func setExpanded(_ expanded: Bool, for section: PixivRouteSection) {
+        let id = section.storageID
+        let wasExpanded = isExpanded(section)
+        guard wasExpanded != expanded else { return }
+        if expanded {
+            collapsedIDs.remove(id)
+        } else {
+            collapsedIDs.insert(id)
+        }
+        persist()
+    }
+
+    func binding(for section: PixivRouteSection) -> Binding<Bool> {
+        Binding(
+            get: { self.isExpanded(section) },
+            set: { self.setExpanded($0, for: section) }
+        )
+    }
+
+    private func persist() {
+        UserDefaults.standard.set(Array(collapsedIDs), forKey: Self.storageKey)
     }
 }
 
