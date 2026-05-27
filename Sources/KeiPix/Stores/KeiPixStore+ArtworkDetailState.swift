@@ -39,7 +39,7 @@ extension KeiPixStore {
         return (try? JSONDecoder().decode(ArtworkDetailExpansionState.self, from: data)) ?? .designDefault
     }
 
-    private func persistArtworkDetailStateLibrary() {
+    func persistArtworkDetailStateLibrary() {
         guard let data = try? JSONEncoder().encode(artworkDetailStateLibrary) else { return }
         UserDefaults.standard.set(data, forKey: "artworkDetailStateLibrary")
     }

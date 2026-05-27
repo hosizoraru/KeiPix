@@ -32,7 +32,7 @@ struct PinnedCreator: Identifiable, Codable, Hashable, Sendable {
     }
 }
 
-struct PinnedCreatorLibrary: Codable, Sendable {
+struct PinnedCreatorLibrary: Codable, Equatable, Sendable {
     var creators: [PinnedCreator] = []
 
     var sortedCreators: [PinnedCreator] {

@@ -1,4 +1,6 @@
+import AppKit
 import SwiftUI
+import UniformTypeIdentifiers
 
 /// Storage settings page. Surfaces every regenerable cache the app
 /// keeps locally so users can audit on-disk footprint and clear
@@ -17,12 +19,21 @@ struct StorageSettingsPage: View {
 
     @State private var categories: [CacheCategorySnapshot] = []
 
+    private static let backupFileDateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = TimeZone(identifier: "UTC")
+        formatter.dateFormat = "yyyyMMdd-HHmmss"
+        return formatter
+    }()
+
     var body: some View {
         Form {
             overviewSection
             ForEach(categories) { snapshot in
                 categorySection(snapshot)
             }
+            backupSection
             footerSection
         }
         .formStyle(.grouped)
@@ -86,6 +97,37 @@ struct StorageSettingsPage: View {
         }
     }
 
+    /// Backup/restore lives in Storage rather than its own Settings
+    /// category because users come here to think about *the data
+    /// KeiPix keeps locally* — caches, libraries, history. Putting
+    /// the Export/Import controls beside the cache list keeps the
+    /// "what's on my disk" mental model in one place, the same way
+    /// macOS Time Machine settings live under General → Storage.
+    private var backupSection: some View {
+        Section {
+            HStack {
+                Button {
+                    exportBackup()
+                } label: {
+                    Label(L10n.exportBackup, systemImage: "square.and.arrow.up")
+                }
+                Button {
+                    importBackup()
+                } label: {
+                    Label(L10n.importBackup, systemImage: "square.and.arrow.down")
+                }
+            }
+            .padding(.vertical, 2)
+        } header: {
+            Text(L10n.backupAndRestore)
+        } footer: {
+            Text(L10n.backupHint)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
     private var formattedTotal: String {
         let total = categories.reduce(0) { $0 + ($1.byteSize ?? 0) }
         return ByteCountFormatter.string(fromByteCount: Int64(total), countStyle: .file)
@@ -108,5 +150,82 @@ struct StorageSettingsPage: View {
 
     private func reloadSnapshots() {
         categories = store.cacheCategorySnapshots()
+    }
+
+    /// Hand the archive to `NSSavePanel` and let the user pick a
+    /// destination. Mirrors the saved-search and muted-content
+    /// exporters already in the app — same JSON+ISO-8601 wire
+    /// shape, same naming convention so users recognise the file
+    /// at a glance.
+    private func exportBackup() {
+        let archive = store.exportBackupArchive()
+        let panel = NSSavePanel()
+        panel.title = L10n.exportBackup
+        panel.nameFieldStringValue = "keipix-backup-\(Self.backupFileDateFormatter.string(from: archive.exportedAt)).json"
+        panel.allowedContentTypes = [.json]
+
+        guard panel.runModal() == .OK, let url = panel.url else {
+            return
+        }
+
+        do {
+            let data = try store.encodeBackupArchive(archive)
+            try data.write(to: url, options: [.atomic])
+            // Use a coarse "everything in this archive" count so the
+            // user knows the file isn't empty without us having to
+            // tally per-category counts at export time.
+            let entryCount = archive.savedSearches?.presets.count ?? 0
+                + (archive.savedSearches?.savedSearches.count ?? 0)
+                + (archive.savedSearches?.searchHistory.count ?? 0)
+                + archive.localBrowsingHistory.count
+                + archive.pinnedCreators.creators.count
+                + archive.pinnedBookmarkTags.count
+                + archive.readerProgress.items.count
+                + archive.downloadedReaderProgress.items.count
+                + archive.mangaWatchlistReadState.items.count
+                + archive.artworkDetailState.entries.count
+                + (archive.mutedContent?.totalCount ?? 0)
+            coordinator.setActionMessage(
+                String(format: L10n.exportedBackupFormat, entryCount)
+            )
+        } catch {
+            coordinator.setActionMessage(
+                "\(L10n.unableToExportBackup): \(error.localizedDescription)"
+            )
+        }
+    }
+
+    private func importBackup() {
+        let panel = NSOpenPanel()
+        panel.title = L10n.importBackup
+        panel.allowedContentTypes = [.json]
+        panel.allowsMultipleSelection = false
+        panel.canChooseDirectories = false
+
+        guard panel.runModal() == .OK, let url = panel.url else {
+            return
+        }
+
+        do {
+            let data = try Data(contentsOf: url)
+            let archive = try store.decodeBackupArchive(data)
+            let summary = store.importBackupArchive(archive)
+            coordinator.setActionMessage(
+                String(format: L10n.importedBackupFormat, summary.totalCount)
+            )
+            // Refresh the cache snapshots — importing browsing history
+            // and reader progress moves their on-disk size, and we'd
+            // rather show the new totals than make the user click away
+            // and come back.
+            reloadSnapshots()
+        } catch let error as KeiPixBackupError {
+            coordinator.setActionMessage(
+                "\(L10n.unableToImportBackup): \(error.localizedMessage)"
+            )
+        } catch {
+            coordinator.setActionMessage(
+                "\(L10n.unableToImportBackup): \(error.localizedDescription)"
+            )
+        }
     }
 }

@@ -72,7 +72,7 @@ extension KeiPixStore {
         return (try? JSONDecoder().decode(PinnedCreatorLibrary.self, from: data)) ?? PinnedCreatorLibrary()
     }
 
-    private func savePinnedCreatorLibrary() {
+    func savePinnedCreatorLibrary() {
         guard let data = try? JSONEncoder().encode(pinnedCreatorLibrary) else { return }
         UserDefaults.standard.set(data, forKey: "pinnedCreatorLibrary")
     }

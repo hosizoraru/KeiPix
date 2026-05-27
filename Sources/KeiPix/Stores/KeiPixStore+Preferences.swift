@@ -483,17 +483,17 @@ extension KeiPixStore {
         persistMangaWatchlistReadStateLibrary()
     }
 
-    private func persistReaderProgressLibrary() {
+    func persistReaderProgressLibrary() {
         guard let data = try? JSONEncoder().encode(readerProgressLibrary) else { return }
         UserDefaults.standard.set(data, forKey: "readerProgressLibrary")
     }
 
-    private func persistDownloadedReaderProgressLibrary() {
+    func persistDownloadedReaderProgressLibrary() {
         guard let data = try? JSONEncoder().encode(downloadedReaderProgressLibrary) else { return }
         UserDefaults.standard.set(data, forKey: "downloadedReaderProgressLibrary")
     }
 
-    private func persistMangaWatchlistReadStateLibrary() {
+    func persistMangaWatchlistReadStateLibrary() {
         guard let data = try? JSONEncoder().encode(mangaWatchlistReadStateLibrary) else { return }
         UserDefaults.standard.set(data, forKey: "mangaWatchlistReadStateLibrary")
     }

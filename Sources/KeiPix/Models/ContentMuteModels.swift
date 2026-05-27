@@ -10,7 +10,7 @@ struct MutedArtworkEntry: Codable, Identifiable, Hashable, Sendable {
     let title: String
 }
 
-struct MutedContentArchive: Codable, Sendable {
+struct MutedContentArchive: Codable, Equatable, Sendable {
     var schemaVersion = 1
     let exportedAt: Date
     let tags: [String]

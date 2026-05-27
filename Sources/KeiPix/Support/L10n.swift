@@ -1360,6 +1360,17 @@ enum L10n {
     static var spotlightRebuildIndex: String { text("Rebuild Spotlight Index") }
     static var spotlightClearIndex: String { text("Clear Spotlight Index") }
 
+    static var backupAndRestore: String { text("Backup & Restore") }
+    static var backupHint: String { text("Export every locally-stored library — saved searches, browsing history, pinned creators, reader progress, manga read state, muted content, and the bookmark/follow defaults you've tuned — into one JSON file. Importing merges back into the running session without overwriting bits that already exist.") }
+    static var exportBackup: String { text("Export Backup…") }
+    static var importBackup: String { text("Import Backup…") }
+    static var exportedBackupFormat: String { text("Exported backup with %d entries") }
+    static var importedBackupFormat: String { text("Imported %d entries from backup") }
+    static var unableToExportBackup: String { text("Unable to export backup") }
+    static var unableToImportBackup: String { text("Unable to import backup") }
+    static var backupUnsupportedSchemaFormat: String { text("Backup uses schema v%d but this build only supports v%d. Update KeiPix and try again.") }
+    static var backupDecodingFailedFormat: String { text("Couldn't read the backup file: %@") }
+
     static func pageStatus(_ page: Int, _ count: Int) -> String {
         String(format: text("Page %d of %d"), locale: Locale.current, page, count)
     }

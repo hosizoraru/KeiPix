@@ -155,7 +155,10 @@ enum SettingsCategory: String, CaseIterable, Identifiable, Hashable {
                 L10n.cacheFeedSnapshotsTitle,
                 L10n.cacheBrowsingHistoryTitle,
                 L10n.cacheSearchHistoryTitle,
-                L10n.cacheArtworkDetailStateTitle
+                L10n.cacheArtworkDetailStateTitle,
+                L10n.backupAndRestore,
+                L10n.exportBackup,
+                L10n.importBackup
             ]
         case .account:
             return [
