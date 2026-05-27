@@ -370,6 +370,21 @@ final class ArtworkDownloadStore {
         DownloadNamingTemplate(rawValue: downloadNamingTemplate).previewPath()
     }
 
+    /// Live preview rows for the Downloads settings page. Each row
+    /// renders the user's current template against a documented scenario
+    /// (standalone illust, multi-page artwork, serialized manga) so a
+    /// typo or token swap surfaces immediately instead of showing up the
+    /// next time a download lands.
+    var downloadNamingTemplatePreviewScenarios: [DownloadNamingTemplate.PreviewScenario] {
+        DownloadNamingTemplate(rawValue: downloadNamingTemplate).previewScenarios()
+    }
+
+    /// Names of placeholders in the user's template that don't match any
+    /// known token. Returns an empty list when the template is clean.
+    var unknownNamingPlaceholders: [String] {
+        DownloadNamingTemplate(rawValue: downloadNamingTemplate).unknownPlaceholders
+    }
+
     func startWorkerIfNeeded(preferOriginal: Bool) {
         guard isPaused == false else { return }
         guard items.contains(where: { $0.status == .queued }) else { return }

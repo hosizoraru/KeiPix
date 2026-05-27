@@ -28,6 +28,72 @@ struct DownloadNamingTemplate: Sendable {
         render(context: .preview).relativePath
     }
 
+    /// Renders the template against each documented preview scenario,
+    /// returning the resulting relative paths so the Downloads settings
+    /// page can show a side-by-side comparison without having to
+    /// reconstruct the contexts itself.
+    func previewScenarios() -> [PreviewScenario] {
+        PreviewScenario.allCases.map { scenario in
+            var copy = scenario
+            copy.renderedPath = render(context: scenario.context).relativePath
+            return copy
+        }
+    }
+
+    struct PreviewScenario: Identifiable, Sendable {
+        let id: PreviewScenarioKind
+        let context: Context
+        var renderedPath: String
+
+        static let allCases: [PreviewScenario] = [
+            PreviewScenario(id: .standalone, context: .previewStandalone, renderedPath: ""),
+            PreviewScenario(id: .multiPage, context: .previewMultiPage, renderedPath: ""),
+            PreviewScenario(id: .series, context: .previewSeries, renderedPath: "")
+        ]
+    }
+
+    enum PreviewScenarioKind: String, CaseIterable, Sendable {
+        case standalone
+        case multiPage
+        case series
+    }
+
+    /// Set of placeholder names the template references that aren't part
+    /// of the documented token vocabulary. Surfaced inline by the
+    /// Downloads settings page so a typo like `${ide}` doesn't silently
+    /// collapse to an empty string at download time.
+    var unknownPlaceholders: [String] {
+        var seen: [String] = []
+        var cursor = effectiveTemplate.startIndex
+        let template = effectiveTemplate
+        while let openRange = template[cursor...].range(of: "${") {
+            let valueStart = openRange.upperBound
+            guard let closeIndex = template[valueStart...].firstIndex(of: "}") else { break }
+            let key = String(template[valueStart..<closeIndex])
+            if Self.isKnownPlaceholder(key), seen.contains(key) == false {
+                cursor = template.index(after: closeIndex)
+                continue
+            }
+            if Self.isKnownPlaceholder(key) == false, seen.contains(key) == false {
+                seen.append(key)
+            }
+            cursor = template.index(after: closeIndex)
+        }
+        return seen
+    }
+
+    private static let knownPlaceholders: Set<String> = [
+        "id", "title", "user", "userId", "series", "seriesId",
+        "page", "page1", "pages", "ext", "AI", "R18", "R18G",
+        "tag1", "tag2"
+    ]
+
+    private static func isKnownPlaceholder(_ key: String) -> Bool {
+        if knownPlaceholders.contains(key) { return true }
+        if key.hasPrefix("tag("), key.hasSuffix(")") { return true }
+        return false
+    }
+
     private func replacedPlaceholders(in template: String, context: Context) -> String {
         var output = ""
         var cursor = template.startIndex
@@ -183,23 +249,7 @@ struct DownloadNamingTemplate: Sendable {
             extensionName = Self.normalizedExtension(from: sourceURL)
         }
 
-        static let preview = Context(
-            artworkID: 12345678,
-            title: "Blue Morning",
-            creatorName: "kei",
-            creatorID: 424242,
-            seriesTitle: "Morning Series",
-            seriesID: 9001,
-            tags: ["landscape", "original"],
-            isAI: false,
-            isR18: false,
-            isR18G: false,
-            pageIndex: 0,
-            totalPages: 3,
-            extensionName: "jpg"
-        )
-
-        private init(
+        fileprivate init(
             artworkID: Int,
             title: String,
             creatorName: String,
@@ -234,6 +284,88 @@ struct DownloadNamingTemplate: Sendable {
             return ext.isDownloadExtension ? ext : "jpg"
         }
     }
+}
+
+// Documented sample contexts used by the Downloads settings page to
+// preview a template against three real-world shapes: a standalone
+// single-page illustration, a multi-page set, and a serialized manga
+// chapter. Pulled out into an extension so the Context struct body
+// stays under the swiftlint type_body_length budget.
+extension DownloadNamingTemplate.Context {
+    /// Default preview context used by `previewPath()`. Models a
+    /// serialized work so the canonical preview surfaces ${series}
+    /// folders — keeps the existing snapshot test honest about how the
+    /// folder hierarchy looks for the most common Pixez-parity setup.
+    static let preview = Self(
+        artworkID: 100000000,
+        title: "Sample Artwork",
+        creatorName: "Sample Artist",
+        creatorID: 12345,
+        seriesTitle: "Morning Series",
+        seriesID: 9001,
+        tags: ["original", "landscape"],
+        isAI: false,
+        isR18: false,
+        isR18G: false,
+        pageIndex: 0,
+        totalPages: 1,
+        extensionName: "png"
+    )
+
+    /// Standalone single-page illustration. No series, single page,
+    /// PNG extension. Anchors the "common case" preview row.
+    static let previewStandalone = Self(
+        artworkID: 100000001,
+        title: "Standalone Illustration",
+        creatorName: "Sample Artist",
+        creatorID: 12345,
+        seriesTitle: nil,
+        seriesID: nil,
+        tags: ["illustration"],
+        isAI: false,
+        isR18: false,
+        isR18G: false,
+        pageIndex: 0,
+        totalPages: 1,
+        extensionName: "png"
+    )
+
+    /// Multi-page set, second page of three. Surfaces how `${page}`
+    /// and `${pages}` collaborate when more than one image lands.
+    static let previewMultiPage = Self(
+        artworkID: 100000002,
+        title: "Multi Page Set",
+        creatorName: "Sample Artist",
+        creatorID: 12345,
+        seriesTitle: nil,
+        seriesID: nil,
+        tags: ["original"],
+        isAI: false,
+        isR18: false,
+        isR18G: false,
+        pageIndex: 1,
+        totalPages: 3,
+        extensionName: "jpg"
+    )
+
+    /// Serialized manga chapter, page 2 of 8 inside chapter 4. Lets
+    /// users see what `${series}` / `${seriesId}` resolve to before
+    /// they queue a real download.
+    static let previewSeries = Self(
+        artworkID: 100000003,
+        title: "Chapter 4",
+        creatorName: "Sample Mangaka",
+        creatorID: 67890,
+        seriesTitle: "Sample Series",
+        seriesID: 999,
+        tags: ["manga"],
+        isAI: false,
+        isR18: false,
+        isR18G: false,
+        pageIndex: 1,
+        totalPages: 8,
+        extensionName: "jpg"
+    )
 }
 
 private extension String {

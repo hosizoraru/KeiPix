@@ -247,6 +247,16 @@ enum L10n {
     static var downloadNamingTemplate: String { text("Download Naming Template") }
     static var downloadNamingTemplateHint: String { text("Use placeholders like ${id}, ${title}, ${user}, ${userId}, ${series}, ${seriesId}, ${page}, ${page1}, ${pages}, ${ext}, ${AI}, ${R18}, ${R18G}, ${tag1}, ${tag2}, ${tag(name)}. Paths stay inside the download folder.") }
     static var templatePreview: String { text("Template Preview") }
+    static var livePreview: String { text("Live Preview") }
+    static var templatePreviewStandalone: String { text("Standalone Illust") }
+    static var templatePreviewMultiPage: String { text("Multi-Page Artwork") }
+    static var templatePreviewSeries: String { text("Series Chapter") }
+    static func unknownPlaceholdersFormat(_ value: String) -> String {
+        String(format: text("Unknown placeholders: %@"), locale: Locale.current, value)
+    }
+    static var unknownPlaceholdersHint: String {
+        text("Template references placeholders that won't expand at download time. They'll collapse to empty strings.")
+    }
     static var resetTemplate: String { text("Reset Template") }
     static var choose: String { text("Choose") }
     static var clearCompleted: String { text("Clear Completed") }

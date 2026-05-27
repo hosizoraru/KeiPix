@@ -13897,6 +13897,35 @@
         }
       }
     },
+    "Live Preview": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Live Preview"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ライブプレビュー"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "实时预览"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "即時預覽"
+          }
+        }
+      }
+    },
     "Live download throughput": {
       "extractionState": "manual",
       "localizations": {
@@ -15430,6 +15459,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "鼠標"
+          }
+        }
+      }
+    },
+    "Multi-Page Artwork": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Multi-Page Artwork"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "複数ページのイラスト"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "多页插画"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "多頁插畫"
           }
         }
       }
@@ -28252,6 +28310,35 @@
         }
       }
     },
+    "Series Chapter": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Series Chapter"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "シリーズの一話"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "系列章节"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "系列章節"
+          }
+        }
+      }
+    },
     "Series Filter": {
       "extractionState": "manual",
       "localizations": {
@@ -29412,6 +29499,35 @@
         }
       }
     },
+    "Standalone Illust": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Standalone Illust"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "単ページのイラスト"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "单页插画"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "單頁插畫"
+          }
+        }
+      }
+    },
     "Standard Quality": {
       "extractionState": "manual",
       "localizations": {
@@ -29959,6 +30075,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "模板預覽"
+          }
+        }
+      }
+    },
+    "Template references placeholders that won't expand at download time. They'll collapse to empty strings.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Template references placeholders that won't expand at download time. They'll collapse to empty strings."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ダウンロード時に展開されないプレースホルダがテンプレートに含まれています。空文字に折りたたまれます。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "模板引用了在下载时无法解析的占位符，它们会被收缩为空字符串。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "範本引用了在下載時無法解析的佔位符，它們會收縮為空字串。"
           }
         }
       }
@@ -31525,6 +31670,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "未知"
+          }
+        }
+      }
+    },
+    "Unknown placeholders: %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unknown placeholders: %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "不明なプレースホルダ：%@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未知占位符：%@"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未知佔位符：%@"
           }
         }
       }

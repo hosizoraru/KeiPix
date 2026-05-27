@@ -55,6 +55,39 @@ struct DownloadNamingTemplateTests {
         #expect(preview.contains("Morning Series"))
     }
 
+    @Test("previewScenarios renders three documented shapes for the live preview")
+    func previewScenariosCoverDocumentedShapes() {
+        let template = DownloadNamingTemplate(rawValue: DownloadNamingTemplate.defaultTemplate)
+        let scenarios = template.previewScenarios()
+
+        #expect(scenarios.count == 3)
+        #expect(scenarios.map(\.id) == [.standalone, .multiPage, .series])
+        // Each rendered path must be non-empty so the settings page never
+        // shows a row with just the download folder followed by a slash.
+        for scenario in scenarios {
+            #expect(scenario.renderedPath.isEmpty == false)
+        }
+        // The multi-page scenario must show a different page index than
+        // the standalone scenario so a token swap surfaces visibly.
+        let standalone = scenarios.first { $0.id == .standalone }?.renderedPath ?? ""
+        let multiPage = scenarios.first { $0.id == .multiPage }?.renderedPath ?? ""
+        #expect(standalone != multiPage)
+    }
+
+    @Test("unknownPlaceholders flags typos but stays silent for documented tokens")
+    func unknownPlaceholdersFlagsTypos() {
+        let clean = DownloadNamingTemplate(rawValue: "${user}/${id}_p${page1}.${ext}")
+        #expect(clean.unknownPlaceholders.isEmpty)
+
+        let typo = DownloadNamingTemplate(rawValue: "${user}/${ide}_p${page1}.${ext}")
+        #expect(typo.unknownPlaceholders == ["ide"])
+
+        // The `tag(name)` form is a documented dynamic placeholder; it
+        // should not show up as unknown even though the suffix changes.
+        let dynamic = DownloadNamingTemplate(rawValue: "${tag(landscape)}/${id}.${ext}")
+        #expect(dynamic.unknownPlaceholders.isEmpty)
+    }
+
     private func makeContext(
         seriesTitle: String?,
         seriesID: Int?
