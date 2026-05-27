@@ -621,6 +621,215 @@ actor PixivAPI {
         }
     }
 
+    // MARK: - Novels
+
+    /// `/v1/novel/recommended` — recommended feed for the home tab. Mirrors
+    /// the params pixez sends; we always opt into ranking inserts and the
+    /// translated tag results because both surface in the list cards.
+    func recommendedNovels() async throws -> PixivNovelListResponse {
+        try await requestNovelList(path: "/v1/novel/recommended", query: [
+            "include_privacy_policy": "true",
+            "include_ranking_novels": "true",
+            "filter": "for_android"
+        ])
+    }
+
+    /// `/v1/novel/follow` — novels from creators the user follows.
+    /// `restrict` accepts `public` or `private`.
+    func followingNovels(restrict: String = "public") async throws -> PixivNovelListResponse {
+        try await requestNovelList(path: "/v1/novel/follow", query: [
+            "restrict": restrict
+        ])
+    }
+
+    /// `/v1/novel/ranking` — ranking by mode (`day`, `week`, `month`,
+    /// `day_male`, `day_female`, `week_rookie`, `week_ai`, `day_r18`,
+    /// `week_r18`, `week_r18g`, `day_r18_ai`).
+    func novelRanking(mode: String, date: String? = nil) async throws -> PixivNovelListResponse {
+        var query = [
+            "mode": mode,
+            "filter": "for_android"
+        ]
+        if let date {
+            query["date"] = date
+        }
+        return try await requestNovelList(path: "/v1/novel/ranking", query: query)
+    }
+
+    /// `/v1/search/novel` — keyword search. `searchTarget` and `sort` mirror
+    /// pixez. We currently always pass `merge_plain_keyword_results=true`
+    /// because pixez does and it gives nicer hits on Japanese keywords.
+    func searchNovels(
+        keyword: String,
+        searchTarget: String = "partial_match_for_tags",
+        sort: String = "date_desc",
+        bookmarkNum: Int? = nil,
+        startDate: String? = nil,
+        endDate: String? = nil
+    ) async throws -> PixivNovelListResponse {
+        let trimmed = keyword.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard trimmed.isEmpty == false else {
+            return PixivNovelListResponse(novels: [], nextURL: nil)
+        }
+
+        var query = [
+            "word": trimmed,
+            "search_target": searchTarget,
+            "sort": sort,
+            "merge_plain_keyword_results": "true",
+            "filter": "for_android"
+        ]
+        if let bookmarkNum {
+            query["bookmark_num"] = "\(bookmarkNum)"
+        }
+        if let startDate {
+            query["start_date"] = startDate
+        }
+        if let endDate {
+            query["end_date"] = endDate
+        }
+        return try await requestNovelList(path: "/v1/search/novel", query: query)
+    }
+
+    /// `/v1/user/novels` — novels written by a particular user.
+    func userNovels(userID: Int) async throws -> PixivNovelListResponse {
+        try await requestNovelList(path: "/v1/user/novels", query: [
+            "user_id": "\(userID)",
+            "filter": "for_android"
+        ])
+    }
+
+    /// `/v1/user/bookmarks/novel` — bookmarks (own or another user's).
+    /// `restrict` accepts `public` or `private`.
+    func userNovelBookmarks(
+        userID: String,
+        restrict: String = "public",
+        tag: String? = nil
+    ) async throws -> PixivNovelListResponse {
+        var query = [
+            "user_id": userID,
+            "restrict": restrict
+        ]
+        if let tag, tag.isEmpty == false {
+            query["tag"] = tag
+        }
+        return try await requestNovelList(path: "/v1/user/bookmarks/novel", query: query)
+    }
+
+    /// `/v1/novel/related` — novels similar to the given novel.
+    func relatedNovels(novelID: Int) async throws -> PixivNovelListResponse {
+        try await requestNovelList(path: "/v1/novel/related", query: [
+            "novel_id": "\(novelID)",
+            "filter": "for_android"
+        ])
+    }
+
+    /// Continues a paginated novel list using a `next_url` returned by the
+    /// previous page. Matches the pixez `getNext()` pattern — pixiv's
+    /// `next_url` is an absolute URL, so callers don't have to rebuild the
+    /// query themselves.
+    func nextNovelList(_ url: URL) async throws -> PixivNovelListResponse {
+        try await requestJSON(url, method: "GET", form: nil)
+    }
+
+    /// `/v2/novel/detail` — full novel object including caption / tags /
+    /// series. Used to refresh stale cards (e.g., when entering the reader
+    /// from a watchlist or pixiv link).
+    func novelDetail(novelID: Int) async throws -> PixivNovel {
+        var components = URLComponents(url: URL(string: "/v2/novel/detail", relativeTo: Endpoint.apiBase)!, resolvingAgainstBaseURL: true)!
+        components.queryItems = [URLQueryItem(name: "novel_id", value: "\(novelID)")]
+        guard let url = components.url else { throw PixivAPIError.invalidResponse }
+        let response: PixivNovelDetailResponse = try await requestJSON(url, method: "GET", form: nil)
+        return response.novel
+    }
+
+    /// `/v1/novel/text` — body content. The text uses the inline-tag dialect
+    /// `NovelTextTokenizer` understands.
+    func novelText(novelID: Int) async throws -> PixivNovelText {
+        var components = URLComponents(url: URL(string: "/v1/novel/text", relativeTo: Endpoint.apiBase)!, resolvingAgainstBaseURL: true)!
+        components.queryItems = [URLQueryItem(name: "novel_id", value: "\(novelID)")]
+        guard let url = components.url else { throw PixivAPIError.invalidResponse }
+        return try await requestJSON(url, method: "GET", form: nil)
+    }
+
+    /// `/v2/novel/series` — series header plus a paginated chapter list.
+    func novelSeries(seriesID: Int) async throws -> PixivNovelSeriesResponse {
+        var components = URLComponents(url: URL(string: "/v2/novel/series", relativeTo: Endpoint.apiBase)!, resolvingAgainstBaseURL: true)!
+        components.queryItems = [URLQueryItem(name: "series_id", value: "\(seriesID)")]
+        guard let url = components.url else { throw PixivAPIError.invalidResponse }
+        return try await requestJSON(url, method: "GET", form: nil)
+    }
+
+    func nextNovelSeries(_ url: URL) async throws -> PixivNovelSeriesResponse {
+        try await requestJSON(url, method: "GET", form: nil)
+    }
+
+    /// `/v1/watchlist/novel` — series the user has subscribed to.
+    func novelWatchlist() async throws -> PixivNovelWatchlistResponse {
+        try await requestJSON(
+            URL(string: "/v1/watchlist/novel", relativeTo: Endpoint.apiBase)!,
+            method: "GET",
+            form: nil
+        )
+    }
+
+    func nextNovelWatchlist(_ url: URL) async throws -> PixivNovelWatchlistResponse {
+        try await requestJSON(url, method: "GET", form: nil)
+    }
+
+    /// `/v1/watchlist/novel/add` and `.../delete`. Unlike the manga
+    /// counterpart, the novel watchlist sends form-encoded `series_id`.
+    func setNovelWatchlist(seriesID: Int, isAdded: Bool) async throws {
+        let path = isAdded ? "/v1/watchlist/novel/add" : "/v1/watchlist/novel/delete"
+        _ = try await requestJSON(
+            URL(string: path, relativeTo: Endpoint.apiBase)!,
+            method: "POST",
+            form: ["series_id": "\(seriesID)"]
+        ) as EmptyResponse
+    }
+
+    /// `/v2/novel/bookmark/add` — adds a novel to bookmarks. Pixiv uses the
+    /// same restrict/tags shape as illust bookmarks.
+    func addNovelBookmark(novelID: Int, restrict: BookmarkRestrict, tags: [String] = []) async throws {
+        var formItems: [(String, String)] = [
+            ("novel_id", "\(novelID)"),
+            ("restrict", restrict.rawValue)
+        ]
+        formItems.append(contentsOf: tags.map { ("tags[]", $0) })
+        _ = try await requestJSON(
+            URL(string: "/v2/novel/bookmark/add", relativeTo: Endpoint.apiBase)!,
+            method: "POST",
+            formItems: formItems
+        ) as EmptyResponse
+    }
+
+    /// `/v1/novel/bookmark/delete`.
+    func deleteNovelBookmark(novelID: Int) async throws {
+        _ = try await requestJSON(
+            URL(string: "/v1/novel/bookmark/delete", relativeTo: Endpoint.apiBase)!,
+            method: "POST",
+            form: ["novel_id": "\(novelID)"]
+        ) as EmptyResponse
+    }
+
+    /// `/v1/trending-tags/novel` — surfaced on the search empty state.
+    func trendingNovelTags() async throws -> PixivNovelTrendingTagsResponse {
+        try await requestJSON(
+            URL(string: "/v1/trending-tags/novel?filter=for_android", relativeTo: Endpoint.apiBase)!,
+            method: "GET",
+            form: nil
+        )
+    }
+
+    private func requestNovelList(path: String, query: [String: String]) async throws -> PixivNovelListResponse {
+        var components = URLComponents(url: URL(string: path, relativeTo: Endpoint.apiBase)!, resolvingAgainstBaseURL: true)!
+        components.queryItems = query.map { URLQueryItem(name: $0.key, value: $0.value) }
+        guard let url = components.url else { throw PixivAPIError.invalidResponse }
+        return try await requestJSON(url, method: "GET", form: nil)
+    }
+
+    // MARK: - Feed helpers (illusts)
+
     private func requestFeed(path: String, query: [String: String]) async throws -> PixivFeedResponse {
         var components = URLComponents(url: URL(string: path, relativeTo: Endpoint.apiBase)!, resolvingAgainstBaseURL: true)!
         components.queryItems = query.map { URLQueryItem(name: $0.key, value: $0.value) }
