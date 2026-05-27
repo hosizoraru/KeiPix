@@ -18,6 +18,7 @@ struct StandaloneArtworkReader: View {
     @State private var imageRotation: Double = 0
     @State private var isImageFlippedHorizontally = false
     @State private var isImageFlippedVertically = false
+    @AppStorage("reader.snapToPageBoundaries") private var snapToPageBoundaries = false
 
     init(artwork: PixivArtwork, store: KeiPixStore) {
         self.artwork = artwork
@@ -75,6 +76,11 @@ struct StandaloneArtworkReader: View {
                     }
                     .scrollPosition(id: $scrollTarget, anchor: .top)
                     .scrollEdgeEffectStyle(.soft, for: .top)
+                    .modifier(
+                        ConditionalScrollSnapping(
+                            isEnabled: snapToPageBoundaries && readingMode == .continuous
+                        )
+                    )
                 }
 
                 if isFocusPresetEnabled {
@@ -153,6 +159,18 @@ struct StandaloneArtworkReader: View {
                 )
             }
             .help(L10n.imageQualityToggleHint)
+
+            if readingMode == .continuous {
+                Button {
+                    snapToPageBoundaries.toggle()
+                } label: {
+                    Label(
+                        L10n.snapToPages,
+                        systemImage: snapToPageBoundaries ? "arrow.down.to.line" : "arrow.down.to.line.compact"
+                    )
+                }
+                .help(L10n.snapToPages)
+            }
 
             Menu {
                 Button {
@@ -409,5 +427,17 @@ private struct ReaderPageJumpOverlay: View {
         let target = (Int(pageText) ?? pageIndex + 1) - 1
         scrollToPage(target)
         syncPageText()
+    }
+}
+
+private struct ConditionalScrollSnapping: ViewModifier {
+    let isEnabled: Bool
+
+    func body(content: Content) -> some View {
+        if isEnabled {
+            content.scrollTargetBehavior(.viewAligned(limitBehavior: .automatic))
+        } else {
+            content
+        }
     }
 }
