@@ -36,6 +36,23 @@ final class ArtworkDownloadStore {
     /// the system center.
     let completionNotifier: DownloadCompletionNotifier
 
+    /// Hook fired on every queue mutation that affects Spotlight
+    /// indexing — completion, deletion, clear-completed, etc. Wired
+    /// by `KeiPixStore` to forward to the CoreSpotlight surface
+    /// without dragging the indexer dependency into the download
+    /// store. Optional so the store stays usable in isolation (and
+    /// in tests).
+    var spotlightSink: SpotlightSink?
+
+    /// Side-effect channel for CoreSpotlight. Lets the download
+    /// store stay ignorant of CoreSpotlight while still letting
+    /// `KeiPixStore` keep the system index in sync as items finish
+    /// or get removed.
+    struct SpotlightSink {
+        let didComplete: @MainActor (ArtworkDownloadItem) -> Void
+        let didRemoveArtworkIDs: @MainActor ([Int]) -> Void
+    }
+
     init(completionNotifier: DownloadCompletionNotifier = DownloadCompletionNotifier()) {
         self.completionNotifier = completionNotifier
         downloadDirectoryPath = UserDefaults.standard.string(forKey: "downloadDirectoryPath")
@@ -573,6 +590,10 @@ final class ArtworkDownloadStore {
         if notifyOnDownloadFinish {
             completionNotifier.recordCompletion(title: items[index].title)
         }
+        // Mirror to CoreSpotlight via the sink so a freshly-finished
+        // download is searchable from `Cmd+Space` immediately. The
+        // sink itself decides whether indexing is enabled.
+        spotlightSink?.didComplete(items[index])
         persistItems()
     }
 

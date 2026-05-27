@@ -29,7 +29,8 @@ struct KeiPixLogTests {
             "release-update",
             "downloads",
             "network",
-            "localization"
+            "localization",
+            "spotlight"
         ])
     }
 

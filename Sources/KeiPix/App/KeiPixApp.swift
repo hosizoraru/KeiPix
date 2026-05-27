@@ -1,3 +1,4 @@
+import CoreSpotlight
 import SwiftUI
 
 @main
@@ -17,6 +18,21 @@ struct KeiPixApp: App {
                 .preferredColorScheme(store.appColorScheme.preferredColorScheme)
                 .onOpenURL { url in
                     Task { await store.openPixivLink(url) }
+                }
+                // Spotlight click handoff. CoreSpotlight posts an
+                // activity carrying the entry's unique identifier; we
+                // decode the artwork id off it and route into the
+                // reader window so the user lands on the artwork they
+                // searched for, not just the main app surface.
+                .onContinueUserActivity(CSSearchableItemActionType) { activity in
+                    if let id = store.artworkIDForSpotlightActivity(activity) {
+                        openWindow(id: "artwork-reader", value: id)
+                    }
+                }
+                .onContinueUserActivity(DownloadSpotlightAttributes.activityType) { activity in
+                    if let id = store.artworkIDForSpotlightActivity(activity) {
+                        openWindow(id: "artwork-reader", value: id)
+                    }
                 }
                 .task {
                     if VisualQALaunchArgument.contains(.settingsWindow)

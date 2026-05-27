@@ -29499,6 +29499,151 @@
         }
       }
     },
+    "Spotlight Indexing": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spotlight Indexing"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spotlight インデックス"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spotlight 索引"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spotlight 索引"
+          }
+        }
+      }
+    },
+    "Index downloaded artworks in Spotlight": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Index downloaded artworks in Spotlight"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ダウンロード済み作品を Spotlight でインデックス化"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在 Spotlight 中索引已下载作品"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在 Spotlight 中索引已下載作品"
+          }
+        }
+      }
+    },
+    "When on, completed downloads appear as Spotlight results so Cmd+Space can find them by title, creator, or tag. KeiPix never indexes hidden categories — flipping a Hide AI / R-18 / R-18G toggle automatically removes that content from the system index. Clearing wipes every KeiPix entry from Spotlight without touching the downloads themselves.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "When on, completed downloads appear as Spotlight results so Cmd+Space can find them by title, creator, or tag. KeiPix never indexes hidden categories — flipping a Hide AI / R-18 / R-18G toggle automatically removes that content from the system index. Clearing wipes every KeiPix entry from Spotlight without touching the downloads themselves."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "オンにするとダウンロードが完了した作品が Spotlight に表示され、Cmd+Space からタイトル・作者・タグで検索できます。非表示にしているカテゴリ (AI / R-18 / R-18G) は決してインデックス化されません — トグルを切り替えるとシステムのインデックスから自動的に削除されます。「消去」は Spotlight に登録された KeiPix のエントリのみをすべて削除し、ダウンロードしたファイル自体には触れません。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "开启后，已完成的下载会以 Spotlight 结果的形式出现，Cmd+Space 即可按标题、作者或标签查找。KeiPix 绝不会索引被隐藏的内容类别——切换「隐藏 AI / R-18 / R-18G」开关时，对应内容会自动从系统索引中移除。点「清除」只会抹掉 KeiPix 在 Spotlight 中的所有条目，不会影响下载的文件本身。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "開啟後，已完成的下載會以 Spotlight 結果的形式出現，Cmd+Space 即可依標題、作者或標籤查找。KeiPix 絕不會索引被隱藏的內容類別——切換「隱藏 AI / R-18 / R-18G」開關時，對應內容會自動從系統索引中移除。按「清除」只會抹掉 KeiPix 在 Spotlight 中的所有條目，不會影響下載的檔案本身。"
+          }
+        }
+      }
+    },
+    "Rebuild Spotlight Index": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rebuild Spotlight Index"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spotlight インデックスを再構築"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重建 Spotlight 索引"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重建 Spotlight 索引"
+          }
+        }
+      }
+    },
+    "Clear Spotlight Index": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear Spotlight Index"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spotlight インデックスを消去"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "清除 Spotlight 索引"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "清除 Spotlight 索引"
+          }
+        }
+      }
+    },
     "Standalone Illust": {
       "extractionState": "manual",
       "localizations": {

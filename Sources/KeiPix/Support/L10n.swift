@@ -1354,6 +1354,12 @@ enum L10n {
     static var itemCountFormat: String { text("%d items") }
     static var noStoredItems: String { text("No stored items") }
 
+    static var spotlightIndexing: String { text("Spotlight Indexing") }
+    static var spotlightIndexingDownloads: String { text("Index downloaded artworks in Spotlight") }
+    static var spotlightIndexingHint: String { text("When on, completed downloads appear as Spotlight results so Cmd+Space can find them by title, creator, or tag. KeiPix never indexes hidden categories — flipping a Hide AI / R-18 / R-18G toggle automatically removes that content from the system index. Clearing wipes every KeiPix entry from Spotlight without touching the downloads themselves.") }
+    static var spotlightRebuildIndex: String { text("Rebuild Spotlight Index") }
+    static var spotlightClearIndex: String { text("Clear Spotlight Index") }
+
     static func pageStatus(_ page: Int, _ count: Int) -> String {
         String(format: text("Page %d of %d"), locale: Locale.current, page, count)
     }

@@ -198,18 +198,33 @@ extension KeiPixStore {
         hideAIArtworks = value
         UserDefaults.standard.set(value, forKey: "hideAIArtworks")
         applyContentFilters()
+        refreshSpotlightIndexAfterFilterChange()
     }
 
     func setHideR18Artworks(_ value: Bool) {
         hideR18Artworks = value
         UserDefaults.standard.set(value, forKey: "hideR18Artworks")
         applyContentFilters()
+        refreshSpotlightIndexAfterFilterChange()
     }
 
     func setHideR18GArtworks(_ value: Bool) {
         hideR18GArtworks = value
         UserDefaults.standard.set(value, forKey: "hideR18GArtworks")
         applyContentFilters()
+        refreshSpotlightIndexAfterFilterChange()
+    }
+
+    /// Wipe the KeiPix Spotlight domain and rebuild from the current
+    /// download list when a hide-toggle flips. The wipe-and-rebuild
+    /// shape is the safe option — flipping a toggle off (e.g. show
+    /// AI again) needs the previously-hidden items to come back, and
+    /// re-indexing every completed download is cheap when the cap is
+    /// in the low thousands.
+    private func refreshSpotlightIndexAfterFilterChange() {
+        guard spotlightIndexingEnabled else { return }
+        clearSpotlightIndex()
+        rebuildSpotlightIndex()
     }
 
     func setMaskSensitivePreviews(_ value: Bool) {

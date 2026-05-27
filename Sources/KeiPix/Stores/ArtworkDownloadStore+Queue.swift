@@ -312,7 +312,9 @@ extension ArtworkDownloadStore {
     }
 
     func clearCompleted() {
+        let removed = items.filter { $0.status == .completed }.map(\.artworkID)
         items.removeAll { $0.status == .completed }
+        spotlightSink?.didRemoveArtworkIDs(removed)
         persistItems()
     }
 
@@ -363,9 +365,13 @@ extension ArtworkDownloadStore {
     @discardableResult
     func clearInvalidItems() -> Int {
         let initialCount = items.count
+        let removed = items.filter { item in
+            item.status == .completed && hasReadableDownload(for: item) == false
+        }.map(\.artworkID)
         items.removeAll { item in
             item.status == .completed && hasReadableDownload(for: item) == false
         }
+        spotlightSink?.didRemoveArtworkIDs(removed)
         persistItems()
         return initialCount - items.count
     }
@@ -388,6 +394,7 @@ extension ArtworkDownloadStore {
             items.remove(at: index)
         }
         throughputSampler.reset(itemID: item.id)
+        spotlightSink?.didRemoveArtworkIDs([item.artworkID])
         persistItems()
     }
 
@@ -419,10 +426,12 @@ extension ArtworkDownloadStore {
         guard targets.isEmpty == false else { return 0 }
 
         let ids = Set(targets.map(\.id))
+        let removedArtworkIDs = targets.map(\.artworkID)
         items.removeAll { ids.contains($0.id) }
         for id in ids {
             throughputSampler.reset(itemID: id)
         }
+        spotlightSink?.didRemoveArtworkIDs(removedArtworkIDs)
         persistItems()
         return targets.count
     }

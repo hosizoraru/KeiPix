@@ -25,6 +25,7 @@ enum KeiPixLog {
     static let downloads = Logger(subsystem: subsystem, category: "downloads")
     static let network = Logger(subsystem: subsystem, category: "network")
     static let localization = Logger(subsystem: subsystem, category: "localization")
+    static let spotlight = Logger(subsystem: subsystem, category: "spotlight")
 
     /// Stable list of category names the viewer surfaces as filter chips.
     /// Order mirrors the user-facing severity / blast radius of each
@@ -34,6 +35,7 @@ enum KeiPixLog {
         "release-update",
         "downloads",
         "network",
-        "localization"
+        "localization",
+        "spotlight"
     ]
 }

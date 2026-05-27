@@ -127,6 +127,12 @@ final class KeiPixStore {
     var hideR18Artworks = UserDefaults.standard.bool(forKey: "hideR18Artworks")
     var hideR18GArtworks = UserDefaults.standard.bool(forKey: "hideR18GArtworks")
     var maskSensitivePreviews = UserDefaults.standard.object(forKey: "maskSensitivePreviews") as? Bool ?? false
+    /// Whether completed downloads are mirrored into CoreSpotlight so
+    /// `Cmd+Space` can find them. Off by default — same as Mail's
+    /// "Index every message" preference — so a user has to opt in
+    /// before any artwork metadata leaves the app's sandbox into the
+    /// system-wide search index.
+    var spotlightIndexingEnabled = UserDefaults.standard.bool(forKey: "spotlightIndexingEnabled")
     var restrictedModeEnabled: Bool?
     /// Account-wide AI display preference (Pixiv `show_ai`). `nil` until the
     /// store has either no session, a guest/test session, or a successful
@@ -257,6 +263,19 @@ final class KeiPixStore {
     var recordedBrowsingHistoryIDs = Set<Int>()
 
     init() {
+        // Wire CoreSpotlight side effects so finishing or removing a
+        // download keeps the system index in sync. The sink stays
+        // optional on the download store side, which lets that store
+        // stay testable without dragging in the indexer.
+        downloads.spotlightSink = ArtworkDownloadStore.SpotlightSink(
+            didComplete: { [weak self] item in
+                self?.registerDownloadInSpotlight(item)
+            },
+            didRemoveArtworkIDs: { [weak self] ids in
+                self?.unregisterDownloadsFromSpotlight(artworkIDs: ids)
+            }
+        )
+
         if VisualQALaunchArgument.isActive {
             activateVisualQASampleSession()
         } else if accountSessionMode == .guest {

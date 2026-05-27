@@ -30,6 +30,7 @@ struct PrivacySettingsPage: View {
             if store.session != nil {
                 accountIdentitySection
             }
+            spotlightSection
             relatedControlsSection
         }
         .formStyle(.grouped)
@@ -68,6 +69,39 @@ struct PrivacySettingsPage: View {
             Text(L10n.privacyAndIdentity)
         } footer: {
             Text(L10n.accountIdentityPrivacyHint)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    private var spotlightSection: some View {
+        // CoreSpotlight indexing is opt-in — same posture Mail uses
+        // for "Index every message". Off by default so a fresh-install
+        // user has to actively decide to surface artwork metadata in
+        // the system-wide search index. The Rebuild and Clear buttons
+        // mirror the affordances Apple's own apps ship next to a
+        // Spotlight toggle.
+        Section {
+            Toggle(
+                L10n.spotlightIndexingDownloads,
+                isOn: Binding(
+                    get: { store.spotlightIndexingEnabled },
+                    set: { store.setSpotlightIndexingEnabled($0) }
+                )
+            )
+
+            Button(L10n.spotlightRebuildIndex) {
+                store.rebuildSpotlightIndex()
+            }
+            .disabled(store.spotlightIndexingEnabled == false)
+
+            Button(L10n.spotlightClearIndex) {
+                store.clearSpotlightIndex()
+            }
+        } header: {
+            Text(L10n.spotlightIndexing)
+        } footer: {
+            Text(L10n.spotlightIndexingHint)
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
