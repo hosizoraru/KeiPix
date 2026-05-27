@@ -1331,6 +1331,29 @@ enum L10n {
     static var nextPageAvailable: String { text("More available") }
     static var noMorePages: String { text("End of feed") }
 
+    static var settingsStorage: String { text("Storage") }
+    static var storageOverview: String { text("Storage Overview") }
+    static var totalCacheSize: String { text("Total Cache Size") }
+    static var storageHint: String { text("KeiPix can rebuild every cache below from Pixiv on demand. Clearing one frees space; clearing all reverts the app to a clean install state without touching your bookmarks, downloads, or muted lists.") }
+    static var clearCategory: String { text("Clear") }
+    static var clearAllCaches: String { text("Clear All Caches") }
+    static var clearedCacheCategoryFormat: String { text("Cleared %@") }
+    static var clearedAllCaches: String { text("Cleared all caches") }
+    static var nothingToClear: String { text("Nothing to clear") }
+
+    static var cacheImageTitle: String { text("Image cache") }
+    static var cacheImageDetail: String { text("Decoded thumbnails kept in memory and the on-disk URLCache used by the image pipeline. Re-downloads transparently next time an artwork is viewed.") }
+    static var cacheFeedSnapshotsTitle: String { text("Offline feed snapshots") }
+    static var cacheFeedSnapshotsDetail: String { text("Recent feed pages saved locally so the app can keep working when the network drops. Cleared snapshots reload the next time the feed comes back online.") }
+    static var cacheBrowsingHistoryTitle: String { text("Browsing history") }
+    static var cacheBrowsingHistoryDetail: String { text("Local list of artworks you've opened. Used by the History sidebar entry; clearing wipes that list without affecting Pixiv's server-side history.") }
+    static var cacheSearchHistoryTitle: String { text("Search history") }
+    static var cacheSearchHistoryDetail: String { text("Recent search queries that surface as suggestions in the search field. Clearing removes the suggestion list; saved searches stay put.") }
+    static var cacheArtworkDetailStateTitle: String { text("Artwork detail UI state") }
+    static var cacheArtworkDetailStateDetail: String { text("Per-artwork remembered section expansion (tags, comments, related). Clearing returns every artwork's detail page to its default layout.") }
+    static var itemCountFormat: String { text("%d items") }
+    static var noStoredItems: String { text("No stored items") }
+
     static func pageStatus(_ page: Int, _ count: Int) -> String {
         String(format: text("Page %d of %d"), locale: Locale.current, page, count)
     }

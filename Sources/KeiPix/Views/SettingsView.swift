@@ -182,6 +182,8 @@ struct SettingsView: View {
             PrivacySettingsPage(store: store, coordinator: coordinator)
         case .downloads:
             DownloadsSettingsPage(store: store, coordinator: coordinator)
+        case .storage:
+            StorageSettingsPage(store: store, coordinator: coordinator)
         case .account:
             AccountSettingsPage(store: store, coordinator: coordinator)
         case .keyboard:

@@ -21,6 +21,7 @@ enum SettingsCategory: String, CaseIterable, Identifiable, Hashable {
     case privacy
     case downloads
     case sharing
+    case storage
     case keyboard
     case advancedQA
 
@@ -35,6 +36,7 @@ enum SettingsCategory: String, CaseIterable, Identifiable, Hashable {
         case .safety: L10n.settingsSafety
         case .privacy: L10n.settingsPrivacy
         case .downloads: L10n.downloads
+        case .storage: L10n.settingsStorage
         case .account: L10n.account
         case .keyboard: L10n.settingsKeyboard
         case .advancedQA: L10n.settingsAdvancedQA
@@ -50,6 +52,7 @@ enum SettingsCategory: String, CaseIterable, Identifiable, Hashable {
         case .safety: "lock.shield"
         case .privacy: "hand.raised"
         case .downloads: "tray.and.arrow.down"
+        case .storage: "internaldrive"
         case .account: "person.crop.circle"
         case .keyboard: "keyboard"
         case .advancedQA: "wrench.and.screwdriver"
@@ -141,6 +144,18 @@ enum SettingsCategory: String, CaseIterable, Identifiable, Hashable {
                 L10n.autoBookmarkDownloadedArtworks,
                 L10n.downloadNamingTemplate,
                 L10n.templatePreview
+            ]
+        case .storage:
+            return [
+                title,
+                L10n.storageOverview,
+                L10n.totalCacheSize,
+                L10n.clearAllCaches,
+                L10n.cacheImageTitle,
+                L10n.cacheFeedSnapshotsTitle,
+                L10n.cacheBrowsingHistoryTitle,
+                L10n.cacheSearchHistoryTitle,
+                L10n.cacheArtworkDetailStateTitle
             ]
         case .account:
             return [
