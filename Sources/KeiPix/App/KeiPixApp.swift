@@ -16,6 +16,16 @@ struct KeiPixApp: App {
                 .background(WindowCaptureProtectionBridge(isProtected: store.isMainWindowCaptureProtected))
                 .environment(\.locale, store.appLanguage.locale ?? .current)
                 .preferredColorScheme(store.appColorScheme.preferredColorScheme)
+                .onAppear {
+                    // Hand the running store + window opener to the
+                    // AppIntents locator so intents invoked from
+                    // Shortcuts / Spotlight can route into the live
+                    // app instead of spawning a detached helper.
+                    KeiPixStoreLocator.shared.register(store: store)
+                    KeiPixStoreLocator.shared.registerOpenWindowHandler { artworkID in
+                        openWindow(id: "artwork-reader", value: artworkID)
+                    }
+                }
                 .onOpenURL { url in
                     Task { await store.openPixivLink(url) }
                 }
