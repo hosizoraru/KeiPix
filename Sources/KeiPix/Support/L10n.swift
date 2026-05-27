@@ -1157,6 +1157,71 @@ enum L10n {
     static var weeklyManga: String { text("Weekly Manga") }
     static var monthlyManga: String { text("Monthly Manga") }
     static var dailyR18Manga: String { text("Daily R-18 Manga") }
+    static var weeklyAI: String { text("Weekly AI") }
+    static var weeklyR18AI: String { text("Weekly R-18 AI") }
+
+    // MARK: - Novels
+
+    static var novels: String { text("Novels") }
+    static var novel: String { text("Novel") }
+    static var novelRanking: String { text("Novel Ranking") }
+    static var recommendedNovels: String { text("Recommended Novels") }
+    static var followingNovels: String { text("Following Novels") }
+    static var searchNovels: String { text("Search Novels") }
+    static var novelPublicBookmarks: String { text("Public Novel Bookmarks") }
+    static var novelPrivateBookmarks: String { text("Private Novel Bookmarks") }
+    static var novelWatchlist: String { text("Novel Watchlist") }
+    static var creatorNovels: String { text("Creator Novels") }
+    static var creatorNovelBookmarks: String { text("Creator Novel Bookmarks") }
+    static var openNovel: String { text("Open Novel") }
+    static var selectNovel: String { text("Select a novel") }
+    static var openInPixivNovel: String { text("Open Novel in Pixiv") }
+    static var copyNovelLink: String { text("Copy Novel Link") }
+    static var copiedNovelLink: String { text("Copied novel link") }
+    static var novelLength: String { text("Length") }
+    static var novelTextLengthFormat: String { text("%d characters") }
+    static var novelPageCountFormat: String { text("%d pages") }
+    static var novelOriginalBadge: String { text("Original") }
+    static var novelChapterFormat: String { text("Chapter: %@") }
+    static var novelSeries: String { text("Series") }
+    static var novelSeriesFormat: String { text("Series: %@") }
+    static var novelPreviousInSeries: String { text("Previous in Series") }
+    static var novelNextInSeries: String { text("Next in Series") }
+    static var novelEnableWatchlist: String { text("Add to Watchlist") }
+    static var novelDisableWatchlist: String { text("Remove from Watchlist") }
+    static var novelWatchlistAddedFormat: String { text("Added %@ to watchlist") }
+    static var novelWatchlistRemovedFormat: String { text("Removed %@ from watchlist") }
+    static var novelBookmark: String { text("Bookmark Novel") }
+    static var novelRemoveBookmark: String { text("Remove Novel Bookmark") }
+    static var noNovels: String { text("No novels") }
+    static var noNovelsHint: String { text("Pixiv hasn't returned any novels for this view yet.") }
+    static var loadMoreNovels: String { text("Load More Novels") }
+    static var loadedNovelsFormat: String { text("Loaded %d novels") }
+    static var refreshedNovelsFormat: String { text("Refreshed %d novels") }
+    static var novelText: String { text("Novel Text") }
+    static var openNovelReader: String { text("Open Reader") }
+    static var novelReaderSettings: String { text("Reader Settings") }
+    static var novelReaderTextSize: String { text("Text Size") }
+    static var novelReaderLineSpacing: String { text("Line Spacing") }
+    static var novelReaderTheme: String { text("Reader Theme") }
+    static var novelReaderThemeLight: String { text("Light") }
+    static var novelReaderThemeSepia: String { text("Sepia") }
+    static var novelReaderThemeDark: String { text("Dark") }
+    static var novelReaderFontFamily: String { text("Font") }
+    static var novelReaderFontSystem: String { text("System") }
+    static var novelReaderFontSerif: String { text("Serif") }
+    static var novelReaderFontMonospaced: String { text("Monospaced") }
+    static var novelReaderUseVerticalLayout: String { text("Vertical layout") }
+    static var novelReaderShowChapterMarkers: String { text("Show chapter markers") }
+    static var novelReaderParagraphSpacing: String { text("Paragraph Spacing") }
+    static var novelReaderMaxWidth: String { text("Max Width") }
+    static var novelLoadingText: String { text("Loading novel text") }
+    static var novelTextUnavailable: String { text("Novel text unavailable") }
+    static var novelTextUnavailableHint: String { text("Pixiv didn't return body text for this novel.") }
+    static var novelEmbeddedImage: String { text("Embedded image") }
+    static var novelEmbeddedUploadedImage: String { text("Uploaded image") }
+    static var novelJumpPageFormat: String { text("Jump to page %d") }
+    static var novelPageProgressFormat: String { text("Page %d of %d") }
     static var details: String { text("Details") }
     static var tags: String { text("Tags") }
     static var searchTag: String { text("Search Tag") }

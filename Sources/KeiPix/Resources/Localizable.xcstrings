@@ -13,7 +13,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "#%@ is already muted"
+            "value": "#%@ は既にミュート済み"
           }
         },
         "zh-Hans": {
@@ -42,7 +42,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ is already muted"
+            "value": "%@ は既にミュート済み"
           }
         },
         "zh-Hans": {
@@ -71,7 +71,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ requested locally"
+            "value": "%@ をローカルでリクエスト済み"
           }
         },
         "zh-Hans": {
@@ -100,7 +100,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ used of %@"
+            "value": "%@ / %@ 使用中"
           }
         },
         "zh-Hans": {
@@ -129,7 +129,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ · %d works checked"
+            "value": "%@ · 作品 %d 件を確認"
           }
         },
         "zh-Hans": {
@@ -245,7 +245,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "%d already bookmarked works will be skipped to avoid remote tag conflicts."
+            "value": "リモートタグ競合を避けるため、既にブックマーク済みの作品 %d 件をスキップ"
           }
         },
         "zh-Hans": {
@@ -303,7 +303,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "%d frames"
+            "value": "%d フレーム"
           }
         },
         "zh-Hans": {
@@ -332,7 +332,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "%d history articles"
+            "value": "記事履歴 %d 件"
           }
         },
         "zh-Hans": {
@@ -361,7 +361,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "%d history items"
+            "value": "履歴 %d 件"
           }
         },
         "zh-Hans": {
@@ -390,7 +390,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "%d loaded"
+            "value": "%d 読み込み済み"
           }
         },
         "zh-Hans": {
@@ -419,7 +419,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "%d more already-bookmarked works skipped"
+            "value": "既にブックマーク済みの作品 %d 件をスキップ"
           }
         },
         "zh-Hans": {
@@ -448,7 +448,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "%d more works will be bookmarked"
+            "value": "さらに %d 件の作品をブックマークします"
           }
         },
         "zh-Hans": {
@@ -477,7 +477,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "%d muted items"
+            "value": "ミュート %d 件"
           }
         },
         "zh-Hans": {
@@ -535,7 +535,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "%d pages"
+            "value": "%dページ"
           }
         },
         "zh-Hans": {
@@ -593,7 +593,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "%d saved articles"
+            "value": "保存記事 %d 件"
           }
         },
         "zh-Hans": {
@@ -622,7 +622,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "%d selected works"
+            "value": "選択作品 %d 件"
           }
         },
         "zh-Hans": {
@@ -651,7 +651,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "%d shown · %d active · %d completed"
+            "value": "表示 %d 件 · アクティブ %d 件 · 完了 %d 件"
           }
         },
         "zh-Hans": {
@@ -680,7 +680,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "%d shown · %d loaded · %@"
+            "value": "表示 %d 件 · 読み込み %d 件 · %@"
           }
         },
         "zh-Hans": {
@@ -709,7 +709,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "%d shown, %d active, %d completed, %@ stored"
+            "value": "表示 %d 件、アクティブ %d 件、完了 %d 件、%@ 保存済み"
           }
         },
         "zh-Hans": {
@@ -738,7 +738,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "%d total · %d active · %d completed"
+            "value": "合計 %d 件 · アクティブ %d 件 · 完了 %d 件"
           }
         },
         "zh-Hans": {
@@ -796,7 +796,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "%d visible works"
+            "value": "表示作品 %d 件"
           }
         },
         "zh-Hans": {
@@ -825,7 +825,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "%d visible works will be affected"
+            "value": "表示作品 %d 件に影響します"
           }
         },
         "zh-Hans": {
@@ -854,7 +854,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "%d will be bookmarked · %d already bookmarked · %@"
+            "value": "ブックマーク %d 件 · 既にブックマーク済み %d 件 · %@"
           }
         },
         "zh-Hans": {
@@ -883,7 +883,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "+%d more candidates"
+            "value": "他 %d 件の候補"
           }
         },
         "zh-Hans": {
@@ -1033,7 +1033,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "AI/R18/R18G badges, filters, mute sync, and privacy controls remain visible."
+            "value": "AI/R18/R18Gバッジ、フィルター、ミュート同期、プライバシー設定は引き続き表示"
           }
         },
         "zh-Hans": {
@@ -1120,7 +1120,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Account Mode"
+            "value": "アカウントモード"
           }
         },
         "zh-Hans": {
@@ -1149,7 +1149,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Account Token Refresh"
+            "value": "アカウントトークン更新"
           }
         },
         "zh-Hans": {
@@ -1178,7 +1178,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Account health"
+            "value": "アカウントの健全性"
           }
         },
         "zh-Hans": {
@@ -1207,7 +1207,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Account identity hidden"
+            "value": "アカウントID非表示"
           }
         },
         "zh-Hans": {
@@ -1265,7 +1265,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Action Required"
+            "value": "アクションが必要"
           }
         },
         "zh-Hans": {
@@ -1497,7 +1497,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Add bulk mute previews."
+            "value": "一括ミュートプレビューを追加"
           }
         },
         "zh-Hans": {
@@ -1584,7 +1584,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Add optional NSFW blur and bulk mute previews."
+            "value": "NSFWぼかしと一括ミュートプレビューを追加"
           }
         },
         "zh-Hans": {
@@ -1613,7 +1613,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Add saved preset import and export."
+            "value": "保存済みプリセットのインポート/エクスポートを追加"
           }
         },
         "zh-Hans": {
@@ -1700,7 +1700,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Added %@ to watchlist"
+            "value": "%@をウォッチリストに追加しました"
           }
         },
         "zh-Hans": {
@@ -1729,7 +1729,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Added bookmark tag #%@"
+            "value": "ブックマークタグ #%@ を追加"
           }
         },
         "zh-Hans": {
@@ -1874,7 +1874,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "All Ages"
+            "value": "全年齢"
           }
         },
         "zh-Hans": {
@@ -1961,7 +1961,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "All Creators"
+            "value": "全クリエイター"
           }
         },
         "zh-Hans": {
@@ -2019,7 +2019,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "All Following"
+            "value": "フォロー中すべて"
           }
         },
         "zh-Hans": {
@@ -2048,7 +2048,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "All Pages"
+            "value": "全ページ"
           }
         },
         "zh-Hans": {
@@ -2280,7 +2280,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Applied search preset %@"
+            "value": "検索プリセット %@ を適用"
           }
         },
         "zh-Hans": {
@@ -2338,7 +2338,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Apply Bookmarks"
+            "value": "ブックマークを適用"
           }
         },
         "zh-Hans": {
@@ -2367,7 +2367,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Apply Bulk Mute"
+            "value": "一括ミュートを適用"
           }
         },
         "zh-Hans": {
@@ -2396,7 +2396,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Area"
+            "value": "エリア"
           }
         },
         "zh-Hans": {
@@ -2454,7 +2454,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Articles open in-app and Pixiv artwork/user/tag links route natively."
+            "value": "記事はアプリ内で開き、Pixiv作品/ユーザー/タグリンクはネイティブにルーティング"
           }
         },
         "zh-Hans": {
@@ -2512,7 +2512,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Artwork Copy Template"
+            "value": "作品コピーテンプレート"
           }
         },
         "zh-Hans": {
@@ -2628,7 +2628,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Artwork detail and social"
+            "value": "作品詳細とソーシャル"
           }
         },
         "zh-Hans": {
@@ -2657,7 +2657,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Artwork search covers match mode, sort, AI/R18, bookmark counts, saved searches, and autocomplete."
+            "value": "作品検索は一致モード、ソート、AI/R18、ブックマーク数、保存検索、自動補完をカバー"
           }
         },
         "zh-Hans": {
@@ -2686,7 +2686,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Artwork, creator, tag, search, and Pixivision URLs resolve to native destinations."
+            "value": "作品、クリエイター、タグ、検索、PixivisionのURLはネイティブな宛先に解決"
           }
         },
         "zh-Hans": {
@@ -2744,7 +2744,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Authorize Mutable QA"
+            "value": "変更可能QAを承認"
           }
         },
         "zh-Hans": {
@@ -2831,7 +2831,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Available from %@ to %@"
+            "value": "%@ 〜 %@ で利用可能"
           }
         },
         "zh-Hans": {
@@ -2860,7 +2860,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Available in diagnostics"
+            "value": "診断で利用可能"
           }
         },
         "zh-Hans": {
@@ -2918,7 +2918,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Batch Bookmark"
+            "value": "一括ブックマーク"
           }
         },
         "zh-Hans": {
@@ -2947,7 +2947,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Batch Bookmark Selected"
+            "value": "選択を一括ブックマーク"
           }
         },
         "zh-Hans": {
@@ -2976,7 +2976,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Batch Download"
+            "value": "一括ダウンロード"
           }
         },
         "zh-Hans": {
@@ -3005,7 +3005,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Batch Download Loaded Artworks"
+            "value": "読み込み済み作品を一括ダウンロード"
           }
         },
         "zh-Hans": {
@@ -3034,7 +3034,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Blur R-18 and R-18G thumbnails while keeping metadata and actions visible."
+            "value": "R-18およびR-18Gサムネイルをぼかしつつメタデータとアクションを表示"
           }
         },
         "zh-Hans": {
@@ -3121,7 +3121,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bookmark add and remove"
+            "value": "ブックマークの追加と削除"
           }
         },
         "zh-Hans": {
@@ -3179,7 +3179,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bookmark tag #%@ is already selected"
+            "value": "ブックマークタグ #%@ は既に選択済み"
           }
         },
         "zh-Hans": {
@@ -3208,7 +3208,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bookmarked %d works · %d failed"
+            "value": "ブックマーク %d 件 · 失敗 %d 件"
           }
         },
         "zh-Hans": {
@@ -3295,7 +3295,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bulk Mute Preview"
+            "value": "一括ミュートプレビュー"
           }
         },
         "zh-Hans": {
@@ -3353,7 +3353,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cached Feed"
+            "value": "キャッシュフィード"
           }
         },
         "zh-Hans": {
@@ -3411,7 +3411,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cancel %@ and remove it from the queue? Local files stay in the download folder."
+            "value": "%@ をキャンセルしてキューから削除しますか？ローカルファイルはダウンロードフォルダに残ります"
           }
         },
         "zh-Hans": {
@@ -3440,7 +3440,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cancel %d visible active downloads and remove them from the queue? Local files stay in the download folder."
+            "value": "表示中のアクティブダウンロード %d 件をキャンセルしてキューから削除しますか？ローカルファイルはダウンロードフォルダに残ります"
           }
         },
         "zh-Hans": {
@@ -3469,7 +3469,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cancel Download"
+            "value": "ダウンロードをキャンセル"
           }
         },
         "zh-Hans": {
@@ -3527,7 +3527,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cancel Visible Active Downloads"
+            "value": "表示中のアクティブダウンロードをキャンセル"
           }
         },
         "zh-Hans": {
@@ -3556,7 +3556,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cancelled %d downloads"
+            "value": "ダウンロード %d 件をキャンセル"
           }
         },
         "zh-Hans": {
@@ -3643,7 +3643,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Capture visual QA screenshots for hot tags and wide feeds."
+            "value": "ホットタグとワイドフィードのビジュアルQAスクリーンショットをキャプチャ"
           }
         },
         "zh-Hans": {
@@ -3730,7 +3730,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Change the download filter to see other queue items."
+            "value": "ダウンロードフィルターを変更して他のキュー項目を表示"
           }
         },
         "zh-Hans": {
@@ -3817,7 +3817,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Change the watchlist search to see other series."
+            "value": "ウォッチリスト検索を変更して他の作品を表示"
           }
         },
         "zh-Hans": {
@@ -3846,7 +3846,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Changed muted content; previous snapshot had %d items"
+            "value": "ミュートコンテンツを変更；前回のスナップショットは %d 件"
           }
         },
         "zh-Hans": {
@@ -3875,7 +3875,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Changing the reader mode in an artwork updates the matching default for future works."
+            "value": "作品のリーダーモードを変更すると今後の作品の対応するデフォルトが更新"
           }
         },
         "zh-Hans": {
@@ -3904,7 +3904,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Check Follow Visibility"
+            "value": "フォロー公開設定を確認"
           }
         },
         "zh-Hans": {
@@ -3991,7 +3991,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Checked follow visibility for %d creators"
+            "value": "クリエイター %d 件のフォロー公開設定を確認"
           }
         },
         "zh-Hans": {
@@ -4020,7 +4020,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Checked follow visibility for %d creators, %d failed"
+            "value": "クリエイター %d 件のフォロー公開設定を確認、%d 件失敗"
           }
         },
         "zh-Hans": {
@@ -4049,7 +4049,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Checking follow visibility"
+            "value": "フォロー公開設定を確認中"
           }
         },
         "zh-Hans": {
@@ -4194,7 +4194,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Clear %d completed download records?"
+            "value": "完了したダウンロード記録 %d 件をクリアしますか？"
           }
         },
         "zh-Hans": {
@@ -4223,7 +4223,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Clear %d failed download records? Local files stay in the download folder."
+            "value": "失敗したダウンロード記録 %d 件をクリアしますか？ローカルファイルはダウンロードフォルダに残ります"
           }
         },
         "zh-Hans": {
@@ -4252,7 +4252,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Clear %d failed downloads and move partial local files to Trash?"
+            "value": "失敗したダウンロード %d 件をクリアし部分ローカルファイルをゴミ箱に移動しますか？"
           }
         },
         "zh-Hans": {
@@ -4281,7 +4281,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Clear %d invalid download records?"
+            "value": "無効なダウンロード記録 %d 件をクリアしますか？"
           }
         },
         "zh-Hans": {
@@ -4310,7 +4310,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Clear %d recent searches?"
+            "value": "最近の検索 %d 件をクリアしますか？"
           }
         },
         "zh-Hans": {
@@ -4339,7 +4339,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Clear Article History"
+            "value": "記事履歴をクリア"
           }
         },
         "zh-Hans": {
@@ -4368,7 +4368,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Clear Completed"
+            "value": "完了をクリア"
           }
         },
         "zh-Hans": {
@@ -4397,7 +4397,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Clear Failed"
+            "value": "クリア失敗"
           }
         },
         "zh-Hans": {
@@ -4455,7 +4455,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Clear Image Cache"
+            "value": "画像キャッシュをクリア"
           }
         },
         "zh-Hans": {
@@ -4484,7 +4484,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Clear Invalid"
+            "value": "無効をクリア"
           }
         },
         "zh-Hans": {
@@ -4571,7 +4571,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Clear Search History"
+            "value": "検索履歴をクリア"
           }
         },
         "zh-Hans": {
@@ -4629,7 +4629,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Clear all local browsing history?"
+            "value": "すべてのローカル閲覧履歴をクリアしますか？"
           }
         },
         "zh-Hans": {
@@ -4658,7 +4658,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Clear all muted content?"
+            "value": "全ミュートコンテンツをクリアしますか？"
           }
         },
         "zh-Hans": {
@@ -4687,7 +4687,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cleared %d downloads"
+            "value": "ダウンロード %d 件をクリア"
           }
         },
         "zh-Hans": {
@@ -4716,7 +4716,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cleared %d history items"
+            "value": "履歴 %d 件をクリア"
           }
         },
         "zh-Hans": {
@@ -4745,7 +4745,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cleared %d muted items"
+            "value": "ミュート %d 件をクリア"
           }
         },
         "zh-Hans": {
@@ -4774,7 +4774,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cleared %d recent searches"
+            "value": "最近の検索 %d 件をクリア"
           }
         },
         "zh-Hans": {
@@ -4803,7 +4803,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cleared article history"
+            "value": "記事履歴をクリア済み"
           }
         },
         "zh-Hans": {
@@ -4832,7 +4832,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cleared bookmark tag selection"
+            "value": "ブックマークタグ選択をクリア"
           }
         },
         "zh-Hans": {
@@ -4890,7 +4890,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Comment #%d"
+            "value": "コメント #%d"
           }
         },
         "zh-Hans": {
@@ -4919,7 +4919,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Comment #%d feedback ready"
+            "value": "コメント #%d フィードバック準備完了"
           }
         },
         "zh-Hans": {
@@ -4977,7 +4977,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Comment feedback"
+            "value": "コメントフィードバック"
           }
         },
         "zh-Hans": {
@@ -5006,7 +5006,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Comment posting"
+            "value": "コメント投稿中"
           }
         },
         "zh-Hans": {
@@ -5064,7 +5064,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Comments and feedback"
+            "value": "コメントとフィードバック"
           }
         },
         "zh-Hans": {
@@ -5093,7 +5093,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Comments, replies, feedback summaries, and local comment mute flows remain reachable."
+            "value": "コメント、返信、フィードバックサマリー、ローカルコメントミュートフローは引き続き到達可能"
           }
         },
         "zh-Hans": {
@@ -5151,7 +5151,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Compact artwork cards"
+            "value": "コンパクト作品カード"
           }
         },
         "zh-Hans": {
@@ -5180,7 +5180,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Complete login in the embedded Pixiv page. KeiPix captures only the authorization code."
+            "value": "埋め込みPixivページでログインを完了。KeiPixは認証コードのみをキャプチャします"
           }
         },
         "zh-Hans": {
@@ -5325,7 +5325,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Content Rating"
+            "value": "コンテンツレーティング"
           }
         },
         "zh-Hans": {
@@ -5412,7 +5412,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Copied %@"
+            "value": "コピー済み: %@"
           }
         },
         "zh-Hans": {
@@ -5441,7 +5441,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Copied %d artwork links"
+            "value": "作品リンク %d 件をコピー"
           }
         },
         "zh-Hans": {
@@ -5470,7 +5470,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Copied %d bookmark tags"
+            "value": "ブックマークタグ %d 件をコピー"
           }
         },
         "zh-Hans": {
@@ -5499,7 +5499,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Copied %d creator links"
+            "value": "クリエイターリンク %d 件をコピー"
           }
         },
         "zh-Hans": {
@@ -5528,7 +5528,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Copied %d creator summaries"
+            "value": "クリエイターサマリー %d 件をコピー"
           }
         },
         "zh-Hans": {
@@ -5557,7 +5557,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Copied %d links"
+            "value": "%d 件のリンクをコピー"
           }
         },
         "zh-Hans": {
@@ -5586,7 +5586,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Copied Artwork Summary"
+            "value": "作品サマリーをコピー済み"
           }
         },
         "zh-Hans": {
@@ -5615,7 +5615,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Copied Diagnostics"
+            "value": "診断情報をコピー済み"
           }
         },
         "zh-Hans": {
@@ -5673,7 +5673,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Copied Pixiv Web Search Link"
+            "value": "Pixiv Web検索リンクをコピー済み"
           }
         },
         "zh-Hans": {
@@ -5702,7 +5702,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Copied QA Checklist"
+            "value": "QAチェックリストをコピー済み"
           }
         },
         "zh-Hans": {
@@ -5731,7 +5731,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Copied QA Matrix"
+            "value": "QAマトリクスをコピー済み"
           }
         },
         "zh-Hans": {
@@ -5789,7 +5789,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Copied Search Summary"
+            "value": "検索サマリーをコピー済み"
           }
         },
         "zh-Hans": {
@@ -5818,7 +5818,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Copied article link"
+            "value": "記事リンクをコピー済み"
           }
         },
         "zh-Hans": {
@@ -6021,7 +6021,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Copy Diagnostics"
+            "value": "診断情報をコピー"
           }
         },
         "zh-Hans": {
@@ -6137,7 +6137,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Copy Keyword"
+            "value": "キーワードをコピー"
           }
         },
         "zh-Hans": {
@@ -6195,7 +6195,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Copy Loaded Artwork Links"
+            "value": "読み込み済み作品リンクをコピー"
           }
         },
         "zh-Hans": {
@@ -6253,7 +6253,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Copy QA Checklist"
+            "value": "QAチェックリストをコピー"
           }
         },
         "zh-Hans": {
@@ -6282,7 +6282,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Copy QA Matrix"
+            "value": "QAマトリクスをコピー"
           }
         },
         "zh-Hans": {
@@ -6369,7 +6369,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Copy Search Summary"
+            "value": "検索サマリーをコピー"
           }
         },
         "zh-Hans": {
@@ -6398,7 +6398,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Copy Selected Artwork Links"
+            "value": "選択作品リンクをコピー"
           }
         },
         "zh-Hans": {
@@ -6543,7 +6543,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Copy Visible Creator Links"
+            "value": "表示クリエイターリンクをコピー"
           }
         },
         "zh-Hans": {
@@ -6572,7 +6572,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Copy Visible Creator Summary"
+            "value": "表示クリエイターサマリーをコピー"
           }
         },
         "zh-Hans": {
@@ -6601,7 +6601,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Copy Visible Links"
+            "value": "表示リンクをコピー"
           }
         },
         "zh-Hans": {
@@ -6659,7 +6659,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Copy a report summary, open Pixiv Web, or apply a local mute without submitting remote reports from KeiPix."
+            "value": "レポートサマリーをコピー、Pixiv Webを開く、KeiPixからリモートレポートを送信せずにローカルミュートを適用"
           }
         },
         "zh-Hans": {
@@ -6688,7 +6688,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Copy template is already default"
+            "value": "コピーテンプレートは既にデフォルトです"
           }
         },
         "zh-Hans": {
@@ -6717,7 +6717,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Copy template reset"
+            "value": "コピーテンプレートをリセット"
           }
         },
         "zh-Hans": {
@@ -6775,7 +6775,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Couldn't load this ugoira."
+            "value": "このうごイラを読み込めませんでした。"
           }
         },
         "zh-Hans": {
@@ -6862,7 +6862,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Creator Actions"
+            "value": "クリエイターアクション"
           }
         },
         "zh-Hans": {
@@ -6891,7 +6891,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Creator Copy Template"
+            "value": "クリエイターコピーテンプレート"
           }
         },
         "zh-Hans": {
@@ -6920,7 +6920,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Creator Filter"
+            "value": "クリエイターフィルター"
           }
         },
         "zh-Hans": {
@@ -6978,7 +6978,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Creator Illustrations"
+            "value": "クリエイターイラスト"
           }
         },
         "zh-Hans": {
@@ -7007,7 +7007,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Creator Manga"
+            "value": "クリエイター漫画"
           }
         },
         "zh-Hans": {
@@ -7094,7 +7094,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Creator Public Bookmarks"
+            "value": "クリエイター公開ブックマーク"
           }
         },
         "zh-Hans": {
@@ -7123,7 +7123,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Creator Sort"
+            "value": "クリエイター並び替え"
           }
         },
         "zh-Hans": {
@@ -7152,7 +7152,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Creator discovery"
+            "value": "クリエイター発見"
           }
         },
         "zh-Hans": {
@@ -7210,7 +7210,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Current Page to End"
+            "value": "現在ページから最後まで"
           }
         },
         "zh-Hans": {
@@ -7239,7 +7239,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Current Route"
+            "value": "現在のルート"
           }
         },
         "zh-Hans": {
@@ -7674,7 +7674,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Default Follow Visibility"
+            "value": "デフォルトフォロー公開設定"
           }
         },
         "zh-Hans": {
@@ -7732,7 +7732,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Default Order"
+            "value": "デフォルト順"
           }
         },
         "zh-Hans": {
@@ -7761,7 +7761,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Delete %@ and move local files to Trash?"
+            "value": "%@ を削除しローカルファイルをゴミ箱に移動しますか？"
           }
         },
         "zh-Hans": {
@@ -7790,7 +7790,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Delete %@ from local history?"
+            "value": "%@ をローカル履歴から削除しますか？"
           }
         },
         "zh-Hans": {
@@ -7819,7 +7819,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Delete %d visible downloads and move local files to Trash?"
+            "value": "表示ダウンロード %d 件を削除しローカルファイルをゴミ箱に移動しますか？"
           }
         },
         "zh-Hans": {
@@ -7848,7 +7848,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Delete Download"
+            "value": "ダウンロードを削除"
           }
         },
         "zh-Hans": {
@@ -7877,7 +7877,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Delete Visible Downloads"
+            "value": "表示ダウンロードを削除"
           }
         },
         "zh-Hans": {
@@ -7906,7 +7906,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Delete from History"
+            "value": "履歴から削除"
           }
         },
         "zh-Hans": {
@@ -7935,7 +7935,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Delete from Muted Content"
+            "value": "ミュートコンテンツから削除"
           }
         },
         "zh-Hans": {
@@ -7964,7 +7964,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Deleted %@ from local history"
+            "value": "%@ をローカル履歴から削除"
           }
         },
         "zh-Hans": {
@@ -7993,7 +7993,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Deleted %d downloads"
+            "value": "ダウンロード %d 件を削除"
           }
         },
         "zh-Hans": {
@@ -8051,7 +8051,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Deselect Artwork"
+            "value": "作品の選択を解除"
           }
         },
         "zh-Hans": {
@@ -8080,7 +8080,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Detail inspector, tags, creator actions, comments, related works, feedback, and local mute actions remain reachable."
+            "value": "詳細インスペクター、タグ、クリエイターアクション、コメント、関連作品、フィードバック、ローカルミュートアクションは引き続き到達可能"
           }
         },
         "zh-Hans": {
@@ -8225,7 +8225,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Direct connection"
+            "value": "直接接続"
           }
         },
         "zh-Hans": {
@@ -8283,7 +8283,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Disabled"
+            "value": "無効"
           }
         },
         "zh-Hans": {
@@ -8399,7 +8399,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Download Actions"
+            "value": "ダウンロードアクション"
           }
         },
         "zh-Hans": {
@@ -8457,7 +8457,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Download Failed"
+            "value": "ダウンロード失敗"
           }
         },
         "zh-Hans": {
@@ -8573,7 +8573,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Download Page Range"
+            "value": "ページ範囲ダウンロード"
           }
         },
         "zh-Hans": {
@@ -8602,7 +8602,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Download artworks from the detail view or artwork context menus."
+            "value": "詳細ビューまたは作品コンテキストメニューから作品をダウンロード"
           }
         },
         "zh-Hans": {
@@ -8631,7 +8631,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Download deletion"
+            "value": "ダウンロード削除"
           }
         },
         "zh-Hans": {
@@ -8718,7 +8718,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Download interrupted"
+            "value": "ダウンロード中断"
           }
         },
         "zh-Hans": {
@@ -8776,7 +8776,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Download queue"
+            "value": "ダウンロードキュー"
           }
         },
         "zh-Hans": {
@@ -8805,7 +8805,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Download template is already default"
+            "value": "ダウンロードテンプレートは既にデフォルトです"
           }
         },
         "zh-Hans": {
@@ -8834,7 +8834,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Download template reset"
+            "value": "ダウンロードテンプレートをリセット"
           }
         },
         "zh-Hans": {
@@ -8921,7 +8921,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Downloaded Locally"
+            "value": "ローカルダウンロード済み"
           }
         },
         "zh-Hans": {
@@ -9008,7 +9008,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Downloads Paused"
+            "value": "ダウンロード一時停止中"
           }
         },
         "zh-Hans": {
@@ -9037,7 +9037,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Downloads Resumed"
+            "value": "ダウンロード再開"
           }
         },
         "zh-Hans": {
@@ -9066,7 +9066,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Downloads add the artwork to your Pixiv bookmarks using the default bookmark visibility."
+            "value": "ダウンロードはデフォルトのブックマーク公開設定で作品をPixivブックマークに追加"
           }
         },
         "zh-Hans": {
@@ -9124,7 +9124,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Drop Pixiv link to open in KeiPix"
+            "value": "PixivリンクをドロップしてKeiPixで開く"
           }
         },
         "zh-Hans": {
@@ -9298,7 +9298,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Enabled"
+            "value": "有効"
           }
         },
         "zh-Hans": {
@@ -9327,7 +9327,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "End Page"
+            "value": "終了ページ"
           }
         },
         "zh-Hans": {
@@ -9443,7 +9443,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Enter a search keyword"
+            "value": "検索キーワードを入力"
           }
         },
         "zh-Hans": {
@@ -9472,7 +9472,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Enter artwork ID"
+            "value": "作品IDを入力"
           }
         },
         "zh-Hans": {
@@ -9501,7 +9501,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Enter creator ID"
+            "value": "クリエイターIDを入力"
           }
         },
         "zh-Hans": {
@@ -9617,7 +9617,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Evidence"
+            "value": "エビデンス"
           }
         },
         "zh-Hans": {
@@ -9704,7 +9704,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Exit Focus Reading"
+            "value": "集中読書を終了"
           }
         },
         "zh-Hans": {
@@ -9849,7 +9849,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Export Muted Content"
+            "value": "ミュートコンテンツをエクスポート"
           }
         },
         "zh-Hans": {
@@ -9878,7 +9878,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Export Search Library"
+            "value": "検索ライブラリをエクスポート"
           }
         },
         "zh-Hans": {
@@ -9936,7 +9936,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Exported"
+            "value": "エクスポート済み"
           }
         },
         "zh-Hans": {
@@ -9965,7 +9965,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Exported GIF %@"
+            "value": "GIFエクスポート: %@"
           }
         },
         "zh-Hans": {
@@ -9994,7 +9994,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Exported ZIP %@"
+            "value": "ZIPエクスポート: %@"
           }
         },
         "zh-Hans": {
@@ -10023,7 +10023,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Exported frame %@"
+            "value": "フレームエクスポート: %@"
           }
         },
         "zh-Hans": {
@@ -10052,7 +10052,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Exported search library"
+            "value": "検索ライブラリをエクスポート済み"
           }
         },
         "zh-Hans": {
@@ -10168,7 +10168,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Feed"
+            "value": "フィード"
           }
         },
         "zh-Hans": {
@@ -10400,7 +10400,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Follow %d visible creators privately?"
+            "value": "表示クリエイター %d 件を非公開フォローしますか？"
           }
         },
         "zh-Hans": {
@@ -10429,7 +10429,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Follow %d visible creators publicly?"
+            "value": "表示クリエイター %d 件を公開フォローしますか？"
           }
         },
         "zh-Hans": {
@@ -10545,7 +10545,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Follow Using Default"
+            "value": "デフォルトでフォロー"
           }
         },
         "zh-Hans": {
@@ -10574,7 +10574,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Follow Visibility"
+            "value": "フォロー公開設定"
           }
         },
         "zh-Hans": {
@@ -10603,7 +10603,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Follow Visible Privately"
+            "value": "非公開フォロー"
           }
         },
         "zh-Hans": {
@@ -10632,7 +10632,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Follow Visible Publicly"
+            "value": "公開フォロー"
           }
         },
         "zh-Hans": {
@@ -10661,7 +10661,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Follow and unfollow"
+            "value": "フォロー/解除"
           }
         },
         "zh-Hans": {
@@ -10719,7 +10719,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Follow lists, recommended creators, creator search, and follow visibility stay usable."
+            "value": "フォローリスト、おすすめクリエイター、クリエイター検索、フォロー公開設定は引き続き利用可能"
           }
         },
         "zh-Hans": {
@@ -10748,7 +10748,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Followed %@"
+            "value": "フォロー済み: %@"
           }
         },
         "zh-Hans": {
@@ -10777,7 +10777,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Followed %d creators"
+            "value": "クリエイター %d 件をフォロー"
           }
         },
         "zh-Hans": {
@@ -10951,7 +10951,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Following creators"
+            "value": "フォロー中のクリエイター"
           }
         },
         "zh-Hans": {
@@ -10980,7 +10980,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Following feed"
+            "value": "フォロー中フィード"
           }
         },
         "zh-Hans": {
@@ -11183,7 +11183,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Gallery visual surfaces"
+            "value": "ギャラリービジュアル表示"
           }
         },
         "zh-Hans": {
@@ -11299,7 +11299,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Guest Account"
+            "value": "ゲストアカウント"
           }
         },
         "zh-Hans": {
@@ -11647,7 +11647,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Hide your Pixiv name and ID in the sidebar. The account header shrinks to avatar only."
+            "value": "スクリーンショット用にサイドバーのPixiv名とIDを非表示"
           }
         },
         "zh-Hans": {
@@ -11763,7 +11763,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Hot tag cards load preview artwork and route searches in-app."
+            "value": "ホットタグカードはプレビュー作品を読み込み、アプリ内で検索をルーティング"
           }
         },
         "zh-Hans": {
@@ -11821,7 +11821,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Illustration and manga ranking routes load and support date/mode switching."
+            "value": "イラストと漫画のランキングルートは読み込みと日付/モード切替に対応"
           }
         },
         "zh-Hans": {
@@ -11850,7 +11850,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Illustration feeds"
+            "value": "イラストフィード"
           }
         },
         "zh-Hans": {
@@ -11908,7 +11908,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Image Cache"
+            "value": "画像キャッシュ"
           }
         },
         "zh-Hans": {
@@ -11937,7 +11937,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Image Host"
+            "value": "画像ホスト"
           }
         },
         "zh-Hans": {
@@ -12082,7 +12082,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Image cache cleared"
+            "value": "画像キャッシュをクリア済み"
           }
         },
         "zh-Hans": {
@@ -12111,7 +12111,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Image cache, history, downloads, and last successful surfaces support offline-friendly review."
+            "value": "画像キャッシュ、履歴、ダウンロード、最後に成功した表示はオフライン対応の確認をサポート"
           }
         },
         "zh-Hans": {
@@ -12227,7 +12227,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Import Muted Content"
+            "value": "ミュートコンテンツをインポート"
           }
         },
         "zh-Hans": {
@@ -12256,7 +12256,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Import Search Library"
+            "value": "検索ライブラリをインポート"
           }
         },
         "zh-Hans": {
@@ -12285,7 +12285,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Import Token"
+            "value": "トークンをインポート"
           }
         },
         "zh-Hans": {
@@ -12314,7 +12314,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Import muted content from file?"
+            "value": "ファイルからミュートコンテンツをインポートしますか？"
           }
         },
         "zh-Hans": {
@@ -12343,7 +12343,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Imported"
+            "value": "インポート済み"
           }
         },
         "zh-Hans": {
@@ -12372,7 +12372,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Imported %d presets · %d saved · %d history"
+            "value": "プリセット %d 件 · 保存 %d 件 · 履歴 %d 件をインポート"
           }
         },
         "zh-Hans": {
@@ -12401,7 +12401,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "In Download Queue"
+            "value": "ダウンロードキュー内"
           }
         },
         "zh-Hans": {
@@ -12488,7 +12488,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Invalid response"
+            "value": "無効なレスポンス"
           }
         },
         "zh-Hans": {
@@ -12807,7 +12807,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Keep Settings search and grouping in regression coverage."
+            "value": "設定の検索とグループ化をリグレッションカバレッジに維持"
           }
         },
         "zh-Hans": {
@@ -12836,7 +12836,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Keep Ugoira player visual evidence in regression coverage."
+            "value": "うごイラプレイヤーのビジュアルエビデンスをリグレッションカバレッジに維持"
           }
         },
         "zh-Hans": {
@@ -12865,7 +12865,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Keep bookmark and download automation in regression coverage."
+            "value": "ブックマークとダウンロードの自動化をリグレッションカバレッジに維持"
           }
         },
         "zh-Hans": {
@@ -12894,7 +12894,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Keep comment emoji, stamp, feedback, and local mute coverage current."
+            "value": "コメント絵文字、スタンプ、フィードバック、ローカルミュートカバレッジを最新に保つ"
           }
         },
         "zh-Hans": {
@@ -12923,7 +12923,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Keep creator route QA evidence current."
+            "value": "クリエイタールートQAエビデンスを最新に保つ"
           }
         },
         "zh-Hans": {
@@ -12952,7 +12952,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Keep download queue visual evidence in regression coverage."
+            "value": "ダウンロードキューのビジュアルエビデンスをリグレッションカバレッジに維持"
           }
         },
         "zh-Hans": {
@@ -13010,7 +13010,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Keep feed QA evidence current."
+            "value": "フィードQAエビデンスを最新に保つ"
           }
         },
         "zh-Hans": {
@@ -13039,7 +13039,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Keep feed snapshot cache in regression coverage."
+            "value": "フィードスナップショットキャッシュをリグレッションカバレッジに維持"
           }
         },
         "zh-Hans": {
@@ -13097,7 +13097,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Keep pinned creator collections in regression coverage."
+            "value": "ピン留めクリエイターコレクションをリグレッションカバレッジに維持"
           }
         },
         "zh-Hans": {
@@ -13126,7 +13126,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Keep ranking route QA evidence current."
+            "value": "ランキングルートQAエビデンスを最新に保つ"
           }
         },
         "zh-Hans": {
@@ -13155,7 +13155,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Keep reader window visual evidence and resume in regression coverage."
+            "value": "リーダーウィンドウのビジュアルエビデンスと再開をリグレッションカバレッジに維持"
           }
         },
         "zh-Hans": {
@@ -13184,7 +13184,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Keep regression coverage"
+            "value": "リグレッションカバレッジを維持"
           }
         },
         "zh-Hans": {
@@ -13213,7 +13213,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Keep resolver tests and in-app link checks current."
+            "value": "リゾルバテストとアプリ内リンクチェックを最新に保つ"
           }
         },
         "zh-Hans": {
@@ -13242,7 +13242,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Keep source-boundary tests current when referencing Pixez or Pixes behavior."
+            "value": "PixezまたはPixesの動作を参照する際のソース境界テストを最新に保つ"
           }
         },
         "zh-Hans": {
@@ -13329,7 +13329,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Keep watchlist update badges in regression coverage."
+            "value": "ウォッチリスト更新バッジをリグレッションカバレッジに維持"
           }
         },
         "zh-Hans": {
@@ -13358,7 +13358,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "KeiPix applies AI visibility locally and through search filters. Pixiv account-wide AI display has no verified App API endpoint in this build."
+            "value": "KeiPixはローカルおよび検索フィルターでAI表示を適用。Pixivアカウント全体のAI表示にはこのビルドで検証済みのApp APIエンドポイントがありません"
           }
         },
         "zh-Hans": {
@@ -13503,7 +13503,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "KeiPix saves Pixiv tokens inside the sandboxed app container and uses native Pixiv app API requests."
+            "value": "KeiPixはサンドボックス化されたアプリコンテナ内にPixivトークンを保存しネイティブPixivアプリAPIリクエストを使用"
           }
         },
         "zh-Hans": {
@@ -13532,7 +13532,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "KeiPix stays a SwiftPM macOS app built with Swift, SwiftUI, and narrow AppKit/WebKit bridges."
+            "value": "KeiPixはSwift、SwiftUI、狭いAppKit/WebKitブリッジで構築されたSwiftPM macOSアプリです"
           }
         },
         "zh-Hans": {
@@ -14025,7 +14025,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Load More Creators"
+            "value": "さらにクリエイターを読み込む"
           }
         },
         "zh-Hans": {
@@ -14054,7 +14054,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Load More Related Artworks"
+            "value": "さらに関連作品を読み込む"
           }
         },
         "zh-Hans": {
@@ -14112,7 +14112,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Load More Spotlight Articles"
+            "value": "さらにスポットライト記事を読み込む"
           }
         },
         "zh-Hans": {
@@ -14141,7 +14141,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Load More Watchlist"
+            "value": "さらにウォッチリストを読み込む"
           }
         },
         "zh-Hans": {
@@ -14170,7 +14170,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Loaded %d Pixiv history items"
+            "value": "Pixiv履歴 %d 件を読み込み"
           }
         },
         "zh-Hans": {
@@ -14199,7 +14199,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Loaded %d Spotlight articles"
+            "value": "スポットライト記事 %d 件を読み込み"
           }
         },
         "zh-Hans": {
@@ -14228,7 +14228,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Loaded %d bookmark tags"
+            "value": "ブックマークタグ %d 件を読み込み"
           }
         },
         "zh-Hans": {
@@ -14257,7 +14257,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Loaded %d watchlist series"
+            "value": "ウォッチリスト %d 件を読み込み"
           }
         },
         "zh-Hans": {
@@ -14315,7 +14315,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Loaded cached feed %@ · %d works · %@"
+            "value": "キャッシュフィード %@ · 作品 %d 件 · %@ を読み込み"
           }
         },
         "zh-Hans": {
@@ -14373,7 +14373,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Loading Ugoira"
+            "value": "うごイラ読み込み中"
           }
         },
         "zh-Hans": {
@@ -14402,7 +14402,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Loading comment feedback preview"
+            "value": "コメントフィードバックプレビュー読み込み中"
           }
         },
         "zh-Hans": {
@@ -14460,7 +14460,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Local AI artworks hidden"
+            "value": "ローカルAI作品非表示"
           }
         },
         "zh-Hans": {
@@ -14489,7 +14489,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Local AI artworks visible"
+            "value": "ローカルAI作品を表示"
           }
         },
         "zh-Hans": {
@@ -14518,7 +14518,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Local cache and offline"
+            "value": "ローカルキャッシュとオフライン"
           }
         },
         "zh-Hans": {
@@ -14547,7 +14547,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Local-only artwork mutes %d · comment phrases %d"
+            "value": "ローカルのみ作品ミュート %d 件 · コメントフレーズ %d 件"
           }
         },
         "zh-Hans": {
@@ -14692,7 +14692,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Login to open Pixiv links"
+            "value": "Pixivリンクを開くにはサインイン"
           }
         },
         "zh-Hans": {
@@ -14750,7 +14750,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Logout from this Pixiv account?"
+            "value": "このPixivアカウントからサインアウトしますか？"
           }
         },
         "zh-Hans": {
@@ -14953,7 +14953,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Manga feeds and watchlist"
+            "value": "漫画フィードとウォッチリスト"
           }
         },
         "zh-Hans": {
@@ -15098,7 +15098,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Masonry, hot tags, Pixivision, and wide/tall mixed cards render without overlap, gray gutters, or clipped text."
+            "value": "メゾンリ、ホットタグ、Pixivision、ワイド/トール混合カードは重複、グレーガター、テキスト切り詰めなしで描画"
           }
         },
         "zh-Hans": {
@@ -15504,7 +15504,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Multi-page reader supports per-page aspect ratio, continuous reading, keyboard, and trackpad gestures."
+            "value": "複数ページリーダーはページごとのアスペクト比、連続読書、キーボード、トラックパッドジェスチャーに対応"
           }
         },
         "zh-Hans": {
@@ -15533,7 +15533,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mutable Action Readiness"
+            "value": "変更可能アクション準備状況"
           }
         },
         "zh-Hans": {
@@ -15591,7 +15591,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mute %@?"
+            "value": "%@ をミュートしますか？"
           }
         },
         "zh-Hans": {
@@ -15620,7 +15620,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mute %d visible creators?"
+            "value": "表示クリエイター %d 件をミュートしますか？"
           }
         },
         "zh-Hans": {
@@ -15765,7 +15765,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mute Visible Creators"
+            "value": "表示クリエイターをミュート"
           }
         },
         "zh-Hans": {
@@ -15794,7 +15794,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mute artwork %@?"
+            "value": "作品 %@ をミュートしますか？"
           }
         },
         "zh-Hans": {
@@ -15823,7 +15823,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mute artworks, creators, or tags from artwork menus, or add tags here."
+            "value": "作品メニューから作品、クリエイター、タグをミュート、またはここでタグを追加"
           }
         },
         "zh-Hans": {
@@ -15852,7 +15852,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mute sync"
+            "value": "ミュート同期"
           }
         },
         "zh-Hans": {
@@ -15881,7 +15881,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mute sync read-only check"
+            "value": "ミュート同期読み取り専用チェック"
           }
         },
         "zh-Hans": {
@@ -15910,7 +15910,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mute tag #%@?"
+            "value": "タグ #%@ をミュートしますか？"
           }
         },
         "zh-Hans": {
@@ -15968,7 +15968,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Muted %@"
+            "value": "ミュート済み: %@"
           }
         },
         "zh-Hans": {
@@ -15997,7 +15997,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Muted %d creators"
+            "value": "ミュート済みクリエイター %d 件"
           }
         },
         "zh-Hans": {
@@ -16026,7 +16026,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Muted %d items"
+            "value": "ミュート %d 件"
           }
         },
         "zh-Hans": {
@@ -16200,7 +16200,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Muted artwork %@"
+            "value": "ミュート済み作品: %@"
           }
         },
         "zh-Hans": {
@@ -16229,7 +16229,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Muted comment phrase %@"
+            "value": "コメントフレーズ %@ をミュート"
           }
         },
         "zh-Hans": {
@@ -16258,7 +16258,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Muted tag #%@"
+            "value": "ミュート済みタグ #%@"
           }
         },
         "zh-Hans": {
@@ -16287,7 +16287,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Native Apple route"
+            "value": "ネイティブAppleルート"
           }
         },
         "zh-Hans": {
@@ -16316,7 +16316,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Native article links: %@"
+            "value": "ネイティブ記事リンク: %@"
           }
         },
         "zh-Hans": {
@@ -16345,7 +16345,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Needs Evidence"
+            "value": "エビデンスが必要"
           }
         },
         "zh-Hans": {
@@ -16374,7 +16374,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Needs Explicit Approval"
+            "value": "明示的な承認が必要"
           }
         },
         "zh-Hans": {
@@ -16403,7 +16403,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Needs Test Account"
+            "value": "テストアカウントが必要"
           }
         },
         "zh-Hans": {
@@ -16519,7 +16519,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "New bookmarks also follow the creator using your default follow visibility."
+            "value": "新しいブックマークはデフォルトのフォロー公開設定でクリエイターもフォロー"
           }
         },
         "zh-Hans": {
@@ -16548,7 +16548,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "New bookmarks are added to the download queue using original images when available."
+            "value": "新しいブックマークは利用可能な場合オリジナル画像でダウンロードキューに追加"
           }
         },
         "zh-Hans": {
@@ -16635,7 +16635,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Next Action"
+            "value": "次のアクション"
           }
         },
         "zh-Hans": {
@@ -16664,7 +16664,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Next Artwork"
+            "value": "次の作品"
           }
         },
         "zh-Hans": {
@@ -16780,7 +16780,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "No Pixiv Web search link"
+            "value": "Pixiv Web検索リンクなし"
           }
         },
         "zh-Hans": {
@@ -16838,7 +16838,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "No Pixiv link in clipboard"
+            "value": "クリップボードにPixivリンクなし"
           }
         },
         "zh-Hans": {
@@ -16867,7 +16867,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "No Selection"
+            "value": "未選択"
           }
         },
         "zh-Hans": {
@@ -16925,7 +16925,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "No article history"
+            "value": "記事履歴なし"
           }
         },
         "zh-Hans": {
@@ -16954,7 +16954,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "No artwork links to copy"
+            "value": "コピーする作品リンクなし"
           }
         },
         "zh-Hans": {
@@ -17012,7 +17012,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "No bookmark changes"
+            "value": "ブックマーク変更なし"
           }
         },
         "zh-Hans": {
@@ -17070,7 +17070,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "No bookmark tags"
+            "value": "ブックマークタグなし"
           }
         },
         "zh-Hans": {
@@ -17099,7 +17099,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "No bookmark tags to copy"
+            "value": "コピーするブックマークタグなし"
           }
         },
         "zh-Hans": {
@@ -17157,7 +17157,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "No creator links to copy"
+            "value": "コピーするクリエイターリンクなし"
           }
         },
         "zh-Hans": {
@@ -17186,7 +17186,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "No creator summaries to copy"
+            "value": "コピーするクリエイターサマリーなし"
           }
         },
         "zh-Hans": {
@@ -17215,7 +17215,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "No creators"
+            "value": "クリエイターなし"
           }
         },
         "zh-Hans": {
@@ -17244,7 +17244,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "No download links to copy"
+            "value": "コピーするダウンロードリンクなし"
           }
         },
         "zh-Hans": {
@@ -17273,7 +17273,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "No download records changed"
+            "value": "ダウンロード記録に変更なし"
           }
         },
         "zh-Hans": {
@@ -17331,7 +17331,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "No followed creators to check"
+            "value": "確認するフォロー中クリエイターなし"
           }
         },
         "zh-Hans": {
@@ -17476,7 +17476,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "No matching bookmark tags"
+            "value": "一致するブックマークタグなし"
           }
         },
         "zh-Hans": {
@@ -17505,7 +17505,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "No matching creators"
+            "value": "一致するクリエイターなし"
           }
         },
         "zh-Hans": {
@@ -17534,7 +17534,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "No matching creators for this action"
+            "value": "このアクションに一致するクリエイターなし"
           }
         },
         "zh-Hans": {
@@ -17621,7 +17621,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "No matching searches"
+            "value": "一致する検索なし"
           }
         },
         "zh-Hans": {
@@ -17650,7 +17650,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "No matching series artworks"
+            "value": "一致するシリーズ作品なし"
           }
         },
         "zh-Hans": {
@@ -17708,7 +17708,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "No matching watchlist series"
+            "value": "一致するウォッチリストなし"
           }
         },
         "zh-Hans": {
@@ -17737,7 +17737,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "No maximum"
+            "value": "上限なし"
           }
         },
         "zh-Hans": {
@@ -17766,7 +17766,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "No minimum"
+            "value": "下限なし"
           }
         },
         "zh-Hans": {
@@ -17824,7 +17824,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "No native article links found"
+            "value": "ネイティブ記事リンクが見つかりません"
           }
         },
         "zh-Hans": {
@@ -17853,7 +17853,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "No new mute candidates"
+            "value": "新しいミュート候補なし"
           }
         },
         "zh-Hans": {
@@ -17911,7 +17911,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "No recent creator works"
+            "value": "最近のクリエイター作品なし"
           }
         },
         "zh-Hans": {
@@ -17940,7 +17940,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "No recent searches"
+            "value": "最近の検索なし"
           }
         },
         "zh-Hans": {
@@ -18056,7 +18056,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "No retryable downloads"
+            "value": "再試行可能なダウンロードなし"
           }
         },
         "zh-Hans": {
@@ -18085,7 +18085,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "No saved articles"
+            "value": "保存記事なし"
           }
         },
         "zh-Hans": {
@@ -18114,7 +18114,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "No saved search presets"
+            "value": "保存済み検索プリセットなし"
           }
         },
         "zh-Hans": {
@@ -18143,7 +18143,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "No saved searches"
+            "value": "保存検索なし"
           }
         },
         "zh-Hans": {
@@ -18201,7 +18201,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "No selected works"
+            "value": "選択作品なし"
           }
         },
         "zh-Hans": {
@@ -18230,7 +18230,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "No series artworks"
+            "value": "シリーズ作品なし"
           }
         },
         "zh-Hans": {
@@ -18317,7 +18317,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "No unbookmarked works in the loaded feed"
+            "value": "読み込み済みフィードに未ブックマーク作品なし"
           }
         },
         "zh-Hans": {
@@ -18346,7 +18346,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "No unbookmarked works in the selection"
+            "value": "選択に未ブックマーク作品なし"
           }
         },
         "zh-Hans": {
@@ -18404,7 +18404,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Non-Novel QA Matrix"
+            "value": "小説以外のQAマトリクス"
           }
         },
         "zh-Hans": {
@@ -18433,7 +18433,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Not run"
+            "value": "未実行"
           }
         },
         "zh-Hans": {
@@ -18984,7 +18984,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Open Downloaded Artwork"
+            "value": "ダウンロード済み作品を開く"
           }
         },
         "zh-Hans": {
@@ -19187,7 +19187,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Open Pixiv ID"
+            "value": "Pixiv IDを開く"
           }
         },
         "zh-Hans": {
@@ -19216,7 +19216,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Open Pixiv Link from Clipboard"
+            "value": "クリップボードからPixivリンクを開く"
           }
         },
         "zh-Hans": {
@@ -19303,7 +19303,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Open Pixivision articles to build a local reading history."
+            "value": "Pixivision記事を開いてローカル閲覧履歴を構築"
           }
         },
         "zh-Hans": {
@@ -19448,7 +19448,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Open an article and verify native link routing."
+            "value": "記事を開いてネイティブリンクルーティングを確認"
           }
         },
         "zh-Hans": {
@@ -19477,7 +19477,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Open an artwork or creator directly by numeric Pixiv ID."
+            "value": "数値のPixiv IDで作品またはクリエイターを直接開く"
           }
         },
         "zh-Hans": {
@@ -19506,7 +19506,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Open an artwork to test the image host"
+            "value": "作品を開いて画像ホストをテスト"
           }
         },
         "zh-Hans": {
@@ -19680,7 +19680,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Opened %@ %d"
+            "value": "%@ %d を開きました"
           }
         },
         "zh-Hans": {
@@ -19709,7 +19709,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Opened Pixiv link %@"
+            "value": "Pixivリンク %@ を開きました"
           }
         },
         "zh-Hans": {
@@ -19738,7 +19738,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Opened download folder"
+            "value": "ダウンロードフォルダを開きました"
           }
         },
         "zh-Hans": {
@@ -20057,7 +20057,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pages %d-%d · %d selected · %d total"
+            "value": "ページ %d-%d · 選択 %d 件 · 合計 %d 件"
           }
         },
         "zh-Hans": {
@@ -20115,7 +20115,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Passed"
+            "value": "合格"
           }
         },
         "zh-Hans": {
@@ -20260,7 +20260,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Paste a Pixiv refresh token exported from another client. KeiPix refreshes it once, saves the new session in secure local storage, and switches to the imported account."
+            "value": "他のクライアントからエクスポートしたPixivリフレッシュトークンを貼り付け。KeiPixは1回更新し、新しいセッションをセキュアローカルストレージに保存してインポートしたアカウントに切り替えます"
           }
         },
         "zh-Hans": {
@@ -20318,7 +20318,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pause Ugoira"
+            "value": "うごイラ一時停止"
           }
         },
         "zh-Hans": {
@@ -20463,7 +20463,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pin creators from recommended, search, following, or profile views to build a local creator collection."
+            "value": "おすすめ、検索、フォロー中、プロフィールからクリエイターをピン留めしてローカルコレクションを構築"
           }
         },
         "zh-Hans": {
@@ -20492,7 +20492,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pinned %@"
+            "value": "ピン留め: %@"
           }
         },
         "zh-Hans": {
@@ -20608,7 +20608,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pixiv AI Display"
+            "value": "Pixiv AI表示"
           }
         },
         "zh-Hans": {
@@ -20695,7 +20695,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pixiv ID Type"
+            "value": "Pixiv IDの種類"
           }
         },
         "zh-Hans": {
@@ -20753,7 +20753,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pixiv Restricted Mode"
+            "value": "Pixiv制限モード"
           }
         },
         "zh-Hans": {
@@ -20782,7 +20782,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pixiv URL routing"
+            "value": "Pixiv URLルーティング"
           }
         },
         "zh-Hans": {
@@ -20869,7 +20869,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pixiv sync covers muted tags and creators. Local muted artworks stay on this Mac."
+            "value": "Pixiv同期はミュートタグとクリエイターをカバー。ローカルミュート作品はこのMacに残ります"
           }
         },
         "zh-Hans": {
@@ -20985,7 +20985,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pixivision Article #%d"
+            "value": "Pixivision記事 #%d"
           }
         },
         "zh-Hans": {
@@ -21014,7 +21014,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Play Ugoira"
+            "value": "うごイラ再生"
           }
         },
         "zh-Hans": {
@@ -21159,7 +21159,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Popular (limited preview)"
+            "value": "人気（限定プレビュー）"
           }
         },
         "zh-Hans": {
@@ -21188,7 +21188,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Popular Preview"
+            "value": "人気プレビュー"
           }
         },
         "zh-Hans": {
@@ -21391,7 +21391,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Preview Comment Feedback"
+            "value": "コメントフィードバックプレビュー"
           }
         },
         "zh-Hans": {
@@ -21420,7 +21420,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Preview KeiPix with local sample artworks."
+            "value": "ローカルサンプル作品でKeiPixをプレビュー"
           }
         },
         "zh-Hans": {
@@ -21478,7 +21478,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Preview Works"
+            "value": "作品プレビュー"
           }
         },
         "zh-Hans": {
@@ -21507,7 +21507,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Previous Artwork"
+            "value": "前の作品"
           }
         },
         "zh-Hans": {
@@ -21594,7 +21594,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Priority"
+            "value": "優先度"
           }
         },
         "zh-Hans": {
@@ -21710,7 +21710,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Private Follow"
+            "value": "非公開フォロー"
           }
         },
         "zh-Hans": {
@@ -21739,7 +21739,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Private Following"
+            "value": "非公開フォロー中"
           }
         },
         "zh-Hans": {
@@ -21768,7 +21768,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Private bookmark add/remove completed"
+            "value": "非公開ブックマーク追加/削除が完了"
           }
         },
         "zh-Hans": {
@@ -21826,7 +21826,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Private follow/unfollow completed"
+            "value": "非公開フォロー/解除が完了"
           }
         },
         "zh-Hans": {
@@ -21884,7 +21884,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Protect sensitive content from screen capture"
+            "value": "画面キャプチャから機密コンテンツを保護"
           }
         },
         "zh-Hans": {
@@ -21971,7 +21971,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Public Follow"
+            "value": "公開フォロー"
           }
         },
         "zh-Hans": {
@@ -22058,7 +22058,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Public/private bookmarks, bookmark tags, and bookmark automation remain reachable."
+            "value": "公開/非公開ブックマーク、ブックマークタグ、ブックマーク自動化は引き続き到達可能"
           }
         },
         "zh-Hans": {
@@ -22087,7 +22087,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Public/private/all following artwork feeds remain reachable."
+            "value": "公開/非公開/すべてのフォロー中作品フィードは引き続き到達可能"
           }
         },
         "zh-Hans": {
@@ -22145,7 +22145,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Queue, local library, naming templates, ugoira downloads, and batch actions stay usable."
+            "value": "キュー、ローカルライブラリ、命名テンプレート、うごイラダウンロード、一括アクションは引き続き利用可能"
           }
         },
         "zh-Hans": {
@@ -22203,7 +22203,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Queued %d downloads"
+            "value": "ダウンロード %d 件をキューに追加"
           }
         },
         "zh-Hans": {
@@ -22232,7 +22232,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Queued Current Page"
+            "value": "現在ページをキューに追加"
           }
         },
         "zh-Hans": {
@@ -22261,7 +22261,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Queued pages %d-%d (%d pages)"
+            "value": "キュー: ページ %d-%d（%d ページ）"
           }
         },
         "zh-Hans": {
@@ -22290,7 +22290,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Queueing downloads is covered by read-only runtime QA."
+            "value": "ダウンロードキューは読み取り専用ランタイムQAでカバー"
           }
         },
         "zh-Hans": {
@@ -22406,7 +22406,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Quick diagnostics for signed-in QA and screenshot-safe support reports."
+            "value": "サインイン済みQAとスクリーンショット対応サポートレポート用の簡易診断"
           }
         },
         "zh-Hans": {
@@ -22435,7 +22435,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Quickly hides sidebar account identity for screenshots and screen sharing."
+            "value": "スクリーンショットと画面共有用にサイドバーのアカウントIDを素早く非表示"
           }
         },
         "zh-Hans": {
@@ -22522,7 +22522,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "R-18 and R-18G artwork windows are hidden from screenshots and screen sharing when possible."
+            "value": "R-18およびR-18G作品ウィンドウは可能な限りスクリーンショットと画面共有から非表示"
           }
         },
         "zh-Hans": {
@@ -22551,7 +22551,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "R-18 preview hidden"
+            "value": "R-18プレビュー非表示"
           }
         },
         "zh-Hans": {
@@ -22609,7 +22609,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "R-18G preview hidden"
+            "value": "R-18Gプレビュー非表示"
           }
         },
         "zh-Hans": {
@@ -22725,7 +22725,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Reachable"
+            "value": "到達可能"
           }
         },
         "zh-Hans": {
@@ -22754,7 +22754,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Read-only remote diagnostics are available. Import and upload still require explicit approval."
+            "value": "読み取り専用リモート診断が利用可能。インポートとアップロードには明示的な承認が必要"
           }
         },
         "zh-Hans": {
@@ -22783,7 +22783,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Reader"
+            "value": "リーダー"
           }
         },
         "zh-Hans": {
@@ -22928,7 +22928,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Reading, discovery, safety, downloads, privacy, and QA controls stay grouped in native Settings."
+            "value": "閲覧、発見、安全、ダウンロード、プライバシー、QA設定はネイティブ設定でグループ化"
           }
         },
         "zh-Hans": {
@@ -22957,7 +22957,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Real Account"
+            "value": "本番アカウント"
           }
         },
         "zh-Hans": {
@@ -22986,7 +22986,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Real account required"
+            "value": "本番アカウントが必要"
           }
         },
         "zh-Hans": {
@@ -23131,7 +23131,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Recommended creators, search creators, related creators, and creator previews remain reachable."
+            "value": "おすすめクリエイター、クリエイター検索、関連クリエイター、クリエイタープレビューは引き続き到達可能"
           }
         },
         "zh-Hans": {
@@ -23160,7 +23160,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Recommended illustrations and latest illustrations load through native feeds."
+            "value": "おすすめイラストと最新イラストはネイティブフィードで読み込み"
           }
         },
         "zh-Hans": {
@@ -23189,7 +23189,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Recommended manga, manga rankings, series, and watchlist remain reachable."
+            "value": "おすすめ漫画、漫画ランキング、シリーズ、ウォッチリストは引き続き到達可能"
           }
         },
         "zh-Hans": {
@@ -23276,7 +23276,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Refresh Cache Status"
+            "value": "キャッシュ状態を更新"
           }
         },
         "zh-Hans": {
@@ -23305,7 +23305,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Refresh Live Feed"
+            "value": "ライブフィードを更新"
           }
         },
         "zh-Hans": {
@@ -23421,7 +23421,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Refresh the current section or start a search."
+            "value": "現在のセクションを更新するか検索を開始"
           }
         },
         "zh-Hans": {
@@ -23479,7 +23479,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Refreshed %d bookmark tags"
+            "value": "ブックマークタグ %d 件を更新"
           }
         },
         "zh-Hans": {
@@ -23508,7 +23508,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Refreshed %d creators"
+            "value": "クリエイター %d 件を更新"
           }
         },
         "zh-Hans": {
@@ -23537,7 +23537,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Refreshed %d watchlist series"
+            "value": "ウォッチリスト %d 件を更新"
           }
         },
         "zh-Hans": {
@@ -23682,7 +23682,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Reload Ugoira"
+            "value": "うごイラ再読み込み"
           }
         },
         "zh-Hans": {
@@ -23711,7 +23711,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Remote %d tags / %d creators · Local %d tags / %d creators · Missing locally %d tags / %d creators · Local-only %d tags / %d creators · Pixiv limit %d"
+            "value": "リモート タグ %d / クリエイター %d · ローカル タグ %d / クリエイター %d · ローカルに未存在 タグ %d / クリエイター %d · ローカルのみ タグ %d / クリエイター %d · Pixiv上限 %d"
           }
         },
         "zh-Hans": {
@@ -23740,7 +23740,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Remote or destructive actions stay visible in QA until a test account or explicit approval covers them."
+            "value": "リモートまたは破壊的なアクションはテストアカウントまたは明示的な承認でカバーされるまでQAに表示"
           }
         },
         "zh-Hans": {
@@ -23769,7 +23769,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Remove %@ from the download queue? Local files stay in the download folder."
+            "value": "%@ をダウンロードキューから削除しますか？ローカルファイルはダウンロードフォルダに残ります"
           }
         },
         "zh-Hans": {
@@ -23798,7 +23798,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Remove %@ from watchlist?"
+            "value": "%@ をウォッチリストから削除しますか？"
           }
         },
         "zh-Hans": {
@@ -23827,7 +23827,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Remove %d visible download records? Local files stay in the download folder."
+            "value": "表示ダウンロード記録 %d 件を削除しますか？ローカルファイルはダウンロードフォルダに残ります"
           }
         },
         "zh-Hans": {
@@ -23914,7 +23914,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Remove Download Record"
+            "value": "ダウンロード記録を削除"
           }
         },
         "zh-Hans": {
@@ -23972,7 +23972,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Remove Saved Search"
+            "value": "保存検索を削除"
           }
         },
         "zh-Hans": {
@@ -24001,7 +24001,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Remove Search Preset"
+            "value": "検索プリセットを削除"
           }
         },
         "zh-Hans": {
@@ -24030,7 +24030,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Remove Visible Download Records"
+            "value": "表示ダウンロード記録を削除"
           }
         },
         "zh-Hans": {
@@ -24059,7 +24059,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Remove account %@ from this Mac?"
+            "value": "アカウント %@ をこのMacから削除しますか？"
           }
         },
         "zh-Hans": {
@@ -24088,7 +24088,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Remove bookmark from %@?"
+            "value": "%@ のブックマークを解除しますか？"
           }
         },
         "zh-Hans": {
@@ -24117,7 +24117,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Remove from Article History"
+            "value": "記事履歴から削除"
           }
         },
         "zh-Hans": {
@@ -24175,7 +24175,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Remove muted artwork %@?"
+            "value": "ミュート済み作品 %@ を解除しますか？"
           }
         },
         "zh-Hans": {
@@ -24204,7 +24204,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Remove muted comment phrase %@?"
+            "value": "ミュート済みコメントフレーズ %@ を解除しますか？"
           }
         },
         "zh-Hans": {
@@ -24233,7 +24233,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Remove muted creator %@?"
+            "value": "ミュート済みクリエイター %@ を解除しますか？"
           }
         },
         "zh-Hans": {
@@ -24262,7 +24262,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Remove muted tag #%@?"
+            "value": "ミュート済みタグ #%@ を解除しますか？"
           }
         },
         "zh-Hans": {
@@ -24291,7 +24291,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Remove saved search %@?"
+            "value": "保存検索 %@ を削除しますか？"
           }
         },
         "zh-Hans": {
@@ -24320,7 +24320,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Remove search preset %@?"
+            "value": "検索プリセット %@ を削除しますか？"
           }
         },
         "zh-Hans": {
@@ -24349,7 +24349,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Removed %@ from watchlist"
+            "value": "%@をウォッチリストから削除しました"
           }
         },
         "zh-Hans": {
@@ -24378,7 +24378,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Removed %d download records"
+            "value": "ダウンロード記録 %d 件を削除"
           }
         },
         "zh-Hans": {
@@ -24407,7 +24407,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Removed %d saved searches"
+            "value": "保存検索 %d 件を削除"
           }
         },
         "zh-Hans": {
@@ -24436,7 +24436,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Removed %d search presets"
+            "value": "検索プリセット %d 件を削除"
           }
         },
         "zh-Hans": {
@@ -24465,7 +24465,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Removed account %@"
+            "value": "アカウント削除: %@"
           }
         },
         "zh-Hans": {
@@ -24494,7 +24494,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Removed article history item"
+            "value": "記事履歴アイテムを削除"
           }
         },
         "zh-Hans": {
@@ -24523,7 +24523,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Removed bookmark from %@"
+            "value": "%@ のブックマークを解除"
           }
         },
         "zh-Hans": {
@@ -24552,7 +24552,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Removed muted artwork %@"
+            "value": "ミュート済み作品 %@ を解除"
           }
         },
         "zh-Hans": {
@@ -24581,7 +24581,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Removed muted comment phrase %@"
+            "value": "ミュート済みコメントフレーズ %@ を解除"
           }
         },
         "zh-Hans": {
@@ -24610,7 +24610,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Removed muted creator %@"
+            "value": "ミュート済みクリエイター %@ を解除"
           }
         },
         "zh-Hans": {
@@ -24639,7 +24639,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Removed muted tag #%@"
+            "value": "ミュート済みタグ #%@ を解除"
           }
         },
         "zh-Hans": {
@@ -24668,7 +24668,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Removed saved article"
+            "value": "保存記事を削除"
           }
         },
         "zh-Hans": {
@@ -24697,7 +24697,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Reopen multi-page artworks on the last page read on this Mac."
+            "value": "このMacで最後に読んだページから複数ページ作品を再開"
           }
         },
         "zh-Hans": {
@@ -24871,7 +24871,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Requires a disposable Pixiv test account."
+            "value": "使い捨てのPixivテストアカウントが必要"
           }
         },
         "zh-Hans": {
@@ -24900,7 +24900,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Requires explicit approval before deleting local files."
+            "value": "ローカルファイル削除前に明示的な承認が必要"
           }
         },
         "zh-Hans": {
@@ -24929,7 +24929,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Requires explicit approval before syncing mute changes."
+            "value": "ミュート変更の同期前に明示的な承認が必要"
           }
         },
         "zh-Hans": {
@@ -24958,7 +24958,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Requires explicit approval for remote write verification."
+            "value": "リモート書き込み検証に明示的な承認が必要"
           }
         },
         "zh-Hans": {
@@ -25016,7 +25016,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Reset Artwork Copy Template"
+            "value": "作品コピーテンプレートをリセット"
           }
         },
         "zh-Hans": {
@@ -25045,7 +25045,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Reset Bookmark Edits"
+            "value": "ブックマーク編集をリセット"
           }
         },
         "zh-Hans": {
@@ -25074,7 +25074,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Reset Creator Copy Template"
+            "value": "クリエイターコピーテンプレートをリセット"
           }
         },
         "zh-Hans": {
@@ -25103,7 +25103,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Reset Creator Filters"
+            "value": "クリエイターフィルターをリセット"
           }
         },
         "zh-Hans": {
@@ -25219,7 +25219,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Reset bookmark edits"
+            "value": "ブックマーク編集をリセット"
           }
         },
         "zh-Hans": {
@@ -25248,7 +25248,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Reset creator filters"
+            "value": "クリエイターフィルターをリセット"
           }
         },
         "zh-Hans": {
@@ -25277,7 +25277,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Reset unsaved bookmark edits?"
+            "value": "未保存のブックマーク編集をリセットしますか？"
           }
         },
         "zh-Hans": {
@@ -25335,7 +25335,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Restored %d creator actions"
+            "value": "クリエイターアクション %d 件を復元"
           }
         },
         "zh-Hans": {
@@ -25422,7 +25422,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Retried %d downloads"
+            "value": "ダウンロード %d 件を再試行"
           }
         },
         "zh-Hans": {
@@ -25480,7 +25480,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Retry Failed"
+            "value": "再試行失敗"
           }
         },
         "zh-Hans": {
@@ -25509,7 +25509,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Retry at %@"
+            "value": "再試行: %@"
           }
         },
         "zh-Hans": {
@@ -25538,7 +25538,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Reveal Current Page"
+            "value": "現在ページを表示"
           }
         },
         "zh-Hans": {
@@ -25567,7 +25567,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Reveal Downloaded Artwork"
+            "value": "ダウンロード済み作品を表示"
           }
         },
         "zh-Hans": {
@@ -25596,7 +25596,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Reveal Exported GIF"
+            "value": "エクスポートGIFを表示"
           }
         },
         "zh-Hans": {
@@ -25625,7 +25625,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Reveal First Visible"
+            "value": "最初の表示を表示"
           }
         },
         "zh-Hans": {
@@ -25712,7 +25712,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Revealed download in Finder"
+            "value": "Finderでダウンロードを表示"
           }
         },
         "zh-Hans": {
@@ -25741,7 +25741,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Review implementation"
+            "value": "実装を確認"
           }
         },
         "zh-Hans": {
@@ -25828,7 +25828,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Run Account Health Check"
+            "value": "アカウント健全性チェックを実行"
           }
         },
         "zh-Hans": {
@@ -25857,7 +25857,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Run Comment Feedback Diagnostics"
+            "value": "コメントフィードバック診断を実行"
           }
         },
         "zh-Hans": {
@@ -25886,7 +25886,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Run ID Navigation Diagnostics"
+            "value": "IDナビゲーション診断を実行"
           }
         },
         "zh-Hans": {
@@ -25915,7 +25915,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Run Mute Sync Diagnostics"
+            "value": "ミュート同期診断を実行"
           }
         },
         "zh-Hans": {
@@ -25944,7 +25944,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Run Network Diagnostics"
+            "value": "ネットワーク診断を実行"
           }
         },
         "zh-Hans": {
@@ -25973,7 +25973,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Run Non-Novel QA Matrix"
+            "value": "小説以外のQAマトリクスを実行"
           }
         },
         "zh-Hans": {
@@ -26002,7 +26002,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Run Read-only QA"
+            "value": "読み取り専用QAを実行"
           }
         },
         "zh-Hans": {
@@ -26031,7 +26031,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Run Reversible Mutable QA"
+            "value": "可逆変更可能QAを実行"
           }
         },
         "zh-Hans": {
@@ -26060,7 +26060,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Run Search Diagnostics"
+            "value": "検索診断を実行"
           }
         },
         "zh-Hans": {
@@ -26089,7 +26089,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Run account health QA after sign-in."
+            "value": "サインイン後にアカウント健全性QAを実行"
           }
         },
         "zh-Hans": {
@@ -26118,7 +26118,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Run detail QA on the selected artwork."
+            "value": "選択作品の詳細QAを実行"
           }
         },
         "zh-Hans": {
@@ -26147,7 +26147,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Run following-feed QA with a signed-in account."
+            "value": "サインイン済みアカウントでフォロー中フィードQAを実行"
           }
         },
         "zh-Hans": {
@@ -26176,7 +26176,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Run hot tag route and visual QA."
+            "value": "ホットタグルートとビジュアルQAを実行"
           }
         },
         "zh-Hans": {
@@ -26205,7 +26205,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Run repeatable QA surfaces with local fixtures."
+            "value": "ローカルフィクスチャで繰り返し可能なQA表示を実行"
           }
         },
         "zh-Hans": {
@@ -26234,7 +26234,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Running ID navigation diagnostics"
+            "value": "IDナビゲーション診断実行中"
           }
         },
         "zh-Hans": {
@@ -26263,7 +26263,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Running account health check"
+            "value": "アカウント健全性チェック実行中"
           }
         },
         "zh-Hans": {
@@ -26292,7 +26292,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Running comment feedback diagnostics"
+            "value": "コメントフィードバック診断実行中"
           }
         },
         "zh-Hans": {
@@ -26321,7 +26321,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Running diagnostics"
+            "value": "診断実行中"
           }
         },
         "zh-Hans": {
@@ -26350,7 +26350,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Running mute sync diagnostics"
+            "value": "ミュート同期診断実行中"
           }
         },
         "zh-Hans": {
@@ -26379,7 +26379,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Running non-novel QA matrix"
+            "value": "小説以外のQAマトリクス実行中"
           }
         },
         "zh-Hans": {
@@ -26408,7 +26408,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Running read-only QA"
+            "value": "読み取り専用QA実行中"
           }
         },
         "zh-Hans": {
@@ -26437,7 +26437,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Running reversible mutable QA"
+            "value": "可逆変更可能QA実行中"
           }
         },
         "zh-Hans": {
@@ -26466,7 +26466,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Running search diagnostics"
+            "value": "検索診断を実行中"
           }
         },
         "zh-Hans": {
@@ -26495,7 +26495,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Running search for %@"
+            "value": "検索中: %@"
           }
         },
         "zh-Hans": {
@@ -26524,7 +26524,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Runs private bookmark add/remove and private follow/unfollow on the selected artwork and creator. Use a disposable Pixiv test account."
+            "value": "選択した作品とクリエイターで非公開ブックマーク追加/削除と非公開フォロー/解除を実行。使い捨てのPixivテストアカウントを使用してください。"
           }
         },
         "zh-Hans": {
@@ -26553,7 +26553,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Runtime Readiness"
+            "value": "ランタイム準備状況"
           }
         },
         "zh-Hans": {
@@ -26640,7 +26640,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Safety and filtering"
+            "value": "安全とフィルタリング"
           }
         },
         "zh-Hans": {
@@ -26785,7 +26785,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Save Diagnostics"
+            "value": "診断情報を保存"
           }
         },
         "zh-Hans": {
@@ -26814,7 +26814,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Save Pixivision articles here for later reading."
+            "value": "Pixivision記事をここで保存して後で読む"
           }
         },
         "zh-Hans": {
@@ -26901,7 +26901,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Saved %@"
+            "value": "保存済み: %@"
           }
         },
         "zh-Hans": {
@@ -26930,7 +26930,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Saved %@ with filters"
+            "value": "フィルター付きで %@ を保存"
           }
         },
         "zh-Hans": {
@@ -26988,7 +26988,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Saved Diagnostics"
+            "value": "診断情報を保存済み"
           }
         },
         "zh-Hans": {
@@ -27075,7 +27075,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Saved article"
+            "value": "記事を保存しました"
           }
         },
         "zh-Hans": {
@@ -27104,7 +27104,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Saved bookmark for %@"
+            "value": "%@ のブックマークを保存"
           }
         },
         "zh-Hans": {
@@ -27133,7 +27133,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Saved session"
+            "value": "セッションを保存しました"
           }
         },
         "zh-Hans": {
@@ -27191,7 +27191,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Scheduled %d downloads for retry"
+            "value": "ダウンロード %d 件を再試行予約"
           }
         },
         "zh-Hans": {
@@ -27249,7 +27249,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Screen protection"
+            "value": "画面保護"
           }
         },
         "zh-Hans": {
@@ -27510,7 +27510,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Search also accepts illust:123 and user:123."
+            "value": "検索は illust:123 や user:123 も受け付けます"
           }
         },
         "zh-Hans": {
@@ -27568,7 +27568,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Search bookmark tags"
+            "value": "ブックマークタグを検索"
           }
         },
         "zh-Hans": {
@@ -27597,7 +27597,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Search creators in this list"
+            "value": "このリストのクリエイターを検索"
           }
         },
         "zh-Hans": {
@@ -27655,7 +27655,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Search filters applied"
+            "value": "検索フィルター適用済み"
           }
         },
         "zh-Hans": {
@@ -27684,7 +27684,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Search filters reset"
+            "value": "検索フィルターをリセット"
           }
         },
         "zh-Hans": {
@@ -27771,7 +27771,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Search saved searches"
+            "value": "保存検索を検索"
           }
         },
         "zh-Hans": {
@@ -27829,7 +27829,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Search watchlist series"
+            "value": "ウォッチリスト作品を検索"
           }
         },
         "zh-Hans": {
@@ -28003,7 +28003,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Select Artwork"
+            "value": "作品を選択"
           }
         },
         "zh-Hans": {
@@ -28032,7 +28032,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Select an article"
+            "value": "記事を選択"
           }
         },
         "zh-Hans": {
@@ -28061,7 +28061,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Select an artwork by an unfollowed creator for reversible QA"
+            "value": "フォロー解除済みクリエイターの作品を選択して可逆QAを実行"
           }
         },
         "zh-Hans": {
@@ -28090,7 +28090,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Select an unbookmarked artwork for reversible QA"
+            "value": "未ブックマーク作品を選択して可逆QAを実行"
           }
         },
         "zh-Hans": {
@@ -28119,7 +28119,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Selected %d bookmark tags"
+            "value": "ブックマークタグ %d 件を選択"
           }
         },
         "zh-Hans": {
@@ -28148,7 +28148,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Selected Artwork"
+            "value": "選択中の作品"
           }
         },
         "zh-Hans": {
@@ -28206,7 +28206,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Selected ranking date was unavailable. Showing the latest ranking."
+            "value": "選択したランキング日は利用不可。最新ランキングを表示します。"
           }
         },
         "zh-Hans": {
@@ -28438,7 +28438,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Session"
+            "value": "セッション"
           }
         },
         "zh-Hans": {
@@ -28496,7 +28496,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Settings organization"
+            "value": "設定の整理"
           }
         },
         "zh-Hans": {
@@ -28612,7 +28612,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Share Exported GIF"
+            "value": "エクスポートGIFを共有"
           }
         },
         "zh-Hans": {
@@ -28641,7 +28641,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Share Ugoira ZIP"
+            "value": "うごイラZIPを共有"
           }
         },
         "zh-Hans": {
@@ -28815,7 +28815,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Show account identity"
+            "value": "アカウントIDを表示"
           }
         },
         "zh-Hans": {
@@ -28902,7 +28902,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Showing cached feed %@ · %d works · saved %@"
+            "value": "キャッシュフィード %@ · 作品 %d 件 · 保存 %@ を表示"
           }
         },
         "zh-Hans": {
@@ -28931,7 +28931,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Showing latest ranking"
+            "value": "最新ランキングを表示"
           }
         },
         "zh-Hans": {
@@ -28960,7 +28960,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Showing ranking for %@"
+            "value": "ランキング表示: %@"
           }
         },
         "zh-Hans": {
@@ -28989,7 +28989,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Showing ranking: %@"
+            "value": "ランキング表示: %@"
           }
         },
         "zh-Hans": {
@@ -29018,7 +29018,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sign in and run QA"
+            "value": "サインインしてQAを実行"
           }
         },
         "zh-Hans": {
@@ -29076,7 +29076,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Signed In"
+            "value": "サインイン済み"
           }
         },
         "zh-Hans": {
@@ -29105,7 +29105,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Signed Out"
+            "value": "サインアウト済み"
           }
         },
         "zh-Hans": {
@@ -29221,7 +29221,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Skipped"
+            "value": "スキップ"
           }
         },
         "zh-Hans": {
@@ -29395,7 +29395,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Source pages %@"
+            "value": "ソースページ: %@"
           }
         },
         "zh-Hans": {
@@ -29424,7 +29424,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Source pages %d-%d"
+            "value": "ソースページ: %d-%d"
           }
         },
         "zh-Hans": {
@@ -30004,7 +30004,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Start Page"
+            "value": "開始ページ"
           }
         },
         "zh-Hans": {
@@ -30033,7 +30033,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Status"
+            "value": "状態"
           }
         },
         "zh-Hans": {
@@ -30120,7 +30120,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Stored session can refresh account data without repeated authorization prompts."
+            "value": "保存済みセッションは再認証なしでアカウントデータを更新可能"
           }
         },
         "zh-Hans": {
@@ -30149,7 +30149,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "SwiftPM macOS 26 · Swift + SwiftUI · no Flutter/Dart source in KeiPix"
+            "value": "SwiftPM macOS 26 · Swift + SwiftUI · KeiPixにFlutter/Dartソースなし"
           }
         },
         "zh-Hans": {
@@ -30236,7 +30236,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Switched to %@"
+            "value": "%@ に切り替えました"
           }
         },
         "zh-Hans": {
@@ -30294,7 +30294,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sync muted content from Pixiv?"
+            "value": "Pixivからミュートコンテンツを同期しますか？"
           }
         },
         "zh-Hans": {
@@ -30323,7 +30323,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Synced"
+            "value": "同期済み"
           }
         },
         "zh-Hans": {
@@ -30352,7 +30352,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Syncs Pixiv account restricted mode for adult content visibility across clients."
+            "value": "Pixivアカウントの制限モードをクライアント間で同期しアダルトコンテンツの表示を制御"
           }
         },
         "zh-Hans": {
@@ -30381,7 +30381,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "System Proxy"
+            "value": "システムプロキシ"
           }
         },
         "zh-Hans": {
@@ -30584,7 +30584,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Test Mode Account"
+            "value": "テストモードアカウント"
           }
         },
         "zh-Hans": {
@@ -30613,7 +30613,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "This adds the local muted tags and creators to your Pixiv account."
+            "value": "ローカルのミュートタグとクリエイターをPixivアカウントに追加します"
           }
         },
         "zh-Hans": {
@@ -30642,7 +30642,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "This feed is restored from the last successful load and stays read-only until refresh succeeds."
+            "value": "このフィードは最後に成功した読み込みから復元され、更新が成功するまで読み取り専用"
           }
         },
         "zh-Hans": {
@@ -30671,7 +30671,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "This imports muted tags and creators from your Pixiv account into this Mac. You can undo the local changes after syncing."
+            "value": "PixivアカウントからミュートタグとクリエイターをこのMacにインポートします。同期後にローカル変更を元に戻せます"
           }
         },
         "zh-Hans": {
@@ -30700,7 +30700,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "This replaces local muted content with the selected file. You can undo the local changes after importing."
+            "value": "ローカルのミュートコンテンツを選択したファイルで置き換えます。インポート後にローカル変更を元に戻せます"
           }
         },
         "zh-Hans": {
@@ -31193,7 +31193,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tracks the P0/P1/P2 non-novel gaps from the Pixez and Pixes comparison with current evidence."
+            "value": "PixezおよびPixes比較からのP0/P1/P2非小説ギャップを現在のエビデンスで追跡"
           }
         },
         "zh-Hans": {
@@ -31338,7 +31338,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Trending tags"
+            "value": "トレンドタグ"
           }
         },
         "zh-Hans": {
@@ -31425,7 +31425,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Type TEST ACCOUNT to continue"
+            "value": "TEST ACCOUNTと入力して続行"
           }
         },
         "zh-Hans": {
@@ -31483,7 +31483,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ugoira Export Actions"
+            "value": "うごイラエクスポートアクション"
           }
         },
         "zh-Hans": {
@@ -31599,7 +31599,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ugoira metadata is missing. Re-download this item to enable in-app preview and GIF export."
+            "value": "うごイラメタデータがありません。アプリ内プレビューとGIFエクスポートを有効にするには再ダウンロードしてください"
           }
         },
         "zh-Hans": {
@@ -31628,7 +31628,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ugoira playback, speed controls, ZIP/GIF export, and frame export stay reachable."
+            "value": "うごイラ再生、速度制御、ZIP/GIFエクスポート、フレームエクスポートは引き続き到達可能"
           }
         },
         "zh-Hans": {
@@ -31657,7 +31657,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Unable to export frame"
+            "value": "フレームをエクスポートできません"
           }
         },
         "zh-Hans": {
@@ -31686,7 +31686,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Unable to export search library"
+            "value": "検索ライブラリをエクスポートできません"
           }
         },
         "zh-Hans": {
@@ -31715,7 +31715,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Unable to import search library"
+            "value": "検索ライブラリをインポートできません"
           }
         },
         "zh-Hans": {
@@ -31744,7 +31744,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Unable to open download folder"
+            "value": "ダウンロードフォルダを開けません"
           }
         },
         "zh-Hans": {
@@ -31773,7 +31773,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Unable to open downloaded artwork"
+            "value": "ダウンロード済み作品を開けません"
           }
         },
         "zh-Hans": {
@@ -31802,7 +31802,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Unable to save diagnostics"
+            "value": "診断情報を保存できません"
           }
         },
         "zh-Hans": {
@@ -31918,7 +31918,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Unfollow %@?"
+            "value": "%@ のフォローを解除しますか？"
           }
         },
         "zh-Hans": {
@@ -31947,7 +31947,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Unfollow %d visible creators?"
+            "value": "表示クリエイター %d 件のフォローを解除しますか？"
           }
         },
         "zh-Hans": {
@@ -31976,7 +31976,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Unfollow Visible Creators"
+            "value": "表示クリエイターのフォローを解除"
           }
         },
         "zh-Hans": {
@@ -32005,7 +32005,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Unfollowed"
+            "value": "フォロー解除済み"
           }
         },
         "zh-Hans": {
@@ -32034,7 +32034,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Unfollowed %@"
+            "value": "フォロー解除: %@"
           }
         },
         "zh-Hans": {
@@ -32063,7 +32063,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Unfollowed %d creators"
+            "value": "クリエイター %d 件のフォローを解除"
           }
         },
         "zh-Hans": {
@@ -32092,7 +32092,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Unknown"
+            "value": "不明"
           }
         },
         "zh-Hans": {
@@ -32237,7 +32237,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Unpinned %@"
+            "value": "ピン留め解除: %@"
           }
         },
         "zh-Hans": {
@@ -32295,7 +32295,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Unsupported Pixiv link"
+            "value": "未対応のPixivリンク"
           }
         },
         "zh-Hans": {
@@ -32353,7 +32353,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Updated %d creators"
+            "value": "クリエイター %d 件を更新"
           }
         },
         "zh-Hans": {
@@ -32382,7 +32382,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Updated follow visibility for %@"
+            "value": "%@ のフォロー公開設定を更新"
           }
         },
         "zh-Hans": {
@@ -32411,7 +32411,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Updating creators"
+            "value": "クリエイター更新中"
           }
         },
         "zh-Hans": {
@@ -32440,7 +32440,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Upload local muted tags and creators to Pixiv?"
+            "value": "ローカルのミュートタグとクリエイターをPixivにアップロードしますか？"
           }
         },
         "zh-Hans": {
@@ -32498,7 +32498,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Uploaded"
+            "value": "アップロード済み"
           }
         },
         "zh-Hans": {
@@ -32527,7 +32527,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Use Pixiv sessions saved in this app's secure storage."
+            "value": "このアプリのセキュアストレージに保存されたPixivセッションを使用"
           }
         },
         "zh-Hans": {
@@ -32614,7 +32614,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Use fewer concurrent downloads for unstable proxies; use more when the connection is healthy."
+            "value": "不安定なプロキシでは同時ダウンロード数を減らし、接続が良好なら増やす"
           }
         },
         "zh-Hans": {
@@ -32701,7 +32701,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Use placeholders like ${id}, ${title}, ${creator}, ${account}, ${userId}, ${pages}, ${views}, ${bookmarks}, ${comments}, ${badges}, ${tags}, ${url}, ${AI}, ${R18}, and ${R18G}."
+            "value": "プレースホルダー: ${id}、${title}、${creator}、${account}、${userId}、${pages}、${views}、${bookmarks}、${comments}、${badges}、${tags}、${url}、${AI}、${R18}、${R18G}"
           }
         },
         "zh-Hans": {
@@ -32730,7 +32730,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Use placeholders like ${id}, ${title}, ${user}, ${userId}, ${series}, ${seriesId}, ${page}, ${page1}, ${pages}, ${ext}, ${AI}, ${R18}, ${R18G}, ${tag1}, ${tag2}, ${tag(name)}. Paths stay inside the download folder."
+            "value": "プレースホルダー: ${id}、${title}、${user}、${userId}、${series}、${seriesId}、${page}、${page1}、${pages}、${ext}、${AI}、${R18}、${R18G}、${tag1}、${tag2}、${tag(name)}。パスはダウンロードフォルダ内に留まります"
           }
         },
         "zh-Hans": {
@@ -32759,7 +32759,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Verified"
+            "value": "確認済み"
           }
         },
         "zh-Hans": {
@@ -32875,7 +32875,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "View All Related Creators"
+            "value": "関連クリエイターをすべて表示"
           }
         },
         "zh-Hans": {
@@ -33049,7 +33049,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Visible Artworks"
+            "value": "表示作品"
           }
         },
         "zh-Hans": {
@@ -33078,7 +33078,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Visible Creators"
+            "value": "表示クリエイター"
           }
         },
         "zh-Hans": {
@@ -33107,7 +33107,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Visible Tags"
+            "value": "表示タグ"
           }
         },
         "zh-Hans": {
@@ -33136,7 +33136,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Visual QA %d/%d · latest %@"
+            "value": "ビジュアルQA %d/%d · 最新: %@"
           }
         },
         "zh-Hans": {
@@ -33165,7 +33165,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Visual QA missing"
+            "value": "ビジュアルQA未実行"
           }
         },
         "zh-Hans": {
@@ -33223,7 +33223,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Web content reloaded"
+            "value": "Webコンテンツ再読み込み"
           }
         },
         "zh-Hans": {
@@ -34367,6 +34367,1589 @@
           "stringUnit": {
             "state": "translated",
             "value": "沒有已儲存的項目"
+          }
+        }
+      }
+    },
+    "Novels": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Novels"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "小说"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "小說"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "小説"
+          }
+        }
+      }
+    },
+    "Novel": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Novel"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "小说"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "小說"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "小説"
+          }
+        }
+      }
+    },
+    "Novel Ranking": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Novel Ranking"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "小说排行榜"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "小說排行榜"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "小説ランキング"
+          }
+        }
+      }
+    },
+    "Recommended Novels": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recommended Novels"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "推荐小说"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "推薦小說"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "おすすめ小説"
+          }
+        }
+      }
+    },
+    "Following Novels": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Following Novels"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "关注用户的小说"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "追蹤用戶的小說"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "フォロー中の小説"
+          }
+        }
+      }
+    },
+    "Search Novels": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search Novels"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "搜索小说"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "搜尋小說"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "小説を検索"
+          }
+        }
+      }
+    },
+    "Public Novel Bookmarks": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Public Novel Bookmarks"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "公开收藏的小说"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "公開收藏的小說"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "公開ブックマーク小説"
+          }
+        }
+      }
+    },
+    "Private Novel Bookmarks": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Private Novel Bookmarks"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "私密收藏的小说"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "私密收藏的小說"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "非公開ブックマーク小説"
+          }
+        }
+      }
+    },
+    "Novel Watchlist": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Novel Watchlist"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "小说追更"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "小說追更"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "小説のウォッチリスト"
+          }
+        }
+      }
+    },
+    "Creator Novels": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Creator Novels"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "创作者的小说"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "創作者的小說"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "作者の小説"
+          }
+        }
+      }
+    },
+    "Creator Novel Bookmarks": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Creator Novel Bookmarks"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "创作者收藏的小说"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "創作者收藏的小說"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "作者がブックマークした小説"
+          }
+        }
+      }
+    },
+    "Open Novel": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Novel"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "打开小说"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "開啟小說"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "小説を開く"
+          }
+        }
+      }
+    },
+    "Select a novel": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select a novel"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "选择一篇小说"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "選擇一篇小說"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "小説を選択"
+          }
+        }
+      }
+    },
+    "Open Novel in Pixiv": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Novel in Pixiv"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在 Pixiv 中打开小说"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在 Pixiv 中開啟小說"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pixivで小説を開く"
+          }
+        }
+      }
+    },
+    "Copy Novel Link": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy Novel Link"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "复制小说链接"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "複製小說連結"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "小説リンクをコピー"
+          }
+        }
+      }
+    },
+    "Copied novel link": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copied novel link"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已复制小说链接"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已複製小說連結"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "小説リンクをコピーしました"
+          }
+        }
+      }
+    },
+    "Length": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Length"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "长度"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "長度"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "長さ"
+          }
+        }
+      }
+    },
+    "%d characters": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d characters"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d 字"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d 字"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d文字"
+          }
+        }
+      }
+    },
+    "Chapter: %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chapter: %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "章节：%@"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "章節：%@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "章: %@"
+          }
+        }
+      }
+    },
+    "Series": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Series"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "系列"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "系列"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "シリーズ"
+          }
+        }
+      }
+    },
+    "Series: %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Series: %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "系列：%@"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "系列：%@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "シリーズ: %@"
+          }
+        }
+      }
+    },
+    "Previous in Series": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Previous in Series"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "系列上一篇"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "系列上一篇"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "シリーズの前の作品"
+          }
+        }
+      }
+    },
+    "Next in Series": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Next in Series"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "系列下一篇"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "系列下一篇"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "シリーズの次の作品"
+          }
+        }
+      }
+    },
+    "Bookmark Novel": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bookmark Novel"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "收藏小说"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "收藏小說"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "小説をブックマーク"
+          }
+        }
+      }
+    },
+    "Remove Novel Bookmark": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove Novel Bookmark"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "取消收藏小说"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "取消收藏小說"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "小説のブックマークを解除"
+          }
+        }
+      }
+    },
+    "No novels": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No novels"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "没有小说"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "沒有小說"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "小説がありません"
+          }
+        }
+      }
+    },
+    "Pixiv hasn't returned any novels for this view yet.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pixiv hasn't returned any novels for this view yet."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pixiv 尚未返回此视图的小说内容。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pixiv 尚未回傳此檢視畫面的小說內容。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pixivはこのビューの小説をまだ返していません。"
+          }
+        }
+      }
+    },
+    "Load More Novels": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Load More Novels"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "加载更多小说"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "載入更多小說"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "小説をさらに読み込む"
+          }
+        }
+      }
+    },
+    "Loaded %d novels": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Loaded %d novels"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已加载 %d 篇小说"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已載入 %d 篇小說"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d件の小説を読み込みました"
+          }
+        }
+      }
+    },
+    "Refreshed %d novels": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refreshed %d novels"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已刷新 %d 篇小说"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已重新整理 %d 篇小說"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d件の小説を更新しました"
+          }
+        }
+      }
+    },
+    "Novel Text": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Novel Text"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "小说正文"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "小說內文"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "小説本文"
+          }
+        }
+      }
+    },
+    "Open Reader": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Reader"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "打开阅读器"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "開啟閱讀器"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "リーダーを開く"
+          }
+        }
+      }
+    },
+    "Reader Settings": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reader Settings"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "阅读器设置"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "閱讀器設定"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "リーダー設定"
+          }
+        }
+      }
+    },
+    "Text Size": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Text Size"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "文字大小"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "文字大小"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "文字サイズ"
+          }
+        }
+      }
+    },
+    "Line Spacing": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Line Spacing"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "行距"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "行距"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "行間"
+          }
+        }
+      }
+    },
+    "Reader Theme": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reader Theme"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "阅读器主题"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "閱讀器主題"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "リーダーテーマ"
+          }
+        }
+      }
+    },
+    "Light": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Light"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "浅色"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "淺色"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ライト"
+          }
+        }
+      }
+    },
+    "Sepia": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sepia"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "羊皮纸"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "羊皮紙"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "セピア"
+          }
+        }
+      }
+    },
+    "Dark": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dark"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "深色"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "深色"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ダーク"
+          }
+        }
+      }
+    },
+    "Font": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Font"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "字体"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "字型"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "フォント"
+          }
+        }
+      }
+    },
+    "System": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "System"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "系统"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "系統"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "システム"
+          }
+        }
+      }
+    },
+    "Serif": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Serif"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "衬线"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "襯線"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "セリフ"
+          }
+        }
+      }
+    },
+    "Monospaced": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Monospaced"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "等宽"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "等寬"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "等幅"
+          }
+        }
+      }
+    },
+    "Vertical layout": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vertical layout"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "竖排版式"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "直書版式"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "縦書きレイアウト"
+          }
+        }
+      }
+    },
+    "Show chapter markers": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show chapter markers"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "显示章节标记"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "顯示章節標記"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "章マーカーを表示"
+          }
+        }
+      }
+    },
+    "Loading novel text": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Loading novel text"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在加载小说正文"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在載入小說內文"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "小説本文を読み込み中"
+          }
+        }
+      }
+    },
+    "Novel text unavailable": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Novel text unavailable"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法获取小说正文"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "無法取得小說內文"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "小説本文を取得できません"
+          }
+        }
+      }
+    },
+    "Pixiv didn't return body text for this novel.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pixiv didn't return body text for this novel."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pixiv 没有返回这篇小说的正文。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pixiv 沒有回傳這篇小說的內文。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pixivはこの小説の本文を返しませんでした。"
+          }
+        }
+      }
+    },
+    "Embedded image": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Embedded image"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "内嵌图片"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "內嵌圖片"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "埋め込み画像"
+          }
+        }
+      }
+    },
+    "Uploaded image": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uploaded image"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "上传的图片"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "上傳的圖片"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "アップロードされた画像"
+          }
+        }
+      }
+    },
+    "Jump to page %d": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jump to page %d"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "跳转到第 %d 页"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "跳至第 %d 頁"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%dページへジャンプ"
+          }
+        }
+      }
+    },
+    "Weekly AI": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weekly AI"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "每周 AI"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "每週 AI"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "週間AI"
+          }
+        }
+      }
+    },
+    "Weekly R-18 AI": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weekly R-18 AI"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "每周 R-18 AI"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "每週 R-18 AI"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "週間R-18 AI"
+          }
+        }
+      }
+    },
+    "Paragraph Spacing": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "段落间距"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "段落間距"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "段落間隔"
+          }
+        }
+      }
+    },
+    "Max Width": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最大宽度"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最大寬度"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最大幅"
           }
         }
       }
