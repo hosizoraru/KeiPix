@@ -239,6 +239,31 @@ enum JapaneseTranslations {
             "ユーザーがオプトアウトできるよう、ReleaseUpdateChecker を KeiPixApp.task に接続し、checkForUpdatesOnLaunch トグルとスキップ済みバージョンの記録を尊重してください。",
         "SemanticVersion comparator, JSON decoder, and 24-hour throttle round-trip in the unit suite.":
             "SemanticVersion 比較器、JSON デコーダ、24 時間スロットリングはユニットテストでラウンドトリップ検証されています。",
+        "Keyboard": "キーボード",
+        "Keyboard Shortcuts": "キーボードショートカット",
+        "Every menu shortcut below can be re-bound from System Settings → Keyboard → Keyboard Shortcuts → App Shortcuts. Pick KeiPix from the application list and enter the menu item title exactly as shown to assign a new key combination.":
+            "下記のメニューショートカットはすべて「システム設定 → キーボード → キーボードショートカット → " +
+            "App ショートカット」で再割り当てできます。アプリ一覧から KeiPix を選び、メニュー項目の名称を以下のとおり" +
+            "正確に入力すると、新しいキー組み合わせを設定できます。",
+        "Open Keyboard Shortcut Settings…": "キーボードショートカット設定を開く…",
+        "Inline reader keys aren't menu items, so macOS can't rebind them. They're listed for reference only.":
+            "リーダー内のインラインキーはメニュー項目ではないため macOS では再割り当てできません。参考として表示しています。",
+        "App Commands": "アプリコマンド",
+        "Reader Inline Keys": "リーダーインラインキー",
+        "Toggle Privacy Mode": "プライバシーモードを切り替え",
+        "Toggle Pause Downloads": "ダウンロードの一時停止を切り替え",
+        "Jump to Page…": "ページへ移動…",
+        "Toggle Fullscreen Reading": "フルスクリーン閲覧を切り替え",
+        "Keyboard shortcut catalog": "キーボードショートカットカタログ",
+        "Every menu and reader keyboard shortcut routes through KeyboardShortcutCatalog so the Settings → Keyboard page never drifts from the bindings the menu bar actually fires.":
+            "メニューおよびリーダーのキーボードショートカットはすべて KeyboardShortcutCatalog 経由で配線されており、" +
+            "「設定 → キーボード」ページとメニューバーで実際に発火するバインディングがずれないようになっています。",
+        "Keep new menu items registered in KeyboardShortcutCatalog and surface them through .shortcut(_:) instead of inline .keyboardShortcut(_:modifiers:) calls.":
+            "新しいメニュー項目は KeyboardShortcutCatalog に登録し、インラインの .keyboardShortcut(_:modifiers:) " +
+            "呼び出しではなく .shortcut(_:) を経由して公開してください。",
+        "Catalog covers every ShortcutAction case, surfaces are well-formed, and System Settings deep-link URL parses in the unit suite.":
+            "カタログはすべての ShortcutAction ケースを網羅し、サーフェスは適切に構成され、システム設定への" +
+            "ディープリンク URL もユニットテストで正しく解釈されます。",
         "Show translated tag names": "タグの翻訳名を表示",
         "Content Filters": "コンテンツフィルター",
         "Show content badges": "コンテンツバッジを表示",

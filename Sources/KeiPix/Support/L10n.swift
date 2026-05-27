@@ -979,6 +979,39 @@ enum L10n {
     static var qaReleaseUpdateCheckEvidence: String {
         text("SemanticVersion comparator, JSON decoder, and 24-hour throttle round-trip in the unit suite.")
     }
+
+    // MARK: - Keyboard shortcuts
+
+    static var settingsKeyboard: String { text("Keyboard") }
+    static var keyboardCustomization: String { text("Keyboard Shortcuts") }
+    static var keyboardCustomizationHint: String {
+        text("Every menu shortcut below can be re-bound from System Settings → Keyboard → Keyboard Shortcuts → " +
+             "App Shortcuts. Pick KeiPix from the application list and enter the menu item title exactly as " +
+             "shown to assign a new key combination.")
+    }
+    static var openKeyboardSystemSettings: String { text("Open Keyboard Shortcut Settings…") }
+    static var keyboardReaderInlineHint: String {
+        text("Inline reader keys aren't menu items, so macOS can't rebind them. They're listed for reference only.")
+    }
+    static var shortcutSurfaceMain: String { text("App Commands") }
+    static var shortcutSurfaceReaderInline: String { text("Reader Inline Keys") }
+    static var shortcutTogglePrivacyMode: String { text("Toggle Privacy Mode") }
+    static var shortcutTogglePauseDownloads: String { text("Toggle Pause Downloads") }
+    static var readerJumpToPage: String { text("Jump to Page…") }
+    static var readerToggleFullscreen: String { text("Toggle Fullscreen Reading") }
+    static var qaShortcutCatalog: String { text("Keyboard shortcut catalog") }
+    static var qaShortcutCatalogRequirement: String {
+        text("Every menu and reader keyboard shortcut routes through KeyboardShortcutCatalog so the Settings → " +
+             "Keyboard page never drifts from the bindings the menu bar actually fires.")
+    }
+    static var qaShortcutCatalogNext: String {
+        text("Keep new menu items registered in KeyboardShortcutCatalog and surface them through .shortcut(_:) " +
+             "instead of inline .keyboardShortcut(_:modifiers:) calls.")
+    }
+    static var qaShortcutCatalogEvidence: String {
+        text("Catalog covers every ShortcutAction case, surfaces are well-formed, and System Settings deep-link " +
+             "URL parses in the unit suite.")
+    }
     static var systemProxy: String { text("System Proxy") }
     static var directConnection: String { text("Direct connection") }
     static var pixivAPI: String { text("Pixiv API") }

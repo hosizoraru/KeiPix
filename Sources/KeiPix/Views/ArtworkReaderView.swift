@@ -53,16 +53,16 @@ struct ArtworkReaderView: View {
         .overlay {
             HStack {
                 Button(L10n.previousPage) { movePage(-1) }
-                    .keyboardShortcut(.leftArrow, modifiers: [])
+                    .shortcut(.readerPreviousPage)
                     .hidden()
                 Button(L10n.nextPage) { movePage(1) }
-                    .keyboardShortcut(.rightArrow, modifiers: [])
+                    .shortcut(.readerNextPage)
                     .hidden()
                 Button(L10n.resetZoom) { interaction.resetZoom() }
-                    .keyboardShortcut(.escape, modifiers: [])
+                    .shortcut(.readerResetZoom)
                     .hidden()
                 Button(L10n.toggleZoom) { interaction.toggleSmartZoom(in: .zero) }
-                    .keyboardShortcut(.space, modifiers: [])
+                    .shortcut(.readerToggleZoom)
                     .hidden()
             }
             .accessibilityHidden(true)

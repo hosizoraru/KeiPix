@@ -184,6 +184,8 @@ struct SettingsView: View {
             DownloadsSettingsPage(store: store, coordinator: coordinator)
         case .account:
             AccountSettingsPage(store: store, coordinator: coordinator)
+        case .keyboard:
+            KeyboardSettingsPage()
         case .advancedQA:
             AdvancedQASettingsPage(store: store, coordinator: coordinator)
         }

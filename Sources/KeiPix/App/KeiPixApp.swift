@@ -43,42 +43,42 @@ struct KeiPixApp: App {
                 Button(L10n.refresh) {
                     Task { await store.reloadCurrentFeed() }
                 }
-                .keyboardShortcut("r", modifiers: .command)
+                .shortcut(.refreshFeed)
 
                 Divider()
 
                 Button(store.privacyModeEnabled ? L10n.disablePrivacyMode : L10n.enablePrivacyMode) {
                     store.setPrivacyModeEnabled(!store.privacyModeEnabled)
                 }
-                .keyboardShortcut("p", modifiers: [.command, .shift])
+                .shortcut(.togglePrivacyMode)
 
                 Button(L10n.openPixivLinkFromClipboard) {
                     Task { await store.openPixivLinkFromClipboard() }
                 }
-                .keyboardShortcut("l", modifiers: [.command, .shift])
+                .shortcut(.openPixivLinkFromClipboard)
 
                 Button(L10n.searchLocalImageSource) {
                     store.presentLocalImageSourceSearch()
                 }
-                .keyboardShortcut("i", modifiers: [.command, .option])
+                .shortcut(.searchLocalImageSource)
 
                 Button(L10n.copyDiagnostics) {
                     store.copyRuntimeReadinessDiagnostics()
                 }
-                .keyboardShortcut("g", modifiers: [.command, .option])
+                .shortcut(.copyDiagnostics)
             }
 
             CommandMenu(L10n.artwork) {
                 Button(L10n.previousArtwork) {
                     store.selectPreviousArtwork()
                 }
-                .keyboardShortcut(.leftArrow, modifiers: [.command])
+                .shortcut(.previousArtwork)
                 .disabled(store.selectedArtwork == nil)
 
                 Button(L10n.nextArtwork) {
                     store.selectNextArtwork()
                 }
-                .keyboardShortcut(.rightArrow, modifiers: [.command])
+                .shortcut(.nextArtwork)
                 .disabled(store.selectedArtwork == nil)
 
                 Divider()
@@ -86,13 +86,13 @@ struct KeiPixApp: App {
                 Button(store.selectedArtwork?.isBookmarked == true ? L10n.removeBookmark : L10n.bookmark) {
                     Task { await store.toggleSelectedBookmark() }
                 }
-                .keyboardShortcut("b", modifiers: [.command])
+                .shortcut(.toggleBookmark)
                 .disabled(store.selectedArtwork == nil)
 
                 Button(L10n.download) {
                     store.downloadSelectedArtwork()
                 }
-                .keyboardShortcut("d", modifiers: [.command, .shift])
+                .shortcut(.downloadArtwork)
                 .disabled(store.selectedArtwork == nil)
 
                 Button(L10n.searchImageSource) {
@@ -100,7 +100,7 @@ struct KeiPixApp: App {
                         store.presentImageSourceSearch(for: artwork)
                     }
                 }
-                .keyboardShortcut("s", modifiers: [.command, .option])
+                .shortcut(.searchImageSource)
                 .disabled(store.selectedArtwork == nil)
 
                 Divider()
@@ -108,19 +108,19 @@ struct KeiPixApp: App {
                 Button(L10n.openCreatorProfile) {
                     store.presentSelectedArtworkCreatorProfile()
                 }
-                .keyboardShortcut("u", modifiers: [.command])
+                .shortcut(.openCreatorProfile)
                 .disabled(store.selectedArtwork == nil)
 
                 Button(L10n.creatorIllustrations) {
                     Task { await store.openSelectedArtworkCreatorFeed(.userIllustrations) }
                 }
-                .keyboardShortcut("u", modifiers: [.command, .option])
+                .shortcut(.creatorIllustrations)
                 .disabled(store.selectedArtwork == nil)
 
                 Button(L10n.creatorManga) {
                     Task { await store.openSelectedArtworkCreatorFeed(.userManga) }
                 }
-                .keyboardShortcut("u", modifiers: [.command, .control])
+                .shortcut(.creatorManga)
                 .disabled(store.selectedArtwork == nil)
 
                 Divider()
@@ -129,7 +129,7 @@ struct KeiPixApp: App {
                     store.prepareSelectedReaderWindow()
                     openWindow(id: "artwork-reader")
                 }
-                .keyboardShortcut(.return, modifiers: [.command])
+                .shortcut(.openReaderWindow)
                 .disabled(store.selectedArtwork == nil)
 
                 Divider()
@@ -137,13 +137,13 @@ struct KeiPixApp: App {
                 Button(L10n.openInPixiv) {
                     store.openSelectedArtworkInPixiv()
                 }
-                .keyboardShortcut("o", modifiers: [.command, .shift])
+                .shortcut(.openInPixiv)
                 .disabled(store.selectedArtwork?.pixivURL == nil)
 
                 Button(L10n.copyLink) {
                     store.copySelectedArtworkLink()
                 }
-                .keyboardShortcut("c", modifiers: [.command, .shift])
+                .shortcut(.copyArtworkLink)
                 .disabled(store.selectedArtwork?.pixivURL == nil)
 
                 Divider()
@@ -151,19 +151,19 @@ struct KeiPixApp: App {
                 Button(L10n.selectAll) {
                     gallerySelectionCommandActions?.selectAllVisible()
                 }
-                .keyboardShortcut("a", modifiers: [.command])
+                .shortcut(.selectAll)
                 .disabled(gallerySelectionCommandActions?.canSelectAll != true)
 
                 Button(L10n.clearSelection) {
                     gallerySelectionCommandActions?.clearSelection()
                 }
-                .keyboardShortcut("a", modifiers: [.command, .shift])
+                .shortcut(.clearSelection)
                 .disabled(gallerySelectionCommandActions?.canClear != true)
 
                 Button(L10n.copySelectedArtworkLinks) {
                     gallerySelectionCommandActions?.copySelectedLinks()
                 }
-                .keyboardShortcut("c", modifiers: [.command, .option])
+                .shortcut(.copySelectedLinks)
                 .disabled(gallerySelectionCommandActions?.canCopyLinks != true)
 
                 Button(L10n.batchDownload) {
@@ -182,7 +182,7 @@ struct KeiPixApp: App {
                     openWindow(id: "main")
                     store.select(.downloads)
                 }
-                .keyboardShortcut("d", modifiers: [.command, .option])
+                .shortcut(.openDownloads)
 
                 Button(L10n.batchDownloadLoadedArtworks) {
                     let queuedCount = store.enqueueDownloads(
@@ -195,7 +195,7 @@ struct KeiPixApp: App {
                         store.select(.downloads)
                     }
                 }
-                .keyboardShortcut("d", modifiers: [.command, .control])
+                .shortcut(.batchDownloadLoadedArtworks)
                 .disabled(store.selectedRoute.usesArtworkFeed == false || store.artworks.isEmpty)
 
                 Divider()
@@ -207,13 +207,13 @@ struct KeiPixApp: App {
                         _ = store.downloads.pauseQueue()
                     }
                 }
-                .keyboardShortcut("p", modifiers: [.command, .option])
+                .shortcut(.togglePauseDownloads)
                 .disabled(store.downloads.isPaused ? store.downloads.hasQueuedItems == false : store.downloads.activeCount == 0)
 
                 Button(L10n.openFolder) {
                     _ = store.downloads.openDownloadDirectory()
                 }
-                .keyboardShortcut("f", modifiers: [.command, .option])
+                .shortcut(.openDownloadFolder)
             }
 
             CommandGroup(after: .appInfo) {

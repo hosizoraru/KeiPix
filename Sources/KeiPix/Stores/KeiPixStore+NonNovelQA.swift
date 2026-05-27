@@ -297,7 +297,8 @@ extension KeiPixStore {
             qaThroughputItem(visualEvidence: visualEvidence),
             qaDownloadFinishNotificationItem(visualEvidence: visualEvidence),
             qaProxyConfigurationItem(),
-            qaReleaseUpdateCheckItem()
+            qaReleaseUpdateCheckItem(),
+            qaShortcutCatalogItem()
         ]
     }
 
@@ -439,6 +440,35 @@ extension KeiPixStore {
             id: "release-update-check",
             passed: comparatorOrders && prereleaseOrdering && bundleVersionParses && toggleInSync,
             evidence: L10n.qaReleaseUpdateCheckEvidence
+        )
+    }
+
+    /// Builds the keyboard shortcut catalog QA row. Pulled into its
+    /// own method so `qaLocalSurfaces` stays under SwiftLint's
+    /// `function_body_length` ceiling.
+    private func qaShortcutCatalogItem() -> NonNovelQAItem {
+        // Shortcut catalog — anchors on three deterministic invariants
+        // that would silently drift if a future menu addition forgot to
+        // route through the catalog: every ShortcutAction case has a
+        // catalog entry (so the trapping subscript can never blow up),
+        // every catalog entry produces a non-empty display string (so
+        // the Settings → Keyboard pill renders something), and the
+        // System Settings deep-link URL parses (so the "Open Keyboard
+        // Shortcut Settings…" button can't no-op). The live deep-link
+        // round-trip into System Settings stays a manual visual check.
+        let allActionsCovered = ShortcutAction.allCases.allSatisfy { action in
+            KeyboardShortcutCatalog.entries.contains { $0.action == action }
+        }
+        let allEntriesRender = KeyboardShortcutCatalog.entries.allSatisfy { entry in
+            entry.binding.displayString.isEmpty == false
+        }
+        let deepLinkParses = URL(
+            string: "x-apple.systempreferences:com.apple.Keyboard-Settings.extension?KeyboardShortcuts"
+        ) != nil
+        return qaStaticItem(
+            id: "shortcut-catalog",
+            passed: allActionsCovered && allEntriesRender && deepLinkParses,
+            evidence: L10n.qaShortcutCatalogEvidence
         )
     }
 
@@ -694,6 +724,14 @@ private extension KeiPixStore {
             requirement: L10n.qaReleaseUpdateCheckRequirement,
             nextAction: L10n.qaReleaseUpdateCheckNext,
             systemImage: "arrow.down.circle.dotted"
+        ),
+        NonNovelQATemplate(
+            id: "shortcut-catalog",
+            priority: .p2,
+            title: L10n.qaShortcutCatalog,
+            requirement: L10n.qaShortcutCatalogRequirement,
+            nextAction: L10n.qaShortcutCatalogNext,
+            systemImage: "keyboard"
         )
     ]
 }

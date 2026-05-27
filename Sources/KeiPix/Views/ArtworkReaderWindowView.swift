@@ -167,14 +167,14 @@ private struct StandaloneArtworkReader: View {
                 Label(L10n.pageJump, systemImage: "number")
             }
             .disabled(pageCount <= 1)
-            .keyboardShortcut("j", modifiers: [.command])
+            .shortcut(.readerJumpToPage)
 
             Button {
                 enterFocusPreset()
             } label: {
                 Label(L10n.fullScreenReading, systemImage: "arrow.up.left.and.arrow.down.right")
             }
-            .keyboardShortcut("f", modifiers: [.command, .shift])
+            .shortcut(.readerToggleFullscreen)
 
             Button {
                 scrollToPage(pageIndex - 1, proxy: proxy)
