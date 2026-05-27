@@ -13,7 +13,7 @@ struct GalleryContentGrid: View {
         Group {
             if store.galleryLayoutMode.usesListRow {
                 LazyVStack(spacing: 10) {
-                    ForEach(store.artworks) { artwork in
+                    ForEach(store.clientFilteredArtworks) { artwork in
                         ListRowArtworkCard(
                             artwork: artwork,
                             store: store,
@@ -41,7 +41,7 @@ struct GalleryContentGrid: View {
                 }
             } else if store.galleryLayoutMode.usesCompactGrid {
                 LazyVGrid(columns: compactColumns, spacing: 12) {
-                    ForEach(store.artworks) { artwork in
+                    ForEach(store.clientFilteredArtworks) { artwork in
                         artworkTile(artwork)
                     }
 
@@ -272,7 +272,7 @@ private struct MasonryArtworkGrid: View {
             fixedColumnCount: fixedColumnCount,
             denseFixedColumns: usesDenseThreeColumnLayout
         ) {
-            ForEach(store.artworks) { artwork in
+            ForEach(store.clientFilteredArtworks) { artwork in
                 let presentation = ArtworkMasonryPresentation(artwork: artwork)
                 ArtworkCardView(
                     artwork: artwork,

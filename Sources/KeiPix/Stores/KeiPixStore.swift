@@ -20,6 +20,10 @@ final class KeiPixStore {
         return destination.route
     }()
     var artworks: [PixivArtwork] = []
+    var clientFilterQuery = ""
+    var clientFilteredArtworks: [PixivArtwork] {
+        ClientFilterDSL.filter(artworks, query: clientFilterQuery)
+    }
     var selectedArtwork: PixivArtwork?
     var searchPopularPreviewArtworks: [PixivArtwork] = []
     var isLoadingSearchPopularPreview = false

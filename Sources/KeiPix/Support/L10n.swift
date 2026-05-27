@@ -1330,6 +1330,7 @@ enum L10n {
     static var goToPage: String { text("Go to Page") }
     static var fullScreenReading: String { text("Full Screen Reading") }
     static var snapToPages: String { text("Snap to Pages") }
+    static var filterArtworks: String { text("Filter artworks...") }
     static var exitFocusReading: String { text("Exit Focus Reading") }
     static var resetZoom: String { text("Reset Zoom") }
     static var toggleZoom: String { text("Toggle Zoom") }

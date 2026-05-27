@@ -37,6 +37,26 @@ struct FeedHeaderView: View {
 
     @ViewBuilder
     private var headerActions: some View {
+        if store.artworks.isEmpty == false {
+            HStack(spacing: 6) {
+                Image(systemName: "line.3.horizontal.decrease.circle")
+                    .foregroundStyle(.secondary)
+                TextField(L10n.filterArtworks, text: $store.clientFilterQuery)
+                    .textFieldStyle(.roundedBorder)
+                    .frame(minWidth: 140, idealWidth: 200, maxWidth: 280)
+                if store.clientFilterQuery.isEmpty == false {
+                    Button {
+                        store.clientFilterQuery = ""
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundStyle(.secondary)
+                    }
+                    .buttonStyle(.plain)
+                    .help(L10n.clearSearch)
+                }
+            }
+        }
+
         if store.selectedRoute == .search,
            store.searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false {
             Menu {
