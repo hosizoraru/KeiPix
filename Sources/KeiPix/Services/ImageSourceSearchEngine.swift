@@ -1,5 +1,8 @@
-import AppKit
 import Foundation
+import SwiftUI
+#if os(macOS)
+import AppKit
+#endif
 
 /// Reverse-image-search engine identifier. Used by the persistence
 /// layer (UserDefaults) and the engine picker UI to track which
@@ -136,7 +139,7 @@ enum Ascii2DClient {
     /// larger uploads, so trimming the dimensions keeps short artworks
     /// snappy and large illustrations within budget.
     private static func normalizedImageData(_ data: Data) -> Data {
-        guard let image = NSImage(data: data),
+        guard let image = PlatformImage(data: data),
               let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
             return data
         }

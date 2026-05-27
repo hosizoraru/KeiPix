@@ -1,5 +1,8 @@
-import AppKit
 import Foundation
+import SwiftUI
+#if os(macOS)
+import AppKit
+#endif
 
 enum SauceNAOClient {
     static func webSearchURL(imageURL: URL) -> URL? {
@@ -46,7 +49,7 @@ enum SauceNAOClient {
     }
 
     private static func normalizedImageData(_ data: Data) -> Data {
-        guard let image = NSImage(data: data),
+        guard let image = PlatformImage(data: data),
               let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
             return data
         }

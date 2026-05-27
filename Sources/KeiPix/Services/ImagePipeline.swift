@@ -1,8 +1,11 @@
-import AppKit
 import CoreGraphics
 import Foundation
 import ImageIO
 import os
+import SwiftUI
+#if os(macOS)
+import AppKit
+#endif
 
 /// Concurrency-friendly image loader with URLCache-backed disk caching,
 /// in-memory `NSCache` rasterized-bitmap caching, in-flight request
@@ -59,7 +62,7 @@ final class ImagePipeline: @unchecked Sendable {
 
     private let session: URLSession
     private let urlCache: URLCache
-    private let memoryCache = NSCache<NSURL, NSImage>()
+    private let memoryCache = NSCache<NSURL, PlatformImage>()
 
     /// Decode queue separate from the URLSession delegate queue so
     /// CPU-heavy bitmap decoding doesn't starve the network's
@@ -74,7 +77,7 @@ final class ImagePipeline: @unchecked Sendable {
     /// In-flight fetch map. Multiple concurrent callers asking for
     /// the same URL share a single network + decode task. Guarded by
     /// `inFlightLock` because we mutate it from arbitrary callers.
-    private var inFlight: [URL: Task<NSImage, Error>] = [:]
+    private var inFlight: [URL: Task<PlatformImage, Error>] = [:]
     private let inFlightLock = OSAllocatedUnfairLock()
 
     private init() {
@@ -134,7 +137,7 @@ final class ImagePipeline: @unchecked Sendable {
     /// Fetches a decoded `NSImage` for the URL, hitting the in-memory
     /// cache when possible and de-duplicating concurrent requests for
     /// the same URL.
-    func image(for url: URL, priority: Priority = .userInitiated) async throws -> NSImage {
+    func image(for url: URL, priority: Priority = .userInitiated) async throws -> PlatformImage {
         let key = url as NSURL
         if let cached = memoryCache.object(forKey: key) {
             return cached
@@ -144,11 +147,11 @@ final class ImagePipeline: @unchecked Sendable {
         // await their Task instead of kicking off a parallel one.
         // Mutating the map needs the unfair lock; awaiting the Task
         // happens outside the critical section.
-        let task: Task<NSImage, Error> = inFlightLock.withLock {
+        let task: Task<PlatformImage, Error> = inFlightLock.withLock {
             if let existing = inFlight[url] {
                 return existing
             }
-            let new = Task<NSImage, Error>(priority: priority.taskPriority) { [weak self] in
+            let new = Task<PlatformImage, Error>(priority: priority.taskPriority) { [weak self] in
                 guard let self else { throw CancellationError() }
                 defer { self.removeInFlight(url) }
                 return try await self.fetchAndDecode(url: url, priority: priority)
@@ -216,7 +219,7 @@ final class ImagePipeline: @unchecked Sendable {
 
     // MARK: - Private
 
-    private func fetchAndDecode(url: URL, priority: Priority) async throws -> NSImage {
+    private func fetchAndDecode(url: URL, priority: Priority) async throws -> PlatformImage {
         let (data, response) = try await session.data(for: authenticatedRequest(for: url))
         try validate(response: response)
         let image = try await decode(data: data, qos: priority.dispatchQoS)
@@ -231,18 +234,18 @@ final class ImagePipeline: @unchecked Sendable {
     /// touches it. Without this, the first time a cell draws on the
     /// main thread it pays the JPEG decode cost (~10-30 ms per
     /// master1200 frame) — which lands as a scroll stutter.
-    private func decode(data: Data, qos: DispatchQoS.QoSClass) async throws -> NSImage {
-        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<NSImage, Error>) in
+    private func decode(data: Data, qos: DispatchQoS.QoSClass) async throws -> PlatformImage {
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<PlatformImage, Error>) in
             decodeQueue.async(qos: DispatchQoS(qosClass: qos, relativePriority: 0)) {
                 let options: [CFString: Any] = [
                     kCGImageSourceShouldCache: true,
                     kCGImageSourceShouldCacheImmediately: true
                 ]
                 guard let source = CGImageSourceCreateWithData(data as CFData, options as CFDictionary) else {
-                    // Fall back to NSImage(data:) so we still serve
+                    // Fall back to PlatformImage(data:) so we still serve
                     // formats CGImageSource doesn't recognise (rare
                     // legacy GIF / webp variants).
-                    if let image = NSImage(data: data) {
+                    if let image = PlatformImage(data: data) {
                         continuation.resume(returning: image)
                     } else {
                         continuation.resume(throwing: PixivAPIError.invalidResponse)
@@ -251,7 +254,7 @@ final class ImagePipeline: @unchecked Sendable {
                 }
 
                 guard let cgImage = CGImageSourceCreateImageAtIndex(source, 0, options as CFDictionary) else {
-                    if let image = NSImage(data: data) {
+                    if let image = PlatformImage(data: data) {
                         continuation.resume(returning: image)
                     } else {
                         continuation.resume(throwing: PixivAPIError.invalidResponse)
@@ -259,11 +262,15 @@ final class ImagePipeline: @unchecked Sendable {
                     return
                 }
 
-                // Use the CGImage's pixel dimensions for the NSImage
+                // Use the CGImage's pixel dimensions for the image
                 // size so callers receive a 1× representation that
                 // SwiftUI can lay out without a second decode pass.
+                #if os(macOS)
                 let pixelSize = NSSize(width: cgImage.width, height: cgImage.height)
                 let image = NSImage(cgImage: cgImage, size: pixelSize)
+                #else
+                let image = UIImage(cgImage: cgImage)
+                #endif
                 continuation.resume(returning: image)
             }
         }
@@ -274,7 +281,7 @@ final class ImagePipeline: @unchecked Sendable {
     /// for opaque JPEGs but keeps the math cheap and safe; falls
     /// back to the raw payload size if pixel dimensions aren't
     /// reachable.
-    private func approximateCost(of image: NSImage, fallback: Int) -> Int {
+    private func approximateCost(of image: PlatformImage, fallback: Int) -> Int {
         let size = image.size
         guard size.width > 0, size.height > 0 else { return fallback }
         return Int(size.width * size.height) * 4

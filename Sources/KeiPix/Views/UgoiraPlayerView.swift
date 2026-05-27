@@ -101,7 +101,7 @@ struct UgoiraPlayerView: View {
         }
     }
 
-    private var currentFrame: NSImage? {
+    private var currentFrame: PlatformImage? {
         guard let animation = player.animation,
               animation.frames.indices.contains(player.currentFrameIndex) else {
             return nil
@@ -346,6 +346,7 @@ struct UgoiraPlayerView: View {
     }
 }
 
+#if os(macOS)
 extension NSImage {
     func pngData() -> Data? {
         guard let tiffRepresentation,
@@ -355,3 +356,4 @@ extension NSImage {
         return bitmap.representation(using: .png, properties: [:])
     }
 }
+#endif

@@ -1,6 +1,9 @@
-import AppKit
 import Compression
 import Foundation
+import SwiftUI
+#if os(macOS)
+import AppKit
+#endif
 
 enum UgoiraFrameDecoder {
     static func decode(zipData: Data, metadata: PixivUgoiraMetadata) throws -> UgoiraAnimation {
@@ -12,7 +15,7 @@ enum UgoiraFrameDecoder {
 
         let frames = metadataFrames.compactMap { frame -> UgoiraAnimationFrame? in
             guard let data = imageDataByName[frame.file],
-                  let image = NSImage(data: data) else {
+                  let image = PlatformImage(data: data) else {
                 return nil
             }
             let delayMilliseconds = max(frame.delay, 1)

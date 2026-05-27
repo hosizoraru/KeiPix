@@ -1,5 +1,8 @@
-import AppKit
 import PDFKit
+import SwiftUI
+#if os(macOS)
+import AppKit
+#endif
 
 /// Generates PDF documents and collage images from artwork image files.
 enum BatchExportService {
@@ -27,7 +30,7 @@ enum BatchExportService {
         let pdfDocument = PDFDocument()
 
         for (index, imageURL) in imageURLs.enumerated() {
-            guard let image = NSImage(contentsOf: imageURL) else { continue }
+            guard let image = PlatformImage(contentsOf: imageURL) else { continue }
             guard let page = PDFPage(image: image) else { continue }
             pdfDocument.insert(page, at: index)
         }
@@ -50,7 +53,7 @@ enum BatchExportService {
     ) -> URL? {
         guard imageURLs.isEmpty == false else { return nil }
 
-        let images = imageURLs.compactMap { NSImage(contentsOf: $0) }
+        let images = imageURLs.compactMap { PlatformImage(contentsOf: $0) }
         guard images.isEmpty == false else { return nil }
 
         let cols = min(columns, images.count)
@@ -72,8 +75,9 @@ enum BatchExportService {
         let finalW = totalW * scale
         let finalH = totalH * scale
 
+        #if os(macOS)
         let size = NSSize(width: finalW, height: finalH)
-        let image = NSImage(size: size)
+        let image = PlatformImage(size: size)
 
         image.lockFocus()
         NSColor.windowBackgroundColor.setFill()
@@ -95,6 +99,10 @@ enum BatchExportService {
               let bitmap = NSBitmapImageRep(data: tiffData),
               let pngData = bitmap.representation(using: .png, properties: [:])
         else { return nil }
+        #else
+        // iPadOS: UIGraphicsImageRenderer-based implementation in Phase 5.
+        return nil
+        #endif
 
         let outputDir = outputDirectory
             ?? FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask).first!

@@ -78,17 +78,18 @@ struct ReaderPagePresentation {
         return min(availableWidth, max(availableWidth * continuousWidthFraction(), minimumWidth))
     }
 
-    static func aspectRatio(from image: NSImage) -> CGFloat? {
+    static func aspectRatio(from image: PlatformImage) -> CGFloat? {
+        #if os(macOS)
         if let representation = image.representations.max(by: { lhs, rhs in
             lhs.pixelsWide * lhs.pixelsHigh < rhs.pixelsWide * rhs.pixelsHigh
         }), representation.pixelsWide > 0, representation.pixelsHigh > 0 {
             return validAspectRatio(CGFloat(representation.pixelsWide) / CGFloat(representation.pixelsHigh))
         }
+        #endif
 
-        guard image.size.width > 0, image.size.height > 0 else {
-            return nil
-        }
-        return validAspectRatio(image.size.width / image.size.height)
+        let size = image.size
+        guard size.width > 0, size.height > 0 else { return nil }
+        return validAspectRatio(size.width / size.height)
     }
 
     private static func validAspectRatio(_ value: CGFloat?) -> CGFloat? {

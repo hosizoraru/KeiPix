@@ -1,5 +1,7 @@
-import AppKit
 import Foundation
+#if os(macOS)
+import AppKit
+#endif
 
 enum VisualQASampleData {
     static let guestSession: PixivSession = {

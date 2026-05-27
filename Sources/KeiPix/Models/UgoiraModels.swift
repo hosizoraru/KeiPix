@@ -1,5 +1,8 @@
-import AppKit
 import Foundation
+import SwiftUI
+#if os(macOS)
+import AppKit
+#endif
 
 struct PixivUgoiraMetadataResponse: Decodable, Sendable {
     let metadata: PixivUgoiraMetadata
@@ -29,7 +32,7 @@ struct PixivUgoiraFrame: Codable, Hashable, Sendable {
 }
 
 struct UgoiraAnimationFrame {
-    let image: NSImage
+    let image: PlatformImage
     let delay: Duration
     let delayMilliseconds: Int
 }
@@ -47,6 +50,7 @@ struct UgoiraAnimation {
     }
 
     static var visualQASample: UgoiraAnimation {
+        #if os(macOS)
         let colors: [NSColor] = [.systemPink, .systemBlue, .systemGreen, .systemOrange]
         let frames = colors.enumerated().map { index, color in
             UgoiraAnimationFrame(
@@ -56,6 +60,10 @@ struct UgoiraAnimation {
             )
         }
         return UgoiraAnimation(frames: frames)
+        #else
+        // iPadOS placeholder — real implementation in Phase 5.
+        return UgoiraAnimation(frames: [])
+        #endif
     }
 }
 

@@ -1,5 +1,7 @@
-import AppKit
 import SwiftUI
+#if os(macOS)
+import AppKit
+#endif
 
 struct DownloadedArtworkViewer: View {
     let item: ArtworkDownloadItem
@@ -321,8 +323,8 @@ private struct LocalImageView: View {
     let contentMode: ContentMode
 
     var body: some View {
-        if let image = NSImage(contentsOf: url) {
-            Image(nsImage: image)
+        if let image = PlatformImage(contentsOf: url) {
+            image.swiftUIImage
                 .resizable()
                 .aspectRatio(contentMode: contentMode)
         } else {

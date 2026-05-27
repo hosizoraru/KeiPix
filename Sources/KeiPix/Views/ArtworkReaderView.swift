@@ -1,5 +1,7 @@
-import AppKit
 import SwiftUI
+#if os(macOS)
+import AppKit
+#endif
 
 struct ArtworkReaderView: View {
     let artwork: PixivArtwork
@@ -219,7 +221,7 @@ private struct ArtworkSinglePageReader: View {
     let interaction: ArtworkReaderInteractionState
     let movePage: (Int) -> Void
     let handlePageSwipe: (TrackpadScrollEvent) -> Bool
-    let onImageLoaded: (NSImage, Int) -> Void
+    let onImageLoaded: (PlatformImage, Int) -> Void
 
     var body: some View {
         let currentPageIndex = pageIndex
@@ -337,7 +339,7 @@ private struct ArtworkContinuousReader: View {
     @Binding var pageIndex: Int
     let presentation: (Int) -> ReaderPagePresentation
     let handlePageSwipe: (TrackpadScrollEvent) -> Bool
-    let onImageLoaded: (NSImage, Int) -> Void
+    let onImageLoaded: (PlatformImage, Int) -> Void
 
     var body: some View {
         LazyVStack(spacing: 16) {

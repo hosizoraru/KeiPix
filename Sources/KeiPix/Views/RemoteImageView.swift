@@ -1,5 +1,7 @@
-import AppKit
 import SwiftUI
+#if os(macOS)
+import AppKit
+#endif
 
 /// Remote image view that fills whatever space the parent proposes.
 ///
@@ -23,8 +25,8 @@ struct RemoteImageView: View {
     let url: URL?
     var localURL: URL? = nil
     var contentMode: ContentMode = .fill
-    var onImageLoaded: ((NSImage) -> Void)? = nil
-    @State private var image: NSImage?
+    var onImageLoaded: ((PlatformImage) -> Void)? = nil
+    @State private var image: PlatformImage?
     @State private var failed = false
 
     var body: some View {
@@ -50,7 +52,7 @@ struct RemoteImageView: View {
             }
             .overlay {
                 if let image {
-                    Image(nsImage: image)
+                    image.swiftUIImage
                         .resizable()
                         .aspectRatio(contentMode: contentMode)
                 }
@@ -66,7 +68,7 @@ struct RemoteImageView: View {
     }
 
     private func load() async {
-        if let localURL, let localImage = NSImage(contentsOf: localURL) {
+        if let localURL, let localImage = PlatformImage(contentsOf: localURL) {
             failed = false
             image = localImage
             onImageLoaded?(localImage)

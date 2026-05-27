@@ -1,6 +1,8 @@
-import AppKit
 import SwiftUI
 import UniformTypeIdentifiers
+#if os(macOS)
+import AppKit
+#endif
 
 /// Standalone sheet viewer for an already-downloaded ugoira ZIP. Shares
 /// `UgoiraPlayer` + `UgoiraPlaybackBar` with the inline reader so both
@@ -138,7 +140,7 @@ struct DownloadedUgoiraViewer: View {
         }
     }
 
-    private var currentFrame: NSImage? {
+    private var currentFrame: PlatformImage? {
         guard let animation = player.animation,
               animation.frames.indices.contains(player.currentFrameIndex) else {
             return nil
