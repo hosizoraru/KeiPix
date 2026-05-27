@@ -298,25 +298,6 @@ extension KeiPixStore {
             passed: dragDropResolves,
             evidence: L10n.qaTransferableDragDropEvidence
         )
-        // Quick Look — passes once a download-queue screenshot covers
-        // the surface (the Quick Look button only renders inside that
-        // view) and the row helper still resolves a non-nil URL for at
-        // least one completed item with a readable artifact. The
-        // visual surface check is the regression anchor; the live
-        // resolution check guards against future refactors that strip
-        // the helper but leave the toolbar button behind.
-        let quickLookSurfaces: [VisualQASurface] = [.downloadQueue]
-        let hasResolvableQuickLook = self.downloads.completedItems.contains { item in
-            self.downloads.hasReadableDownload(for: item)
-        }
-        let quickLook = qaStaticItem(
-            id: "quick-look",
-            passed: visualEvidence.covers(quickLookSurfaces) && (self.downloads.completedItems.isEmpty || hasResolvableQuickLook),
-            evidence: [
-                L10n.qaQuickLookEvidence,
-                visualEvidence.summary(for: quickLookSurfaces)
-            ].joined(separator: " · ")
-        )
         return [
             nativeRoute,
             gallery,
@@ -330,8 +311,63 @@ extension KeiPixStore {
             captionTranslation,
             followingEmphasis,
             transferableDragDrop,
-            quickLook
+            qaQuickLookItem(visualEvidence: visualEvidence),
+            qaThroughputItem(visualEvidence: visualEvidence)
         ]
+    }
+
+    /// Builds the Quick Look QA row. Lives in its own method so
+    /// `qaLocalSurfaces` stays under SwiftLint's
+    /// `function_body_length` ceiling — the local surfaces list keeps
+    /// growing as we land P2 items, and inlining each new check pushes
+    /// the parent function past the 100-line limit.
+    private func qaQuickLookItem(visualEvidence: VisualQAEvidenceIndex) -> NonNovelQAItem {
+        // Quick Look — passes once a download-queue screenshot covers
+        // the surface (the Quick Look button only renders inside that
+        // view) and the row helper still resolves a non-nil URL for at
+        // least one completed item with a readable artifact. The
+        // visual surface check is the regression anchor; the live
+        // resolution check guards against future refactors that strip
+        // the helper but leave the toolbar button behind.
+        let quickLookSurfaces: [VisualQASurface] = [.downloadQueue]
+        let hasResolvableQuickLook = self.downloads.completedItems.contains { item in
+            self.downloads.hasReadableDownload(for: item)
+        }
+        let quickLookPassed = visualEvidence.covers(quickLookSurfaces)
+            && (self.downloads.completedItems.isEmpty || hasResolvableQuickLook)
+        return qaStaticItem(
+            id: "quick-look",
+            passed: quickLookPassed,
+            evidence: [
+                L10n.qaQuickLookEvidence,
+                visualEvidence.summary(for: quickLookSurfaces)
+            ].joined(separator: " · ")
+        )
+    }
+
+    /// Builds the live-throughput QA row. Pulled into its own method
+    /// so `qaLocalSurfaces` stays under SwiftLint's
+    /// `function_body_length` ceiling — the local surfaces list keeps
+    /// growing as we land P2 items, and inlining each new check pushes
+    /// the parent function past the 100-line limit.
+    private func qaThroughputItem(visualEvidence: VisualQAEvidenceIndex) -> NonNovelQAItem {
+        // Live throughput — passes once a download-queue screenshot
+        // covers the surface and the sampler is wired up. We can't
+        // assert "the speedometer is moving right now" from a static
+        // check, so the regression anchor is the visual-evidence
+        // requirement plus the helper's existence (verified at compile
+        // time by the call below).
+        let throughputSurfaces: [VisualQASurface] = [.downloadQueue]
+        let throughputSamplerWired = self.downloads.aggregateThroughputText != nil
+            || self.downloads.downloadingCount == 0
+        return qaStaticItem(
+            id: "download-throughput",
+            passed: visualEvidence.covers(throughputSurfaces) && throughputSamplerWired,
+            evidence: [
+                L10n.qaDownloadThroughputEvidence,
+                visualEvidence.summary(for: throughputSurfaces)
+            ].joined(separator: " · ")
+        )
     }
 
     private func qaFeedItem(
@@ -526,7 +562,15 @@ private extension KeiPixStore {
         NonNovelQATemplate(id: "caption-translation", priority: .p1, title: L10n.qaCaptionTranslation, requirement: L10n.qaCaptionTranslationRequirement, nextAction: L10n.qaCaptionTranslationNext, systemImage: "character.bubble"),
         NonNovelQATemplate(id: "following-emphasis", priority: .p2, title: L10n.qaFollowingEmphasis, requirement: L10n.qaFollowingEmphasisRequirement, nextAction: L10n.qaFollowingEmphasisNext, systemImage: "checkmark.seal"),
         NonNovelQATemplate(id: "transferable-drag-drop", priority: .p2, title: L10n.qaTransferableDragDrop, requirement: L10n.qaTransferableDragDropRequirement, nextAction: L10n.qaTransferableDragDropNext, systemImage: "square.and.arrow.up.on.square"),
-        NonNovelQATemplate(id: "quick-look", priority: .p2, title: L10n.qaQuickLook, requirement: L10n.qaQuickLookRequirement, nextAction: L10n.qaQuickLookNext, systemImage: "eye")
+        NonNovelQATemplate(id: "quick-look", priority: .p2, title: L10n.qaQuickLook, requirement: L10n.qaQuickLookRequirement, nextAction: L10n.qaQuickLookNext, systemImage: "eye"),
+        NonNovelQATemplate(
+            id: "download-throughput",
+            priority: .p2,
+            title: L10n.qaDownloadThroughput,
+            requirement: L10n.qaDownloadThroughputRequirement,
+            nextAction: L10n.qaDownloadThroughputNext,
+            systemImage: "speedometer"
+        )
     ]
 }
 

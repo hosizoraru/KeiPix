@@ -996,6 +996,12 @@
 "Completed downloads expose a Quick Look affordance — Space-bar peek, toolbar button, and context-menu entry — that opens Apple's system preview panel." = "Completed downloads expose a Quick Look affordance — Space-bar peek, toolbar button, and context-menu entry — that opens Apple's system preview panel.";
 "Keep DownloadQueueView's quickLookURL binding and focus-driven Space handler covered so Apple's preview panel never falls back to a third-party fallback." = "Keep DownloadQueueView's quickLookURL binding and focus-driven Space handler covered so Apple's preview panel never falls back to a third-party fallback.";
 "Each completed row resolves a Quick Look URL and surfaces the preview button, context-menu entry, and Space-bar handler." = "Each completed row resolves a Quick Look URL and surfaces the preview button, context-menu entry, and Space-bar handler.";
+"%@/s" = "%@/s";
+"Total %@" = "Total %@";
+"Live download throughput" = "Live download throughput";
+"Active downloads display a sliding-window byte-per-second readout per row and an aggregate rate in the queue subtitle, just like Finder." = "Active downloads display a sliding-window byte-per-second readout per row and an aggregate rate in the queue subtitle, just like Finder.";
+"Keep DownloadThroughputSampler wired through ArtworkDownloadStore.download(_:sourceURLs:) and reset on pause / cancel / complete so the speedometer never lies." = "Keep DownloadThroughputSampler wired through ArtworkDownloadStore.download(_:sourceURLs:) and reset on pause / cancel / complete so the speedometer never lies.";
+"Throughput sampler records per-page bytes and exposes per-item plus aggregate rates that the queue surfaces." = "Throughput sampler records per-page bytes and exposes per-item plus aggregate rates that the queue surfaces.";
 "System Proxy" = "System Proxy";
 "Direct connection" = "Direct connection";
 "Pixiv API" = "Pixiv API";

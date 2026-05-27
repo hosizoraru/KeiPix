@@ -22,6 +22,10 @@ extension ArtworkDownloadStore {
         workerTasks.values.forEach { $0.cancel() }
         queueWakeTask?.cancel()
         queueWakeTask = nil
+        // Pausing should clear the speedometer right away — the
+        // sliding window would otherwise keep showing the last
+        // pre-pause sample for ~8 seconds.
+        throughputSampler.resetAll()
         return true
     }
 
@@ -362,6 +366,7 @@ extension ArtworkDownloadStore {
         if let index = items.firstIndex(where: { $0.id == item.id }) {
             items.remove(at: index)
         }
+        throughputSampler.reset(itemID: item.id)
         persistItems()
     }
 
@@ -374,6 +379,7 @@ extension ArtworkDownloadStore {
 
         let removedItem = items.remove(at: index)
         cancelWorkers(for: Set([removedItem.id]))
+        throughputSampler.reset(itemID: removedItem.id)
         persistItems()
         return restorableCancelledItem(removedItem)
     }
@@ -393,6 +399,9 @@ extension ArtworkDownloadStore {
 
         let ids = Set(targets.map(\.id))
         items.removeAll { ids.contains($0.id) }
+        for id in ids {
+            throughputSampler.reset(itemID: id)
+        }
         persistItems()
         return targets.count
     }
@@ -405,6 +414,9 @@ extension ArtworkDownloadStore {
         let ids = Set(targets.map(\.id))
         items.removeAll { ids.contains($0.id) }
         cancelWorkers(for: ids)
+        for id in ids {
+            throughputSampler.reset(itemID: id)
+        }
         persistItems()
         return targets.map(restorableCancelledItem)
     }

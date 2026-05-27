@@ -1017,6 +1017,12 @@
 "Completed downloads expose a Quick Look affordance — Space-bar peek, toolbar button, and context-menu entry — that opens Apple's system preview panel." = "已完成的下載提供快速查看入口——空格鍵預覽、工具欄按钮和右鍵菜單項均會調起 Apple 系統預覽面板。";
 "Keep DownloadQueueView's quickLookURL binding and focus-driven Space handler covered so Apple's preview panel never falls back to a third-party fallback." = "持續覆盖 DownloadQueueView 的 quickLookURL 绑定與基於焦點的空格鍵處理，確保 Apple 的預覽面板不會回退到第三方實現。";
 "Each completed row resolves a Quick Look URL and surfaces the preview button, context-menu entry, and Space-bar handler." = "每個已完成的下載行都能解析出快速查看 URL，並暴露預覽按钮、右鍵菜單項和空格鍵處理。";
+"%@/s" = "%@/秒";
+"Total %@" = "合計 %@";
+"Live download throughput" = "下載速度實時顯示";
+"Active downloads display a sliding-window byte-per-second readout per row and an aggregate rate in the queue subtitle, just like Finder." = "下載中的任务在每一行顯示滑動窗口內的每秒字节数，並在隊列副標題中展示總速率，像訪達一樣。";
+"Keep DownloadThroughputSampler wired through ArtworkDownloadStore.download(_:sourceURLs:) and reset on pause / cancel / complete so the speedometer never lies." = "保持 DownloadThroughputSampler 接入 ArtworkDownloadStore.download(_:sourceURLs:)，並在暫停/取消/完成時重置，避免速度指示失真。";
+"Throughput sampler records per-page bytes and exposes per-item plus aggregate rates that the queue surfaces." = "速率采樣器按頁記錄字节数，並對外暴露單任务和聚合速率，由下載隊列介面展示。";
 "System Proxy" = "系統代理";
 "Direct connection" = "直連";
 "Pixiv API" = "Pixiv API";

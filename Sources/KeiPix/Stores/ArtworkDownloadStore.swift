@@ -19,6 +19,11 @@ final class ArtworkDownloadStore {
     var workerTasks: [UUID: Task<Void, Never>] = [:]
     var activeWorkerItemIDs: [UUID: UUID] = [:]
     var queueWakeTask: Task<Void, Never>?
+    /// Sliding-window byte/sec sampler. Mutates whenever a worker
+    /// finishes a page (live samples) or an item leaves
+    /// `.downloading` (resets). Read by the row badge and the
+    /// nav-subtitle aggregate.
+    var throughputSampler = DownloadThroughputSampler()
 
     init() {
         downloadDirectoryPath = UserDefaults.standard.string(forKey: "downloadDirectoryPath")
@@ -247,6 +252,33 @@ final class ArtworkDownloadStore {
         return Self.fileSizeFormatter.string(fromByteCount: byteCount)
     }
 
+    /// Formatted bytes-per-second for the row, or `nil` when the item
+    /// isn't actively downloading or no samples are recent enough to
+    /// quote a rate. Reads `throughputSampler` so SwiftUI invalidates
+    /// the row whenever the sampler mutates through `record`.
+    func throughputText(for item: ArtworkDownloadItem) -> String? {
+        guard item.status == .downloading else { return nil }
+        guard let bytesPerSecond = throughputSampler.bytesPerSecond(for: item.id) else { return nil }
+        return Self.formatThroughput(bytesPerSecond: bytesPerSecond)
+    }
+
+    /// Aggregate "X MB/s" line used in the navigation subtitle. Only
+    /// shows when at least one item is downloading; the sampler's
+    /// sliding window already drops stale numbers, but the explicit
+    /// `downloadingCount > 0` guard keeps the label from lingering on
+    /// the very last sample after a worker exits.
+    var aggregateThroughputText: String? {
+        guard downloadingCount > 0 else { return nil }
+        guard let bytesPerSecond = throughputSampler.aggregateBytesPerSecond() else { return nil }
+        return Self.formatThroughput(bytesPerSecond: bytesPerSecond)
+    }
+
+    private static func formatThroughput(bytesPerSecond: Double) -> String {
+        let bytes = Int64(bytesPerSecond.rounded())
+        let formatted = Self.throughputByteFormatter.string(fromByteCount: max(bytes, 0))
+        return String(format: L10n.downloadThroughputPerSecondFormat, formatted)
+    }
+
     private func downloadedImageURL(in item: ArtworkDownloadItem, pageIndex: Int) -> URL? {
         let urls = validImageURLs(from: item.downloadedFilePaths ?? [])
         guard urls.isEmpty == false else { return nil }
@@ -430,8 +462,19 @@ final class ArtworkDownloadStore {
         var lastFolder = root
         for (pageIndex, url) in sourceURLs.enumerated() {
             try Task.checkCancellation()
+            let pageStart = Date()
             let data = try await ImagePipeline.shared.data(for: url)
             try Task.checkCancellation()
+            // Record one sample per page. Wall-clock duration includes
+            // the cooperative-yield gaps between `await`s, but those
+            // dominate only on a saturated worker pool — close enough
+            // for a UX speedometer where the goal is "is it moving".
+            let pageDuration = Date().timeIntervalSince(pageStart)
+            throughputSampler.record(
+                itemID: item.id,
+                bytes: data.count,
+                durationSeconds: pageDuration
+            )
             let sourcePageIndex = item.sourcePageIndexes?[safe: pageIndex] ?? pageIndex
             let renderedPath = template.render(context: .init(
                 item: item,
@@ -493,6 +536,7 @@ final class ArtworkDownloadStore {
         items[index].completedPages = items[index].pageCount
         items[index].folderPath = folder.path(percentEncoded: false)
         items[index].updatedAt = Date()
+        throughputSampler.reset(itemID: itemID)
         persistItems()
     }
 
@@ -501,6 +545,7 @@ final class ArtworkDownloadStore {
         items[index].status = .queued
         items[index].errorMessage = nil
         items[index].updatedAt = Date()
+        throughputSampler.reset(itemID: itemID)
         persistItems()
     }
 
@@ -509,6 +554,7 @@ final class ArtworkDownloadStore {
         items[index].status = .failed
         items[index].errorMessage = error.localizedDescription
         items[index].updatedAt = Date()
+        throughputSampler.reset(itemID: itemID)
         persistItems()
     }
 
@@ -584,6 +630,19 @@ final class ArtworkDownloadStore {
         let formatter = ByteCountFormatter()
         formatter.allowedUnits = [.useKB, .useMB, .useGB]
         formatter.countStyle = .file
+        return formatter
+    }()
+
+    /// Distinct formatter for throughput so we can drop down to bytes
+    /// when the rate is tiny (a sub-1 KB/s residual after the window
+    /// nearly empties) without polluting the per-file size labels
+    /// elsewhere.
+    private static let throughputByteFormatter: ByteCountFormatter = {
+        let formatter = ByteCountFormatter()
+        formatter.allowedUnits = [.useBytes, .useKB, .useMB, .useGB]
+        formatter.countStyle = .binary
+        formatter.includesUnit = true
+        formatter.zeroPadsFractionDigits = false
         return formatter
     }()
 }

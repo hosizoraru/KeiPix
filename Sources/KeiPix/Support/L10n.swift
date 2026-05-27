@@ -323,6 +323,8 @@ enum L10n {
     static var resumeDownloads: String { text("Resume Downloads") }
     static var downloadsPaused: String { text("Downloads Paused") }
     static var downloadsResumed: String { text("Downloads Resumed") }
+    static var downloadThroughputPerSecondFormat: String { text("%@/s") }
+    static var downloadThroughputTotalFormat: String { text("Total %@") }
     static var downloadedLocally: String { text("Downloaded Locally") }
     static var inDownloadQueue: String { text("In Download Queue") }
     static var downloadFailed: String { text("Download Failed") }
@@ -884,6 +886,16 @@ enum L10n {
     }
     static var qaQuickLookEvidence: String {
         text("Each completed row resolves a Quick Look URL and surfaces the preview button, context-menu entry, and Space-bar handler.")
+    }
+    static var qaDownloadThroughput: String { text("Live download throughput") }
+    static var qaDownloadThroughputRequirement: String {
+        text("Active downloads display a sliding-window byte-per-second readout per row and an aggregate rate in the queue subtitle, just like Finder.")
+    }
+    static var qaDownloadThroughputNext: String {
+        text("Keep DownloadThroughputSampler wired through ArtworkDownloadStore.download(_:sourceURLs:) and reset on pause / cancel / complete so the speedometer never lies.")
+    }
+    static var qaDownloadThroughputEvidence: String {
+        text("Throughput sampler records per-page bytes and exposes per-item plus aggregate rates that the queue surfaces.")
     }
     static var systemProxy: String { text("System Proxy") }
     static var directConnection: String { text("Direct connection") }
