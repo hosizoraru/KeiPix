@@ -5,7 +5,9 @@ import Observation
 @MainActor
 @Observable
 final class KeiPixStore {
-    let downloads = ArtworkDownloadStore()
+    let api: PixivAPI
+    let downloads: ArtworkDownloadStore
+    let novels: NovelFeatureStore
 
     var session: PixivSession?
     var storedAccounts: [PixivStoredAccount] = []
@@ -44,6 +46,7 @@ final class KeiPixStore {
     var savedSearchPresets = KeiPixStore.loadSavedSearchPresets()
     var bookmarkTagFilter: String?
     var localBrowsingHistory = KeiPixStore.loadLocalBrowsingHistory()
+    var watchLaterQueue = KeiPixStore.loadWatchLaterQueue()
     var spotlightFavoriteArticles = KeiPixStore.loadSpotlightArticles(key: "spotlightFavoriteArticles")
     var spotlightArticleHistory = KeiPixStore.loadSpotlightArticles(key: "spotlightArticleHistory")
     var readerProgressLibrary = KeiPixStore.loadReaderProgressLibrary()
@@ -250,7 +253,6 @@ final class KeiPixStore {
         screenCaptureProtectionEnabled && readerWindowArtwork?.requiresScreenCaptureProtection == true
     }
 
-    let api = PixivAPI()
     var allArtworks: [PixivArtwork] = []
     private var allSearchPopularPreviewArtworks: [PixivArtwork] = []
     var nextURL: URL?
@@ -263,6 +265,11 @@ final class KeiPixStore {
     var recordedBrowsingHistoryIDs = Set<Int>()
 
     init() {
+        let api = PixivAPI()
+        self.api = api
+        self.downloads = ArtworkDownloadStore()
+        self.novels = NovelFeatureStore(api: api)
+
         // Wire CoreSpotlight side effects so finishing or removing a
         // download keeps the system index in sync. The sink stays
         // optional on the download store side, which lets that store
@@ -275,6 +282,30 @@ final class KeiPixStore {
                 self?.unregisterDownloadsFromSpotlight(artworkIDs: ids)
             }
         )
+
+        // Hand the novel store the slices of state it needs to drive
+        // its feed dispatcher. Closures keep the dependency one-way —
+        // `NovelFeatureStore` never imports `KeiPixStore`, which keeps
+        // the surface area small and the cycle-of-references clean.
+        novels.passesContentFilter = { [weak self] novel in
+            self?.passesNovelContentFilter(novel) ?? true
+        }
+        novels.rankingDateProvider = { [weak self] in
+            self?.rankingDateParameter
+        }
+        novels.followingRestrictProvider = { [weak self] in
+            self?.defaultFollowRestrict.rawValue ?? "public"
+        }
+        novels.searchKeywordProvider = { [weak self] in
+            self?.searchText.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        }
+        novels.currentUserID = { [weak self] in
+            guard let raw = self?.session?.user.id else { return nil }
+            return Int(raw)
+        }
+        novels.focusedUserID = { [weak self] in
+            self?.focusedUser?.id
+        }
 
         if VisualQALaunchArgument.isActive {
             activateVisualQASampleSession()
@@ -334,6 +365,19 @@ final class KeiPixStore {
                 return
             }
             Task { await reloadCurrentFeed() }
+        } else if route.usesNovelFeed {
+            // Novels live on `NovelFeatureStore`. The artwork pipeline
+            // is intentionally cleared so the gallery column doesn't
+            // show stale illusts behind a novel route.
+            activeFeedRequestID = nil
+            allArtworks = []
+            artworks = []
+            activeFeedSnapshotRestoration = nil
+            allSearchPopularPreviewArtworks = []
+            searchPopularPreviewArtworks = []
+            nextURL = nil
+            isLoading = false
+            Task { await novels.refresh(route: route) }
         } else {
             activeFeedRequestID = nil
             allArtworks = []
@@ -851,9 +895,33 @@ final class KeiPixStore {
             return try await api.following(restrict: "private")
         case .history:
             return try await api.browsingHistoryIllusts()
-        case .home, .mangaWatchlist, .downloads, .savedSearches, .trendingTags, .bookmarkTags, .mutedContent, .spotlight:
+        case .home, .watchLater, .mangaWatchlist, .downloads, .savedSearches, .trendingTags, .bookmarkTags, .mutedContent, .spotlight:
             return PixivFeedResponse(illusts: [], nextURL: nil)
         case .followingCreators, .pinnedCreators, .recommendedUsers, .searchUsers:
+            return PixivFeedResponse(illusts: [], nextURL: nil)
+        case .novelRecommended,
+             .novelFollowing,
+             .novelSearch,
+             .novelPublicBookmarks,
+             .novelPrivateBookmarks,
+             .novelWatchlist,
+             .novelRankingDaily,
+             .novelRankingWeekly,
+             .novelRankingMonthly,
+             .novelRankingDailyMale,
+             .novelRankingDailyFemale,
+             .novelRankingWeeklyRookie,
+             .novelRankingWeeklyAI,
+             .novelRankingDailyR18,
+             .novelRankingWeeklyR18,
+             .novelRankingWeeklyR18AI,
+             .novelRankingWeeklyR18G,
+             .userNovels,
+             .userNovelBookmarks:
+            // Novel routes flow through `NovelFeatureStore` instead of the
+            // shared artwork pipeline. Returning an empty response here keeps
+            // the existing artwork view-models inert when a novel route is
+            // selected.
             return PixivFeedResponse(illusts: [], nextURL: nil)
         }
     }
@@ -917,6 +985,39 @@ final class KeiPixStore {
             },
             nextURL: response.nextURL
         )
+    }
+
+    /// Mirrors `passesContentFilters(_:)` but for novels. Novels don't
+    /// participate in the search-page knobs (work type, bookmark count,
+    /// ugoira filter), so the novel surface only honors the global
+    /// AI / R-18 / mute toggles.
+    func passesNovelContentFilter(_ novel: PixivNovel) -> Bool {
+        if hideMutedContent, isMutedLocally(novel: novel) {
+            return false
+        }
+        if hideAIArtworks, novel.isAI {
+            return false
+        }
+        if hideR18GArtworks, novel.isR18G {
+            return false
+        }
+        if hideR18Artworks, novel.isR18 {
+            return false
+        }
+        return true
+    }
+
+    /// Local mute check tailored to a novel. Reuses the same mute lists
+    /// as the artwork pipeline so a creator muted from an illust hides
+    /// their novels too.
+    func isMutedLocally(novel: PixivNovel) -> Bool {
+        if novel.isMuted {
+            return true
+        }
+        if mutedUsers[novel.user.id] != nil {
+            return true
+        }
+        return novel.tags.contains { mutedTags.contains($0.name) }
     }
 
     func passesContentFilters(_ artwork: PixivArtwork) -> Bool {

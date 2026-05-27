@@ -65,6 +65,37 @@ struct DiscoveryDashboardSection: Identifiable {
                 ]
             ),
             DiscoveryDashboardSection(
+                id: "novels",
+                title: L10n.novels,
+                systemImage: "book",
+                routes: [
+                    .novelRecommended,
+                    .novelFollowing,
+                    .novelSearch,
+                    .novelPublicBookmarks,
+                    .novelPrivateBookmarks,
+                    .novelWatchlist
+                ]
+            ),
+            DiscoveryDashboardSection(
+                id: "novel-ranking",
+                title: L10n.novelRanking,
+                systemImage: "chart.bar",
+                routes: [
+                    .novelRankingDaily,
+                    .novelRankingWeekly,
+                    .novelRankingMonthly,
+                    .novelRankingDailyMale,
+                    .novelRankingDailyFemale,
+                    .novelRankingWeeklyRookie,
+                    .novelRankingWeeklyAI,
+                    .novelRankingDailyR18,
+                    .novelRankingWeeklyR18,
+                    .novelRankingWeeklyR18AI,
+                    .novelRankingWeeklyR18G
+                ]
+            ),
+            DiscoveryDashboardSection(
                 id: "library",
                 title: L10n.library,
                 systemImage: "books.vertical",
@@ -76,6 +107,7 @@ struct DiscoveryDashboardSection: Identifiable {
                     .following,
                     .privateFollowing,
                     .history,
+                    .watchLater,
                     .mutedContent,
                     .mangaWatchlist,
                     .downloads

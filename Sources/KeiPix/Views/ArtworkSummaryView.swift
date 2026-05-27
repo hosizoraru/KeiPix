@@ -383,6 +383,24 @@ private struct ArtworkActionStrip: View {
 
                         Divider()
 
+                        if store.isInWatchLater(artwork.id) {
+                            Button {
+                                store.removeFromWatchLater(LocalArtworkHistoryItem(artwork: artwork))
+                                showActionMessage(L10n.watchLaterRemoved)
+                            } label: {
+                                Label(L10n.watchLaterRemoved, systemImage: "clock.badge.xmark")
+                            }
+                        } else {
+                            Button {
+                                store.addToWatchLater(artwork)
+                                showActionMessage(L10n.watchLaterAdded)
+                            } label: {
+                                Label(L10n.watchLaterAdded, systemImage: "clock.badge.plus")
+                            }
+                        }
+
+                        Divider()
+
                         Button {
                             copyArtworkSummary()
                         } label: {

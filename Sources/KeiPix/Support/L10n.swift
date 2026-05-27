@@ -114,6 +114,12 @@ enum L10n {
     static var localHistory: String { text("Local") }
     static var pixivHistory: String { text("Pixiv") }
     static var searchHistory: String { text("Search history") }
+    static var watchLater: String { text("Watch Later") }
+    static var watchLaterEmpty: String { text("No items in watch later queue") }
+    static var watchLaterEmptyHint: String { text("Add artworks from the detail view to watch later.") }
+    static var watchLaterAdded: String { text("Added to Watch Later") }
+    static var watchLaterRemoved: String { text("Removed from Watch Later") }
+    static var watchLaterClear: String { text("Clear Watch Later") }
     static var clearSearch: String { text("Clear Search") }
     static var clearHistory: String { text("Clear History") }
     static var clearHistoryConfirmation: String { text("Clear all local browsing history?") }

@@ -107,7 +107,7 @@ extension KeiPixStore {
         UserDefaults.standard.set(data, forKey: "localBrowsingHistory")
     }
 
-    private func allKnownArtwork(id: Int) -> PixivArtwork? {
+    func allKnownArtwork(id: Int) -> PixivArtwork? {
         if let selectedArtwork, selectedArtwork.id == id {
             return selectedArtwork
         }
@@ -117,7 +117,7 @@ extension KeiPixStore {
         return allArtworks.first { $0.id == id }
     }
 
-    private func passesLocalHistoryFilters(_ item: LocalArtworkHistoryItem) -> Bool {
+    func passesLocalHistoryFilters(_ item: LocalArtworkHistoryItem) -> Bool {
         if hideAIArtworks, item.isAI {
             return false
         }

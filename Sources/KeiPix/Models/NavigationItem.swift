@@ -4,15 +4,32 @@ enum PixivRouteSection: Identifiable {
     case works
     case ranking
     case mangaRanking
+    case novels
+    case novelRanking
     case library
 
-    var id: String { title }
+    /// Stable identifier suitable for persistence (e.g. UserDefaults keys).
+    /// Unlike `title`, this never changes when the user switches locale.
+    var storageID: String {
+        switch self {
+        case .works: "works"
+        case .ranking: "ranking"
+        case .mangaRanking: "mangaRanking"
+        case .novels: "novels"
+        case .novelRanking: "novelRanking"
+        case .library: "library"
+        }
+    }
+
+    var id: String { storageID }
 
     var title: String {
         switch self {
         case .works: L10n.works
         case .ranking: L10n.ranking
         case .mangaRanking: L10n.mangaRanking
+        case .novels: L10n.novels
+        case .novelRanking: L10n.novelRanking
         case .library: L10n.library
         }
     }
@@ -50,6 +67,29 @@ enum PixivRouteSection: Identifiable {
             ]
         case .mangaRanking:
             [.mangaRankingDaily, .mangaRankingWeekly, .mangaRankingMonthly, .mangaRankingDailyR18]
+        case .novels:
+            [
+                .novelRecommended,
+                .novelFollowing,
+                .novelSearch,
+                .novelPublicBookmarks,
+                .novelPrivateBookmarks,
+                .novelWatchlist
+            ]
+        case .novelRanking:
+            [
+                .novelRankingDaily,
+                .novelRankingWeekly,
+                .novelRankingMonthly,
+                .novelRankingDailyMale,
+                .novelRankingDailyFemale,
+                .novelRankingWeeklyRookie,
+                .novelRankingWeeklyAI,
+                .novelRankingDailyR18,
+                .novelRankingWeeklyR18,
+                .novelRankingWeeklyR18AI,
+                .novelRankingWeeklyR18G
+            ]
         case .library:
             [
                 .publicBookmarks,
@@ -61,6 +101,7 @@ enum PixivRouteSection: Identifiable {
                 .followingCreators,
                 .pinnedCreators,
                 .history,
+                .watchLater,
                 .mutedContent,
                 .mangaWatchlist,
                 .downloads
@@ -72,6 +113,7 @@ enum PixivRouteSection: Identifiable {
 enum PixivRankingFamily: String, CaseIterable {
     case illustration
     case manga
+    case novel
 }
 
 enum PixivRoute: String, CaseIterable, Identifiable, Codable {
@@ -113,13 +155,34 @@ enum PixivRoute: String, CaseIterable, Identifiable, Codable {
     case followingCreators
     case pinnedCreators
     case history
+    case watchLater
     case mutedContent
     case mangaWatchlist
     case downloads
     case recommendedUsers
+    // MARK: Novels
+    case novelRecommended
+    case novelFollowing
+    case novelSearch
+    case novelPublicBookmarks
+    case novelPrivateBookmarks
+    case novelWatchlist
+    case novelRankingDaily
+    case novelRankingWeekly
+    case novelRankingMonthly
+    case novelRankingDailyMale
+    case novelRankingDailyFemale
+    case novelRankingWeeklyRookie
+    case novelRankingWeeklyAI
+    case novelRankingDailyR18
+    case novelRankingWeeklyR18
+    case novelRankingWeeklyR18AI
+    case novelRankingWeeklyR18G
+    case userNovels
+    case userNovelBookmarks
 
     static var sidebarSections: [PixivRouteSection] {
-        [.works, .ranking, .mangaRanking, .library]
+        [.works, .ranking, .mangaRanking, .novels, .novelRanking, .library]
     }
 
     var isSidebarRoute: Bool {
@@ -168,10 +231,30 @@ enum PixivRoute: String, CaseIterable, Identifiable, Codable {
         case .followingCreators: L10n.followingCreators
         case .pinnedCreators: L10n.pinnedCreators
         case .history: L10n.history
+        case .watchLater: L10n.watchLater
         case .mutedContent: L10n.mutedContent
         case .mangaWatchlist: L10n.mangaWatchlist
         case .downloads: L10n.downloads
         case .recommendedUsers: L10n.recommendedCreators
+        case .novelRecommended: L10n.recommendedNovels
+        case .novelFollowing: L10n.followingNovels
+        case .novelSearch: L10n.searchNovels
+        case .novelPublicBookmarks: L10n.novelPublicBookmarks
+        case .novelPrivateBookmarks: L10n.novelPrivateBookmarks
+        case .novelWatchlist: L10n.novelWatchlist
+        case .novelRankingDaily: L10n.daily
+        case .novelRankingWeekly: L10n.weekly
+        case .novelRankingMonthly: L10n.monthly
+        case .novelRankingDailyMale: L10n.forMale
+        case .novelRankingDailyFemale: L10n.forFemale
+        case .novelRankingWeeklyRookie: L10n.rookies
+        case .novelRankingWeeklyAI: L10n.weeklyAI
+        case .novelRankingDailyR18: L10n.dailyR18
+        case .novelRankingWeeklyR18: L10n.weeklyR18
+        case .novelRankingWeeklyR18AI: L10n.weeklyR18AI
+        case .novelRankingWeeklyR18G: L10n.weeklyR18G
+        case .userNovels: L10n.creatorNovels
+        case .userNovelBookmarks: L10n.creatorNovelBookmarks
         }
     }
 
@@ -188,10 +271,56 @@ enum PixivRoute: String, CaseIterable, Identifiable, Codable {
              .trendingTags,
              .spotlight,
              .bookmarkTags,
-             .mutedContent:
+             .mutedContent,
+             .novelRecommended,
+             .novelFollowing,
+             .novelSearch,
+             .novelPublicBookmarks,
+             .novelPrivateBookmarks,
+             .novelWatchlist,
+             .novelRankingDaily,
+             .novelRankingWeekly,
+             .novelRankingMonthly,
+             .novelRankingDailyMale,
+             .novelRankingDailyFemale,
+             .novelRankingWeeklyRookie,
+             .novelRankingWeeklyAI,
+             .novelRankingDailyR18,
+             .novelRankingWeeklyR18,
+             .novelRankingWeeklyR18AI,
+             .novelRankingWeeklyR18G,
+             .userNovels,
+             .userNovelBookmarks:
             false
         default:
             true
+        }
+    }
+
+    var usesNovelFeed: Bool {
+        switch self {
+        case .novelRecommended,
+             .novelFollowing,
+             .novelSearch,
+             .novelPublicBookmarks,
+             .novelPrivateBookmarks,
+             .novelWatchlist,
+             .novelRankingDaily,
+             .novelRankingWeekly,
+             .novelRankingMonthly,
+             .novelRankingDailyMale,
+             .novelRankingDailyFemale,
+             .novelRankingWeeklyRookie,
+             .novelRankingWeeklyAI,
+             .novelRankingDailyR18,
+             .novelRankingWeeklyR18,
+             .novelRankingWeeklyR18AI,
+             .novelRankingWeeklyR18G,
+             .userNovels,
+             .userNovelBookmarks:
+            true
+        default:
+            false
         }
     }
 
@@ -206,7 +335,32 @@ enum PixivRoute: String, CaseIterable, Identifiable, Codable {
         if Self.mangaRankingRoutes.contains(self) {
             return .manga
         }
+        if Self.novelRankingRoutes.contains(self) {
+            return .novel
+        }
         return nil
+    }
+
+    /// pixiv `mode` query value for the ranking endpoints. Returns `nil` for
+    /// non-ranking routes so callers can short-circuit on the optional.
+    var rankingMode: String? {
+        switch self {
+        case .rankingDaily, .mangaRankingDaily, .novelRankingDaily: "day"
+        case .rankingWeekly, .mangaRankingWeekly, .novelRankingWeekly: "week"
+        case .rankingMonthly, .mangaRankingMonthly, .novelRankingMonthly: "month"
+        case .rankingDailyMale, .novelRankingDailyMale: "day_male"
+        case .rankingDailyFemale, .novelRankingDailyFemale: "day_female"
+        case .rankingWeeklyOriginal: "week_original"
+        case .rankingWeeklyRookie, .novelRankingWeeklyRookie: "week_rookie"
+        case .rankingDailyAI: "day_ai"
+        case .rankingDailyR18AI: "day_r18_ai"
+        case .rankingDailyR18, .mangaRankingDailyR18, .novelRankingDailyR18: "day_r18"
+        case .rankingWeeklyR18, .novelRankingWeeklyR18: "week_r18"
+        case .rankingWeeklyR18G, .novelRankingWeeklyR18G: "week_r18g"
+        case .novelRankingWeeklyAI: "week_ai"
+        case .novelRankingWeeklyR18AI: "week_ai_r18"
+        default: nil
+        }
     }
 
     static var illustrationRankingRoutes: [PixivRoute] {
@@ -235,17 +389,39 @@ enum PixivRoute: String, CaseIterable, Identifiable, Codable {
         ]
     }
 
+    static var novelRankingRoutes: [PixivRoute] {
+        [
+            .novelRankingDaily,
+            .novelRankingWeekly,
+            .novelRankingMonthly,
+            .novelRankingDailyMale,
+            .novelRankingDailyFemale,
+            .novelRankingWeeklyRookie,
+            .novelRankingWeeklyAI,
+            .novelRankingDailyR18,
+            .novelRankingWeeklyR18,
+            .novelRankingWeeklyR18AI,
+            .novelRankingWeeklyR18G
+        ]
+    }
+
     static func rankingRoutes(for family: PixivRankingFamily) -> [PixivRoute] {
         switch family {
         case .illustration:
             illustrationRankingRoutes
         case .manga:
             mangaRankingRoutes
+        case .novel:
+            novelRankingRoutes
         }
     }
 
     var isOwnBookmarkRoute: Bool {
         self == .publicBookmarks || self == .privateBookmarks
+    }
+
+    var isOwnNovelBookmarkRoute: Bool {
+        self == .novelPublicBookmarks || self == .novelPrivateBookmarks
     }
 
     var systemImage: String {
@@ -282,9 +458,23 @@ enum PixivRoute: String, CaseIterable, Identifiable, Codable {
         case .followingCreators: "person.2.crop.square.stack"
         case .pinnedCreators: "pin"
         case .history: "clock.arrow.circlepath"
+        case .watchLater: "clock.badge.plus"
         case .mutedContent: "eye.slash"
         case .mangaWatchlist: "rectangle.stack.badge.person.crop"
         case .downloads: "arrow.down.circle"
+        case .novelRecommended: "book"
+        case .novelFollowing: "book.and.wrench"
+        case .novelSearch: "text.magnifyingglass"
+        case .novelPublicBookmarks, .novelPrivateBookmarks: "bookmark.square"
+        case .novelWatchlist: "books.vertical"
+        case .novelRankingDaily, .novelRankingWeekly, .novelRankingMonthly: "chart.bar.doc.horizontal"
+        case .novelRankingDailyMale, .novelRankingDailyFemale: "person.2"
+        case .novelRankingWeeklyRookie: "sparkles"
+        case .novelRankingWeeklyAI, .novelRankingWeeklyR18AI: "sparkles.rectangle.stack"
+        case .novelRankingDailyR18, .novelRankingWeeklyR18: "exclamationmark.triangle"
+        case .novelRankingWeeklyR18G: "exclamationmark.octagon"
+        case .userNovels: "person.crop.rectangle"
+        case .userNovelBookmarks: "person.crop.circle.badge.checkmark"
         }
     }
 }

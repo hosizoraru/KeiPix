@@ -26,6 +26,9 @@ struct ContentView: View {
             } else if store.selectedRoute == .spotlight {
                 SpotlightArticleDetailView(store: store)
                     .navigationSplitViewColumnWidth(min: 360, ideal: 500)
+            } else if store.selectedRoute.usesNovelFeed {
+                NovelDetailView(store: store)
+                    .navigationSplitViewColumnWidth(min: 320, ideal: 460)
             } else {
                 ArtworkDetailView(store: store)
                     .navigationSplitViewColumnWidth(min: 300, ideal: 420)
@@ -549,6 +552,8 @@ private struct ContentColumnView: View {
             DiscoveryDashboardView(store: store)
         } else if store.selectedRoute == .mangaWatchlist {
             MangaWatchlistView(store: store)
+        } else if store.selectedRoute == .novelWatchlist {
+            NovelWatchlistView(store: store)
         } else if store.selectedRoute == .downloads {
             DownloadQueueView(store: store)
         } else if store.selectedRoute == .savedSearches {
@@ -561,10 +566,14 @@ private struct ContentColumnView: View {
             BookmarkTagsView(store: store)
         } else if store.selectedRoute == .history {
             BrowsingHistoryView(store: store)
+        } else if store.selectedRoute == .watchLater {
+            WatchLaterView(store: store)
         } else if store.selectedRoute == .mutedContent {
             MutedContentView(store: store)
         } else if store.selectedRoute == .followingCreators || store.selectedRoute == .pinnedCreators || store.selectedRoute == .recommendedUsers || store.selectedRoute == .searchUsers {
             UserPreviewListView(store: store, mode: userPreviewMode)
+        } else if store.selectedRoute.usesNovelFeed {
+            NovelGalleryView(store: store)
         } else {
             GalleryView(store: store)
         }
