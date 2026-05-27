@@ -4,7 +4,7 @@ import UserNotifications
 @testable import KeiPix
 
 @MainActor
-@Suite("Download finish notifier")
+@Suite("Download finish notifier", .serialized)
 struct DownloadCompletionNotifierTests {
 
     @Test("Single completion fires exactly one banner after the coalesce window")
@@ -14,11 +14,15 @@ struct DownloadCompletionNotifierTests {
         let notifier = DownloadCompletionNotifier(
             center: center,
             authorizationStore: auth,
-            coalesceWindowSeconds: 0.05
+            coalesceWindowSeconds: 0.10
         )
 
         notifier.recordCompletion(title: "First")
-        try await Task.sleep(for: .milliseconds(120))
+        // Coalesce window is 100 ms; we wait long enough that even under
+        // parallel test load the unstructured Task.sleep + @MainActor hop
+        // back into flushPendingNotifications has finished. Earlier
+        // 50 ms / 120 ms tuning was tight enough to flake on busy runners.
+        try await Task.sleep(for: .milliseconds(400))
 
         #expect(center.added.count == 1)
         #expect(center.added.first?.content.body == "First")

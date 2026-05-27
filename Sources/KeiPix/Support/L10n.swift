@@ -1012,6 +1012,39 @@ enum L10n {
         text("Catalog covers every ShortcutAction case, surfaces are well-formed, and System Settings deep-link " +
              "URL parses in the unit suite.")
     }
+
+    // MARK: - About window
+
+    static var aboutKeiPix: String { text("About KeiPix") }
+    static func versionLabel(_ value: String) -> String {
+        String(format: text("Version %@"), locale: Locale.current, value)
+    }
+    static func buildLabel(_ value: String) -> String {
+        String(format: text("Build %@"), locale: Locale.current, value)
+    }
+    static var aboutSummary: String {
+        text("KeiPix is a native macOS Pixiv client written in Swift and SwiftUI.")
+    }
+    static var aboutSourceRepository: String { text("Source Repository") }
+    static var aboutOpenOnGitHub: String { text("Open on GitHub") }
+    static var aboutAcknowledgments: String { text("Acknowledgments") }
+    static var aboutReferenceProjects: String { text("Reference Projects") }
+    static var aboutReferenceProjectsBody: String {
+        text("Pixez and Pixes are GPL-licensed Flutter apps used as behavior references only. " +
+             "KeiPix's source is original Swift; reference-client implementation paths are blocked " +
+             "by NativeBoundaryTests.")
+    }
+    static var aboutLocalization: String { text("Localization") }
+    static var aboutLocalizationBody: String {
+        text("English, Simplified Chinese, Traditional Chinese, Japanese.")
+    }
+    static var aboutLicense: String { text("License") }
+    static var aboutLicenseBody: String {
+        text("Source available for personal evaluation. No formal license has been published; " +
+             "all rights reserved by the author.")
+    }
+    static var aboutCopyDiagnostics: String { text("Copy Diagnostics Bundle") }
+    static var aboutDiagnosticsCopied: String { text("Diagnostics copied") }
     static var systemProxy: String { text("System Proxy") }
     static var directConnection: String { text("Direct connection") }
     static var pixivAPI: String { text("Pixiv API") }

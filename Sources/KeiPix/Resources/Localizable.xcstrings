@@ -1050,6 +1050,35 @@
         }
       }
     },
+    "About KeiPix": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "About KeiPix"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "KeiPix について"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "关于 KeiPix"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "關於 KeiPix"
+          }
+        }
+      }
+    },
     "Account": {
       "extractionState": "manual",
       "localizations": {
@@ -1191,6 +1220,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "帳號身份已隱藏"
+          }
+        }
+      }
+    },
+    "Acknowledgments": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acknowledgments"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "謝辞"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "致谢"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "致謝"
           }
         }
       }
@@ -3163,6 +3221,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "收藏"
+          }
+        }
+      }
+    },
+    "Build %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Build %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ビルド %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "构建 %@"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "構建 %@"
           }
         }
       }
@@ -5922,6 +6009,35 @@
         }
       }
     },
+    "Copy Diagnostics Bundle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy Diagnostics Bundle"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "診断情報をコピー"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "复制诊断信息"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "複製診斷資訊"
+          }
+        }
+      }
+    },
     "Copy Download Folder Path": {
       "extractionState": "manual",
       "localizations": {
@@ -7894,6 +8010,35 @@
         }
       }
     },
+    "Diagnostics copied": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diagnostics copied"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "診断情報をコピーしました"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "诊断信息已复制"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "診斷資訊已複製"
+          }
+        }
+      }
+    },
     "Direct (No Proxy)": {
       "extractionState": "manual",
       "localizations": {
@@ -9108,6 +9253,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "英文"
+          }
+        }
+      }
+    },
+    "English, Simplified Chinese, Traditional Chinese, Japanese.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "English, Simplified Chinese, Traditional Chinese, Japanese."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "英語、簡体中国語、繁体中国語、日本語。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "英语、简体中文、繁体中文、日语。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "英文、簡體中文、繁體中文、日文。"
           }
         }
       }
@@ -12969,6 +13143,35 @@
         }
       }
     },
+    "KeiPix is a native macOS Pixiv client written in Swift and SwiftUI.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "KeiPix is a native macOS Pixiv client written in Swift and SwiftUI."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "KeiPix は Swift と SwiftUI で書かれたネイティブ macOS 向け Pixiv クライアントです。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "KeiPix 是用 Swift 与 SwiftUI 编写的原生 macOS Pixiv 客户端。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "KeiPix 是用 Swift 與 SwiftUI 編寫的原生 macOS Pixiv 客戶端。"
+          }
+        }
+      }
+    },
     "KeiPix is up to date": {
       "extractionState": "manual",
       "localizations": {
@@ -13342,6 +13545,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "書架"
+          }
+        }
+      }
+    },
+    "License": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "License"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ライセンス"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "许可证"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "授權"
           }
         }
       }
@@ -14009,6 +14241,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "僅本地作品封鎖 %d · 留言短語 %d"
+          }
+        }
+      }
+    },
+    "Localization": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Localization"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ローカライゼーション"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "本地化"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "本地化"
           }
         }
       }
@@ -18769,6 +19030,35 @@
         }
       }
     },
+    "Open on GitHub": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open on GitHub"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GitHub で開く"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在 GitHub 打开"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在 GitHub 打開"
+          }
+        }
+      }
+    },
     "Open the system translation sheet for this text. Lets you pick a target language, copy the result, or flip back to the original.": {
       "extractionState": "manual",
       "localizations": {
@@ -19664,6 +19954,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "置頂作者"
+          }
+        }
+      }
+    },
+    "Pixez and Pixes are GPL-licensed Flutter apps used as behavior references only. KeiPix's source is original Swift; reference-client implementation paths are blocked by NativeBoundaryTests.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pixez and Pixes are GPL-licensed Flutter apps used as behavior references only. KeiPix's source is original Swift; reference-client implementation paths are blocked by NativeBoundaryTests."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pixez と Pixes は GPL ライセンスの Flutter アプリで、挙動参照のみに利用しています。KeiPix のソースはすべてオリジナルの Swift で書かれており、NativeBoundaryTests が参照クライアント由来の実装パスを遮断します。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pixez 与 Pixes 为 GPL 许可的 Flutter 应用，仅作为行为参考。KeiPix 全部源码为原创 Swift；NativeBoundaryTests 会拦截参考客户端实现路径。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pixez 與 Pixes 為 GPL 授權的 Flutter 應用，僅作為行為參考。KeiPix 全部原始碼為原創 Swift；NativeBoundaryTests 會攔截參考客戶端實作路徑。"
           }
         }
       }
@@ -22303,6 +22622,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "推薦漫畫、漫畫榜、系列和漫畫追蹤需要可訪問。"
+          }
+        }
+      }
+    },
+    "Reference Projects": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reference Projects"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "参考プロジェクト"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "参考项目"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "參考項目"
           }
         }
       }
@@ -28310,6 +28658,64 @@
         }
       }
     },
+    "Source Repository": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Source Repository"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ソースリポジトリ"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "源码仓库"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "原始碼倉庫"
+          }
+        }
+      }
+    },
+    "Source available for personal evaluation. No formal license has been published; all rights reserved by the author.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Source available for personal evaluation. No formal license has been published; all rights reserved by the author."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ソースは個人での評価目的で公開されています。正式なライセンスは発行されておらず、すべての権利は作者が保持します。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "源码可用于个人评估，目前未发布正式许可证；版权归作者所有。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "原始碼可用於個人評估，目前未發佈正式授權；版權歸作者所有。"
+          }
+        }
+      }
+    },
     "Source pages %@": {
       "extractionState": "manual",
       "localizations": {
@@ -31177,6 +31583,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "已驗證"
+          }
+        }
+      }
+    },
+    "Version %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Version %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "バージョン %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "版本 %@"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "版本 %@"
           }
         }
       }

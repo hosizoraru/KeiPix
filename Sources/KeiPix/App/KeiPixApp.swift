@@ -216,7 +216,17 @@ struct KeiPixApp: App {
                 .shortcut(.openDownloadFolder)
             }
 
-            CommandGroup(after: .appInfo) {
+            // Replace macOS' default "About KeiPix" menu item — the bare
+            // `orderFrontStandardAboutPanel` only shows the bundle's short
+            // version string, so we route to the custom AboutView scene
+            // that surfaces version/build, the repo link, reference-project
+            // attribution, locale list, and license context users expect
+            // from a Mac app.
+            CommandGroup(replacing: .appInfo) {
+                Button(L10n.aboutKeiPix) {
+                    openWindow(id: "about")
+                }
+
                 // Manual entry mirrors macOS App Store / Sparkle's
                 // "Check for Updates…" — bypasses the 24-hour throttle
                 // so a user who just hit "Skip This Version" can still
@@ -227,6 +237,14 @@ struct KeiPixApp: App {
                 .disabled(store.isCheckingForUpdates)
             }
         }
+
+        Window(L10n.aboutKeiPix, id: "about") {
+            AboutView()
+                .environment(\.locale, store.appLanguage.locale ?? .current)
+                .preferredColorScheme(store.appColorScheme.preferredColorScheme)
+        }
+        .windowResizability(.contentSize)
+        .restorationBehavior(.disabled)
 
         Window(L10n.readerWindow, id: "artwork-reader") {
             ArtworkReaderWindowView(store: store)
