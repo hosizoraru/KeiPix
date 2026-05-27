@@ -453,9 +453,7 @@ final class KeiPixStore {
 
     @discardableResult
     func openPixivLinkFromClipboard() async -> String {
-        guard let rawText = NSPasteboard.general.string(forType: .string)?
-            .trimmingCharacters(in: .whitespacesAndNewlines),
-              rawText.isEmpty == false,
+        guard let rawText = PasteboardWriter.currentString(),
               let url = PixivWebLinkResolver.firstSupportedURL(in: rawText) else {
             errorMessage = L10n.noPixivLinkInClipboard
             return L10n.noPixivLinkInClipboard

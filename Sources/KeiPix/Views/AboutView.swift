@@ -157,9 +157,7 @@ struct AboutView: View {
         Locale: \(Locale.current.identifier)
         Repository: \(Self.repositoryURL.absoluteString)
         """
-        let pasteboard = NSPasteboard.general
-        pasteboard.clearContents()
-        pasteboard.setString(payload, forType: .string)
+        PasteboardWriter.copy(payload)
         diagnosticsToast = L10n.aboutDiagnosticsCopied
     }
 

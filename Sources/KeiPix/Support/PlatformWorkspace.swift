@@ -1,5 +1,8 @@
-import AppKit
 import Foundation
+import SwiftUI
+#if os(macOS)
+import AppKit
+#endif
 
 /// Platform-agnostic façade over the OS "open URL" and
 /// "reveal-in-file-browser" surfaces. Today every call routes to
@@ -25,20 +28,30 @@ enum PlatformWorkspace {
     /// need to opt into the async variant when we add it.
     @discardableResult
     static func open(_ url: URL) -> Bool {
+        #if os(macOS)
         NSWorkspace.shared.open(url)
+        #else
+        UIApplication.shared.open(url)
+        return true
+        #endif
     }
 
     /// Reveals a single file URL in the system file browser.
     /// On macOS this raises Finder with the file selected; on
     /// iPadOS it would deep-link into Files at the parent folder.
     static func revealInFiles(_ url: URL) {
+        #if os(macOS)
         NSWorkspace.shared.activateFileViewerSelecting([url])
+        #endif
+        // iPadOS: UIDocumentPickerViewController in Phase 5.
     }
 
     /// Reveals multiple file URLs in the system file browser. Used
     /// by the downloads viewer when the user batch-selects items.
     static func revealInFiles(_ urls: [URL]) {
         guard urls.isEmpty == false else { return }
+        #if os(macOS)
         NSWorkspace.shared.activateFileViewerSelecting(urls)
+        #endif
     }
 }

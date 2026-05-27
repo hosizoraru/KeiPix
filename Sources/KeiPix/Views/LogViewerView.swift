@@ -230,9 +230,7 @@ struct LogViewerView: View {
                 "\(entry.levelLabel.uppercased()) \(entry.category): \(entry.message)"
             }
             .joined(separator: "\n")
-        let pasteboard = NSPasteboard.general
-        pasteboard.clearContents()
-        pasteboard.setString(payload, forType: .string)
+        PasteboardWriter.copy(payload)
         copyToast = L10n.logsCopied
     }
 
