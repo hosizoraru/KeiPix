@@ -63,6 +63,15 @@ final class DownloadCompletionNotifier {
         }
     }
 
+    /// Awaits the in-flight coalesce task's completion. Exists so tests
+    /// can wait for the debounced flush deterministically instead of
+    /// guessing a sleep duration that has to outrun unstructured-Task
+    /// scheduling under parallel-test CPU pressure. Real callers don't
+    /// need this — the debounce fires on its own from `recordCompletion`.
+    func awaitPendingFlush() async {
+        await coalesceTask?.value
+    }
+
     /// Drops any buffered completions without posting. Called when the
     /// queue is paused or the user cancels in bulk so a stale "1
     /// download finished" doesn't fire after the affected workers

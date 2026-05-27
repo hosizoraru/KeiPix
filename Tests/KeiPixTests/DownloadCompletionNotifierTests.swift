@@ -14,15 +14,13 @@ struct DownloadCompletionNotifierTests {
         let notifier = DownloadCompletionNotifier(
             center: center,
             authorizationStore: auth,
-            coalesceWindowSeconds: 0.10
+            coalesceWindowSeconds: 0.05
         )
 
         notifier.recordCompletion(title: "First")
-        // Coalesce window is 100 ms; we wait long enough that even under
-        // parallel test load the unstructured Task.sleep + @MainActor hop
-        // back into flushPendingNotifications has finished. Earlier
-        // 50 ms / 120 ms tuning was tight enough to flake on busy runners.
-        try await Task.sleep(for: .milliseconds(400))
+        // Earlier wall-clock sleeps flaked under parallel-suite CPU
+        // pressure; awaiting the coalesce task itself removes the race.
+        await notifier.awaitPendingFlush()
 
         #expect(center.added.count == 1)
         #expect(center.added.first?.content.body == "First")
@@ -35,14 +33,13 @@ struct DownloadCompletionNotifierTests {
         let notifier = DownloadCompletionNotifier(
             center: center,
             authorizationStore: auth,
-            coalesceWindowSeconds: 0.08
+            coalesceWindowSeconds: 0.05
         )
 
         for index in 0..<5 {
             notifier.recordCompletion(title: "Item \(index)")
-            try await Task.sleep(for: .milliseconds(20))
         }
-        try await Task.sleep(for: .milliseconds(150))
+        await notifier.awaitPendingFlush()
 
         #expect(center.added.count == 1)
         // Body for batch path uses %d so the count must appear; we
@@ -61,7 +58,7 @@ struct DownloadCompletionNotifierTests {
         )
 
         notifier.recordCompletion(title: "Quiet")
-        try await Task.sleep(for: .milliseconds(120))
+        await notifier.awaitPendingFlush()
 
         #expect(center.added.isEmpty)
     }
@@ -73,12 +70,16 @@ struct DownloadCompletionNotifierTests {
         let notifier = DownloadCompletionNotifier(
             center: center,
             authorizationStore: auth,
-            coalesceWindowSeconds: 0.10
+            coalesceWindowSeconds: 0.05
         )
 
         notifier.recordCompletion(title: "Will be cancelled")
         notifier.flushBuffer()
-        try await Task.sleep(for: .milliseconds(150))
+        // Sleep just long enough that any orphaned task would have fired
+        // by now. We're checking the negative — that no banner posts —
+        // so awaiting the coalesce task isn't useful (it's nil after
+        // cancel/flush). 100 ms is well past the 50 ms window.
+        try await Task.sleep(for: .milliseconds(100))
 
         #expect(center.added.isEmpty)
     }
