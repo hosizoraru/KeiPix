@@ -1193,6 +1193,9 @@ enum L10n {
     static var novelWatchlistRemovedFormat: String { text("Removed %@ from watchlist") }
     static var novelBookmark: String { text("Bookmark Novel") }
     static var novelRemoveBookmark: String { text("Remove Novel Bookmark") }
+    static var novelExport: String { text("Export Novel") }
+    static var novelExportTXT: String { text("Export as TXT") }
+    static var novelExportMarkdown: String { text("Export as Markdown") }
     static var noNovels: String { text("No novels") }
     static var noNovelsHint: String { text("Pixiv hasn't returned any novels for this view yet.") }
     static var loadMoreNovels: String { text("Load More Novels") }
