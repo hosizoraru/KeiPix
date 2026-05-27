@@ -228,6 +228,14 @@ final class ImagePipeline: @unchecked Sendable {
         return image
     }
 
+    /// Active image processors, loaded from UserDefaults.
+    /// Empty array means no processing (pass-through).
+    private static var activeProcessors: [any ImageProcessor] {
+        guard UserDefaults.standard.bool(forKey: "imageProcessorsEnabled") else { return [] }
+        let identifiers = UserDefaults.standard.stringArray(forKey: "activeImageProcessors") ?? []
+        return identifiers.compactMap { ImageProcessorRegistry.processor(for: $0) }
+    }
+
     /// Decodes JPEG/PNG bytes on a background queue using
     /// `CGImageSource` with `kCGImageSourceShouldCacheImmediately`
     /// set so the bitmap is fully rasterized before SwiftUI ever
@@ -262,14 +270,31 @@ final class ImagePipeline: @unchecked Sendable {
                     return
                 }
 
+                // Apply image processors if any are active.
+                // Reads from UserDefaults each time so toggles
+                // take effect on the next image load.
+                let finalImage: CGImage
+                let processors = Self.activeProcessors
+                if processors.isEmpty {
+                    finalImage = cgImage
+                } else {
+                    var processed = cgImage
+                    for processor in processors {
+                        if let result = processor.process(processed) {
+                            processed = result
+                        }
+                    }
+                    finalImage = processed
+                }
+
                 // Use the CGImage's pixel dimensions for the image
                 // size so callers receive a 1× representation that
                 // SwiftUI can lay out without a second decode pass.
                 #if os(macOS)
-                let pixelSize = NSSize(width: cgImage.width, height: cgImage.height)
-                let image = NSImage(cgImage: cgImage, size: pixelSize)
+                let pixelSize = NSSize(width: finalImage.width, height: finalImage.height)
+                let image = NSImage(cgImage: finalImage, size: pixelSize)
                 #else
-                let image = UIImage(cgImage: cgImage)
+                let image = UIImage(cgImage: finalImage)
                 #endif
                 continuation.resume(returning: image)
             }

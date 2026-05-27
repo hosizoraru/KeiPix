@@ -1,5 +1,8 @@
 import AppKit
 import SwiftUI
+#if canImport(Translation)
+@preconcurrency import Translation
+#endif
 
 /// Body-text reader presented as a sheet from `NovelDetailView`. Walks
 /// the `NovelToken` stream produced by `NovelTextTokenizer`, splits it on
@@ -35,6 +38,8 @@ struct NovelReaderView: View {
     @State private var pageIndex: Int = 0
     @State private var isSettingsPresented = false
     @State private var isTranslationPresented = false
+    @State private var translationEngine = NovelTranslationEngine()
+    @State private var translationConfig = TranslationSession.Configuration(source: nil, target: nil)
 
     private var novelStore: NovelFeatureStore { store.novels }
 
@@ -99,6 +104,31 @@ struct NovelReaderView: View {
                 pageIndex = 0
             }
         }
+        .onChange(of: pageIndex) { _, _ in
+            translationEngine.clearTranslations()
+        }
+        .translationTask(translationConfig) { session in
+            guard translationEngine.isInlineTranslationActive else { return }
+            let paragraphs = currentPageTokens.enumerated().compactMap { index, token -> (Int, String)? in
+                if case .text(let value) = token,
+                   let translatable = CaptionTranslationAvailability.translatableText(from: value) {
+                    return (index, translatable)
+                }
+                return nil
+            }
+            guard paragraphs.isEmpty == false else { return }
+            translationEngine.setTranslating()
+            var results: [Int: String] = [:]
+            for (tokenIndex, text) in paragraphs {
+                guard translationEngine.isInlineTranslationActive else { break }
+                if let response = try? await session.translate(text) {
+                    results[tokenIndex] = response.targetText
+                }
+            }
+            if translationEngine.isInlineTranslationActive {
+                translationEngine.applyResults(results)
+            }
+        }
         .sheet(isPresented: $isSettingsPresented) {
             NovelReaderSettingsView(
                 textSize: $textSize,
@@ -156,6 +186,23 @@ struct NovelReaderView: View {
             }
             .help(L10n.translate)
             .keyboardShortcut("t", modifiers: [])
+
+            // Inline translate toggle — shows translated text
+            // above each paragraph using TranslationSession.
+            Button {
+                translationEngine.isInlineTranslationActive.toggle()
+                if translationEngine.isInlineTranslationActive {
+                    // Bump the config to trigger .translationTask.
+                    translationConfig = TranslationSession.Configuration(source: nil, target: nil)
+                } else {
+                    translationEngine.clearTranslations()
+                }
+            } label: {
+                Label(L10n.novelInlineTranslate, systemImage: "text.bubble")
+                    .labelStyle(.iconOnly)
+            }
+            .help(L10n.novelInlineTranslateHelp)
+            .tint(translationEngine.isInlineTranslationActive ? .accentColor : nil)
 
             Button {
                 isSettingsPresented = true
@@ -235,8 +282,8 @@ struct NovelReaderView: View {
     private var pageContent: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: CGFloat(paragraphSpacing)) {
-                ForEach(Array(currentPageTokens.enumerated()), id: \.offset) { _, token in
-                    tokenView(token)
+                ForEach(Array(currentPageTokens.enumerated()), id: \.offset) { index, token in
+                    tokenView(token, tokenIndex: index)
                 }
             }
             .frame(maxWidth: CGFloat(maxContentWidth), alignment: .leading)
@@ -248,14 +295,29 @@ struct NovelReaderView: View {
     }
 
     @ViewBuilder
-    private func tokenView(_ token: NovelToken) -> some View {
+    private func tokenView(_ token: NovelToken, tokenIndex: Int = 0) -> some View {
         switch token {
         case .text(let value):
-            Text(value)
-                .font(bodyFont)
-                .lineSpacing(CGFloat(max(lineSpacing - 2, 0)))
-                .fixedSize(horizontal: false, vertical: true)
+            if translationEngine.isInlineTranslationActive,
+               let translated = translationEngine.translatedText(for: tokenIndex) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(translated)
+                        .font(bodyFont)
+                        .lineSpacing(CGFloat(max(lineSpacing - 2, 0)))
+                        .fixedSize(horizontal: false, vertical: true)
+                    Text(value)
+                        .font(rubyAnnotationFont)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
                 .frame(maxWidth: .infinity, alignment: .leading)
+            } else {
+                Text(value)
+                    .font(bodyFont)
+                    .lineSpacing(CGFloat(max(lineSpacing - 2, 0)))
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
         case .newPage:
             // The pager already splits on `.newPage`; if we ever fall
             // through (e.g., the splitter gets disabled), surface the

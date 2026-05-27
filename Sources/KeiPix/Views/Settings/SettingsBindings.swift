@@ -126,6 +126,16 @@ extension KeiPixStore {
         }
     }
 
+    // MARK: - Image Processing
+
+    var settings_imageProcessorsEnabledBinding: Binding<Bool> {
+        Binding {
+            self.imageProcessorsEnabled
+        } set: { value in
+            self.setImageProcessorsEnabled(value)
+        }
+    }
+
     var settings_defaultBookmarkRestrictBinding: Binding<BookmarkRestrict> {
         Binding {
             self.defaultBookmarkRestrict

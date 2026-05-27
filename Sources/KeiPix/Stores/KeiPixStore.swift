@@ -237,6 +237,11 @@ final class KeiPixStore {
     var useRankingDate = UserDefaults.standard.object(forKey: "useRankingDate") as? Bool ?? false
     var rankingDate = KeiPixStore.loadRankingDate()
     var trackpadGesturesEnabled = UserDefaults.standard.object(forKey: "trackpadGesturesEnabled") as? Bool ?? true
+
+    // MARK: - Image Processing
+
+    var imageProcessorsEnabled = UserDefaults.standard.bool(forKey: "imageProcessorsEnabled")
+    var activeImageProcessors: [String] = UserDefaults.standard.stringArray(forKey: "activeImageProcessors") ?? []
     var horizontalSwipeBehavior = UserDefaults.standard.string(forKey: "horizontalSwipeBehavior")
         .flatMap(TrackpadHorizontalSwipeBehavior.init(rawValue:)) ?? .pageOnly
     var defaultArtworkReadingMode = KeiPixStore.loadEnum(

@@ -425,6 +425,20 @@ extension KeiPixStore {
         UserDefaults.standard.set(behavior.rawValue, forKey: "horizontalSwipeBehavior")
     }
 
+    // MARK: - Image Processing
+
+    func setImageProcessorsEnabled(_ value: Bool) {
+        imageProcessorsEnabled = value
+        UserDefaults.standard.set(value, forKey: "imageProcessorsEnabled")
+        ImagePipeline.shared.clearCaches()
+    }
+
+    func setActiveImageProcessors(_ identifiers: [String]) {
+        activeImageProcessors = identifiers
+        UserDefaults.standard.set(identifiers, forKey: "activeImageProcessors")
+        ImagePipeline.shared.clearCaches()
+    }
+
     func defaultReadingMode(for artwork: PixivArtwork, pageCount: Int? = nil) -> ArtworkReadingMode {
         switch ArtworkReadingModePreferenceKind.kind(for: artwork, pageCount: pageCount ?? artwork.displayPageCount) {
         case .artwork:

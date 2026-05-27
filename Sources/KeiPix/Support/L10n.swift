@@ -550,6 +550,15 @@ enum L10n {
     static var illustDetailQuality: String { text("Illust detail quality") }
     static var mangaDetailQuality: String { text("Manga detail quality") }
     static var imageQualityTierHint: String { text("Pixiv ships every illust at three sizes. Pick the rung that matches your bandwidth — Medium loads fastest, Original is the source asset.") }
+    static var imageProcessing: String { text("Image Processing") }
+    static var imageProcessorsEnabled: String { text("Enable image processing") }
+    static var imageProcessorsHint: String { text("Apply visual enhancements to decoded images using Core Image and Vision filters. Changes take effect on newly loaded images.") }
+    static var smartCrop: String { text("Smart Crop") }
+    static var imageSharpen: String { text("Sharpen") }
+    static var imageDenoise: String { text("Noise Reduction") }
+    static var novelInlineTranslate: String { text("Inline Translate") }
+    static var novelInlineTranslateHelp: String { text("Show translated text above each paragraph") }
+    static var novelTranslating: String { text("Translating…") }
     static var imageTransform: String { text("Image Transform") }
     static var rotateLeft: String { text("Rotate Left") }
     static var rotateRight: String { text("Rotate Right") }

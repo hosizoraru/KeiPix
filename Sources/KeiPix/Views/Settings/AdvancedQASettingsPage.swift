@@ -30,8 +30,42 @@ struct AdvancedQASettingsPage: View {
                     }
                 }
             }
+
+            Section {
+                Toggle(L10n.imageProcessorsEnabled, isOn: store.settings_imageProcessorsEnabledBinding)
+                if store.imageProcessorsEnabled {
+                    ForEach(ImageProcessorRegistry.allProcessors, id: \.identifier) { processor in
+                        Toggle(
+                            processor.displayName,
+                            isOn: processorToggleBinding(for: processor.identifier)
+                        )
+                    }
+                }
+            } header: {
+                Text(L10n.imageProcessing)
+            } footer: {
+                Text(L10n.imageProcessorsHint)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
         }
         .formStyle(.grouped)
         .navigationTitle(L10n.settingsAdvancedQA)
+    }
+
+    private func processorToggleBinding(for identifier: String) -> Binding<Bool> {
+        Binding {
+            store.activeImageProcessors.contains(identifier)
+        } set: { enabled in
+            var current = store.activeImageProcessors
+            if enabled {
+                if !current.contains(identifier) {
+                    current.append(identifier)
+                }
+            } else {
+                current.removeAll { $0 == identifier }
+            }
+            store.setActiveImageProcessors(current)
+        }
     }
 }
