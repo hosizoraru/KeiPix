@@ -198,7 +198,7 @@ struct UgoiraPlayerView: View {
                 }
 
                 Button {
-                    NSWorkspace.shared.activateFileViewerSelecting([exportedGIFURL])
+                    PlatformWorkspace.revealInFiles(exportedGIFURL)
                 } label: {
                     Label(L10n.revealExportedGIF, systemImage: "folder")
                 }

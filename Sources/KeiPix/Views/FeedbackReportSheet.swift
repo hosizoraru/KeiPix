@@ -35,7 +35,7 @@ struct FeedbackReportSheet: View {
                             title: L10n.openPixivWebReportPage,
                             systemImage: "safari"
                         ) {
-                            NSWorkspace.shared.open(url)
+                            PlatformWorkspace.open(url)
                         }
                     }
                 }

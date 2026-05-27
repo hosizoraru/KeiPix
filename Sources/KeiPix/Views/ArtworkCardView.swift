@@ -45,7 +45,7 @@ struct ArtworkCardView: View {
         .scaleEffect(isHovering ? 1.012 : 1)
         .animation(.snappy(duration: 0.16), value: isHovering)
         .animation(.snappy(duration: 0.16), value: isSelected)
-        .onHover { isHovering = $0 }
+        .keiPixHoverTracker { isHovering = $0 }
         // Drag the artwork's Pixiv URL out of the card. macOS turns a
         // URL drop on Finder into a `.webloc` bookmark, while drops
         // into Safari, Notes, or Messages paste the link verbatim —

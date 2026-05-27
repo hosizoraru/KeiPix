@@ -148,7 +148,7 @@ struct DownloadQueueRow: View {
             Menu {
                 if let pixivURL = item.pixivURL {
                     Button {
-                        NSWorkspace.shared.open(pixivURL)
+                        PlatformWorkspace.open(pixivURL)
                     } label: {
                         Label(L10n.openInPixiv, systemImage: "safari")
                     }
@@ -221,7 +221,7 @@ struct DownloadQueueRow: View {
             }
             if let pixivURL = item.pixivURL {
                 Button(L10n.openInPixiv) {
-                    NSWorkspace.shared.open(pixivURL)
+                    PlatformWorkspace.open(pixivURL)
                 }
                 Button(L10n.copyLink) {
                     PasteboardWriter.copy(pixivURL.absoluteString)

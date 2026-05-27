@@ -184,7 +184,7 @@ private struct TrendingTagCard: View {
         }
         .shadow(color: .black.opacity(isHovering ? 0.16 : 0), radius: isHovering ? 12 : 0, y: isHovering ? 8 : 0)
         .animation(.snappy(duration: 0.16), value: isHovering)
-        .onHover { isHovering = $0 }
+        .keiPixHoverTracker { isHovering = $0 }
         .help(tagHelp)
         .contextMenu {
             Button(L10n.searchTag, action: search)

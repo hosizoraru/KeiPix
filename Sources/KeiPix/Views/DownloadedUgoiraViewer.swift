@@ -190,7 +190,7 @@ struct DownloadedUgoiraViewer: View {
                 }
 
                 Button {
-                    NSWorkspace.shared.activateFileViewerSelecting([exportedGIFURL])
+                    PlatformWorkspace.revealInFiles(exportedGIFURL)
                 } label: {
                     Label(L10n.revealExportedGIF, systemImage: "folder")
                 }
@@ -200,7 +200,7 @@ struct DownloadedUgoiraViewer: View {
 
             if let pixivURL = item.pixivURL {
                 Button {
-                    NSWorkspace.shared.open(pixivURL)
+                    PlatformWorkspace.open(pixivURL)
                 } label: {
                     Label(L10n.openInPixiv, systemImage: "safari")
                 }
@@ -286,7 +286,7 @@ struct DownloadedUgoiraViewer: View {
     }
 
     private func revealZip() {
-        NSWorkspace.shared.activateFileViewerSelecting([zipURL])
+        PlatformWorkspace.revealInFiles(zipURL)
     }
 
     private func showStatus(_ message: String) {

@@ -205,7 +205,7 @@ private struct DiscoveryDashboardRouteCard: View {
         .shadow(color: .black.opacity(isHovering ? 0.10 : 0), radius: isHovering ? 10 : 0, y: isHovering ? 6 : 0)
         .animation(.snappy(duration: 0.16), value: isHovering)
         .animation(.snappy(duration: 0.16), value: isSelected)
-        .onHover { isHovering = $0 }
+        .keiPixHoverTracker { isHovering = $0 }
         .help(route.title)
     }
 

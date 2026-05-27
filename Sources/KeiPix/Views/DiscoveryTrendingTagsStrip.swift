@@ -197,7 +197,7 @@ private struct DiscoveryTrendingTagChip: View {
         }
         .shadow(color: .black.opacity(isHovering ? 0.18 : 0), radius: isHovering ? 10 : 0, y: isHovering ? 6 : 0)
         .animation(.snappy(duration: 0.16), value: isHovering)
-        .onHover { isHovering = $0 }
+        .keiPixHoverTracker { isHovering = $0 }
         .help(tagHelp)
     }
 

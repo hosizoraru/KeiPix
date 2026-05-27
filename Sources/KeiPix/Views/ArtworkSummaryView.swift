@@ -366,7 +366,7 @@ private struct ArtworkActionStrip: View {
 
                         if let currentLocalPageURL {
                             Button {
-                                NSWorkspace.shared.activateFileViewerSelecting([currentLocalPageURL])
+                                PlatformWorkspace.revealInFiles(currentLocalPageURL)
                             } label: {
                                 Label(L10n.revealCurrentPage, systemImage: "folder")
                             }

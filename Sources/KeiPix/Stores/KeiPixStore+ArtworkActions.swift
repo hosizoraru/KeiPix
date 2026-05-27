@@ -171,7 +171,7 @@ extension KeiPixStore {
 
     func openSelectedArtworkInPixiv() {
         guard let url = selectedArtwork?.pixivURL else { return }
-        NSWorkspace.shared.open(url)
+        PlatformWorkspace.open(url)
     }
 
     func copySelectedArtworkLink() {

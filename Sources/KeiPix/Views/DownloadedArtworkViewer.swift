@@ -118,7 +118,7 @@ struct DownloadedArtworkViewer: View {
             Menu {
                 if let pixivURL = item.pixivURL {
                     Button {
-                        NSWorkspace.shared.open(pixivURL)
+                        PlatformWorkspace.open(pixivURL)
                     } label: {
                         Label(L10n.openInPixiv, systemImage: "safari")
                     }
@@ -270,7 +270,7 @@ struct DownloadedArtworkViewer: View {
     }
 
     private func revealCurrentPage() {
-        NSWorkspace.shared.activateFileViewerSelecting([currentImageURL])
+        PlatformWorkspace.revealInFiles(currentImageURL)
     }
 
     private func dismissActionMessageIfNeeded(_ message: String?) async {

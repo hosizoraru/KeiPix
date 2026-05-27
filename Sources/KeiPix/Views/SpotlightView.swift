@@ -442,7 +442,7 @@ private struct SpotlightArticleCard: View {
         .contentShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
         .shadow(color: .black.opacity(isHovering ? 0.12 : 0.04), radius: isHovering ? 8 : 2, y: isHovering ? 4 : 1)
         .animation(.snappy(duration: 0.16), value: isHovering)
-        .onHover { isHovering = $0 }
+        .keiPixHoverTracker { isHovering = $0 }
         .help(primaryTitle)
         .contextMenu {
             Button(L10n.openArticle) { select() }

@@ -357,7 +357,7 @@ private struct BookmarkTagCard: View {
         .buttonStyle(.plain)
         .scaleEffect(isHovering ? 1.01 : 1)
         .animation(.snappy(duration: 0.16), value: isHovering)
-        .onHover { isHovering = $0 }
+        .keiPixHoverTracker { isHovering = $0 }
         .help(title)
     }
 }

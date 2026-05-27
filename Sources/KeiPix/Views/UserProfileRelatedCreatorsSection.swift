@@ -178,7 +178,7 @@ private struct RelatedCreatorCard: View {
         .keiInteractiveGlass(16)
         .scaleEffect(isHovering ? 1.012 : 1)
         .animation(.snappy(duration: 0.16), value: isHovering)
-        .onHover { isHovering = $0 }
+        .keiPixHoverTracker { isHovering = $0 }
         .contextMenu {
             Button(L10n.creatorProfile) {
                 openProfile()

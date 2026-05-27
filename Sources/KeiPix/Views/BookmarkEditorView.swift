@@ -58,7 +58,7 @@ struct BookmarkEditorView: View {
                             title: L10n.openInPixiv,
                             systemImage: "safari"
                         ) {
-                            NSWorkspace.shared.open(url)
+                            PlatformWorkspace.open(url)
                         }
 
                         SheetHeaderActionButton(

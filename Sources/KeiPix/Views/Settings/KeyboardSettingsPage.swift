@@ -58,11 +58,11 @@ struct KeyboardSettingsPage: View {
     /// the button never silently no-ops.
     private func openKeyboardSystemSettings() {
         let anchored = URL(string: "x-apple.systempreferences:com.apple.Keyboard-Settings.extension?KeyboardShortcuts")
-        if let anchored, NSWorkspace.shared.open(anchored) {
+        if let anchored, PlatformWorkspace.open(anchored) {
             return
         }
         if let fallback = URL(string: "x-apple.systempreferences:com.apple.Keyboard-Settings.extension") {
-            NSWorkspace.shared.open(fallback)
+            PlatformWorkspace.open(fallback)
         }
     }
 }

@@ -85,7 +85,7 @@ struct ImageSourceSearchSheet: View {
                 title: openInTitle,
                 systemImage: "safari"
             ) {
-                NSWorkspace.shared.open(webSearchURL)
+                PlatformWorkspace.open(webSearchURL)
             }
 
             SheetHeaderActionButton(

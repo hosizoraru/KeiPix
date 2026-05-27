@@ -58,11 +58,11 @@ extension KeiPixStore {
     }
 
     /// Opens the release notes URL in the user's default browser. We
-    /// route through `NSWorkspace` instead of `openURL(_:)` because the
-    /// store doesn't have a SwiftUI environment handle, and this keeps
-    /// the call site testable (any future spy can swap NSWorkspace).
+    /// route through `PlatformWorkspace` instead of `openURL(_:)` because the
+    /// store doesn't have a SwiftUI environment handle, and the façade
+    /// keeps the call site testable + iPadOS-portable.
     func openReleaseNotes(_ update: ReleaseUpdate) {
-        NSWorkspace.shared.open(update.htmlURL)
+        PlatformWorkspace.open(update.htmlURL)
     }
 
     /// Whether a launch-time banner should surface for the latest

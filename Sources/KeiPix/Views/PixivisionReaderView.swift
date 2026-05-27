@@ -403,7 +403,7 @@ private struct PixivisionWorkCard: View {
             .animation(.snappy(duration: 0.16), value: isHovering)
         }
         .buttonStyle(.plain)
-        .onHover { isHovering = $0 }
+        .keiPixHoverTracker { isHovering = $0 }
         .help(work.title)
     }
 

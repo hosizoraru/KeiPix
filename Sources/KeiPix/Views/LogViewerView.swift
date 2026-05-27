@@ -241,7 +241,7 @@ struct LogViewerView: View {
         // for pre-filtering by subsystem, but Console restores its last
         // filter and our build script documents the canonical predicate.
         let consoleURL = URL(fileURLWithPath: "/System/Applications/Utilities/Console.app")
-        NSWorkspace.shared.open(consoleURL)
+        PlatformWorkspace.open(consoleURL)
     }
 
     // MARK: - OSLogStore plumbing

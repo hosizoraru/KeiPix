@@ -182,14 +182,14 @@ final class ArtworkDownloadStore {
     @discardableResult
     func reveal(_ item: ArtworkDownloadItem) -> Bool {
         if let filePath = item.downloadedFilePaths?.first {
-            NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: filePath, isDirectory: false)])
+            PlatformWorkspace.revealInFiles(URL(fileURLWithPath: filePath, isDirectory: false))
             return true
         }
         guard let folderPath = item.folderPath else {
             openDownloadDirectory()
             return false
         }
-        NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: folderPath, isDirectory: true)])
+        PlatformWorkspace.revealInFiles(URL(fileURLWithPath: folderPath, isDirectory: true))
         return true
     }
 
@@ -358,7 +358,7 @@ final class ArtworkDownloadStore {
         let url = URL(fileURLWithPath: downloadDirectoryPath, isDirectory: true)
         do {
             try fileManager.createDirectory(at: url, withIntermediateDirectories: true)
-            return NSWorkspace.shared.open(url)
+            return PlatformWorkspace.open(url)
         } catch {
             return false
         }
