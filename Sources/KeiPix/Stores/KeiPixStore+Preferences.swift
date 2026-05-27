@@ -324,6 +324,18 @@ extension KeiPixStore {
         UserDefaults.standard.set(scheme.rawValue, forKey: ProxyConfiguration.DefaultsKey.scheme)
     }
 
+    /// Persists the launch-time update-check toggle. Flipping it off
+    /// also clears `lastUpdateCheckAt` so re-enabling the toggle later
+    /// doesn't replay an already-passed throttle window.
+    func setCheckForUpdatesOnLaunch(_ value: Bool) {
+        checkForUpdatesOnLaunch = value
+        UserDefaults.standard.set(value, forKey: "checkForUpdatesOnLaunch")
+        if value == false {
+            lastUpdateCheckAt = nil
+            UserDefaults.standard.removeObject(forKey: "lastUpdateCheckAt")
+        }
+    }
+
     /// Toggles whether a bookmark tag is pinned. Returns `true` when the tag
     /// is pinned after the call so callers can show appropriate feedback.
     @discardableResult

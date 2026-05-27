@@ -943,6 +943,42 @@ enum L10n {
     static var qaProxyConfigurationEvidence: String {
         text("Persisted proxy mode round-trips through KeiPixStore and produces the expected connectionProxyDictionary shape per scheme.")
     }
+    static var checkForUpdates: String { text("Check for Updates…") }
+    static var checkingForUpdates: String { text("Checking for updates…") }
+    static var checkForUpdatesOnLaunch: String { text("Check for updates on launch") }
+    static var checkForUpdatesOnLaunchHint: String {
+        text("Once a day, KeiPix asks GitHub whether a newer release has been published. " +
+             "Disable this to skip the check entirely.")
+    }
+    static var updateAvailableTitle: String { text("A new KeiPix release is available") }
+    static var updateAvailableMessageFormat: String {
+        text("Version %@ is now available. You're running %@.")
+    }
+    static var openReleaseNotes: String { text("Open Release Notes") }
+    static var skipThisVersion: String { text("Skip This Version") }
+    static var remindLater: String { text("Later") }
+    static var noUpdatesAvailableTitle: String { text("KeiPix is up to date") }
+    static var noUpdatesAvailableMessageFormat: String {
+        text("You're running the latest released version (%@).")
+    }
+    static var updateCheckFailedTitle: String { text("Couldn't check for updates") }
+    static var updateCheckFailedMessage: String {
+        text("KeiPix couldn't reach GitHub. Check your network or proxy settings and try again.")
+    }
+    static var releasePublishedAtFormat: String { text("Published %@") }
+    static var qaReleaseUpdateCheck: String { text("GitHub release update check") }
+    static var qaReleaseUpdateCheckRequirement: String {
+        text("On launch, KeiPix asks GitHub for the latest release once per 24-hour window, " +
+             "compares it to the running CFBundleShortVersionString, and surfaces a banner " +
+             "with Open Release Notes / Skip / Later actions when a newer tag is published.")
+    }
+    static var qaReleaseUpdateCheckNext: String {
+        text("Keep ReleaseUpdateChecker wired through KeiPixApp.task and respect the " +
+             "checkForUpdatesOnLaunch toggle plus the skipped-version memory so users can opt out.")
+    }
+    static var qaReleaseUpdateCheckEvidence: String {
+        text("SemanticVersion comparator, JSON decoder, and 24-hour throttle round-trip in the unit suite.")
+    }
     static var systemProxy: String { text("System Proxy") }
     static var directConnection: String { text("Direct connection") }
     static var pixivAPI: String { text("Pixiv API") }

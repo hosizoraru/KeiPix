@@ -268,6 +268,61 @@ struct ContentView: View {
         } message: {
             Text(store.errorMessage ?? "")
         }
+        .alert(
+            L10n.updateAvailableTitle,
+            isPresented: Binding(
+                get: { store.pendingReleaseUpdatePrompt != nil },
+                set: { newValue in
+                    if newValue == false {
+                        store.pendingReleaseUpdatePrompt = nil
+                    }
+                }
+            ),
+            presenting: store.pendingReleaseUpdatePrompt
+        ) { release in
+            Button(L10n.openReleaseNotes) {
+                store.openReleaseNotes(release)
+                store.pendingReleaseUpdatePrompt = nil
+            }
+            Button(L10n.skipThisVersion) {
+                store.skipRelease(tagName: release.tagName)
+                store.pendingReleaseUpdatePrompt = nil
+            }
+            Button(L10n.remindLater, role: .cancel) {
+                store.pendingReleaseUpdatePrompt = nil
+            }
+        } message: { release in
+            Text(String(
+                format: L10n.updateAvailableMessageFormat,
+                release.displayName,
+                store.currentReleaseSemanticVersion.displayString
+            ))
+        }
+        .alert(
+            L10n.noUpdatesAvailableTitle,
+            isPresented: Binding(
+                get: { store.presentingNoUpdatesAvailable },
+                set: { store.presentingNoUpdatesAvailable = $0 }
+            )
+        ) {
+            Button(L10n.ok) { store.presentingNoUpdatesAvailable = false }
+        } message: {
+            Text(String(
+                format: L10n.noUpdatesAvailableMessageFormat,
+                store.currentReleaseSemanticVersion.displayString
+            ))
+        }
+        .alert(
+            L10n.updateCheckFailedTitle,
+            isPresented: Binding(
+                get: { store.presentingUpdateCheckFailed },
+                set: { store.presentingUpdateCheckFailed = $0 }
+            )
+        ) {
+            Button(L10n.ok) { store.presentingUpdateCheckFailed = false }
+        } message: {
+            Text(store.manualUpdateCheckError ?? L10n.updateCheckFailedMessage)
+        }
     }
 
     private var showsPixivLinkDropOverlayForVisualQA: Bool {

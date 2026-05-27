@@ -153,6 +153,52 @@ final class KeiPixStore {
     var proxyConfigurationPort = UserDefaults.standard.integer(forKey: ProxyConfiguration.DefaultsKey.port)
     var proxyConfigurationScheme = UserDefaults.standard.string(forKey: ProxyConfiguration.DefaultsKey.scheme)
         .flatMap(ProxyScheme.init(rawValue:)) ?? .http
+    /// Opt-in toggle for the GitHub release update check that runs on
+    /// launch. Defaults to `true` because it's a single low-volume API
+    /// call per day and macOS users expect this kind of self-update
+    /// affordance from a freestanding app — Pixez and Pixes both ship
+    /// the same setting on by default.
+    var checkForUpdatesOnLaunch = UserDefaults.standard.object(forKey: "checkForUpdatesOnLaunch") as? Bool ?? true
+    /// The newest release the app saw on its last successful check.
+    /// Surfaces in Settings as the "current latest" anchor and powers
+    /// the manual `Help → Check for Updates…` "you're up to date" alert
+    /// without having to re-fetch.
+    var latestReleaseUpdate: ReleaseUpdate? = KeiPixStore.loadLatestReleaseUpdate()
+    /// Newest release tag the user explicitly skipped. The launch-time
+    /// banner stays silent for this exact tag so a noisy "we just shipped
+    /// 0.2.0" prompt can be dismissed once and stay dismissed; future
+    /// releases past it (0.2.1, 0.3.0) still surface a fresh banner.
+    var skippedReleaseTagName = UserDefaults.standard.string(forKey: "skippedReleaseTagName") ?? ""
+    /// When the launch-time check last ran. Used as a 24-hour throttle so
+    /// a user who quits / reopens KeiPix repeatedly during the day doesn't
+    /// pummel GitHub. The manual menu entry bypasses this throttle.
+    var lastUpdateCheckAt: Date? = UserDefaults.standard.object(forKey: "lastUpdateCheckAt") as? Date
+    /// In-flight progress flag for the manual `Help → Check for Updates…`
+    /// command — flipping it lets the menu item disable while a request
+    /// is in flight, mirroring App Store's "Checking…" state.
+    var isCheckingForUpdates = false
+    /// Result of the most recent **manual** update check. Wraps either a
+    /// fresh `ReleaseUpdate` (newer than current) or an `upToDate` result
+    /// so the manual entry point can show the right alert. The
+    /// launch-time check writes only into `latestReleaseUpdate` because
+    /// it's silent when there's nothing new.
+    var manualUpdateCheckResult: ReleaseUpdateCheckResult?
+    /// Last error from a manual update check, surfaced in the
+    /// "Couldn't check for updates" alert. Cleared on the next attempt.
+    var manualUpdateCheckError: String?
+    /// Release that's currently driving the "update available" prompt.
+    /// Both the launch-time check and the manual menu entry funnel into
+    /// this single binding so ContentView only has to handle one alert
+    /// for the "newer version" case.
+    var pendingReleaseUpdatePrompt: ReleaseUpdate?
+    /// Bound to the "KeiPix is up to date" alert that the manual menu
+    /// entry surfaces. Lives on the store (not local @State) so the
+    /// menu command can fire it from outside the view tree.
+    var presentingNoUpdatesAvailable = false
+    /// Bound to the "Couldn't check for updates" alert. Same rationale
+    /// as `presentingNoUpdatesAvailable` — the menu command sets it,
+    /// ContentView reads it.
+    var presentingUpdateCheckFailed = false
     var searchMatchType = KeiPixStore.loadEnum("searchMatchType", defaultValue: SearchMatchType.partialTags)
     var searchSort = KeiPixStore.loadEnum("searchSort", defaultValue: SearchSort.dateDescending)
     var searchAgeLimit = KeiPixStore.loadEnum("searchAgeLimit", defaultValue: SearchAgeLimit.unlimited)
@@ -972,6 +1018,19 @@ final class KeiPixStore {
             return MangaWatchlistReadStateLibrary()
         }
         return (try? JSONDecoder().decode(MangaWatchlistReadStateLibrary.self, from: data)) ?? MangaWatchlistReadStateLibrary()
+    }
+
+    /// Restores the most recent `ReleaseUpdate` we surfaced. Stored as
+    /// JSON under a single UserDefaults key (vs. four scalar keys like
+    /// the proxy config) because the GitHub fields ride together — we
+    /// never want a half-restored release with a tag but no URL.
+    private static func loadLatestReleaseUpdate() -> ReleaseUpdate? {
+        guard let data = UserDefaults.standard.data(forKey: "latestReleaseUpdate") else {
+            return nil
+        }
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        return try? decoder.decode(ReleaseUpdate.self, from: data)
     }
 
     func persistSavedSearchPresets() {

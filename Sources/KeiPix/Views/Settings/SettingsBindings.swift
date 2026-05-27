@@ -321,4 +321,12 @@ extension KeiPixStore {
             self.setProxyConfigurationScheme(value)
         }
     }
+
+    var settings_checkForUpdatesOnLaunchBinding: Binding<Bool> {
+        Binding {
+            self.checkForUpdatesOnLaunch
+        } set: { value in
+            self.setCheckForUpdatesOnLaunch(value)
+        }
+    }
 }

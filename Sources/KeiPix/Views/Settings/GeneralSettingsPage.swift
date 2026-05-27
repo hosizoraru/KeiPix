@@ -130,6 +130,25 @@ struct GeneralSettingsPage: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
             }
+
+            Section {
+                Toggle(L10n.checkForUpdatesOnLaunch, isOn: store.settings_checkForUpdatesOnLaunchBinding)
+
+                Button {
+                    Task { await store.checkForReleaseUpdateNow() }
+                } label: {
+                    if store.isCheckingForUpdates {
+                        Label(L10n.checkingForUpdates, systemImage: "arrow.triangle.2.circlepath")
+                    } else {
+                        Label(L10n.checkForUpdates, systemImage: "arrow.down.circle")
+                    }
+                }
+                .disabled(store.isCheckingForUpdates)
+            } footer: {
+                Text(L10n.checkForUpdatesOnLaunchHint)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
         }
         .formStyle(.grouped)
         .navigationTitle(L10n.settingsGeneral)

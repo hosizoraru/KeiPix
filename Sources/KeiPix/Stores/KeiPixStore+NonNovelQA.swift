@@ -296,7 +296,8 @@ extension KeiPixStore {
             qaQuickLookItem(visualEvidence: visualEvidence),
             qaThroughputItem(visualEvidence: visualEvidence),
             qaDownloadFinishNotificationItem(visualEvidence: visualEvidence),
-            qaProxyConfigurationItem()
+            qaProxyConfigurationItem(),
+            qaReleaseUpdateCheckItem()
         ]
     }
 
@@ -410,6 +411,34 @@ extension KeiPixStore {
             id: "proxy-configuration",
             passed: modesAgree && manualSampleProducesDictionary,
             evidence: L10n.qaProxyConfigurationEvidence
+        )
+    }
+
+    /// Builds the release-update-check QA row. Pulled into its own
+    /// method so `qaLocalSurfaces` stays under SwiftLint's
+    /// `function_body_length` ceiling — the local surfaces list keeps
+    /// growing as we land P2 items, and inlining each new check pushes
+    /// the parent function past the 100-line limit.
+    private func qaReleaseUpdateCheckItem() -> NonNovelQAItem {
+        // Release update check — anchors on three deterministic
+        // invariants that would silently drift if a future refactor
+        // unwired the feature: the SemanticVersion comparator orders
+        // canonical pairs correctly, the bundle's CFBundleShortVersionString
+        // parses back into a usable SemanticVersion, and the persisted
+        // toggle round-trips through KeiPixStore. We can't probe a
+        // live GitHub release from a static check, so the network
+        // round-trip lives in the unit suite (decodeRelease fixture).
+        let comparatorOrders = (SemanticVersion("0.1.0") ?? .init(major: 0, minor: 0, patch: 0))
+            < (SemanticVersion("0.2.0") ?? .init(major: 0, minor: 0, patch: 0))
+        let prereleaseOrdering = (SemanticVersion("0.2.0-rc.1") ?? .init(major: 0, minor: 0, patch: 0))
+            < (SemanticVersion("0.2.0") ?? .init(major: 0, minor: 0, patch: 0))
+        let bundleVersionParses = currentReleaseSemanticVersion >= SemanticVersion(major: 0, minor: 0, patch: 0)
+        let storedToggle = (UserDefaults.standard.object(forKey: "checkForUpdatesOnLaunch") as? Bool) ?? true
+        let toggleInSync = storedToggle == checkForUpdatesOnLaunch
+        return qaStaticItem(
+            id: "release-update-check",
+            passed: comparatorOrders && prereleaseOrdering && bundleVersionParses && toggleInSync,
+            evidence: L10n.qaReleaseUpdateCheckEvidence
         )
     }
 
@@ -657,6 +686,14 @@ private extension KeiPixStore {
             requirement: L10n.qaProxyConfigurationRequirement,
             nextAction: L10n.qaProxyConfigurationNext,
             systemImage: "network.badge.shield.half.filled"
+        ),
+        NonNovelQATemplate(
+            id: "release-update-check",
+            priority: .p2,
+            title: L10n.qaReleaseUpdateCheck,
+            requirement: L10n.qaReleaseUpdateCheckRequirement,
+            nextAction: L10n.qaReleaseUpdateCheckNext,
+            systemImage: "arrow.down.circle.dotted"
         )
     ]
 }

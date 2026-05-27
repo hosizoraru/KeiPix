@@ -214,6 +214,31 @@ enum JapaneseTranslations {
             "起動時にプロキシモードが暗黙的にシステムへ戻らないよう、ProxyConfiguration.loadFromUserDefaults を PixivAPI.init と ImagePipeline.init に接続したまま維持してください。",
         "Persisted proxy mode round-trips through KeiPixStore and produces the expected connectionProxyDictionary shape per scheme.":
             "保存されたプロキシモードは KeiPixStore を経由してラウンドトリップし、プロトコルごとに期待される connectionProxyDictionary を生成します。",
+        "Check for Updates…": "アップデートを確認…",
+        "Checking for updates…": "アップデートを確認中…",
+        "Check for updates on launch": "起動時にアップデートを確認",
+        "Once a day, KeiPix asks GitHub whether a newer release has been published. Disable this to skip the check entirely.":
+            "KeiPix は 1 日 1 回 GitHub に新しいリリースを問い合わせます。確認自体を行いたくない場合はオフにしてください。",
+        "A new KeiPix release is available": "KeiPix の新しいリリースが利用可能",
+        "Version %@ is now available. You're running %@.":
+            "バージョン %@ が利用可能です。現在は %@ を使用しています。",
+        "Open Release Notes": "リリースノートを開く",
+        "Skip This Version": "このバージョンをスキップ",
+        "Later": "後で",
+        "KeiPix is up to date": "KeiPix は最新です",
+        "You're running the latest released version (%@).":
+            "最新の公開バージョン（%@）を使用しています。",
+        "Couldn't check for updates": "アップデートを確認できません",
+        "KeiPix couldn't reach GitHub. Check your network or proxy settings and try again.":
+            "GitHub に接続できませんでした。ネットワークまたはプロキシ設定を確認して再度お試しください。",
+        "Published %@": "%@ に公開",
+        "GitHub release update check": "GitHub リリースのアップデート確認",
+        "On launch, KeiPix asks GitHub for the latest release once per 24-hour window, compares it to the running CFBundleShortVersionString, and surfaces a banner with Open Release Notes / Skip / Later actions when a newer tag is published.":
+            "起動時、KeiPix は 24 時間に 1 回 GitHub から最新リリースを取得し、稼働中の CFBundleShortVersionString と比較します。新しいタグが公開されている場合は「リリースノートを開く / スキップ / 後で」のバナーを表示します。",
+        "Keep ReleaseUpdateChecker wired through KeiPixApp.task and respect the checkForUpdatesOnLaunch toggle plus the skipped-version memory so users can opt out.":
+            "ユーザーがオプトアウトできるよう、ReleaseUpdateChecker を KeiPixApp.task に接続し、checkForUpdatesOnLaunch トグルとスキップ済みバージョンの記録を尊重してください。",
+        "SemanticVersion comparator, JSON decoder, and 24-hour throttle round-trip in the unit suite.":
+            "SemanticVersion 比較器、JSON デコーダ、24 時間スロットリングはユニットテストでラウンドトリップ検証されています。",
         "Show translated tag names": "タグの翻訳名を表示",
         "Content Filters": "コンテンツフィルター",
         "Show content badges": "コンテンツバッジを表示",

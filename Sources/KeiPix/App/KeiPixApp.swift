@@ -25,6 +25,17 @@ struct KeiPixApp: App {
                         openSettings()
                     }
                 }
+                .task {
+                    // Run the GitHub release check once per launch — the
+                    // store's 24-hour throttle keeps repeat opens from
+                    // pummelling the GitHub API. The QA launch arguments
+                    // never need a network round-trip, so skip the
+                    // check when any visual-QA flag is set.
+                    if VisualQALaunchArgument.isActive == false {
+                        await store.checkForReleaseUpdateIfDue()
+                        store.presentPendingReleaseUpdateIfNeeded()
+                    }
+                }
         }
         .defaultSize(width: 1280, height: 800)
         .commands {
@@ -203,6 +214,17 @@ struct KeiPixApp: App {
                     _ = store.downloads.openDownloadDirectory()
                 }
                 .keyboardShortcut("f", modifiers: [.command, .option])
+            }
+
+            CommandGroup(after: .appInfo) {
+                // Manual entry mirrors macOS App Store / Sparkle's
+                // "Check for Updates…" — bypasses the 24-hour throttle
+                // so a user who just hit "Skip This Version" can still
+                // re-trigger the prompt without waiting a day.
+                Button(store.isCheckingForUpdates ? L10n.checkingForUpdates : L10n.checkForUpdates) {
+                    Task { await store.checkForReleaseUpdateNow() }
+                }
+                .disabled(store.isCheckingForUpdates)
             }
         }
 
