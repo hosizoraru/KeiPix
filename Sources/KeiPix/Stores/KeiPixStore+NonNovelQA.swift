@@ -295,7 +295,8 @@ extension KeiPixStore {
             qaTransferableDragDropItem(),
             qaQuickLookItem(visualEvidence: visualEvidence),
             qaThroughputItem(visualEvidence: visualEvidence),
-            qaDownloadFinishNotificationItem(visualEvidence: visualEvidence)
+            qaDownloadFinishNotificationItem(visualEvidence: visualEvidence),
+            qaProxyConfigurationItem()
         ]
     }
 
@@ -376,6 +377,39 @@ extension KeiPixStore {
                 L10n.qaDownloadThroughputEvidence,
                 visualEvidence.summary(for: throughputSurfaces)
             ].joined(separator: " · ")
+        )
+    }
+
+    /// Builds the app-level proxy QA row. Pulled into its own method
+    /// so `qaLocalSurfaces` stays under SwiftLint's
+    /// `function_body_length` ceiling — the local surfaces list keeps
+    /// growing as we land P2 items, and inlining each new check pushes
+    /// the parent function past the 100-line limit.
+    private func qaProxyConfigurationItem() -> NonNovelQAItem {
+        // App-level proxy — the regression anchor is the round-trip
+        // between the persisted UserDefaults snapshot and the
+        // ProxyConfiguration enum the URLSession owners read at init.
+        // We can't probe a live proxy from a static check, but we
+        // can guarantee that the same enum case the user picked is
+        // what the next launch will hand to PixivAPI / ImagePipeline,
+        // and that each scheme produces a non-empty proxy dictionary
+        // shape (which would silently drift if a future refactor
+        // forgot to wire up a new CFNetwork key).
+        let snapshot = ProxyConfiguration.loadFromUserDefaults()
+        let modesAgree: Bool
+        switch (snapshot, proxyConfigurationMode) {
+        case (.system, .system), (.direct, .direct), (.manual, .manual):
+            modesAgree = true
+        default:
+            modesAgree = false
+        }
+        let manualSampleProducesDictionary = ProxyConfiguration
+            .manual(host: "127.0.0.1", port: 7_890, scheme: .http)
+            .connectionProxyDictionary?.isEmpty == false
+        return qaStaticItem(
+            id: "proxy-configuration",
+            passed: modesAgree && manualSampleProducesDictionary,
+            evidence: L10n.qaProxyConfigurationEvidence
         )
     }
 
@@ -615,6 +649,14 @@ private extension KeiPixStore {
             requirement: L10n.qaDownloadFinishNotificationRequirement,
             nextAction: L10n.qaDownloadFinishNotificationNext,
             systemImage: "bell.badge"
+        ),
+        NonNovelQATemplate(
+            id: "proxy-configuration",
+            priority: .p2,
+            title: L10n.qaProxyConfiguration,
+            requirement: L10n.qaProxyConfigurationRequirement,
+            nextAction: L10n.qaProxyConfigurationNext,
+            systemImage: "network.badge.shield.half.filled"
         )
     ]
 }

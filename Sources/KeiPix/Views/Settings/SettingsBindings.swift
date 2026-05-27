@@ -283,4 +283,42 @@ extension KeiPixStore {
             Task { await self.downloads.setNotifyOnDownloadFinish(value) }
         }
     }
+
+    var settings_proxyConfigurationModeBinding: Binding<ProxyConfigurationMode> {
+        Binding {
+            self.proxyConfigurationMode
+        } set: { value in
+            self.setProxyConfigurationMode(value)
+        }
+    }
+
+    var settings_proxyConfigurationHostBinding: Binding<String> {
+        Binding {
+            self.proxyConfigurationHost
+        } set: { value in
+            self.setProxyConfigurationHost(value)
+        }
+    }
+
+    /// String binding for the manual-proxy port so SwiftUI's
+    /// TextField can edit it without forcing the user through a
+    /// stepper. Empty / non-numeric input clamps to 0, which the
+    /// proxy loader treats as "fall back to system" so a typo can
+    /// never block all traffic.
+    var settings_proxyConfigurationPortBinding: Binding<String> {
+        Binding {
+            self.proxyConfigurationPort > 0 ? String(self.proxyConfigurationPort) : ""
+        } set: { value in
+            let trimmed = value.trimmingCharacters(in: .whitespaces)
+            self.setProxyConfigurationPort(Int(trimmed) ?? 0)
+        }
+    }
+
+    var settings_proxyConfigurationSchemeBinding: Binding<ProxyScheme> {
+        Binding {
+            self.proxyConfigurationScheme
+        } set: { value in
+            self.setProxyConfigurationScheme(value)
+        }
+    }
 }

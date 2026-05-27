@@ -142,6 +142,17 @@ final class KeiPixStore {
     var creatorCopyTemplate = UserDefaults.standard.string(forKey: "creatorCopyTemplate")
         ?? CreatorCopyTemplate.defaultTemplate
     var restoreArtworkReaderProgress = UserDefaults.standard.object(forKey: "restoreArtworkReaderProgress") as? Bool ?? true
+    /// App-level proxy mode. `URLSession` owners (PixivAPI,
+    /// ImagePipeline) read the same persisted snapshot at init, so
+    /// the four storage keys (mode/host/port/scheme) are the source
+    /// of truth — `setProxyConfiguration` keeps these observable
+    /// properties in sync with what the next launch will use.
+    var proxyConfigurationMode = UserDefaults.standard.string(forKey: ProxyConfiguration.DefaultsKey.mode)
+        .flatMap(ProxyConfigurationMode.init(rawValue:)) ?? .system
+    var proxyConfigurationHost = UserDefaults.standard.string(forKey: ProxyConfiguration.DefaultsKey.host) ?? ""
+    var proxyConfigurationPort = UserDefaults.standard.integer(forKey: ProxyConfiguration.DefaultsKey.port)
+    var proxyConfigurationScheme = UserDefaults.standard.string(forKey: ProxyConfiguration.DefaultsKey.scheme)
+        .flatMap(ProxyScheme.init(rawValue:)) ?? .http
     var searchMatchType = KeiPixStore.loadEnum("searchMatchType", defaultValue: SearchMatchType.partialTags)
     var searchSort = KeiPixStore.loadEnum("searchSort", defaultValue: SearchSort.dateDescending)
     var searchAgeLimit = KeiPixStore.loadEnum("searchAgeLimit", defaultValue: SearchAgeLimit.unlimited)

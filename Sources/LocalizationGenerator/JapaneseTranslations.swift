@@ -195,6 +195,25 @@ enum JapaneseTranslations {
             "ArtworkDownloadStore.markCompleted を DownloadCompletionNotifier 経由で UNUserNotificationCenter に渡し、ダウンロード完了時の通知が途切れないようにしてください。",
         "Notifier records every markCompleted call and posts one Notification Center request per debounce window.":
             "通知サービスは markCompleted の呼び出しを記録し、デバウンスウィンドウごとに通知センターへ 1 件のリクエストを送信します。",
+        "Network": "ネットワーク",
+        "Proxy": "プロキシ",
+        "Follow System": "システムに従う",
+        "Direct (No Proxy)": "直接接続（プロキシなし）",
+        "Manual": "手動",
+        "Host": "ホスト",
+        "Port": "ポート",
+        "Scheme": "プロトコル",
+        "Routes Pixiv API and image traffic through the chosen proxy. \"Follow System\" honours macOS network settings; manual mode and direct mode take effect after relaunching KeiPix.":
+            "Pixiv API と画像通信を選択したプロキシ経由で送ります。「システムに従う」は macOS のネットワーク設定を尊重します。手動モードと直接接続モードは KeiPix の再起動後に反映されます。",
+        "Quit and reopen KeiPix to apply proxy changes.":
+            "プロキシの変更を適用するには KeiPix を終了して再度開いてください。",
+        "App-level proxy override": "アプリ単位のプロキシ設定",
+        "Pixiv API and image-host URLSessions read the persisted proxy snapshot at init so manual / direct overrides apply on the next app launch.":
+            "Pixiv API と画像ホストの URLSession は初期化時に保存済みのプロキシ設定を読み込むため、手動 / 直接接続の指定は次回起動時に反映されます。",
+        "Keep ProxyConfiguration.loadFromUserDefaults wired through PixivAPI.init and ImagePipeline.init so the proxy mode never silently regresses to system on launch.":
+            "起動時にプロキシモードが暗黙的にシステムへ戻らないよう、ProxyConfiguration.loadFromUserDefaults を PixivAPI.init と ImagePipeline.init に接続したまま維持してください。",
+        "Persisted proxy mode round-trips through KeiPixStore and produces the expected connectionProxyDictionary shape per scheme.":
+            "保存されたプロキシモードは KeiPixStore を経由してラウンドトリップし、プロトコルごとに期待される connectionProxyDictionary を生成します。",
         "Show translated tag names": "タグの翻訳名を表示",
         "Content Filters": "コンテンツフィルター",
         "Show content badges": "コンテンツバッジを表示",

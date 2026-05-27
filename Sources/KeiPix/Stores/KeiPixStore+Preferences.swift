@@ -297,6 +297,33 @@ extension KeiPixStore {
         UserDefaults.standard.set(destination.rawValue, forKey: "launchDestination")
     }
 
+    /// Persists the proxy mode picker. Mode flips take effect on the
+    /// next URLSession init — KeiPix surfaces a footer note that the
+    /// app must restart for the change to apply, mirroring how Pixez
+    /// ships the same setting (and avoiding mid-flight session
+    /// invalidation on the global ImagePipeline).
+    func setProxyConfigurationMode(_ mode: ProxyConfigurationMode) {
+        proxyConfigurationMode = mode
+        UserDefaults.standard.set(mode.rawValue, forKey: ProxyConfiguration.DefaultsKey.mode)
+    }
+
+    func setProxyConfigurationHost(_ host: String) {
+        let trimmed = host.trimmingCharacters(in: .whitespaces)
+        proxyConfigurationHost = trimmed
+        UserDefaults.standard.set(trimmed, forKey: ProxyConfiguration.DefaultsKey.host)
+    }
+
+    func setProxyConfigurationPort(_ port: Int) {
+        let clamped = max(0, min(port, 65_535))
+        proxyConfigurationPort = clamped
+        UserDefaults.standard.set(clamped, forKey: ProxyConfiguration.DefaultsKey.port)
+    }
+
+    func setProxyConfigurationScheme(_ scheme: ProxyScheme) {
+        proxyConfigurationScheme = scheme
+        UserDefaults.standard.set(scheme.rawValue, forKey: ProxyConfiguration.DefaultsKey.scheme)
+    }
+
     /// Toggles whether a bookmark tag is pinned. Returns `true` when the tag
     /// is pinned after the call so callers can show appropriate feedback.
     @discardableResult

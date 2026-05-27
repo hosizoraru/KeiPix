@@ -116,6 +116,15 @@ final class ImagePipeline: @unchecked Sendable {
             "Referer": "https://app-api.pixiv.net/",
             "User-Agent": "KeiPix/1.0"
         ]
+        // Honor the user's app-level proxy preference at session init.
+        // `nil` means "follow macOS network settings" — that's how
+        // ProxyConfiguration.system stays in sync with the system pane
+        // without us re-reading SystemConfiguration. Manual / direct
+        // overrides require an app restart to take effect, mirroring
+        // how Pixez ships the same setting.
+        if let proxy = ProxyConfiguration.loadFromUserDefaults().connectionProxyDictionary {
+            configuration.connectionProxyDictionary = proxy
+        }
 
         session = URLSession(configuration: configuration)
     }

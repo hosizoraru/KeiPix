@@ -914,6 +914,35 @@ enum L10n {
     static var qaDownloadFinishNotificationEvidence: String {
         text("Notifier records every markCompleted call and posts one Notification Center request per debounce window.")
     }
+    static var network: String { text("Network") }
+    static var proxyConfiguration: String { text("Proxy") }
+    static var proxyConfigurationModeSystem: String { text("Follow System") }
+    static var proxyConfigurationModeDirect: String { text("Direct (No Proxy)") }
+    static var proxyConfigurationModeManual: String { text("Manual") }
+    static var proxyHost: String { text("Host") }
+    static var proxyPort: String { text("Port") }
+    static var proxyScheme: String { text("Scheme") }
+    static var proxySchemeHTTP: String { text("HTTP") }
+    static var proxySchemeHTTPS: String { text("HTTPS") }
+    static var proxySchemeSOCKS5: String { text("SOCKS5") }
+    static var proxyConfigurationHint: String {
+        text("Routes Pixiv API and image traffic through the chosen proxy. \"Follow System\" honours macOS network settings; manual mode and direct mode take effect after relaunching KeiPix.")
+    }
+    static var proxyConfigurationRestartHint: String {
+        text("Quit and reopen KeiPix to apply proxy changes.")
+    }
+    static var proxyHostPlaceholder: String { text("127.0.0.1") }
+    static var proxyPortPlaceholder: String { text("7890") }
+    static var qaProxyConfiguration: String { text("App-level proxy override") }
+    static var qaProxyConfigurationRequirement: String {
+        text("Pixiv API and image-host URLSessions read the persisted proxy snapshot at init so manual / direct overrides apply on the next app launch.")
+    }
+    static var qaProxyConfigurationNext: String {
+        text("Keep ProxyConfiguration.loadFromUserDefaults wired through PixivAPI.init and ImagePipeline.init so the proxy mode never silently regresses to system on launch.")
+    }
+    static var qaProxyConfigurationEvidence: String {
+        text("Persisted proxy mode round-trips through KeiPixStore and produces the expected connectionProxyDictionary shape per scheme.")
+    }
     static var systemProxy: String { text("System Proxy") }
     static var directConnection: String { text("Direct connection") }
     static var pixivAPI: String { text("Pixiv API") }

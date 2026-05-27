@@ -89,6 +89,47 @@ struct GeneralSettingsPage: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
+
+            Section {
+                Picker(L10n.proxyConfiguration, selection: store.settings_proxyConfigurationModeBinding) {
+                    Text(L10n.proxyConfigurationModeSystem).tag(ProxyConfigurationMode.system)
+                    Text(L10n.proxyConfigurationModeDirect).tag(ProxyConfigurationMode.direct)
+                    Text(L10n.proxyConfigurationModeManual).tag(ProxyConfigurationMode.manual)
+                }
+                .pickerStyle(.menu)
+
+                if store.proxyConfigurationMode == .manual {
+                    Picker(L10n.proxyScheme, selection: store.settings_proxyConfigurationSchemeBinding) {
+                        Text(L10n.proxySchemeHTTP).tag(ProxyScheme.http)
+                        Text(L10n.proxySchemeHTTPS).tag(ProxyScheme.https)
+                        Text(L10n.proxySchemeSOCKS5).tag(ProxyScheme.socks5)
+                    }
+                    .pickerStyle(.segmented)
+
+                    TextField(
+                        L10n.proxyHost,
+                        text: store.settings_proxyConfigurationHostBinding,
+                        prompt: Text(L10n.proxyHostPlaceholder)
+                    )
+                    .textFieldStyle(.roundedBorder)
+
+                    TextField(
+                        L10n.proxyPort,
+                        text: store.settings_proxyConfigurationPortBinding,
+                        prompt: Text(L10n.proxyPortPlaceholder)
+                    )
+                    .textFieldStyle(.roundedBorder)
+                }
+            } header: {
+                Text(L10n.network)
+            } footer: {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(L10n.proxyConfigurationHint)
+                    Text(L10n.proxyConfigurationRestartHint)
+                }
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            }
         }
         .formStyle(.grouped)
         .navigationTitle(L10n.settingsGeneral)
