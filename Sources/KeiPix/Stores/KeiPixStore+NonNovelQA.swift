@@ -280,6 +280,31 @@ extension KeiPixStore {
             passed: storedEmphasizeFollowing == emphasizeFollowingArtists,
             evidence: storedEmphasizeFollowing ? L10n.enabled : L10n.disabled
         )
+        return [
+            nativeRoute,
+            gallery,
+            downloads,
+            safety,
+            offline,
+            ugoira,
+            settings,
+            sharing,
+            imageQuality,
+            captionTranslation,
+            followingEmphasis,
+            qaTransferableDragDropItem(),
+            qaQuickLookItem(visualEvidence: visualEvidence),
+            qaThroughputItem(visualEvidence: visualEvidence),
+            qaDownloadFinishNotificationItem(visualEvidence: visualEvidence)
+        ]
+    }
+
+    /// Builds the Transferable drag-and-drop QA row. Pulled into its
+    /// own method so `qaLocalSurfaces` stays under SwiftLint's
+    /// `function_body_length` ceiling — the local surfaces list keeps
+    /// growing as we land P2 items, and inlining each new check pushes
+    /// the parent function past the 100-line limit.
+    private func qaTransferableDragDropItem() -> NonNovelQAItem {
         // Transferable drag-and-drop — anchors on the symmetry between
         // the modern drop side (`PixivLinkDropPayload`) and the new
         // drag sources (artwork cards + completed download rows). We
@@ -293,27 +318,11 @@ extension KeiPixStore {
             PixivLinkDropPayload(rawText: "pixiv://illusts/901")
         ]
         let dragDropResolves = PixivDroppedLinkReader.firstSupportedURL(from: dragDropPayloads) != nil
-        let transferableDragDrop = qaStaticItem(
+        return qaStaticItem(
             id: "transferable-drag-drop",
             passed: dragDropResolves,
             evidence: L10n.qaTransferableDragDropEvidence
         )
-        return [
-            nativeRoute,
-            gallery,
-            downloads,
-            safety,
-            offline,
-            ugoira,
-            settings,
-            sharing,
-            imageQuality,
-            captionTranslation,
-            followingEmphasis,
-            transferableDragDrop,
-            qaQuickLookItem(visualEvidence: visualEvidence),
-            qaThroughputItem(visualEvidence: visualEvidence)
-        ]
     }
 
     /// Builds the Quick Look QA row. Lives in its own method so
@@ -366,6 +375,34 @@ extension KeiPixStore {
             evidence: [
                 L10n.qaDownloadThroughputEvidence,
                 visualEvidence.summary(for: throughputSurfaces)
+            ].joined(separator: " · ")
+        )
+    }
+
+    /// Builds the download-finish notification QA row. Pulled into
+    /// its own method so `qaLocalSurfaces` stays under SwiftLint's
+    /// `function_body_length` ceiling — the local surfaces list keeps
+    /// growing as we land P2 items, and inlining each new check pushes
+    /// the parent function past the 100-line limit.
+    private func qaDownloadFinishNotificationItem(visualEvidence: VisualQAEvidenceIndex) -> NonNovelQAItem {
+        // Notification Center banner on download finish — passes once
+        // a download-queue screenshot covers the surface and the
+        // toggle round-trips through ArtworkDownloadStore. We can't
+        // assert "a banner just posted" from a static check, so the
+        // regression anchor is the visual-evidence requirement plus
+        // the persisted-toggle agreement (which would silently drift
+        // if a future refactor unwired setNotifyOnDownloadFinish from
+        // UserDefaults). Compile-time existence of the notifier is
+        // guaranteed by the type system on ArtworkDownloadStore.
+        let notificationSurfaces: [VisualQASurface] = [.downloadQueue]
+        let storedToggle = (UserDefaults.standard.object(forKey: "notifyOnDownloadFinish") as? Bool) ?? false
+        let toggleInSync = storedToggle == self.downloads.notifyOnDownloadFinish
+        return qaStaticItem(
+            id: "download-finish-notification",
+            passed: visualEvidence.covers(notificationSurfaces) && toggleInSync,
+            evidence: [
+                L10n.qaDownloadFinishNotificationEvidence,
+                visualEvidence.summary(for: notificationSurfaces)
             ].joined(separator: " · ")
         )
     }
@@ -570,6 +607,14 @@ private extension KeiPixStore {
             requirement: L10n.qaDownloadThroughputRequirement,
             nextAction: L10n.qaDownloadThroughputNext,
             systemImage: "speedometer"
+        ),
+        NonNovelQATemplate(
+            id: "download-finish-notification",
+            priority: .p2,
+            title: L10n.qaDownloadFinishNotification,
+            requirement: L10n.qaDownloadFinishNotificationRequirement,
+            nextAction: L10n.qaDownloadFinishNotificationNext,
+            systemImage: "bell.badge"
         )
     ]
 }

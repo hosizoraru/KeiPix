@@ -180,6 +180,21 @@ enum JapaneseTranslations {
         "Active downloads display a sliding-window byte-per-second readout per row and an aggregate rate in the queue subtitle, just like Finder.": "ダウンロード中の項目は、Finder のように各行へスライディングウィンドウの毎秒バイト数を表示し、キューのサブタイトルには合計レートを表示します。",
         "Keep DownloadThroughputSampler wired through ArtworkDownloadStore.download(_:sourceURLs:) and reset on pause / cancel / complete so the speedometer never lies.": "DownloadThroughputSampler を ArtworkDownloadStore.download(_:sourceURLs:) に接続し、一時停止／キャンセル／完了時にリセットして、速度計が誤った値を示さないようにしてください。",
         "Throughput sampler records per-page bytes and exposes per-item plus aggregate rates that the queue surfaces.": "スループットサンプラーはページ単位でバイト数を記録し、キュー画面が表示する項目別および合計レートを公開します。",
+        "Download finished": "ダウンロード完了",
+        "Downloads finished": "ダウンロード完了",
+        "%d artworks finished downloading.": "%d 件の作品がダウンロード完了しました。",
+        "Notify when downloads finish": "ダウンロード完了時に通知",
+        "Posts a Notification Center banner once a download wraps up — coalesced for batches so a 50-image queue still surfaces a single banner.":
+            "ダウンロードが完了すると通知センターにバナーを表示します。バッチダウンロードはまとめられ、50 枚のキューでも 1 件のバナーになります。",
+        "Notification Center declined permission. Re-enable banners for KeiPix in System Settings → Notifications.":
+            "通知センターで権限が拒否されました。「システム設定 → 通知」から KeiPix のバナーを再度許可してください。",
+        "Notification Center banner on download finish": "ダウンロード完了時の通知センターバナー",
+        "DownloadCompletionNotifier coalesces completed-download titles into a single banner per quiescent burst, gated on the user's opt-in toggle and Apple's authorization state.":
+            "DownloadCompletionNotifier は静寂期間ごとに完了したダウンロードのタイトルを 1 件のバナーへ統合し、ユーザーの設定と Apple の権限状態に従って表示します。",
+        "Keep ArtworkDownloadStore.markCompleted wired through DownloadCompletionNotifier so a finished download still hands off to UNUserNotificationCenter.":
+            "ArtworkDownloadStore.markCompleted を DownloadCompletionNotifier 経由で UNUserNotificationCenter に渡し、ダウンロード完了時の通知が途切れないようにしてください。",
+        "Notifier records every markCompleted call and posts one Notification Center request per debounce window.":
+            "通知サービスは markCompleted の呼び出しを記録し、デバウンスウィンドウごとに通知センターへ 1 件のリクエストを送信します。",
         "Show translated tag names": "タグの翻訳名を表示",
         "Content Filters": "コンテンツフィルター",
         "Show content badges": "コンテンツバッジを表示",

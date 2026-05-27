@@ -46,6 +46,27 @@ extension ArtworkDownloadStore {
         startWorkerIfNeeded(preferOriginal: true)
     }
 
+    /// Updates the "notify when downloads finish" preference and lazily
+    /// asks Notification Center for authorization the first time the
+    /// user opts in. Returns the resolved authorization state so the
+    /// settings page can flash a hint when macOS denied the prompt;
+    /// the toggle itself is kept in sync with whatever the user picked
+    /// regardless, so they can flip it off again without bouncing
+    /// through System Settings.
+    @discardableResult
+    func setNotifyOnDownloadFinish(_ value: Bool) async -> Bool {
+        notifyOnDownloadFinish = value
+        UserDefaults.standard.set(value, forKey: "notifyOnDownloadFinish")
+        if value == false {
+            // Drop any debounced banner — turning the toggle off mid-
+            // window otherwise lets a stray banner slip through after
+            // the user said no.
+            completionNotifier.flushBuffer()
+            return true
+        }
+        return await completionNotifier.requestAuthorizationIfNeeded()
+    }
+
     func enqueue(_ artwork: PixivArtwork, preferOriginal: Bool = true) {
         if let existingIndex = items.firstIndex(where: {
             $0.artworkID == artwork.id

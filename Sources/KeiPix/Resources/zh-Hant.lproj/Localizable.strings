@@ -1023,6 +1023,16 @@
 "Active downloads display a sliding-window byte-per-second readout per row and an aggregate rate in the queue subtitle, just like Finder." = "下載中的任务在每一行顯示滑動窗口內的每秒字节数，並在隊列副標題中展示總速率，像訪達一樣。";
 "Keep DownloadThroughputSampler wired through ArtworkDownloadStore.download(_:sourceURLs:) and reset on pause / cancel / complete so the speedometer never lies." = "保持 DownloadThroughputSampler 接入 ArtworkDownloadStore.download(_:sourceURLs:)，並在暫停/取消/完成時重置，避免速度指示失真。";
 "Throughput sampler records per-page bytes and exposes per-item plus aggregate rates that the queue surfaces." = "速率采樣器按頁記錄字节数，並對外暴露單任务和聚合速率，由下載隊列介面展示。";
+"Download finished" = "下載已完成";
+"Downloads finished" = "下載已完成";
+"%d artworks finished downloading." = "%d 個作品已完成下載。";
+"Notify when downloads finish" = "下載完成時傳送通知";
+"Posts a Notification Center banner once a download wraps up — coalesced for batches so a 50-image queue still surfaces a single banner." = "下載完成後向通知中心推送一条橫幅，批量下載會合並為單条橫幅，避免 50 张圖的隊列產生 50 条通知。";
+"Notification Center declined permission. Re-enable banners for KeiPix in System Settings → Notifications." = "通知中心已拒绝授權。請在「系統設定 → 通知」中為 KeiPix 重新開啟橫幅通知。";
+"Notification Center banner on download finish" = "下載完成時的通知中心橫幅";
+"DownloadCompletionNotifier coalesces completed-download titles into a single banner per quiescent burst, gated on the user's opt-in toggle and Apple's authorization state." = "DownloadCompletionNotifier 會在静默窗口內合並已完成的下載標題為單条橫幅，受使用者開關與 Apple 授權狀態共同控制。";
+"Keep ArtworkDownloadStore.markCompleted wired through DownloadCompletionNotifier so a finished download still hands off to UNUserNotificationCenter." = "保持 ArtworkDownloadStore.markCompleted 經由 DownloadCompletionNotifier 轉交給 UNUserNotificationCenter，以便完成的下載仍會觸發通知。";
+"Notifier records every markCompleted call and posts one Notification Center request per debounce window." = "通知器在每次 markCompleted 調用時記錄任务，並在防抖窗口內向通知中心傳送一次請求。";
 "System Proxy" = "系統代理";
 "Direct connection" = "直連";
 "Pixiv API" = "Pixiv API";

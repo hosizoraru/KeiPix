@@ -14,6 +14,12 @@ final class ArtworkDownloadStore {
     var downloadSearchText = ""
     var isPaused: Bool
     var maxConcurrentDownloads: Int
+    /// User-facing toggle for the macOS Notification Center banner that
+    /// fires when a download wraps up. Persisted via UserDefaults so
+    /// the preference survives launches; defaults to `false` so we
+    /// don't surprise a fresh-install user with a banner before they've
+    /// seen Settings.
+    var notifyOnDownloadFinish: Bool
 
     let fileManager = FileManager.default
     var workerTasks: [UUID: Task<Void, Never>] = [:]
@@ -24,8 +30,14 @@ final class ArtworkDownloadStore {
     /// `.downloading` (resets). Read by the row badge and the
     /// nav-subtitle aggregate.
     var throughputSampler = DownloadThroughputSampler()
+    /// Posts (and coalesces) Notification Center banners when a
+    /// download wraps up. Behind a protocol-typed reference so unit
+    /// tests can swap in a fake center; the real `init` always wires
+    /// the system center.
+    let completionNotifier: DownloadCompletionNotifier
 
-    init() {
+    init(completionNotifier: DownloadCompletionNotifier = DownloadCompletionNotifier()) {
+        self.completionNotifier = completionNotifier
         downloadDirectoryPath = UserDefaults.standard.string(forKey: "downloadDirectoryPath")
             ?? ArtworkDownloadStore.defaultDownloadDirectory.path(percentEncoded: false)
         downloadNamingTemplate = UserDefaults.standard.string(forKey: "downloadNamingTemplate")
@@ -38,6 +50,7 @@ final class ArtworkDownloadStore {
         maxConcurrentDownloads = Self.clampedConcurrentDownloadCount(
             UserDefaults.standard.object(forKey: "maxConcurrentDownloads") as? Int ?? 2
         )
+        notifyOnDownloadFinish = UserDefaults.standard.bool(forKey: "notifyOnDownloadFinish")
         items = ArtworkDownloadStore.loadItems()
         var restoredInterruptedItems = false
         for index in items.indices {
@@ -537,6 +550,14 @@ final class ArtworkDownloadStore {
         items[index].folderPath = folder.path(percentEncoded: false)
         items[index].updatedAt = Date()
         throughputSampler.reset(itemID: itemID)
+        // Fire-and-forget banner so the worker stays on its hot path.
+        // The notifier coalesces a burst of completions into one
+        // banner — same shape Finder uses when a copy of many files
+        // wraps up — so a 50-image queue doesn't spam Notification
+        // Center.
+        if notifyOnDownloadFinish {
+            completionNotifier.recordCompletion(title: items[index].title)
+        }
         persistItems()
     }
 

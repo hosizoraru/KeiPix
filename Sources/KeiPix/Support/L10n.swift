@@ -325,6 +325,13 @@ enum L10n {
     static var downloadsResumed: String { text("Downloads Resumed") }
     static var downloadThroughputPerSecondFormat: String { text("%@/s") }
     static var downloadThroughputTotalFormat: String { text("Total %@") }
+    static var downloadFinishedNotificationTitle: String { text("Download finished") }
+    static var downloadFinishedNotificationBodyFormat: String { text("%@") }
+    static var downloadsFinishedNotificationTitle: String { text("Downloads finished") }
+    static var downloadsFinishedNotificationBodyFormat: String { text("%d artworks finished downloading.") }
+    static var notifyOnDownloadFinish: String { text("Notify when downloads finish") }
+    static var notifyOnDownloadFinishHint: String { text("Posts a Notification Center banner once a download wraps up — coalesced for batches so a 50-image queue still surfaces a single banner.") }
+    static var notifyOnDownloadFinishAuthDenied: String { text("Notification Center declined permission. Re-enable banners for KeiPix in System Settings → Notifications.") }
     static var downloadedLocally: String { text("Downloaded Locally") }
     static var inDownloadQueue: String { text("In Download Queue") }
     static var downloadFailed: String { text("Download Failed") }
@@ -896,6 +903,16 @@ enum L10n {
     }
     static var qaDownloadThroughputEvidence: String {
         text("Throughput sampler records per-page bytes and exposes per-item plus aggregate rates that the queue surfaces.")
+    }
+    static var qaDownloadFinishNotification: String { text("Notification Center banner on download finish") }
+    static var qaDownloadFinishNotificationRequirement: String {
+        text("DownloadCompletionNotifier coalesces completed-download titles into a single banner per quiescent burst, gated on the user's opt-in toggle and Apple's authorization state.")
+    }
+    static var qaDownloadFinishNotificationNext: String {
+        text("Keep ArtworkDownloadStore.markCompleted wired through DownloadCompletionNotifier so a finished download still hands off to UNUserNotificationCenter.")
+    }
+    static var qaDownloadFinishNotificationEvidence: String {
+        text("Notifier records every markCompleted call and posts one Notification Center request per debounce window.")
     }
     static var systemProxy: String { text("System Proxy") }
     static var directConnection: String { text("Direct connection") }

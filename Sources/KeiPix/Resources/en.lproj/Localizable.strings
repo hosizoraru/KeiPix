@@ -1002,6 +1002,16 @@
 "Active downloads display a sliding-window byte-per-second readout per row and an aggregate rate in the queue subtitle, just like Finder." = "Active downloads display a sliding-window byte-per-second readout per row and an aggregate rate in the queue subtitle, just like Finder.";
 "Keep DownloadThroughputSampler wired through ArtworkDownloadStore.download(_:sourceURLs:) and reset on pause / cancel / complete so the speedometer never lies." = "Keep DownloadThroughputSampler wired through ArtworkDownloadStore.download(_:sourceURLs:) and reset on pause / cancel / complete so the speedometer never lies.";
 "Throughput sampler records per-page bytes and exposes per-item plus aggregate rates that the queue surfaces." = "Throughput sampler records per-page bytes and exposes per-item plus aggregate rates that the queue surfaces.";
+"Download finished" = "Download finished";
+"Downloads finished" = "Downloads finished";
+"%d artworks finished downloading." = "%d artworks finished downloading.";
+"Notify when downloads finish" = "Notify when downloads finish";
+"Posts a Notification Center banner once a download wraps up — coalesced for batches so a 50-image queue still surfaces a single banner." = "Posts a Notification Center banner once a download wraps up — coalesced for batches so a 50-image queue still surfaces a single banner.";
+"Notification Center declined permission. Re-enable banners for KeiPix in System Settings → Notifications." = "Notification Center declined permission. Re-enable banners for KeiPix in System Settings → Notifications.";
+"Notification Center banner on download finish" = "Notification Center banner on download finish";
+"DownloadCompletionNotifier coalesces completed-download titles into a single banner per quiescent burst, gated on the user's opt-in toggle and Apple's authorization state." = "DownloadCompletionNotifier coalesces completed-download titles into a single banner per quiescent burst, gated on the user's opt-in toggle and Apple's authorization state.";
+"Keep ArtworkDownloadStore.markCompleted wired through DownloadCompletionNotifier so a finished download still hands off to UNUserNotificationCenter." = "Keep ArtworkDownloadStore.markCompleted wired through DownloadCompletionNotifier so a finished download still hands off to UNUserNotificationCenter.";
+"Notifier records every markCompleted call and posts one Notification Center request per debounce window." = "Notifier records every markCompleted call and posts one Notification Center request per debounce window.";
 "System Proxy" = "System Proxy";
 "Direct connection" = "Direct connection";
 "Pixiv API" = "Pixiv API";

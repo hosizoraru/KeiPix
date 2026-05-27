@@ -63,10 +63,13 @@ struct DownloadsSettingsPage: View {
             }
 
             Toggle(L10n.autoBookmarkDownloadedArtworks, isOn: store.settings_autoBookmarkDownloadsBinding)
+
+            Toggle(L10n.notifyOnDownloadFinish, isOn: store.settings_notifyOnDownloadFinishBinding)
         } footer: {
             VStack(alignment: .leading, spacing: 4) {
                 Text(L10n.concurrentDownloadsHint)
                 Text(L10n.autoBookmarkDownloadedArtworksHint)
+                Text(L10n.notifyOnDownloadFinishHint)
             }
             .font(.caption)
             .foregroundStyle(.secondary)

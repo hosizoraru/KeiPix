@@ -269,4 +269,18 @@ extension KeiPixStore {
             self.downloads.setMaxConcurrentDownloads(value)
         }
     }
+
+    /// Toggles the macOS Notification Center banner that fires when a
+    /// download wraps up. The setter hops onto a Task because asking
+    /// Notification Center for authorization is async, but SwiftUI
+    /// expects bindings to be synchronous — kicking the request to a
+    /// detached Task lets the toggle flip immediately and lets the
+    /// authorization prompt arrive on its own schedule.
+    var settings_notifyOnDownloadFinishBinding: Binding<Bool> {
+        Binding {
+            self.downloads.notifyOnDownloadFinish
+        } set: { value in
+            Task { await self.downloads.setNotifyOnDownloadFinish(value) }
+        }
+    }
 }
