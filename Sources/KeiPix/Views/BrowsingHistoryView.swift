@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 
 struct BrowsingHistoryView: View {
@@ -114,6 +115,15 @@ struct BrowsingHistoryView: View {
             Menu {
                 switch source {
                 case .local:
+                    Button {
+                        exportHistory()
+                    } label: {
+                        Label(L10n.exportHistory, systemImage: "square.and.arrow.up")
+                    }
+                    .disabled(store.localBrowsingHistory.isEmpty)
+
+                    Divider()
+
                     Button(role: .destructive) {
                         isClearConfirmationPresented = true
                     } label: {
@@ -322,6 +332,24 @@ struct BrowsingHistoryView: View {
         guard let url = item.pixivURL else { return }
         PasteboardWriter.copy(url.absoluteString)
         actionMessage = L10n.copied
+    }
+
+    private func exportHistory() {
+        let items = store.localBrowsingHistory
+        guard items.isEmpty == false else { return }
+
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        encoder.dateEncodingStrategy = .iso8601
+        guard let data = try? encoder.encode(items) else { return }
+
+        let panel = NSSavePanel()
+        panel.allowedContentTypes = [.json]
+        panel.nameFieldStringValue = "keipix-history-\(Date().formatted(.dateTime.year().month().day())).json"
+        panel.canCreateDirectories = true
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        try? data.write(to: url)
+        actionMessage = L10n.exportedHistory
     }
 }
 

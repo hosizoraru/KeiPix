@@ -126,6 +126,8 @@ enum L10n {
     static var deleteHistoryItemConfirmationFormat: String { text("Delete %@ from local history?") }
     static var deletedHistoryItemFormat: String { text("Deleted %@ from local history") }
     static var clearedHistoryItemsFormat: String { text("Cleared %d history items") }
+    static var exportHistory: String { text("Export History") }
+    static var exportedHistory: String { text("Exported history") }
     static var deleteFromHistory: String { text("Delete from History") }
     static var noLocalHistoryTitle: String { text("No local history") }
     static var noLocalHistorySubtitle: String { text("Open artworks to build a private local history on this Mac.") }
