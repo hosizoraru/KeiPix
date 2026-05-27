@@ -87,6 +87,9 @@ struct NovelReaderView: View {
             // the same reader instance (e.g., via a series link).
             pageIndex = 0
             await novelStore.loadNovelText(for: novel.id)
+            // Kick off image resolution for embedded artwork and
+            // uploaded images once the body text is available.
+            await loadEmbeddedImages()
         }
         .onChange(of: novelStore.loadedNovelTextID) { _, newValue in
             // When the body text resolves for the current novel, reset
@@ -263,9 +266,9 @@ struct NovelReaderView: View {
                 chapterMarker(title)
             }
         case .pixivImage(let illustID, _):
-            embeddedArtworkPlaceholder(illustID: illustID)
+            embeddedArtworkView(illustID: illustID)
         case .uploadedImage(let key):
-            uploadedImagePlaceholder(key: key)
+            uploadedImageView(key: key)
         case .jumpURL(let label, let url):
             Link(destination: url) {
                 Label(label.isEmpty ? url.absoluteString : label, systemImage: "link")
@@ -296,54 +299,112 @@ struct NovelReaderView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    private func embeddedArtworkPlaceholder(illustID: Int) -> some View {
-        let url = URL(string: "https://www.pixiv.net/artworks/\(illustID)")
-        return HStack(spacing: 10) {
-            Image(systemName: "photo")
-                .font(.title3)
-                .foregroundStyle(.secondary)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(L10n.novelEmbeddedImage)
-                    .font(.callout.weight(.medium))
-                Text("illust/\(illustID)")
-                    .font(.caption.monospaced())
-                    .foregroundStyle(.secondary)
-            }
-            Spacer(minLength: 0)
-            if let url {
-                Button {
-                    NSWorkspace.shared.open(url)
-                } label: {
-                    Label(L10n.openInPixiv, systemImage: "arrow.up.right.square")
-                        .labelStyle(.iconOnly)
+    private func embeddedArtworkView(illustID: Int) -> some View {
+        let imageURL = novelStore.embeddedArtworkURLs[illustID]
+        let pixivURL = URL(string: "https://www.pixiv.net/artworks/\(illustID)")
+        return VStack(alignment: .leading, spacing: 6) {
+            if let imageURL {
+                RemoteImageView(url: imageURL)
+                    .aspectRatio(contentMode: .fit)
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .frame(maxWidth: .infinity)
+            } else {
+                // Still loading or fetch failed — show a compact
+                // card that doesn't block reading flow.
+                HStack(spacing: 10) {
+                    Image(systemName: "photo")
+                        .font(.title3)
+                        .foregroundStyle(.secondary)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(L10n.novelEmbeddedImage)
+                            .font(.callout.weight(.medium))
+                        Text("illust/\(illustID)")
+                            .font(.caption.monospaced())
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer(minLength: 0)
+                    if let pixivURL {
+                        Button {
+                            PlatformWorkspace.open(pixivURL)
+                        } label: {
+                            Label(L10n.openInPixiv, systemImage: "arrow.up.right.square")
+                                .labelStyle(.iconOnly)
+                        }
+                        .buttonStyle(.borderless)
+                    }
                 }
-                .buttonStyle(.borderless)
+                .padding(10)
+                .background(theme.embedBackgroundColor, in: RoundedRectangle(cornerRadius: 8))
             }
         }
-        .padding(10)
-        .background(theme.embedBackgroundColor, in: RoundedRectangle(cornerRadius: 8))
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    private func uploadedImagePlaceholder(key: String) -> some View {
-        HStack(spacing: 10) {
-            Image(systemName: "photo.stack")
-                .font(.title3)
-                .foregroundStyle(.secondary)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(L10n.novelEmbeddedUploadedImage)
-                    .font(.callout.weight(.medium))
-                Text(key)
-                    .font(.caption.monospaced())
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-                    .truncationMode(.middle)
+    private func uploadedImageView(key: String) -> some View {
+        let imageURL = novelStore.uploadedImageURLs[key]
+        return VStack(alignment: .leading, spacing: 6) {
+            if let imageURL {
+                RemoteImageView(url: imageURL)
+                    .aspectRatio(contentMode: .fit)
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .frame(maxWidth: .infinity)
+            } else {
+                HStack(spacing: 10) {
+                    Image(systemName: "photo.stack")
+                        .font(.title3)
+                        .foregroundStyle(.secondary)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(L10n.novelEmbeddedUploadedImage)
+                            .font(.callout.weight(.medium))
+                        Text(key)
+                            .font(.caption.monospaced())
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                            .truncationMode(.middle)
+                    }
+                    Spacer(minLength: 0)
+                }
+                .padding(10)
+                .background(theme.embedBackgroundColor, in: RoundedRectangle(cornerRadius: 8))
             }
-            Spacer(minLength: 0)
         }
-        .padding(10)
-        .background(theme.embedBackgroundColor, in: RoundedRectangle(cornerRadius: 8))
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    /// Resolves image URLs for every embedded-image token on the
+    /// current page. Artwork images are fetched individually via
+    /// the Pixiv API; uploaded images are batch-resolved by
+    /// scraping the novel web page once.
+    private func loadEmbeddedImages() async {
+        // Collect artwork IDs from the full token stream so we can
+        // fire concurrent fetches for all of them.
+        let artworkIDs = Set(novelStore.loadedNovelTokens.compactMap { token -> Int? in
+            if case .pixivImage(let id, _) = token { return id }
+            return nil
+        })
+        let hasUploadedImages = novelStore.loadedNovelTokens.contains { token in
+            if case .uploadedImage = token { return true }
+            return false
+        }
+
+        // Scrape uploaded images (single network call for the
+        // whole novel) in parallel with artwork detail fetches.
+        async let uploadedTask: Void = {
+            if hasUploadedImages {
+                await novelStore.loadUploadedImages(for: novel.id)
+            }
+        }()
+
+        // Fire artwork fetches concurrently — each one is a
+        // lightweight `/v1/illust/detail` call.
+        await withTaskGroup(of: Void.self) { group in
+            for illustID in artworkIDs {
+                group.addTask {
+                    await novelStore.loadEmbeddedArtworkURL(illustID: illustID)
+                }
+            }
+        }
+        await uploadedTask
     }
 
     private var footer: some View {

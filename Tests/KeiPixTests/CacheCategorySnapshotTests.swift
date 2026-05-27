@@ -56,13 +56,13 @@ struct CacheCategorySnapshotTests {
         #expect(snapshot.displayLabel.contains("0 items") == false)
     }
 
-    @Test("CacheCategoryKind.allCases covers the five regenerable surfaces the page renders")
+    @Test("CacheCategoryKind.allCases covers the six regenerable surfaces the page renders")
     func allCasesShape() {
         // The settings page builds rows from `allCases`, so a
         // missing case would silently drop a row. Pin the canonical
-        // five so a reordering or renaming shows up here first.
+        // six so a reordering or renaming shows up here first.
         #expect(CacheCategoryKind.allCases == [
-            .image, .feedSnapshots, .browsingHistory, .searchHistory, .artworkDetailState
+            .image, .feedSnapshots, .browsingHistory, .searchHistory, .artworkDetailState, .novelText
         ])
     }
 }

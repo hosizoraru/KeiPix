@@ -67,6 +67,22 @@ final class NovelFeatureStore {
     /// load so SwiftUI doesn't pay the lex cost on every view update.
     private(set) var loadedNovelTokens: [NovelToken] = []
 
+    // MARK: - Embedded image state
+
+    /// Maps artwork IDs referenced by `[pixivimage:<id>]` tokens to
+    /// their resolved image URL. Populated lazily as the reader
+    /// encounters each token so we don't batch-fetch every embedded
+    /// artwork on novel open.
+    private(set) var embeddedArtworkURLs: [Int: URL] = [:]
+    /// IDs currently being fetched — prevents duplicate requests when
+    /// the same artwork appears on multiple pages.
+    private var embeddedArtworkLoadingIDs: Set<Int> = []
+
+    /// Maps uploaded-image keys (`[uploadedimage:<key>]`) to their CDN
+    /// URLs. Scraped from the Pixiv novel web page's
+    /// `<meta id="meta-preload-data">` JSON.
+    private(set) var uploadedImageURLs: [String: URL] = [:]
+
     // MARK: - Series / watchlist state
 
     private(set) var watchlistSeries: [PixivNovelSeriesItem] = []
@@ -243,6 +259,8 @@ final class NovelFeatureStore {
         novelTextError = nil
         loadedNovelText = nil
         loadedNovelTokens = []
+        embeddedArtworkURLs = [:]
+        uploadedImageURLs = [:]
 
         // Try disk cache first for instant offline reads.
         if let cached = await NovelTextDiskCache.shared.load(novelID: novelID) {
@@ -269,6 +287,40 @@ final class NovelFeatureStore {
             guard loadedNovelTextID == novelID else { return }
             novelTextError = String(describing: error)
         }
+    }
+
+    // MARK: - Embedded image loading
+
+    /// Fetches the image URL for an artwork referenced by
+    /// `[pixivimage:<id>]` in a novel. Results are cached in-memory so
+    /// repeated tokens on different pages don't re-fetch.
+    func loadEmbeddedArtworkURL(illustID: Int) async {
+        guard embeddedArtworkURLs[illustID] == nil,
+              !embeddedArtworkLoadingIDs.contains(illustID) else { return }
+        embeddedArtworkLoadingIDs.insert(illustID)
+        defer { embeddedArtworkLoadingIDs.remove(illustID) }
+        do {
+            let artwork = try await api.illustDetail(illustID: illustID)
+            embeddedArtworkURLs[illustID] = artwork.imageURL(at: 0, tier: .large)
+        } catch {
+            // Silently ignore — the reader falls back to the
+            // placeholder if no URL appears.
+        }
+    }
+
+    /// Scrapes the Pixiv novel web page for the
+    /// `textEmbeddedImages` mapping that resolves
+    /// `[uploadedimage:<key>]` tokens to CDN URLs. Called once
+    /// when the reader opens; the mapping is cached for the
+    /// session.
+    func loadUploadedImages(for novelID: Int) async {
+        guard uploadedImageURLs.isEmpty else { return }
+        let token = await api.currentSession()?.accessToken
+        let mapping = await NovelWebImageScraper.fetchUploadedImages(
+            novelID: novelID,
+            accessToken: token
+        )
+        uploadedImageURLs = mapping
     }
 
     /// Refresh the cached novel object (caption, bookmark/series state)
