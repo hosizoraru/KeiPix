@@ -393,6 +393,11 @@ extension KeiPixStore {
         UserDefaults.standard.set(mode.rawValue, forKey: "spotlightListLayoutMode")
     }
 
+    func setNovelGalleryLayoutMode(_ mode: NovelGalleryLayoutMode) {
+        novelGalleryLayoutMode = mode
+        UserDefaults.standard.set(mode.rawValue, forKey: "novelGalleryLayoutMode")
+    }
+
     func isDashboardSectionVisible(_ section: DiscoveryDashboardSection) -> Bool {
         hiddenDashboardSectionIDs.contains(section.id) == false
     }

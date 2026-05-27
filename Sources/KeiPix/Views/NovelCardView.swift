@@ -135,3 +135,70 @@ private extension Color {
         Color(nsColor: .separatorColor)
     }
 }
+
+/// Vertical card for grid layout — cover on top, text below.
+struct NovelGridCardView: View {
+    let novel: PixivNovel
+    var isSelected: Bool = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            RemoteImageView(url: novel.imageURLs.medium ?? novel.imageURLs.squareMedium)
+                .aspectRatio(2.0 / 3.0, contentMode: .fill)
+                .frame(maxWidth: .infinity)
+                .frame(height: 200)
+                .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(alignment: .top, spacing: 6) {
+                    Text(novel.title)
+                        .font(.callout.weight(.semibold))
+                        .lineLimit(2)
+                        .multilineTextAlignment(.leading)
+
+                    Spacer(minLength: 0)
+
+                    if novel.isBookmarked {
+                        Image(systemName: "bookmark.fill")
+                            .foregroundStyle(.tint)
+                            .font(.caption)
+                    }
+                }
+
+                Text(novel.user.name)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+
+                HStack(spacing: 8) {
+                    if novel.isOriginal {
+                        Text(L10n.novelOriginalBadge)
+                            .font(.caption2.weight(.semibold))
+                            .padding(.horizontal, 5)
+                            .padding(.vertical, 2)
+                            .background(.tint.opacity(0.18), in: Capsule())
+                            .foregroundStyle(.tint)
+                    }
+                    Label(novel.textLength.formatted(), systemImage: "textformat")
+                    Label(novel.totalBookmarks.formatted(), systemImage: "bookmark")
+                }
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+            }
+            .padding(.horizontal, 8)
+            .padding(.bottom, 10)
+        }
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(isSelected ? Color.accentColor.opacity(0.12) : Color(nsColor: .controlBackgroundColor))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .strokeBorder(
+                    isSelected ? Color.accentColor : Color.separator.opacity(0.5),
+                    lineWidth: isSelected ? 1.5 : 0.5
+                )
+        )
+        .help(novel.title)
+    }
+}

@@ -24,6 +24,22 @@ struct NovelGalleryView: View {
             }
         }
         .navigationTitle(store.selectedRoute.title)
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Picker(L10n.galleryLayout, selection: Binding(
+                    get: { store.novelGalleryLayoutMode },
+                    set: { store.setNovelGalleryLayoutMode($0) }
+                )) {
+                    ForEach(NovelGalleryLayoutMode.allCases) { mode in
+                        Label(mode.title, systemImage: mode.systemImage)
+                            .tag(mode)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .labelsHidden()
+                .frame(maxWidth: 140)
+            }
+        }
         .task(id: novelTaskID) {
             // Only kick the first load; route changes already trigger
             // `KeiPixStore.select(_:)` -> `NovelFeatureStore.refresh`.
@@ -38,29 +54,56 @@ struct NovelGalleryView: View {
 
     private var listContent: some View {
         ScrollView {
-            LazyVStack(spacing: 12) {
-                ForEach(novelStore.novels) { novel in
-                    NovelCardView(
-                        novel: novel,
-                        isSelected: novelStore.selectedNovel?.id == novel.id
-                    )
-                    .contentShape(Rectangle())
-                    .onTapGesture {
-                        Task { await novelStore.openNovel(novel) }
-                    }
-                    .contextMenu {
-                        novelContextMenu(novel)
-                    }
-                }
-
-                if novelStore.nextURL != nil {
-                    paginationFooter
-                        .onAppear {
-                            Task { await novelStore.loadMore(route: store.selectedRoute) }
+            if store.novelGalleryLayoutMode == .grid {
+                let columns = [GridItem(.adaptive(minimum: 180, maximum: 260), spacing: 14)]
+                LazyVGrid(columns: columns, spacing: 14) {
+                    ForEach(novelStore.novels) { novel in
+                        NovelGridCardView(
+                            novel: novel,
+                            isSelected: novelStore.selectedNovel?.id == novel.id
+                        )
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            Task { await novelStore.openNovel(novel) }
                         }
+                        .contextMenu {
+                            novelContextMenu(novel)
+                        }
+                    }
+
+                    if novelStore.nextURL != nil {
+                        paginationFooter
+                            .onAppear {
+                                Task { await novelStore.loadMore(route: store.selectedRoute) }
+                            }
+                    }
                 }
+                .padding(16)
+            } else {
+                LazyVStack(spacing: 12) {
+                    ForEach(novelStore.novels) { novel in
+                        NovelCardView(
+                            novel: novel,
+                            isSelected: novelStore.selectedNovel?.id == novel.id
+                        )
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            Task { await novelStore.openNovel(novel) }
+                        }
+                        .contextMenu {
+                            novelContextMenu(novel)
+                        }
+                    }
+
+                    if novelStore.nextURL != nil {
+                        paginationFooter
+                            .onAppear {
+                                Task { await novelStore.loadMore(route: store.selectedRoute) }
+                            }
+                    }
+                }
+                .padding(16)
             }
-            .padding(16)
         }
     }
 

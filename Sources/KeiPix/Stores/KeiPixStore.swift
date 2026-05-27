@@ -114,6 +114,7 @@ final class KeiPixStore {
     var galleryLayoutMode = KeiPixStore.loadGalleryLayoutMode()
     var creatorListLayoutMode = KeiPixStore.loadCreatorListLayoutMode()
     var spotlightListLayoutMode = KeiPixStore.loadSpotlightListLayoutMode()
+    var novelGalleryLayoutMode = KeiPixStore.loadEnum("novelGalleryLayoutMode", defaultValue: NovelGalleryLayoutMode.list)
     var showTranslatedTags = UserDefaults.standard.object(forKey: "showTranslatedTags") as? Bool ?? true
     var showContentBadges = UserDefaults.standard.object(forKey: "showContentBadges") as? Bool ?? true
     var showAccountIdentity = UserDefaults.standard.object(forKey: "showAccountIdentity") as? Bool ?? true
