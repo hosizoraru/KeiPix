@@ -108,6 +108,7 @@ struct DiscoveryDashboardSection: Identifiable {
                     .privateFollowing,
                     .history,
                     .watchLater,
+                    .workSubscriptions,
                     .mutedContent,
                     .mangaWatchlist,
                     .downloads

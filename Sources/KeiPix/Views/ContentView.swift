@@ -568,6 +568,8 @@ private struct ContentColumnView: View {
             BrowsingHistoryView(store: store)
         } else if store.selectedRoute == .watchLater {
             WatchLaterView(store: store)
+        } else if store.selectedRoute == .workSubscriptions {
+            WorkSubscriptionsView(store: store)
         } else if store.selectedRoute == .mutedContent {
             MutedContentView(store: store)
         } else if store.selectedRoute == .followingCreators || store.selectedRoute == .pinnedCreators || store.selectedRoute == .recommendedUsers || store.selectedRoute == .searchUsers {

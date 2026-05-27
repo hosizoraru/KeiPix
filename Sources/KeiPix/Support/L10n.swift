@@ -118,6 +118,14 @@ enum L10n {
     static var pixivHistory: String { text("Pixiv") }
     static var searchHistory: String { text("Search history") }
     static var watchLater: String { text("Watch Later") }
+    static var workSubscriptions: String { text("Subscriptions") }
+    static var workSubscriptionsEmpty: String { text("No subscriptions yet") }
+    static var workSubscriptionsEmptyHint: String { text("Subscribe to creators from their profile to track new works.") }
+    static var workSubscriptionsSubscribed: String { text("Subscribed") }
+    static var workSubscriptionsUnsubscribed: String { text("Unsubscribed") }
+    static var workSubscriptionsCheckNow: String { text("Check for Updates") }
+    static var workSubscriptionsNewWorks: String { text("new works") }
+    static var workSubscriptionsLastChecked: String { text("Last checked") }
     static var watchLaterEmpty: String { text("No items in watch later queue") }
     static var watchLaterEmptyHint: String { text("Add artworks from the detail view to watch later.") }
     static var watchLaterAdded: String { text("Added to Watch Later") }

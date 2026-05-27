@@ -268,6 +268,7 @@ final class KeiPixStore {
     var mutedArtworks = KeiPixStore.loadIntStringDictionary("mutedArtworks")
     var mutedCommentPhrases = Set(UserDefaults.standard.stringArray(forKey: "mutedCommentPhrases") ?? [])
     var hiddenDashboardSectionIDs = Set(UserDefaults.standard.stringArray(forKey: "hiddenDashboardSectionIDs") ?? [])
+    var workSubscriptions = KeiPixStore.loadSubscriptions()
     var recordedBrowsingHistoryIDs = Set<Int>()
 
     init() {
@@ -901,7 +902,7 @@ final class KeiPixStore {
             return try await api.following(restrict: "private")
         case .history:
             return try await api.browsingHistoryIllusts()
-        case .home, .watchLater, .mangaWatchlist, .downloads, .savedSearches, .trendingTags, .bookmarkTags, .mutedContent, .spotlight:
+        case .home, .watchLater, .workSubscriptions, .mangaWatchlist, .downloads, .savedSearches, .trendingTags, .bookmarkTags, .mutedContent, .spotlight:
             return PixivFeedResponse(illusts: [], nextURL: nil)
         case .followingCreators, .pinnedCreators, .recommendedUsers, .searchUsers:
             return PixivFeedResponse(illusts: [], nextURL: nil)
