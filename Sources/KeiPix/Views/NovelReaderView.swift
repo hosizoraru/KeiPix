@@ -34,6 +34,7 @@ struct NovelReaderView: View {
 
     @State private var pageIndex: Int = 0
     @State private var isSettingsPresented = false
+    @State private var isTranslationPresented = false
 
     private var novelStore: NovelFeatureStore { store.novels }
 
@@ -54,6 +55,19 @@ struct NovelReaderView: View {
         return pages[pageIndex]
     }
 
+    private var currentPagePlainText: String {
+        currentPageTokens.compactMap { token in
+            switch token {
+            case .text(let v): return v
+            case .chapter(let t): return t
+            case .jumpURL(let l, _): return l
+            case .ruby(let b, let r): return "\(b)(\(r))"
+            case .jumpPage(let p): return "→ p.\(p)"
+            default: return nil
+            }
+        }.joined(separator: "\n")
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             header
@@ -64,6 +78,10 @@ struct NovelReaderView: View {
         }
         .background(theme.backgroundColor)
         .foregroundStyle(theme.foregroundColor)
+        .translationPresentation(
+            isPresented: $isTranslationPresented,
+            text: currentPagePlainText
+        )
         .task(id: novel.id) {
             // Reset paging when the user opens a different novel from
             // the same reader instance (e.g., via a series link).
@@ -126,6 +144,15 @@ struct NovelReaderView: View {
             }
             .help(novel.isBookmarked ? L10n.novelRemoveBookmark : L10n.novelBookmark)
             .keyboardShortcut("b", modifiers: [])
+
+            Button {
+                isTranslationPresented = true
+            } label: {
+                Label(L10n.translate, systemImage: "translate")
+                    .labelStyle(.iconOnly)
+            }
+            .help(L10n.translate)
+            .keyboardShortcut("t", modifiers: [])
 
             Button {
                 isSettingsPresented = true
