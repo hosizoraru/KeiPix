@@ -1276,8 +1276,10 @@ enum L10n {
 }
 
 extension Bundle {
-    /// Resource bundle that holds `Localizable.strings` regardless of whether the
-    /// app is built via Swift Package Manager (where `Bundle.module` is generated)
+    /// Resource bundle that holds the localized `.lproj/Localizable.strings`
+    /// files compiled out of `Localizable.xcstrings` by the
+    /// `XCStringsBuilder` SwiftPM plugin, regardless of whether the app is
+    /// built via Swift Package Manager (where `Bundle.module` is generated)
     /// or Xcode (where resources live in the main app bundle).
     static var keipixResources: Bundle {
         #if SWIFT_PACKAGE

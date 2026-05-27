@@ -31,7 +31,7 @@ Sources/KeiPix/
 │   └── ArtworkDownloadStore+Queue.swift        # 队列动作
 ├── Support/         # 跨视图复用工具：Masonry / Glass / Trackpad / 链接解析 / L10n / 视觉 QA 启动参数等
 ├── Views/           # 所有 SwiftUI 视图（按 surface 拆分单文件）
-└── Resources/       # en.lproj、zh-Hans.lproj 的 Localizable.strings
+└── Resources/       # Localizable.xcstrings（XCStringsBuilder 插件构建期编译成各 .lproj/Localizable.strings）
 ```
 
 ## 关键模块

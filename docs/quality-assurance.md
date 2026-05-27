@@ -124,6 +124,6 @@ swift test --filter <TestSuiteName>
 
 - 任一画廊 / 阅读器 / 设置 / Runtime Readiness 的视图布局有变更
 - 视图新增 / 删除 / 重命名 SwiftUI 视图文件
-- Localizable.strings 中相关文案改动
+- Localizable.xcstrings 中相关文案改动
 - API 路径或解析逻辑改动到 surface 上的可见字段
 - 新增 surface（按上面流程登记 manifest）

@@ -9,32 +9,30 @@ let package = Package(
         .macOS(.v26)
     ],
     products: [
-        .executable(name: "KeiPix", targets: ["KeiPix"]),
-        // CLI tool that regenerates `zh-Hant.lproj` and `ja.lproj` from
-        // the canonical `zh-Hans` / `en` sources. Run on demand with
-        // `swift run LocalizationGenerator`; the output `.strings`
-        // files are committed alongside the rest of the resources, so
-        // the shipping app target has zero dependency on this tool.
-        .executable(name: "LocalizationGenerator", targets: ["LocalizationGenerator"])
+        .executable(name: "KeiPix", targets: ["KeiPix"])
     ],
     targets: [
         .executableTarget(
             name: "KeiPix",
             resources: [
                 .process("Resources")
+            ],
+            plugins: [
+                .plugin(name: "XCStringsBuilder")
             ]
         ),
-        .executableTarget(
-            name: "LocalizationGenerator",
-            path: "Sources/LocalizationGenerator"
+        // Build-tool plugin: compiles `Localizable.xcstrings` into per-locale
+        // `.lproj/<stem>.strings` via `xcrun xcstringstool compile`. SwiftPM
+        // 6.2 does not run `xcstringstool` automatically, so the shipping
+        // bundle would otherwise lack `.lproj` directories and every locale
+        // other than the development language would silently fall back.
+        .plugin(
+            name: "XCStringsBuilder",
+            capability: .buildTool()
         ),
         .testTarget(
             name: "KeiPixTests",
             dependencies: ["KeiPix"]
-        ),
-        .testTarget(
-            name: "LocalizationGeneratorTests",
-            dependencies: ["LocalizationGenerator"]
         )
     ]
 )
