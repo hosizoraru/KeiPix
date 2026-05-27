@@ -39,6 +39,7 @@ enum NovelWebImageScraper {
 
         guard let data = try? await URLSession.shared.data(for: request).0,
               let html = String(data: data, encoding: .utf8) else {
+            KeiPixLog.network.error("Failed to fetch uploaded images for novel \(novelID)")
             return [:]
         }
 

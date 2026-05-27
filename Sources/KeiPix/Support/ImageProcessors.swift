@@ -7,6 +7,13 @@ import CoreImage
 import Vision
 #endif
 
+/// Shared `CIContext` for image processors. CIContext is thread-safe
+/// and heavyweight (initialises GPU/Metal state), so reusing a single
+/// instance across all processor calls avoids measurable latency.
+#if canImport(CoreImage)
+private let sharedCIContext = CIContext()
+#endif
+
 // MARK: - Sharpen
 
 /// Applies luminance sharpening via `CISharpenLuminance`.
@@ -29,8 +36,7 @@ struct SharpenProcessor: ImageProcessor {
         filter.setValue(ciImage, forKey: kCIInputImageKey)
         filter.setValue(intensity, forKey: kCIInputSharpnessKey)
         guard let output = filter.outputImage else { return nil }
-        let context = CIContext()
-        return context.createCGImage(output, from: output.extent)
+        return sharedCIContext.createCGImage(output, from: output.extent)
         #else
         return nil
         #endif
@@ -63,8 +69,7 @@ struct DenoiseProcessor: ImageProcessor {
         filter.setValue(noiseLevel, forKey: "inputNoiseLevel")
         filter.setValue(sharpness, forKey: kCIInputSharpnessKey)
         guard let output = filter.outputImage else { return nil }
-        let context = CIContext()
-        return context.createCGImage(output, from: output.extent)
+        return sharedCIContext.createCGImage(output, from: output.extent)
         #else
         return nil
         #endif

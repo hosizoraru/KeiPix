@@ -303,8 +303,7 @@ final class NovelFeatureStore {
             let artwork = try await api.illustDetail(illustID: illustID)
             embeddedArtworkURLs[illustID] = artwork.imageURL(at: 0, tier: .large)
         } catch {
-            // Silently ignore — the reader falls back to the
-            // placeholder if no URL appears.
+            KeiPixLog.network.error("Failed to load embedded artwork \(illustID): \(error.localizedDescription)")
         }
     }
 

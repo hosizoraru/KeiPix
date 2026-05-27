@@ -151,7 +151,7 @@ private struct NovelDetailContent: View {
 
             if let url = novel.pixivURL {
                 Button {
-                    NSWorkspace.shared.open(url)
+                    PlatformWorkspace.open(url)
                 } label: {
                     Label(L10n.openInPixivNovel, systemImage: "arrow.up.right.square")
                 }
@@ -223,7 +223,7 @@ private struct NovelDetailContent: View {
                 Spacer(minLength: 0)
                 if let url = novel.seriesPixivURL {
                     Button {
-                        NSWorkspace.shared.open(url)
+                        PlatformWorkspace.open(url)
                     } label: {
                         Label(L10n.openInPixiv, systemImage: "arrow.up.right.square")
                             .labelStyle(.iconOnly)

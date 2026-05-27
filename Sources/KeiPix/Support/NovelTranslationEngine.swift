@@ -26,15 +26,24 @@ final class NovelTranslationEngine {
     /// triggers the `.translationTask` modifier on the reader view.
     var isInlineTranslationActive: Bool = false
 
+    /// Monotonic counter bumped on page change and toggle-off.
+    /// The `.translationTask` closure captures this at start and
+    /// checks it before calling `applyResults` to avoid stale
+    /// results overwriting fresh ones.
+    private(set) var generation: Int = 0
+
     func setTranslating() {
         state = .translating
     }
 
-    /// Applies batch translation results from the view's
-    /// `.translationTask` closure.
-    func applyResults(_ results: [Int: String]) {
+    /// Applies batch translation results if the generation is still
+    /// current. Returns `true` if results were applied.
+    @discardableResult
+    func applyResults(_ results: [Int: String], generation: Int) -> Bool {
+        guard generation == self.generation else { return false }
         translatedParagraphs = results
         state = results.isEmpty ? .error("No translations") : .completed
+        return true
     }
 
     /// Returns translated text for a given token index, or nil.
@@ -42,16 +51,25 @@ final class NovelTranslationEngine {
         translatedParagraphs[tokenIndex]
     }
 
-    /// Clears translations when navigating to a new page.
+    /// Clears translations when navigating to a new page. Bumps
+    /// generation so in-flight tasks abandon their results.
     func clearTranslations() {
+        generation += 1
         translatedParagraphs = [:]
         state = .idle
     }
 
     /// Fully resets including the toggle.
     func reset() {
+        generation += 1
         translatedParagraphs = [:]
         state = .idle
         isInlineTranslationActive = false
+    }
+
+    /// Bumps generation when the user toggles translation off,
+    /// cancelling any in-flight work.
+    func cancelInFlight() {
+        generation += 1
     }
 }

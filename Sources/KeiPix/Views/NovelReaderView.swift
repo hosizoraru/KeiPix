@@ -108,6 +108,7 @@ struct NovelReaderView: View {
             translationEngine.clearTranslations()
         }
         .translationTask(translationConfig) { session in
+            let gen = translationEngine.generation
             guard translationEngine.isInlineTranslationActive else { return }
             let paragraphs = currentPageTokens.enumerated().compactMap { index, token -> (Int, String)? in
                 if case .text(let value) = token,
@@ -125,9 +126,7 @@ struct NovelReaderView: View {
                     results[tokenIndex] = response.targetText
                 }
             }
-            if translationEngine.isInlineTranslationActive {
-                translationEngine.applyResults(results)
-            }
+            translationEngine.applyResults(results, generation: gen)
         }
         .sheet(isPresented: $isSettingsPresented) {
             NovelReaderSettingsView(

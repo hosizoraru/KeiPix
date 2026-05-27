@@ -145,7 +145,7 @@ struct NovelGalleryView: View {
     private func novelContextMenu(_ novel: PixivNovel) -> some View {
         if let url = novel.pixivURL {
             Button(L10n.openInPixivNovel) {
-                NSWorkspace.shared.open(url)
+                PlatformWorkspace.open(url)
             }
             Button(L10n.copyNovelLink) {
                 PasteboardWriter.copy(url.absoluteString)

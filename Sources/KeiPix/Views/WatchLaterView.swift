@@ -108,7 +108,7 @@ private struct WatchLaterCard: View {
             if let url = item.pixivURL {
                 Divider()
                 Button {
-                    NSWorkspace.shared.open(url)
+                    PlatformWorkspace.open(url)
                 } label: {
                     Label(L10n.openInPixiv, systemImage: "arrow.up.right.square")
                 }

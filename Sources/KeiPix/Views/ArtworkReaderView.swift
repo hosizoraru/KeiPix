@@ -119,7 +119,7 @@ struct ArtworkReaderView: View {
         )
     }
 
-    private func updatePageAspectRatio(_ image: NSImage, pageIndex: Int) {
+    private func updatePageAspectRatio(_ image: PlatformImage, pageIndex: Int) {
         guard let aspectRatio = ReaderPagePresentation.aspectRatio(from: image),
               pageAspectRatios[pageIndex] != aspectRatio else {
             return

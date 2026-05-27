@@ -1,3 +1,4 @@
+#if os(macOS)
 import SwiftUI
 
 /// Menu Bar Extra providing quick access to common actions without
@@ -135,3 +136,4 @@ struct MenuBarExtraView: View {
         }
     }
 }
+#endif

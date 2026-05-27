@@ -1,3 +1,4 @@
+#if os(macOS)
 import AppKit
 import Foundation
 import UniformTypeIdentifiers
@@ -39,3 +40,4 @@ extension KeiPixStore {
         return formatter
     }()
 }
+#endif
