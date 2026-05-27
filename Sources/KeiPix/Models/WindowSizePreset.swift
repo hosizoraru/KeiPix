@@ -1,5 +1,8 @@
-import AppKit
 import CoreGraphics
+import SwiftUI
+#if os(macOS)
+import AppKit
+#endif
 
 enum WindowSizePreset: String, CaseIterable, Identifiable {
     case small
@@ -43,6 +46,7 @@ enum WindowSizePreset: String, CaseIterable, Identifiable {
         }
     }
 
+    #if os(macOS)
     @MainActor
     func apply(sidebarVisible: Bool, accountIdentityVisible: Bool = true) {
         guard let window = NSApp.keyWindow ?? NSApp.mainWindow else { return }
@@ -60,6 +64,7 @@ enum WindowSizePreset: String, CaseIterable, Identifiable {
         nextFrame.origin.y = nextFrame.origin.y.clamped(to: visibleFrame.minY...(visibleFrame.maxY - fittedSize.height))
         window.setFrame(nextFrame, display: true, animate: true)
     }
+    #endif
 }
 
 private extension Comparable {

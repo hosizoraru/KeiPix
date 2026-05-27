@@ -1,3 +1,4 @@
+#if os(macOS)
 import AppKit
 import SwiftUI
 
@@ -25,3 +26,4 @@ private final class CaptureProtectionView: NSView {
         isHidden = true
     }
 }
+#endif

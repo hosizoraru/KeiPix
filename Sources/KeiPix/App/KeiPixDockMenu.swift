@@ -1,3 +1,4 @@
+#if os(macOS)
 import AppKit
 import Foundation
 
@@ -102,3 +103,4 @@ enum KeiPixDockMenuBuilder {
         ]
     }
 }
+#endif
