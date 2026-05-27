@@ -111,12 +111,30 @@ struct NovelReaderView: View {
             Spacer(minLength: 0)
 
             Button {
+                Task {
+                    await novelStore.toggleBookmark(
+                        novel: novel,
+                        restrict: store.defaultBookmarkRestrict
+                    )
+                }
+            } label: {
+                Label(
+                    novel.isBookmarked ? L10n.novelRemoveBookmark : L10n.novelBookmark,
+                    systemImage: novel.isBookmarked ? "bookmark.fill" : "bookmark"
+                )
+                .labelStyle(.iconOnly)
+            }
+            .help(novel.isBookmarked ? L10n.novelRemoveBookmark : L10n.novelBookmark)
+            .keyboardShortcut("b", modifiers: [])
+
+            Button {
                 isSettingsPresented = true
             } label: {
                 Label(L10n.novelReaderSettings, systemImage: "textformat.size")
                     .labelStyle(.iconOnly)
             }
             .help(L10n.novelReaderSettings)
+            .keyboardShortcut(",", modifiers: .command)
 
             Button {
                 dismiss()
