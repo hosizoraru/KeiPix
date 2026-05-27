@@ -1056,6 +1056,8 @@ enum L10n {
     // MARK: - About window
 
     static var aboutKeiPix: String { text("About KeiPix") }
+    static var openMainWindow: String { text("Open Main Window") }
+    static var quitKeiPix: String { text("Quit KeiPix") }
     static func versionLabel(_ value: String) -> String {
         String(format: text("Version %@"), locale: Locale.current, value)
     }

@@ -322,5 +322,12 @@ struct KeiPixApp: App {
                 .environment(\.locale, store.appLanguage.locale ?? .current)
                 .preferredColorScheme(store.appColorScheme.preferredColorScheme)
         }
+
+        MenuBarExtra {
+            MenuBarExtraView(store: store)
+                .environment(\.locale, store.appLanguage.locale ?? .current)
+        } label: {
+            Image(systemName: "photo.on.rectangle.angled")
+        }
     }
 }
