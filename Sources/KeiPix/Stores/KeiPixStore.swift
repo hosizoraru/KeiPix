@@ -262,6 +262,7 @@ final class KeiPixStore {
     var mutedUsers = KeiPixStore.loadIntStringDictionary("mutedUsers")
     var mutedArtworks = KeiPixStore.loadIntStringDictionary("mutedArtworks")
     var mutedCommentPhrases = Set(UserDefaults.standard.stringArray(forKey: "mutedCommentPhrases") ?? [])
+    var hiddenDashboardSectionIDs = Set(UserDefaults.standard.stringArray(forKey: "hiddenDashboardSectionIDs") ?? [])
     var recordedBrowsingHistoryIDs = Set<Int>()
 
     init() {

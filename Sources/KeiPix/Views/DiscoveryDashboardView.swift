@@ -2,6 +2,7 @@ import SwiftUI
 
 struct DiscoveryDashboardView: View {
     @Bindable var store: KeiPixStore
+    @State private var isCustomizationPresented = false
 
     var body: some View {
         Group {
@@ -13,6 +14,9 @@ struct DiscoveryDashboardView: View {
         }
         .navigationTitle(L10n.discover)
         .navigationSubtitle(store.session != nil ? L10n.signedIn : "")
+        .sheet(isPresented: $isCustomizationPresented) {
+            DashboardCustomizationSheet(store: store)
+        }
     }
 
     private var dashboardContent: some View {
@@ -20,14 +24,9 @@ struct DiscoveryDashboardView: View {
             LazyVStack(alignment: .leading, spacing: 18) {
                 header
 
-                // Inline trending-tags rail mirrors Pixiv Web's
-                // 急上昇タグ preview on the discovery surface — a
-                // glanceable shortcut that links into the dedicated
-                // trending-tags route. The strip hides itself when the
-                // user is signed-out or the API yields no tags.
                 DiscoveryTrendingTagsStrip(store: store)
 
-                ForEach(DiscoveryDashboardSection.all) { section in
+                ForEach(store.visibleDashboardSections) { section in
                     DiscoveryDashboardRouteSection(section: section, store: store)
                 }
             }
@@ -64,6 +63,13 @@ struct DiscoveryDashboardView: View {
             }
 
             Spacer(minLength: 0)
+
+            Button {
+                isCustomizationPresented = true
+            } label: {
+                Label(L10n.customizeDashboard, systemImage: "slider.horizontal.3")
+            }
+            .help(L10n.customizeDashboard)
         }
         .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -236,5 +242,55 @@ private struct DashboardStatusPill: View {
         .padding(.horizontal, 8)
         .padding(.vertical, 4)
         .background(.regularMaterial, in: Capsule())
+    }
+}
+
+private struct DashboardCustomizationSheet: View {
+    @Bindable var store: KeiPixStore
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            List {
+                Section(L10n.dashboardSections) {
+                    ForEach(DiscoveryDashboardSection.all) { section in
+                        HStack {
+                            Image(systemName: section.systemImage)
+                                .foregroundStyle(.secondary)
+                                .frame(width: 24)
+
+                            Text(section.title)
+
+                            Spacer()
+
+                            Text("\(section.routes.count)")
+                                .font(.caption.monospacedDigit())
+                                .foregroundStyle(.tertiary)
+
+                            Toggle("", isOn: Binding(
+                                get: { store.isDashboardSectionVisible(section) },
+                                set: { store.setDashboardSectionVisible($0, for: section) }
+                            ))
+                            .labelsHidden()
+                        }
+                    }
+                }
+
+                Section {
+                    Button(L10n.resetDashboardSections) {
+                        store.hiddenDashboardSectionIDs.removeAll()
+                        UserDefaults.standard.removeObject(forKey: "hiddenDashboardSectionIDs")
+                    }
+                    .foregroundStyle(.secondary)
+                }
+            }
+            .frame(minWidth: 360, minHeight: 400)
+            .navigationTitle(L10n.customizeDashboard)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button(L10n.done) { dismiss() }
+                }
+            }
+        }
     }
 }

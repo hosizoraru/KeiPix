@@ -2,6 +2,9 @@ import Foundation
 
 enum L10n {
     static var discover: String { text("Discovery") }
+    static var customizeDashboard: String { text("Customize Dashboard") }
+    static var dashboardSections: String { text("Dashboard Sections") }
+    static var resetDashboardSections: String { text("Reset to Default") }
     static var discoverDetailHint: String { text("Pick a Discover card to open a feed, creator list, ranking, or library view.") }
     static var explore: String { text("Explore") }
     static var works: String { text("Works") }

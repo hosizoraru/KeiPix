@@ -393,6 +393,23 @@ extension KeiPixStore {
         UserDefaults.standard.set(mode.rawValue, forKey: "spotlightListLayoutMode")
     }
 
+    func isDashboardSectionVisible(_ section: DiscoveryDashboardSection) -> Bool {
+        hiddenDashboardSectionIDs.contains(section.id) == false
+    }
+
+    func setDashboardSectionVisible(_ visible: Bool, for section: DiscoveryDashboardSection) {
+        if visible {
+            hiddenDashboardSectionIDs.remove(section.id)
+        } else {
+            hiddenDashboardSectionIDs.insert(section.id)
+        }
+        UserDefaults.standard.set(Array(hiddenDashboardSectionIDs), forKey: "hiddenDashboardSectionIDs")
+    }
+
+    var visibleDashboardSections: [DiscoveryDashboardSection] {
+        DiscoveryDashboardSection.all.filter { isDashboardSectionVisible($0) }
+    }
+
     func setTrackpadGesturesEnabled(_ value: Bool) {
         trackpadGesturesEnabled = value
         UserDefaults.standard.set(value, forKey: "trackpadGesturesEnabled")
