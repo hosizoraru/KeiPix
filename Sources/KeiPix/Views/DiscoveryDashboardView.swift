@@ -65,6 +65,13 @@ struct DiscoveryDashboardView: View {
             Spacer(minLength: 0)
 
             Button {
+                Task { await store.surpriseMe() }
+            } label: {
+                Label(L10n.surpriseMe, systemImage: "shuffle")
+            }
+            .help(L10n.surpriseMe)
+
+            Button {
                 isCustomizationPresented = true
             } label: {
                 Label(L10n.customizeDashboard, systemImage: "slider.horizontal.3")

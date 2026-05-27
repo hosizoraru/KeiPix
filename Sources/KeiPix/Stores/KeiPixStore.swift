@@ -831,6 +831,22 @@ final class KeiPixStore {
         return true
     }
 
+    func randomFromCurrentFeed() -> Bool {
+        guard let artwork = artworks.randomElement() else { return false }
+        selectedArtwork = artwork
+        return true
+    }
+
+    func surpriseMe() async {
+        do {
+            let response = try await api.recommendedIllusts()
+            guard let artwork = response.illusts.randomElement() else { return }
+            selectedArtwork = artwork
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
     private func loadFeed(for route: PixivRoute) async throws -> PixivFeedResponse {
         switch route {
         case .illustrations:

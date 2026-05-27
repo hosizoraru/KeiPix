@@ -55,6 +55,13 @@ struct FeedHeaderView: View {
                     .help(L10n.clearSearch)
                 }
             }
+
+            Button {
+                _ = store.randomFromCurrentFeed()
+            } label: {
+                Label(L10n.randomFromFeed, systemImage: "shuffle")
+            }
+            .help(L10n.randomFromFeed)
         }
 
         if store.selectedRoute == .search,

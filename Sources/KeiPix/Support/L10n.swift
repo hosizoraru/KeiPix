@@ -1339,6 +1339,8 @@ enum L10n {
     static var fullScreenReading: String { text("Full Screen Reading") }
     static var snapToPages: String { text("Snap to Pages") }
     static var filterArtworks: String { text("Filter artworks...") }
+    static var surpriseMe: String { text("Surprise Me") }
+    static var randomFromFeed: String { text("Random") }
     static var exitFocusReading: String { text("Exit Focus Reading") }
     static var resetZoom: String { text("Reset Zoom") }
     static var toggleZoom: String { text("Toggle Zoom") }
