@@ -243,6 +243,16 @@ final class NovelFeatureStore {
         novelTextError = nil
         loadedNovelText = nil
         loadedNovelTokens = []
+
+        // Try disk cache first for instant offline reads.
+        if let cached = await NovelTextDiskCache.shared.load(novelID: novelID) {
+            guard loadedNovelTextID == novelID else { return }
+            loadedNovelText = cached
+            loadedNovelTokens = NovelTextTokenizer.tokenize(cached.novelText)
+            isLoadingNovelText = false
+            return
+        }
+
         defer { isLoadingNovelText = false }
         do {
             let text = try await api.novelText(novelID: novelID)
@@ -251,6 +261,8 @@ final class NovelFeatureStore {
             guard loadedNovelTextID == novelID else { return }
             loadedNovelText = text
             loadedNovelTokens = NovelTextTokenizer.tokenize(text.novelText)
+            // Write-through to disk so the novel stays available offline.
+            await NovelTextDiskCache.shared.save(text, novelID: novelID)
         } catch is CancellationError {
             return
         } catch {

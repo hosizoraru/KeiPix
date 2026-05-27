@@ -215,7 +215,7 @@ struct PixivNovelDetailResponse: Decodable, Sendable {
 
 // MARK: - Text (`/v1/novel/text`)
 
-struct PixivNovelText: Decodable, Sendable {
+struct PixivNovelText: Codable, Sendable {
     /// Last reading position pixiv has remembered for this account; we
     /// surface it but currently don't auto-jump to it.
     let novelMarker: PixivNovelMarker?
@@ -231,7 +231,7 @@ struct PixivNovelText: Decodable, Sendable {
     }
 }
 
-struct PixivNovelMarker: Decodable, Sendable {
+struct PixivNovelMarker: Codable, Sendable {
     let page: Int?
 }
 

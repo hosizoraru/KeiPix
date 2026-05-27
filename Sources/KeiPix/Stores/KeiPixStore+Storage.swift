@@ -27,6 +27,8 @@ extension KeiPixStore {
                 return searchHistoryCacheSnapshot()
             case .artworkDetailState:
                 return artworkDetailStateCacheSnapshot()
+            case .novelText:
+                return novelTextCacheSnapshot()
             }
         }
     }
@@ -50,6 +52,8 @@ extension KeiPixStore {
         case .artworkDetailState:
             artworkDetailStateLibrary = ArtworkDetailStateLibrary()
             UserDefaults.standard.removeObject(forKey: "artworkDetailStateLibrary")
+        case .novelText:
+            Task { await NovelTextDiskCache.shared.clearAll() }
         }
 
         switch kind {
@@ -58,6 +62,7 @@ extension KeiPixStore {
         case .browsingHistory: return browsingHistoryCacheSnapshot()
         case .searchHistory: return searchHistoryCacheSnapshot()
         case .artworkDetailState: return artworkDetailStateCacheSnapshot()
+        case .novelText: return novelTextCacheSnapshot()
         }
     }
 
@@ -138,6 +143,19 @@ extension KeiPixStore {
             id: .artworkDetailState,
             title: L10n.cacheArtworkDetailStateTitle,
             detail: L10n.cacheArtworkDetailStateDetail,
+            byteSize: bytes,
+            itemCount: count,
+            isEmpty: count == 0
+        )
+    }
+
+    private func novelTextCacheSnapshot() -> CacheCategorySnapshot {
+        let bytes = NovelTextDiskCache.shared.cachedSize()
+        let count = NovelTextDiskCache.shared.cachedIDs().count
+        return CacheCategorySnapshot(
+            id: .novelText,
+            title: L10n.cacheNovelTextTitle,
+            detail: L10n.cacheNovelTextDetail,
             byteSize: bytes,
             itemCount: count,
             isEmpty: count == 0

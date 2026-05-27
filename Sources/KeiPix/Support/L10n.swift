@@ -1453,6 +1453,8 @@ enum L10n {
     static var cacheSearchHistoryDetail: String { text("Recent search queries that surface as suggestions in the search field. Clearing removes the suggestion list; saved searches stay put.") }
     static var cacheArtworkDetailStateTitle: String { text("Artwork detail UI state") }
     static var cacheArtworkDetailStateDetail: String { text("Per-artwork remembered section expansion (tags, comments, related). Clearing returns every artwork's detail page to its default layout.") }
+    static var cacheNovelTextTitle: String { text("Novel Text Cache") }
+    static var cacheNovelTextDetail: String { text("Cached novel body text for offline reading. Clearing requires re-downloading novels from Pixiv.") }
     static var itemCountFormat: String { text("%d items") }
     static var noStoredItems: String { text("No stored items") }
 

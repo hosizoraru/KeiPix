@@ -11,6 +11,7 @@ enum CacheCategoryKind: String, CaseIterable, Sendable, Identifiable {
     case browsingHistory
     case searchHistory
     case artworkDetailState
+    case novelText
 
     var id: String { rawValue }
 }
