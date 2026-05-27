@@ -298,6 +298,25 @@ extension KeiPixStore {
             passed: dragDropResolves,
             evidence: L10n.qaTransferableDragDropEvidence
         )
+        // Quick Look — passes once a download-queue screenshot covers
+        // the surface (the Quick Look button only renders inside that
+        // view) and the row helper still resolves a non-nil URL for at
+        // least one completed item with a readable artifact. The
+        // visual surface check is the regression anchor; the live
+        // resolution check guards against future refactors that strip
+        // the helper but leave the toolbar button behind.
+        let quickLookSurfaces: [VisualQASurface] = [.downloadQueue]
+        let hasResolvableQuickLook = self.downloads.completedItems.contains { item in
+            self.downloads.hasReadableDownload(for: item)
+        }
+        let quickLook = qaStaticItem(
+            id: "quick-look",
+            passed: visualEvidence.covers(quickLookSurfaces) && (self.downloads.completedItems.isEmpty || hasResolvableQuickLook),
+            evidence: [
+                L10n.qaQuickLookEvidence,
+                visualEvidence.summary(for: quickLookSurfaces)
+            ].joined(separator: " · ")
+        )
         return [
             nativeRoute,
             gallery,
@@ -310,7 +329,8 @@ extension KeiPixStore {
             imageQuality,
             captionTranslation,
             followingEmphasis,
-            transferableDragDrop
+            transferableDragDrop,
+            quickLook
         ]
     }
 
@@ -505,7 +525,8 @@ private extension KeiPixStore {
         NonNovelQATemplate(id: "image-quality-tier", priority: .p1, title: L10n.qaImageQualityTier, requirement: L10n.qaImageQualityTierRequirement, nextAction: L10n.qaImageQualityTierNext, systemImage: "photo.stack"),
         NonNovelQATemplate(id: "caption-translation", priority: .p1, title: L10n.qaCaptionTranslation, requirement: L10n.qaCaptionTranslationRequirement, nextAction: L10n.qaCaptionTranslationNext, systemImage: "character.bubble"),
         NonNovelQATemplate(id: "following-emphasis", priority: .p2, title: L10n.qaFollowingEmphasis, requirement: L10n.qaFollowingEmphasisRequirement, nextAction: L10n.qaFollowingEmphasisNext, systemImage: "checkmark.seal"),
-        NonNovelQATemplate(id: "transferable-drag-drop", priority: .p2, title: L10n.qaTransferableDragDrop, requirement: L10n.qaTransferableDragDropRequirement, nextAction: L10n.qaTransferableDragDropNext, systemImage: "square.and.arrow.up.on.square")
+        NonNovelQATemplate(id: "transferable-drag-drop", priority: .p2, title: L10n.qaTransferableDragDrop, requirement: L10n.qaTransferableDragDropRequirement, nextAction: L10n.qaTransferableDragDropNext, systemImage: "square.and.arrow.up.on.square"),
+        NonNovelQATemplate(id: "quick-look", priority: .p2, title: L10n.qaQuickLook, requirement: L10n.qaQuickLookRequirement, nextAction: L10n.qaQuickLookNext, systemImage: "eye")
     ]
 }
 

@@ -990,6 +990,12 @@
 "Pixiv-link drops resolve through Transferable on every drop surface, and completed downloads + artwork cards drag out as native file or URL payloads." = "Pixiv-link drops resolve through Transferable on every drop surface, and completed downloads + artwork cards drag out as native file or URL payloads.";
 "Keep PixivLinkDropPayload and the artwork drag URL covered so a future ProxyRepresentation refactor doesn't silently break Finder drops." = "Keep PixivLinkDropPayload and the artwork drag URL covered so a future ProxyRepresentation refactor doesn't silently break Finder drops.";
 "PixivLinkDropPayload resolves URL and text shapes; download rows and artwork cards expose Transferable drag sources." = "PixivLinkDropPayload resolves URL and text shapes; download rows and artwork cards expose Transferable drag sources.";
+"Quick Look" = "Quick Look";
+"Press Space to peek the file with Quick Look, just like Finder." = "Press Space to peek the file with Quick Look, just like Finder.";
+"Quick Look preview" = "Quick Look preview";
+"Completed downloads expose a Quick Look affordance — Space-bar peek, toolbar button, and context-menu entry — that opens Apple's system preview panel." = "Completed downloads expose a Quick Look affordance — Space-bar peek, toolbar button, and context-menu entry — that opens Apple's system preview panel.";
+"Keep DownloadQueueView's quickLookURL binding and focus-driven Space handler covered so Apple's preview panel never falls back to a third-party fallback." = "Keep DownloadQueueView's quickLookURL binding and focus-driven Space handler covered so Apple's preview panel never falls back to a third-party fallback.";
+"Each completed row resolves a Quick Look URL and surfaces the preview button, context-menu entry, and Space-bar handler." = "Each completed row resolves a Quick Look URL and surfaces the preview button, context-menu entry, and Space-bar handler.";
 "System Proxy" = "System Proxy";
 "Direct connection" = "Direct connection";
 "Pixiv API" = "Pixiv API";

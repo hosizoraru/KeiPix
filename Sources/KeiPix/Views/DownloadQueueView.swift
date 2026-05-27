@@ -1,4 +1,5 @@
 import AppKit
+import QuickLook
 import SwiftUI
 
 struct DownloadQueueView: View {
@@ -7,10 +8,72 @@ struct DownloadQueueView: View {
     @State private var pendingDangerAction: DownloadDangerAction?
     @State private var actionMessage: String?
     @State private var didPresentVisualQAPreview = false
+    /// Drives `.quickLookPreview(_:)`. Setting this binding to a non-nil
+    /// URL pops Apple's system Quick Look panel — same affordance Finder
+    /// gives a selected file when the user hits the space bar. We park a
+    /// single binding at the view root so toolbar buttons, context-menu
+    /// items, and the space-bar key handler all share one source of
+    /// truth and only one panel can be on screen at a time.
+    @State private var quickLookURL: URL?
+    /// ID of the row that should receive space-bar key events. We
+    /// install `focusable() + focused()` on each row so the user's
+    /// focus walks the queue rather than getting trapped in the
+    /// toolbar — matches how Finder's list view handles space-bar
+    /// preview against the highlighted row.
+    @FocusState private var focusedRowID: UUID?
 
     var body: some View {
         let visibleItems = store.downloads.filteredItems
+        return queueColumnWithChrome(visibleItems: visibleItems)
+            .sheet(item: $selectedPreview) { preview in
+                previewSheet(preview)
+            }
+    }
 
+    /// Two-stage body so SwiftUI's type-checker doesn't try to infer
+    /// every modifier chain in one expression. The original body
+    /// (queue column + ten modifiers + the sheet) tripped the
+    /// "compiler is unable to type-check" timeout once the Quick
+    /// Look binding, focus, and confirmation dialog all chained
+    /// together.
+    @ViewBuilder
+    private func queueColumnWithChrome(visibleItems: [ArtworkDownloadItem]) -> some View {
+        queueColumn(visibleItems: visibleItems)
+            .navigationTitle(L10n.downloads)
+            .navigationSubtitle(downloadStatusText)
+            .quickLookPreview($quickLookURL)
+            .overlay(alignment: .bottom) {
+                actionMessageOverlay
+            }
+            .animation(.snappy(duration: 0.18), value: actionMessage)
+            .task(id: actionMessage) {
+                await dismissActionMessageIfNeeded(actionMessage)
+            }
+            .task {
+                presentDownloadedReaderVisualQAIfNeeded()
+            }
+            .confirmationDialog(
+                pendingDangerAction?.title ?? L10n.downloadActions,
+                isPresented: downloadDangerActionBinding,
+                titleVisibility: .visible,
+                presenting: pendingDangerAction
+            ) { action in
+                Button(action.confirmButtonTitle, role: .destructive) {
+                    perform(action)
+                }
+                Button(L10n.cancel, role: .cancel) {
+                    pendingDangerAction = nil
+                }
+            } message: { action in
+                Text(action.message)
+            }
+    }
+
+    /// Main vertical layout for the queue. Keeping the header / empty
+    /// states / list switch in its own helper means the type-checker
+    /// only has to chew through one heavy expression at a time.
+    @ViewBuilder
+    private func queueColumn(visibleItems: [ArtworkDownloadItem]) -> some View {
         VStack(spacing: 0) {
             DownloadQueueHeader(
                 downloads: store.downloads,
@@ -18,9 +81,9 @@ struct DownloadQueueView: View {
                 copyVisibleLinks: copyVisibleLinks,
                 showActionMessage: showActionMessage
             )
-                .padding(.horizontal, 18)
-                .padding(.vertical, 12)
-                .background(.bar)
+            .padding(.horizontal, 18)
+            .padding(.vertical, 12)
+            .background(.bar)
 
             if store.downloads.items.isEmpty {
                 EmptyStateView(
@@ -35,87 +98,41 @@ struct DownloadQueueView: View {
                     systemImage: "line.3.horizontal.decrease.circle"
                 )
             } else {
-                ScrollView {
-                    LazyVStack(spacing: 10) {
-                        ForEach(visibleItems) { item in
-                            DownloadQueueRow(
-                                item: item,
-                                downloads: store.downloads,
-                                canOpen: store.downloads.hasReadableDownload(for: item),
-                                open: {
-                                    openDownloadedItem(item)
-                                },
-                                retry: {
-                                    retryDownload(item)
-                                },
-                                reveal: {
-                                    revealDownload(item)
-                                },
-                                copied: {
-                                    showActionMessage(L10n.copied)
-                                },
-                                cancel: {
-                                    pendingDangerAction = .cancelItem(item)
-                                },
-                                delete: {
-                                    pendingDangerAction = .deleteItem(item)
-                                }
-                            )
-                        }
-                    }
-                    .padding(18)
-                }
-                .scrollEdgeEffectStyle(.soft, for: .top)
+                downloadList(items: visibleItems)
             }
         }
-        .navigationTitle(L10n.downloads)
-        .navigationSubtitle(downloadStatusText)
-        .overlay(alignment: .bottom) {
-            if let actionMessage {
-                FloatingStatusBanner(maxWidth: 520) {
-                    Text(actionMessage)
-                        .font(.callout)
-                        .foregroundStyle(.secondary)
-                        .textSelection(.enabled)
-                }
-                .padding(.horizontal, 18)
-                .padding(.bottom, 14)
-                .transition(.move(edge: .bottom).combined(with: .opacity))
+    }
+
+    @ViewBuilder
+    private var actionMessageOverlay: some View {
+        if let actionMessage {
+            FloatingStatusBanner(maxWidth: 520) {
+                Text(actionMessage)
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                    .textSelection(.enabled)
+            }
+            .padding(.horizontal, 18)
+            .padding(.bottom, 14)
+            .transition(.move(edge: .bottom).combined(with: .opacity))
+        }
+    }
+
+    /// Pulled out so the `body` expression stays simple enough for the
+    /// Swift type-checker. The sheet's enum-switch + `.iPadFriendlySheet`
+    /// chained on top of every other modifier on the queue used to push
+    /// the body past the type-checker timeout.
+    @ViewBuilder
+    private func previewSheet(_ preview: DownloadedPreview) -> some View {
+        Group {
+            switch preview {
+            case .images(let item, let imageURLs):
+                DownloadedArtworkViewer(item: item, imageURLs: imageURLs, store: store)
+            case .ugoira(let item, let zipURL):
+                DownloadedUgoiraViewer(item: item, zipURL: zipURL)
             }
         }
-        .animation(.snappy(duration: 0.18), value: actionMessage)
-        .task(id: actionMessage) {
-            await dismissActionMessageIfNeeded(actionMessage)
-        }
-        .task {
-            presentDownloadedReaderVisualQAIfNeeded()
-        }
-        .confirmationDialog(
-            pendingDangerAction?.title ?? L10n.downloadActions,
-            isPresented: downloadDangerActionBinding,
-            titleVisibility: .visible,
-            presenting: pendingDangerAction
-        ) { action in
-            Button(action.confirmButtonTitle, role: .destructive) {
-                perform(action)
-            }
-            Button(L10n.cancel, role: .cancel) {
-                pendingDangerAction = nil
-            }
-        } message: { action in
-            Text(action.message)
-        }
-        .sheet(item: $selectedPreview) { preview in
-            Group {
-                switch preview {
-                case .images(let item, let imageURLs):
-                    DownloadedArtworkViewer(item: item, imageURLs: imageURLs, store: store)
-                case .ugoira(let item, let zipURL):
-                    DownloadedUgoiraViewer(item: item, zipURL: zipURL)
-                }
-            }
-            .iPadFriendlySheet()
-        }
+        .iPadFriendlySheet()
     }
 
     private var downloadStatusBadge: some View {
@@ -124,6 +141,47 @@ struct DownloadQueueView: View {
             .foregroundStyle(.secondary)
             .lineLimit(1)
             .help(downloadStatusHelp)
+    }
+
+    /// Pulled out of `body` so the type-checker doesn't have to chew
+    /// through the row-construction expression alongside every other
+    /// modifier on the queue. Each row is wired with focus + space-bar
+    /// + the Quick Look handler so the affordance matches Finder's
+    /// list view.
+    @ViewBuilder
+    private func downloadList(items: [ArtworkDownloadItem]) -> some View {
+        ScrollView {
+            LazyVStack(spacing: 10) {
+                ForEach(items) { item in
+                    downloadRow(for: item)
+                }
+            }
+            .padding(18)
+        }
+        .scrollEdgeEffectStyle(.soft, for: .top)
+    }
+
+    @ViewBuilder
+    private func downloadRow(for item: ArtworkDownloadItem) -> some View {
+        DownloadQueueRow(
+            item: item,
+            downloads: store.downloads,
+            canOpen: store.downloads.hasReadableDownload(for: item),
+            isFocused: focusedRowID == item.id,
+            open: { openDownloadedItem(item) },
+            retry: { retryDownload(item) },
+            reveal: { revealDownload(item) },
+            quickLook: { presentQuickLook(for: item) },
+            copied: { showActionMessage(L10n.copied) },
+            cancel: { pendingDangerAction = .cancelItem(item) },
+            delete: { pendingDangerAction = .deleteItem(item) }
+        )
+        .focusable()
+        .focused($focusedRowID, equals: item.id)
+        .onKeyPress(.space) {
+            presentQuickLook(for: item)
+            return .handled
+        }
     }
 
     private var downloadStatusText: String {
@@ -205,6 +263,46 @@ struct DownloadQueueView: View {
             showActionMessage(L10n.revealedDownloadInFinder)
         } else {
             showActionMessage(L10n.openedDownloadFolder)
+        }
+    }
+
+    /// Show Apple's Quick Look panel for the row's primary artifact.
+    /// We pick the same URL the row uses for `.draggable` (folder for
+    /// multi-page artworks, single image for partials, .zip for Ugoira)
+    /// so the space-bar preview matches what dragging the row reveals.
+    /// `.quickLookPreview` ignores nil URLs without surfacing an alert,
+    /// so we only flash the status banner when there's nothing to show.
+    private func presentQuickLook(for item: ArtworkDownloadItem) {
+        guard let url = quickLookURL(for: item) else {
+            showActionMessage(L10n.unableToOpenDownloadedArtwork)
+            return
+        }
+        quickLookURL = url
+    }
+
+    /// Resolves the file URL Quick Look should peek at. Mirrors the
+    /// drag-to-Finder helper in `DownloadQueueRow.draggableFileURL`,
+    /// kept here as a top-level member so the space-bar handler can
+    /// resolve URLs without reaching into the row.
+    private func quickLookURL(for item: ArtworkDownloadItem) -> URL? {
+        guard item.status == .completed else { return nil }
+        switch item.resolvedArtifactKind {
+        case .imagePages:
+            // Quick Look on a folder steps through the contents the
+            // same way Finder does, which is exactly what we want for
+            // multi-page works. Fall back to the first image when the
+            // folder path isn't recorded yet.
+            if let folderPath = item.folderPath {
+                let folderURL = URL(fileURLWithPath: folderPath, isDirectory: true)
+                if FileManager.default.fileExists(atPath: folderURL.path(percentEncoded: false)) {
+                    return folderURL
+                }
+            }
+            return store.downloads.imageFileURLs(for: item).first
+        case .ugoiraZip:
+            guard let filePath = item.downloadedFilePaths?.first else { return nil }
+            let url = URL(fileURLWithPath: filePath, isDirectory: false)
+            return FileManager.default.fileExists(atPath: url.path(percentEncoded: false)) ? url : nil
         }
     }
 
@@ -517,9 +615,11 @@ private struct DownloadQueueRow: View {
     let item: ArtworkDownloadItem
     @Bindable var downloads: ArtworkDownloadStore
     let canOpen: Bool
+    let isFocused: Bool
     let open: () -> Void
     let retry: () -> Void
     let reveal: () -> Void
+    let quickLook: () -> Void
     let copied: () -> Void
     let cancel: () -> Void
     let delete: () -> Void
@@ -617,6 +717,22 @@ private struct DownloadQueueRow: View {
             .disabled(canOpen == false)
             .help(L10n.openDownloadedArtwork)
 
+            // Quick Look — same affordance Finder hands to a selected
+            // file via the space bar. Disabled for queued / failed
+            // rows where there's no on-disk artifact yet. The space
+            // shortcut is wired at the row level (focused() + .onKeyPress)
+            // rather than on the button so multiple rendered buttons
+            // don't fight over a single accelerator.
+            Button {
+                quickLook()
+            } label: {
+                Label(L10n.quickLook, systemImage: "eye")
+            }
+            .labelStyle(.iconOnly)
+            .buttonStyle(.bordered)
+            .disabled(canOpen == false)
+            .help(L10n.quickLookHint)
+
             Button {
                 reveal()
             } label: {
@@ -641,6 +757,13 @@ private struct DownloadQueueRow: View {
                         Label(L10n.copyLink, systemImage: "link")
                     }
                 }
+
+                Button {
+                    quickLook()
+                } label: {
+                    Label(L10n.quickLook, systemImage: "eye")
+                }
+                .disabled(canOpen == false)
 
                 Button {
                     reveal()
@@ -669,6 +792,15 @@ private struct DownloadQueueRow: View {
         }
         .padding(12)
         .keiPanel(16)
+        // Subtle accent ring on the focused row so users can see which
+        // entry the space bar will preview. Mirrors how Finder's list
+        // view paints a halo around the selected file.
+        .overlay {
+            if isFocused {
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .stroke(Color.accentColor.opacity(0.65), lineWidth: 2)
+            }
+        }
         .modifier(DownloadRowDraggableModifier(fileURL: draggableFileURL))
         .contextMenu {
             if item.status == .failed {
@@ -677,6 +809,10 @@ private struct DownloadQueueRow: View {
                 }
                 .disabled(item.sourceImageURLs?.isEmpty != false)
             }
+            Button(L10n.quickLook) {
+                quickLook()
+            }
+            .disabled(canOpen == false)
             Button(L10n.revealInFinder) {
                 reveal()
             }
