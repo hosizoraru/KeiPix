@@ -280,7 +280,7 @@ final class KeiPixStore {
     }
 
     var allArtworks: [PixivArtwork] = []
-    private var allSearchPopularPreviewArtworks: [PixivArtwork] = []
+    var allSearchPopularPreviewArtworks: [PixivArtwork] = []
     var nextURL: URL?
     private var activeFeedRequestID: UUID?
     private var activeSearchPopularPreviewRequestID: UUID?
@@ -455,108 +455,6 @@ final class KeiPixStore {
     }
 
     @discardableResult
-    func openPixivLink(_ url: URL) async -> String {
-        guard let destination = PixivWebLinkResolver.destination(from: url) else {
-            errorMessage = L10n.unsupportedPixivLink
-            return L10n.unsupportedPixivLink
-        }
-
-        guard session != nil, usesLocalSampleAccount == false else {
-            isLoginPresented = true
-            return L10n.loginRequiredForPixivLink
-        }
-
-        do {
-            try await openPixivDestination(destination)
-            return String(format: L10n.openedPixivLinkFormat, destination.normalizedLabel)
-        } catch {
-            errorMessage = error.localizedDescription
-            return error.localizedDescription
-        }
-    }
-
-    @discardableResult
-    func openPixivLinkFromClipboard() async -> String {
-        guard let rawText = PasteboardWriter.currentString(),
-              let url = PixivWebLinkResolver.firstSupportedURL(in: rawText) else {
-            errorMessage = L10n.noPixivLinkInClipboard
-            return L10n.noPixivLinkInClipboard
-        }
-
-        return await openPixivLink(url)
-    }
-
-    @discardableResult
-    func openPixivID(_ id: Int, target: PixivIDOpenTarget) async -> String {
-        guard session != nil, usesLocalSampleAccount == false else {
-            isLoginPresented = true
-            return L10n.loginRequiredForPixivLink
-        }
-
-        do {
-            switch target {
-            case .artwork:
-                try await openPixivDestination(.artwork(id))
-            case .creator:
-                try await openPixivDestination(.user(id))
-            }
-            return String(format: L10n.openedPixivIDFormat, target.title, id)
-        } catch {
-            errorMessage = error.localizedDescription
-            return error.localizedDescription
-        }
-    }
-
-    private func openPixivDestination(_ destination: PixivWebDestination) async throws {
-        switch destination {
-        case .artwork(let id):
-            let artwork = try await api.illustDetail(illustID: id)
-            focusedUser = nil
-            bookmarkTagFilter = nil
-            selectedSpotlightArticle = nil
-            selectedRoute = .illustrations
-            allArtworks = [artwork]
-            artworks = [artwork]
-            activeFeedSnapshotRestoration = nil
-            navigateToArtwork(artwork)
-            nextURL = nil
-            await recordBrowsingHistory(for: artwork)
-        case .user(let id):
-            let detail = try await api.userDetail(userID: id)
-            await openUserFeed(user: detail.user, route: .userIllustrations)
-        case .tag(let keyword), .search(let keyword):
-            searchText = keyword
-            await runSearch()
-        case .creatorSearch(let keyword):
-            focusedUser = nil
-            bookmarkTagFilter = nil
-            selectedSpotlightArticle = nil
-            searchText = keyword
-            selectedRoute = .searchUsers
-            searchSubmissionID += 1
-        case .pixivisionArticle(let id, let url):
-            focusedUser = nil
-            bookmarkTagFilter = nil
-            selectedArtwork = nil
-            allArtworks = []
-            artworks = []
-            activeFeedSnapshotRestoration = nil
-            allSearchPopularPreviewArtworks = []
-            searchPopularPreviewArtworks = []
-            nextURL = nil
-            selectedRoute = .spotlight
-            selectedSpotlightArticle = .linkPlaceholder(id: id, url: normalizedPixivisionURL(id: id, sourceURL: url))
-        }
-    }
-
-    private func normalizedPixivisionURL(id: Int, sourceURL: URL) -> URL {
-        if let host = sourceURL.host(percentEncoded: false)?.lowercased(),
-           host == "pixivision.net" || host == "www.pixivision.net" {
-            return sourceURL
-        }
-        return URL(string: "https://www.pixivision.net/a/\(id)")!
-    }
-
     func reloadCurrentFeed() async {
         let context = currentFeedRequestContext()
         if usesLocalSampleAccount {

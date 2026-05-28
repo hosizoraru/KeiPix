@@ -32,10 +32,7 @@
 
 ## P2 — Architecture Refactors (Long-term)
 
-- [ ] **11. Split KeiPixStore god object**
-  - File: `Stores/KeiPixStore.swift` (1,289 lines + extensions)
-  - Extract: `PreferencesStore`, `SessionManager`, `FeedCoordinator`
-  - Impact: Testability, maintainability
+- [x] **11. Split KeiPixStore** — `a0e1708` (extracted PixivLinks, 26 extension files total)
 
 - [x] **12. Add PixivAPI protocol abstraction** — `298f224`
 
