@@ -146,10 +146,14 @@ struct RuntimeReadinessView: View {
 
     var body: some View {
         let snapshot = store.runtimeReadinessSnapshot
+        #if DEBUG
         let qaSnapshot = store.lastNonNovelQAMatrixSnapshot ?? NonNovelQAMatrixSnapshot(
             checkedAt: snapshot.checkedAt,
             items: KeiPixStore.nonNovelQABaselineItems
         )
+        #else
+        let qaSnapshot: NonNovelQAMatrixSnapshot? = nil
+        #endif
 
         Section(L10n.runtimeReadiness) {
             Text(L10n.runtimeReadinessHint)
@@ -522,13 +526,17 @@ struct RuntimeReadinessView: View {
     private func runReadOnlyQA() async {
         isRunningReadOnlyQA = true
         defer { isRunningReadOnlyQA = false }
+        #if DEBUG
         async let nonNovelQA = store.runNonNovelQAMatrix()
+        #endif
         async let network = store.runNetworkDiagnostics()
         async let search = store.runSearchDiagnostics()
         async let directNavigation = store.runDirectNavigationDiagnostics()
         async let commentFeedback = store.runCommentFeedbackDiagnostics()
         async let muteSync = store.runMuteSyncDiagnostics()
+        #if DEBUG
         _ = await nonNovelQA
+        #endif
         networkResults = await network
         searchResults = await search
         directNavigationResults = await directNavigation
@@ -542,9 +550,11 @@ struct RuntimeReadinessView: View {
     }
 
     private func runNonNovelQA() async {
+        #if DEBUG
         isRunningNonNovelQA = true
         defer { isRunningNonNovelQA = false }
         _ = await store.runNonNovelQAMatrix()
+        #endif
     }
 
     private func runDiagnostics() async {
