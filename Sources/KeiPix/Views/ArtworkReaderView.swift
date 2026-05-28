@@ -110,7 +110,7 @@ struct ArtworkReaderView: View {
         }
     }
 
-    private func handlePageSwipe(_ event: TrackpadScrollEvent) -> Bool {
+    private func handlePageSwipe(_ event: ReaderScrollEvent) -> Bool {
         guard store.trackpadGesturesEnabled, event.isMomentum == false, interaction.isZoomed == false else {
             return false
         }
@@ -234,7 +234,7 @@ private struct ArtworkSinglePageReader: View {
     let presentation: ReaderPagePresentation
     let interaction: ArtworkReaderInteractionState
     let movePage: (Int) -> Void
-    let handlePageSwipe: (TrackpadScrollEvent) -> Bool
+    let handlePageSwipe: (ReaderScrollEvent) -> Bool
     let onImageLoaded: (PlatformImage, Int) -> Void
 
     var body: some View {
@@ -253,24 +253,25 @@ private struct ArtworkSinglePageReader: View {
                     .scaleEffect(interaction.scale)
                     .offset(interaction.offset)
 
-                TrackpadEventBridge(
-                    isEnabled: store.trackpadGesturesEnabled,
-                    onScroll: { event in
-                        handleScroll(event, in: proxy.size)
-                    },
-                    onMagnify: { delta, phase in
-                        handleMagnify(delta, phase: phase, in: proxy.size)
-                    },
-                    onSmartMagnify: {
-                        interaction.toggleSmartZoom(in: proxy.size)
-                        return true
-                    },
-                    onDrag: { delta in
-                        guard interaction.isZoomed else { return false }
-                        interaction.applyPan(deltaX: -delta.width, deltaY: -delta.height, in: proxy.size)
-                        return true
-                    }
-                )
+                Color.clear
+                    .readerGestures(
+                        isEnabled: store.trackpadGesturesEnabled,
+                        onScroll: { event in
+                            handleScroll(event, in: proxy.size)
+                        },
+                        onMagnify: { delta, isEnded in
+                            handleMagnify(delta, isEnded: isEnded, in: proxy.size)
+                        },
+                        onSmartMagnify: {
+                            interaction.toggleSmartZoom(in: proxy.size)
+                            return true
+                        },
+                        onDrag: { delta in
+                            guard interaction.isZoomed else { return false }
+                            interaction.applyPan(deltaX: -delta.width, deltaY: -delta.height, in: proxy.size)
+                            return true
+                        }
+                    )
 
                 if pageCount > 1 {
                     HStack {
@@ -328,7 +329,7 @@ private struct ArtworkSinglePageReader: View {
         artwork.displayPageCount
     }
 
-    private func handleScroll(_ event: TrackpadScrollEvent, in size: CGSize) -> Bool {
+    private func handleScroll(_ event: ReaderScrollEvent, in size: CGSize) -> Bool {
         guard store.trackpadGesturesEnabled else { return false }
         if interaction.isZoomed {
             interaction.applyPan(deltaX: event.deltaX, deltaY: event.deltaY, in: size)
@@ -337,10 +338,10 @@ private struct ArtworkSinglePageReader: View {
         return handlePageSwipe(event)
     }
 
-    private func handleMagnify(_ delta: CGFloat, phase: NSEvent.Phase, in size: CGSize) -> Bool {
+    private func handleMagnify(_ delta: CGFloat, isEnded: Bool, in size: CGSize) -> Bool {
         guard store.trackpadGesturesEnabled else { return false }
         interaction.applyMagnification(delta, in: size)
-        if phase.contains(.ended) || phase.contains(.cancelled) {
+        if isEnded {
             interaction.finishMagnification()
         }
         return true
@@ -352,7 +353,7 @@ private struct ArtworkContinuousReader: View {
     @Bindable var store: KeiPixStore
     @Binding var pageIndex: Int
     let presentation: (Int) -> ReaderPagePresentation
-    let handlePageSwipe: (TrackpadScrollEvent) -> Bool
+    let handlePageSwipe: (ReaderScrollEvent) -> Bool
     let onImageLoaded: (PlatformImage, Int) -> Void
 
     var body: some View {
@@ -376,13 +377,14 @@ private struct ArtworkContinuousReader: View {
                         .background(.quaternary, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
                         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                         .overlay {
-                            TrackpadEventBridge(
-                                isEnabled: store.trackpadGesturesEnabled,
-                                onScroll: handlePageSwipe,
-                                onMagnify: { _, _ in false },
-                                onSmartMagnify: { false },
-                                onDrag: { _ in false }
-                            )
+                            Color.clear
+                                .readerGestures(
+                                    isEnabled: store.trackpadGesturesEnabled,
+                                    onScroll: handlePageSwipe,
+                                    onMagnify: { _, _ in false },
+                                    onSmartMagnify: { false },
+                                    onDrag: { _ in false }
+                                )
                         }
                         .overlay(alignment: .topTrailing) {
                             PageBadge(index: index, count: pageCount)
@@ -420,7 +422,7 @@ private struct ArtworkDoublePageReader: View {
     let presentationRight: ReaderPagePresentation
     let interaction: ArtworkReaderInteractionState
     let movePage: (Int) -> Void
-    let handlePageSwipe: (TrackpadScrollEvent) -> Bool
+    let handlePageSwipe: (ReaderScrollEvent) -> Bool
     let onImageLoaded: (PlatformImage, Int) -> Void
 
     var body: some View {
@@ -457,24 +459,25 @@ private struct ArtworkDoublePageReader: View {
             }
             .contentShape(Rectangle())
             .background {
-                TrackpadEventBridge(
-                    isEnabled: store.trackpadGesturesEnabled,
-                    onScroll: { event in
-                        handleScroll(event, in: proxy.size)
-                    },
-                    onMagnify: { delta, phase in
-                        handleMagnify(delta, phase: phase, in: proxy.size)
-                    },
-                    onSmartMagnify: {
-                        interaction.toggleSmartZoom(in: proxy.size)
-                        return true
-                    },
-                    onDrag: { delta in
-                        guard interaction.isZoomed else { return false }
-                        interaction.applyPan(deltaX: -delta.width, deltaY: -delta.height, in: proxy.size)
-                        return true
-                    }
-                )
+                Color.clear
+                    .readerGestures(
+                        isEnabled: store.trackpadGesturesEnabled,
+                        onScroll: { event in
+                            handleScroll(event, in: proxy.size)
+                        },
+                        onMagnify: { delta, isEnded in
+                            handleMagnify(delta, isEnded: isEnded, in: proxy.size)
+                        },
+                        onSmartMagnify: {
+                            interaction.toggleSmartZoom(in: proxy.size)
+                            return true
+                        },
+                        onDrag: { delta in
+                            guard interaction.isZoomed else { return false }
+                            interaction.applyPan(deltaX: -delta.width, deltaY: -delta.height, in: proxy.size)
+                            return true
+                        }
+                    )
             }
         }
         .frame(maxWidth: .infinity)
@@ -502,7 +505,7 @@ private struct ArtworkDoublePageReader: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
-    private func handleScroll(_ event: TrackpadScrollEvent, in size: CGSize) -> Bool {
+    private func handleScroll(_ event: ReaderScrollEvent, in size: CGSize) -> Bool {
         guard store.trackpadGesturesEnabled else { return false }
         if interaction.isZoomed {
             interaction.applyPan(deltaX: event.deltaX, deltaY: event.deltaY, in: size)
@@ -511,10 +514,10 @@ private struct ArtworkDoublePageReader: View {
         return handlePageSwipe(event)
     }
 
-    private func handleMagnify(_ delta: CGFloat, phase: NSEvent.Phase, in size: CGSize) -> Bool {
+    private func handleMagnify(_ delta: CGFloat, isEnded: Bool, in size: CGSize) -> Bool {
         guard store.trackpadGesturesEnabled else { return false }
         interaction.applyMagnification(delta, in: size)
-        if phase.contains(.ended) || phase.contains(.cancelled) {
+        if isEnded {
             interaction.finishMagnification()
         }
         return true
@@ -526,7 +529,7 @@ private struct ArtworkPageIndexGrid: View {
     @Bindable var store: KeiPixStore
     let selectedPage: Int
     let selectPage: (Int) -> Void
-    let handlePageSwipe: (TrackpadScrollEvent) -> Bool
+    let handlePageSwipe: (ReaderScrollEvent) -> Bool
 
     private let columns = [GridItem(.adaptive(minimum: 72, maximum: 92), spacing: 10)]
 
@@ -549,13 +552,14 @@ private struct ArtworkPageIndexGrid: View {
             }
         }
         .background {
-            TrackpadEventBridge(
-                isEnabled: true,
-                onScroll: handlePageSwipe,
-                onMagnify: { _, _ in false },
-                onSmartMagnify: { false },
-                onDrag: { _ in false }
-            )
+            Color.clear
+                .readerGestures(
+                    isEnabled: true,
+                    onScroll: handlePageSwipe,
+                    onMagnify: { _, _ in false },
+                    onSmartMagnify: { false },
+                    onDrag: { _ in false }
+                )
         }
         .scrollTargetLayout()
     }

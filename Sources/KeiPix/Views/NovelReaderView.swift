@@ -368,13 +368,14 @@ struct NovelReaderView: View {
             swipeEdgeOverlays
         }
         .background {
-            TrackpadEventBridge(
-                isEnabled: store.trackpadGesturesEnabled,
-                onScroll: handlePageSwipe,
-                onMagnify: { _, _ in false },
-                onSmartMagnify: { false },
-                onDrag: { _ in false }
-            )
+            Color.clear
+                .readerGestures(
+                    isEnabled: store.trackpadGesturesEnabled,
+                    onScroll: handlePageSwipe,
+                    onMagnify: { _, _ in false },
+                    onSmartMagnify: { false },
+                    onDrag: { _ in false }
+                )
         }
     }
 
@@ -427,13 +428,14 @@ struct NovelReaderView: View {
             swipeEdgeOverlays
         }
         .background {
-            TrackpadEventBridge(
-                isEnabled: store.trackpadGesturesEnabled,
-                onScroll: handlePageSwipe,
-                onMagnify: { _, _ in false },
-                onSmartMagnify: { false },
-                onDrag: { _ in false }
-            )
+            Color.clear
+                .readerGestures(
+                    isEnabled: store.trackpadGesturesEnabled,
+                    onScroll: handlePageSwipe,
+                    onMagnify: { _, _ in false },
+                    onSmartMagnify: { false },
+                    onDrag: { _ in false }
+                )
         }
     }
 
@@ -639,7 +641,7 @@ struct NovelReaderView: View {
 
     @State private var accumulatedSwipeX: CGFloat = 0
 
-    private func handlePageSwipe(_ event: TrackpadScrollEvent) -> Bool {
+    private func handlePageSwipe(_ event: ReaderScrollEvent) -> Bool {
         guard store.trackpadGesturesEnabled, event.isMomentum == false else {
             return false
         }

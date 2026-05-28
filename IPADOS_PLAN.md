@@ -23,23 +23,11 @@
 
 ## Phase 2 — Touch Gestures
 
-- [ ] **2.1 Replace TrackpadEventBridge**
-  - File: `Support/TrackpadEventBridge.swift`
-  - macOS: NSViewRepresentable for scroll/magnify/drag
-  - iPadOS: UIGestureRecognizer or SwiftUI gestures
-  - Impact: Page navigation in readers
+- [x] **2.1 Replace TrackpadEventBridge** — `1c805eb`
 
-- [ ] **2.2 Swipe-to-navigate**
-  - Files: Reader views
-  - iPadOS: Two-finger swipe or edge swipe for page turns
-  - Reuse: Existing swipe threshold logic from `ArtworkReaderInteractionState`
-  - Impact: Touch-based page navigation
+- [x] **2.2 Swipe-to-navigate** — `1c805eb` (included in gesture bridge)
 
-- [ ] **2.3 Pinch-to-zoom**
-  - Files: Reader views
-  - iPadOS: `.magnification` gesture or `MagnificationGesture`
-  - Reuse: Existing zoom logic from `ArtworkReaderInteractionState`
-  - Impact: Image zoom in readers
+- [x] **2.3 Pinch-to-zoom** — `1c805eb` (included in gesture bridge)
 
 - [ ] **2.4 Long-press context menus**
   - Files: Gallery cards, artwork detail
