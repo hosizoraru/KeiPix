@@ -294,7 +294,7 @@ struct PixivisionArticleParserTests {
     /// (101/102/103) so the assertions are stable regardless of which
     /// real article the parser was prototyped against.
     private static let featureArticleHTML: String = {
-        let html = """
+        var html = """
         <html><head>
         <meta property="og:title" content="球体关节插画特辑">
         <meta property="og:description" content="精彩特辑摘要。">
