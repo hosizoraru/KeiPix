@@ -414,6 +414,7 @@ private struct AdaptiveActionRow: View {
         .labelStyle(.iconOnly)
         .help(artwork.isBookmarked ? L10n.editBookmark : L10n.bookmark)
         .accessibilityLabel(artwork.isBookmarked ? L10n.editBookmark : L10n.bookmark)
+        .touchTarget()
         .buttonStyle(.glassProminent)
         .controlSize(.small)
         .sheet(isPresented: $isBookmarkEditorPresented) {
@@ -441,6 +442,7 @@ private struct AdaptiveActionRow: View {
         .controlSize(.small)
         .help(downloadPrimaryTitle)
         .accessibilityLabel(downloadPrimaryTitle)
+        .touchTarget()
     }
 
     private var openReaderButton: some View {
@@ -455,6 +457,7 @@ private struct AdaptiveActionRow: View {
         .controlSize(.small)
         .help(L10n.openReaderWindow)
         .accessibilityLabel(L10n.openReaderWindow)
+        .touchTarget()
     }
 
     private var shareButton: some View {
@@ -501,6 +504,7 @@ private struct AdaptiveActionRow: View {
         .controlSize(.small)
         .help(L10n.searchImageSource)
         .accessibilityLabel(L10n.searchImageSource)
+        .touchTarget()
     }
 
     private var watchLaterButton: some View {
@@ -523,6 +527,7 @@ private struct AdaptiveActionRow: View {
         .controlSize(.small)
         .help(store.isInWatchLater(artwork.id) ? L10n.watchLaterRemoved : L10n.watchLaterAdded)
         .accessibilityLabel(store.isInWatchLater(artwork.id) ? L10n.watchLaterRemoved : L10n.watchLaterAdded)
+        .touchTarget()
     }
 
     // MARK: - More menu
@@ -698,6 +703,7 @@ private struct AdaptiveActionRow: View {
         .controlSize(.small)
         .help(L10n.moreActions)
         .accessibilityLabel(L10n.moreActions)
+        .touchTarget()
         .sheet(item: $feedbackRequest) { request in
             FeedbackReportSheet(request: request) {
                 store.requestDangerAction(AppDangerAction(kind: .muteArtwork(artwork)))

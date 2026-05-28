@@ -64,6 +64,7 @@ struct FeedHeaderView: View {
             }
             .labelStyle(.iconOnly)
             .help(L10n.randomFromFeed)
+            .touchTarget()
         }
 
         if store.selectedRoute == .search,
@@ -116,6 +117,7 @@ struct FeedHeaderView: View {
             }
             .labelStyle(.iconOnly)
             .help(L10n.searchActions)
+            .touchTarget()
             .menuStyle(.button)
             .buttonStyle(.bordered)
         }
@@ -296,6 +298,7 @@ struct FeedHeaderView: View {
         .labelStyle(.iconOnly)
         .help(L10n.moreActions)
         .accessibilityLabel(L10n.moreActions)
+        .touchTarget()
         .menuStyle(.button)
         .buttonStyle(.bordered)
         .popover(isPresented: $isBatchDownloadPresented, arrowEdge: .bottom) {
@@ -340,6 +343,7 @@ struct FeedHeaderView: View {
             .labelStyle(.iconOnly)
             .help(L10n.search)
             .accessibilityLabel(L10n.search)
+            .touchTarget()
             .buttonStyle(.bordered)
         }
     }

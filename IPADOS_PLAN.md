@@ -72,9 +72,7 @@
   - Verify: Login, browse, download, read, bookmark
   - Impact: Quality assurance
 
-- [ ] **6.2 Touch target sizing**
-  - Verify all interactive elements meet 44pt minimum
-  - Impact: Touch usability
+- [x] **6.2 Touch target sizing** — `f3474d7`
 
 - [ ] **6.3 Dynamic Type support**
   - Verify text scales properly on iPad
