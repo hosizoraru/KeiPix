@@ -1,3 +1,4 @@
+#if DEBUG
 import Foundation
 #if os(macOS)
 import AppKit
@@ -881,3 +882,4 @@ extension KeiPixStore {
         )
     }
 }
+#endif

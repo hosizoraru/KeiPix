@@ -1,3 +1,4 @@
+#if DEBUG
 import Foundation
 
 @MainActor
@@ -745,3 +746,4 @@ private extension String {
         split(separator: "\n", omittingEmptySubsequences: true).count
     }
 }
+#endif
