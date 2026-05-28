@@ -22,6 +22,7 @@ extension KeiPixStore {
     }
 
     func presentLocalImageSourceSearch() {
+        #if os(macOS)
         let panel = NSOpenPanel()
         panel.allowedContentTypes = [.image]
         panel.allowsMultipleSelection = false
@@ -36,5 +37,9 @@ extension KeiPixStore {
         }
 
         imageSourceSearchRequest = ImageSourceSearchRequest(localImageURL: url)
+        #else
+        // iPadOS: image source search via Photos picker or document picker
+        // TODO: Implement with PHPickerViewController or .fileImporter
+        #endif
     }
 }

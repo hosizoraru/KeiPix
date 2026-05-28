@@ -343,6 +343,7 @@ final class ArtworkDownloadStore {
 
     @discardableResult
     func chooseDownloadDirectory() -> Bool {
+        #if os(macOS)
         let panel = NSOpenPanel()
         panel.canChooseFiles = false
         panel.canChooseDirectories = true
@@ -355,6 +356,10 @@ final class ArtworkDownloadStore {
             return true
         }
         return false
+        #else
+        // iPadOS: directory selection via .fileImporter
+        return false
+        #endif
     }
 
     @discardableResult

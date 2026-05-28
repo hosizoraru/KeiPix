@@ -337,12 +337,14 @@ private struct NovelDetailContent: View {
                 ext = "md"
             }
 
+            #if os(macOS)
             let panel = NSSavePanel()
             panel.allowedContentTypes = [ext == "md" ? .init(filenameExtension: "md")! : .plainText]
             panel.nameFieldStringValue = "\(novel.id)_\(novel.title).\(ext)"
             panel.canCreateDirectories = true
             guard panel.runModal() == .OK, let url = panel.url else { return }
             try? content.write(to: url, atomically: true, encoding: .utf8)
+            #endif
         }
     }
 

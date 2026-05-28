@@ -343,6 +343,7 @@ struct BrowsingHistoryView: View {
         encoder.dateEncodingStrategy = .iso8601
         guard let data = try? encoder.encode(items) else { return }
 
+        #if os(macOS)
         let panel = NSSavePanel()
         panel.allowedContentTypes = [.json]
         panel.nameFieldStringValue = "keipix-history-\(Date().formatted(.dateTime.year().month().day())).json"
@@ -350,6 +351,7 @@ struct BrowsingHistoryView: View {
         guard panel.runModal() == .OK, let url = panel.url else { return }
         try? data.write(to: url)
         actionMessage = L10n.exportedHistory
+        #endif
     }
 }
 

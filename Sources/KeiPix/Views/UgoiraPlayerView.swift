@@ -327,12 +327,16 @@ struct UgoiraPlayerView: View {
     }
 
     private func savePanelURL(extension fileExtension: String, contentType: UTType, title: String) -> URL? {
+        #if os(macOS)
         let panel = NSSavePanel()
         panel.allowedContentTypes = [contentType]
         panel.canCreateDirectories = true
         panel.title = title
         panel.nameFieldStringValue = "\(artwork.id).\(fileExtension)"
         return panel.runModal() == .OK ? panel.url : nil
+        #else
+        return nil
+        #endif
     }
 
     private func showStatus(_ message: String) {

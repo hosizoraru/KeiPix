@@ -4,16 +4,17 @@ import UniformTypeIdentifiers
 import AppKit
 #endif
 
-/// Cross-platform file picker facade. On macOS wraps `NSSavePanel` /
-/// `NSOpenPanel`; on iPadOS wraps `.fileExporter` / `.fileImporter`
-/// view modifiers. Phase 1 creates the surface — Phase 3 migrates
-/// the 15 call sites.
+/// Cross-platform file picker facade.
+///
+/// macOS: wraps `NSSavePanel` / `NSOpenPanel`
+/// iPadOS: uses SwiftUI `.fileExporter` / `.fileImporter` modifiers
 enum PlatformFilePicker {
 
-    // MARK: - Save
+    // MARK: - Save (macOS only — iPadOS uses view modifiers)
 
     /// Presents a save panel and writes `data` to the user-chosen URL.
     /// Returns the chosen URL on success, `nil` on cancel.
+    /// macOS only — iPadOS should use `.fileExporter` view modifier.
     @MainActor
     static func saveFile(
         data: Data,
@@ -29,10 +30,7 @@ enum PlatformFilePicker {
         try? data.write(to: url, options: .atomic)
         return url
         #else
-        // iPadOS path will use .fileExporter modifier at the call site.
-        // This synchronous wrapper is a placeholder — the real iPadOS
-        // implementation drives the view modifier and receives the URL
-        // through a binding.
+        // iPadOS uses .fileExporter view modifier at the call site.
         return nil
         #endif
     }
@@ -51,9 +49,10 @@ enum PlatformFilePicker {
         )
     }
 
-    // MARK: - Open
+    // MARK: - Open (macOS only — iPadOS uses view modifiers)
 
     /// Presents an open panel and returns the selected file URL(s).
+    /// macOS only — iPadOS should use `.fileImporter` view modifier.
     @MainActor
     static func openFile(
         allowedContentTypes: [UTType],
@@ -68,13 +67,15 @@ enum PlatformFilePicker {
         guard panel.runModal() == .OK else { return [] }
         return panel.urls
         #else
+        // iPadOS uses .fileImporter view modifier at the call site.
         return []
         #endif
     }
 
-    // MARK: - Directory
+    // MARK: - Directory (macOS only — iPadOS uses view modifiers)
 
     /// Presents an open panel for selecting a directory.
+    /// macOS only — iPadOS should use `.fileImporter` view modifier.
     @MainActor
     static func openDirectory(
         allowsMultipleSelection: Bool = false
@@ -87,7 +88,71 @@ enum PlatformFilePicker {
         guard panel.runModal() == .OK else { return nil }
         return panel.url
         #else
+        // iPadOS uses .fileImporter view modifier at the call site.
         return nil
         #endif
     }
 }
+
+// MARK: - iPadOS File Export Modifier
+
+#if os(iOS)
+/// View modifier for iPadOS file export using `.fileExporter`.
+struct FileExportModifier: ViewModifier {
+    @Binding var isPresented: Bool
+    let document: FileExportDocument
+    let onCompletion: (Result<URL, Error>) -> Void
+
+    func body(content: Content) -> some View {
+        content
+            .fileExporter(
+                isPresented: $isPresented,
+                document: document,
+                contentType: document.contentType,
+                defaultFilename: document.filename
+            ) { result in
+                onCompletion(result)
+            }
+    }
+}
+
+/// Simple document type for file export on iPadOS.
+struct FileExportDocument: FileDocument {
+    static var readableContentTypes: [UTType] { [.data] }
+
+    let data: Data
+    let contentType: UTType
+    let filename: String
+
+    init(data: Data, contentType: UTType, filename: String) {
+        self.data = data
+        self.contentType = contentType
+        self.filename = filename
+    }
+
+    init(configuration: ReadConfiguration) throws {
+        self.data = configuration.file.regularFileContents ?? Data()
+        self.contentType = .data
+        self.filename = "export"
+    }
+
+    func fileWrapper(configuration: WriteConfiguration) throws -> FileWrapper {
+        FileWrapper(regularFileWithContents: data)
+    }
+}
+
+extension View {
+    /// Present a file exporter on iPadOS.
+    func fileExport(
+        isPresented: Binding<Bool>,
+        document: FileExportDocument,
+        onCompletion: @escaping (Result<URL, Error>) -> Void
+    ) -> some View {
+        modifier(FileExportModifier(
+            isPresented: isPresented,
+            document: document,
+            onCompletion: onCompletion
+        ))
+    }
+}
+#endif

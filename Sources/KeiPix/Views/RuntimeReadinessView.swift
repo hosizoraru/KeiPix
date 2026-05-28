@@ -618,6 +618,7 @@ struct RuntimeReadinessView: View {
     }
 
     private func saveDiagnostics(_ snapshot: RuntimeReadinessSnapshot) {
+        #if os(macOS)
         let panel = NSSavePanel()
         panel.title = L10n.saveDiagnostics
         panel.nameFieldStringValue = "keipix-diagnostics-\(Self.fileDateFormatter.string(from: Date())).txt"
@@ -633,6 +634,7 @@ struct RuntimeReadinessView: View {
         } catch {
             cacheMessage = "\(L10n.unableToSaveDiagnostics): \(error.localizedDescription)"
         }
+        #endif
     }
 
     private func diagnosticsReport(_ snapshot: RuntimeReadinessSnapshot) -> String {

@@ -286,11 +286,15 @@ struct DownloadedUgoiraViewer: View {
     }
 
     private func saveGIFURL() -> URL? {
+        #if os(macOS)
         let panel = NSSavePanel()
         panel.allowedContentTypes = [.gif]
         panel.canCreateDirectories = true
         panel.nameFieldStringValue = "\(item.artworkID).gif"
         return panel.runModal() == .OK ? panel.url : nil
+        #else
+        return nil
+        #endif
     }
 
     private func revealZip() {

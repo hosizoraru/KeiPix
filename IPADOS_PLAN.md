@@ -43,10 +43,7 @@
 
 ## Phase 4 — File & Document Handling
 
-- [ ] **4.1 Replace NSOpenPanel/NSSavePanel**
-  - Files: `Stores/KeiPixStore+ImageSourceSearch.swift`, `Support/PlatformFilePicker.swift`
-  - iPadOS: Use `UIDocumentPickerViewController` via `PlatformFilePicker`
-  - Impact: File import/export
+- [x] **4.1 Replace NSOpenPanel/NSSavePanel** — `ce3152b`
 
 - [ ] **4.2 Photos library access**
   - iPadOS: `PHPhotoPicker` for saving to Photos
