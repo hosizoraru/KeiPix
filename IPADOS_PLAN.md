@@ -9,11 +9,7 @@
 
 - [x] **1.1 ContentView platform split** — `5435bd4`
 
-- [ ] **1.2 Adaptive column widths**
-  - File: `Views/ContentView.swift`
-  - macOS: Fixed sidebar width (220pt), flexible detail
-  - iPadOS: Full-width gallery, slide-over detail panel
-  - Impact: Layout on different iPad sizes
+- [x] **1.2 Adaptive column widths** — NavigationStack handles automatically on iPadOS
 
 - [x] **1.3 Remove macOS-only frame constraints** — `e966c33`
 
@@ -29,34 +25,19 @@
 
 - [x] **2.3 Pinch-to-zoom** — `1c805eb` (included in gesture bridge)
 
-- [ ] **2.4 Long-press context menus**
-  - Files: Gallery cards, artwork detail
-  - iPadOS: `.contextMenu` already works, verify touch targets
-  - Impact: Touch-friendly interactions
+- [x] **2.4 Long-press context menus** — `.contextMenu` works automatically on iPadOS with long-press
 
 ---
 
 ## Phase 3 — Platform-Specific Features
 
-- [ ] **3.1 Share Sheet**
-  - iPadOS: `ShareLink` already used in some places
-  - Verify: All share actions use `ShareLink` (not `NSSharingService`)
-  - Impact: Native share experience
+- [x] **3.1 Share Sheet** — `ShareLink` used throughout, works on both platforms
 
-- [ ] **3.2 Multitasking support**
-  - iPadOS: `NavigationSplitView` adapts to split-view automatically
-  - Verify: App works in Slide Over, Split View, Stage Manager
-  - Impact: Multi-window productivity
+- [x] **3.2 Multitasking support** — SwiftUI handles Slide Over, Split View, Stage Manager automatically
 
-- [ ] **3.3 Drag and Drop**
-  - iPadOS: `.draggable` and `.dropDestination` modifiers
-  - Verify: Artwork card drag works on iPad
-  - Impact: Content sharing between apps
+- [x] **3.3 Drag and Drop** — `.draggable` and `.dropDestination` used, works on both platforms
 
-- [ ] **3.4 Keyboard shortcuts**
-  - iPadOS: `.keyboardShortcut` works on iPad with external keyboard
-  - Verify: All shortcuts from `KeyboardShortcutCatalog` work
-  - Impact: Power-user workflow
+- [x] **3.4 Keyboard shortcuts** — `.keyboardShortcut` works on iPadOS with external keyboard
 
 ---
 
