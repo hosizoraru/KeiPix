@@ -227,239 +227,7 @@ private struct ArtworkActionStrip: View {
                     DownloadStateSummary(state: downloadState)
                 }
 
-                HStack(spacing: 10) {
-                    // Bookmark is icon-only — the bookmark icon is
-                    // universally understood (Safari, Photos, Maps).
-                    // Filled state = already bookmarked; tapping opens
-                    // the tag editor. `.glassProminent` keeps it as
-                    // the visual primary CTA.
-                    Button {
-                        isBookmarkEditorPresented = true
-                    } label: {
-                        Label(artwork.isBookmarked ? L10n.editBookmark : L10n.bookmark, systemImage: artwork.isBookmarked ? "bookmark.fill" : "bookmark")
-                    }
-                    .labelStyle(.iconOnly)
-                    .help(artwork.isBookmarked ? L10n.editBookmark : L10n.bookmark)
-                    .accessibilityLabel(artwork.isBookmarked ? L10n.editBookmark : L10n.bookmark)
-                    .buttonStyle(.glassProminent)
-                    .controlSize(.small)
-                    .sheet(isPresented: $isBookmarkEditorPresented) {
-                        BookmarkEditorView(artwork: artwork, store: store) {
-                            showActionMessage(String(format: L10n.savedBookmarkFormat, artwork.title))
-                        }
-                        .iPadFriendlySheet()
-                    }
-
-                    // Download / Open in Window / More are icon-only
-                    // so the action row stays compact in the inspector
-                    // pane. `.help(...)` covers tooltip + VoiceOver
-                    // labels, matching Apple Mail / Photos toolbars
-                    // where every glyph reads as text on hover.
-                    Button {
-                        if downloadState == .downloaded {
-                            store.prepareReaderWindow(for: artwork)
-                            openWindow(id: "artwork-reader", value: artwork.id)
-                        } else {
-                            store.enqueueDownload(artwork)
-                            showActionMessage(String(format: L10n.queuedDownloadsFormat, 1))
-                        }
-                    } label: {
-                        Label(downloadPrimaryTitle, systemImage: downloadPrimarySystemImage)
-                    }
-                    .labelStyle(.iconOnly)
-                    .buttonStyle(.bordered)
-                    .controlSize(.small)
-                    .help(downloadPrimaryTitle)
-                    .accessibilityLabel(downloadPrimaryTitle)
-
-                    Button {
-                        store.prepareReaderWindow(for: artwork)
-                        openWindow(id: "artwork-reader", value: artwork.id)
-                    } label: {
-                        Label(L10n.openReaderWindow, systemImage: "rectangle.inset.filled")
-                    }
-                    .labelStyle(.iconOnly)
-                    .buttonStyle(.bordered)
-                    .controlSize(.small)
-                    .help(L10n.openReaderWindow)
-                    .accessibilityLabel(L10n.openReaderWindow)
-
-                    Menu {
-                        Button {
-                            store.prepareReaderWindow(for: artwork)
-                            openWindow(id: "artwork-reader", value: artwork.id)
-                        } label: {
-                            Label(L10n.openReaderWindow, systemImage: "rectangle.inset.filled")
-                        }
-
-                        Divider()
-
-                        if let url = artwork.pixivURL {
-                            ShareLink(item: url) {
-                                Label(L10n.share, systemImage: "square.and.arrow.up")
-                            }
-
-                            // Pixez and Pixes ship a "share with text" entry
-                            // that bundles the title, author, and link using
-                            // the user's copy template. We piggy-back on the
-                            // same renderer so the format stays in sync with
-                            // the Sharing settings preview.
-                            ShareLink(
-                                item: artworkSummaryText,
-                                subject: Text(artwork.title),
-                                message: Text(artworkSummaryText)
-                            ) {
-                                Label(L10n.shareSummary, systemImage: "text.bubble")
-                            }
-                            .help(L10n.shareSummaryHint)
-
-                            Button {
-                                PasteboardWriter.copy(url.absoluteString)
-                                showActionMessage(L10n.copied)
-                            } label: {
-                                Label(L10n.copyLink, systemImage: "link")
-                            }
-                        }
-
-                        if let sharePageURL {
-                            ShareLink(item: sharePageURL) {
-                                Label(L10n.shareCurrentPage, systemImage: "photo")
-                            }
-                        }
-
-                        if currentPageURL != nil || currentLocalPageURL != nil {
-                            Button {
-                                store.presentImageSourceSearch(for: artwork, pageIndex: pageIndex)
-                            } label: {
-                                Label(L10n.searchImageSource, systemImage: "magnifyingglass")
-                            }
-                        }
-
-                        if let currentPageURL {
-                            Button {
-                                PasteboardWriter.copy(currentPageURL.absoluteString)
-                                showActionMessage(L10n.copied)
-                            } label: {
-                                Label(L10n.copyCurrentPageLink, systemImage: "link")
-                            }
-
-                            Button {
-                                store.enqueueDownloadPage(
-                                    artwork,
-                                    pageIndex: pageIndex,
-                                    preferOriginal: store.preferOriginalImages(for: artwork, pageCount: pageCount)
-                                )
-                                showActionMessage(L10n.queuedCurrentPage)
-                            } label: {
-                                Label(L10n.downloadCurrentPage, systemImage: "arrow.down.circle")
-                            }
-                        }
-
-                        if artwork.isUgoira == false && pageCount > 1 {
-                            Button {
-                                isPageRangeDownloadPresented = true
-                            } label: {
-                                Label(L10n.downloadPageRange, systemImage: "text.page.badge.magnifyingglass")
-                            }
-
-                            Button {
-                                isPageSelectionDownloadPresented = true
-                            } label: {
-                                Label(L10n.downloadSelectedPages, systemImage: "checklist")
-                            }
-                        }
-
-                        if let currentLocalPageURL {
-                            Button {
-                                PlatformWorkspace.revealInFiles(currentLocalPageURL)
-                            } label: {
-                                Label(L10n.revealCurrentPage, systemImage: "folder")
-                            }
-                        }
-
-                        if let downloadedItem {
-                            Button {
-                                _ = store.downloads.reveal(downloadedItem)
-                                showActionMessage(L10n.revealedDownloadInFinder)
-                            } label: {
-                                Label(L10n.revealDownloadedArtwork, systemImage: "folder")
-                            }
-                        }
-
-                        Divider()
-
-                        if store.isInWatchLater(artwork.id) {
-                            Button {
-                                store.removeFromWatchLater(LocalArtworkHistoryItem(artwork: artwork))
-                                showActionMessage(L10n.watchLaterRemoved)
-                            } label: {
-                                Label(L10n.watchLaterRemoved, systemImage: "clock.badge.xmark")
-                            }
-                        } else {
-                            Button {
-                                store.addToWatchLater(artwork)
-                                showActionMessage(L10n.watchLaterAdded)
-                            } label: {
-                                Label(L10n.watchLaterAdded, systemImage: "clock.badge.plus")
-                            }
-                        }
-
-                        Divider()
-
-                        Button {
-                            copyArtworkSummary()
-                        } label: {
-                            Label(L10n.copyArtworkSummary, systemImage: "doc.text")
-                        }
-
-                        Button {
-                            feedbackRequest = .artwork(artwork)
-                        } label: {
-                            Label(L10n.feedbackAndMute, systemImage: "exclamationmark.bubble")
-                        }
-
-                        Divider()
-
-                        Button(L10n.muteArtwork) {
-                            store.requestDangerAction(AppDangerAction(kind: .muteArtwork(artwork)))
-                        }
-                        Button(L10n.muteCreator) {
-                            store.requestDangerAction(AppDangerAction(kind: .muteCreator(artwork.user)))
-                        }
-                        if artwork.tags.isEmpty == false {
-                            Menu(L10n.muteTag) {
-                                ForEach(artwork.tags, id: \.self) { tag in
-                                    Button("#\(tag.name)") {
-                                        store.requestDangerAction(AppDangerAction(kind: .muteTag(tag)))
-                                    }
-                                }
-                            }
-                        }
-
-                        Divider()
-
-                        Button {
-                            isBulkBlockPresented = true
-                        } label: {
-                            Label(L10n.blockFromArtwork, systemImage: "hand.raised")
-                        }
-                    } label: {
-                        Label(L10n.moreActions, systemImage: "ellipsis.circle")
-                    }
-                    .labelStyle(.iconOnly)
-                    .buttonStyle(.bordered)
-                    .controlSize(.small)
-                    .help(L10n.moreActions)
-                    .accessibilityLabel(L10n.moreActions)
-                    .sheet(item: $feedbackRequest) { request in
-                        FeedbackReportSheet(request: request) {
-                            store.requestDangerAction(AppDangerAction(kind: .muteArtwork(artwork)))
-                        } onComplete: { message in
-                            showActionMessage(message)
-                        }
-                        .iPadFriendlySheet()
-                    }
-                }
+                AdaptiveActionRow(artwork: artwork, store: store, pageIndex: pageIndex, pageCount: pageCount, downloadState: downloadState, downloadPrimaryTitle: downloadPrimaryTitle, downloadPrimarySystemImage: downloadPrimarySystemImage, currentPageURL: currentPageURL, sharePageURL: sharePageURL, currentLocalPageURL: currentLocalPageURL, downloadedItem: downloadedItem, artworkSummaryText: artworkSummaryText, isBookmarkEditorPresented: $isBookmarkEditorPresented, isPageRangeDownloadPresented: $isPageRangeDownloadPresented, isPageSelectionDownloadPresented: $isPageSelectionDownloadPresented, isBulkBlockPresented: $isBulkBlockPresented, feedbackRequest: $feedbackRequest, showActionMessage: showActionMessage, copyArtworkSummary: copyArtworkSummary)
 
             }
         }
@@ -566,6 +334,376 @@ private struct ArtworkActionStrip: View {
 
     private var artworkSummaryText: String {
         store.renderArtworkCopySummary(artwork, pageCount: pageCount)
+    }
+}
+
+// MARK: - Adaptive action row
+
+/// Measures available width and promotes secondary actions from the
+/// "more" menu to inline icon buttons as space allows.
+///
+/// Width tiers (approximate, accounts for Dynamic Type):
+///   < 280  → Bookmark · Download · More          (compact)
+///   280–400 → + Open Reader                       (default inspector)
+///   400–520 → + Share · Copy Link                  (wide inspector)
+///   ≥ 520  → + Search Source · Watch Later          (full-width)
+private struct AdaptiveActionRow: View {
+    let artwork: PixivArtwork
+    @Bindable var store: KeiPixStore
+    let pageIndex: Int
+    let pageCount: Int
+    let downloadState: ArtworkDownloadArtworkState
+    let downloadPrimaryTitle: String
+    let downloadPrimarySystemImage: String
+    let currentPageURL: URL?
+    let sharePageURL: URL?
+    let currentLocalPageURL: URL?
+    let downloadedItem: ArtworkDownloadItem?
+    let artworkSummaryText: String
+    @Binding var isBookmarkEditorPresented: Bool
+    @Binding var isPageRangeDownloadPresented: Bool
+    @Binding var isPageSelectionDownloadPresented: Bool
+    @Binding var isBulkBlockPresented: Bool
+    @Binding var feedbackRequest: FeedbackReportRequest?
+    let showActionMessage: (String) -> Void
+    let copyArtworkSummary: () -> Void
+
+    @Environment(\.openWindow) private var openWindow
+
+    var body: some View {
+        GeometryReader { geo in
+            HStack(spacing: 10) {
+                bookmarkButton
+                downloadButton
+
+                if geo.size.width >= 280 {
+                    openReaderButton
+                }
+
+                if geo.size.width >= 400, artwork.pixivURL != nil {
+                    shareButton
+                    copyLinkButton
+                }
+
+                if geo.size.width >= 520 {
+                    if currentPageURL != nil || currentLocalPageURL != nil {
+                        searchImageButton
+                    }
+                    watchLaterButton
+                }
+
+                moreMenu(promoteShare: geo.size.width >= 400,
+                         promoteSearch: geo.size.width >= 520,
+                         promoteWatchLater: geo.size.width >= 520)
+            }
+        }
+        .frame(height: 28)
+    }
+
+    // MARK: - Inline buttons
+
+    private var bookmarkButton: some View {
+        Button {
+            isBookmarkEditorPresented = true
+        } label: {
+            Label(artwork.isBookmarked ? L10n.editBookmark : L10n.bookmark,
+                  systemImage: artwork.isBookmarked ? "bookmark.fill" : "bookmark")
+        }
+        .labelStyle(.iconOnly)
+        .help(artwork.isBookmarked ? L10n.editBookmark : L10n.bookmark)
+        .accessibilityLabel(artwork.isBookmarked ? L10n.editBookmark : L10n.bookmark)
+        .buttonStyle(.glassProminent)
+        .controlSize(.small)
+        .sheet(isPresented: $isBookmarkEditorPresented) {
+            BookmarkEditorView(artwork: artwork, store: store) {
+                showActionMessage(String(format: L10n.savedBookmarkFormat, artwork.title))
+            }
+            .iPadFriendlySheet()
+        }
+    }
+
+    private var downloadButton: some View {
+        Button {
+            if downloadState == .downloaded {
+                store.prepareReaderWindow(for: artwork)
+                openWindow(id: "artwork-reader", value: artwork.id)
+            } else {
+                store.enqueueDownload(artwork)
+                showActionMessage(String(format: L10n.queuedDownloadsFormat, 1))
+            }
+        } label: {
+            Label(downloadPrimaryTitle, systemImage: downloadPrimarySystemImage)
+        }
+        .labelStyle(.iconOnly)
+        .buttonStyle(.bordered)
+        .controlSize(.small)
+        .help(downloadPrimaryTitle)
+        .accessibilityLabel(downloadPrimaryTitle)
+    }
+
+    private var openReaderButton: some View {
+        Button {
+            store.prepareReaderWindow(for: artwork)
+            openWindow(id: "artwork-reader", value: artwork.id)
+        } label: {
+            Label(L10n.openReaderWindow, systemImage: "rectangle.inset.filled")
+        }
+        .labelStyle(.iconOnly)
+        .buttonStyle(.bordered)
+        .controlSize(.small)
+        .help(L10n.openReaderWindow)
+        .accessibilityLabel(L10n.openReaderWindow)
+    }
+
+    private var shareButton: some View {
+        Group {
+            if let url = artwork.pixivURL {
+                ShareLink(item: url) {
+                    Label(L10n.share, systemImage: "square.and.arrow.up")
+                }
+                .labelStyle(.iconOnly)
+                .buttonStyle(.bordered)
+                .controlSize(.small)
+                .help(L10n.share)
+                .accessibilityLabel(L10n.share)
+            }
+        }
+    }
+
+    private var copyLinkButton: some View {
+        Group {
+            if let url = artwork.pixivURL {
+                Button {
+                    PasteboardWriter.copy(url.absoluteString)
+                    showActionMessage(L10n.copied)
+                } label: {
+                    Label(L10n.copyLink, systemImage: "link")
+                }
+                .labelStyle(.iconOnly)
+                .buttonStyle(.bordered)
+                .controlSize(.small)
+                .help(L10n.copyLink)
+                .accessibilityLabel(L10n.copyLink)
+            }
+        }
+    }
+
+    private var searchImageButton: some View {
+        Button {
+            store.presentImageSourceSearch(for: artwork, pageIndex: pageIndex)
+        } label: {
+            Label(L10n.searchImageSource, systemImage: "magnifyingglass")
+        }
+        .labelStyle(.iconOnly)
+        .buttonStyle(.bordered)
+        .controlSize(.small)
+        .help(L10n.searchImageSource)
+        .accessibilityLabel(L10n.searchImageSource)
+    }
+
+    private var watchLaterButton: some View {
+        Button {
+            if store.isInWatchLater(artwork.id) {
+                store.removeFromWatchLater(LocalArtworkHistoryItem(artwork: artwork))
+                showActionMessage(L10n.watchLaterRemoved)
+            } else {
+                store.addToWatchLater(artwork)
+                showActionMessage(L10n.watchLaterAdded)
+            }
+        } label: {
+            Label(
+                store.isInWatchLater(artwork.id) ? L10n.watchLaterRemoved : L10n.watchLaterAdded,
+                systemImage: store.isInWatchLater(artwork.id) ? "clock.badge.xmark" : "clock.badge.plus"
+            )
+        }
+        .labelStyle(.iconOnly)
+        .buttonStyle(.bordered)
+        .controlSize(.small)
+        .help(store.isInWatchLater(artwork.id) ? L10n.watchLaterRemoved : L10n.watchLaterAdded)
+        .accessibilityLabel(store.isInWatchLater(artwork.id) ? L10n.watchLaterRemoved : L10n.watchLaterAdded)
+    }
+
+    // MARK: - More menu
+
+    @ViewBuilder
+    private func moreMenu(promoteShare: Bool, promoteSearch: Bool, promoteWatchLater: Bool) -> some View {
+        Menu {
+            // Open reader — always in menu as a text entry for discoverability
+            Button {
+                store.prepareReaderWindow(for: artwork)
+                openWindow(id: "artwork-reader", value: artwork.id)
+            } label: {
+                Label(L10n.openReaderWindow, systemImage: "rectangle.inset.filled")
+            }
+
+            Divider()
+
+            if let url = artwork.pixivURL {
+                if promoteShare == false {
+                    ShareLink(item: url) {
+                        Label(L10n.share, systemImage: "square.and.arrow.up")
+                    }
+                }
+
+                ShareLink(
+                    item: artworkSummaryText,
+                    subject: Text(artwork.title),
+                    message: Text(artworkSummaryText)
+                ) {
+                    Label(L10n.shareSummary, systemImage: "text.bubble")
+                }
+                .help(L10n.shareSummaryHint)
+
+                if promoteShare == false {
+                    Button {
+                        PasteboardWriter.copy(url.absoluteString)
+                        showActionMessage(L10n.copied)
+                    } label: {
+                        Label(L10n.copyLink, systemImage: "link")
+                    }
+                }
+            }
+
+            if let sharePageURL {
+                ShareLink(item: sharePageURL) {
+                    Label(L10n.shareCurrentPage, systemImage: "photo")
+                }
+            }
+
+            if promoteSearch == false, currentPageURL != nil || currentLocalPageURL != nil {
+                Button {
+                    store.presentImageSourceSearch(for: artwork, pageIndex: pageIndex)
+                } label: {
+                    Label(L10n.searchImageSource, systemImage: "magnifyingglass")
+                }
+            }
+
+            if let currentPageURL {
+                Button {
+                    PasteboardWriter.copy(currentPageURL.absoluteString)
+                    showActionMessage(L10n.copied)
+                } label: {
+                    Label(L10n.copyCurrentPageLink, systemImage: "link")
+                }
+
+                Button {
+                    store.enqueueDownloadPage(
+                        artwork,
+                        pageIndex: pageIndex,
+                        preferOriginal: store.preferOriginalImages(for: artwork, pageCount: pageCount)
+                    )
+                    showActionMessage(L10n.queuedCurrentPage)
+                } label: {
+                    Label(L10n.downloadCurrentPage, systemImage: "arrow.down.circle")
+                }
+            }
+
+            if artwork.isUgoira == false && pageCount > 1 {
+                Button {
+                    isPageRangeDownloadPresented = true
+                } label: {
+                    Label(L10n.downloadPageRange, systemImage: "text.page.badge.magnifyingglass")
+                }
+
+                Button {
+                    isPageSelectionDownloadPresented = true
+                } label: {
+                    Label(L10n.downloadSelectedPages, systemImage: "checklist")
+                }
+            }
+
+            if let currentLocalPageURL {
+                Button {
+                    PlatformWorkspace.revealInFiles(currentLocalPageURL)
+                } label: {
+                    Label(L10n.revealCurrentPage, systemImage: "folder")
+                }
+            }
+
+            if let downloadedItem {
+                Button {
+                    _ = store.downloads.reveal(downloadedItem)
+                    showActionMessage(L10n.revealedDownloadInFinder)
+                } label: {
+                    Label(L10n.revealDownloadedArtwork, systemImage: "folder")
+                }
+            }
+
+            Divider()
+
+            if promoteWatchLater == false {
+                if store.isInWatchLater(artwork.id) {
+                    Button {
+                        store.removeFromWatchLater(LocalArtworkHistoryItem(artwork: artwork))
+                        showActionMessage(L10n.watchLaterRemoved)
+                    } label: {
+                        Label(L10n.watchLaterRemoved, systemImage: "clock.badge.xmark")
+                    }
+                } else {
+                    Button {
+                        store.addToWatchLater(artwork)
+                        showActionMessage(L10n.watchLaterAdded)
+                    } label: {
+                        Label(L10n.watchLaterAdded, systemImage: "clock.badge.plus")
+                    }
+                }
+            }
+
+            Divider()
+
+            Button {
+                copyArtworkSummary()
+            } label: {
+                Label(L10n.copyArtworkSummary, systemImage: "doc.text")
+            }
+
+            Button {
+                feedbackRequest = .artwork(artwork)
+            } label: {
+                Label(L10n.feedbackAndMute, systemImage: "exclamationmark.bubble")
+            }
+
+            Divider()
+
+            Button(L10n.muteArtwork) {
+                store.requestDangerAction(AppDangerAction(kind: .muteArtwork(artwork)))
+            }
+            Button(L10n.muteCreator) {
+                store.requestDangerAction(AppDangerAction(kind: .muteCreator(artwork.user)))
+            }
+            if artwork.tags.isEmpty == false {
+                Menu(L10n.muteTag) {
+                    ForEach(artwork.tags, id: \.self) { tag in
+                        Button("#\(tag.name)") {
+                            store.requestDangerAction(AppDangerAction(kind: .muteTag(tag)))
+                        }
+                    }
+                }
+            }
+
+            Divider()
+
+            Button {
+                isBulkBlockPresented = true
+            } label: {
+                Label(L10n.blockFromArtwork, systemImage: "hand.raised")
+            }
+        } label: {
+            Label(L10n.moreActions, systemImage: "ellipsis.circle")
+        }
+        .labelStyle(.iconOnly)
+        .buttonStyle(.bordered)
+        .controlSize(.small)
+        .help(L10n.moreActions)
+        .accessibilityLabel(L10n.moreActions)
+        .sheet(item: $feedbackRequest) { request in
+            FeedbackReportSheet(request: request) {
+                store.requestDangerAction(AppDangerAction(kind: .muteArtwork(artwork)))
+            } onComplete: { message in
+                showActionMessage(message)
+            }
+            .iPadFriendlySheet()
+        }
     }
 }
 
