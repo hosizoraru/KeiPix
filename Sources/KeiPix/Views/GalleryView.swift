@@ -88,52 +88,60 @@ private struct GalleryFeedView: View {
     @Environment(\.openWindow) private var openWindow
 
     var body: some View {
-        ScrollView {
-            LazyVStack(spacing: 0, pinnedViews: [.sectionHeaders]) {
-                Section {
-                    Group {
-                        if store.artworks.isEmpty {
-                            EmptyStateView(
-                                title: L10n.noArtworkTitle,
-                                subtitle: L10n.noArtworkSubtitle,
-                                systemImage: "photo.on.rectangle.angled"
-                            )
-                            .frame(maxWidth: .infinity)
-                            .frame(minHeight: 420)
-                        } else {
-                            if let restoration = store.activeFeedSnapshotRestoration {
-                                CachedFeedStatusStrip(restoration: restoration) {
-                                    store.requestRouteRefresh()
+        ScrollViewReader { proxy in
+            ScrollView {
+                LazyVStack(spacing: 0, pinnedViews: [.sectionHeaders]) {
+                    Section {
+                        Group {
+                            if store.artworks.isEmpty {
+                                EmptyStateView(
+                                    title: L10n.noArtworkTitle,
+                                    subtitle: L10n.noArtworkSubtitle,
+                                    systemImage: "photo.on.rectangle.angled"
+                                )
+                                .frame(maxWidth: .infinity)
+                                .frame(minHeight: 420)
+                            } else {
+                                if let restoration = store.activeFeedSnapshotRestoration {
+                                    CachedFeedStatusStrip(restoration: restoration) {
+                                        store.requestRouteRefresh()
+                                    }
+                                    .padding(.bottom, 12)
                                 }
-                                .padding(.bottom, 12)
+
+                                SearchPopularPreviewStrip(store: store, actionMessage: $actionMessage)
+
+                                GalleryContentGrid(
+                                    store: store,
+                                    actionMessage: $actionMessage,
+                                    artworkSelection: $artworkSelection
+                                )
                             }
-
-                            SearchPopularPreviewStrip(store: store, actionMessage: $actionMessage)
-
-                            GalleryContentGrid(
-                                store: store,
-                                actionMessage: $actionMessage,
-                                artworkSelection: $artworkSelection
-                            )
                         }
-                    }
-                    .padding(.horizontal, 18)
-                    .padding(.top, 14)
-                    .padding(.bottom, 20)
-                } header: {
-                    FeedHeaderView(
-                        store: store,
-                        actionMessage: $actionMessage,
-                        artworkSelection: $artworkSelection,
-                        batchBookmarkCommandRequest: $batchBookmarkCommandRequest
-                    )
                         .padding(.horizontal, 18)
-                        .padding(.vertical, 5)
-                        .background(.bar)
+                        .padding(.top, 14)
+                        .padding(.bottom, 20)
+                    } header: {
+                        FeedHeaderView(
+                            store: store,
+                            actionMessage: $actionMessage,
+                            artworkSelection: $artworkSelection,
+                            batchBookmarkCommandRequest: $batchBookmarkCommandRequest
+                        )
+                            .padding(.horizontal, 18)
+                            .padding(.vertical, 5)
+                            .background(.bar)
+                    }
+                }
+            }
+            .scrollEdgeEffectStyle(.soft, for: .top)
+            .onChange(of: store.selectedArtwork?.id) { _, newID in
+                guard let newID else { return }
+                withAnimation(.snappy(duration: 0.15)) {
+                    proxy.scrollTo(newID, anchor: .center)
                 }
             }
         }
-        .scrollEdgeEffectStyle(.soft, for: .top)
         .onChange(of: store.artworks.map(\.id)) { _, visibleArtworkIDs in
             artworkSelection.prune(visibleArtworkIDs: visibleArtworkIDs)
         }

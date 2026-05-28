@@ -13,6 +13,31 @@ struct ArtworkDetailView: View {
             }
         }
         .navigationTitle(L10n.details)
+        .toolbar {
+            ToolbarItem(placement: .navigation) {
+                HStack(spacing: 4) {
+                    Button {
+                        store.navigateBack()
+                    } label: {
+                        Label(L10n.goBack, systemImage: "chevron.left")
+                    }
+                    .labelStyle(.iconOnly)
+                    .help(L10n.goBack)
+                    .accessibilityLabel(L10n.goBack)
+                    .disabled(store.canNavigateBack == false)
+
+                    Button {
+                        store.navigateForward()
+                    } label: {
+                        Label(L10n.goForward, systemImage: "chevron.right")
+                    }
+                    .labelStyle(.iconOnly)
+                    .help(L10n.goForward)
+                    .accessibilityLabel(L10n.goForward)
+                    .disabled(store.canNavigateForward == false)
+                }
+            }
+        }
     }
 }
 
