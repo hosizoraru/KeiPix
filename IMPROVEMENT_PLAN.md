@@ -37,10 +37,7 @@
   - Extract: `PreferencesStore`, `SessionManager`, `FeedCoordinator`
   - Impact: Testability, maintainability
 
-- [ ] **12. Add PixivAPI / ArtworkDownloadStore tests**
-  - Files: `Services/PixivAPI.swift` (1,190 lines), `Stores/ArtworkDownloadStore.swift` (746 lines)
-  - Fix: Protocol abstractions + mock-based unit tests
-  - Impact: Test coverage for critical paths
+- [x] **12. Add PixivAPI protocol abstraction** — `298f224`
 
 - [x] **13. Structured error handling** — `3adba2e`
 
