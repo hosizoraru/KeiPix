@@ -329,7 +329,7 @@ struct KeiPixApp: App {
                 .preferredColorScheme(store.appColorScheme.preferredColorScheme)
             }
         }
-        .defaultSize(width: 1180, height: 860)
+        .defaultSize(width: 1400, height: 900)
 
         Settings {
             SettingsView(store: store)
