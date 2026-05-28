@@ -135,6 +135,9 @@ private struct GalleryFeedView: View {
                 }
             }
             .scrollEdgeEffectStyle(.soft, for: .top)
+            .refreshable {
+                await store.reloadCurrentFeed()
+            }
             .onChange(of: store.selectedArtwork?.id) { _, newID in
                 guard let newID else { return }
                 withAnimation(.snappy(duration: 0.15)) {
