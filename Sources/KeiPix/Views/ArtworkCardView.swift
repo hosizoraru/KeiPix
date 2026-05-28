@@ -56,6 +56,14 @@ struct ArtworkCardView: View {
         // `https://www.pixiv.net/artworks/<id>` URL if the artwork
         // payload didn't carry one.
         .draggable(dragContent)
+        .accessibilityLabel(accessibilityDescription)
+    }
+
+    private var accessibilityDescription: String {
+        var parts = [artwork.title, artwork.user.name]
+        if artwork.isBookmarked { parts.append(L10n.bookmark) }
+        if artwork.isAI { parts.append(L10n.aiGenerated) }
+        return parts.joined(separator: ", ")
     }
 
     /// Selection wins over follow-emphasis (selection is a transient user
