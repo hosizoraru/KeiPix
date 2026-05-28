@@ -12,11 +12,7 @@
 - [x] **3. Add `.refreshable` to `GalleryView`** — `fddd828`
 - [x] **4. Extract status message debounce pattern** — `1980090`
 
-- [ ] **5. Convert error alerts to non-blocking toasts**
-  - File: `Views/ContentView.swift:260`
-  - Problem: `.alert` blocks all interaction for transient network errors
-  - Fix: Use existing `FloatingStatusBanner` for errors, keep `.alert` only for critical actions
-  - Impact: UX — non-blocking error feedback
+- [x] **5. Convert error alerts to non-blocking toasts** — `639d950`
 
 ---
 

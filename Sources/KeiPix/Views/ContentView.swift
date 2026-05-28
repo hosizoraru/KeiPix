@@ -257,23 +257,25 @@ struct ContentView: View {
                 store.presentGalleryLayoutVisualQA(mode: visualQAGalleryLayoutMode)
             }
         }
-        .alert(L10n.errorTitle, isPresented: errorBinding) {
-            if store.selectedRoute.isRankingRoute {
-                Button(L10n.latestRanking) {
-                    resetRankingToLatest()
-                }
+        .overlay(alignment: .bottom) {
+            if let errorMessage = store.errorMessage {
+                ErrorToast(
+                    message: errorMessage,
+                    onRetry: {
+                        store.errorMessage = nil
+                        store.requestRouteRefresh()
+                    },
+                    onCopy: {
+                        copyCurrentError()
+                    },
+                    onDismiss: {
+                        store.errorMessage = nil
+                    }
+                )
+                .animation(.snappy(duration: 0.2), value: store.errorMessage)
             }
-            Button(L10n.retry) {
-                store.errorMessage = nil
-                store.requestRouteRefresh()
-            }
-            Button(L10n.copyError) {
-                copyCurrentError()
-            }
-            Button(L10n.ok) { store.errorMessage = nil }
-        } message: {
-            Text(store.errorMessage ?? "")
         }
+        .statusMessageAutoDismiss($store.errorMessage, duration: .seconds(8))
         .alert(
             L10n.updateAvailableTitle,
             isPresented: Binding(
@@ -397,16 +399,6 @@ struct ContentView: View {
         }
         .labelStyle(.iconOnly)
         .help(L10n.appControls)
-    }
-
-    private var errorBinding: Binding<Bool> {
-        Binding {
-            store.errorMessage != nil
-        } set: { value in
-            if value == false {
-                store.errorMessage = nil
-            }
-        }
     }
 
     private var dangerActionBinding: Binding<Bool> {
