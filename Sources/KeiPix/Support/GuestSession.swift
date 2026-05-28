@@ -40,14 +40,17 @@ extension KeiPixStore {
     }
 
     #if !DEBUG
-    /// Stub for release builds — presentLocalSampleFeed is DEBUG-only.
-    func presentLocalSampleFeed(for route: PixivRoute) {
-        // No-op in release builds
-    }
-
-    /// Stub for release builds — presentCachedFeedVisualQA is DEBUG-only.
-    func presentCachedFeedVisualQA() {
-        // No-op in release builds
-    }
+    // Stubs for QA-only methods that are called from KeiPixStore
+    // but only defined in VisualQASampleData (DEBUG-only).
+    func presentLocalSampleFeed(for route: PixivRoute) {}
+    func presentCachedFeedVisualQA() {}
+    func activateVisualQATestMode(preserveStoredAccounts: Bool = true, persist: Bool = true) {}
+    func activateVisualQASampleSession() {}
+    func presentGalleryLayoutVisualQA(mode: GalleryLayoutMode) {}
+    func presentRankingVisualQA() {}
+    func presentMutedContentVisualQA() {}
+    func presentUgoiraPlayerVisualQA() {}
+    func presentDownloadedReaderVisualQA() {}
+    func presentArtworkDetailSocialVisualQA() {}
     #endif
 }
