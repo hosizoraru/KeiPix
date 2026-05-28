@@ -598,6 +598,7 @@ final class ArtworkDownloadStore {
         // download is searchable from `Cmd+Space` immediately. The
         // sink itself decides whether indexing is enabled.
         spotlightSink?.didComplete(items[index])
+        HapticFeedback.downloadComplete()
         persistItems()
     }
 

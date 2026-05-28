@@ -20,6 +20,7 @@ extension KeiPixStore {
                 tags: automaticBookmarkTags(for: artwork)
             )
             updateArtwork(artwork.id) { $0.isBookmarked = true }
+            HapticFeedback.bookmark()
             if autoDownloadBookmarkedArtworks {
                 enqueueDownload(artwork)
             }

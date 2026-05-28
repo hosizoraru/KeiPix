@@ -50,8 +50,8 @@
 - [ ] WidgetKit — "Artwork of the Day", download queue status
 - [ ] Quick Look — Space bar artwork preview
 - [ ] Share Extension — receive Pixiv links from other apps
-- [ ] Haptic feedback — `NSHapticFeedbackManager` for bookmarks/downloads
-- [ ] Skeleton loading states — replace `ProgressView` spinners
+- [x] Haptic feedback — `ba4e8a9`
+- [x] Skeleton loading states — `ba4e8a9`
 - [ ] Touch Bar support
 - [ ] Handoff between devices
 - [ ] Finder extension for downloaded files
