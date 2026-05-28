@@ -551,11 +551,10 @@ private struct CommentRow: View {
                         }
                         .buttonStyle(.borderless)
 
-                        // Per-comment translate via the Apple Translation
-                        // sheet. Gated by `CaptionTranslationAvailability`
-                        // so emoji-only / stamp-only comments don't get
-                        // a noisy "Translate" affordance.
-                        ArtworkTranslateButton(text: text, style: .compact)
+                        // Per-comment translate. Gated by
+                        // `CaptionTranslationAvailability` so emoji-only
+                        // comments don't get a noisy affordance.
+                        ArtworkTranslateButton(text: text)
                     }
 
                     Menu {

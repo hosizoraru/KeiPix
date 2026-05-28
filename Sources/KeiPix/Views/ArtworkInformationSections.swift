@@ -15,21 +15,12 @@ struct ArtworkInformationSections: View {
                     systemImage: "text.alignleft",
                     isExpanded: $captionExpanded
                 ) {
-                    VStack(alignment: .leading, spacing: 10) {
+                    InlineTranslateSection(text: artwork.caption.htmlStripped) {
                         Text(artwork.caption.htmlStripped)
                             .font(.callout)
                             .foregroundStyle(.secondary)
                             .textSelection(.enabled)
                             .fixedSize(horizontal: false, vertical: true)
-
-                        // Caption translation hand-off. Uses Apple's system
-                        // translation sheet which ships its own language
-                        // picker / "show original" / copy actions, so we
-                        // stay aligned with Safari / Mail.
-                        ArtworkTranslateButton(
-                            text: artwork.caption.htmlStripped,
-                            style: .prominent
-                        )
                     }
                 }
             }

@@ -1,97 +1,158 @@
 import SwiftUI
 #if canImport(Translation)
-import Translation
+@preconcurrency import Translation
 #endif
 
-/// A compact "Translate" button that opens Apple's system translation
-/// presentation for a chunk of user-visible text. Used on artwork
-/// captions and comment bodies where Pixiv content is frequently
-/// Japanese / Chinese and the user wants a quick read in their own
-/// language.
-///
-/// We deliberately lean on the Apple-supplied
-/// `.translationPresentation(isPresented:text:)` modifier instead of
-/// rolling our own UI — it ships the language picker, "show original",
-/// and copy actions for free, and matches the affordance Safari /
-/// Mail / Messages already use on macOS so the gesture feels native.
-///
-/// Visibility is gated by `CaptionTranslationAvailability` so we don't
-/// surface the button for empty captions or pure-emoji blurbs that
-/// Translate can't usefully process.
-struct ArtworkTranslateButton: View {
-    let text: String
-    var style: Style = .compact
+// MARK: - Inline translate button
 
-    @State private var isPresented = false
-
-    enum Style {
-        /// Borderless caption-row glyph paired with `Translate`. Used
-        /// inline next to caption / comment text.
-        case compact
-        /// Bordered button with full label. Used as a primary action
-        /// inside the caption inspector.
-        case prominent
-    }
+/// A compact icon-only toggle that activates inline bilingual
+/// translation via Apple's `TranslationSession`. When active, the
+/// accompanying `InlineTranslateSection` shows the translated text
+/// above the original.
+///
+/// Replaces the old sheet-based `.translationPresentation` with an
+/// immersive overlay that keeps the user in their reading flow.
+struct InlineTranslateButton: View {
+    @Binding var isActive: Bool
 
     var body: some View {
-        if let translatable = CaptionTranslationAvailability.translatableText(from: text) {
-            button(translatable)
-        }
-    }
-
-    @ViewBuilder
-    private func button(_ translatable: String) -> some View {
-        switch style {
-        case .compact:
-            compactButton(translatable)
-        case .prominent:
-            prominentButton(translatable)
-        }
-    }
-
-    private func compactButton(_ translatable: String) -> some View {
         Button {
-            isPresented = true
+            isActive.toggle()
         } label: {
             Label(L10n.translate, systemImage: "character.bubble")
-                .labelStyle(.titleAndIcon)
-                .font(.caption.weight(.medium))
         }
+        .labelStyle(.iconOnly)
+        .help(L10n.translate)
+        .accessibilityLabel(L10n.translate)
         .buttonStyle(.borderless)
-        .help(L10n.translateCaptionHelp)
-        .modifier(TranslationPresentationModifier(text: translatable, isPresented: $isPresented))
-    }
-
-    private func prominentButton(_ translatable: String) -> some View {
-        Button {
-            isPresented = true
-        } label: {
-            Label(L10n.translate, systemImage: "character.bubble")
-        }
-        .buttonStyle(.bordered)
-        .controlSize(.small)
-        .help(L10n.translateCaptionHelp)
-        .modifier(TranslationPresentationModifier(text: translatable, isPresented: $isPresented))
+        .tint(isActive ? .accentColor : nil)
     }
 }
 
-/// Wraps the Apple `translationPresentation` modifier behind an
-/// availability check so KeiPix keeps building if the SDK ever drops
-/// the Translation framework (e.g. on a non-macOS slice). On every
-/// supported macOS 26 build the modifier resolves at compile time.
+// MARK: - Inline translate section
+
+/// Wraps a block of text with an inline bilingual translation overlay.
+/// When translation is active, shows the translated text above the
+/// original in a secondary style. Uses Apple's `TranslationSession`
+/// for on-demand translation without sheet popups.
+///
+/// Usage:
+/// ```swift
+/// InlineTranslateSection(text: caption) {
+///     Text(caption)
+///         .font(.callout)
+/// }
+/// ```
+struct InlineTranslateSection<Content: View>: View {
+    let text: String
+    @ViewBuilder var content: Content
+
+    @State private var isTranslateActive = false
+    @State private var translatedText: String?
+    @State private var isTranslating = false
+    @State private var translationConfig = TranslationSession.Configuration(source: nil, target: nil)
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            // Header row: translate toggle
+            HStack(spacing: 6) {
+                Spacer()
+                InlineTranslateButton(isActive: $isTranslateActive)
+            }
+
+            // Translated text (when active)
+            if isTranslateActive {
+                if isTranslating {
+                    HStack(spacing: 6) {
+                        ProgressView()
+                            .controlSize(.mini)
+                        Text(L10n.translating)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                } else if let translatedText {
+                    Text(translatedText)
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                        .textSelection(.enabled)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(10)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(.quaternary.opacity(0.5), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                }
+            }
+
+            // Original content
+            content
+        }
+        #if canImport(Translation)
+        .translationTask(translationConfig) { session in
+            guard isTranslateActive else { return }
+            let cleaned = CaptionTranslationAvailability.translatableText(from: text)
+            guard let cleaned else { return }
+
+            isTranslating = true
+            translatedText = nil
+
+            if let response = try? await session.translate(cleaned), isTranslateActive {
+                translatedText = response.targetText
+            } else if isTranslateActive {
+                translatedText = L10n.translationFailed
+            }
+            isTranslating = false
+        }
+        #endif
+        .onChange(of: isTranslateActive) { _, active in
+            if active {
+                // Bump config to trigger .translationTask
+                translationConfig = TranslationSession.Configuration(source: nil, target: nil)
+            } else {
+                translatedText = nil
+                isTranslating = false
+            }
+        }
+    }
+}
+
+// MARK: - Legacy sheet-based button (kept for comments row usage)
+
+/// The old sheet-based translate button, now icon-only. Still used
+/// in comment rows where wrapping each comment in a full
+/// `InlineTranslateSection` would be too heavy.
+struct ArtworkTranslateButton: View {
+    let text: String
+
+    @State private var isPresented = false
+
+    var body: some View {
+        if let translatable = CaptionTranslationAvailability.translatableText(from: text) {
+            Button {
+                isPresented = true
+            } label: {
+                Label(L10n.translate, systemImage: "character.bubble")
+            }
+            .labelStyle(.iconOnly)
+            .buttonStyle(.borderless)
+            .help(L10n.translate)
+            .accessibilityLabel(L10n.translate)
+            #if canImport(Translation)
+            .modifier(TranslationPresentationModifier(text: translatable, isPresented: $isPresented))
+            #endif
+        }
+    }
+}
+
+#if canImport(Translation)
 private struct TranslationPresentationModifier: ViewModifier {
     let text: String
     @Binding var isPresented: Bool
 
     func body(content: Content) -> some View {
-        #if canImport(Translation)
         if #available(macOS 14.4, *) {
             content.translationPresentation(isPresented: $isPresented, text: text)
         } else {
             content
         }
-        #else
-        content
-        #endif
     }
 }
+#endif

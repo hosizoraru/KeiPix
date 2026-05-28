@@ -569,7 +569,8 @@ enum L10n {
     static var flipVertical: String { text("Flip Vertical") }
     static var resetTransform: String { text("Reset Transform") }
     static var translate: String { text("Translate") }
-    static var translateCaptionHelp: String { text("Open the system translation sheet for this text. Lets you pick a target language, copy the result, or flip back to the original.") }
+    static var translating: String { text("Translating…") }
+    static var translationFailed: String { text("Translation unavailable") }
     static var downloadSelectedPages: String { text("Save Selected Pages…") }
     static var selectPagesToSave: String { text("Select Pages to Save") }
     static var selectAllPages: String { text("Select All") }
