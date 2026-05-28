@@ -571,6 +571,9 @@ enum L10n {
     static var translate: String { text("Translate") }
     static var translating: String { text("Translating…") }
     static var translationFailed: String { text("Translation unavailable") }
+    static var translationTargetLanguage: String { text("Translation Language") }
+    static var translationTargetLanguageHint: String { text("Choose the target language for inline translation. \"System\" follows your device language setting.") }
+    static var translationTargetSystem: String { text("System") }
     static var downloadSelectedPages: String { text("Save Selected Pages…") }
     static var selectPagesToSave: String { text("Select Pages to Save") }
     static var selectAllPages: String { text("Select All") }

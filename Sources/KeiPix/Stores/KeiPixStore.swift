@@ -74,6 +74,8 @@ final class KeiPixStore {
     var accountSessionMode = KeiPixStore.loadAccountSessionMode()
     var appLanguage = UserDefaults.standard.string(forKey: "appLanguage")
         .flatMap(AppLanguage.init(rawValue:)) ?? .automatic
+    var translationTargetLanguage = UserDefaults.standard.string(forKey: "translationTargetLanguage")
+        .flatMap(TranslationTargetLanguage.init(rawValue:)) ?? .system
     var appColorScheme = UserDefaults.standard.string(forKey: "appColorScheme")
         .flatMap(AppColorScheme.init(rawValue:)) ?? .system
     /// User-chosen destination to land on at launch. Mirrors the "open at

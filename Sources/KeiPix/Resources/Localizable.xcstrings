@@ -31181,6 +31181,64 @@
         }
       }
     },
+    "Translation Language": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Translation Language"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "翻訳言語"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "翻译语言"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "翻譯語言"
+          }
+        }
+      }
+    },
+    "Translation Language Hint": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose the target language for inline translation. \"System\" follows your device language setting."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "インライン翻訳の対象言語を選択してください。「システム」はデバイスの言語設定に従います。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "选择内联翻译的目标语言。\"系统\"跟随设备语言设置。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "選擇內聯翻譯的目標語言。\"系統\"跟隨裝置語言設定。"
+          }
+        }
+      }
+    },
     "Trending Tags": {
       "extractionState": "manual",
       "localizations": {

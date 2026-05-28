@@ -14,6 +14,14 @@ extension KeiPixStore {
         }
     }
 
+    var settings_translationTargetLanguageBinding: Binding<TranslationTargetLanguage> {
+        Binding {
+            self.translationTargetLanguage
+        } set: { value in
+            self.setTranslationTargetLanguage(value)
+        }
+    }
+
     var settings_appColorSchemeBinding: Binding<AppColorScheme> {
         Binding {
             self.appColorScheme

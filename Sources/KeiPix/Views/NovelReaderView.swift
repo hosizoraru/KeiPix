@@ -190,7 +190,7 @@ struct NovelReaderView: View {
             Button {
                 translationEngine.isInlineTranslationActive.toggle()
                 if translationEngine.isInlineTranslationActive {
-                    translationConfig = TranslationLanguageResolver.configuration(for: store.appLanguage)
+                    translationConfig = TranslationLanguageResolver.configuration(for: store.translationTargetLanguage)
                 } else {
                     translationEngine.clearTranslations()
                     translationConfig = nil
@@ -299,15 +299,26 @@ struct NovelReaderView: View {
         case .text(let value):
             if translationEngine.isInlineTranslationActive,
                let translated = translationEngine.translatedText(for: tokenIndex) {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(translated)
+                // Immersive bilingual: original on top, translated
+                // below with a left accent bar — mirrors browser
+                // extensions like Immersive Translate.
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(value)
                         .font(bodyFont)
                         .lineSpacing(CGFloat(max(lineSpacing - 2, 0)))
                         .fixedSize(horizontal: false, vertical: true)
-                    Text(value)
-                        .font(rubyAnnotationFont)
+
+                    Text(translated)
+                        .font(bodyFont)
+                        .lineSpacing(CGFloat(max(lineSpacing - 2, 0)))
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
+                        .padding(.leading, 10)
+                        .overlay(alignment: .leading) {
+                            Rectangle()
+                                .fill(.tertiary)
+                                .frame(width: 3)
+                        }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
             } else {

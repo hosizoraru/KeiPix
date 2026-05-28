@@ -302,6 +302,11 @@ extension KeiPixStore {
         UserDefaults.standard.set(language.rawValue, forKey: "appLanguage")
     }
 
+    func setTranslationTargetLanguage(_ language: TranslationTargetLanguage) {
+        translationTargetLanguage = language
+        UserDefaults.standard.set(language.rawValue, forKey: "translationTargetLanguage")
+    }
+
     func setAppColorScheme(_ scheme: AppColorScheme) {
         appColorScheme = scheme
         UserDefaults.standard.set(scheme.rawValue, forKey: "appColorScheme")

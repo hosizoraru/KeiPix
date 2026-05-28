@@ -33,6 +33,21 @@ struct ReadingSettingsPage: View {
             }
 
             Section {
+                Picker(L10n.translationTargetLanguage, selection: store.settings_translationTargetLanguageBinding) {
+                    ForEach(TranslationTargetLanguage.allCases) { language in
+                        Text(language.title).tag(language)
+                    }
+                }
+                .pickerStyle(.menu)
+            } header: {
+                Text(L10n.translate)
+            } footer: {
+                Text(L10n.translationTargetLanguageHint)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            Section {
                 Toggle(L10n.enableTrackpadGestures, isOn: store.settings_trackpadGesturesBinding)
 
                 Picker(L10n.twoFingerSwipeBehavior, selection: store.settings_horizontalSwipeBehaviorBinding) {

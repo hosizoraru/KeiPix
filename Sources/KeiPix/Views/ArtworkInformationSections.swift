@@ -15,7 +15,7 @@ struct ArtworkInformationSections: View {
                     systemImage: "text.alignleft",
                     isExpanded: $captionExpanded
                 ) {
-                    InlineTranslateSection(text: artwork.caption.htmlStripped, appLanguage: store.appLanguage) {
+                    InlineTranslateSection(text: artwork.caption.htmlStripped, translationTargetLanguage: store.translationTargetLanguage) {
                         Text(artwork.caption.htmlStripped)
                             .font(.callout)
                             .foregroundStyle(.secondary)
