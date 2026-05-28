@@ -1,3 +1,4 @@
+#if os(macOS)
 import SwiftUI
 
 struct ContentView: View {
@@ -636,3 +637,4 @@ private extension Array where Element == String {
         contains { $0.localizedCaseInsensitiveCompare(value) == .orderedSame }
     }
 }
+#endif

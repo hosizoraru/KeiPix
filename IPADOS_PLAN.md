@@ -7,11 +7,7 @@
 
 ## Phase 1 — Core UI Adaptation
 
-- [ ] **1.1 ContentView platform split**
-  - File: `Views/ContentView.swift`
-  - macOS: Keep `NavigationSplitView` (3-column)
-  - iPadOS: Use `TabView` with sidebar-style tabs (Feed / Downloads / Settings)
-  - Impact: Primary navigation structure
+- [x] **1.1 ContentView platform split** — `5435bd4`
 
 - [ ] **1.2 Adaptive column widths**
   - File: `Views/ContentView.swift`
@@ -138,7 +134,7 @@
 These items were deferred from the main improvement plan and should be tackled after iPadOS adaptation:
 
 | # | Item | Priority | Notes |
-|---|------|----------|-------|
+| --- | --- | --- | --- |
 | 1 | **SwiftData persistence** | High | Replace UserDefaults JSON blobs. Benefits both platforms. |
 | 2 | **WidgetKit** | Medium | "Artwork of the Day" widget. iOS-only initially. |
 | 3 | **Quick Look** | Medium | Space bar preview on macOS. iPadOS uses different preview. |
@@ -163,6 +159,7 @@ These items were deferred from the main improvement plan and should be tackled a
 ## Key Architecture Decisions
 
 ### Navigation Strategy
+
 - **macOS**: Keep `NavigationSplitView` (3-column) — already works well
 - **iPadOS**: Use `TabView` with 3 tabs (Feed / Library / Settings)
   - Feed tab: Gallery + detail (NavigationStack push)
@@ -170,14 +167,17 @@ These items were deferred from the main improvement plan and should be tackled a
   - Settings tab: All settings
 
 ### Reader Presentation
+
 - **macOS**: Separate `WindowGroup` (already implemented)
 - **iPadOS**: `.fullScreenCover` with custom dismiss gesture
 
 ### Gesture Handling
+
 - **macOS**: `TrackpadEventBridge` (NSViewRepresentable)
 - **iPadOS**: SwiftUI gestures (`.onTapGesture`, `.gesture`, `.magnification`)
 
 ### File Access
+
 - **macOS**: `NSOpenPanel` / `NSSavePanel`
 - **iPadOS**: `PlatformFilePicker` (already abstracted)
 
@@ -186,7 +186,7 @@ These items were deferred from the main improvement plan and should be tackled a
 ## Files to Modify
 
 | File | Change |
-|------|--------|
+| --- | --- |
 | `Views/ContentView.swift` | Platform-specific navigation (TabView vs NavigationSplitView) |
 | `Views/ArtworkReaderView.swift` | Touch gesture support |
 | `Views/NovelReaderView.swift` | Touch gesture support |
