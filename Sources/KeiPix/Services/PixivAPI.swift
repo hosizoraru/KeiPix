@@ -752,6 +752,135 @@ actor PixivAPI {
         return try await requestJSON(url, method: "GET", form: nil)
     }
 
+    /// `/webview/v2/novel` — fetches novel content via the webview HTML
+    /// endpoint. Both pixez and Pixeval use this as their primary novel
+    /// text source because `/v1/novel/text` returns 404 for some novels.
+    ///
+    /// Returns the parsed novel text and any uploaded-image URLs found
+    /// in the same HTML blob, avoiding a second network round-trip.
+    func webviewNovelContent(novelID: Int) async throws -> (text: PixivNovelText, uploadedImages: [String: URL]) {
+        var components = URLComponents(url: URL(string: "/webview/v2/novel", relativeTo: Endpoint.apiBase)!, resolvingAgainstBaseURL: true)!
+        components.queryItems = [URLQueryItem(name: "id", value: "\(novelID)")]
+        guard let url = components.url else { throw PixivAPIError.invalidResponse }
+
+        var request = URLRequest(url: url)
+        applyHeaders(to: &request, includeAuth: true)
+        // The webview endpoint returns HTML; accept it as a web page.
+        request.setValue("text/html,application/xhtml+xml", forHTTPHeaderField: "Accept")
+
+        let (data, response) = try await urlSession.data(for: request)
+        guard let httpResponse = response as? HTTPURLResponse,
+              (200..<300).contains(httpResponse.statusCode) else {
+            let code = (response as? HTTPURLResponse)?.statusCode ?? -1
+            throw PixivAPIError.status(code, "webview novel fetch failed")
+        }
+
+        guard let html = String(data: data, encoding: .utf8) else {
+            throw PixivAPIError.invalidResponse
+        }
+
+        let parsed = try Self.parseWebViewNovelJSON(from: html)
+        let uploadedImages = Self.parseWebViewUploadedImages(from: parsed.rawJSON)
+        let novelText = try Self.convertWebViewToNovelText(parsed.model, novelID: novelID)
+        return (text: novelText, uploadedImages: uploadedImages)
+    }
+
+    // MARK: - Webview HTML parsing
+
+    /// The webview JSON model. Only the fields we need are decoded.
+    private struct WebViewNovelModel: Decodable {
+        let text: String
+        let seriesNavigation: SeriesNav?
+        let marker: WebViewMarker?
+
+        struct SeriesNav: Decodable {
+            let prevNovel: WebViewNavEntry?
+            let nextNovel: WebViewNavEntry?
+
+            enum CodingKeys: String, CodingKey {
+                case prevNovel = "prevNovel"
+                case nextNovel = "nextNovel"
+            }
+        }
+
+        struct WebViewNavEntry: Decodable {
+            let id: Int
+            let title: String
+        }
+
+        struct WebViewMarker: Decodable {
+            let page: Int?
+        }
+    }
+
+    private struct ParsedWebView {
+        let model: WebViewNovelModel
+        let rawJSON: [String: Any]
+    }
+
+    /// Extracts the novel JSON from the webview HTML using the same
+    /// regex approach pixez uses: `novel: ({.*?}),\n\s*isOwnWork`.
+    private static func parseWebViewNovelJSON(from html: String) throws -> ParsedWebView {
+        // Find the <script> tag content containing the novel data.
+        // The regex targets: novel: { ... },\n  isOwnWork
+        let pattern = #"novel:\s*(\{.*?\}),\s*\n\s*isOwnWork"#
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: [.dotMatchesLineSeparators]),
+              let match = regex.firstMatch(in: html, range: NSRange(html.startIndex..<html.endIndex, in: html)),
+              match.numberOfRanges >= 2,
+              let captureRange = Range(match.range(at: 1), in: html) else {
+            throw PixivAPIError.invalidResponse
+        }
+
+        let jsonSubstring = html[captureRange]
+        guard let jsonData = String(jsonSubstring).data(using: .utf8) else {
+            throw PixivAPIError.invalidResponse
+        }
+
+        let model = try JSONDecoder().decode(WebViewNovelModel.self, from: jsonData)
+        let rawJSON = (try? JSONSerialization.jsonObject(with: jsonData) as? [String: Any]) ?? [:]
+        return ParsedWebView(model: model, rawJSON: rawJSON)
+    }
+
+    /// Converts the webview model to our `PixivNovelText` format so
+    /// the rest of the novel pipeline (tokenizer, reader, disk cache)
+    /// works unchanged.
+    private static func convertWebViewToNovelText(_ model: WebViewNovelModel, novelID: Int) throws -> PixivNovelText {
+        let prev = model.seriesNavigation?.prevNovel.map { PixivNovelStub(id: $0.id, title: $0.title) }
+        let next = model.seriesNavigation?.nextNovel.map { PixivNovelStub(id: $0.id, title: $0.title) }
+        let marker = model.marker.map { PixivNovelMarker(page: $0.page) }
+
+        // PixivNovelText is Decodable; build via JSON round-trip so we
+        // don't need to add a memberwise init that leaks into the public API.
+        let dict: [String: Any?] = [
+            "novel_text": model.text,
+            "series_prev": prev.map { ["id": $0.id, "title": $0.title] },
+            "series_next": next.map { ["id": $0.id, "title": $0.title] },
+            "novel_marker": marker.map { ["page": $0.page as Any] }
+        ]
+        let data = try JSONSerialization.data(withJSONObject: dict.compactMapValues { $0 })
+        return try JSONDecoder().decode(PixivNovelText.self, from: data)
+    }
+
+    /// Extracts `textEmbeddedImages` from the raw webview JSON — the
+    /// same data NovelWebImageScraper scrapes from the `<meta>` tag,
+    /// but already available in the parsed script JSON.
+    private static func parseWebViewUploadedImages(from json: [String: Any]) -> [String: URL] {
+        guard let images = json["images"] as? [String: Any] else { return [:] }
+        var result: [String: URL] = [:]
+        for (key, value) in images {
+            guard let entry = value as? [String: Any],
+                  let urls = entry["urls"] as? [String: Any] else { continue }
+            let preferred = urls["original"] as? String
+                ?? urls["1200x1200"] as? String
+                ?? urls["480mw"] as? String
+                ?? urls.first?.value as? String
+            if let urlString = preferred, let url = URL(string: urlString) {
+                result[key] = url
+            }
+        }
+        return result
+    }
+
     /// `/v2/novel/series` — series header plus a paginated chapter list.
     func novelSeries(seriesID: Int) async throws -> PixivNovelSeriesResponse {
         var components = URLComponents(url: URL(string: "/v2/novel/series", relativeTo: Endpoint.apiBase)!, resolvingAgainstBaseURL: true)!
@@ -963,6 +1092,39 @@ actor PixivAPI {
             throw PixivAPIError.invalidResponse
         }
         return data
+    }
+
+    /// Fetches raw HTML from a `www.pixiv.net` page using the app's
+    /// configured URLSession (which carries the user's proxy settings).
+    /// Used by `NovelWebImageScraper` instead of `URLSession.shared`
+    /// so that manual / system proxies are respected.
+    func fetchPixivWebPage(url: URL) async throws -> String {
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        // Use a browser-like UA for the web page, matching pixez's approach.
+        request.setValue(
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+                + "AppleWebKit/605.1.15 (KHTML, like Gecko) "
+                + "Version/26.0 Safari/605.1.15",
+            forHTTPHeaderField: "User-Agent"
+        )
+        request.setValue(
+            Locale.current.identifier.replacingOccurrences(of: "_", with: "-"),
+            forHTTPHeaderField: "Accept-Language"
+        )
+        if let token = session?.accessToken {
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        }
+
+        let (data, response) = try await urlSession.data(for: request)
+        guard let httpResponse = response as? HTTPURLResponse,
+              (200..<300).contains(httpResponse.statusCode) else {
+            throw PixivAPIError.invalidResponse
+        }
+        guard let html = String(data: data, encoding: .utf8) else {
+            throw PixivAPIError.invalidResponse
+        }
+        return html
     }
 
     private func applyHeaders(to request: inout URLRequest, includeAuth: Bool) {

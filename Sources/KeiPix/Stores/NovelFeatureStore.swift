@@ -208,7 +208,23 @@ final class NovelFeatureStore {
     private func loadFeed(for route: PixivRoute) async throws -> PixivNovelListResponse {
         switch route {
         case .novelRecommended:
-            return try await api.recommendedNovels()
+            // The recommended endpoint often returns very few items
+            // (2–3). Fetch daily ranking in parallel and merge to give
+            // the user a fuller first page, matching what pixez and
+            // Pixeval show.
+            async let recommended = api.recommendedNovels()
+            async let ranking = api.novelRanking(mode: "day")
+            var recResponse = try await recommended
+            let rankResponse = try await ranking
+            let existingIDs = Set(recResponse.novels.map(\.id))
+            let extra = rankResponse.novels.filter { existingIDs.contains($0.id) == false }
+            if extra.isEmpty == false {
+                recResponse = PixivNovelListResponse(
+                    novels: recResponse.novels + extra,
+                    nextURL: recResponse.nextURL ?? rankResponse.nextURL
+                )
+            }
+            return recResponse
         case .novelFollowing:
             return try await api.followingNovels(restrict: followingRestrictProvider())
         case .novelSearch:
@@ -306,8 +322,27 @@ final class NovelFeatureStore {
         } catch is CancellationError {
             return
         } catch {
+            // `/v1/novel/text` returns 404 for some novels. Both pixez
+            // and Pixeval fall back to the webview HTML endpoint, which
+            // embeds the novel JSON in a <script> tag.
             guard loadedNovelTextID == novelID else { return }
-            novelTextError = String(describing: error)
+            do {
+                let result = try await api.webviewNovelContent(novelID: novelID)
+                guard loadedNovelTextID == novelID else { return }
+                loadedNovelText = result.text
+                uploadedImageURLs = result.uploadedImages
+                let tokens = await Task.detached {
+                    NovelTextTokenizer.tokenize(result.text.novelText)
+                }.value
+                guard loadedNovelTextID == novelID else { return }
+                loadedNovelTokens = tokens
+                await NovelTextDiskCache.shared.save(result.text, novelID: novelID)
+            } catch is CancellationError {
+                return
+            } catch {
+                guard loadedNovelTextID == novelID else { return }
+                novelTextError = String(describing: error)
+            }
         }
     }
 
@@ -336,10 +371,9 @@ final class NovelFeatureStore {
     /// session.
     func loadUploadedImages(for novelID: Int) async {
         guard uploadedImageURLs.isEmpty else { return }
-        let token = await api.currentSession()?.accessToken
         let mapping = await NovelWebImageScraper.fetchUploadedImages(
             novelID: novelID,
-            accessToken: token
+            api: api
         )
         uploadedImageURLs = mapping
     }

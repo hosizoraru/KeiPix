@@ -11,34 +11,22 @@ import Foundation
 enum NovelWebImageScraper {
     /// Fetches the uploaded-image mapping for a novel.
     ///
+    /// Uses the PixivAPI actor's configured URLSession so that the
+    /// user's proxy settings (system or manual) are respected.
+    /// Previously this used `URLSession.shared`, which bypassed
+    /// any custom proxy configuration.
+    ///
     /// - Parameters:
     ///   - novelID: The Pixiv novel ID.
-    ///   - accessToken: Optional OAuth token; the page is
-    ///     accessible without auth but R-18 novels require it.
+    ///   - api: The PixivAPI actor instance (carries URLSession + auth).
     /// - Returns: A dictionary mapping uploaded-image keys to
     ///   their CDN URLs (preferring the largest available size).
     static func fetchUploadedImages(
         novelID: Int,
-        accessToken: String?
+        api: PixivAPI
     ) async -> [String: URL] {
         let pageURL = URL(string: "https://www.pixiv.net/novel/show.php?id=\(novelID)")!
-        var request = URLRequest(url: pageURL)
-        request.setValue(
-            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
-                + "AppleWebKit/605.1.15 (KHTML, like Gecko) "
-                + "Version/26.0 Safari/605.1.15",
-            forHTTPHeaderField: "User-Agent"
-        )
-        request.setValue(
-            Locale.current.identifier.replacingOccurrences(of: "_", with: "-"),
-            forHTTPHeaderField: "Accept-Language"
-        )
-        if let accessToken {
-            request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
-        }
-
-        guard let data = try? await URLSession.shared.data(for: request).0,
-              let html = String(data: data, encoding: .utf8) else {
+        guard let html = try? await api.fetchPixivWebPage(url: pageURL) else {
             KeiPixLog.network.error("Failed to fetch uploaded images for novel \(novelID)")
             return [:]
         }
