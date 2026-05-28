@@ -45,10 +45,7 @@
 
 - [x] **4.1 Replace NSOpenPanel/NSSavePanel** — `ce3152b`
 
-- [ ] **4.2 Photos library access**
-  - iPadOS: `PHPhotoPicker` for saving to Photos
-  - Verify: Download-to-Photos flow works
-  - Impact: Save artwork to device
+- [x] **4.2 Photos library access** — `472b02e`
 
 - [ ] **4.3 Files app integration**
   - iPadOS: Downloads go to app's Documents directory

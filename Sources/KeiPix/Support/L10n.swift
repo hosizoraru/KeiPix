@@ -326,6 +326,9 @@ enum L10n {
     static var revealInFinder: String { text("Reveal in Finder") }
     static var openDownloadedArtwork: String { text("Open Downloaded Artwork") }
     static var revealDownloadedArtwork: String { text("Reveal Downloaded Artwork") }
+    static var saveToPhotos: String { text("Save to Photos") }
+    static var savedToPhotos: String { text("Saved to Photos") }
+    static var saveToPhotosFailed: String { text("Save to Photos failed") }
     static var deleteDownload: String { text("Remove Download Record") }
     static var noDownloadsTitle: String { text("No downloads yet") }
     static var noDownloadsSubtitle: String { text("Download artworks from the detail view or artwork context menus.") }

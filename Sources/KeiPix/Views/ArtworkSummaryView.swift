@@ -634,6 +634,19 @@ private struct AdaptiveActionRow: View {
                 } label: {
                     Label(L10n.revealDownloadedArtwork, systemImage: "folder")
                 }
+
+                #if os(iOS)
+                Button {
+                    Task {
+                        if let localURL = store.downloads.downloadedImageURL(artworkID: artwork.id, pageIndex: pageIndex) {
+                            let saved = await PhotosSaver.saveImage(from: localURL)
+                            showActionMessage(saved ? L10n.savedToPhotos : L10n.saveToPhotosFailed)
+                        }
+                    }
+                } label: {
+                    Label(L10n.saveToPhotos, systemImage: "photo.on.rectangle")
+                }
+                #endif
             }
 
             Divider()
