@@ -155,6 +155,32 @@ struct ContentView: View {
                 .task(id: store.searchText) {
                     await store.refreshSearchSuggestions()
                 }
+                .fullScreenCover(isPresented: readerBinding) {
+                    if let artwork = store.readerWindowArtwork {
+                        NavigationStack {
+                            ArtworkReaderWindowView(store: store, artworkID: artwork.id)
+                                .toolbar {
+                                    ToolbarItem(placement: .cancellationAction) {
+                                        Button {
+                                            store.readerWindowArtwork = nil
+                                        } label: {
+                                            Label(L10n.close, systemImage: "xmark")
+                                        }
+                                    }
+                                }
+                        }
+                    }
+                }
+        }
+    }
+
+    private var readerBinding: Binding<Bool> {
+        Binding {
+            store.readerWindowArtwork != nil
+        } set: { newValue in
+            if newValue == false {
+                store.readerWindowArtwork = nil
+            }
         }
     }
 

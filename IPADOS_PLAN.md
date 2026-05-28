@@ -15,16 +15,9 @@
   - iPadOS: Full-width gallery, slide-over detail panel
   - Impact: Layout on different iPad sizes
 
-- [ ] **1.3 Remove macOS-only frame constraints**
-  - Files: Multiple views with `.frame(minWidth: minHeight:)`
-  - Fix: Wrap in `#if os(macOS)` or use adaptive values
-  - Impact: Proper sizing on iPad
+- [x] **1.3 Remove macOS-only frame constraints** — `e966c33`
 
-- [ ] **1.4 Reader as full-screen sheet**
-  - File: `Views/ArtworkReaderView.swift`, `Views/NovelReaderView.swift`
-  - macOS: Separate window
-  - iPadOS: Full-screen `.sheet` or `.fullScreenCover`
-  - Impact: Reading experience
+- [x] **1.4 Reader as full-screen sheet** — `80a935f`
 
 ---
 
