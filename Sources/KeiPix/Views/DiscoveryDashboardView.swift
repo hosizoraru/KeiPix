@@ -37,10 +37,12 @@ struct DiscoveryDashboardView: View {
         .scrollEdgeEffectStyle(.soft, for: .top)
     }
 
+    @ScaledMetric(relativeTo: .headline) private var headerIconSize: CGFloat = 28
+
     private var header: some View {
         HStack(alignment: .center, spacing: 14) {
             Image(systemName: "square.grid.2x2")
-                .font(.system(size: 28, weight: .semibold))
+                .font(.system(size: headerIconSize, weight: .semibold))
                 .symbolRenderingMode(.hierarchical)
                 .foregroundStyle(.secondary)
                 .frame(width: 44, height: 44)
@@ -91,10 +93,12 @@ struct DiscoveryDashboardView: View {
         }
     }
 
+    @ScaledMetric(relativeTo: .largeTitle) private var signedOutIconSize: CGFloat = 56
+
     private var signedOutContent: some View {
         VStack(spacing: 18) {
             Image(systemName: "sparkles.rectangle.stack")
-                .font(.system(size: 56, weight: .medium))
+                .font(.system(size: signedOutIconSize, weight: .medium))
                 .symbolRenderingMode(.hierarchical)
                 .foregroundStyle(.secondary)
 

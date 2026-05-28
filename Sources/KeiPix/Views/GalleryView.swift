@@ -274,11 +274,12 @@ private struct CachedFeedStatusStrip: View {
 
 private struct SignedOutView: View {
     @Bindable var store: KeiPixStore
+    @ScaledMetric(relativeTo: .largeTitle) private var iconSize: CGFloat = 56
 
     var body: some View {
         VStack(spacing: 18) {
             Image(systemName: "sparkles.rectangle.stack")
-                .font(.system(size: 56, weight: .medium))
+                .font(.system(size: iconSize, weight: .medium))
                 .symbolRenderingMode(.hierarchical)
                 .foregroundStyle(.secondary)
 

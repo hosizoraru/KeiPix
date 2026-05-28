@@ -74,9 +74,7 @@
 
 - [x] **6.2 Touch target sizing** — `f3474d7`
 
-- [ ] **6.3 Dynamic Type support**
-  - Verify text scales properly on iPad
-  - Impact: Accessibility
+- [x] **6.3 Dynamic Type support** — `db6662e`
 
 ---
 

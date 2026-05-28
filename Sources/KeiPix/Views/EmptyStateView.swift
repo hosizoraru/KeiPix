@@ -5,10 +5,12 @@ struct EmptyStateView: View {
     let subtitle: String
     let systemImage: String
 
+    @ScaledMetric(relativeTo: .title) private var iconSize: CGFloat = 46
+
     var body: some View {
         VStack(spacing: 12) {
             Image(systemName: systemImage)
-                .font(.system(size: 46, weight: .medium))
+                .font(.system(size: iconSize, weight: .medium))
                 .symbolRenderingMode(.hierarchical)
                 .foregroundStyle(.secondary)
             Text(title)
