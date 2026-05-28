@@ -98,6 +98,7 @@ struct NovelTextTokenizerTests {
     }
 
     @Test("Reader page splitter collapses empty pages from adjacent newpage markers")
+    @MainActor
     func readerSplitPagesCollapsesEmpty() {
         let tokens: [NovelToken] = [
             .text("a"),
@@ -112,12 +113,14 @@ struct NovelTextTokenizerTests {
     }
 
     @Test("Reader page splitter on token-less input returns empty")
+    @MainActor
     func readerSplitPagesEmpty() {
         let pages = NovelReaderView.splitPages([])
         #expect(pages.isEmpty)
     }
 
     @Test("Reader page splitter with no newpage returns single page")
+    @MainActor
     func readerSplitPagesSinglePage() {
         let tokens: [NovelToken] = [.text("only")]
         let pages = NovelReaderView.splitPages(tokens)

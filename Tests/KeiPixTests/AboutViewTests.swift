@@ -6,6 +6,7 @@ import Testing
 struct AboutViewTests {
 
     @Test("Repository URL is well-formed and points at the canonical KeiPix repo")
+    @MainActor
     func repositoryURLParses() {
         let url = AboutView.repositoryURL
         #expect(url.scheme == "https")
