@@ -163,7 +163,7 @@ struct ArtworkCommentsView: View {
                 }
                 .disabled(isPosting)
 
-                Text("\(draft.count) / 140")
+                Text(L10n.commentDraftCount(draft.count))
                     .font(.caption)
                     .foregroundStyle(draft.count > 140 ? .red : .secondary)
 

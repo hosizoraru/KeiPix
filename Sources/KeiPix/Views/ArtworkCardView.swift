@@ -128,7 +128,7 @@ struct ArtworkCardView: View {
                         .lineLimit(resolvedDisplayStyle.titleLineLimit)
                     Spacer(minLength: 6)
                     if artwork.pageCount > 1 {
-                        Text("\(artwork.pageCount)P")
+                        Text(L10n.pageCountShort(artwork.pageCount))
                             .font(.caption2.weight(.semibold))
                             .padding(.horizontal, 7)
                             .padding(.vertical, 3)

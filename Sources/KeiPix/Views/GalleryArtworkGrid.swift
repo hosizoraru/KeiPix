@@ -535,7 +535,7 @@ private struct ListRowArtworkCard: View {
                                 .foregroundStyle(.red)
                         }
                         if artwork.isAI {
-                            Text("AI")
+                            Text(L10n.aiBadge)
                                 .font(.caption2.weight(.bold))
                                 .padding(.horizontal, 5)
                                 .padding(.vertical, 2)

@@ -31,7 +31,7 @@ struct WatchLaterView: View {
             }
         }
         .navigationTitle(L10n.watchLater)
-        .navigationSubtitle("\(items.count)")
+        .navigationSubtitle(String(format: L10n.itemCountFormat, items.count))
         .confirmationDialog(
             L10n.clearHistoryConfirmation,
             isPresented: $isClearConfirmationPresented,

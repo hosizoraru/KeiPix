@@ -94,7 +94,7 @@ struct DownloadedArtworkViewer: View {
                 Text(item.title)
                     .font(.headline)
                     .lineLimit(1)
-                Text("\(item.creatorName) · \(imageURLs.count)P")
+                Text(L10n.creatorPageHeader(item.creatorName, imageURLs.count))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }

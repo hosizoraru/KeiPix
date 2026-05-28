@@ -76,7 +76,7 @@ struct SafetySettingsPage: View {
                     .textSelection(.enabled)
             }
         } header: {
-            Text("Pixiv")
+            Text(L10n.pixivSection)
         } footer: {
             VStack(alignment: .leading, spacing: 4) {
                 Text(L10n.pixivRestrictedModeHint)

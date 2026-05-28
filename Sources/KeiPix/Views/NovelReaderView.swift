@@ -384,7 +384,7 @@ struct NovelReaderView: View {
                     VStack(alignment: .leading, spacing: 2) {
                         Text(L10n.novelEmbeddedImage)
                             .font(.callout.weight(.medium))
-                        Text("illust/\(illustID)")
+                        Text(L10n.pixivIllustRef(illustID))
                             .font(.caption.monospaced())
                             .foregroundStyle(.secondary)
                     }

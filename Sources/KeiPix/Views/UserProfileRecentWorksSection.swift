@@ -162,7 +162,7 @@ struct UserProfileRecentWorksSection: View {
                 .foregroundStyle(.primary)
 
             if artwork.pageCount > 1 {
-                Label("\(artwork.pageCount)P", systemImage: "square.stack")
+                Label(L10n.pageCountShort(artwork.pageCount), systemImage: "square.stack")
                     .labelStyle(.titleAndIcon)
                     .font(.caption2)
                     .foregroundStyle(.secondary)

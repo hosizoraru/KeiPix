@@ -163,7 +163,7 @@ struct ArtworkReaderControls: View {
                         .frame(width: 62)
                         .onSubmit(commitPageText)
 
-                    Text("/ \(pageCount)")
+                    Text(L10n.pageTotal(pageCount))
                         .font(.callout.monospacedDigit())
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
@@ -468,7 +468,7 @@ private struct PageBadge: View {
     let count: Int
 
     var body: some View {
-        Text("\(index + 1) / \(count)")
+        Text(L10n.pageOfTotal(index + 1, count))
             .font(.caption.weight(.semibold).monospacedDigit())
             .padding(.horizontal, 9)
             .padding(.vertical, 5)

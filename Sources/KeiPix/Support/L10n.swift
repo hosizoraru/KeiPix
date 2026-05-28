@@ -1152,6 +1152,20 @@ enum L10n {
     static var selectedArtwork: String { text("Selected Artwork") }
     static var noSelection: String { text("No Selection") }
     static var pageCountFormat: String { text("%d pages") }
+    static var pageCountShortFormat: String { text("%dP") }
+    static func pageCountShort(_ n: Int) -> String { String(format: text("%dP"), n) }
+    static var pageTotalFormat: String { text("/ %d") }
+    static func pageTotal(_ count: Int) -> String { String(format: text("/ %d"), count) }
+    static var pageOfTotalFormat: String { text("%d / %d") }
+    static func pageOfTotal(_ page: Int, _ total: Int) -> String { String(format: text("%d / %d"), page, total) }
+    static var commentDraftCountFormat: String { text("%d / 140") }
+    static func commentDraftCount(_ current: Int) -> String { String(format: text("%d / 140"), current) }
+    static var creatorPageHeaderFormat: String { text("%@ · %dP") }
+    static func creatorPageHeader(_ name: String, _ pages: Int) -> String { String(format: text("%@ · %dP"), name, pages) }
+    static var aiBadge: String { text("AI") }
+    static var pixivSection: String { text("Pixiv") }
+    static var pixivIllustRefFormat: String { text("illust/%d") }
+    static func pixivIllustRef(_ id: Int) -> String { String(format: text("illust/%d"), id) }
     static var downloadReadinessFormat: String { text("%d total · %d active · %d completed") }
     static var accountIdentityHidden: String { text("Account identity hidden") }
     static var screenProtection: String { text("Screen protection") }

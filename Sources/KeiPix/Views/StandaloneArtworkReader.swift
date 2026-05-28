@@ -132,7 +132,7 @@ struct StandaloneArtworkReader: View {
                 Text(artwork.title)
                     .font(.headline)
                     .lineLimit(1)
-                Text("\(artwork.user.name) · \(pageCount)P")
+                Text(L10n.creatorPageHeader(artwork.user.name, pageCount))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -369,7 +369,7 @@ private struct ReaderPageJumpOverlay: View {
                         .frame(width: 82)
                         .onSubmit(commit)
 
-                    Text("/ \(pageCount)")
+                    Text(L10n.pageTotal(pageCount))
                         .font(.callout.monospacedDigit())
                         .foregroundStyle(.secondary)
 

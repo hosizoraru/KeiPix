@@ -498,7 +498,7 @@ private struct ArtworkPreviewThumb: View {
             }
 
             if artwork.pageCount > 1 {
-                Text("\(artwork.pageCount)P")
+                Text(L10n.pageCountShort(artwork.pageCount))
                     .font(.caption2.weight(.semibold))
                     .padding(.horizontal, 6)
                     .padding(.vertical, 2)
