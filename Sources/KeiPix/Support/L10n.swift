@@ -578,6 +578,7 @@ enum L10n {
     static var translationTargetLanguage: String { text("Translation Language") }
     static var translationTargetLanguageHint: String { text("Choose the target language for inline translation. \"System\" follows your device language setting.") }
     static var translationTargetSystem: String { text("System") }
+    static var translationProgressFormat: String { text("%d / %d paragraphs") }
     static var downloadSelectedPages: String { text("Save Selected Pages…") }
     static var selectPagesToSave: String { text("Select Pages to Save") }
     static var selectAllPages: String { text("Select All") }
@@ -723,6 +724,8 @@ enum L10n {
     static var importToken: String { text("Import Token") }
     static var importTokenHint: String { text("Paste a Pixiv refresh token exported from another client. KeiPix refreshes it once, saves the new session in secure local storage, and switches to the imported account.") }
     static var editProfileOnPixiv: String { text("Edit Profile on Pixiv") }
+    static var enable: String { text("Enable") }
+    static var disable: String { text("Disable") }
     static var manageAccountOnPixiv: String { text("Manage Account on Pixiv") }
     static var accountWebSettingsHint: String { text("Profile, password, and email changes happen on the Pixiv website. KeiPix opens the relevant page in your browser.") }
     static var spotlightCategoryAll: String { text("All") }

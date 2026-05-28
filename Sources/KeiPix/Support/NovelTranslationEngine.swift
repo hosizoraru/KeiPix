@@ -64,6 +64,15 @@ final class NovelTranslationEngine {
     /// Which page is currently being translated.
     private(set) var translatingPageIndex: Int?
 
+    /// Translation progress for the current page (0.0 – 1.0).
+    private(set) var translationProgress: Double = 0
+
+    /// Total paragraphs being translated on the current page.
+    private(set) var translationTotal: Int = 0
+
+    /// How many paragraphs have been translated so far.
+    private(set) var translationCompleted: Int = 0
+
     /// Returns translated text for a given page and token index.
     func translatedText(pageIndex: Int, tokenIndex: Int) -> String? {
         pageTranslations[pageIndex]?[tokenIndex]
@@ -79,8 +88,18 @@ final class NovelTranslationEngine {
         translatingPageIndex == pageIndex && state == .translating
     }
 
+    /// Update progress during translation.
+    func updateProgress(completed: Int, total: Int) {
+        translationCompleted = completed
+        translationTotal = total
+        translationProgress = total > 0 ? Double(completed) / Double(total) : 0
+    }
+
     /// Store translation results for a page.
     func applyResults(_ results: [Int: String], for pageIndex: Int) {
+        translationProgress = 0
+        translationTotal = 0
+        translationCompleted = 0
         if results.isEmpty {
             // Don't cache empty results — might be a transient failure.
             if translatingPageIndex == pageIndex {
@@ -97,9 +116,12 @@ final class NovelTranslationEngine {
     }
 
     /// Mark a page as currently being translated.
-    func setTranslating(pageIndex: Int) {
+    func setTranslating(pageIndex: Int, total: Int) {
         translatingPageIndex = pageIndex
         state = .translating
+        translationTotal = total
+        translationCompleted = 0
+        translationProgress = 0
     }
 
     /// Clear translations for a specific page (e.g., on re-translate).

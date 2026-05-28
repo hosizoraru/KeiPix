@@ -130,13 +130,29 @@ struct NovelReaderView: View {
         }
         guard paragraphs.isEmpty == false else { return }
 
-        translationEngine.setTranslating(pageIndex: page)
+        translationEngine.setTranslating(pageIndex: page, total: paragraphs.count)
 
+        // Translate paragraphs with concurrency for speed.
+        // Use TaskGroup to translate multiple paragraphs in parallel.
         var results: [Int: String] = [:]
-        for (tokenIndex, paragraphText) in paragraphs {
-            guard translationEngine.isInlineTranslationActive else { break }
-            if let response = try? await session.translate(paragraphText) {
-                results[tokenIndex] = response.targetText
+        let total = paragraphs.count
+
+        await withTaskGroup(of: (Int, String)?.self) { group in
+            for (tokenIndex, paragraphText) in paragraphs {
+                guard translationEngine.isInlineTranslationActive else { break }
+                group.addTask {
+                    if let response = try? await session.translate(paragraphText) {
+                        return (tokenIndex, response.targetText)
+                    }
+                    return nil
+                }
+            }
+
+            for await result in group {
+                if let (tokenIndex, translated) = result {
+                    results[tokenIndex] = translated
+                }
+                translationEngine.updateProgress(completed: results.count, total: total)
             }
         }
         translationEngine.applyResults(results, for: page)
@@ -205,43 +221,55 @@ struct NovelReaderView: View {
     }
 
     private var translationModeMenu: some View {
-        Menu {
-            // Toggle translation on/off
-            Button {
-                toggleTranslation()
-            } label: {
-                Label(
-                    translationEngine.isInlineTranslationActive ? L10n.novelInlineTranslate : L10n.translate,
-                    systemImage: translationEngine.isInlineTranslationActive ? "checkmark.circle.fill" : "character.bubble"
-                )
-            }
-            .keyboardShortcut("t", modifiers: [])
-
-            Divider()
-
-            // Mode picker
-            ForEach(NovelTranslationMode.allCases) { mode in
+        HStack(spacing: 6) {
+            Menu {
+                // Toggle translation on/off
                 Button {
-                    translationEngine.translationMode = mode
-                    if translationEngine.isInlineTranslationActive {
-                        translationConfig?.invalidate()
-                    }
+                    toggleTranslation()
                 } label: {
-                    Label(mode.title, systemImage: mode.systemImage)
+                    Label(
+                        translationEngine.isInlineTranslationActive ? L10n.disable : L10n.enable,
+                        systemImage: translationEngine.isInlineTranslationActive ? "xmark.circle" : "character.bubble"
+                    )
                 }
-                .disabled(translationEngine.translationMode == mode)
+                .keyboardShortcut("t", modifiers: [])
+
+                Divider()
+
+                // Mode picker — checkmark on selected item
+                ForEach(NovelTranslationMode.allCases) { mode in
+                    Button {
+                        translationEngine.translationMode = mode
+                        if translationEngine.isInlineTranslationActive {
+                            translationConfig?.invalidate()
+                        }
+                    } label: {
+                        Label(mode.title, systemImage: mode.systemImage)
+                    }
+                    .disabled(translationEngine.translationMode == mode)
+                }
+            } label: {
+                Label(L10n.translate, systemImage: translationEngine.isInlineTranslationActive
+                      ? translationEngine.translationMode.systemImage
+                      : "character.bubble")
+                .labelStyle(.iconOnly)
             }
-        } label: {
-            Label(L10n.translate, systemImage: translationEngine.isInlineTranslationActive
-                  ? translationEngine.translationMode.systemImage
-                  : "character.bubble")
-            .labelStyle(.iconOnly)
+            .help(translationEngine.isInlineTranslationActive
+                  ? translationEngine.translationMode.helpText
+                  : L10n.translate)
+            .accessibilityLabel(L10n.translate)
+            .tint(translationEngine.isInlineTranslationActive ? .accentColor : nil)
+
+            // Progress indicator during translation
+            if translationEngine.isTranslating(pageIndex: pageIndex) {
+                ProgressView(value: translationEngine.translationProgress)
+                    .progressViewStyle(.circular)
+                    .controlSize(.mini)
+                    .help(String(format: L10n.translationProgressFormat,
+                                 translationEngine.translationCompleted,
+                                 translationEngine.translationTotal))
+            }
         }
-        .help(translationEngine.isInlineTranslationActive
-              ? translationEngine.translationMode.helpText
-              : L10n.translate)
-        .accessibilityLabel(L10n.translate)
-        .tint(translationEngine.isInlineTranslationActive ? .accentColor : nil)
     }
 
     private func toggleTranslation() {
