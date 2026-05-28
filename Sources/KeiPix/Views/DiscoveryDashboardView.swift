@@ -69,14 +69,18 @@ struct DiscoveryDashboardView: View {
             } label: {
                 Label(L10n.surpriseMe, systemImage: "shuffle")
             }
+            .labelStyle(.iconOnly)
             .help(L10n.surpriseMe)
+            .accessibilityLabel(L10n.surpriseMe)
 
             Button {
                 isCustomizationPresented = true
             } label: {
                 Label(L10n.customizeDashboard, systemImage: "slider.horizontal.3")
             }
+            .labelStyle(.iconOnly)
             .help(L10n.customizeDashboard)
+            .accessibilityLabel(L10n.customizeDashboard)
         }
         .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)

@@ -174,6 +174,8 @@ struct FeedHeaderView: View {
                 Label(rankingDateTitle, systemImage: "calendar")
             }
             .buttonStyle(.bordered)
+            .help(rankingDateTitle)
+            .accessibilityLabel(rankingDateTitle)
             .popover(isPresented: $isRankingDatePopoverPresented, arrowEdge: .bottom) {
                 RankingDatePopover(
                     useRankingDate: $draftUseRankingDate,
@@ -246,6 +248,8 @@ struct FeedHeaderView: View {
             }
             .menuStyle(.button)
             .buttonStyle(.bordered)
+            .help(selectionTitle)
+            .accessibilityLabel(selectionTitle)
             .tint(artworkSelection.hasSelection || artworkSelection.isSelectionMode ? .accentColor : nil)
         }
 
@@ -289,6 +293,9 @@ struct FeedHeaderView: View {
         } label: {
             Label(L10n.moreActions, systemImage: "ellipsis.circle")
         }
+        .labelStyle(.iconOnly)
+        .help(L10n.moreActions)
+        .accessibilityLabel(L10n.moreActions)
         .menuStyle(.button)
         .buttonStyle(.bordered)
         .popover(isPresented: $isBatchDownloadPresented, arrowEdge: .bottom) {
@@ -330,6 +337,9 @@ struct FeedHeaderView: View {
             } label: {
                 Label(L10n.search, systemImage: "magnifyingglass")
             }
+            .labelStyle(.iconOnly)
+            .help(L10n.search)
+            .accessibilityLabel(L10n.search)
             .buttonStyle(.bordered)
         }
     }

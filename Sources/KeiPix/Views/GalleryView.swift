@@ -235,6 +235,9 @@ private struct CachedFeedStatusStrip: View {
             } label: {
                 Label(L10n.refreshLiveFeed, systemImage: "arrow.clockwise")
             }
+            .labelStyle(.iconOnly)
+            .help(L10n.refreshLiveFeed)
+            .accessibilityLabel(L10n.refreshLiveFeed)
             .controlSize(.small)
         }
         .padding(.horizontal, 12)

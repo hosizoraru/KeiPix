@@ -27,6 +27,9 @@ struct SearchPopularPreviewStrip: View {
                     } label: {
                         Label(L10n.showPopularResults, systemImage: "line.3.horizontal.decrease.circle")
                     }
+                    .labelStyle(.iconOnly)
+                    .help(L10n.showPopularResults)
+                    .accessibilityLabel(L10n.showPopularResults)
                     .buttonStyle(.bordered)
                     .controlSize(.small)
                 }
