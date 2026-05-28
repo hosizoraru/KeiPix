@@ -19,10 +19,16 @@ final class KeiPixStore {
         let destination = LaunchDestination(rawValue: raw) ?? .home
         return destination.route
     }()
-    var artworks: [PixivArtwork] = []
-    var clientFilterQuery = ""
-    var clientFilteredArtworks: [PixivArtwork] {
-        ClientFilterDSL.filter(artworks, query: clientFilterQuery)
+    var artworks: [PixivArtwork] = [] {
+        didSet { recomputeFilteredArtworks() }
+    }
+    var clientFilterQuery = "" {
+        didSet { recomputeFilteredArtworks() }
+    }
+    private(set) var clientFilteredArtworks: [PixivArtwork] = []
+
+    private func recomputeFilteredArtworks() {
+        clientFilteredArtworks = ClientFilterDSL.filter(artworks, query: clientFilterQuery)
     }
     var selectedArtwork: PixivArtwork?
 
