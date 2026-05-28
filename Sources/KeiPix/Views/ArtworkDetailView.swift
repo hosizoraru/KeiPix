@@ -172,19 +172,35 @@ private struct ArtworkInspectorView: View {
     }
 
     private var usesArtworkDetailSocialVisualQA: Bool {
-        VisualQALaunchArgument.contains(.artworkDetailSocial)
+        #if DEBUG
+        return VisualQALaunchArgument.contains(.artworkDetailSocial)
+        #else
+        return false
+        #endif
     }
 
     private var visualQASeriesResponse: PixivArtworkSeriesResponse? {
-        usesArtworkDetailSocialVisualQA ? VisualQASampleData.seriesResponse : nil
+        #if DEBUG
+        return usesArtworkDetailSocialVisualQA ? VisualQASampleData.seriesResponse : nil
+        #else
+        return nil
+        #endif
     }
 
     private var visualQACommentsResponse: PixivCommentResponse? {
-        usesArtworkDetailSocialVisualQA ? VisualQASampleData.artworkDetailSocialComments : nil
+        #if DEBUG
+        return usesArtworkDetailSocialVisualQA ? VisualQASampleData.artworkDetailSocialComments : nil
+        #else
+        return nil
+        #endif
     }
 
     private var visualQARelatedResponse: PixivFeedResponse? {
-        usesArtworkDetailSocialVisualQA ? VisualQASampleData.artworkDetailSocialRelatedResponse : nil
+        #if DEBUG
+        return usesArtworkDetailSocialVisualQA ? VisualQASampleData.artworkDetailSocialRelatedResponse : nil
+        #else
+        return nil
+        #endif
     }
 
     private func resetForArtwork() {

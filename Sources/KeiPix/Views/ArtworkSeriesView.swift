@@ -403,6 +403,7 @@ struct ArtworkSeriesView: View {
     }
 }
 
+#if DEBUG
 struct ArtworkSeriesVisualQASheetView: View {
     @Bindable var store: KeiPixStore
     @State private var isExpanded = true
@@ -427,6 +428,7 @@ struct ArtworkSeriesVisualQASheetView: View {
         }
     }
 }
+#endif
 
 private struct SeriesControlsView: View {
     @Binding var sortMode: ArtworkSeriesSortMode
