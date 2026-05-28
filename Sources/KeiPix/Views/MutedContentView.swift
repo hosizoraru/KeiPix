@@ -189,6 +189,7 @@ struct MutedContentView: View {
                     Label(L10n.moreActions, systemImage: "ellipsis.circle")
                 }
             }
+            .labelStyle(.iconOnly)
             .help(L10n.muteSyncHint)
         }
         .controlSize(.small)

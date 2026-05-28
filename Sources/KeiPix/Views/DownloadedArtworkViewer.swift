@@ -67,6 +67,8 @@ struct DownloadedArtworkViewer: View {
                 } label: {
                     Label(L10n.previousPage, systemImage: "chevron.left")
                 }
+                .labelStyle(.iconOnly)
+                .help(L10n.previousPage)
                 .keyboardShortcut(.leftArrow, modifiers: [])
                 .disabled(pageIndex == 0)
 
@@ -75,6 +77,8 @@ struct DownloadedArtworkViewer: View {
                 } label: {
                     Label(L10n.nextPage, systemImage: "chevron.right")
                 }
+                .labelStyle(.iconOnly)
+                .help(L10n.nextPage)
                 .keyboardShortcut(.rightArrow, modifiers: [])
                 .disabled(pageIndex >= imageURLs.count - 1)
 
@@ -83,6 +87,8 @@ struct DownloadedArtworkViewer: View {
                 } label: {
                     Label(L10n.toggleReadingMode, systemImage: "rectangle.split.1x2")
                 }
+                .labelStyle(.iconOnly)
+                .help(L10n.toggleReadingMode)
                 .keyboardShortcut(.space, modifiers: [])
             }
         }
@@ -261,6 +267,8 @@ struct DownloadedArtworkViewer: View {
                 } label: {
                     Label(L10n.previousPage, systemImage: "chevron.left")
                 }
+                .labelStyle(.iconOnly)
+                .help(L10n.previousPage)
                 .disabled(pageIndex == 0)
 
                 Text(L10n.pageStatus(pageIndex + 1, imageURLs.count))
@@ -273,6 +281,8 @@ struct DownloadedArtworkViewer: View {
                 } label: {
                     Label(L10n.nextPage, systemImage: "chevron.right")
                 }
+                .labelStyle(.iconOnly)
+                .help(L10n.nextPage)
                 .disabled(pageIndex >= imageURLs.count - 1)
             }
             .padding(.bottom, 16)

@@ -158,6 +158,7 @@ struct CreatorListViewOptionsMenu: View {
         } label: {
             Label(L10n.viewOptions, systemImage: "slider.horizontal.3")
         }
+        .labelStyle(.iconOnly)
         .help(L10n.viewOptions)
     }
 }
@@ -240,6 +241,7 @@ struct CreatorListBulkActionsMenu: View {
                 Label(L10n.creatorActions, systemImage: "ellipsis.circle")
             }
         }
+        .labelStyle(.iconOnly)
         .help(L10n.creatorActions)
     }
 }

@@ -168,12 +168,16 @@ struct SavedSearchesView: View {
             } label: {
                 Label(L10n.importSearchLibrary, systemImage: "square.and.arrow.down")
             }
+            .labelStyle(.iconOnly)
+            .help(L10n.importSearchLibrary)
 
             Button {
                 exportSearchLibrary()
             } label: {
                 Label(L10n.exportSearchLibrary, systemImage: "square.and.arrow.up")
             }
+            .labelStyle(.iconOnly)
+            .help(L10n.exportSearchLibrary)
             .disabled(store.savedSearchPresets.isEmpty && store.savedSearches.isEmpty && store.searchHistory.isEmpty)
         }
         .controlSize(.small)

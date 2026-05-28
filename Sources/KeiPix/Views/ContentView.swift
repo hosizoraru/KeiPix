@@ -70,6 +70,8 @@ struct ContentView: View {
                 } label: {
                     Label(L10n.refresh, systemImage: "arrow.clockwise")
                 }
+                .labelStyle(.iconOnly)
+                .help(L10n.refresh)
             }
 
             ToolbarItem(placement: .primaryAction) {
@@ -91,6 +93,7 @@ struct ContentView: View {
                     } label: {
                         Label(store.galleryLayoutMode.title, systemImage: store.galleryLayoutMode.systemImage)
                     }
+                    .labelStyle(.iconOnly)
                     .help(L10n.galleryLayout)
                 }
             }
@@ -392,6 +395,7 @@ struct ContentView: View {
         } label: {
             Label(L10n.appControls, systemImage: "ellipsis.circle")
         }
+        .labelStyle(.iconOnly)
         .help(L10n.appControls)
     }
 

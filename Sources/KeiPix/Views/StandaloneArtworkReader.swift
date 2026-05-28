@@ -158,6 +158,7 @@ struct StandaloneArtworkReader: View {
                     systemImage: isOriginal ? "photo.badge.checkmark.fill" : "photo"
                 )
             }
+            .labelStyle(.iconOnly)
             .help(L10n.imageQualityToggleHint)
 
             if readingMode == .continuous {
@@ -169,6 +170,7 @@ struct StandaloneArtworkReader: View {
                         systemImage: snapToPageBoundaries ? "arrow.down.to.line" : "arrow.down.to.line.compact"
                     )
                 }
+                .labelStyle(.iconOnly)
                 .help(L10n.snapToPages)
             }
 
@@ -205,6 +207,7 @@ struct StandaloneArtworkReader: View {
             } label: {
                 Label(L10n.imageTransform, systemImage: "crop.rotate")
             }
+            .labelStyle(.iconOnly)
             .help(L10n.imageTransform)
 
             Button {
@@ -212,6 +215,8 @@ struct StandaloneArtworkReader: View {
             } label: {
                 Label(L10n.pageJump, systemImage: "number")
             }
+            .labelStyle(.iconOnly)
+            .help(L10n.pageJump)
             .disabled(pageCount <= 1)
             .shortcut(.readerJumpToPage)
 
@@ -220,6 +225,8 @@ struct StandaloneArtworkReader: View {
             } label: {
                 Label(L10n.fullScreenReading, systemImage: "arrow.up.left.and.arrow.down.right")
             }
+            .labelStyle(.iconOnly)
+            .help(L10n.fullScreenReading)
             .shortcut(.readerToggleFullscreen)
 
             Button {
@@ -227,6 +234,8 @@ struct StandaloneArtworkReader: View {
             } label: {
                 Label(L10n.previousPage, systemImage: "chevron.left")
             }
+            .labelStyle(.iconOnly)
+            .help(L10n.previousPage)
             .disabled(pageIndex <= 0)
 
             Text(L10n.pageStatus(pageIndex + 1, pageCount))
@@ -239,6 +248,8 @@ struct StandaloneArtworkReader: View {
             } label: {
                 Label(L10n.nextPage, systemImage: "chevron.right")
             }
+            .labelStyle(.iconOnly)
+            .help(L10n.nextPage)
             .disabled(pageIndex >= pageCount - 1)
         }
     }
@@ -285,6 +296,8 @@ struct StandaloneArtworkReader: View {
                 } label: {
                     Label(L10n.exitFocusReading, systemImage: "xmark")
                 }
+                .labelStyle(.iconOnly)
+                .help(L10n.exitFocusReading)
             }
             .buttonStyle(.bordered)
             .controlSize(.small)

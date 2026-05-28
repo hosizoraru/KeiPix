@@ -113,6 +113,7 @@ struct SpotlightView: View {
                         } label: {
                             Label(L10n.refresh, systemImage: "arrow.clockwise")
                         }
+                        .labelStyle(.iconOnly)
                         .help(L10n.refresh)
                         .disabled(isLoading)
                     }
@@ -127,6 +128,7 @@ struct SpotlightView: View {
                         Button(role: .destructive, action: clearHistory) {
                             Label(L10n.clearArticleHistory, systemImage: "trash")
                         }
+                        .labelStyle(.iconOnly)
                         .help(L10n.clearArticleHistory)
                         .disabled(store.spotlightArticleHistory.isEmpty)
                     }
@@ -280,6 +282,7 @@ struct SpotlightView: View {
         } label: {
             Label(L10n.viewOptions, systemImage: "slider.horizontal.3")
         }
+        .labelStyle(.iconOnly)
         .help(L10n.viewOptions)
     }
 

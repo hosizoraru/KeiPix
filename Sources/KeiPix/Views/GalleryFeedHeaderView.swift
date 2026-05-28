@@ -61,6 +61,7 @@ struct FeedHeaderView: View {
             } label: {
                 Label(L10n.randomFromFeed, systemImage: "shuffle")
             }
+            .labelStyle(.iconOnly)
             .help(L10n.randomFromFeed)
         }
 
@@ -112,6 +113,8 @@ struct FeedHeaderView: View {
             } label: {
                 Label(L10n.searchActions, systemImage: "ellipsis.circle")
             }
+            .labelStyle(.iconOnly)
+            .help(L10n.searchActions)
             .menuStyle(.button)
             .buttonStyle(.bordered)
         }

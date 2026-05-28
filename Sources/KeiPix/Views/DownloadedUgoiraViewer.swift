@@ -48,6 +48,8 @@ struct DownloadedUgoiraViewer: View {
                         systemImage: player.isPlaying ? "pause.fill" : "play.fill"
                     )
                 }
+                .labelStyle(.iconOnly)
+                .help(player.isPlaying ? L10n.pauseUgoira : L10n.playUgoira)
                 .keyboardShortcut(.space, modifiers: [])
                 .disabled(player.hasContent == false)
             }
@@ -58,6 +60,8 @@ struct DownloadedUgoiraViewer: View {
                 } label: {
                     Label(L10n.revealInFinder, systemImage: "folder")
                 }
+                .labelStyle(.iconOnly)
+                .help(L10n.revealInFinder)
             }
         }
         .task(id: zipURL) {
