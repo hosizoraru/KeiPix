@@ -90,6 +90,8 @@ struct LogViewerView: View {
             } label: {
                 Label(L10n.refreshLogs, systemImage: "arrow.clockwise")
             }
+            .labelStyle(.iconOnly)
+            .help(L10n.refreshLogs)
             .disabled(loading)
 
             Button {
@@ -97,6 +99,8 @@ struct LogViewerView: View {
             } label: {
                 Label(L10n.copyVisibleLogs, systemImage: "doc.on.doc")
             }
+            .labelStyle(.iconOnly)
+            .help(L10n.copyVisibleLogs)
             .disabled(filteredEntries.isEmpty)
 
             Button {
@@ -104,6 +108,8 @@ struct LogViewerView: View {
             } label: {
                 Label(L10n.revealInConsole, systemImage: "arrow.up.right.square")
             }
+            .labelStyle(.iconOnly)
+            .help(L10n.revealInConsole)
         }
     }
 

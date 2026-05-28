@@ -52,6 +52,7 @@ struct UserPreviewListView: View {
                 } label: {
                     Label(L10n.refresh, systemImage: "arrow.clockwise")
                 }
+                .labelStyle(.iconOnly)
                 .help(L10n.refresh)
                 .disabled(isLoading)
             }
@@ -71,6 +72,7 @@ struct UserPreviewListView: View {
                     } label: {
                         Label(L10n.resetCreatorFilters, systemImage: "arrow.counterclockwise")
                     }
+                    .labelStyle(.iconOnly)
                     .help(L10n.resetCreatorFilters)
                 }
             }

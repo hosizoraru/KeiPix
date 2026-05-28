@@ -150,6 +150,7 @@ struct UserProfileSheetHeader: View {
                 Link(destination: openInPixivURL) {
                     Label(L10n.openInPixiv, systemImage: "safari")
                 }
+                .labelStyle(.iconOnly)
                 .buttonStyle(.bordered)
                 .controlSize(.small)
                 .help(L10n.openInPixiv)
@@ -159,6 +160,7 @@ struct UserProfileSheetHeader: View {
                 } label: {
                     Label(L10n.copyLink, systemImage: "link")
                 }
+                .labelStyle(.iconOnly)
                 .buttonStyle(.bordered)
                 .controlSize(.small)
                 .help(L10n.copyLink)

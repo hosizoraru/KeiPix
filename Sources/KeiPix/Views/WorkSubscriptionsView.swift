@@ -60,6 +60,8 @@ struct WorkSubscriptionsView: View {
             } label: {
                 Label(L10n.workSubscriptionsCheckNow, systemImage: "arrow.clockwise")
             }
+            .labelStyle(.iconOnly)
+            .help(L10n.workSubscriptionsCheckNow)
             .disabled(isChecking || store.session == nil)
         }
         .controlSize(.small)

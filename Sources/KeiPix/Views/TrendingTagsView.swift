@@ -81,6 +81,7 @@ struct TrendingTagsView: View {
                     } label: {
                         Label(L10n.refresh, systemImage: "arrow.clockwise")
                     }
+                    .labelStyle(.iconOnly)
                     .help(L10n.refresh)
                     .disabled(isLoading)
                 }
