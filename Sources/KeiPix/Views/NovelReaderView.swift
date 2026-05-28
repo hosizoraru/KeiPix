@@ -28,6 +28,8 @@ struct NovelReaderView: View {
     @AppStorage("novelReader.useVerticalLayout") private var useVerticalLayout: Bool = false
     @AppStorage("novelReader.showChapterMarkers") private var showChapterMarkers: Bool = true
     @AppStorage("novelReader.readingMode") private var readingModeRaw: String = NovelReadingMode.singlePage.rawValue
+    @AppStorage("novelReader.translationMode") private var translationModeRaw: String = NovelTranslationMode.bilingual.rawValue
+    @AppStorage("novelReader.translationActive") private var translationActive: Bool = false
 
     // MARK: - Local UI state
 
@@ -81,6 +83,12 @@ struct NovelReaderView: View {
             readerLoadStarted = true
             pageIndex = 0
             translationEngine.reset()
+            // Restore persisted translation preferences
+            translationEngine.translationMode = NovelTranslationMode(rawValue: translationModeRaw) ?? .bilingual
+            if translationActive {
+                translationEngine.isInlineTranslationActive = true
+                translationConfig = TranslationLanguageResolver.configuration(for: store.translationTargetLanguage)
+            }
             await novelStore.loadNovelText(for: novel.id)
             await loadEmbeddedImages()
         }
@@ -97,9 +105,22 @@ struct NovelReaderView: View {
                 translationConfig?.invalidate()
             }
         }
+        .onChange(of: readingModeRaw) { _, _ in
+            // When switching to double-page mode, translate the next
+            // page if translation is active.
+            let mode = NovelReadingMode(rawValue: readingModeRaw) ?? .singlePage
+            if mode == .doublePage, translationEngine.isInlineTranslationActive, translationConfig != nil {
+                translationConfig?.invalidate()
+            }
+        }
         .translationTask(translationConfig) { session in
             guard translationEngine.isInlineTranslationActive else { return }
             await translateCurrentPage(session: session)
+            // In double-page mode, also translate the next page
+            let mode = NovelReadingMode(rawValue: readingModeRaw) ?? .singlePage
+            if mode == .doublePage, pageIndex + 1 < pages.count {
+                await translatePage(pageIndex + 1, session: session)
+            }
         }
         .sheet(isPresented: $isSettingsPresented) {
             NovelReaderSettingsView(
@@ -110,7 +131,9 @@ struct NovelReaderView: View {
                 themeRawValue: $themeRawValue,
                 fontFamilyRawValue: $fontFamilyRawValue,
                 useVerticalLayout: $useVerticalLayout,
-                showChapterMarkers: $showChapterMarkers
+                showChapterMarkers: $showChapterMarkers,
+                readingModeRaw: $readingModeRaw,
+                translationModeRaw: $translationModeRaw
             )
             .iPadFriendlySheet()
         }
@@ -119,13 +142,17 @@ struct NovelReaderView: View {
     // MARK: - Translation
 
     private func translateCurrentPage(session: TranslationSession) async {
-        let page = pageIndex
-        guard translationEngine.isInlineTranslationActive else { return }
+        await translatePage(pageIndex, session: session)
+    }
 
-        // Skip if already cached
+    private func translatePage(_ page: Int, session: TranslationSession) async {
+        guard translationEngine.isInlineTranslationActive else { return }
         if translationEngine.hasTranslation(for: page) { return }
 
-        let paragraphs = currentPageTokens.enumerated().compactMap { index, token -> (Int, String)? in
+        guard pages.indices.contains(page) else { return }
+        let tokens = pages[page]
+
+        let paragraphs = tokens.enumerated().compactMap { index, token -> (Int, String)? in
             if case .text(let value) = token,
                let translatable = CaptionTranslationAvailability.translatableText(from: value) {
                 return (index, translatable)
@@ -136,8 +163,6 @@ struct NovelReaderView: View {
 
         translationEngine.setTranslating(pageIndex: page, total: paragraphs.count)
 
-        // Translate paragraphs with concurrency for speed.
-        // Use TaskGroup to translate multiple paragraphs in parallel.
         var results: [Int: String] = [:]
         let total = paragraphs.count
 
@@ -256,6 +281,7 @@ struct NovelReaderView: View {
                 ForEach(NovelTranslationMode.allCases) { mode in
                     Button {
                         translationEngine.translationMode = mode
+                        translationModeRaw = mode.rawValue
                         if translationEngine.isInlineTranslationActive {
                             translationConfig?.invalidate()
                         }
@@ -290,6 +316,7 @@ struct NovelReaderView: View {
 
     private func toggleTranslation() {
         translationEngine.isInlineTranslationActive.toggle()
+        translationActive = translationEngine.isInlineTranslationActive
         if translationEngine.isInlineTranslationActive {
             translationConfig = TranslationLanguageResolver.configuration(for: store.translationTargetLanguage)
         } else {
@@ -956,6 +983,8 @@ struct NovelReaderSettingsView: View {
     @Binding var fontFamilyRawValue: String
     @Binding var useVerticalLayout: Bool
     @Binding var showChapterMarkers: Bool
+    @Binding var readingModeRaw: String
+    @Binding var translationModeRaw: String
 
     @Environment(\.dismiss) private var dismiss
 
@@ -1023,6 +1052,30 @@ struct NovelReaderSettingsView: View {
                         }
                     }
                     .pickerStyle(.segmented)
+                }
+
+                Section {
+                    Picker(L10n.readingMode, selection: $readingModeRaw) {
+                        ForEach(NovelReadingMode.allCases) { mode in
+                            Label(mode.title, systemImage: mode.systemImage).tag(mode.rawValue)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                }
+
+                Section {
+                    Picker(L10n.translate, selection: $translationModeRaw) {
+                        ForEach(NovelTranslationMode.allCases) { mode in
+                            Text(mode.title).tag(mode.rawValue)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                } header: {
+                    Text(L10n.translate)
+                } footer: {
+                    Text(L10n.translationTargetLanguageHint)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                 }
 
                 Section {
