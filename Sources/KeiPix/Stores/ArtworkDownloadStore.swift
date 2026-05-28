@@ -688,9 +688,16 @@ final class ArtworkDownloadStore {
     }
 
     private static var defaultDownloadDirectory: URL {
+        #if os(macOS)
         FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask).first?
             .appending(path: "KeiPix", directoryHint: .isDirectory)
         ?? URL.homeDirectory.appending(path: "Downloads/KeiPix", directoryHint: .isDirectory)
+        #else
+        // iPadOS: use Documents directory which is accessible via Files app
+        FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?
+            .appending(path: "KeiPix", directoryHint: .isDirectory)
+        ?? URL.documentsDirectory.appending(path: "KeiPix", directoryHint: .isDirectory)
+        #endif
     }
 
     private static let fileSizeFormatter: ByteCountFormatter = {

@@ -47,10 +47,7 @@
 
 - [x] **4.2 Photos library access** — `472b02e`
 
-- [ ] **4.3 Files app integration**
-  - iPadOS: Downloads go to app's Documents directory
-  - Verify: Files app can browse downloads
-  - Impact: File management
+- [x] **4.3 Files app integration** — `f75b435`
 
 ---
 
