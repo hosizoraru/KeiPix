@@ -381,6 +381,7 @@ struct MutedContentView: View {
             }
             .buttonStyle(.borderless)
             .help(L10n.deleteFromMutedContent)
+            .accessibilityLabel(L10n.deleteFromMutedContent)
         }
         .font(.callout)
         .padding(.horizontal, 10)

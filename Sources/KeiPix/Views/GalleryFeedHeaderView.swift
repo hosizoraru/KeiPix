@@ -53,6 +53,7 @@ struct FeedHeaderView: View {
                     }
                     .buttonStyle(.plain)
                     .help(L10n.clearSearch)
+                    .accessibilityLabel(L10n.clearSearch)
                 }
             }
 

@@ -357,6 +357,7 @@ struct UserPreviewCard: View {
                 .buttonStyle(.bordered)
                 .controlSize(.small)
                 .help(L10n.openInPixiv)
+                .accessibilityLabel(L10n.openInPixiv)
             }
 
             actionChip(

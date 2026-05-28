@@ -33,6 +33,7 @@ struct NovelCardView: View {
                         Image(systemName: "bookmark.fill")
                             .foregroundStyle(.tint)
                             .help(L10n.bookmark)
+                            .accessibilityLabel(L10n.bookmark)
                     }
                 }
 

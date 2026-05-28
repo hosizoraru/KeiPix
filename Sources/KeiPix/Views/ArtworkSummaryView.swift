@@ -166,6 +166,7 @@ private struct CreatorQuickActionsMenu: View {
         .buttonStyle(.bordered)
         .controlSize(.small)
         .help(artwork.user.isFollowed ? L10n.unfollow : L10n.follow)
+        .accessibilityLabel(artwork.user.isFollowed ? L10n.unfollow : L10n.follow)
         .disabled(isUpdatingFollow)
         .sheet(item: $feedbackRequest) { request in
             FeedbackReportSheet(request: request) {
