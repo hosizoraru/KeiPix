@@ -81,14 +81,14 @@ extension KeiPixStore {
 
     func selectLocalHistoryItem(_ item: LocalArtworkHistoryItem) async {
         if let artwork = allKnownArtwork(id: item.id) {
-            selectedArtwork = artwork
+            navigateToArtwork(artwork)
             await recordBrowsingHistory(for: artwork)
             return
         }
 
         do {
             let artwork = try await api.illustDetail(illustID: item.id)
-            selectedArtwork = artwork
+            navigateToArtwork(artwork)
             await recordBrowsingHistory(for: artwork)
         } catch {
             errorMessage = error.localizedDescription

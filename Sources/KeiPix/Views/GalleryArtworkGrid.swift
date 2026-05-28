@@ -216,7 +216,7 @@ struct GalleryContentGrid: View {
         if artworkSelection.isSelectionMode || NSEvent.modifierFlags.contains(.command) {
             artworkSelection.toggle(artwork.id)
         } else {
-            store.selectedArtwork = artwork
+            store.navigateToArtwork(artwork)
         }
     }
 
@@ -370,7 +370,7 @@ private struct MasonryArtworkGrid: View {
         if artworkSelection.isSelectionMode || NSEvent.modifierFlags.contains(.command) {
             artworkSelection.toggle(artwork.id)
         } else {
-            store.selectedArtwork = artwork
+            store.navigateToArtwork(artwork)
         }
     }
 

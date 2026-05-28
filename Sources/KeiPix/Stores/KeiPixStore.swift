@@ -25,6 +25,10 @@ final class KeiPixStore {
         ClientFilterDSL.filter(artworks, query: clientFilterQuery)
     }
     var selectedArtwork: PixivArtwork?
+
+    // MARK: - Navigation history (in-memory, per-session)
+    var navigationHistory = NavigationHistory()
+
     var searchPopularPreviewArtworks: [PixivArtwork] = []
     var isLoadingSearchPopularPreview = false
     var presentedUserProfile: PixivUser?
@@ -344,6 +348,7 @@ final class KeiPixStore {
 
     func resetLoadedSessionContent() {
         restrictedModeEnabled = nil
+        clearNavigationHistory()
         allArtworks = []
         artworks = []
         activeFeedSnapshotRestoration = nil
@@ -364,6 +369,7 @@ final class KeiPixStore {
     func select(_ route: PixivRoute) {
         focusedUser = nil
         errorMessage = nil
+        clearNavigationHistory()
         if route != selectedRoute || route.isOwnBookmarkRoute == false {
             bookmarkTagFilter = nil
         }
@@ -407,6 +413,7 @@ final class KeiPixStore {
         bookmarkTagFilter = nil
         selectedSpotlightArticle = nil
         errorMessage = nil
+        clearNavigationHistory()
         selectedRoute = route
         await reloadCurrentFeed()
     }
@@ -428,7 +435,7 @@ final class KeiPixStore {
             activeFeedSnapshotRestoration = nil
             allSearchPopularPreviewArtworks = []
             searchPopularPreviewArtworks = []
-            selectedArtwork = artwork
+            navigateToArtwork(artwork)
             await recordBrowsingHistory(for: artwork)
         } catch {
             errorMessage = error.localizedDescription
@@ -499,7 +506,7 @@ final class KeiPixStore {
             allArtworks = [artwork]
             artworks = [artwork]
             activeFeedSnapshotRestoration = nil
-            selectedArtwork = artwork
+            navigateToArtwork(artwork)
             nextURL = nil
             await recordBrowsingHistory(for: artwork)
         case .user(let id):
@@ -830,13 +837,13 @@ final class KeiPixStore {
         }
         let nextIndex = index + delta
         guard artworks.indices.contains(nextIndex) else { return false }
-        self.selectedArtwork = artworks[nextIndex]
+        navigateToArtwork(artworks[nextIndex])
         return true
     }
 
     func randomFromCurrentFeed() -> Bool {
         guard let artwork = artworks.randomElement() else { return false }
-        selectedArtwork = artwork
+        navigateToArtwork(artwork)
         return true
     }
 
@@ -844,7 +851,7 @@ final class KeiPixStore {
         do {
             let response = try await api.recommendedIllusts()
             guard let artwork = response.illusts.randomElement() else { return }
-            selectedArtwork = artwork
+            navigateToArtwork(artwork)
         } catch {
             errorMessage = error.localizedDescription
         }
