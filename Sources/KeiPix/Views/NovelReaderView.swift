@@ -1,4 +1,6 @@
+#if os(macOS)
 import AppKit
+#endif
 import SwiftUI
 #if canImport(Translation)
 @preconcurrency import Translation
