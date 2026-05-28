@@ -190,7 +190,7 @@ struct NovelReaderView: View {
             Button {
                 translationEngine.isInlineTranslationActive.toggle()
                 if translationEngine.isInlineTranslationActive {
-                    translationConfig = TranslationSession.Configuration(source: nil, target: nil)
+                    translationConfig = TranslationLanguageResolver.configuration(for: store.appLanguage)
                 } else {
                     translationEngine.clearTranslations()
                     translationConfig = nil

@@ -3,6 +3,39 @@ import SwiftUI
 @preconcurrency import Translation
 #endif
 
+// MARK: - Translation language resolver
+
+/// Resolves the target language for translation based on the app's
+/// language setting. Since Pixiv is a Japanese site, most content is
+/// in Japanese — when the app language matches the source text, we
+/// translate to Japanese as a sensible fallback.
+enum TranslationLanguageResolver {
+    /// Returns a `Locale.Language` suitable as the translation target.
+    /// For `.automatic`, returns `nil` (system decides).
+    static func targetLanguage(for appLanguage: AppLanguage) -> Locale.Language? {
+        switch appLanguage {
+        case .automatic:
+            return nil
+        case .simplifiedChinese:
+            return Locale.Language(identifier: "zh-Hans")
+        case .traditionalChinese:
+            return Locale.Language(identifier: "zh-Hant")
+        case .japanese:
+            return Locale.Language(identifier: "ja")
+        case .english:
+            return Locale.Language(identifier: "en")
+        }
+    }
+
+    /// Builds a `TranslationSession.Configuration` with the correct
+    /// target language for the current app language. Source is always
+    /// `nil` for auto-detection.
+    static func configuration(for appLanguage: AppLanguage) -> TranslationSession.Configuration {
+        let target = targetLanguage(for: appLanguage)
+        return TranslationSession.Configuration(source: nil, target: target)
+    }
+}
+
 // MARK: - Inline translate button
 
 /// A compact icon-only toggle that activates inline bilingual
@@ -32,12 +65,9 @@ struct InlineTranslateButton: View {
 /// When translation is active, shows the translated text above the
 /// original in a secondary style. Uses Apple's `TranslationSession`
 /// for on-demand translation without sheet popups.
-///
-/// Uses the correct Apple pattern: optional `Configuration?` — setting
-/// it to non-nil triggers `.translationTask`. Calling `invalidate()`
-/// re-translates when text changes.
 struct InlineTranslateSection<Content: View>: View {
     let text: String
+    var appLanguage: AppLanguage = .automatic
     @ViewBuilder var content: Content
 
     @State private var isTranslateActive = false
@@ -94,8 +124,7 @@ struct InlineTranslateSection<Content: View>: View {
         #endif
         .onChange(of: isTranslateActive) { _, active in
             if active {
-                // Set non-nil config to trigger .translationTask
-                translationConfig = TranslationSession.Configuration(source: nil, target: nil)
+                translationConfig = TranslationLanguageResolver.configuration(for: appLanguage)
             } else {
                 translatedText = nil
                 isTranslating = false
@@ -103,7 +132,6 @@ struct InlineTranslateSection<Content: View>: View {
             }
         }
         .onChange(of: text) { _, _ in
-            // Re-translate when source text changes
             if isTranslateActive, translationConfig != nil {
                 translationConfig?.invalidate()
             }

@@ -261,7 +261,7 @@ private struct NovelDetailContent: View {
         VStack(alignment: .leading, spacing: 6) {
             Text(L10n.description)
                 .font(.headline)
-            InlineTranslateSection(text: captionPlainText) {
+            InlineTranslateSection(text: captionPlainText, appLanguage: store.appLanguage) {
                 Text(captionPlainText)
                     .font(.body)
                     .textSelection(.enabled)
