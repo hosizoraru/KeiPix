@@ -94,6 +94,7 @@ final class SidebarSectionExpansion {
     }
 }
 
+#if DEBUG
 private struct AccountHeader: View {
     @Bindable var store: KeiPixStore
 
@@ -251,3 +252,4 @@ private struct AccountModeMenuLabel: View {
         }
     }
 }
+#endif
