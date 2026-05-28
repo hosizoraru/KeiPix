@@ -259,6 +259,50 @@ struct PixivArtwork: Codable, Identifiable, Hashable, Sendable {
         return badges
     }
 
+    init(
+        id: Int,
+        title: String,
+        type: String,
+        caption: String,
+        user: PixivUser,
+        tags: [PixivTag],
+        createDate: Date,
+        pageCount: Int,
+        width: Int,
+        height: Int,
+        totalView: Int,
+        totalBookmarks: Int,
+        totalComments: Int,
+        isBookmarked: Bool,
+        isMuted: Bool,
+        isAI: Bool,
+        sanityLevel: Int,
+        xRestrict: Int,
+        series: PixivArtworkSeriesSummary?,
+        images: [PixivImageSet]
+    ) {
+        self.id = id
+        self.title = title
+        self.type = type
+        self.caption = caption
+        self.user = user
+        self.tags = tags
+        self.createDate = createDate
+        self.pageCount = pageCount
+        self.width = width
+        self.height = height
+        self.totalView = totalView
+        self.totalBookmarks = totalBookmarks
+        self.totalComments = totalComments
+        self.isBookmarked = isBookmarked
+        self.isMuted = isMuted
+        self.isAI = isAI
+        self.sanityLevel = sanityLevel
+        self.xRestrict = xRestrict
+        self.series = series
+        self.images = images
+    }
+
     enum CodingKeys: String, CodingKey {
         case id
         case title
