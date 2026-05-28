@@ -36532,6 +36532,52 @@
         }
       }
     },
+    "Removed %@ from Watch Later": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已将「%@」从稍后再看移除"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已將「%@」從稍後再看移除"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "「%@」を後で見るから削除しました"
+          }
+        }
+      }
+    },
+    "Cleared %d watch later items": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已清空 %d 个稍后再看项目"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已清空 %d 個稍後再看項目"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d 件の後で見るをクリアしました"
+          }
+        }
+      }
+    },
     "Export History": {
       "extractionState": "manual",
       "localizations": {

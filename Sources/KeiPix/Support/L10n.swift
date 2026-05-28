@@ -131,6 +131,8 @@ enum L10n {
     static var watchLaterAdded: String { text("Added to Watch Later") }
     static var watchLaterRemoved: String { text("Removed from Watch Later") }
     static var watchLaterRemoveConfirm: String { text("Remove from Watch Later?") }
+    static var watchLaterRemovedFormat: String { text("Removed %@ from Watch Later") }
+    static var clearedWatchLaterFormat: String { text("Cleared %d watch later items") }
     static var watchLaterClear: String { text("Clear Watch Later") }
     static var clearSearch: String { text("Clear Search") }
     static var clearHistory: String { text("Clear History") }

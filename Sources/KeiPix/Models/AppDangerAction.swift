@@ -52,6 +52,7 @@ struct AppUndoAction: Identifiable {
         case unmuteTag(String)
         case restoreDownloads([ArtworkDownloadItem])
         case restoreLocalHistory([LocalArtworkHistoryItem])
+        case restoreWatchLater([LocalArtworkHistoryItem])
         case restoreSavedSearches([String])
         case restoreSavedSearchPresets([SavedSearchPreset])
         case restoreSearchHistory([String])
@@ -84,6 +85,8 @@ struct AppUndoAction: Identifiable {
             String(format: L10n.clearedDownloadsFormat, items.count)
         case .restoreLocalHistory(let items):
             String(format: L10n.clearedHistoryItemsFormat, items.count)
+        case .restoreWatchLater(let items):
+            String(format: L10n.clearedWatchLaterFormat, items.count)
         case .restoreSavedSearches(let keywords):
             String(format: L10n.removedSavedSearchesFormat, keywords.count)
         case .restoreSavedSearchPresets(let presets):

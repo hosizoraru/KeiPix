@@ -27,6 +27,14 @@ extension KeiPixStore {
         persistWatchLaterQueue()
     }
 
+    func restoreWatchLaterItems(_ items: [LocalArtworkHistoryItem]) {
+        for item in items.reversed() {
+            guard watchLaterQueue.contains(where: { $0.id == item.id }) == false else { continue }
+            watchLaterQueue.insert(item, at: 0)
+        }
+        persistWatchLaterQueue()
+    }
+
     func watchLaterItems(matching query: String) -> [LocalArtworkHistoryItem] {
         watchLaterQueue.filter { item in
             passesLocalHistoryFilters(item) && item.matches(query)

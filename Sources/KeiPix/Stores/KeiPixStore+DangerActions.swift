@@ -54,6 +54,8 @@ extension KeiPixStore {
             downloads.restoreItems(items)
         case .restoreLocalHistory(let items):
             restoreLocalBrowsingHistory(items)
+        case .restoreWatchLater(let items):
+            restoreWatchLaterItems(items)
         case .restoreSavedSearches(let keywords):
             restoreSavedSearches(keywords)
         case .restoreSavedSearchPresets(let presets):

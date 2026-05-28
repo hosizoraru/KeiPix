@@ -275,6 +275,7 @@ enum PixivRoute: String, CaseIterable, Identifiable, Codable {
              .spotlight,
              .bookmarkTags,
              .mutedContent,
+             .watchLater,
              .novelRecommended,
              .novelFollowing,
              .novelSearch,
@@ -461,7 +462,7 @@ enum PixivRoute: String, CaseIterable, Identifiable, Codable {
         case .followingCreators: "person.2.crop.square.stack"
         case .pinnedCreators: "pin"
         case .history: "clock.arrow.circlepath"
-        case .watchLater: "clock.badge.plus"
+        case .watchLater: "bookmark.circle"
         case .workSubscriptions: "bell.badge"
         case .mutedContent: "eye.slash"
         case .mangaWatchlist: "rectangle.stack.badge.person.crop"
