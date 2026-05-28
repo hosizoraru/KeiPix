@@ -49,7 +49,7 @@
 
 - [x] **Quick Look** — `f253f65`
 - [x] **WidgetKit** — `5a37683` (data provider for widget extension)
-- [ ] Share Extension — receive Pixiv links from other apps
+- [x] **Share Extension** — `8c04a2f`
 - [x] Haptic feedback — `ba4e8a9`
 - [x] Skeleton loading states — `ba4e8a9`
 - [x] **Touch Bar** — `f229b60`

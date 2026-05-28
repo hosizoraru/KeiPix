@@ -59,6 +59,12 @@ struct KeiPixApp: App {
                         store.presentPendingReleaseUpdateIfNeeded()
                     }
                 }
+                .task {
+                    // Check for pending links from Share Extension
+                    if let url = ShareExtensionHandler.consumePendingLink() {
+                        await store.openPixivLink(url)
+                    }
+                }
                 #if os(iOS)
                 .task {
                     BackgroundFetchScheduler.register()
