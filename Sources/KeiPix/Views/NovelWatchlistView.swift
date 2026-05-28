@@ -38,8 +38,8 @@ struct NovelWatchlistView: View {
 
                         if novelStore.watchlistNextURL != nil {
                             paginationFooter
-                                .onAppear {
-                                    Task { await novelStore.loadMore(route: .novelWatchlist) }
+                                .task {
+                                    await novelStore.loadMore(route: .novelWatchlist)
                                 }
                         }
                     }

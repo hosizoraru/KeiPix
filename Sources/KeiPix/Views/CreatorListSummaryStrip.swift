@@ -31,21 +31,18 @@ struct CreatorListSummaryStrip: View {
         }
     }
 
-    private var followedCount: Int {
-        previews.filter(\.user.isFollowed).count
+    private var stats: (followed: Int, muted: Int, works: Int) {
+        previews.reduce(into: (0, 0, 0)) { acc, p in
+            if p.user.isFollowed { acc.0 += 1 }
+            if p.isMuted { acc.1 += 1 }
+            acc.2 += p.illusts.count
+        }
     }
 
-    private var unfollowedCount: Int {
-        previews.count - followedCount
-    }
-
-    private var mutedCount: Int {
-        previews.filter(\.isMuted).count
-    }
-
-    private var previewWorkCount: Int {
-        previews.reduce(0) { $0 + $1.illusts.count }
-    }
+    private var followedCount: Int { stats.followed }
+    private var unfollowedCount: Int { previews.count - stats.followed }
+    private var mutedCount: Int { stats.muted }
+    private var previewWorkCount: Int { stats.works }
 }
 
 private struct CreatorSummaryChip: View {

@@ -108,6 +108,7 @@ private struct ProfileStatCell: View {
         }
         .buttonStyle(.plain)
         .keiPixHoverTracker { isHovering = $0 }
+        .animation(.snappy(duration: 0.16), value: isHovering)
         .help("\(entry.title) · \(entry.value.formatted())")
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(entry.title): \(entry.value.formatted())")

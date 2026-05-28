@@ -73,8 +73,8 @@ struct NovelGalleryView: View {
 
                     if novelStore.nextURL != nil {
                         paginationFooter
-                            .onAppear {
-                                Task { await novelStore.loadMore(route: store.selectedRoute) }
+                            .task {
+                                await novelStore.loadMore(route: store.selectedRoute)
                             }
                     }
                 }
@@ -97,8 +97,8 @@ struct NovelGalleryView: View {
 
                     if novelStore.nextURL != nil {
                         paginationFooter
-                            .onAppear {
-                                Task { await novelStore.loadMore(route: store.selectedRoute) }
+                            .task {
+                                await novelStore.loadMore(route: store.selectedRoute)
                             }
                     }
                 }

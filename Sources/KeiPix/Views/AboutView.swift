@@ -1,4 +1,3 @@
-import AppKit
 import SwiftUI
 
 /// About panel surfaced through the application menu's "About KeiPix" item.

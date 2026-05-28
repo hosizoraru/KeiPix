@@ -1,4 +1,3 @@
-import AppKit
 import SwiftUI
 
 /// Hosts a single artwork in its own reader window. Driven by an
