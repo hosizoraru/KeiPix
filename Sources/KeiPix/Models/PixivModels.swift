@@ -416,6 +416,8 @@ struct PixivFeedResponse: Decodable, Sendable {
         self.nextURL = nextURL
     }
 
+    static let empty = PixivFeedResponse(illusts: [], nextURL: nil)
+
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         illusts = try container.decodeIfPresent([PixivArtwork].self, forKey: .illusts) ?? []

@@ -870,7 +870,13 @@ final class KeiPixStore {
     }
 
     private func loadFeed(for route: PixivRoute) async throws -> PixivFeedResponse {
+        // Ranking routes — use the mode mapping from PixivRoute
+        if let mode = route.rankingMode, route.usesNovelFeed == false {
+            return try await api.ranking(mode: mode, date: rankingDateParameter)
+        }
+
         switch route {
+        // Discovery
         case .illustrations:
             return try await api.recommendedIllusts()
         case .mangaRecommended:
@@ -879,12 +885,14 @@ final class KeiPixStore {
             return try await api.latestIllusts(contentType: "illust")
         case .newManga:
             return try await api.latestIllusts(contentType: "manga")
+
+        // Search
         case .search:
             let keyword = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
-            if keyword.isEmpty {
-                return PixivFeedResponse(illusts: [], nextURL: nil)
-            }
+            guard keyword.isEmpty == false else { return .empty }
             return try await api.search(keyword: keyword, options: searchOptions)
+
+        // User content
         case .userIllustrations:
             guard let focusedUser else { throw PixivAPIError.invalidResponse }
             return try await api.userIllusts(userID: focusedUser.id, type: "illust")
@@ -894,80 +902,30 @@ final class KeiPixStore {
         case .userPublicBookmarks:
             guard let focusedUser else { throw PixivAPIError.invalidResponse }
             return try await api.bookmarks(restrict: "public", userID: "\(focusedUser.id)")
-        case .rankingDaily:
-            return try await api.ranking(mode: "day", date: rankingDateParameter)
-        case .rankingWeekly:
-            return try await api.ranking(mode: "week", date: rankingDateParameter)
-        case .rankingMonthly:
-            return try await api.ranking(mode: "month", date: rankingDateParameter)
-        case .rankingDailyMale:
-            return try await api.ranking(mode: "day_male", date: rankingDateParameter)
-        case .rankingDailyFemale:
-            return try await api.ranking(mode: "day_female", date: rankingDateParameter)
-        case .rankingWeeklyOriginal:
-            return try await api.ranking(mode: "week_original", date: rankingDateParameter)
-        case .rankingWeeklyRookie:
-            return try await api.ranking(mode: "week_rookie", date: rankingDateParameter)
-        case .rankingDailyAI:
-            return try await api.ranking(mode: "day_ai", date: rankingDateParameter)
-        case .rankingDailyR18AI:
-            return try await api.ranking(mode: "day_r18_ai", date: rankingDateParameter)
-        case .rankingDailyR18:
-            return try await api.ranking(mode: "day_r18", date: rankingDateParameter)
-        case .rankingWeeklyR18:
-            return try await api.ranking(mode: "week_r18", date: rankingDateParameter)
-        case .rankingWeeklyR18G:
-            return try await api.ranking(mode: "week_r18g", date: rankingDateParameter)
-        case .mangaRankingDaily:
-            return try await api.ranking(mode: "day_manga", date: rankingDateParameter)
-        case .mangaRankingWeekly:
-            return try await api.ranking(mode: "week_manga", date: rankingDateParameter)
-        case .mangaRankingMonthly:
-            return try await api.ranking(mode: "month_manga", date: rankingDateParameter)
-        case .mangaRankingDailyR18:
-            return try await api.ranking(mode: "day_r18_manga", date: rankingDateParameter)
+
+        // Own bookmarks
         case .publicBookmarks:
             guard let userID = session?.user.id else { throw PixivAPIError.missingSession }
             return try await api.bookmarks(restrict: "public", userID: userID, tag: bookmarkTagFilter)
         case .privateBookmarks:
             guard let userID = session?.user.id else { throw PixivAPIError.missingSession }
             return try await api.bookmarks(restrict: "private", userID: userID, tag: bookmarkTagFilter)
+
+        // Following
         case .allFollowing:
             return try await api.following(restrict: "all")
         case .following:
             return try await api.following(restrict: "public")
         case .privateFollowing:
             return try await api.following(restrict: "private")
+
+        // History
         case .history:
             return try await api.browsingHistoryIllusts()
-        case .home, .watchLater, .workSubscriptions, .mangaWatchlist, .downloads, .savedSearches, .trendingTags, .bookmarkTags, .mutedContent, .spotlight:
-            return PixivFeedResponse(illusts: [], nextURL: nil)
-        case .followingCreators, .pinnedCreators, .recommendedUsers, .searchUsers:
-            return PixivFeedResponse(illusts: [], nextURL: nil)
-        case .novelRecommended,
-             .novelFollowing,
-             .novelSearch,
-             .novelPublicBookmarks,
-             .novelPrivateBookmarks,
-             .novelWatchlist,
-             .novelRankingDaily,
-             .novelRankingWeekly,
-             .novelRankingMonthly,
-             .novelRankingDailyMale,
-             .novelRankingDailyFemale,
-             .novelRankingWeeklyRookie,
-             .novelRankingWeeklyAI,
-             .novelRankingDailyR18,
-             .novelRankingWeeklyR18,
-             .novelRankingWeeklyR18AI,
-             .novelRankingWeeklyR18G,
-             .userNovels,
-             .userNovelBookmarks:
-            // Novel routes flow through `NovelFeatureStore` instead of the
-            // shared artwork pipeline. Returning an empty response here keeps
-            // the existing artwork view-models inert when a novel route is
-            // selected.
-            return PixivFeedResponse(illusts: [], nextURL: nil)
+
+        // Non-artwork routes (handled by other systems)
+        default:
+            return .empty
         }
     }
 

@@ -25,7 +25,7 @@
 
 - [x] **7. Replace repetitive `setX()`/UserDefaults pattern** — `0e7275a`
 - [ ] **8. Auto-generate L10n from String Catalog**
-- [ ] **9. Refactor `loadFeed` route mapping**
+- [x] **9. Refactor `loadFeed` route mapping** — `0fe99e9`
 - [x] **10. Wrap AppKit imports in `#if os(macOS)`** — `40c1e72`
 
 ---
