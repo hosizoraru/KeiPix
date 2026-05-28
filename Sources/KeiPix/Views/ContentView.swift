@@ -213,6 +213,7 @@ struct ContentView: View {
         .onChange(of: store.undoAction?.id) { _, _ in
             registerCurrentUndoAction()
         }
+        #if DEBUG
         .task {
             if VisualQALaunchArgument.contains(.mangaWatchlist) {
                 store.activateVisualQASampleSession()
@@ -258,6 +259,7 @@ struct ContentView: View {
                 store.presentGalleryLayoutVisualQA(mode: visualQAGalleryLayoutMode)
             }
         }
+        #endif
         .overlay(alignment: .bottom) {
             if let errorMessage = store.errorMessage {
                 ErrorToast(
