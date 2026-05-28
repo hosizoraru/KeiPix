@@ -52,7 +52,7 @@
 - [ ] Share Extension — receive Pixiv links from other apps
 - [x] Haptic feedback — `ba4e8a9`
 - [x] Skeleton loading states — `ba4e8a9`
-- [ ] Touch Bar support
+- [x] **Touch Bar** — `f229b60`
 - [ ] Handoff between devices
 - [ ] Finder extension for downloaded files
 
