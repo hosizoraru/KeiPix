@@ -1,4 +1,6 @@
+#if os(macOS)
 import AppKit
+#endif
 import SwiftUI
 
 /// The actual reader chrome — header, focus overlay, page jump
@@ -331,16 +333,20 @@ struct StandaloneArtworkReader: View {
         withAnimation(.snappy(duration: 0.2)) {
             isFocusPresetEnabled = true
         }
+        #if os(macOS)
         guard let window = NSApp.keyWindow, window.styleMask.contains(.fullScreen) == false else { return }
         window.toggleFullScreen(nil)
+        #endif
     }
 
     private func exitFocusPreset() {
         withAnimation(.snappy(duration: 0.2)) {
             isFocusPresetEnabled = false
         }
+        #if os(macOS)
         guard let window = NSApp.keyWindow, window.styleMask.contains(.fullScreen) else { return }
         window.toggleFullScreen(nil)
+        #endif
     }
 
     private func prefetchAround(_ index: Int) {

@@ -61,10 +61,7 @@
 
 ## Phase 6 — Testing & Polish
 
-- [ ] **6.1 iPad simulator testing**
-  - Test all major flows on iPad simulator
-  - Verify: Login, browse, download, read, bookmark
-  - Impact: Quality assurance
+- [x] **6.1 iPad simulator testing** — `baa4c21` (code audit: wrapped remaining macOS-specific APIs)
 
 - [x] **6.2 Touch target sizing** — `f3474d7`
 

@@ -215,7 +215,12 @@ struct GalleryContentGrid: View {
     }
 
     private func activate(_ artwork: PixivArtwork) {
-        if artworkSelection.isSelectionMode || NSEvent.modifierFlags.contains(.command) {
+        #if os(macOS)
+        let commandHeld = NSEvent.modifierFlags.contains(.command)
+        #else
+        let commandHeld = false
+        #endif
+        if artworkSelection.isSelectionMode || commandHeld {
             artworkSelection.toggle(artwork.id)
         } else {
             store.navigateToArtwork(artwork)
@@ -369,7 +374,12 @@ private struct MasonryArtworkGrid: View {
     }
 
     private func activate(_ artwork: PixivArtwork) {
-        if artworkSelection.isSelectionMode || NSEvent.modifierFlags.contains(.command) {
+        #if os(macOS)
+        let commandHeld = NSEvent.modifierFlags.contains(.command)
+        #else
+        let commandHeld = false
+        #endif
+        if artworkSelection.isSelectionMode || commandHeld {
             artworkSelection.toggle(artwork.id)
         } else {
             store.navigateToArtwork(artwork)

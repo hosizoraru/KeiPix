@@ -104,6 +104,7 @@ struct UgoiraExportPackage {
     }
 }
 
+#if os(macOS)
 private extension NSImage {
     static func visualQAUgoiraFrame(index: Int, color: NSColor) -> NSImage {
         let size = NSSize(width: 960, height: 640)
@@ -135,3 +136,4 @@ private extension NSImage {
         return image
     }
 }
+#endif
