@@ -455,7 +455,6 @@ final class KeiPixStore {
         }
     }
 
-    @discardableResult
     func reloadCurrentFeed() async {
         let context = currentFeedRequestContext()
         if usesLocalSampleAccount {

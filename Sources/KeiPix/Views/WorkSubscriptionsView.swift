@@ -83,7 +83,7 @@ struct WorkSubscriptionsView: View {
                             subscription: subscription,
                             showContentBadges: store.showContentBadges,
                             select: {
-                                Task { await selectSubscription(subscription) }
+                                selectSubscription(subscription)
                             },
                             unsubscribe: {
                                 store.workSubscriptions.removeAll { $0.id == subscription.id }

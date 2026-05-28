@@ -6,9 +6,11 @@ struct SidebarView: View {
 
     var body: some View {
         List(selection: $store.selectedRoute) {
+            #if DEBUG
             Section {
                 AccountHeader(store: store)
             }
+            #endif
 
             ForEach(PixivRoute.sidebarSections) { section in
                 Section(isExpanded: expansion.binding(for: section)) {
