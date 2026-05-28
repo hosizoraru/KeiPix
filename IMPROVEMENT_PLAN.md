@@ -18,7 +18,7 @@
 
 ## P1 — High Impact, Medium Effort
 
-- [ ] **6. Extract QA/VisualQA code from production**
+- [x] **6. Extract QA/VisualQA code from production** — `79dfa38`
   - Files: `Stores/KeiPixStore+NonNovelQA.swift` (747 lines), `Support/VisualQASampleData.swift` (883 lines)
   - Fix: Move to test target or wrap in `#if DEBUG`
   - Impact: Binary size, code cleanliness
@@ -42,10 +42,7 @@
   - Fix: Protocol abstractions + mock-based unit tests
   - Impact: Test coverage for critical paths
 
-- [ ] **13. Structured error handling**
-  - File: All `errorMessage = error.localizedDescription` calls
-  - Fix: `AppError` enum with retry actions, error categorization
-  - Impact: UX — better error recovery
+- [x] **13. Structured error handling** — `3adba2e`
 
 - [ ] **14. SwiftData persistence layer**
   - Problem: All persistence via UserDefaults JSON blobs

@@ -1194,6 +1194,8 @@ enum L10n {
     static var noArtworkTitle: String { text("No artworks loaded") }
     static var noArtworkSubtitle: String { text("Refresh the current section or start a search.") }
     static var errorTitle: String { text("Request failed") }
+    static var errorRateLimited: String { text("Too many requests. Please try again later.") }
+    static var errorSessionExpired: String { text("Session expired. Please log in again.") }
     static var copyError: String { text("Copy Error") }
     static var copiedError: String { text("Copied Error") }
     static var copied: String { text("Copied") }
