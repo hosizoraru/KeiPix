@@ -144,13 +144,13 @@ struct ContentView: View {
             )
             .iPadFriendlySheet()
         }
+        .sheet(isPresented: $isSeriesSheetVisualQAPresented) {
+            ArtworkSeriesVisualQASheetView(store: store)
+                .iPadFriendlySheet()
+        }
         #endif
         .sheet(isPresented: $isPixivIDOpenPresented) {
             PixivIDOpenSheet(store: store, showStatus: showStatus)
-                .iPadFriendlySheet()
-        }
-        .sheet(isPresented: $isSeriesSheetVisualQAPresented) {
-            ArtworkSeriesVisualQASheetView(store: store)
                 .iPadFriendlySheet()
         }
         .sheet(item: $feedbackVisualQARequest) { request in

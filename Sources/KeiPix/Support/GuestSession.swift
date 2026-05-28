@@ -32,6 +32,11 @@ extension KeiPixStore {
         session = GuestSession.session
         restrictedModeEnabled = false
         isLoginPresented = false
+        #if DEBUG
         presentLocalSampleFeed(for: selectedRoute.usesArtworkFeed ? selectedRoute : .illustrations)
+        #else
+        // In release builds, trigger a real feed load
+        Task { await reloadCurrentFeed() }
+        #endif
     }
 }
