@@ -1,79 +1,131 @@
 # KeiPix
 
-KeiPix 是一款面向 macOS 26+ 的原生 Swift + SwiftUI Pixiv 客户端。所有 UI 使用 SwiftUI 编写，仅在桌面集成层（窗口、触控板、安全沙盒、Pixivision 文章 WebView）使用窄口的 AppKit / WebKit 桥接。
+Native Swift + SwiftUI Pixiv client for macOS 26+ and iPadOS 26+.
 
-> Native Swift + SwiftUI Pixiv client for macOS 26 and newer Apple platforms. Reference Flutter projects under `tmp/` are behavior references only — no GPL / Flutter / Dart source is reused inside `Sources/KeiPix`.
+> 所有 UI 使用 SwiftUI 编写，仅在桌面集成层使用窄口的 AppKit 桥接。iPadOS 使用跨平台手势和文件抽象层。
 
-## 项目状态
+## 功能概览
 
-非小说功能面（插画、漫画、发现、账户、下载、阅读器、安全过滤、本地缓存）整体完成度约 **96–99%**，每条线都有可重复的视觉 QA 证据与读模式诊断。小说相关流程（推荐 / 搜索 / 排行榜 / 阅读器 / 评论）按当前策略**继续延后**，待非小说面稳定再启动。最新带日期的快照见 [`readme/PROGRESS.md`](readme/PROGRESS.md) 与 [`readme/NON_NOVEL_GAP_AUDIT_2026-05-25.md`](readme/NON_NOVEL_GAP_AUDIT_2026-05-25.md)。
+### 浏览与发现
 
-## 主要特性
+- **原生画廊**：MasonryLayout、四档密度、连续/单页/双页/索引阅读模式
+- **浏览器式导航历史**：Cmd+[ / Cmd+] 后退/前进，100 条历史缓存
+- **自适应操作栏**：根据面板宽度自动显示更多按钮（收藏/下载/分享/搜索图源/稍后再看）
+- **内联翻译**：Apple Translation 框架，支持双语对照和沉浸式两种模式，翻译目标语言可配置
+- **搜索**：高级筛选、自动补全、保存预设、Pixiv Web URL 互通
 
-- **原生体验**：`NavigationSplitView` 侧边栏 + 自适应 masonry 画廊 + 详情 inspector，AppKit 仅做触控板、窗口、剪贴板、URL 拖放等窄桥接
-- **登录与账户**：Pixiv OAuth PKCE（嵌入式 `WKWebView`）、沙盒容器内的本地安全存储、token 自动刷新、refresh-token 一键导入（Pixez 迁移）、多账号切换、访客 / 测试模式
-- **完整的非小说浏览**：推荐 / 排行榜 / 关注 / 收藏 / 标签搜索 / Pixivision，原生发现仪表盘聚合所有侧边栏入口
-- **画廊与阅读器**：自定义 `MasonryLayout`、四档密度、连续 / 单页 / 索引模式、触控板手势、跳页面板、独立阅读器窗口、专注全屏、按作品续读
-- **下载与本地库**：队列 / 模板命名 / 多 P 范围下载 / 失败退避重试 / 自动收藏联动 / 本地阅读器 / Finder 联动
-- **Ugoira**：解码、变速播放、ZIP / GIF / 单帧 PNG 导出、本地预览
-- **搜索**：高级筛选（match/sort/age/date/bookmark/AI/work-type/ugoira）、自动补全、保存预设 / 历史 JSON 导入导出、非 Premium 限量热门预览、Pixiv Web URL 互通
-- **安全过滤**：AI / R-18 / R-18G 标记与可选预览遮罩、本地静音 + Pixiv mute 同步只读诊断、反馈 / 举报原生 sheet
-- **离线与缓存**：URLCache 图片缓存、按路由 / 筛选键缓存的最近成功作品流，断网失败时只读还原并提示
-- **可重复的视觉 QA**：23 个 launch mode 直达独立窗口截图，证据落在 `artifacts/visual-qa/<UTC 时间戳>/`
-- **本地化**：英文与简体中文 strings 全覆盖，Settings 搜索按本地化语言索引
-- **Runtime Readiness 矩阵**：P0/P1/P2 行 + 可复制诊断文本，最新一次签入运行选定 2P 作品 `#142077008`，记录 P0 4/4、P1 8/8、P2 8/8
+### 阅读器
+
+- **双页书本模式**：宽屏自动展开左右页，类似实体书阅读体验
+- **触控板手势**：滑动翻页、捏合缩放、双击缩放、拖拽平移
+- **iPadOS 触控手势**：跨平台手势桥接器，支持滑动/捏合/双击
+- **翻译缓存**：按页缓存翻译结果，翻页不丢失
+- **翻译模式**：双语对照（原文+译文）和沉浸式（译文替换原文）
+
+### 下载与本地库
+
+- 队列管理 / 模板命名 / 多P范围下载 / 失败退避重试
+- 自动收藏联动 / 本地阅读器 / Finder 元数据写入
+- iPadOS: Photos 库保存 / Files app 集成
+
+### 平台集成
+
+- **Spotlight**：下载内容可搜索
+- **Shortcuts**：AppIntents 支持
+- **Handoff**：跨设备接力浏览
+- **Touch Bar**：导航/收藏/下载快捷按钮
+- **Quick Look**：空格键预览画作
+- **WidgetKit**：数据提供器（Artwork of the Day）
+- **Share Extension**：接收其他 App 的 Pixiv 链接
+
+### 安全与隐私
+
+- AI / R-18 / R-18G 标记与可选预览遮罩
+- 本地静音 + Pixiv mute 同步
+- 隐私模式 / 屏幕截图保护
+
+## 平台支持
+
+| 平台 | 最低版本 | 状态 |
+| --- | --- | --- |
+| macOS | 26.0 | 主平台，完整功能 |
+| iPadOS | 26.0 | 基础适配完成（TabView 导航、触控手势、全屏阅读器） |
 
 ## 快速开始
 
 ```bash
+# 构建并运行
 ./script/build_and_run.sh
+
+# 仅构建
+swift build
+
+# 运行测试
+swift test
+
+# 视觉 QA 模式
+./script/build_and_run.sh --verify
 ```
 
-常用模式：
+## 项目结构
 
-```bash
-./script/build_and_run.sh --verify     # 启动 cached-feed 视觉 QA 模式（默认 --verify 入口）
-./script/build_and_run.sh --logs       # 跟随 stdout/stderr
-./script/build_and_run.sh --debug      # lldb 启动
-./script/build_and_run.sh --package    # 仅打包不启动
+```text
+Sources/KeiPix/
+├── App/              # 应用入口、AppDelegate、Services
+├── Intents/          # AppIntents (Shortcuts)
+├── Models/           # 数据模型、路由、阅读模式
+├── Resources/        # xcstrings、资源文件
+├── Services/         # PixivAPI、ImagePipeline、SpotlightIndexer
+├── Stores/           # KeiPixStore (26 个扩展文件)
+├── Support/          # 工具类、L10n、平台抽象
+└── Views/            # SwiftUI 视图 (90+ 文件)
 ```
 
-更细的视觉 QA launch mode 列表请看 [`docs/quality-assurance.md`](docs/quality-assurance.md)。
+## 架构亮点
 
-Codex 应用的 Run 动作通过 `.codex/environments/environment.toml` 走同一个脚本。
+- **@Observable**：KeiPixStore 使用 Swift Observation 框架
+- **平台抽象**：PlatformTypes、PlatformWorkspace、PlatformFilePicker、PasteboardWriter
+- **跨平台手势**：ReaderGestureBridge 统一 macOS 触控板和 iPadOS 触控手势
+- **条件编译**：`#if os(macOS)` / `#if os(iOS)` 分离平台特定代码
+- **结构化错误**：AppError 枚举（network/auth/parsing/rateLimited）
 
-## 文档索引
+## 改进计划
 
-精简后的细分文档全部放在 [`docs/`](docs/) 下：
+详见 [`IMPROVEMENT_PLAN.md`](IMPROVEMENT_PLAN.md) 和 [`IPADOS_PLAN.md`](IPADOS_PLAN.md)。
 
-| 文档 | 内容 |
+| 阶段 | 状态 |
 | --- | --- |
-| [`docs/architecture.md`](docs/architecture.md) | 模块划分、源码目录、与 Pixez/Pixes 的边界 |
-| [`docs/build-and-run.md`](docs/build-and-run.md) | SwiftPM / XcodeGen 双轨构建、签名、沙盒、`.codex` 集成 |
-| [`docs/features.md`](docs/features.md) | 按流程展开的非小说功能矩阵 |
-| [`docs/quality-assurance.md`](docs/quality-assurance.md) | Runtime Readiness 矩阵、视觉 QA 流程、可变更动作授权 |
-| [`docs/safety-and-privacy.md`](docs/safety-and-privacy.md) | AI / R-18 / mute / 反馈 / 远端写入授权策略 |
-| [`docs/localization.md`](docs/localization.md) | 多语言策略与扩展指引 |
-| [`docs/contributing.md`](docs/contributing.md) | 提交规范、参考项目使用边界、源边界测试 |
-
-历史快照：[`readme/PROGRESS.md`](readme/PROGRESS.md) ｜ [`readme/NON_NOVEL_GAP_AUDIT_2026-05-25.md`](readme/NON_NOVEL_GAP_AUDIT_2026-05-25.md)
-
-## 参考项目
-
-下列两个 Flutter 客户端被 clone 到 `tmp/` 仅作为产品和后端架构的参考（OAuth PKCE、Pixiv App API headers、token refresh、image `Referer`、侧边栏分区、画廊浏览、详情动作）：
-
-- `tmp/pixez-flutter`
-- `tmp/pixes`
-
-`Sources/KeiPix` 是全新的原生 SwiftUI 实现。`Tests/KeiPixTests/NativeBoundaryTests.swift` 强制源码边界：检测 `Package.swift`、SwiftUI-first 视图，并阻止 Flutter / Dart / Kotlin 实现路径混入主源码。
+| P0 (高影响小改动) | 5/5 ✅ |
+| P1 (高影响中改动) | 5/5 ✅ |
+| P2 (架构重构) | 5/5 ✅ |
+| P3 (新功能) | 8/8 ✅ |
+| iPadOS 适配 | 20/20 ✅ |
 
 ## 运行环境
 
-- macOS 26.0 或更新（`Package.swift` 与 `project.yml` 同步声明）
-- Swift 6.0（`SWIFT_STRICT_CONCURRENCY: complete`）
-- Xcode 26.x，启用 App Sandbox + Hardened Runtime
-- 网络：Pixiv App API（`X-Client-Time` / `X-Client-Hash` / Bearer / 表单 POST），图片走带 `Referer` 的原生 loader
+- macOS 26.0+ / iPadOS 26.0+
+- Swift 6.2+（`SWIFT_STRICT_CONCURRENCY: complete`）
+- Xcode 26.x
+- App Sandbox + Hardened Runtime
+
+## 测试
+
+```bash
+# 运行所有测试
+swift test
+
+# 测试覆盖
+# - 49 个测试文件
+# - 模型、解析器、服务、工具类
+# - NavigationHistory、SearchOptions、DownloadNamingTemplate 等
+```
+
+## 本地化
+
+- 英文 / 简体中文 / 繁体中文 / 日文
+- String Catalog (`.xcstrings`) 格式
+- 运行时语言切换支持
 
 ## License
 
-仓库当前未附带正式 License 文件。在加入正式 License 之前，本项目源码版权归作者所有，仅供阅读与评估，不授予分发或衍生授权。任何对参考项目（Pixez / Pixes，GPL）的代码引用都被 `NativeBoundaryTests` 拦截。
+仓库当前未附带正式 License 文件。在加入正式 License 之前，本项目源码版权归作者所有，仅供阅读与评估，不授予分发或衍生授权。

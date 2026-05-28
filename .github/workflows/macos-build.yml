@@ -1,13 +1,5 @@
-name: macOS Build
+name: Build & Test
 
-# Triggers:
-# - push to master / a release branch -> regression check + zip artifact
-# - pull request -> same, gated to the PR runner so we catch breakage
-#   before it lands
-# - tag push (v*) -> additionally produce a .dmg and attach both zip
-#   and dmg to the GitHub Release (publishes only if the release
-#   already exists, so the workflow never auto-publishes drafts)
-# - manual dispatch -> on-demand build with selectable format
 on:
   push:
     branches: [master]
@@ -22,24 +14,17 @@ on:
         default: zip
         options: [zip, dmg, both]
 
-# Cancel superseded runs on the same ref so the queue stays small.
 concurrency:
-  group: macos-build-${{ github.ref }}
+  group: build-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
-  contents: write   # needed for tag-driven release uploads
+  contents: write
   actions: read
 
 jobs:
   build:
     name: Build & package KeiPix.app
-    # macos-26 ships Xcode 26.x as the default toolchain, which is the
-    # only public runner that satisfies our `swift-tools-version: 6.2`
-    # + `.macOS(.v26)` deployment target. Older labels (macos-15 and
-    # below) cap at Xcode 16 / Swift 6.1 and reject the package outright.
-    # `macos-latest` is intentionally avoided since GitHub rolls it
-    # forward without notice.
     runs-on: macos-26
     timeout-minutes: 25
 
@@ -47,17 +32,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
         with:
-          # Tag descriptions feed CFBundleShortVersionString via
-          # `git describe`, so we need annotated tag history. A
-          # depth of 50 is enough for `describe` without the cost
-          # of an unshallow fetch.
           fetch-depth: 50
 
       - name: Select Xcode toolchain
-        # Pin to the newest Xcode 26 the runner advertises so the
-        # Swift 6.2 toolchain and macOS 26 SDK are guaranteed even
-        # when the runner image rolls in additional builds. Falls
-        # back to the runner's default Xcode if no 26.x is found.
         run: |
           set -euo pipefail
           xcode_path=""
@@ -73,10 +50,6 @@ jobs:
           swift --version
 
       - name: Cache SwiftPM build products
-        # The SwiftPM build folder is the dominant compile-time cost.
-        # Keying on Package.resolved + every .swift source means any
-        # real change still rebuilds; a same-content rerun reuses the
-        # incremental build.
         uses: actions/cache@v5
         with:
           path: |
@@ -90,11 +63,10 @@ jobs:
       - name: Resolve dependencies
         run: swift package resolve
 
+      - name: Build (macOS)
+        run: swift build
+
       - name: Run tests
-        # Tests run against the debug build and exercise the same
-        # source set as the release packaging step below. They're
-        # ~2 seconds locally, so paying for a green signal in CI is
-        # cheap insurance against shipping a broken bundle.
         run: swift test --parallel
 
       - name: Determine artifact format
@@ -108,12 +80,8 @@ jobs:
           if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
             fmt="$DISPATCH_FORMAT"
           elif [ "${REF#refs/tags/v}" != "$REF" ]; then
-            # Tag pushes always produce both formats so we have
-            # something to attach to the release.
             fmt="both"
           else
-            # Push / PR runs only need the zip; dmg adds ~30s and
-            # nobody downloads it from a regression run.
             fmt="zip"
           fi
           echo "format=$fmt" >> "$GITHUB_OUTPUT"
@@ -138,16 +106,10 @@ jobs:
             artifacts/KeiPix-*.zip
             artifacts/KeiPix-*.dmg
           if-no-files-found: error
-          # Keep PR/feature branch artifacts trim. Tag releases are
-          # uploaded separately and live forever on the Release page.
           retention-days: 14
-          compression-level: 0   # the zip / dmg are already compressed
+          compression-level: 0
 
       - name: Attach to GitHub Release
-        # Only fire on tag pushes. We use softprops/action-gh-release
-        # because it tolerates pre-existing draft releases (so a
-        # release-please workflow can own metadata) and uploads our
-        # binaries idempotently.
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v3
         with:
