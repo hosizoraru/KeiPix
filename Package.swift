@@ -6,7 +6,8 @@ let package = Package(
     name: "KeiPix",
     defaultLocalization: "en",
     platforms: [
-        .macOS(.v26)
+        .macOS(.v26),
+        .iOS(.v26)
     ],
     products: [
         .executable(name: "KeiPix", targets: ["KeiPix"])
