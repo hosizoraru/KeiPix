@@ -83,6 +83,17 @@ final class NovelFeatureStore {
     /// `<meta id="meta-preload-data">` JSON.
     private(set) var uploadedImageURLs: [String: URL] = [:]
 
+    // MARK: - Related novels state
+
+    /// Novels similar to the currently selected novel. Populated lazily
+    /// when the user expands the "Related Novels" section in the detail
+    /// view. Mirrors the artwork side's `ArtworkRelatedView` pattern.
+    private(set) var relatedNovels: [PixivNovel] = []
+    private(set) var relatedNovelsNextURL: URL?
+    private(set) var isLoadingRelatedNovels = false
+    private(set) var relatedNovelsError: String?
+    private var relatedNovelsLoadedForID: Int?
+
     // MARK: - Series / watchlist state
 
     private(set) var watchlistSeries: [PixivNovelSeriesItem] = []
@@ -266,7 +277,13 @@ final class NovelFeatureStore {
         if let cached = await NovelTextDiskCache.shared.load(novelID: novelID) {
             guard loadedNovelTextID == novelID else { return }
             loadedNovelText = cached
-            loadedNovelTokens = NovelTextTokenizer.tokenize(cached.novelText)
+            // Tokenize off the main actor to avoid frame hitches on
+            // long novels.
+            let tokens = await Task.detached {
+                NovelTextTokenizer.tokenize(cached.novelText)
+            }.value
+            guard loadedNovelTextID == novelID else { return }
+            loadedNovelTokens = tokens
             isLoadingNovelText = false
             return
         }
@@ -278,7 +295,12 @@ final class NovelFeatureStore {
             // before the request finished.
             guard loadedNovelTextID == novelID else { return }
             loadedNovelText = text
-            loadedNovelTokens = NovelTextTokenizer.tokenize(text.novelText)
+            // Tokenize off the main actor.
+            let tokens = await Task.detached {
+                NovelTextTokenizer.tokenize(text.novelText)
+            }.value
+            guard loadedNovelTextID == novelID else { return }
+            loadedNovelTokens = tokens
             // Write-through to disk so the novel stays available offline.
             await NovelTextDiskCache.shared.save(text, novelID: novelID)
         } catch is CancellationError {
@@ -333,6 +355,8 @@ final class NovelFeatureStore {
                 selectedNovel = novel
             }
             replaceInLists(novel)
+        } catch is CancellationError {
+            return
         } catch {
             errorMessage = String(describing: error)
         }
@@ -426,6 +450,49 @@ final class NovelFeatureStore {
             watchlistError = String(describing: error)
             return false
         }
+    }
+
+    // MARK: - Related novels
+
+    func loadRelatedNovels(for novelID: Int) async {
+        guard relatedNovelsLoadedForID != novelID else { return }
+        relatedNovelsLoadedForID = novelID
+        isLoadingRelatedNovels = true
+        relatedNovelsError = nil
+        relatedNovels = []
+        relatedNovelsNextURL = nil
+        defer { isLoadingRelatedNovels = false }
+        do {
+            let response = try await api.relatedNovels(novelID: novelID)
+            guard relatedNovelsLoadedForID == novelID else { return }
+            relatedNovels = response.novels
+            relatedNovelsNextURL = response.nextURL
+        } catch is CancellationError {
+            return
+        } catch {
+            guard relatedNovelsLoadedForID == novelID else { return }
+            relatedNovelsError = error.localizedDescription
+        }
+    }
+
+    func loadMoreRelatedNovels() async {
+        guard let nextURL = relatedNovelsNextURL else { return }
+        do {
+            let response = try await api.nextNovelList(nextURL)
+            relatedNovels.append(contentsOf: response.novels)
+            relatedNovelsNextURL = response.nextURL
+        } catch is CancellationError {
+            return
+        } catch {
+            relatedNovelsError = error.localizedDescription
+        }
+    }
+
+    func clearRelatedNovels() {
+        relatedNovels = []
+        relatedNovelsNextURL = nil
+        relatedNovelsLoadedForID = nil
+        relatedNovelsError = nil
     }
 
     // MARK: - Helpers

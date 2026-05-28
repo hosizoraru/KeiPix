@@ -53,7 +53,7 @@ struct WatchLaterView: View {
             .padding(16)
         }
         .confirmationDialog(
-            L10n.watchLaterRemoved,
+            L10n.watchLaterRemoveConfirm,
             isPresented: Binding(
                 get: { pendingDeleteItem != nil },
                 set: { if !$0 { pendingDeleteItem = nil } }
@@ -61,8 +61,12 @@ struct WatchLaterView: View {
             presenting: pendingDeleteItem
         ) { item in
             Button(L10n.watchLaterRemoved, role: .destructive) {
+                pendingDeleteItem = nil
                 store.removeFromWatchLater(item)
             }
+            Button(L10n.cancel, role: .cancel) {}
+        } message: { item in
+            Text(item.title)
         }
     }
 }

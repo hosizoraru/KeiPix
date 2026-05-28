@@ -29,6 +29,7 @@ private struct NovelDetailContent: View {
     let novel: PixivNovel
 
     @State private var isReaderPresented = false
+    @State private var isRelatedExpanded = false
 
     private var novelStore: NovelFeatureStore { store.novels }
 
@@ -56,6 +57,12 @@ private struct NovelDetailContent: View {
                 if let series = novel.series, series.hasSeries {
                     seriesSection(series: series)
                 }
+
+                NovelRelatedView(
+                    novelID: novel.id,
+                    store: store,
+                    isExpanded: $isRelatedExpanded
+                )
             }
             .padding(20)
         }
@@ -165,9 +172,9 @@ private struct NovelDetailContent: View {
     private var metaSection: some View {
         HStack(spacing: 18) {
             metaItem(systemImage: "textformat", title: L10n.novelLength, value: String(format: L10n.novelTextLengthFormat, novel.textLength))
-            metaItem(systemImage: "doc.richtext", title: L10n.viewAll, value: String(format: L10n.novelPageCountFormat, novel.pageCount))
+            metaItem(systemImage: "doc.richtext", title: L10n.pages, value: String(format: L10n.novelPageCountFormat, novel.pageCount))
             metaItem(systemImage: "bookmark", title: L10n.bookmark, value: "\(novel.totalBookmarks)")
-            metaItem(systemImage: "eye", title: L10n.viewAll, value: "\(novel.totalView)")
+            metaItem(systemImage: "eye", title: L10n.views, value: "\(novel.totalView)")
             Spacer(minLength: 0)
         }
         .padding(12)

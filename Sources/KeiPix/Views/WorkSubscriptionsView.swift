@@ -187,7 +187,7 @@ private struct SubscriptionCard: View {
                 .strokeBorder(.separator.opacity(0.4), lineWidth: 1)
         }
         .contextMenu {
-            Button(L10n.workSubscriptionsUnsubscribed, role: .destructive, action: unsubscribe)
+            Button(L10n.workSubscriptionsUnsubscribe, role: .destructive, action: unsubscribe)
         }
     }
 }

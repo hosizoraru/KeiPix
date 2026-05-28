@@ -130,6 +130,7 @@ enum L10n {
     static var watchLaterEmptyHint: String { text("Add artworks from the detail view to watch later.") }
     static var watchLaterAdded: String { text("Added to Watch Later") }
     static var watchLaterRemoved: String { text("Removed from Watch Later") }
+    static var watchLaterRemoveConfirm: String { text("Remove from Watch Later?") }
     static var watchLaterClear: String { text("Clear Watch Later") }
     static var clearSearch: String { text("Clear Search") }
     static var clearHistory: String { text("Clear History") }
@@ -1266,6 +1267,10 @@ enum L10n {
     static var novelEmbeddedUploadedImage: String { text("Uploaded image") }
     static var novelJumpPageFormat: String { text("Jump to page %d") }
     static var novelPageProgressFormat: String { text("Page %d of %d") }
+    static var relatedNovels: String { text("Related Novels") }
+    static var noRelatedNovels: String { text("No related novels") }
+    static var loadMoreRelatedNovels: String { text("Load More Related Novels") }
+    static var workSubscriptionsUnsubscribe: String { text("Unsubscribe") }
     static var details: String { text("Details") }
     static var tags: String { text("Tags") }
     static var searchTag: String { text("Search Tag") }

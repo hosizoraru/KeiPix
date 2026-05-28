@@ -36,6 +36,10 @@ struct NovelReaderView: View {
     // MARK: - Local UI state
 
     @State private var pageIndex: Int = 0
+    /// Tracks whether the reader's own `.task` has fired at least
+    /// once. Prevents showing a stale error inherited from
+    /// `openNovel` before the reader has had a chance to retry.
+    @State private var readerLoadStarted = false
     @State private var isSettingsPresented = false
     @State private var isTranslationPresented = false
     @State private var translationEngine = NovelTranslationEngine()
@@ -88,6 +92,7 @@ struct NovelReaderView: View {
             text: currentPagePlainText
         )
         .task(id: novel.id) {
+            readerLoadStarted = true
             // Reset paging when the user opens a different novel from
             // the same reader instance (e.g., via a series link).
             pageIndex = 0
@@ -227,7 +232,7 @@ struct NovelReaderView: View {
 
     @ViewBuilder
     private var content: some View {
-        if novelStore.isLoadingNovelText {
+        if !readerLoadStarted || novelStore.isLoadingNovelText {
             loadingState
         } else if let error = novelStore.novelTextError {
             errorState(error)
