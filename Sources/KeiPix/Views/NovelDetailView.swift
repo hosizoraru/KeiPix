@@ -124,49 +124,110 @@ private struct NovelDetailContent: View {
     }
 
     private var actionRow: some View {
-        HStack(spacing: 10) {
-            Button {
-                isReaderPresented = true
-            } label: {
-                Label(L10n.openNovelReader, systemImage: "book.pages")
-            }
-            .buttonStyle(.borderedProminent)
+        GeometryReader { geo in
+            HStack(spacing: 10) {
+                // Reader — primary CTA, always visible
+                Button {
+                    isReaderPresented = true
+                } label: {
+                    Label(L10n.openNovelReader, systemImage: "book.pages")
+                }
+                .labelStyle(.iconOnly)
+                .help(L10n.openNovelReader)
+                .accessibilityLabel(L10n.openNovelReader)
+                .buttonStyle(.glassProminent)
+                .controlSize(.small)
 
-            Button {
-                Task {
-                    await novelStore.toggleBookmark(
-                        novel: novel,
-                        restrict: store.defaultBookmarkRestrict
+                // Bookmark — always visible
+                Button {
+                    Task {
+                        await novelStore.toggleBookmark(
+                            novel: novel,
+                            restrict: store.defaultBookmarkRestrict
+                        )
+                    }
+                } label: {
+                    Label(
+                        novel.isBookmarked ? L10n.novelRemoveBookmark : L10n.novelBookmark,
+                        systemImage: novel.isBookmarked ? "bookmark.fill" : "bookmark"
                     )
                 }
-            } label: {
-                Label(
-                    novel.isBookmarked ? L10n.novelRemoveBookmark : L10n.novelBookmark,
-                    systemImage: novel.isBookmarked ? "bookmark.fill" : "bookmark"
-                )
-            }
-            .buttonStyle(.bordered)
+                .labelStyle(.iconOnly)
+                .help(novel.isBookmarked ? L10n.novelRemoveBookmark : L10n.novelBookmark)
+                .accessibilityLabel(novel.isBookmarked ? L10n.novelRemoveBookmark : L10n.novelBookmark)
+                .buttonStyle(.bordered)
+                .controlSize(.small)
 
-            Menu {
-                Button(L10n.novelExportTXT) { exportNovel(format: .txt) }
-                Button(L10n.novelExportMarkdown) { exportNovel(format: .markdown) }
-            } label: {
-                Label(L10n.novelExport, systemImage: "square.and.arrow.up")
-            }
-            .menuStyle(.borderlessButton)
-            .fixedSize()
+                // Open in Pixiv — promoted when wide enough
+                if geo.size.width >= 320, novel.pixivURL != nil {
+                    Button {
+                        if let url = novel.pixivURL {
+                            PlatformWorkspace.open(url)
+                        }
+                    } label: {
+                        Label(L10n.openInPixivNovel, systemImage: "arrow.up.right.square")
+                    }
+                    .labelStyle(.iconOnly)
+                    .help(L10n.openInPixivNovel)
+                    .accessibilityLabel(L10n.openInPixivNovel)
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+                }
 
-            if let url = novel.pixivURL {
+                // More — export, open in pixiv (when narrow), share
+                novelMoreMenu(promotePixiv: geo.size.width >= 320)
+            }
+        }
+        .frame(height: 28)
+    }
+
+    @ViewBuilder
+    private func novelMoreMenu(promotePixiv: Bool) -> some View {
+        Menu {
+            if promotePixiv == false, let url = novel.pixivURL {
                 Button {
                     PlatformWorkspace.open(url)
                 } label: {
                     Label(L10n.openInPixivNovel, systemImage: "arrow.up.right.square")
                 }
-                .buttonStyle(.bordered)
+
+                Divider()
             }
 
-            Spacer(minLength: 0)
+            Button {
+                exportNovel(format: .txt)
+            } label: {
+                Label(L10n.novelExportTXT, systemImage: "doc.text")
+            }
+
+            Button {
+                exportNovel(format: .markdown)
+            } label: {
+                Label(L10n.novelExportMarkdown, systemImage: "doc.richtext")
+            }
+
+            if let url = novel.pixivURL {
+                Divider()
+
+                ShareLink(item: url) {
+                    Label(L10n.share, systemImage: "square.and.arrow.up")
+                }
+
+                Button {
+                    PasteboardWriter.copy(url.absoluteString)
+                } label: {
+                    Label(L10n.copyLink, systemImage: "link")
+                }
+            }
+        } label: {
+            Label(L10n.moreActions, systemImage: "ellipsis.circle")
         }
+        .labelStyle(.iconOnly)
+        .help(L10n.moreActions)
+        .accessibilityLabel(L10n.moreActions)
+        .menuStyle(.button)
+        .buttonStyle(.bordered)
+        .controlSize(.small)
     }
 
     private var metaSection: some View {
