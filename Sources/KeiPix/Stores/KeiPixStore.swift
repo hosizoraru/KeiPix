@@ -75,7 +75,11 @@ final class KeiPixStore {
     var activeFeedSnapshotRestoration: FeedSnapshotRestoration?
     var artworkDetailStateLibrary = KeiPixStore.loadArtworkDetailStateLibrary()
     var artworkDetailDefaultExpansion = KeiPixStore.loadArtworkDetailDefaultExpansion()
+    #if DEBUG
     var lastNonNovelQAMatrixSnapshot = KeiPixStore.loadLastNonNovelQAMatrixSnapshot()
+    #else
+    var lastNonNovelQAMatrixSnapshot: NonNovelQAMatrixSnapshot? = nil
+    #endif
     var errorMessage: String?
     var isLoading = false
     var isLoadingMore = false
