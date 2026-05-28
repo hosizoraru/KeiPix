@@ -151,7 +151,9 @@ struct AccountSettingsPage: View {
             case .guest:
                 store.activateGuestMode()
             case .visualQA:
+                #if DEBUG
                 store.activateVisualQATestMode()
+                #endif
             }
         }
     }

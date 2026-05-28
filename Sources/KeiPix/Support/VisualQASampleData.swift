@@ -673,16 +673,6 @@ enum VisualQASampleData {
 
 @MainActor
 extension KeiPixStore {
-    func activateGuestMode() {
-        accountSessionMode = .guest
-        UserDefaults.standard.set(AccountSessionMode.guest.rawValue, forKey: "accountSessionMode")
-        UserDefaults.standard.set(true, forKey: "accountSessionModeUserSelected")
-        session = VisualQASampleData.guestSession
-        restrictedModeEnabled = false
-        isLoginPresented = false
-        presentLocalSampleFeed(for: selectedRoute.usesArtworkFeed ? selectedRoute : .illustrations)
-    }
-
     func activateVisualQATestMode(preserveStoredAccounts: Bool = true, persist: Bool = true) {
         accountSessionMode = .visualQA
         if persist {
