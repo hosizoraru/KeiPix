@@ -37,7 +37,9 @@ struct DownloadedUgoiraViewer: View {
                 statusRow(statusMessage)
             }
         }
+        #if os(macOS)
         .frame(minWidth: 760, minHeight: 560)
+        #endif
         .toolbar {
             ToolbarItem(placement: .confirmationAction) {
                 Button {

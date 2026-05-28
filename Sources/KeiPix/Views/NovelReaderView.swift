@@ -1090,6 +1090,8 @@ struct NovelReaderSettingsView: View {
             .formStyle(.grouped)
         }
         .padding(20)
+        #if os(macOS)
         .frame(minWidth: 420, idealWidth: 460, minHeight: 360)
+        #endif
     }
 }

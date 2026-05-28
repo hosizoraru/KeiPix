@@ -74,7 +74,9 @@ private struct NovelDetailContent: View {
         }
         .sheet(isPresented: $isReaderPresented) {
             NovelReaderView(store: store, novel: novel)
+                #if os(macOS)
                 .frame(minWidth: 720, minHeight: 540, idealHeight: 720)
+                #endif
                 .iPadFriendlySheet()
         }
     }

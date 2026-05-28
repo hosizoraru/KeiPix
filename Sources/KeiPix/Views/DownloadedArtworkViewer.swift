@@ -36,7 +36,9 @@ struct DownloadedArtworkViewer: View {
                 }
             }
         }
+        #if os(macOS)
         .frame(minWidth: 900, minHeight: 680)
+        #endif
         .overlay(alignment: .bottom) {
             if let actionMessage {
                 FloatingStatusBanner {

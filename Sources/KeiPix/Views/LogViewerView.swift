@@ -31,7 +31,9 @@ struct LogViewerView: View {
             Divider()
             content
         }
+        #if os(macOS)
         .frame(minWidth: 720, minHeight: 480)
+        #endif
         .navigationTitle(L10n.logs)
         .task {
             await refresh()

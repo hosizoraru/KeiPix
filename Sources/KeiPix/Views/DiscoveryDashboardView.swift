@@ -295,7 +295,9 @@ private struct DashboardCustomizationSheet: View {
                     .foregroundStyle(.secondary)
                 }
             }
+            #if os(macOS)
             .frame(minWidth: 360, minHeight: 400)
+            #endif
             .navigationTitle(L10n.customizeDashboard)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {

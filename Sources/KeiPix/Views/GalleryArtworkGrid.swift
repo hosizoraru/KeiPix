@@ -465,7 +465,9 @@ private struct ArtworkSeriesSheet: View {
                 )
                     .padding(18)
             }
+            #if os(macOS)
             .frame(minWidth: 560, idealWidth: 680, minHeight: 520, idealHeight: 700)
+            #endif
             .navigationTitle(artwork.series?.title ?? L10n.artworkSeries)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
