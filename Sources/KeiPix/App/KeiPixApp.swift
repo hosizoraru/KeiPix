@@ -52,6 +52,12 @@ struct KeiPixApp: App {
                         store.presentPendingReleaseUpdateIfNeeded()
                     }
                 }
+                #if os(iOS)
+                .task {
+                    BackgroundFetchScheduler.register()
+                    BackgroundFetchScheduler.scheduleNextRefresh()
+                }
+                #endif
         }
         #if os(macOS)
         .defaultSize(width: 1280, height: 800)

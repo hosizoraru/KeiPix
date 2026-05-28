@@ -59,15 +59,9 @@
 
 ## Phase 5 — Notifications & Background
 
-- [ ] **5.1 Background fetch**
-  - iPadOS: `BGTaskScheduler` for feed refresh
-  - macOS: Already handled by app lifecycle
-  - Impact: Fresh content on app launch
+- [x] **5.1 Background fetch** — `145f135`
 
-- [ ] **5.2 Push notifications**
-  - iPadOS: Same `UNUserNotificationCenter` API
-  - Verify: Download completion notifications work
-  - Impact: User feedback
+- [x] **5.2 Push notifications** — `UNUserNotificationCenter` already cross-platform
 
 ---
 
