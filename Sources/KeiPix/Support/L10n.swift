@@ -1381,6 +1381,7 @@ enum L10n {
     static var thumbnails: String { text("Thumbnails") }
     static var readingMode: String { text("Reading Mode") }
     static var singlePage: String { text("Single Page") }
+    static var doublePage: String { text("Double Page") }
     static var continuousReading: String { text("Continuous Reading") }
     static var pageIndex: String { text("Page Index") }
     static var jumpToPage: String { text("Jump to Page") }

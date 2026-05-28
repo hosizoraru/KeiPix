@@ -28,6 +28,18 @@ struct ArtworkReaderView: View {
                     handlePageSwipe: handlePageSwipe,
                     onImageLoaded: updatePageAspectRatio
                 )
+            case .doublePage:
+                ArtworkDoublePageReader(
+                    artwork: artwork,
+                    store: store,
+                    pageIndex: $pageIndex,
+                    presentationLeft: presentation(for: pageIndex),
+                    presentationRight: presentation(for: pageIndex + 1),
+                    interaction: interaction,
+                    movePage: movePage,
+                    handlePageSwipe: handlePageSwipe,
+                    onImageLoaded: updatePageAspectRatio
+                )
             case .continuous:
                 ArtworkContinuousReader(
                     artwork: artwork,
@@ -88,7 +100,9 @@ struct ArtworkReaderView: View {
     }
 
     private func movePage(_ delta: Int) {
-        let target = pageIndex + delta
+        // In double-page mode, advance by 2 pages
+        let effectiveDelta = readingMode == .doublePage ? delta * 2 : delta
+        let target = pageIndex + effectiveDelta
         if (0..<pageCount).contains(target) {
             scrollToPage(target)
         } else if store.horizontalSwipeBehavior == .pageThenArtworkAtEdges {
@@ -390,6 +404,120 @@ private struct ArtworkContinuousReader: View {
 
     private var pageCount: Int {
         artwork.displayPageCount
+    }
+}
+
+// MARK: - Double-page reader
+
+/// Shows two pages side by side like an open book. The left page is
+/// the current page, the right page is the next page. Pages advance
+/// by 2 when navigating forward/backward.
+private struct ArtworkDoublePageReader: View {
+    let artwork: PixivArtwork
+    @Bindable var store: KeiPixStore
+    @Binding var pageIndex: Int
+    let presentationLeft: ReaderPagePresentation
+    let presentationRight: ReaderPagePresentation
+    let interaction: ArtworkReaderInteractionState
+    let movePage: (Int) -> Void
+    let handlePageSwipe: (TrackpadScrollEvent) -> Bool
+    let onImageLoaded: (PlatformImage, Int) -> Void
+
+    var body: some View {
+        GeometryReader { proxy in
+            HStack(spacing: 0) {
+                // Left page
+                pageView(index: pageIndex, presentation: presentationLeft, proxy: proxy)
+                    .overlay(alignment: .topLeading) {
+                        PageBadge(index: pageIndex, count: pageCount)
+                            .padding(10)
+                    }
+
+                // Spine
+                Rectangle()
+                    .fill(.quaternary)
+                    .frame(width: 1)
+
+                // Right page
+                if pageIndex + 1 < pageCount {
+                    pageView(index: pageIndex + 1, presentation: presentationRight, proxy: proxy)
+                        .overlay(alignment: .topTrailing) {
+                            PageBadge(index: pageIndex + 1, count: pageCount)
+                                .padding(10)
+                        }
+                } else {
+                    // End of book
+                    ZStack {
+                        Color.clear
+                        Image(systemName: "book.closed")
+                            .font(.system(size: 28))
+                            .foregroundStyle(.tertiary)
+                    }
+                }
+            }
+            .contentShape(Rectangle())
+            .background {
+                TrackpadEventBridge(
+                    isEnabled: store.trackpadGesturesEnabled,
+                    onScroll: { event in
+                        handleScroll(event, in: proxy.size)
+                    },
+                    onMagnify: { delta, phase in
+                        handleMagnify(delta, phase: phase, in: proxy.size)
+                    },
+                    onSmartMagnify: {
+                        interaction.toggleSmartZoom(in: proxy.size)
+                        return true
+                    },
+                    onDrag: { delta in
+                        guard interaction.isZoomed else { return false }
+                        interaction.applyPan(deltaX: -delta.width, deltaY: -delta.height, in: proxy.size)
+                        return true
+                    }
+                )
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .frame(minHeight: 300)
+        .background(.quaternary)
+        .backgroundExtensionEffect()
+    }
+
+    private var pageCount: Int {
+        artwork.displayPageCount
+    }
+
+    @ViewBuilder
+    private func pageView(index: Int, presentation: ReaderPagePresentation, proxy: GeometryProxy) -> some View {
+        RemoteImageView(
+            url: artwork.imageURL(at: index, preferOriginal: store.preferOriginalImages(for: artwork)),
+            localURL: store.downloads.downloadedImageURL(artworkID: artwork.id, pageIndex: index),
+            contentMode: .fit,
+            onImageLoaded: { image in
+                onImageLoaded(image, index)
+            }
+        )
+        .scaleEffect(interaction.scale)
+        .offset(interaction.offset)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    private func handleScroll(_ event: TrackpadScrollEvent, in size: CGSize) -> Bool {
+        guard store.trackpadGesturesEnabled else { return false }
+        if interaction.isZoomed {
+            interaction.applyPan(deltaX: event.deltaX, deltaY: event.deltaY, in: size)
+            return true
+        }
+        return handlePageSwipe(event)
+    }
+
+    private func handleMagnify(_ delta: CGFloat, phase: NSEvent.Phase, in size: CGSize) -> Bool {
+        guard store.trackpadGesturesEnabled else { return false }
+        interaction.applyMagnification(delta, in: size)
+        if phase.contains(.ended) || phase.contains(.cancelled) {
+            interaction.finishMagnification()
+        }
+        return true
     }
 }
 

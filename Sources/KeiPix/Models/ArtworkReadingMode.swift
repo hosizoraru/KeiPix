@@ -2,6 +2,7 @@ import Foundation
 
 enum ArtworkReadingMode: String, CaseIterable, Identifiable {
     case singlePage
+    case doublePage
     case continuous
     case index
 
@@ -11,6 +12,8 @@ enum ArtworkReadingMode: String, CaseIterable, Identifiable {
         switch self {
         case .singlePage:
             L10n.singlePage
+        case .doublePage:
+            L10n.doublePage
         case .continuous:
             L10n.continuousReading
         case .index:
@@ -22,6 +25,8 @@ enum ArtworkReadingMode: String, CaseIterable, Identifiable {
         switch self {
         case .singlePage:
             "rectangle"
+        case .doublePage:
+            "rectangle.split.2x1"
         case .continuous:
             "rectangle.stack"
         case .index:

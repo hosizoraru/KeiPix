@@ -27,6 +27,7 @@ struct NovelReaderView: View {
     @AppStorage("novelReader.fontFamily") private var fontFamilyRawValue: String = NovelReaderFontFamily.system.rawValue
     @AppStorage("novelReader.useVerticalLayout") private var useVerticalLayout: Bool = false
     @AppStorage("novelReader.showChapterMarkers") private var showChapterMarkers: Bool = true
+    @AppStorage("novelReader.readingMode") private var readingModeRaw: String = NovelReadingMode.singlePage.rawValue
 
     // MARK: - Local UI state
 
@@ -193,6 +194,18 @@ struct NovelReaderView: View {
             .help(novel.isBookmarked ? L10n.novelRemoveBookmark : L10n.novelBookmark)
             .keyboardShortcut("b", modifiers: [])
 
+            // Reading mode (single / double page)
+            Button {
+                let current = NovelReadingMode(rawValue: readingModeRaw) ?? .singlePage
+                readingModeRaw = (current == .singlePage ? NovelReadingMode.doublePage : .singlePage).rawValue
+            } label: {
+                let current = NovelReadingMode(rawValue: readingModeRaw) ?? .singlePage
+                Label(current.title, systemImage: current.systemImage)
+                    .labelStyle(.iconOnly)
+            }
+            .help(L10n.readingMode)
+            .keyboardShortcut("d", modifiers: .command)
+
             // Translation mode picker (bilingual / immersive)
             translationModeMenu
 
@@ -294,7 +307,9 @@ struct NovelReaderView: View {
             unavailableState
         } else {
             GeometryReader { geo in
-                if geo.size.width >= 1200, pages.count > 1 {
+                let mode = NovelReadingMode(rawValue: readingModeRaw) ?? .singlePage
+                let useDoublePage = mode == .doublePage || (geo.size.width >= 1200 && pages.count > 1)
+                if useDoublePage, pages.count > 1 {
                     twoPageLayout(geo: geo)
                 } else {
                     singlePageLayout
@@ -730,6 +745,29 @@ struct NovelReaderView: View {
             pages.append(current)
         }
         return pages.isEmpty ? [tokens] : pages
+    }
+}
+
+// MARK: - Novel reading mode
+
+enum NovelReadingMode: String, CaseIterable, Identifiable {
+    case singlePage
+    case doublePage
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .singlePage: return L10n.singlePage
+        case .doublePage: return L10n.doublePage
+        }
+    }
+
+    var systemImage: String {
+        switch self {
+        case .singlePage: return "rectangle"
+        case .doublePage: return "rectangle.split.2x1"
+        }
     }
 }
 
