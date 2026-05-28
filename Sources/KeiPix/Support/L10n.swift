@@ -659,6 +659,8 @@ enum L10n {
     static var apply: String { text("Apply") }
     static var artwork: String { text("Artwork") }
     static var selectArtwork: String { text("Select Artwork") }
+    static var goBack: String { text("Go Back") }
+    static var goForward: String { text("Go Forward") }
     static var previousArtwork: String { text("Previous Artwork") }
     static var nextArtwork: String { text("Next Artwork") }
     static var readerWindow: String { text("Reader Window") }

@@ -55,6 +55,20 @@ enum KeyboardShortcutCatalog {
 
         // MARK: Artwork menu
         ShortcutCatalogEntry(
+            action: .navigateBack,
+            label: L10n.goBack,
+            binding: ShortcutBinding(key: .character("["), modifiers: [.command]),
+            surface: .artwork,
+            isCustomizable: true
+        ),
+        ShortcutCatalogEntry(
+            action: .navigateForward,
+            label: L10n.goForward,
+            binding: ShortcutBinding(key: .character("]"), modifiers: [.command]),
+            surface: .artwork,
+            isCustomizable: true
+        ),
+        ShortcutCatalogEntry(
             action: .previousArtwork,
             label: L10n.previousArtwork,
             binding: ShortcutBinding(key: .leftArrow, modifiers: [.command]),
@@ -265,6 +279,8 @@ enum ShortcutAction: String, CaseIterable, Sendable {
     case searchLocalImageSource
     case copyDiagnostics
 
+    case navigateBack
+    case navigateForward
     case previousArtwork
     case nextArtwork
     case toggleBookmark

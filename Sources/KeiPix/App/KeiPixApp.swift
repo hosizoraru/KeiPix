@@ -95,6 +95,20 @@ struct KeiPixApp: App {
             }
 
             CommandMenu(L10n.artwork) {
+                Button(L10n.goBack) {
+                    store.navigateBack()
+                }
+                .shortcut(.navigateBack)
+                .disabled(store.canNavigateBack == false)
+
+                Button(L10n.goForward) {
+                    store.navigateForward()
+                }
+                .shortcut(.navigateForward)
+                .disabled(store.canNavigateForward == false)
+
+                Divider()
+
                 Button(L10n.previousArtwork) {
                     store.selectPreviousArtwork()
                 }
