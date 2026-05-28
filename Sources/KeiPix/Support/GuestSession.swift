@@ -35,8 +35,19 @@ extension KeiPixStore {
         #if DEBUG
         presentLocalSampleFeed(for: selectedRoute.usesArtworkFeed ? selectedRoute : .illustrations)
         #else
-        // In release builds, trigger a real feed load
         Task { await reloadCurrentFeed() }
         #endif
     }
+
+    #if !DEBUG
+    /// Stub for release builds — presentLocalSampleFeed is DEBUG-only.
+    func presentLocalSampleFeed(for route: PixivRoute) {
+        // No-op in release builds
+    }
+
+    /// Stub for release builds — presentCachedFeedVisualQA is DEBUG-only.
+    func presentCachedFeedVisualQA() {
+        // No-op in release builds
+    }
+    #endif
 }
