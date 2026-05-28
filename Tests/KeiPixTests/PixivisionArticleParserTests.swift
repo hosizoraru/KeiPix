@@ -186,7 +186,7 @@ struct PixivisionArticleParserTests {
         // shelf headings ("XX相关最新文章" / "喜欢XX的人也喜欢这些")
         // render twice — once as bare text in the prose flow, then
         // again as the headers of `RelatedArticlesShelf`.
-        var html = """
+        let html = """
         <html><body>
         <article class="am__article-body-container">
         <p>Body paragraph.</p>
@@ -294,7 +294,7 @@ struct PixivisionArticleParserTests {
     /// (101/102/103) so the assertions are stable regardless of which
     /// real article the parser was prototyped against.
     private static let featureArticleHTML: String = {
-        var html = """
+        let html = """
         <html><head>
         <meta property="og:title" content="球体关节插画特辑">
         <meta property="og:description" content="精彩特辑摘要。">
