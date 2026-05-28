@@ -10,11 +10,11 @@ enum PixivAPIError: LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .missingSession: "Login is required."
-        case .missingCodeVerifier: "Login verifier is missing."
-        case .invalidResponse: "Invalid Pixiv response."
+        case .missingSession: L10n.errorLoginRequired
+        case .missingCodeVerifier: L10n.errorLoginVerifierMissing
+        case .invalidResponse: L10n.errorInvalidPixivResponse
         case .serverMessage(let message): message
-        case .status(let code, let body): "HTTP \(code): \(body)"
+        case .status(let code, let body): String(format: L10n.errorHTTPFormat, code, body)
         }
     }
 }

@@ -1507,6 +1507,64 @@ enum L10n {
     static var backupUnsupportedSchemaFormat: String { text("Backup uses schema v%d but this build only supports v%d. Update KeiPix and try again.") }
     static var backupDecodingFailedFormat: String { text("Couldn't read the backup file: %@") }
 
+    // MARK: - Intent / Shortcuts
+
+    static var intentOpenPixivLink: String { text("Open Pixiv Link") }
+    static var intentOpenPixivLinkDescription: String { text("Open a Pixiv URL or artwork ID in KeiPix.") }
+    static var intentLinkParamTitle: String { text("Link") }
+    static var intentLinkParamDescription: String { text("A Pixiv URL or artwork ID.") }
+    static var intentOpenArtwork: String { text("Open Artwork in Reader") }
+    static var intentOpenArtworkDescription: String { text("Open a Pixiv artwork in its own reader window.") }
+    static var intentArtworkParamTitle: String { text("Artwork") }
+    static var intentArtworkParamDescription: String { text("A Pixiv artwork ID or URL.") }
+    static var intentRefreshFeed: String { text("Refresh Current Feed") }
+    static var intentRefreshFeedDescription: String { text("Reload the feed currently shown in KeiPix's main window.") }
+    static var intentNotPixivLink: String { text("That doesn't look like a Pixiv link.") }
+    static var intentNotReady: String { text("KeiPix isn't ready yet — open the app and try again.") }
+    static var intentNoArtworkIDFormat: String { text("Couldn't find an artwork id in that input.") }
+    static var intentOpenedArtworkFormat: String { text("Opened artwork %lld.") }
+    static var intentNotRunning: String { text("KeiPix isn't running.") }
+    static var intentRefreshed: String { text("Refreshed.") }
+
+    // MARK: - Error descriptions
+
+    static var errorGitHubNonHTTP: String { text("GitHub returned a non-HTTP response while checking for updates.") }
+    static var errorGitHubHTTPFormat: String { text("GitHub returned HTTP %d while checking for updates.") }
+    static var errorGitHubJSONShape: String { text("GitHub's release JSON did not match the expected shape.") }
+    static var errorGitHubMalformedTagFormat: String { text("GitHub release tag %@ is not a recognised semantic version.") }
+    static var errorLoginRequired: String { text("Login is required.") }
+    static var errorLoginVerifierMissing: String { text("Login verifier is missing.") }
+    static var errorInvalidPixivResponse: String { text("Invalid Pixiv response.") }
+    static var errorHTTPFormat: String { text("HTTP %d: %@") }
+    static var errorEncodeSession: String { text("Unable to encode session.") }
+    static var errorDecodeSession: String { text("Unable to decode saved session.") }
+
+    // MARK: - Keyboard key names
+
+    static var keyLeftArrow: String { text("Left Arrow") }
+    static var keyRightArrow: String { text("Right Arrow") }
+    static var keyUpArrow: String { text("Up Arrow") }
+    static var keyDownArrow: String { text("Down Arrow") }
+    static var keyEscape: String { text("Escape") }
+    static var keySpace: String { text("Space") }
+    static var keyReturn: String { text("Return") }
+
+    // MARK: - Web link labels
+
+    static var linkUserPrefixFormat: String { text("User #%lld") }
+    static var linkPixivisionPrefixFormat: String { text("Pixivision #%lld") }
+
+    // MARK: - Format / unit strings
+
+    static func downloadProgressFormat(_ completed: Int, _ total: Int) -> String {
+        String(format: text("%d / %d"), locale: Locale.current, completed, total)
+    }
+    static var ugoiraNoFrames: String { text("\u{2014}") }
+    static func ugoiraPositionFormat(_ current: Int, _ total: Int, _ duration: String) -> String {
+        String(format: text("%d / %d \u{00B7} %@"), locale: Locale.current, current, total, duration)
+    }
+    static var millisecondsUnit: String { text("ms") }
+
     static func pageStatus(_ page: Int, _ count: Int) -> String {
         String(format: text("Page %d of %d"), locale: Locale.current, page, count)
     }

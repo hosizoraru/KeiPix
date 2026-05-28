@@ -19,7 +19,7 @@ struct KeiPixShortcuts: AppShortcutsProvider {
                 "Open Pixiv link in \(.applicationName)",
                 "Open \(\.$link) in \(.applicationName)"
             ],
-            shortTitle: "Open Pixiv Link",
+            shortTitle: LocalizedStringResource(stringLiteral: L10n.intentOpenPixivLink),
             systemImageName: "link"
         )
 
@@ -29,7 +29,7 @@ struct KeiPixShortcuts: AppShortcutsProvider {
                 "Open artwork in \(.applicationName)",
                 "Show \(\.$artwork) in \(.applicationName)"
             ],
-            shortTitle: "Open Artwork",
+            shortTitle: LocalizedStringResource(stringLiteral: L10n.intentOpenArtwork),
             systemImageName: "rectangle.portrait.on.rectangle.portrait"
         )
 
@@ -39,7 +39,7 @@ struct KeiPixShortcuts: AppShortcutsProvider {
                 "Refresh \(.applicationName)",
                 "Reload feed in \(.applicationName)"
             ],
-            shortTitle: "Refresh Feed",
+            shortTitle: LocalizedStringResource(stringLiteral: L10n.intentRefreshFeed),
             systemImageName: "arrow.clockwise"
         )
     }

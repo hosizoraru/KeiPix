@@ -108,13 +108,13 @@ private struct ShortcutCatalogRow: View {
     private func spokenKeyName(for key: ShortcutBinding.Key) -> String {
         switch key {
         case .character(let value): return String(value).uppercased()
-        case .leftArrow: return "Left Arrow"
-        case .rightArrow: return "Right Arrow"
-        case .upArrow: return "Up Arrow"
-        case .downArrow: return "Down Arrow"
-        case .escape: return "Escape"
-        case .space: return "Space"
-        case .returnKey: return "Return"
+        case .leftArrow: return L10n.keyLeftArrow
+        case .rightArrow: return L10n.keyRightArrow
+        case .upArrow: return L10n.keyUpArrow
+        case .downArrow: return L10n.keyDownArrow
+        case .escape: return L10n.keyEscape
+        case .space: return L10n.keySpace
+        case .returnKey: return L10n.keyReturn
         }
     }
 }

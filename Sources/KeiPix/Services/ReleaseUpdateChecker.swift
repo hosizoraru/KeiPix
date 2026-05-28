@@ -13,13 +13,13 @@ enum ReleaseUpdateCheckerError: LocalizedError, Sendable {
     var errorDescription: String? {
         switch self {
         case .invalidResponse:
-            return "GitHub returned a non-HTTP response while checking for updates."
+            return L10n.errorGitHubNonHTTP
         case .status(let code):
-            return "GitHub returned HTTP \(code) while checking for updates."
+            return String(format: L10n.errorGitHubHTTPFormat, code)
         case .decodingFailed:
-            return "GitHub's release JSON did not match the expected shape."
+            return L10n.errorGitHubJSONShape
         case .malformedTag(let raw):
-            return "GitHub release tag \(raw) is not a recognised semantic version."
+            return String(format: L10n.errorGitHubMalformedTagFormat, raw)
         }
     }
 }

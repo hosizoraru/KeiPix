@@ -285,13 +285,13 @@ extension PixivWebDestination {
         case .artwork(let id):
             return "#\(id)"
         case .user(let id):
-            return "User #\(id)"
+            return String(format: L10n.linkUserPrefixFormat, id)
         case .tag(let tag), .search(let tag):
             return tag
         case .creatorSearch(let keyword):
             return keyword
         case .pixivisionArticle(let id, _):
-            return "Pixivision #\(id)"
+            return String(format: L10n.linkPixivisionPrefixFormat, id)
         }
     }
 }

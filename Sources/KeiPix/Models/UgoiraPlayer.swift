@@ -76,8 +76,8 @@ final class UgoiraPlayer {
     }
 
     var positionSummary: String {
-        guard frameCount > 0 else { return "—" }
-        return "\(currentFrameIndex + 1) / \(frameCount) · \(totalDurationLabel)"
+        guard frameCount > 0 else { return L10n.ugoiraNoFrames }
+        return L10n.ugoiraPositionFormat(currentFrameIndex + 1, frameCount, totalDurationLabel)
     }
 
     // MARK: - State transitions

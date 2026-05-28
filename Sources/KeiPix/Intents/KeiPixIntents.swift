@@ -32,11 +32,11 @@ struct OpenPixivLinkIntent: AppIntent {
     @MainActor
     func perform() async throws -> some IntentResult & ProvidesDialog {
         guard let url = IntentInputNormalizer.pixivURL(from: link) else {
-            return .result(dialog: IntentDialog("That doesn't look like a Pixiv link."))
+            return .result(dialog: IntentDialog(stringLiteral: L10n.intentNotPixivLink))
         }
 
         guard let store = KeiPixStoreLocator.shared.store else {
-            return .result(dialog: IntentDialog("KeiPix isn't ready yet — open the app and try again."))
+            return .result(dialog: IntentDialog(stringLiteral: L10n.intentNotReady))
         }
 
         let message = await store.openPixivLink(url)
@@ -70,12 +70,12 @@ struct OpenArtworkIntent: AppIntent {
     @MainActor
     func perform() async throws -> some IntentResult & ProvidesDialog {
         guard let id = IntentInputNormalizer.artworkID(from: artwork) else {
-            return .result(dialog: IntentDialog("Couldn't find an artwork id in that input."))
+            return .result(dialog: IntentDialog(stringLiteral: L10n.intentNoArtworkIDFormat))
         }
 
         let locator = KeiPixStoreLocator.shared
         guard let store = locator.store else {
-            return .result(dialog: IntentDialog("KeiPix isn't ready yet — open the app and try again."))
+            return .result(dialog: IntentDialog(stringLiteral: L10n.intentNotReady))
         }
 
         if let cached = store.readerWindowArtwork(id: id) {
@@ -85,7 +85,7 @@ struct OpenArtworkIntent: AppIntent {
         }
 
         locator.openReaderWindow(artworkID: id)
-        return .result(dialog: IntentDialog("Opened artwork \(id)."))
+        return .result(dialog: IntentDialog(stringLiteral: String(format: L10n.intentOpenedArtworkFormat, id)))
     }
 }
 
@@ -102,9 +102,9 @@ struct RefreshFeedIntent: AppIntent {
     @MainActor
     func perform() async throws -> some IntentResult & ProvidesDialog {
         guard let store = KeiPixStoreLocator.shared.store else {
-            return .result(dialog: IntentDialog("KeiPix isn't running."))
+            return .result(dialog: IntentDialog(stringLiteral: L10n.intentNotRunning))
         }
         await store.reloadCurrentFeed()
-        return .result(dialog: IntentDialog("Refreshed."))
+        return .result(dialog: IntentDialog(stringLiteral: L10n.intentRefreshed))
     }
 }

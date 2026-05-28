@@ -249,7 +249,7 @@ struct ArtworkDownloadItem: Identifiable, Codable, Sendable {
         if resolvedArtifactKind == .ugoiraZip, let ugoiraFrameCount {
             return String(format: L10n.ugoiraFrameCountFormat, ugoiraFrameCount)
         }
-        return "\(completedPages) / \(pageCount)"
+        return L10n.downloadProgressFormat(completedPages, pageCount)
     }
 
     var sourcePageLabel: String? {

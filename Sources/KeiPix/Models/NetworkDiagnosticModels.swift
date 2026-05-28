@@ -22,7 +22,7 @@ struct NetworkDiagnosticResult: Identifiable, Hashable {
     }
 
     var diagnosticsLine: String {
-        let durationText = duration.map { " · \(String(format: "%.0f ms", $0 * 1000))" } ?? ""
+        let durationText = duration.map { " · \(String(format: "%.0f %@", $0 * 1000, L10n.millisecondsUnit))" } ?? ""
         return "\(title): \(statusText) · \(detail)\(durationText)"
     }
 }

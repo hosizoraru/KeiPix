@@ -6,8 +6,8 @@ enum PixivSessionStoreError: LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .encodeFailed: "Unable to encode session."
-        case .decodeFailed: "Unable to decode saved session."
+        case .encodeFailed: L10n.errorEncodeSession
+        case .decodeFailed: L10n.errorDecodeSession
         }
     }
 }
