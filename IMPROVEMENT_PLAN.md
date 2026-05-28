@@ -54,7 +54,7 @@
 - [x] Skeleton loading states — `ba4e8a9`
 - [x] **Touch Bar** — `f229b60`
 - [x] **Handoff** — `ff3ffc2`
-- [ ] Finder extension for downloaded files
+- [x] **Finder extension** — `077e057`
 
 ---
 

@@ -604,6 +604,19 @@ final class ArtworkDownloadStore {
         // sink itself decides whether indexing is enabled.
         spotlightSink?.didComplete(items[index])
         HapticFeedback.downloadComplete()
+
+        // Write Finder metadata (comments, xattrs) to downloaded files
+        #if os(macOS)
+        if let filePaths = items[index].downloadedFilePaths {
+            for path in filePaths {
+                FinderMetadataWriter.writeMetadata(
+                    for: items[index],
+                    to: URL(fileURLWithPath: path)
+                )
+            }
+        }
+        #endif
+
         persistItems()
     }
 
