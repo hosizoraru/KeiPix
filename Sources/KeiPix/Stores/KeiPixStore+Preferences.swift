@@ -2,65 +2,69 @@ import Foundation
 
 @MainActor
 extension KeiPixStore {
+    // MARK: - Generic persistence helper
+
+    /// Persists a value to UserDefaults and updates the store property.
+    /// Reduces the repetitive `property = value; UserDefaults.set(value, forKey:)` pattern.
+    private func persist<T>(_ key: String, value: T, to property: ReferenceWritableKeyPath<KeiPixStore, T>) {
+        self[keyPath: property] = value
+        UserDefaults.standard.set(value, forKey: key)
+    }
+
+    /// Persists a `RawRepresentable` value (enum with String/Int raw value).
+    private func persistRaw<T: RawRepresentable>(_ key: String, value: T, to property: ReferenceWritableKeyPath<KeiPixStore, T>) {
+        self[keyPath: property] = value
+        UserDefaults.standard.set(value.rawValue, forKey: key)
+    }
+
+    // MARK: - Bookmark & follow
+
     func setDefaultBookmarkRestrict(_ restrict: BookmarkRestrict) {
-        defaultBookmarkRestrict = restrict
-        UserDefaults.standard.set(restrict.rawValue, forKey: "defaultBookmarkRestrict")
+        persistRaw("defaultBookmarkRestrict", value: restrict, to: \.defaultBookmarkRestrict)
     }
 
     func setDefaultFollowRestrict(_ restrict: BookmarkRestrict) {
-        defaultFollowRestrict = restrict
-        UserDefaults.standard.set(restrict.rawValue, forKey: "defaultFollowRestrict")
+        persistRaw("defaultFollowRestrict", value: restrict, to: \.defaultFollowRestrict)
     }
 
     func setFollowCreatorAfterBookmark(_ value: Bool) {
-        followCreatorAfterBookmark = value
-        UserDefaults.standard.set(value, forKey: "followCreatorAfterBookmark")
+        persist("followCreatorAfterBookmark", value: value, to: \.followCreatorAfterBookmark)
     }
 
     func setAutoDownloadBookmarkedArtworks(_ value: Bool) {
-        autoDownloadBookmarkedArtworks = value
-        UserDefaults.standard.set(value, forKey: "autoDownloadBookmarkedArtworks")
+        persist("autoDownloadBookmarkedArtworks", value: value, to: \.autoDownloadBookmarkedArtworks)
     }
 
     func setAutoBookmarkDownloadedArtworks(_ value: Bool) {
-        autoBookmarkDownloadedArtworks = value
-        UserDefaults.standard.set(value, forKey: "autoBookmarkDownloadedArtworks")
+        persist("autoBookmarkDownloadedArtworks", value: value, to: \.autoBookmarkDownloadedArtworks)
     }
 
     func setAutoTagBookmarksWithArtworkTags(_ value: Bool) {
-        autoTagBookmarksWithArtworkTags = value
-        UserDefaults.standard.set(value, forKey: "autoTagBookmarksWithArtworkTags")
+        persist("autoTagBookmarksWithArtworkTags", value: value, to: \.autoTagBookmarksWithArtworkTags)
     }
 
     func setArtworkCopyTemplate(_ template: String) {
-        artworkCopyTemplate = template
-        UserDefaults.standard.set(template, forKey: "artworkCopyTemplate")
+        persist("artworkCopyTemplate", value: template, to: \.artworkCopyTemplate)
     }
 
     func resetArtworkCopyTemplate() -> Bool {
-        guard artworkCopyTemplate != ArtworkCopyTemplate.defaultTemplate else {
-            return false
-        }
+        guard artworkCopyTemplate != ArtworkCopyTemplate.defaultTemplate else { return false }
         setArtworkCopyTemplate(ArtworkCopyTemplate.defaultTemplate)
         return true
     }
 
     func setCreatorCopyTemplate(_ template: String) {
-        creatorCopyTemplate = template
-        UserDefaults.standard.set(template, forKey: "creatorCopyTemplate")
+        persist("creatorCopyTemplate", value: template, to: \.creatorCopyTemplate)
     }
 
     func resetCreatorCopyTemplate() -> Bool {
-        guard creatorCopyTemplate != CreatorCopyTemplate.defaultTemplate else {
-            return false
-        }
+        guard creatorCopyTemplate != CreatorCopyTemplate.defaultTemplate else { return false }
         setCreatorCopyTemplate(CreatorCopyTemplate.defaultTemplate)
         return true
     }
 
     func setRestoreArtworkReaderProgress(_ value: Bool) {
-        restoreArtworkReaderProgress = value
-        UserDefaults.standard.set(value, forKey: "restoreArtworkReaderProgress")
+        persist("restoreArtworkReaderProgress", value: value, to: \.restoreArtworkReaderProgress)
     }
 
     func setUseOriginalImagesInDetail(_ value: Bool) {
@@ -159,28 +163,23 @@ extension KeiPixStore {
     }
 
     func setShowTranslatedTags(_ value: Bool) {
-        showTranslatedTags = value
-        UserDefaults.standard.set(value, forKey: "showTranslatedTags")
+        persist("showTranslatedTags", value: value, to: \.showTranslatedTags)
     }
 
     func setShowContentBadges(_ value: Bool) {
-        showContentBadges = value
-        UserDefaults.standard.set(value, forKey: "showContentBadges")
+        persist("showContentBadges", value: value, to: \.showContentBadges)
     }
 
     func setShowAccountIdentity(_ value: Bool) {
-        showAccountIdentity = value
-        UserDefaults.standard.set(value, forKey: "showAccountIdentity")
+        persist("showAccountIdentity", value: value, to: \.showAccountIdentity)
     }
 
     func setEmphasizeFollowingArtists(_ value: Bool) {
-        emphasizeFollowingArtists = value
-        UserDefaults.standard.set(value, forKey: "emphasizeFollowingArtists")
+        persist("emphasizeFollowingArtists", value: value, to: \.emphasizeFollowingArtists)
     }
 
     func setPrivacyModeEnabled(_ value: Bool) {
-        privacyModeEnabled = value
-        UserDefaults.standard.set(value, forKey: "privacyModeEnabled")
+        persist("privacyModeEnabled", value: value, to: \.privacyModeEnabled)
     }
 
     func setScreenCaptureProtectionEnabled(_ value: Bool) {
@@ -228,28 +227,23 @@ extension KeiPixStore {
     }
 
     func setMaskSensitivePreviews(_ value: Bool) {
-        maskSensitivePreviews = value
-        UserDefaults.standard.set(value, forKey: "maskSensitivePreviews")
+        persist("maskSensitivePreviews", value: value, to: \.maskSensitivePreviews)
     }
 
     func setSearchMatchType(_ value: SearchMatchType) {
-        searchMatchType = value
-        UserDefaults.standard.set(value.rawValue, forKey: "searchMatchType")
+        persistRaw("searchMatchType", value: value, to: \.searchMatchType)
     }
 
     func setSearchSort(_ value: SearchSort) {
-        searchSort = value
-        UserDefaults.standard.set(value.rawValue, forKey: "searchSort")
+        persistRaw("searchSort", value: value, to: \.searchSort)
     }
 
     func setSearchAgeLimit(_ value: SearchAgeLimit) {
-        searchAgeLimit = value
-        UserDefaults.standard.set(value.rawValue, forKey: "searchAgeLimit")
+        persistRaw("searchAgeLimit", value: value, to: \.searchAgeLimit)
     }
 
     func setSearchDateRange(_ value: SearchDateRange) {
-        searchDateRange = value
-        UserDefaults.standard.set(value.rawValue, forKey: "searchDateRange")
+        persistRaw("searchDateRange", value: value, to: \.searchDateRange)
     }
 
     func setSearchMinimumBookmarks(_ value: SearchBookmarkThreshold) {
@@ -283,38 +277,33 @@ extension KeiPixStore {
     }
 
     func setImageSourceSearchEngine(_ value: ImageSourceSearchEngineKind) {
-        imageSourceSearchEngine = value
-        UserDefaults.standard.set(value.rawValue, forKey: "imageSourceSearchEngine")
+        persistRaw("imageSourceSearchEngine", value: value, to: \.imageSourceSearchEngine)
     }
 
     func setUseRankingDate(_ value: Bool) {
-        useRankingDate = value
-        UserDefaults.standard.set(value, forKey: "useRankingDate")
+        persist("useRankingDate", value: value, to: \.useRankingDate)
     }
 
     func setRankingDate(_ value: Date) {
-        rankingDate = Self.clampedRankingDate(value)
-        UserDefaults.standard.set(rankingDate, forKey: "rankingDate")
+        let clamped = Self.clampedRankingDate(value)
+        rankingDate = clamped
+        UserDefaults.standard.set(clamped, forKey: "rankingDate")
     }
 
     func setAppLanguage(_ language: AppLanguage) {
-        appLanguage = language
-        UserDefaults.standard.set(language.rawValue, forKey: "appLanguage")
+        persistRaw("appLanguage", value: language, to: \.appLanguage)
     }
 
     func setTranslationTargetLanguage(_ language: TranslationTargetLanguage) {
-        translationTargetLanguage = language
-        UserDefaults.standard.set(language.rawValue, forKey: "translationTargetLanguage")
+        persistRaw("translationTargetLanguage", value: language, to: \.translationTargetLanguage)
     }
 
     func setAppColorScheme(_ scheme: AppColorScheme) {
-        appColorScheme = scheme
-        UserDefaults.standard.set(scheme.rawValue, forKey: "appColorScheme")
+        persistRaw("appColorScheme", value: scheme, to: \.appColorScheme)
     }
 
     func setLaunchDestination(_ destination: LaunchDestination) {
-        launchDestination = destination
-        UserDefaults.standard.set(destination.rawValue, forKey: "launchDestination")
+        persistRaw("launchDestination", value: destination, to: \.launchDestination)
     }
 
     /// Persists the proxy mode picker. Mode flips take effect on the
@@ -323,25 +312,21 @@ extension KeiPixStore {
     /// ships the same setting (and avoiding mid-flight session
     /// invalidation on the global ImagePipeline).
     func setProxyConfigurationMode(_ mode: ProxyConfigurationMode) {
-        proxyConfigurationMode = mode
-        UserDefaults.standard.set(mode.rawValue, forKey: ProxyConfiguration.DefaultsKey.mode)
+        persistRaw(ProxyConfiguration.DefaultsKey.mode, value: mode, to: \.proxyConfigurationMode)
     }
 
     func setProxyConfigurationHost(_ host: String) {
         let trimmed = host.trimmingCharacters(in: .whitespaces)
-        proxyConfigurationHost = trimmed
-        UserDefaults.standard.set(trimmed, forKey: ProxyConfiguration.DefaultsKey.host)
+        persist(ProxyConfiguration.DefaultsKey.host, value: trimmed, to: \.proxyConfigurationHost)
     }
 
     func setProxyConfigurationPort(_ port: Int) {
         let clamped = max(0, min(port, 65_535))
-        proxyConfigurationPort = clamped
-        UserDefaults.standard.set(clamped, forKey: ProxyConfiguration.DefaultsKey.port)
+        persist(ProxyConfiguration.DefaultsKey.port, value: clamped, to: \.proxyConfigurationPort)
     }
 
     func setProxyConfigurationScheme(_ scheme: ProxyScheme) {
-        proxyConfigurationScheme = scheme
-        UserDefaults.standard.set(scheme.rawValue, forKey: ProxyConfiguration.DefaultsKey.scheme)
+        persistRaw(ProxyConfiguration.DefaultsKey.scheme, value: scheme, to: \.proxyConfigurationScheme)
     }
 
     /// Persists the launch-time update-check toggle. Flipping it off
@@ -389,18 +374,15 @@ extension KeiPixStore {
     }
 
     func setCreatorListLayoutMode(_ mode: CreatorListLayoutMode) {
-        creatorListLayoutMode = mode
-        UserDefaults.standard.set(mode.rawValue, forKey: "creatorListLayoutMode")
+        persistRaw("creatorListLayoutMode", value: mode, to: \.creatorListLayoutMode)
     }
 
     func setSpotlightListLayoutMode(_ mode: SpotlightListLayoutMode) {
-        spotlightListLayoutMode = mode
-        UserDefaults.standard.set(mode.rawValue, forKey: "spotlightListLayoutMode")
+        persistRaw("spotlightListLayoutMode", value: mode, to: \.spotlightListLayoutMode)
     }
 
     func setNovelGalleryLayoutMode(_ mode: NovelGalleryLayoutMode) {
-        novelGalleryLayoutMode = mode
-        UserDefaults.standard.set(mode.rawValue, forKey: "novelGalleryLayoutMode")
+        persistRaw("novelGalleryLayoutMode", value: mode, to: \.novelGalleryLayoutMode)
     }
 
     func isDashboardSectionVisible(_ section: DiscoveryDashboardSection) -> Bool {
@@ -421,13 +403,11 @@ extension KeiPixStore {
     }
 
     func setTrackpadGesturesEnabled(_ value: Bool) {
-        trackpadGesturesEnabled = value
-        UserDefaults.standard.set(value, forKey: "trackpadGesturesEnabled")
+        persist("trackpadGesturesEnabled", value: value, to: \.trackpadGesturesEnabled)
     }
 
     func setHorizontalSwipeBehavior(_ behavior: TrackpadHorizontalSwipeBehavior) {
-        horizontalSwipeBehavior = behavior
-        UserDefaults.standard.set(behavior.rawValue, forKey: "horizontalSwipeBehavior")
+        persistRaw("horizontalSwipeBehavior", value: behavior, to: \.horizontalSwipeBehavior)
     }
 
     // MARK: - Image Processing
@@ -465,13 +445,11 @@ extension KeiPixStore {
     }
 
     func setDefaultArtworkReadingMode(_ mode: ArtworkReadingMode) {
-        defaultArtworkReadingMode = mode
-        UserDefaults.standard.set(mode.rawValue, forKey: ArtworkReadingModePreferenceKind.artwork.storageKey)
+        persistRaw(ArtworkReadingModePreferenceKind.artwork.storageKey, value: mode, to: \.defaultArtworkReadingMode)
     }
 
     func setDefaultMangaReadingMode(_ mode: ArtworkReadingMode) {
-        defaultMangaReadingMode = mode
-        UserDefaults.standard.set(mode.rawValue, forKey: ArtworkReadingModePreferenceKind.manga.storageKey)
+        persistRaw(ArtworkReadingModePreferenceKind.manga.storageKey, value: mode, to: \.defaultMangaReadingMode)
     }
 
     func restoredReaderPageIndex(for artwork: PixivArtwork, pageCount: Int? = nil) -> Int {

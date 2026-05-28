@@ -23,26 +23,10 @@
   - Fix: Move to test target or wrap in `#if DEBUG`
   - Impact: Binary size, code cleanliness
 
-- [ ] **7. Replace repetitive `setX()`/UserDefaults pattern**
-  - File: `Stores/KeiPixStore+Preferences.swift` (541 lines, 81 setters)
-  - Fix: Generic `persist<T>(_ key: String, value: T)` or `@AppStorage` migration
-  - Impact: ~400 lines eliminated
-
+- [x] **7. Replace repetitive `setX()`/UserDefaults pattern** — `0e7275a`
 - [ ] **8. Auto-generate L10n from String Catalog**
-  - File: `Support/L10n.swift` (1,613 lines)
-  - Problem: Manual wrapping of every string key
-  - Fix: Use Swift's `LocalizedStringResource` or compiler-generated enum from `.xcstrings`
-  - Impact: Maintenance burden
-
 - [ ] **9. Refactor `loadFeed` route mapping**
-  - File: `Stores/KeiPixStore.swift:862-962` (100-line switch)
-  - Fix: Route-to-API mapping table
-  - Impact: Extensibility
-
-- [ ] **10. Wrap AppKit imports in `#if os(macOS)`**
-  - Files: 7 stores/views with unconditional `import AppKit`
-  - Fix: Conditional compilation + use `PlatformFilePicker` consistently
-  - Impact: iPadOS readiness
+- [x] **10. Wrap AppKit imports in `#if os(macOS)`** — `40c1e72`
 
 ---
 
