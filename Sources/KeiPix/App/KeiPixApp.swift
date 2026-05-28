@@ -39,6 +39,13 @@ struct KeiPixApp: App {
                         openWindow(id: "artwork-reader", value: id)
                     }
                 }
+                .onContinueUserActivity(HandoffManager.activityType) { activity in
+                    if let state = HandoffManager.restoreState(from: activity) {
+                        if let artworkID = state.artworkID {
+                            openWindow(id: "artwork-reader", value: artworkID)
+                        }
+                    }
+                }
                 .task {
                     if VisualQALaunchArgument.contains(.settingsWindow)
                         || VisualQALaunchArgument.contains(.runtimeReadiness)

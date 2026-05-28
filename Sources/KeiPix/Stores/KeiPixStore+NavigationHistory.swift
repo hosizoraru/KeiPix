@@ -73,6 +73,10 @@ extension KeiPixStore {
     func navigateToArtwork(_ artwork: PixivArtwork) {
         navigationHistory.push(artwork.id)
         selectedArtwork = artwork
+        HandoffManager.shared.updateActivity(
+            route: selectedRoute.rawValue,
+            artworkID: artwork.id
+        )
     }
 
     /// Navigate backward in history.

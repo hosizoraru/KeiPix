@@ -386,6 +386,7 @@ final class KeiPixStore {
             bookmarkTagFilter = nil
         }
         selectedRoute = route
+        HandoffManager.shared.updateActivity(route: route.rawValue)
         if route != .spotlight {
             selectedSpotlightArticle = nil
         }

@@ -53,7 +53,7 @@
 - [x] Haptic feedback — `ba4e8a9`
 - [x] Skeleton loading states — `ba4e8a9`
 - [x] **Touch Bar** — `f229b60`
-- [ ] Handoff between devices
+- [x] **Handoff** — `ff3ffc2`
 - [ ] Finder extension for downloaded files
 
 ---
