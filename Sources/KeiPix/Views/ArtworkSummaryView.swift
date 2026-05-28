@@ -228,15 +228,19 @@ private struct ArtworkActionStrip: View {
                 }
 
                 HStack(spacing: 10) {
-                    // Bookmark stays text + icon — it's the primary
-                    // CTA and the most-asked-for action on a detail
-                    // pane (matches Pixiv Web's prominent ❤ button).
+                    // Bookmark is icon-only — the bookmark icon is
+                    // universally understood (Safari, Photos, Maps).
+                    // Filled state = already bookmarked; tapping opens
+                    // the tag editor. `.glassProminent` keeps it as
+                    // the visual primary CTA.
                     Button {
                         isBookmarkEditorPresented = true
                     } label: {
                         Label(artwork.isBookmarked ? L10n.editBookmark : L10n.bookmark, systemImage: artwork.isBookmarked ? "bookmark.fill" : "bookmark")
-                            .frame(maxWidth: .infinity)
                     }
+                    .labelStyle(.iconOnly)
+                    .help(artwork.isBookmarked ? L10n.editBookmark : L10n.bookmark)
+                    .accessibilityLabel(artwork.isBookmarked ? L10n.editBookmark : L10n.bookmark)
                     .buttonStyle(.glassProminent)
                     .controlSize(.small)
                     .sheet(isPresented: $isBookmarkEditorPresented) {

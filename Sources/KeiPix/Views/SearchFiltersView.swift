@@ -10,7 +10,9 @@ struct SearchFilterButton: View {
         } label: {
             Label(filterButtonTitle, systemImage: filterButtonImage)
         }
+        .labelStyle(.iconOnly)
         .help(store.searchOptions.summary)
+        .accessibilityLabel(filterButtonTitle)
         .popover(isPresented: $isPresented, arrowEdge: .bottom) {
             SearchFiltersView(store: store) {
                 isPresented = false
