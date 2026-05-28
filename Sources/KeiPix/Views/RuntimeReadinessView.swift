@@ -146,21 +146,18 @@ struct RuntimeReadinessView: View {
 
     var body: some View {
         let snapshot = store.runtimeReadinessSnapshot
-        #if DEBUG
-        let qaSnapshot = store.lastNonNovelQAMatrixSnapshot ?? NonNovelQAMatrixSnapshot(
-            checkedAt: snapshot.checkedAt,
-            items: KeiPixStore.nonNovelQABaselineItems
-        )
-        #else
-        let qaSnapshot: NonNovelQAMatrixSnapshot? = nil
-        #endif
 
         Section(L10n.runtimeReadiness) {
             Text(L10n.runtimeReadinessHint)
                 .font(.caption)
                 .foregroundStyle(.secondary)
 
+            #if DEBUG
             if usesRuntimeReadinessVisualQA {
+                let qaSnapshot = store.lastNonNovelQAMatrixSnapshot ?? NonNovelQAMatrixSnapshot(
+                    checkedAt: snapshot.checkedAt,
+                    items: KeiPixStore.nonNovelQABaselineItems
+                )
                 NonNovelQAMatrixView(
                     snapshot: qaSnapshot,
                     runQA: {
@@ -174,7 +171,10 @@ struct RuntimeReadinessView: View {
                 )
 
                 Divider()
+            }
+            #endif
 
+            if usesRuntimeReadinessVisualQA {
                 MutableActionReadinessView(
                     items: snapshot.mutableActionItems,
                     didCopyChecklist: didCopyChecklist,
@@ -278,7 +278,12 @@ struct RuntimeReadinessView: View {
                 Divider()
             }
 
+            #if DEBUG
             if usesRuntimeReadinessVisualQA == false {
+                let qaSnapshot = store.lastNonNovelQAMatrixSnapshot ?? NonNovelQAMatrixSnapshot(
+                    checkedAt: snapshot.checkedAt,
+                    items: KeiPixStore.nonNovelQABaselineItems
+                )
                 NonNovelQAMatrixView(
                     snapshot: qaSnapshot,
                     runQA: {
@@ -291,6 +296,7 @@ struct RuntimeReadinessView: View {
                     isRunning: isRunningNonNovelQA
                 )
             }
+            #endif
 
             FlowLayout(spacing: 8) {
                 Button {
