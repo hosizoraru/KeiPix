@@ -561,6 +561,10 @@ enum L10n {
     static var imageDenoise: String { text("Noise Reduction") }
     static var novelInlineTranslate: String { text("Inline Translate") }
     static var novelInlineTranslateHelp: String { text("Show translated text above each paragraph") }
+    static var novelTranslateBilingual: String { text("Bilingual") }
+    static var novelTranslateBilingualHelp: String { text("Show original and translated text together") }
+    static var novelTranslateImmersive: String { text("Immersive") }
+    static var novelTranslateImmersiveHelp: String { text("Replace original text with translation") }
     static var novelTranslating: String { text("Translating…") }
     static var imageTransform: String { text("Image Transform") }
     static var rotateLeft: String { text("Rotate Left") }
@@ -1251,6 +1255,7 @@ enum L10n {
     static var novelSeriesFormat: String { text("Series: %@") }
     static var novelPreviousInSeries: String { text("Previous in Series") }
     static var novelNextInSeries: String { text("Next in Series") }
+    static var novelEnd: String { text("End") }
     static var novelEnableWatchlist: String { text("Add to Watchlist") }
     static var novelDisableWatchlist: String { text("Remove from Watchlist") }
     static var novelWatchlistAddedFormat: String { text("Added %@ to watchlist") }

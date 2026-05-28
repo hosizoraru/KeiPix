@@ -4,18 +4,13 @@ import SwiftUI
 @preconcurrency import Translation
 #endif
 
-/// Body-text reader presented as a sheet from `NovelDetailView`. Walks
-/// the `NovelToken` stream produced by `NovelTextTokenizer`, splits it on
-/// `[newpage]` boundaries, and renders one page at a time so long
-/// novels stay scrollable without inflating SwiftUI's layout cache.
+/// Body-text reader presented as a sheet from `NovelDetailView`.
 ///
-/// All visual knobs (text size, line spacing, theme, font family,
-/// chapter markers) are persisted via `@AppStorage` so a user's reader
-/// preferences survive across novels and app launches. Vertical layout
-/// is exposed for parity with pixez but currently styles the page
-/// content rather than swapping to a CTFrame-backed vertical layout —
-/// SwiftUI's `Text` doesn't ship a true vertical writing mode on macOS,
-/// so we keep the toggle inert behind the same key for now.
+/// Features:
+/// - Two-page book layout on wide screens (> 1200pt)
+/// - Bilingual / immersive inline translation
+/// - Per-page translation caching
+/// - Keyboard navigation (←/→)
 struct NovelReaderView: View {
     @Bindable var store: KeiPixStore
     let novel: PixivNovel
@@ -36,9 +31,6 @@ struct NovelReaderView: View {
     // MARK: - Local UI state
 
     @State private var pageIndex: Int = 0
-    /// Tracks whether the reader's own `.task` has fired at least
-    /// once. Prevents showing a stale error inherited from
-    /// `openNovel` before the reader has had a chance to retry.
     @State private var readerLoadStarted = false
     @State private var isSettingsPresented = false
     @State private var translationEngine = NovelTranslationEngine()
@@ -63,18 +55,13 @@ struct NovelReaderView: View {
         return pages[pageIndex]
     }
 
-    private var currentPagePlainText: String {
-        currentPageTokens.compactMap { token in
-            switch token {
-            case .text(let v): return v
-            case .chapter(let t): return t
-            case .jumpURL(let l, _): return l
-            case .ruby(let b, let r): return "\(b)(\(r))"
-            case .jumpPage(let p): return "→ p.\(p)"
-            default: return nil
-            }
-        }.joined(separator: "\n")
+    private var nextPageTokens: [NovelToken] {
+        let next = pageIndex + 1
+        guard pages.indices.contains(next) else { return [] }
+        return pages[next]
     }
+
+    // MARK: - Body
 
     var body: some View {
         VStack(spacing: 0) {
@@ -88,53 +75,27 @@ struct NovelReaderView: View {
         .foregroundStyle(theme.foregroundColor)
         .task(id: novel.id) {
             readerLoadStarted = true
-            // Reset paging when the user opens a different novel from
-            // the same reader instance (e.g., via a series link).
             pageIndex = 0
+            translationEngine.reset()
             await novelStore.loadNovelText(for: novel.id)
-            // Kick off image resolution for embedded artwork and
-            // uploaded images once the body text is available.
             await loadEmbeddedImages()
         }
         .onChange(of: novelStore.loadedNovelTextID) { _, newValue in
-            // When the body text resolves for the current novel, reset
-            // the cursor so the reader doesn't open mid-novel after a
-            // series jump.
             if newValue == novel.id {
                 pageIndex = 0
             }
         }
         .onChange(of: pageIndex) { _, _ in
-            translationEngine.clearTranslations()
-            // Re-trigger translation for the new page if inline
-            // translation is active.
+            // Don't clear cached translations — they persist across
+            // page navigation. Only trigger translation for the new
+            // page if inline translation is active.
             if translationEngine.isInlineTranslationActive, translationConfig != nil {
                 translationConfig?.invalidate()
             }
         }
         .translationTask(translationConfig) { session in
-            let gen = translationEngine.generation
             guard translationEngine.isInlineTranslationActive else { return }
-            let paragraphs = currentPageTokens.enumerated().compactMap { index, token -> (Int, String)? in
-                if case .text(let value) = token,
-                   let translatable = CaptionTranslationAvailability.translatableText(from: value) {
-                    return (index, translatable)
-                }
-                return nil
-            }
-            guard paragraphs.isEmpty == false else { return }
-            translationEngine.setTranslating()
-
-            // Translate paragraphs sequentially. The system caches
-            // language models so repeated calls are fast.
-            var results: [Int: String] = [:]
-            for (tokenIndex, paragraphText) in paragraphs {
-                guard translationEngine.isInlineTranslationActive else { break }
-                if let response = try? await session.translate(paragraphText) {
-                    results[tokenIndex] = response.targetText
-                }
-            }
-            translationEngine.applyResults(results, generation: gen)
+            await translateCurrentPage(session: session)
         }
         .sheet(isPresented: $isSettingsPresented) {
             NovelReaderSettingsView(
@@ -149,6 +110,36 @@ struct NovelReaderView: View {
             )
             .iPadFriendlySheet()
         }
+    }
+
+    // MARK: - Translation
+
+    private func translateCurrentPage(session: TranslationSession) async {
+        let page = pageIndex
+        guard translationEngine.isInlineTranslationActive else { return }
+
+        // Skip if already cached
+        if translationEngine.hasTranslation(for: page) { return }
+
+        let paragraphs = currentPageTokens.enumerated().compactMap { index, token -> (Int, String)? in
+            if case .text(let value) = token,
+               let translatable = CaptionTranslationAvailability.translatableText(from: value) {
+                return (index, translatable)
+            }
+            return nil
+        }
+        guard paragraphs.isEmpty == false else { return }
+
+        translationEngine.setTranslating(pageIndex: page)
+
+        var results: [Int: String] = [:]
+        for (tokenIndex, paragraphText) in paragraphs {
+            guard translationEngine.isInlineTranslationActive else { break }
+            if let response = try? await session.translate(paragraphText) {
+                results[tokenIndex] = response.targetText
+            }
+        }
+        translationEngine.applyResults(results, for: page)
     }
 
     // MARK: - Chrome
@@ -168,6 +159,7 @@ struct NovelReaderView: View {
 
             Spacer(minLength: 0)
 
+            // Bookmark
             Button {
                 Task {
                     await novelStore.toggleBookmark(
@@ -185,24 +177,10 @@ struct NovelReaderView: View {
             .help(novel.isBookmarked ? L10n.novelRemoveBookmark : L10n.novelBookmark)
             .keyboardShortcut("b", modifiers: [])
 
-            // Inline translate toggle — shows translated text above
-            // each paragraph using TranslationSession batch API.
-            Button {
-                translationEngine.isInlineTranslationActive.toggle()
-                if translationEngine.isInlineTranslationActive {
-                    translationConfig = TranslationLanguageResolver.configuration(for: store.translationTargetLanguage)
-                } else {
-                    translationEngine.clearTranslations()
-                    translationConfig = nil
-                }
-            } label: {
-                Label(L10n.translate, systemImage: "character.bubble")
-                    .labelStyle(.iconOnly)
-            }
-            .help(L10n.translate)
-            .keyboardShortcut("t", modifiers: [])
-            .tint(translationEngine.isInlineTranslationActive ? .accentColor : nil)
+            // Translation mode picker (bilingual / immersive)
+            translationModeMenu
 
+            // Settings
             Button {
                 isSettingsPresented = true
             } label: {
@@ -212,6 +190,7 @@ struct NovelReaderView: View {
             .help(L10n.novelReaderSettings)
             .keyboardShortcut(",", modifiers: .command)
 
+            // Close
             Button {
                 dismiss()
             } label: {
@@ -225,6 +204,58 @@ struct NovelReaderView: View {
         .background(.thinMaterial)
     }
 
+    private var translationModeMenu: some View {
+        Menu {
+            // Toggle translation on/off
+            Button {
+                toggleTranslation()
+            } label: {
+                Label(
+                    translationEngine.isInlineTranslationActive ? L10n.novelInlineTranslate : L10n.translate,
+                    systemImage: translationEngine.isInlineTranslationActive ? "checkmark.circle.fill" : "character.bubble"
+                )
+            }
+            .keyboardShortcut("t", modifiers: [])
+
+            Divider()
+
+            // Mode picker
+            ForEach(NovelTranslationMode.allCases) { mode in
+                Button {
+                    translationEngine.translationMode = mode
+                    if translationEngine.isInlineTranslationActive {
+                        translationConfig?.invalidate()
+                    }
+                } label: {
+                    Label(mode.title, systemImage: mode.systemImage)
+                }
+                .disabled(translationEngine.translationMode == mode)
+            }
+        } label: {
+            Label(L10n.translate, systemImage: translationEngine.isInlineTranslationActive
+                  ? translationEngine.translationMode.systemImage
+                  : "character.bubble")
+            .labelStyle(.iconOnly)
+        }
+        .help(translationEngine.isInlineTranslationActive
+              ? translationEngine.translationMode.helpText
+              : L10n.translate)
+        .accessibilityLabel(L10n.translate)
+        .tint(translationEngine.isInlineTranslationActive ? .accentColor : nil)
+    }
+
+    private func toggleTranslation() {
+        translationEngine.isInlineTranslationActive.toggle()
+        if translationEngine.isInlineTranslationActive {
+            translationConfig = TranslationLanguageResolver.configuration(for: store.translationTargetLanguage)
+        } else {
+            translationEngine.clearAll()
+            translationConfig = nil
+        }
+    }
+
+    // MARK: - Content
+
     @ViewBuilder
     private var content: some View {
         if !readerLoadStarted || novelStore.isLoadingNovelText {
@@ -234,9 +265,242 @@ struct NovelReaderView: View {
         } else if novelStore.loadedNovelText == nil || novelStore.loadedNovelTokens.isEmpty {
             unavailableState
         } else {
-            pageContent
+            GeometryReader { geo in
+                if geo.size.width >= 1200, pages.count > 1 {
+                    twoPageLayout(geo: geo)
+                } else {
+                    singlePageLayout
+                }
+            }
         }
     }
+
+    // MARK: - Single page layout
+
+    private var singlePageLayout: some View {
+        ScrollView {
+            pageColumn(tokens: currentPageTokens, pageIndex: pageIndex)
+                .frame(maxWidth: CGFloat(maxContentWidth), alignment: .leading)
+                .frame(maxWidth: .infinity, alignment: .center)
+                .padding(.horizontal, 32)
+                .padding(.vertical, 24)
+                .textSelection(.enabled)
+        }
+    }
+
+    // MARK: - Two-page book layout
+
+    private func twoPageLayout(geo: GeometryProxy) -> some View {
+        HStack(spacing: 0) {
+            // Left page
+            ScrollView {
+                pageColumn(tokens: currentPageTokens, pageIndex: pageIndex)
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+                    .padding(.trailing, 24)
+                    .padding(.leading, 32)
+                    .padding(.vertical, 24)
+                    .textSelection(.enabled)
+            }
+
+            // Spine divider
+            Rectangle()
+                .fill(.quaternary)
+                .frame(width: 1)
+
+            // Right page (next page)
+            ScrollView {
+                if pageIndex + 1 < pages.count {
+                    pageColumn(tokens: nextPageTokens, pageIndex: pageIndex + 1)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.leading, 24)
+                        .padding(.trailing, 32)
+                        .padding(.vertical, 24)
+                        .textSelection(.enabled)
+                } else {
+                    // Last page — show end mark
+                    VStack {
+                        Spacer()
+                        Image(systemName: "book.closed")
+                            .font(.system(size: 32))
+                            .foregroundStyle(.tertiary)
+                        Text(L10n.novelEnd)
+                            .font(.caption)
+                            .foregroundStyle(.tertiary)
+                        Spacer()
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                }
+            }
+        }
+    }
+
+    // MARK: - Page column
+
+    private func pageColumn(tokens: [NovelToken], pageIndex: Int) -> some View {
+        VStack(alignment: .leading, spacing: CGFloat(paragraphSpacing)) {
+            ForEach(Array(tokens.enumerated()), id: \.offset) { index, token in
+                tokenView(token, tokenIndex: index, pageIndex: pageIndex)
+            }
+        }
+    }
+
+    // MARK: - Token rendering
+
+    @ViewBuilder
+    private func tokenView(_ token: NovelToken, tokenIndex: Int = 0, pageIndex: Int = 0) -> some View {
+        switch token {
+        case .text(let value):
+            textTokenView(value, tokenIndex: tokenIndex, pageIndex: pageIndex)
+        case .newPage:
+            EmptyView()
+        case .chapter(let title):
+            if showChapterMarkers {
+                chapterMarker(title)
+            }
+        case .pixivImage(let illustID, _):
+            embeddedArtworkView(illustID: illustID)
+        case .uploadedImage(let key):
+            uploadedImageView(key: key)
+        case .jumpURL(let label, let url):
+            Link(destination: url) {
+                Label(label.isEmpty ? url.absoluteString : label, systemImage: "link")
+                    .font(bodyFont.weight(.medium))
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        case .ruby(let base, let reading):
+            Text("\(Text(base).font(bodyFont))\(Text(" (\(reading))").font(rubyAnnotationFont))")
+                .frame(maxWidth: .infinity, alignment: .leading)
+        case .jumpPage(let target):
+            Text(String(format: L10n.novelJumpPageFormat, target))
+                .font(bodyFont.weight(.medium).italic())
+                .foregroundStyle(.secondary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    @ViewBuilder
+    private func textTokenView(_ value: String, tokenIndex: Int, pageIndex: Int) -> some View {
+        if translationEngine.isInlineTranslationActive,
+           let translated = translationEngine.translatedText(pageIndex: pageIndex, tokenIndex: tokenIndex) {
+            switch translationEngine.translationMode {
+            case .bilingual:
+                // Bilingual: original on top, translation below with accent bar
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(value)
+                        .font(bodyFont)
+                        .lineSpacing(CGFloat(max(lineSpacing - 2, 0)))
+                        .fixedSize(horizontal: false, vertical: true)
+
+                    Text(translated)
+                        .font(bodyFont)
+                        .lineSpacing(CGFloat(max(lineSpacing - 2, 0)))
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(.leading, 10)
+                        .overlay(alignment: .leading) {
+                            Rectangle()
+                                .fill(.tertiary)
+                                .frame(width: 3)
+                        }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            case .immersive:
+                // Immersive: translation replaces original
+                Text(translated)
+                    .font(bodyFont)
+                    .lineSpacing(CGFloat(max(lineSpacing - 2, 0)))
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+        } else if translationEngine.isTranslating(pageIndex: pageIndex) {
+            // Show original while translating
+            Text(value)
+                .font(bodyFont)
+                .lineSpacing(CGFloat(max(lineSpacing - 2, 0)))
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .opacity(0.6)
+        } else {
+            Text(value)
+                .font(bodyFont)
+                .lineSpacing(CGFloat(max(lineSpacing - 2, 0)))
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    // MARK: - Footer
+
+    private var footer: some View {
+        HStack(spacing: 12) {
+            Button {
+                if let prev = novelStore.loadedNovelText?.seriesPrev {
+                    navigateToSeriesEntry(id: prev.id)
+                }
+            } label: {
+                Label(L10n.novelPreviousInSeries, systemImage: "chevron.backward.circle")
+                    .labelStyle(.iconOnly)
+            }
+            .disabled(novelStore.loadedNovelText?.seriesPrev == nil)
+            .help(L10n.novelPreviousInSeries)
+
+            Spacer(minLength: 0)
+
+            HStack(spacing: 8) {
+                Button {
+                    goToPage(pageIndex - 1)
+                } label: {
+                    Label(L10n.previousPage, systemImage: "arrow.left")
+                        .labelStyle(.iconOnly)
+                }
+                .disabled(pageIndex == 0 || pages.isEmpty)
+                .keyboardShortcut(.leftArrow, modifiers: [])
+
+                if pages.isEmpty == false {
+                    Text(String(format: L10n.novelPageProgressFormat, pageIndex + 1, pages.count))
+                        .font(.caption.weight(.medium))
+                        .monospacedDigit()
+                        .foregroundStyle(.secondary)
+                }
+
+                Button {
+                    goToPage(pageIndex + 1)
+                } label: {
+                    Label(L10n.nextPage, systemImage: "arrow.right")
+                        .labelStyle(.iconOnly)
+                }
+                .disabled(pageIndex >= pages.count - 1 || pages.isEmpty)
+                .keyboardShortcut(.rightArrow, modifiers: [])
+            }
+
+            Spacer(minLength: 0)
+
+            Button {
+                if let next = novelStore.loadedNovelText?.seriesNext {
+                    navigateToSeriesEntry(id: next.id)
+                }
+            } label: {
+                Label(L10n.novelNextInSeries, systemImage: "chevron.forward.circle")
+                    .labelStyle(.iconOnly)
+            }
+            .disabled(novelStore.loadedNovelText?.seriesNext == nil)
+            .help(L10n.novelNextInSeries)
+        }
+        .padding(.horizontal, 18)
+        .padding(.vertical, 10)
+        .background(.thinMaterial)
+    }
+
+    // MARK: - Page navigation
+
+    private func goToPage(_ target: Int) {
+        let clamped = min(max(target, 0), pages.count - 1)
+        guard clamped != pageIndex else { return }
+        pageIndex = clamped
+    }
+
+    // MARK: - Loading / error states
 
     private var loadingState: some View {
         VStack(spacing: 12) {
@@ -278,87 +542,7 @@ struct NovelReaderView: View {
         )
     }
 
-    private var pageContent: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: CGFloat(paragraphSpacing)) {
-                ForEach(Array(currentPageTokens.enumerated()), id: \.offset) { index, token in
-                    tokenView(token, tokenIndex: index)
-                }
-            }
-            .frame(maxWidth: CGFloat(maxContentWidth), alignment: .leading)
-            .frame(maxWidth: .infinity, alignment: .center)
-            .padding(.horizontal, 32)
-            .padding(.vertical, 24)
-            .textSelection(.enabled)
-        }
-    }
-
-    @ViewBuilder
-    private func tokenView(_ token: NovelToken, tokenIndex: Int = 0) -> some View {
-        switch token {
-        case .text(let value):
-            if translationEngine.isInlineTranslationActive,
-               let translated = translationEngine.translatedText(for: tokenIndex) {
-                // Immersive bilingual: original on top, translated
-                // below with a left accent bar — mirrors browser
-                // extensions like Immersive Translate.
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(value)
-                        .font(bodyFont)
-                        .lineSpacing(CGFloat(max(lineSpacing - 2, 0)))
-                        .fixedSize(horizontal: false, vertical: true)
-
-                    Text(translated)
-                        .font(bodyFont)
-                        .lineSpacing(CGFloat(max(lineSpacing - 2, 0)))
-                        .foregroundStyle(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .padding(.leading, 10)
-                        .overlay(alignment: .leading) {
-                            Rectangle()
-                                .fill(.tertiary)
-                                .frame(width: 3)
-                        }
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-            } else {
-                Text(value)
-                    .font(bodyFont)
-                    .lineSpacing(CGFloat(max(lineSpacing - 2, 0)))
-                    .fixedSize(horizontal: false, vertical: true)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-            }
-        case .newPage:
-            // The pager already splits on `.newPage`; if we ever fall
-            // through (e.g., the splitter gets disabled), surface the
-            // marker as a thin divider so authors' intent isn't lost.
-            EmptyView()
-        case .chapter(let title):
-            if showChapterMarkers {
-                chapterMarker(title)
-            }
-        case .pixivImage(let illustID, _):
-            embeddedArtworkView(illustID: illustID)
-        case .uploadedImage(let key):
-            uploadedImageView(key: key)
-        case .jumpURL(let label, let url):
-            Link(destination: url) {
-                Label(label.isEmpty ? url.absoluteString : label, systemImage: "link")
-                    .font(bodyFont.weight(.medium))
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-        case .ruby(let base, let reading):
-            // Inline ruby fallback: `base(reading)`. SwiftUI Text doesn't
-            // ship a true ruby annotation, so this matches pixez/pixes.
-            Text("\(Text(base).font(bodyFont))\(Text(" (\(reading))").font(rubyAnnotationFont))")
-                .frame(maxWidth: .infinity, alignment: .leading)
-        case .jumpPage(let target):
-            Text(String(format: L10n.novelJumpPageFormat, target))
-                .font(bodyFont.weight(.medium).italic())
-                .foregroundStyle(.secondary)
-                .frame(maxWidth: .infinity, alignment: .leading)
-        }
-    }
+    // MARK: - Helpers
 
     private func chapterMarker(_ title: String) -> some View {
         HStack(spacing: 8) {
@@ -381,8 +565,6 @@ struct NovelReaderView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 8))
                     .frame(maxWidth: .infinity)
             } else {
-                // Still loading or fetch failed — show a compact
-                // card that doesn't block reading flow.
                 HStack(spacing: 10) {
                     Image(systemName: "photo")
                         .font(.title3)
@@ -443,13 +625,7 @@ struct NovelReaderView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    /// Resolves image URLs for every embedded-image token on the
-    /// current page. Artwork images are fetched individually via
-    /// the Pixiv API; uploaded images are batch-resolved by
-    /// scraping the novel web page once.
     private func loadEmbeddedImages() async {
-        // Collect artwork IDs from the full token stream so we can
-        // fire concurrent fetches for all of them.
         let artworkIDs = Set(novelStore.loadedNovelTokens.compactMap { token -> Int? in
             if case .pixivImage(let id, _) = token { return id }
             return nil
@@ -459,16 +635,12 @@ struct NovelReaderView: View {
             return false
         }
 
-        // Scrape uploaded images (single network call for the
-        // whole novel) in parallel with artwork detail fetches.
         async let uploadedTask: Void = {
             if hasUploadedImages {
                 await novelStore.loadUploadedImages(for: novel.id)
             }
         }()
 
-        // Fire artwork fetches concurrently — each one is a
-        // lightweight `/v1/illust/detail` call.
         await withTaskGroup(of: Void.self) { group in
             for illustID in artworkIDs {
                 group.addTask {
@@ -478,68 +650,6 @@ struct NovelReaderView: View {
         }
         await uploadedTask
     }
-
-    private var footer: some View {
-        HStack(spacing: 12) {
-            Button {
-                if let prev = novelStore.loadedNovelText?.seriesPrev {
-                    navigateToSeriesEntry(id: prev.id)
-                }
-            } label: {
-                Label(L10n.novelPreviousInSeries, systemImage: "chevron.backward.circle")
-                    .labelStyle(.iconOnly)
-            }
-            .disabled(novelStore.loadedNovelText?.seriesPrev == nil)
-            .help(L10n.novelPreviousInSeries)
-
-            Spacer(minLength: 0)
-
-            HStack(spacing: 8) {
-                Button {
-                    pageIndex = max(0, pageIndex - 1)
-                } label: {
-                    Label(L10n.previousPage, systemImage: "arrow.left")
-                        .labelStyle(.iconOnly)
-                }
-                .disabled(pageIndex == 0 || pages.isEmpty)
-                .keyboardShortcut(.leftArrow, modifiers: [])
-
-                if pages.isEmpty == false {
-                    Text(String(format: L10n.novelPageProgressFormat, pageIndex + 1, pages.count))
-                        .font(.caption.weight(.medium))
-                        .monospacedDigit()
-                        .foregroundStyle(.secondary)
-                }
-
-                Button {
-                    pageIndex = min(pages.count - 1, pageIndex + 1)
-                } label: {
-                    Label(L10n.nextPage, systemImage: "arrow.right")
-                        .labelStyle(.iconOnly)
-                }
-                .disabled(pageIndex >= pages.count - 1 || pages.isEmpty)
-                .keyboardShortcut(.rightArrow, modifiers: [])
-            }
-
-            Spacer(minLength: 0)
-
-            Button {
-                if let next = novelStore.loadedNovelText?.seriesNext {
-                    navigateToSeriesEntry(id: next.id)
-                }
-            } label: {
-                Label(L10n.novelNextInSeries, systemImage: "chevron.forward.circle")
-                    .labelStyle(.iconOnly)
-            }
-            .disabled(novelStore.loadedNovelText?.seriesNext == nil)
-            .help(L10n.novelNextInSeries)
-        }
-        .padding(.horizontal, 18)
-        .padding(.vertical, 10)
-        .background(.thinMaterial)
-    }
-
-    // MARK: - Helpers
 
     private func navigateToSeriesEntry(id: Int) {
         Task {
@@ -574,9 +684,6 @@ struct NovelReaderView: View {
         }
     }
 
-    /// Walk the token stream once and split on `[newpage]`. Empty pages
-    /// (back-to-back markers) collapse so the pager doesn't render a
-    /// blank page between chapters.
     static func splitPages(_ tokens: [NovelToken]) -> [[NovelToken]] {
         guard tokens.isEmpty == false else { return [] }
         var pages: [[NovelToken]] = []
@@ -631,9 +738,6 @@ enum NovelReaderTheme: String, CaseIterable, Identifiable {
         }
     }
 
-    /// Slightly differentiated background for embedded blocks (image
-    /// placeholders, jump links). `.quaternary` would do, but the sepia
-    /// and dark themes need their own tone so the blocks don't blend.
     var embedBackgroundColor: Color {
         switch self {
         case .light: Color(nsColor: .controlBackgroundColor)
@@ -693,41 +797,33 @@ struct NovelReaderSettingsView: View {
                     Slider(value: $textSize, in: 12...28, step: 1) {
                         Text(L10n.novelReaderTextSize)
                     } minimumValueLabel: {
-                        Text("12")
-                            .font(.caption)
+                        Text("12").font(.caption)
                     } maximumValueLabel: {
-                        Text("28")
-                            .font(.caption)
+                        Text("28").font(.caption)
                     }
 
                     Slider(value: $lineSpacing, in: 0...16, step: 1) {
                         Text(L10n.novelReaderLineSpacing)
                     } minimumValueLabel: {
-                        Text("0")
-                            .font(.caption)
+                        Text("0").font(.caption)
                     } maximumValueLabel: {
-                        Text("16")
-                            .font(.caption)
+                        Text("16").font(.caption)
                     }
 
                     Slider(value: $paragraphSpacing, in: 0...24, step: 1) {
                         Text(L10n.novelReaderParagraphSpacing)
                     } minimumValueLabel: {
-                        Text("0")
-                            .font(.caption)
+                        Text("0").font(.caption)
                     } maximumValueLabel: {
-                        Text("24")
-                            .font(.caption)
+                        Text("24").font(.caption)
                     }
 
                     Slider(value: $maxContentWidth, in: 480...960, step: 40) {
                         Text(L10n.novelReaderMaxWidth)
                     } minimumValueLabel: {
-                        Text("480")
-                            .font(.caption)
+                        Text("480").font(.caption)
                     } maximumValueLabel: {
-                        Text("960")
-                            .font(.caption)
+                        Text("960").font(.caption)
                     }
                 }
 
