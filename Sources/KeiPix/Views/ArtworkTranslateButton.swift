@@ -9,9 +9,6 @@ import SwiftUI
 /// translation via Apple's `TranslationSession`. When active, the
 /// accompanying `InlineTranslateSection` shows the translated text
 /// above the original.
-///
-/// Replaces the old sheet-based `.translationPresentation` with an
-/// immersive overlay that keeps the user in their reading flow.
 struct InlineTranslateButton: View {
     @Binding var isActive: Bool
 
@@ -36,13 +33,9 @@ struct InlineTranslateButton: View {
 /// original in a secondary style. Uses Apple's `TranslationSession`
 /// for on-demand translation without sheet popups.
 ///
-/// Usage:
-/// ```swift
-/// InlineTranslateSection(text: caption) {
-///     Text(caption)
-///         .font(.callout)
-/// }
-/// ```
+/// Uses the correct Apple pattern: optional `Configuration?` — setting
+/// it to non-nil triggers `.translationTask`. Calling `invalidate()`
+/// re-translates when text changes.
 struct InlineTranslateSection<Content: View>: View {
     let text: String
     @ViewBuilder var content: Content
@@ -50,17 +43,15 @@ struct InlineTranslateSection<Content: View>: View {
     @State private var isTranslateActive = false
     @State private var translatedText: String?
     @State private var isTranslating = false
-    @State private var translationConfig = TranslationSession.Configuration(source: nil, target: nil)
+    @State private var translationConfig: TranslationSession.Configuration?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            // Header row: translate toggle
             HStack(spacing: 6) {
                 Spacer()
                 InlineTranslateButton(isActive: $isTranslateActive)
             }
 
-            // Translated text (when active)
             if isTranslateActive {
                 if isTranslating {
                     HStack(spacing: 6) {
@@ -82,7 +73,6 @@ struct InlineTranslateSection<Content: View>: View {
                 }
             }
 
-            // Original content
             content
         }
         #if canImport(Translation)
@@ -104,20 +94,27 @@ struct InlineTranslateSection<Content: View>: View {
         #endif
         .onChange(of: isTranslateActive) { _, active in
             if active {
-                // Bump config to trigger .translationTask
+                // Set non-nil config to trigger .translationTask
                 translationConfig = TranslationSession.Configuration(source: nil, target: nil)
             } else {
                 translatedText = nil
                 isTranslating = false
+                translationConfig = nil
+            }
+        }
+        .onChange(of: text) { _, _ in
+            // Re-translate when source text changes
+            if isTranslateActive, translationConfig != nil {
+                translationConfig?.invalidate()
             }
         }
     }
 }
 
-// MARK: - Legacy sheet-based button (kept for comments row usage)
+// MARK: - Sheet-based translate (for lightweight contexts like comment rows)
 
-/// The old sheet-based translate button, now icon-only. Still used
-/// in comment rows where wrapping each comment in a full
+/// Icon-only button that opens the system translation sheet.
+/// Used in comment rows where wrapping each comment in
 /// `InlineTranslateSection` would be too heavy.
 struct ArtworkTranslateButton: View {
     let text: String
@@ -136,23 +133,8 @@ struct ArtworkTranslateButton: View {
             .help(L10n.translate)
             .accessibilityLabel(L10n.translate)
             #if canImport(Translation)
-            .modifier(TranslationPresentationModifier(text: translatable, isPresented: $isPresented))
+            .translationPresentation(isPresented: $isPresented, text: translatable)
             #endif
         }
     }
 }
-
-#if canImport(Translation)
-private struct TranslationPresentationModifier: ViewModifier {
-    let text: String
-    @Binding var isPresented: Bool
-
-    func body(content: Content) -> some View {
-        if #available(macOS 14.4, *) {
-            content.translationPresentation(isPresented: $isPresented, text: text)
-        } else {
-            content
-        }
-    }
-}
-#endif

@@ -41,9 +41,8 @@ struct NovelReaderView: View {
     /// `openNovel` before the reader has had a chance to retry.
     @State private var readerLoadStarted = false
     @State private var isSettingsPresented = false
-    @State private var isTranslationPresented = false
     @State private var translationEngine = NovelTranslationEngine()
-    @State private var translationConfig = TranslationSession.Configuration(source: nil, target: nil)
+    @State private var translationConfig: TranslationSession.Configuration?
 
     private var novelStore: NovelFeatureStore { store.novels }
 
@@ -87,10 +86,6 @@ struct NovelReaderView: View {
         }
         .background(theme.backgroundColor)
         .foregroundStyle(theme.foregroundColor)
-        .translationPresentation(
-            isPresented: $isTranslationPresented,
-            text: currentPagePlainText
-        )
         .task(id: novel.id) {
             readerLoadStarted = true
             // Reset paging when the user opens a different novel from
@@ -111,6 +106,11 @@ struct NovelReaderView: View {
         }
         .onChange(of: pageIndex) { _, _ in
             translationEngine.clearTranslations()
+            // Re-trigger translation for the new page if inline
+            // translation is active.
+            if translationEngine.isInlineTranslationActive, translationConfig != nil {
+                translationConfig?.invalidate()
+            }
         }
         .translationTask(translationConfig) { session in
             let gen = translationEngine.generation
@@ -124,10 +124,13 @@ struct NovelReaderView: View {
             }
             guard paragraphs.isEmpty == false else { return }
             translationEngine.setTranslating()
+
+            // Translate paragraphs sequentially. The system caches
+            // language models so repeated calls are fast.
             var results: [Int: String] = [:]
-            for (tokenIndex, text) in paragraphs {
+            for (tokenIndex, paragraphText) in paragraphs {
                 guard translationEngine.isInlineTranslationActive else { break }
-                if let response = try? await session.translate(text) {
+                if let response = try? await session.translate(paragraphText) {
                     results[tokenIndex] = response.targetText
                 }
             }
@@ -182,30 +185,22 @@ struct NovelReaderView: View {
             .help(novel.isBookmarked ? L10n.novelRemoveBookmark : L10n.novelBookmark)
             .keyboardShortcut("b", modifiers: [])
 
+            // Inline translate toggle — shows translated text above
+            // each paragraph using TranslationSession batch API.
             Button {
-                isTranslationPresented = true
+                translationEngine.isInlineTranslationActive.toggle()
+                if translationEngine.isInlineTranslationActive {
+                    translationConfig = TranslationSession.Configuration(source: nil, target: nil)
+                } else {
+                    translationEngine.clearTranslations()
+                    translationConfig = nil
+                }
             } label: {
-                Label(L10n.translate, systemImage: "translate")
+                Label(L10n.translate, systemImage: "character.bubble")
                     .labelStyle(.iconOnly)
             }
             .help(L10n.translate)
             .keyboardShortcut("t", modifiers: [])
-
-            // Inline translate toggle — shows translated text
-            // above each paragraph using TranslationSession.
-            Button {
-                translationEngine.isInlineTranslationActive.toggle()
-                if translationEngine.isInlineTranslationActive {
-                    // Bump the config to trigger .translationTask.
-                    translationConfig = TranslationSession.Configuration(source: nil, target: nil)
-                } else {
-                    translationEngine.clearTranslations()
-                }
-            } label: {
-                Label(L10n.novelInlineTranslate, systemImage: "text.bubble")
-                    .labelStyle(.iconOnly)
-            }
-            .help(L10n.novelInlineTranslateHelp)
             .tint(translationEngine.isInlineTranslationActive ? .accentColor : nil)
 
             Button {
