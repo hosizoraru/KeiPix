@@ -48,7 +48,7 @@
 ## P3 — Platform Integration (Nice-to-have)
 
 - [x] **Quick Look** — `f253f65`
-- [ ] WidgetKit — "Artwork of the Day", download queue status
+- [x] **WidgetKit** — `5a37683` (data provider for widget extension)
 - [ ] Share Extension — receive Pixiv links from other apps
 - [x] Haptic feedback — `ba4e8a9`
 - [x] Skeleton loading states — `ba4e8a9`

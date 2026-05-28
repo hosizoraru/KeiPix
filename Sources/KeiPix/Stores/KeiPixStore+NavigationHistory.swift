@@ -77,6 +77,7 @@ extension KeiPixStore {
             route: selectedRoute.rawValue,
             artworkID: artwork.id
         )
+        WidgetDataProvider.saveArtwork(artwork)
     }
 
     /// Navigate backward in history.
