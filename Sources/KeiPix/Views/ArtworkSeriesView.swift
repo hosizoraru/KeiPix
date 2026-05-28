@@ -506,6 +506,7 @@ private struct SeriesHeaderView: View {
             }
 
             HStack(spacing: 8) {
+                Spacer()
                 Button {
                     toggleWatchlist()
                 } label: {
@@ -519,15 +520,24 @@ private struct SeriesHeaderView: View {
                         )
                     }
                 }
+                .labelStyle(.iconOnly)
+                .help(detail.watchlistAdded ? L10n.watchlistAdded : L10n.addToWatchlist)
+                .accessibilityLabel(detail.watchlistAdded ? L10n.watchlistAdded : L10n.addToWatchlist)
                 .buttonStyle(.bordered)
+                .controlSize(.small)
                 .disabled(isUpdatingWatchlist)
 
                 if let url = detail.pixivURL {
                     Link(destination: url) {
                         Label(L10n.openSeriesInPixiv, systemImage: "safari")
                     }
+                    .labelStyle(.iconOnly)
+                    .help(L10n.openSeriesInPixiv)
+                    .accessibilityLabel(L10n.openSeriesInPixiv)
                     .buttonStyle(.bordered)
+                    .controlSize(.small)
                 }
+                Spacer()
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)

@@ -126,6 +126,8 @@ private struct NovelDetailContent: View {
     private var actionRow: some View {
         GeometryReader { geo in
             HStack(spacing: 10) {
+                Spacer()
+
                 // Reader — primary CTA, always visible
                 Button {
                     isReaderPresented = true
@@ -176,6 +178,8 @@ private struct NovelDetailContent: View {
 
                 // More — export, open in pixiv (when narrow), share
                 novelMoreMenu(promotePixiv: geo.size.width >= 320)
+
+                Spacer()
             }
         }
         .frame(height: 28)

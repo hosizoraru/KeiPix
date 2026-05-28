@@ -373,6 +373,7 @@ private struct AdaptiveActionRow: View {
     var body: some View {
         GeometryReader { geo in
             HStack(spacing: 10) {
+                Spacer()
                 bookmarkButton
                 downloadButton
 
@@ -395,6 +396,7 @@ private struct AdaptiveActionRow: View {
                 moreMenu(promoteShare: geo.size.width >= 400,
                          promoteSearch: geo.size.width >= 520,
                          promoteWatchLater: geo.size.width >= 520)
+                Spacer()
             }
         }
         .frame(height: 28)
