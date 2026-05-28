@@ -133,6 +133,7 @@ struct ContentView: View {
             UserProfileSheet(user: user, store: store)
                 .iPadFriendlySheet()
         }
+        #if DEBUG
         .sheet(item: $creatorProfileVisualQAUser) { user in
             UserProfileSheet(
                 user: user,
@@ -143,6 +144,7 @@ struct ContentView: View {
             )
             .iPadFriendlySheet()
         }
+        #endif
         .sheet(isPresented: $isPixivIDOpenPresented) {
             PixivIDOpenSheet(store: store, showStatus: showStatus)
                 .iPadFriendlySheet()
