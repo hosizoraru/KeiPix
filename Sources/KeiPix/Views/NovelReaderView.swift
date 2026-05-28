@@ -36,6 +36,9 @@ struct NovelReaderView: View {
     @State private var isSettingsPresented = false
     @State private var translationEngine = NovelTranslationEngine()
     @State private var translationConfig: TranslationSession.Configuration?
+    @State private var swipeOffset: CGFloat = 0
+    @State private var swipeEdgeLeading = false
+    @State private var swipeEdgeTrailing = false
 
     private var novelStore: NovelFeatureStore { store.novels }
 
@@ -321,13 +324,28 @@ struct NovelReaderView: View {
     // MARK: - Single page layout
 
     private var singlePageLayout: some View {
-        ScrollView {
-            pageColumn(tokens: currentPageTokens, pageIndex: pageIndex)
-                .frame(maxWidth: CGFloat(maxContentWidth), alignment: .leading)
-                .frame(maxWidth: .infinity, alignment: .center)
-                .padding(.horizontal, 32)
-                .padding(.vertical, 24)
-                .textSelection(.enabled)
+        ZStack {
+            ScrollView {
+                pageColumn(tokens: currentPageTokens, pageIndex: pageIndex)
+                    .frame(maxWidth: CGFloat(maxContentWidth), alignment: .leading)
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .padding(.horizontal, 32)
+                    .padding(.vertical, 24)
+                    .textSelection(.enabled)
+            }
+            .offset(x: swipeOffset)
+
+            // Edge glow during swipe
+            swipeEdgeOverlays
+        }
+        .background {
+            TrackpadEventBridge(
+                isEnabled: store.trackpadGesturesEnabled,
+                onScroll: handlePageSwipe,
+                onMagnify: { _, _ in false },
+                onSmartMagnify: { false },
+                onDrag: { _ in false }
+            )
         }
     }
 
@@ -375,6 +393,51 @@ struct NovelReaderView: View {
                 }
             }
         }
+        .offset(x: swipeOffset)
+        .overlay {
+            swipeEdgeOverlays
+        }
+        .background {
+            TrackpadEventBridge(
+                isEnabled: store.trackpadGesturesEnabled,
+                onScroll: handlePageSwipe,
+                onMagnify: { _, _ in false },
+                onSmartMagnify: { false },
+                onDrag: { _ in false }
+            )
+        }
+    }
+
+    // MARK: - Swipe edge glow
+
+    @ViewBuilder
+    private var swipeEdgeOverlays: some View {
+        HStack(spacing: 0) {
+            // Leading edge glow (swiping right → go back)
+            if swipeEdgeLeading {
+                LinearGradient(
+                    colors: [Color.accentColor.opacity(0.15), .clear],
+                    startPoint: .leading,
+                    endPoint: .trailing
+                )
+                .frame(width: 60)
+                .allowsHitTesting(false)
+            }
+
+            Spacer()
+
+            // Trailing edge glow (swiping left → go forward)
+            if swipeEdgeTrailing {
+                LinearGradient(
+                    colors: [.clear, Color.accentColor.opacity(0.15)],
+                    startPoint: .leading,
+                    endPoint: .trailing
+                )
+                .frame(width: 60)
+                .allowsHitTesting(false)
+            }
+        }
+        .animation(.snappy(duration: 0.15), value: swipeEdgeLeading || swipeEdgeTrailing)
     }
 
     // MARK: - Page column
@@ -541,6 +604,59 @@ struct NovelReaderView: View {
         let clamped = min(max(target, 0), pages.count - 1)
         guard clamped != pageIndex else { return }
         pageIndex = clamped
+    }
+
+    // MARK: - Trackpad gestures
+
+    @State private var accumulatedSwipeX: CGFloat = 0
+
+    private func handlePageSwipe(_ event: TrackpadScrollEvent) -> Bool {
+        guard store.trackpadGesturesEnabled, event.isMomentum == false else {
+            return false
+        }
+
+        // Only handle horizontal swipes
+        guard abs(event.deltaX) > abs(event.deltaY) * 1.35 else {
+            if event.isFinished {
+                accumulatedSwipeX = 0
+                resetSwipeVisual()
+            }
+            return false
+        }
+
+        accumulatedSwipeX += event.deltaX
+
+        // Visual feedback — show edge glow and subtle offset
+        let clampedOffset = max(-40, min(40, accumulatedSwipeX * 0.3))
+        swipeOffset = clampedOffset
+        swipeEdgeLeading = accumulatedSwipeX > 30
+        swipeEdgeTrailing = accumulatedSwipeX < -30
+
+        let threshold: CGFloat = 80
+        if abs(accumulatedSwipeX) >= threshold {
+            let delta = accumulatedSwipeX > 0 ? -1 : 1
+            accumulatedSwipeX = 0
+            resetSwipeVisual()
+
+            let mode = NovelReadingMode(rawValue: readingModeRaw) ?? .singlePage
+            let effectiveDelta = mode == .doublePage ? delta * 2 : delta
+            goToPage(pageIndex + effectiveDelta)
+            return true
+        }
+
+        if event.isFinished {
+            accumulatedSwipeX = 0
+            resetSwipeVisual()
+        }
+        return true
+    }
+
+    private func resetSwipeVisual() {
+        withAnimation(.snappy(duration: 0.2)) {
+            swipeOffset = 0
+            swipeEdgeLeading = false
+            swipeEdgeTrailing = false
+        }
     }
 
     // MARK: - Loading / error states
