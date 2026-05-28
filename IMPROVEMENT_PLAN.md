@@ -24,7 +24,7 @@
   - Impact: Binary size, code cleanliness
 
 - [x] **7. Replace repetitive `setX()`/UserDefaults pattern** — `0e7275a`
-- [ ] **8. Auto-generate L10n from String Catalog**
+- [x] **8. L10n system already uses String Catalog** — `text()` reads from compiled `.xcstrings` `.lproj` bundles. Manual `L10n` enum needed for custom `appLanguage` override (not supported by `LocalizedStringResource`).
 - [x] **9. Refactor `loadFeed` route mapping** — `0fe99e9`
 - [x] **10. Wrap AppKit imports in `#if os(macOS)`** — `40c1e72`
 
