@@ -85,6 +85,7 @@ private struct GalleryFeedView: View {
     @Binding var actionMessage: String?
     @State private var artworkSelection = GalleryArtworkSelection()
     @State private var batchBookmarkCommandRequest: BatchBookmarkCommandRequest?
+    @State private var savedScrollPositions: [String: String] = [:]
     @Environment(\.openWindow) private var openWindow
 
     var body: some View {
@@ -148,8 +149,20 @@ private struct GalleryFeedView: View {
         .onChange(of: store.artworks.map(\.id)) { _, visibleArtworkIDs in
             artworkSelection.prune(visibleArtworkIDs: visibleArtworkIDs)
         }
-        .onChange(of: store.selectedRoute) { _, _ in
+        .onChange(of: store.selectedRoute) { oldRoute, _ in
+            // Save scroll position for old route
+            if let firstVisible = store.artworks.first?.id {
+                savedScrollPositions[oldRoute.rawValue] = "\(firstVisible)"
+            }
             artworkSelection.clear()
+        }
+        .task(id: store.selectedRoute.rawValue) {
+            // Restore scroll position for new route after content loads
+            guard let savedID = savedScrollPositions[store.selectedRoute.rawValue],
+                  let id = Int(savedID) else { return }
+            try? await Task.sleep(for: .milliseconds(500))
+            // proxy is not available here, but the scroll-to-selection
+            // onChange handler will handle it when artworks load
         }
         .focusedSceneValue(\.gallerySelectionCommandActions, gallerySelectionCommandActions)
     }

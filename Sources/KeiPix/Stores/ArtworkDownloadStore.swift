@@ -153,6 +153,16 @@ final class ArtworkDownloadStore {
         items.filter { $0.status == .completed }.count
     }
 
+    /// Update the Dock badge with active download count.
+    func updateDockBadge() {
+        #if os(macOS)
+        let count = activeCount
+        DispatchQueue.main.async {
+            NSApp.dockTile.badgeLabel = count > 0 ? "\(count)" : nil
+        }
+        #endif
+    }
+
     var completedItems: [ArtworkDownloadItem] {
         items.filter { $0.status == .completed }
     }
@@ -618,6 +628,7 @@ final class ArtworkDownloadStore {
         #endif
 
         persistItems()
+        updateDockBadge()
     }
 
     private func markQueued(itemID: UUID) {

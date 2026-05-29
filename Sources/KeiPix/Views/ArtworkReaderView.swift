@@ -89,6 +89,7 @@ struct ArtworkReaderView: View {
             interaction.activePageIndex = value
             interaction.resetZoom()
         }
+        .animation(.snappy(duration: 0.2), value: pageIndex)
         .onChange(of: artwork.id) { _, _ in
             pageAspectRatios.removeAll()
             interaction.resetZoom()
