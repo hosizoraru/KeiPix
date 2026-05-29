@@ -48,6 +48,10 @@
 - 视图文件保持 ≤ 1000 行；超过时按子视图拆开（参考 `GalleryFeedHeaderView`、`UserPreviewListComponents`）
 - Store 按领域用 extension 文件分；主 `KeiPixStore.swift` 控制在 1000 行以内
 - 不要把多个无关 helper 放进同一个 `Support/*.swift`；按用途单独命名
+- 按钮优先使用 `.labelStyle(.iconOnly)` + `.help()` + `.accessibilityLabel()`
+- 状态消息使用 `.statusMessageAutoDismiss()` 修饰符
+- 跨平台代码使用 `#if os(macOS)` / `#if os(iOS)` 条件编译
+- AppKit/UIKit 包装器放在 `Support/` 目录，使用 `NSViewRepresentable` / `UIViewRepresentable`
 
 ## 可变更动作
 
