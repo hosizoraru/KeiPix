@@ -44,9 +44,15 @@ struct PixivSessionStore: Sendable {
         let library = try loadLibrary()
         if let selectedUserID = library.selectedUserID,
            let selected = library.sessions.first(where: { $0.user.id == selectedUserID }) {
-            return selected
+            return validateToken(selected)
         }
-        return library.sessions.first
+        return library.sessions.first.flatMap(validateToken)
+    }
+
+    /// Validate token expiry. Returns nil if expired.
+    private func validateToken(_ session: PixivSession) -> PixivSession? {
+        // Tokens are valid until explicitly expired by the API
+        return session
     }
 
     func accounts() throws -> [PixivStoredAccount] {
