@@ -38,10 +38,7 @@
 
 - [x] **13. Structured error handling** — `3adba2e`
 
-- [ ] **14. SwiftData persistence layer**
-  - Problem: All persistence via UserDefaults JSON blobs
-  - Fix: SwiftData models for history, downloads, bookmarks, watchlist
-  - Impact: Query performance, relationship modeling
+- [x] **14. SwiftData persistence layer** — `28e4fee`
 
 ---
 

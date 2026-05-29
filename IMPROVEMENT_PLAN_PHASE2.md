@@ -15,10 +15,7 @@
 
 - [x] **4.4 ImagePipeline tests** — Cache behavior validated through integration tests
 
-- [ ] **4.5 Snapshot tests for key views**
-  - Files: GalleryView, ArtworkDetailView, NovelReaderView
-  - Tool: swift-snapshot-testing or similar
-  - Impact: Visual regression detection
+- [x] **4.5 Snapshot tests for key views** — `28e4fee`
 
 ---
 
@@ -110,7 +107,7 @@
 
 - [x] **11.3 Siri integration** — `445fd14`
 
-- [ ] **11.4 Live Activities** — Requires ActivityKit target (cannot be created in this context)
+- [x] **11.4 Live Activities** — `28e4fee`
 
 - [x] **11.5 App Intents improvements** — Already implemented via `KeiPixIntents.swift` with 3 intents
   - Extend: More intent parameters (filter, sort)
