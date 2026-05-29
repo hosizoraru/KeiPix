@@ -4,8 +4,9 @@ import SwiftUI
 
 /// Touch Bar provider for KeiPix.
 ///
-/// Provides contextual Touch Bar items for the main window and
-/// reader windows. Uses NSTouchBar with SwiftUI-compatible items.
+/// Provides contextual Touch Bar items for the main window,
+/// reader windows, and novel reader. Uses NSTouchBar with
+/// sliders, progress indicators, and button groups.
 @MainActor
 final class TouchBarProvider: NSObject, NSTouchBarDelegate {
     private weak var store: KeiPixStore?
@@ -15,6 +16,8 @@ final class TouchBarProvider: NSObject, NSTouchBarDelegate {
         super.init()
     }
 
+    // MARK: - Touch Bar creators
+
     func createMainTouchBar() -> NSTouchBar {
         let bar = NSTouchBar()
         bar.delegate = self
@@ -23,6 +26,7 @@ final class TouchBarProvider: NSObject, NSTouchBarDelegate {
             .init("com.keipix.navigation"),
             .init("com.keipix.bookmark"),
             .init("com.keipix.download"),
+            .init("com.keipix.downloadProgress"),
             .flexibleSpace
         ]
         return bar
@@ -42,10 +46,25 @@ final class TouchBarProvider: NSObject, NSTouchBarDelegate {
         return bar
     }
 
+    func createNovelReaderTouchBar() -> NSTouchBar {
+        let bar = NSTouchBar()
+        bar.delegate = self
+        bar.defaultItemIdentifiers = [
+            .fixedSpaceLarge,
+            .init("com.keipix.novel.textSize"),
+            .init("com.keipix.novel.lineSpacing"),
+            .flexibleSpace,
+            .init("com.keipix.novel.theme"),
+            .fixedSpaceLarge
+        ]
+        return bar
+    }
+
     // MARK: - NSTouchBarDelegate
 
     func touchBar(_ touchBar: NSTouchBar, makeItemForIdentifier identifier: NSTouchBarItem.Identifier) -> NSTouchBarItem? {
         switch identifier.rawValue {
+        // Navigation
         case "com.keipix.navigation":
             return createNavigationGroup()
 
@@ -87,6 +106,7 @@ final class TouchBarProvider: NSObject, NSTouchBarDelegate {
             )
             return item
 
+        // Bookmark
         case "com.keipix.bookmark":
             let isBookmarked = store?.selectedArtwork?.isBookmarked ?? false
             let imageName = isBookmarked ? "bookmark.fill" : "bookmark"
@@ -98,6 +118,7 @@ final class TouchBarProvider: NSObject, NSTouchBarDelegate {
             )
             return item
 
+        // Download
         case "com.keipix.download":
             let item = NSButtonTouchBarItem(
                 identifier: identifier,
@@ -106,6 +127,20 @@ final class TouchBarProvider: NSObject, NSTouchBarDelegate {
                 action: #selector(downloadArtwork)
             )
             return item
+
+        // Download progress
+        case "com.keipix.downloadProgress":
+            return createDownloadProgressItem()
+
+        // Novel reader controls
+        case "com.keipix.novel.textSize":
+            return createTextSizeSlider()
+
+        case "com.keipix.novel.lineSpacing":
+            return createLineSpacingSlider()
+
+        case "com.keipix.novel.theme":
+            return createThemePicker()
 
         default:
             return nil
@@ -125,6 +160,52 @@ final class TouchBarProvider: NSObject, NSTouchBarDelegate {
             .init("com.keipix.nav.next")
         ]
         item.groupTouchBar = groupBar
+        return item
+    }
+
+    // MARK: - Download progress
+
+    private func createDownloadProgressItem() -> NSTouchBarItem? {
+        guard let store else { return nil }
+        let activeCount = store.downloads.activeCount
+        guard activeCount > 0 else { return nil }
+
+        let item = NSCustomTouchBarItem(identifier: .init("com.keipix.downloadProgress"))
+        let label = NSTextField(labelWithString: "↓ \(activeCount)")
+        label.font = NSFont.systemFont(ofSize: NSFont.smallSystemFontSize)
+        item.view = label
+        return item
+    }
+
+    // MARK: - Novel reader controls
+
+    private func createTextSizeSlider() -> NSSliderTouchBarItem {
+        let item = NSSliderTouchBarItem(identifier: .init("com.keipix.novel.textSize"))
+        item.label = L10n.novelReaderTextSize
+        item.slider.minValue = 12
+        item.slider.maxValue = 28
+        item.slider.doubleValue = 17
+        item.target = self
+        item.action = #selector(textSizeChanged(_:))
+        return item
+    }
+
+    private func createLineSpacingSlider() -> NSSliderTouchBarItem {
+        let item = NSSliderTouchBarItem(identifier: .init("com.keipix.novel.lineSpacing"))
+        item.label = L10n.novelReaderLineSpacing
+        item.slider.minValue = 0
+        item.slider.maxValue = 16
+        item.slider.doubleValue = 6
+        item.target = self
+        item.action = #selector(lineSpacingChanged(_:))
+        return item
+    }
+
+    private func createThemePicker() -> NSTouchBarItem {
+        let item = NSCustomTouchBarItem(identifier: .init("com.keipix.novel.theme"))
+        let button = NSButton(title: "Theme", target: self, action: #selector(themeChanged(_:)))
+        button.bezelStyle = .recessed
+        item.view = button
         return item
     }
 
@@ -153,6 +234,23 @@ final class TouchBarProvider: NSObject, NSTouchBarDelegate {
 
     @objc private func downloadArtwork() {
         store?.downloadSelectedArtwork()
+    }
+
+    @objc private func textSizeChanged(_ sender: NSSliderTouchBarItem) {
+        UserDefaults.standard.set(sender.slider.doubleValue, forKey: "novelReader.textSize")
+    }
+
+    @objc private func lineSpacingChanged(_ sender: NSSliderTouchBarItem) {
+        UserDefaults.standard.set(sender.slider.doubleValue, forKey: "novelReader.lineSpacing")
+    }
+
+    @objc private func themeChanged(_ sender: NSButton) {
+        // Cycle through themes
+        let themes = NovelReaderTheme.allCases
+        let current = UserDefaults.standard.string(forKey: "novelReader.theme").flatMap(NovelReaderTheme.init) ?? .light
+        let nextIndex = (themes.firstIndex(of: current) ?? 0) + 1
+        let next = themes[nextIndex % themes.count]
+        UserDefaults.standard.set(next.rawValue, forKey: "novelReader.theme")
     }
 }
 #endif
