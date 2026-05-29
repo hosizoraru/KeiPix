@@ -56,7 +56,9 @@ struct ArtworkCardView: View {
         // `https://www.pixiv.net/artworks/<id>` URL if the artwork
         // payload didn't carry one.
         .draggable(dragContent)
+        .accessibilityElement(children: .combine)
         .accessibilityLabel(accessibilityDescription)
+        .accessibilityHint(L10n.artworkCardHint)
     }
 
     private var accessibilityDescription: String {

@@ -1315,6 +1315,7 @@ enum L10n {
     static var copyTranslatedTag: String { text("Copy Translated Tag") }
     static var description: String { text("Description") }
     static var artworkInformation: String { text("Artwork Information") }
+    static var artworkCardHint: String { text("Double-tap to view artwork details") }
     static var comments: String { text("Comments") }
     static var writeComment: String { text("Write a comment") }
     static var postComment: String { text("Post Comment") }
