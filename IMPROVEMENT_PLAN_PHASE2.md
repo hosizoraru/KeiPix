@@ -72,22 +72,13 @@
 
 - [x] **6.1 VoiceOver for gallery grid** — `042c33e`
 
-- [ ] **6.2 Keyboard navigation for gallery**
-  - Add: Arrow key navigation between artworks
-  - Add: Enter to select, Escape to deselect
-  - Impact: Keyboard-only workflow
+- [x] **6.2 Keyboard navigation for gallery** — `cb3248c`
 
 - [x] **6.3 Reduce motion support** — `042c33e`
 
-- [ ] **6.4 High contrast support**
-  - Audit: All custom colors for contrast ratios
-  - Add: High contrast color variants
-  - Impact: Low vision accessibility
+- [x] **6.4 High contrast support** — `cb3248c`
 
-- [ ] **6.5 VoiceOver for reader**
-  - File: `Views/NovelReaderView.swift`, `Views/ArtworkReaderView.swift`
-  - Add: Page count announcements, reading progress
-  - Impact: Audio reading experience
+- [x] **6.5 VoiceOver for reader** — `cb3248c`
 
 ---
 
@@ -144,11 +135,7 @@
 
 ## P9 — Security & Privacy
 
-- [ ] **9.1 Token storage hardening**
-  - File: `Services/PixivSessionStore.swift`
-  - Current: Keychain storage (already secure)
-  - Add: Token rotation, expiry validation
-  - Impact: Security posture
+- [x] **9.1 Token storage hardening** — `d21fcf0`
 
 - [ ] **9.2 Network request signing**
   - File: `Services/PixivAPI.swift`
@@ -166,9 +153,7 @@
 
 ## P10 — Documentation
 
-- [ ] **10.1 Architecture decision records**
-  - Document: Key design decisions (Observable vs Combine, etc.)
-  - Impact: Onboarding, maintenance
+- [x] **10.1 Architecture decision records** — `906324f`
 
 - [ ] **10.2 API documentation**
   - Add: DocC comments to public APIs
@@ -189,9 +174,7 @@
   - Extend: Index more metadata (tags, series, creators)
   - Impact: Search integration
 
-- [ ] **11.3 Siri integration**
-  - Add: `AppIntent` for "Open latest artwork"
-  - Impact: Voice control
+- [x] **11.3 Siri integration** — `445fd14`
 
 - [ ] **11.4 Live Activities**
   - Add: Download progress on Lock Screen
