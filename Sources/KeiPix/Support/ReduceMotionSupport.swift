@@ -1,5 +1,29 @@
 import SwiftUI
 
+/// Accessibility support utilities for reduce motion and high contrast.
+
+/// High contrast support utilities.
+enum HighContrastSupport {
+    /// Check if high contrast is enabled.
+    static var isHighContrastEnabled: Bool {
+        #if os(macOS)
+        return NSWorkspace.shared.accessibilityDisplayShouldIncreaseContrast
+        #else
+        return UIAccessibility.isDarkerSystemColorsEnabled
+        #endif
+    }
+
+    /// Get border color that respects high contrast setting.
+    static func borderColor(default: Color, highContrast: Color) -> Color {
+        isHighContrastEnabled ? highContrast : `default`
+    }
+
+    /// Get opacity that respects high contrast setting.
+    static func opacity(default: Double, highContrast: Double) -> Double {
+        isHighContrastEnabled ? highContrast : `default`
+    }
+}
+
 /// Reduce motion support utilities.
 ///
 /// Respects the system's "Reduce Motion" accessibility setting

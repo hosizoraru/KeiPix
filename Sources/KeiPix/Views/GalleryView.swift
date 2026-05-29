@@ -165,6 +165,18 @@ private struct GalleryFeedView: View {
             // onChange handler will handle it when artworks load
         }
         .focusedSceneValue(\.gallerySelectionCommandActions, gallerySelectionCommandActions)
+        .onKeyPress(.upArrow) {
+            store.selectPreviousArtwork()
+            return .handled
+        }
+        .onKeyPress(.downArrow) {
+            store.selectNextArtwork()
+            return .handled
+        }
+        .onKeyPress(.escape) {
+            artworkSelection.clear()
+            return .handled
+        }
     }
 
     private var gallerySelectionCommandActions: GallerySelectionCommandActions? {

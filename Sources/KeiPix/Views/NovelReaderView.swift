@@ -106,6 +106,13 @@ struct NovelReaderView: View {
             if translationEngine.isInlineTranslationActive, translationConfig != nil {
                 translationConfig?.invalidate()
             }
+            // VoiceOver announcement for page change
+            #if os(macOS)
+            if NSWorkspace.shared.accessibilityDisplayShouldReduceMotion {
+                let announcement = String(format: L10n.novelPageProgressFormat, pageIndex + 1, pages.count)
+                NSAccessibility.post(element: NSApp as Any, notification: .announcementRequested, userInfo: [.announcement: announcement])
+            }
+            #endif
         }
         .onChange(of: readingModeRaw) { _, _ in
             // When switching to double-page mode, translate the next
