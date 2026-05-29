@@ -70,21 +70,14 @@
 
 ## P6 — Accessibility
 
-- [ ] **6.1 VoiceOver for gallery grid**
-  - File: `Views/GalleryArtworkGrid.swift`
-  - Add: `accessibilityElement(children: .combine)` for cards
-  - Add: Navigation hints for swipe gestures
-  - Impact: Screen reader usability
+- [x] **6.1 VoiceOver for gallery grid** — `042c33e`
 
 - [ ] **6.2 Keyboard navigation for gallery**
   - Add: Arrow key navigation between artworks
   - Add: Enter to select, Escape to deselect
   - Impact: Keyboard-only workflow
 
-- [ ] **6.3 Reduce motion support**
-  - Check: All `.animation()` calls respect `reduceMotion`
-  - Add: `@Environment(\.accessibilityReduceMotion)` checks
-  - Impact: Motion sensitivity
+- [x] **6.3 Reduce motion support** — `042c33e`
 
 - [ ] **6.4 High contrast support**
   - Audit: All custom colors for contrast ratios
@@ -100,17 +93,9 @@
 
 ## P7 — UX Polish
 
-- [ ] **7.1 Smooth page transitions**
-  - File: Reader views
-  - Add: Crossfade animation between pages
-  - Add: Page curl effect for double-page mode
-  - Impact: Reading experience
+- [x] **7.1 Smooth page transitions** — `de4c48d`
 
-- [ ] **7.2 Gallery scroll position restoration**
-  - File: `Views/GalleryView.swift`
-  - Current: Loses position on route change
-  - Fix: Save/restore scroll position per route
-  - Impact: Navigation continuity
+- [x] **7.2 Gallery scroll position restoration** — `de4c48d`
 
 - [ ] **7.3 Undo for destructive actions**
   - File: `Views/ContentView.swift` (AppUndoBar exists)
@@ -123,10 +108,7 @@
   - Add: Clear individual history items
   - Impact: Search workflow
 
-- [ ] **7.5 Download progress in Dock**
-  - File: `Stores/ArtworkDownloadStore.swift`
-  - Add: `NSApp.dockTile.badgeLabel` for active downloads
-  - Impact: Background task visibility
+- [x] **7.5 Download progress in Dock** — `de4c48d`
 
 - [ ] **7.6 Notification grouping**
   - File: `Support/DownloadCompletionNotifier.swift`
@@ -138,10 +120,7 @@
 
 ## P8 — Code Quality
 
-- [ ] **8.1 Extract KeiPixStore+Search**
-  - File: `Stores/KeiPixStore.swift` (search methods at lines 608-720)
-  - Move: `runSearch()`, `refreshSearchSuggestions()`, `resetSearchOptions()`
-  - Impact: File size reduction
+- [x] **8.1 Extract KeiPixStore+Search** — `e9699a2`
 
 - [ ] **8.2 Extract KeiPixStore+Feed**
   - File: `Stores/KeiPixStore.swift` (feed methods at lines 458-720)
@@ -154,10 +133,7 @@
   - Improve: Typed parameter structs per route
   - Impact: Type safety
 
-- [ ] **8.4 Consistent error messages**
-  - Audit: All `error.localizedDescription` calls
-  - Replace: User-friendly messages via `AppError`
-  - Impact: UX consistency
+- [x] **8.4 Consistent error messages** — `ff2d56d`
 
 - [ ] **8.5 Remove dead code**
   - Audit: Unused functions, unreachable branches
@@ -179,10 +155,7 @@
   - Audit: All request headers, no sensitive data in URLs
   - Impact: Network security
 
-- [ ] **9.3 Privacy manifest**
-  - Add: `PrivacyInfo.xcprivacy` for App Store
-  - Document: Data collection, tracking domains
-  - Impact: App Store compliance
+- [x] **9.3 Privacy manifest** — `0023986`
 
 - [ ] **9.4 Content Security Policy**
   - File: WebView usage (Pixivision articles)
@@ -202,10 +175,7 @@
   - Generate: DocC documentation
   - Impact: Developer experience
 
-- [ ] **10.3 Contributing guide update**
-  - Update: `docs/contributing.md` with new patterns
-  - Add: Testing guidelines, PR checklist
-  - Impact: Contribution quality
+- [x] **10.3 Contributing guide update** — `0023986`
 
 ---
 

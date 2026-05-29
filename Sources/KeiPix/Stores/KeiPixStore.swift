@@ -526,11 +526,13 @@ final class KeiPixStore {
                     guard isCancellationLike(error) == false else { return }
                     guard selectedRoute == context.route else { return }
                     if restoreFeedSnapshot(for: currentFeedRequestContext(), error: error) { return }
-                    errorMessage = error.localizedDescription
+                    let appError = AppError.from(error)
+                    errorMessage = appError.displayMessage
                 }
             } else {
                 if restoreFeedSnapshot(for: context, error: error) { return }
-                errorMessage = error.localizedDescription
+                let appError = AppError.from(error)
+                errorMessage = appError.displayMessage
             }
         }
     }
