@@ -1,4 +1,8 @@
+#if os(macOS)
 import AppKit
+#elseif os(iOS)
+import UIKit
+#endif
 import SwiftUI
 
 struct BrowsingHistoryView: View {
@@ -157,28 +161,12 @@ struct BrowsingHistoryView: View {
                     systemImage: "clock.arrow.circlepath"
                 )
             } else {
-                ScrollView {
-                    LazyVGrid(columns: localColumns, spacing: 14) {
-                        ForEach(items) { item in
-                            LocalHistoryCard(
-                                item: item,
-                                isSelected: store.selectedArtwork?.id == item.id,
-                                showContentBadges: store.showContentBadges,
-                                select: {
-                                    Task { await store.selectLocalHistoryItem(item) }
-                                },
-                                delete: {
-                                    pendingDeleteItem = item
-                                },
-                                copyLink: {
-                                    copyHistoryItemLink(item)
-                                }
-                            )
-                        }
-                    }
-                    .padding(18)
+                NativeBrowsingHistoryCollectionView(
+                    items: items.map(NativeBrowsingHistoryCollectionItem.local),
+                    layout: .localCards
+                ) { item in
+                    nativeLocalHistoryContent(for: item)
                 }
-                .scrollEdgeEffectStyle(.soft, for: .top)
             }
         }
     }
@@ -203,65 +191,101 @@ struct BrowsingHistoryView: View {
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
-                ScrollView {
-                    LazyVGrid(columns: pixivColumns, spacing: 14) {
-                        ForEach(store.artworks) { artwork in
-                            ArtworkCardView(
-                                artwork: artwork,
-                                isSelected: store.selectedArtwork?.id == artwork.id,
-                                isCompact: true,
-                                showContentBadges: store.showContentBadges,
-                                maskSensitivePreview: store.maskSensitivePreviews,
-                                feedPreviewTier: store.feedPreviewImageQualityTier,
-                                emphasizeFollowing: store.emphasizeFollowingArtists
-                            ) {
-                                store.selectedArtwork = artwork
-                            }
-                            .contextMenu {
-                                Button(artwork.isBookmarked ? L10n.removeBookmark : L10n.bookmark) {
-                                    if artwork.isBookmarked {
-                                        store.requestDangerAction(AppDangerAction(kind: .removeBookmark(artwork)))
-                                    } else {
-                                        Task { await bookmark(artwork) }
-                                    }
-                                }
-                                Button(L10n.download) {
-                                    store.enqueueDownload(artwork)
-                                    actionMessage = String(format: L10n.queuedDownloadsFormat, 1)
-                                }
-                                if let url = artwork.pixivURL {
-                                    Link(L10n.openInPixiv, destination: url)
-                                    Button(L10n.copyLink) {
-                                        PasteboardWriter.copy(url.absoluteString)
-                                        actionMessage = L10n.copied
-                                    }
-                                }
-                            }
-                        }
-
-                        if store.hasNextPage {
-                            Button {
-                                Task { await loadMorePixivHistory() }
-                            } label: {
-                                Label(L10n.loadMore, systemImage: "arrow.down.circle")
-                                    .frame(maxWidth: .infinity, minHeight: 132)
-                            }
-                            .buttonStyle(.bordered)
-                        }
-                    }
-                    .padding(18)
+                NativeBrowsingHistoryCollectionView(
+                    items: pixivHistoryItems,
+                    layout: .pixivCards
+                ) { item in
+                    nativePixivHistoryContent(for: item)
                 }
-                .scrollEdgeEffectStyle(.soft, for: .top)
             }
         }
     }
 
-    private var localColumns: [GridItem] {
-        [GridItem(.adaptive(minimum: 170, maximum: 240), spacing: 14)]
+    private var pixivHistoryItems: [NativeBrowsingHistoryCollectionItem] {
+        var items = store.artworks.map(NativeBrowsingHistoryCollectionItem.pixiv)
+        if store.hasNextPage {
+            items.append(.loadMore)
+        }
+        return items
     }
 
-    private var pixivColumns: [GridItem] {
-        [GridItem(.adaptive(minimum: 160, maximum: 220), spacing: 14)]
+    private func nativeLocalHistoryContent(for item: NativeBrowsingHistoryCollectionItem) -> AnyView {
+        guard case .local(let historyItem) = item else {
+            return AnyView(EmptyView())
+        }
+
+        return AnyView(
+            LocalHistoryCard(
+                item: historyItem,
+                isSelected: store.selectedArtwork?.id == historyItem.id,
+                showContentBadges: store.showContentBadges,
+                select: {
+                    Task { await store.selectLocalHistoryItem(historyItem) }
+                },
+                delete: {
+                    pendingDeleteItem = historyItem
+                },
+                copyLink: {
+                    copyHistoryItemLink(historyItem)
+                }
+            )
+        )
+    }
+
+    private func nativePixivHistoryContent(for item: NativeBrowsingHistoryCollectionItem) -> AnyView {
+        switch item {
+        case .pixiv(let artwork):
+            return AnyView(
+                ArtworkCardView(
+                    artwork: artwork,
+                    isSelected: store.selectedArtwork?.id == artwork.id,
+                    isCompact: true,
+                    showContentBadges: store.showContentBadges,
+                    maskSensitivePreview: store.maskSensitivePreviews,
+                    feedPreviewTier: store.feedPreviewImageQualityTier,
+                    emphasizeFollowing: store.emphasizeFollowingArtists
+                ) {
+                    store.selectedArtwork = artwork
+                }
+                .contextMenu {
+                    pixivHistoryMenu(for: artwork)
+                }
+            )
+        case .loadMore:
+            return AnyView(
+                Button {
+                    Task { await loadMorePixivHistory() }
+                } label: {
+                    Label(L10n.loadMore, systemImage: "arrow.down.circle")
+                        .frame(maxWidth: .infinity, minHeight: 132)
+                }
+                .buttonStyle(.bordered)
+            )
+        case .local:
+            return AnyView(EmptyView())
+        }
+    }
+
+    @ViewBuilder
+    private func pixivHistoryMenu(for artwork: PixivArtwork) -> some View {
+        Button(artwork.isBookmarked ? L10n.removeBookmark : L10n.bookmark) {
+            if artwork.isBookmarked {
+                store.requestDangerAction(AppDangerAction(kind: .removeBookmark(artwork)))
+            } else {
+                Task { await bookmark(artwork) }
+            }
+        }
+        Button(L10n.download) {
+            store.enqueueDownload(artwork)
+            actionMessage = String(format: L10n.queuedDownloadsFormat, 1)
+        }
+        if let url = artwork.pixivURL {
+            Link(L10n.openInPixiv, destination: url)
+            Button(L10n.copyLink) {
+                PasteboardWriter.copy(url.absoluteString)
+                actionMessage = L10n.copied
+            }
+        }
     }
 
     private var localDeleteBinding: Binding<Bool> {

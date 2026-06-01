@@ -1,4 +1,3 @@
-import AppKit
 import QuickLook
 import SwiftUI
 
@@ -15,12 +14,10 @@ struct DownloadQueueView: View {
     /// items, and the space-bar key handler all share one source of
     /// truth and only one panel can be on screen at a time.
     @State private var quickLookURL: URL?
-    /// ID of the row that should receive space-bar key events. We
-    /// install `focusable() + focused()` on each row so the user's
-    /// focus walks the queue rather than getting trapped in the
-    /// toolbar — matches how Finder's list view handles space-bar
-    /// preview against the highlighted row.
-    @FocusState private var focusedRowID: UUID?
+    /// Selected row for the native queue list. The AppKit/UIKit
+    /// container owns keyboard focus and forwards Space to Quick Look,
+    /// while SwiftUI keeps the selection value for row chrome.
+    @State private var selectedDownloadID: UUID?
 
     var body: some View {
         let visibleItems = store.downloads.filteredItems
@@ -142,38 +139,19 @@ struct DownloadQueueView: View {
     /// list view.
     @ViewBuilder
     private func downloadList(items: [ArtworkDownloadItem]) -> some View {
-        ScrollView {
-            LazyVStack(spacing: 10) {
-                ForEach(items) { item in
-                    downloadRow(for: item)
-                }
-            }
-            .padding(18)
-        }
-        .scrollEdgeEffectStyle(.soft, for: .top)
-    }
-
-    @ViewBuilder
-    private func downloadRow(for item: ArtworkDownloadItem) -> some View {
-        DownloadQueueRow(
-            item: item,
+        NativeDownloadQueueListView(
+            items: items,
             downloads: store.downloads,
-            canOpen: store.downloads.hasReadableDownload(for: item),
-            isFocused: focusedRowID == item.id,
-            open: { openDownloadedItem(item) },
-            retry: { retryDownload(item) },
-            reveal: { revealDownload(item) },
-            quickLook: { presentQuickLook(for: item) },
+            selectedItemID: $selectedDownloadID,
+            canOpen: { store.downloads.hasReadableDownload(for: $0) },
+            open: openDownloadedItem,
+            retry: retryDownload,
+            reveal: revealDownload,
+            quickLook: presentQuickLook,
             copied: { showActionMessage(L10n.copied) },
-            cancel: { pendingDangerAction = .cancelItem(item) },
-            delete: { pendingDangerAction = .deleteItem(item) }
+            cancel: { pendingDangerAction = .cancelItem($0) },
+            delete: { pendingDangerAction = .deleteItem($0) }
         )
-        .focusable()
-        .focused($focusedRowID, equals: item.id)
-        .onKeyPress(.space) {
-            presentQuickLook(for: item)
-            return .handled
-        }
     }
 
     private var downloadStatusText: String {

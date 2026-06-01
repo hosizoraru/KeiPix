@@ -362,14 +362,14 @@ struct NovelReaderView: View {
 
     private var singlePageLayout: some View {
         ZStack {
-            ScrollView {
-                pageColumn(tokens: currentPageTokens, pageIndex: pageIndex)
-                    .frame(maxWidth: CGFloat(maxContentWidth), alignment: .leading)
-                    .frame(maxWidth: .infinity, alignment: .center)
-                    .padding(.horizontal, 32)
-                    .padding(.vertical, 24)
-                    .textSelection(.enabled)
-            }
+            readerPageSurface(
+                tokens: currentPageTokens,
+                pageIndex: pageIndex,
+                maxWidth: CGFloat(maxContentWidth),
+                horizontalPadding: 32,
+                verticalPadding: 24,
+                alignment: .center
+            )
             .offset(x: swipeOffset)
 
             // Edge glow during swipe
@@ -392,14 +392,16 @@ struct NovelReaderView: View {
     private func twoPageLayout(geo: GeometryProxy) -> some View {
         HStack(spacing: 0) {
             // Left page
-            ScrollView {
-                pageColumn(tokens: currentPageTokens, pageIndex: pageIndex)
-                    .frame(maxWidth: .infinity, alignment: .trailing)
-                    .padding(.trailing, 24)
-                    .padding(.leading, 32)
-                    .padding(.vertical, 24)
-                    .textSelection(.enabled)
-            }
+            readerPageSurface(
+                tokens: currentPageTokens,
+                pageIndex: pageIndex,
+                maxWidth: nil,
+                horizontalPadding: 0,
+                verticalPadding: 24,
+                leadingPadding: 32,
+                trailingPadding: 24,
+                alignment: .trailing
+            )
 
             // Spine divider
             Rectangle()
@@ -407,28 +409,30 @@ struct NovelReaderView: View {
                 .frame(width: 1)
 
             // Right page (next page)
-            ScrollView {
-                if pageIndex + 1 < pages.count {
-                    pageColumn(tokens: nextPageTokens, pageIndex: pageIndex + 1)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.leading, 24)
-                        .padding(.trailing, 32)
-                        .padding(.vertical, 24)
-                        .textSelection(.enabled)
-                } else {
-                    // Last page — show end mark
-                    VStack {
-                        Spacer()
-                        Image(systemName: "book.closed")
-                            .font(.system(size: 32))
-                            .foregroundStyle(.tertiary)
-                        Text(L10n.novelEnd)
-                            .font(.caption)
-                            .foregroundStyle(.tertiary)
-                        Spacer()
-                    }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            if pageIndex + 1 < pages.count {
+                readerPageSurface(
+                    tokens: nextPageTokens,
+                    pageIndex: pageIndex + 1,
+                    maxWidth: nil,
+                    horizontalPadding: 0,
+                    verticalPadding: 24,
+                    leadingPadding: 24,
+                    trailingPadding: 32,
+                    alignment: .leading
+                )
+            } else {
+                // Last page — show end mark
+                VStack {
+                    Spacer()
+                    Image(systemName: "book.closed")
+                        .font(.system(size: 32))
+                        .foregroundStyle(.tertiary)
+                    Text(L10n.novelEnd)
+                        .font(.caption)
+                        .foregroundStyle(.tertiary)
+                    Spacer()
                 }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
         .offset(x: swipeOffset)
@@ -480,6 +484,76 @@ struct NovelReaderView: View {
     }
 
     // MARK: - Page column
+
+    @ViewBuilder
+    private func readerPageSurface(
+        tokens: [NovelToken],
+        pageIndex: Int,
+        maxWidth: CGFloat?,
+        horizontalPadding: CGFloat,
+        verticalPadding: CGFloat,
+        leadingPadding: CGFloat? = nil,
+        trailingPadding: CGFloat? = nil,
+        alignment: Alignment
+    ) -> some View {
+        let leading = leadingPadding ?? horizontalPadding
+        let trailing = trailingPadding ?? horizontalPadding
+        if usesNativeNovelTextPage(tokens) {
+            nativeNovelTextPage(tokens: tokens, pageIndex: pageIndex)
+                .frame(maxWidth: maxWidth ?? .infinity, maxHeight: .infinity, alignment: .leading)
+                .padding(.leading, leading)
+                .padding(.trailing, trailing)
+                .padding(.vertical, verticalPadding)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: alignment)
+        } else {
+            ScrollView {
+                pageColumn(tokens: tokens, pageIndex: pageIndex)
+                    .frame(maxWidth: maxWidth ?? .infinity, alignment: alignment)
+                    .frame(maxWidth: .infinity, alignment: alignment)
+                    .padding(.leading, leading)
+                    .padding(.trailing, trailing)
+                    .padding(.vertical, verticalPadding)
+                    .textSelection(.enabled)
+            }
+        }
+    }
+
+    private func usesNativeNovelTextPage(_ tokens: [NovelToken]) -> Bool {
+        tokens.contains { token in
+            switch token {
+            case .pixivImage, .uploadedImage:
+                true
+            case .text, .newPage, .chapter, .jumpURL, .ruby, .jumpPage:
+                false
+            }
+        } == false
+    }
+
+    private func nativeNovelTextPage(tokens: [NovelToken], pageIndex: Int) -> some View {
+        NativeNovelTextPageView(
+            tokens: tokens,
+            fontFamily: fontFamily,
+            textSize: textSize,
+            lineSpacing: lineSpacing,
+            paragraphSpacing: paragraphSpacing,
+            theme: theme,
+            translatedTexts: translatedTexts(for: tokens, pageIndex: pageIndex),
+            translationMode: translationEngine.translationMode,
+            isTranslationActive: translationEngine.isInlineTranslationActive,
+            isTranslating: translationEngine.isTranslating(pageIndex: pageIndex),
+            showChapterMarkers: showChapterMarkers
+        )
+    }
+
+    private func translatedTexts(for tokens: [NovelToken], pageIndex: Int) -> [Int: String] {
+        var result: [Int: String] = [:]
+        for index in tokens.indices {
+            if let translated = translationEngine.translatedText(pageIndex: pageIndex, tokenIndex: index) {
+                result[index] = translated
+            }
+        }
+        return result
+    }
 
     private func pageColumn(tokens: [NovelToken], pageIndex: Int) -> some View {
         VStack(alignment: .leading, spacing: CGFloat(paragraphSpacing)) {
@@ -945,7 +1019,7 @@ enum NovelReaderTheme: String, CaseIterable, Identifiable {
 
     var backgroundColor: Color {
         switch self {
-        case .light: Color(nsColor: .textBackgroundColor)
+        case .light: Color.platformTextBackground
         case .sepia: Color(red: 0.96, green: 0.92, blue: 0.84)
         case .dark: Color(red: 0.12, green: 0.12, blue: 0.13)
         }
@@ -953,7 +1027,7 @@ enum NovelReaderTheme: String, CaseIterable, Identifiable {
 
     var foregroundColor: Color {
         switch self {
-        case .light: Color(nsColor: .labelColor)
+        case .light: Color.platformLabel
         case .sepia: Color(red: 0.32, green: 0.24, blue: 0.16)
         case .dark: Color(red: 0.92, green: 0.92, blue: 0.94)
         }
@@ -961,7 +1035,7 @@ enum NovelReaderTheme: String, CaseIterable, Identifiable {
 
     var embedBackgroundColor: Color {
         switch self {
-        case .light: Color(nsColor: .controlBackgroundColor)
+        case .light: Color.platformControlBackground
         case .sepia: Color(red: 0.92, green: 0.86, blue: 0.76)
         case .dark: Color(red: 0.18, green: 0.18, blue: 0.20)
         }

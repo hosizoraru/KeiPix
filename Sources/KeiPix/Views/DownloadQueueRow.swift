@@ -1,4 +1,3 @@
-import AppKit
 import SwiftUI
 
 /// Single row inside `DownloadQueueView`. Lives in its own file so the
