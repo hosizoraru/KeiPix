@@ -1,11 +1,33 @@
-# KeiPix Hybrid SwiftUI + AppKit/UIKit Plan
+# KeiPix AppKit/UIKit-first Hybrid UI Plan
 
-> Generated 2026-05-29. Analysis of SwiftUI limitations and AppKit/UIKit integration opportunities.
-> Reference: Apple Developer Documentation, community best practices (SwiftUI+AppKit/UIKit hybrid).
+> Updated 2026-06-01. Direction: AppKit/UIKit first, SwiftUI auxiliary.
+> Reference: Apple Developer Documentation, WWDC SwiftUI performance guidance, and community experience with SwiftUI performance boundaries.
 
 ---
 
-## 为什么要混合开发？
+## 当前技术结论
+
+KeiPix 不再按“SwiftUI 优先，只在桌面集成层窄桥接 AppKit”的方式演进。新的原则是：
+
+- AppKit/UIKit 承担高频交互和平台热路径：图片缩放/滚动、集合视图虚拟化、文本系统、菜单、拖放、输入、窗口。
+- SwiftUI 保留在它擅长的部分：应用状态绑定、导航/窗口外壳、轻量布局组合、设置表单、预览和快速迭代。
+- 桥接边界要窄而清晰：`NSViewRepresentable` / `UIViewRepresentable` 暴露小接口，SwiftUI 仍是可观察状态和业务动作的来源，原生视图负责渲染/手势/复用。
+- 迁移按风险排序：先替换已经证明有性能或交互收益的热路径，不为了“纯原生”重写低收益页面。
+
+## 优先级路线
+
+| 优先级 | 范围 | 平台 | 状态 | 目标 |
+| --- | --- | --- | --- | --- |
+| P0 | 图片阅读器 `NSScrollView` / `UIScrollView` | macOS / iPadOS | 已落地第一切片 | 原生缩放、平移、惯性滚动、双击缩放，SwiftUI 只保留 chrome 和阅读状态 |
+| P0 | Gallery/Feed `NSCollectionView` / `UICollectionView` | macOS / iPadOS | masonry/compact/list 第一阶段已落地 | 用原生复用、diffable snapshot 和原生 layout 承接高密度瀑布流/网格；第一阶段继续 hosted SwiftUI cell |
+| P1 | 小说阅读器 `NSTextView` / `UITextView` | macOS / iPadOS | 第一阶段已落地 | 长文本、选择、复制、链接、富文本和 IME 交给 TextKit；含嵌图页保留 SwiftUI fallback |
+| P1 | 下载队列/历史列表原生化 | macOS / iPadOS | 第一阶段已落地 | 下载队列由 `NSTableView` / `UICollectionView` 承接键盘选择、焦点和空格 Quick Look；浏览历史由 `NSCollectionView` / `UICollectionView` 承接高密度卡片复用，cell 内容暂时继续 hosted SwiftUI |
+| P2 | 创作者列表、搜索框、拖放、菜单增强 | macOS / iPadOS | 创作者列表/搜索/菜单/拖放第一阶段已落地 | 创作者列表复用 `NSCollectionView` / `UICollectionView` 容器；搜索使用 `NSSearchField` / `UISearchTextField`；创作者批量操作在 macOS 接入 `NSMenu`；Pixiv ID 快速打开在 macOS 接入 `NSDraggingDestination` 窄桥 |
+| P3 | Pixivision、设置、运行时诊断等低热路径 | macOS / iPadOS | 保持 SwiftUI | 除非 profiling 证明需要迁移，否则保持 SwiftUI 组合效率 |
+
+---
+
+## 为什么要 AppKit/UIKit 主导？
 
 SwiftUI 是声明式 UI 框架，但存在以下已知限制：
 
@@ -55,17 +77,21 @@ struct NovelTextRenderer: NSViewRepresentable {
 - 原生输入法支持（日文/中文）
 - 更好的翻译叠加布局
 
+**状态：** P1 第一阶段已落地。纯正文页通过 `NativeNovelTextPageView` 进入 `NSTextView` / `UITextView`，继续复用 SwiftUI 的分页、翻译状态、toolbar 和嵌图 fallback。
+
 **文件：** `Views/NovelReaderView.swift` (800+ lines)
 
 ---
 
-### A2. 图片查看器 — NSScrollView + NSMagnificationGestureRecognizer
+### A2. 图片查看器 — NSScrollView / UIScrollView
 
 **问题：**
 - SwiftUI `scaleEffect` + `offset` 手动计算缩放/平移
 - 无惯性滚动、无边界回弹
 - 双指缩放不流畅
 - 无法精确控制缩放中心点
+
+**状态：** P0 第一切片已落地。`ImageScrollView` 在 macOS 走 `NSScrollView`，在 iPadOS 走 `UIScrollView`；`ArtworkReaderView` 和本地下载阅读器的单页/双页图片热路径已接入。
 
 **解决方案：**
 ```swift
@@ -100,6 +126,8 @@ struct ImageScrollView: NSViewRepresentable {
 - 无预取 API（滚动到边缘才加载）
 - 无自定义布局（masonry 需要手动计算）
 - 滚动性能在大数据集下降
+
+**状态：** P0 第一阶段已落地。`NativeGalleryCollectionView` 在 macOS 走 `NSCollectionView`，在 iPadOS 走 `UICollectionView`；compact/list 使用原生 flow layout，masonry 使用共享 placement 引擎驱动原生 collection layout，cell 内容暂时继续由 SwiftUI hosting 承接。iPadOS cross-build 已通过，旧 AppKit 泄漏已从 P0 热路径和必要平台边界中清理出来。
 
 **解决方案：**
 ```swift
@@ -151,7 +179,9 @@ struct SearchField: NSViewRepresentable {
 - 历史记录下拉
 - 更好的自动补全
 
-**文件：** `Views/ContentView.swift` (搜索栏)
+**状态：** P2 第一阶段已落地。创作者列表搜索栏通过 `NativeSearchField` 在 macOS 使用 `NSSearchField`，在 iPadOS 使用 `UISearchTextField`；SwiftUI 继续持有筛选状态。
+
+**文件：** `Support/SearchFieldNSView.swift`, `Views/UserPreviewListComponents.swift`
 
 ---
 
@@ -180,6 +210,8 @@ struct MenuBarEnhancer: NSViewRepresentable {
 - 动态菜单更新
 - 完整的快捷键显示
 - 更好的菜单栏集成
+
+**状态：** P2 第一阶段已落地。`EnhancedMenuNSView` 的 `NSMenu` target/coordinator 已修正，创作者列表批量操作菜单在 macOS 走原生 `NSMenu`，iPadOS 保持 SwiftUI `Menu`。
 
 **文件：** `Views/MenuBarExtraView.swift`
 
@@ -211,7 +243,9 @@ struct DragDropView: NSViewRepresentable {
 - 多项拖放支持
 - 精确的拖放区域控制
 
-**文件：** `Views/GalleryArtworkGrid.swift` (拖放画作)
+**状态：** P2 第一阶段已落地。`DragDropNSView` 现在把 macOS pasteboard 的 URL、file URL、plain text / utf8 plain text 统一整理为 `NativeDropPayload`；`PixivIDOpenSheet` 的快速打开区域已接入 `CustomDropTarget`，可把拖入的 Pixiv 作品/用户链接解析成对应 ID。全局 Pixiv 链接 drop 仍保留 `Transferable` 路线，避免在没有交互证据前扩大替换范围。
+
+**文件：** `Support/DragDropNSView.swift`, `Views/PixivIDOpenSheet.swift`, `Views/PixivLinkDropTarget.swift`
 
 ---
 
@@ -285,31 +319,29 @@ struct DragDropView: NSViewRepresentable {
 
 ## 实施计划
 
-### 阶段 1：核心阅读器重写（高优先级）
+### P0：先把最高频热路径下沉到原生
 
 | 项目 | 平台 | 工作量 | 影响 |
 |------|------|--------|------|
-| A1. NSTextView 小说阅读器 | macOS | 大 | 高 |
-| A2. NSScrollView 图片查看器 | macOS | 中 | 高 |
-| A4. NSTextField 搜索栏 | macOS | 小 | 中 |
+| A2/C2. 图片查看器 | macOS / iPadOS | 中 | 高，已落地第一切片 |
+| A3. Gallery/Feed collection 容器 | macOS / iPadOS | 大 | 高，masonry/compact/list 第一阶段已落地；iPadOS cross-build 通过 |
 
-### 阶段 2：画廊和交互（中优先级）
-
-| 项目 | 平台 | 工作量 | 影响 |
-|------|------|--------|------|
-| A3. NSCollectionView 画廊 | macOS | 大 | 高 |
-| A5. NSMenu 增强 | macOS | 小 | 低 |
-| A6. NSDraggingSession 拖放 | macOS | 中 | 中 |
-
-### 阶段 3：iPadOS 适配（中优先级）
+### P1：文本和队列列表
 
 | 项目 | 平台 | 工作量 | 影响 |
 |------|------|--------|------|
-| C1. UIGestureRecognizer | iPadOS | 中 | 高 |
-| C2. UIScrollView 图片查看 | iPadOS | 中 | 高 |
-| C3. UITextView 文本渲染 | iPadOS | 中 | 中 |
+| A1/C3. Novel TextKit 阅读器 | macOS / iPadOS | 大 | 高，纯正文页第一阶段已落地 |
+| 下载队列/历史列表原生化 | macOS / iPadOS | 中 | 中高，下载队列 native list 与历史 native collection 第一阶段已落地 |
 
-### 阶段 4：平台增强（低优先级）
+### P2：复用原生基础设施扩展周边
+
+| 项目 | 平台 | 工作量 | 影响 |
+|------|------|--------|------|
+| 创作者列表复用 collection/list 基建 | macOS / iPadOS | 中 | 中，第一阶段已落地，card 内容继续 hosted SwiftUI |
+| A4. 搜索栏原生控件 | macOS / iPadOS | 小 | 中，创作者列表搜索已接入 `NSSearchField` / `UISearchTextField` |
+| A5/A6. 菜单、拖放增强 | macOS / iPadOS | 中 | 中，创作者批量操作菜单已接入 `NSMenu`；Pixiv ID 快速打开接入 macOS 原生 drop target |
+
+### P3：保持 SwiftUI，按 profiling 决定是否迁移
 
 | 项目 | 平台 | 工作量 | 影响 |
 |------|------|--------|------|
@@ -318,15 +350,16 @@ struct DragDropView: NSViewRepresentable {
 | B3. NSWindow 增强 | macOS | 中 | 中 |
 | B4. NSUserNotificationCenter | macOS | 小 | 低 |
 | B5. NSWorkspace 增强 | macOS | 小 | 低 |
+| Pixivision / Settings / Runtime readiness | macOS / iPadOS | 小 | 低，默认不迁移 |
 
 ---
 
 ## 关键架构原则
 
-### 1. 渐进式迁移
-- 不要一次性重写所有视图
-- 从性能瓶颈开始（小说阅读器、图片查看器）
-- 保持 SwiftUI 声明式 API 的优势
+### 1. 原生优先、渐进迁移
+- 不一次性重写所有视图，但热路径优先选择 AppKit/UIKit。
+- 从性能瓶颈和平台交互缺口开始（图片阅读器、Gallery/Feed、小说阅读器）。
+- SwiftUI 负责组合和状态，不负责与平台控件重复造轮子。
 
 ### 2. 协议抽象
 ```swift
@@ -445,8 +478,9 @@ struct IPadTextRenderer: TextRenderer {
 
 | 分类 | 项目数 | 状态 |
 |------|--------|------|
-| Phase A (高优先级) | 6 | 待开始 |
-| Phase B (中优先级) | 5 | 待开始 |
-| Phase C (iPadOS) | 5 | 待开始 |
+| P0 | 2 | 图片阅读器第一切片已落地；Gallery/Feed masonry/compact/list 原生 collection 第一阶段已落地；iPadOS cross-build 通过 |
+| P1 | 2 | 小说 TextKit 阅读器第一阶段已落地；下载队列 native list 与历史 native collection 第一阶段已落地 |
+| P2 | 3 | 创作者 native collection、原生搜索、macOS 批量操作 NSMenu、Pixiv ID 快速打开原生 drop target 第一阶段已落地 |
+| P3 | 6+ | 默认保持 SwiftUI，按 profiling 决策 |
 | Phase 2 改进 | 38 | 待开始 |
 | **总计** | **54** | |

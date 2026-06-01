@@ -47,8 +47,8 @@ struct NativeBoundaryTests {
         }
     }
 
-    @Test("Native UI files stay SwiftUI-first with narrow AppKit bridges")
-    func nativeUIFilesStaySwiftUIFirst() throws {
+    @Test("Native bridge boundaries stay explicit")
+    func nativeBridgeBoundariesStayExplicit() throws {
         let root = try packageRoot()
         let viewRoot = root.appending(path: "Sources/KeiPix/Views", directoryHint: .isDirectory)
         let supportRoot = root.appending(path: "Sources/KeiPix/Support", directoryHint: .isDirectory)
@@ -70,6 +70,151 @@ struct NativeBoundaryTests {
 
         #expect(appKitBridgeFiles.contains { $0.lastPathComponent == "TrackpadEventBridge.swift" })
         #expect(appKitBridgeFiles.contains { $0.lastPathComponent == "WindowCaptureProtectionBridge.swift" })
+    }
+
+    @Test("Gallery feed layouts use a native collection bridge")
+    func galleryFeedLayoutsUseNativeCollectionBridge() throws {
+        let root = try packageRoot()
+        let galleryView = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/GalleryView.swift"),
+            encoding: .utf8
+        )
+        let nativeCollection = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Support/NativeGalleryCollectionView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(galleryView.contains("usesNativeGalleryCollection"))
+        #expect(galleryView.contains("usesArtworkMasonry"))
+        #expect(galleryView.contains("NativeGalleryCollectionView("))
+        #expect(nativeCollection.contains("NativeGalleryMasonryNSCollectionViewLayout"))
+        #expect(nativeCollection.contains("NativeGalleryMasonryUICollectionViewLayout"))
+        #expect(nativeCollection.contains("ArtworkMasonryPlacement.resolve"))
+        #expect(nativeCollection.contains("NSCollectionViewDiffableDataSource"))
+        #expect(nativeCollection.contains("UICollectionViewDiffableDataSource"))
+        #expect(nativeCollection.contains("NSHostingView"))
+        #expect(nativeCollection.contains("UIHostingController"))
+        #expect(nativeCollection.contains("UIRefreshControl"))
+    }
+
+    @Test("Novel reader text pages use native TextKit bridges")
+    func novelReaderTextPagesUseNativeTextKitBridges() throws {
+        let root = try packageRoot()
+        let readerView = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/NovelReaderView.swift"),
+            encoding: .utf8
+        )
+        let nativeText = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Support/NativeNovelTextPageView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(readerView.contains("usesNativeNovelTextPage"))
+        #expect(readerView.contains("NativeNovelTextPageView("))
+        #expect(nativeText.contains("NSTextView.scrollableTextView"))
+        #expect(nativeText.contains("UITextView"))
+        #expect(nativeText.contains("NSAttributedString"))
+        #expect(nativeText.contains("NativeNovelTextAttributedStringBuilder"))
+    }
+
+    @Test("Download queue uses a native list container")
+    func downloadQueueUsesNativeListContainer() throws {
+        let root = try packageRoot()
+        let queueView = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/DownloadQueueView.swift"),
+            encoding: .utf8
+        )
+        let nativeList = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Support/NativeDownloadQueueListView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(queueView.contains("NativeDownloadQueueListView("))
+        #expect(nativeList.contains("NSTableView"))
+        #expect(nativeList.contains("UICollectionView"))
+        #expect(nativeList.contains("NSHostingView"))
+        #expect(nativeList.contains("UIHostingConfiguration"))
+        #expect(nativeList.contains("keyDown(with event: NSEvent)"))
+        #expect(nativeList.contains("UIKeyCommand"))
+    }
+
+    @Test("Browsing history uses a native collection container")
+    func browsingHistoryUsesNativeCollectionContainer() throws {
+        let root = try packageRoot()
+        let historyView = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/BrowsingHistoryView.swift"),
+            encoding: .utf8
+        )
+        let nativeCollection = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Support/NativeBrowsingHistoryCollectionView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(historyView.contains("NativeBrowsingHistoryCollectionView("))
+        #expect(historyView.contains("nativeLocalHistoryContent"))
+        #expect(historyView.contains("nativePixivHistoryContent"))
+        #expect(nativeCollection.contains("NSCollectionView"))
+        #expect(nativeCollection.contains("UICollectionView"))
+        #expect(nativeCollection.contains("NSCollectionViewDiffableDataSource"))
+        #expect(nativeCollection.contains("UICollectionViewDiffableDataSource"))
+        #expect(nativeCollection.contains("NSHostingView"))
+        #expect(nativeCollection.contains("UIHostingController"))
+        #expect(nativeCollection.contains("NativeBrowsingHistoryCollectionLayout"))
+    }
+
+    @Test("Creator list, search, menu, and drop use native P2 bridges")
+    func creatorListSearchMenuAndDropUseNativeP2Bridges() throws {
+        let root = try packageRoot()
+        let creatorComponents = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/UserPreviewListComponents.swift"),
+            encoding: .utf8
+        )
+        let quickOpenSheet = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/PixivIDOpenSheet.swift"),
+            encoding: .utf8
+        )
+        let pixivDropTarget = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/PixivLinkDropTarget.swift"),
+            encoding: .utf8
+        )
+        let nativeCollection = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Support/NativeCreatorPreviewCollectionView.swift"),
+            encoding: .utf8
+        )
+        let nativeSearch = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Support/SearchFieldNSView.swift"),
+            encoding: .utf8
+        )
+        let enhancedMenu = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Support/EnhancedMenuNSView.swift"),
+            encoding: .utf8
+        )
+        let nativeDrop = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Support/DragDropNSView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(creatorComponents.contains("NativeCreatorPreviewCollectionView("))
+        #expect(creatorComponents.contains("NativeSearchField("))
+        #expect(creatorComponents.contains("EnhancedMenu("))
+        #expect(creatorComponents.contains("nativeCreatorPreviewContent"))
+        #expect(quickOpenSheet.contains("CustomDropTarget("))
+        #expect(quickOpenSheet.contains("handleNativeDrop"))
+        #expect(pixivDropTarget.contains("firstSupportedURL(from rawTexts: [String])"))
+        #expect(nativeCollection.contains("NSCollectionView"))
+        #expect(nativeCollection.contains("UICollectionView"))
+        #expect(nativeCollection.contains("NSCollectionViewDiffableDataSource"))
+        #expect(nativeCollection.contains("UICollectionViewDiffableDataSource"))
+        #expect(nativeCollection.contains("NSHostingView"))
+        #expect(nativeCollection.contains("UIHostingController"))
+        #expect(nativeSearch.contains("NSSearchField"))
+        #expect(nativeSearch.contains("UISearchTextField"))
+        #expect(enhancedMenu.contains("NSMenu"))
+        #expect(enhancedMenu.contains("menuItem.target = target"))
+        #expect(enhancedMenu.contains("case checkFollowVisibility"))
+        #expect(nativeDrop.contains("NSDraggingInfo"))
+        #expect(nativeDrop.contains("NativeDropPayload"))
+        #expect(nativeDrop.contains("UTType.utf8PlainText"))
     }
 
     private func packageRoot() throws -> URL {
