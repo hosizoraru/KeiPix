@@ -2,6 +2,8 @@
 import Foundation
 #if os(macOS)
 import AppKit
+#elseif os(iOS)
+import UIKit
 #endif
 
 enum VisualQASampleData {
@@ -614,11 +616,11 @@ enum VisualQASampleData {
     private static func writeDownloadedReaderSamplePages() -> [URL] {
         let directory = downloadedReaderSampleDirectory
         try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-        let pages: [(CGSize, NSColor, String)] = [
-            (CGSize(width: 1100, height: 1500), NSColor.systemBlue, "01 Portrait"),
-            (CGSize(width: 2200, height: 1100), NSColor.systemPurple, "02 Wide Spread"),
-            (CGSize(width: 1200, height: 2400), NSColor.systemGreen, "03 Tall Manga"),
-            (CGSize(width: 1800, height: 1800), NSColor.systemOrange, "04 Square")
+        let pages: [(CGSize, PlatformColor, String)] = [
+            (CGSize(width: 1100, height: 1500), PlatformColor.systemBlue, "01 Portrait"),
+            (CGSize(width: 2200, height: 1100), PlatformColor.systemPurple, "02 Wide Spread"),
+            (CGSize(width: 1200, height: 2400), PlatformColor.systemGreen, "03 Tall Manga"),
+            (CGSize(width: 1800, height: 1800), PlatformColor.systemOrange, "04 Square")
         ]
 
         return pages.enumerated().compactMap { index, page in
@@ -632,13 +634,14 @@ enum VisualQASampleData {
         }
     }
 
-    private static func writeSampleImage(size: CGSize, color: NSColor, label: String, to url: URL) throws {
+    private static func writeSampleImage(size: CGSize, color: PlatformColor, label: String, to url: URL) throws {
+        #if os(macOS)
         let image = NSImage(size: size)
         image.lockFocus()
         color.withAlphaComponent(0.86).setFill()
         NSBezierPath(rect: CGRect(origin: .zero, size: size)).fill()
 
-        NSColor.black.withAlphaComponent(0.18).setStroke()
+        PlatformColor.black.withAlphaComponent(0.18).setStroke()
         let stripe = NSBezierPath()
         stripe.move(to: CGPoint(x: size.width * 0.12, y: size.height * 0.12))
         stripe.line(to: CGPoint(x: size.width * 0.88, y: size.height * 0.88))
@@ -650,7 +653,7 @@ enum VisualQASampleData {
         paragraph.alignment = .center
         let attributes: [NSAttributedString.Key: Any] = [
             .font: NSFont.systemFont(ofSize: max(54, min(size.width, size.height) * 0.08), weight: .semibold),
-            .foregroundColor: NSColor.white,
+            .foregroundColor: PlatformColor.white,
             .paragraphStyle: paragraph
         ]
         let textRect = CGRect(
@@ -668,6 +671,37 @@ enum VisualQASampleData {
             throw CocoaError(.fileWriteUnknown)
         }
         try data.write(to: url, options: .atomic)
+        #elseif os(iOS)
+        let renderer = UIGraphicsImageRenderer(size: size)
+        let data = renderer.pngData { _ in
+            color.withAlphaComponent(0.86).setFill()
+            UIBezierPath(rect: CGRect(origin: .zero, size: size)).fill()
+
+            PlatformColor.black.withAlphaComponent(0.18).setStroke()
+            let stripe = UIBezierPath()
+            stripe.move(to: CGPoint(x: size.width * 0.12, y: size.height * 0.12))
+            stripe.addLine(to: CGPoint(x: size.width * 0.88, y: size.height * 0.88))
+            stripe.lineWidth = max(18, min(size.width, size.height) * 0.035)
+            stripe.stroke()
+
+            let text = NSString(string: label)
+            let paragraph = NSMutableParagraphStyle()
+            paragraph.alignment = .center
+            let attributes: [NSAttributedString.Key: Any] = [
+                .font: UIFont.systemFont(ofSize: max(54, min(size.width, size.height) * 0.08), weight: .semibold),
+                .foregroundColor: PlatformColor.white,
+                .paragraphStyle: paragraph
+            ]
+            let textRect = CGRect(
+                x: size.width * 0.08,
+                y: size.height * 0.44,
+                width: size.width * 0.84,
+                height: size.height * 0.18
+            )
+            text.draw(in: textRect, withAttributes: attributes)
+        }
+        try data.write(to: url, options: .atomic)
+        #endif
     }
 }
 

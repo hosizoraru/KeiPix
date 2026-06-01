@@ -241,38 +241,24 @@ private struct ArtworkSinglePageReader: View {
     var body: some View {
         let currentPageIndex = pageIndex
 
-        GeometryReader { proxy in
+        GeometryReader { _ in
             ZStack {
-                RemoteImageView(
-                    url: artwork.imageURL(at: currentPageIndex, preferOriginal: store.preferOriginalImages(for: artwork)),
+                ImageScrollView(
+                    imageURL: artwork.imageURL(at: currentPageIndex, preferOriginal: store.preferOriginalImages(for: artwork)),
                     localURL: store.downloads.downloadedImageURL(artworkID: artwork.id, pageIndex: currentPageIndex),
-                    contentMode: .fit,
+                    resetZoomTrigger: interaction.resetZoomTrigger,
+                    toggleZoomTrigger: interaction.toggleZoomTrigger,
                     onImageLoaded: { image in
                         onImageLoaded(image, currentPageIndex)
+                    },
+                    onZoomChanged: { zoomScale in
+                        interaction.updateNativeZoomScale(zoomScale)
+                    },
+                    onPageSwipe: { event in
+                        handlePageSwipe(event)
                     }
                 )
-                    .scaleEffect(interaction.scale)
-                    .offset(interaction.offset)
-
-                Color.clear
-                    .readerGestures(
-                        isEnabled: store.trackpadGesturesEnabled,
-                        onScroll: { event in
-                            handleScroll(event, in: proxy.size)
-                        },
-                        onMagnify: { delta, isEnded in
-                            handleMagnify(delta, isEnded: isEnded, in: proxy.size)
-                        },
-                        onSmartMagnify: {
-                            interaction.toggleSmartZoom(in: proxy.size)
-                            return true
-                        },
-                        onDrag: { delta in
-                            guard interaction.isZoomed else { return false }
-                            interaction.applyPan(deltaX: -delta.width, deltaY: -delta.height, in: proxy.size)
-                            return true
-                        }
-                    )
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
 
                 if pageCount > 1 {
                     HStack {
@@ -328,24 +314,6 @@ private struct ArtworkSinglePageReader: View {
 
     private var pageCount: Int {
         artwork.displayPageCount
-    }
-
-    private func handleScroll(_ event: ReaderScrollEvent, in size: CGSize) -> Bool {
-        guard store.trackpadGesturesEnabled else { return false }
-        if interaction.isZoomed {
-            interaction.applyPan(deltaX: event.deltaX, deltaY: event.deltaY, in: size)
-            return true
-        }
-        return handlePageSwipe(event)
-    }
-
-    private func handleMagnify(_ delta: CGFloat, isEnded: Bool, in size: CGSize) -> Bool {
-        guard store.trackpadGesturesEnabled else { return false }
-        interaction.applyMagnification(delta, in: size)
-        if isEnded {
-            interaction.finishMagnification()
-        }
-        return true
     }
 }
 
@@ -427,10 +395,10 @@ private struct ArtworkDoublePageReader: View {
     let onImageLoaded: (PlatformImage, Int) -> Void
 
     var body: some View {
-        GeometryReader { proxy in
+        GeometryReader { _ in
             HStack(spacing: 0) {
                 // Left page
-                pageView(index: pageIndex, presentation: presentationLeft, proxy: proxy)
+                pageView(index: pageIndex)
                     .overlay(alignment: .topLeading) {
                         PageBadge(index: pageIndex, count: pageCount)
                             .padding(10)
@@ -443,7 +411,7 @@ private struct ArtworkDoublePageReader: View {
 
                 // Right page
                 if pageIndex + 1 < pageCount {
-                    pageView(index: pageIndex + 1, presentation: presentationRight, proxy: proxy)
+                    pageView(index: pageIndex + 1)
                         .overlay(alignment: .topTrailing) {
                             PageBadge(index: pageIndex + 1, count: pageCount)
                                 .padding(10)
@@ -459,27 +427,6 @@ private struct ArtworkDoublePageReader: View {
                 }
             }
             .contentShape(Rectangle())
-            .background {
-                Color.clear
-                    .readerGestures(
-                        isEnabled: store.trackpadGesturesEnabled,
-                        onScroll: { event in
-                            handleScroll(event, in: proxy.size)
-                        },
-                        onMagnify: { delta, isEnded in
-                            handleMagnify(delta, isEnded: isEnded, in: proxy.size)
-                        },
-                        onSmartMagnify: {
-                            interaction.toggleSmartZoom(in: proxy.size)
-                            return true
-                        },
-                        onDrag: { delta in
-                            guard interaction.isZoomed else { return false }
-                            interaction.applyPan(deltaX: -delta.width, deltaY: -delta.height, in: proxy.size)
-                            return true
-                        }
-                    )
-            }
         }
         .frame(maxWidth: .infinity)
         .frame(minHeight: 300)
@@ -492,36 +439,23 @@ private struct ArtworkDoublePageReader: View {
     }
 
     @ViewBuilder
-    private func pageView(index: Int, presentation: ReaderPagePresentation, proxy: GeometryProxy) -> some View {
-        RemoteImageView(
-            url: artwork.imageURL(at: index, preferOriginal: store.preferOriginalImages(for: artwork)),
+    private func pageView(index: Int) -> some View {
+        ImageScrollView(
+            imageURL: artwork.imageURL(at: index, preferOriginal: store.preferOriginalImages(for: artwork)),
             localURL: store.downloads.downloadedImageURL(artworkID: artwork.id, pageIndex: index),
-            contentMode: .fit,
+            resetZoomTrigger: interaction.resetZoomTrigger,
+            toggleZoomTrigger: interaction.toggleZoomTrigger,
             onImageLoaded: { image in
                 onImageLoaded(image, index)
+            },
+            onZoomChanged: { zoomScale in
+                interaction.updateNativeZoomScale(zoomScale)
+            },
+            onPageSwipe: { event in
+                handlePageSwipe(event)
             }
         )
-        .scaleEffect(interaction.scale)
-        .offset(interaction.offset)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-    }
-
-    private func handleScroll(_ event: ReaderScrollEvent, in size: CGSize) -> Bool {
-        guard store.trackpadGesturesEnabled else { return false }
-        if interaction.isZoomed {
-            interaction.applyPan(deltaX: event.deltaX, deltaY: event.deltaY, in: size)
-            return true
-        }
-        return handlePageSwipe(event)
-    }
-
-    private func handleMagnify(_ delta: CGFloat, isEnded: Bool, in size: CGSize) -> Bool {
-        guard store.trackpadGesturesEnabled else { return false }
-        interaction.applyMagnification(delta, in: size)
-        if isEnded {
-            interaction.finishMagnification()
-        }
-        return true
     }
 }
 

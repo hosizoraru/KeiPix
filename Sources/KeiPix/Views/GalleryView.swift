@@ -1,3 +1,6 @@
+#if os(macOS)
+import AppKit
+#endif
 import SwiftUI
 
 struct GalleryView: View {
@@ -86,9 +89,68 @@ private struct GalleryFeedView: View {
     @State private var artworkSelection = GalleryArtworkSelection()
     @State private var batchBookmarkCommandRequest: BatchBookmarkCommandRequest?
     @State private var savedScrollPositions: [String: String] = [:]
+    @State private var feedbackRequest: FeedbackReportRequest?
+    @State private var feedbackArtwork: PixivArtwork?
+    @State private var seriesArtwork: PixivArtwork?
     @Environment(\.openWindow) private var openWindow
 
     var body: some View {
+        Group {
+            if usesNativeGalleryCollection {
+                nativeFeed
+            } else {
+                swiftUIFeed
+            }
+        }
+        .sheet(item: $feedbackRequest) { request in
+            FeedbackReportSheet(request: request) {
+                if let feedbackArtwork {
+                    store.requestDangerAction(AppDangerAction(kind: .muteArtwork(feedbackArtwork)))
+                }
+            } onComplete: { message in
+                actionMessage = message
+            }
+            .iPadFriendlySheet()
+        }
+        .sheet(item: $seriesArtwork) { artwork in
+            ArtworkSeriesSheet(artwork: artwork, store: store)
+                .iPadFriendlySheet()
+        }
+        .onChange(of: store.artworks.map(\.id)) { _, visibleArtworkIDs in
+            artworkSelection.prune(visibleArtworkIDs: visibleArtworkIDs)
+        }
+        .onChange(of: store.selectedRoute) { oldRoute, _ in
+            // Save scroll position for old route
+            if let firstVisible = store.artworks.first?.id {
+                savedScrollPositions[oldRoute.rawValue] = "\(firstVisible)"
+            }
+            artworkSelection.clear()
+        }
+        .task(id: store.selectedRoute.rawValue) {
+            // Restore scroll position for new route after content loads
+            guard let savedID = savedScrollPositions[store.selectedRoute.rawValue],
+                  let id = Int(savedID) else { return }
+            try? await Task.sleep(for: .milliseconds(500))
+            // Native collection handles selected-artwork scroll directly; the
+            // SwiftUI scroll route keeps the existing onChange proxy behavior.
+            _ = id
+        }
+        .focusedSceneValue(\.gallerySelectionCommandActions, gallerySelectionCommandActions)
+        .onKeyPress(.upArrow) {
+            store.selectPreviousArtwork()
+            return .handled
+        }
+        .onKeyPress(.downArrow) {
+            store.selectNextArtwork()
+            return .handled
+        }
+        .onKeyPress(.escape) {
+            artworkSelection.clear()
+            return .handled
+        }
+    }
+
+    private var swiftUIFeed: some View {
         ScrollViewReader { proxy in
             ScrollView {
                 LazyVStack(spacing: 0, pinnedViews: [.sectionHeaders]) {
@@ -146,37 +208,295 @@ private struct GalleryFeedView: View {
                 }
             }
         }
-        .onChange(of: store.artworks.map(\.id)) { _, visibleArtworkIDs in
-            artworkSelection.prune(visibleArtworkIDs: visibleArtworkIDs)
-        }
-        .onChange(of: store.selectedRoute) { oldRoute, _ in
-            // Save scroll position for old route
-            if let firstVisible = store.artworks.first?.id {
-                savedScrollPositions[oldRoute.rawValue] = "\(firstVisible)"
+    }
+
+    private var nativeFeed: some View {
+        VStack(spacing: 0) {
+            FeedHeaderView(
+                store: store,
+                actionMessage: $actionMessage,
+                artworkSelection: $artworkSelection,
+                batchBookmarkCommandRequest: $batchBookmarkCommandRequest
+            )
+            .padding(.horizontal, 18)
+            .padding(.vertical, 5)
+            .background(.bar)
+
+            NativeGalleryCollectionView(
+                items: nativeGalleryItems,
+                layout: nativeGalleryLayout,
+                scrollToArtworkID: store.selectedArtwork?.id,
+                onRefresh: {
+                    await store.reloadCurrentFeed()
+                }
+            ) { item in
+                AnyView(nativeGalleryContent(for: item))
             }
-            artworkSelection.clear()
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
-        .task(id: store.selectedRoute.rawValue) {
-            // Restore scroll position for new route after content loads
-            guard let savedID = savedScrollPositions[store.selectedRoute.rawValue],
-                  let id = Int(savedID) else { return }
-            try? await Task.sleep(for: .milliseconds(500))
-            // proxy is not available here, but the scroll-to-selection
-            // onChange handler will handle it when artworks load
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    private var usesNativeGalleryCollection: Bool {
+        store.galleryLayoutMode.usesArtworkMasonry
+            || store.galleryLayoutMode.usesCompactGrid
+            || store.galleryLayoutMode.usesListRow
+    }
+
+    private var nativeGalleryLayout: NativeGalleryCollectionLayout {
+        let loadMoreHeight: CGFloat = store.compactArtworkCards ? 150 : 210
+        if store.galleryLayoutMode.usesListRow {
+            return .listRow(rowHeight: 122, loadMoreHeight: loadMoreHeight)
         }
-        .focusedSceneValue(\.gallerySelectionCommandActions, gallerySelectionCommandActions)
-        .onKeyPress(.upArrow) {
-            store.selectPreviousArtwork()
-            return .handled
+        if store.galleryLayoutMode.usesArtworkMasonry {
+            return .masonry(configuration: nativeMasonryConfiguration, loadMoreHeight: 210)
         }
-        .onKeyPress(.downArrow) {
-            store.selectNextArtwork()
-            return .handled
+        return .compactGrid(
+            cardHeight: store.compactArtworkCards ? 152 : 222,
+            loadMoreHeight: loadMoreHeight
+        )
+    }
+
+    private var nativeMasonryConfiguration: ArtworkMasonryLayoutConfiguration {
+        let fixedColumnCount = store.galleryLayoutMode.fixedColumnCount
+        let usesDenseThreeColumnLayout = fixedColumnCount == 3
+        return ArtworkMasonryLayoutConfiguration(
+            spacing: 12,
+            preferredColumnWidth: usesDenseThreeColumnLayout ? 168 : 224,
+            minColumnWidth: usesDenseThreeColumnLayout ? 116 : 176,
+            maxColumnWidth: 260,
+            fixedColumnCount: fixedColumnCount,
+            denseFixedColumns: usesDenseThreeColumnLayout
+        )
+    }
+
+    private var nativeGalleryItems: [NativeGalleryCollectionItem] {
+        guard store.artworks.isEmpty == false else {
+            return [.empty]
         }
-        .onKeyPress(.escape) {
-            artworkSelection.clear()
-            return .handled
+
+        var items: [NativeGalleryCollectionItem] = []
+        if store.activeFeedSnapshotRestoration != nil {
+            items.append(.cachedStatus)
         }
+        if shouldShowPopularPreview {
+            items.append(.popularPreview)
+        }
+        items.append(contentsOf: store.clientFilteredArtworks.map(NativeGalleryCollectionItem.artwork))
+        if store.hasNextPage, store.activeFeedSnapshotRestoration == nil {
+            items.append(.loadMore)
+        }
+        return items
+    }
+
+    private var shouldShowPopularPreview: Bool {
+        store.selectedRoute == .search
+            && (store.isLoadingSearchPopularPreview || store.searchPopularPreviewArtworks.isEmpty == false)
+    }
+
+    @ViewBuilder
+    private func nativeGalleryContent(for item: NativeGalleryCollectionItem) -> some View {
+        switch item {
+        case .empty:
+            EmptyStateView(
+                title: L10n.noArtworkTitle,
+                subtitle: L10n.noArtworkSubtitle,
+                systemImage: "photo.on.rectangle.angled"
+            )
+            .frame(maxWidth: .infinity)
+            .frame(minHeight: 420)
+        case .cachedStatus:
+            if let restoration = store.activeFeedSnapshotRestoration {
+                CachedFeedStatusStrip(restoration: restoration) {
+                    store.requestRouteRefresh()
+                }
+            }
+        case .popularPreview:
+            SearchPopularPreviewStrip(store: store, actionMessage: $actionMessage)
+        case .artwork(let artwork):
+            if store.galleryLayoutMode.usesListRow {
+                nativeListRow(artwork)
+            } else if store.galleryLayoutMode.usesCompactGrid {
+                nativeCompactArtworkTile(artwork)
+            } else {
+                nativeMasonryArtworkTile(artwork)
+            }
+        case .loadMore:
+            LoadMoreTile(store: store)
+        }
+    }
+
+    private func nativeListRow(_ artwork: PixivArtwork) -> some View {
+        ListRowArtworkCard(
+            artwork: artwork,
+            store: store,
+            isSelected: store.selectedArtwork?.id == artwork.id,
+            isInSelection: artworkSelection.contains(artwork.id)
+        ) {
+            activate(artwork)
+        }
+        .overlay(alignment: .topTrailing) {
+            if artworkSelection.contains(artwork.id) {
+                GallerySelectionBadge()
+                    .padding(8)
+            }
+        }
+        .contextMenu {
+            selectionContextButton(for: artwork)
+            Divider()
+            artworkContextMenu(artwork)
+        }
+    }
+
+    private func nativeCompactArtworkTile(_ artwork: PixivArtwork) -> some View {
+        ArtworkCardView(
+            artwork: artwork,
+            isSelected: store.selectedArtwork?.id == artwork.id,
+            isCompact: store.compactArtworkCards,
+            showContentBadges: store.showContentBadges,
+            maskSensitivePreview: store.maskSensitivePreviews,
+            downloadState: store.downloads.downloadState(for: artwork.id),
+            feedPreviewTier: store.feedPreviewImageQualityTier,
+            downloadedFileURL: store.downloads.downloadedImageURL(artworkID: artwork.id, pageIndex: 0),
+            emphasizeFollowing: store.emphasizeFollowingArtists
+        ) {
+            activate(artwork)
+        }
+        .overlay(alignment: .topTrailing) {
+            if artworkSelection.contains(artwork.id) {
+                GallerySelectionBadge()
+                    .padding(8)
+            }
+        }
+        .contextMenu {
+            selectionContextButton(for: artwork)
+            Divider()
+            artworkContextMenu(artwork)
+        }
+    }
+
+    private func nativeMasonryArtworkTile(_ artwork: PixivArtwork) -> some View {
+        let presentation = ArtworkMasonryPresentation(artwork: artwork)
+        return ArtworkCardView(
+            artwork: artwork,
+            isSelected: store.selectedArtwork?.id == artwork.id,
+            isCompact: false,
+            showContentBadges: store.showContentBadges,
+            maskSensitivePreview: store.maskSensitivePreviews,
+            downloadState: store.downloads.downloadState(for: artwork.id),
+            displayStyle: presentation.cardStyle,
+            fillsAvailableHeight: true,
+            feedPreviewTier: store.feedPreviewImageQualityTier,
+            downloadedFileURL: store.downloads.downloadedImageURL(artworkID: artwork.id, pageIndex: 0),
+            emphasizeFollowing: store.emphasizeFollowingArtists
+        ) {
+            activate(artwork)
+        }
+        .overlay(alignment: .topTrailing) {
+            if artworkSelection.contains(artwork.id) {
+                GallerySelectionBadge()
+                    .padding(8)
+            }
+        }
+        .contextMenu {
+            selectionContextButton(for: artwork)
+            Divider()
+            artworkContextMenu(artwork)
+        }
+    }
+
+    @ViewBuilder
+    private func artworkContextMenu(_ artwork: PixivArtwork) -> some View {
+        Button(artwork.isBookmarked ? L10n.removeBookmark : L10n.bookmark) {
+            if artwork.isBookmarked {
+                store.requestDangerAction(AppDangerAction(kind: .removeBookmark(artwork)))
+            } else {
+                Task { await bookmark(artwork) }
+            }
+        }
+        Button(L10n.download) {
+            store.enqueueDownload(artwork)
+            actionMessage = String(format: L10n.queuedDownloadsFormat, 1)
+        }
+        Button(L10n.searchImageSource) {
+            store.presentImageSourceSearch(for: artwork)
+        }
+        ArtworkSeriesContextMenuItems(
+            artwork: artwork,
+            store: store,
+            actionMessage: $actionMessage,
+            showSeries: { seriesArtwork = $0 }
+        )
+        Divider()
+        Button {
+            presentFeedback(artwork)
+        } label: {
+            Label(L10n.feedbackAndMute, systemImage: "exclamationmark.bubble")
+        }
+        Button(L10n.muteArtwork) {
+            store.requestDangerAction(AppDangerAction(kind: .muteArtwork(artwork)))
+        }
+        Button(L10n.muteCreator) {
+            store.requestDangerAction(AppDangerAction(kind: .muteCreator(artwork.user)))
+        }
+        if artwork.tags.isEmpty == false {
+            Menu(L10n.muteTag) {
+                ForEach(artwork.tags.prefix(12), id: \.self) { tag in
+                    Button("#\(tag.name)") {
+                        store.requestDangerAction(AppDangerAction(kind: .muteTag(tag)))
+                    }
+                }
+            }
+        }
+        if let url = artwork.pixivURL {
+            Link(L10n.openInPixiv, destination: url)
+            Button(L10n.copyLink) {
+                PasteboardWriter.copy(url.absoluteString)
+                actionMessage = L10n.copied
+            }
+        }
+    }
+
+    private func activate(_ artwork: PixivArtwork) {
+        #if os(macOS)
+        let commandHeld = NSEvent.modifierFlags.contains(.command)
+        #else
+        let commandHeld = false
+        #endif
+        if artworkSelection.isSelectionMode || commandHeld {
+            artworkSelection.toggle(artwork.id)
+        } else {
+            store.navigateToArtwork(artwork)
+        }
+    }
+
+    private func selectionContextButton(for artwork: PixivArtwork) -> some View {
+        Button {
+            artworkSelection.toggle(artwork.id)
+        } label: {
+            Label(
+                artworkSelection.contains(artwork.id) ? L10n.deselectArtwork : L10n.selectArtwork,
+                systemImage: artworkSelection.contains(artwork.id) ? "checkmark.circle.fill" : "checkmark.circle"
+            )
+        }
+    }
+
+    private func bookmark(_ artwork: PixivArtwork) async {
+        do {
+            try await store.saveBookmark(
+                artwork,
+                restrict: store.defaultBookmarkRestrict,
+                tags: store.automaticBookmarkTags(for: artwork)
+            )
+            actionMessage = String(format: L10n.savedBookmarkFormat, artwork.title)
+        } catch {
+            store.errorMessage = error.localizedDescription
+        }
+    }
+
+    private func presentFeedback(_ artwork: PixivArtwork) {
+        feedbackArtwork = artwork
+        feedbackRequest = .artwork(artwork)
     }
 
     private var gallerySelectionCommandActions: GallerySelectionCommandActions? {

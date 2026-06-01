@@ -21,17 +21,19 @@ enum TrackpadHorizontalSwipeBehavior: String, CaseIterable, Identifiable {
 @MainActor
 @Observable
 final class ArtworkReaderInteractionState {
-    static let minimumScale: CGFloat = 1
-    static let maximumScale: CGFloat = 4
-    static let smartZoomScale: CGFloat = 2.25
-    static let resetSnapThreshold: CGFloat = 1.04
-    static let swipeThreshold: CGFloat = 90
-    static let horizontalDominance: CGFloat = 1.35
+    nonisolated static let minimumScale: CGFloat = 1
+    nonisolated static let maximumScale: CGFloat = 4
+    nonisolated static let smartZoomScale: CGFloat = 2.25
+    nonisolated static let resetSnapThreshold: CGFloat = 1.04
+    nonisolated static let swipeThreshold: CGFloat = 90
+    nonisolated static let horizontalDominance: CGFloat = 1.35
 
     var scale: CGFloat = 1
     var offset: CGSize = .zero
     var activePageIndex = 0
     var isGestureLocked = false
+    var resetZoomTrigger = 0
+    var toggleZoomTrigger = 0
 
     private var accumulatedSwipe = CGSize.zero
 
@@ -43,6 +45,7 @@ final class ArtworkReaderInteractionState {
         scale = Self.minimumScale
         offset = .zero
         isGestureLocked = false
+        resetZoomTrigger += 1
     }
 
     func toggleSmartZoom(in size: CGSize) {
@@ -51,6 +54,15 @@ final class ArtworkReaderInteractionState {
         } else {
             scale = Self.smartZoomScale
             offset = clamped(offset, in: size)
+            toggleZoomTrigger += 1
+        }
+    }
+
+    func updateNativeZoomScale(_ nativeScale: CGFloat) {
+        guard nativeScale.isFinite else { return }
+        scale = max(Self.minimumScale, nativeScale)
+        if isZoomed == false {
+            offset = .zero
         }
     }
 

@@ -398,7 +398,7 @@ private struct MasonryArtworkGrid: View {
     }
 }
 
-private struct GallerySelectionBadge: View {
+struct GallerySelectionBadge: View {
     var body: some View {
         Image(systemName: "checkmark.circle.fill")
             .font(.title3.weight(.semibold))
@@ -415,7 +415,7 @@ private struct GallerySelectionBadge: View {
     }
 }
 
-private struct ArtworkSeriesContextMenuItems: View {
+struct ArtworkSeriesContextMenuItems: View {
     let artwork: PixivArtwork
     @Bindable var store: KeiPixStore
     @Binding var actionMessage: String?
@@ -458,7 +458,7 @@ private struct ArtworkSeriesContextMenuItems: View {
     }
 }
 
-private struct ArtworkSeriesSheet: View {
+struct ArtworkSeriesSheet: View {
     let artwork: PixivArtwork
     @Bindable var store: KeiPixStore
     @Environment(\.dismiss) private var dismiss
@@ -490,7 +490,7 @@ private struct ArtworkSeriesSheet: View {
     }
 }
 
-private struct LoadMoreTile: View {
+struct LoadMoreTile: View {
     @Bindable var store: KeiPixStore
 
     var body: some View {
@@ -516,7 +516,7 @@ private struct LoadMoreTile: View {
     }
 }
 
-private struct ListRowArtworkCard: View {
+struct ListRowArtworkCard: View {
     let artwork: PixivArtwork
     @Bindable var store: KeiPixStore
     let isSelected: Bool

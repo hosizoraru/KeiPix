@@ -50,6 +50,15 @@ enum GalleryLayoutMode: String, CaseIterable, Identifiable {
         }
     }
 
+    var usesArtworkMasonry: Bool {
+        switch self {
+        case .autoMasonry, .twoColumnMasonry, .threeColumnMasonry:
+            true
+        case .compactGrid, .listRow:
+            false
+        }
+    }
+
     var usesCompactGrid: Bool {
         self == .compactGrid
     }

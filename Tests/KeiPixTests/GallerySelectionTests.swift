@@ -127,4 +127,31 @@ struct GallerySelectionTests {
         #expect(layout.resolvedColumnCount(for: visibleIdentityMasonryWidth) == 3)
         #expect(layout.resolvedColumnCount(for: hiddenIdentityMasonryWidth) == 3)
     }
+
+    @Test("Artwork masonry placement keeps full-width native collection strips outside columns")
+    func artworkMasonryPlacementKeepsFullWidthStripsOutsideColumns() {
+        let resolved = ArtworkMasonryPlacement.resolve(
+            elements: [
+                .fullWidth(height: 82),
+                .artwork(aspectRatio: 0.72),
+                .artwork(aspectRatio: 1.58),
+                .fullWidth(height: 210)
+            ],
+            availableWidth: 640,
+            configuration: ArtworkMasonryLayoutConfiguration(
+                spacing: 12,
+                preferredColumnWidth: 224,
+                minColumnWidth: 176,
+                maxColumnWidth: 260
+            )
+        )
+
+        #expect(resolved.frames.count == 4)
+        #expect(resolved.frames[0].width == 640)
+        #expect(resolved.frames[0].height == 82)
+        #expect(resolved.frames[3].width == 640)
+        #expect(resolved.frames[3].minY >= resolved.frames[1].maxY)
+        #expect(resolved.frames[3].minY >= resolved.frames[2].maxY)
+        #expect(resolved.size.height >= resolved.frames[3].maxY)
+    }
 }

@@ -259,7 +259,7 @@ struct DownloadedArtworkViewer: View {
         VStack(spacing: 12) {
             Spacer(minLength: 0)
 
-            LocalImageView(url: currentImageURL, contentMode: .fit)
+            ImageScrollView(imageURL: nil, localURL: currentImageURL)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .padding(18)
 
