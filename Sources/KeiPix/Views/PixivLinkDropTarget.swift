@@ -115,4 +115,8 @@ enum PixivDroppedLinkReader {
         }
         return nil
     }
+
+    static func firstSupportedURL(from rawTexts: [String]) -> URL? {
+        firstSupportedURL(from: rawTexts.map(PixivLinkDropPayload.init(rawText:)))
+    }
 }

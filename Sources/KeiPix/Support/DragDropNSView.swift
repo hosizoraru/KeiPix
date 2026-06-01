@@ -3,6 +3,12 @@ import AppKit
 import SwiftUI
 import UniformTypeIdentifiers
 
+struct NativeDropPayload: Equatable {
+    let rawText: String
+    let url: URL?
+    let typeIdentifier: String
+}
+
 /// NSView wrapper for drop target support with custom visual feedback.
 ///
 /// Provides richer drop handling than SwiftUI's `.dropDestination`:
@@ -12,7 +18,7 @@ import UniformTypeIdentifiers
 /// - Precise drop position control
 struct DropTargetNSView: NSViewRepresentable {
     let acceptedTypes: [UTType]
-    let onDrop: ([URL]) -> Bool
+    let onDrop: ([NativeDropPayload]) -> Bool
     let onDragEntered: (() -> Void)?
     let onDragExited: (() -> Void)?
 
@@ -27,6 +33,8 @@ struct DropTargetNSView: NSViewRepresentable {
 
     func updateNSView(_ nsView: DropTargetView, context: Context) {
         nsView.onDrop = onDrop
+        nsView.onDragEntered = onDragEntered
+        nsView.onDragExited = onDragExited
     }
 
     func makeCoordinator() -> Coordinator {
@@ -38,7 +46,7 @@ struct DropTargetNSView: NSViewRepresentable {
 
 /// Custom NSView that implements NSDraggingDestination.
 class DropTargetView: NSView {
-    var onDrop: (([URL]) -> Bool)?
+    var onDrop: (([NativeDropPayload]) -> Bool)?
     var onDragEntered: (() -> Void)?
     var onDragExited: (() -> Void)?
 
@@ -49,7 +57,7 @@ class DropTargetView: NSView {
     // MARK: - NSDraggingDestination
 
     override func draggingEntered(_ sender: any NSDraggingInfo) -> NSDragOperation {
-        guard onDrop != nil else { return [] }
+        guard onDrop != nil, readablePayloads(from: sender.draggingPasteboard).isEmpty == false else { return [] }
         isHighlighted = true
         needsDisplay = true
         onDragEntered?()
@@ -63,31 +71,73 @@ class DropTargetView: NSView {
     }
 
     override func prepareForDragOperation(_ sender: any NSDraggingInfo) -> Bool {
-        return onDrop != nil
+        onDrop != nil && readablePayloads(from: sender.draggingPasteboard).isEmpty == false
     }
 
     override func performDragOperation(_ sender: any NSDraggingInfo) -> Bool {
         guard let onDrop else { return false }
 
-        let urls = sender.draggingPasteboard.pasteboardItems?.compactMap { item -> URL? in
-            if let urlString = item.string(forType: .fileURL) {
-                return URL(string: urlString)
-            }
-            if let urlString = item.string(forType: .URL) {
-                return URL(string: urlString)
-            }
-            return nil
-        } ?? []
+        let payloads = readablePayloads(from: sender.draggingPasteboard)
+        guard payloads.isEmpty == false else { return false }
 
         isHighlighted = false
         needsDisplay = true
 
-        return onDrop(urls)
+        return onDrop(payloads)
     }
 
     override func concludeDragOperation(_ sender: (any NSDraggingInfo)?) {
         isHighlighted = false
         needsDisplay = true
+    }
+
+    private func readablePayloads(from pasteboard: NSPasteboard) -> [NativeDropPayload] {
+        var payloads: [NativeDropPayload] = []
+
+        for item in pasteboard.pasteboardItems ?? [] {
+            appendPayload(
+                rawText: item.string(forType: .URL),
+                typeIdentifier: NSPasteboard.PasteboardType.URL.rawValue,
+                to: &payloads
+            )
+            appendPayload(
+                rawText: item.string(forType: .fileURL),
+                typeIdentifier: NSPasteboard.PasteboardType.fileURL.rawValue,
+                to: &payloads
+            )
+            appendPayload(
+                rawText: item.string(forType: .string),
+                typeIdentifier: NSPasteboard.PasteboardType.string.rawValue,
+                to: &payloads
+            )
+            appendPayload(
+                rawText: item.string(forType: NSPasteboard.PasteboardType(UTType.plainText.identifier)),
+                typeIdentifier: UTType.plainText.identifier,
+                to: &payloads
+            )
+            appendPayload(
+                rawText: item.string(forType: NSPasteboard.PasteboardType(UTType.utf8PlainText.identifier)),
+                typeIdentifier: UTType.utf8PlainText.identifier,
+                to: &payloads
+            )
+        }
+
+        return payloads
+    }
+
+    private func appendPayload(
+        rawText: String?,
+        typeIdentifier: String,
+        to payloads: inout [NativeDropPayload]
+    ) {
+        guard let rawText, rawText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false else {
+            return
+        }
+
+        let url = URL(string: rawText)
+        let payload = NativeDropPayload(rawText: rawText, url: url, typeIdentifier: typeIdentifier)
+        guard payloads.contains(payload) == false else { return }
+        payloads.append(payload)
     }
 
     // MARK: - Drawing
@@ -114,7 +164,7 @@ class DropTargetView: NSView {
 /// SwiftUI view with custom drop target support.
 struct CustomDropTarget<Content: View>: View {
     let acceptedTypes: [UTType]
-    let onDrop: ([URL]) -> Bool
+    let onDrop: ([NativeDropPayload]) -> Bool
     let onDragEntered: (() -> Void)?
     let onDragExited: (() -> Void)?
     @ViewBuilder let content: () -> Content

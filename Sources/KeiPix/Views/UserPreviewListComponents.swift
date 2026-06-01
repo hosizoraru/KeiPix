@@ -97,9 +97,14 @@ struct CreatorListSearchBar: View {
                 Image(systemName: "magnifyingglass")
                     .foregroundStyle(.secondary)
 
-                TextField(L10n.searchCreatorsInList, text: $creatorSearchText)
-                    .textFieldStyle(.roundedBorder)
-                    .frame(maxWidth: .infinity)
+                NativeSearchField(
+                    text: $creatorSearchText,
+                    placeholder: L10n.searchCreatorsInList,
+                    suggestions: [],
+                    onSubmit: {},
+                    onTextChange: { creatorSearchText = $0 }
+                )
+                .frame(maxWidth: .infinity)
             }
             .frame(maxWidth: 360)
 
@@ -179,6 +184,17 @@ struct CreatorListBulkActionsMenu: View {
     let requestBulkAction: (CreatorBulkAction) -> Void
 
     var body: some View {
+        #if os(macOS)
+        EnhancedMenu(sections: enhancedMenuSections) { item in
+            handleEnhancedMenuItem(item)
+        }
+        .help(L10n.creatorActions)
+        #else
+        swiftUIMenu
+        #endif
+    }
+
+    private var swiftUIMenu: some View {
         Menu {
             Button {
                 checkVisibleFollowVisibility()
@@ -244,6 +260,100 @@ struct CreatorListBulkActionsMenu: View {
         .labelStyle(.iconOnly)
         .help(L10n.creatorActions)
     }
+
+    #if os(macOS)
+    private var enhancedMenuSections: [MenuSection] {
+        [
+            MenuSection(
+                title: L10n.checkFollowVisibility,
+                items: [
+                    MenuItem(
+                        title: L10n.checkFollowVisibility,
+                        icon: menuIcon("checkmark.seal"),
+                        isEnabled: isCheckingFollowVisibility == false && visibleFollowedPreviewsCount > 0,
+                        action: .checkFollowVisibility
+                    )
+                ]
+            ),
+            MenuSection(
+                title: L10n.visibleCreators,
+                items: [
+                    MenuItem(
+                        title: L10n.copyVisibleCreatorLinks,
+                        icon: menuIcon("link"),
+                        isEnabled: visiblePreviewsCount > 0,
+                        action: .copyVisibleCreatorLinks
+                    ),
+                    MenuItem(
+                        title: L10n.copyVisibleCreatorSummary,
+                        icon: menuIcon("doc.text"),
+                        isEnabled: visiblePreviewsCount > 0,
+                        action: .copyVisibleCreatorSummary
+                    )
+                ]
+            ),
+            MenuSection(
+                title: L10n.following,
+                items: [
+                    MenuItem(
+                        title: L10n.followVisiblePublicly,
+                        icon: menuIcon("person.crop.circle.badge.plus"),
+                        isEnabled: isRunningBulkAction == false && bulkActionTargetCount(.followPublic) > 0,
+                        action: .followPublic
+                    ),
+                    MenuItem(
+                        title: L10n.followVisiblePrivately,
+                        icon: menuIcon("lock.circle"),
+                        isEnabled: isRunningBulkAction == false && bulkActionTargetCount(.followPrivate) > 0,
+                        action: .followPrivate
+                    )
+                ]
+            ),
+            MenuSection(
+                title: L10n.creatorActions,
+                items: [
+                    MenuItem(
+                        title: L10n.muteVisibleCreators,
+                        icon: menuIcon("eye.slash"),
+                        isEnabled: isRunningBulkAction == false && bulkActionTargetCount(.mute) > 0,
+                        action: .mute
+                    ),
+                    MenuItem(
+                        title: L10n.unfollowVisibleCreators,
+                        icon: menuIcon("person.crop.circle.badge.minus"),
+                        isEnabled: isRunningBulkAction == false && bulkActionTargetCount(.unfollow) > 0,
+                        action: .unfollow
+                    )
+                ]
+            )
+        ]
+    }
+
+    private func handleEnhancedMenuItem(_ item: MenuItem) {
+        switch item.action {
+        case .checkFollowVisibility:
+            checkVisibleFollowVisibility()
+        case .copyVisibleCreatorLinks:
+            copyVisibleCreatorLinks()
+        case .copyVisibleCreatorSummary:
+            copyVisibleCreatorSummary()
+        case .followPublic:
+            requestBulkAction(.followPublic)
+        case .followPrivate:
+            requestBulkAction(.followPrivate)
+        case .mute:
+            requestBulkAction(.mute)
+        case .unfollow:
+            requestBulkAction(.unfollow)
+        default:
+            break
+        }
+    }
+
+    private func menuIcon(_ systemName: String) -> NSImage? {
+        NSImage(systemSymbolName: systemName, accessibilityDescription: nil)
+    }
+    #endif
 }
 
 struct CreatorPreviewListContent: View {
@@ -278,49 +388,27 @@ struct CreatorPreviewListContent: View {
     /// Pixiv ships in the recommended-users / related-users response.
     let loadCreatorPreviewArtworks: (PixivUser) async throws -> [PixivArtwork]
 
-    /// Column descriptors driven by the user-selected layout mode.
-    /// `.auto` uses an adaptive grid that fills the window; `.single`
-    /// pins to one column so the card can host a horizontally
-    /// scrollable preview shelf; `.twoUp` forces exactly two columns
-    /// regardless of width.
-    private var columns: [GridItem] {
-        switch layoutMode {
-        case .auto:
-            // The previous `minimum: 360, maximum: 520` cap left wide
-            // windows with 100+ pt of gutter on each side. Drop the max
-            // entirely so cards stretch to fill the available width,
-            // and tighten the minimum so dense layouts pack 4 cards in.
-            return [GridItem(.adaptive(minimum: 320), spacing: 14)]
-        case .single:
-            return [GridItem(.flexible(), spacing: 14)]
-        case .twoUp:
-            return [
-                GridItem(.flexible(), spacing: 14),
-                GridItem(.flexible(), spacing: 14)
-            ]
-        }
-    }
-
     var body: some View {
         if mode.requiresSearchKeyword, searchKeyword.isEmpty {
             ContentUnavailableView(L10n.enterSearchKeyword, systemImage: "magnifyingglass")
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else if previews.isEmpty {
             emptyState
-        } else {
+        } else if visiblePreviews.isEmpty {
             ScrollView {
-                Group {
-                    if visiblePreviews.isEmpty {
-                        noMatchingCreators
-                    } else {
-                        creatorGrid
-                    }
-                }
-                .padding(.horizontal, 18)
-                .padding(.top, 14)
-                .padding(.bottom, 20)
+                noMatchingCreators
+                    .padding(.horizontal, 18)
+                    .padding(.top, 14)
+                    .padding(.bottom, 20)
             }
             .scrollEdgeEffectStyle(.soft, for: .top)
+        } else {
+            NativeCreatorPreviewCollectionView(
+                items: creatorCollectionItems,
+                layout: NativeCreatorPreviewCollectionLayout(mode: layoutMode)
+            ) { item in
+                nativeCreatorPreviewContent(for: item)
+            }
         }
     }
 
@@ -377,9 +465,18 @@ struct CreatorPreviewListContent: View {
         }
     }
 
-    private var creatorGrid: some View {
-        LazyVGrid(columns: columns, spacing: 14) {
-            ForEach(visiblePreviews) { preview in
+    private var creatorCollectionItems: [NativeCreatorPreviewCollectionItem] {
+        var items = visiblePreviews.map(NativeCreatorPreviewCollectionItem.preview)
+        if nextURL != nil {
+            items.append(.loadMore)
+        }
+        return items
+    }
+
+    private func nativeCreatorPreviewContent(for item: NativeCreatorPreviewCollectionItem) -> AnyView {
+        switch item {
+        case .preview(let preview):
+            return AnyView(
                 UserPreviewCard(
                     preview: preview,
                     followRestrict: followRestrictsByUserID[preview.user.id],
@@ -403,11 +500,11 @@ struct CreatorPreviewListContent: View {
                         ? { try await loadCreatorPreviewArtworks(preview.user) }
                         : nil
                 )
-            }
-
-            if nextURL != nil {
+            )
+        case .loadMore:
+            return AnyView(
                 CreatorLoadMoreButton(isLoadingMore: isLoadingMore, loadMore: loadMore)
-            }
+            )
         }
     }
 }

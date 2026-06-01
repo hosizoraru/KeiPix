@@ -1,6 +1,6 @@
+import SwiftUI
 #if os(macOS)
 import AppKit
-import SwiftUI
 
 /// NSSearchField wrapper with native IME support and autocomplete.
 ///
@@ -52,6 +52,7 @@ struct SearchFieldNSView: NSViewRepresentable {
         )
     }
 
+    @MainActor
     class Coordinator: NSObject, NSSearchFieldDelegate {
         @Binding var text: String
         let onSubmit: () -> Void
@@ -79,7 +80,7 @@ struct SearchFieldNSView: NSViewRepresentable {
         }
 
         func controlTextDidEndEditing(_ obj: Notification) {
-            guard let searchField = obj.object as? NSSearchField else { return }
+            guard obj.object is NSSearchField else { return }
             let reason = obj.userInfo?["NSFieldEditor"] as? NSTextView
             if reason?.textStorage?.string.isEmpty == false {
                 onSubmit()
@@ -111,6 +112,85 @@ struct SearchFieldNSView: NSViewRepresentable {
         }
     }
 }
+#elseif os(iOS)
+import UIKit
+
+/// UISearchTextField wrapper for iPadOS creator/search surfaces.
+///
+/// This mirrors the macOS NSSearchField bridge so SwiftUI owns the
+/// binding while UIKit owns the native text input, IME, and clear button.
+struct SearchFieldUIView: UIViewRepresentable {
+    @Binding var text: String
+    let placeholder: String
+    let suggestions: [String]
+    let onSubmit: () -> Void
+    let onTextChange: (String) -> Void
+
+    func makeUIView(context: Context) -> UISearchTextField {
+        let searchField = UISearchTextField()
+        searchField.placeholder = placeholder
+        searchField.borderStyle = .roundedRect
+        searchField.returnKeyType = .search
+        searchField.clearButtonMode = .whileEditing
+        searchField.autocorrectionType = .no
+        searchField.autocapitalizationType = .none
+        searchField.delegate = context.coordinator
+        searchField.addTarget(
+            context.coordinator,
+            action: #selector(Coordinator.textDidChange(_:)),
+            for: .editingChanged
+        )
+        context.coordinator.searchField = searchField
+        return searchField
+    }
+
+    func updateUIView(_ searchField: UISearchTextField, context: Context) {
+        if searchField.text != text {
+            searchField.text = text
+        }
+        context.coordinator.suggestions = suggestions
+    }
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(
+            text: $text,
+            onSubmit: onSubmit,
+            onTextChange: onTextChange
+        )
+    }
+
+    @MainActor
+    class Coordinator: NSObject, UITextFieldDelegate {
+        @Binding var text: String
+        let onSubmit: () -> Void
+        let onTextChange: (String) -> Void
+        var suggestions: [String] = []
+        weak var searchField: UISearchTextField?
+
+        init(
+            text: Binding<String>,
+            onSubmit: @escaping () -> Void,
+            onTextChange: @escaping (String) -> Void
+        ) {
+            self._text = text
+            self.onSubmit = onSubmit
+            self.onTextChange = onTextChange
+        }
+
+        @objc func textDidChange(_ sender: UISearchTextField) {
+            let newText = sender.text ?? ""
+            text = newText
+            onTextChange(newText)
+        }
+
+        func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+            onSubmit()
+            textField.resignFirstResponder()
+            return true
+        }
+    }
+}
+#endif
 
 // MARK: - SwiftUI wrapper
 
@@ -123,6 +203,7 @@ struct NativeSearchField: View {
     let onTextChange: (String) -> Void
 
     var body: some View {
+        #if os(macOS)
         SearchFieldNSView(
             text: $text,
             placeholder: placeholder,
@@ -131,6 +212,15 @@ struct NativeSearchField: View {
             onTextChange: onTextChange
         )
         .frame(height: 28)
+        #elseif os(iOS)
+        SearchFieldUIView(
+            text: $text,
+            placeholder: placeholder,
+            suggestions: suggestions,
+            onSubmit: onSubmit,
+            onTextChange: onTextChange
+        )
+        .frame(height: 34)
+        #endif
     }
 }
-#endif

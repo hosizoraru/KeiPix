@@ -25,19 +25,19 @@ struct EnhancedMenuNSView: NSViewRepresentable {
         view.frame = NSRect(x: 0, y: 0, width: 28, height: 28)
 
         context.coordinator.button = button
-        context.coordinator.menu = buildMenu()
+        context.coordinator.menu = buildMenu(target: context.coordinator)
         return view
     }
 
     func updateNSView(_ nsView: NSView, context: Context) {
-        context.coordinator.menu = buildMenu()
+        context.coordinator.menu = buildMenu(target: context.coordinator)
     }
 
     func makeCoordinator() -> Coordinator {
         Coordinator(onItemSelected: onItemSelected)
     }
 
-    private func buildMenu() -> NSMenu {
+    private func buildMenu(target: Coordinator) -> NSMenu {
         let menu = NSMenu()
         menu.autoenablesItems = false
 
@@ -61,7 +61,7 @@ struct EnhancedMenuNSView: NSViewRepresentable {
                     action: #selector(Coordinator.handleItem(_:)),
                     keyEquivalent: item.keyEquivalent
                 )
-                menuItem.target = nil // Will be handled by coordinator
+                menuItem.target = target
                 menuItem.image = item.icon
                 menuItem.isEnabled = item.isEnabled
                 menuItem.representedObject = item
@@ -74,6 +74,7 @@ struct EnhancedMenuNSView: NSViewRepresentable {
         return menu
     }
 
+    @MainActor
     class Coordinator: NSObject {
         let onItemSelected: (MenuItem) -> Void
         var button: NSButton?
@@ -133,6 +134,12 @@ enum MenuAction {
     case bookmark
     case mute
     case delete
+    case checkFollowVisibility
+    case copyVisibleCreatorLinks
+    case copyVisibleCreatorSummary
+    case followPublic
+    case followPrivate
+    case unfollow
 }
 
 // MARK: - SwiftUI wrapper

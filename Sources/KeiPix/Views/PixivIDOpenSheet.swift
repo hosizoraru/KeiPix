@@ -1,4 +1,7 @@
 import SwiftUI
+#if os(macOS)
+import UniformTypeIdentifiers
+#endif
 
 struct PixivIDOpenSheet: View {
     @Bindable var store: KeiPixStore
@@ -42,6 +45,8 @@ struct PixivIDOpenSheet: View {
                     .font(.title3.monospacedDigit())
                     .onSubmit(openID)
 
+                nativeDropTarget
+
                 Text(L10n.pixivIDQuickOpenHint)
                     .font(.caption)
                     .foregroundStyle(.tertiary)
@@ -79,6 +84,36 @@ struct PixivIDOpenSheet: View {
         PixivIDInput.normalizedID(from: rawID)
     }
 
+    @ViewBuilder
+    private var nativeDropTarget: some View {
+        #if os(macOS)
+        CustomDropTarget(
+            acceptedTypes: [.url, .plainText, .utf8PlainText],
+            onDrop: handleNativeDrop,
+            onDragEntered: nil,
+            onDragExited: nil
+        ) {
+            HStack(spacing: 8) {
+                Image(systemName: "link.badge.plus")
+                    .foregroundStyle(.secondary)
+
+                Text(L10n.dropPixivLinkToOpen)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
+                Spacer(minLength: 0)
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 10)
+            .background(.quaternary.opacity(0.35), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+            .overlay {
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .strokeBorder(.quaternary, lineWidth: 1)
+            }
+        }
+        #endif
+    }
+
     private func openID() {
         guard let id = normalizedID else { return }
 
@@ -105,10 +140,26 @@ struct PixivIDOpenSheet: View {
     private func pasteFromClipboard() {
         guard let raw = PasteboardWriter.currentString() else { return }
 
+        _ = applyQuickOpenInput(raw, fallbackToRawText: true)
+    }
+
+    #if os(macOS)
+    private func handleNativeDrop(_ payloads: [NativeDropPayload]) -> Bool {
+        for payload in payloads where applyQuickOpenInput(payload.rawText, fallbackToRawText: false) {
+            return true
+        }
+
+        showStatus(L10n.unsupportedPixivLink)
+        return false
+    }
+    #endif
+
+    @discardableResult
+    private func applyQuickOpenInput(_ raw: String, fallbackToRawText: Bool) -> Bool {
         if let request = PixivIDQuickOpenParser.request(from: raw) {
             target = request.target
             rawID = String(request.id)
-            return
+            return true
         }
 
         if let url = URL(string: raw),
@@ -117,11 +168,11 @@ struct PixivIDOpenSheet: View {
             case .artwork(let id):
                 target = .artwork
                 rawID = String(id)
-                return
+                return true
             case .user(let id):
                 target = .creator
                 rawID = String(id)
-                return
+                return true
             case .tag, .search, .creatorSearch, .pixivisionArticle:
                 break
             }
@@ -132,16 +183,26 @@ struct PixivIDOpenSheet: View {
             case .artwork(let id):
                 target = .artwork
                 rawID = String(id)
-                return
+                return true
             case .user(let id):
                 target = .creator
                 rawID = String(id)
-                return
+                return true
             case .tag, .search, .creatorSearch, .pixivisionArticle:
                 break
             }
         }
 
+        if PixivIDInput.normalizedID(from: raw) != nil {
+            rawID = raw
+            return true
+        }
+
+        guard fallbackToRawText else {
+            return false
+        }
+
         rawID = raw
+        return true
     }
 }
