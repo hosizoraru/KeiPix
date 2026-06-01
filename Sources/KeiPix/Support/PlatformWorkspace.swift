@@ -2,6 +2,8 @@ import Foundation
 import SwiftUI
 #if os(macOS)
 import AppKit
+#elseif os(iOS)
+import UIKit
 #endif
 
 /// Platform-agnostic façade over the OS "open URL" and

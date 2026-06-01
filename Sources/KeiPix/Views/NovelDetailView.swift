@@ -247,7 +247,7 @@ private struct NovelDetailContent: View {
             Spacer(minLength: 0)
         }
         .padding(12)
-        .background(Color(nsColor: .controlBackgroundColor), in: RoundedRectangle(cornerRadius: 10))
+        .background(Color.platformControlBackground, in: RoundedRectangle(cornerRadius: 10))
     }
 
     private func metaItem(systemImage: String, title: String, value: String) -> some View {
@@ -283,7 +283,7 @@ private struct NovelDetailContent: View {
                         .font(.caption)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 3)
-                        .background(Color(nsColor: .controlBackgroundColor), in: Capsule())
+                        .background(Color.platformControlBackground, in: Capsule())
                 }
             }
         }
@@ -310,7 +310,7 @@ private struct NovelDetailContent: View {
                 }
             }
             .padding(10)
-            .background(Color(nsColor: .controlBackgroundColor), in: RoundedRectangle(cornerRadius: 8))
+            .background(Color.platformControlBackground, in: RoundedRectangle(cornerRadius: 8))
         }
     }
 

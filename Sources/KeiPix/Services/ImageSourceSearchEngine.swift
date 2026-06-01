@@ -1,8 +1,5 @@
 import Foundation
-import SwiftUI
-#if os(macOS)
-import AppKit
-#endif
+import CoreGraphics
 
 /// Reverse-image-search engine identifier. Used by the persistence
 /// layer (UserDefaults) and the engine picker UI to track which
@@ -140,7 +137,7 @@ enum Ascii2DClient {
     /// snappy and large illustrations within budget.
     private static func normalizedImageData(_ data: Data) -> Data {
         guard let image = PlatformImage(data: data),
-              let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
+              let cgImage = image.platformCGImage else {
             return data
         }
 
@@ -165,8 +162,7 @@ enum Ascii2DClient {
         context.interpolationQuality = .high
         context.draw(cgImage, in: CGRect(x: 0, y: 0, width: targetWidth, height: targetHeight))
         guard let scaledImage = context.makeImage() else { return data }
-        let representation = NSBitmapImageRep(cgImage: scaledImage)
-        return representation.representation(using: .jpeg, properties: [.compressionFactor: 0.82]) ?? data
+        return PlatformImage.jpegData(from: scaledImage, compressionQuality: 0.82) ?? data
     }
 
     /// Pixiv artwork-ID extraction from Ascii2D HTML. The colour

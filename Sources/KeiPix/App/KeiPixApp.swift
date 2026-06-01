@@ -7,7 +7,9 @@ struct KeiPixApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     #endif
     @Environment(\.openWindow) private var openWindow
+    #if os(macOS)
     @Environment(\.openSettings) private var openSettings
+    #endif
     @FocusedValue(\.gallerySelectionCommandActions) private var gallerySelectionCommandActions
     @State private var store = KeiPixStore()
 
@@ -46,6 +48,7 @@ struct KeiPixApp: App {
                         }
                     }
                 }
+                #if os(macOS)
                 .task {
                     if VisualQALaunchArgument.contains(.settingsWindow)
                         || VisualQALaunchArgument.contains(.runtimeReadiness)
@@ -53,6 +56,7 @@ struct KeiPixApp: App {
                         openSettings()
                     }
                 }
+                #endif
                 .task {
                     if VisualQALaunchArgument.isActive == false {
                         await store.checkForReleaseUpdateIfDue()

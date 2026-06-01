@@ -2,6 +2,8 @@ import PDFKit
 import SwiftUI
 #if os(macOS)
 import AppKit
+#elseif os(iOS)
+import UIKit
 #endif
 
 /// Generates PDF documents and collage images from artwork image files.
@@ -100,8 +102,22 @@ enum BatchExportService {
               let pngData = bitmap.representation(using: .png, properties: [:])
         else { return nil }
         #else
-        // iPadOS: UIGraphicsImageRenderer-based implementation in Phase 5.
-        return nil
+        let size = CGSize(width: finalW, height: finalH)
+        let renderer = UIGraphicsImageRenderer(size: size)
+        let pngData = renderer.pngData { context in
+            PlatformColor.systemBackground.setFill()
+            context.fill(CGRect(origin: .zero, size: size))
+
+            for (index, image) in images.enumerated() {
+                let col = index % cols
+                let row = index / cols
+
+                let x = (CGFloat(col) * (cellW + spacing)) * scale
+                let y = (CGFloat(row) * (cellH + spacing)) * scale
+                let destRect = CGRect(x: x, y: y, width: cellW * scale, height: cellH * scale)
+                image.draw(in: destRect)
+            }
+        }
         #endif
 
         let outputDir = outputDirectory

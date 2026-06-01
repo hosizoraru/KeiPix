@@ -1,4 +1,8 @@
+#if os(macOS)
 import AppKit
+#else
+import UIKit
+#endif
 import Foundation
 import ImageIO
 import UniformTypeIdentifiers
@@ -22,7 +26,7 @@ enum UgoiraGIFExporter {
         CGImageDestinationSetProperties(destination, gifProperties as CFDictionary)
 
         for frame in animation.frames {
-            guard let cgImage = frame.image.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
+            guard let cgImage = frame.image.exportableCGImage else {
                 throw PixivAPIError.invalidResponse
             }
             let frameProperties: [CFString: Any] = [
@@ -36,5 +40,15 @@ enum UgoiraGIFExporter {
         guard CGImageDestinationFinalize(destination) else {
             throw PixivAPIError.invalidResponse
         }
+    }
+}
+
+private extension PlatformImage {
+    var exportableCGImage: CGImage? {
+        #if os(macOS)
+        cgImage(forProposedRect: nil, context: nil, hints: nil)
+        #else
+        cgImage
+        #endif
     }
 }

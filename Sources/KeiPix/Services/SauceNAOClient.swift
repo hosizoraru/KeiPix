@@ -1,8 +1,5 @@
 import Foundation
-import SwiftUI
-#if os(macOS)
-import AppKit
-#endif
+import CoreGraphics
 
 enum SauceNAOClient {
     static func webSearchURL(imageURL: URL) -> URL? {
@@ -50,7 +47,7 @@ enum SauceNAOClient {
 
     private static func normalizedImageData(_ data: Data) -> Data {
         guard let image = PlatformImage(data: data),
-              let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
+              let cgImage = image.platformCGImage else {
             return data
         }
 
@@ -77,8 +74,7 @@ enum SauceNAOClient {
         context.draw(cgImage, in: CGRect(x: 0, y: 0, width: targetWidth, height: targetHeight))
         guard let scaledImage = context.makeImage() else { return data }
 
-        let representation = NSBitmapImageRep(cgImage: scaledImage)
-        return representation.representation(using: .jpeg, properties: [.compressionFactor: 0.82]) ?? data
+        return PlatformImage.jpegData(from: scaledImage, compressionQuality: 0.82) ?? data
     }
 
     private static func pixivArtworkIDs(in html: String) -> [Int] {

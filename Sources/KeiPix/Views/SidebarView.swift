@@ -1,3 +1,4 @@
+#if os(macOS)
 import SwiftUI
 
 struct SidebarView: View {
@@ -252,4 +253,5 @@ private struct AccountModeMenuLabel: View {
         }
     }
 }
+#endif
 #endif

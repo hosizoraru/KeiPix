@@ -114,7 +114,7 @@ struct DownloadedUgoiraViewer: View {
     private var canvas: some View {
         ZStack {
             if let frame = currentFrame {
-                Image(nsImage: frame)
+                frame.swiftUIImage
                     .resizable()
                     .interpolation(.medium)
                     .aspectRatio(contentMode: .fit)

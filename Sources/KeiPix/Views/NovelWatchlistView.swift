@@ -150,7 +150,7 @@ private struct NovelWatchlistCard: View {
             }
         }
         .padding(12)
-        .background(Color(nsColor: .controlBackgroundColor), in: RoundedRectangle(cornerRadius: 12))
+        .background(Color.platformControlBackground, in: RoundedRectangle(cornerRadius: 12))
         .contextMenu {
             if let url = item.pixivURL {
                 Link(L10n.openInPixiv, destination: url)
@@ -171,9 +171,9 @@ private struct NovelWatchlistCard: View {
             ZStack {
                 LinearGradient(
                     colors: [
-                        Color(nsColor: .controlAccentColor).opacity(0.24),
-                        Color(nsColor: .systemTeal).opacity(0.18),
-                        Color(nsColor: .controlBackgroundColor).opacity(0.36)
+                        Color.accentColor.opacity(0.24),
+                        Color.teal.opacity(0.18),
+                        Color.platformControlBackground.opacity(0.36)
                     ],
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing

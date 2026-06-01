@@ -1,4 +1,7 @@
+#if os(macOS)
 import AppKit
+#endif
+import Foundation
 import SwiftUI
 import UniformTypeIdentifiers
 
@@ -262,6 +265,7 @@ struct SavedSearchesView: View {
     }
 
     private func exportSearchLibrary() {
+        #if os(macOS)
         let panel = NSSavePanel()
         panel.title = L10n.exportSearchLibrary
         panel.nameFieldStringValue = "keipix-search-library-\(Self.fileDateFormatter.string(from: Date())).json"
@@ -281,9 +285,13 @@ struct SavedSearchesView: View {
         } catch {
             actionMessage = "\(L10n.unableToExportSearchLibrary): \(error.localizedDescription)"
         }
+        #else
+        actionMessage = L10n.unableToExportSearchLibrary
+        #endif
     }
 
     private func importSearchLibrary() {
+        #if os(macOS)
         let panel = NSOpenPanel()
         panel.title = L10n.importSearchLibrary
         panel.allowedContentTypes = [.json]
@@ -309,6 +317,9 @@ struct SavedSearchesView: View {
         } catch {
             actionMessage = "\(L10n.unableToImportSearchLibrary): \(error.localizedDescription)"
         }
+        #else
+        actionMessage = L10n.unableToImportSearchLibrary
+        #endif
     }
 
     private func dismissActionMessageIfNeeded(_ message: String?) async {

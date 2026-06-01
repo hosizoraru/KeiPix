@@ -1,4 +1,7 @@
+#if os(macOS)
 import AppKit
+#endif
+import Foundation
 import SwiftUI
 import UniformTypeIdentifiers
 
@@ -158,6 +161,7 @@ struct StorageSettingsPage: View {
     /// shape, same naming convention so users recognise the file
     /// at a glance.
     private func exportBackup() {
+        #if os(macOS)
         let archive = store.exportBackupArchive()
         let panel = NSSavePanel()
         panel.title = L10n.exportBackup
@@ -193,9 +197,13 @@ struct StorageSettingsPage: View {
                 "\(L10n.unableToExportBackup): \(error.localizedDescription)"
             )
         }
+        #else
+        coordinator.setActionMessage(L10n.unableToExportBackup)
+        #endif
     }
 
     private func importBackup() {
+        #if os(macOS)
         let panel = NSOpenPanel()
         panel.title = L10n.importBackup
         panel.allowedContentTypes = [.json]
@@ -227,5 +235,8 @@ struct StorageSettingsPage: View {
                 "\(L10n.unableToImportBackup): \(error.localizedDescription)"
             )
         }
+        #else
+        coordinator.setActionMessage(L10n.unableToImportBackup)
+        #endif
     }
 }

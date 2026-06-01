@@ -34,6 +34,7 @@ enum ProxyConfiguration: Equatable, Sendable {
     /// (PAC) path: it requires an extra fetch every connection and
     /// the user-facing UI doesn't expose it.
     var connectionProxyDictionary: [AnyHashable: Any]? {
+        #if os(macOS)
         switch self {
         case .system:
             return nil
@@ -51,6 +52,9 @@ enum ProxyConfiguration: Equatable, Sendable {
         case let .manual(host, port, scheme):
             return scheme.proxyDictionary(host: host, port: port)
         }
+        #else
+        return nil
+        #endif
     }
 }
 
@@ -68,6 +72,7 @@ enum ProxyScheme: String, CaseIterable, Identifiable, Sendable {
     /// as a dictionary so the proxy-configuration builder can compose
     /// it directly.
     func proxyDictionary(host: String, port: Int) -> [AnyHashable: Any] {
+        #if os(macOS)
         switch self {
         case .http:
             return [
@@ -88,6 +93,9 @@ enum ProxyScheme: String, CaseIterable, Identifiable, Sendable {
                 kCFNetworkProxiesSOCKSPort: port
             ]
         }
+        #else
+        return [:]
+        #endif
     }
 }
 

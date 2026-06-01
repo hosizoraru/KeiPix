@@ -40,4 +40,17 @@ extension KeiPixStore {
         return formatter
     }()
 }
+#else
+import Foundation
+
+@MainActor
+extension KeiPixStore {
+    func exportMutedContentToFile() throws -> Bool {
+        false
+    }
+
+    func importMutedContentFromFile() throws -> Bool {
+        false
+    }
+}
 #endif

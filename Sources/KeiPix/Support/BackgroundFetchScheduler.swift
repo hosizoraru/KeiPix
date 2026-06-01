@@ -36,9 +36,10 @@ enum BackgroundFetchScheduler {
     private static func handleAppRefresh(task: BGAppRefreshTask) {
         // Schedule the next refresh immediately
         scheduleNextRefresh()
+        let taskBox = BackgroundAppRefreshTaskBox(task)
 
-        let store = KeiPixStore()
-        let taskTask = Task {
+        let taskTask = Task { @MainActor in
+            let store = KeiPixStore()
             await store.reloadCurrentFeed()
         }
 
@@ -48,8 +49,20 @@ enum BackgroundFetchScheduler {
 
         Task {
             await taskTask.value
-            task.setTaskCompleted(success: true)
+            taskBox.setTaskCompleted(success: true)
         }
+    }
+}
+
+private final class BackgroundAppRefreshTaskBox: @unchecked Sendable {
+    private let task: BGAppRefreshTask
+
+    init(_ task: BGAppRefreshTask) {
+        self.task = task
+    }
+
+    func setTaskCompleted(success: Bool) {
+        task.setTaskCompleted(success: success)
     }
 }
 #endif

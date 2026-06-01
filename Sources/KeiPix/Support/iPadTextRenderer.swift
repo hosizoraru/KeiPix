@@ -1,6 +1,7 @@
 #if os(iOS)
 import UIKit
 import SwiftUI
+import UniformTypeIdentifiers
 
 /// UITextView wrapper for iPadOS novel reader.
 ///
@@ -24,7 +25,6 @@ struct NovelTextUIView: UIViewRepresentable {
         textView.backgroundColor = .clear
         textView.textContainerInset = UIEdgeInsets(top: 8, left: 0, bottom: 8, right: 0)
         textView.textContainer.lineFragmentPadding = 0
-        textView.delegate = context.coordinator
         return textView
     }
 
@@ -36,15 +36,6 @@ struct NovelTextUIView: UIViewRepresentable {
         textView.textColor = textColor
     }
 
-    func makeCoordinator() -> Coordinator {
-        Coordinator()
-    }
-
-    class Coordinator: NSObject, UITextViewDelegate {
-        func textView(_ textView: UITextView, shouldInteractWith URL: URL, in characterRange: NSRange, interaction: UITextItemInteraction) -> Bool {
-            return true
-        }
-    }
 }
 
 /// SwiftUI wrapper for UITextView.
@@ -61,7 +52,7 @@ struct iPadNovelTextView: View {
             textColor: UIColor(theme.foregroundColor),
             isEditable: false
         )
-        .background(UIColor(theme.backgroundColor))
+        .background(theme.backgroundColor)
     }
 
     private var nsFont: UIFont {

@@ -86,7 +86,7 @@ struct UgoiraPlayerView: View {
     @ViewBuilder
     private var currentImage: some View {
         if let frame = currentFrame {
-            Image(nsImage: frame)
+            frame.swiftUIImage
                 .resizable()
                 .interpolation(.medium)
                 .aspectRatio(contentMode: .fit)

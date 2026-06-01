@@ -59,7 +59,7 @@ struct NovelCardView: View {
         .padding(12)
         .background(
             RoundedRectangle(cornerRadius: 10)
-                .fill(isSelected ? Color.accentColor.opacity(0.12) : Color(nsColor: .controlBackgroundColor))
+                .fill(isSelected ? Color.accentColor.opacity(0.12) : Color.platformControlBackground)
         )
         .overlay(
             RoundedRectangle(cornerRadius: 10)
@@ -115,7 +115,7 @@ struct NovelCardView: View {
                     .foregroundStyle(.secondary)
                     .padding(.horizontal, 6)
                     .padding(.vertical, 2)
-                    .background(Color(nsColor: .windowBackgroundColor), in: Capsule())
+                    .background(Color.platformWindowBackground, in: Capsule())
             }
         }
     }
@@ -133,7 +133,7 @@ struct NovelCardView: View {
 
 private extension Color {
     static var separator: Color {
-        Color(nsColor: .separatorColor)
+        Color.platformSeparator
     }
 }
 
@@ -191,7 +191,7 @@ struct NovelGridCardView: View {
         }
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .fill(isSelected ? Color.accentColor.opacity(0.12) : Color(nsColor: .controlBackgroundColor))
+                .fill(isSelected ? Color.accentColor.opacity(0.12) : Color.platformControlBackground)
         )
         .overlay(
             RoundedRectangle(cornerRadius: 12)

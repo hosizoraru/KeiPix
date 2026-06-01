@@ -1,5 +1,7 @@
 import Foundation
+#if os(macOS)
 import CFNetwork
+#endif
 
 struct RuntimeReadinessRow: Identifiable, Hashable {
     let id: String
@@ -72,6 +74,7 @@ struct MutableActionQAItem: Identifiable, Hashable {
 @MainActor
 extension KeiPixStore {
     var systemProxySummary: String {
+        #if os(macOS)
         guard let settings = CFNetworkCopySystemProxySettings()?.takeRetainedValue() as? [String: Any] else {
             return L10n.unknown
         }
@@ -99,6 +102,9 @@ extension KeiPixStore {
             values.append("WPAD")
         }
         return values.isEmpty ? L10n.directConnection : values.joined(separator: " · ")
+        #else
+        return L10n.unknown
+        #endif
     }
 
     func runNetworkDiagnostics() async -> [NetworkDiagnosticResult] {

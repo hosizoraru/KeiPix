@@ -140,6 +140,7 @@ struct SettingsView: View {
     @ViewBuilder
     private var sidebar: some View {
         let categories = coordinator.visibleCategories
+        #if os(macOS)
         List(selection: sidebarSelection) {
             ForEach(categories) { category in
                 Label(category.title, systemImage: category.systemImage)
@@ -154,6 +155,23 @@ struct SettingsView: View {
             prompt: Text(L10n.searchSettings)
         )
         .frame(minWidth: 220, idealWidth: 240)
+        #else
+        List {
+            ForEach(categories) { category in
+                Button {
+                    coordinator.selection = category
+                } label: {
+                    Label(category.title, systemImage: category.systemImage)
+                }
+            }
+        }
+        .listStyle(.sidebar)
+        .navigationTitle(L10n.settings)
+        .searchable(
+            text: $coordinator.searchText,
+            prompt: Text(L10n.searchSettings)
+        )
+        #endif
     }
 
     @ViewBuilder

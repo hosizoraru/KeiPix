@@ -225,4 +225,50 @@ struct ContentView: View {
         }
     }
 }
+
+private struct SearchSuggestionRow: View {
+    let tag: PixivTag
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "tag")
+                .foregroundStyle(.secondary)
+                .frame(width: 16)
+
+            VStack(alignment: .leading, spacing: 1) {
+                Text(tag.name)
+                    .lineLimit(1)
+
+                if let translatedName = tag.translatedName, translatedName.isEmpty == false {
+                    Text(translatedName)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                }
+            }
+        }
+    }
+}
+
+private struct SearchKeywordSuggestionRow: View {
+    let keyword: String
+    let isSaved: Bool
+
+    var body: some View {
+        Label {
+            Text(keyword)
+                .lineLimit(1)
+        } icon: {
+            Image(systemName: isSaved ? "star.fill" : "clock.arrow.circlepath")
+                .foregroundStyle(.secondary)
+                .frame(width: 16)
+        }
+    }
+}
+
+private extension Array where Element == String {
+    func containsCaseInsensitive(_ value: String) -> Bool {
+        contains { $0.localizedCaseInsensitiveCompare(value) == .orderedSame }
+    }
+}
 #endif

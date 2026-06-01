@@ -515,9 +515,9 @@ private struct MangaWatchlistCard: View {
             ZStack {
                 LinearGradient(
                     colors: [
-                        Color(nsColor: .controlAccentColor).opacity(0.24),
-                        Color(nsColor: .systemMint).opacity(0.18),
-                        Color(nsColor: .controlBackgroundColor).opacity(0.36)
+                        Color.accentColor.opacity(0.24),
+                        Color.mint.opacity(0.18),
+                        Color.platformControlBackground.opacity(0.36)
                     ],
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing

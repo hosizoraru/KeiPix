@@ -51,24 +51,9 @@ struct LoginSheetView: View {
     }
 }
 
-private struct PixivLoginWebView: NSViewRepresentable {
+private struct PixivLoginWebView {
     let url: URL
     let onCode: (String) -> Void
-
-    func makeCoordinator() -> Coordinator {
-        Coordinator(onCode: onCode)
-    }
-
-    func makeNSView(context: Context) -> WKWebView {
-        let configuration = WKWebViewConfiguration()
-        configuration.websiteDataStore = .nonPersistent()
-        let webView = WKWebView(frame: .zero, configuration: configuration)
-        webView.navigationDelegate = context.coordinator
-        webView.load(URLRequest(url: url))
-        return webView
-    }
-
-    func updateNSView(_ webView: WKWebView, context: Context) {}
 
     final class Coordinator: NSObject, WKNavigationDelegate {
         let onCode: (String) -> Void
@@ -112,3 +97,39 @@ private struct PixivLoginWebView: NSViewRepresentable {
         }
     }
 }
+
+#if os(macOS)
+extension PixivLoginWebView: NSViewRepresentable {
+    func makeCoordinator() -> Coordinator {
+        Coordinator(onCode: onCode)
+    }
+
+    func makeNSView(context: Context) -> WKWebView {
+        let configuration = WKWebViewConfiguration()
+        configuration.websiteDataStore = .nonPersistent()
+        let webView = WKWebView(frame: .zero, configuration: configuration)
+        webView.navigationDelegate = context.coordinator
+        webView.load(URLRequest(url: url))
+        return webView
+    }
+
+    func updateNSView(_ webView: WKWebView, context: Context) {}
+}
+#elseif os(iOS)
+extension PixivLoginWebView: UIViewRepresentable {
+    func makeCoordinator() -> Coordinator {
+        Coordinator(onCode: onCode)
+    }
+
+    func makeUIView(context: Context) -> WKWebView {
+        let configuration = WKWebViewConfiguration()
+        configuration.websiteDataStore = .nonPersistent()
+        let webView = WKWebView(frame: .zero, configuration: configuration)
+        webView.navigationDelegate = context.coordinator
+        webView.load(URLRequest(url: url))
+        return webView
+    }
+
+    func updateUIView(_ webView: WKWebView, context: Context) {}
+}
+#endif

@@ -26,8 +26,7 @@ struct DownloadActivityAttributes: ActivityAttributes {
 }
 
 /// Manages Live Activities for download progress.
-@MainActor
-final class LiveActivityManager {
+final class LiveActivityManager: @unchecked Sendable {
     static let shared = LiveActivityManager()
 
     private var currentActivity: Activity<DownloadActivityAttributes>?
