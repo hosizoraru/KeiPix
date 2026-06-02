@@ -1,0 +1,65 @@
+name: Feature Request
+description: Propose a KeiPix improvement or new workflow.
+title: "feat: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        KeiPix prefers AppKit/UIKit for hot paths and SwiftUI for state/composition glue. Please describe the workflow before the implementation idea.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or workflow
+      description: What user workflow is currently painful, missing, slow or confusing?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior
+      description: Describe the visible result, not only the internal implementation.
+    validations:
+      required: true
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      options:
+        - macOS primary
+        - iPadOS source route
+        - Both
+        - Documentation / QA only
+    validations:
+      required: true
+  - type: dropdown
+    id: ui_layer
+    attributes:
+      label: Likely UI ownership
+      options:
+        - AppKit/UIKit hot path
+        - SwiftUI shell/composition
+        - Service/model/store only
+        - Unsure
+  - type: textarea
+    id: validation
+    attributes:
+      label: Validation ideas
+      description: Which tests, Runtime Readiness rows, visual QA surfaces or manual checks would prove this works?
+      placeholder: |
+        swift test --filter NativeBoundaryTests
+        ./script/build_and_run.sh --visual-qa-...
+  - type: textarea
+    id: risks
+    attributes:
+      label: Risks and privacy/write implications
+      description: Mention remote writes, token handling, content safety, performance, licensing or rollback concerns.
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      options:
+        - label: This request does not require copying source from Pixez, Pixes or another reference client.
+          required: true
+        - label: I noted whether this touches remote Pixiv writes, credentials or sensitive content.
+          required: true

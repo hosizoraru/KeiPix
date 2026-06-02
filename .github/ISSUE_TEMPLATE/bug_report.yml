@@ -1,0 +1,93 @@
+name: Bug Report
+description: Report a reproducible KeiPix issue.
+title: "fix: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug. Please remove secrets from logs and screenshots before posting.
+  - type: input
+    id: version
+    attributes:
+      label: KeiPix version or commit
+      description: Use a tag, commit hash, or "master at <date>".
+      placeholder: "master @ 1a2b3c4"
+    validations:
+      required: true
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      options:
+        - macOS 26+
+        - iPadOS 26+ source route
+        - CI / GitHub Actions
+        - Documentation
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: Include macOS/iPadOS, Xcode, Swift toolchain and device if relevant.
+      placeholder: "macOS 26.0, Xcode 26.3, Swift 6.2"
+  - type: input
+    id: surface
+    attributes:
+      label: Surface or route
+      description: Name the visible area or code path.
+      placeholder: "gallery masonry, artwork reader, download queue, settings, Pixivision"
+    validations:
+      required: true
+  - type: dropdown
+    id: account_mode
+    attributes:
+      label: Account mode
+      options:
+        - Visual QA Sample
+        - Guest preview
+        - Real Pixiv account
+        - Not account-related
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Keep it deterministic. Include launch flags if used.
+      placeholder: |
+        1. Run ./script/build_and_run.sh --visual-qa-gallery-three-column
+        2. Open artwork detail
+        3. Observe...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: Add screenshots, logs, manifest paths or command output. Do not include tokens, cookies or private account data.
+      placeholder: |
+        swift test --filter NativeBoundaryTests
+        artifacts/visual-qa/<timestamp>/gallery-three-column.md
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      options:
+        - label: I removed Pixiv tokens, cookies, request headers and private account data from the report.
+          required: true
+        - label: I checked the README and docs for an existing explanation.
+          required: true
+        - label: I included visual QA evidence when the issue is visible UI behavior.
+          required: false

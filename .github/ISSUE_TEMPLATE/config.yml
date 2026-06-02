@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Documentation
+    url: https://github.com/hosizoraru/KeiPix/tree/master/docs
+    about: Read the architecture, build, QA, safety and contributing docs first.
+  - name: Security policy
+    url: https://github.com/hosizoraru/KeiPix/security/policy
+    about: Report token, privacy, sandbox or vulnerability issues privately when possible.

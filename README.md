@@ -102,7 +102,7 @@ UI 改动需要补对应视觉 QA surface。截图和 manifest 输出在 `artifa
 
 欢迎提 issue 和 PR。请优先说明目标 surface、平台、期望行为、实际行为和验证方式。UI/阅读器/画廊相关改动请附 `swift test` 与视觉 QA 证据；远端写入路径需要说明可见入口、授权方式和回滚/撤销方式。
 
-完整贡献指南见 [docs/contributing.md](docs/contributing.md)。GitHub issue / PR 模板会复用同一套信息：环境、目标 surface、验证证据和回滚风险。
+完整贡献指南见 [CONTRIBUTING.md](CONTRIBUTING.md) 与 [docs/contributing.md](docs/contributing.md)。GitHub issue / PR 模板会复用同一套信息：环境、目标 surface、验证证据和回滚风险。
 
 ## License
 
