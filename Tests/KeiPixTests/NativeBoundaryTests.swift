@@ -87,6 +87,8 @@ struct NativeBoundaryTests {
         #expect(galleryView.contains("usesNativeGalleryCollection"))
         #expect(galleryView.contains("usesArtworkMasonry"))
         #expect(galleryView.contains("NativeGalleryCollectionView("))
+        #expect(galleryView.contains("nativeHighlightedArtworkIDs"))
+        #expect(galleryView.contains("nativeGalleryContentReloadToken"))
         #expect(nativeCollection.contains("NativeGalleryMasonryNSCollectionViewLayout"))
         #expect(nativeCollection.contains("NativeGalleryMasonryUICollectionViewLayout"))
         #expect(nativeCollection.contains("ArtworkMasonryPlacement.resolve"))
@@ -95,6 +97,13 @@ struct NativeBoundaryTests {
         #expect(nativeCollection.contains("NSHostingView"))
         #expect(nativeCollection.contains("UIHostingController"))
         #expect(nativeCollection.contains("UIRefreshControl"))
+        #expect(nativeCollection.contains("lastSnapshotItemIDs"))
+        #expect(nativeCollection.contains("lastLayoutFingerprint"))
+        #expect(nativeCollection.contains("reloadHighlightDeltaIfNeeded"))
+        #expect(nativeCollection.contains("reconfigureVisibleItems"))
+        #expect(nativeCollection.contains("symmetricDifference"))
+        #expect(nativeCollection.contains("reloadItems(at: collectionView.indexPathsForVisibleItems())") == false)
+        #expect(nativeCollection.contains("reloadItems(at: collectionView.indexPathsForVisibleItems)") == false)
     }
 
     @Test("Novel reader text pages use native TextKit bridges")

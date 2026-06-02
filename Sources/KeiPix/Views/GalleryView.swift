@@ -225,7 +225,9 @@ private struct GalleryFeedView: View {
             NativeGalleryCollectionView(
                 items: nativeGalleryItems,
                 layout: nativeGalleryLayout,
+                highlightedArtworkIDs: nativeHighlightedArtworkIDs,
                 scrollToArtworkID: store.selectedArtwork?.id,
+                contentReloadToken: nativeGalleryContentReloadToken,
                 onRefresh: {
                     await store.reloadCurrentFeed()
                 }
@@ -287,6 +289,51 @@ private struct GalleryFeedView: View {
             items.append(.loadMore)
         }
         return items
+    }
+
+    private var nativeHighlightedArtworkIDs: Set<Int> {
+        var ids = artworkSelection.selectedIDs
+        if let selectedArtworkID = store.selectedArtwork?.id {
+            ids.insert(selectedArtworkID)
+        }
+        return ids
+    }
+
+    private var nativeGalleryContentReloadToken: Int {
+        var hasher = Hasher()
+        hasher.combine(store.galleryLayoutMode.rawValue)
+        hasher.combine(store.showContentBadges)
+        hasher.combine(store.maskSensitivePreviews)
+        hasher.combine(store.feedPreviewImageQualityTier.rawValue)
+        hasher.combine(store.emphasizeFollowingArtists)
+        hasher.combine(store.isLoadingMore)
+        hasher.combine(store.isLoadingSearchPopularPreview)
+        hasher.combine(store.activeFeedSnapshotRestoration)
+        for artwork in store.searchPopularPreviewArtworks {
+            hashNativeGalleryArtworkContent(artwork, into: &hasher)
+        }
+        for item in nativeGalleryItems {
+            hashNativeGalleryItemContent(item, into: &hasher)
+        }
+        return hasher.finalize()
+    }
+
+    private func hashNativeGalleryItemContent(
+        _ item: NativeGalleryCollectionItem,
+        into hasher: inout Hasher
+    ) {
+        hasher.combine(item.id)
+        guard case .artwork(let artwork) = item else { return }
+        hashNativeGalleryArtworkContent(artwork, into: &hasher)
+    }
+
+    private func hashNativeGalleryArtworkContent(
+        _ artwork: PixivArtwork,
+        into hasher: inout Hasher
+    ) {
+        hasher.combine(artwork)
+        hasher.combine(store.downloads.downloadState(for: artwork.id).rawValue)
+        hasher.combine(store.downloads.downloadedImageURL(artworkID: artwork.id, pageIndex: 0)?.absoluteString)
     }
 
     private var shouldShowPopularPreview: Bool {
