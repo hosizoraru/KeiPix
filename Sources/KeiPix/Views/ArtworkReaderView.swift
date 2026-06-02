@@ -318,31 +318,6 @@ private struct ArtworkSinglePageReader: View {
     }
 }
 
-private struct SinglePageReaderViewportLayout: Layout {
-    let presentation: ReaderPagePresentation
-
-    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
-        let width = resolvedWidth(from: proposal)
-        return CGSize(width: width, height: presentation.singlePageHeight(for: width))
-    }
-
-    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
-        for subview in subviews {
-            subview.place(
-                at: bounds.origin,
-                proposal: ProposedViewSize(width: bounds.width, height: bounds.height)
-            )
-        }
-    }
-
-    private func resolvedWidth(from proposal: ProposedViewSize) -> CGFloat {
-        guard let width = proposal.width, width.isFinite, width > 0 else {
-            return 640
-        }
-        return width
-    }
-}
-
 private struct ArtworkContinuousReader: View {
     let artwork: PixivArtwork
     @Bindable var store: KeiPixStore
@@ -421,7 +396,10 @@ private struct ArtworkDoublePageReader: View {
     let onImageLoaded: (PlatformImage, Int) -> Void
 
     var body: some View {
-        GeometryReader { _ in
+        DoublePageReaderViewportLayout(
+            leftPresentation: presentationLeft,
+            rightPresentation: pageIndex + 1 < pageCount ? presentationRight : nil
+        ) {
             HStack(spacing: 0) {
                 // Left page
                 pageView(index: pageIndex)
@@ -455,7 +433,6 @@ private struct ArtworkDoublePageReader: View {
             .contentShape(Rectangle())
         }
         .frame(maxWidth: .infinity)
-        .frame(minHeight: 300)
         .background(.quaternary)
         .backgroundExtensionEffect()
     }

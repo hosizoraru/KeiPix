@@ -24,10 +24,10 @@ struct UgoiraPlayerView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            canvas
+            SinglePageReaderViewportLayout(presentation: canvasPresentation) {
+                canvas
+            }
                 .frame(maxWidth: .infinity)
-                .frame(minHeight: 260)
-                .frame(maxHeight: maxCanvasHeight)
                 .background(.quaternary)
                 .backgroundExtensionEffect()
 
@@ -109,12 +109,12 @@ struct UgoiraPlayerView: View {
         return animation.frames[player.currentFrameIndex].image
     }
 
-    private var maxCanvasHeight: CGFloat {
+    private var canvasPresentation: ReaderPagePresentation {
         ReaderPagePresentation(
             pageIndex: 0,
             aspectRatio: nil,
             fallbackAspectRatio: artwork.aspectRatio
-        ).singlePageMaxHeight()
+        )
     }
 
     private func errorOverlay(_ message: String) -> some View {

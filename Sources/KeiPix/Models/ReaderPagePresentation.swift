@@ -16,6 +16,7 @@ struct ReaderPagePresentation {
 
     static let fallbackAspectRatio: CGFloat = 0.75
     static let singlePageMinHeight: CGFloat = 260
+    static let doublePageMinHeight: CGFloat = 300
 
     let pageIndex: Int
     let aspectRatio: CGFloat
@@ -68,6 +69,20 @@ struct ReaderPagePresentation {
         }
         let naturalHeight = availableWidth / max(aspectRatio, 0.1)
         return min(max(naturalHeight, Self.singlePageMinHeight), singlePageMaxHeight())
+    }
+
+    func doublePageHeight(for availableWidth: CGFloat, pairedWith pairedPresentation: ReaderPagePresentation?) -> CGFloat {
+        guard availableWidth.isFinite, availableWidth > 0 else {
+            return Self.doublePageMinHeight
+        }
+        let pageWidth = max((availableWidth - 1) / 2, 1)
+        let pairedAspectRatio = pairedPresentation?.aspectRatio ?? aspectRatio
+        let naturalHeight = max(
+            pageWidth / max(aspectRatio, 0.1),
+            pageWidth / max(pairedAspectRatio, 0.1)
+        )
+        let maxHeight = max(singlePageMaxHeight(), pairedPresentation?.singlePageMaxHeight() ?? singlePageMaxHeight())
+        return min(max(naturalHeight, Self.doublePageMinHeight), maxHeight)
     }
 
     func continuousWidthFraction() -> CGFloat {

@@ -126,6 +126,27 @@ struct NativeBoundaryTests {
         #expect(nativeText.contains("NativeNovelTextAttributedStringBuilder"))
     }
 
+    @Test("Artwork reader native scroll viewports keep SwiftUI height stable")
+    func artworkReaderNativeScrollViewportsKeepHeightStable() throws {
+        let root = try packageRoot()
+        let readerView = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/ArtworkReaderView.swift"),
+            encoding: .utf8
+        )
+        let viewportLayout = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Support/ReaderPageViewportLayout.swift"),
+            encoding: .utf8
+        )
+
+        #expect(readerView.contains("SinglePageReaderViewportLayout(presentation: presentation)"))
+        #expect(readerView.contains("DoublePageReaderViewportLayout("))
+        #expect(readerView.contains("GeometryReader { _ in") == false)
+        #expect(viewportLayout.contains("struct SinglePageReaderViewportLayout: Layout"))
+        #expect(viewportLayout.contains("struct DoublePageReaderViewportLayout: Layout"))
+        #expect(viewportLayout.contains("singlePageHeight(for: width)"))
+        #expect(viewportLayout.contains("doublePageHeight(for: width, pairedWith: rightPresentation)"))
+    }
+
     @Test("Download queue uses a native list container")
     func downloadQueueUsesNativeListContainer() throws {
         let root = try packageRoot()
