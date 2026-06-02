@@ -1,6 +1,6 @@
 # Quality Assurance
 
-KeiPix 的非小说面通过三层证据支撑发布信心：单元测试（SwiftPM）、Runtime Readiness 矩阵（应用内）、视觉 QA（独立 launch mode + 真实窗口截图 + manifest）。本页梳理日常工作流。
+KeiPix 通过三层证据支撑发布信心：单元测试（SwiftPM）、Runtime Readiness 矩阵（应用内）、视觉 QA（独立 launch mode + 真实窗口截图 + manifest）。本页梳理日常工作流。
 
 ## 单元测试
 
@@ -9,9 +9,9 @@ swift test
 swift test --filter <TestSuiteName>
 ```
 
-测试目录 `Tests/KeiPixTests` 共 20 个文件，覆盖：
+当前测试目录 `Tests/KeiPixTests` 共 51 个 Swift 文件；最近一次完整本地基线为 **289 个测试 / 51 个测试套件**。主要覆盖：
 
-- `NativeBoundaryTests` — 强制原生 SwiftUI 路线，禁止 GPL / Flutter / Dart / Kotlin 引入
+- `NativeBoundaryTests` — 强制 AppKit/UIKit 优先、SwiftUI 辅助的 native bridge 边界，禁止 Flutter / Dart / Kotlin / Gradle 参考项目源码进入主源码
 - `RuntimeReadinessTests` — 矩阵模型、持久化、读模式诊断
 - `VisualQAEvidenceTests` — 视觉 QA manifest 模型
 - `BatchBookmarkTests`、`GallerySelectionTests` — 选区与批量动作
@@ -24,7 +24,8 @@ swift test --filter <TestSuiteName>
 - `FeedbackReportTests` — 举报 / 反馈摘要
 - `MangaWatchlistProgressTests`、`ArtworkSeriesPresentationTests`、`ArtworkReadingModeTests` — 漫画与阅读相关
 - `PixivIDOpenTests`、`PixivisionArticleLinkAuditTests` — URL 路由覆盖与活检
-- `ArtworkDetailStateTests` — 详情面板折叠持久化
+- `ArtworkDetailStateTests`、`ReaderPagePresentationTests`、`ReaderWindowRegistryTests` — 详情、阅读模式和阅读窗口状态
+- `PlatformAbstractionTests`、`KeiPixBackupArchiveTests`、`ReleaseUpdateCheckerTests`、`KeyboardShortcutCatalogTests` — 平台抽象、备份、更新和快捷键模型
 
 ## Runtime Readiness 矩阵
 
@@ -60,10 +61,11 @@ swift test --filter <TestSuiteName>
 
 ### 已落地的 launch mode
 
+当前 `VisualQALaunchArgument` 定义 19 个隔离 launch flags：
+
 | Surface | 旗标 |
 | --- | --- |
-| Cached feed restoration | `--visual-qa-cached-feed` |
-| Discovery dashboard | （默认 `--verify`） |
+| Cached feed restoration / minimal verify | `--visual-qa-cached-feed`（`--verify` 也会进入该 surface） |
 | Gallery — auto / 2 列 / 3 列 / 紧凑 | `--visual-qa-gallery-auto` / `--visual-qa-gallery-two-column` / `--visual-qa-gallery-three-column` / `--visual-qa-gallery-compact` |
 | Ranking | `--visual-qa-ranking` |
 | Manga watchlist | `--visual-qa-manga-watchlist` |
@@ -79,7 +81,8 @@ swift test --filter <TestSuiteName>
 | Sharing templates | `--visual-qa-sharing-templates` |
 | Pixiv link drop | `--visual-qa-pixiv-link-drop` |
 | Pixiv ID open | `--visual-qa-pixiv-id-open` |
-| Batch bookmark preview | （`./script/capture_visual_qa.sh batch-bookmark-preview`） |
+
+`batch-bookmark-preview` 目前作为 capture helper surface 记录在历史证据里，但不是 `VisualQALaunchArgument` 的独立命令行旗标。
 
 ### 截图脚本说明
 
@@ -123,7 +126,7 @@ swift test --filter <TestSuiteName>
 在以下情境**必须**重抓相关 surface 的视觉 QA：
 
 - 任一画廊 / 阅读器 / 设置 / Runtime Readiness 的视图布局有变更
-- 视图新增 / 删除 / 重命名 SwiftUI 视图文件
+- 视图新增 / 删除 / 重命名，或 native bridge 的尺寸/滚动/selection 行为有变更
 - Localizable.xcstrings 中相关文案改动
 - API 路径或解析逻辑改动到 surface 上的可见字段
 - 新增 surface（按上面流程登记 manifest）

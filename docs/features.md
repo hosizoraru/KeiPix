@@ -1,6 +1,6 @@
 # Features
 
-按流程展开的非小说功能矩阵。每条线的完成度与最近一次证据时间戳来自 [`readme/NON_NOVEL_GAP_AUDIT_2026-05-25.md`](../readme/NON_NOVEL_GAP_AUDIT_2026-05-25.md)；本页只做精炼。小说面相关流程**继续延后**，待非小说面稳定再启动。
+按流程展开的功能矩阵。本页是当前实现的精炼入口；更早的完成度表和时间戳保留在 [`readme/NON_NOVEL_GAP_AUDIT_2026-05-25.md`](../readme/NON_NOVEL_GAP_AUDIT_2026-05-25.md) 与 [`readme/PROGRESS.md`](../readme/PROGRESS.md)。UI 路线以 AppKit/UIKit 原生热路径为主，SwiftUI 作为状态和组合外壳。
 
 ## 账户与登录
 
@@ -13,17 +13,19 @@
 
 ## 发现入口
 
-- 默认路由是原生 Discover 仪表盘，把所有非首页侧边栏入口聚合成 SwiftUI 命令中心
+- 默认路由是 Discover 仪表盘，把所有非首页侧边栏入口聚合成 SwiftUI 命令中心
 - 各分区显示本地计数：保存搜索、历史、置顶作者、漫画追更、下载、Pixivision 收藏
 - 主 feed：推荐插画 / 推荐漫画 / 最新作品 / 排行榜 / 关注更新 / 收藏 / 标签搜索 / Pixivision
 
 ## 画廊与卡片
 
-- 自定义 `MasonryLayout` SwiftUI Layout，4 档密度（auto / 两列 / 三列 / 紧凑）
-- 三列固定模式按真实账号宽高比分布做了密集化：常规 / 常宽 / 常全景（≤ 3.2）单列；真正超宽（≥ 3.4）开始跨列；ultra-wide（≥ 4.0）整行
+- 原生 collection 容器：masonry / compact / list feed 通过 `NativeGalleryCollectionView` 接入 `NSCollectionView` / `UICollectionView`
+- 4 档密度（auto / 两列 / 三列 / 紧凑）共享 `ArtworkMasonryPresentation` 与 placement 规则，原生 layout 负责复用、滚动和 diffable snapshot
+- 三列固定模式按真实账号宽高比分布做了密集化：常规 / 常宽 / 常全景（<= 3.2）单列；真正超宽（>= 3.4）开始跨列；ultra-wide（>= 4.0）整行
 - 卡片角标：AI / R-18 / R-18G / ugoira / 多 P / 已静音
 - 选区：⌘-click 多选、⌘A 全选、⇧⌘A 取消、画廊菜单 / Artwork 菜单可批量复制 / 下载 / 收藏 / 屏蔽
 - 已加载 feed 与选中子集都支持批量收藏预览（含跳过已收藏）
+- selection highlight 与内容 snapshot 分离，打开详情时不会触发整组瀑布流重排
 
 ## 作品详情
 
@@ -36,13 +38,16 @@
 ## 阅读器
 
 - 详情内嵌阅读器 + 独立阅读器窗口（共享设置）
-- 三种模式：连续 / 单页 / 索引；按作品类型保存默认值（漫画 vs 普通插画）
-- 触控板手势：滑页、双指放大、智能 zoom、键盘翻页
+- 阅读模式：连续 / 单页 / 双页 / 索引；按作品类型保存默认值（漫画 vs 普通插画）
+- 单 P 作品会从过期双页偏好自动回落到单页，避免一页内容被强制放进双页布局
+- 原生图片视口：macOS 使用 `NSScrollView`，iPadOS 使用 `UIScrollView`，SwiftUI 通过 `ReaderPageViewportLayout` 保持稳定高度
+- 触控板/触摸手势：滑页、双指放大、智能 zoom、键盘翻页
 - 全屏专注预设、跳页面板、按作品续读
 - 下载到本地的作品有独立本地阅读器，同样保留页码续读
 
 ## 下载
 
+- 原生队列容器：macOS 使用 `NSTableView`，iPadOS 使用 `UICollectionView`
 - 队列：并发任务、过滤 / 搜索 / 排序、源页范围下载、模板命名占位符
 - 失败项一键全部重试 + 退避调度，避免瞬时压满连接
 - 下载完成可触发自动收藏（按 Settings 开关）

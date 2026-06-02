@@ -51,8 +51,8 @@
 **Rationale**:
 - Single codebase for both platforms
 - Platform-specific code isolated in abstraction files
-- Gradual migration from AppKit to SwiftUI
-- iPadOS support without separate codebase
+- AppKit/UIKit hot paths can live beside SwiftUI shell code without leaking platform APIs everywhere
+- iPadOS support can grow without a separate codebase, while still requiring a dedicated target and validation before release
 
 **Consequences**: `PlatformTypes`, `PlatformWorkspace`, `PlatformFilePicker`, `PasteboardWriter`.
 
@@ -64,15 +64,16 @@
 
 **Context**: SwiftUI has limitations for complex UI (text rendering, gestures, image viewing).
 
-**Decision**: Use AppKit/UIKit wrappers for performance-critical components.
+**Decision**: Make AppKit/UIKit the default owner for performance-critical components, with SwiftUI retained as state/composition glue.
 
 **Rationale**:
 - SwiftUI `Text` can't handle rich text efficiently
 - SwiftUI gestures lack fine control for trackpad
 - `NSScrollView` has better zoom/pan than `scaleEffect`
 - `NSCollectionView` has better virtualization than `LazyVStack`
+- Native menus, drag/drop, search fields and responder-chain integration avoid reimplementing platform behavior in SwiftUI
 
-**Consequences**: `NovelTextNSView`, `ImageScrollView`, `SearchFieldNSView`, `TrackpadEventBridge`.
+**Consequences**: `NativeGalleryCollectionView`, `NativeNovelTextPageView`, `ImageScrollView`, `NativeDownloadQueueListView`, `SearchFieldNSView`, `EnhancedMenuNSView`, `DragDropNSView`, `TrackpadEventBridge`.
 
 ---
 

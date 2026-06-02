@@ -1,101 +1,116 @@
 # Architecture
 
-KeiPix 整体是一款 SwiftPM 单 target 的 macOS 应用，UI 全部基于 SwiftUI，状态聚合在一个 `@MainActor` 的 `KeiPixStore` 上，并通过若干扩展文件按领域切分。AppKit / WebKit 仅以最窄边界出现：触控板事件桥接、窗口截图保护、Pixivision 文章 WebView、URL 拖放接收。
+KeiPix 是 SwiftPM 单 executable target 的原生 Apple 平台客户端。当前主平台是 macOS 26+；`Package.swift` 同时声明 iOS 26，用于保留同源码 iPadOS 适配路线。整体 UI 架构已经调整为 **AppKit/UIKit 优先、SwiftUI 辅助**：平台热路径下沉到原生 view，SwiftUI 负责应用外壳、状态绑定、轻量组合与设置类 surface。
 
-## 源码目录
+## Source Layout
 
-```
+```text
 Sources/KeiPix/
-├── App/             # SwiftUI App 入口、AppDelegate、URL scheme 路由
-├── Models/          # Pixiv API 模型、本地 UI 模型、QA / 可视化 QA 模型
-├── Services/        # PixivAPI、PixivSessionStore、ImagePipeline、Ugoira 解码与导出、SauceNAO
-├── Stores/          # KeiPixStore 主体 + 按领域切分的 extension
-│   ├── KeiPixStore.swift                       # 主状态、feed/route 调度
-│   ├── KeiPixStore+Accounts.swift              # 登录 / 切号 / token 健康检查
-│   ├── KeiPixStore+ArtworkActions.swift        # 收藏 / 关注 / 分享
-│   ├── KeiPixStore+ArtworkDetailState.swift    # 详情面板折叠状态持久化
-│   ├── KeiPixStore+CopyTemplates.swift         # 用户自定义复制模板
-│   ├── KeiPixStore+CreatorCollections.swift    # 本地置顶作者集合
-│   ├── KeiPixStore+DangerActions.swift         # 危险动作授权（mute 上传等）
-│   ├── KeiPixStore+FeedSnapshots.swift         # 离线缓存快照
-│   ├── KeiPixStore+History.swift               # 浏览 / 搜索 / 反向图历史
-│   ├── KeiPixStore+ImageSourceSearch.swift     # SauceNAO 反查
-│   ├── KeiPixStore+MutedContent.swift          # 屏蔽逻辑 + Pixiv 同步
-│   ├── KeiPixStore+MutedContentFiles.swift     # 导入导出
-│   ├── KeiPixStore+NonNovelQA.swift            # 非小说 QA 矩阵执行
-│   ├── KeiPixStore+Preferences.swift           # 用户偏好
-│   ├── KeiPixStore+SavedSearches.swift         # 搜索保存与导入导出
-│   ├── KeiPixStore+Social.swift                # 评论 / 系列 / 列表 API 封装
-│   ├── KeiPixStore+SpotlightLibrary.swift      # Pixivision 收藏与历史
-│   ├── ArtworkDownloadStore.swift              # 下载队列状态机
-│   └── ArtworkDownloadStore+Queue.swift        # 队列动作
-├── Support/         # 跨视图复用工具：Masonry / Glass / Trackpad / 链接解析 / L10n / 视觉 QA 启动参数等
-├── Views/           # 所有 SwiftUI 视图（按 surface 拆分单文件）
-└── Resources/       # Localizable.xcstrings（XCStringsBuilder 插件构建期编译成各 .lproj/Localizable.strings）
+├── App/             # App entry, AppDelegate, dock/menu/service wiring
+├── Intents/         # AppIntents and Shortcuts
+├── Models/          # Pixiv API models, route models, reader/QA models
+├── Services/        # PixivAPI, PixivSessionStore, ImagePipeline, release, SauceNAO
+├── Stores/          # KeiPixStore plus domain extensions
+├── Support/         # Native bridges, platform abstractions, shared utilities
+├── Views/           # SwiftUI shell/composition around native hot paths
+└── Resources/       # Localizable.xcstrings and bundled resources
 ```
 
-## 关键模块
+`KeiPix.xcodeproj` 由 XcodeGen 根据 `project.yml` 生成。仓库里的 Xcode target 当前是 macOS；iPadOS 仍处在同源码 UIKit bridge 与 SwiftPM 平台声明阶段，不把它描述成已发布 target。
+
+## UI Ownership
+
+| Layer | Owner | Examples |
+| --- | --- | --- |
+| Window, route, settings, forms, lightweight composition | SwiftUI | `KeiPixApp`, sidebars, settings sections, action sheets |
+| Dense collection/list virtualization | AppKit/UIKit | `NativeGalleryCollectionView`, `NativeBrowsingHistoryCollectionView`, `NativeCreatorPreviewCollectionView`, `NativeDownloadQueueListView` |
+| Image reader viewport | AppKit/UIKit | `ImageScrollView`, `iPadImageScrollView`, `ReaderPageViewportLayout` |
+| Long text rendering | AppKit/UIKit TextKit | `NativeNovelTextPageView`, `NovelTextNSView`, `iPadTextRenderer` |
+| Platform input and integration | AppKit/UIKit | `SearchFieldNSView`, `EnhancedMenuNSView`, `DragDropNSView`, `TrackpadEventBridge` |
+| Low-heat or rapidly changing surfaces | SwiftUI unless profiling says otherwise | Pixivision wrappers, Runtime Readiness, most settings UI |
+
+The bridge rule is intentionally narrow: native views own rendering, layout reuse, platform gestures and responder behavior; SwiftUI still owns observable state, commands, overlays and screen composition.
+
+## Key Modules
 
 ### `KeiPixStore`
 
-- `@MainActor` `final class`，作为 SwiftUI 环境对象注入
-- 持有当前 session（Pixiv App API token / 账户元数据 / 模式）、当前路由、各 feed 状态、UI 偏好
-- 通过领域 extension 文件切分以维持单文件可读性，主文件目前约 939 行
-- 异步动作统一通过 `Task` 调度，`@Published` 属性驱动 SwiftUI 重渲染
+- `@MainActor` observable store injected into SwiftUI environment.
+- Holds session mode, account metadata, navigation route, feed state, detail state, downloads, local libraries, reading preferences and QA state.
+- Split by domain in `Stores/KeiPixStore+*.swift` so feature work can stay localized.
+- Async work enters through explicit actions and returns UI mutations to the main actor.
 
 ### `PixivAPI`
 
-- 实现 Pixiv App API 的 `X-Client-Time` / `X-Client-Hash` 头与 Bearer 鉴权
-- 401 自动 refresh 一次后重试；表单 POST、JSON 反序列化、可重入诊断接口
-- 路由族覆盖：推荐 / 排行榜 / 关注 / 收藏 / 评论 / 标签 / 系列 / 用户 / 搜索 / mute / popular-preview
+- Implements Pixiv App API headers, bearer auth, refresh-and-retry, form POST, JSON decoding and diagnostics.
+- Covers recommendation, ranking, following, bookmarks, comments, tags, series, users, search, mute and popular-preview routes.
+- Exposed through `PixivAPIProtocol` where tests or sample flows need substitution.
 
 ### `PixivSessionStore`
 
-- 文件型 token store：把 access / refresh token 写到沙盒容器内 `~/Library/Containers/com.keipix.client/Data/Library/Application Support/KeiPix/pixiv-sessions.json`
-- 不依赖 macOS Login Keychain：避开 ad-hoc 开发签名每次构建都变化导致的 ACL 重新授权弹窗
-- 仍然支持多账户：按 user id 分键，`select` / `delete` / `deleteCurrent` 都不污染其他账户
-- 兼容旧版单账户 `pixiv-session.json` 文件，首次启动时自动迁移到多账户库
+- Stores access / refresh tokens in the app sandbox JSON file:
+  `~/Library/Containers/com.keipix.client/Data/Library/Application Support/KeiPix/pixiv-sessions.json`.
+- Avoids development-time Keychain ACL prompts caused by changing ad-hoc signatures.
+- Supports multi-account selection, deletion and migration from the older single-session file.
 
 ### `ImagePipeline`
 
-- 图片加载器：URLCache 磁盘缓存 + 内存缓存
-- 默认带 Pixiv `Referer` 头；R-18/R-18G 预览遮罩在 `RemoteImageView` 中根据偏好叠加
-- 同时供下载库的本地预览复用
+- Adds Pixiv `Referer`, URLCache disk caching and memory caching.
+- Shared by remote cards, detail views, local previews and visual QA sample flows.
+- Sensitive preview masking is applied at the view layer based on user preferences.
 
-### `MasonryLayout` & `ArtworkMasonryPresentation`
+### Native Gallery And Lists
 
-- 自定义 SwiftUI `Layout` 实现真正的瀑布流
-- 按 `aspectRatio` 决定列跨度：常规 / 宽 / 全景 / 超宽各档阈值经过真实账号样本调整
-- `gallery-three-column` 等四档独立的视觉 QA 样本覆盖宽幅、高幅、敏感、AI、ugoira、多 P
+- `NativeGalleryCollectionView` bridges `NSCollectionView` / `UICollectionView`.
+- Masonry, compact and list modes share placement/presentation models while native layouts handle reuse and diffable updates.
+- Selection highlight updates are kept separate from content reloads, preventing visible masonry reshuffle when opening detail.
+- Download queues, browsing history and creator previews use native list/collection containers for keyboard focus, reuse and platform interaction.
 
-### `PixivWebLinkResolver` & `PixivURLRoutingCoverage`
+### Reader Viewports
 
-- 把 Pixiv / Pixivision / `keipix://` / `pixiv://` / 文档 URL / 拖入文本 / 剪贴板片段统一转成 App 内路由
-- `Runtime Readiness` 用 `PixivURLRoutingCoverage` 跑预设样本，外加从 Pixivision 文章 HTML 抽取真实链接做活检
+- `ImageScrollView` routes macOS image reading through `NSScrollView`; iPadOS uses `UIScrollView`.
+- `ReaderPageViewportLayout` gives SwiftUI a stable size contract around native scroll views so single-page and double-page modes do not fight parent layout.
+- Multi-page works can use single, double-page, continuous and index modes; single-page works are coerced away from stale double-page preference.
 
-### Visual QA 启动参数
+### TextKit Novel Pages
 
-- `VisualQALaunchArgument` 解析 23 个独立 surface 的命令行旗标
-- `VisualQASampleData` 注入本地化样本数据，避免触碰真实账户存储
-- 当任一 visual-qa 旗标存在时，`KeiPixStore` 会切换到隔离的 "Visual QA" 模式
+- `NativeNovelTextPageView` handles pure text pages with `NSTextView` / `UITextView`.
+- SwiftUI remains responsible for reader chrome, page state, translation state and embedded-image fallback pages.
 
-## 与 Pixez / Pixes 的边界
+### URL Routing
 
-- 仅作为产品 / 后端架构参考：OAuth PKCE 流程、Pixiv App API headers、token refresh 时机、图片 `Referer`、侧边栏分区、画廊浏览、详情动作
-- `Sources/KeiPix` 内不允许出现 Flutter / Dart / Kotlin 实现文件
-- `Tests/KeiPixTests/NativeBoundaryTests.swift` 强制：
-  - `Package.swift` 存在并声明 macOS 26
-  - 视图文件以 SwiftUI 为主
-  - `Sources/KeiPix` 下不存在 `.dart` / `.kt` / `.kts` / Flutter 引用
+- `PixivWebLinkResolver` and `PixivURLRoutingCoverage` normalize Pixiv / Pixivision / `keipix://` / `pixiv://` / `.webloc` / `.url` / pasted text into app routes.
+- Runtime Readiness can run resolver samples and live Pixivision article link checks.
 
-## 并发与状态
+### Visual QA
 
-- `SWIFT_STRICT_CONCURRENCY: complete`（Swift 6 严格并发）
-- 主线程隔离用 `@MainActor`；Task 边界都标注隔离状态
-- I/O（网络、磁盘、token 文件）走 actor 或后台 task，UI 更新统一切回 `@MainActor`
+- `VisualQALaunchArgument` currently defines 19 isolated launch modes.
+- `VisualQASampleData` injects local sample data and avoids real account state.
+- `script/capture_visual_qa.sh` captures the front KeiPix window and writes a screenshot plus manifest.
 
-## 本地数据层
+## Boundary Tests
 
-- `UserDefaults` 持久化：UI 偏好、QA 矩阵快照、已置顶作者、搜索预设、复制模板、详情折叠状态、阅读进度、下载完成记录索引
-- 文件系统：图片 URLCache、下载库（沙盒 Downloads 区域）、Ugoira ZIP 缓存、可视化 QA 输出
-- 沙盒应用容器：Pixiv access / refresh token（`pixiv-sessions.json`）、账户元数据，写入时使用 `.completeFileProtectionUnlessOpen`
+`Tests/KeiPixTests/NativeBoundaryTests.swift` is the main guardrail for the hybrid direction:
+
+- `Package.swift` must stay on the SwiftPM native route and declare macOS/iOS 26.
+- `Sources/KeiPix` must not vendor Flutter, Dart, Kotlin, Gradle or reference-client implementation paths.
+- SwiftUI view files stay as composition shells.
+- Gallery, reader, TextKit, download queue, browsing history, creator list/search/menu/drop bridges must remain explicit.
+- Native gallery must avoid full visible-item reloads for highlight-only changes.
+
+## Data And Privacy
+
+- User preferences, reading progress, local history, saved searches, pinned creators and QA snapshots use `UserDefaults` or small JSON libraries.
+- Downloaded files live in user-accessible sandbox/download locations.
+- Visual QA uses generated local samples.
+- The app has no telemetry; `--telemetry` only tails local unified logging.
+
+## Concurrency
+
+- `SWIFT_STRICT_CONCURRENCY` is enabled.
+- UI state is main-actor isolated.
+- Network, disk and decoding work are pushed behind async actions or helper types, with UI mutations returning to `@MainActor`.
+
+## Reference Client Boundary
+
+Pixez, Pixes and other clients are product/API references only. Their Flutter/Dart/Kotlin source structure is not copied into `Sources/KeiPix`; behavior is reimplemented with native Swift, AppKit/UIKit and SwiftUI glue, with boundary tests updated before high-risk migrations.

@@ -10,7 +10,7 @@
 | **pixez-flutter** | Flutter / Dart | Android/iOS/Windows/macOS | Most popular 3rd-party Pixiv client |
 | **pixes** | Flutter / Dart | macOS/iOS/Android/Linux | Lightweight desktop-first, Fluent UI |
 | **Pixiv-Nginx** | Nginx config + tools | Windows (primarily) | GFW proxy tool, not a client |
-| **KeiPix** | Swift / SwiftUI | macOS 26 | Native macOS client, strongest QA system |
+| **KeiPix** | Swift / AppKit/UIKit + SwiftUI | macOS 26 primary, iPadOS source route | Native Apple client, strongest QA system |
 
 ## Gap Table — Features KeiPix Lacks
 

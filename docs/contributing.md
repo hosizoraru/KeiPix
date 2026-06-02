@@ -35,10 +35,10 @@
 ## 与参考项目的边界
 
 - `tmp/pixez-flutter`、`tmp/pixes` 仅作为产品 / API 行为的对照，绝不允许把它们的源码结构 / Dart / Kotlin 文件复制到 `Sources/KeiPix`
-- 任何"借鉴"都通过重新阅读后用原生 SwiftUI 重写
+- 任何"借鉴"都通过重新阅读后用原生 Swift、AppKit/UIKit 热路径和 SwiftUI 组合层重写
 - `Tests/KeiPixTests/NativeBoundaryTests.swift` 在 CI 与本地都会拦截：
   - `Sources/KeiPix` 下不能出现 `.dart` / `.kt` / `.kts` / Flutter 引用
-  - 视图文件需要以 SwiftUI 方式实现
+  - SwiftUI 视图文件只能作为组合外壳，不把高频滚动、缩放、长文本和平台输入重新堆回声明式层
   - `Package.swift` 必须存在并声明 macOS 26
 - 任何参考迁移之前先补对应的源边界测试或扩展现有用例
 
@@ -51,7 +51,8 @@
 - 按钮优先使用 `.labelStyle(.iconOnly)` + `.help()` + `.accessibilityLabel()`
 - 状态消息使用 `.statusMessageAutoDismiss()` 修饰符
 - 跨平台代码使用 `#if os(macOS)` / `#if os(iOS)` 条件编译
-- AppKit/UIKit 包装器放在 `Support/` 目录，使用 `NSViewRepresentable` / `UIViewRepresentable`
+- AppKit/UIKit 包装器放在 `Support/` 目录，使用 `NSViewRepresentable` / `UIViewRepresentable`，接口保持小而明确
+- 画廊、阅读器、长文本、下载队列、历史列表、创作者列表、搜索、菜单、拖放等热路径优先复用现有 native bridge，不新增平行 SwiftUI 实现
 
 ## 可变更动作
 

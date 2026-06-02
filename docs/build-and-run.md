@@ -1,44 +1,46 @@
 # Build & Run
 
-KeiPix 同时支持 SwiftPM 与 Xcode 两条路。两条路共享 `Sources/KeiPix` 与 `Tests/KeiPixTests`，`KeiPix.xcodeproj` 由 [`XcodeGen`](https://github.com/yonaskolb/XcodeGen) 从 `project.yml` 生成，并在 `.gitignore` 中。
+KeiPix 同时支持 SwiftPM 与 XcodeGen 两条 macOS 开发路径。两条路径共享 `Sources/KeiPix` 与 `Tests/KeiPixTests`；`KeiPix.xcodeproj` 由 [`XcodeGen`](https://github.com/yonaskolb/XcodeGen) 从 `project.yml` 生成。
 
-## 系统要求
+## Requirements
 
 - macOS 26.0 或更新
-- Xcode 26.x（`project.yml` 锁定 `xcodeVersion: "26.3"`）
-- Swift 6.0
-- Homebrew 用于安装 XcodeGen（仅 Xcode 路径需要）
+- Xcode 26.x（`project.yml` 记录 `xcodeVersion: "26.3"`）
+- Swift 6.2+ toolchain（`Package.swift` 使用 `// swift-tools-version: 6.2`）
+- Homebrew + XcodeGen（仅 Xcode 路径需要）
 
-## 一键构建并运行
+`project.yml` 的 `SWIFT_VERSION: "6.0"` 是 Swift language mode；实际命令行工具链仍以 Xcode/Swift 6.2+ 为准。
+
+## Build And Run The Local App
 
 ```bash
 ./script/build_and_run.sh
 ```
 
-脚本会执行以下流程：
+脚本会执行：
 
-1. `swift build` 编译 SwiftPM 产物
+1. `swift build`
 2. 复制可执行文件到 `dist/KeiPix.app/Contents/MacOS/`
-3. 内联生成 `Info.plist`（含 bundle id、`keipix://` URL scheme、`.webloc/.url` 文档绑定、最低系统版本）
-4. `open -n` 启动一份独立实例
+3. 内联生成 `Info.plist`，包含 bundle id、`keipix://` URL scheme、`.webloc/.url` 文档绑定和最低系统版本
+4. `open -n` 启动独立实例
 
-`pkill -x KeiPix` 会先关掉已有实例，所以可以反复运行。
+普通启动前会先 `pkill -x KeiPix`，方便反复本地验证。
 
-## 启动模式
+## Launch Modes
 
 | Mode | 用途 |
 | --- | --- |
-| `run`（默认） | 普通启动 |
-| `--debug` | 在 lldb 中启动 |
-| `--logs` | 启动并 `log stream` 跟随 stdout/stderr |
-| `--telemetry` | 启动并跟随 `subsystem == com.keipix.client` 的日志 |
+| `run`（默认） | 构建并普通启动 |
+| `--debug` | 在 `lldb` 中启动 |
+| `--logs` | 启动并跟随进程 stdout/stderr 相关 unified log |
+| `--telemetry` | 启动并跟随 `subsystem == com.keipix.client` 的本地日志 |
 | `--verify` | 以 `--visual-qa-cached-feed` 启动，作为最小可重复活性检查 |
-| `--package` | 仅 `plutil -lint` 校验并打印 bundle 路径，不启动 |
-| `--visual-qa-*` | 23 个独立 visual QA surface（详见 [`quality-assurance.md`](quality-assurance.md)） |
+| `--package` | 仅构建 `.app` 并校验 plist，不启动 |
+| `--visual-qa-*` | 进入隔离的视觉 QA sample surface |
 
-`.codex/environments/environment.toml` 把 Codex 应用的 Run 按钮直接绑到这个脚本。
+`.codex/environments/environment.toml` 把 Codex 应用的 Run 按钮绑定到这个脚本。
 
-## 直接走 SwiftPM
+## SwiftPM
 
 ```bash
 swift build
@@ -46,16 +48,17 @@ swift test
 swift run KeiPix
 ```
 
-测试目录 `Tests/KeiPixTests` 覆盖：模型、保存搜索、复制模板、可视化 QA 证据模型、批量收藏、ugoira、`PixivisionArticleLinkAuditor`、`RuntimeReadinessTests`、`NativeBoundaryTests` 等共 20 个测试文件。
+常用定向测试：
 
 ```bash
-swift test --filter RuntimeReadinessTests
 swift test --filter NativeBoundaryTests
+swift test --filter RuntimeReadinessTests
+swift test --filter GallerySelectionTests
 ```
 
-> 实测 `swift test` 基线在 50–72 个用例之间浮动，取决于近期是否新增 visual QA / 模型覆盖。
+当前测试目录有 51 个 Swift 测试文件。最近一次完整本地基线为 **289 个测试 / 51 个测试套件**，覆盖模型、解析器、下载、阅读、URL 路由、视觉 QA、Runtime Readiness 和 native bridge 边界。
 
-## Xcode 路径（XcodeGen）
+## XcodeGen
 
 ```bash
 brew install xcodegen          # 一次性安装
@@ -73,26 +76,57 @@ xcodebuild -project KeiPix.xcodeproj -scheme KeiPix -configuration Debug \
   -destination 'platform=macOS' test
 ```
 
-`KeiPix.xcodeproj` 不入库；想刷新只需重新 `xcodegen generate`。
+`KeiPix.xcodeproj` 不需要手改；刷新项目时重新运行 `xcodegen generate`。
 
-## 应用元数据
+## CI
+
+GitHub Actions workflow 位于 `.github/workflows/macos-build.yml`：
+
+- 选择 Xcode 26 toolchain
+- `swift package resolve`
+- `swift build`
+- `swift test --parallel`
+- `./script/build_release_app.sh` 生成 `.zip` 或 `.dmg`
+- tag `v*` 时把产物附加到 GitHub Release
+
+## Visual QA
+
+启动一个 surface：
+
+```bash
+./script/build_and_run.sh --visual-qa-gallery-three-column
+```
+
+捕获截图与 manifest：
+
+```bash
+./script/capture_visual_qa.sh gallery-three-column
+```
+
+输出在 `artifacts/visual-qa/<UTC timestamp>/`。UI、布局、文案、阅读器或画廊热路径改动后，需要刷新对应 surface 的证据。
+
+## App Metadata
 
 | 文件 | 用途 |
 | --- | --- |
 | `App/Info.plist` | Xcode 构建使用的 plist 模板 |
-| `App/KeiPix.entitlements` | App Sandbox + 网络 / 用户选择文件 / 下载文件 / 打印 entitlement |
-| `script/build_and_run.sh` | SwiftPM 构建路径下生成的 `Info.plist`（与 Xcode 版本同步） |
-| `project.yml` | XcodeGen 项目描述（macOS 26、Swift 6、严格并发、Sandbox、Hardened Runtime） |
+| `App/KeiPix.entitlements` | App Sandbox、网络、用户选择文件、下载、打印 entitlement |
+| `script/build_and_run.sh` | SwiftPM 本地 `.app` 构建与运行脚本 |
+| `script/build_release_app.sh` | CI/release 打包脚本 |
+| `project.yml` | XcodeGen 项目描述 |
 
-修改 entitlement 或 Info.plist 时记得两处都同步。
+修改 entitlement、bundle metadata 或 URL/document type 时，要同步 Xcode 路径和脚本路径。
 
-## 常用排错
+## iPadOS Route
 
-- `swift build` 失败但 Xcode 通过 → 检查 `Package.swift` 的资源声明（`Resources` 目录走 `.process`）
-- 启动后立刻闪退 → 用 `--logs` 跑一次，看是否触发 entitlement 限制（沙盒读写权限）
-- 视觉 QA 截图为空 → 见 [`quality-assurance.md`](quality-assurance.md) 的 Window ID 说明（窗口需要 ≥ 240×240 才会被采集）
-- Token 失效 → Settings → Runtime Readiness → Account Health Check，会显式跑一次刷新；或在 `--verify` 模式下用本地 sample 模式重新验证 UI
+`Package.swift` 声明了 `.iOS(.v26)`，并且多个热路径已经具备 UIKit bridge，例如 `UICollectionView`、`UIScrollView`、`UITextView`、`UISearchTextField`。
 
-## 添加 iPadOS 目标
+但当前 `project.yml` 只生成 macOS app/test target。开启 iPadOS 发布路线前，需要新增 iOS target、设备/Simulator 构建、触控视觉 QA 和平台 entitlement 复核。文档中不要把 iPadOS 写成已完整发布目标，除非这些验证已经补齐。
 
-`project.yml` 已经为未来扩展预留位置：声明第二个 `target`，`platform: iOS`，源码继续指向 `Sources/KeiPix`，再 `xcodegen generate` 即可。本仓库目前不打开 iPadOS 流程，因为 macOS 触控板 / 窗口路径与 iOS 触控差距明显，开启前需要单独评估视图层。
+## Troubleshooting
+
+- `swift build` 失败但 Xcode 通过：检查 `Package.swift` 资源声明和 SwiftPM build-tool plugin 输出。
+- 启动后闪退：用 `./script/build_and_run.sh --logs` 看 sandbox、resource 或 entitlement 错误。
+- 视觉 QA 截图为空：确认目标窗口面积不小于 240x240，并且先用对应 `--visual-qa-*` 启动。
+- Token 失效：Settings -> Runtime Readiness -> Account Health Check，或使用 `--verify` 走隔离 sample 模式验证 UI。
+- iPadOS 相关编译失败：先确认使用 Xcode 26+ SDK、正确 destination，并确认相关 AppKit-only bridge 有 `#if os(macOS)` 隔离。
