@@ -12,6 +12,18 @@ struct ArtworkReadingModeTests {
         #expect(ArtworkReadingModePreferenceKind.manga.fallbackMode == .continuous)
     }
 
+    @Test("Single-page artworks render as single page without erasing the stored preference")
+    func singlePageArtworksUseSinglePageEffectiveMode() {
+        #expect(ArtworkReadingMode.singlePage.effectiveMode(forPageCount: 1) == .singlePage)
+        #expect(ArtworkReadingMode.doublePage.effectiveMode(forPageCount: 1) == .singlePage)
+        #expect(ArtworkReadingMode.continuous.effectiveMode(forPageCount: 1) == .singlePage)
+        #expect(ArtworkReadingMode.index.effectiveMode(forPageCount: 1) == .singlePage)
+
+        #expect(ArtworkReadingMode.doublePage.effectiveMode(forPageCount: 2) == .doublePage)
+        #expect(ArtworkReadingMode.continuous.effectiveMode(forPageCount: 2) == .continuous)
+        #expect(ArtworkReadingMode.index.effectiveMode(forPageCount: 2) == .index)
+    }
+
     @Test("Reader progress clamps and keeps recent entries first")
     func readerProgressLibrary() {
         var library = ArtworkReaderProgressLibrary()

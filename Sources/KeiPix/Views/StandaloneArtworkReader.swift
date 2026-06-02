@@ -80,7 +80,7 @@ struct StandaloneArtworkReader: View {
                     .scrollEdgeEffectStyle(.soft, for: .top)
                     .modifier(
                         ConditionalScrollSnapping(
-                            isEnabled: snapToPageBoundaries && readingMode == .continuous
+                            isEnabled: snapToPageBoundaries && effectiveReadingMode == .continuous
                         )
                     )
                 }
@@ -104,12 +104,12 @@ struct StandaloneArtworkReader: View {
                 }
             }
             .onChange(of: scrollTarget) { _, value in
-                guard readingMode == .continuous, let value, value != pageIndex else { return }
+                guard effectiveReadingMode == .continuous, let value, value != pageIndex else { return }
                 pageIndex = min(max(value, 0), pageCount - 1)
             }
             .onChange(of: readingMode) { _, mode in
                 store.setDefaultReadingMode(mode, for: artwork, pageCount: pageCount)
-                guard mode != .singlePage else { return }
+                guard mode.effectiveMode(forPageCount: pageCount) != .singlePage else { return }
                 scrollToPage(pageIndex, proxy: proxy)
             }
             .task(id: artwork.id) {
@@ -126,6 +126,10 @@ struct StandaloneArtworkReader: View {
 
     private var pageCount: Int {
         artwork.displayPageCount
+    }
+
+    private var effectiveReadingMode: ArtworkReadingMode {
+        readingMode.effectiveMode(forPageCount: pageCount)
     }
 
     private func header(proxy: ScrollViewProxy) -> some View {
@@ -163,7 +167,7 @@ struct StandaloneArtworkReader: View {
             .labelStyle(.iconOnly)
             .help(L10n.imageQualityToggleHint)
 
-            if readingMode == .continuous {
+            if effectiveReadingMode == .continuous {
                 Button {
                     snapToPageBoundaries.toggle()
                 } label: {
@@ -317,13 +321,13 @@ struct StandaloneArtworkReader: View {
         readingMode = store.defaultReadingMode(for: artwork, pageCount: pageCount)
         let restoredPageIndex = store.restoredReaderPageIndex(for: artwork, pageCount: pageCount)
         pageIndex = restoredPageIndex
-        scrollTarget = readingMode == .singlePage ? nil : restoredPageIndex
+        scrollTarget = effectiveReadingMode == .singlePage ? nil : restoredPageIndex
     }
 
     private func scrollToPage(_ index: Int, proxy: ScrollViewProxy) {
         let clamped = min(max(index, 0), pageCount - 1)
         pageIndex = clamped
-        guard readingMode != .singlePage else { return }
+        guard effectiveReadingMode != .singlePage else { return }
         withAnimation(.snappy(duration: 0.22)) {
             proxy.scrollTo(clamped, anchor: .top)
         }

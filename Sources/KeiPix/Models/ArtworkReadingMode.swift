@@ -37,6 +37,10 @@ enum ArtworkReadingMode: String, CaseIterable, Identifiable {
     static func defaultMode(for pageCount: Int) -> ArtworkReadingMode {
         pageCount >= 12 ? .continuous : .singlePage
     }
+
+    func effectiveMode(forPageCount pageCount: Int) -> ArtworkReadingMode {
+        pageCount > 1 ? self : .singlePage
+    }
 }
 
 enum ArtworkReadingModePreferenceKind: String {

@@ -148,12 +148,12 @@ private struct ArtworkInspectorView: View {
                 prefetchAround(value)
             }
             .onChange(of: scrollTarget) { _, value in
-                guard readingMode == .continuous, let value, value != pageIndex else { return }
+                guard effectiveReadingMode == .continuous, let value, value != pageIndex else { return }
                 pageIndex = min(max(value, 0), pageCount - 1)
             }
             .onChange(of: readingMode) { _, mode in
                 store.setDefaultReadingMode(mode, for: artwork, pageCount: pageCount)
-                guard mode != .singlePage else { return }
+                guard mode.effectiveMode(forPageCount: pageCount) != .singlePage else { return }
                 scrollToPage(pageIndex, proxy: proxy)
             }
             .task(id: artwork.id) {
@@ -169,6 +169,10 @@ private struct ArtworkInspectorView: View {
 
     private var pageCount: Int {
         artwork.displayPageCount
+    }
+
+    private var effectiveReadingMode: ArtworkReadingMode {
+        readingMode.effectiveMode(forPageCount: pageCount)
     }
 
     private var usesArtworkDetailSocialVisualQA: Bool {
@@ -208,7 +212,7 @@ private struct ArtworkInspectorView: View {
         readingMode = store.defaultReadingMode(for: artwork, pageCount: pageCount)
         let restoredPageIndex = store.restoredReaderPageIndex(for: artwork, pageCount: pageCount)
         pageIndex = restoredPageIndex
-        scrollTarget = readingMode == .singlePage ? nil : restoredPageIndex
+        scrollTarget = effectiveReadingMode == .singlePage ? nil : restoredPageIndex
     }
 
     private func detailExpansionBinding(_ keyPath: WritableKeyPath<ArtworkDetailExpansionState, Bool>) -> Binding<Bool> {
@@ -223,7 +227,7 @@ private struct ArtworkInspectorView: View {
     private func scrollToPage(_ index: Int, proxy: ScrollViewProxy) {
         let clamped = min(max(index, 0), pageCount - 1)
         pageIndex = clamped
-        guard readingMode != .singlePage else { return }
+        guard effectiveReadingMode != .singlePage else { return }
         withAnimation(.snappy(duration: 0.22)) {
             proxy.scrollTo(clamped, anchor: .top)
         }

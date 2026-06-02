@@ -16,7 +16,7 @@ struct ArtworkReaderView: View {
 
     var body: some View {
         Group {
-            switch readingMode {
+            switch effectiveReadingMode {
             case .singlePage:
                 ArtworkSinglePageReader(
                     artwork: artwork,
@@ -82,7 +82,7 @@ struct ArtworkReaderView: View {
             .accessibilityHidden(true)
         }
         .onChange(of: scrollTarget) { _, value in
-            guard readingMode == .continuous, let value, value != pageIndex else { return }
+            guard effectiveReadingMode == .continuous, let value, value != pageIndex else { return }
             pageIndex = min(max(value, 0), pageCount - 1)
         }
         .onChange(of: pageIndex) { _, value in
@@ -100,9 +100,13 @@ struct ArtworkReaderView: View {
         artwork.displayPageCount
     }
 
+    private var effectiveReadingMode: ArtworkReadingMode {
+        readingMode.effectiveMode(forPageCount: pageCount)
+    }
+
     private func movePage(_ delta: Int) {
         // In double-page mode, advance by 2 pages
-        let effectiveDelta = readingMode == .doublePage ? delta * 2 : delta
+        let effectiveDelta = effectiveReadingMode == .doublePage ? delta * 2 : delta
         let target = pageIndex + effectiveDelta
         if (0..<pageCount).contains(target) {
             scrollToPage(target)
