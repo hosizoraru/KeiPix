@@ -9,6 +9,7 @@ import SwiftUI
 /// - Novel text printing (paginated)
 /// - Custom print settings (orientation, scaling)
 /// - Print preview support
+@MainActor
 enum PrintManager {
 
     // MARK: - Artwork Printing
