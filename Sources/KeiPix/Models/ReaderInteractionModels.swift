@@ -27,6 +27,7 @@ final class ArtworkReaderInteractionState {
     nonisolated static let resetSnapThreshold: CGFloat = 1.04
     nonisolated static let swipeThreshold: CGFloat = 90
     nonisolated static let horizontalDominance: CGFloat = 1.35
+    nonisolated static let nativeZoomUpdateTolerance: CGFloat = 0.005
 
     var scale: CGFloat = 1
     var offset: CGSize = .zero
@@ -60,7 +61,9 @@ final class ArtworkReaderInteractionState {
 
     func updateNativeZoomScale(_ nativeScale: CGFloat) {
         guard nativeScale.isFinite else { return }
-        scale = max(Self.minimumScale, nativeScale)
+        let normalizedScale = max(Self.minimumScale, nativeScale)
+        guard abs(scale - normalizedScale) > Self.nativeZoomUpdateTolerance else { return }
+        scale = normalizedScale
         if isZoomed == false {
             offset = .zero
         }

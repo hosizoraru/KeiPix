@@ -106,6 +106,10 @@ struct ImageScrollView: UIViewRepresentable {
         private var lastToggleZoomTrigger = 0
         private var fitZoomScale: CGFloat = 1
         private var lastViewportSize: CGSize = .zero
+        private var lastReportedLogicalZoom: CGFloat?
+
+        private static let viewportSizeTolerance: CGFloat = 1
+        private static let zoomReportTolerance: CGFloat = 0.005
 
         init(
             onImageLoaded: ((PlatformImage) -> Void)?,
@@ -157,7 +161,11 @@ struct ImageScrollView: UIViewRepresentable {
         func refitAfterViewportChangeIfNeeded() {
             guard let scrollView else { return }
             let size = scrollView.bounds.size
-            guard size.width > 0, size.height > 0, size != lastViewportSize else { return }
+            guard size.width > 0,
+                  size.height > 0,
+                  Self.isMeaningfullyDifferent(size, from: lastViewportSize) else {
+                return
+            }
             lastViewportSize = size
             updateFitZoomScale(preservingLogicalZoom: true)
         }
@@ -222,6 +230,8 @@ struct ImageScrollView: UIViewRepresentable {
             imageView.image = image
             imageView.frame = CGRect(origin: .zero, size: size)
             scrollView.contentSize = size
+            lastViewportSize = .zero
+            lastReportedLogicalZoom = nil
             updateFitZoomScale(preservingLogicalZoom: false)
             onImageLoaded?(image)
         }
@@ -263,11 +273,22 @@ struct ImageScrollView: UIViewRepresentable {
 
         private func reportZoom(zoomScale: CGFloat) {
             guard fitZoomScale > 0 else { return }
-            onZoomChanged?(max(1, zoomScale / fitZoomScale))
+            let logicalZoom = max(1, zoomScale / fitZoomScale)
+            if let lastReportedLogicalZoom,
+               abs(logicalZoom - lastReportedLogicalZoom) <= Self.zoomReportTolerance {
+                return
+            }
+            lastReportedLogicalZoom = logicalZoom
+            onZoomChanged?(logicalZoom)
         }
 
         private static func loadKey(imageURL: URL?, localURL: URL?) -> String {
             "\(localURL?.path(percentEncoded: false) ?? "")|\(imageURL?.absoluteString ?? "")"
+        }
+
+        private static func isMeaningfullyDifferent(_ lhs: CGSize, from rhs: CGSize) -> Bool {
+            abs(lhs.width - rhs.width) > viewportSizeTolerance
+                || abs(lhs.height - rhs.height) > viewportSizeTolerance
         }
     }
 }

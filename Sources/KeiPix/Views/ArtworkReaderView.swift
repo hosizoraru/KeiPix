@@ -245,7 +245,7 @@ private struct ArtworkSinglePageReader: View {
     var body: some View {
         let currentPageIndex = pageIndex
 
-        GeometryReader { _ in
+        SinglePageReaderViewportLayout(presentation: presentation) {
             ZStack {
                 ImageScrollView(
                     imageURL: artwork.imageURL(at: currentPageIndex, preferOriginal: store.preferOriginalImages(for: artwork)),
@@ -307,10 +307,7 @@ private struct ArtworkSinglePageReader: View {
             .clipped()
             .contentShape(Rectangle())
         }
-        .aspectRatio(presentation.aspectRatio, contentMode: .fit)
         .frame(maxWidth: .infinity)
-        .frame(minHeight: 260)
-        .frame(maxHeight: presentation.singlePageMaxHeight())
         .background(.quaternary)
         .backgroundExtensionEffect()
         .clipShape(RoundedRectangle(cornerRadius: 0, style: .continuous))
@@ -318,6 +315,31 @@ private struct ArtworkSinglePageReader: View {
 
     private var pageCount: Int {
         artwork.displayPageCount
+    }
+}
+
+private struct SinglePageReaderViewportLayout: Layout {
+    let presentation: ReaderPagePresentation
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let width = resolvedWidth(from: proposal)
+        return CGSize(width: width, height: presentation.singlePageHeight(for: width))
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        for subview in subviews {
+            subview.place(
+                at: bounds.origin,
+                proposal: ProposedViewSize(width: bounds.width, height: bounds.height)
+            )
+        }
+    }
+
+    private func resolvedWidth(from proposal: ProposedViewSize) -> CGFloat {
+        guard let width = proposal.width, width.isFinite, width > 0 else {
+            return 640
+        }
+        return width
     }
 }
 

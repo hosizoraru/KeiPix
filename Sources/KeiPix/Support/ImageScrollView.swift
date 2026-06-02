@@ -48,6 +48,7 @@ struct ImageScrollView: NSViewRepresentable {
         scrollView.hasHorizontalScroller = true
         scrollView.autohidesScrollers = true
         scrollView.allowsMagnification = true
+        scrollView.scrollerStyle = .overlay
         scrollView.minMagnification = 0.05
         scrollView.maxMagnification = ArtworkReaderInteractionState.maximumScale
         scrollView.backgroundColor = .clear
@@ -66,6 +67,9 @@ struct ImageScrollView: NSViewRepresentable {
         }
         scrollView.onMagnificationChanged = { magnification in
             context.coordinator.reportZoom(magnification: magnification)
+        }
+        scrollView.shouldForwardScrollToParent = { event in
+            context.coordinator.shouldForwardScrollToParent(event)
         }
 
         let doubleClick = NSClickGestureRecognizer(
@@ -116,6 +120,10 @@ struct ImageScrollView: NSViewRepresentable {
         private var lastToggleZoomTrigger = 0
         private var fitMagnification: CGFloat = 1
         private var lastViewportSize: CGSize = .zero
+        private var lastReportedLogicalZoom: CGFloat?
+
+        private static let viewportSizeTolerance: CGFloat = 1
+        private static let zoomReportTolerance: CGFloat = 0.005
 
         init(
             onImageLoaded: ((PlatformImage) -> Void)?,
@@ -168,10 +176,19 @@ struct ImageScrollView: NSViewRepresentable {
             return onPageSwipe?(event) ?? false
         }
 
+        func shouldForwardScrollToParent(_ event: ReaderScrollEvent) -> Bool {
+            guard logicalZoomScale <= 1.01 else { return false }
+            return abs(event.deltaY) > abs(event.deltaX) * ArtworkReaderInteractionState.horizontalDominance
+        }
+
         func refitAfterViewportChangeIfNeeded() {
             guard let scrollView else { return }
             let size = scrollView.contentSize
-            guard size.width > 0, size.height > 0, size != lastViewportSize else { return }
+            guard size.width > 0,
+                  size.height > 0,
+                  Self.isMeaningfullyDifferent(size, from: lastViewportSize) else {
+                return
+            }
             lastViewportSize = size
             updateFitMagnification(preservingLogicalZoom: true)
         }
@@ -203,6 +220,8 @@ struct ImageScrollView: NSViewRepresentable {
             imageView.image = image
             imageView.frame = CGRect(origin: .zero, size: size)
             scrollView.documentView = imageView
+            lastViewportSize = .zero
+            lastReportedLogicalZoom = nil
             updateFitMagnification(preservingLogicalZoom: false)
             onImageLoaded?(image)
         }
@@ -243,7 +262,13 @@ struct ImageScrollView: NSViewRepresentable {
 
         func reportZoom(magnification: CGFloat) {
             guard fitMagnification > 0 else { return }
-            onZoomChanged?(max(1, magnification / fitMagnification))
+            let logicalZoom = max(1, magnification / fitMagnification)
+            if let lastReportedLogicalZoom,
+               abs(logicalZoom - lastReportedLogicalZoom) <= Self.zoomReportTolerance {
+                return
+            }
+            lastReportedLogicalZoom = logicalZoom
+            onZoomChanged?(logicalZoom)
         }
 
         private static func loadKey(imageURL: URL?, localURL: URL?) -> String {
@@ -263,6 +288,11 @@ struct ImageScrollView: NSViewRepresentable {
             }
             return CGSize(width: 1, height: 1)
         }
+
+        private static func isMeaningfullyDifferent(_ lhs: CGSize, from rhs: CGSize) -> Bool {
+            abs(lhs.width - rhs.width) > viewportSizeTolerance
+                || abs(lhs.height - rhs.height) > viewportSizeTolerance
+        }
     }
 }
 
@@ -271,6 +301,7 @@ final class NativeImageScrollView: NSScrollView {
     var onSmartMagnify: (@MainActor () -> Bool)?
     var onLayout: (@MainActor () -> Void)?
     var onMagnificationChanged: (@MainActor (CGFloat) -> Void)?
+    var shouldForwardScrollToParent: (@MainActor (ReaderScrollEvent) -> Bool)?
 
     override func scrollWheel(with event: NSEvent) {
         let multiplier: CGFloat = event.hasPreciseScrollingDeltas ? 1 : 10
@@ -282,6 +313,14 @@ final class NativeImageScrollView: NSScrollView {
         )
 
         if onReaderScroll?(readerEvent) == true {
+            return
+        }
+        if shouldForwardScrollToParent?(readerEvent) == true {
+            if let nextResponder {
+                nextResponder.scrollWheel(with: event)
+            } else {
+                super.scrollWheel(with: event)
+            }
             return
         }
         super.scrollWheel(with: event)
