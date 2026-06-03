@@ -31,8 +31,12 @@ struct BookmarkTagsView: View {
                 }
             }
         }
-        .navigationTitle(L10n.bookmarkTags)
-        .navigationSubtitle(bookmarkTagSummary)
+        .platformPageHeader(
+            title: L10n.bookmarkTags,
+            status: bookmarkTagNavigationStatus,
+            statusSystemImage: "tag"
+        )
+        .platformPageNavigationChrome(title: L10n.bookmarkTags, status: bookmarkTagNavigationStatus)
         .overlay(alignment: .bottom) {
             VStack(spacing: 8) {
                 if let actionMessage {
@@ -67,6 +71,11 @@ struct BookmarkTagsView: View {
 
     private var bookmarkTagLoadKey: String {
         "\(selectedRestrict.rawValue)-\(store.routeRefreshGeneration)"
+    }
+
+    private var bookmarkTagNavigationStatus: String {
+        guard store.session != nil else { return "" }
+        return bookmarkTagSummary
     }
 
     private var header: some View {

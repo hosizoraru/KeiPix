@@ -67,14 +67,17 @@ struct TrendingTagsView: View {
                 .scrollEdgeEffectStyle(.soft, for: .top)
             }
         }
-        .navigationTitle(L10n.trendingTags)
-        .navigationSubtitle("\(tags.count.formatted()) \(L10n.results)")
+        .platformPageHeader(
+            title: L10n.trendingTags,
+            status: trendingTagsStatusText,
+            statusSystemImage: "number"
+        )
+        .platformPageNavigationChrome(title: L10n.trendingTags, status: trendingTagsStatusText)
         .toolbar {
             if store.session != nil {
-                // Single-source surface: just a refresh action. Empty
-                // status badges live on the navigation subtitle now,
-                // following the macOS HIG pattern Mail / Music use for
-                // single-list views.
+                // Single-source surface: just a refresh action. Count
+                // metadata lives in platform page chrome so iPadOS
+                // doesn't burn a second title row on tiny subtitle text.
                 ToolbarItem(placement: .secondaryAction) {
                     Button {
                         Task { await load() }
@@ -117,6 +120,11 @@ struct TrendingTagsView: View {
         .task(id: store.routeRefreshGeneration) {
             await load()
         }
+    }
+
+    private var trendingTagsStatusText: String {
+        guard store.session != nil else { return "" }
+        return "\(tags.count.formatted()) \(L10n.results)"
     }
 
     private func load() async {

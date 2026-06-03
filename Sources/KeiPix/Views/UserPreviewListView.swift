@@ -38,8 +38,12 @@ struct UserPreviewListView: View {
                 creatorListSurface
             }
         }
-        .navigationTitle(mode.title)
-        .navigationSubtitle(navigationSubtitle)
+        .platformPageHeader(
+            title: mode.title,
+            status: creatorNavigationStatus,
+            statusSystemImage: "person.2"
+        )
+        .platformPageNavigationChrome(title: mode.title, status: creatorNavigationStatus)
         .toolbar {
             // macOS HIG keeps refresh / view-options / bulk-action
             // entry points in the toolbar so the body stays focused on
@@ -314,6 +318,11 @@ struct UserPreviewListView: View {
             return "\(searchKeyword) · \(counts) · \(pagination)"
         }
         return "\(counts) · \(pagination)"
+    }
+
+    private var creatorNavigationStatus: String {
+        guard store.session != nil else { return "" }
+        return navigationSubtitle
     }
 
     private var restrictBinding: Binding<BookmarkRestrict> {

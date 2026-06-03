@@ -324,6 +324,48 @@ struct NativeBoundaryTests {
         #expect(workSubscriptions.contains("guard store.session != nil else { return \"\" }"))
     }
 
+    @Test("iPad page status uses inline title chrome")
+    func iPadPageStatusUsesInlineTitleChrome() throws {
+        let root = try packageRoot()
+        let emptyState = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/EmptyStateView.swift"),
+            encoding: .utf8
+        )
+        let discovery = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/DiscoveryDashboardView.swift"),
+            encoding: .utf8
+        )
+        let inlineStatusPages = [
+            "Sources/KeiPix/Views/TrendingTagsView.swift",
+            "Sources/KeiPix/Views/BookmarkTagsView.swift",
+            "Sources/KeiPix/Views/MangaWatchlistView.swift",
+            "Sources/KeiPix/Views/UserPreviewListView.swift",
+            "Sources/KeiPix/Views/SpotlightView.swift",
+            "Sources/KeiPix/Views/WorkSubscriptionsView.swift",
+            "Sources/KeiPix/Views/WatchLaterView.swift",
+            "Sources/KeiPix/Views/BrowsingHistoryView.swift",
+            "Sources/KeiPix/Views/SavedSearchesView.swift",
+            "Sources/KeiPix/Views/MutedContentView.swift",
+            "Sources/KeiPix/Views/DownloadQueueView.swift"
+        ]
+
+        #expect(emptyState.contains("struct PlatformPageTitleHeader: View"))
+        #expect(emptyState.contains("func platformPageHeader(title: String, status: String, statusSystemImage: String? = nil)"))
+        #expect(emptyState.contains("ViewThatFits(in: .horizontal)"))
+        #expect(emptyState.contains(".navigationBarTitleDisplayMode(.inline)"))
+        #expect(emptyState.contains(".glassEffect(.regular, in: Capsule(style: .continuous))"))
+
+        for path in inlineStatusPages {
+            let source = try String(contentsOf: root.appending(path: path), encoding: .utf8)
+            #expect(source.contains(".platformPageHeader("), "\(path) should render iPadOS page status beside the title")
+            #expect(source.contains(".platformPageNavigationChrome("), "\(path) should keep macOS navigation subtitle behavior centralized")
+            #expect(source.contains(".navigationSubtitle(") == false, "\(path) should not force iPadOS status into the system subtitle row")
+        }
+
+        #expect(discovery.contains(".platformPageNavigationChrome(title: L10n.discover, status: navigationSubtitle)"))
+        #expect(discovery.contains(".navigationSubtitle(") == false)
+    }
+
     @Test("macOS feed keeps sidebar manual and lifts artwork navigation")
     func macOSFeedKeepsSidebarManualAndLiftsArtworkNavigation() throws {
         let root = try packageRoot()

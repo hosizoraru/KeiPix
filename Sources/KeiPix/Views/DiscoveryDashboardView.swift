@@ -23,8 +23,7 @@ struct DiscoveryDashboardView: View {
                 dashboardContent
             }
         }
-        .navigationTitle(L10n.discover)
-        .navigationSubtitle(navigationSubtitle)
+        .platformPageNavigationChrome(title: L10n.discover, status: navigationSubtitle)
         .sheet(isPresented: $isCustomizationPresented) {
             DashboardCustomizationSheet(store: store)
         }

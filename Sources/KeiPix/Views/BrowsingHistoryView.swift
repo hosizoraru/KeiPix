@@ -29,8 +29,12 @@ struct BrowsingHistoryView: View {
                 pixivHistoryContent
             }
         }
-        .navigationTitle(L10n.history)
-        .navigationSubtitle(historyStatusText)
+        .platformPageHeader(
+            title: L10n.history,
+            status: historyStatusText,
+            statusSystemImage: "clock.arrow.circlepath"
+        )
+        .platformPageNavigationChrome(title: L10n.history, status: historyStatusText)
         .confirmationDialog(
             L10n.clearHistoryConfirmation,
             isPresented: $isClearConfirmationPresented,

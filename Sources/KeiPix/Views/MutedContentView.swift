@@ -32,8 +32,12 @@ struct MutedContentView: View {
             }
             .scrollEdgeEffectStyle(.soft, for: .top)
         }
-        .navigationTitle(L10n.mutedContent)
-        .navigationSubtitle(totalCountText)
+        .platformPageHeader(
+            title: L10n.mutedContent,
+            status: totalCountText,
+            statusSystemImage: "eye.slash"
+        )
+        .platformPageNavigationChrome(title: L10n.mutedContent, status: totalCountText)
         .overlay(alignment: .bottom) {
             if let statusMessage {
                 FloatingStatusBanner(maxWidth: 520) {

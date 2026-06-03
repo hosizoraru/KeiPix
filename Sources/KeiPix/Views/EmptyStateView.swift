@@ -219,3 +219,101 @@ struct PixivSignedOutStateView: View {
         .contentShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
     }
 }
+
+struct PlatformPageTitleHeader: View {
+    let title: String
+    let status: String
+    var statusSystemImage: String?
+
+    var body: some View {
+        #if os(iOS)
+        ViewThatFits(in: .horizontal) {
+            HStack(alignment: .firstTextBaseline, spacing: 10) {
+                titleText
+                statusPill
+                Spacer(minLength: 0)
+            }
+
+            VStack(alignment: .leading, spacing: 8) {
+                titleText
+                statusPill
+            }
+        }
+        .padding(.horizontal, 18)
+        .padding(.top, 7)
+        .padding(.bottom, 5)
+        #else
+        EmptyView()
+        #endif
+    }
+
+    private var titleText: some View {
+        Text(title)
+            .font(.largeTitle.weight(.bold))
+            .lineLimit(1)
+            .minimumScaleFactor(0.78)
+            .truncationMode(.middle)
+    }
+
+    @ViewBuilder
+    private var statusPill: some View {
+        if status.isEmpty == false {
+            if let statusSystemImage {
+                Label {
+                    Text(status)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                } icon: {
+                    Image(systemName: statusSystemImage)
+                }
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(.secondary)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 5)
+                .glassEffect(.regular, in: Capsule(style: .continuous))
+                .accessibilityLabel(status)
+            } else {
+                Text(status)
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 5)
+                    .glassEffect(.regular, in: Capsule(style: .continuous))
+                    .accessibilityLabel(status)
+            }
+        }
+    }
+}
+
+extension View {
+    @ViewBuilder
+    func platformPageHeader(title: String, status: String, statusSystemImage: String? = nil) -> some View {
+        #if os(iOS)
+        VStack(spacing: 0) {
+            PlatformPageTitleHeader(
+                title: title,
+                status: status,
+                statusSystemImage: statusSystemImage
+            )
+            self
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+        #else
+        self
+        #endif
+    }
+
+    @ViewBuilder
+    func platformPageNavigationChrome(title: String, status: String) -> some View {
+        #if os(iOS)
+        self.navigationTitle("")
+            .navigationBarTitleDisplayMode(.inline)
+        #else
+        self
+            .navigationTitle(title)
+            .navigationSubtitle(status)
+        #endif
+    }
+}

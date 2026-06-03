@@ -36,8 +36,12 @@ struct DownloadQueueView: View {
     @ViewBuilder
     private func queueColumnWithChrome(visibleItems: [ArtworkDownloadItem]) -> some View {
         queueColumn(visibleItems: visibleItems)
-            .navigationTitle(L10n.downloads)
-            .navigationSubtitle(downloadStatusText)
+            .platformPageHeader(
+                title: L10n.downloads,
+                status: downloadStatusText,
+                statusSystemImage: "arrow.down.circle"
+            )
+            .platformPageNavigationChrome(title: L10n.downloads, status: downloadStatusText)
             .quickLookPreview($quickLookURL)
             .overlay(alignment: .bottom) {
                 actionMessageOverlay

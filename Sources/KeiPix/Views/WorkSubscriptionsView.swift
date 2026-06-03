@@ -33,8 +33,12 @@ struct WorkSubscriptionsView: View {
                 }
             }
         }
-        .navigationTitle(L10n.workSubscriptions)
-        .navigationSubtitle(subtitle)
+        .platformPageHeader(
+            title: L10n.workSubscriptions,
+            status: subtitle,
+            statusSystemImage: "bell.badge"
+        )
+        .platformPageNavigationChrome(title: L10n.workSubscriptions, status: subtitle)
         .overlay(alignment: .bottom) {
             if let actionMessage {
                 FloatingStatusBanner(maxWidth: 520) {

@@ -30,8 +30,12 @@ struct MangaWatchlistView: View {
                 watchlistSurface
             }
         }
-        .navigationTitle(L10n.mangaWatchlist)
-        .navigationSubtitle(showsSignedOutState ? "" : watchlistStatusText)
+        .platformPageHeader(
+            title: L10n.mangaWatchlist,
+            status: watchlistNavigationStatus,
+            statusSystemImage: "book.pages"
+        )
+        .platformPageNavigationChrome(title: L10n.mangaWatchlist, status: watchlistNavigationStatus)
         .confirmationDialog(
             L10n.removeFromWatchlist,
             isPresented: removalBinding,
@@ -237,6 +241,10 @@ struct MangaWatchlistView: View {
             return "\(visibleSeries.count.formatted()) \(L10n.results) · \(paging)"
         }
         return "\(filteredSeries.count.formatted()) / \(visibleSeries.count.formatted()) \(L10n.results) · \(paging)"
+    }
+
+    private var watchlistNavigationStatus: String {
+        showsSignedOutState ? "" : watchlistStatusText
     }
 
     private var normalizedWatchlistSearchText: String {

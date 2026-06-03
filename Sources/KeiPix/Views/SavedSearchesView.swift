@@ -115,8 +115,12 @@ struct SavedSearchesView: View {
             .padding(18)
         }
         .scrollEdgeEffectStyle(.soft, for: .top)
-        .navigationTitle(L10n.savedSearches)
-        .navigationSubtitle(savedSearchStatusText)
+        .platformPageHeader(
+            title: L10n.savedSearches,
+            status: savedSearchStatusText,
+            statusSystemImage: "magnifyingglass"
+        )
+        .platformPageNavigationChrome(title: L10n.savedSearches, status: savedSearchStatusText)
         .overlay(alignment: .bottom) {
             if let actionMessage {
                 FloatingStatusBanner(maxWidth: 520) {

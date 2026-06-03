@@ -38,8 +38,12 @@ struct WatchLaterView: View {
                 content
             }
         }
-        .navigationTitle(L10n.watchLater)
-        .navigationSubtitle(String(format: L10n.itemCountFormat, items.count))
+        .platformPageHeader(
+            title: L10n.watchLater,
+            status: watchLaterStatusText,
+            statusSystemImage: "bookmark.circle"
+        )
+        .platformPageNavigationChrome(title: L10n.watchLater, status: watchLaterStatusText)
         .confirmationDialog(
             L10n.clearHistoryConfirmation,
             isPresented: $isClearConfirmationPresented,
@@ -90,6 +94,10 @@ struct WatchLaterView: View {
                 .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
+    }
+
+    private var watchLaterStatusText: String {
+        String(format: L10n.itemCountFormat, items.count)
     }
 
     private var header: some View {

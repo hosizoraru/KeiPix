@@ -80,8 +80,12 @@ struct SpotlightView: View {
                 .scrollEdgeEffectStyle(.soft, for: .top)
             }
         }
-        .navigationTitle(L10n.spotlight)
-        .navigationSubtitle(navigationSubtitle)
+        .platformPageHeader(
+            title: L10n.spotlight,
+            status: spotlightNavigationStatus,
+            statusSystemImage: "newspaper"
+        )
+        .platformPageNavigationChrome(title: L10n.spotlight, status: spotlightNavigationStatus)
         .toolbar {
             if store.session != nil {
                 // Principal placement on macOS centers the segmented
@@ -310,6 +314,11 @@ struct SpotlightView: View {
         case .history:
             L10n.noArticleHistory
         }
+    }
+
+    private var spotlightNavigationStatus: String {
+        guard store.session != nil else { return "" }
+        return navigationSubtitle
     }
 
     private var emptySubtitle: String {
