@@ -84,19 +84,31 @@ struct NativeToolbarMenu {
 }
 
 struct NativeToolbarMenuSection {
+    enum Presentation {
+        case inline
+        case palette
+    }
+
     let title: String
     let items: [NativeToolbarMenuItem]
+    let presentation: Presentation
 
-    init(title: String = "", items: [NativeToolbarMenuItem]) {
+    init(title: String = "", presentation: Presentation = .inline, items: [NativeToolbarMenuItem]) {
         self.title = title
         self.items = items
+        self.presentation = presentation
     }
 
     @MainActor
     func uiMenu(coordinator: NativeToolbarMenuButton.Coordinator) -> UIMenu {
-        UIMenu(
+        var options: UIMenu.Options = [.displayInline]
+        if presentation == .palette {
+            options.insert(.displayAsPalette)
+        }
+
+        return UIMenu(
             title: title,
-            options: .displayInline,
+            options: options,
             children: items.map { $0.uiElement(coordinator: coordinator) }
         )
     }

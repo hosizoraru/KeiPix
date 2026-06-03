@@ -211,6 +211,7 @@ struct ContentView: View {
             }
         }
         .listStyle(.sidebar)
+        .navigationSplitViewColumnWidth(min: 190, ideal: 218, max: 252)
         .navigationTitle("KeiPix")
     }
 
@@ -267,6 +268,30 @@ struct ContentView: View {
                         }
                     }
 
+                    ToolbarItemGroup(placement: .topBarLeading) {
+                        if showsArtworkNavigationControls {
+                            Button {
+                                store.navigateBack()
+                            } label: {
+                                Label(L10n.goBack, systemImage: "chevron.left")
+                            }
+                            .labelStyle(.iconOnly)
+                            .help(L10n.goBack)
+                            .accessibilityLabel(L10n.goBack)
+                            .disabled(store.canNavigateBack == false)
+
+                            Button {
+                                store.navigateForward()
+                            } label: {
+                                Label(L10n.goForward, systemImage: "chevron.right")
+                            }
+                            .labelStyle(.iconOnly)
+                            .help(L10n.goForward)
+                            .accessibilityLabel(L10n.goForward)
+                            .disabled(store.canNavigateForward == false)
+                        }
+                    }
+
                     ToolbarItem(placement: .primaryAction) {
                         Button {
                             store.requestRouteRefresh()
@@ -285,7 +310,6 @@ struct ContentView: View {
                         if showsGalleryLayoutPicker {
                             NativeToolbarMenuButton(
                                 systemImage: store.galleryLayoutMode.systemImage,
-                                title: L10n.galleryLayout,
                                 accessibilityLabel: L10n.galleryLayout,
                                 menu: galleryLayoutMenu,
                                 select: handleNativeToolbarMenuAction
@@ -301,7 +325,7 @@ struct ContentView: View {
                             } label: {
                                 Label(
                                     isArtworkDetailPanelUserEnabled ? L10n.hideDetails : L10n.showDetails,
-                                    systemImage: "sidebar.trailing"
+                                    systemImage: artworkDetailToggleSystemImage
                                 )
                             }
                             .labelStyle(.iconOnly)
@@ -326,7 +350,6 @@ struct ContentView: View {
                     ToolbarItem(placement: .primaryAction) {
                         NativeToolbarMenuButton(
                             systemImage: "ellipsis.circle",
-                            title: L10n.appControls,
                             accessibilityLabel: L10n.appControls,
                             menu: appControlsMenu,
                             select: handleNativeToolbarMenuAction
@@ -384,22 +407,28 @@ struct ContentView: View {
     @ViewBuilder
     private func iPadFeedBrowserLayout(showsSidebarToggle: Bool) -> some View {
         if showsSidebarToggle, store.selectedRoute.usesArtworkFeed {
-            HStack(spacing: 0) {
-                feedContent(discoveryPresentation: discoveryPresentation(showsSidebarToggle: showsSidebarToggle))
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            GeometryReader { proxy in
+                let detailPanelWidth = iPadArtworkDetailPanelWidth(for: proxy.size.width)
 
-                if isArtworkDetailPanelVisible {
-                    Divider()
+                HStack(spacing: 0) {
+                    feedContent(discoveryPresentation: discoveryPresentation(showsSidebarToggle: showsSidebarToggle))
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-                    iPadArtworkDetailPanel {
-                        dismissArtworkDetail(clearSelection: false)
+                    if isArtworkDetailPanelVisible {
+                        Divider()
+
+                        iPadArtworkDetailPanel {
+                            dismissArtworkDetail(clearSelection: false)
+                        }
+                        .frame(width: detailPanelWidth)
+                        .frame(maxHeight: .infinity)
+                        .transition(.move(edge: .trailing).combined(with: .opacity))
                     }
-                    .frame(minWidth: 340, idealWidth: 420, maxWidth: 460, maxHeight: .infinity)
-                    .transition(.move(edge: .trailing).combined(with: .opacity))
                 }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .animation(.snappy(duration: 0.24), value: isArtworkDetailPanelVisible)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .animation(.snappy(duration: 0.24), value: isArtworkDetailPanelVisible)
         } else {
             feedContent(discoveryPresentation: discoveryPresentation(showsSidebarToggle: showsSidebarToggle))
         }
@@ -407,39 +436,24 @@ struct ContentView: View {
 
     private func iPadArtworkDetailPanel(close: @escaping () -> Void) -> some View {
         VStack(spacing: 0) {
-            HStack(spacing: 8) {
-                VStack(alignment: .leading, spacing: 2) {
+            HStack(spacing: 10) {
+                Image(systemName: "info.circle")
+                    .font(.title3.weight(.semibold))
+                    .symbolRenderingMode(.hierarchical)
+                    .foregroundStyle(.secondary)
+
+                VStack(alignment: .leading, spacing: 3) {
                     Text(L10n.details)
                         .font(.headline)
                     if let artwork = store.selectedArtwork {
                         Text(artwork.title)
-                            .font(.caption)
+                            .font(.subheadline)
                             .foregroundStyle(.secondary)
                             .lineLimit(1)
+                            .truncationMode(.middle)
                     }
                 }
-
-                Spacer(minLength: 8)
-
-                Button {
-                    store.navigateBack()
-                } label: {
-                    Label(L10n.goBack, systemImage: "chevron.left")
-                }
-                .labelStyle(.iconOnly)
-                .help(L10n.goBack)
-                .accessibilityLabel(L10n.goBack)
-                .disabled(store.canNavigateBack == false)
-
-                Button {
-                    store.navigateForward()
-                } label: {
-                    Label(L10n.goForward, systemImage: "chevron.right")
-                }
-                .labelStyle(.iconOnly)
-                .help(L10n.goForward)
-                .accessibilityLabel(L10n.goForward)
-                .disabled(store.canNavigateForward == false)
+                .frame(maxWidth: .infinity, alignment: .leading)
 
                 if let artwork = store.selectedArtwork {
                     Button {
@@ -465,7 +479,7 @@ struct ContentView: View {
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 10)
-            .background(.bar)
+            .background(.regularMaterial)
 
             Divider()
 
@@ -502,6 +516,10 @@ struct ContentView: View {
         store.selectedRoute.usesArtworkFeed
     }
 
+    private var showsArtworkNavigationControls: Bool {
+        store.selectedRoute.usesArtworkFeed
+    }
+
     private var showsArtworkActionsMenu: Bool {
         store.selectedRoute.usesArtworkFeed
     }
@@ -510,11 +528,16 @@ struct ContentView: View {
         store.selectedArtwork == nil ? "photo" : "photo.badge.checkmark"
     }
 
+    private var artworkDetailToggleSystemImage: String {
+        isArtworkDetailPanelUserEnabled ? "info.circle.fill" : "info.circle"
+    }
+
     private var galleryLayoutMenu: NativeToolbarMenu {
         NativeToolbarMenu(
             title: L10n.galleryLayout,
             sections: [
                 NativeToolbarMenuSection(
+                    presentation: .palette,
                     items: GalleryLayoutMode.allCases.map { mode in
                         .action(
                             id: IPadToolbarMenuAction.galleryLayout(mode),
@@ -537,37 +560,20 @@ struct ContentView: View {
             title: L10n.currentArtwork,
             sections: [
                 NativeToolbarMenuSection(
-                    title: L10n.navigation,
+                    presentation: .palette,
                     items: [
-                        .action(
-                            id: IPadToolbarMenuAction.goBack,
-                            title: L10n.goBack,
-                            systemImage: "chevron.left",
-                            isEnabled: store.canNavigateBack
-                        ),
-                        .action(
-                            id: IPadToolbarMenuAction.goForward,
-                            title: L10n.goForward,
-                            systemImage: "chevron.right",
-                            isEnabled: store.canNavigateForward
-                        ),
                         .action(
                             id: IPadToolbarMenuAction.previousArtwork,
                             title: L10n.previousArtwork,
-                            systemImage: "arrow.up",
+                            systemImage: "chevron.up",
                             isEnabled: canSelectAdjacentArtwork(delta: -1)
                         ),
                         .action(
                             id: IPadToolbarMenuAction.nextArtwork,
                             title: L10n.nextArtwork,
-                            systemImage: "arrow.down",
+                            systemImage: "chevron.down",
                             isEnabled: canSelectAdjacentArtwork(delta: 1)
-                        )
-                    ]
-                ),
-                NativeToolbarMenuSection(
-                    title: L10n.artwork,
-                    items: [
+                        ),
                         .action(
                             id: IPadToolbarMenuAction.toggleBookmark,
                             title: selectedArtwork?.isBookmarked == true ? L10n.removeBookmark : L10n.bookmark,
@@ -575,6 +581,17 @@ struct ContentView: View {
                             isSelected: selectedArtwork?.isBookmarked == true,
                             isEnabled: hasSelection
                         ),
+                        .action(
+                            id: IPadToolbarMenuAction.openReaderWindow,
+                            title: L10n.openReaderWindow,
+                            systemImage: "rectangle.inset.filled",
+                            isEnabled: hasSelection
+                        )
+                    ]
+                ),
+                NativeToolbarMenuSection(
+                    title: L10n.artwork,
+                    items: [
                         .action(
                             id: IPadToolbarMenuAction.downloadSelectedArtwork,
                             title: L10n.download,
@@ -585,12 +602,6 @@ struct ContentView: View {
                             id: IPadToolbarMenuAction.searchImageSource,
                             title: L10n.searchImageSource,
                             systemImage: "photo.badge.magnifyingglass",
-                            isEnabled: hasSelection
-                        ),
-                        .action(
-                            id: IPadToolbarMenuAction.openReaderWindow,
-                            title: L10n.openReaderWindow,
-                            systemImage: "rectangle.inset.filled",
                             isEnabled: hasSelection
                         )
                     ]
@@ -644,7 +655,7 @@ struct ContentView: View {
             title: L10n.appControls,
             sections: [
                 NativeToolbarMenuSection(
-                    title: L10n.links,
+                    presentation: .palette,
                     items: [
                         .action(
                             id: IPadToolbarMenuAction.openPixivLinkFromClipboard,
@@ -878,6 +889,22 @@ struct ContentView: View {
                 store.selectedArtwork = nil
             }
         }
+    }
+
+    private func iPadArtworkDetailPanelWidth(for availableWidth: CGFloat) -> CGFloat {
+        let minimum: CGFloat = availableWidth < 760 ? 300 : 320
+        let cap: CGFloat
+        if availableWidth >= 1180 {
+            cap = 430
+        } else if availableWidth >= 980 {
+            cap = 390
+        } else {
+            cap = 340
+        }
+
+        let feedReserve: CGFloat = availableWidth < 900 ? 420 : 520
+        let roomAwareMaximum = min(cap, max(minimum, availableWidth - feedReserve))
+        return min(max(minimum, availableWidth * 0.34), roomAwareMaximum)
     }
 
     private func discoveryPresentation(showsSidebarToggle: Bool) -> DiscoveryDashboardPresentation {

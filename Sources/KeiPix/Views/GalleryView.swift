@@ -274,38 +274,57 @@ private struct GalleryFeedView: View {
 
     #if os(iOS)
     private var iPadNativeFeedHeader: some View {
-        HStack(alignment: .center, spacing: 12) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(navigationTitle)
-                    .font(.title2.weight(.bold))
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.72)
-                    .truncationMode(.middle)
+        ViewThatFits(in: .horizontal) {
+            HStack(alignment: .center, spacing: 12) {
+                iPadFeedTitleLine
+                    .frame(minWidth: 210, maxWidth: .infinity, alignment: .leading)
+                    .layoutPriority(1)
 
-                if gallerySubtitle.isEmpty == false {
-                    Text(gallerySubtitle)
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
-                        .truncationMode(.middle)
-                }
+                iPadCompactFeedActions
+                    .frame(maxWidth: 430, alignment: .trailing)
             }
-            .frame(minWidth: 170, maxWidth: .infinity, alignment: .leading)
-            .layoutPriority(1)
 
-            FeedHeaderView(
-                store: store,
-                actionMessage: $actionMessage,
-                artworkSelection: $artworkSelection,
-                batchBookmarkCommandRequest: $batchBookmarkCommandRequest,
-                presentation: .iPadCompact
-            )
-            .frame(maxWidth: 520, alignment: .trailing)
+            VStack(alignment: .leading, spacing: 8) {
+                iPadFeedTitleLine
+                iPadCompactFeedActions
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+            }
         }
         .padding(.horizontal, 18)
-        .padding(.top, 4)
+        .padding(.top, 5)
         .padding(.bottom, 7)
         .background(.bar)
+    }
+
+    private var iPadFeedTitleLine: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 10) {
+            Text(navigationTitle)
+                .font(.title2.weight(.bold))
+                .lineLimit(1)
+                .minimumScaleFactor(0.78)
+                .truncationMode(.middle)
+
+            if gallerySubtitle.isEmpty == false {
+                Text(gallerySubtitle)
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+                    .padding(.horizontal, 9)
+                    .padding(.vertical, 4)
+                    .background(.thinMaterial, in: Capsule())
+            }
+        }
+    }
+
+    private var iPadCompactFeedActions: some View {
+        FeedHeaderView(
+            store: store,
+            actionMessage: $actionMessage,
+            artworkSelection: $artworkSelection,
+            batchBookmarkCommandRequest: $batchBookmarkCommandRequest,
+            presentation: .iPadCompact
+        )
     }
     #endif
 
