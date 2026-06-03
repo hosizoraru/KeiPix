@@ -119,14 +119,14 @@ struct ContentView: View {
 
     private var feedTab: some View {
         NavigationStack {
-            GalleryView(store: store)
+            feedContent
                 .navigationDestination(for: PixivRoute.self) { route in
                     routeDetail(for: route)
                 }
                 .toolbar {
                     ToolbarItem(placement: .primaryAction) {
                         Button {
-                            Task { await store.reloadCurrentFeed() }
+                            store.requestRouteRefresh()
                         } label: {
                             Label(L10n.refresh, systemImage: "arrow.clockwise")
                         }
@@ -174,6 +174,41 @@ struct ContentView: View {
         }
     }
 
+    @ViewBuilder
+    private var feedContent: some View {
+        if store.selectedRoute == .home {
+            DiscoveryDashboardView(store: store)
+        } else if store.selectedRoute == .mangaWatchlist {
+            MangaWatchlistView(store: store)
+        } else if store.selectedRoute == .novelWatchlist {
+            NovelWatchlistView(store: store)
+        } else if store.selectedRoute == .downloads {
+            DownloadQueueView(store: store)
+        } else if store.selectedRoute == .savedSearches {
+            SavedSearchesView(store: store)
+        } else if store.selectedRoute == .trendingTags {
+            TrendingTagsView(store: store)
+        } else if store.selectedRoute == .spotlight {
+            SpotlightView(store: store)
+        } else if store.selectedRoute == .bookmarkTags {
+            BookmarkTagsView(store: store)
+        } else if store.selectedRoute == .history {
+            BrowsingHistoryView(store: store)
+        } else if store.selectedRoute == .watchLater {
+            WatchLaterView(store: store)
+        } else if store.selectedRoute == .workSubscriptions {
+            WorkSubscriptionsView(store: store)
+        } else if store.selectedRoute == .mutedContent {
+            MutedContentView(store: store)
+        } else if store.selectedRoute == .followingCreators || store.selectedRoute == .pinnedCreators || store.selectedRoute == .recommendedUsers || store.selectedRoute == .searchUsers {
+            UserPreviewListView(store: store, mode: userPreviewMode)
+        } else if store.selectedRoute.usesNovelFeed {
+            NovelGalleryView(store: store)
+        } else {
+            GalleryView(store: store)
+        }
+    }
+
     private var readerBinding: Binding<Bool> {
         Binding {
             store.readerWindowArtwork != nil
@@ -181,6 +216,19 @@ struct ContentView: View {
             if newValue == false {
                 store.readerWindowArtwork = nil
             }
+        }
+    }
+
+    private var userPreviewMode: UserPreviewListMode {
+        switch store.selectedRoute {
+        case .followingCreators:
+            .following
+        case .pinnedCreators:
+            .pinned
+        case .searchUsers:
+            .search
+        default:
+            .recommended
         }
     }
 

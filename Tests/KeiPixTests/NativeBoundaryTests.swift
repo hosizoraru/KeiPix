@@ -114,6 +114,26 @@ struct NativeBoundaryTests {
         #expect(shortcuts.contains(#"\(\.$artwork)"#) == false)
     }
 
+    @Test("iPad feed root dispatches non artwork routes")
+    func iPadFeedRootDispatchesNonArtworkRoutes() throws {
+        let root = try packageRoot()
+        let contentView = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/ContentView_iPadOS.swift"),
+            encoding: .utf8
+        )
+
+        #expect(contentView.contains("private var feedContent: some View"))
+        #expect(contentView.contains("if store.selectedRoute == .home"))
+        #expect(contentView.contains("DiscoveryDashboardView(store: store)"))
+        #expect(contentView.contains("NovelGalleryView(store: store)"))
+        #expect(contentView.contains("SpotlightView(store: store)"))
+        #expect(contentView.contains("BookmarkTagsView(store: store)"))
+        #expect(contentView.contains("BrowsingHistoryView(store: store)"))
+        #expect(contentView.contains("UserPreviewListView(store: store, mode: userPreviewMode)"))
+        #expect(contentView.contains("store.requestRouteRefresh()"))
+        #expect(contentView.contains("Task { await store.reloadCurrentFeed() }") == false)
+    }
+
     @Test("Refresh token export is explicit and confirmation gated")
     func refreshTokenExportIsExplicitAndConfirmationGated() throws {
         let root = try packageRoot()
