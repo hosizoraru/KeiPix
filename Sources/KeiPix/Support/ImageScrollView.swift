@@ -66,7 +66,7 @@ struct ImageScrollView: NSViewRepresentable {
             context.coordinator.refitAfterViewportChangeIfNeeded()
         }
         scrollView.onMagnificationChanged = { magnification in
-            context.coordinator.reportZoom(magnification: magnification)
+            context.coordinator.handleMagnificationChanged(magnification)
         }
         scrollView.shouldForwardScrollToParent = { event in
             context.coordinator.shouldForwardScrollToParent(event)
@@ -220,6 +220,7 @@ struct ImageScrollView: NSViewRepresentable {
             imageView.image = image
             imageView.frame = CGRect(origin: .zero, size: size)
             scrollView.documentView = imageView
+            scrollView.contentInsets = NSEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
             lastViewportSize = .zero
             lastReportedLogicalZoom = nil
             updateFitMagnification(preservingLogicalZoom: false)
@@ -253,11 +254,42 @@ struct ImageScrollView: NSViewRepresentable {
                 NSAnimationContext.runAnimationGroup { context in
                     context.duration = 0.18
                     scrollView.animator().magnification = clamped
+                } completionHandler: { [weak self] in
+                    Task { @MainActor [weak self] in
+                        self?.centerDocument()
+                    }
                 }
             } else {
                 scrollView.magnification = clamped
             }
+            centerDocument()
             reportZoom(magnification: clamped)
+        }
+
+        func handleMagnificationChanged(_ magnification: CGFloat) {
+            centerDocument()
+            reportZoom(magnification: magnification)
+        }
+
+        private func centerDocument() {
+            guard let scrollView,
+                  let imageView,
+                  imageView.bounds.width > 0,
+                  imageView.bounds.height > 0 else {
+                return
+            }
+            let scaledSize = CGSize(
+                width: imageView.bounds.width * scrollView.magnification,
+                height: imageView.bounds.height * scrollView.magnification
+            )
+            let horizontalInset = max((scrollView.contentSize.width - scaledSize.width) * 0.5, 0)
+            let verticalInset = max((scrollView.contentSize.height - scaledSize.height) * 0.5, 0)
+            scrollView.contentInsets = NSEdgeInsets(
+                top: verticalInset,
+                left: horizontalInset,
+                bottom: verticalInset,
+                right: horizontalInset
+            )
         }
 
         func reportZoom(magnification: CGFloat) {

@@ -175,12 +175,9 @@ struct ArtworkReaderControls: View {
             }
         }
         .controlSize(.small)
-        .padding(10)
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .stroke(.quaternary, lineWidth: 1)
-        }
+        .padding(.horizontal, 11)
+        .padding(.vertical, 9)
+        .readerControlChrome()
         .onAppear {
             syncPageText()
         }
@@ -339,9 +336,8 @@ private struct ArtworkSinglePageReader: View {
             .contentShape(Rectangle())
         }
         .frame(maxWidth: .infinity)
-        .background(.quaternary)
-        .backgroundExtensionEffect()
-        .clipShape(RoundedRectangle(cornerRadius: 0, style: .continuous))
+        .readerCanvasChrome()
+        .padding(.horizontal, 16)
     }
 
     private var pageCount: Int {
@@ -464,8 +460,8 @@ private struct ArtworkDoublePageReader: View {
             .contentShape(Rectangle())
         }
         .frame(maxWidth: .infinity)
-        .background(.quaternary)
-        .backgroundExtensionEffect()
+        .readerCanvasChrome()
+        .padding(.horizontal, 16)
     }
 
     private var pageCount: Int {
@@ -591,5 +587,26 @@ private struct PageNavigationButton: View {
         .buttonStyle(.plain)
         .accessibilityLabel(title)
         .keiInteractiveGlass(18)
+    }
+}
+
+private extension View {
+    func readerCanvasChrome(cornerRadius: CGFloat = 26) -> some View {
+        self
+            .background(.thinMaterial, in: RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
+            .overlay {
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .stroke(.quaternary, lineWidth: 1)
+            }
+            .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
+    }
+
+    func readerControlChrome() -> some View {
+        self
+            .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .overlay {
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .stroke(.quaternary, lineWidth: 1)
+            }
     }
 }

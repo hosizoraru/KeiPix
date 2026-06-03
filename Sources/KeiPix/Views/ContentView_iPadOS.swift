@@ -427,52 +427,60 @@ struct ContentView: View {
 
     private func iPadArtworkDetailPanel(close: @escaping () -> Void) -> some View {
         VStack(spacing: 0) {
-            HStack(spacing: 10) {
-                Image(systemName: "info.circle")
-                    .font(.title3.weight(.semibold))
-                    .symbolRenderingMode(.hierarchical)
-                    .foregroundStyle(.secondary)
+            GlassEffectContainer {
+                HStack(spacing: 10) {
+                    Image(systemName: "info.circle")
+                        .font(.headline.weight(.semibold))
+                        .symbolRenderingMode(.hierarchical)
+                        .foregroundStyle(.secondary)
 
-                VStack(alignment: .leading, spacing: 3) {
-                    Text(L10n.details)
-                        .font(.headline)
-                    if let artwork = store.selectedArtwork {
-                        Text(artwork.title)
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                            .lineLimit(1)
-                            .truncationMode(.middle)
-                    }
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-
-                if let artwork = store.selectedArtwork {
-                    Button {
-                        withAnimation(.snappy(duration: 0.18)) {
-                            store.prepareReaderWindow(for: artwork)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(L10n.details)
+                            .font(.headline)
+                        if let artwork = store.selectedArtwork {
+                            Text(artwork.title)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                                .lineLimit(1)
+                                .truncationMode(.middle)
                         }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+
+                    if let artwork = store.selectedArtwork {
+                        Button {
+                            withAnimation(.snappy(duration: 0.18)) {
+                                store.prepareReaderWindow(for: artwork)
+                            }
+                        } label: {
+                            Label(L10n.openReaderWindow, systemImage: "rectangle.inset.filled")
+                        }
+                        .labelStyle(.iconOnly)
+                        .buttonStyle(.plain)
+                        .controlSize(.small)
+                        .keiInteractiveGlass(14)
+                        .help(L10n.openReaderWindow)
+                        .accessibilityLabel(L10n.openReaderWindow)
+                    }
+
+                    Button {
+                        close()
                     } label: {
-                        Label(L10n.openReaderWindow, systemImage: "rectangle.inset.filled")
+                        Label(L10n.close, systemImage: "xmark")
                     }
                     .labelStyle(.iconOnly)
-                    .help(L10n.openReaderWindow)
-                    .accessibilityLabel(L10n.openReaderWindow)
+                    .buttonStyle(.plain)
+                    .controlSize(.small)
+                    .keiInteractiveGlass(14)
+                    .help(L10n.close)
+                    .accessibilityLabel(L10n.close)
                 }
-
-                Button {
-                    close()
-                } label: {
-                    Label(L10n.close, systemImage: "xmark")
-                }
-                .labelStyle(.iconOnly)
-                .help(L10n.close)
-                .accessibilityLabel(L10n.close)
             }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 10)
-            .background(.regularMaterial)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
 
             Divider()
+                .opacity(0.45)
 
             ArtworkDetailView(store: store, showsNavigationChrome: false)
         }

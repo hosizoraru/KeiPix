@@ -460,6 +460,14 @@ struct NativeBoundaryTests {
             contentsOf: root.appending(path: "Sources/KeiPix/Views/ArtworkReaderView.swift"),
             encoding: .utf8
         )
+        let imageScrollView = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Support/ImageScrollView.swift"),
+            encoding: .utf8
+        )
+        let artworkSummary = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/ArtworkSummaryView.swift"),
+            encoding: .utf8
+        )
         let viewportLayout = try String(
             contentsOf: root.appending(path: "Sources/KeiPix/Support/ReaderPageViewportLayout.swift"),
             encoding: .utf8
@@ -472,6 +480,15 @@ struct NativeBoundaryTests {
         #expect(viewportLayout.contains("struct DoublePageReaderViewportLayout: Layout"))
         #expect(viewportLayout.contains("singlePageHeight(for: width)"))
         #expect(viewportLayout.contains("doublePageHeight(for: width, pairedWith: rightPresentation)"))
+        #expect(readerView.contains(".readerCanvasChrome()"))
+        #expect(readerView.contains(".readerControlChrome()"))
+        #expect(imageScrollView.contains("func handleMagnificationChanged(_ magnification: CGFloat)"))
+        #expect(imageScrollView.contains("private func centerDocument()"))
+        #expect(imageScrollView.contains("scrollView.contentInsets = NSEdgeInsets("))
+        #expect(imageScrollView.contains("completionHandler: { [weak self] in"))
+        #expect(artworkSummary.contains("private var metricsRail: some View"))
+        #expect(artworkSummary.contains("FlowLayout(spacing: 8)"))
+        #expect(artworkSummary.contains(".frame(maxWidth: .infinity, alignment: .leading)"))
     }
 
     @Test("Download queue uses a native list container")

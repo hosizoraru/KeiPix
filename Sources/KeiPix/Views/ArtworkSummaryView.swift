@@ -9,7 +9,7 @@ struct ArtworkSummaryView: View {
     @State private var creatorActionMessage: String?
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 10) {
             summaryHeader
             creatorIdentityRow
             if let creatorActionMessage {
@@ -20,20 +20,17 @@ struct ArtworkSummaryView: View {
             }
             ArtworkActionStrip(artwork: artwork, store: store, pageIndex: pageIndex, pageCount: pageCount)
         }
-        .padding(16)
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .stroke(.quaternary, lineWidth: 1)
-        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 12)
+        .keiGlass(22)
     }
 
     private var summaryHeader: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: 7) {
             HStack(alignment: .top, spacing: 12) {
                 Text(artwork.title)
-                    .font(.title2.weight(.semibold))
-                    .lineLimit(3)
+                    .font(.title3.weight(.semibold))
+                    .lineLimit(2)
                     .textSelection(.enabled)
                     .frame(maxWidth: .infinity, alignment: .leading)
 
@@ -92,8 +89,9 @@ struct ArtworkSummaryView: View {
                 isUserProfilePresented = true
             }
         }
-        .padding(10)
-        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .padding(.horizontal, 10)
+        .padding(.vertical, 8)
+        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 15, style: .continuous))
         .sheet(isPresented: $isUserProfilePresented) {
             UserProfileSheet(user: artwork.user, store: store)
                 .iPadFriendlySheet()
@@ -230,13 +228,8 @@ private struct ArtworkActionStrip: View {
 
     var body: some View {
         GlassEffectContainer {
-            VStack(spacing: 12) {
-                HStack(spacing: 10) {
-                    MetricView(title: L10n.views, value: artwork.totalView, systemImage: "eye")
-                    MetricView(title: L10n.saves, value: artwork.totalBookmarks, systemImage: "bookmark")
-                    MetricView(title: L10n.comments, value: artwork.totalComments, systemImage: "text.bubble")
-                    MetricView(title: L10n.pages, value: pageCount, systemImage: "square.stack", detail: pageCount > 1 ? "\(pageIndex + 1) / \(pageCount)" : nil)
-                }
+            VStack(alignment: .leading, spacing: 9) {
+                metricsRail
 
                 if let actionMessage {
                     Text(actionMessage)
@@ -278,6 +271,20 @@ private struct ArtworkActionStrip: View {
                 showBulkBlockMessage(applied)
             }
             .iPadFriendlySheet()
+        }
+    }
+
+    private var metricsRail: some View {
+        FlowLayout(spacing: 8) {
+            MetricView(title: L10n.views, value: artwork.totalView, systemImage: "eye")
+            MetricView(title: L10n.saves, value: artwork.totalBookmarks, systemImage: "bookmark")
+            MetricView(title: L10n.comments, value: artwork.totalComments, systemImage: "text.bubble")
+            MetricView(
+                title: L10n.pages,
+                value: pageCount,
+                systemImage: "square.stack",
+                detail: pageCount > 1 ? "\(pageIndex + 1) / \(pageCount)" : nil
+            )
         }
     }
 
@@ -395,7 +402,6 @@ private struct AdaptiveActionRow: View {
     var body: some View {
         GeometryReader { geo in
             HStack(spacing: 10) {
-                Spacer()
                 bookmarkButton
                 downloadButton
 
@@ -418,8 +424,8 @@ private struct AdaptiveActionRow: View {
                 moreMenu(promoteShare: geo.size.width >= 400,
                          promoteSearch: geo.size.width >= 520,
                          promoteWatchLater: geo.size.width >= 520)
-                Spacer()
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
         .frame(height: 28)
     }
@@ -786,18 +792,19 @@ private struct MetricView: View {
 
     var body: some View {
         Label {
-            VStack(alignment: .leading, spacing: 1) {
-                Text(detail ?? value.formatted())
-                    .font(.headline)
-                Text(title)
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-            }
+            Text(detail ?? value.formatted())
+                .font(.callout.weight(.semibold).monospacedDigit())
+            Text(title)
+                .font(.caption2)
+                .foregroundStyle(.secondary)
         } icon: {
             Image(systemName: systemImage)
                 .foregroundStyle(.secondary)
         }
         .labelStyle(.titleAndIcon)
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 8)
+        .padding(.vertical, 5)
+        .background(.thinMaterial, in: Capsule())
+        .fixedSize(horizontal: true, vertical: false)
     }
 }
