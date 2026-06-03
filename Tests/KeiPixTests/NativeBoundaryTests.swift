@@ -114,6 +114,32 @@ struct NativeBoundaryTests {
         #expect(shortcuts.contains(#"\(\.$artwork)"#) == false)
     }
 
+    @Test("XcodeGen declares a first-class iOS app target")
+    func xcodeGenDeclaresFirstClassiOSTarget() throws {
+        let root = try packageRoot()
+        let project = try String(
+            contentsOf: root.appending(path: "project.yml"),
+            encoding: .utf8
+        )
+        let plist = try String(
+            contentsOf: root.appending(path: "App/Info-iOS.plist"),
+            encoding: .utf8
+        )
+
+        #expect(project.contains("KeiPixiOS:"))
+        #expect(project.contains("PRODUCT_BUNDLE_IDENTIFIER: com.keipix.client.ios"))
+        #expect(project.contains("INFOPLIST_FILE: App/Info-iOS.plist"))
+        #expect(project.contains("TARGETED_DEVICE_FAMILY: \"1\""))
+        #expect(project.contains("KeiPix iOS:"))
+        #expect(plist.contains("<key>LSRequiresIPhoneOS</key>"))
+        #expect(plist.contains("<key>UIDeviceFamily</key>") == false)
+        #expect(plist.contains("<key>UISupportedInterfaceOrientations</key>"))
+        #expect(plist.contains("<key>UISupportedInterfaceOrientations~ipad</key>") == false)
+        #expect(plist.contains("<string>UIInterfaceOrientationPortrait</string>"))
+        #expect(plist.contains("<string>UIInterfaceOrientationLandscapeLeft</string>"))
+        #expect(plist.contains("<string>UIInterfaceOrientationLandscapeRight</string>"))
+    }
+
     @Test("iPad feed root dispatches non artwork routes")
     func iPadFeedRootDispatchesNonArtworkRoutes() throws {
         let root = try packageRoot()

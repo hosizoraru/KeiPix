@@ -60,6 +60,34 @@ targets:
       commandLineArguments: {}
       environmentVariables: []
 
+  KeiPixiOS:
+    type: application
+    platform: iOS
+    deploymentTarget: "26.0"
+    sources:
+      - path: Sources/KeiPix
+        excludes:
+          - "**/.DS_Store"
+      - path: PrivacyInfo.xcprivacy
+        buildPhase: resources
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.keipix.client.ios
+        PRODUCT_NAME: KeiPix
+        INFOPLIST_FILE: App/Info-iOS.plist
+        CODE_SIGN_STYLE: Automatic
+        CODE_SIGN_IDENTITY: "-"
+        ENABLE_PREVIEWS: YES
+        TARGETED_DEVICE_FAMILY: "1"
+        SUPPORTS_MACCATALYST: NO
+        LD_RUNPATH_SEARCH_PATHS:
+          - "$(inherited)"
+          - "@executable_path/Frameworks"
+    scheme:
+      gatherCoverageData: false
+      commandLineArguments: {}
+      environmentVariables: []
+
   KeiPixiPad:
     type: application
     platform: iOS
@@ -121,6 +149,20 @@ schemes:
       gatherCoverageData: false
       targets:
         - KeiPixTests
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+    archive:
+      config: Release
+
+  KeiPix iOS:
+    build:
+      targets:
+        KeiPixiOS: all
+    run:
+      config: Debug
+      executable: KeiPixiOS
     profile:
       config: Release
     analyze:
