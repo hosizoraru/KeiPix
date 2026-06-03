@@ -1,6 +1,6 @@
 # Build & Run
 
-KeiPix 同时支持 SwiftPM 与 XcodeGen 两条 macOS 开发路径。两条路径共享 `Sources/KeiPix` 与 `Tests/KeiPixTests`；`KeiPix.xcodeproj` 由 [`XcodeGen`](https://github.com/yonaskolb/XcodeGen) 从 `project.yml` 生成。
+KeiPix 同时支持 SwiftPM 与 XcodeGen 开发路径。SwiftPM 主要服务 macOS 本地可执行程序与测试，XcodeGen 生成 macOS app/test target 以及正式 iPadOS app target；两条路径共享 `Sources/KeiPix` 与 `Tests/KeiPixTests`。`KeiPix.xcodeproj` 由 [`XcodeGen`](https://github.com/yonaskolb/XcodeGen) 从 `project.yml` 生成。
 
 ## Requirements
 
@@ -56,7 +56,7 @@ swift test --filter RuntimeReadinessTests
 swift test --filter GallerySelectionTests
 ```
 
-当前测试目录有 51 个 Swift 测试文件。最近一次完整本地基线为 **289 个测试 / 51 个测试套件**，覆盖模型、解析器、下载、阅读、URL 路由、视觉 QA、Runtime Readiness 和 native bridge 边界。
+当前测试目录有 52 个 Swift 测试文件。最近一次完整本地基线为 **302 个测试 / 52 个测试套件**，覆盖模型、解析器、下载、阅读、URL 路由、视觉 QA、Runtime Readiness、iPadOS target metadata 和 native bridge 边界。
 
 ## XcodeGen
 
@@ -74,6 +74,16 @@ xcodebuild -project KeiPix.xcodeproj -scheme KeiPix -configuration Debug \
 
 xcodebuild -project KeiPix.xcodeproj -scheme KeiPix -configuration Debug \
   -destination 'platform=macOS' test
+```
+
+正式 iPadOS target 使用独立 scheme：
+
+```bash
+xcodebuild -project KeiPix.xcodeproj -scheme 'KeiPix iPadOS' \
+  -configuration Debug \
+  -destination 'platform=iOS Simulator,id=<simulator-udid>' \
+  -derivedDataPath /tmp/KeiPix-iPadFormalDerived \
+  build
 ```
 
 `KeiPix.xcodeproj` 不需要手改；刷新项目时重新运行 `xcodegen generate`。
@@ -110,6 +120,7 @@ GitHub Actions workflow 位于 `.github/workflows/macos-build.yml`：
 | 文件 | 用途 |
 | --- | --- |
 | `App/Info.plist` | Xcode 构建使用的 plist 模板 |
+| `App/Info-iPadOS.plist` | iPadOS target 使用的 plist 模板，包含 `keipix://` / `pixiv://` 路由、后台刷新、照片保存说明和 iPad 方向声明 |
 | `App/KeiPix.entitlements` | App Sandbox、网络、用户选择文件、下载、打印 entitlement |
 | `script/build_and_run.sh` | SwiftPM 本地 `.app` 构建与运行脚本 |
 | `script/build_release_app.sh` | CI/release 打包脚本 |
@@ -117,11 +128,18 @@ GitHub Actions workflow 位于 `.github/workflows/macos-build.yml`：
 
 修改 entitlement、bundle metadata 或 URL/document type 时，要同步 Xcode 路径和脚本路径。
 
-## iPadOS Route
+## iPadOS Target
 
-`Package.swift` 声明了 `.iOS(.v26)`，并且多个热路径已经具备 UIKit bridge，例如 `UICollectionView`、`UIScrollView`、`UITextView`、`UISearchTextField`。
+`project.yml` 声明了正式 `KeiPixiPad` app target 和 `KeiPix iPadOS` scheme，target 平台为 iOS、设备族为 iPad，bundle id 为 `com.keipix.client.ipad`。`Package.swift` 同时声明 `.iOS(.v26)`，多个热路径已经具备 UIKit bridge，例如 `UICollectionView`、`UIScrollView`、`UITextView`、`UISearchTextField`。
 
-但当前 `project.yml` 只生成 macOS app/test target。开启 iPadOS 发布路线前，需要新增 iOS target、设备/Simulator 构建、触控视觉 QA 和平台 entitlement 复核。文档中不要把 iPadOS 写成已完整发布目标，除非这些验证已经补齐。
+推荐验证顺序：
+
+1. `xcodegen generate`
+2. 使用 `KeiPix iPadOS` scheme 在 iPad Simulator 上 build/run
+3. 检查 feed、downloads、settings 这类基础 surface 的安全区、sidebar/detail、空状态和触控导航
+4. 再补多尺寸设备矩阵、视觉 QA、签名和分发检查
+
+文档中可以把 iPadOS 写成正式 target，但不要写成已公开发布完成目标，除非上述设备与分发验证已经补齐。命令行和 XcodeBuildMCP 同时跑构建时，建议给命令行 `xcodebuild` 指定独立 `-derivedDataPath`，避免 DerivedData 数据库锁。
 
 ## Troubleshooting
 

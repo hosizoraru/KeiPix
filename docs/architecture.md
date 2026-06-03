@@ -1,6 +1,6 @@
 # Architecture
 
-KeiPix 是 SwiftPM 单 executable target 的原生 Apple 平台客户端。当前主平台是 macOS 26+；`Package.swift` 同时声明 iOS 26，用于保留同源码 iPadOS 适配路线。整体 UI 架构已经调整为 **AppKit/UIKit 优先、SwiftUI 辅助**：平台热路径下沉到原生 view，SwiftUI 负责应用外壳、状态绑定、轻量组合与设置类 surface。
+KeiPix 是原生 Apple 平台客户端。当前主平台是 macOS 26+；SwiftPM 提供单 executable target，XcodeGen 声明 macOS app/test target 和正式 iPadOS app target。整体 UI 架构已经调整为 **AppKit/UIKit 优先、SwiftUI 辅助**：平台热路径下沉到原生 view，SwiftUI 负责应用外壳、状态绑定、轻量组合与设置类 surface。
 
 ## Source Layout
 
@@ -16,7 +16,7 @@ Sources/KeiPix/
 └── Resources/       # Localizable.xcstrings and bundled resources
 ```
 
-`KeiPix.xcodeproj` 由 XcodeGen 根据 `project.yml` 生成。仓库里的 Xcode target 当前是 macOS；iPadOS 仍处在同源码 UIKit bridge 与 SwiftPM 平台声明阶段，不把它描述成已发布 target。
+`KeiPix.xcodeproj` 由 XcodeGen 根据 `project.yml` 生成。仓库里的正式 app target 包含 macOS `KeiPix` 与 iPadOS `KeiPixiPad`；iPadOS 已具备基础 Simulator build-run 验证，但公开发布前仍需要更广泛的多尺寸视觉 QA、签名和分发检查。
 
 ## UI Ownership
 
@@ -95,6 +95,7 @@ The bridge rule is intentionally narrow: native views own rendering, layout reus
 - `Package.swift` must stay on the SwiftPM native route and declare macOS/iOS 26.
 - `Sources/KeiPix` must not vendor Flutter, Dart, Kotlin, Gradle or reference-client implementation paths.
 - SwiftUI view files stay as composition shells.
+- XcodeGen must keep first-class macOS and iPadOS app targets explicit.
 - Gallery, reader, TextKit, download queue, browsing history, creator list/search/menu/drop bridges must remain explicit.
 - Native gallery must avoid full visible-item reloads for highlight-only changes.
 

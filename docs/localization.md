@@ -11,6 +11,8 @@ Sources/KeiPix/Resources/
 
 `Package.swift` 声明 `defaultLocalization: "en"`，`Info.plist` 与脚本生成的 plist 都声明 `CFBundleLocalizations: [en, zh-Hans, zh-Hant, ja]`。`XCStringsBuilder` SwiftPM 插件在构建时调用 `xcrun xcstringstool compile`，把 `Localizable.xcstrings` 编译成各 `<lang>.lproj/Localizable.strings`，再由 `Resources/.process` 自动打包进 bundle。
 
+XcodeGen 路径不走 SwiftPM build-tool plugin；macOS 与 iPadOS app target 都把同一个 `Localizable.xcstrings` 放入资源构建阶段，由 Xcode 的 string catalog 编译流程处理。修改 string catalog 后，SwiftPM 与 XcodeGen 两条路径都需要至少各跑一次构建，避免只验证了其中一边。
+
 ## L10n 入口
 
 `Sources/KeiPix/Support/L10n.swift` 是所有 UI 字符串的访问层：
@@ -31,7 +33,7 @@ Sources/KeiPix/Resources/
 
 - 在 `Localizable.xcstrings` 中为目标 locale 补全所有 key 的翻译
 - `Package.swift` 不需要改（资源走 `Resources/.process`，插件按 xcstrings 中声明的语言生成 `.lproj`）；Xcode 路径需要重新 `xcodegen generate`
-- `Info.plist` / `script/build_and_run.sh` 中的 `CFBundleLocalizations` 加入新语言代码
+- `Info.plist` / `Info-iPadOS.plist` / `script/build_and_run.sh` 中的 `CFBundleLocalizations` 加入新语言代码
 - 把翻译走查写进当次 PR 的验证清单
 
 ## 文案风格
