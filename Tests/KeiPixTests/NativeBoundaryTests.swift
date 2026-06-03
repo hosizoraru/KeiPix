@@ -160,10 +160,20 @@ struct NativeBoundaryTests {
         #expect(contentView.contains("dismissArtworkDetail(clearSelection: true)"))
         #expect(contentView.contains("store.prepareReaderWindow(for: artwork)"))
         #expect(contentView.contains("NativeToolbarMenuButton("))
+        #expect(contentView.contains(".navigationSplitViewColumnWidth(min: 190, ideal: 218, max: 252)"))
+        #expect(contentView.contains("ToolbarItemGroup(placement: .topBarLeading)"))
+        #expect(contentView.contains("private var showsArtworkNavigationControls: Bool"))
+        #expect(contentView.contains("private var artworkDetailToggleSystemImage: String"))
+        #expect(contentView.contains("GeometryReader { proxy in"))
+        #expect(contentView.contains("iPadArtworkDetailPanelWidth(for: proxy.size.width)"))
+        #expect(contentView.contains("private func iPadArtworkDetailPanelWidth(for availableWidth: CGFloat) -> CGFloat"))
+        #expect(contentView.contains("systemImage: store.galleryLayoutMode.systemImage,\n                                accessibilityLabel: L10n.galleryLayout"))
+        #expect(contentView.contains("systemImage: \"ellipsis.circle\",\n                            accessibilityLabel: L10n.appControls"))
         #expect(contentView.contains("title: L10n.galleryLayout"))
         #expect(contentView.contains("title: L10n.appControls"))
         #expect(contentView.contains("private var galleryLayoutMenu: NativeToolbarMenu"))
         #expect(contentView.contains("private var artworkActionsMenu: NativeToolbarMenu"))
+        #expect(contentView.contains("presentation: .palette"))
         #expect(contentView.contains("private var showsArtworkActionsMenu: Bool"))
         #expect(contentView.contains("accessibilityLabel: L10n.currentArtwork"))
         #expect(contentView.contains("selectedArtworkMenuSystemImage"))
@@ -221,8 +231,27 @@ struct NativeBoundaryTests {
         #expect(nativeToolbarMenu.contains("button.showsMenuAsPrimaryAction = true"))
         #expect(nativeToolbarMenu.contains("configuration.title = title"))
         #expect(nativeToolbarMenu.contains("configuration.imagePlacement = .leading"))
+        #expect(nativeToolbarMenu.contains("case palette"))
+        #expect(nativeToolbarMenu.contains(".displayAsPalette"))
         #expect(nativeToolbarMenu.contains("UIMenu("))
         #expect(nativeToolbarMenu.contains("UIAction("))
+    }
+
+    @Test("macOS feed keeps sidebar manual and lifts artwork navigation")
+    func macOSFeedKeepsSidebarManualAndLiftsArtworkNavigation() throws {
+        let root = try packageRoot()
+        let contentView = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/ContentView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(contentView.contains("NavigationSplitView(columnVisibility: $columnVisibility)"))
+        #expect(contentView.contains("ArtworkDetailView(store: store, showsNavigationChrome: false)"))
+        #expect(contentView.contains("ToolbarItemGroup(placement: .navigation)"))
+        #expect(contentView.contains("private var showsArtworkNavigationControls: Bool"))
+        #expect(contentView.contains("private func toggleSidebar()"))
+        #expect(contentView.contains("columnVisibility = isSidebarPresented ? .all : .doubleColumn"))
+        #expect(contentView.contains("detailOnly") == false)
     }
 
     @Test("Refresh token export is explicit and confirmation gated")

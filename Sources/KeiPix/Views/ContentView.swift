@@ -31,7 +31,7 @@ struct ContentView: View {
                 NovelDetailView(store: store)
                     .navigationSplitViewColumnWidth(min: 320, ideal: 460)
             } else {
-                ArtworkDetailView(store: store)
+                ArtworkDetailView(store: store, showsNavigationChrome: false)
                     .navigationSplitViewColumnWidth(min: 300, ideal: 420)
             }
         }
@@ -55,6 +55,30 @@ struct ContentView: View {
             await store.refreshSearchSuggestions()
         }
         .toolbar {
+            ToolbarItemGroup(placement: .navigation) {
+                if showsArtworkNavigationControls {
+                    Button {
+                        store.navigateBack()
+                    } label: {
+                        Label(L10n.goBack, systemImage: "chevron.left")
+                    }
+                    .labelStyle(.iconOnly)
+                    .help(L10n.goBack)
+                    .accessibilityLabel(L10n.goBack)
+                    .disabled(store.canNavigateBack == false)
+
+                    Button {
+                        store.navigateForward()
+                    } label: {
+                        Label(L10n.goForward, systemImage: "chevron.right")
+                    }
+                    .labelStyle(.iconOnly)
+                    .help(L10n.goForward)
+                    .accessibilityLabel(L10n.goForward)
+                    .disabled(store.canNavigateForward == false)
+                }
+            }
+
             ToolbarItem(placement: .primaryAction) {
                 Button {
                     toggleSidebar()
@@ -483,6 +507,10 @@ struct ContentView: View {
     }
 
     private var showsGalleryLayoutPicker: Bool {
+        store.selectedRoute.usesArtworkFeed
+    }
+
+    private var showsArtworkNavigationControls: Bool {
         store.selectedRoute.usesArtworkFeed
     }
 
