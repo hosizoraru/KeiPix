@@ -127,6 +127,40 @@ struct PixivisionArticleParserTests {
         #expect(paragraphTexts.contains { $0.contains("Caption beta") })
     }
 
+    @Test("Feature index article parses embedded Pixivision article cards")
+    func parsesFeatureIndexArticleCards() {
+        let parsed = PixivisionArticleParser.parse(
+            html: Self.articleIndexFeatureHTML,
+            articleID: 11785,
+            sourceURL: URL(string: "https://www.pixivision.net/zh/a/11785")!
+        )
+
+        let headings = parsed.blocks.compactMap { block -> String? in
+            if case .heading(let text) = block { return text } else { return nil }
+        }
+        #expect(headings == ["日语热门特辑", "英语热门特辑"])
+
+        let paragraphs = parsed.blocks.compactMap { block -> String? in
+            if case .paragraph(let text) = block { return text } else { return nil }
+        }
+        #expect(paragraphs.first?.contains("5月的pixivision") == true)
+
+        let articleBlocks = parsed.blocks.compactMap { block -> PixivisionInlineArticle? in
+            if case .article(let article) = block { return article } else { return nil }
+        }
+        #expect(articleBlocks.map(\.articleID) == [11510, 11270, 11556])
+        #expect(articleBlocks[0].title == "优雅又可爱♡ - 玛丽珍鞋插画特辑 -")
+        #expect(articleBlocks[0].category == "插画")
+        #expect(articleBlocks[0].publishDateText == "2026.05.07")
+        #expect(articleBlocks[0].tags == ["时尚配件", "鞋子", "玛丽珍鞋"])
+        #expect(articleBlocks[0].coverURL?.absoluteString.contains("131727829") == true)
+        #expect(articleBlocks[0].articleURL.absoluteString == "https://www.pixivision.net/zh/a/11510")
+
+        // The `<h2 class="arc__title">` inside each card is card
+        // metadata, not a body section heading.
+        #expect(headings.contains { $0.contains("玛丽珍鞋插画特辑") } == false)
+    }
+
     @Test("Related-articles shelves parse with kind, heading, cards, and view-more URL")
     func parsesRelatedArticleShelves() {
         let parsed = PixivisionArticleParser.parse(
@@ -287,6 +321,89 @@ struct PixivisionArticleParserTests {
         """
     }
 
+    private static func inlineArticleCardHTML(
+        articleID: Int,
+        title: String,
+        imageID: String,
+        date: String,
+        tags: [String]
+    ) -> String {
+        """
+        <div class="article-item _feature-article-body__article_card">
+        <article class="_article-card spotlight">
+        <div class="arc__thumbnail-container">
+        <a href="/zh/a/\(articleID)" data-gtm-action="ClickImage" data-gtm-label="\(articleID)">
+        <div class="_thumbnail" style="background-image:  url(https://i.pximg.net/c/1200x630_q80/img-original/img/\(imageID)_p0.jpg)"></div>
+        </a>
+        <a href="/zh/c/illustration"><span class="arc__thumbnail-label _category-label large spotlight">插画</span></a>
+        </div>
+        <div class="arc__title-container">
+        <h2 class="arc__title"><a href="/zh/a/\(articleID)" data-gtm-action="ClickTitle">\(title)</a></h2>
+        </div>
+        <div class="arc__footer-container">
+        <ul class="_tag-list">
+        \(tags.map { #"<li class="tls__list-item-container"><a href="/zh/t/100"><div class="tls__list-item small">\#($0)</div></a></li>"# }.joined())
+        </ul>
+        <div class="arc__footer-date-pr"><time class="_date small light-gray" datetime="2026-05-07">\(date)</time></div>
+        </div>
+        </article>
+        </div>
+        """
+    }
+
+    /// Mirror of a Pixivision monthly roundup page (`2026年5月
+    /// pixivision热门特辑`-style) where the article body is mostly
+    /// a grouped index of other Pixivision articles instead of Pixiv
+    /// artwork cards.
+    private static let articleIndexFeatureHTML: String = {
+        var html = """
+        <html><head>
+        <meta property="og:title" content="热门话题一个不落下♡ - 2026年5月pixivision热门特辑 -">
+        <meta property="og:description" content="5月热门特辑摘要。">
+        <meta property="og:image" content="https://embed.pixiv.net/pixivision/zh/a/11785/ogimage.jpg">
+        </head><body>
+        <a class="_category type-bg-color" href="/zh/c/illustration">插画</a>
+        <time class="_date am__sub-info__date large light-gray">2026.05.31</time>
+        <h1 class="am__title">热门话题一个不落下♡ - 2026年5月pixivision热门特辑 -</h1>
+        <article class="am__article-body-container" data-gtm-category="Article">
+        <div class="article-item _feature-article-body__paragraph">
+        <div class="fab__paragraph _medium-editor-text">
+        <div>5月的pixivision也网罗了各种人气特辑，千万不要错过咯。</div>
+        </div>
+        </div>
+        <div class="article-item _feature-article-body__heading"><h3>日语热门特辑</h3></div>
+        """
+        html += inlineArticleCardHTML(
+            articleID: 11510,
+            title: "优雅又可爱♡ - 玛丽珍鞋插画特辑 -",
+            imageID: "2025/06/19/11/18/37/131727829",
+            date: "2026.05.07",
+            tags: ["时尚配件", "鞋子", "玛丽珍鞋"]
+        )
+        html += inlineArticleCardHTML(
+            articleID: 11270,
+            title: "意味深长的目光♡ - 流盼插画特辑 -",
+            imageID: "2026/03/16/19/52/41/142376088",
+            date: "2026.05.06",
+            tags: ["眼睛", "回眸"]
+        )
+        html += """
+        <div class="article-item _feature-article-body__heading"><h3>英语热门特辑</h3></div>
+        """
+        html += inlineArticleCardHTML(
+            articleID: 11556,
+            title: "柔美的曲线 - 大腿插画特辑 -",
+            imageID: "2025/08/09/01/36/52/133650043",
+            date: "2026.05.22",
+            tags: ["○○控", "性感", "腿部", "大腿"]
+        )
+        html += """
+        </article>
+        </body></html>
+        """
+        return html
+    }()
+
     /// Mirror of a Pixivision feature article (`球体关节插画特辑`-style)
     /// where the body contains many work cards, each preceded by a
     /// feature-style heading + paragraph wrapper, and the body ends
@@ -382,4 +499,3 @@ struct PixivisionArticleParserTests {
         return html
     }()
 }
-

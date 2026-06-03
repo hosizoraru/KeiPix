@@ -200,6 +200,17 @@ struct PixivisionReaderView: View {
                     showStatus(L10n.copied)
                 }
             )
+        case .article(let article):
+            PixivisionInlineArticleCard(
+                article: article,
+                openArticle: {
+                    selectArticle(spotlightArticle(from: article))
+                },
+                copyLink: {
+                    PasteboardWriter.copy(article.articleURL.absoluteString)
+                    showStatus(L10n.copied)
+                }
+            )
         }
     }
 
@@ -269,6 +280,17 @@ struct PixivisionReaderView: View {
         )
     }
 
+    private func spotlightArticle(from inlineArticle: PixivisionInlineArticle) -> PixivSpotlightArticle {
+        PixivSpotlightArticle(
+            id: inlineArticle.articleID,
+            title: inlineArticle.title,
+            pureTitle: inlineArticle.title,
+            thumbnail: inlineArticle.coverURL,
+            articleURL: inlineArticle.articleURL,
+            publishDate: Date()
+        )
+    }
+
     // MARK: - Error banner
 
     private func errorBanner(_ message: String) -> some View {
@@ -310,6 +332,150 @@ struct PixivisionReaderView: View {
             content = try await store.pixivisionArticleContent(for: article)
         } catch {
             errorMessage = error.localizedDescription
+        }
+    }
+}
+
+/// Pixivision feature articles can embed other Pixivision articles as
+/// first-class body cards (for example monthly "popular feature"
+/// roundups). Keep those links native: the card looks like article
+/// content, but tapping it swaps the active reader article instead of
+/// opening a web tab.
+private struct PixivisionInlineArticleCard: View {
+    let article: PixivisionInlineArticle
+    let openArticle: () -> Void
+    let copyLink: () -> Void
+
+    @State private var isHovering = false
+
+    var body: some View {
+        Button(action: openArticle) {
+            ViewThatFits(in: .horizontal) {
+                horizontalLayout
+                verticalLayout
+            }
+            .padding(12)
+            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .overlay {
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .stroke(isHovering ? Color.accentColor.opacity(0.55) : Color.primary.opacity(0.12), lineWidth: 1)
+            }
+            .scaleEffect(isHovering ? 1.006 : 1)
+            .animation(.snappy(duration: 0.16), value: isHovering)
+        }
+        .buttonStyle(.plain)
+        .frame(maxWidth: 720, alignment: .leading)
+        .keiPixHoverTracker { isHovering = $0 }
+        .contextMenu {
+            Button(L10n.openArticle, action: openArticle)
+            Link(L10n.openInPixiv, destination: article.articleURL)
+            Divider()
+            Button(L10n.copyLink, action: copyLink)
+        }
+        .help(article.title)
+    }
+
+    private var horizontalLayout: some View {
+        HStack(alignment: .top, spacing: 14) {
+            cover
+                .frame(width: 210, height: 118)
+
+            VStack(alignment: .leading, spacing: 8) {
+                metadataRow
+                title
+                tagRow
+                Spacer(minLength: 0)
+            }
+            .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    private var verticalLayout: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            cover
+                .aspectRatio(16.0 / 9.0, contentMode: .fit)
+                .frame(maxWidth: .infinity)
+            metadataRow
+            title
+            tagRow
+        }
+    }
+
+    private var cover: some View {
+        ZStack(alignment: .topLeading) {
+            Color.black.opacity(0.82)
+            RemoteImageView(url: article.coverURL, contentMode: .fill)
+
+            if let category = article.category, category.isEmpty == false {
+                Text(category)
+                    .font(.caption2.weight(.semibold))
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(.black.opacity(0.58), in: Capsule())
+                    .padding(8)
+            }
+        }
+        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .stroke(.quaternary, lineWidth: 1)
+        }
+    }
+
+    private var metadataRow: some View {
+        HStack(spacing: 6) {
+            Label(L10n.openArticle, systemImage: "newspaper")
+                .labelStyle(.iconOnly)
+                .foregroundStyle(Color.accentColor)
+
+            if let category = article.category, category.isEmpty == false {
+                Text(category)
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(Color.accentColor)
+            }
+
+            if let date = article.publishDateText, date.isEmpty == false {
+                if article.category?.isEmpty == false {
+                    Text("·")
+                        .foregroundStyle(.tertiary)
+                }
+                Text(date)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            Spacer(minLength: 0)
+
+            Image(systemName: "chevron.right")
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.tertiary)
+        }
+        .font(.caption)
+    }
+
+    private var title: some View {
+        Text(article.title)
+            .font(.headline.weight(.semibold))
+            .foregroundStyle(.primary)
+            .multilineTextAlignment(.leading)
+            .lineLimit(3)
+            .fixedSize(horizontal: false, vertical: true)
+    }
+
+    @ViewBuilder
+    private var tagRow: some View {
+        if article.tags.isEmpty == false {
+            FlowLayout(spacing: 6) {
+                ForEach(article.tags.prefix(4), id: \.self) { tag in
+                    Text(tag)
+                        .font(.caption2.weight(.medium))
+                        .foregroundStyle(.secondary)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
+                        .background(.quaternary, in: Capsule())
+                }
+            }
         }
     }
 }

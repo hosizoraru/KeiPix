@@ -30,6 +30,7 @@ enum PixivisionArticleBlock: Sendable, Equatable, Identifiable {
     case heading(text: String)
     case paragraph(text: String)
     case work(PixivisionArticleWork)
+    case article(PixivisionInlineArticle)
 
     var id: String {
         switch self {
@@ -39,6 +40,8 @@ enum PixivisionArticleBlock: Sendable, Equatable, Identifiable {
             return "p:" + text.prefix(60)
         case .work(let work):
             return "w:\(work.artworkID)"
+        case .article(let article):
+            return "a:\(article.articleID)"
         }
     }
 }
@@ -51,6 +54,22 @@ struct PixivisionArticleWork: Sendable, Equatable {
     let creatorName: String
     let creatorAvatarURL: URL?
     let illustImageURL: URL?
+}
+
+/// Pixivision article card embedded inside a feature article body.
+/// Monthly / curated roundup pages use this for "all articles" blocks:
+/// a heading per language or topic, followed by one or more article
+/// cards linking to other Pixivision pages.
+struct PixivisionInlineArticle: Sendable, Equatable, Identifiable {
+    let articleID: Int
+    let title: String
+    let category: String?
+    let publishDateText: String?
+    let coverURL: URL?
+    let articleURL: URL
+    let tags: [String]
+
+    var id: Int { articleID }
 }
 
 /// Tag chip Pixivision attaches to the article header. We carry the
@@ -193,7 +212,7 @@ enum PixivisionArticleParser {
         // `parseRelatedSections`, so removing them from the body
         // before block parsing keeps each heading rendered once.
         let prunedBody = removeRelatedShelves(from: bodyHTML)
-        let blocks = parseBlocks(in: prunedBody)
+        let blocks = parseBlocks(in: prunedBody, sourceURL: sourceURL)
         let tags = parseTags(in: html, sourceURL: sourceURL)
         let relatedSections = parseRelatedSections(in: html, sourceURL: sourceURL)
 
@@ -225,34 +244,51 @@ enum PixivisionArticleParser {
     /// between cards for prose blocks — the cards themselves are
     /// parsed as a single unit, so their inner markup never bleeds
     /// into the rendered article body.
-    static func parseBlocks(in bodyHTML: String) -> [PixivisionArticleBlock] {
+    static func parseBlocks(
+        in bodyHTML: String,
+        sourceURL: URL = URL(string: "https://www.pixivision.net/")!
+    ) -> [PixivisionArticleBlock] {
         guard bodyHTML.isEmpty == false else { return [] }
 
-        let workRanges = findWorkCardRanges(in: bodyHTML)
+        let contentRanges = (
+            findWorkCardRanges(in: bodyHTML).map { BodyBlockRange(range: $0, kind: .work) }
+                + findInlineArticleCardRanges(in: bodyHTML).map { BodyBlockRange(range: $0, kind: .article) }
+        )
+        .sorted { $0.range.lowerBound < $1.range.lowerBound }
 
         var blocks: [PixivisionArticleBlock] = []
         var seenWorkIDs = Set<Int>()
+        var seenArticleIDs = Set<Int>()
         var cursor = bodyHTML.startIndex
 
-        for workRange in workRanges {
+        for contentRange in contentRanges {
             // Prose chunk that appeared between the last cursor and
-            // the start of this work card — scan it for paragraphs +
+            // the start of this card — scan it for paragraphs +
             // headings so they keep their original document order.
-            if cursor < workRange.lowerBound {
+            if cursor < contentRange.range.lowerBound {
                 appendProseBlocks(
-                    from: String(bodyHTML[cursor..<workRange.lowerBound]),
+                    from: String(bodyHTML[cursor..<contentRange.range.lowerBound]),
                     into: &blocks
                 )
             }
 
-            if let work = parseWork(in: String(bodyHTML[workRange])),
-               seenWorkIDs.insert(work.artworkID).inserted {
-                blocks.append(.work(work))
+            let cardHTML = String(bodyHTML[contentRange.range])
+            switch contentRange.kind {
+            case .work:
+                if let work = parseWork(in: cardHTML),
+                   seenWorkIDs.insert(work.artworkID).inserted {
+                    blocks.append(.work(work))
+                }
+            case .article:
+                if let article = parseInlineArticle(in: cardHTML, sourceURL: sourceURL),
+                   seenArticleIDs.insert(article.articleID).inserted {
+                    blocks.append(.article(article))
+                }
             }
-            cursor = workRange.upperBound
+            cursor = contentRange.range.upperBound
         }
 
-        // Trailing prose after the last work card.
+        // Trailing prose after the last recognised card.
         if cursor < bodyHTML.endIndex {
             appendProseBlocks(
                 from: String(bodyHTML[cursor..<bodyHTML.endIndex]),
@@ -263,19 +299,57 @@ enum PixivisionArticleParser {
         return blocks
     }
 
+    private struct BodyBlockRange {
+        let range: Range<String.Index>
+        let kind: Kind
+
+        enum Kind {
+            case work
+            case article
+        }
+    }
+
     /// Finds every `<div class="am__work">…</div>` block in the body,
     /// counting balanced `<div>` opens/closes so the matched range
     /// always wraps the *whole* card — even when the inner markup
     /// nests divs at different depths.
     private static func findWorkCardRanges(in bodyHTML: String) -> [Range<String.Index>] {
-        let openMarker = "<div class=\"am__work\">"
+        findBalancedDivRanges(
+            in: bodyHTML,
+            openerPattern: #"<div\b[^>]*class="[^"]*\bam__work\b[^"]*"[^>]*>"#
+        )
+    }
+
+    /// Finds Pixivision article cards embedded in curated feature
+    /// articles, e.g. the monthly roundup pages where each language
+    /// section is a list of `_article-card` blocks.
+    private static func findInlineArticleCardRanges(in bodyHTML: String) -> [Range<String.Index>] {
+        findBalancedDivRanges(
+            in: bodyHTML,
+            openerPattern: #"<div\b[^>]*class="[^"]*_feature-article-body__article_card[^"]*"[^>]*>"#
+        )
+    }
+
+    private static func findBalancedDivRanges(
+        in bodyHTML: String,
+        openerPattern: String
+    ) -> [Range<String.Index>] {
         let openTag = "<div"
         let closeTag = "</div>"
+        guard let regex = try? NSRegularExpression(pattern: openerPattern, options: []) else {
+            return []
+        }
 
         var results: [Range<String.Index>] = []
         var searchStart = bodyHTML.startIndex
 
-        while let openRange = bodyHTML.range(of: openMarker, range: searchStart..<bodyHTML.endIndex) {
+        while searchStart < bodyHTML.endIndex {
+            let searchRange = NSRange(searchStart..<bodyHTML.endIndex, in: bodyHTML)
+            guard let match = regex.firstMatch(in: bodyHTML, options: [], range: searchRange),
+                  let openRange = Range(match.range, in: bodyHTML) else {
+                break
+            }
+
             var depth = 1
             var cursor = openRange.upperBound
 
@@ -403,6 +477,80 @@ enum PixivisionArticleParser {
         )
     }
 
+    private static func parseInlineArticle(in html: String, sourceURL: URL) -> PixivisionInlineArticle? {
+        guard let articleID = firstCapturedInt(in: html, pattern: #"href="[^"]*/a/(\d+)""#) else {
+            return nil
+        }
+        let title = extractFirstString(
+            in: html,
+            pattern: #"<h2[^>]*class="[^"]*arc__title[^"]*"[^>]*>[\s\S]*?<a[^>]*>([\s\S]*?)</a>"#
+        ) ?? extractFirstString(
+            in: html,
+            pattern: #"<a[^>]*data-gtm-action="ClickTitle"[^>]*>([\s\S]*?)</a>"#
+        ) ?? ""
+        let category = extractFirstString(
+            in: html,
+            pattern: #"<span[^>]*class="[^"]*arc__thumbnail-label[^"]*"[^>]*>([\s\S]*?)</span>"#
+        )
+        let publishDate = extractFirstString(
+            in: html,
+            pattern: #"<time[^>]*class="[^"]*_date[^"]*"[^>]*>([\s\S]*?)</time>"#
+        )
+        let coverURL = extractBackgroundImageURL(in: html).flatMap(URL.init(string:))
+        let articleHref = extractFirstString(
+            in: html,
+            pattern: #"<a[^>]*href="([^"]*/a/\d+)""#,
+            decodeAsText: false
+        )
+        let articleURL = articleHref.flatMap { absoluteURL(from: $0, sourceURL: sourceURL) }
+            ?? fallbackArticleURL(articleID: articleID, sourceURL: sourceURL)
+        let tags = parseInlineArticleTagLabels(in: html)
+
+        return PixivisionInlineArticle(
+            articleID: articleID,
+            title: title,
+            category: category,
+            publishDateText: publishDate,
+            coverURL: coverURL,
+            articleURL: articleURL,
+            tags: tags
+        )
+    }
+
+    private static func parseInlineArticleTagLabels(in html: String) -> [String] {
+        let pattern = #"<(?:div|span)[^>]*class="[^"]*tls__list-item[^"]*"[^>]*>([\s\S]*?)</(?:div|span)>"#
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: []) else {
+            return []
+        }
+
+        var labels: [String] = []
+        var seen = Set<String>()
+        let nsRange = NSRange(html.startIndex..<html.endIndex, in: html)
+        regex.enumerateMatches(in: html, options: [], range: nsRange) { match, _, _ in
+            guard let match,
+                  let range = Range(match.range(at: 1), in: html) else {
+                return
+            }
+            let label = stripTags(String(html[range]))
+            guard label.isEmpty == false, seen.insert(label).inserted else { return }
+            labels.append(label)
+        }
+        return labels
+    }
+
+    private static func fallbackArticleURL(articleID: Int, sourceURL: URL) -> URL {
+        let pathComponents = sourceURL.pathComponents.filter { $0 != "/" }
+        let localePrefix: String
+        if pathComponents.count >= 2, pathComponents[1] == "a", pathComponents[0] != "a" {
+            localePrefix = "/\(pathComponents[0])"
+        } else {
+            localePrefix = ""
+        }
+        let fallbackPath = "\(localePrefix)/a/\(articleID)"
+        return absoluteURL(from: fallbackPath, sourceURL: sourceURL)
+            ?? URL(string: "https://www.pixivision.net/a/\(articleID)")!
+    }
+
     /// Find the first `<img>` tag whose `class` attribute contains the
     /// given anchor word, and return its `src` attribute. Robust to
     /// attribute ordering (`<img src=… class=…>` vs `<img class=… src=…>`).
@@ -413,6 +561,17 @@ enum PixivisionArticleParser {
             return nil
         }
         return extractFirstString(in: imgTag, pattern: #"\bsrc="([^"]+)""#, decodeAsText: false)
+    }
+
+    private static func extractBackgroundImageURL(in html: String) -> String? {
+        extractFirstString(
+            in: html,
+            pattern: #"<div[^>]*class="[^"]*_thumbnail[^"]*"[^>]*style="[^"]*url\(([^)]+)\)[^"]*"[^>]*>"#,
+            decodeAsText: false
+        )
+        .map {
+            $0.trimmingCharacters(in: CharacterSet(charactersIn: "\"'"))
+        }
     }
 
     private static func parseTags(in html: String, sourceURL: URL) -> [PixivisionArticleTag] {
