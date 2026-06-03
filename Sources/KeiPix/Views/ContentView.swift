@@ -79,7 +79,7 @@ struct ContentView: View {
                 }
             }
 
-            ToolbarItem(placement: .primaryAction) {
+            ToolbarItemGroup(placement: .primaryAction) {
                 Button {
                     toggleSidebar()
                 } label: {
@@ -87,9 +87,7 @@ struct ContentView: View {
                 }
                 .labelStyle(.iconOnly)
                 .help(sidebarVisible ? L10n.hideSidebar : L10n.showSidebar)
-            }
 
-            ToolbarItem(placement: .primaryAction) {
                 Button {
                     store.requestRouteRefresh()
                 } label: {
@@ -99,13 +97,13 @@ struct ContentView: View {
                 .help(L10n.refresh)
             }
 
-            ToolbarItem(placement: .primaryAction) {
+            ToolbarSpacer(.fixed, placement: .primaryAction)
+
+            ToolbarItemGroup(placement: .primaryAction) {
                 if showsSearchFilters {
                     SearchFilterButton(store: store)
                 }
-            }
 
-            ToolbarItem(placement: .primaryAction) {
                 if showsGalleryLayoutPicker {
                     Menu {
                         Picker(L10n.galleryLayout, selection: galleryLayoutBinding) {
@@ -123,11 +121,11 @@ struct ContentView: View {
                 }
             }
 
-            ToolbarItem(placement: .primaryAction) {
-                appControlsMenu
-            }
+            ToolbarSpacer(.fixed, placement: .primaryAction)
 
-            ToolbarItem(placement: .primaryAction) {
+            ToolbarItemGroup(placement: .primaryAction) {
+                appControlsMenu
+
                 if store.session == nil {
                     Button {
                         store.isLoginPresented = true
@@ -138,6 +136,7 @@ struct ContentView: View {
                 }
             }
         }
+        .windowStyler(unifiedToolbar: true)
         .sheet(isPresented: $store.isLoginPresented) {
             LoginSheetView(store: store)
                 .frame(width: 900, height: 680)
@@ -368,57 +367,61 @@ struct ContentView: View {
 
     private var appControlsMenu: some View {
         Menu {
-            Button {
-                Task { await openPixivLinkFromClipboard() }
-            } label: {
-                Label(L10n.openPixivLinkFromClipboard, systemImage: "link.badge.plus")
-            }
-
-            Button {
-                isPixivIDOpenPresented = true
-            } label: {
-                Label(L10n.openPixivID, systemImage: "number")
-            }
-
-            Button {
-                store.presentLocalImageSourceSearch()
-            } label: {
-                Label(L10n.searchLocalImageSource, systemImage: "photo.badge.magnifyingglass")
-            }
-
-            Divider()
-
-            Menu {
-                ForEach(WindowSizePreset.allCases) { preset in
-                    Button(preset.title) {
-                        preset.apply(
-                            sidebarVisible: sidebarVisible,
-                            accountIdentityVisible: store.showsSidebarAccountIdentity
-                        )
-                    }
+            Section(L10n.links) {
+                Button {
+                    Task { await openPixivLinkFromClipboard() }
+                } label: {
+                    Label(L10n.openPixivLinkFromClipboard, systemImage: "link.badge.plus")
                 }
-            } label: {
-                Label(L10n.windowSize, systemImage: "macwindow")
+
+                Button {
+                    isPixivIDOpenPresented = true
+                } label: {
+                    Label(L10n.openPixivID, systemImage: "number")
+                }
+
+                Button {
+                    store.presentLocalImageSourceSearch()
+                } label: {
+                    Label(L10n.searchLocalImageSource, systemImage: "photo.badge.magnifyingglass")
+                }
             }
 
-            Button {
-                store.setPrivacyModeEnabled(!store.privacyModeEnabled)
-            } label: {
-                Label(
-                    store.privacyModeEnabled ? L10n.disablePrivacyMode : L10n.enablePrivacyMode,
-                    systemImage: store.privacyModeEnabled ? "eye.slash.fill" : "eye"
-                )
+            Section(L10n.windowSize) {
+                Menu {
+                    ForEach(WindowSizePreset.allCases) { preset in
+                        Button(preset.title) {
+                            preset.apply(
+                                sidebarVisible: sidebarVisible,
+                                accountIdentityVisible: store.showsSidebarAccountIdentity
+                            )
+                        }
+                    }
+                } label: {
+                    Label(L10n.windowSize, systemImage: "macwindow")
+                }
+
+                Button {
+                    store.setPrivacyModeEnabled(!store.privacyModeEnabled)
+                } label: {
+                    Label(
+                        store.privacyModeEnabled ? L10n.disablePrivacyMode : L10n.enablePrivacyMode,
+                        systemImage: store.privacyModeEnabled ? "eye.slash.fill" : "eye"
+                    )
+                }
             }
 
-            Divider()
+            Section(L10n.viewOptions) {
+                Toggle(L10n.showContentBadges, isOn: showContentBadgesBinding)
+                Toggle(L10n.maskSensitivePreviews, isOn: maskSensitivePreviewsBinding)
+            }
 
-            Toggle(L10n.showContentBadges, isOn: showContentBadgesBinding)
-            Toggle(L10n.hideAIArtworks, isOn: hideAIBinding)
-            Toggle(L10n.hideR18Artworks, isOn: hideR18Binding)
-            Toggle(L10n.hideR18GArtworks, isOn: hideR18GBinding)
-            Toggle(L10n.maskSensitivePreviews, isOn: maskSensitivePreviewsBinding)
-
-            Divider()
+            Section(L10n.contentFilters) {
+                Toggle(L10n.hideMutedContent, isOn: hideMutedContentBinding)
+                Toggle(L10n.hideAIArtworks, isOn: hideAIBinding)
+                Toggle(L10n.hideR18Artworks, isOn: hideR18Binding)
+                Toggle(L10n.hideR18GArtworks, isOn: hideR18GBinding)
+            }
 
             SettingsLink {
                 Label(L10n.settings, systemImage: "gearshape")
@@ -527,6 +530,14 @@ struct ContentView: View {
             store.showContentBadges
         } set: { value in
             store.setShowContentBadges(value)
+        }
+    }
+
+    private var hideMutedContentBinding: Binding<Bool> {
+        Binding {
+            store.hideMutedContent
+        } set: { value in
+            store.setHideMutedContent(value)
         }
     }
 

@@ -254,6 +254,24 @@ struct NativeBoundaryTests {
         #expect(contentView.contains("detailOnly") == false)
     }
 
+    @Test("macOS toolbar uses grouped AppKit chrome")
+    func macOSToolbarUsesGroupedAppKitChrome() throws {
+        let root = try packageRoot()
+        let contentView = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/ContentView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(contentView.contains("ToolbarItemGroup(placement: .primaryAction)"))
+        #expect(contentView.contains("ToolbarSpacer(.fixed, placement: .primaryAction)"))
+        #expect(contentView.contains(".windowStyler(unifiedToolbar: true)"))
+        #expect(contentView.contains("Section(L10n.links)"))
+        #expect(contentView.contains("Section(L10n.windowSize)"))
+        #expect(contentView.contains("Section(L10n.viewOptions)"))
+        #expect(contentView.contains("Section(L10n.contentFilters)"))
+        #expect(contentView.contains("Toggle(L10n.hideMutedContent, isOn: hideMutedContentBinding)"))
+    }
+
     @Test("Refresh token export is explicit and confirmation gated")
     func refreshTokenExportIsExplicitAndConfirmationGated() throws {
         let root = try packageRoot()
