@@ -7,6 +7,14 @@ struct WatchLaterView: View {
     @State private var isClearConfirmationPresented = false
     @State private var actionMessage: String?
 
+    private let gridLayout = NativeAdaptiveGridCollectionLayout(
+        minimumItemWidth: 180,
+        maximumItemWidth: 240,
+        itemHeight: 252,
+        spacing: 12,
+        sectionInsets: EdgeInsets(top: 16, leading: 16, bottom: 20, trailing: 16)
+    )
+
     private var items: [LocalArtworkHistoryItem] {
         store.watchLaterItems(matching: searchText)
     }
@@ -118,20 +126,17 @@ struct WatchLaterView: View {
     }
 
     private var content: some View {
-        ScrollView {
-            LazyVGrid(
-                columns: [GridItem(.adaptive(minimum: 180, maximum: 240), spacing: 12)],
-                spacing: 12
-            ) {
-                ForEach(items) { item in
-                    WatchLaterCard(item: item) {
-                        Task { await store.selectWatchLaterItem(item) }
-                    } onRemove: {
-                        pendingDeleteItem = item
-                    }
+        NativeAdaptiveGridCollectionView(
+            items: items,
+            layout: gridLayout
+        ) { item in
+            AnyView(
+                WatchLaterCard(item: item) {
+                    Task { await store.selectWatchLaterItem(item) }
+                } onRemove: {
+                    pendingDeleteItem = item
                 }
-            }
-            .padding(16)
+            )
         }
     }
 

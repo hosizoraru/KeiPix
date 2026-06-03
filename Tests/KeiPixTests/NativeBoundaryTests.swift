@@ -321,6 +321,21 @@ struct NativeBoundaryTests {
         #expect(subscriptions.contains("ScrollView {") == false)
     }
 
+    @Test("Watch later uses a native adaptive grid")
+    func watchLaterUsesNativeAdaptiveGrid() throws {
+        let root = try packageRoot()
+        let watchLater = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/WatchLaterView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(watchLater.contains("NativeAdaptiveGridCollectionView("))
+        #expect(watchLater.contains("gridLayout"))
+        #expect(watchLater.contains("WatchLaterCard(item: item)"))
+        #expect(watchLater.contains("LazyVGrid") == false)
+        #expect(watchLater.contains("ScrollView {") == false)
+    }
+
     @Test("Creator list, search, menu, and drop use native P2 bridges")
     func creatorListSearchMenuAndDropUseNativeP2Bridges() throws {
         let root = try packageRoot()
