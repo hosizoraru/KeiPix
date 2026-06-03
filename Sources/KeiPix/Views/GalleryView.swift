@@ -251,8 +251,8 @@ private struct GalleryFeedView: View {
                 batchBookmarkCommandRequest: $batchBookmarkCommandRequest
             )
             .padding(.horizontal, 18)
-            .padding(.vertical, 5)
-            .background(.bar)
+            .padding(.top, 9)
+            .padding(.bottom, 7)
             #endif
 
             NativeGalleryCollectionView(

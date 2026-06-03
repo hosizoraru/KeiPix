@@ -272,6 +272,39 @@ struct NativeBoundaryTests {
         #expect(contentView.contains("Toggle(L10n.hideMutedContent, isOn: hideMutedContentBinding)"))
     }
 
+    @Test("macOS feed header uses glass action chrome")
+    func macOSFeedHeaderUsesGlassActionChrome() throws {
+        let root = try packageRoot()
+        let feedHeader = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/GalleryFeedHeaderView.swift"),
+            encoding: .utf8
+        )
+        let galleryView = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/GalleryView.swift"),
+            encoding: .utf8
+        )
+        let feedHeaderActionChromeTail = feedHeader
+            .components(separatedBy: "func feedHeaderActionChrome() -> some View")
+            .dropFirst()
+            .first ?? ""
+        let feedHeaderActionChrome = feedHeaderActionChromeTail
+            .components(separatedBy: "func iPadFeedHeaderActionChrome() -> some View")
+            .first ?? ""
+
+        #expect(feedHeader.contains("GlassEffectContainer"))
+        #expect(feedHeader.contains("HStack(spacing: 8) {\n                        headerActions"))
+        #expect(feedHeader.contains("private var macOSFilterField: some View"))
+        #expect(feedHeader.contains(".textFieldStyle(.plain)"))
+        #expect(feedHeader.contains(".layoutPriority(1)"))
+        #expect(feedHeader.contains(".feedHeaderActionChrome()"))
+        #expect(feedHeader.contains(".keiInteractiveGlass(16)"))
+        #expect(feedHeaderActionChrome.contains(".buttonStyle(.plain)"))
+        #expect(feedHeaderActionChrome.contains(".buttonStyle(.bordered)") == false)
+
+        #expect(galleryView.contains(".padding(.horizontal, 18)\n            .padding(.top, 9)\n            .padding(.bottom, 7)"))
+        #expect(galleryView.contains(".padding(.horizontal, 18)\n            .padding(.vertical, 5)\n            .background(.bar)") == false)
+    }
+
     @Test("Refresh token export is explicit and confirmation gated")
     func refreshTokenExportIsExplicitAndConfirmationGated() throws {
         let root = try packageRoot()

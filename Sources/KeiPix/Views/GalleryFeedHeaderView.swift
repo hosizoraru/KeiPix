@@ -43,9 +43,18 @@ struct FeedHeaderView: View {
         Group {
             switch presentation {
             case .regular:
+                #if os(macOS)
+                GlassEffectContainer {
+                    HStack(spacing: 8) {
+                        headerActions
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                #else
                 FlowLayout(spacing: 8) {
                     headerActions
                 }
+                #endif
             case .iPadCompact:
                 iPadCompactHeaderActions
             }
@@ -100,6 +109,9 @@ struct FeedHeaderView: View {
     @ViewBuilder
     private var headerActions: some View {
         if store.artworks.isEmpty == false {
+            #if os(macOS)
+            macOSFilterField
+            #else
             HStack(spacing: 6) {
                 Image(systemName: "line.3.horizontal.decrease.circle")
                     .foregroundStyle(.secondary)
@@ -118,15 +130,16 @@ struct FeedHeaderView: View {
                     .accessibilityLabel(L10n.clearSearch)
                 }
             }
+            #endif
 
             Button {
                 _ = store.randomFromCurrentFeed()
             } label: {
                 Label(L10n.randomFromFeed, systemImage: "shuffle")
             }
-            .labelStyle(.iconOnly)
             .help(L10n.randomFromFeed)
-            .touchTarget()
+            .accessibilityLabel(L10n.randomFromFeed)
+            .feedHeaderActionChrome()
         }
 
         if store.selectedRoute == .search,
@@ -177,11 +190,9 @@ struct FeedHeaderView: View {
             } label: {
                 Label(L10n.searchActions, systemImage: "ellipsis.circle")
             }
-            .labelStyle(.iconOnly)
             .help(L10n.searchActions)
-            .touchTarget()
-            .menuStyle(.button)
-            .buttonStyle(.bordered)
+            .accessibilityLabel(L10n.searchActions)
+            .feedHeaderActionChrome()
         }
 
         if store.selectedRoute.isOwnBookmarkRoute {
@@ -222,9 +233,9 @@ struct FeedHeaderView: View {
             } label: {
                 Label(L10n.bookmarkTags, systemImage: "tag")
             }
-            .menuStyle(.button)
-            .buttonStyle(.bordered)
             .help(bookmarkTagTitle)
+            .accessibilityLabel(bookmarkTagTitle)
+            .feedHeaderActionChrome()
         }
 
         if store.selectedRoute.isRankingRoute {
@@ -237,9 +248,9 @@ struct FeedHeaderView: View {
             } label: {
                 Label(rankingDateTitle, systemImage: "calendar")
             }
-            .buttonStyle(.bordered)
             .help(rankingDateTitle)
             .accessibilityLabel(rankingDateTitle)
+            .feedHeaderActionChrome()
             .popover(isPresented: $isRankingDatePopoverPresented, arrowEdge: .bottom) {
                 RankingDatePopover(
                     useRankingDate: $draftUseRankingDate,
@@ -310,10 +321,9 @@ struct FeedHeaderView: View {
             } label: {
                 Label(selectionTitle, systemImage: artworkSelection.hasSelection ? "checkmark.circle.fill" : "checkmark.circle")
             }
-            .menuStyle(.button)
-            .buttonStyle(.bordered)
             .help(selectionTitle)
             .accessibilityLabel(selectionTitle)
+            .feedHeaderActionChrome()
             .tint(artworkSelection.hasSelection || artworkSelection.isSelectionMode ? .accentColor : nil)
         }
 
@@ -357,12 +367,9 @@ struct FeedHeaderView: View {
         } label: {
             Label(L10n.moreActions, systemImage: "ellipsis.circle")
         }
-        .labelStyle(.iconOnly)
         .help(L10n.moreActions)
         .accessibilityLabel(L10n.moreActions)
-        .touchTarget()
-        .menuStyle(.button)
-        .buttonStyle(.bordered)
+        .feedHeaderActionChrome()
         .popover(isPresented: $isBatchDownloadPresented, arrowEdge: .bottom) {
             BatchDownloadPopover(
                 limit: $batchDownloadLimit,
@@ -402,13 +409,46 @@ struct FeedHeaderView: View {
             } label: {
                 Label(L10n.search, systemImage: "magnifyingglass")
             }
-            .labelStyle(.iconOnly)
             .help(L10n.search)
             .accessibilityLabel(L10n.search)
-            .touchTarget()
-            .buttonStyle(.bordered)
+            .feedHeaderActionChrome()
         }
     }
+
+    #if os(macOS)
+    private var macOSFilterField: some View {
+        HStack(spacing: 7) {
+            Image(systemName: "line.3.horizontal.decrease.circle")
+                .font(.callout.weight(.medium))
+                .symbolRenderingMode(.hierarchical)
+                .foregroundStyle(.secondary)
+
+            TextField(L10n.filterArtworks, text: $store.clientFilterQuery)
+                .textFieldStyle(.plain)
+                .lineLimit(1)
+                .frame(minWidth: 150, idealWidth: 220, maxWidth: 280)
+                .layoutPriority(1)
+                .accessibilityLabel(L10n.filterArtworks)
+
+            if store.clientFilterQuery.isEmpty == false {
+                Button {
+                    store.clientFilterQuery = ""
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.callout)
+                        .symbolRenderingMode(.hierarchical)
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(.secondary)
+                .help(L10n.clearSearch)
+                .accessibilityLabel(L10n.clearSearch)
+            }
+        }
+        .padding(.horizontal, 11)
+        .frame(height: 32)
+        .keiInteractiveGlass(16)
+    }
+    #endif
 
     private var compactSelectionMenu: some View {
         Menu {
@@ -567,9 +607,9 @@ struct FeedHeaderView: View {
             } label: {
                 Label(store.selectedRoute.title, systemImage: "chart.bar")
             }
-            .menuStyle(.button)
-            .buttonStyle(.bordered)
             .help(L10n.rankingMode)
+            .accessibilityLabel(L10n.rankingMode)
+            .feedHeaderActionChrome()
         }
     }
 
@@ -860,6 +900,25 @@ struct FeedHeaderView: View {
 }
 
 private extension View {
+    @ViewBuilder
+    func feedHeaderActionChrome() -> some View {
+        #if os(macOS)
+        self
+            .labelStyle(.iconOnly)
+            .buttonStyle(.plain)
+            .frame(width: 32, height: 32)
+            .keiInteractiveGlass(16)
+        #elseif os(iOS)
+        self
+            .labelStyle(.iconOnly)
+            .buttonStyle(.plain)
+            .frame(width: 34, height: 34)
+            .keiInteractiveGlass(17)
+        #else
+        self
+        #endif
+    }
+
     @ViewBuilder
     func iPadFeedHeaderActionChrome() -> some View {
         #if os(iOS)
