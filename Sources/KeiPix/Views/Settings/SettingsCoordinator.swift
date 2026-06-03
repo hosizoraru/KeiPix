@@ -35,6 +35,7 @@ final class SettingsCoordinator {
     var isLogoutConfirmationPresented = false
     var isAccountLoginPresented = false
     var isTokenLoginPresented = false
+    var isRefreshTokenCopyConfirmationPresented = false
     var accountRemovalCandidate: PixivStoredAccount?
     var isMutedContentSyncConfirmationPresented = false
     var isMutedContentUploadConfirmationPresented = false

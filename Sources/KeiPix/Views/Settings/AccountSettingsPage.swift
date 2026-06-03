@@ -65,6 +65,12 @@ struct AccountSettingsPage: View {
                 }
 
                 if store.accountSessionMode == .real, store.session != nil {
+                    Button {
+                        coordinator.isRefreshTokenCopyConfirmationPresented = true
+                    } label: {
+                        Label(L10n.copyRefreshToken, systemImage: "doc.on.doc")
+                    }
+
                     Button(role: .destructive) {
                         coordinator.isLogoutConfirmationPresented = true
                     } label: {
@@ -72,9 +78,14 @@ struct AccountSettingsPage: View {
                     }
                 }
             } footer: {
-                Text(L10n.importTokenHint)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(L10n.importTokenHint)
+                    if store.accountSessionMode == .real, store.session != nil {
+                        Text(L10n.copyRefreshTokenHint)
+                    }
+                }
+                .font(.caption)
+                .foregroundStyle(.secondary)
             }
 
             // Apple-style deep-link section for things only the website can

@@ -5772,6 +5772,35 @@
         }
       }
     },
+    "Copied Refresh Token": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copied Refresh Token"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refresh Token をコピーしました"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已复制 Refresh Token"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已複製 Refresh Token"
+          }
+        }
+      }
+    },
     "Copied Search Summary": {
       "extractionState": "manual",
       "localizations": {
@@ -6319,6 +6348,64 @@
           "stringUnit": {
             "state": "translated",
             "value": "複製檢舉摘要"
+          }
+        }
+      }
+    },
+    "Copy Refresh Token": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy Refresh Token"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refresh Token をコピー"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "复制 Refresh Token"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "複製 Refresh Token"
+          }
+        }
+      }
+    },
+    "Copy the current Pixiv refresh token so you can paste it into KeiPix on your iPad. Treat it like a password and clear the clipboard after transferring it.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy the current Pixiv refresh token so you can paste it into KeiPix on your iPad. Treat it like a password and clear the clipboard after transferring it."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "現在の Pixiv refresh token をコピーして、iPad の KeiPix に貼り付けられます。パスワードと同じように扱い、転送後はクリップボードを消去してください。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "复制当前 Pixiv refresh token，便于粘贴到 iPad 上的 KeiPix。请像密码一样保管，迁移完成后清空剪贴板。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "複製目前 Pixiv refresh token，方便貼到 iPad 上的 KeiPix。請像密碼一樣保管，轉移完成後清空剪貼簿。"
           }
         }
       }
@@ -30766,6 +30853,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "這會把本地封鎖標籤和創作者添加到你的 Pixiv 帳號。"
+          }
+        }
+      }
+    },
+    "This copies a long-lived Pixiv credential. Only paste it into KeiPix on a device you control.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This copies a long-lived Pixiv credential. Only paste it into KeiPix on a device you control."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "長期有効な Pixiv 認証情報をコピーします。自分が管理するデバイスの KeiPix にだけ貼り付けてください。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这会复制一个长期有效的 Pixiv 凭据。只粘贴到你自己设备上的 KeiPix。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "這會複製一個長期有效的 Pixiv 憑證。只貼到你自己裝置上的 KeiPix。"
           }
         }
       }

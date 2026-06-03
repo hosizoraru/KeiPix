@@ -114,6 +114,32 @@ struct NativeBoundaryTests {
         #expect(shortcuts.contains(#"\(\.$artwork)"#) == false)
     }
 
+    @Test("Refresh token export is explicit and confirmation gated")
+    func refreshTokenExportIsExplicitAndConfirmationGated() throws {
+        let root = try packageRoot()
+        let accountSettings = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/Settings/AccountSettingsPage.swift"),
+            encoding: .utf8
+        )
+        let settingsView = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/SettingsView.swift"),
+            encoding: .utf8
+        )
+        let coordinator = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/Settings/SettingsCoordinator.swift"),
+            encoding: .utf8
+        )
+
+        #expect(accountSettings.contains("L10n.copyRefreshToken"))
+        #expect(accountSettings.contains("isRefreshTokenCopyConfirmationPresented = true"))
+        #expect(accountSettings.contains("PasteboardWriter.copy") == false)
+        #expect(settingsView.contains("confirmationDialog(\n            L10n.copyRefreshToken"))
+        #expect(settingsView.contains("copyCurrentRefreshToken()"))
+        #expect(settingsView.contains("PasteboardWriter.copy(refreshToken)"))
+        #expect(settingsView.contains("L10n.copyRefreshTokenConfirmationMessage"))
+        #expect(coordinator.contains("isRefreshTokenCopyConfirmationPresented"))
+    }
+
     @Test("Gallery feed layouts use a native collection bridge")
     func galleryFeedLayoutsUseNativeCollectionBridge() throws {
         let root = try packageRoot()

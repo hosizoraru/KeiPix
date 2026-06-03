@@ -730,6 +730,10 @@ enum L10n {
     static var addAccount: String { text("Add Account") }
     static var importToken: String { text("Import Token") }
     static var importTokenHint: String { text("Paste a Pixiv refresh token exported from another client. KeiPix refreshes it once, saves the new session in secure local storage, and switches to the imported account.") }
+    static var copyRefreshToken: String { text("Copy Refresh Token") }
+    static var copyRefreshTokenHint: String { text("Copy the current Pixiv refresh token so you can paste it into KeiPix on your iPad. Treat it like a password and clear the clipboard after transferring it.") }
+    static var copyRefreshTokenConfirmationMessage: String { text("This copies a long-lived Pixiv credential. Only paste it into KeiPix on a device you control.") }
+    static var copiedRefreshToken: String { text("Copied Refresh Token") }
     static var editProfileOnPixiv: String { text("Edit Profile on Pixiv") }
     static var enable: String { text("Enable") }
     static var disable: String { text("Disable") }

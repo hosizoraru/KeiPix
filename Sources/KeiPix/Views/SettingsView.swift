@@ -100,6 +100,18 @@ struct SettingsView: View {
             Text(String(format: L10n.removeAccountConfirmationFormat, account.name))
         }
         .confirmationDialog(
+            L10n.copyRefreshToken,
+            isPresented: $coordinator.isRefreshTokenCopyConfirmationPresented,
+            titleVisibility: .visible
+        ) {
+            Button(L10n.copyRefreshToken) {
+                copyCurrentRefreshToken()
+            }
+            Button(L10n.cancel, role: .cancel) {}
+        } message: {
+            Text(L10n.copyRefreshTokenConfirmationMessage)
+        }
+        .confirmationDialog(
             L10n.syncMutedContentConfirmation,
             isPresented: $coordinator.isMutedContentSyncConfirmationPresented,
             titleVisibility: .visible
@@ -302,6 +314,16 @@ struct SettingsView: View {
             coordinator.mutedContentMessage = error.localizedDescription
             coordinator.mutedContentMessageIsError = true
         }
+    }
+
+    private func copyCurrentRefreshToken() {
+        guard let refreshToken = store.session?.refreshToken,
+              refreshToken.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false else {
+            coordinator.setActionMessage(L10n.errorLoginRequired)
+            return
+        }
+        PasteboardWriter.copy(refreshToken)
+        coordinator.setActionMessage(L10n.copiedRefreshToken)
     }
 
     private func updateRestrictedMode(_ value: Bool) async {

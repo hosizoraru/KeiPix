@@ -7,7 +7,7 @@
 - Pixiv OAuth PKCE，使用嵌入式 `WKWebView`
 - 沙盒应用容器内的本地安全存储：access / refresh token 持久化
 - token 自动刷新 + Settings → Runtime Readiness 一键 Account Health Check（显式刷新一次并写入诊断）
-- refresh-token 一键导入：兼容 Pixez 用户迁移
+- refresh-token 一键导入 / 显式复制：兼容 Pixez 用户迁移，也方便 macOS 已登录后复制给 iPadOS 端导入
 - 多账户切换：侧边栏头像菜单 + Settings 的统一模式选择器
 - 三种会话模式：真实账户 / Guest 预览 / Visual QA Sample（隔离）
 
