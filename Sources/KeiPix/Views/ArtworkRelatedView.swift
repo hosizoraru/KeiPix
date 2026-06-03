@@ -16,7 +16,7 @@ struct ArtworkRelatedView: View {
     @State private var pendingDangerAction: AppDangerAction?
 
     private let columns = [
-        GridItem(.adaptive(minimum: 140, maximum: 210), spacing: 12)
+        GridItem(.adaptive(minimum: 128, maximum: 184), spacing: 12)
     ]
 
     var body: some View {
@@ -81,16 +81,21 @@ struct ArtworkRelatedView: View {
                 }
 
                 if let statusMessage {
-                    Text(statusMessage)
-                        .font(.callout)
+                    Label(statusMessage, systemImage: "checkmark.circle")
+                        .font(.caption.weight(.semibold))
                         .foregroundStyle(.secondary)
+                        .lineLimit(2)
                         .textSelection(.enabled)
+                        .padding(.horizontal, 9)
+                        .padding(.vertical, 5)
+                        .background(.thinMaterial, in: Capsule())
                 }
 
                 if let errorMessage {
-                    Text(errorMessage)
+                    Label(errorMessage, systemImage: "exclamationmark.triangle")
                         .font(.callout)
                         .foregroundStyle(.red)
+                        .lineLimit(3)
                         .textSelection(.enabled)
                 }
 
@@ -106,19 +111,23 @@ struct ArtworkRelatedView: View {
                         }
                     }
                     .buttonStyle(.bordered)
+                    .controlSize(.small)
                     .disabled(isLoadingMore)
                 }
             }
-            .padding(.top, 12)
+            .padding(.top, 10)
         } label: {
-            Label(title, systemImage: "sparkles.rectangle.stack")
-                .font(.headline)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .contentShape(Rectangle())
+            ArtworkInspectorSectionHeader(
+                title: L10n.relatedArtworks,
+                subtitle: headerSubtitle,
+                systemImage: "sparkles.rectangle.stack"
+            )
+            .contentShape(Rectangle())
         }
         .disclosureGroupStyle(.automatic)
-        .padding(14)
-        .keiPanel(16)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 12)
+        .keiGlass(18)
         .task(id: isExpanded) {
             guard isExpanded, hasLoaded == false else { return }
             await loadInitial()
@@ -141,10 +150,8 @@ struct ArtworkRelatedView: View {
         }
     }
 
-    private var title: String {
-        relatedArtworks.isEmpty
-            ? L10n.relatedArtworks
-            : "\(L10n.relatedArtworks) (\(relatedArtworks.count.formatted()))"
+    private var headerSubtitle: String? {
+        relatedArtworks.isEmpty ? nil : relatedArtworks.count.formatted()
     }
 
     private func loadInitial() async {

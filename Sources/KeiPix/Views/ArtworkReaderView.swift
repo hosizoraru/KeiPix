@@ -156,21 +156,31 @@ struct ArtworkReaderControls: View {
     @State private var pageText = "1"
 
     var body: some View {
-        ViewThatFits(in: .horizontal) {
-            HStack(spacing: 12) {
-                readingModePicker
-                    .frame(minWidth: 190, maxWidth: 260)
+        GlassEffectContainer(spacing: 10) {
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 10) {
+                    readingModeMenu
 
-                if pageCount > 1 {
-                    pageNavigationControls
+                    if pageCount > 1 {
+                        pageNavigationControls
+                    }
                 }
-            }
+                .frame(maxWidth: .infinity, alignment: .center)
 
-            VStack(spacing: 10) {
-                readingModePicker
+                VStack(spacing: 9) {
+                    HStack(spacing: 10) {
+                        readingModeMenu
 
-                if pageCount > 1 {
-                    pageNavigationControls
+                        if pageCount > 1 {
+                            compactPageNavigationControls
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .center)
+
+                    if pageCount > 1 {
+                        pageSlider
+                            .frame(maxWidth: 220)
+                    }
                 }
             }
         }
@@ -189,64 +199,111 @@ struct ArtworkReaderControls: View {
         }
     }
 
-    private var readingModePicker: some View {
-        Picker(L10n.readingMode, selection: $readingMode) {
-            ForEach(ArtworkReadingMode.allCases) { mode in
-                Label(mode.title, systemImage: mode.systemImage)
-                    .tag(mode)
+    private var effectiveReadingMode: ArtworkReadingMode {
+        readingMode.effectiveMode(forPageCount: pageCount)
+    }
+
+    private var readingModeMenu: some View {
+        Menu {
+            Section(L10n.readingMode) {
+                readingModeMenuItems
+            }
+        } label: {
+            Label(effectiveReadingMode.title, systemImage: effectiveReadingMode.systemImage)
+                .lineLimit(1)
+        }
+        .menuStyle(.button)
+        .buttonStyle(.bordered)
+        .buttonBorderShape(.capsule)
+        .accessibilityLabel(L10n.readingMode)
+        .accessibilityValue(effectiveReadingMode.title)
+    }
+
+    @ViewBuilder
+    private var readingModeMenuItems: some View {
+        ForEach(ArtworkReadingMode.allCases) { mode in
+            Button {
+                withAnimation(.snappy(duration: 0.18)) {
+                    readingMode = mode
+                }
+            } label: {
+                Label(mode.title, systemImage: mode == effectiveReadingMode ? "checkmark.circle.fill" : mode.systemImage)
             }
         }
-        .pickerStyle(.segmented)
     }
 
     private var pageNavigationControls: some View {
-        HStack(spacing: 9) {
+        HStack(spacing: 8) {
+            pageStepper
+            pageIndicator
+            pageSlider
+                .frame(minWidth: 96, idealWidth: 136, maxWidth: 180)
+        }
+        .frame(maxWidth: 360)
+    }
+
+    private var compactPageNavigationControls: some View {
+        HStack(spacing: 8) {
+            pageStepper
+            pageIndicator
+        }
+    }
+
+    private var pageStepper: some View {
+        ControlGroup {
             Button {
                 scrollToPage(pageIndex - 1)
             } label: {
-                Image(systemName: "chevron.left")
-                    .frame(width: 18, height: 18)
+                Label(L10n.previousPage, systemImage: "chevron.left")
             }
-            .buttonStyle(.plain)
+            .labelStyle(.iconOnly)
             .disabled(pageIndex <= 0)
             .accessibilityLabel(L10n.previousPage)
-
-            TextField(L10n.page, text: $pageText)
-                .textFieldStyle(.plain)
-                .font(.callout.monospacedDigit())
-                .multilineTextAlignment(.center)
-                .frame(width: 46)
-                .padding(.horizontal, 9)
-                .padding(.vertical, 5)
-                .background(.thinMaterial, in: Capsule())
-                .onSubmit(commitPageText)
-
-            Text(L10n.pageTotal(pageCount))
-                .font(.callout.monospacedDigit())
-                .foregroundStyle(.secondary)
-                .lineLimit(1)
-
-            Slider(
-                value: Binding(
-                    get: { Double(pageIndex + 1) },
-                    set: { scrollToPage(Int($0.rounded()) - 1) }
-                ),
-                in: 1...Double(pageCount),
-                step: 1
-            )
-            .frame(minWidth: 90)
-            .accessibilityLabel(L10n.jumpToPage)
 
             Button {
                 scrollToPage(pageIndex + 1)
             } label: {
-                Image(systemName: "chevron.right")
-                    .frame(width: 18, height: 18)
+                Label(L10n.nextPage, systemImage: "chevron.right")
             }
-            .buttonStyle(.plain)
+            .labelStyle(.iconOnly)
             .disabled(pageIndex >= pageCount - 1)
             .accessibilityLabel(L10n.nextPage)
         }
+    }
+
+    private var pageIndicator: some View {
+        HStack(spacing: 3) {
+            TextField(L10n.page, text: $pageText)
+                .textFieldStyle(.plain)
+                .font(.caption.weight(.semibold).monospacedDigit())
+                .multilineTextAlignment(.center)
+                .frame(width: 38)
+                .onSubmit(commitPageText)
+
+            Text(L10n.pageTotal(pageCount))
+                .font(.caption.weight(.semibold).monospacedDigit())
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 6)
+        .background(.thinMaterial, in: Capsule())
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(L10n.page)
+        .accessibilityValue(L10n.pageOfTotal(pageIndex + 1, pageCount))
+    }
+
+    private var pageSlider: some View {
+        Slider(
+            value: Binding(
+                get: { Double(pageIndex + 1) },
+                set: { scrollToPage(Int($0.rounded()) - 1) }
+            ),
+            in: 1...Double(pageCount),
+            step: 1
+        )
+        .accessibilityLabel(L10n.jumpToPage)
+        .accessibilityValue(L10n.pageOfTotal(pageIndex + 1, pageCount))
     }
 
     private func syncPageText() {
@@ -603,10 +660,6 @@ private extension View {
 
     func readerControlChrome() -> some View {
         self
-            .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-            .overlay {
-                RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .stroke(.quaternary, lineWidth: 1)
-            }
+            .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
     }
 }

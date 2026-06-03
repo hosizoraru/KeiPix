@@ -482,6 +482,13 @@ struct NativeBoundaryTests {
         #expect(viewportLayout.contains("doublePageHeight(for: width, pairedWith: rightPresentation)"))
         #expect(readerView.contains(".readerCanvasChrome()"))
         #expect(readerView.contains(".readerControlChrome()"))
+        #expect(readerView.contains("GlassEffectContainer(spacing: 10)"))
+        #expect(readerView.contains("private var readingModeMenu: some View"))
+        #expect(readerView.contains("Menu {\n            Section(L10n.readingMode)"))
+        #expect(readerView.contains("ControlGroup {"))
+        #expect(readerView.contains(".buttonStyle(.bordered)"))
+        #expect(readerView.contains("private var pageIndicator: some View"))
+        #expect(readerView.contains(".pickerStyle(.segmented)") == false)
         #expect(imageScrollView.contains("func handleMagnificationChanged(_ magnification: CGFloat)"))
         #expect(imageScrollView.contains("private func centerDocument()"))
         #expect(imageScrollView.contains("scrollView.contentInsets = NSEdgeInsets("))
@@ -510,6 +517,14 @@ struct NativeBoundaryTests {
             contentsOf: root.appending(path: "Sources/KeiPix/Views/ArtworkDetailView.swift"),
             encoding: .utf8
         )
+        let artworkComments = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/ArtworkCommentsView.swift"),
+            encoding: .utf8
+        )
+        let artworkRelated = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/ArtworkRelatedView.swift"),
+            encoding: .utf8
+        )
 
         #expect(artworkSummary.contains("AdaptiveArtworkActionLayout.resolve"))
         #expect(artworkSummary.contains("showsWatchLaterInline"))
@@ -520,6 +535,8 @@ struct NativeBoundaryTests {
         #expect(artworkInformation.contains("ArtworkContextCard("))
         #expect(artworkInformation.contains("contextExpansionBinding"))
         #expect(artworkInformation.contains("TagCloudInspectorSection("))
+        #expect(artworkInformation.contains("struct ArtworkInspectorSectionHeader: View"))
+        #expect(artworkInformation.contains("ArtworkInspectorSectionHeader("))
         #expect(artworkInformation.contains("ArtworkMetadataRail"))
         #expect(artworkInformation.contains("ArtworkMetadataPill"))
         #expect(artworkInformation.contains("L10n.imageSize"))
@@ -529,6 +546,15 @@ struct NativeBoundaryTests {
         #expect(artworkDetail.contains("private static let topAnchorID = \"artwork-detail-top\""))
         #expect(artworkDetail.contains("scrollToRestoredPosition(proxy: proxy)"))
         #expect(artworkDetail.contains("proxy.scrollTo(Self.topAnchorID, anchor: .top)"))
+        #expect(artworkComments.contains("ArtworkInspectorSectionHeader("))
+        #expect(artworkComments.contains(".keiGlass(18)"))
+        #expect(artworkComments.contains(".textFieldStyle(.plain)"))
+        #expect(artworkComments.contains(".textFieldStyle(.roundedBorder)") == false)
+        #expect(artworkComments.contains(".keiPanel(16)") == false)
+        #expect(artworkComments.contains(".background(.quinary") == false)
+        #expect(artworkRelated.contains("ArtworkInspectorSectionHeader("))
+        #expect(artworkRelated.contains(".keiGlass(18)"))
+        #expect(artworkRelated.contains(".keiPanel(16)") == false)
     }
 
     @Test("Download queue uses a native list container")

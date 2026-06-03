@@ -49,7 +49,7 @@ private struct ArtworkContextCard: View {
             }
             .padding(.top, 10)
         } label: {
-            SectionHeader(
+            ArtworkInspectorSectionHeader(
                 title: L10n.artworkInformation,
                 subtitle: headerSubtitle,
                 systemImage: "doc.text.magnifyingglass"
@@ -109,7 +109,7 @@ private struct TagCloudInspectorSection: View {
             ArtworkTagChipsView(tags: artwork.tags, store: store)
                 .padding(.top, 10)
         } label: {
-            SectionHeader(
+            ArtworkInspectorSectionHeader(
                 title: L10n.tags,
                 subtitle: String(format: L10n.tagCountFormat, artwork.tags.count),
                 systemImage: "tag"
@@ -122,9 +122,9 @@ private struct TagCloudInspectorSection: View {
     }
 }
 
-private struct SectionHeader: View {
+struct ArtworkInspectorSectionHeader: View {
     let title: String
-    let subtitle: String
+    let subtitle: String?
     let systemImage: String
 
     var body: some View {
@@ -134,14 +134,16 @@ private struct SectionHeader: View {
                     .font(.headline)
                     .lineLimit(1)
 
-                Text(subtitle)
-                    .font(.caption2.weight(.semibold))
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-                    .truncationMode(.middle)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 3)
-                    .background(.thinMaterial, in: Capsule())
+                if let subtitle, subtitle.isEmpty == false {
+                    Text(subtitle)
+                        .font(.caption2.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
+                        .background(.thinMaterial, in: Capsule())
+                }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         } icon: {
@@ -149,6 +151,7 @@ private struct SectionHeader: View {
                 .symbolRenderingMode(.hierarchical)
                 .foregroundStyle(.secondary)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 

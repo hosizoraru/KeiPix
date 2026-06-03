@@ -51,17 +51,22 @@ struct ArtworkCommentsView: View {
                 }
 
                 if let statusMessage {
-                    Text(statusMessage)
-                        .font(.callout)
+                    Label(statusMessage, systemImage: "checkmark.circle")
+                        .font(.caption.weight(.semibold))
                         .foregroundStyle(.secondary)
+                        .lineLimit(2)
                         .textSelection(.enabled)
+                        .padding(.horizontal, 9)
+                        .padding(.vertical, 5)
+                        .background(.thinMaterial, in: Capsule())
                 }
 
                 if let errorMessage {
                     HStack(alignment: .firstTextBaseline, spacing: 10) {
-                        Text(errorMessage)
+                        Label(errorMessage, systemImage: "exclamationmark.triangle")
                             .font(.callout)
                             .foregroundStyle(.red)
+                            .lineLimit(3)
                             .textSelection(.enabled)
 
                         Spacer(minLength: 0)
@@ -91,25 +96,28 @@ struct ArtworkCommentsView: View {
                     .disabled(isLoadingMore)
                 }
             }
-            .padding(.top, 12)
+            .padding(.top, 10)
         } label: {
-            Label(title, systemImage: "text.bubble")
-                .font(.headline)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .contentShape(Rectangle())
+            ArtworkInspectorSectionHeader(
+                title: L10n.comments,
+                subtitle: headerSubtitle,
+                systemImage: "text.bubble"
+            )
+            .contentShape(Rectangle())
         }
         .disclosureGroupStyle(.automatic)
-        .padding(14)
-        .keiPanel(16)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 12)
+        .keiGlass(18)
         .task(id: isExpanded) {
             guard isExpanded, hasLoaded == false else { return }
             await loadInitial()
         }
     }
 
-    private var title: String {
+    private var headerSubtitle: String? {
         let count = totalComments ?? artwork.totalComments
-        return count > 0 ? "\(L10n.comments) (\(count.formatted()))" : L10n.comments
+        return count > 0 ? count.formatted() : nil
     }
 
     private var composer: some View {
@@ -134,8 +142,15 @@ struct ArtworkCommentsView: View {
             }
 
             TextField(replyTarget.map(replyTargetTitle) ?? L10n.writeComment, text: $draft, axis: .vertical)
-                .textFieldStyle(.roundedBorder)
+                .textFieldStyle(.plain)
                 .lineLimit(2...5)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 10)
+                .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .stroke(.quaternary, lineWidth: 1)
+                }
                 .disabled(isPosting)
 
             HStack {
@@ -459,7 +474,11 @@ private struct MutedCommentPlaceholder: View {
             .controlSize(.small)
         }
         .padding(10)
-        .background(.quinary, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .stroke(.quaternary, lineWidth: 1)
+        }
         .help(reasonText)
     }
 
@@ -596,8 +615,12 @@ private struct CommentRow: View {
                 .font(.caption)
             }
         }
-        .padding(10)
-        .background(.quinary, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .padding(12)
+        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 15, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 15, style: .continuous)
+                .stroke(.quaternary, lineWidth: 1)
+        }
         .sheet(item: $feedbackRequest) { request in
             FeedbackReportSheet(request: request, localMuteAction: localMuteAction) { message in
                 status(message)
