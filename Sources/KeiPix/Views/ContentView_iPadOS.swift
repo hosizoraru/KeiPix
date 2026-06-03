@@ -427,64 +427,102 @@ struct ContentView: View {
 
     private func iPadArtworkDetailPanel(close: @escaping () -> Void) -> some View {
         VStack(spacing: 0) {
-            GlassEffectContainer {
-                HStack(spacing: 10) {
-                    Image(systemName: "info.circle")
-                        .font(.headline.weight(.semibold))
-                        .symbolRenderingMode(.hierarchical)
-                        .foregroundStyle(.secondary)
-
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(L10n.details)
-                            .font(.headline)
-                        if let artwork = store.selectedArtwork {
-                            Text(artwork.title)
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                                .lineLimit(1)
-                                .truncationMode(.middle)
-                        }
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-
-                    if let artwork = store.selectedArtwork {
-                        Button {
-                            withAnimation(.snappy(duration: 0.18)) {
-                                store.prepareReaderWindow(for: artwork)
-                            }
-                        } label: {
-                            Label(L10n.openReaderWindow, systemImage: "rectangle.inset.filled")
-                        }
-                        .labelStyle(.iconOnly)
-                        .buttonStyle(.plain)
-                        .controlSize(.small)
-                        .keiInteractiveGlass(14)
-                        .help(L10n.openReaderWindow)
-                        .accessibilityLabel(L10n.openReaderWindow)
-                    }
-
-                    Button {
-                        close()
-                    } label: {
-                        Label(L10n.close, systemImage: "xmark")
-                    }
-                    .labelStyle(.iconOnly)
-                    .buttonStyle(.plain)
-                    .controlSize(.small)
-                    .keiInteractiveGlass(14)
-                    .help(L10n.close)
-                    .accessibilityLabel(L10n.close)
-                }
-            }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
-
-            Divider()
-                .opacity(0.45)
+            iPadArtworkDetailHeader(close: close)
 
             ArtworkDetailView(store: store, showsNavigationChrome: false)
         }
         .background(.background)
+    }
+
+    private func iPadArtworkDetailHeader(close: @escaping () -> Void) -> some View {
+        GlassEffectContainer(spacing: 10) {
+            HStack(spacing: 12) {
+                Image(systemName: "sidebar.right")
+                    .font(.headline.weight(.semibold))
+                    .symbolRenderingMode(.hierarchical)
+                    .foregroundStyle(.secondary)
+                    .frame(width: 34, height: 34)
+                    .keiGlass(14)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(L10n.details)
+                        .font(.headline.weight(.semibold))
+                        .lineLimit(1)
+
+                    if let artwork = store.selectedArtwork {
+                        Text(artwork.title)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                            .truncationMode(.middle)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+                if let artwork = store.selectedArtwork {
+                    ViewThatFits(in: .horizontal) {
+                        iPadReaderWindowButton(for: artwork, showsTitle: true)
+                        iPadReaderWindowButton(for: artwork, showsTitle: false)
+                    }
+                }
+
+                iPadArtworkDetailCloseButton(close: close)
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 10)
+            .keiGlass(20)
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 8)
+    }
+
+    @ViewBuilder
+    private func iPadReaderWindowButton(for artwork: PixivArtwork, showsTitle: Bool) -> some View {
+        if showsTitle {
+            Button {
+                withAnimation(.snappy(duration: 0.18)) {
+                    store.prepareReaderWindow(for: artwork)
+                }
+            } label: {
+                Label(L10n.openReaderWindow, systemImage: "rectangle.inset.filled")
+                    .font(.callout.weight(.semibold))
+                    .lineLimit(1)
+            }
+            .labelStyle(.titleAndIcon)
+            .buttonStyle(.glassProminent)
+            .buttonBorderShape(.capsule)
+            .controlSize(.regular)
+            .help(L10n.openReaderWindow)
+            .accessibilityLabel(L10n.openReaderWindow)
+        } else {
+            Button {
+                withAnimation(.snappy(duration: 0.18)) {
+                    store.prepareReaderWindow(for: artwork)
+                }
+            } label: {
+                Label(L10n.openReaderWindow, systemImage: "rectangle.inset.filled")
+            }
+            .labelStyle(.iconOnly)
+            .buttonStyle(.glassProminent)
+            .buttonBorderShape(.capsule)
+            .controlSize(.regular)
+            .help(L10n.openReaderWindow)
+            .accessibilityLabel(L10n.openReaderWindow)
+        }
+    }
+
+    private func iPadArtworkDetailCloseButton(close: @escaping () -> Void) -> some View {
+        Button {
+            close()
+        } label: {
+            Label(L10n.close, systemImage: "xmark")
+        }
+        .labelStyle(.iconOnly)
+        .buttonStyle(.bordered)
+        .buttonBorderShape(.capsule)
+        .controlSize(.regular)
+        .help(L10n.close)
+        .accessibilityLabel(L10n.close)
     }
 
     private var routeMenu: some View {
