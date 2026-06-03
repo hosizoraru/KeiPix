@@ -84,6 +84,36 @@ struct NativeBoundaryTests {
         #expect(app.contains("ContentView(store: store)\n                .frame(minWidth: 840") == false)
     }
 
+    @Test("XcodeGen declares a first-class iPadOS app target")
+    func xcodeGenDeclaresFirstClassiPadOSTarget() throws {
+        let root = try packageRoot()
+        let project = try String(
+            contentsOf: root.appending(path: "project.yml"),
+            encoding: .utf8
+        )
+        let plist = try String(
+            contentsOf: root.appending(path: "App/Info-iPadOS.plist"),
+            encoding: .utf8
+        )
+        let shortcuts = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Intents/KeiPixShortcuts.swift"),
+            encoding: .utf8
+        )
+
+        #expect(project.contains("iOS: \"26.0\""))
+        #expect(project.contains("KeiPixiPad:"))
+        #expect(project.contains("platform: iOS"))
+        #expect(project.contains("INFOPLIST_FILE: App/Info-iPadOS.plist"))
+        #expect(project.contains("TARGETED_DEVICE_FAMILY: \"2\""))
+        #expect(project.contains("KeiPix iPadOS:"))
+        #expect(plist.contains("<key>LSRequiresIPhoneOS</key>"))
+        #expect(plist.contains("<key>UIDeviceFamily</key>") == false)
+        #expect(plist.contains("<key>BGTaskSchedulerPermittedIdentifiers</key>"))
+        #expect(plist.contains("<string>com.keipix.feed-refresh</string>"))
+        #expect(shortcuts.contains(#"\(\.$link)"#) == false)
+        #expect(shortcuts.contains(#"\(\.$artwork)"#) == false)
+    }
+
     @Test("Gallery feed layouts use a native collection bridge")
     func galleryFeedLayoutsUseNativeCollectionBridge() throws {
         let root = try packageRoot()

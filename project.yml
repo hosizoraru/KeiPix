@@ -3,6 +3,7 @@ options:
   bundleIdPrefix: com.keipix
   deploymentTarget:
     macOS: "26.0"
+    iOS: "26.0"
   developmentLanguage: en
   createIntermediateGroups: true
   generateEmptyDirectories: true
@@ -59,6 +60,34 @@ targets:
       commandLineArguments: {}
       environmentVariables: []
 
+  KeiPixiPad:
+    type: application
+    platform: iOS
+    deploymentTarget: "26.0"
+    sources:
+      - path: Sources/KeiPix
+        excludes:
+          - "**/.DS_Store"
+      - path: PrivacyInfo.xcprivacy
+        buildPhase: resources
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.keipix.client.ipad
+        PRODUCT_NAME: KeiPix
+        INFOPLIST_FILE: App/Info-iPadOS.plist
+        CODE_SIGN_STYLE: Automatic
+        CODE_SIGN_IDENTITY: "-"
+        ENABLE_PREVIEWS: YES
+        TARGETED_DEVICE_FAMILY: "2"
+        SUPPORTS_MACCATALYST: NO
+        LD_RUNPATH_SEARCH_PATHS:
+          - "$(inherited)"
+          - "@executable_path/Frameworks"
+    scheme:
+      gatherCoverageData: false
+      commandLineArguments: {}
+      environmentVariables: []
+
   KeiPixTests:
     type: bundle.unit-test
     platform: macOS
@@ -92,6 +121,20 @@ schemes:
       gatherCoverageData: false
       targets:
         - KeiPixTests
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+    archive:
+      config: Release
+
+  KeiPix iPadOS:
+    build:
+      targets:
+        KeiPixiPad: all
+    run:
+      config: Debug
+      executable: KeiPixiPad
     profile:
       config: Release
     analyze:
