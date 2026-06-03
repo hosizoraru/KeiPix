@@ -1,13 +1,16 @@
 #if os(iOS)
 import SwiftUI
 
-/// iPadOS-specific ContentView using TabView for navigation.
+/// iPadOS-specific ContentView with a split landscape shell and compact tabs.
 ///
-/// Replaces the macOS NavigationSplitView with a tab-based layout
-/// optimized for touch interaction on iPad.
+/// Landscape keeps KeiPix close to the macOS browsing model: a persistent
+/// route sidebar with a main content column. Portrait falls back to the
+/// touch-first tab layout so the UI does not spend half the screen on chrome.
 struct ContentView: View {
     @Bindable var store: KeiPixStore
     @State private var selectedTab: iPadTab = .feed
+    @State private var splitColumnVisibility: NavigationSplitViewVisibility = .all
+    @State private var selectedSidebarItem: iPadSidebarItem = .route(.home)
     @State private var isPixivIDOpenPresented = false
     @State private var feedbackRequest: FeedbackReportRequest?
 
@@ -34,6 +37,87 @@ struct ContentView: View {
     }
 
     var body: some View {
+        adaptiveRoot
+            .environment(\.locale, store.appLanguage.locale ?? .current)
+            .preferredColorScheme(store.appColorScheme.preferredColorScheme)
+            .onOpenURL { url in
+                Task { await store.openPixivLink(url) }
+            }
+            .onAppear {
+                KeiPixStoreLocator.shared.register(store: store)
+            }
+            .sheet(isPresented: $store.isLoginPresented) {
+                LoginSheetView(store: store)
+                    .iPadFriendlySheet()
+            }
+            .sheet(isPresented: $store.isTokenLoginPresented) {
+                TokenLoginSheetView(store: store)
+                    .iPadFriendlySheet()
+            }
+            .sheet(item: $store.imageSourceSearchRequest) { request in
+                ImageSourceSearchSheet(store: store, request: request)
+                    .iPadFriendlySheet()
+            }
+            .sheet(item: $store.presentedUserProfile) { user in
+                UserProfileSheet(user: user, store: store)
+                    .iPadFriendlySheet()
+            }
+            .sheet(isPresented: $isPixivIDOpenPresented) {
+                PixivIDOpenSheet(store: store, showStatus: { _ in })
+                    .iPadFriendlySheet()
+            }
+            .sheet(item: $feedbackRequest) { request in
+                FeedbackReportSheet(request: request, localMuteAction: {}) { _ in }
+                    .iPadFriendlySheet()
+            }
+            .confirmationDialog(
+                store.pendingDangerAction?.title ?? L10n.moreActions,
+                isPresented: dangerActionBinding,
+                titleVisibility: .visible,
+                presenting: store.pendingDangerAction
+            ) { action in
+                Button(action.title, role: .destructive) {
+                    Task { await store.performDangerAction(action) }
+                }
+                Button(L10n.cancel, role: .cancel) {
+                    store.pendingDangerAction = nil
+                }
+            } message: { action in
+                Text(action.confirmationMessage)
+            }
+            .overlay(alignment: .bottom) {
+                if let errorMessage = store.errorMessage {
+                    ErrorToast(
+                        message: errorMessage,
+                        onRetry: {
+                            store.errorMessage = nil
+                            store.requestRouteRefresh()
+                        },
+                        onCopy: {
+                            PasteboardWriter.copy(errorMessage)
+                        },
+                        onDismiss: {
+                            store.errorMessage = nil
+                        }
+                    )
+                    .animation(.snappy(duration: 0.2), value: store.errorMessage)
+                }
+            }
+            .statusMessageAutoDismiss($store.errorMessage, duration: .seconds(8))
+    }
+
+    @ViewBuilder
+    private var adaptiveRoot: some View {
+        GeometryReader { geometry in
+            if usesLandscapeSidebar(for: geometry.size) {
+                landscapeSplitRoot
+            } else {
+                compactTabRoot
+            }
+        }
+    }
+
+    private var compactTabRoot: some View {
         TabView(selection: $selectedTab) {
             Tab(L10n.feed, systemImage: "photo.on.rectangle.angled", value: .feed) {
                 feedTab
@@ -47,83 +131,137 @@ struct ContentView: View {
                 settingsTab
             }
         }
-        .environment(\.locale, store.appLanguage.locale ?? .current)
-        .preferredColorScheme(store.appColorScheme.preferredColorScheme)
-        .onOpenURL { url in
-            Task { await store.openPixivLink(url) }
+    }
+
+    private var landscapeSplitRoot: some View {
+        NavigationSplitView(columnVisibility: $splitColumnVisibility) {
+            iPadSidebar
+        } detail: {
+            landscapeDetail
         }
         .onAppear {
-            KeiPixStoreLocator.shared.register(store: store)
+            syncSidebarSelectionFromCurrentTab()
         }
-        .sheet(isPresented: $store.isLoginPresented) {
-            LoginSheetView(store: store)
-                .iPadFriendlySheet()
+        .onChange(of: selectedSidebarItem) { _, item in
+            selectSidebarItem(item)
         }
-        .sheet(isPresented: $store.isTokenLoginPresented) {
-            TokenLoginSheetView(store: store)
-                .iPadFriendlySheet()
+        .onChange(of: store.selectedRoute) { _, route in
+            selectedSidebarItem = .route(route)
+            selectedTab = route == .downloads ? .library : .feed
         }
-        .sheet(item: $store.imageSourceSearchRequest) { request in
-            ImageSourceSearchSheet(store: store, request: request)
-                .iPadFriendlySheet()
-        }
-        .sheet(item: $store.presentedUserProfile) { user in
-            UserProfileSheet(user: user, store: store)
-                .iPadFriendlySheet()
-        }
-        .sheet(isPresented: $isPixivIDOpenPresented) {
-            PixivIDOpenSheet(store: store, showStatus: { _ in })
-                .iPadFriendlySheet()
-        }
-        .sheet(item: $feedbackRequest) { request in
-            FeedbackReportSheet(request: request, localMuteAction: {}) { _ in }
-                .iPadFriendlySheet()
-        }
-        .confirmationDialog(
-            store.pendingDangerAction?.title ?? L10n.moreActions,
-            isPresented: dangerActionBinding,
-            titleVisibility: .visible,
-            presenting: store.pendingDangerAction
-        ) { action in
-            Button(action.title, role: .destructive) {
-                Task { await store.performDangerAction(action) }
-            }
-            Button(L10n.cancel, role: .cancel) {
-                store.pendingDangerAction = nil
-            }
-        } message: { action in
-            Text(action.confirmationMessage)
-        }
-        .overlay(alignment: .bottom) {
-            if let errorMessage = store.errorMessage {
-                ErrorToast(
-                    message: errorMessage,
-                    onRetry: {
-                        store.errorMessage = nil
-                        store.requestRouteRefresh()
-                    },
-                    onCopy: {
-                        PasteboardWriter.copy(errorMessage)
-                    },
-                    onDismiss: {
-                        store.errorMessage = nil
-                    }
-                )
-                .animation(.snappy(duration: 0.2), value: store.errorMessage)
-            }
-        }
-        .statusMessageAutoDismiss($store.errorMessage, duration: .seconds(8))
+        .navigationSplitViewStyle(.balanced)
     }
 
     // MARK: - Feed Tab
 
     private var feedTab: some View {
+        feedNavigationStack(showsSidebarToggle: false)
+    }
+
+    private var iPadSidebar: some View {
+        List {
+            ForEach(PixivRoute.sidebarSections) { section in
+                Section(section.title) {
+                    ForEach(section.routes) { route in
+                        Button {
+                            selectRoute(route)
+                        } label: {
+                            iPadSidebarRow(
+                                title: route.title,
+                                systemImage: route.systemImage,
+                                isSelected: selectedSidebarItem == .route(route)
+                            )
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
+
+            Section(L10n.settings) {
+                Button {
+                    selectedSidebarItem = .settings
+                    selectedTab = .settings
+                } label: {
+                    iPadSidebarRow(
+                        title: L10n.settings,
+                        systemImage: "gearshape",
+                        isSelected: selectedSidebarItem == .settings
+                    )
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .listStyle(.sidebar)
+        .navigationTitle("KeiPix")
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                sidebarToggleButton
+            }
+        }
+    }
+
+    private func iPadSidebarRow(title: String, systemImage: String, isSelected: Bool) -> some View {
+        Label {
+            HStack(spacing: 8) {
+                Text(title)
+                    .lineLimit(1)
+
+                Spacer(minLength: 0)
+
+                if isSelected {
+                    Image(systemName: "checkmark")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.tint)
+                }
+            }
+        } icon: {
+            Image(systemName: systemImage)
+                .frame(width: 18)
+        }
+        .foregroundStyle(isSelected ? Color.accentColor : Color.primary)
+        .contentShape(Rectangle())
+    }
+
+    @ViewBuilder
+    private var landscapeDetail: some View {
+        switch selectedSidebarItem {
+        case .route:
+            feedNavigationStack(showsSidebarToggle: true)
+        case .settings:
+            NavigationStack {
+                SettingsView(store: store)
+                    .toolbar {
+                        ToolbarItem(placement: .topBarLeading) {
+                            sidebarToggleButton
+                        }
+                    }
+            }
+        }
+    }
+
+    private func feedNavigationStack(showsSidebarToggle: Bool) -> some View {
         NavigationStack {
             feedContent
                 .navigationDestination(for: PixivRoute.self) { route in
                     routeDetail(for: route)
                 }
                 .toolbar {
+                    if showsSidebarToggle {
+                        ToolbarItem(placement: .topBarLeading) {
+                            sidebarToggleButton
+                        }
+
+                        if splitColumnVisibility == .detailOnly {
+                            ToolbarItem(placement: .topBarLeading) {
+                                routeMenu
+                            }
+                        }
+                    } else {
+                        ToolbarItem(placement: .topBarLeading) {
+                            routeMenu
+                        }
+                    }
+
                     ToolbarItem(placement: .primaryAction) {
                         Button {
                             store.requestRouteRefresh()
@@ -172,6 +310,40 @@ struct ContentView: View {
                     }
                 }
         }
+    }
+
+    private var sidebarToggleButton: some View {
+        Button {
+            withAnimation(.snappy(duration: 0.2)) {
+                splitColumnVisibility = splitColumnVisibility == .detailOnly ? .all : .detailOnly
+            }
+        } label: {
+            Label(
+                splitColumnVisibility == .detailOnly ? L10n.showSidebar : L10n.hideSidebar,
+                systemImage: "sidebar.leading"
+            )
+        }
+        .accessibilityLabel(splitColumnVisibility == .detailOnly ? L10n.showSidebar : L10n.hideSidebar)
+    }
+
+    private var routeMenu: some View {
+        Menu {
+            ForEach(PixivRoute.sidebarSections) { section in
+                Section(section.title) {
+                    ForEach(section.routes) { route in
+                        Button {
+                            selectRoute(route)
+                        } label: {
+                            Label(route.title, systemImage: route == store.selectedRoute ? "checkmark" : route.systemImage)
+                        }
+                    }
+                }
+            }
+        } label: {
+            Label(store.selectedRoute.title, systemImage: store.selectedRoute.systemImage)
+                .lineLimit(1)
+        }
+        .accessibilityLabel("\(L10n.currentRoute): \(store.selectedRoute.title)")
     }
 
     @ViewBuilder
@@ -232,6 +404,38 @@ struct ContentView: View {
         }
     }
 
+    private func usesLandscapeSidebar(for size: CGSize) -> Bool {
+        size.width >= 700 && size.width > size.height
+    }
+
+    private func syncSidebarSelectionFromCurrentTab() {
+        switch selectedTab {
+        case .feed:
+            selectedSidebarItem = .route(store.selectedRoute)
+        case .library:
+            selectedSidebarItem = .route(.downloads)
+        case .settings:
+            selectedSidebarItem = .settings
+        }
+    }
+
+    private func selectSidebarItem(_ item: iPadSidebarItem) {
+        switch item {
+        case .route(let route):
+            selectRoute(route)
+        case .settings:
+            selectedTab = .settings
+        }
+    }
+
+    private func selectRoute(_ route: PixivRoute) {
+        selectedSidebarItem = .route(route)
+        selectedTab = route == .downloads ? .library : .feed
+        if store.selectedRoute != route {
+            store.select(route)
+        }
+    }
+
     // MARK: - Library Tab
 
     private var libraryTab: some View {
@@ -272,6 +476,11 @@ struct ContentView: View {
             }
         }
     }
+}
+
+private enum iPadSidebarItem: Hashable {
+    case route(PixivRoute)
+    case settings
 }
 
 private struct SearchSuggestionRow: View {
