@@ -269,6 +269,29 @@ struct NativeBoundaryTests {
         #expect(nativeList.contains("refreshVisibleItems(in: collectionView)"))
     }
 
+    @Test("Manga watchlist uses a native adaptive grid")
+    func mangaWatchlistUsesNativeAdaptiveGrid() throws {
+        let root = try packageRoot()
+        let watchlist = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/MangaWatchlistView.swift"),
+            encoding: .utf8
+        )
+        let nativeGrid = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Support/NativeAdaptiveGridCollectionView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(watchlist.contains("NativeAdaptiveGridCollectionView("))
+        #expect(watchlist.contains("mangaWatchlistGridItems"))
+        #expect(watchlist.contains("mangaWatchlistGridContent(for: item)"))
+        #expect(watchlist.contains("LazyVGrid") == false)
+        #expect(nativeGrid.contains("NSCollectionView"))
+        #expect(nativeGrid.contains("UICollectionView"))
+        #expect(nativeGrid.contains("NSCollectionViewDiffableDataSource"))
+        #expect(nativeGrid.contains("UICollectionViewDiffableDataSource"))
+        #expect(nativeGrid.contains("refreshVisibleHostedContent(in: collectionView)"))
+    }
+
     @Test("Creator list, search, menu, and drop use native P2 bridges")
     func creatorListSearchMenuAndDropUseNativeP2Bridges() throws {
         let root = try packageRoot()

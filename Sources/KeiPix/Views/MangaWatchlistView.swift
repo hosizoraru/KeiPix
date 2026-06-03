@@ -13,9 +13,11 @@ struct MangaWatchlistView: View {
     @State private var pendingRemoval: PixivMangaSeriesPreview?
     @State private var watchlistSearchText = ""
 
-    private let columns = [
-        GridItem(.adaptive(minimum: 220, maximum: 320), spacing: 14)
-    ]
+    private let gridLayout = NativeAdaptiveGridCollectionLayout(
+        minimumItemWidth: 220,
+        maximumItemWidth: 320,
+        itemHeight: 330
+    )
 
     var body: some View {
         Group {
@@ -184,36 +186,48 @@ struct MangaWatchlistView: View {
                 systemImage: "line.3.horizontal.decrease.circle"
             )
         } else {
-            ScrollView {
-                LazyVGrid(columns: columns, spacing: 14) {
-                    ForEach(filteredSeries) { item in
-                        MangaWatchlistCard(
-                            series: item,
-                            updateStatus: store.mangaWatchlistUpdateStatus(for: item),
-                            isRemoving: removingSeriesIDs.contains(item.id),
-                            openLatest: {
-                                Task {
-                                    if await store.openLatestArtwork(in: item) {
-                                        store.markMangaWatchlistSeriesRead(item)
-                                    }
-                                }
-                            },
-                            markRead: {
-                                store.markMangaWatchlistSeriesRead(item)
-                            },
-                            remove: {
-                                pendingRemoval = item
-                            }
-                        )
-                    }
-
-                    if showsLoadMoreEntry {
-                        loadMoreButton
-                    }
-                }
-                .padding(18)
+            NativeAdaptiveGridCollectionView(
+                items: mangaWatchlistGridItems,
+                layout: gridLayout
+            ) { item in
+                mangaWatchlistGridContent(for: item)
             }
-            .scrollEdgeEffectStyle(.soft, for: .top)
+        }
+    }
+
+    private var mangaWatchlistGridItems: [MangaWatchlistGridItem] {
+        var items = filteredSeries.map(MangaWatchlistGridItem.series)
+        if showsLoadMoreEntry {
+            items.append(.loadMore)
+        }
+        return items
+    }
+
+    private func mangaWatchlistGridContent(for item: MangaWatchlistGridItem) -> AnyView {
+        switch item {
+        case .series(let item):
+            return AnyView(
+                MangaWatchlistCard(
+                    series: item,
+                    updateStatus: store.mangaWatchlistUpdateStatus(for: item),
+                    isRemoving: removingSeriesIDs.contains(item.id),
+                    openLatest: {
+                        Task {
+                            if await store.openLatestArtwork(in: item) {
+                                store.markMangaWatchlistSeriesRead(item)
+                            }
+                        }
+                    },
+                    markRead: {
+                        store.markMangaWatchlistSeriesRead(item)
+                    },
+                    remove: {
+                        pendingRemoval = item
+                    }
+                )
+            )
+        case .loadMore:
+            return AnyView(loadMoreButton)
         }
     }
 
@@ -368,6 +382,11 @@ struct MangaWatchlistView: View {
             actionMessage = nil
         }
     }
+}
+
+private enum MangaWatchlistGridItem: Hashable {
+    case series(PixivMangaSeriesPreview)
+    case loadMore
 }
 
 private struct MangaWatchlistCard: View {
