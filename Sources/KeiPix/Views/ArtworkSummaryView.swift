@@ -1,4 +1,7 @@
 import SwiftUI
+#if os(iOS)
+import UIKit
+#endif
 
 struct ArtworkSummaryView: View {
     let artwork: PixivArtwork
@@ -368,14 +371,9 @@ private struct ArtworkActionStrip: View {
 
 // MARK: - Adaptive action row
 
-/// Measures available width and promotes secondary actions from the
-/// "more" menu to inline icon buttons as space allows.
-///
-/// Width tiers (approximate, accounts for Dynamic Type):
-///   < 280  → Bookmark · Download · More          (compact)
-///   280–400 → + Open Reader                       (default inspector)
-///   400–520 → + Share · Copy Link                  (wide inspector)
-///   ≥ 520  → + Search Source · Watch Later          (full-width)
+/// Measures available width and promotes secondary actions by frequency.
+/// Compact platforms keep only the primary actions inline; wide panes can
+/// afford text-bearing pills for actions whose icon is ambiguous.
 private struct AdaptiveActionRow: View {
     let artwork: PixivArtwork
     @Bindable var store: KeiPixStore
@@ -401,45 +399,68 @@ private struct AdaptiveActionRow: View {
 
     var body: some View {
         GeometryReader { geo in
-            HStack(spacing: 10) {
-                bookmarkButton
-                downloadButton
+            let layout = AdaptiveArtworkActionLayout.resolve(width: geo.size.width, isPhone: isPhone)
 
-                if geo.size.width >= 280 {
-                    openReaderButton
-                }
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: layout.spacing) {
+                    bookmarkButton(showsTitle: layout.showsPrimaryTitles)
+                    downloadButton(showsTitle: layout.showsPrimaryTitles)
 
-                if geo.size.width >= 400, artwork.pixivURL != nil {
-                    shareButton
-                    copyLinkButton
-                }
-
-                if geo.size.width >= 520 {
-                    if currentPageURL != nil || currentLocalPageURL != nil {
-                        searchImageButton
+                    if layout.showsReader {
+                        openReaderButton(showsTitle: layout.showsSecondaryTitles)
                     }
-                    watchLaterButton
-                }
 
-                moreMenu(promoteShare: geo.size.width >= 400,
-                         promoteSearch: geo.size.width >= 520,
-                         promoteWatchLater: geo.size.width >= 520)
+                    if layout.showsShare, artwork.pixivURL != nil {
+                        shareButton(showsTitle: layout.showsSecondaryTitles)
+                    }
+
+                    if layout.showsCopyLink, artwork.pixivURL != nil {
+                        copyLinkButton(showsTitle: layout.showsSecondaryTitles)
+                    }
+
+                    if layout.showsSearchImage, currentPageURL != nil || currentLocalPageURL != nil {
+                        searchImageButton(showsTitle: layout.showsSecondaryTitles)
+                    }
+
+                    if layout.showsWatchLaterInline {
+                        watchLaterButton(showsTitle: true)
+                    }
+
+                    moreMenu(layout: layout)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+                HStack(spacing: 8) {
+                    bookmarkButton(showsTitle: false)
+                    downloadButton(showsTitle: false)
+                    moreMenu(layout: .compactFallback)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .frame(height: 28)
+        .frame(height: 34)
+    }
+
+    private var isPhone: Bool {
+        #if os(iOS)
+        UIDevice.current.userInterfaceIdiom == .phone
+        #else
+        false
+        #endif
     }
 
     // MARK: - Inline buttons
 
-    private var bookmarkButton: some View {
+    private func bookmarkButton(showsTitle: Bool) -> some View {
         Button {
             isBookmarkEditorPresented = true
         } label: {
-            Label(artwork.isBookmarked ? L10n.editBookmark : L10n.bookmark,
-                  systemImage: artwork.isBookmarked ? "bookmark.fill" : "bookmark")
+            actionLabel(
+                title: artwork.isBookmarked ? L10n.editBookmark : L10n.bookmark,
+                systemImage: artwork.isBookmarked ? "bookmark.fill" : "bookmark",
+                showsTitle: showsTitle
+            )
         }
-        .labelStyle(.iconOnly)
         .help(artwork.isBookmarked ? L10n.editBookmark : L10n.bookmark)
         .accessibilityLabel(artwork.isBookmarked ? L10n.editBookmark : L10n.bookmark)
         .touchTarget()
@@ -453,7 +474,7 @@ private struct AdaptiveActionRow: View {
         }
     }
 
-    private var downloadButton: some View {
+    private func downloadButton(showsTitle: Bool) -> some View {
         Button {
             if downloadState == .downloaded {
                 store.prepareReaderWindow(for: artwork)
@@ -463,9 +484,8 @@ private struct AdaptiveActionRow: View {
                 showActionMessage(String(format: L10n.queuedDownloadsFormat, 1))
             }
         } label: {
-            Label(downloadPrimaryTitle, systemImage: downloadPrimarySystemImage)
+            actionLabel(title: downloadPrimaryTitle, systemImage: downloadPrimarySystemImage, showsTitle: showsTitle)
         }
-        .labelStyle(.iconOnly)
         .buttonStyle(.bordered)
         .controlSize(.small)
         .help(downloadPrimaryTitle)
@@ -473,14 +493,13 @@ private struct AdaptiveActionRow: View {
         .touchTarget()
     }
 
-    private var openReaderButton: some View {
+    private func openReaderButton(showsTitle: Bool) -> some View {
         Button {
             store.prepareReaderWindow(for: artwork)
             openWindow(id: "artwork-reader", value: artwork.id)
         } label: {
-            Label(L10n.openReaderWindow, systemImage: "rectangle.inset.filled")
+            actionLabel(title: L10n.openReaderWindow, systemImage: "rectangle.inset.filled", showsTitle: showsTitle)
         }
-        .labelStyle(.iconOnly)
         .buttonStyle(.bordered)
         .controlSize(.small)
         .help(L10n.openReaderWindow)
@@ -488,13 +507,12 @@ private struct AdaptiveActionRow: View {
         .touchTarget()
     }
 
-    private var shareButton: some View {
+    private func shareButton(showsTitle: Bool) -> some View {
         Group {
             if let url = artwork.pixivURL {
                 ShareLink(item: url) {
-                    Label(L10n.share, systemImage: "square.and.arrow.up")
+                    actionLabel(title: L10n.share, systemImage: "square.and.arrow.up", showsTitle: showsTitle)
                 }
-                .labelStyle(.iconOnly)
                 .buttonStyle(.bordered)
                 .controlSize(.small)
                 .help(L10n.share)
@@ -503,16 +521,15 @@ private struct AdaptiveActionRow: View {
         }
     }
 
-    private var copyLinkButton: some View {
+    private func copyLinkButton(showsTitle: Bool) -> some View {
         Group {
             if let url = artwork.pixivURL {
                 Button {
                     PasteboardWriter.copy(url.absoluteString)
                     showActionMessage(L10n.copied)
                 } label: {
-                    Label(L10n.copyLink, systemImage: "link")
+                    actionLabel(title: L10n.copyLink, systemImage: "link", showsTitle: showsTitle)
                 }
-                .labelStyle(.iconOnly)
                 .buttonStyle(.bordered)
                 .controlSize(.small)
                 .help(L10n.copyLink)
@@ -521,13 +538,12 @@ private struct AdaptiveActionRow: View {
         }
     }
 
-    private var searchImageButton: some View {
+    private func searchImageButton(showsTitle: Bool) -> some View {
         Button {
             store.presentImageSourceSearch(for: artwork, pageIndex: pageIndex)
         } label: {
-            Label(L10n.searchImageSource, systemImage: "magnifyingglass")
+            actionLabel(title: L10n.searchImageSource, systemImage: "magnifyingglass", showsTitle: showsTitle)
         }
-        .labelStyle(.iconOnly)
         .buttonStyle(.bordered)
         .controlSize(.small)
         .help(L10n.searchImageSource)
@@ -535,7 +551,7 @@ private struct AdaptiveActionRow: View {
         .touchTarget()
     }
 
-    private var watchLaterButton: some View {
+    private func watchLaterButton(showsTitle: Bool) -> some View {
         Button {
             if store.isInWatchLater(artwork.id) {
                 store.removeFromWatchLater(LocalArtworkHistoryItem(artwork: artwork))
@@ -545,36 +561,52 @@ private struct AdaptiveActionRow: View {
                 showActionMessage(L10n.watchLaterAdded)
             }
         } label: {
-            Label(
-                store.isInWatchLater(artwork.id) ? L10n.watchLaterRemoved : L10n.watchLaterAdded,
-                systemImage: store.isInWatchLater(artwork.id) ? "clock.badge.xmark" : "clock.badge.plus"
+            actionLabel(
+                title: store.isInWatchLater(artwork.id) ? L10n.inWatchLater : L10n.watchLater,
+                systemImage: store.isInWatchLater(artwork.id) ? "clock.badge.checkmark" : "clock.badge.plus",
+                showsTitle: showsTitle
             )
         }
-        .labelStyle(.iconOnly)
         .buttonStyle(.bordered)
         .controlSize(.small)
-        .help(store.isInWatchLater(artwork.id) ? L10n.watchLaterRemoved : L10n.watchLaterAdded)
-        .accessibilityLabel(store.isInWatchLater(artwork.id) ? L10n.watchLaterRemoved : L10n.watchLaterAdded)
+        .help(watchLaterActionTitle)
+        .accessibilityLabel(watchLaterActionTitle)
         .touchTarget()
+    }
+
+    @ViewBuilder
+    private func actionLabel(title: String, systemImage: String, showsTitle: Bool) -> some View {
+        if showsTitle {
+            Label(title, systemImage: systemImage)
+                .lineLimit(1)
+        } else {
+            Label(title, systemImage: systemImage)
+                .labelStyle(.iconOnly)
+        }
+    }
+
+    private var watchLaterActionTitle: String {
+        store.isInWatchLater(artwork.id) ? L10n.removeFromWatchLater : L10n.addToWatchLater
     }
 
     // MARK: - More menu
 
     @ViewBuilder
-    private func moreMenu(promoteShare: Bool, promoteSearch: Bool, promoteWatchLater: Bool) -> some View {
+    private func moreMenu(layout: AdaptiveArtworkActionLayout) -> some View {
         Menu {
-            // Open reader — always in menu as a text entry for discoverability
-            Button {
-                store.prepareReaderWindow(for: artwork)
-                openWindow(id: "artwork-reader", value: artwork.id)
-            } label: {
-                Label(L10n.openReaderWindow, systemImage: "rectangle.inset.filled")
+            if layout.showsReader == false {
+                Button {
+                    store.prepareReaderWindow(for: artwork)
+                    openWindow(id: "artwork-reader", value: artwork.id)
+                } label: {
+                    Label(L10n.openReaderWindow, systemImage: "rectangle.inset.filled")
+                }
+
+                Divider()
             }
 
-            Divider()
-
             if let url = artwork.pixivURL {
-                if promoteShare == false {
+                if layout.showsShare == false {
                     ShareLink(item: url) {
                         Label(L10n.share, systemImage: "square.and.arrow.up")
                     }
@@ -589,7 +621,7 @@ private struct AdaptiveActionRow: View {
                 }
                 .help(L10n.shareSummaryHint)
 
-                if promoteShare == false {
+                if layout.showsCopyLink == false {
                     Button {
                         PasteboardWriter.copy(url.absoluteString)
                         showActionMessage(L10n.copied)
@@ -605,7 +637,7 @@ private struct AdaptiveActionRow: View {
                 }
             }
 
-            if promoteSearch == false, currentPageURL != nil || currentLocalPageURL != nil {
+            if layout.showsSearchImage == false, currentPageURL != nil || currentLocalPageURL != nil {
                 Button {
                     store.presentImageSourceSearch(for: artwork, pageIndex: pageIndex)
                 } label: {
@@ -677,22 +709,22 @@ private struct AdaptiveActionRow: View {
                 #endif
             }
 
-            Divider()
+            if layout.showsWatchLaterInline == false {
+                Divider()
 
-            if promoteWatchLater == false {
                 if store.isInWatchLater(artwork.id) {
                     Button {
                         store.removeFromWatchLater(LocalArtworkHistoryItem(artwork: artwork))
                         showActionMessage(L10n.watchLaterRemoved)
                     } label: {
-                        Label(L10n.watchLaterRemoved, systemImage: "clock.badge.xmark")
+                        Label(L10n.removeFromWatchLater, systemImage: "clock.badge.xmark")
                     }
                 } else {
                     Button {
                         store.addToWatchLater(artwork)
                         showActionMessage(L10n.watchLaterAdded)
                     } label: {
-                        Label(L10n.watchLaterAdded, systemImage: "clock.badge.plus")
+                        Label(L10n.addToWatchLater, systemImage: "clock.badge.plus")
                     }
                 }
             }
@@ -753,6 +785,42 @@ private struct AdaptiveActionRow: View {
             }
             .iPadFriendlySheet()
         }
+    }
+}
+
+private struct AdaptiveArtworkActionLayout {
+    let spacing: CGFloat
+    let showsPrimaryTitles: Bool
+    let showsSecondaryTitles: Bool
+    let showsReader: Bool
+    let showsShare: Bool
+    let showsCopyLink: Bool
+    let showsSearchImage: Bool
+    let showsWatchLaterInline: Bool
+
+    static let compactFallback = AdaptiveArtworkActionLayout(
+        spacing: 8,
+        showsPrimaryTitles: false,
+        showsSecondaryTitles: false,
+        showsReader: false,
+        showsShare: false,
+        showsCopyLink: false,
+        showsSearchImage: false,
+        showsWatchLaterInline: false
+    )
+
+    static func resolve(width: CGFloat, isPhone: Bool) -> AdaptiveArtworkActionLayout {
+        let effectiveWidth = isPhone ? min(width, 360) : width
+        return AdaptiveArtworkActionLayout(
+            spacing: effectiveWidth >= 520 ? 9 : 8,
+            showsPrimaryTitles: effectiveWidth >= 560,
+            showsSecondaryTitles: effectiveWidth >= 700,
+            showsReader: effectiveWidth >= 300,
+            showsShare: effectiveWidth >= 420,
+            showsCopyLink: effectiveWidth >= 500,
+            showsSearchImage: effectiveWidth >= 560,
+            showsWatchLaterInline: effectiveWidth >= 640
+        )
     }
 }
 

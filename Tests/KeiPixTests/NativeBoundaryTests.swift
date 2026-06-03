@@ -491,6 +491,39 @@ struct NativeBoundaryTests {
         #expect(artworkSummary.contains(".frame(maxWidth: .infinity, alignment: .leading)"))
     }
 
+    @Test("Artwork detail inspector uses adaptive actions and merged information cards")
+    func artworkDetailInspectorUsesAdaptiveActionsAndMergedInformationCards() throws {
+        let root = try packageRoot()
+        let artworkSummary = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/ArtworkSummaryView.swift"),
+            encoding: .utf8
+        )
+        let artworkInformation = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/ArtworkInformationSections.swift"),
+            encoding: .utf8
+        )
+        let artworkTags = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/ArtworkTagChipsView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(artworkSummary.contains("AdaptiveArtworkActionLayout.resolve"))
+        #expect(artworkSummary.contains("showsWatchLaterInline"))
+        #expect(artworkSummary.contains("watchLaterButton(showsTitle: true)"))
+        #expect(artworkSummary.contains("UIDevice.current.userInterfaceIdiom == .phone"))
+        #expect(artworkSummary.contains("L10n.addToWatchLater"))
+        #expect(artworkSummary.contains("L10n.inWatchLater"))
+        #expect(artworkInformation.contains("ArtworkContextCard("))
+        #expect(artworkInformation.contains("contextExpansionBinding"))
+        #expect(artworkInformation.contains("TagCloudInspectorSection("))
+        #expect(artworkInformation.contains("ArtworkMetadataRail"))
+        #expect(artworkInformation.contains("ArtworkMetadataPill"))
+        #expect(artworkInformation.contains("L10n.imageSize"))
+        #expect(artworkInformation.contains("CollapsibleInspectorSection") == false)
+        #expect(artworkTags.contains("ViewThatFits(in: .horizontal)"))
+        #expect(artworkTags.contains("RoundedRectangle(cornerRadius: 13"))
+    }
+
     @Test("Download queue uses a native list container")
     func downloadQueueUsesNativeListContainer() throws {
         let root = try packageRoot()

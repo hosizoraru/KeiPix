@@ -27,25 +27,37 @@ struct ArtworkTagChipsView: View {
         Button {
             search(tag)
         } label: {
-            VStack(alignment: .leading, spacing: 2) {
-                Text("#\(tag.name)")
-                    .font(.caption.weight(.semibold))
-                    .lineLimit(1)
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 5) {
+                    tagTitle(tag)
+                    translatedTagTitle(tag)
+                    Image(systemName: "magnifyingglass")
+                        .font(.caption2.weight(.semibold))
+                        .foregroundStyle(.tertiary)
+                }
 
-                if let translatedName = translatedName(for: tag) {
-                    Text(translatedName)
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
+                VStack(alignment: .leading, spacing: 2) {
+                    HStack(spacing: 5) {
+                        tagTitle(tag)
+                        Image(systemName: "magnifyingglass")
+                            .font(.caption2.weight(.semibold))
+                            .foregroundStyle(.tertiary)
+                    }
+                    translatedTagTitle(tag)
                 }
             }
             .padding(.horizontal, 10)
-            .padding(.vertical, 6)
-            .background(.quinary, in: Capsule())
-            .contentShape(Capsule())
+            .padding(.vertical, 7)
+            .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 13, style: .continuous))
+            .overlay {
+                RoundedRectangle(cornerRadius: 13, style: .continuous)
+                    .stroke(.quaternary, lineWidth: 1)
+            }
+            .contentShape(RoundedRectangle(cornerRadius: 13, style: .continuous))
         }
         .buttonStyle(.plain)
         .help(tagHelp(tag))
+        .accessibilityLabel(tagHelp(tag))
         .contextMenu {
             Button(L10n.searchTag) {
                 search(tag)
@@ -83,6 +95,22 @@ struct ArtworkTagChipsView: View {
             Button(L10n.muteTag) {
                 store.requestDangerAction(AppDangerAction(kind: .muteTag(tag)))
             }
+        }
+    }
+
+    private func tagTitle(_ tag: PixivTag) -> some View {
+        Text("#\(tag.name)")
+            .font(.caption.weight(.semibold))
+            .lineLimit(1)
+    }
+
+    @ViewBuilder
+    private func translatedTagTitle(_ tag: PixivTag) -> some View {
+        if let translatedName = translatedName(for: tag) {
+            Text(translatedName)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
         }
     }
 

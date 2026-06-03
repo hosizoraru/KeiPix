@@ -95,12 +95,10 @@ private struct ArtworkInspectorView: View {
                     ArtworkSummaryView(artwork: artwork, store: store, pageIndex: pageIndex, pageCount: pageCount)
                         .padding(.horizontal, 18)
 
-                    // Information (caption / tags / metadata) sits
-                    // right under the summary so the most-used
-                    // metadata — translated tags, mute targets,
-                    // artwork ID — is the first thing the user
-                    // reaches after the action strip. Pixiv Web's
-                    // own desktop layout follows the same ordering.
+                    // Artwork context and tags sit right under the
+                    // summary so the user reaches Pixiv-style title,
+                    // caption, tags, and metadata before the social
+                    // fold.
                     ArtworkInformationSections(
                         artwork: artwork,
                         store: store,

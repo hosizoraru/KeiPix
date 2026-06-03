@@ -118,6 +118,9 @@ enum L10n {
     static var pixivHistory: String { text("Pixiv") }
     static var searchHistory: String { text("Search history") }
     static var watchLater: String { text("Watch Later") }
+    static var addToWatchLater: String { text("Add to Watch Later") }
+    static var removeFromWatchLater: String { text("Remove from Watch Later") }
+    static var inWatchLater: String { text("In Watch Later") }
     static var workSubscriptions: String { text("Subscriptions") }
     static var workSubscriptionsEmpty: String { text("No subscriptions yet") }
     static var workSubscriptionsEmptyHint: String { text("Subscribe to creators from their profile to track new works.") }
@@ -1320,6 +1323,7 @@ enum L10n {
     static var showDetails: String { text("Show Details") }
     static var hideDetails: String { text("Hide Details") }
     static var tags: String { text("Tags") }
+    static var tagCountFormat: String { text("%d tags") }
     static var searchTag: String { text("Search Tag") }
     static var openTagInPixiv: String { text("Open Tag in Pixiv") }
     static var copyTagLink: String { text("Copy Tag Link") }
@@ -1481,6 +1485,7 @@ enum L10n {
     static var noMutedContentHint: String { text("Mute artworks, creators, or tags from artwork menus, or add tags here.") }
     static var mutedContentCountFormat: String { text("%d muted items") }
     static var contentRating: String { text("Content Rating") }
+    static var imageSize: String { text("Image Size") }
     static var allAges: String { text("All Ages") }
     static var yes: String { text("Yes") }
     static var no: String { text("No") }

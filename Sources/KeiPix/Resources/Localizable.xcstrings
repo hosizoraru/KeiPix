@@ -552,6 +552,35 @@
         }
       }
     },
+    "%d tags": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d tags"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d 個のタグ"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d 个标签"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d 個標籤"
+          }
+        }
+      }
+    },
     "%d results for %@": {
       "extractionState": "manual",
       "localizations": {
@@ -1650,6 +1679,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "加入下載隊列"
+          }
+        }
+      }
+    },
+    "Add to Watch Later": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add to Watch Later"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "後で見るに追加"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "添加到稍后再看"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "加入稍後再看"
           }
         }
       }
@@ -12152,6 +12210,35 @@
         }
       }
     },
+    "Image Size": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Image Size"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "画像サイズ"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "图像尺寸"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "圖像尺寸"
+          }
+        }
+      }
+    },
     "Image cache cleared": {
       "extractionState": "manual",
       "localizations": {
@@ -12525,6 +12612,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "已在下載隊列"
+          }
+        }
+      }
+    },
+    "In Watch Later": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In Watch Later"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "後で見るに追加済み"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已在稍后再看"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已在稍後再看"
           }
         }
       }
@@ -24357,6 +24473,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "從文章紀錄移除"
+          }
+        }
+      }
+    },
+    "Remove from Watch Later": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove from Watch Later"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "後で見るから削除"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "从稍后再看移除"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "從稍後再看移除"
           }
         }
       }

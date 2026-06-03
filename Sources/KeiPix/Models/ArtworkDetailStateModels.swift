@@ -1,12 +1,9 @@
 import Foundation
 
 /// Per-artwork (and per-user) record of which detail-pane cards the
-/// reader has expanded. The detail surface ships six collapsible
-/// sections — caption / tags / metadata / series / comments / related
-/// — and we want each one to remember its open state both within a
-/// single artwork (so scrolling the reader doesn't blow it away) and
-/// across artworks (so a user who likes seeing tags doesn't have to
-/// re-expand on every new piece).
+/// reader has expanded. The UI can group several persisted toggles
+/// into one visual card (for example caption + metadata), but the
+/// stored shape stays split so older preferences remain readable.
 ///
 /// The two-level memory works like this:
 ///
