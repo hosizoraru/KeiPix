@@ -156,60 +156,31 @@ struct ArtworkReaderControls: View {
     @State private var pageText = "1"
 
     var body: some View {
-        VStack(spacing: 10) {
-            Picker(L10n.readingMode, selection: $readingMode) {
-                ForEach(ArtworkReadingMode.allCases) { mode in
-                    Label(mode.title, systemImage: mode.systemImage)
-                        .tag(mode)
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: 12) {
+                readingModePicker
+                    .frame(minWidth: 190, maxWidth: 260)
+
+                if pageCount > 1 {
+                    pageNavigationControls
                 }
             }
-            .pickerStyle(.segmented)
 
-            if pageCount > 1 {
-                HStack(spacing: 10) {
-                    Button {
-                        scrollToPage(pageIndex - 1)
-                    } label: {
-                        Image(systemName: "chevron.left")
-                            .frame(width: 18, height: 18)
-                    }
-                    .disabled(pageIndex <= 0)
-                    .accessibilityLabel(L10n.previousPage)
+            VStack(spacing: 10) {
+                readingModePicker
 
-                    TextField(L10n.page, text: $pageText)
-                        .textFieldStyle(.roundedBorder)
-                        .multilineTextAlignment(.center)
-                        .frame(width: 62)
-                        .onSubmit(commitPageText)
-
-                    Text(L10n.pageTotal(pageCount))
-                        .font(.callout.monospacedDigit())
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
-
-                    Slider(
-                        value: Binding(
-                            get: { Double(pageIndex + 1) },
-                            set: { scrollToPage(Int($0.rounded()) - 1) }
-                        ),
-                        in: 1...Double(pageCount),
-                        step: 1
-                    )
-                    .accessibilityLabel(L10n.jumpToPage)
-
-                    Button {
-                        scrollToPage(pageIndex + 1)
-                    } label: {
-                        Image(systemName: "chevron.right")
-                            .frame(width: 18, height: 18)
-                    }
-                    .disabled(pageIndex >= pageCount - 1)
-                    .accessibilityLabel(L10n.nextPage)
+                if pageCount > 1 {
+                    pageNavigationControls
                 }
             }
         }
-        .padding(12)
-        .keiPanel(16)
+        .controlSize(.small)
+        .padding(10)
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .stroke(.quaternary, lineWidth: 1)
+        }
         .onAppear {
             syncPageText()
         }
@@ -218,6 +189,66 @@ struct ArtworkReaderControls: View {
         }
         .onChange(of: pageCount) { _, _ in
             syncPageText()
+        }
+    }
+
+    private var readingModePicker: some View {
+        Picker(L10n.readingMode, selection: $readingMode) {
+            ForEach(ArtworkReadingMode.allCases) { mode in
+                Label(mode.title, systemImage: mode.systemImage)
+                    .tag(mode)
+            }
+        }
+        .pickerStyle(.segmented)
+    }
+
+    private var pageNavigationControls: some View {
+        HStack(spacing: 9) {
+            Button {
+                scrollToPage(pageIndex - 1)
+            } label: {
+                Image(systemName: "chevron.left")
+                    .frame(width: 18, height: 18)
+            }
+            .buttonStyle(.plain)
+            .disabled(pageIndex <= 0)
+            .accessibilityLabel(L10n.previousPage)
+
+            TextField(L10n.page, text: $pageText)
+                .textFieldStyle(.plain)
+                .font(.callout.monospacedDigit())
+                .multilineTextAlignment(.center)
+                .frame(width: 46)
+                .padding(.horizontal, 9)
+                .padding(.vertical, 5)
+                .background(.thinMaterial, in: Capsule())
+                .onSubmit(commitPageText)
+
+            Text(L10n.pageTotal(pageCount))
+                .font(.callout.monospacedDigit())
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+
+            Slider(
+                value: Binding(
+                    get: { Double(pageIndex + 1) },
+                    set: { scrollToPage(Int($0.rounded()) - 1) }
+                ),
+                in: 1...Double(pageCount),
+                step: 1
+            )
+            .frame(minWidth: 90)
+            .accessibilityLabel(L10n.jumpToPage)
+
+            Button {
+                scrollToPage(pageIndex + 1)
+            } label: {
+                Image(systemName: "chevron.right")
+                    .frame(width: 18, height: 18)
+            }
+            .buttonStyle(.plain)
+            .disabled(pageIndex >= pageCount - 1)
+            .accessibilityLabel(L10n.nextPage)
         }
     }
 

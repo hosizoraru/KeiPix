@@ -9,73 +9,95 @@ struct ArtworkSummaryView: View {
     @State private var creatorActionMessage: String?
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: 16) {
+            summaryHeader
+            creatorIdentityRow
+            if let creatorActionMessage {
+                Text(creatorActionMessage)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .textSelection(.enabled)
+            }
+            ArtworkActionStrip(artwork: artwork, store: store, pageIndex: pageIndex, pageCount: pageCount)
+        }
+        .padding(16)
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                .stroke(.quaternary, lineWidth: 1)
+        }
+    }
+
+    private var summaryHeader: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .top, spacing: 12) {
                 Text(artwork.title)
                     .font(.title2.weight(.semibold))
                     .lineLimit(3)
                     .textSelection(.enabled)
-
-                if store.showContentBadges {
-                    ArtworkContentBadgesView(badges: artwork.contentBadges)
-                }
-
-                HStack(spacing: 10) {
-                    Button {
-                        isUserProfilePresented = true
-                    } label: {
-                        HStack(spacing: 10) {
-                            RemoteImageView(url: artwork.user.avatarURL)
-                                .frame(width: 32, height: 32)
-                                .clipShape(Circle())
-
-                            VStack(alignment: .leading, spacing: 1) {
-                                Text(artwork.user.name)
-                                    .font(.headline)
-                                    .lineLimit(1)
-                                Text("@\(artwork.user.account)")
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                                    .lineLimit(1)
-                            }
-
-                            Spacer(minLength: 8)
-
-                            Image(systemName: "chevron.right")
-                                .font(.caption.weight(.semibold))
-                                .foregroundStyle(.tertiary)
-                        }
-                        .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .help(L10n.openCreatorProfile)
 
-                    CreatorQuickActionsMenu(
-                        artwork: artwork,
-                        store: store,
-                        showActionMessage: showCreatorActionMessage
-                    ) {
-                        isUserProfilePresented = true
-                    }
-                }
-                .sheet(isPresented: $isUserProfilePresented) {
-                    UserProfileSheet(user: artwork.user, store: store)
-                        .iPadFriendlySheet()
-                }
-
-                if let creatorActionMessage {
-                    Text(creatorActionMessage)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .textSelection(.enabled)
-                }
+                Text("#\(artwork.id)")
+                    .font(.caption.weight(.semibold).monospacedDigit())
+                    .foregroundStyle(.secondary)
+                    .padding(.horizontal, 9)
+                    .padding(.vertical, 5)
+                    .background(.thinMaterial, in: Capsule())
+                    .textSelection(.enabled)
             }
 
-            ArtworkActionStrip(artwork: artwork, store: store, pageIndex: pageIndex, pageCount: pageCount)
+            if store.showContentBadges {
+                ArtworkContentBadgesView(badges: artwork.contentBadges)
+            }
         }
-        .padding(14)
-        .keiPanel(18)
+    }
+
+    private var creatorIdentityRow: some View {
+        HStack(spacing: 10) {
+            Button {
+                isUserProfilePresented = true
+            } label: {
+                HStack(spacing: 10) {
+                    RemoteImageView(url: artwork.user.avatarURL)
+                        .frame(width: 34, height: 34)
+                        .clipShape(Circle())
+
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text(artwork.user.name)
+                            .font(.headline)
+                            .lineLimit(1)
+                        Text("@\(artwork.user.account)")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                    }
+
+                    Spacer(minLength: 8)
+
+                    Image(systemName: "chevron.right")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.tertiary)
+                }
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .help(L10n.openCreatorProfile)
+
+            CreatorQuickActionsMenu(
+                artwork: artwork,
+                store: store,
+                showActionMessage: showCreatorActionMessage
+            ) {
+                isUserProfilePresented = true
+            }
+        }
+        .padding(10)
+        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .sheet(isPresented: $isUserProfilePresented) {
+            UserProfileSheet(user: artwork.user, store: store)
+                .iPadFriendlySheet()
+        }
     }
 
     private func showCreatorActionMessage(_ message: String) {
