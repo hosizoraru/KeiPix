@@ -26,6 +26,7 @@ struct DiscoveryTrendingTagsStrip: View {
     @State private var tags: [PixivTrendingTag] = []
     @State private var isLoading = false
     @State private var loadFailed = false
+    @State private var hasAttemptedLoad = false
 
     /// Cap the rail at 12 tags. Pixiv Web's discovery rail surfaces a
     /// similar count and the dashboard already feels dense; more than
@@ -46,14 +47,14 @@ struct DiscoveryTrendingTagsStrip: View {
     private var shouldHideSection: Bool {
         store.session == nil
             || (loadFailed && tags.isEmpty)
-            || (isLoading == false && tags.isEmpty)
+            || (hasAttemptedLoad && isLoading == false && tags.isEmpty)
     }
 
     private var section: some View {
         VStack(alignment: .leading, spacing: 10) {
             header
 
-            if isLoading && tags.isEmpty {
+            if (isLoading || hasAttemptedLoad == false) && tags.isEmpty {
                 ProgressView()
                     .controlSize(.small)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -104,11 +105,15 @@ struct DiscoveryTrendingTagsStrip: View {
     private func load() async {
         guard store.session != nil else {
             tags = []
+            hasAttemptedLoad = false
             return
         }
         isLoading = true
         loadFailed = false
-        defer { isLoading = false }
+        defer {
+            isLoading = false
+            hasAttemptedLoad = true
+        }
 
         do {
             tags = try await store.trendingTags()
