@@ -121,12 +121,23 @@ struct NativeBoundaryTests {
             contentsOf: root.appending(path: "Sources/KeiPix/Views/ContentView_iPadOS.swift"),
             encoding: .utf8
         )
+        let dashboardView = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/DiscoveryDashboardView.swift"),
+            encoding: .utf8
+        )
+        let trendingStrip = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/DiscoveryTrendingTagsStrip.swift"),
+            encoding: .utf8
+        )
 
-        #expect(contentView.contains("private var feedContent: some View"))
+        #expect(contentView.contains("private func feedContent(discoveryPresentation: DiscoveryDashboardPresentation) -> some View"))
+        #expect(contentView.contains("DiscoveryDashboardView(store: store, presentation: discoveryPresentation)"))
+        #expect(contentView.contains("private func discoveryPresentation(showsSidebarToggle: Bool) -> DiscoveryDashboardPresentation"))
+        #expect(contentView.contains("splitColumnVisibility != .detailOnly ? .sidebarCompanion : .full"))
         #expect(contentView.contains("NavigationSplitView(columnVisibility: $splitColumnVisibility)"))
         #expect(contentView.contains("List {"))
         #expect(contentView.contains("private func iPadSidebarRow("))
-        #expect(contentView.contains("private var sidebarToggleButton: some View"))
+        #expect(contentView.contains("private var sidebarToggleButton: some View") == false)
         #expect(contentView.contains("usesLandscapeSidebar(for size: CGSize)"))
         #expect(contentView.contains("case settings"))
         #expect(contentView.contains("ToolbarItem(placement: .topBarLeading)"))
@@ -134,7 +145,6 @@ struct NativeBoundaryTests {
         #expect(contentView.contains("ForEach(PixivRoute.sidebarSections)"))
         #expect(contentView.contains("store.select(route)"))
         #expect(contentView.contains("if store.selectedRoute == .home"))
-        #expect(contentView.contains("DiscoveryDashboardView(store: store)"))
         #expect(contentView.contains("NovelGalleryView(store: store)"))
         #expect(contentView.contains("SpotlightView(store: store)"))
         #expect(contentView.contains("BookmarkTagsView(store: store)"))
@@ -142,6 +152,17 @@ struct NativeBoundaryTests {
         #expect(contentView.contains("UserPreviewListView(store: store, mode: userPreviewMode)"))
         #expect(contentView.contains("store.requestRouteRefresh()"))
         #expect(contentView.contains("Task { await store.reloadCurrentFeed() }") == false)
+        #expect(contentView.contains("ToolbarItem(placement: .topBarTrailing)") == false)
+        #expect(dashboardView.contains("enum DiscoveryDashboardPresentation"))
+        #expect(dashboardView.contains("case sidebarCompanion"))
+        #expect(dashboardView.contains("sidebarCompanionContent"))
+        #expect(dashboardView.contains("companionOverview"))
+        #expect(dashboardView.contains("DashboardMetricGroupCard"))
+        #expect(dashboardView.contains("DashboardMetricTile"))
+        #expect(dashboardView.contains("ViewThatFits(in: .horizontal)"))
+        #expect(dashboardView.contains("ForEach(store.visibleDashboardSections)"))
+        #expect(trendingStrip.contains("@State private var hasAttemptedLoad = false"))
+        #expect(trendingStrip.contains("hasAttemptedLoad && isLoading == false && tags.isEmpty"))
     }
 
     @Test("Refresh token export is explicit and confirmation gated")

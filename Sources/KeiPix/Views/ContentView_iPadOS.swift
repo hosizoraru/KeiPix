@@ -193,11 +193,6 @@ struct ContentView: View {
         }
         .listStyle(.sidebar)
         .navigationTitle("KeiPix")
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                sidebarToggleButton
-            }
-        }
     }
 
     private func iPadSidebarRow(title: String, systemImage: String, isSelected: Bool) -> some View {
@@ -230,27 +225,18 @@ struct ContentView: View {
         case .settings:
             NavigationStack {
                 SettingsView(store: store)
-                    .toolbar {
-                        ToolbarItem(placement: .topBarLeading) {
-                            sidebarToggleButton
-                        }
-                    }
             }
         }
     }
 
     private func feedNavigationStack(showsSidebarToggle: Bool) -> some View {
         NavigationStack {
-            feedContent
+            feedContent(discoveryPresentation: discoveryPresentation(showsSidebarToggle: showsSidebarToggle))
                 .navigationDestination(for: PixivRoute.self) { route in
                     routeDetail(for: route)
                 }
                 .toolbar {
                     if showsSidebarToggle {
-                        ToolbarItem(placement: .topBarLeading) {
-                            sidebarToggleButton
-                        }
-
                         if splitColumnVisibility == .detailOnly {
                             ToolbarItem(placement: .topBarLeading) {
                                 routeMenu
@@ -312,20 +298,6 @@ struct ContentView: View {
         }
     }
 
-    private var sidebarToggleButton: some View {
-        Button {
-            withAnimation(.snappy(duration: 0.2)) {
-                splitColumnVisibility = splitColumnVisibility == .detailOnly ? .all : .detailOnly
-            }
-        } label: {
-            Label(
-                splitColumnVisibility == .detailOnly ? L10n.showSidebar : L10n.hideSidebar,
-                systemImage: "sidebar.leading"
-            )
-        }
-        .accessibilityLabel(splitColumnVisibility == .detailOnly ? L10n.showSidebar : L10n.hideSidebar)
-    }
-
     private var routeMenu: some View {
         Menu {
             ForEach(PixivRoute.sidebarSections) { section in
@@ -346,10 +318,14 @@ struct ContentView: View {
         .accessibilityLabel("\(L10n.currentRoute): \(store.selectedRoute.title)")
     }
 
+    private func discoveryPresentation(showsSidebarToggle: Bool) -> DiscoveryDashboardPresentation {
+        showsSidebarToggle && splitColumnVisibility != .detailOnly ? .sidebarCompanion : .full
+    }
+
     @ViewBuilder
-    private var feedContent: some View {
+    private func feedContent(discoveryPresentation: DiscoveryDashboardPresentation) -> some View {
         if store.selectedRoute == .home {
-            DiscoveryDashboardView(store: store)
+            DiscoveryDashboardView(store: store, presentation: discoveryPresentation)
         } else if store.selectedRoute == .mangaWatchlist {
             MangaWatchlistView(store: store)
         } else if store.selectedRoute == .novelWatchlist {
