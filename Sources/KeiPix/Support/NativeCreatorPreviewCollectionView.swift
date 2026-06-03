@@ -7,12 +7,15 @@ import UIKit
 
 enum NativeCreatorPreviewCollectionItem: Hashable, Identifiable {
     case preview(PixivUserPreview)
+    case artwork(PixivArtwork)
     case loadMore
 
     var id: String {
         switch self {
         case .preview(let preview):
             "creator-\(preview.user.id)"
+        case .artwork(let artwork):
+            "artwork-\(artwork.id)"
         case .loadMore:
             "load-more"
         }
@@ -38,6 +41,7 @@ enum NativeCreatorPreviewCollectionLayout: Equatable {
     case auto
     case single
     case twoUp
+    case horizontalShelf(itemWidth: CGFloat, itemHeight: CGFloat)
 
     init(mode: CreatorListLayoutMode) {
         switch mode {
@@ -55,10 +59,17 @@ enum NativeCreatorPreviewCollectionLayout: Equatable {
     var lineSpacing: CGFloat { 14 }
 
     var sectionInsets: EdgeInsets {
-        EdgeInsets(top: 14, leading: 18, bottom: 20, trailing: 18)
+        if case .horizontalShelf = self {
+            return EdgeInsets(top: 2, leading: 1, bottom: 2, trailing: 1)
+        }
+        return EdgeInsets(top: 14, leading: 18, bottom: 20, trailing: 18)
     }
 
     func itemSize(for item: NativeCreatorPreviewCollectionItem, containerWidth: CGFloat) -> CGSize {
+        if case .horizontalShelf(let itemWidth, let itemHeight) = self {
+            return CGSize(width: itemWidth, height: itemHeight)
+        }
+
         let insets = sectionInsets
         let availableWidth = max(containerWidth - insets.leading - insets.trailing, 1)
 
@@ -81,6 +92,8 @@ enum NativeCreatorPreviewCollectionLayout: Equatable {
             let spacing = interitemSpacing
             let columns = max(1, Int((availableWidth + spacing) / (minimumWidth + spacing)))
             return floor((availableWidth - spacing * CGFloat(columns - 1)) / CGFloat(columns))
+        case .horizontalShelf(let itemWidth, _):
+            return itemWidth
         }
     }
 
@@ -91,6 +104,8 @@ enum NativeCreatorPreviewCollectionLayout: Equatable {
         case .auto, .twoUp:
             let previewHeight = max(width / 2.4, 118)
             return 54 + previewHeight + 28 + 28 + 36 + 28
+        case .horizontalShelf(_, let itemHeight):
+            return itemHeight
         }
     }
 }
@@ -124,17 +139,14 @@ extension NativeCreatorPreviewCollectionView: NSViewRepresentable {
         collectionView.delegate = context.coordinator
         collectionView.isSelectable = false
         collectionView.backgroundColors = [.clear]
-        collectionView.autoresizingMask = [.width]
+        configureScrollBehavior(for: scrollView, collectionView: collectionView)
 
         scrollView.documentView = collectionView
         scrollView.drawsBackground = false
         scrollView.backgroundColor = .clear
-        scrollView.hasVerticalScroller = true
-        scrollView.hasHorizontalScroller = false
         scrollView.autohidesScrollers = true
         scrollView.borderType = .noBorder
         scrollView.scrollerStyle = .overlay
-        scrollView.verticalScrollElasticity = .allowed
 
         context.coordinator.configureDataSource(for: collectionView)
         context.coordinator.parent = self
@@ -146,9 +158,18 @@ extension NativeCreatorPreviewCollectionView: NSViewRepresentable {
 
     func updateNSView(_ scrollView: NSScrollView, context: Context) {
         guard let collectionView = scrollView.documentView as? NSCollectionView else { return }
+        configureScrollBehavior(for: scrollView, collectionView: collectionView)
         context.coordinator.parent = self
         context.coordinator.updateCollectionLayout(for: collectionView)
         context.coordinator.applySnapshot(to: collectionView)
+    }
+
+    private func configureScrollBehavior(for scrollView: NSScrollView, collectionView: NSCollectionView) {
+        collectionView.autoresizingMask = layout.scrollDirection == .horizontal ? [.height] : [.width]
+        scrollView.hasVerticalScroller = layout.scrollDirection == .vertical
+        scrollView.hasHorizontalScroller = layout.scrollDirection == .horizontal
+        scrollView.verticalScrollElasticity = layout.scrollDirection == .vertical ? .allowed : .none
+        scrollView.horizontalScrollElasticity = layout.scrollDirection == .horizontal ? .allowed : .none
     }
 
     @MainActor
@@ -187,6 +208,7 @@ extension NativeCreatorPreviewCollectionView: NSViewRepresentable {
             flowLayout.minimumInteritemSpacing = parent.layout.interitemSpacing
             flowLayout.minimumLineSpacing = parent.layout.lineSpacing
             flowLayout.sectionInset = parent.layout.nsSectionInsets
+            flowLayout.scrollDirection = parent.layout.nsScrollDirection
             flowLayout.invalidateLayout()
         }
 
@@ -194,8 +216,19 @@ extension NativeCreatorPreviewCollectionView: NSViewRepresentable {
             var snapshot = NSDiffableDataSourceSnapshot<Int, NativeCreatorPreviewCollectionItem>()
             snapshot.appendSections([0])
             snapshot.appendItems(parent.items, toSection: 0)
-            dataSource?.apply(snapshot, animatingDifferences: false) { [weak collectionView] in
-                collectionView?.reloadItems(at: collectionView?.indexPathsForVisibleItems() ?? [])
+            dataSource?.apply(snapshot, animatingDifferences: false) { [weak self, weak collectionView] in
+                guard let self, let collectionView else { return }
+                refreshVisibleHostedContent(in: collectionView)
+            }
+        }
+
+        private func refreshVisibleHostedContent(in collectionView: NSCollectionView) {
+            for indexPath in collectionView.indexPathsForVisibleItems() {
+                guard indexPath.item < parent.items.count,
+                      let item = collectionView.item(at: indexPath) as? NativeCreatorPreviewHostingCollectionItem else {
+                    continue
+                }
+                item.configure(with: parent.content(parent.items[indexPath.item]))
             }
         }
 
@@ -251,6 +284,13 @@ private final class NativeCreatorPreviewHostingCollectionItem: NSCollectionViewI
 }
 
 private extension NativeCreatorPreviewCollectionLayout {
+    var scrollDirection: NativeCreatorPreviewCollectionScrollDirection {
+        if case .horizontalShelf = self {
+            return .horizontal
+        }
+        return .vertical
+    }
+
     var nsSectionInsets: NSEdgeInsets {
         let insets = sectionInsets
         return NSEdgeInsets(
@@ -259,6 +299,10 @@ private extension NativeCreatorPreviewCollectionLayout {
             bottom: insets.bottom,
             right: insets.trailing
         )
+    }
+
+    var nsScrollDirection: NSCollectionView.ScrollDirection {
+        scrollDirection == .horizontal ? .horizontal : .vertical
     }
 }
 #elseif os(iOS)
@@ -273,8 +317,7 @@ extension NativeCreatorPreviewCollectionView: UIViewRepresentable {
             collectionViewLayout: UICollectionViewFlowLayout()
         )
         collectionView.backgroundColor = .clear
-        collectionView.alwaysBounceVertical = true
-        collectionView.showsVerticalScrollIndicator = true
+        configureScrollBehavior(for: collectionView)
         collectionView.register(
             NativeCreatorPreviewHostingCollectionCell.self,
             forCellWithReuseIdentifier: NativeCreatorPreviewHostingCollectionCell.reuseIdentifier
@@ -290,9 +333,17 @@ extension NativeCreatorPreviewCollectionView: UIViewRepresentable {
     }
 
     func updateUIView(_ collectionView: UICollectionView, context: Context) {
+        configureScrollBehavior(for: collectionView)
         context.coordinator.parent = self
         context.coordinator.updateCollectionLayout(for: collectionView)
         context.coordinator.applySnapshot(to: collectionView)
+    }
+
+    private func configureScrollBehavior(for collectionView: UICollectionView) {
+        collectionView.alwaysBounceVertical = layout.scrollDirection == .vertical
+        collectionView.alwaysBounceHorizontal = layout.scrollDirection == .horizontal
+        collectionView.showsVerticalScrollIndicator = layout.scrollDirection == .vertical
+        collectionView.showsHorizontalScrollIndicator = layout.scrollDirection == .horizontal
     }
 
     @MainActor
@@ -331,6 +382,7 @@ extension NativeCreatorPreviewCollectionView: UIViewRepresentable {
             flowLayout.minimumInteritemSpacing = parent.layout.interitemSpacing
             flowLayout.minimumLineSpacing = parent.layout.lineSpacing
             flowLayout.sectionInset = parent.layout.uiSectionInsets
+            flowLayout.scrollDirection = parent.layout.uiScrollDirection
             flowLayout.invalidateLayout()
         }
 
@@ -338,9 +390,19 @@ extension NativeCreatorPreviewCollectionView: UIViewRepresentable {
             var snapshot = NSDiffableDataSourceSnapshot<Int, NativeCreatorPreviewCollectionItem>()
             snapshot.appendSections([0])
             snapshot.appendItems(parent.items, toSection: 0)
-            dataSource?.apply(snapshot, animatingDifferences: false) { [weak collectionView] in
-                guard let collectionView else { return }
-                collectionView.reloadItems(at: collectionView.indexPathsForVisibleItems)
+            dataSource?.apply(snapshot, animatingDifferences: false) { [weak self, weak collectionView] in
+                guard let self, let collectionView else { return }
+                refreshVisibleHostedContent(in: collectionView)
+            }
+        }
+
+        private func refreshVisibleHostedContent(in collectionView: UICollectionView) {
+            for indexPath in collectionView.indexPathsForVisibleItems {
+                guard indexPath.item < parent.items.count,
+                      let cell = collectionView.cellForItem(at: indexPath) as? NativeCreatorPreviewHostingCollectionCell else {
+                    continue
+                }
+                cell.configure(with: parent.content(parent.items[indexPath.item]))
             }
         }
 
@@ -389,6 +451,13 @@ private final class NativeCreatorPreviewHostingCollectionCell: UICollectionViewC
 }
 
 private extension NativeCreatorPreviewCollectionLayout {
+    var scrollDirection: NativeCreatorPreviewCollectionScrollDirection {
+        if case .horizontalShelf = self {
+            return .horizontal
+        }
+        return .vertical
+    }
+
     var uiSectionInsets: UIEdgeInsets {
         let insets = sectionInsets
         return UIEdgeInsets(
@@ -398,5 +467,14 @@ private extension NativeCreatorPreviewCollectionLayout {
             right: insets.trailing
         )
     }
+
+    var uiScrollDirection: UICollectionView.ScrollDirection {
+        scrollDirection == .horizontal ? .horizontal : .vertical
+    }
 }
 #endif
+
+private enum NativeCreatorPreviewCollectionScrollDirection {
+    case vertical
+    case horizontal
+}

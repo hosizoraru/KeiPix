@@ -505,6 +505,8 @@ struct CreatorPreviewListContent: View {
             return AnyView(
                 CreatorLoadMoreButton(isLoadingMore: isLoadingMore, loadMore: loadMore)
             )
+        case .artwork:
+            return AnyView(EmptyView())
         }
     }
 }
