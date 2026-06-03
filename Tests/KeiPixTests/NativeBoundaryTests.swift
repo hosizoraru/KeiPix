@@ -200,6 +200,7 @@ struct NativeBoundaryTests {
         #expect(contentView.contains("NavigationSplitView(columnVisibility: $splitColumnVisibility)"))
         #expect(contentView.contains("List {"))
         #expect(contentView.contains("private func iPadSidebarRow("))
+        #expect(contentView.contains("systemName: \"checkmark\"") == false)
         #expect(contentView.contains("private var sidebarToggleButton: some View") == false)
         #expect(contentView.contains("usesLandscapeSidebar(for size: CGSize)"))
         #expect(contentView.contains("case settings"))

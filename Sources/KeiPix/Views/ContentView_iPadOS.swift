@@ -217,18 +217,9 @@ struct ContentView: View {
 
     private func iPadSidebarRow(title: String, systemImage: String, isSelected: Bool) -> some View {
         Label {
-            HStack(spacing: 8) {
-                Text(title)
-                    .lineLimit(1)
-
-                Spacer(minLength: 0)
-
-                if isSelected {
-                    Image(systemName: "checkmark")
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(.tint)
-                }
-            }
+            Text(title)
+                .lineLimit(1)
+                .frame(maxWidth: .infinity, alignment: .leading)
         } icon: {
             Image(systemName: systemImage)
                 .frame(width: 18)
