@@ -199,6 +199,31 @@ struct NativeBoundaryTests {
         #expect(nativeCollection.contains("reloadItems(at: collectionView?.indexPathsForVisibleItems()") == false)
     }
 
+    @Test("Bookmark tags use a native collection container")
+    func bookmarkTagsUseNativeCollectionContainer() throws {
+        let root = try packageRoot()
+        let bookmarkTagsView = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/BookmarkTagsView.swift"),
+            encoding: .utf8
+        )
+        let nativeCollection = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Support/NativeBookmarkTagCollectionView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(bookmarkTagsView.contains("NativeBookmarkTagCollectionView("))
+        #expect(bookmarkTagsView.contains("bookmarkTagCollectionItems"))
+        #expect(bookmarkTagsView.contains("nativeBookmarkTagContent(for: item)"))
+        #expect(bookmarkTagsView.contains("LazyVGrid") == false)
+        #expect(nativeCollection.contains("NSCollectionView"))
+        #expect(nativeCollection.contains("UICollectionView"))
+        #expect(nativeCollection.contains("NSCollectionViewDiffableDataSource"))
+        #expect(nativeCollection.contains("UICollectionViewDiffableDataSource"))
+        #expect(nativeCollection.contains("NativeBookmarkTagCollectionLayout"))
+        #expect(nativeCollection.contains("refreshVisibleHostedContent(in: collectionView)"))
+        #expect(nativeCollection.contains("reloadItems(at:") == false)
+    }
+
     @Test("Creator list, search, menu, and drop use native P2 bridges")
     func creatorListSearchMenuAndDropUseNativeP2Bridges() throws {
         let root = try packageRoot()

@@ -11,9 +11,7 @@ struct BookmarkTagsView: View {
     @State private var actionMessage: String?
     @State private var filterText = ""
 
-    private let columns = [
-        GridItem(.adaptive(minimum: 190, maximum: 280), spacing: 12)
-    ]
+    private let tagCollectionLayout = NativeBookmarkTagCollectionLayout()
 
     var body: some View {
         Group {
@@ -23,105 +21,14 @@ struct BookmarkTagsView: View {
                 ProgressView(L10n.loading)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
-                ScrollView {
-                    LazyVStack(spacing: 0, pinnedViews: [.sectionHeaders]) {
-                        Section {
-                            if tags.isEmpty, let errorMessage {
-                                ContentUnavailableView {
-                                    Label(L10n.errorTitle, systemImage: "exclamationmark.triangle")
-                                } description: {
-                                    Text(errorMessage)
-                                } actions: {
-                                    Button {
-                                        Task { await load(showFeedback: true) }
-                                    } label: {
-                                        Label(L10n.retry, systemImage: "arrow.clockwise")
-                                    }
-                                    .buttonStyle(.borderedProminent)
-                                }
-                                .frame(maxWidth: .infinity)
-                                .frame(minHeight: 360)
-                                .padding(.horizontal, 18)
-                                .padding(.top, 14)
-                            } else {
-                                LazyVGrid(columns: columns, spacing: 12) {
-                                    BookmarkTagCard(
-                                        title: L10n.allBookmarkTags,
-                                        count: totalVisibleCount,
-                                        systemImage: "tray.full",
-                                        isPinned: false,
-                                        action: { store.openBookmarks(restrict: selectedRestrict, tag: nil) }
-                                    )
-
-                                    BookmarkTagCard(
-                                        title: L10n.unclassified,
-                                        count: nil,
-                                        systemImage: "tag.slash",
-                                        isPinned: false,
-                                        action: { store.openBookmarks(restrict: selectedRestrict, tag: "未分類") }
-                                    )
-
-                                    ForEach(filteredTags) { tag in
-                                        BookmarkTagCard(
-                                            title: tag.name,
-                                            count: tag.count,
-                                            systemImage: store.isBookmarkTagPinned(tag.name) ? "pin.fill" : "tag",
-                                            isPinned: store.isBookmarkTagPinned(tag.name),
-                                            action: { store.openBookmarks(restrict: selectedRestrict, tag: tag.name) }
-                                        )
-                                        .contextMenu {
-                                            Button {
-                                                togglePin(tag.name)
-                                            } label: {
-                                                Label(
-                                                    store.isBookmarkTagPinned(tag.name) ? L10n.unpinTag : L10n.pinTag,
-                                                    systemImage: store.isBookmarkTagPinned(tag.name) ? "pin.slash" : "pin"
-                                                )
-                                            }
-
-                                            Button(L10n.copyTag) {
-                                                PasteboardWriter.copy(tag.name)
-                                                showActionMessage(String(format: L10n.copiedKeywordFormat, "#\(tag.name)"))
-                                            }
-                                        }
-                                    }
-                                }
-                                .padding(.horizontal, 18)
-                                .padding(.top, 14)
-
-                                if filteredTags.isEmpty {
-                                    Text(tags.isEmpty ? L10n.noBookmarkTags : L10n.noMatchingBookmarkTags)
-                                        .font(.callout)
-                                        .foregroundStyle(.secondary)
-                                        .frame(maxWidth: .infinity, alignment: .leading)
-                                        .padding(14)
-                                        .keiPanel(14)
-                                        .padding(.horizontal, 18)
-                                        .padding(.top, 12)
-                                }
-                            }
-
-                            if nextURL != nil {
-                                Button {
-                                    Task { await loadMore() }
-                                } label: {
-                                    Label(isLoadingMore ? L10n.loading : L10n.loadMore, systemImage: "arrow.down.circle")
-                                        .frame(maxWidth: .infinity)
-                                }
-                                .buttonStyle(.bordered)
-                                .disabled(isLoadingMore)
-                                .padding(.horizontal, 18)
-                                .padding(.vertical, 14)
-                            }
-                        } header: {
-                            header
-                                .padding(.horizontal, 18)
-                                .padding(.vertical, 6)
-                                .background(.bar)
-                        }
-                    }
+                VStack(spacing: 0) {
+                    header
+                        .padding(.horizontal, 18)
+                        .padding(.vertical, 6)
+                        .background(.bar)
+                    Divider()
+                    tagCollectionContent
                 }
-                .scrollEdgeEffectStyle(.soft, for: .top)
             }
         }
         .navigationTitle(L10n.bookmarkTags)
@@ -208,6 +115,120 @@ struct BookmarkTagsView: View {
             .help(L10n.moreActions)
         }
         .controlSize(.small)
+    }
+
+    @ViewBuilder
+    private var tagCollectionContent: some View {
+        if tags.isEmpty, let errorMessage {
+            ContentUnavailableView {
+                Label(L10n.errorTitle, systemImage: "exclamationmark.triangle")
+            } description: {
+                Text(errorMessage)
+            } actions: {
+                Button {
+                    Task { await load(showFeedback: true) }
+                } label: {
+                    Label(L10n.retry, systemImage: "arrow.clockwise")
+                }
+                .buttonStyle(.borderedProminent)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .padding(.horizontal, 18)
+            .padding(.top, 14)
+        } else {
+            NativeBookmarkTagCollectionView(
+                items: bookmarkTagCollectionItems,
+                layout: tagCollectionLayout
+            ) { item in
+                nativeBookmarkTagContent(for: item)
+            }
+        }
+    }
+
+    private var bookmarkTagCollectionItems: [NativeBookmarkTagCollectionItem] {
+        var items: [NativeBookmarkTagCollectionItem] = [
+            .all(count: totalVisibleCount),
+            .unclassified
+        ]
+        items.append(contentsOf: filteredTags.map(NativeBookmarkTagCollectionItem.tag))
+        if filteredTags.isEmpty {
+            items.append(.emptyMessage(tags.isEmpty ? L10n.noBookmarkTags : L10n.noMatchingBookmarkTags))
+        }
+        if nextURL != nil {
+            items.append(.loadMore(isLoading: isLoadingMore))
+        }
+        return items
+    }
+
+    private func nativeBookmarkTagContent(for item: NativeBookmarkTagCollectionItem) -> AnyView {
+        switch item {
+        case .all(let count):
+            return AnyView(
+                BookmarkTagCard(
+                    title: L10n.allBookmarkTags,
+                    count: count,
+                    systemImage: "tray.full",
+                    isPinned: false,
+                    action: { store.openBookmarks(restrict: selectedRestrict, tag: nil) }
+                )
+            )
+        case .unclassified:
+            return AnyView(
+                BookmarkTagCard(
+                    title: L10n.unclassified,
+                    count: nil,
+                    systemImage: "tag.slash",
+                    isPinned: false,
+                    action: { store.openBookmarks(restrict: selectedRestrict, tag: "未分類") }
+                )
+            )
+        case .tag(let tag):
+            return AnyView(
+                BookmarkTagCard(
+                    title: tag.name,
+                    count: tag.count,
+                    systemImage: store.isBookmarkTagPinned(tag.name) ? "pin.fill" : "tag",
+                    isPinned: store.isBookmarkTagPinned(tag.name),
+                    action: { store.openBookmarks(restrict: selectedRestrict, tag: tag.name) }
+                )
+                .contextMenu {
+                    Button {
+                        togglePin(tag.name)
+                    } label: {
+                        Label(
+                            store.isBookmarkTagPinned(tag.name) ? L10n.unpinTag : L10n.pinTag,
+                            systemImage: store.isBookmarkTagPinned(tag.name) ? "pin.slash" : "pin"
+                        )
+                    }
+
+                    Button(L10n.copyTag) {
+                        PasteboardWriter.copy(tag.name)
+                        showActionMessage(String(format: L10n.copiedKeywordFormat, "#\(tag.name)"))
+                    }
+                }
+            )
+        case .emptyMessage(let message):
+            return AnyView(
+                Text(message)
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+                    .padding(14)
+                    .keiPanel(14)
+            )
+        case .loadMore(let isLoading):
+            return AnyView(
+                Button {
+                    Task { await loadMore() }
+                } label: {
+                    Label(isLoading ? L10n.loading : L10n.loadMore, systemImage: "arrow.down.circle")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.bordered)
+                .disabled(isLoading)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            )
+        }
     }
 
     private var bookmarkTagSummary: String {
