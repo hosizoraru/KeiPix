@@ -6,6 +6,12 @@ struct WorkSubscriptionsView: View {
     @State private var isChecking = false
     @State private var actionMessage: String?
 
+    private let gridLayout = NativeAdaptiveGridCollectionLayout(
+        minimumItemWidth: 280,
+        maximumItemWidth: 400,
+        itemHeight: 118
+    )
+
     private var filteredSubscriptions: [WorkSubscription] {
         store.subscriptionItems(matching: searchText)
     }
@@ -76,31 +82,26 @@ struct WorkSubscriptionsView: View {
                 systemImage: "bell.badge"
             )
         } else {
-            ScrollView {
-                LazyVGrid(columns: columns, spacing: 14) {
-                    ForEach(filteredSubscriptions) { subscription in
-                        SubscriptionCard(
-                            subscription: subscription,
-                            showContentBadges: store.showContentBadges,
-                            select: {
-                                selectSubscription(subscription)
-                            },
-                            unsubscribe: {
-                                store.workSubscriptions.removeAll { $0.id == subscription.id }
-                                store.saveSubscriptions()
-                                actionMessage = L10n.workSubscriptionsUnsubscribed
-                            }
-                        )
-                    }
-                }
-                .padding(18)
+            NativeAdaptiveGridCollectionView(
+                items: filteredSubscriptions,
+                layout: gridLayout
+            ) { subscription in
+                AnyView(
+                    SubscriptionCard(
+                        subscription: subscription,
+                        showContentBadges: store.showContentBadges,
+                        select: {
+                            selectSubscription(subscription)
+                        },
+                        unsubscribe: {
+                            store.workSubscriptions.removeAll { $0.id == subscription.id }
+                            store.saveSubscriptions()
+                            actionMessage = L10n.workSubscriptionsUnsubscribed
+                        }
+                    )
+                )
             }
-            .scrollEdgeEffectStyle(.soft, for: .top)
         }
-    }
-
-    private var columns: [GridItem] {
-        [GridItem(.adaptive(minimum: 280, maximum: 400), spacing: 14)]
     }
 
     private var subtitle: String {

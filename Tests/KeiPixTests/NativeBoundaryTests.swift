@@ -306,6 +306,21 @@ struct NativeBoundaryTests {
         #expect(watchlist.contains("LazyVGrid") == false)
     }
 
+    @Test("Work subscriptions use a native adaptive grid")
+    func workSubscriptionsUseNativeAdaptiveGrid() throws {
+        let root = try packageRoot()
+        let subscriptions = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/WorkSubscriptionsView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(subscriptions.contains("NativeAdaptiveGridCollectionView("))
+        #expect(subscriptions.contains("gridLayout"))
+        #expect(subscriptions.contains("SubscriptionCard("))
+        #expect(subscriptions.contains("LazyVGrid") == false)
+        #expect(subscriptions.contains("ScrollView {") == false)
+    }
+
     @Test("Creator list, search, menu, and drop use native P2 bridges")
     func creatorListSearchMenuAndDropUseNativeP2Bridges() throws {
         let root = try packageRoot()
