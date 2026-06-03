@@ -224,6 +224,30 @@ struct NativeBoundaryTests {
         #expect(nativeCollection.contains("reloadItems(at:") == false)
     }
 
+    @Test("Log viewer uses a native list container")
+    func logViewerUsesNativeListContainer() throws {
+        let root = try packageRoot()
+        let logViewer = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/LogViewerView.swift"),
+            encoding: .utf8
+        )
+        let nativeList = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Support/NativeLogEntryListView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(logViewer.contains("NativeLogEntryListView(entries: filteredEntries)"))
+        #expect(logViewer.contains("LogEntryRow(entry: entry)"))
+        #expect(logViewer.contains("List(filteredEntries)") == false)
+        #expect(nativeList.contains("NSTableView"))
+        #expect(nativeList.contains("UICollectionView"))
+        #expect(nativeList.contains("NSHostingView"))
+        #expect(nativeList.contains("UIHostingConfiguration"))
+        #expect(nativeList.contains("lastEntryIDs"))
+        #expect(nativeList.contains("refreshVisibleRows(in: tableView)"))
+        #expect(nativeList.contains("refreshVisibleItems(in: collectionView)"))
+    }
+
     @Test("Creator list, search, menu, and drop use native P2 bridges")
     func creatorListSearchMenuAndDropUseNativeP2Bridges() throws {
         let root = try packageRoot()

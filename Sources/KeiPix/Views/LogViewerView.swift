@@ -130,32 +130,9 @@ struct LogViewerView: View {
     }
 
     private var list: some View {
-        // `Table` would surface column resizing for free, but log entries
-        // only need a single dense row per record and the message column
-        // would dominate the rest anyway — `List` keeps the layout
-        // closer to Console.app.
-        List(filteredEntries) { entry in
-            VStack(alignment: .leading, spacing: 2) {
-                HStack(spacing: 8) {
-                    Text(entry.timestamp.formatted(date: .omitted, time: .standard))
-                        .font(.system(.caption, design: .monospaced))
-                        .foregroundStyle(.secondary)
-                    Text(entry.levelLabel)
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(entry.levelColor)
-                    Text(entry.category)
-                        .font(.caption)
-                        .foregroundStyle(.tertiary)
-                    Spacer()
-                }
-                Text(entry.message)
-                    .font(.system(.body, design: .monospaced))
-                    .textSelection(.enabled)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-            .padding(.vertical, 2)
+        NativeLogEntryListView(entries: filteredEntries) { entry in
+            AnyView(LogEntryRow(entry: entry))
         }
-        .listStyle(.inset)
     }
 
     private var emptyState: some View {
@@ -316,6 +293,38 @@ struct LogEntry: Identifiable, Hashable, Sendable {
         case .undefined: return .secondary
         @unknown default: return .secondary
         }
+    }
+}
+
+private struct LogEntryRow: View {
+    let entry: LogEntry
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 3) {
+            HStack(spacing: 8) {
+                Text(entry.timestamp.formatted(date: .omitted, time: .standard))
+                    .font(.system(.caption, design: .monospaced))
+                    .foregroundStyle(.secondary)
+                Text(entry.levelLabel)
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(entry.levelColor)
+                Text(entry.category)
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
+                    .lineLimit(1)
+                Spacer()
+            }
+
+            Text(entry.message)
+                .font(.system(.body, design: .monospaced))
+                .textSelection(.enabled)
+                .lineLimit(2)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 6)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+        .background(Color.secondary.opacity(0.08), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
     }
 }
 
