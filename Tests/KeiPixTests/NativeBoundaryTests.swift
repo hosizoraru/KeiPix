@@ -268,12 +268,27 @@ struct NativeBoundaryTests {
             contentsOf: root.appending(path: "Sources/KeiPix/Support/NativeGalleryCollectionView.swift"),
             encoding: .utf8
         )
+        let nativeInlineFilter = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Support/NativeInlineFilterField.swift"),
+            encoding: .utf8
+        )
+        let feedHeader = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/GalleryFeedHeaderView.swift"),
+            encoding: .utf8
+        )
 
         #expect(galleryView.contains("usesNativeGalleryCollection"))
         #expect(galleryView.contains("usesArtworkMasonry"))
         #expect(galleryView.contains("NativeGalleryCollectionView("))
+        #expect(galleryView.contains("iPadNativeFeedHeader"))
+        #expect(galleryView.contains("navigationBarTitleDisplayMode(.inline)"))
+        #expect(galleryView.contains("presentation: .iPadCompact"))
         #expect(galleryView.contains("nativeHighlightedArtworkIDs"))
         #expect(galleryView.contains("nativeGalleryContentReloadToken"))
+        #expect(feedHeader.contains("enum FeedHeaderPresentation"))
+        #expect(feedHeader.contains("case iPadCompact"))
+        #expect(feedHeader.contains("NativeInlineFilterField("))
+        #expect(feedHeader.contains("iPadFeedHeaderActionChrome()"))
         #expect(store.contains("var artworkNavigationIntentSerial = 0"))
         #expect(navigationHistory.contains("artworkNavigationIntentSerial += 1"))
         #expect(artworkCard.contains(".minimumScaleFactor(0.82)"))
@@ -289,6 +304,7 @@ struct NativeBoundaryTests {
         #expect(nativeCollection.contains("NSHostingView"))
         #expect(nativeCollection.contains("UIHostingController"))
         #expect(nativeCollection.contains("UIRefreshControl"))
+        #expect(nativeCollection.contains("EdgeInsets(top: 10"))
         #expect(nativeCollection.contains("lastSnapshotItemIDs"))
         #expect(nativeCollection.contains("lastLayoutFingerprint"))
         #expect(nativeCollection.contains("reloadHighlightDeltaIfNeeded"))
@@ -296,6 +312,9 @@ struct NativeBoundaryTests {
         #expect(nativeCollection.contains("symmetricDifference"))
         #expect(nativeCollection.contains("reloadItems(at: collectionView.indexPathsForVisibleItems())") == false)
         #expect(nativeCollection.contains("reloadItems(at: collectionView.indexPathsForVisibleItems)") == false)
+        #expect(nativeInlineFilter.contains("struct NativeInlineFilterField: UIViewRepresentable"))
+        #expect(nativeInlineFilter.contains("UISearchTextField"))
+        #expect(nativeInlineFilter.contains("UITextFieldDelegate"))
     }
 
     @Test("Search popular preview uses a native artwork shelf")

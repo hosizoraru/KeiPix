@@ -15,10 +15,15 @@ struct GalleryView: View {
                 ProgressView(L10n.loading)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
-                GalleryFeedView(store: store, actionMessage: $actionMessage)
+                GalleryFeedView(
+                    store: store,
+                    actionMessage: $actionMessage,
+                    navigationTitle: navigationTitle,
+                    gallerySubtitle: gallerySubtitle
+                )
             }
         }
-        .navigationTitle(navigationTitle)
+        .navigationTitle(platformNavigationTitle)
         .overlay(alignment: .bottom) {
             if let actionMessage {
                 FloatingStatusBanner(maxWidth: 520) {
@@ -33,7 +38,10 @@ struct GalleryView: View {
             }
         }
         .animation(.snappy(duration: 0.18), value: actionMessage)
-        .navigationSubtitle(gallerySubtitle)
+        .navigationSubtitle(platformGallerySubtitle)
+        #if os(iOS)
+        .navigationBarTitleDisplayMode(.inline)
+        #endif
     }
 
     /// Subtitle string shown beneath the navigation title (replaces
@@ -51,6 +59,22 @@ struct GalleryView: View {
             return "\(store.selectedRoute.title) · \(focusedUser.name)"
         }
         return store.selectedRoute.title
+    }
+
+    private var platformNavigationTitle: String {
+        #if os(iOS)
+        return ""
+        #else
+        return navigationTitle
+        #endif
+    }
+
+    private var platformGallerySubtitle: String {
+        #if os(iOS)
+        return ""
+        #else
+        return gallerySubtitle
+        #endif
     }
 
     private var feedStatusText: String {
@@ -89,6 +113,8 @@ struct GalleryView: View {
 private struct GalleryFeedView: View {
     @Bindable var store: KeiPixStore
     @Binding var actionMessage: String?
+    let navigationTitle: String
+    let gallerySubtitle: String
     @State private var artworkSelection = GalleryArtworkSelection()
     @State private var batchBookmarkCommandRequest: BatchBookmarkCommandRequest?
     @State private var savedScrollPositions: [String: String] = [:]
@@ -215,6 +241,9 @@ private struct GalleryFeedView: View {
 
     private var nativeFeed: some View {
         VStack(spacing: 0) {
+            #if os(iOS)
+            iPadNativeFeedHeader
+            #else
             FeedHeaderView(
                 store: store,
                 actionMessage: $actionMessage,
@@ -224,6 +253,7 @@ private struct GalleryFeedView: View {
             .padding(.horizontal, 18)
             .padding(.vertical, 5)
             .background(.bar)
+            #endif
 
             NativeGalleryCollectionView(
                 items: nativeGalleryItems,
@@ -241,6 +271,43 @@ private struct GalleryFeedView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
+
+    #if os(iOS)
+    private var iPadNativeFeedHeader: some View {
+        HStack(alignment: .center, spacing: 12) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(navigationTitle)
+                    .font(.title2.weight(.bold))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.72)
+                    .truncationMode(.middle)
+
+                if gallerySubtitle.isEmpty == false {
+                    Text(gallerySubtitle)
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                }
+            }
+            .frame(minWidth: 170, maxWidth: .infinity, alignment: .leading)
+            .layoutPriority(1)
+
+            FeedHeaderView(
+                store: store,
+                actionMessage: $actionMessage,
+                artworkSelection: $artworkSelection,
+                batchBookmarkCommandRequest: $batchBookmarkCommandRequest,
+                presentation: .iPadCompact
+            )
+            .frame(maxWidth: 520, alignment: .trailing)
+        }
+        .padding(.horizontal, 18)
+        .padding(.top, 4)
+        .padding(.bottom, 7)
+        .background(.bar)
+    }
+    #endif
 
     private var usesNativeGalleryCollection: Bool {
         store.galleryLayoutMode.usesArtworkMasonry

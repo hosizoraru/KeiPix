@@ -73,7 +73,7 @@ enum NativeGalleryCollectionLayout: Equatable {
     }
 
     var sectionInsets: EdgeInsets {
-        EdgeInsets(top: 14, leading: 18, bottom: 20, trailing: 18)
+        EdgeInsets(top: 10, leading: 18, bottom: 20, trailing: 18)
     }
 
     func itemSize(for item: NativeGalleryCollectionItem, containerWidth: CGFloat) -> CGSize {

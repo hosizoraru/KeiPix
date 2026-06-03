@@ -1,10 +1,16 @@
 import SwiftUI
 
+enum FeedHeaderPresentation {
+    case regular
+    case iPadCompact
+}
+
 struct FeedHeaderView: View {
     @Bindable var store: KeiPixStore
     @Binding var actionMessage: String?
     @Binding var artworkSelection: GalleryArtworkSelection
     @Binding var batchBookmarkCommandRequest: BatchBookmarkCommandRequest?
+    let presentation: FeedHeaderPresentation
     @State private var isBatchDownloadPresented = false
     @State private var batchDownloadLimit = 30
     @State private var batchActionArtworks: [PixivArtwork] = []
@@ -19,9 +25,30 @@ struct FeedHeaderView: View {
     @State private var draftUseRankingDate = false
     @State private var draftRankingDate = KeiPixStore.latestSelectableRankingDate()
 
+    init(
+        store: KeiPixStore,
+        actionMessage: Binding<String?>,
+        artworkSelection: Binding<GalleryArtworkSelection>,
+        batchBookmarkCommandRequest: Binding<BatchBookmarkCommandRequest?>,
+        presentation: FeedHeaderPresentation = .regular
+    ) {
+        self.store = store
+        self._actionMessage = actionMessage
+        self._artworkSelection = artworkSelection
+        self._batchBookmarkCommandRequest = batchBookmarkCommandRequest
+        self.presentation = presentation
+    }
+
     var body: some View {
-        FlowLayout(spacing: 8) {
-            headerActions
+        Group {
+            switch presentation {
+            case .regular:
+                FlowLayout(spacing: 8) {
+                    headerActions
+                }
+            case .iPadCompact:
+                iPadCompactHeaderActions
+            }
         }
         .controlSize(.small)
         .task(id: bookmarkTagRouteKey) {
@@ -33,6 +60,41 @@ struct FeedHeaderView: View {
         .onChange(of: batchBookmarkCommandRequest) { _, request in
             handleBatchBookmarkCommandRequest(request)
         }
+    }
+
+    @ViewBuilder
+    private var iPadCompactHeaderActions: some View {
+        HStack(spacing: 7) {
+            if store.artworks.isEmpty == false {
+                #if os(iOS)
+                NativeInlineFilterField(
+                    text: $store.clientFilterQuery,
+                    placeholder: L10n.filterArtworks,
+                    accessibilityLabel: L10n.filterArtworks
+                )
+                .frame(minWidth: 180, idealWidth: 240, maxWidth: 300, minHeight: 34, maxHeight: 34)
+                .layoutPriority(1)
+                #else
+                EmptyView()
+                #endif
+
+                Button {
+                    _ = store.randomFromCurrentFeed()
+                } label: {
+                    Label(L10n.randomFromFeed, systemImage: "shuffle")
+                }
+                .help(L10n.randomFromFeed)
+                .accessibilityLabel(L10n.randomFromFeed)
+                .iPadFeedHeaderActionChrome()
+            }
+
+            if store.artworks.isEmpty == false {
+                compactSelectionMenu
+            }
+
+            compactMoreActionsMenu
+        }
+        .frame(maxWidth: .infinity, alignment: .trailing)
     }
 
     @ViewBuilder
@@ -348,6 +410,148 @@ struct FeedHeaderView: View {
         }
     }
 
+    private var compactSelectionMenu: some View {
+        Menu {
+            Toggle(isOn: selectionModeBinding) {
+                Label(L10n.selectionMode, systemImage: "checkmark.circle")
+            }
+
+            Button {
+                artworkSelection.selectAll(store.artworks.map(\.id))
+            } label: {
+                Label(L10n.selectAll, systemImage: "checkmark.circle.fill")
+            }
+
+            Button {
+                artworkSelection.clear()
+            } label: {
+                Label(L10n.clearSelection, systemImage: "xmark.circle")
+            }
+            .disabled(artworkSelection.hasSelection == false)
+
+            Divider()
+
+            Button {
+                copySelectedArtworkLinks()
+            } label: {
+                Label(L10n.copySelectedArtworkLinks, systemImage: "link")
+            }
+            .disabled(selectedArtworkLinks.isEmpty)
+
+            Button {
+                presentBatchDownload(artworks: selectedArtworks)
+            } label: {
+                Label(L10n.batchDownload, systemImage: "square.and.arrow.down.on.square")
+            }
+            .disabled(selectedArtworks.isEmpty)
+
+            Button {
+                presentBatchBookmarkPreview(artworks: selectedArtworks, scope: .selectedWorks)
+            } label: {
+                Label(L10n.batchBookmarkSelected, systemImage: "bookmark")
+            }
+            .disabled(selectedArtworks.isEmpty)
+
+            Menu {
+                ForEach(BulkMuteTarget.allCases) { target in
+                    Button {
+                        presentBulkMutePreview(target, artworks: selectedArtworks)
+                    } label: {
+                        Label(target.title, systemImage: target.systemImage)
+                    }
+                    .disabled(selectedArtworks.isEmpty)
+                }
+            } label: {
+                Label(L10n.bulkMutePreview, systemImage: "eye.slash")
+            }
+            .disabled(selectedArtworks.isEmpty)
+        } label: {
+            Label(selectionTitle, systemImage: artworkSelection.hasSelection ? "checkmark.circle.fill" : "checkmark.circle")
+        }
+        .help(selectionTitle)
+        .accessibilityLabel(selectionTitle)
+        .tint(artworkSelection.hasSelection || artworkSelection.isSelectionMode ? .accentColor : nil)
+        .iPadFeedHeaderActionChrome()
+    }
+
+    private var compactMoreActionsMenu: some View {
+        Menu {
+            Button {
+                copyLoadedArtworkLinks()
+            } label: {
+                Label(L10n.copyLoadedArtworkLinks, systemImage: "link")
+            }
+            .disabled(loadedArtworkLinks.isEmpty)
+
+            Button {
+                presentBatchDownload(artworks: store.artworks)
+            } label: {
+                Label(L10n.batchDownload, systemImage: "square.and.arrow.down.on.square")
+            }
+            .disabled(store.artworks.isEmpty)
+
+            Button {
+                presentBatchBookmarkPreview(artworks: store.artworks, scope: .loadedFeed)
+            } label: {
+                Label(L10n.batchBookmark, systemImage: "bookmark")
+            }
+            .disabled(store.artworks.isEmpty)
+
+            Divider()
+
+            Menu {
+                ForEach(BulkMuteTarget.allCases) { target in
+                    Button {
+                        presentBulkMutePreview(target, artworks: store.artworks)
+                    } label: {
+                        Label(target.title, systemImage: target.systemImage)
+                    }
+                    .disabled(store.artworks.isEmpty)
+                }
+            } label: {
+                Label(L10n.bulkMutePreview, systemImage: "eye.slash")
+            }
+            .disabled(store.artworks.isEmpty)
+        } label: {
+            Label(L10n.moreActions, systemImage: "ellipsis.circle")
+        }
+        .help(L10n.moreActions)
+        .accessibilityLabel(L10n.moreActions)
+        .iPadFeedHeaderActionChrome()
+        .popover(isPresented: $isBatchDownloadPresented, arrowEdge: .bottom) {
+            BatchDownloadPopover(
+                limit: $batchDownloadLimit,
+                maxLimit: maxBatchDownloadLimit,
+                queuedCount: lastQueuedDownloadCount,
+                downloadDirectoryPath: store.downloads.downloadDirectoryPath,
+                action: queueBatchDownload
+            )
+        }
+        .popover(item: $bulkMutePreview, arrowEdge: .bottom) { preview in
+            BulkMutePreviewPopover(
+                preview: preview,
+                cancel: {
+                    bulkMutePreview = nil
+                },
+                apply: {
+                    applyBulkMutePreview(preview)
+                }
+            )
+        }
+        .popover(item: $batchBookmarkPreview, arrowEdge: .bottom) { preview in
+            BatchBookmarkPreviewPopover(
+                preview: preview,
+                isApplying: isApplyingBatchBookmark,
+                cancel: {
+                    batchBookmarkPreview = nil
+                },
+                apply: {
+                    applyBatchBookmarkPreview(preview)
+                }
+            )
+        }
+    }
+
     @ViewBuilder
     private var rankingModeMenu: some View {
         if let family = store.selectedRoute.rankingFamily {
@@ -652,6 +856,21 @@ struct FeedHeaderView: View {
         if actionMessage == message {
             actionMessage = nil
         }
+    }
+}
+
+private extension View {
+    @ViewBuilder
+    func iPadFeedHeaderActionChrome() -> some View {
+        #if os(iOS)
+        self
+            .labelStyle(.iconOnly)
+            .buttonStyle(.plain)
+            .frame(width: 34, height: 34)
+            .keiInteractiveGlass(17)
+        #else
+        self
+        #endif
     }
 }
 
