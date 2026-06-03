@@ -18,7 +18,7 @@ struct DiscoveryDashboardView: View {
     var body: some View {
         Group {
             if store.session == nil {
-                signedOutContent
+                PixivSignedOutStateView(store: store)
             } else {
                 dashboardContent
             }
@@ -47,13 +47,15 @@ struct DiscoveryDashboardView: View {
 
     private var fullDashboardContent: some View {
         ScrollView {
-            LazyVStack(alignment: .leading, spacing: 18) {
-                header
+            GlassEffectContainer(spacing: 18) {
+                LazyVStack(alignment: .leading, spacing: 18) {
+                    header
 
-                DiscoveryTrendingTagsStrip(store: store)
+                    DiscoveryTrendingTagsStrip(store: store)
 
-                ForEach(store.visibleDashboardSections) { section in
-                    DiscoveryDashboardRouteSection(section: section, store: store)
+                    ForEach(store.visibleDashboardSections) { section in
+                        DiscoveryDashboardRouteSection(section: section, store: store)
+                    }
                 }
             }
             .padding(.horizontal, 18)
@@ -65,10 +67,12 @@ struct DiscoveryDashboardView: View {
 
     private var sidebarCompanionContent: some View {
         ScrollView {
-            LazyVStack(alignment: .leading, spacing: 14) {
-                compactHeader
-                companionOverview
-                DiscoveryTrendingTagsStrip(store: store)
+            GlassEffectContainer(spacing: 14) {
+                LazyVStack(alignment: .leading, spacing: 14) {
+                    compactHeader
+                    companionOverview
+                    DiscoveryTrendingTagsStrip(store: store)
+                }
             }
             .padding(.horizontal, 14)
             .padding(.top, 10)
@@ -77,100 +81,22 @@ struct DiscoveryDashboardView: View {
         .scrollEdgeEffectStyle(.soft, for: .top)
     }
 
-    @ScaledMetric(relativeTo: .headline) private var headerIconSize: CGFloat = 28
-
     private var header: some View {
-        HStack(alignment: .center, spacing: 14) {
-            Image(systemName: "square.grid.2x2")
-                .font(.system(size: headerIconSize, weight: .semibold))
-                .symbolRenderingMode(.hierarchical)
-                .foregroundStyle(.secondary)
-                .frame(width: 44, height: 44)
-                .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
-                .overlay {
-                    RoundedRectangle(cornerRadius: 8, style: .continuous)
-                        .stroke(Color.secondary.opacity(0.14), lineWidth: 1)
-                }
-
-            VStack(alignment: .leading, spacing: 4) {
-                Text(L10n.discover)
-                    .font(.title2.weight(.semibold))
-                    .lineLimit(1)
-
-                HStack(spacing: 8) {
-                    DashboardStatusPill(title: L10n.currentRoute, value: store.selectedRoute.title, systemImage: "location")
-                    DashboardStatusPill(title: L10n.feed, value: "\(store.artworks.count.formatted())", systemImage: "photo.on.rectangle")
-                    DashboardStatusPill(title: L10n.downloads, value: "\(store.downloads.items.count.formatted())", systemImage: "arrow.down.circle")
-                }
-            }
-
-            Spacer(minLength: 0)
-
-            Button {
-                Task { await store.surpriseMe() }
-            } label: {
-                Label(L10n.surpriseMe, systemImage: "shuffle")
-            }
-            .labelStyle(.iconOnly)
-            .help(L10n.surpriseMe)
-            .accessibilityLabel(L10n.surpriseMe)
-
-            Button {
-                isCustomizationPresented = true
-            } label: {
-                Label(L10n.customizeDashboard, systemImage: "slider.horizontal.3")
-            }
-            .labelStyle(.iconOnly)
-            .help(L10n.customizeDashboard)
-            .accessibilityLabel(L10n.customizeDashboard)
-        }
-        .padding(14)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .stroke(Color.secondary.opacity(0.12), lineWidth: 1)
-        }
+        DiscoveryDashboardHeroCard(
+            store: store,
+            style: .full,
+            surprise: { Task { await store.surpriseMe() } },
+            customize: { isCustomizationPresented = true }
+        )
     }
 
     private var compactHeader: some View {
-        HStack(alignment: .center, spacing: 12) {
-            Image(systemName: "square.grid.2x2")
-                .font(.system(size: 20, weight: .semibold))
-                .symbolRenderingMode(.hierarchical)
-                .foregroundStyle(.secondary)
-                .frame(width: 34, height: 34)
-                .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 7, style: .continuous))
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text(L10n.discover)
-                    .font(.headline.weight(.semibold))
-                    .lineLimit(1)
-
-                Text(L10n.signedIn)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-            }
-
-            Spacer(minLength: 0)
-
-            Button {
-                Task { await store.surpriseMe() }
-            } label: {
-                Label(L10n.surpriseMe, systemImage: "shuffle")
-            }
-            .labelStyle(.iconOnly)
-            .help(L10n.surpriseMe)
-            .accessibilityLabel(L10n.surpriseMe)
-        }
-        .padding(12)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .stroke(Color.secondary.opacity(0.12), lineWidth: 1)
-        }
+        DiscoveryDashboardHeroCard(
+            store: store,
+            style: .compact,
+            surprise: { Task { await store.surpriseMe() } },
+            customize: { isCustomizationPresented = true }
+        )
     }
 
     private var companionOverview: some View {
@@ -235,35 +161,137 @@ struct DiscoveryDashboardView: View {
         ]
     }
 
-    @ScaledMetric(relativeTo: .largeTitle) private var signedOutIconSize: CGFloat = 56
+}
 
-    private var signedOutContent: some View {
-        VStack(spacing: 18) {
+private enum DiscoveryDashboardHeroStyle: Equatable {
+    case full
+    case compact
+
+    var cornerRadius: CGFloat {
+        switch self {
+        case .full:
+            26
+        case .compact:
+            22
+        }
+    }
+
+    var iconSide: CGFloat {
+        switch self {
+        case .full:
+            52
+        case .compact:
+            40
+        }
+    }
+}
+
+private struct DiscoveryDashboardHeroCard: View {
+    @Bindable var store: KeiPixStore
+    let style: DiscoveryDashboardHeroStyle
+    let surprise: () -> Void
+    let customize: () -> Void
+
+    @ScaledMetric(relativeTo: .headline) private var compactIconSize: CGFloat = 20
+    @ScaledMetric(relativeTo: .largeTitle) private var fullIconSize: CGFloat = 30
+
+    var body: some View {
+        HStack(alignment: .center, spacing: style == .full ? 16 : 12) {
             Image(systemName: "sparkles.rectangle.stack")
-                .font(.system(size: signedOutIconSize, weight: .medium))
+                .font(.system(size: style == .full ? fullIconSize : compactIconSize, weight: .semibold))
                 .symbolRenderingMode(.hierarchical)
                 .foregroundStyle(.secondary)
+                .frame(width: style.iconSide, height: style.iconSide)
+                .keiGlass(style == .full ? 20 : 16)
 
-            VStack(spacing: 6) {
-                Text(L10n.signedOutTitle)
-                    .font(.title2.weight(.semibold))
-                Text(L10n.signedOutSubtitle)
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-                    .frame(maxWidth: 480)
-            }
+            VStack(alignment: .leading, spacing: style == .full ? 8 : 5) {
+                Text(L10n.discover)
+                    .font(style == .full ? .title2.weight(.semibold) : .headline.weight(.semibold))
+                    .lineLimit(1)
 
-            Button {
-                store.isLoginPresented = true
-            } label: {
-                Label(L10n.login, systemImage: "person.crop.circle.badge.plus")
+                FlowLayout(spacing: 7) {
+                    DashboardStatusPill(title: L10n.currentRoute, value: store.selectedRoute.title, systemImage: "location")
+                    if style == .full {
+                        DashboardStatusPill(title: L10n.feed, value: store.artworks.count.formatted(), systemImage: "photo.on.rectangle")
+                        DashboardStatusPill(title: L10n.downloads, value: store.downloads.items.count.formatted(), systemImage: "arrow.down.circle")
+                    } else {
+                        DashboardStatusPill(title: L10n.session, value: L10n.signedIn, systemImage: "person.crop.circle.badge.checkmark")
+                    }
+                }
             }
-            .buttonStyle(.borderedProminent)
-            .controlSize(.large)
+            .frame(maxWidth: .infinity, alignment: .leading)
+
+            heroActions
         }
-        .padding(28)
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding(style == .full ? 16 : 13)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .keiGlass(style.cornerRadius)
+    }
+
+    private var heroActions: some View {
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: 9) {
+                surpriseButton(showsTitle: style == .full)
+                customizeButton(showsTitle: style == .full)
+            }
+
+            HStack(spacing: 8) {
+                surpriseButton(showsTitle: false)
+                customizeButton(showsTitle: false)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func surpriseButton(showsTitle: Bool) -> some View {
+        if showsTitle {
+            Button(action: surprise) {
+                Label(L10n.surpriseMe, systemImage: "shuffle")
+                    .lineLimit(1)
+            }
+            .labelStyle(.titleAndIcon)
+            .buttonStyle(.glassProminent)
+            .buttonBorderShape(.capsule)
+            .controlSize(style == .full ? .regular : .small)
+            .help(L10n.surpriseMe)
+            .accessibilityLabel(L10n.surpriseMe)
+        } else {
+            Button(action: surprise) {
+                Label(L10n.surpriseMe, systemImage: "shuffle")
+            }
+            .labelStyle(.iconOnly)
+            .buttonStyle(.glassProminent)
+            .buttonBorderShape(.capsule)
+            .controlSize(style == .full ? .regular : .small)
+            .help(L10n.surpriseMe)
+            .accessibilityLabel(L10n.surpriseMe)
+        }
+    }
+
+    @ViewBuilder
+    private func customizeButton(showsTitle: Bool) -> some View {
+        if showsTitle {
+            Button(action: customize) {
+                Label(L10n.customizeDashboard, systemImage: "slider.horizontal.3")
+                    .lineLimit(1)
+            }
+            .labelStyle(.titleAndIcon)
+            .buttonStyle(.bordered)
+            .buttonBorderShape(.capsule)
+            .controlSize(style == .full ? .regular : .small)
+            .help(L10n.customizeDashboard)
+            .accessibilityLabel(L10n.customizeDashboard)
+        } else {
+            Button(action: customize) {
+                Label(L10n.customizeDashboard, systemImage: "slider.horizontal.3")
+            }
+            .labelStyle(.iconOnly)
+            .buttonStyle(.bordered)
+            .buttonBorderShape(.capsule)
+            .controlSize(style == .full ? .regular : .small)
+            .help(L10n.customizeDashboard)
+            .accessibilityLabel(L10n.customizeDashboard)
+        }
     }
 }
 
@@ -280,24 +308,33 @@ private struct DashboardMetricGroupCard: View {
     let metrics: [DashboardMetric]
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Label(title, systemImage: systemImage)
-                .font(.headline.weight(.semibold))
-                .foregroundStyle(.primary)
-                .lineLimit(1)
+        GlassEffectContainer(spacing: 10) {
+            VStack(alignment: .leading, spacing: 11) {
+                HStack(spacing: 9) {
+                    Image(systemName: systemImage)
+                        .font(.subheadline.weight(.semibold))
+                        .symbolRenderingMode(.hierarchical)
+                        .foregroundStyle(.secondary)
+                        .frame(width: 30, height: 30)
+                        .keiGlass(13)
 
-            VStack(alignment: .leading, spacing: 8) {
-                ForEach(metrics) { metric in
-                    DashboardMetricTile(metric: metric)
+                    Text(title)
+                        .font(.headline.weight(.semibold))
+                        .foregroundStyle(.primary)
+                        .lineLimit(1)
+
+                    Spacer(minLength: 0)
+                }
+
+                VStack(alignment: .leading, spacing: 8) {
+                    ForEach(metrics) { metric in
+                        DashboardMetricTile(metric: metric)
+                    }
                 }
             }
-        }
-        .padding(12)
-        .frame(maxWidth: .infinity, minHeight: 156, alignment: .topLeading)
-        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .stroke(Color.secondary.opacity(0.12), lineWidth: 1)
+            .padding(13)
+            .frame(maxWidth: .infinity, minHeight: 160, alignment: .topLeading)
+            .keiGlass(20)
         }
     }
 }
@@ -311,7 +348,8 @@ private struct DashboardMetricTile: View {
                 .font(.caption.weight(.semibold))
                 .symbolRenderingMode(.hierarchical)
                 .foregroundStyle(.secondary)
-                .frame(width: 18)
+                .frame(width: 22, height: 22)
+                .keiGlass(10)
 
             Text(metric.title)
                 .font(.caption.weight(.medium))
@@ -329,7 +367,7 @@ private struct DashboardMetricTile: View {
         .padding(.horizontal, 10)
         .padding(.vertical, 8)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.secondary.opacity(0.07), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+        .keiGlass(14)
     }
 }
 
@@ -338,26 +376,33 @@ private struct DiscoveryDashboardRouteSection: View {
     @Bindable var store: KeiPixStore
 
     private let columns = [
-        GridItem(.adaptive(minimum: 168, maximum: 260), spacing: 12, alignment: .top)
+        GridItem(.adaptive(minimum: 180, maximum: 270), spacing: 12, alignment: .top)
     ]
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Label(section.title, systemImage: section.systemImage)
-                .font(.headline.weight(.semibold))
-                .foregroundStyle(.primary)
+        GlassEffectContainer(spacing: 12) {
+            VStack(alignment: .leading, spacing: 12) {
+                DiscoveryDashboardSectionHeader(
+                    title: section.title,
+                    systemImage: section.systemImage,
+                    count: section.routes.count
+                )
 
-            LazyVGrid(columns: columns, alignment: .leading, spacing: 12) {
-                ForEach(section.routes) { route in
-                    DiscoveryDashboardRouteCard(
-                        route: route,
-                        metric: metric(for: route),
-                        isSelected: store.selectedRoute == route
-                    ) {
-                        store.select(route)
+                LazyVGrid(columns: columns, alignment: .leading, spacing: 12) {
+                    ForEach(section.routes) { route in
+                        DiscoveryDashboardRouteCard(
+                            route: route,
+                            metric: metric(for: route),
+                            isSelected: store.selectedRoute == route
+                        ) {
+                            store.select(route)
+                        }
                     }
                 }
             }
+            .padding(14)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .keiGlass(22)
         }
     }
 
@@ -382,6 +427,36 @@ private struct DiscoveryDashboardRouteSection: View {
     }
 }
 
+private struct DiscoveryDashboardSectionHeader: View {
+    let title: String
+    let systemImage: String
+    let count: Int
+
+    var body: some View {
+        HStack(alignment: .center, spacing: 10) {
+            Image(systemName: systemImage)
+                .font(.subheadline.weight(.semibold))
+                .symbolRenderingMode(.hierarchical)
+                .foregroundStyle(.secondary)
+                .frame(width: 32, height: 32)
+                .keiGlass(14)
+
+            Text(title)
+                .font(.headline.weight(.semibold))
+                .lineLimit(1)
+
+            Spacer(minLength: 0)
+
+            Text(count.formatted())
+                .font(.caption.weight(.semibold).monospacedDigit())
+                .foregroundStyle(.secondary)
+                .padding(.horizontal, 9)
+                .padding(.vertical, 4)
+                .glassEffect(.regular, in: Capsule(style: .continuous))
+        }
+    }
+}
+
 private struct DiscoveryDashboardRouteCard: View {
     let route: PixivRoute
     let metric: String?
@@ -397,8 +472,8 @@ private struct DiscoveryDashboardRouteCard: View {
                     .font(.system(size: 18, weight: .semibold))
                     .symbolRenderingMode(.hierarchical)
                     .foregroundStyle(isSelected ? Color.accentColor : Color.secondary)
-                    .frame(width: 28, height: 28)
-                    .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 7, style: .continuous))
+                    .frame(width: 34, height: 34)
+                    .keiGlass(14)
 
                 VStack(alignment: .leading, spacing: 6) {
                     Text(route.title)
@@ -415,35 +490,38 @@ private struct DiscoveryDashboardRouteCard: View {
                             .lineLimit(1)
                             .padding(.horizontal, 7)
                             .padding(.vertical, 3)
-                            .background(.quaternary, in: Capsule())
+                            .glassEffect(.regular, in: Capsule(style: .continuous))
                     }
                 }
 
                 Spacer(minLength: 0)
+
+                if isSelected {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.subheadline.weight(.semibold))
+                        .symbolRenderingMode(.hierarchical)
+                        .foregroundStyle(.tint)
+                }
             }
             .padding(12)
-            .frame(maxWidth: .infinity, minHeight: 76, alignment: .topLeading)
-            .contentShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+            .frame(maxWidth: .infinity, minHeight: 82, alignment: .topLeading)
+            .contentShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         }
         .buttonStyle(.plain)
-        .background(backgroundStyle, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+        .keiInteractiveGlass(18)
         .overlay {
-            RoundedRectangle(cornerRadius: 8, style: .continuous)
-                .stroke(strokeStyle, lineWidth: isSelected ? 1.4 : 1)
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .strokeBorder(strokeStyle, lineWidth: isSelected ? 1.2 : 0.8)
         }
-        .shadow(color: .black.opacity(isHovering ? 0.10 : 0), radius: isHovering ? 10 : 0, y: isHovering ? 6 : 0)
+        .shadow(color: .black.opacity(isHovering ? 0.10 : 0), radius: isHovering ? 12 : 0, y: isHovering ? 7 : 0)
         .animation(.snappy(duration: 0.16), value: isHovering)
         .animation(.snappy(duration: 0.16), value: isSelected)
         .keiPixHoverTracker { isHovering = $0 }
         .help(route.title)
     }
 
-    private var backgroundStyle: some ShapeStyle {
-        isSelected || isHovering ? AnyShapeStyle(.regularMaterial) : AnyShapeStyle(.thinMaterial)
-    }
-
     private var strokeStyle: Color {
-        isSelected ? Color.accentColor.opacity(0.55) : Color.secondary.opacity(isHovering ? 0.22 : 0.12)
+        isSelected ? Color.accentColor.opacity(0.48) : Color.secondary.opacity(isHovering ? 0.18 : 0.08)
     }
 }
 
@@ -464,7 +542,7 @@ private struct DashboardStatusPill: View {
         .foregroundStyle(.secondary)
         .padding(.horizontal, 8)
         .padding(.vertical, 4)
-        .background(.regularMaterial, in: Capsule())
+        .glassEffect(.regular, in: Capsule(style: .continuous))
     }
 }
 

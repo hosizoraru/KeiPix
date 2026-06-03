@@ -51,31 +51,44 @@ struct DiscoveryTrendingTagsStrip: View {
     }
 
     private var section: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            header
+        GlassEffectContainer(spacing: 12) {
+            VStack(alignment: .leading, spacing: 12) {
+                header
 
-            if (isLoading || hasAttemptedLoad == false) && tags.isEmpty {
-                ProgressView()
-                    .controlSize(.small)
+                if (isLoading || hasAttemptedLoad == false) && tags.isEmpty {
+                    HStack(spacing: 8) {
+                        ProgressView()
+                            .controlSize(.small)
+                        Text(L10n.trendingTags)
+                            .font(.caption.weight(.medium))
+                            .foregroundStyle(.secondary)
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 10)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.vertical, 6)
-            } else {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(alignment: .top, spacing: 10) {
-                        ForEach(tags.prefix(Self.previewLimit)) { tag in
-                            DiscoveryTrendingTagChip(
-                                tag: tag,
-                                showTranslatedName: store.showTranslatedTags,
-                                showContentBadges: store.showContentBadges,
-                                maskSensitivePreview: store.maskSensitivePreviews
-                            ) {
-                                searchTag(tag)
+                    .keiGlass(16)
+                } else {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(alignment: .top, spacing: 12) {
+                            ForEach(tags.prefix(Self.previewLimit)) { tag in
+                                DiscoveryTrendingTagChip(
+                                    tag: tag,
+                                    showTranslatedName: store.showTranslatedTags,
+                                    showContentBadges: store.showContentBadges,
+                                    maskSensitivePreview: store.maskSensitivePreviews
+                                ) {
+                                    searchTag(tag)
+                                }
                             }
                         }
+                        .padding(.horizontal, 1) // keep border strokes inside the clip
+                        .padding(.bottom, 1)
                     }
-                    .padding(.horizontal, 1) // keep border strokes inside the clip
                 }
             }
+            .padding(14)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .keiGlass(22)
         }
         .task(id: store.session?.user.id) {
             await load()
@@ -95,9 +108,10 @@ struct DiscoveryTrendingTagsStrip: View {
             } label: {
                 Label(L10n.viewAll, systemImage: "chevron.right")
                     .labelStyle(.titleAndIcon)
-                    .font(.callout)
+                    .font(.callout.weight(.medium))
             }
-            .buttonStyle(.borderless)
+            .buttonStyle(.bordered)
+            .buttonBorderShape(.capsule)
             .controlSize(.small)
         }
     }
@@ -149,7 +163,8 @@ private struct DiscoveryTrendingTagChip: View {
     var body: some View {
         Button(action: action) {
             ZStack(alignment: .bottomLeading) {
-                Color.black
+                Rectangle()
+                    .fill(.regularMaterial)
 
                 RemoteImageView(
                     url: tag.artwork.thumbnailURL,
@@ -192,15 +207,16 @@ private struct DiscoveryTrendingTagChip: View {
                 .shadow(color: .black.opacity(0.32), radius: 2, y: 1)
                 .padding(8)
             }
-            .frame(width: 168, height: 112)
-            .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+            .frame(width: 174, height: 116)
+            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .contentShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         }
         .buttonStyle(.plain)
         .overlay {
-            RoundedRectangle(cornerRadius: 8, style: .continuous)
-                .stroke(.white.opacity(isHovering ? 0.32 : 0), lineWidth: 1)
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .stroke(.white.opacity(isHovering ? 0.36 : 0.12), lineWidth: 1)
         }
-        .shadow(color: .black.opacity(isHovering ? 0.18 : 0), radius: isHovering ? 10 : 0, y: isHovering ? 6 : 0)
+        .shadow(color: .black.opacity(isHovering ? 0.18 : 0.06), radius: isHovering ? 12 : 4, y: isHovering ? 7 : 2)
         .animation(.snappy(duration: 0.16), value: isHovering)
         .keiPixHoverTracker { isHovering = $0 }
         .help(tagHelp)
