@@ -11,6 +11,8 @@ struct ContentView: View {
     @State private var selectedTab: iPadTab = .feed
     @State private var splitColumnVisibility: NavigationSplitViewVisibility = .all
     @State private var selectedSidebarItem: iPadSidebarItem = .route(.home)
+    @State private var isArtworkDetailPresented = false
+    @State private var isArtworkDetailPanelUserEnabled = false
     @State private var isPixivIDOpenPresented = false
     @State private var feedbackRequest: FeedbackReportRequest?
 
@@ -231,7 +233,7 @@ struct ContentView: View {
 
     private func feedNavigationStack(showsSidebarToggle: Bool) -> some View {
         NavigationStack {
-            feedContent(discoveryPresentation: discoveryPresentation(showsSidebarToggle: showsSidebarToggle))
+            iPadFeedBrowserLayout(showsSidebarToggle: showsSidebarToggle)
                 .navigationDestination(for: PixivRoute.self) { route in
                     routeDetail(for: route)
                 }
@@ -261,6 +263,23 @@ struct ContentView: View {
                             SearchFilterButton(store: store)
                         }
                     }
+
+                    ToolbarItem(placement: .primaryAction) {
+                        if showsArtworkDetailToggle(showsSidebarToggle: showsSidebarToggle) {
+                            Button {
+                                toggleArtworkDetailPanel(hidesSidebar: showsSidebarToggle)
+                            } label: {
+                                Label(
+                                    isArtworkDetailPanelUserEnabled ? L10n.hideDetails : L10n.showDetails,
+                                    systemImage: "sidebar.trailing"
+                                )
+                            }
+                            .labelStyle(.iconOnly)
+                            .help(isArtworkDetailPanelUserEnabled ? L10n.hideDetails : L10n.showDetails)
+                            .accessibilityLabel(isArtworkDetailPanelUserEnabled ? L10n.hideDetails : L10n.showDetails)
+                            .disabled(canShowArtworkDetailPanel == false && isArtworkDetailPanelUserEnabled == false)
+                        }
+                    }
                 }
                 .searchable(text: $store.searchText, prompt: L10n.searchPlaceholder)
                 .searchSuggestions {
@@ -278,6 +297,17 @@ struct ContentView: View {
                 }
                 .task(id: store.searchText) {
                     await store.refreshSearchSuggestions()
+                }
+                .onChange(of: store.artworkNavigationIntentSerial) { _, _ in
+                    guard let artwork = store.selectedArtwork else { return }
+                    if isArtworkDetailPanelUserEnabled {
+                        presentArtworkDetail(for: artwork, hidesSidebar: showsSidebarToggle)
+                    }
+                }
+                .onChange(of: store.selectedRoute) { _, route in
+                    if route.usesArtworkFeed == false {
+                        dismissArtworkDetail(clearSelection: true)
+                    }
                 }
                 .fullScreenCover(isPresented: readerBinding) {
                     if let artwork = store.readerWindowArtwork {
@@ -298,6 +328,99 @@ struct ContentView: View {
         }
     }
 
+    @ViewBuilder
+    private func iPadFeedBrowserLayout(showsSidebarToggle: Bool) -> some View {
+        if showsSidebarToggle, store.selectedRoute.usesArtworkFeed {
+            HStack(spacing: 0) {
+                feedContent(discoveryPresentation: discoveryPresentation(showsSidebarToggle: showsSidebarToggle))
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+                if isArtworkDetailPanelVisible {
+                    Divider()
+
+                    iPadArtworkDetailPanel {
+                        dismissArtworkDetail(clearSelection: false)
+                    }
+                    .frame(minWidth: 340, idealWidth: 420, maxWidth: 460, maxHeight: .infinity)
+                    .transition(.move(edge: .trailing).combined(with: .opacity))
+                }
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .animation(.snappy(duration: 0.24), value: isArtworkDetailPanelVisible)
+        } else {
+            feedContent(discoveryPresentation: discoveryPresentation(showsSidebarToggle: showsSidebarToggle))
+        }
+    }
+
+    private func iPadArtworkDetailPanel(close: @escaping () -> Void) -> some View {
+        VStack(spacing: 0) {
+            HStack(spacing: 8) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(L10n.details)
+                        .font(.headline)
+                    if let artwork = store.selectedArtwork {
+                        Text(artwork.title)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                    }
+                }
+
+                Spacer(minLength: 8)
+
+                Button {
+                    store.navigateBack()
+                } label: {
+                    Label(L10n.goBack, systemImage: "chevron.left")
+                }
+                .labelStyle(.iconOnly)
+                .help(L10n.goBack)
+                .accessibilityLabel(L10n.goBack)
+                .disabled(store.canNavigateBack == false)
+
+                Button {
+                    store.navigateForward()
+                } label: {
+                    Label(L10n.goForward, systemImage: "chevron.right")
+                }
+                .labelStyle(.iconOnly)
+                .help(L10n.goForward)
+                .accessibilityLabel(L10n.goForward)
+                .disabled(store.canNavigateForward == false)
+
+                if let artwork = store.selectedArtwork {
+                    Button {
+                        withAnimation(.snappy(duration: 0.18)) {
+                            store.prepareReaderWindow(for: artwork)
+                        }
+                    } label: {
+                        Label(L10n.openReaderWindow, systemImage: "rectangle.inset.filled")
+                    }
+                    .labelStyle(.iconOnly)
+                    .help(L10n.openReaderWindow)
+                    .accessibilityLabel(L10n.openReaderWindow)
+                }
+
+                Button {
+                    close()
+                } label: {
+                    Label(L10n.close, systemImage: "xmark")
+                }
+                .labelStyle(.iconOnly)
+                .help(L10n.close)
+                .accessibilityLabel(L10n.close)
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 10)
+            .background(.bar)
+
+            Divider()
+
+            ArtworkDetailView(store: store, showsNavigationChrome: false)
+        }
+        .background(.background)
+    }
+
     private var routeMenu: some View {
         Menu {
             ForEach(PixivRoute.sidebarSections) { section in
@@ -316,6 +439,53 @@ struct ContentView: View {
                 .lineLimit(1)
         }
         .accessibilityLabel("\(L10n.currentRoute): \(store.selectedRoute.title)")
+    }
+
+    private func showsArtworkDetailToggle(showsSidebarToggle: Bool) -> Bool {
+        showsSidebarToggle && store.selectedRoute.usesArtworkFeed
+    }
+
+    private var canShowArtworkDetailPanel: Bool {
+        store.selectedArtwork != nil || store.clientFilteredArtworks.isEmpty == false || store.artworks.isEmpty == false
+    }
+
+    private var isArtworkDetailPanelVisible: Bool {
+        isArtworkDetailPanelUserEnabled && isArtworkDetailPresented && store.selectedArtwork != nil
+    }
+
+    private func toggleArtworkDetailPanel(hidesSidebar: Bool) {
+        if isArtworkDetailPanelUserEnabled {
+            dismissArtworkDetail(clearSelection: false)
+            return
+        }
+        guard let artwork = store.selectedArtwork ?? store.clientFilteredArtworks.first ?? store.artworks.first else {
+            return
+        }
+        isArtworkDetailPanelUserEnabled = true
+        presentArtworkDetail(for: artwork, hidesSidebar: hidesSidebar)
+    }
+
+    private func presentArtworkDetail(for artwork: PixivArtwork, hidesSidebar: Bool) {
+        guard store.selectedRoute.usesArtworkFeed else { return }
+        if store.selectedArtwork?.id != artwork.id {
+            store.selectedArtwork = artwork
+        }
+        withAnimation(.snappy(duration: 0.24)) {
+            if hidesSidebar {
+                splitColumnVisibility = .detailOnly
+            }
+            isArtworkDetailPresented = true
+        }
+    }
+
+    private func dismissArtworkDetail(clearSelection: Bool) {
+        withAnimation(.snappy(duration: 0.22)) {
+            isArtworkDetailPanelUserEnabled = false
+            isArtworkDetailPresented = false
+            if clearSelection {
+                store.selectedArtwork = nil
+            }
+        }
     }
 
     private func discoveryPresentation(showsSidebarToggle: Bool) -> DiscoveryDashboardPresentation {
@@ -398,15 +568,18 @@ struct ContentView: View {
     private func selectSidebarItem(_ item: iPadSidebarItem) {
         switch item {
         case .route(let route):
-            selectRoute(route)
+            selectRoute(route, clearsArtworkDetail: false)
         case .settings:
             selectedTab = .settings
         }
     }
 
-    private func selectRoute(_ route: PixivRoute) {
+    private func selectRoute(_ route: PixivRoute, clearsArtworkDetail: Bool = true) {
         selectedSidebarItem = .route(route)
         selectedTab = route == .downloads ? .library : .feed
+        if clearsArtworkDetail {
+            dismissArtworkDetail(clearSelection: true)
+        }
         if store.selectedRoute != route {
             store.select(route)
         }

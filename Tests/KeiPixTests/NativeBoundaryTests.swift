@@ -134,6 +134,27 @@ struct NativeBoundaryTests {
         #expect(contentView.contains("DiscoveryDashboardView(store: store, presentation: discoveryPresentation)"))
         #expect(contentView.contains("private func discoveryPresentation(showsSidebarToggle: Bool) -> DiscoveryDashboardPresentation"))
         #expect(contentView.contains("splitColumnVisibility != .detailOnly ? .sidebarCompanion : .full"))
+        #expect(contentView.contains("@State private var isArtworkDetailPresented = false"))
+        #expect(contentView.contains("iPadFeedBrowserLayout(showsSidebarToggle: showsSidebarToggle)"))
+        #expect(contentView.contains("private func iPadFeedBrowserLayout(showsSidebarToggle: Bool) -> some View"))
+        #expect(contentView.contains("HStack(spacing: 0)"))
+        #expect(contentView.contains("iPadArtworkDetailPanel"))
+        #expect(contentView.contains("ArtworkDetailView(store: store, showsNavigationChrome: false)"))
+        #expect(contentView.contains("@State private var isArtworkDetailPanelUserEnabled = false"))
+        #expect(contentView.contains("toggleArtworkDetailPanel(hidesSidebar: showsSidebarToggle)"))
+        #expect(contentView.contains("isArtworkDetailPanelUserEnabled ? L10n.hideDetails : L10n.showDetails"))
+        #expect(contentView.contains("if isArtworkDetailPanelUserEnabled {\n                        presentArtworkDetail(for: artwork, hidesSidebar: showsSidebarToggle)"))
+        #expect(contentView.contains("private var isArtworkDetailPanelVisible: Bool"))
+        #expect(contentView.contains("dismissArtworkDetail(clearSelection: false)"))
+        #expect(contentView.contains(".onChange(of: store.artworkNavigationIntentSerial)"))
+        #expect(contentView.contains("selectRoute(route, clearsArtworkDetail: false)"))
+        #expect(contentView.contains("private func selectRoute(_ route: PixivRoute, clearsArtworkDetail: Bool = true)"))
+        #expect(contentView.contains("private func toggleArtworkDetailPanel(hidesSidebar: Bool)"))
+        #expect(contentView.contains("private func presentArtworkDetail(for artwork: PixivArtwork, hidesSidebar: Bool)"))
+        #expect(contentView.contains("guard store.selectedRoute.usesArtworkFeed else { return }"))
+        #expect(contentView.contains("splitColumnVisibility = .detailOnly"))
+        #expect(contentView.contains("dismissArtworkDetail(clearSelection: true)"))
+        #expect(contentView.contains("store.prepareReaderWindow(for: artwork)"))
         #expect(contentView.contains("NavigationSplitView(columnVisibility: $splitColumnVisibility)"))
         #expect(contentView.contains("List {"))
         #expect(contentView.contains("private func iPadSidebarRow("))
@@ -198,6 +219,26 @@ struct NativeBoundaryTests {
             contentsOf: root.appending(path: "Sources/KeiPix/Views/GalleryView.swift"),
             encoding: .utf8
         )
+        let artworkCard = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/ArtworkCardView.swift"),
+            encoding: .utf8
+        )
+        let masonryPresentation = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Models/ArtworkMasonryPresentation.swift"),
+            encoding: .utf8
+        )
+        let l10n = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Support/L10n.swift"),
+            encoding: .utf8
+        )
+        let store = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Stores/KeiPixStore.swift"),
+            encoding: .utf8
+        )
+        let navigationHistory = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Stores/KeiPixStore+NavigationHistory.swift"),
+            encoding: .utf8
+        )
         let nativeCollection = try String(
             contentsOf: root.appending(path: "Sources/KeiPix/Support/NativeGalleryCollectionView.swift"),
             encoding: .utf8
@@ -208,6 +249,13 @@ struct NativeBoundaryTests {
         #expect(galleryView.contains("NativeGalleryCollectionView("))
         #expect(galleryView.contains("nativeHighlightedArtworkIDs"))
         #expect(galleryView.contains("nativeGalleryContentReloadToken"))
+        #expect(store.contains("var artworkNavigationIntentSerial = 0"))
+        #expect(navigationHistory.contains("artworkNavigationIntentSerial += 1"))
+        #expect(artworkCard.contains(".minimumScaleFactor(0.82)"))
+        #expect(masonryPresentation.contains("case .wide:\n            2"))
+        #expect(l10n.contains("static var showDetails: String"))
+        #expect(l10n.contains("static var hideDetails: String"))
+        #expect(l10n.contains("Tap to select artwork"))
         #expect(nativeCollection.contains("NativeGalleryMasonryNSCollectionViewLayout"))
         #expect(nativeCollection.contains("NativeGalleryMasonryUICollectionViewLayout"))
         #expect(nativeCollection.contains("ArtworkMasonryPlacement.resolve"))

@@ -1315,6 +1315,8 @@ enum L10n {
     static var loadMoreRelatedNovels: String { text("Load More Related Novels") }
     static var workSubscriptionsUnsubscribe: String { text("Unsubscribe") }
     static var details: String { text("Details") }
+    static var showDetails: String { text("Show Details") }
+    static var hideDetails: String { text("Hide Details") }
     static var tags: String { text("Tags") }
     static var searchTag: String { text("Search Tag") }
     static var openTagInPixiv: String { text("Open Tag in Pixiv") }
@@ -1323,7 +1325,7 @@ enum L10n {
     static var copyTranslatedTag: String { text("Copy Translated Tag") }
     static var description: String { text("Description") }
     static var artworkInformation: String { text("Artwork Information") }
-    static var artworkCardHint: String { text("Double-tap to view artwork details") }
+    static var artworkCardHint: String { text("Tap to select artwork") }
     static var comments: String { text("Comments") }
     static var writeComment: String { text("Write a comment") }
     static var postComment: String { text("Post Comment") }

@@ -73,6 +73,7 @@ extension KeiPixStore {
     func navigateToArtwork(_ artwork: PixivArtwork) {
         navigationHistory.push(artwork.id)
         selectedArtwork = artwork
+        artworkNavigationIntentSerial += 1
         HandoffManager.shared.updateActivity(
             route: selectedRoute.rawValue,
             artworkID: artwork.id

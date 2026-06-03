@@ -35,6 +35,11 @@ final class KeiPixStore {
         clientFilteredArtworks = ClientFilterDSL.filter(artworks, query: clientFilterQuery)
     }
     var selectedArtwork: PixivArtwork?
+    /// Advances only when the user explicitly navigates to an artwork.
+    /// Feed loading and filter restoration may update `selectedArtwork`
+    /// directly; iPadOS uses this serial to distinguish those passive
+    /// selection updates from a real request to open the detail reader.
+    var artworkNavigationIntentSerial = 0
 
     // MARK: - Navigation history (in-memory, per-session)
     var navigationHistory = NavigationHistory()

@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ArtworkDetailView: View {
     @Bindable var store: KeiPixStore
+    var showsNavigationChrome = true
 
     var body: some View {
         Group {
@@ -12,29 +13,31 @@ struct ArtworkDetailView: View {
                 EmptyStateView(title: L10n.noArtworkTitle, subtitle: L10n.noArtworkSubtitle, systemImage: "sidebar.trailing")
             }
         }
-        .navigationTitle(L10n.details)
+        .navigationTitle(showsNavigationChrome ? L10n.details : "")
         .toolbar {
-            ToolbarItem(placement: .navigation) {
-                HStack(spacing: 4) {
-                    Button {
-                        store.navigateBack()
-                    } label: {
-                        Label(L10n.goBack, systemImage: "chevron.left")
-                    }
-                    .labelStyle(.iconOnly)
-                    .help(L10n.goBack)
-                    .accessibilityLabel(L10n.goBack)
-                    .disabled(store.canNavigateBack == false)
+            if showsNavigationChrome {
+                ToolbarItem(placement: .navigation) {
+                    HStack(spacing: 4) {
+                        Button {
+                            store.navigateBack()
+                        } label: {
+                            Label(L10n.goBack, systemImage: "chevron.left")
+                        }
+                        .labelStyle(.iconOnly)
+                        .help(L10n.goBack)
+                        .accessibilityLabel(L10n.goBack)
+                        .disabled(store.canNavigateBack == false)
 
-                    Button {
-                        store.navigateForward()
-                    } label: {
-                        Label(L10n.goForward, systemImage: "chevron.right")
+                        Button {
+                            store.navigateForward()
+                        } label: {
+                            Label(L10n.goForward, systemImage: "chevron.right")
+                        }
+                        .labelStyle(.iconOnly)
+                        .help(L10n.goForward)
+                        .accessibilityLabel(L10n.goForward)
+                        .disabled(store.canNavigateForward == false)
                     }
-                    .labelStyle(.iconOnly)
-                    .help(L10n.goForward)
-                    .accessibilityLabel(L10n.goForward)
-                    .disabled(store.canNavigateForward == false)
                 }
             }
         }
