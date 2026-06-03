@@ -12,6 +12,7 @@ import SwiftUI
 /// paragraph, work card, tag) the way Apple News / Reader Mode would.
 struct SpotlightArticleDetailView: View {
     @Bindable var store: KeiPixStore
+    var showsNavigationChrome = true
     @State private var webProfileUser: PixivUser?
     @State private var actionMessage: String?
 
@@ -48,7 +49,7 @@ struct SpotlightArticleDetailView: View {
                 )
                 .id(article.id)
             }
-            .navigationTitle(article.pureTitle.isEmpty ? L10n.spotlight : article.pureTitle)
+            .navigationTitle(showsNavigationChrome ? (article.pureTitle.isEmpty ? L10n.spotlight : article.pureTitle) : "")
             .task(id: article.id) {
                 store.recordSpotlightArticleHistory(article)
             }
@@ -76,7 +77,7 @@ struct SpotlightArticleDetailView: View {
         } else {
             ContentUnavailableView(L10n.selectArticle, systemImage: "newspaper")
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .navigationTitle(L10n.spotlight)
+                .navigationTitle(showsNavigationChrome ? L10n.spotlight : "")
         }
     }
 
@@ -180,4 +181,3 @@ private struct SpotlightArticleHeader: View {
         }
     }
 }
-

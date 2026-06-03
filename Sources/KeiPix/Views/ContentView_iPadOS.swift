@@ -13,6 +13,9 @@ struct ContentView: View {
     @State private var selectedSidebarItem: iPadSidebarItem = .route(.home)
     @State private var isArtworkDetailPresented = false
     @State private var isArtworkDetailPanelUserEnabled = false
+    @State private var isSpotlightDetailPresented = false
+    @State private var isSpotlightDetailPanelUserEnabled = false
+    @State private var isSpotlightArticlePushPresented = false
     @State private var isPixivIDOpenPresented = false
     @State private var feedbackRequest: FeedbackReportRequest?
     @State private var statusMessage: String?
@@ -246,6 +249,9 @@ struct ContentView: View {
                 .navigationDestination(for: PixivRoute.self) { route in
                     routeDetail(for: route)
                 }
+                .navigationDestination(isPresented: $isSpotlightArticlePushPresented) {
+                    SpotlightArticleDetailView(store: store)
+                }
                 .toolbar {
                     if showsSidebarToggle {
                         if splitColumnVisibility == .detailOnly {
@@ -306,6 +312,23 @@ struct ContentView: View {
                                 select: handleNativeToolbarMenuAction
                             )
                             .fixedSize(horizontal: true, vertical: false)
+                        }
+                    }
+
+                    ToolbarItem(placement: .primaryAction) {
+                        if showsSpotlightDetailToggle(showsSidebarToggle: showsSidebarToggle) {
+                            Button {
+                                toggleSpotlightDetailPanel(hidesSidebar: showsSidebarToggle)
+                            } label: {
+                                Label(
+                                    isSpotlightDetailPanelUserEnabled ? L10n.hideDetails : L10n.showDetails,
+                                    systemImage: spotlightDetailToggleSystemImage
+                                )
+                            }
+                            .labelStyle(.iconOnly)
+                            .help(isSpotlightDetailPanelUserEnabled ? L10n.hideDetails : L10n.showDetails)
+                            .accessibilityLabel(isSpotlightDetailPanelUserEnabled ? L10n.hideDetails : L10n.showDetails)
+                            .disabled(canShowSpotlightDetailPanel == false && isSpotlightDetailPanelUserEnabled == false)
                         }
                     }
 
@@ -375,6 +398,9 @@ struct ContentView: View {
                     if route.usesArtworkFeed == false {
                         dismissArtworkDetail(clearSelection: true)
                     }
+                    if route != .spotlight {
+                        dismissSpotlightDetail(clearSelection: true)
+                    }
                 }
                 .fullScreenCover(isPresented: readerBinding) {
                     if let artwork = store.readerWindowArtwork {
@@ -397,12 +423,41 @@ struct ContentView: View {
 
     @ViewBuilder
     private func iPadFeedBrowserLayout(showsSidebarToggle: Bool) -> some View {
-        if showsSidebarToggle, store.selectedRoute.usesArtworkFeed {
+        if showsSidebarToggle, store.selectedRoute == .spotlight {
+            GeometryReader { proxy in
+                let detailPanelWidth = iPadSpotlightDetailPanelWidth(for: proxy.size.width)
+
+                HStack(spacing: 0) {
+                    feedContent(
+                        discoveryPresentation: discoveryPresentation(showsSidebarToggle: showsSidebarToggle),
+                        showsSidebarToggle: showsSidebarToggle
+                    )
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+                    if isSpotlightDetailPanelVisible {
+                        Divider()
+
+                        iPadSpotlightDetailPanel {
+                            dismissSpotlightDetail(clearSelection: false)
+                        }
+                        .frame(width: detailPanelWidth)
+                        .frame(maxHeight: .infinity)
+                        .transition(.move(edge: .trailing).combined(with: .opacity))
+                    }
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .animation(.snappy(duration: 0.24), value: isSpotlightDetailPanelVisible)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        } else if showsSidebarToggle, store.selectedRoute.usesArtworkFeed {
             GeometryReader { proxy in
                 let detailPanelWidth = iPadArtworkDetailPanelWidth(for: proxy.size.width)
 
                 HStack(spacing: 0) {
-                    feedContent(discoveryPresentation: discoveryPresentation(showsSidebarToggle: showsSidebarToggle))
+                    feedContent(
+                        discoveryPresentation: discoveryPresentation(showsSidebarToggle: showsSidebarToggle),
+                        showsSidebarToggle: showsSidebarToggle
+                    )
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
 
                     if isArtworkDetailPanelVisible {
@@ -421,8 +476,55 @@ struct ContentView: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {
-            feedContent(discoveryPresentation: discoveryPresentation(showsSidebarToggle: showsSidebarToggle))
+            feedContent(
+                discoveryPresentation: discoveryPresentation(showsSidebarToggle: showsSidebarToggle),
+                showsSidebarToggle: showsSidebarToggle
+            )
         }
+    }
+
+    private func iPadSpotlightDetailPanel(close: @escaping () -> Void) -> some View {
+        VStack(spacing: 0) {
+            iPadSpotlightDetailHeader(close: close)
+
+            SpotlightArticleDetailView(store: store, showsNavigationChrome: false)
+        }
+        .background(.background)
+    }
+
+    private func iPadSpotlightDetailHeader(close: @escaping () -> Void) -> some View {
+        GlassEffectContainer(spacing: 10) {
+            HStack(spacing: 12) {
+                Image(systemName: "newspaper")
+                    .font(.headline.weight(.semibold))
+                    .symbolRenderingMode(.hierarchical)
+                    .foregroundStyle(.secondary)
+                    .frame(width: 34, height: 34)
+                    .keiGlass(14)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(L10n.spotlight)
+                        .font(.headline.weight(.semibold))
+                        .lineLimit(1)
+
+                    if let article = store.selectedSpotlightArticle {
+                        Text(article.pureTitle.isEmpty ? article.title : article.pureTitle)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                            .truncationMode(.middle)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+                iPadArtworkDetailCloseButton(close: close)
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 10)
+            .keiGlass(20)
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 8)
     }
 
     private func iPadArtworkDetailPanel(close: @escaping () -> Void) -> some View {
@@ -549,6 +651,10 @@ struct ContentView: View {
         showsSidebarToggle && store.selectedRoute.usesArtworkFeed
     }
 
+    private func showsSpotlightDetailToggle(showsSidebarToggle: Bool) -> Bool {
+        showsSidebarToggle && store.selectedRoute == .spotlight
+    }
+
     private var showsGalleryLayoutPicker: Bool {
         store.selectedRoute.usesArtworkFeed
     }
@@ -567,6 +673,10 @@ struct ContentView: View {
 
     private var artworkDetailToggleSystemImage: String {
         isArtworkDetailPanelUserEnabled ? "info.circle.fill" : "info.circle"
+    }
+
+    private var spotlightDetailToggleSystemImage: String {
+        isSpotlightDetailPanelUserEnabled ? "newspaper.fill" : "newspaper"
     }
 
     private var galleryLayoutMenu: NativeToolbarMenu {
@@ -893,6 +1003,52 @@ struct ContentView: View {
         isArtworkDetailPanelUserEnabled && isArtworkDetailPresented && store.selectedArtwork != nil
     }
 
+    private var canShowSpotlightDetailPanel: Bool {
+        store.selectedSpotlightArticle != nil
+    }
+
+    private var isSpotlightDetailPanelVisible: Bool {
+        isSpotlightDetailPanelUserEnabled && isSpotlightDetailPresented && store.selectedSpotlightArticle != nil
+    }
+
+    private func toggleSpotlightDetailPanel(hidesSidebar: Bool) {
+        if isSpotlightDetailPanelUserEnabled {
+            dismissSpotlightDetail(clearSelection: false)
+            return
+        }
+        guard let article = store.selectedSpotlightArticle else { return }
+        presentSpotlightArticle(article, usesPanel: hidesSidebar)
+    }
+
+    private func presentSpotlightArticle(_ article: PixivSpotlightArticle, usesPanel: Bool) {
+        store.selectedSpotlightArticle = article
+        if usesPanel {
+            isSpotlightDetailPanelUserEnabled = true
+            isSpotlightArticlePushPresented = false
+            withAnimation(.snappy(duration: 0.24)) {
+                splitColumnVisibility = .detailOnly
+                isSpotlightDetailPresented = true
+            }
+        } else {
+            withAnimation(.snappy(duration: 0.22)) {
+                isSpotlightDetailPanelUserEnabled = false
+                isSpotlightDetailPresented = false
+                isSpotlightArticlePushPresented = true
+            }
+        }
+    }
+
+    private func dismissSpotlightDetail(clearSelection: Bool) {
+        withAnimation(.snappy(duration: 0.22)) {
+            isSpotlightDetailPanelUserEnabled = false
+            isSpotlightDetailPresented = false
+            isSpotlightArticlePushPresented = false
+            if clearSelection {
+                store.selectedSpotlightArticle = nil
+            }
+        }
+    }
+
     private func toggleArtworkDetailPanel(hidesSidebar: Bool) {
         if isArtworkDetailPanelUserEnabled {
             dismissArtworkDetail(clearSelection: false)
@@ -944,12 +1100,31 @@ struct ContentView: View {
         return min(max(minimum, availableWidth * 0.34), roomAwareMaximum)
     }
 
+    private func iPadSpotlightDetailPanelWidth(for availableWidth: CGFloat) -> CGFloat {
+        let minimum: CGFloat = availableWidth < 900 ? 360 : 420
+        let cap: CGFloat
+        if availableWidth >= 1180 {
+            cap = 620
+        } else if availableWidth >= 980 {
+            cap = 560
+        } else {
+            cap = 460
+        }
+
+        let feedReserve: CGFloat = availableWidth < 980 ? 360 : 460
+        let roomAwareMaximum = min(cap, max(minimum, availableWidth - feedReserve))
+        return min(max(minimum, availableWidth * 0.44), roomAwareMaximum)
+    }
+
     private func discoveryPresentation(showsSidebarToggle: Bool) -> DiscoveryDashboardPresentation {
         showsSidebarToggle && splitColumnVisibility != .detailOnly ? .sidebarCompanion : .full
     }
 
     @ViewBuilder
-    private func feedContent(discoveryPresentation: DiscoveryDashboardPresentation) -> some View {
+    private func feedContent(
+        discoveryPresentation: DiscoveryDashboardPresentation,
+        showsSidebarToggle: Bool
+    ) -> some View {
         if store.selectedRoute == .home {
             DiscoveryDashboardView(store: store, presentation: discoveryPresentation)
         } else if store.selectedRoute == .mangaWatchlist {
@@ -963,7 +1138,9 @@ struct ContentView: View {
         } else if store.selectedRoute == .trendingTags {
             TrendingTagsView(store: store)
         } else if store.selectedRoute == .spotlight {
-            SpotlightView(store: store)
+            SpotlightView(store: store) { article in
+                presentSpotlightArticle(article, usesPanel: showsSidebarToggle)
+            }
         } else if store.selectedRoute == .bookmarkTags {
             BookmarkTagsView(store: store)
         } else if store.selectedRoute == .history {

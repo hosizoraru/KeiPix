@@ -2,6 +2,7 @@ import SwiftUI
 
 struct SpotlightView: View {
     @Bindable var store: KeiPixStore
+    var openArticle: ((PixivSpotlightArticle) -> Void)?
     @State private var articles: [PixivSpotlightArticle] = []
     @State private var nextURL: URL?
     @State private var isLoading = false
@@ -40,38 +41,29 @@ struct SpotlightView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 ScrollView {
-                    LazyVGrid(columns: articleColumns, spacing: 12) {
-                        ForEach(displayedArticles) { article in
-                            SpotlightArticleCard(
-                                article: article,
-                                isSelected: store.selectedSpotlightArticle?.id == article.id,
-                                isSaved: store.isSpotlightArticleSaved(article),
-                                isInHistory: store.spotlightArticleHistory.contains { $0.id == article.id },
-                                layoutMode: store.spotlightListLayoutMode
-                            ) {
-                                store.recordSpotlightArticleHistory(article)
-                                store.selectedSpotlightArticle = article
-                            } copied: {
-                                showActionMessage(L10n.copied)
-                            } toggleSaved: {
-                                toggleSaved(article)
-                            } removeFromHistory: {
-                                store.removeSpotlightArticleHistory(article)
-                                showActionMessage(L10n.removedArticleHistory)
+                    VStack(spacing: 14) {
+                        LazyVGrid(columns: articleColumns, spacing: 12) {
+                            ForEach(displayedArticles) { article in
+                                SpotlightArticleCard(
+                                    article: article,
+                                    isSelected: store.selectedSpotlightArticle?.id == article.id,
+                                    isSaved: store.isSpotlightArticleSaved(article),
+                                    isInHistory: store.spotlightArticleHistory.contains { $0.id == article.id },
+                                    layoutMode: store.spotlightListLayoutMode
+                                ) {
+                                    select(article)
+                                } copied: {
+                                    showActionMessage(L10n.copied)
+                                } toggleSaved: {
+                                    toggleSaved(article)
+                                } removeFromHistory: {
+                                    store.removeSpotlightArticleHistory(article)
+                                    showActionMessage(L10n.removedArticleHistory)
+                                }
                             }
                         }
 
-                        if collectionMode == .latest, nextURL != nil {
-                            Button {
-                                Task { await loadMore() }
-                            } label: {
-                                Label(isLoadingMore ? L10n.loading : L10n.loadMoreSpotlightArticles, systemImage: "arrow.down.circle")
-                                    .frame(maxWidth: .infinity)
-                            }
-                            .buttonStyle(.bordered)
-                            .disabled(isLoadingMore)
-                            .gridCellColumns(loadMoreSpan)
-                        }
+                        paginationFooter
                     }
                     .padding(.horizontal, 18)
                     .padding(.top, 14)
@@ -215,16 +207,6 @@ struct SpotlightView: View {
         }
     }
 
-    /// `gridCellColumns` value for the trailing "Load More" button so
-    /// it spans the full row regardless of the current layout mode.
-    private var loadMoreSpan: Int {
-        switch store.spotlightListLayoutMode {
-        case .auto: return 2
-        case .single: return 1
-        case .twoUp: return 2
-        }
-    }
-
     /// Two-way bridge between the collection header's picker and the
     /// store-owned setting; setter persists to UserDefaults so the
     /// preference survives relaunches.
@@ -243,15 +225,60 @@ struct SpotlightView: View {
     private var navigationSubtitle: String {
         let count = displayedArticles.count.formatted()
         switch collectionMode {
-        case .latest:
-            let pagination = nextURL == nil ? L10n.noMorePages : L10n.nextPageAvailable
-            return "\(count) · \(pagination)"
-        case .monthlyRanking, .recommend:
+        case .latest, .monthlyRanking, .recommend:
             return count
         case .favorites:
             return String(format: L10n.savedArticleCountFormat, store.spotlightFavoriteArticles.count)
         case .history:
             return String(format: L10n.articleHistoryCountFormat, store.spotlightArticleHistory.count)
+        }
+    }
+
+    @ViewBuilder
+    private var paginationFooter: some View {
+        if collectionMode == .latest {
+            HStack {
+                Spacer(minLength: 0)
+
+                if nextURL != nil {
+                    Button {
+                        Task { await loadMore() }
+                    } label: {
+                        HStack(spacing: 8) {
+                            if isLoadingMore {
+                                ProgressView()
+                                    .controlSize(.small)
+                            } else {
+                                Image(systemName: "arrow.down.circle.fill")
+                                    .symbolRenderingMode(.hierarchical)
+                            }
+
+                            Text(isLoadingMore ? L10n.loading : L10n.loadMore)
+                                .font(.callout.weight(.semibold))
+                        }
+                        .foregroundStyle(Color.accentColor)
+                        .padding(.horizontal, 18)
+                        .padding(.vertical, 8)
+                        .frame(minWidth: 168)
+                        .glassEffect(.regular.interactive(), in: Capsule(style: .continuous))
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(isLoadingMore)
+                    .accessibilityLabel(isLoadingMore ? L10n.loading : L10n.loadMoreSpotlightArticles)
+                    .help(L10n.loadMoreSpotlightArticles)
+                } else if displayedArticles.isEmpty == false {
+                    Label(L10n.noMorePages, systemImage: "checkmark.circle")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .glassEffect(.regular, in: Capsule(style: .continuous))
+                }
+
+                Spacer(minLength: 0)
+            }
+            .padding(.top, 2)
+            .padding(.bottom, 6)
         }
     }
 
@@ -419,6 +446,12 @@ struct SpotlightView: View {
             selectStableArticle()
         }
         showActionMessage(saved ? L10n.savedArticle : L10n.removedSavedArticle)
+    }
+
+    private func select(_ article: PixivSpotlightArticle) {
+        store.recordSpotlightArticleHistory(article)
+        store.selectedSpotlightArticle = article
+        openArticle?(article)
     }
 
     private func clearHistory() {
