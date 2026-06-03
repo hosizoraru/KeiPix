@@ -136,6 +136,8 @@ struct ArtworkCardView: View {
                     Text(artwork.title)
                         .font(isCompact ? .caption.weight(.semibold) : .subheadline.weight(.semibold))
                         .lineLimit(resolvedDisplayStyle.titleLineLimit)
+                        .minimumScaleFactor(0.82)
+                        .fixedSize(horizontal: false, vertical: true)
                     Spacer(minLength: 6)
                     if artwork.pageCount > 1 {
                         Text(L10n.pageCountShort(artwork.pageCount))
@@ -150,6 +152,7 @@ struct ArtworkCardView: View {
                     .font(.caption2)
                     .foregroundStyle(.white.opacity(0.78))
                     .lineLimit(1)
+                    .minimumScaleFactor(0.82)
 
                 if shouldEmphasizeFollowing {
                     Label(L10n.following, systemImage: "checkmark.seal.fill")

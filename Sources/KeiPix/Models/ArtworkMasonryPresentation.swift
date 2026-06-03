@@ -23,7 +23,7 @@ enum ArtworkCardDisplayStyle {
         case .regular:
             2
         case .wide:
-            1
+            2
         }
     }
 }
