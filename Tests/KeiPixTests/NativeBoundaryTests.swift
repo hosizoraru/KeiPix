@@ -140,6 +140,33 @@ struct NativeBoundaryTests {
         #expect(plist.contains("<string>UIInterfaceOrientationLandscapeRight</string>"))
     }
 
+    @Test("Simulator run scripts cover iOS and iPadOS schemes")
+    func simulatorRunScriptsCoverMobileSchemes() throws {
+        let root = try packageRoot()
+        let runnerURL = root.appending(path: "script/build_and_run_simulator.sh")
+        let iOSURL = root.appending(path: "script/build_and_run_ios.sh")
+        let iPadOSURL = root.appending(path: "script/build_and_run_ipados.sh")
+        let runner = try String(contentsOf: runnerURL, encoding: .utf8)
+        let iOSWrapper = try String(contentsOf: iOSURL, encoding: .utf8)
+        let iPadOSWrapper = try String(contentsOf: iPadOSURL, encoding: .utf8)
+
+        #expect(FileManager.default.fileExists(atPath: runnerURL.path(percentEncoded: false)))
+        #expect(FileManager.default.fileExists(atPath: iOSURL.path(percentEncoded: false)))
+        #expect(FileManager.default.fileExists(atPath: iPadOSURL.path(percentEncoded: false)))
+        #expect(runner.contains("KeiPix iOS"))
+        #expect(runner.contains("KeiPix iPadOS"))
+        #expect(runner.contains("com.keipix.client.ios"))
+        #expect(runner.contains("com.keipix.client.ipad"))
+        #expect(runner.contains("xcodegen generate"))
+        #expect(runner.contains("-destination \"platform=iOS Simulator,id=$SIMULATOR_ID\""))
+        #expect(runner.contains("xcrun simctl install \"$SIMULATOR_ID\""))
+        #expect(runner.contains("xcrun simctl launch --terminate-running-process \"$SIMULATOR_ID\" \"$BUNDLE_ID\""))
+        #expect(runner.contains("KEIPIX_IOS_SIMULATOR_ID"))
+        #expect(runner.contains("KEIPIX_IPADOS_SIMULATOR_ID"))
+        #expect(iOSWrapper.contains("build_and_run_simulator.sh\" ios"))
+        #expect(iPadOSWrapper.contains("build_and_run_simulator.sh\" ipados"))
+    }
+
     @Test("iPad feed root dispatches non artwork routes")
     func iPadFeedRootDispatchesNonArtworkRoutes() throws {
         let root = try packageRoot()

@@ -1,6 +1,6 @@
 # Build & Run
 
-KeiPix 同时支持 SwiftPM 与 XcodeGen 开发路径。SwiftPM 主要服务 macOS 本地可执行程序与测试，XcodeGen 生成 macOS app/test target 以及正式 iPadOS app target；两条路径共享 `Sources/KeiPix` 与 `Tests/KeiPixTests`。`KeiPix.xcodeproj` 由 [`XcodeGen`](https://github.com/yonaskolb/XcodeGen) 从 `project.yml` 生成。
+KeiPix 同时支持 SwiftPM 与 XcodeGen 开发路径。SwiftPM 主要服务 macOS 本地可执行程序与测试，XcodeGen 生成 macOS app/test target 以及正式 iOS / iPadOS app target；两条路径共享 `Sources/KeiPix` 与 `Tests/KeiPixTests`。`KeiPix.xcodeproj` 由 [`XcodeGen`](https://github.com/yonaskolb/XcodeGen) 从 `project.yml` 生成。
 
 ## Requirements
 
@@ -26,7 +26,46 @@ KeiPix 同时支持 SwiftPM 与 XcodeGen 开发路径。SwiftPM 主要服务 mac
 
 普通启动前会先 `pkill -x KeiPix`，方便反复本地验证。
 
+## Build And Run Simulator Apps
+
+iOS 和 iPadOS 使用 XcodeGen + `xcodebuild` + `simctl` 路线。脚本会在需要时运行 `xcodegen generate`，查找或创建项目专用 Simulator，boot 后 build、install、launch：
+
+```bash
+./script/build_and_run_ios.sh
+./script/build_and_run_ipados.sh
+```
+
+常用验收模式：
+
+```bash
+./script/build_and_run_ios.sh --verify
+./script/build_and_run_ipados.sh --verify
+./script/build_and_run_ios.sh --build-only
+./script/build_and_run_ipados.sh --logs
+```
+
+默认 Simulator 名称为 `KeiPix-iOS` 和 `KeiPix-iPadOS`。如果你正在和其他工作树并行验收，建议显式指定设备，避免混用登录态或截图证据：
+
+```bash
+KEIPIX_IOS_SIMULATOR_ID=<iphone-udid> ./script/build_and_run_ios.sh --verify
+KEIPIX_IPADOS_SIMULATOR_ID=<ipad-udid> ./script/build_and_run_ipados.sh --verify
+```
+
+可用环境变量：
+
+| 变量 | 用途 |
+| --- | --- |
+| `KEIPIX_CONFIGURATION` | `Debug` 或 `Release`，默认 `Debug` |
+| `KEIPIX_SIMULATOR_ID` | iOS/iPadOS 共用的 Simulator UDID override |
+| `KEIPIX_IOS_SIMULATOR_ID` / `KEIPIX_IPADOS_SIMULATOR_ID` | 单平台 Simulator UDID override |
+| `KEIPIX_IOS_SIMULATOR_NAME` / `KEIPIX_IPADOS_SIMULATOR_NAME` | 自动查找或创建的 Simulator 名称 |
+| `KEIPIX_IOS_DEVICE_TYPE` / `KEIPIX_IPADOS_DEVICE_TYPE` | 自动创建时使用的 `simctl` device type id |
+| `KEIPIX_DERIVED_DATA_PATH` | 共用 DerivedData override |
+| `KEIPIX_XCODEBUILD_VERBOSE=1` | 显示完整 `xcodebuild` 日志；默认使用 `-quiet` 保持脚本输出简洁 |
+
 ## Launch Modes
+
+macOS 本地 `.app` 脚本：
 
 | Mode | 用途 |
 | --- | --- |
@@ -39,6 +78,16 @@ KeiPix 同时支持 SwiftPM 与 XcodeGen 开发路径。SwiftPM 主要服务 mac
 | `--visual-qa-*` | 进入隔离的视觉 QA sample surface |
 
 `.codex/environments/environment.toml` 把 Codex 应用的 Run 按钮绑定到这个脚本。
+
+Simulator 脚本：
+
+| Mode | 用途 |
+| --- | --- |
+| `run`（默认） | 生成项目、构建、安装并启动 |
+| `--build-only` | 只构建，不启动 Simulator |
+| `--install-only` | 安装并启动最近一次构建产物 |
+| `--verify` | 构建、安装、启动，并输出一张 Simulator screenshot |
+| `--logs` | 启动后跟随 app bundle id 的 unified log |
 
 ## SwiftPM
 
@@ -56,7 +105,7 @@ swift test --filter RuntimeReadinessTests
 swift test --filter GallerySelectionTests
 ```
 
-当前测试目录有 52 个 Swift 测试文件。最近一次完整本地基线为 **302 个测试 / 52 个测试套件**，覆盖模型、解析器、下载、阅读、URL 路由、视觉 QA、Runtime Readiness、iPadOS target metadata 和 native bridge 边界。
+当前测试目录有 52 个 Swift 测试文件。最近一次完整本地基线为 **313 个测试 / 52 个测试套件**，覆盖模型、解析器、下载、阅读、URL 路由、视觉 QA、Runtime Readiness、iOS / iPadOS target metadata 和 native bridge 边界。
 
 ## XcodeGen
 
@@ -76,12 +125,18 @@ xcodebuild -project KeiPix.xcodeproj -scheme KeiPix -configuration Debug \
   -destination 'platform=macOS' test
 ```
 
-正式 iPadOS target 使用独立 scheme：
+正式 iOS / iPadOS target 使用独立 scheme：
 
 ```bash
+xcodebuild -project KeiPix.xcodeproj -scheme 'KeiPix iOS' \
+  -configuration Debug \
+  -destination 'platform=iOS Simulator,id=<iphone-simulator-udid>' \
+  -derivedDataPath /tmp/KeiPix-iOSDerived \
+  build
+
 xcodebuild -project KeiPix.xcodeproj -scheme 'KeiPix iPadOS' \
   -configuration Debug \
-  -destination 'platform=iOS Simulator,id=<simulator-udid>' \
+  -destination 'platform=iOS Simulator,id=<ipad-simulator-udid>' \
   -derivedDataPath /tmp/KeiPix-iPadFormalDerived \
   build
 ```
@@ -120,26 +175,31 @@ GitHub Actions workflow 位于 `.github/workflows/macos-build.yml`：
 | 文件 | 用途 |
 | --- | --- |
 | `App/Info.plist` | Xcode 构建使用的 plist 模板 |
+| `App/Info-iOS.plist` | iOS target 使用的 plist 模板，包含 `keipix://` / `pixiv://` 路由、后台刷新、照片保存说明和 iPhone 方向声明 |
 | `App/Info-iPadOS.plist` | iPadOS target 使用的 plist 模板，包含 `keipix://` / `pixiv://` 路由、后台刷新、照片保存说明和 iPad 方向声明 |
 | `App/KeiPix.entitlements` | App Sandbox、网络、用户选择文件、下载、打印 entitlement |
 | `script/build_and_run.sh` | SwiftPM 本地 `.app` 构建与运行脚本 |
+| `script/build_and_run_ios.sh` | iOS Simulator 快速构建、安装和启动脚本 |
+| `script/build_and_run_ipados.sh` | iPadOS Simulator 快速构建、安装和启动脚本 |
+| `script/build_and_run_simulator.sh` | iOS/iPadOS 两个入口共用的 XcodeGen / `xcodebuild` / `simctl` runner |
 | `script/build_release_app.sh` | CI/release 打包脚本 |
 | `project.yml` | XcodeGen 项目描述 |
 
 修改 entitlement、bundle metadata 或 URL/document type 时，要同步 Xcode 路径和脚本路径。
 
-## iPadOS Target
+## iOS And iPadOS Targets
 
-`project.yml` 声明了正式 `KeiPixiPad` app target 和 `KeiPix iPadOS` scheme，target 平台为 iOS、设备族为 iPad，bundle id 为 `com.keipix.client.ipad`。`Package.swift` 同时声明 `.iOS(.v26)`，多个热路径已经具备 UIKit bridge，例如 `UICollectionView`、`UIScrollView`、`UITextView`、`UISearchTextField`。
+`project.yml` 声明了正式 `KeiPixiOS` / `KeiPixiPad` app target 和 `KeiPix iOS` / `KeiPix iPadOS` scheme。两个 target 平台都为 iOS，设备族分别为 iPhone 与 iPad，bundle id 分别为 `com.keipix.client.ios` 和 `com.keipix.client.ipad`。`Package.swift` 同时声明 `.iOS(.v26)`，多个热路径已经具备 UIKit bridge，例如 `UICollectionView`、`UIScrollView`、`UITextView`、`UISearchTextField`。
 
 推荐验证顺序：
 
 1. `xcodegen generate`
-2. 使用 `KeiPix iPadOS` scheme 在 iPad Simulator 上 build/run
-3. 检查 feed、downloads、settings 这类基础 surface 的安全区、sidebar/detail、空状态和触控导航
-4. 再补多尺寸设备矩阵、视觉 QA、签名和分发检查
+2. 使用 `./script/build_and_run_ios.sh --verify` 跑 iPhone smoke check
+3. 使用 `./script/build_and_run_ipados.sh --verify` 跑 iPad smoke check
+4. 检查 feed、downloads、settings 这类基础 surface 的安全区、sidebar/detail、空状态和触控导航
+5. 再补多尺寸设备矩阵、视觉 QA、签名和分发检查
 
-文档中可以把 iPadOS 写成正式 target，但不要写成已公开发布完成目标，除非上述设备与分发验证已经补齐。命令行和 XcodeBuildMCP 同时跑构建时，建议给命令行 `xcodebuild` 指定独立 `-derivedDataPath`，避免 DerivedData 数据库锁。
+文档中可以把 iOS / iPadOS 写成正式 target，但不要写成已公开发布完成目标，除非上述设备与分发验证已经补齐。命令行和 XcodeBuildMCP 同时跑构建时，建议给命令行 `xcodebuild` 指定独立 `-derivedDataPath`，避免 DerivedData 数据库锁。
 
 ## Troubleshooting
 
@@ -147,4 +207,5 @@ GitHub Actions workflow 位于 `.github/workflows/macos-build.yml`：
 - 启动后闪退：用 `./script/build_and_run.sh --logs` 看 sandbox、resource 或 entitlement 错误。
 - 视觉 QA 截图为空：确认目标窗口面积不小于 240x240，并且先用对应 `--visual-qa-*` 启动。
 - Token 失效：Settings -> Runtime Readiness -> Account Health Check，或使用 `--verify` 走隔离 sample 模式验证 UI。
-- iPadOS 相关编译失败：先确认使用 Xcode 26+ SDK、正确 destination，并确认相关 AppKit-only bridge 有 `#if os(macOS)` 隔离。
+- iOS / iPadOS 相关编译失败：先确认使用 Xcode 26+ SDK、正确 destination，并确认相关 AppKit-only bridge 有 `#if os(macOS)` 隔离。
+- 并行验收混到其他工作树：给脚本传 `KEIPIX_IOS_SIMULATOR_ID` 或 `KEIPIX_IPADOS_SIMULATOR_ID`，并使用独立 `KEIPIX_DERIVED_DATA_PATH`。
