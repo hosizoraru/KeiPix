@@ -210,8 +210,19 @@ extension NativeBrowsingHistoryCollectionView: NSViewRepresentable {
             var snapshot = NSDiffableDataSourceSnapshot<Int, NativeBrowsingHistoryCollectionItem>()
             snapshot.appendSections([0])
             snapshot.appendItems(parent.items, toSection: 0)
-            dataSource?.apply(snapshot, animatingDifferences: false) { [weak collectionView] in
-                collectionView?.reloadItems(at: collectionView?.indexPathsForVisibleItems() ?? [])
+            dataSource?.apply(snapshot, animatingDifferences: false) { [weak self, weak collectionView] in
+                guard let self, let collectionView else { return }
+                refreshVisibleHostedContent(in: collectionView)
+            }
+        }
+
+        private func refreshVisibleHostedContent(in collectionView: NSCollectionView) {
+            for indexPath in collectionView.indexPathsForVisibleItems() {
+                guard indexPath.item < parent.items.count,
+                      let item = collectionView.item(at: indexPath) as? NativeBrowsingHistoryHostingCollectionItem else {
+                    continue
+                }
+                item.configure(with: parent.content(parent.items[indexPath.item]))
             }
         }
 
@@ -354,9 +365,19 @@ extension NativeBrowsingHistoryCollectionView: UIViewRepresentable {
             var snapshot = NSDiffableDataSourceSnapshot<Int, NativeBrowsingHistoryCollectionItem>()
             snapshot.appendSections([0])
             snapshot.appendItems(parent.items, toSection: 0)
-            dataSource?.apply(snapshot, animatingDifferences: false) { [weak collectionView] in
-                guard let collectionView else { return }
-                collectionView.reloadItems(at: collectionView.indexPathsForVisibleItems)
+            dataSource?.apply(snapshot, animatingDifferences: false) { [weak self, weak collectionView] in
+                guard let self, let collectionView else { return }
+                refreshVisibleHostedContent(in: collectionView)
+            }
+        }
+
+        private func refreshVisibleHostedContent(in collectionView: UICollectionView) {
+            for indexPath in collectionView.indexPathsForVisibleItems {
+                guard indexPath.item < parent.items.count,
+                      let cell = collectionView.cellForItem(at: indexPath) as? NativeBrowsingHistoryHostingCollectionCell else {
+                    continue
+                }
+                cell.configure(with: parent.content(parent.items[indexPath.item]))
             }
         }
 

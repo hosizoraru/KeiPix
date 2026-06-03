@@ -90,7 +90,7 @@ extension NativeDownloadQueueListView: NSViewRepresentable {
         context.coordinator.parent = self
         guard let tableView = context.coordinator.tableView else { return }
         tableView.tableColumns.first?.width = max(scrollView.contentSize.width, 240)
-        tableView.reloadData()
+        context.coordinator.applyItems(to: tableView)
         context.coordinator.restoreSelection()
     }
 
@@ -100,6 +100,7 @@ extension NativeDownloadQueueListView: NSViewRepresentable {
     final class Coordinator: NSObject, NSTableViewDataSource, NSTableViewDelegate {
         var parent: NativeDownloadQueueListView
         weak var tableView: NSTableView?
+        private var lastItemIDs: [UUID] = []
 
         init(parent: NativeDownloadQueueListView) {
             self.parent = parent
@@ -123,6 +124,32 @@ extension NativeDownloadQueueListView: NSViewRepresentable {
             cell.identifier = NativeDownloadTableCell.identifier
             cell.host(AnyView(parent.row(for: item)))
             return cell
+        }
+
+        func applyItems(to tableView: NSTableView) {
+            let itemIDs = parent.items.map(\.id)
+            if itemIDs != lastItemIDs {
+                lastItemIDs = itemIDs
+                tableView.reloadData()
+                return
+            }
+            refreshVisibleRows(in: tableView)
+        }
+
+        private func refreshVisibleRows(in tableView: NSTableView) {
+            let visibleRows = tableView.rows(in: tableView.visibleRect)
+            guard visibleRows.location != NSNotFound, visibleRows.length > 0 else { return }
+            let end = visibleRows.location + visibleRows.length
+            for row in visibleRows.location..<end where parent.items.indices.contains(row) {
+                guard let cell = tableView.view(
+                    atColumn: 0,
+                    row: row,
+                    makeIfNecessary: false
+                ) as? NativeDownloadTableCell else {
+                    continue
+                }
+                cell.host(AnyView(parent.row(for: parent.items[row])))
+            }
         }
 
         func tableViewSelectionDidChange(_ notification: Notification) {
@@ -208,7 +235,7 @@ extension NativeDownloadQueueListView: UIViewRepresentable {
 
     func updateUIView(_ collectionView: UICollectionView, context: Context) {
         context.coordinator.parent = self
-        collectionView.reloadData()
+        context.coordinator.applyItems(to: collectionView)
         context.coordinator.restoreSelection(in: collectionView)
     }
 
@@ -217,6 +244,7 @@ extension NativeDownloadQueueListView: UIViewRepresentable {
         static let cellIdentifier = "native-download-row-cell"
 
         var parent: NativeDownloadQueueListView
+        private var lastItemIDs: [UUID] = []
 
         init(parent: NativeDownloadQueueListView) {
             self.parent = parent
@@ -236,18 +264,42 @@ extension NativeDownloadQueueListView: UIViewRepresentable {
             )
             guard parent.items.indices.contains(indexPath.item) else { return cell }
             let item = parent.items[indexPath.item]
-            cell.backgroundColor = .clear
-            cell.contentConfiguration = UIHostingConfiguration {
-                parent.row(for: item)
-            }
-            .margins(.all, 0)
+            configure(cell, with: item)
             return cell
         }
 
         func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
             guard parent.items.indices.contains(indexPath.item) else { return }
             parent.selectedItemID = parent.items[indexPath.item].id
-            collectionView.reloadItems(at: [indexPath])
+            refreshVisibleItems(in: collectionView)
+        }
+
+        func applyItems(to collectionView: UICollectionView) {
+            let itemIDs = parent.items.map(\.id)
+            if itemIDs != lastItemIDs {
+                lastItemIDs = itemIDs
+                collectionView.reloadData()
+                return
+            }
+            refreshVisibleItems(in: collectionView)
+        }
+
+        private func refreshVisibleItems(in collectionView: UICollectionView) {
+            for indexPath in collectionView.indexPathsForVisibleItems {
+                guard parent.items.indices.contains(indexPath.item),
+                      let cell = collectionView.cellForItem(at: indexPath) else {
+                    continue
+                }
+                configure(cell, with: parent.items[indexPath.item])
+            }
+        }
+
+        private func configure(_ cell: UICollectionViewCell, with item: ArtworkDownloadItem) {
+            cell.backgroundColor = .clear
+            cell.contentConfiguration = UIHostingConfiguration {
+                parent.row(for: item)
+            }
+            .margins(.all, 0)
         }
 
         func collectionView(

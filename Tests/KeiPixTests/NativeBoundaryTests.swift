@@ -166,6 +166,10 @@ struct NativeBoundaryTests {
         #expect(nativeList.contains("UIHostingConfiguration"))
         #expect(nativeList.contains("keyDown(with event: NSEvent)"))
         #expect(nativeList.contains("UIKeyCommand"))
+        #expect(nativeList.contains("lastItemIDs"))
+        #expect(nativeList.contains("refreshVisibleRows(in: tableView)"))
+        #expect(nativeList.contains("refreshVisibleItems(in: collectionView)"))
+        #expect(nativeList.contains("reloadItems(at: [indexPath])") == false)
     }
 
     @Test("Browsing history uses a native collection container")
@@ -190,6 +194,9 @@ struct NativeBoundaryTests {
         #expect(nativeCollection.contains("NSHostingView"))
         #expect(nativeCollection.contains("UIHostingController"))
         #expect(nativeCollection.contains("NativeBrowsingHistoryCollectionLayout"))
+        #expect(nativeCollection.contains("refreshVisibleHostedContent(in: collectionView)"))
+        #expect(nativeCollection.contains("reloadItems(at: collectionView.indexPathsForVisibleItems)") == false)
+        #expect(nativeCollection.contains("reloadItems(at: collectionView?.indexPathsForVisibleItems()") == false)
     }
 
     @Test("Creator list, search, menu, and drop use native P2 bridges")
