@@ -19,23 +19,23 @@ struct ContentView: View {
                 .toolbar(removing: .sidebarToggle)
         } content: {
             ContentColumnView(store: store)
-                .navigationSplitViewColumnWidth(min: 500, ideal: 720)
+                .navigationSplitViewColumnWidth(min: 560, ideal: 760)
         } detail: {
             if store.selectedRoute == .home {
                 DiscoveryDashboardDetailPlaceholder()
-                    .navigationSplitViewColumnWidth(min: 320, ideal: 420)
+                    .navigationSplitViewColumnWidth(min: 360, ideal: 440)
             } else if store.selectedRoute == .spotlight {
                 SpotlightArticleDetailView(store: store)
-                    .navigationSplitViewColumnWidth(min: 360, ideal: 500)
+                    .navigationSplitViewColumnWidth(min: 420, ideal: 560)
             } else if store.selectedRoute.usesNovelFeed {
                 NovelDetailView(store: store)
-                    .navigationSplitViewColumnWidth(min: 320, ideal: 460)
+                    .navigationSplitViewColumnWidth(min: 380, ideal: 500)
             } else {
                 ArtworkDetailView(store: store, showsNavigationChrome: false)
-                    .navigationSplitViewColumnWidth(min: 300, ideal: 420)
+                    .navigationSplitViewColumnWidth(min: 360, ideal: 460)
             }
         }
-        .frame(minWidth: minimumWindowWidth, minHeight: 700)
+        .frame(minWidth: minimumWindowWidth, minHeight: MainWindowSizing.minimumHeight)
         .searchable(text: $store.searchText, prompt: L10n.searchPlaceholder)
         .searchSuggestions {
             ForEach(store.matchingLocalSearchTerms(), id: \.self) { keyword in
@@ -137,6 +137,14 @@ struct ContentView: View {
             }
         }
         .windowStyler(unifiedToolbar: true)
+        .mainWindowSizing(
+            minimumWidth: minimumWindowWidth,
+            minimumHeight: MainWindowSizing.minimumHeight,
+            preferredDefaultSize: WindowSizePreset.balanced.size(
+                sidebarVisible: sidebarVisible,
+                accountIdentityVisible: store.showsSidebarAccountIdentity
+            )
+        )
         .sheet(isPresented: $store.isLoginPresented) {
             LoginSheetView(store: store)
                 .frame(width: 900, height: 680)
@@ -498,11 +506,10 @@ struct ContentView: View {
     }
 
     private var minimumWindowWidth: CGFloat {
-        if sidebarVisible {
-            store.showsSidebarAccountIdentity ? 970 : 940
-        } else {
-            840
-        }
+        MainWindowSizing.minimumWidth(
+            sidebarVisible: sidebarVisible,
+            accountIdentityVisible: store.showsSidebarAccountIdentity
+        )
     }
 
     private var showsSearchFilters: Bool {

@@ -116,11 +116,11 @@ struct GallerySelectionTests {
         let visibleIdentityMasonryWidth = WindowSizePreset.balanced.size(
             sidebarVisible: true,
             accountIdentityVisible: true
-        ).width - 184 - 420 - 36
+        ).width - 258 - 440 - 36
         let hiddenIdentityMasonryWidth = WindowSizePreset.balanced.size(
             sidebarVisible: true,
             accountIdentityVisible: false
-        ).width - 144 - 420 - 36
+        ).width - 232 - 440 - 36
 
         #expect(visibleIdentityMasonryWidth >= 640)
         #expect(hiddenIdentityMasonryWidth >= 640)

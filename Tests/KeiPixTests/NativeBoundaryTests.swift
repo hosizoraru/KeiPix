@@ -80,8 +80,10 @@ struct NativeBoundaryTests {
             encoding: .utf8
         )
 
-        #expect(app.contains("#if os(macOS)\n                .frame(minWidth: 840, minHeight: 700)"))
-        #expect(app.contains("ContentView(store: store)\n                .frame(minWidth: 840") == false)
+        #expect(app.contains("MainWindowSizing.minimumWidth("))
+        #expect(app.contains("MainWindowSizing.minimumHeight"))
+        #expect(app.contains(".defaultSize(width: MainWindowSizing.defaultSize.width, height: MainWindowSizing.defaultSize.height)"))
+        #expect(app.contains("ContentView(store: store)\n                .frame(minWidth: MainWindowSizing") == false)
     }
 
     @Test("XcodeGen declares a first-class iPadOS app target")
@@ -497,10 +499,17 @@ struct NativeBoundaryTests {
 
         #expect(contentView.contains("NavigationSplitView(columnVisibility: $columnVisibility)"))
         #expect(contentView.contains("ArtworkDetailView(store: store, showsNavigationChrome: false)"))
+        #expect(contentView.contains(".navigationSplitViewColumnWidth(min: 560, ideal: 760)"))
+        #expect(contentView.contains(".navigationSplitViewColumnWidth(min: 360, ideal: 440)"))
+        #expect(contentView.contains(".navigationSplitViewColumnWidth(min: 420, ideal: 560)"))
+        #expect(contentView.contains(".frame(minWidth: minimumWindowWidth, minHeight: MainWindowSizing.minimumHeight)"))
+        #expect(contentView.contains(".mainWindowSizing("))
+        #expect(contentView.contains("preferredDefaultSize: WindowSizePreset.balanced.size("))
         #expect(contentView.contains("ToolbarItemGroup(placement: .navigation)"))
         #expect(contentView.contains("private var showsArtworkNavigationControls: Bool"))
         #expect(contentView.contains("private func toggleSidebar()"))
         #expect(contentView.contains("columnVisibility = isSidebarPresented ? .all : .doubleColumn"))
+        #expect(contentView.contains("MainWindowSizing.minimumWidth(\n            sidebarVisible: sidebarVisible"))
         #expect(contentView.contains("detailOnly") == false)
     }
 
@@ -520,6 +529,43 @@ struct NativeBoundaryTests {
         #expect(contentView.contains("Section(L10n.viewOptions)"))
         #expect(contentView.contains("Section(L10n.contentFilters)"))
         #expect(contentView.contains("Toggle(L10n.hideMutedContent, isOn: hideMutedContentBinding)"))
+    }
+
+    @Test("macOS launch sizing clamps restored narrow windows")
+    func macOSLaunchSizingClampsRestoredNarrowWindows() throws {
+        let root = try packageRoot()
+        let sidebarView = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/SidebarView.swift"),
+            encoding: .utf8
+        )
+        let windowSizePreset = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Models/WindowSizePreset.swift"),
+            encoding: .utf8
+        )
+        let windowStyler = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Support/WindowStyler.swift"),
+            encoding: .utf8
+        )
+
+        #expect(windowSizePreset.contains("enum MainWindowSizing"))
+        #expect(windowSizePreset.contains("static let minimumHeight: CGFloat = 760"))
+        #expect(windowSizePreset.contains("static let defaultSize = CGSize(width: 1440, height: 860)"))
+        #expect(windowSizePreset.contains("accountIdentityVisible ? 1240 : 1200"))
+        #expect(windowSizePreset.contains("CGSize(width: MainWindowSizing.minimumWidth(sidebarVisible: true"))
+        #expect(windowSizePreset.contains("CGSize(width: MainWindowSizing.minimumWidth(sidebarVisible: false), height: 720)"))
+        #expect(sidebarView.contains("min: store.showsSidebarAccountIdentity ? 238 : 218"))
+        #expect(sidebarView.contains("ideal: store.showsSidebarAccountIdentity ? 258 : 232"))
+        #expect(sidebarView.contains("max: store.showsSidebarAccountIdentity ? 300 : 270"))
+        #expect(windowStyler.contains("struct MainWindowSizingModifier: ViewModifier"))
+        #expect(windowStyler.contains("private final class MainWindowSizingHostView: NSView"))
+        #expect(windowStyler.contains("override func viewDidMoveToWindow()"))
+        #expect(windowStyler.contains("private var didApplyInitialComfortSize = false"))
+        #expect(windowStyler.contains("window.contentMinSize = NSSize(width: effectiveMinimum.width, height: effectiveMinimum.height)"))
+        #expect(windowStyler.contains("window.contentRect(forFrameRect: visibleFrame).size"))
+        #expect(windowStyler.contains("didApplyInitialComfortSize ? effectiveMinimum"))
+        #expect(windowStyler.contains("window.contentLayoutRect"))
+        #expect(windowStyler.contains("window.setFrame(nextFrame, display: true, animate: false)"))
+        #expect(windowStyler.contains("func mainWindowSizing("))
     }
 
     @Test("macOS feed header uses glass action chrome")

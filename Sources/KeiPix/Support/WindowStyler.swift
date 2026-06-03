@@ -109,21 +109,145 @@ private struct WindowStylerBackground: NSViewRepresentable {
     func makeNSView(context: Context) -> NSView {
         let view = NSView()
         Task { @MainActor in
-            guard let window = view.window else { return }
-            if transparentTitlebar {
-                WindowStyler.applyTransparentTitlebar(window)
-            }
-            if unifiedToolbar {
-                WindowStyler.applyUnifiedToolbar(window)
-            }
-            if vibrantBackground {
-                WindowStyler.applyVibrantBackground(window)
-            }
+            apply(to: view.window)
         }
         return view
     }
 
-    func updateNSView(_ nsView: NSView, context: Context) {}
+    func updateNSView(_ nsView: NSView, context: Context) {
+        Task { @MainActor in
+            apply(to: nsView.window)
+        }
+    }
+
+    private func apply(to window: NSWindow?) {
+        guard let window else { return }
+        if transparentTitlebar {
+            WindowStyler.applyTransparentTitlebar(window)
+        }
+        if unifiedToolbar {
+            WindowStyler.applyUnifiedToolbar(window)
+        }
+        if vibrantBackground {
+            WindowStyler.applyVibrantBackground(window)
+        }
+    }
+}
+
+struct MainWindowSizingModifier: ViewModifier {
+    let minimumWidth: CGFloat
+    let minimumHeight: CGFloat
+    let preferredDefaultSize: CGSize
+
+    func body(content: Content) -> some View {
+        content
+            .background {
+                MainWindowSizingBridge(
+                    minimumSize: CGSize(width: minimumWidth, height: minimumHeight),
+                    preferredDefaultSize: preferredDefaultSize
+                )
+            }
+    }
+}
+
+private struct MainWindowSizingBridge: NSViewRepresentable {
+    let minimumSize: CGSize
+    let preferredDefaultSize: CGSize
+
+    func makeNSView(context: Context) -> MainWindowSizingHostView {
+        MainWindowSizingHostView(
+            minimumSize: minimumSize,
+            preferredDefaultSize: preferredDefaultSize
+        )
+    }
+
+    func updateNSView(_ nsView: MainWindowSizingHostView, context: Context) {
+        nsView.update(
+            minimumSize: minimumSize,
+            preferredDefaultSize: preferredDefaultSize
+        )
+    }
+}
+
+@MainActor
+private final class MainWindowSizingHostView: NSView {
+    private var minimumSize: CGSize
+    private var preferredDefaultSize: CGSize
+    private var didApplyInitialComfortSize = false
+
+    init(minimumSize: CGSize, preferredDefaultSize: CGSize) {
+        self.minimumSize = minimumSize
+        self.preferredDefaultSize = preferredDefaultSize
+        super.init(frame: .zero)
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) {
+        fatalError("MainWindowSizingHostView does not support decoding")
+    }
+
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        scheduleApply()
+    }
+
+    func update(minimumSize: CGSize, preferredDefaultSize: CGSize) {
+        self.minimumSize = minimumSize
+        self.preferredDefaultSize = preferredDefaultSize
+        scheduleApply()
+    }
+
+    private func scheduleApply() {
+        Task { @MainActor [weak self] in
+            self?.applySizing()
+        }
+    }
+
+    private func applySizing() {
+        guard let window else { return }
+        let visibleFrame = window.screen?.visibleFrame ?? NSScreen.main?.visibleFrame ?? window.frame
+        let maximumContentSize = window.contentRect(forFrameRect: visibleFrame).size
+        let effectiveMinimum = CGSize(
+            width: min(minimumSize.width, maximumContentSize.width),
+            height: min(minimumSize.height, maximumContentSize.height)
+        )
+        window.contentMinSize = NSSize(width: effectiveMinimum.width, height: effectiveMinimum.height)
+
+        let targetBaseline = didApplyInitialComfortSize ? effectiveMinimum : CGSize(
+            width: min(max(preferredDefaultSize.width, effectiveMinimum.width), maximumContentSize.width),
+            height: min(max(preferredDefaultSize.height, effectiveMinimum.height), maximumContentSize.height)
+        )
+        let contentFrame = window.contentLayoutRect
+        defer { didApplyInitialComfortSize = true }
+
+        guard contentFrame.width < targetBaseline.width || contentFrame.height < targetBaseline.height else {
+            return
+        }
+
+        let nextFrame = fittedFrame(
+            for: window,
+            targetContentSize: targetBaseline,
+            visibleFrame: visibleFrame
+        )
+        window.setFrame(nextFrame, display: true, animate: false)
+    }
+
+    private func fittedFrame(
+        for window: NSWindow,
+        targetContentSize: CGSize,
+        visibleFrame: CGRect
+    ) -> CGRect {
+        let targetFrameSize = window.frameRect(forContentRect: CGRect(origin: .zero, size: targetContentSize)).size
+        let currentFrame = window.frame
+        let width = min(targetFrameSize.width, visibleFrame.width)
+        let height = min(targetFrameSize.height, visibleFrame.height)
+        var nextFrame = CGRect(origin: currentFrame.origin, size: CGSize(width: width, height: height))
+        nextFrame.origin.x = currentFrame.midX - width / 2
+        nextFrame.origin.y = currentFrame.maxY - height
+        nextFrame.origin.x = nextFrame.origin.x.clamped(to: visibleFrame.minX...(visibleFrame.maxX - width))
+        nextFrame.origin.y = nextFrame.origin.y.clamped(to: visibleFrame.minY...(visibleFrame.maxY - height))
+        return nextFrame
+    }
 }
 
 extension View {
@@ -138,6 +262,24 @@ extension View {
             unifiedToolbar: unifiedToolbar,
             vibrantBackground: vibrantBackground
         ))
+    }
+
+    func mainWindowSizing(
+        minimumWidth: CGFloat,
+        minimumHeight: CGFloat,
+        preferredDefaultSize: CGSize
+    ) -> some View {
+        modifier(MainWindowSizingModifier(
+            minimumWidth: minimumWidth,
+            minimumHeight: minimumHeight,
+            preferredDefaultSize: preferredDefaultSize
+        ))
+    }
+}
+
+private extension Comparable {
+    func clamped(to range: ClosedRange<Self>) -> Self {
+        min(max(self, range.lowerBound), range.upperBound)
     }
 }
 #endif

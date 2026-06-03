@@ -17,7 +17,13 @@ struct KeiPixApp: App {
         WindowGroup("KeiPix", id: "main") {
             ContentView(store: store)
                 #if os(macOS)
-                .frame(minWidth: 840, minHeight: 700)
+                .frame(
+                    minWidth: MainWindowSizing.minimumWidth(
+                        sidebarVisible: true,
+                        accountIdentityVisible: store.showsSidebarAccountIdentity
+                    ),
+                    minHeight: MainWindowSizing.minimumHeight
+                )
                 .background(WindowCaptureProtectionBridge(isProtected: store.isMainWindowCaptureProtected))
                 #endif
                 .environment(\.locale, store.appLanguage.locale ?? .current)
@@ -77,7 +83,7 @@ struct KeiPixApp: App {
                 #endif
         }
         #if os(macOS)
-        .defaultSize(width: 1280, height: 800)
+        .defaultSize(width: MainWindowSizing.defaultSize.width, height: MainWindowSizing.defaultSize.height)
         .commands {
             macCommands
         }

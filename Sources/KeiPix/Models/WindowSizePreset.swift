@@ -4,6 +4,19 @@ import SwiftUI
 import AppKit
 #endif
 
+enum MainWindowSizing {
+    static let minimumHeight: CGFloat = 760
+    static let defaultSize = CGSize(width: 1440, height: 860)
+
+    static func minimumWidth(sidebarVisible: Bool, accountIdentityVisible: Bool = true) -> CGFloat {
+        if sidebarVisible {
+            accountIdentityVisible ? 1240 : 1200
+        } else {
+            920
+        }
+    }
+}
+
 enum WindowSizePreset: String, CaseIterable, Identifiable {
     case small
     case balanced
@@ -28,21 +41,21 @@ enum WindowSizePreset: String, CaseIterable, Identifiable {
     func size(sidebarVisible: Bool, accountIdentityVisible: Bool = true) -> CGSize {
         switch (self, sidebarVisible) {
         case (.small, true):
-            CGSize(width: accountIdentityVisible ? 970 : 940, height: 720)
+            CGSize(width: MainWindowSizing.minimumWidth(sidebarVisible: true, accountIdentityVisible: accountIdentityVisible), height: MainWindowSizing.minimumHeight)
         case (.balanced, true):
-            CGSize(width: accountIdentityVisible ? 1280 : 1240, height: 800)
+            accountIdentityVisible ? MainWindowSizing.defaultSize : CGSize(width: 1360, height: MainWindowSizing.defaultSize.height)
         case (.wide, true):
-            CGSize(width: accountIdentityVisible ? 1400 : 1360, height: 860)
+            CGSize(width: accountIdentityVisible ? 1640 : 1580, height: 940)
         case (.reading, true):
-            CGSize(width: accountIdentityVisible ? 1260 : 1220, height: 860)
+            CGSize(width: accountIdentityVisible ? 1500 : 1440, height: 940)
         case (.small, false):
-            CGSize(width: 840, height: 700)
+            CGSize(width: MainWindowSizing.minimumWidth(sidebarVisible: false), height: 720)
         case (.balanced, false):
-            CGSize(width: 1020, height: 760)
+            CGSize(width: 1120, height: 780)
         case (.wide, false):
-            CGSize(width: 1180, height: 840)
+            CGSize(width: 1280, height: 860)
         case (.reading, false):
-            CGSize(width: 980, height: 840)
+            CGSize(width: 1100, height: 860)
         }
     }
 
