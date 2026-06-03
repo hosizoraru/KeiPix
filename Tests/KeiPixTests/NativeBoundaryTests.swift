@@ -247,6 +247,42 @@ struct NativeBoundaryTests {
         #expect(nativeDrop.contains("UTType.utf8PlainText"))
     }
 
+    @Test("Creator profile shelves use native horizontal collection bridges")
+    func creatorProfileShelvesUseNativeHorizontalCollectionBridges() throws {
+        let root = try packageRoot()
+        let recentWorks = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/UserProfileRecentWorksSection.swift"),
+            encoding: .utf8
+        )
+        let relatedCreators = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/UserProfileRelatedCreatorsSection.swift"),
+            encoding: .utf8
+        )
+        let nativeCollection = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Support/NativeCreatorPreviewCollectionView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(recentWorks.contains("NativeCreatorPreviewCollectionView("))
+        #expect(recentWorks.contains(".horizontalShelf(itemWidth: cardWidth, itemHeight: cardHeight)"))
+        #expect(recentWorks.contains("artworkShelfItems"))
+        #expect(recentWorks.contains("ScrollView(.horizontal)") == false)
+        #expect(recentWorks.contains("LazyHStack") == false)
+
+        #expect(relatedCreators.contains("NativeCreatorPreviewCollectionView("))
+        #expect(relatedCreators.contains(".horizontalShelf(itemWidth: relatedCreatorShelfItemWidth, itemHeight: cardHeight)"))
+        #expect(relatedCreators.contains("relatedCreatorShelfItems"))
+        #expect(relatedCreators.contains("ScrollView(.horizontal)") == false)
+        #expect(relatedCreators.contains("LazyHStack") == false)
+
+        #expect(nativeCollection.contains("case artwork(PixivArtwork)"))
+        #expect(nativeCollection.contains("case horizontalShelf(itemWidth: CGFloat, itemHeight: CGFloat)"))
+        #expect(nativeCollection.contains("flowLayout.scrollDirection = parent.layout.nsScrollDirection"))
+        #expect(nativeCollection.contains("flowLayout.scrollDirection = parent.layout.uiScrollDirection"))
+        #expect(nativeCollection.contains("refreshVisibleHostedContent(in: collectionView)"))
+        #expect(nativeCollection.contains("reloadItems(at:") == false)
+    }
+
     private func packageRoot() throws -> URL {
         var candidate = URL(fileURLWithPath: FileManager.default.currentDirectoryPath, isDirectory: true)
         for _ in 0..<8 {

@@ -116,19 +116,20 @@ struct UserProfileRecentWorksSection: View {
     }
 
     private var carousel: some View {
-        ScrollView(.horizontal) {
-            LazyHStack(spacing: 12) {
-                ForEach(artworks.prefix(visibleCap)) { artwork in
-                    artworkCard(artwork)
-                        .frame(width: cardWidth)
-                }
+        NativeCreatorPreviewCollectionView(
+            items: artworkShelfItems,
+            layout: .horizontalShelf(itemWidth: cardWidth, itemHeight: cardHeight)
+        ) { item in
+            switch item {
+            case .artwork(let artwork):
+                return AnyView(artworkCard(artwork))
+            case .preview, .loadMore:
+                return AnyView(EmptyView())
             }
-            .padding(.vertical, 2)
-            .padding(.horizontal, 1)
         }
-        .scrollIndicators(.hidden)
+        .frame(height: cardHeight)
         // Fade the leading + trailing edges so users get a visual cue that
-        // the carousel scrolls. Lifted from Apple's Music shelves.
+        // the native carousel scrolls. Lifted from Apple's Music shelves.
         .mask {
             HStack(spacing: 0) {
                 LinearGradient(colors: [.clear, .black], startPoint: .leading, endPoint: .trailing)
@@ -138,6 +139,10 @@ struct UserProfileRecentWorksSection: View {
                     .frame(width: 14)
             }
         }
+    }
+
+    private var artworkShelfItems: [NativeCreatorPreviewCollectionItem] {
+        artworks.prefix(visibleCap).map(NativeCreatorPreviewCollectionItem.artwork)
     }
 
     private func artworkCard(_ artwork: PixivArtwork) -> some View {

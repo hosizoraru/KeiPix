@@ -25,6 +25,8 @@ struct UserProfileRelatedCreatorsSection: View {
     let selectArtwork: (PixivArtwork) -> Void
 
     private let cardWidth: CGFloat = 196
+    private let cardHeight: CGFloat = 230
+    private let cardHorizontalPadding: CGFloat = 28
     private let visibleCap = 10
 
     var body: some View {
@@ -102,21 +104,25 @@ struct UserProfileRelatedCreatorsSection: View {
             ForEach(0..<4, id: \.self) { _ in
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
                     .fill(.quaternary)
-                    .frame(width: cardWidth, height: 230)
+                    .frame(width: relatedCreatorShelfItemWidth, height: cardHeight)
                     .overlay {
                         ProgressView()
                             .controlSize(.small)
                     }
             }
         }
-        .frame(height: 230)
+        .frame(height: cardHeight)
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private var carousel: some View {
-        ScrollView(.horizontal) {
-            LazyHStack(spacing: 12) {
-                ForEach(relatedUsers.prefix(visibleCap)) { preview in
+        NativeCreatorPreviewCollectionView(
+            items: relatedCreatorShelfItems,
+            layout: .horizontalShelf(itemWidth: relatedCreatorShelfItemWidth, itemHeight: cardHeight)
+        ) { item in
+            switch item {
+            case .preview(let preview):
+                return AnyView(
                     RelatedCreatorCard(
                         preview: preview,
                         cardWidth: cardWidth,
@@ -131,12 +137,12 @@ struct UserProfileRelatedCreatorsSection: View {
                         copied: copied,
                         selectArtwork: selectArtwork
                     )
-                }
+                )
+            case .artwork, .loadMore:
+                return AnyView(EmptyView())
             }
-            .padding(.vertical, 2)
-            .padding(.horizontal, 1)
         }
-        .scrollIndicators(.hidden)
+        .frame(height: cardHeight)
         .mask {
             HStack(spacing: 0) {
                 LinearGradient(colors: [.clear, .black], startPoint: .leading, endPoint: .trailing)
@@ -146,6 +152,14 @@ struct UserProfileRelatedCreatorsSection: View {
                     .frame(width: 14)
             }
         }
+    }
+
+    private var relatedCreatorShelfItemWidth: CGFloat {
+        cardWidth + cardHorizontalPadding
+    }
+
+    private var relatedCreatorShelfItems: [NativeCreatorPreviewCollectionItem] {
+        relatedUsers.prefix(visibleCap).map(NativeCreatorPreviewCollectionItem.preview)
     }
 }
 
