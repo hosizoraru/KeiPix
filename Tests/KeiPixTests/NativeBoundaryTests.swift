@@ -506,6 +506,10 @@ struct NativeBoundaryTests {
             contentsOf: root.appending(path: "Sources/KeiPix/Views/ArtworkTagChipsView.swift"),
             encoding: .utf8
         )
+        let artworkDetail = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/ArtworkDetailView.swift"),
+            encoding: .utf8
+        )
 
         #expect(artworkSummary.contains("AdaptiveArtworkActionLayout.resolve"))
         #expect(artworkSummary.contains("showsWatchLaterInline"))
@@ -522,6 +526,9 @@ struct NativeBoundaryTests {
         #expect(artworkInformation.contains("CollapsibleInspectorSection") == false)
         #expect(artworkTags.contains("ViewThatFits(in: .horizontal)"))
         #expect(artworkTags.contains("RoundedRectangle(cornerRadius: 13"))
+        #expect(artworkDetail.contains("private static let topAnchorID = \"artwork-detail-top\""))
+        #expect(artworkDetail.contains("scrollToRestoredPosition(proxy: proxy)"))
+        #expect(artworkDetail.contains("proxy.scrollTo(Self.topAnchorID, anchor: .top)"))
     }
 
     @Test("Download queue uses a native list container")

@@ -64,6 +64,10 @@ private struct ArtworkInspectorView: View {
         ScrollViewReader { proxy in
             ScrollView {
                 VStack(spacing: 14) {
+                    Color.clear
+                        .frame(height: 0)
+                        .id(Self.topAnchorID)
+
                     if pageCount > 1 {
                         ArtworkReaderControls(
                             pageIndex: $pageIndex,
@@ -160,12 +164,15 @@ private struct ArtworkInspectorView: View {
             .task(id: artwork.id) {
                 resetForArtwork()
                 prefetchAround(pageIndex)
+                await Task.yield()
+                scrollToRestoredPosition(proxy: proxy)
                 await store.recordBrowsingHistory(for: artwork)
                 await scrollForVisualQA(proxy: proxy)
             }
         }
     }
 
+    private static let topAnchorID = "artwork-detail-top"
     private static let commentsAnchorID = "artwork-detail-comments"
 
     private var pageCount: Int {
@@ -231,6 +238,17 @@ private struct ArtworkInspectorView: View {
         guard effectiveReadingMode != .singlePage else { return }
         withAnimation(.snappy(duration: 0.22)) {
             proxy.scrollTo(clamped, anchor: .top)
+        }
+    }
+
+    private func scrollToRestoredPosition(proxy: ScrollViewProxy) {
+        if effectiveReadingMode == .continuous {
+            scrollToPage(pageIndex, proxy: proxy)
+            return
+        }
+
+        withAnimation(.snappy(duration: 0.18)) {
+            proxy.scrollTo(Self.topAnchorID, anchor: .top)
         }
     }
 
