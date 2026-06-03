@@ -106,6 +106,27 @@ struct NativeBoundaryTests {
         #expect(nativeCollection.contains("reloadItems(at: collectionView.indexPathsForVisibleItems)") == false)
     }
 
+    @Test("Search popular preview uses a native artwork shelf")
+    func searchPopularPreviewUsesNativeArtworkShelf() throws {
+        let root = try packageRoot()
+        let popularPreview = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/GalleryPopularPreviewStrip.swift"),
+            encoding: .utf8
+        )
+        let nativeShelf = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Support/NativeArtworkShelfCollectionView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(popularPreview.contains("NativeArtworkShelfCollectionView("))
+        #expect(popularPreview.contains("popularPreviewCard(_ artwork: PixivArtwork)"))
+        #expect(popularPreview.contains("ScrollView(.horizontal)") == false)
+        #expect(popularPreview.contains("LazyHStack") == false)
+        #expect(nativeShelf.contains("NativeCreatorPreviewCollectionView("))
+        #expect(nativeShelf.contains(".horizontalShelf(itemWidth: itemWidth, itemHeight: itemHeight)"))
+        #expect(nativeShelf.contains("NativeCreatorPreviewCollectionItem.artwork"))
+    }
+
     @Test("Novel reader text pages use native TextKit bridges")
     func novelReaderTextPagesUseNativeTextKitBridges() throws {
         let root = try packageRoot()

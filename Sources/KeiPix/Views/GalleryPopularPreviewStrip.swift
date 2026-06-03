@@ -45,57 +45,13 @@ struct SearchPopularPreviewStrip: View {
                     .frame(height: 194)
                     .frame(maxWidth: .infinity)
                 } else {
-                    ScrollView(.horizontal) {
-                        LazyHStack(spacing: 12) {
-                            ForEach(store.searchPopularPreviewArtworks) { artwork in
-                                ArtworkCardView(
-                                    artwork: artwork,
-                                    isSelected: store.selectedArtwork?.id == artwork.id,
-                                    isCompact: true,
-                                    showContentBadges: store.showContentBadges,
-                                    maskSensitivePreview: store.maskSensitivePreviews,
-                                    downloadState: store.downloads.downloadState(for: artwork.id),
-                                    preferredHeight: 178,
-                                    feedPreviewTier: store.feedPreviewImageQualityTier,
-                                    emphasizeFollowing: store.emphasizeFollowingArtists
-                                ) {
-                                    store.selectedArtwork = artwork
-                                }
-                                .frame(width: 150)
-                                .contextMenu {
-                                    Button(artwork.isBookmarked ? L10n.removeBookmark : L10n.bookmark) {
-                                        if artwork.isBookmarked {
-                                            store.requestDangerAction(AppDangerAction(kind: .removeBookmark(artwork)))
-                                        } else {
-                                            Task { await bookmark(artwork) }
-                                        }
-                                    }
-                                    Button(L10n.download) {
-                                        store.enqueueDownload(artwork)
-                                        actionMessage = String(format: L10n.queuedDownloadsFormat, 1)
-                                    }
-                                    Button(L10n.searchImageSource) {
-                                        store.presentImageSourceSearch(for: artwork)
-                                    }
-                                    Button {
-                                        presentFeedback(artwork)
-                                    } label: {
-                                        Label(L10n.feedbackAndMute, systemImage: "exclamationmark.bubble")
-                                    }
-                                    if let url = artwork.pixivURL {
-                                        Divider()
-                                        Link(L10n.openInPixiv, destination: url)
-                                        Button(L10n.copyLink) {
-                                            PasteboardWriter.copy(url.absoluteString)
-                                            actionMessage = L10n.copied
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        .padding(.vertical, 2)
+                    NativeArtworkShelfCollectionView(
+                        artworks: store.searchPopularPreviewArtworks,
+                        itemWidth: 150,
+                        itemHeight: 194
+                    ) { artwork in
+                        AnyView(popularPreviewCard(artwork))
                     }
-                    .scrollIndicators(.hidden)
                 }
             }
             .padding(14)
@@ -130,5 +86,50 @@ struct SearchPopularPreviewStrip: View {
     private func presentFeedback(_ artwork: PixivArtwork) {
         feedbackArtwork = artwork
         feedbackRequest = .artwork(artwork)
+    }
+
+    private func popularPreviewCard(_ artwork: PixivArtwork) -> some View {
+        ArtworkCardView(
+            artwork: artwork,
+            isSelected: store.selectedArtwork?.id == artwork.id,
+            isCompact: true,
+            showContentBadges: store.showContentBadges,
+            maskSensitivePreview: store.maskSensitivePreviews,
+            downloadState: store.downloads.downloadState(for: artwork.id),
+            preferredHeight: 178,
+            feedPreviewTier: store.feedPreviewImageQualityTier,
+            emphasizeFollowing: store.emphasizeFollowingArtists
+        ) {
+            store.selectedArtwork = artwork
+        }
+        .contextMenu {
+            Button(artwork.isBookmarked ? L10n.removeBookmark : L10n.bookmark) {
+                if artwork.isBookmarked {
+                    store.requestDangerAction(AppDangerAction(kind: .removeBookmark(artwork)))
+                } else {
+                    Task { await bookmark(artwork) }
+                }
+            }
+            Button(L10n.download) {
+                store.enqueueDownload(artwork)
+                actionMessage = String(format: L10n.queuedDownloadsFormat, 1)
+            }
+            Button(L10n.searchImageSource) {
+                store.presentImageSourceSearch(for: artwork)
+            }
+            Button {
+                presentFeedback(artwork)
+            } label: {
+                Label(L10n.feedbackAndMute, systemImage: "exclamationmark.bubble")
+            }
+            if let url = artwork.pixivURL {
+                Divider()
+                Link(L10n.openInPixiv, destination: url)
+                Button(L10n.copyLink) {
+                    PasteboardWriter.copy(url.absoluteString)
+                    actionMessage = L10n.copied
+                }
+            }
+        }
     }
 }
