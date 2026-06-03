@@ -312,6 +312,18 @@ struct ContentView: View {
                     }
 
                     ToolbarItem(placement: .primaryAction) {
+                        if showsArtworkActionsMenu {
+                            NativeToolbarMenuButton(
+                                systemImage: selectedArtworkMenuSystemImage,
+                                accessibilityLabel: L10n.currentArtwork,
+                                menu: artworkActionsMenu,
+                                select: handleNativeToolbarMenuAction
+                            )
+                            .fixedSize(horizontal: true, vertical: false)
+                        }
+                    }
+
+                    ToolbarItem(placement: .primaryAction) {
                         NativeToolbarMenuButton(
                             systemImage: "ellipsis.circle",
                             title: L10n.appControls,
@@ -490,6 +502,14 @@ struct ContentView: View {
         store.selectedRoute.usesArtworkFeed
     }
 
+    private var showsArtworkActionsMenu: Bool {
+        store.selectedRoute.usesArtworkFeed
+    }
+
+    private var selectedArtworkMenuSystemImage: String {
+        store.selectedArtwork == nil ? "photo" : "photo.badge.checkmark"
+    }
+
     private var galleryLayoutMenu: NativeToolbarMenu {
         NativeToolbarMenu(
             title: L10n.galleryLayout,
@@ -503,6 +523,117 @@ struct ContentView: View {
                             isSelected: store.galleryLayoutMode == mode
                         )
                     }
+                )
+            ]
+        )
+    }
+
+    private var artworkActionsMenu: NativeToolbarMenu {
+        let selectedArtwork = store.selectedArtwork
+        let hasSelection = selectedArtwork != nil
+        let hasPixivLink = selectedArtwork?.pixivURL != nil
+
+        return NativeToolbarMenu(
+            title: L10n.currentArtwork,
+            sections: [
+                NativeToolbarMenuSection(
+                    title: L10n.navigation,
+                    items: [
+                        .action(
+                            id: IPadToolbarMenuAction.goBack,
+                            title: L10n.goBack,
+                            systemImage: "chevron.left",
+                            isEnabled: store.canNavigateBack
+                        ),
+                        .action(
+                            id: IPadToolbarMenuAction.goForward,
+                            title: L10n.goForward,
+                            systemImage: "chevron.right",
+                            isEnabled: store.canNavigateForward
+                        ),
+                        .action(
+                            id: IPadToolbarMenuAction.previousArtwork,
+                            title: L10n.previousArtwork,
+                            systemImage: "arrow.up",
+                            isEnabled: canSelectAdjacentArtwork(delta: -1)
+                        ),
+                        .action(
+                            id: IPadToolbarMenuAction.nextArtwork,
+                            title: L10n.nextArtwork,
+                            systemImage: "arrow.down",
+                            isEnabled: canSelectAdjacentArtwork(delta: 1)
+                        )
+                    ]
+                ),
+                NativeToolbarMenuSection(
+                    title: L10n.artwork,
+                    items: [
+                        .action(
+                            id: IPadToolbarMenuAction.toggleBookmark,
+                            title: selectedArtwork?.isBookmarked == true ? L10n.removeBookmark : L10n.bookmark,
+                            systemImage: selectedArtwork?.isBookmarked == true ? "bookmark.fill" : "bookmark",
+                            isSelected: selectedArtwork?.isBookmarked == true,
+                            isEnabled: hasSelection
+                        ),
+                        .action(
+                            id: IPadToolbarMenuAction.downloadSelectedArtwork,
+                            title: L10n.download,
+                            systemImage: "arrow.down.circle",
+                            isEnabled: hasSelection
+                        ),
+                        .action(
+                            id: IPadToolbarMenuAction.searchImageSource,
+                            title: L10n.searchImageSource,
+                            systemImage: "photo.badge.magnifyingglass",
+                            isEnabled: hasSelection
+                        ),
+                        .action(
+                            id: IPadToolbarMenuAction.openReaderWindow,
+                            title: L10n.openReaderWindow,
+                            systemImage: "rectangle.inset.filled",
+                            isEnabled: hasSelection
+                        )
+                    ]
+                ),
+                NativeToolbarMenuSection(
+                    title: L10n.creator,
+                    items: [
+                        .action(
+                            id: IPadToolbarMenuAction.openCreatorProfile,
+                            title: L10n.openCreatorProfile,
+                            systemImage: "person.crop.circle",
+                            isEnabled: hasSelection
+                        ),
+                        .action(
+                            id: IPadToolbarMenuAction.creatorIllustrations,
+                            title: L10n.creatorIllustrations,
+                            systemImage: "photo.on.rectangle.angled",
+                            isEnabled: hasSelection
+                        ),
+                        .action(
+                            id: IPadToolbarMenuAction.creatorManga,
+                            title: L10n.creatorManga,
+                            systemImage: "book.pages",
+                            isEnabled: hasSelection
+                        )
+                    ]
+                ),
+                NativeToolbarMenuSection(
+                    title: L10n.links,
+                    items: [
+                        .action(
+                            id: IPadToolbarMenuAction.openSelectedArtworkInPixiv,
+                            title: L10n.openInPixiv,
+                            systemImage: "safari",
+                            isEnabled: hasPixivLink
+                        ),
+                        .action(
+                            id: IPadToolbarMenuAction.copySelectedArtworkLink,
+                            title: L10n.copyLink,
+                            systemImage: "link",
+                            isEnabled: hasPixivLink
+                        )
+                    ]
                 )
             ]
         )
@@ -627,6 +758,40 @@ struct ContentView: View {
             isPixivIDOpenPresented = true
         case IPadToolbarMenuAction.searchLocalImageSource:
             store.presentLocalImageSourceSearch()
+        case IPadToolbarMenuAction.goBack:
+            store.navigateBack()
+        case IPadToolbarMenuAction.goForward:
+            store.navigateForward()
+        case IPadToolbarMenuAction.previousArtwork:
+            store.selectPreviousArtwork()
+        case IPadToolbarMenuAction.nextArtwork:
+            store.selectNextArtwork()
+        case IPadToolbarMenuAction.toggleBookmark:
+            Task { await store.toggleSelectedBookmark() }
+        case IPadToolbarMenuAction.downloadSelectedArtwork:
+            if store.selectedArtwork != nil {
+                store.downloadSelectedArtwork()
+                showStatus(String(format: L10n.queuedDownloadsFormat, 1))
+            }
+        case IPadToolbarMenuAction.searchImageSource:
+            if let artwork = store.selectedArtwork {
+                store.presentImageSourceSearch(for: artwork)
+            }
+        case IPadToolbarMenuAction.openCreatorProfile:
+            store.presentSelectedArtworkCreatorProfile()
+        case IPadToolbarMenuAction.creatorIllustrations:
+            Task { await store.openSelectedArtworkCreatorFeed(.userIllustrations) }
+        case IPadToolbarMenuAction.creatorManga:
+            Task { await store.openSelectedArtworkCreatorFeed(.userManga) }
+        case IPadToolbarMenuAction.openReaderWindow:
+            store.prepareSelectedReaderWindow()
+        case IPadToolbarMenuAction.openSelectedArtworkInPixiv:
+            store.openSelectedArtworkInPixiv()
+        case IPadToolbarMenuAction.copySelectedArtworkLink:
+            if store.selectedArtwork?.pixivURL != nil {
+                store.copySelectedArtworkLink()
+                showStatus(L10n.copied)
+            }
         case IPadToolbarMenuAction.showContentBadges:
             store.setShowContentBadges(!store.showContentBadges)
         case IPadToolbarMenuAction.maskSensitivePreviews:
@@ -652,6 +817,14 @@ struct ContentView: View {
     private func openPixivLinkFromClipboard() async {
         let message = await store.openPixivLinkFromClipboard()
         showStatus(message)
+    }
+
+    private func canSelectAdjacentArtwork(delta: Int) -> Bool {
+        guard let selectedArtwork = store.selectedArtwork,
+              let index = store.artworks.firstIndex(where: { $0.id == selectedArtwork.id }) else {
+            return false
+        }
+        return store.artworks.indices.contains(index + delta)
     }
 
     private func showStatus(_ message: String) {
@@ -855,6 +1028,19 @@ private enum IPadToolbarMenuAction {
     static let openPixivLinkFromClipboard = "open-pixiv-link-from-clipboard"
     static let openPixivID = "open-pixiv-id"
     static let searchLocalImageSource = "search-local-image-source"
+    static let goBack = "go-back"
+    static let goForward = "go-forward"
+    static let previousArtwork = "previous-artwork"
+    static let nextArtwork = "next-artwork"
+    static let toggleBookmark = "toggle-bookmark"
+    static let downloadSelectedArtwork = "download-selected-artwork"
+    static let searchImageSource = "search-image-source"
+    static let openCreatorProfile = "open-creator-profile"
+    static let creatorIllustrations = "creator-illustrations"
+    static let creatorManga = "creator-manga"
+    static let openReaderWindow = "open-reader-window"
+    static let openSelectedArtworkInPixiv = "open-selected-artwork-in-pixiv"
+    static let copySelectedArtworkLink = "copy-selected-artwork-link"
     static let showContentBadges = "show-content-badges"
     static let maskSensitivePreviews = "mask-sensitive-previews"
     static let hideMutedContent = "hide-muted-content"

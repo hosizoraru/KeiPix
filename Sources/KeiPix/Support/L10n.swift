@@ -675,6 +675,7 @@ enum L10n {
     static var apply: String { text("Apply") }
     static var artwork: String { text("Artwork") }
     static var selectArtwork: String { text("Select Artwork") }
+    static var navigation: String { text("Navigation") }
     static var goBack: String { text("Go Back") }
     static var goForward: String { text("Go Forward") }
     static var previousArtwork: String { text("Previous Artwork") }
@@ -1166,6 +1167,7 @@ enum L10n {
     static var signedIn: String { text("Signed In") }
     static var signedOut: String { text("Signed Out") }
     static var currentRoute: String { text("Current Route") }
+    static var currentArtwork: String { text("Current Artwork") }
     static var feed: String { text("Feed") }
     static var feedReadinessFormat: String { text("%d shown · %d loaded · %@") }
     static var loadedCachedFeedFormat: String { text("Loaded cached feed %@ · %d works · %@") }
