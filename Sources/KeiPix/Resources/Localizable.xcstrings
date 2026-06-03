@@ -7135,6 +7135,35 @@
         }
       }
     },
+    "Creator Tags": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Creator Tags"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "クリエイタータグ"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "作者标签"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "作者標籤"
+          }
+        }
+      }
+    },
     "Creator discovery": {
       "extractionState": "manual",
       "localizations": {
@@ -17140,6 +17169,35 @@
         }
       }
     },
+    "No creator tags": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No creator tags"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "クリエイタータグなし"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "暂无作者标签"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "暫無作者標籤"
+          }
+        }
+      }
+    },
     "No creators": {
       "extractionState": "manual",
       "localizations": {
@@ -17426,6 +17484,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "没有符合的收藏標籤"
+          }
+        }
+      }
+    },
+    "No matching creator tags": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No matching creator tags"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "一致するクリエイタータグなし"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "没有匹配的作者标签"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "沒有符合的作者標籤"
           }
         }
       }
@@ -27518,6 +27605,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "搜尋收藏標籤"
+          }
+        }
+      }
+    },
+    "Search creator tags": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search creator tags"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "クリエイタータグを検索"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "搜索作者标签"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "搜尋作者標籤"
           }
         }
       }

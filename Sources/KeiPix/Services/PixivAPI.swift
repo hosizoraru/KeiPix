@@ -23,6 +23,7 @@ actor PixivAPI {
     private struct Endpoint {
         static let apiBase = URL(string: "https://app-api.pixiv.net")!
         static let oauthBase = URL(string: "https://oauth.secure.pixiv.net")!
+        static let webBase = URL(string: "https://www.pixiv.net")!
     }
 
     private let tokenStore = PixivSessionStore()
@@ -401,6 +402,54 @@ actor PixivAPI {
         ])
     }
 
+    func creatorIllustTags(userID: Int) async throws -> [CreatorArtworkTag] {
+        let url = URL(string: "/ajax/user/\(userID)/illusts/tags", relativeTo: Endpoint.webBase)!
+        let response: PixivWebResponse<[CreatorArtworkTag]> = try await requestPixivWebJSON(url)
+        if response.error {
+            throw PixivAPIError.serverMessage(response.message)
+        }
+        return response.body.sorted { lhs, rhs in
+            if lhs.count == rhs.count {
+                return lhs.name.localizedStandardCompare(rhs.name) == .orderedAscending
+            }
+            return lhs.count > rhs.count
+        }
+    }
+
+    func creatorTaggedIllusts(user: PixivUser, tag: CreatorArtworkTag) async throws -> PixivFeedResponse {
+        try await creatorTaggedIllusts(
+            user: user,
+            tagName: tag.name,
+            expectedCount: tag.count
+        )
+    }
+
+    func creatorTaggedIllusts(
+        user: PixivUser,
+        tagName: String,
+        expectedCount: Int?
+    ) async throws -> PixivFeedResponse {
+        let trimmedTag = tagName.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard trimmedTag.isEmpty == false else { return .empty }
+
+        let all = try await creatorProfileAll(userID: user.id)
+        var matches: [PixivArtwork] = []
+
+        for ids in Self.batches(all.illustIDs, size: 80) {
+            let response = try await creatorProfileIllusts(userID: user.id, ids: ids)
+            let worksByID = Dictionary(uniqueKeysWithValues: response.works.map { ($0.id, $0) })
+            for id in ids {
+                guard let work = worksByID[id], work.containsTag(trimmedTag) else { continue }
+                matches.append(work.artwork(fallbackUser: user))
+                if let expectedCount, matches.count >= expectedCount {
+                    return PixivFeedResponse(illusts: Self.sortedCreatorTaggedArtworks(matches), nextURL: nil)
+                }
+            }
+        }
+
+        return PixivFeedResponse(illusts: Self.sortedCreatorTaggedArtworks(matches), nextURL: nil)
+    }
+
     func search(keyword: String, options: SearchOptions) async throws -> PixivFeedResponse {
         var query = Self.illustSearchQuery(keyword: keyword, options: options)
 
@@ -506,6 +555,25 @@ actor PixivAPI {
             return try await requestBrowsingHistory(offset: offset)
         }
         return try await requestFeed(url: url)
+    }
+
+    private func creatorProfileAll(userID: Int) async throws -> PixivWebProfileAllResponse {
+        let url = URL(string: "/ajax/user/\(userID)/profile/all", relativeTo: Endpoint.webBase)!
+        return try await requestPixivWebJSON(url)
+    }
+
+    private func creatorProfileIllusts(userID: Int, ids: [Int]) async throws -> PixivWebProfileIllustsResponse {
+        guard ids.isEmpty == false else {
+            return PixivWebProfileIllustsResponse(works: [])
+        }
+
+        var components = URLComponents(url: URL(string: "/ajax/user/\(userID)/profile/illusts", relativeTo: Endpoint.webBase)!, resolvingAgainstBaseURL: true)!
+        var queryItems = ids.map { URLQueryItem(name: "ids[]", value: "\($0)") }
+        queryItems.append(URLQueryItem(name: "work_category", value: "illustManga"))
+        queryItems.append(URLQueryItem(name: "is_first_page", value: "1"))
+        components.queryItems = queryItems
+        guard let url = components.url else { throw PixivAPIError.invalidResponse }
+        return try await requestPixivWebJSON(url)
     }
 
     func ugoiraMetadata(illustID: Int) async throws -> PixivUgoiraMetadata {
@@ -1074,6 +1142,21 @@ actor PixivAPI {
         return try jsonDecoder.decode(T.self, from: data)
     }
 
+    private func requestPixivWebJSON<T: Decodable>(_ url: URL) async throws -> T {
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        applyPixivWebHeaders(to: &request)
+
+        let (data, response) = try await urlSession.data(for: request)
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw PixivAPIError.invalidResponse
+        }
+        guard (200..<300).contains(httpResponse.statusCode) else {
+            throw PixivAPIError.status(httpResponse.statusCode, String(decoding: data, as: UTF8.self))
+        }
+        return try jsonDecoder.decode(T.self, from: data)
+    }
+
     private func requestData(
         _ url: URL,
         includeAuth: Bool,
@@ -1137,6 +1220,37 @@ actor PixivAPI {
         request.setValue(request.url?.host, forHTTPHeaderField: "Host")
         if includeAuth, let token = session?.accessToken {
             request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        }
+    }
+
+    private func applyPixivWebHeaders(to request: inout URLRequest) {
+        request.setValue(
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+                + "AppleWebKit/605.1.15 (KHTML, like Gecko) "
+                + "Version/26.0 Safari/605.1.15 KeiPix/1.0",
+            forHTTPHeaderField: "User-Agent"
+        )
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
+        request.setValue(
+            Locale.current.identifier.replacingOccurrences(of: "_", with: "-"),
+            forHTTPHeaderField: "Accept-Language"
+        )
+        request.setValue("https://www.pixiv.net/", forHTTPHeaderField: "Referer")
+    }
+
+    private static func batches<Element>(_ elements: [Element], size: Int) -> [[Element]] {
+        guard size > 0, elements.isEmpty == false else { return [] }
+        return stride(from: 0, to: elements.count, by: size).map { start in
+            Array(elements[start..<min(start + size, elements.count)])
+        }
+    }
+
+    private static func sortedCreatorTaggedArtworks(_ artworks: [PixivArtwork]) -> [PixivArtwork] {
+        artworks.sorted { lhs, rhs in
+            if lhs.createDate == rhs.createDate {
+                return lhs.id > rhs.id
+            }
+            return lhs.createDate > rhs.createDate
         }
     }
 

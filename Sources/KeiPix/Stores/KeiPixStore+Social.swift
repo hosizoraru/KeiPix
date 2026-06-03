@@ -39,6 +39,10 @@ extension KeiPixStore {
             }
     }
 
+    func creatorIllustTags(for user: PixivUser) async throws -> [CreatorArtworkTag] {
+        try await api.creatorIllustTags(userID: user.id)
+    }
+
     func searchUsers(keyword: String) async throws -> PixivUserPreviewResponse {
         let response = try await api.searchUsers(keyword: keyword)
         return filteredUserPreviewResponse(response)

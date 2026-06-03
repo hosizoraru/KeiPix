@@ -60,6 +60,7 @@ extension FeedRequestContext {
             focusedUserID.map(String.init) ?? "",
             searchText,
             bookmarkTagFilter ?? "",
+            creatorArtworkTagFilter?.snapshotKey ?? "",
             useRankingDate ? "\(rankingDate.timeIntervalSince1970)" : "",
             searchOptions.matchType.rawValue,
             searchOptions.sort.rawValue,
@@ -80,6 +81,9 @@ extension FeedRequestContext {
         }
         if let bookmarkTagFilter {
             return "\(route.title) · #\(bookmarkTagFilter)"
+        }
+        if let creatorArtworkTagFilter {
+            return "\(route.title) · #\(creatorArtworkTagFilter.tag)"
         }
         return route.title
     }

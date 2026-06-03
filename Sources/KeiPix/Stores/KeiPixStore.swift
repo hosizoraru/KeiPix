@@ -63,6 +63,7 @@ final class KeiPixStore {
     var savedSearches = UserDefaults.standard.stringArray(forKey: "savedSearches") ?? []
     var savedSearchPresets = KeiPixStore.loadSavedSearchPresets()
     var bookmarkTagFilter: String?
+    var creatorArtworkTagFilter: CreatorArtworkTagFilter?
     var localBrowsingHistory = KeiPixStore.loadLocalBrowsingHistory()
     var watchLaterQueue = KeiPixStore.loadWatchLaterQueue()
     var spotlightFavoriteArticles = KeiPixStore.loadSpotlightArticles(key: "spotlightFavoriteArticles")
@@ -377,6 +378,7 @@ final class KeiPixStore {
         imageSourceSearchRequest = nil
         searchSuggestions = []
         nextURL = nil
+        creatorArtworkTagFilter = nil
         activeFeedRequestID = nil
         activeSearchPopularPreviewRequestID = nil
         recordedBrowsingHistoryIDs.removeAll()
@@ -384,6 +386,7 @@ final class KeiPixStore {
 
     func select(_ route: PixivRoute) {
         focusedUser = nil
+        creatorArtworkTagFilter = nil
         errorMessage = nil
         clearNavigationHistory()
         if route != selectedRoute || route.isOwnBookmarkRoute == false {
@@ -428,10 +431,26 @@ final class KeiPixStore {
     func openUserFeed(user: PixivUser, route: PixivRoute) async {
         focusedUser = user
         bookmarkTagFilter = nil
+        creatorArtworkTagFilter = nil
         selectedSpotlightArticle = nil
         errorMessage = nil
         clearNavigationHistory()
         selectedRoute = route
+        await reloadCurrentFeed()
+    }
+
+    func openCreatorTagFeed(user: PixivUser, tag: CreatorArtworkTag) async {
+        focusedUser = user
+        bookmarkTagFilter = nil
+        creatorArtworkTagFilter = CreatorArtworkTagFilter(
+            userID: user.id,
+            tag: tag.name,
+            expectedCount: tag.count
+        )
+        selectedSpotlightArticle = nil
+        errorMessage = nil
+        clearNavigationHistory()
+        selectedRoute = .userIllustrations
         await reloadCurrentFeed()
     }
 
@@ -445,6 +464,7 @@ final class KeiPixStore {
             let artwork = try await api.illustDetail(illustID: artworkID)
             focusedUser = nil
             bookmarkTagFilter = nil
+            creatorArtworkTagFilter = nil
             selectedSpotlightArticle = nil
             selectedRoute = .illustrations
             allArtworks = [artwork]
@@ -718,6 +738,13 @@ final class KeiPixStore {
         // User content
         case .userIllustrations:
             guard let focusedUser else { throw PixivAPIError.invalidResponse }
+            if let creatorArtworkTagFilter, creatorArtworkTagFilter.userID == focusedUser.id {
+                return try await api.creatorTaggedIllusts(
+                    user: focusedUser,
+                    tagName: creatorArtworkTagFilter.tag,
+                    expectedCount: creatorArtworkTagFilter.expectedCount
+                )
+            }
             return try await api.userIllusts(userID: focusedUser.id, type: "illust")
         case .userManga:
             guard let focusedUser else { throw PixivAPIError.invalidResponse }
@@ -779,6 +806,7 @@ final class KeiPixStore {
             searchText: searchText.trimmingCharacters(in: .whitespacesAndNewlines),
             searchSubmissionID: searchSubmissionID,
             bookmarkTagFilter: bookmarkTagFilter,
+            creatorArtworkTagFilter: creatorArtworkTagFilter,
             useRankingDate: useRankingDate,
             rankingDate: rankingDate,
             searchOptions: searchOptions
@@ -1074,6 +1102,7 @@ struct FeedRequestContext: Equatable {
     let searchText: String
     let searchSubmissionID: Int
     let bookmarkTagFilter: String?
+    let creatorArtworkTagFilter: CreatorArtworkTagFilter?
     let useRankingDate: Bool
     let rankingDate: Date
     let searchOptions: SearchOptions

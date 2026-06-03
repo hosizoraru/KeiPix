@@ -72,6 +72,9 @@ struct GalleryView: View {
         if let focusedUser = store.focusedUser {
             parts.append("\(focusedUser.name) @\(focusedUser.account)")
         }
+        if let creatorTag = store.creatorArtworkTagFilter?.tag {
+            parts.append("#\(creatorTag)")
+        }
         if store.selectedRoute == .search {
             let keyword = store.searchText.trimmingCharacters(in: .whitespacesAndNewlines)
             if keyword.isEmpty == false {

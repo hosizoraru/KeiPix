@@ -78,6 +78,7 @@ extension KeiPixStore {
             artworkID: artwork.id
         )
         WidgetDataProvider.saveArtwork(artwork)
+        resolveCreatorTagSummaryIfNeeded(artwork)
     }
 
     /// Navigate backward in history.
@@ -103,6 +104,7 @@ extension KeiPixStore {
     private func resolveAndSelectArtwork(id: Int) {
         if let artwork = allKnownArtwork(id: id) {
             selectedArtwork = artwork
+            resolveCreatorTagSummaryIfNeeded(artwork)
         } else {
             Task {
                 do {
@@ -112,6 +114,36 @@ extension KeiPixStore {
                     errorMessage = error.localizedDescription
                 }
             }
+        }
+    }
+
+    private func resolveCreatorTagSummaryIfNeeded(_ artwork: PixivArtwork) {
+        guard let filter = creatorArtworkTagFilter, artwork.isPixivWebProfileSummary else { return }
+
+        let artworkID = artwork.id
+        Task {
+            do {
+                let detailedArtwork = try await api.illustDetail(illustID: artworkID)
+                guard creatorArtworkTagFilter == filter else { return }
+                replaceLoadedArtwork(detailedArtwork)
+                if selectedArtwork?.id == artworkID {
+                    selectedArtwork = detailedArtwork
+                    WidgetDataProvider.saveArtwork(detailedArtwork)
+                }
+            } catch {
+                if selectedArtwork?.id == artworkID {
+                    errorMessage = error.localizedDescription
+                }
+            }
+        }
+    }
+
+    private func replaceLoadedArtwork(_ artwork: PixivArtwork) {
+        if let index = allArtworks.firstIndex(where: { $0.id == artwork.id }) {
+            allArtworks[index] = artwork
+        }
+        if let index = artworks.firstIndex(where: { $0.id == artwork.id }) {
+            artworks[index] = artwork
         }
     }
 }

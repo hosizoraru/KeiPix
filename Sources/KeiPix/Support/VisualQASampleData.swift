@@ -304,6 +304,7 @@ enum VisualQASampleData {
             width: 2600,
             height: 1300,
             tags: ["creator", "wide"],
+            type: "illust",
             isBookmarked: true
         ),
         decodeArtwork(
@@ -324,6 +325,7 @@ enum VisualQASampleData {
             width: 1800,
             height: 1800,
             tags: ["creator", "AI"],
+            type: "illust",
             isAI: true,
             isBookmarked: false
         )

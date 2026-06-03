@@ -220,6 +220,13 @@ struct UserProfileSheet: View {
                     }
                 )
 
+                UserProfileCreatorTagsSection(
+                    user: currentUser,
+                    store: store,
+                    openTag: openCreatorTag,
+                    visualQAArtworks: visualQARecentWorks
+                )
+
                 UserProfileRecentWorksSection(
                     user: currentUser,
                     store: store,
@@ -533,6 +540,13 @@ struct UserProfileSheet: View {
     private func openFeed(_ route: PixivRoute) {
         Task {
             await store.openUserFeed(user: currentUser, route: route)
+            dismiss()
+        }
+    }
+
+    private func openCreatorTag(_ tag: CreatorArtworkTag) {
+        Task {
+            await store.openCreatorTagFeed(user: currentUser, tag: tag)
             dismiss()
         }
     }
