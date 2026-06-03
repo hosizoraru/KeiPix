@@ -10,9 +10,11 @@ struct NovelWatchlistView: View {
 
     private var novelStore: NovelFeatureStore { store.novels }
 
-    private let columns = [
-        GridItem(.adaptive(minimum: 220, maximum: 320), spacing: 14)
-    ]
+    private let gridLayout = NativeAdaptiveGridCollectionLayout(
+        minimumItemWidth: 220,
+        maximumItemWidth: 320,
+        itemHeight: 320
+    )
 
     var body: some View {
         Group {
@@ -26,24 +28,11 @@ struct NovelWatchlistView: View {
                     systemImage: "books.vertical"
                 )
             } else {
-                ScrollView {
-                    LazyVGrid(columns: columns, spacing: 14) {
-                        ForEach(novelStore.watchlistSeries) { item in
-                            NovelWatchlistCard(
-                                item: item,
-                                openLatest: { openLatest(item) },
-                                remove: { remove(item) }
-                            )
-                        }
-
-                        if novelStore.watchlistNextURL != nil {
-                            paginationFooter
-                                .task {
-                                    await novelStore.loadMore(route: .novelWatchlist)
-                                }
-                        }
-                    }
-                    .padding(18)
+                NativeAdaptiveGridCollectionView(
+                    items: novelWatchlistGridItems,
+                    layout: gridLayout
+                ) { item in
+                    novelWatchlistGridContent(for: item)
                 }
             }
         }
@@ -71,6 +60,36 @@ struct NovelWatchlistView: View {
         .padding(.vertical, 12)
     }
 
+    private var novelWatchlistGridItems: [NovelWatchlistGridItem] {
+        var items = novelStore.watchlistSeries.map(NovelWatchlistGridItem.series)
+        if novelStore.watchlistNextURL != nil {
+            items.append(.pagination)
+        }
+        return items
+    }
+
+    private func novelWatchlistGridContent(for item: NovelWatchlistGridItem) -> AnyView {
+        switch item {
+        case .series(let item):
+            return AnyView(
+                NovelWatchlistCard(
+                    item: item,
+                    openLatest: { openLatest(item) },
+                    remove: { remove(item) }
+                )
+            )
+        case .pagination:
+            return AnyView(
+                paginationFooter
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .keiPanel(12)
+                    .task {
+                        await novelStore.loadMore(route: .novelWatchlist)
+                    }
+            )
+        }
+    }
+
     private func openLatest(_ item: PixivNovelSeriesItem) {
         guard let novelID = item.latestContentID else { return }
         Task {
@@ -86,6 +105,11 @@ struct NovelWatchlistView: View {
             _ = await novelStore.setWatchlist(seriesID: item.id, isAdded: false)
         }
     }
+}
+
+private enum NovelWatchlistGridItem: Hashable {
+    case series(PixivNovelSeriesItem)
+    case pagination
 }
 
 private struct NovelWatchlistCard: View {

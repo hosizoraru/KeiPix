@@ -292,6 +292,20 @@ struct NativeBoundaryTests {
         #expect(nativeGrid.contains("refreshVisibleHostedContent(in: collectionView)"))
     }
 
+    @Test("Novel watchlist uses a native adaptive grid")
+    func novelWatchlistUsesNativeAdaptiveGrid() throws {
+        let root = try packageRoot()
+        let watchlist = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/NovelWatchlistView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(watchlist.contains("NativeAdaptiveGridCollectionView("))
+        #expect(watchlist.contains("novelWatchlistGridItems"))
+        #expect(watchlist.contains("novelWatchlistGridContent(for: item)"))
+        #expect(watchlist.contains("LazyVGrid") == false)
+    }
+
     @Test("Creator list, search, menu, and drop use native P2 bridges")
     func creatorListSearchMenuAndDropUseNativeP2Bridges() throws {
         let root = try packageRoot()
