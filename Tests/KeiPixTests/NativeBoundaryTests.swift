@@ -129,6 +129,10 @@ struct NativeBoundaryTests {
             contentsOf: root.appending(path: "Sources/KeiPix/Views/DiscoveryTrendingTagsStrip.swift"),
             encoding: .utf8
         )
+        let nativeToolbarMenu = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Support/NativeToolbarMenuButton.swift"),
+            encoding: .utf8
+        )
 
         #expect(contentView.contains("private func feedContent(discoveryPresentation: DiscoveryDashboardPresentation) -> some View"))
         #expect(contentView.contains("DiscoveryDashboardView(store: store, presentation: discoveryPresentation)"))
@@ -155,6 +159,20 @@ struct NativeBoundaryTests {
         #expect(contentView.contains("splitColumnVisibility = .detailOnly"))
         #expect(contentView.contains("dismissArtworkDetail(clearSelection: true)"))
         #expect(contentView.contains("store.prepareReaderWindow(for: artwork)"))
+        #expect(contentView.contains("NativeToolbarMenuButton("))
+        #expect(contentView.contains("title: L10n.galleryLayout"))
+        #expect(contentView.contains("title: L10n.appControls"))
+        #expect(contentView.contains("private var galleryLayoutMenu: NativeToolbarMenu"))
+        #expect(contentView.contains("private var appControlsMenu: NativeToolbarMenu"))
+        #expect(contentView.contains("handleNativeToolbarMenuAction"))
+        #expect(contentView.contains("L10n.showContentBadges"))
+        #expect(contentView.contains("L10n.hideMutedContent"))
+        #expect(contentView.contains("L10n.hideAIArtworks"))
+        #expect(contentView.contains("L10n.hideR18Artworks"))
+        #expect(contentView.contains("L10n.hideR18GArtworks"))
+        #expect(contentView.contains("L10n.maskSensitivePreviews"))
+        #expect(contentView.contains("store.setPrivacyModeEnabled"))
+        #expect(contentView.contains("store.setGalleryLayoutMode(mode)"))
         #expect(contentView.contains("NavigationSplitView(columnVisibility: $splitColumnVisibility)"))
         #expect(contentView.contains("List {"))
         #expect(contentView.contains("private func iPadSidebarRow("))
@@ -184,6 +202,13 @@ struct NativeBoundaryTests {
         #expect(dashboardView.contains("ForEach(store.visibleDashboardSections)"))
         #expect(trendingStrip.contains("@State private var hasAttemptedLoad = false"))
         #expect(trendingStrip.contains("hasAttemptedLoad && isLoading == false && tags.isEmpty"))
+        #expect(nativeToolbarMenu.contains("struct NativeToolbarMenuButton: UIViewRepresentable"))
+        #expect(nativeToolbarMenu.contains("UIButton(type: .system)"))
+        #expect(nativeToolbarMenu.contains("button.showsMenuAsPrimaryAction = true"))
+        #expect(nativeToolbarMenu.contains("configuration.title = title"))
+        #expect(nativeToolbarMenu.contains("configuration.imagePlacement = .leading"))
+        #expect(nativeToolbarMenu.contains("UIMenu("))
+        #expect(nativeToolbarMenu.contains("UIAction("))
     }
 
     @Test("Refresh token export is explicit and confirmation gated")

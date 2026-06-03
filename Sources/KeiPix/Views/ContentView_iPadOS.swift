@@ -15,6 +15,7 @@ struct ContentView: View {
     @State private var isArtworkDetailPanelUserEnabled = false
     @State private var isPixivIDOpenPresented = false
     @State private var feedbackRequest: FeedbackReportRequest?
+    @State private var statusMessage: String?
 
     enum iPadTab: String, CaseIterable {
         case feed
@@ -88,23 +89,39 @@ struct ContentView: View {
                 Text(action.confirmationMessage)
             }
             .overlay(alignment: .bottom) {
-                if let errorMessage = store.errorMessage {
-                    ErrorToast(
-                        message: errorMessage,
-                        onRetry: {
-                            store.errorMessage = nil
-                            store.requestRouteRefresh()
-                        },
-                        onCopy: {
-                            PasteboardWriter.copy(errorMessage)
-                        },
-                        onDismiss: {
-                            store.errorMessage = nil
+                VStack(spacing: 8) {
+                    if let statusMessage {
+                        FloatingStatusBanner(maxWidth: 520) {
+                            Text(statusMessage)
+                                .font(.callout)
+                                .foregroundStyle(.secondary)
+                                .textSelection(.enabled)
                         }
-                    )
-                    .animation(.snappy(duration: 0.2), value: store.errorMessage)
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                    }
+
+                    if let errorMessage = store.errorMessage {
+                        ErrorToast(
+                            message: errorMessage,
+                            onRetry: {
+                                store.errorMessage = nil
+                                store.requestRouteRefresh()
+                            },
+                            onCopy: {
+                                PasteboardWriter.copy(errorMessage)
+                            },
+                            onDismiss: {
+                                store.errorMessage = nil
+                            }
+                        )
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                    }
                 }
+                .padding(.horizontal, 18)
+                .padding(.bottom, 14)
             }
+            .animation(.snappy(duration: 0.18), value: statusMessage)
+            .animation(.snappy(duration: 0.2), value: store.errorMessage)
             .statusMessageAutoDismiss($store.errorMessage, duration: .seconds(8))
     }
 
@@ -265,6 +282,19 @@ struct ContentView: View {
                     }
 
                     ToolbarItem(placement: .primaryAction) {
+                        if showsGalleryLayoutPicker {
+                            NativeToolbarMenuButton(
+                                systemImage: store.galleryLayoutMode.systemImage,
+                                title: L10n.galleryLayout,
+                                accessibilityLabel: L10n.galleryLayout,
+                                menu: galleryLayoutMenu,
+                                select: handleNativeToolbarMenuAction
+                            )
+                            .fixedSize(horizontal: true, vertical: false)
+                        }
+                    }
+
+                    ToolbarItem(placement: .primaryAction) {
                         if showsArtworkDetailToggle(showsSidebarToggle: showsSidebarToggle) {
                             Button {
                                 toggleArtworkDetailPanel(hidesSidebar: showsSidebarToggle)
@@ -279,6 +309,17 @@ struct ContentView: View {
                             .accessibilityLabel(isArtworkDetailPanelUserEnabled ? L10n.hideDetails : L10n.showDetails)
                             .disabled(canShowArtworkDetailPanel == false && isArtworkDetailPanelUserEnabled == false)
                         }
+                    }
+
+                    ToolbarItem(placement: .primaryAction) {
+                        NativeToolbarMenuButton(
+                            systemImage: "ellipsis.circle",
+                            title: L10n.appControls,
+                            accessibilityLabel: L10n.appControls,
+                            menu: appControlsMenu,
+                            select: handleNativeToolbarMenuAction
+                        )
+                        .fixedSize(horizontal: true, vertical: false)
                     }
                 }
                 .searchable(text: $store.searchText, prompt: L10n.searchPlaceholder)
@@ -443,6 +484,184 @@ struct ContentView: View {
 
     private func showsArtworkDetailToggle(showsSidebarToggle: Bool) -> Bool {
         showsSidebarToggle && store.selectedRoute.usesArtworkFeed
+    }
+
+    private var showsGalleryLayoutPicker: Bool {
+        store.selectedRoute.usesArtworkFeed
+    }
+
+    private var galleryLayoutMenu: NativeToolbarMenu {
+        NativeToolbarMenu(
+            title: L10n.galleryLayout,
+            sections: [
+                NativeToolbarMenuSection(
+                    items: GalleryLayoutMode.allCases.map { mode in
+                        .action(
+                            id: IPadToolbarMenuAction.galleryLayout(mode),
+                            title: mode.title,
+                            systemImage: mode.systemImage,
+                            isSelected: store.galleryLayoutMode == mode
+                        )
+                    }
+                )
+            ]
+        )
+    }
+
+    private var appControlsMenu: NativeToolbarMenu {
+        NativeToolbarMenu(
+            title: L10n.appControls,
+            sections: [
+                NativeToolbarMenuSection(
+                    title: L10n.links,
+                    items: [
+                        .action(
+                            id: IPadToolbarMenuAction.openPixivLinkFromClipboard,
+                            title: L10n.openPixivLinkFromClipboard,
+                            systemImage: "link.badge.plus"
+                        ),
+                        .action(
+                            id: IPadToolbarMenuAction.openPixivID,
+                            title: L10n.openPixivID,
+                            systemImage: "number"
+                        ),
+                        .action(
+                            id: IPadToolbarMenuAction.searchLocalImageSource,
+                            title: L10n.searchLocalImageSource,
+                            systemImage: "photo.badge.magnifyingglass"
+                        )
+                    ]
+                ),
+                NativeToolbarMenuSection(
+                    title: L10n.viewOptions,
+                    items: [
+                        .submenu(
+                            title: L10n.galleryLayout,
+                            systemImage: store.galleryLayoutMode.systemImage,
+                            items: GalleryLayoutMode.allCases.map { mode in
+                                .action(
+                                    id: IPadToolbarMenuAction.galleryLayout(mode),
+                                    title: mode.title,
+                                    systemImage: mode.systemImage,
+                                    isSelected: store.galleryLayoutMode == mode
+                                )
+                            }
+                        ),
+                        .action(
+                            id: IPadToolbarMenuAction.showContentBadges,
+                            title: L10n.showContentBadges,
+                            systemImage: "tag",
+                            isSelected: store.showContentBadges
+                        ),
+                        .action(
+                            id: IPadToolbarMenuAction.maskSensitivePreviews,
+                            title: L10n.maskSensitivePreviews,
+                            systemImage: "eye.trianglebadge.exclamationmark",
+                            isSelected: store.maskSensitivePreviews
+                        )
+                    ]
+                ),
+                NativeToolbarMenuSection(
+                    title: L10n.contentFilters,
+                    items: [
+                        .action(
+                            id: IPadToolbarMenuAction.hideMutedContent,
+                            title: L10n.hideMutedContent,
+                            systemImage: "speaker.slash",
+                            isSelected: store.hideMutedContent
+                        ),
+                        .action(
+                            id: IPadToolbarMenuAction.hideAIArtworks,
+                            title: L10n.hideAIArtworks,
+                            systemImage: "sparkles",
+                            isSelected: store.hideAIArtworks
+                        ),
+                        .action(
+                            id: IPadToolbarMenuAction.hideR18Artworks,
+                            title: L10n.hideR18Artworks,
+                            systemImage: "18.circle",
+                            isSelected: store.hideR18Artworks
+                        ),
+                        .action(
+                            id: IPadToolbarMenuAction.hideR18GArtworks,
+                            title: L10n.hideR18GArtworks,
+                            systemImage: "exclamationmark.triangle",
+                            isSelected: store.hideR18GArtworks
+                        )
+                    ]
+                ),
+                NativeToolbarMenuSection(
+                    title: L10n.privacyMode,
+                    items: [
+                        .action(
+                            id: IPadToolbarMenuAction.privacyMode,
+                            title: store.privacyModeEnabled ? L10n.disablePrivacyMode : L10n.enablePrivacyMode,
+                            systemImage: store.privacyModeEnabled ? "eye.slash.fill" : "eye",
+                            isSelected: store.privacyModeEnabled
+                        )
+                    ]
+                ),
+                NativeToolbarMenuSection(
+                    items: [
+                        .action(
+                            id: IPadToolbarMenuAction.settings,
+                            title: L10n.settings,
+                            systemImage: "gearshape"
+                        )
+                    ]
+                )
+            ]
+        )
+    }
+
+    private func handleNativeToolbarMenuAction(_ id: String) {
+        if let mode = IPadToolbarMenuAction.galleryLayoutMode(from: id) {
+            store.setGalleryLayoutMode(mode)
+            return
+        }
+
+        switch id {
+        case IPadToolbarMenuAction.openPixivLinkFromClipboard:
+            Task { await openPixivLinkFromClipboard() }
+        case IPadToolbarMenuAction.openPixivID:
+            isPixivIDOpenPresented = true
+        case IPadToolbarMenuAction.searchLocalImageSource:
+            store.presentLocalImageSourceSearch()
+        case IPadToolbarMenuAction.showContentBadges:
+            store.setShowContentBadges(!store.showContentBadges)
+        case IPadToolbarMenuAction.maskSensitivePreviews:
+            store.setMaskSensitivePreviews(!store.maskSensitivePreviews)
+        case IPadToolbarMenuAction.hideMutedContent:
+            store.setHideMutedContent(!store.hideMutedContent)
+        case IPadToolbarMenuAction.hideAIArtworks:
+            store.setHideAIArtworks(!store.hideAIArtworks)
+        case IPadToolbarMenuAction.hideR18Artworks:
+            store.setHideR18Artworks(!store.hideR18Artworks)
+        case IPadToolbarMenuAction.hideR18GArtworks:
+            store.setHideR18GArtworks(!store.hideR18GArtworks)
+        case IPadToolbarMenuAction.privacyMode:
+            store.setPrivacyModeEnabled(!store.privacyModeEnabled)
+        case IPadToolbarMenuAction.settings:
+            selectedSidebarItem = .settings
+            selectedTab = .settings
+        default:
+            break
+        }
+    }
+
+    private func openPixivLinkFromClipboard() async {
+        let message = await store.openPixivLinkFromClipboard()
+        showStatus(message)
+    }
+
+    private func showStatus(_ message: String) {
+        statusMessage = message
+        Task {
+            try? await Task.sleep(for: .seconds(2.5))
+            if statusMessage == message {
+                statusMessage = nil
+            }
+        }
     }
 
     private var canShowArtworkDetailPanel: Bool {
@@ -630,6 +849,32 @@ struct ContentView: View {
 private enum iPadSidebarItem: Hashable {
     case route(PixivRoute)
     case settings
+}
+
+private enum IPadToolbarMenuAction {
+    static let openPixivLinkFromClipboard = "open-pixiv-link-from-clipboard"
+    static let openPixivID = "open-pixiv-id"
+    static let searchLocalImageSource = "search-local-image-source"
+    static let showContentBadges = "show-content-badges"
+    static let maskSensitivePreviews = "mask-sensitive-previews"
+    static let hideMutedContent = "hide-muted-content"
+    static let hideAIArtworks = "hide-ai-artworks"
+    static let hideR18Artworks = "hide-r18-artworks"
+    static let hideR18GArtworks = "hide-r18g-artworks"
+    static let privacyMode = "privacy-mode"
+    static let settings = "settings"
+
+    private static let galleryLayoutPrefix = "gallery-layout:"
+
+    static func galleryLayout(_ mode: GalleryLayoutMode) -> String {
+        galleryLayoutPrefix + mode.rawValue
+    }
+
+    static func galleryLayoutMode(from id: String) -> GalleryLayoutMode? {
+        guard id.hasPrefix(galleryLayoutPrefix) else { return nil }
+        let rawValue = String(id.dropFirst(galleryLayoutPrefix.count))
+        return GalleryLayoutMode(rawValue: rawValue)
+    }
 }
 
 private struct SearchSuggestionRow: View {
