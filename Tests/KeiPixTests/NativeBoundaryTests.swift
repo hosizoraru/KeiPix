@@ -143,6 +143,10 @@ struct NativeBoundaryTests {
         #expect(contentView.contains("private func iPadFeedBrowserLayout(showsSidebarToggle: Bool) -> some View"))
         #expect(contentView.contains("HStack(spacing: 0)"))
         #expect(contentView.contains("iPadArtworkDetailPanel"))
+        #expect(contentView.contains("private func iPadArtworkDetailHeader(close: @escaping () -> Void) -> some View"))
+        #expect(contentView.contains("private func iPadReaderWindowButton(for artwork: PixivArtwork, showsTitle: Bool) -> some View"))
+        #expect(contentView.contains("Label(L10n.openReaderWindow, systemImage: \"rectangle.inset.filled\")"))
+        #expect(contentView.contains(".buttonStyle(.glassProminent)"))
         #expect(contentView.contains("ArtworkDetailView(store: store, showsNavigationChrome: false)"))
         #expect(contentView.contains("@State private var isArtworkDetailPanelUserEnabled = false"))
         #expect(contentView.contains("toggleArtworkDetailPanel(hidesSidebar: showsSidebarToggle)"))
@@ -221,12 +225,27 @@ struct NativeBoundaryTests {
         #expect(dashboardView.contains("case sidebarCompanion"))
         #expect(dashboardView.contains("sidebarCompanionContent"))
         #expect(dashboardView.contains("companionOverview"))
+        #expect(dashboardView.contains("private enum DiscoveryDashboardHeroStyle: Equatable"))
+        #expect(dashboardView.contains("private struct DiscoveryDashboardHeroCard: View"))
+        #expect(dashboardView.contains("private struct DiscoveryDashboardSectionHeader: View"))
         #expect(dashboardView.contains("DashboardMetricGroupCard"))
         #expect(dashboardView.contains("DashboardMetricTile"))
         #expect(dashboardView.contains("ViewThatFits(in: .horizontal)"))
         #expect(dashboardView.contains("ForEach(store.visibleDashboardSections)"))
+        #expect(dashboardView.contains(".keiGlass(22)"))
+        #expect(dashboardView.contains(".keiInteractiveGlass(18)"))
+        #expect(dashboardView.contains(".background(.thinMaterial, in: RoundedRectangle(cornerRadius: 10") == false)
+        #expect(dashboardView.contains(".background(Color.secondary.opacity(0.07)") == false)
+        #expect(dashboardView.contains("backgroundStyle") == false)
         #expect(trendingStrip.contains("@State private var hasAttemptedLoad = false"))
         #expect(trendingStrip.contains("hasAttemptedLoad && isLoading == false && tags.isEmpty"))
+        #expect(trendingStrip.contains("GlassEffectContainer(spacing: 12)"))
+        #expect(trendingStrip.contains(".keiGlass(22)"))
+        #expect(trendingStrip.contains(".buttonStyle(.bordered)"))
+        #expect(trendingStrip.contains(".clipShape(RoundedRectangle(cornerRadius: 18"))
+        #expect(trendingStrip.contains(".buttonStyle(.borderless)") == false)
+        #expect(trendingStrip.contains("Color.black") == false)
+        #expect(trendingStrip.contains("cornerRadius: 8") == false)
         #expect(nativeToolbarMenu.contains("struct NativeToolbarMenuButton: UIViewRepresentable"))
         #expect(nativeToolbarMenu.contains("UIButton(type: .system)"))
         #expect(nativeToolbarMenu.contains("button.showsMenuAsPrimaryAction = true"))
@@ -236,6 +255,73 @@ struct NativeBoundaryTests {
         #expect(nativeToolbarMenu.contains(".displayAsPalette"))
         #expect(nativeToolbarMenu.contains("UIMenu("))
         #expect(nativeToolbarMenu.contains("UIAction("))
+    }
+
+    @Test("Pixiv signed-out surfaces share one native login state")
+    func pixivSignedOutSurfacesShareOneNativeLoginState() throws {
+        let root = try packageRoot()
+        let emptyState = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/EmptyStateView.swift"),
+            encoding: .utf8
+        )
+        let signedOutConsumers = [
+            "Sources/KeiPix/Views/GalleryView.swift",
+            "Sources/KeiPix/Views/DiscoveryDashboardView.swift",
+            "Sources/KeiPix/Views/TrendingTagsView.swift",
+            "Sources/KeiPix/Views/BookmarkTagsView.swift",
+            "Sources/KeiPix/Views/MangaWatchlistView.swift",
+            "Sources/KeiPix/Views/NovelGalleryView.swift",
+            "Sources/KeiPix/Views/NovelWatchlistView.swift",
+            "Sources/KeiPix/Views/SpotlightView.swift",
+            "Sources/KeiPix/Views/UserPreviewListView.swift",
+            "Sources/KeiPix/Views/WorkSubscriptionsView.swift"
+        ]
+
+        #expect(emptyState.contains("struct PixivSignedOutStateView: View"))
+        #expect(emptyState.contains("GlassEffectContainer(spacing: 18)"))
+        #expect(emptyState.contains(".keiGlass(30)"))
+        #expect(emptyState.contains("private var signedOutHero: some View"))
+        #expect(emptyState.contains("private var signedOutActions: some View"))
+        #expect(emptyState.contains("ViewThatFits(in: .horizontal)"))
+        #expect(emptyState.contains("store.activateGuestMode()"))
+        #expect(emptyState.contains("store.isLoginPresented = true"))
+        #expect(emptyState.contains("store.isTokenLoginPresented = true"))
+        #expect(emptyState.contains(".buttonStyle(.glassProminent)"))
+        #expect(emptyState.contains(".keiInteractiveGlass(20)"))
+        #expect(emptyState.contains("systemImage: \"key\""))
+
+        for path in signedOutConsumers {
+            let source = try String(contentsOf: root.appending(path: path), encoding: .utf8)
+            #expect(source.contains("PixivSignedOutStateView(store: store)"), "\(path) should reuse the shared Pixiv signed-out surface")
+            #expect(source.contains("EmptyStateView(title: L10n.signedOutTitle") == false, "\(path) should not hand-roll a signed-out empty state")
+        }
+
+        let gallery = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/GalleryView.swift"),
+            encoding: .utf8
+        )
+        let discovery = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/DiscoveryDashboardView.swift"),
+            encoding: .utf8
+        )
+        let novelGallery = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/NovelGalleryView.swift"),
+            encoding: .utf8
+        )
+        let novelWatchlist = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/NovelWatchlistView.swift"),
+            encoding: .utf8
+        )
+        let workSubscriptions = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/WorkSubscriptionsView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(gallery.contains("private struct SignedOutView") == false)
+        #expect(discovery.contains("private var signedOutContent") == false)
+        #expect(novelGallery.contains("if store.session != nil, novelStore.novels.isEmpty && novelStore.isLoading == false"))
+        #expect(novelWatchlist.contains("if store.session != nil {\n                await novelStore.refreshWatchlist()"))
+        #expect(workSubscriptions.contains("guard store.session != nil else { return \"\" }"))
     }
 
     @Test("macOS feed keeps sidebar manual and lifts artwork navigation")

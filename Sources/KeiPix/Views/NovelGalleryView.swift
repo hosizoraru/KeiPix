@@ -15,7 +15,9 @@ struct NovelGalleryView: View {
 
     var body: some View {
         Group {
-            if novelStore.isLoading && novelStore.novels.isEmpty {
+            if store.session == nil {
+                PixivSignedOutStateView(store: store)
+            } else if novelStore.isLoading && novelStore.novels.isEmpty {
                 loadingState
             } else if novelStore.novels.isEmpty {
                 emptyState
@@ -43,7 +45,7 @@ struct NovelGalleryView: View {
         .task(id: novelTaskID) {
             // Only kick the first load; route changes already trigger
             // `KeiPixStore.select(_:)` -> `NovelFeatureStore.refresh`.
-            if novelStore.novels.isEmpty && novelStore.isLoading == false {
+            if store.session != nil, novelStore.novels.isEmpty && novelStore.isLoading == false {
                 await novelStore.refresh(route: store.selectedRoute)
             }
         }

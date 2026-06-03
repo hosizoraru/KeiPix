@@ -17,15 +17,21 @@ struct WorkSubscriptionsView: View {
     }
 
     var body: some View {
-        VStack(spacing: 0) {
-            header
-                .padding(.horizontal, 18)
-                .padding(.vertical, 12)
-                .background(.bar)
+        Group {
+            if store.session == nil {
+                PixivSignedOutStateView(store: store)
+            } else {
+                VStack(spacing: 0) {
+                    header
+                        .padding(.horizontal, 18)
+                        .padding(.vertical, 12)
+                        .background(.bar)
 
-            Divider()
+                    Divider()
 
-            content
+                    content
+                }
+            }
         }
         .navigationTitle(L10n.workSubscriptions)
         .navigationSubtitle(subtitle)
@@ -105,6 +111,7 @@ struct WorkSubscriptionsView: View {
     }
 
     private var subtitle: String {
+        guard store.session != nil else { return "" }
         let count = filteredSubscriptions.count
         let newCount = filteredSubscriptions.reduce(0) { $0 + $1.newArtworkCount }
         var parts = ["\(count) \(L10n.results)"]

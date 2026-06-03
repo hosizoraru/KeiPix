@@ -18,7 +18,9 @@ struct NovelWatchlistView: View {
 
     var body: some View {
         Group {
-            if novelStore.isLoadingWatchlist && novelStore.watchlistSeries.isEmpty {
+            if store.session == nil {
+                PixivSignedOutStateView(store: store)
+            } else if novelStore.isLoadingWatchlist && novelStore.watchlistSeries.isEmpty {
                 ProgressView(L10n.loading)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if novelStore.watchlistSeries.isEmpty {
@@ -40,7 +42,9 @@ struct NovelWatchlistView: View {
         .task(id: store.routeRefreshGeneration) {
             // Mirrors `MangaWatchlistView` — only the route refresh
             // signal triggers a fresh fetch so toolbar Refresh works.
-            await novelStore.refreshWatchlist()
+            if store.session != nil {
+                await novelStore.refreshWatchlist()
+            }
         }
     }
 

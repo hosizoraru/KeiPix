@@ -22,7 +22,7 @@ struct MangaWatchlistView: View {
     var body: some View {
         Group {
             if showsSignedOutState {
-                EmptyStateView(title: L10n.signedOutTitle, subtitle: L10n.signedOutSubtitle, systemImage: "person.crop.circle.badge.exclamationmark")
+                PixivSignedOutStateView(store: store)
             } else if isLoading && usesVisualQASample == false {
                 ProgressView(L10n.loading)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)

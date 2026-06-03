@@ -10,7 +10,7 @@ struct GalleryView: View {
     var body: some View {
         Group {
             if store.session == nil {
-                SignedOutView(store: store)
+                PixivSignedOutStateView(store: store)
             } else if store.isLoading {
                 ProgressView(L10n.loading)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -750,53 +750,5 @@ private struct CachedFeedStatusStrip: View {
             restoration.errorDescription
         ]
         .joined(separator: " · ")
-    }
-}
-
-private struct SignedOutView: View {
-    @Bindable var store: KeiPixStore
-    @ScaledMetric(relativeTo: .largeTitle) private var iconSize: CGFloat = 56
-
-    var body: some View {
-        VStack(spacing: 18) {
-            Image(systemName: "sparkles.rectangle.stack")
-                .font(.system(size: iconSize, weight: .medium))
-                .symbolRenderingMode(.hierarchical)
-                .foregroundStyle(.secondary)
-
-            VStack(spacing: 6) {
-                Text(L10n.signedOutTitle)
-                    .font(.title2.weight(.semibold))
-                Text(L10n.signedOutSubtitle)
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-                    .frame(maxWidth: 480)
-            }
-
-            HStack(spacing: 10) {
-                Button {
-                    store.activateGuestMode()
-                } label: {
-                    Label(L10n.guestAccount, systemImage: "sparkles.rectangle.stack")
-                }
-
-                Button {
-                    store.isLoginPresented = true
-                } label: {
-                    Label(L10n.login, systemImage: "person.crop.circle.badge.plus")
-                }
-                .buttonStyle(.borderedProminent)
-
-                Button {
-                    store.isTokenLoginPresented = true
-                } label: {
-                    Label(L10n.importToken, systemImage: "key")
-                }
-            }
-            .controlSize(.large)
-        }
-        .padding(28)
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
