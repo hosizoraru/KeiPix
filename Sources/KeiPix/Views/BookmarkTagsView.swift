@@ -23,10 +23,7 @@ struct BookmarkTagsView: View {
             } else {
                 VStack(spacing: 0) {
                     header
-                        .padding(.horizontal, 18)
-                        .padding(.vertical, 6)
-                        .background(.bar)
-                    Divider()
+                        .platformGlassControlBar(verticalPadding: 6, topPadding: 2)
                     tagCollectionContent
                 }
             }

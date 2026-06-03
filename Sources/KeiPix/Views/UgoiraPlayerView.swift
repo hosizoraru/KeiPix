@@ -156,9 +156,7 @@ struct UgoiraPlayerView: View {
                 .lineLimit(2)
             Spacer()
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 8)
-        .background(.bar)
+        .platformGlassControlBar(verticalPadding: 6, topPadding: 4, bottomPadding: 8)
         .transition(.opacity)
     }
 

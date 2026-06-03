@@ -16,9 +16,7 @@ struct DownloadedArtworkViewer: View {
     var body: some View {
         VStack(spacing: 0) {
             header
-                .padding(.horizontal, 18)
-                .padding(.vertical, 12)
-                .background(.bar)
+                .platformGlassControlBar(verticalPadding: 8, topPadding: 8, bottomPadding: 6)
 
             HStack(spacing: 0) {
                 if imageURLs.count > 1 {

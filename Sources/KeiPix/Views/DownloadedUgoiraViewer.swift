@@ -21,9 +21,7 @@ struct DownloadedUgoiraViewer: View {
     var body: some View {
         VStack(spacing: 0) {
             header
-                .padding(.horizontal, 18)
-                .padding(.vertical, 12)
-                .background(.bar)
+                .platformGlassControlBar(verticalPadding: 8, topPadding: 8, bottomPadding: 6)
 
             canvas
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -170,9 +168,7 @@ struct DownloadedUgoiraViewer: View {
                 .lineLimit(2)
             Spacer()
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 8)
-        .background(.bar)
+        .platformGlassControlBar(verticalPadding: 6, topPadding: 4, bottomPadding: 8)
         .transition(.opacity)
     }
 

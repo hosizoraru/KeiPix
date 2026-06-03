@@ -174,11 +174,7 @@ struct UserPreviewListView: View {
                 restrict: restrictBinding,
                 creatorSearchText: $creatorSearchText
             )
-            .padding(.horizontal, 18)
-            .padding(.vertical, 8)
-            .background(.bar)
-
-            Divider()
+            .platformGlassControlBar(verticalPadding: 8, topPadding: 2)
 
             CreatorPreviewListContent(
                 mode: mode,

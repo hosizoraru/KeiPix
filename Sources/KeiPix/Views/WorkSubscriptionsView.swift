@@ -23,11 +23,7 @@ struct WorkSubscriptionsView: View {
             } else {
                 VStack(spacing: 0) {
                     header
-                        .padding(.horizontal, 18)
-                        .padding(.vertical, 12)
-                        .background(.bar)
-
-                    Divider()
+                        .platformGlassControlBar(verticalPadding: 8, topPadding: 2)
 
                     content
                 }

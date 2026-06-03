@@ -42,7 +42,7 @@ struct ArtworkSummaryView: View {
                     .foregroundStyle(.secondary)
                     .padding(.horizontal, 9)
                     .padding(.vertical, 5)
-                    .background(.thinMaterial, in: Capsule())
+                    .glassEffect(.regular, in: Capsule(style: .continuous))
                     .textSelection(.enabled)
             }
 
@@ -872,7 +872,7 @@ private struct MetricView: View {
         .labelStyle(.titleAndIcon)
         .padding(.horizontal, 8)
         .padding(.vertical, 5)
-        .background(.thinMaterial, in: Capsule())
+        .glassEffect(.regular, in: Capsule(style: .continuous))
         .fixedSize(horizontal: true, vertical: false)
     }
 }

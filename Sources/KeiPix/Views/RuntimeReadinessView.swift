@@ -805,7 +805,7 @@ private struct NonNovelQAMatrixView: View {
                         .foregroundStyle(row.passed == row.total ? .green : .orange)
                         .padding(.horizontal, 9)
                         .padding(.vertical, 5)
-                        .background(.thinMaterial, in: Capsule())
+                        .glassEffect(.regular, in: Capsule(style: .continuous))
                 }
             }
 

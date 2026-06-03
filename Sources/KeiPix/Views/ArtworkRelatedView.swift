@@ -88,7 +88,7 @@ struct ArtworkRelatedView: View {
                         .textSelection(.enabled)
                         .padding(.horizontal, 9)
                         .padding(.vertical, 5)
-                        .background(.thinMaterial, in: Capsule())
+                        .glassEffect(.regular, in: Capsule(style: .continuous))
                 }
 
                 if let errorMessage {

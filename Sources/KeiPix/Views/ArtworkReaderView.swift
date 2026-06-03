@@ -287,7 +287,7 @@ struct ArtworkReaderControls: View {
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 6)
-        .background(.thinMaterial, in: Capsule())
+        .glassEffect(.regular, in: Capsule(style: .continuous))
         .accessibilityElement(children: .combine)
         .accessibilityLabel(L10n.page)
         .accessibilityValue(L10n.pageOfTotal(pageIndex + 1, pageCount))
@@ -607,7 +607,7 @@ private struct PageThumbnail: View {
                 .font(.caption2.weight(.bold))
                 .padding(.horizontal, 5)
                 .padding(.vertical, 2)
-                .background(.thinMaterial, in: Capsule())
+                .glassEffect(.regular, in: Capsule(style: .continuous))
                 .padding(4)
         }
         .overlay {

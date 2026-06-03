@@ -54,10 +54,7 @@ struct UserProfileSheetHeader: View {
             identityRow
             actionRail
         }
-        .padding(.horizontal, 18)
-        .padding(.top, 16)
-        .padding(.bottom, 14)
-        .background(.bar)
+        .platformGlassControlBar(verticalPadding: 12, topPadding: 8, bottomPadding: 10)
     }
 
     // MARK: - Identity row

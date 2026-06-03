@@ -28,10 +28,7 @@ struct LoginSheetView: View {
                 .help(L10n.close)
                 .accessibilityLabel(L10n.close)
             }
-            .padding(14)
-            .background(.bar)
-
-            Divider()
+            .platformGlassControlBar(verticalPadding: 10, topPadding: 10, bottomPadding: 8)
 
             if let loginURL {
                 PixivLoginWebView(url: loginURL) { code in

@@ -22,11 +22,7 @@ struct WatchLaterView: View {
     var body: some View {
         VStack(spacing: 0) {
             header
-                .padding(.horizontal, 18)
-                .padding(.vertical, 12)
-                .background(.bar)
-
-            Divider()
+                .platformGlassControlBar(verticalPadding: 8, topPadding: 2)
 
             if items.isEmpty {
                 EmptyStateView(

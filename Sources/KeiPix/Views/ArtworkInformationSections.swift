@@ -142,7 +142,7 @@ struct ArtworkInspectorSectionHeader: View {
                         .truncationMode(.middle)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 3)
-                        .background(.thinMaterial, in: Capsule())
+                        .glassEffect(.regular, in: Capsule(style: .continuous))
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)

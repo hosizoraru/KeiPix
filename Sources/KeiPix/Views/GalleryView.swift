@@ -220,9 +220,7 @@ private struct GalleryFeedView: View {
                             artworkSelection: $artworkSelection,
                             batchBookmarkCommandRequest: $batchBookmarkCommandRequest
                         )
-                            .padding(.horizontal, 18)
-                            .padding(.vertical, 5)
-                            .background(.bar)
+                        .platformGlassControlBar(verticalPadding: 5, topPadding: 0, bottomPadding: 6)
                     }
                 }
             }
@@ -290,10 +288,7 @@ private struct GalleryFeedView: View {
                     .frame(maxWidth: .infinity, alignment: .trailing)
             }
         }
-        .padding(.horizontal, 18)
-        .padding(.top, 5)
-        .padding(.bottom, 7)
-        .background(.bar)
+        .platformGlassControlBar(verticalPadding: 6, topPadding: 2, bottomPadding: 8)
     }
 
     private var iPadFeedTitleLine: some View {
@@ -312,7 +307,7 @@ private struct GalleryFeedView: View {
                     .truncationMode(.middle)
                     .padding(.horizontal, 9)
                     .padding(.vertical, 4)
-                    .background(.thinMaterial, in: Capsule())
+                    .glassEffect(.regular, in: Capsule(style: .continuous))
             }
         }
     }

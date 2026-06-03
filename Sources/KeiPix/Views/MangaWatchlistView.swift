@@ -124,11 +124,7 @@ struct MangaWatchlistView: View {
     private var watchlistSurface: some View {
         VStack(spacing: 0) {
             header
-                .padding(.horizontal, 18)
-                .padding(.vertical, 8)
-                .background(.bar)
-
-            Divider()
+                .platformGlassControlBar(verticalPadding: 8, topPadding: 2)
 
             watchlistContent
         }

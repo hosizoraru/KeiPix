@@ -49,7 +49,7 @@ struct BatchBookmarkPreviewPopover: View {
                         .font(.caption.weight(.medium))
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4)
-                        .background(.thinMaterial, in: Capsule())
+                        .glassEffect(.regular, in: Capsule(style: .continuous))
                 }
             }
         }

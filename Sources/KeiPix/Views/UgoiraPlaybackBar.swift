@@ -35,9 +35,7 @@ struct UgoiraPlaybackBar<TrailingActions: View>: View {
             trailingActions()
         }
         .controlSize(.small)
-        .padding(.horizontal, 14)
-        .padding(.vertical, 10)
-        .background(.bar)
+        .platformGlassControlBar(verticalPadding: 8, topPadding: 6, bottomPadding: 8)
     }
 
     // MARK: - Play / pause

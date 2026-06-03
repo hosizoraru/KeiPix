@@ -79,9 +79,7 @@ struct SheetHeaderRail<Leading: View, Trailing: View>: View {
                 SheetCloseButton(action: closeAction, style: .plain)
             }
         }
-        .padding(.horizontal, 18)
-        .padding(.vertical, 14)
-        .background(.bar)
+        .platformGlassControlBar(verticalPadding: 12, topPadding: 8, bottomPadding: 8)
     }
 }
 

@@ -366,6 +366,37 @@ struct NativeBoundaryTests {
         #expect(discovery.contains(".navigationSubtitle(") == false)
     }
 
+    @Test("OS 26 chrome avoids legacy bar and capsule materials")
+    func os26ChromeAvoidsLegacyBarAndCapsuleMaterials() throws {
+        let root = try packageRoot()
+        let sourceRoot = root.appending(path: "Sources/KeiPix", directoryHint: .isDirectory)
+        let swiftFiles = try sourceFiles(in: sourceRoot).filter { $0.pathExtension == "swift" }
+        let glassSupport = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Support/Glass.swift"),
+            encoding: .utf8
+        )
+        let gallery = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/GalleryView.swift"),
+            encoding: .utf8
+        )
+        let sheetHeader = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Support/SheetHeaderRail.swift"),
+            encoding: .utf8
+        )
+
+        #expect(glassSupport.contains("func platformGlassControlBar("))
+        #expect(glassSupport.contains(".keiGlass(20)"))
+        #expect(gallery.contains(".platformGlassControlBar(verticalPadding: 6"))
+        #expect(gallery.contains(".glassEffect(.regular, in: Capsule(style: .continuous))"))
+        #expect(sheetHeader.contains(".platformGlassControlBar(verticalPadding: 12"))
+
+        for file in swiftFiles {
+            let source = try String(contentsOf: file, encoding: .utf8)
+            #expect(source.contains(".background(.bar)") == false, "\(file.lastPathComponent) should not use legacy bar fills for OS 26 chrome")
+            #expect(source.contains(".background(.thinMaterial, in: Capsule())") == false, "\(file.lastPathComponent) should use glassEffect for status capsules")
+        }
+    }
+
     @Test("macOS feed keeps sidebar manual and lifts artwork navigation")
     func macOSFeedKeepsSidebarManualAndLiftsArtworkNavigation() throws {
         let root = try packageRoot()

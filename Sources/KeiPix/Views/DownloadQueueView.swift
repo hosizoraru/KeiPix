@@ -82,9 +82,7 @@ struct DownloadQueueView: View {
                 copyVisibleLinks: copyVisibleLinks,
                 showActionMessage: showActionMessage
             )
-            .padding(.horizontal, 18)
-            .padding(.vertical, 12)
-            .background(.bar)
+            .platformGlassControlBar(verticalPadding: 8, topPadding: 2)
 
             if store.downloads.items.isEmpty {
                 EmptyStateView(

@@ -34,9 +34,7 @@ struct StandaloneArtworkReader: View {
                 VStack(spacing: 0) {
                     if isFocusPresetEnabled == false {
                         header(proxy: proxy)
-                            .padding(.horizontal, 18)
-                            .padding(.vertical, 12)
-                            .background(.bar)
+                            .platformGlassControlBar(verticalPadding: 8, topPadding: 8, bottomPadding: 6)
                     }
 
                     ScrollView {

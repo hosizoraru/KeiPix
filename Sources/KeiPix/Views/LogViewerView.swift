@@ -44,7 +44,7 @@ struct LogViewerView: View {
                     .font(.callout)
                     .padding(.horizontal, 14)
                     .padding(.vertical, 8)
-                    .background(.thinMaterial, in: Capsule())
+                    .glassEffect(.regular, in: Capsule(style: .continuous))
                     .padding(.bottom, 14)
                     .transition(.opacity)
                     .task(id: message) {

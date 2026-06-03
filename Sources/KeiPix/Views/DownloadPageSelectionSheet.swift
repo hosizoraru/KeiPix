@@ -130,7 +130,7 @@ struct DownloadPageSelectionSheet: View {
                     .font(.caption2.monospacedDigit().weight(.semibold))
                     .padding(.horizontal, 6)
                     .padding(.vertical, 2)
-                    .background(.thinMaterial, in: Capsule())
+                    .glassEffect(.regular, in: Capsule(style: .continuous))
                     .padding(6)
             }
             .overlay(
