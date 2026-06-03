@@ -72,6 +72,18 @@ struct NativeBoundaryTests {
         #expect(appKitBridgeFiles.contains { $0.lastPathComponent == "WindowCaptureProtectionBridge.swift" })
     }
 
+    @Test("iPad root content does not inherit macOS window sizing")
+    func iPadRootContentDoesNotInheritMacOSWindowSizing() throws {
+        let root = try packageRoot()
+        let app = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/App/KeiPixApp.swift"),
+            encoding: .utf8
+        )
+
+        #expect(app.contains("#if os(macOS)\n                .frame(minWidth: 840, minHeight: 700)"))
+        #expect(app.contains("ContentView(store: store)\n                .frame(minWidth: 840") == false)
+    }
+
     @Test("Gallery feed layouts use a native collection bridge")
     func galleryFeedLayoutsUseNativeCollectionBridge() throws {
         let root = try packageRoot()
@@ -289,6 +301,7 @@ struct NativeBoundaryTests {
         #expect(nativeGrid.contains("UICollectionView"))
         #expect(nativeGrid.contains("NSCollectionViewDiffableDataSource"))
         #expect(nativeGrid.contains("UICollectionViewDiffableDataSource"))
+        #expect(nativeGrid.contains("NativeAdaptiveGridCollectionView<Item: Hashable & Sendable>"))
         #expect(nativeGrid.contains("refreshVisibleHostedContent(in: collectionView)"))
     }
 

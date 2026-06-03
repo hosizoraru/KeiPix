@@ -58,8 +58,7 @@ struct ReaderGestureBridge: ViewModifier {
 
     #if os(iOS)
     private var iOSGestureBridge: some View {
-        GeometryReader { proxy in
-            let size = proxy.size
+        GeometryReader { _ in
             Color.clear
                 .contentShape(Rectangle())
                 .gesture(

@@ -1,6 +1,6 @@
 import Foundation
 
-struct WorkSubscription: Codable, Identifiable, Hashable {
+struct WorkSubscription: Codable, Identifiable, Hashable, Sendable {
     var id: Int { creatorID }
     let creatorID: Int
     var creatorName: String

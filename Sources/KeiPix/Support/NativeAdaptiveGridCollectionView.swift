@@ -40,7 +40,7 @@ struct NativeAdaptiveGridCollectionLayout: Equatable {
 /// SwiftUI remains the source of truth for filtering, actions, menus, and row
 /// content. AppKit/UIKit owns scrolling, reuse, and adaptive item sizing.
 @MainActor
-struct NativeAdaptiveGridCollectionView<Item: Hashable> {
+struct NativeAdaptiveGridCollectionView<Item: Hashable & Sendable> {
     let items: [Item]
     let layout: NativeAdaptiveGridCollectionLayout
     let content: (Item) -> AnyView

@@ -33,7 +33,9 @@ enum PlatformWorkspace {
         #if os(macOS)
         NSWorkspace.shared.open(url)
         #else
-        UIApplication.shared.open(url)
+        Task { @MainActor in
+            UIApplication.shared.open(url)
+        }
         return true
         #endif
     }

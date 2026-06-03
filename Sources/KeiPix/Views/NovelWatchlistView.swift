@@ -107,7 +107,7 @@ struct NovelWatchlistView: View {
     }
 }
 
-private enum NovelWatchlistGridItem: Hashable {
+private enum NovelWatchlistGridItem: Hashable, Sendable {
     case series(PixivNovelSeriesItem)
     case pagination
 }

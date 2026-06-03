@@ -384,7 +384,7 @@ struct MangaWatchlistView: View {
     }
 }
 
-private enum MangaWatchlistGridItem: Hashable {
+private enum MangaWatchlistGridItem: Hashable, Sendable {
     case series(PixivMangaSeriesPreview)
     case loadMore
 }

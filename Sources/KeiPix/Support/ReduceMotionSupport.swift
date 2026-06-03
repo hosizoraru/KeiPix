@@ -3,6 +3,7 @@ import SwiftUI
 /// Accessibility support utilities for reduce motion and high contrast.
 
 /// High contrast support utilities.
+@MainActor
 enum HighContrastSupport {
     /// Check if high contrast is enabled.
     static var isHighContrastEnabled: Bool {
@@ -28,6 +29,7 @@ enum HighContrastSupport {
 ///
 /// Respects the system's "Reduce Motion" accessibility setting
 /// by disabling or simplifying animations when enabled.
+@MainActor
 enum ReduceMotionSupport {
     /// Check if reduce motion is enabled.
     static var isReduceMotionEnabled: Bool {
@@ -55,11 +57,13 @@ enum ReduceMotionSupport {
 
 extension View {
     /// Apply animation that respects reduce motion setting.
+    @MainActor
     func accessibleAnimation<V: Equatable>(_ animation: Animation?, value: V) -> some View {
         self.animation(ReduceMotionSupport.animation(animation, value: value), value: value)
     }
 
     /// Apply transition that respects reduce motion setting.
+    @MainActor
     func accessibleTransition(_ transition: AnyTransition) -> some View {
         self.transition(ReduceMotionSupport.transition(transition))
     }
