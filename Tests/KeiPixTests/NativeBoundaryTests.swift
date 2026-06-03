@@ -575,6 +575,10 @@ struct NativeBoundaryTests {
             contentsOf: root.appending(path: "Sources/KeiPix/Support/NativeGalleryCollectionView.swift"),
             encoding: .utf8
         )
+        let hoverEffect = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Support/KeiPixHoverEffect.swift"),
+            encoding: .utf8
+        )
         let nativeInlineFilter = try String(
             contentsOf: root.appending(path: "Sources/KeiPix/Support/NativeInlineFilterField.swift"),
             encoding: .utf8
@@ -617,6 +621,11 @@ struct NativeBoundaryTests {
         #expect(nativeCollection.contains("reloadHighlightDeltaIfNeeded"))
         #expect(nativeCollection.contains("reconfigureVisibleItems"))
         #expect(nativeCollection.contains("symmetricDifference"))
+        #expect(nativeCollection.contains("UIPointerInteractionDelegate"))
+        #expect(nativeCollection.contains("UIPointerStyle(effect: .lift"))
+        #expect(nativeCollection.contains("showsLargeContentViewer = true"))
+        #expect(nativeCollection.contains("largeContentTitle = item.pointerTitle"))
+        #expect(hoverEffect.contains(".hoverEffect(.lift)"))
         #expect(nativeCollection.contains("reloadItems(at: collectionView.indexPathsForVisibleItems())") == false)
         #expect(nativeCollection.contains("reloadItems(at: collectionView.indexPathsForVisibleItems)") == false)
         #expect(nativeInlineFilter.contains("struct NativeInlineFilterField: UIViewRepresentable"))
@@ -676,8 +685,20 @@ struct NativeBoundaryTests {
             contentsOf: root.appending(path: "Sources/KeiPix/Support/ImageScrollView.swift"),
             encoding: .utf8
         )
+        let iPadImageScrollView = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Support/iPadImageScrollView.swift"),
+            encoding: .utf8
+        )
+        let readerGestureBridge = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Support/ReaderGestureBridge.swift"),
+            encoding: .utf8
+        )
         let artworkSummary = try String(
             contentsOf: root.appending(path: "Sources/KeiPix/Views/ArtworkSummaryView.swift"),
+            encoding: .utf8
+        )
+        let interactionModels = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Models/ReaderInteractionModels.swift"),
             encoding: .utf8
         )
         let viewportLayout = try String(
@@ -705,6 +726,14 @@ struct NativeBoundaryTests {
         #expect(imageScrollView.contains("private func centerDocument()"))
         #expect(imageScrollView.contains("scrollView.contentInsets = NSEdgeInsets("))
         #expect(imageScrollView.contains("completionHandler: { [weak self] in"))
+        #expect(iPadImageScrollView.contains("scrollView.isDirectionalLockEnabled = true"))
+        #expect(iPadImageScrollView.contains("scrollView.panGestureRecognizer.allowedScrollTypesMask = [.continuous, .discrete]"))
+        #expect(iPadImageScrollView.contains("let velocity = gesture.velocity(in: gesture.view)"))
+        #expect(iPadImageScrollView.contains("gesture.setTranslation(.zero, in: gesture.view)"))
+        #expect(readerGestureBridge.contains("@State private var lastDragTranslation"))
+        #expect(readerGestureBridge.contains("private static func projectedVelocity"))
+        #expect(interactionModels.contains("swipeVelocityThreshold"))
+        #expect(interactionModels.contains("velocityX: CGFloat? = nil"))
         #expect(artworkSummary.contains("private var metricsRail: some View"))
         #expect(artworkSummary.contains("FlowLayout(spacing: 8)"))
         #expect(artworkSummary.contains(".frame(maxWidth: .infinity, alignment: .leading)"))

@@ -7,6 +7,8 @@ import SwiftUI
 struct ReaderScrollEvent {
     let deltaX: CGFloat
     let deltaY: CGFloat
+    var velocityX: CGFloat? = nil
+    var velocityY: CGFloat? = nil
     let isFinished: Bool
     let isMomentum: Bool
 }
@@ -21,6 +23,7 @@ struct ReaderGestureBridge: ViewModifier {
     let onMagnify: (CGFloat, Bool) -> Bool
     let onSmartMagnify: () -> Bool
     let onDrag: (CGSize) -> Bool
+    @State private var lastDragTranslation: CGSize = .zero
 
     func body(content: Content) -> some View {
         content
@@ -41,6 +44,8 @@ struct ReaderGestureBridge: ViewModifier {
                 let readerEvent = ReaderScrollEvent(
                     deltaX: event.deltaX,
                     deltaY: event.deltaY,
+                    velocityX: nil,
+                    velocityY: nil,
                     isFinished: event.isFinished,
                     isMomentum: event.isMomentum
                 )
@@ -65,11 +70,15 @@ struct ReaderGestureBridge: ViewModifier {
                     DragGesture(minimumDistance: 20)
                         .onChanged { value in
                             guard isEnabled else { return }
-                            let deltaX = value.translation.width
-                            let deltaY = value.translation.height
+                            let deltaX = value.translation.width - lastDragTranslation.width
+                            let deltaY = value.translation.height - lastDragTranslation.height
+                            lastDragTranslation = value.translation
+                            let velocity = Self.projectedVelocity(from: value)
                             let event = ReaderScrollEvent(
                                 deltaX: deltaX,
                                 deltaY: deltaY,
+                                velocityX: velocity.width,
+                                velocityY: velocity.height,
                                 isFinished: false,
                                 isMomentum: false
                             )
@@ -77,11 +86,15 @@ struct ReaderGestureBridge: ViewModifier {
                         }
                         .onEnded { value in
                             guard isEnabled else { return }
-                            let deltaX = value.translation.width
-                            let deltaY = value.translation.height
+                            let deltaX = value.translation.width - lastDragTranslation.width
+                            let deltaY = value.translation.height - lastDragTranslation.height
+                            lastDragTranslation = .zero
+                            let velocity = Self.projectedVelocity(from: value)
                             let event = ReaderScrollEvent(
                                 deltaX: deltaX,
                                 deltaY: deltaY,
+                                velocityX: velocity.width,
+                                velocityY: velocity.height,
                                 isFinished: true,
                                 isMomentum: false
                             )
@@ -104,6 +117,14 @@ struct ReaderGestureBridge: ViewModifier {
                     _ = onSmartMagnify()
                 }
         }
+    }
+
+    private static func projectedVelocity(from value: DragGesture.Value) -> CGSize {
+        let projectionWindow: CGFloat = 0.16
+        return CGSize(
+            width: (value.predictedEndTranslation.width - value.translation.width) / projectionWindow,
+            height: (value.predictedEndTranslation.height - value.translation.height) / projectionWindow
+        )
     }
     #endif
 }

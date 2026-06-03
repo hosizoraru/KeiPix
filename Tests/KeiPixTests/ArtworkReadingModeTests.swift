@@ -66,4 +66,45 @@ struct ArtworkReadingModeTests {
         #expect(library.restoredPageIndex(for: pageRangeDownloadID, pageCount: 4) == 2)
         #expect(library.items.map(\.downloadID) == [pageRangeDownloadID, fullDownloadID])
     }
+
+    @MainActor
+    @Test("Reader swipe treats quick horizontal flicks as page turns")
+    func readerSwipeHandlesQuickHorizontalFlicks() {
+        let interaction = ArtworkReaderInteractionState()
+
+        let slowStart = interaction.trackSwipe(
+            deltaX: 24,
+            deltaY: 3,
+            isFinished: false
+        )
+        #expect(slowStart.handled)
+        #expect(slowStart.pageDelta == nil)
+
+        let flickFinish = interaction.trackSwipe(
+            deltaX: 18,
+            deltaY: 2,
+            velocityX: 920,
+            velocityY: 70,
+            isFinished: true
+        )
+        #expect(flickFinish.handled)
+        #expect(flickFinish.pageDelta == 1)
+    }
+
+    @MainActor
+    @Test("Reader swipe ignores vertical touch and trackpad movement")
+    func readerSwipeIgnoresVerticalMovement() {
+        let interaction = ArtworkReaderInteractionState()
+
+        let vertical = interaction.trackSwipe(
+            deltaX: 28,
+            deltaY: 96,
+            velocityX: 900,
+            velocityY: 1_800,
+            isFinished: true
+        )
+
+        #expect(vertical.handled == false)
+        #expect(vertical.pageDelta == nil)
+    }
 }

@@ -48,8 +48,14 @@ struct ImageScrollView: UIViewRepresentable {
         scrollView.showsHorizontalScrollIndicator = false
         scrollView.bounces = true
         scrollView.bouncesZoom = true
+        scrollView.isDirectionalLockEnabled = true
+        scrollView.decelerationRate = .fast
+        scrollView.delaysContentTouches = false
+        scrollView.canCancelContentTouches = true
+        scrollView.keyboardDismissMode = .interactive
         scrollView.backgroundColor = .clear
 
+        scrollView.panGestureRecognizer.allowedScrollTypesMask = [.continuous, .discrete]
         scrollView.panGestureRecognizer.addTarget(
             context.coordinator,
             action: #selector(Coordinator.handlePanGesture(_:))
@@ -173,14 +179,18 @@ struct ImageScrollView: UIViewRepresentable {
         @objc func handlePanGesture(_ gesture: UIPanGestureRecognizer) {
             guard logicalZoomScale <= 1.01 else { return }
             let translation = gesture.translation(in: gesture.view)
+            let velocity = gesture.velocity(in: gesture.view)
             let state = gesture.state
             let event = ReaderScrollEvent(
                 deltaX: translation.x,
                 deltaY: translation.y,
+                velocityX: velocity.x,
+                velocityY: velocity.y,
                 isFinished: state == .ended || state == .cancelled || state == .failed,
                 isMomentum: false
             )
             _ = onPageSwipe?(event)
+            gesture.setTranslation(.zero, in: gesture.view)
         }
 
         @objc func handleDoubleTap(_ gesture: UITapGestureRecognizer) {

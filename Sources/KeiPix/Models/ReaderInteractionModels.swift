@@ -26,6 +26,7 @@ final class ArtworkReaderInteractionState {
     nonisolated static let smartZoomScale: CGFloat = 2.25
     nonisolated static let resetSnapThreshold: CGFloat = 1.04
     nonisolated static let swipeThreshold: CGFloat = 90
+    nonisolated static let swipeVelocityThreshold: CGFloat = 720
     nonisolated static let horizontalDominance: CGFloat = 1.35
     nonisolated static let nativeZoomUpdateTolerance: CGFloat = 0.005
 
@@ -94,7 +95,13 @@ final class ArtworkReaderInteractionState {
         offset = clamped(proposed, in: size)
     }
 
-    func trackSwipe(deltaX: CGFloat, deltaY: CGFloat, isFinished: Bool) -> (handled: Bool, pageDelta: Int?) {
+    func trackSwipe(
+        deltaX: CGFloat,
+        deltaY: CGFloat,
+        velocityX: CGFloat? = nil,
+        velocityY: CGFloat? = nil,
+        isFinished: Bool
+    ) -> (handled: Bool, pageDelta: Int?) {
         guard abs(deltaX) > abs(deltaY) * Self.horizontalDominance else {
             if isFinished {
                 accumulatedSwipe = .zero
@@ -108,10 +115,14 @@ final class ArtworkReaderInteractionState {
         let x = accumulatedSwipe.width
         let y = accumulatedSwipe.height
         let reachedThreshold = abs(x) >= Self.swipeThreshold && abs(x) > abs(y) * Self.horizontalDominance
+        let reachedVelocityThreshold = isFinished
+            && abs(velocityX ?? 0) >= Self.swipeVelocityThreshold
+            && abs(velocityX ?? 0) > abs(velocityY ?? 0) * Self.horizontalDominance
 
-        if reachedThreshold {
+        if reachedThreshold || reachedVelocityThreshold {
             accumulatedSwipe = .zero
-            return (true, x > 0 ? 1 : -1)
+            let directionSource = reachedThreshold ? x : (velocityX ?? x)
+            return (true, directionSource > 0 ? 1 : -1)
         }
 
         if isFinished {

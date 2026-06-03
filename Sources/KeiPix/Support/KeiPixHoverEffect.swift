@@ -1,10 +1,9 @@
 import SwiftUI
 
-/// Platform-agnostic hover plumbing. Today the body just wraps
-/// `.onHover` because that's the only viable signal on macOS; on
-/// iPadOS the same modifier is the right place to layer
-/// `.hoverEffect(_:)` so the system pointer gets its lift/highlight
-/// treatment without each call site reaching into UIKit.
+/// Platform-agnostic hover plumbing. macOS reports hover transitions for
+/// pointer-driven card chrome; iOS/iPadOS additionally opt into the system
+/// hover effect so Magic Keyboard, mouse, and iPhone Mirroring pointers get
+/// the same lift affordance without each call site reaching into UIKit.
 ///
 /// Why route through one modifier instead of leaving `.onHover`
 /// inline at every card site:
@@ -29,14 +28,20 @@ extension View {
     /// for `.onHover`. Callers decide what to do with the boolean —
     /// flip a `@State`, run an animation, log it.
     ///
-    /// On macOS this is exactly `.onHover`. On iPadOS (when we get
-    /// there) this is the place we'll layer `.hoverEffect(.automatic)`
-    /// on top so the system draws the standard pointer affordance
-    /// alongside whatever custom hover visuals the call site already
-    /// owns.
+    /// On macOS this is `.onHover`. On iOS/iPadOS this also layers
+    /// `.hoverEffect(.lift)` so system pointer feedback sits alongside
+    /// whatever custom hover visuals the call site already owns.
     func keiPixHoverTracker(onChange: @escaping (Bool) -> Void) -> some View {
+        #if os(iOS)
+        self
+            .hoverEffect(.lift)
+            .onHover { isHovering in
+                onChange(isHovering)
+            }
+        #else
         onHover { isHovering in
             onChange(isHovering)
         }
+        #endif
     }
 }

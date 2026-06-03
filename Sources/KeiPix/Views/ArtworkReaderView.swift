@@ -122,6 +122,8 @@ struct ArtworkReaderView: View {
         let result = interaction.trackSwipe(
             deltaX: event.deltaX,
             deltaY: event.deltaY,
+            velocityX: event.velocityX,
+            velocityY: event.velocityY,
             isFinished: event.isFinished
         )
         if let pageDelta = result.pageDelta {

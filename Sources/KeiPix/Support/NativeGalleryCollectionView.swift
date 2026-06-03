@@ -43,6 +43,19 @@ enum NativeGalleryCollectionItem: Hashable, Identifiable {
         }
     }
 
+    var pointerTitle: String? {
+        switch self {
+        case .artwork(let artwork):
+            "\(artwork.title) · \(artwork.user.name)"
+        case .empty:
+            L10n.noArtworkTitle
+        case .loadMore:
+            L10n.loadMore
+        case .cachedStatus, .popularPreview:
+            nil
+        }
+    }
+
     static func == (lhs: NativeGalleryCollectionItem, rhs: NativeGalleryCollectionItem) -> Bool {
         lhs.id == rhs.id
     }
@@ -665,7 +678,7 @@ struct NativeGalleryCollectionView: UIViewRepresentable {
                       ) as? NativeGalleryHostingCollectionCell else {
                     return UICollectionViewCell()
                 }
-                cell.configure(with: parent.content(item))
+                cell.configure(with: parent.content(item), item: item)
                 return cell
             }
         }
@@ -764,7 +777,8 @@ struct NativeGalleryCollectionView: UIViewRepresentable {
                 guard let cell = collectionView.cellForItem(at: indexPath) as? NativeGalleryHostingCollectionCell else {
                     continue
                 }
-                cell.configure(with: parent.content(parent.items[indexPath.item]))
+                let item = parent.items[indexPath.item]
+                cell.configure(with: parent.content(item), item: item)
             }
         }
 
@@ -843,8 +857,21 @@ private final class NativeGalleryHostingCollectionCell: UICollectionViewCell {
     static let reuseIdentifier = "NativeGalleryHostingCollectionCell"
 
     private var hostingController: UIHostingController<AnyView>?
+    private var pointerInteraction: UIPointerInteraction?
 
-    func configure(with content: AnyView) {
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        configureInputAffordances()
+    }
+
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        configureInputAffordances()
+    }
+
+    func configure(with content: AnyView, item: NativeGalleryCollectionItem) {
+        largeContentTitle = item.pointerTitle
+        largeContentImage = nil
         if let hostingController {
             hostingController.rootView = content
             return
@@ -865,7 +892,36 @@ private final class NativeGalleryHostingCollectionCell: UICollectionViewCell {
 
     override func prepareForReuse() {
         super.prepareForReuse()
+        largeContentTitle = nil
         hostingController?.rootView = AnyView(EmptyView())
+    }
+
+    private func configureInputAffordances() {
+        backgroundColor = .clear
+        selectedBackgroundView = UIView()
+        contentView.backgroundColor = .clear
+        contentView.clipsToBounds = false
+        showsLargeContentViewer = true
+
+        let pointerInteraction = UIPointerInteraction(delegate: self)
+        contentView.addInteraction(pointerInteraction)
+        self.pointerInteraction = pointerInteraction
+    }
+}
+
+extension NativeGalleryHostingCollectionCell: UIPointerInteractionDelegate {
+    func pointerInteraction(
+        _ interaction: UIPointerInteraction,
+        styleFor region: UIPointerRegion
+    ) -> UIPointerStyle? {
+        let parameters = UIPreviewParameters()
+        parameters.backgroundColor = .clear
+        let preview = UITargetedPreview(view: contentView, parameters: parameters)
+        let shape = UIPointerShape.roundedRect(
+            contentView.bounds.insetBy(dx: -3, dy: -3),
+            radius: 18
+        )
+        return UIPointerStyle(effect: .lift(preview), shape: shape)
     }
 }
 
