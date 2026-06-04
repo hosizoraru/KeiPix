@@ -813,6 +813,8 @@ struct NativeBoundaryTests {
         #expect(galleryView.contains("presentation: .iPadCompact"))
         #expect(galleryView.contains("nativeHighlightedArtworkIDs"))
         #expect(galleryView.contains("nativeGalleryContentReloadToken"))
+        #expect(galleryView.contains("GalleryFeedLoadingPlaceholder"))
+        #expect(galleryView.contains("store.isLoading ? [.loading] : [.empty]"))
         #expect(feedHeader.contains("enum FeedHeaderPresentation"))
         #expect(feedHeader.contains("case iPadCompact"))
         #expect(feedHeader.contains("NativeInlineFilterField("))
@@ -826,6 +828,7 @@ struct NativeBoundaryTests {
         #expect(l10n.contains("Tap to select artwork"))
         #expect(nativeCollection.contains("NativeGalleryMasonryNSCollectionViewLayout"))
         #expect(nativeCollection.contains("NativeGalleryMasonryUICollectionViewLayout"))
+        #expect(nativeCollection.contains("case loading"))
         #expect(nativeCollection.contains("ArtworkMasonryPlacement.resolve"))
         #expect(nativeCollection.contains("NSCollectionViewDiffableDataSource"))
         #expect(nativeCollection.contains("UICollectionViewDiffableDataSource"))
@@ -846,6 +849,7 @@ struct NativeBoundaryTests {
         #expect(nativeCollection.contains("UIPointerStyle(effect: .lift"))
         #expect(nativeCollection.contains("showsLargeContentViewer = true"))
         #expect(nativeCollection.contains("largeContentTitle = item.pointerTitle"))
+        #expect(masonryPresentation.contains("fallbackAspectRatio"))
         #expect(hoverEffect.contains(".hoverEffect(.lift)"))
         #expect(nativeCollection.contains("reloadItems(at: collectionView.indexPathsForVisibleItems())") == false)
         #expect(nativeCollection.contains("reloadItems(at: collectionView.indexPathsForVisibleItems)") == false)
@@ -1195,6 +1199,18 @@ struct NativeBoundaryTests {
             contentsOf: root.appending(path: "Sources/KeiPix/Views/UserPreviewListComponents.swift"),
             encoding: .utf8
         )
+        let creatorCard = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/UserPreviewCard.swift"),
+            encoding: .utf8
+        )
+        let store = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Stores/KeiPixStore.swift"),
+            encoding: .utf8
+        )
+        let storeSocial = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Stores/KeiPixStore+Social.swift"),
+            encoding: .utf8
+        )
         let quickOpenSheet = try String(
             contentsOf: root.appending(path: "Sources/KeiPix/Views/PixivIDOpenSheet.swift"),
             encoding: .utf8
@@ -1234,6 +1250,17 @@ struct NativeBoundaryTests {
         #expect(nativeCollection.contains("UICollectionViewDiffableDataSource"))
         #expect(nativeCollection.contains("NSHostingView"))
         #expect(nativeCollection.contains("UIHostingController"))
+        #expect(nativeCollection.contains("let contentReloadToken: Int"))
+        #expect(nativeCollection.contains("lastContentReloadToken"))
+        #expect(nativeCollection.contains("applySnapshotUsingReloadData"))
+        #expect(store.contains("creatorPreviewArtworkCacheGeneration"))
+        #expect(store.contains("creatorPreviewArtworkRequests"))
+        #expect(storeSocial.contains("func cachedCreatorPreviewArtworks(for user: PixivUser)"))
+        #expect(storeSocial.contains("creatorPreviewArtworkCacheGeneration &+= 1"))
+        #expect(creatorComponents.contains("creatorPreviewArtworkCacheGeneration: Int"))
+        #expect(creatorComponents.contains("cachedCreatorPreviewArtworks(preview.user)"))
+        #expect(creatorCard.contains("cachedPreviewArtworks: [PixivArtwork]"))
+        #expect(creatorCard.contains("resetFetchState()"))
         #expect(nativeSearch.contains("NSSearchField"))
         #expect(nativeSearch.contains("UISearchTextField"))
         #expect(enhancedMenu.contains("NSMenu"))
@@ -1310,8 +1337,11 @@ struct NativeBoundaryTests {
         #expect(creatorList.contains("showsCloseButton: Bool = false"))
         #expect(creatorList.contains("if showsCloseButton"))
         #expect(creatorComponents.contains("CreatorSearchScopeChip"))
+        #expect(creatorComponents.contains("CreatorSearchLandingState"))
         #expect(creatorComponents.contains("CreatorPreviewListLoadingPlaceholder"))
         #expect(creatorComponents.contains("CreatorPreviewSkeletonCard"))
+        #expect(creatorComponents.contains("contentReloadToken: creatorContentReloadToken"))
+        #expect(creatorComponents.contains("hasher.combine(creatorPreviewArtworkCacheGeneration)"))
 
         #expect(profileSheet.contains("UserProfileLoadingSkeleton"))
         #expect(profileSheet.contains("UserPreviewListView(store: store, mode: mode, showsCloseButton: true)"))
@@ -1352,6 +1382,7 @@ struct NativeBoundaryTests {
         #expect(savedSearches.contains("NativeSearchField("))
         #expect(savedSearches.contains("savedSearchLibraryField"))
         #expect(savedSearches.contains("libraryActionRail"))
+        #expect(savedSearches.contains(".platformGlassControlBar(verticalPadding: 8, topPadding: 2)"))
         #expect(savedSearches.contains("GlassEffectContainer(spacing: 8)"))
         #expect(savedSearches.contains(".keiInteractiveGlass(16)"))
         #expect(savedSearches.contains(".textFieldStyle(.roundedBorder)") == false)
@@ -1397,6 +1428,8 @@ struct NativeBoundaryTests {
         #expect(creatorCard.contains(".buttonStyle(.glass)"))
         #expect(creatorCard.contains(".buttonBorderShape(.capsule)"))
         #expect(creatorCard.contains(".truncationMode(.middle)"))
+        #expect(creatorCard.contains("cachedArtworks.isEmpty == false"))
+        #expect(creatorCard.contains(".task(id: userID)"))
         #expect(nativeCollection.contains("let minimumWidth: CGFloat = 300"))
         #expect(nativeCollection.contains("return 342"))
     }
@@ -1423,6 +1456,8 @@ struct NativeBoundaryTests {
         #expect(recentWorks.contains("artworkShelfLayout.viewportHeight ?? cardHeight"))
         #expect(recentWorks.contains(".frame(height: artworkShelfHeight)"))
         #expect(recentWorks.contains("artworkShelfItems"))
+        #expect(recentWorks.contains("contentReloadToken: artworkShelfContentReloadToken"))
+        #expect(recentWorks.contains("SkeletonPlaceholder(width: cardWidth, height: 178"))
         #expect(recentWorks.contains("ScrollView(.horizontal)") == false)
         #expect(recentWorks.contains("LazyHStack") == false)
 

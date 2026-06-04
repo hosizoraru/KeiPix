@@ -12,112 +12,117 @@ struct SavedSearchesView: View {
     @State private var pendingDangerAction: SavedSearchDangerAction?
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 14) {
-                header
+        VStack(spacing: 0) {
+            header
+                .platformGlassControlBar(verticalPadding: 8, topPadding: 2)
 
-                SavedSearchPresetSection(
-                    presets: visiblePresets,
-                    hasUnfilteredContent: store.savedSearchPresets.isEmpty == false,
-                    rowAction: runPreset,
-                    copyAction: copyPresetKeyword,
-                    copyPixivWebAction: copyPresetPixivWebLink,
-                    removeAction: { preset in
-                        pendingDangerAction = .removePreset(preset)
-                    }
-                )
+            ScrollView {
+                VStack(alignment: .leading, spacing: 14) {
+                    SavedSearchPresetSection(
+                        presets: visiblePresets,
+                        hasUnfilteredContent: store.savedSearchPresets.isEmpty == false,
+                        rowAction: runPreset,
+                        copyAction: copyPresetKeyword,
+                        copyPixivWebAction: copyPresetPixivWebLink,
+                        removeAction: { preset in
+                            pendingDangerAction = .removePreset(preset)
+                        }
+                    )
 
-                SavedSearchSection(
-                    title: L10n.savedSearches,
-                    emptyTitle: L10n.noSavedSearches,
-                    noMatchesTitle: L10n.noMatchingSearches,
-                    keywords: visibleSavedSearches,
-                    hasUnfilteredContent: store.savedSearches.isEmpty == false,
-                    rowAction: runSearch,
-                    trailingAction: { keyword in
-                        Menu {
-                            pixivWebSearchActions(keyword: keyword, options: .defaultValue)
+                    SavedSearchSection(
+                        title: L10n.savedSearches,
+                        emptyTitle: L10n.noSavedSearches,
+                        noMatchesTitle: L10n.noMatchingSearches,
+                        keywords: visibleSavedSearches,
+                        hasUnfilteredContent: store.savedSearches.isEmpty == false,
+                        rowAction: runSearch,
+                        trailingAction: { keyword in
+                            Menu {
+                                pixivWebSearchActions(keyword: keyword, options: .defaultValue)
 
-                            Divider()
+                                Divider()
 
-                            Button {
-                                copyKeyword(keyword)
+                                Button {
+                                    copyKeyword(keyword)
+                                } label: {
+                                    Label(L10n.copyKeyword, systemImage: "doc.on.doc")
+                                }
+
+                                Button {
+                                    store.saveSearchPreset(keyword, options: store.searchOptions)
+                                    actionMessage = String(format: L10n.savedSearchPresetFormat, keyword)
+                                } label: {
+                                    Label(L10n.saveSearchWithFilters, systemImage: "slider.horizontal.3")
+                                }
+
+                                Divider()
+
+                                Button(role: .destructive) {
+                                    pendingDangerAction = .removeSavedSearch(keyword)
+                                } label: {
+                                    Label(L10n.removeSavedSearch, systemImage: "star.slash")
+                                }
                             } label: {
-                                Label(L10n.copyKeyword, systemImage: "doc.on.doc")
+                                Label(L10n.moreActions, systemImage: "ellipsis.circle")
                             }
+                        }
+                    )
 
-                            Button {
-                                store.saveSearchPreset(keyword, options: store.searchOptions)
-                                actionMessage = String(format: L10n.savedSearchPresetFormat, keyword)
-                            } label: {
-                                Label(L10n.saveSearchWithFilters, systemImage: "slider.horizontal.3")
-                            }
-
-                            Divider()
-
+                    SavedSearchSection(
+                        title: L10n.recentSearches,
+                        emptyTitle: L10n.noRecentSearches,
+                        noMatchesTitle: L10n.noMatchingSearches,
+                        keywords: visibleSearchHistory,
+                        hasUnfilteredContent: store.searchHistory.isEmpty == false,
+                        rowAction: runSearch,
+                        footer: {
                             Button(role: .destructive) {
-                                pendingDangerAction = .removeSavedSearch(keyword)
+                                pendingDangerAction = .clearSearchHistory(count: store.searchHistory.count)
                             } label: {
-                                Label(L10n.removeSavedSearch, systemImage: "star.slash")
+                                Label(L10n.clearSearchHistory, systemImage: "trash")
                             }
-                        } label: {
-                            Label(L10n.moreActions, systemImage: "ellipsis.circle")
+                            .disabled(store.searchHistory.isEmpty)
+                            .buttonStyle(.glass)
+                            .buttonBorderShape(.capsule)
+                            .controlSize(.small)
+                        },
+                        trailingAction: { keyword in
+                            Menu {
+                                pixivWebSearchActions(keyword: keyword, options: .defaultValue)
+
+                                Divider()
+
+                                Button {
+                                    copyKeyword(keyword)
+                                } label: {
+                                    Label(L10n.copyKeyword, systemImage: "doc.on.doc")
+                                }
+
+                                Button {
+                                    store.saveSearch(keyword)
+                                    actionMessage = String(format: L10n.savedSearchFormat, keyword)
+                                } label: {
+                                    Label(L10n.saveSearch, systemImage: "star")
+                                }
+
+                                Button {
+                                    store.saveSearchPreset(keyword, options: store.searchOptions)
+                                    actionMessage = String(format: L10n.savedSearchPresetFormat, keyword)
+                                } label: {
+                                    Label(L10n.saveSearchWithFilters, systemImage: "slider.horizontal.3")
+                                }
+                            } label: {
+                                Label(L10n.moreActions, systemImage: "ellipsis.circle")
+                            }
                         }
-                    }
-                )
-
-                SavedSearchSection(
-                    title: L10n.recentSearches,
-                    emptyTitle: L10n.noRecentSearches,
-                    noMatchesTitle: L10n.noMatchingSearches,
-                    keywords: visibleSearchHistory,
-                    hasUnfilteredContent: store.searchHistory.isEmpty == false,
-                    rowAction: runSearch,
-                    footer: {
-                        Button(role: .destructive) {
-                            pendingDangerAction = .clearSearchHistory(count: store.searchHistory.count)
-                        } label: {
-                            Label(L10n.clearSearchHistory, systemImage: "trash")
-                        }
-                        .disabled(store.searchHistory.isEmpty)
-                        .buttonStyle(.glass)
-                        .buttonBorderShape(.capsule)
-                        .controlSize(.small)
-                    },
-                    trailingAction: { keyword in
-                        Menu {
-                            pixivWebSearchActions(keyword: keyword, options: .defaultValue)
-
-                            Divider()
-
-                            Button {
-                                copyKeyword(keyword)
-                            } label: {
-                                Label(L10n.copyKeyword, systemImage: "doc.on.doc")
-                            }
-
-                            Button {
-                                store.saveSearch(keyword)
-                                actionMessage = String(format: L10n.savedSearchFormat, keyword)
-                            } label: {
-                                Label(L10n.saveSearch, systemImage: "star")
-                            }
-
-                            Button {
-                                store.saveSearchPreset(keyword, options: store.searchOptions)
-                                actionMessage = String(format: L10n.savedSearchPresetFormat, keyword)
-                            } label: {
-                                Label(L10n.saveSearchWithFilters, systemImage: "slider.horizontal.3")
-                            }
-                        } label: {
-                            Label(L10n.moreActions, systemImage: "ellipsis.circle")
-                        }
-                    }
-                )
+                    )
+                }
+                .padding(.horizontal, 18)
+                .padding(.top, 6)
+                .padding(.bottom, 20)
             }
-            .padding(18)
+            .scrollEdgeEffectStyle(.soft, for: .top)
         }
-        .scrollEdgeEffectStyle(.soft, for: .top)
         .platformPageHeader(
             title: L10n.savedSearches,
             status: savedSearchStatusText,
@@ -163,9 +168,11 @@ struct SavedSearchesView: View {
             ViewThatFits(in: .horizontal) {
                 HStack(spacing: 10) {
                     savedSearchLibraryField
-                        .frame(minWidth: 240, idealWidth: 320, maxWidth: 420)
+                        .frame(minWidth: 240, idealWidth: 360, maxWidth: 560)
 
                     libraryActionRail
+
+                    Spacer(minLength: 0)
                 }
 
                 VStack(alignment: .leading, spacing: 10) {
@@ -175,8 +182,6 @@ struct SavedSearchesView: View {
             }
         }
         .controlSize(.small)
-        .padding(14)
-        .keiGlass(20)
     }
 
     private var savedSearchLibraryField: some View {
