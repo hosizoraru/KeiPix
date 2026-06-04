@@ -61,9 +61,14 @@ struct FeedbackReportSheet: View {
                     }
                 }
                 .pickerStyle(.menu)
+                .buttonStyle(.glass)
+                .buttonBorderShape(.capsule)
 
                 TextField(L10n.note, text: $note, axis: .vertical)
-                    .textFieldStyle(.roundedBorder)
+                    .textFieldStyle(.plain)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 10)
+                    .keiInteractiveGlass(16)
                     .lineLimit(2...5)
 
                 if let localMuteAction, let localMuteTitle = request.localMuteTitle {

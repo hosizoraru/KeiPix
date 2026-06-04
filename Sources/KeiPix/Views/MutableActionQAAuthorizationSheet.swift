@@ -19,14 +19,18 @@ struct MutableActionQAAuthorizationSheet: View {
                 SheetCloseButton(style: .plain)
             }
 
-            TextField(L10n.mutableActionQAAuthorizationPrompt, text: $confirmationText)
-                .textFieldStyle(.roundedBorder)
+            OS26LibraryTextEntryField(
+                text: $confirmationText,
+                placeholder: L10n.mutableActionQAAuthorizationPrompt,
+                minWidth: 260
+            )
                 .onSubmit(runIfAuthorized)
 
             HStack {
                 Button(L10n.cancel) {
                     dismiss()
                 }
+                .os26GlassButton()
                 .keyboardShortcut(.cancelAction)
 
                 Spacer()
@@ -36,7 +40,7 @@ struct MutableActionQAAuthorizationSheet: View {
                 } label: {
                     Label(L10n.runMutableActionQA, systemImage: "checkmark.shield")
                 }
-                .buttonStyle(.glassProminent)
+                .os26GlassButton(prominent: true)
                 .keyboardShortcut(.defaultAction)
                 .disabled(MutableActionQAAuthorization.isAuthorized(confirmationText) == false)
             }

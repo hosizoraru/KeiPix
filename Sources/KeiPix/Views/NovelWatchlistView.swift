@@ -21,8 +21,7 @@ struct NovelWatchlistView: View {
             if store.session == nil {
                 PixivSignedOutStateView(store: store)
             } else if novelStore.isLoadingWatchlist && novelStore.watchlistSeries.isEmpty {
-                ProgressView(L10n.loading)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                OS26LibraryLoadingView(title: L10n.loading, systemImage: "books.vertical")
             } else if novelStore.watchlistSeries.isEmpty {
                 EmptyStateView(
                     title: L10n.novelWatchlist,
@@ -38,7 +37,12 @@ struct NovelWatchlistView: View {
                 }
             }
         }
-        .navigationTitle(L10n.novelWatchlist)
+        .platformPageHeader(
+            title: L10n.novelWatchlist,
+            status: novelWatchlistStatusText,
+            statusSystemImage: "books.vertical"
+        )
+        .platformPageNavigationChrome(title: L10n.novelWatchlist, status: novelWatchlistStatusText)
         .task(id: store.routeRefreshGeneration) {
             // Mirrors `MangaWatchlistView` — only the route refresh
             // signal triggers a fresh fetch so toolbar Refresh works.
@@ -49,19 +53,25 @@ struct NovelWatchlistView: View {
     }
 
     private var paginationFooter: some View {
-        HStack {
-            Spacer()
-            if novelStore.isLoadingWatchlist {
-                ProgressView()
-                    .controlSize(.small)
-            } else {
-                Text(L10n.loadMoreNovels)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-            Spacer()
+        OS26LoadMoreButton(
+            title: L10n.loadMoreNovels,
+            loadingTitle: L10n.loading,
+            systemImage: "arrow.down.circle",
+            isLoading: novelStore.isLoadingWatchlist,
+            minHeight: 150
+        ) {
+            Task { await novelStore.loadMore(route: .novelWatchlist) }
         }
-        .padding(.vertical, 12)
+        .task {
+            await novelStore.loadMore(route: .novelWatchlist)
+        }
+    }
+
+    private var novelWatchlistStatusText: String {
+        guard store.session != nil else { return "" }
+        let count = novelStore.watchlistSeries.count.formatted()
+        let pagination = novelStore.watchlistNextURL == nil ? L10n.noMorePages : L10n.nextPageAvailable
+        return "\(count) \(L10n.results) · \(pagination)"
     }
 
     private var novelWatchlistGridItems: [NovelWatchlistGridItem] {
@@ -86,10 +96,6 @@ struct NovelWatchlistView: View {
             return AnyView(
                 paginationFooter
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .keiPanel(12)
-                    .task {
-                        await novelStore.loadMore(route: .novelWatchlist)
-                    }
             )
         }
     }
@@ -154,7 +160,7 @@ private struct NovelWatchlistCard: View {
                 } label: {
                     Label(L10n.openNovelReader, systemImage: "book.pages")
                 }
-                .buttonStyle(.bordered)
+                .os26GlassButton(prominent: item.latestContentID != nil)
                 .disabled(item.latestContentID == nil)
 
                 Spacer(minLength: 0)
@@ -171,14 +177,13 @@ private struct NovelWatchlistCard: View {
                     }
                 } label: {
                     Label(L10n.moreActions, systemImage: "ellipsis.circle")
-                        .labelStyle(.iconOnly)
                 }
-                .buttonStyle(.bordered)
+                .os26GlassIconButton()
                 .help(L10n.moreActions)
             }
         }
         .padding(12)
-        .background(Color.platformControlBackground, in: RoundedRectangle(cornerRadius: 12))
+        .keiInteractiveGlass(16)
         .contextMenu {
             if let url = item.pixivURL {
                 Link(L10n.openInPixiv, destination: url)
@@ -211,7 +216,7 @@ private struct NovelWatchlistCard: View {
                     .font(.title2)
                     .foregroundStyle(.secondary)
             }
-            .background(.quaternary)
+            .os26SkeletonSurface(10)
         }
     }
 }

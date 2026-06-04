@@ -34,15 +34,14 @@ struct StoredAccountRow: View {
                 Button(action: switchAccount) {
                     Label(L10n.switchAccount, systemImage: "arrow.triangle.2.circlepath")
                 }
-                .buttonStyle(.bordered)
+                .os26GlassButton()
                 .controlSize(.small)
             }
 
             Button(role: .destructive, action: removeAccount) {
                 Label(L10n.removeAccount, systemImage: "trash")
             }
-            .labelStyle(.iconOnly)
-            .buttonStyle(.bordered)
+            .os26GlassIconButton()
             .controlSize(.small)
             .help(L10n.removeAccount)
         }

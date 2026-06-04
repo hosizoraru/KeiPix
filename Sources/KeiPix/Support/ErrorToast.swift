@@ -28,9 +28,13 @@ struct ErrorToast: View {
 
             HStack(spacing: 8) {
                 Button(L10n.retry, action: onRetry)
+                    .buttonStyle(.glass)
+                    .buttonBorderShape(.capsule)
                     .controlSize(.small)
 
                 Button(L10n.copyError, action: onCopy)
+                    .buttonStyle(.glass)
+                    .buttonBorderShape(.capsule)
                     .controlSize(.small)
 
                 Button {
@@ -46,11 +50,7 @@ struct ErrorToast: View {
         .padding(.horizontal, 14)
         .padding(.vertical, 10)
         .frame(maxWidth: 560, alignment: .leading)
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .stroke(Color.orange.opacity(0.3), lineWidth: 1)
-        }
+        .keiGlass(16)
         .shadow(color: .black.opacity(0.16), radius: 18, y: 8)
         .padding(.horizontal, 18)
         .padding(.bottom, 14)

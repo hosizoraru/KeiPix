@@ -12,24 +12,20 @@ struct TrendingTagsView: View {
             if store.session == nil {
                 PixivSignedOutStateView(store: store)
             } else if isLoading {
-                ProgressView(L10n.loading)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                OS26LibraryLoadingView(title: L10n.loading, systemImage: "number")
             } else if tags.isEmpty {
-                ContentUnavailableView {
-                    Label(L10n.noTrendingTags, systemImage: "number")
-                } description: {
-                    if let errorMessage {
-                        Text(errorMessage)
-                    }
-                } actions: {
+                OS26LibraryUnavailableView(
+                    title: L10n.noTrendingTags,
+                    subtitle: errorMessage,
+                    systemImage: "number"
+                ) {
                     Button {
                         Task { await load() }
                     } label: {
                         Label(L10n.retry, systemImage: "arrow.clockwise")
                     }
-                    .buttonStyle(.borderedProminent)
+                    .os26GlassButton(prominent: true)
                 }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 ScrollView {
                     TrendingTagMasonryLayout(spacing: 12) {

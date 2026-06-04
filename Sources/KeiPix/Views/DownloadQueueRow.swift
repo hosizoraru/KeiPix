@@ -360,6 +360,6 @@ struct DownloadDragPreview: View {
         .font(.callout.weight(.semibold))
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
-        .background(.regularMaterial, in: Capsule())
+        .glassEffect(.regular, in: Capsule(style: .continuous))
     }
 }

@@ -30,7 +30,8 @@ struct SearchPopularPreviewStrip: View {
                     .labelStyle(.iconOnly)
                     .help(L10n.showPopularResults)
                     .accessibilityLabel(L10n.showPopularResults)
-                    .buttonStyle(.bordered)
+                    .buttonStyle(.glass)
+                    .buttonBorderShape(.capsule)
                     .controlSize(.small)
                 }
 
@@ -55,7 +56,7 @@ struct SearchPopularPreviewStrip: View {
                 }
             }
             .padding(14)
-            .keiPanel(18)
+            .keiGlass(18)
             .padding(.bottom, 14)
             .sheet(item: $feedbackRequest) { request in
                 FeedbackReportSheet(request: request) {

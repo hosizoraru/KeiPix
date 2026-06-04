@@ -75,8 +75,10 @@ struct SpotlightArticleDetailView: View {
                 await dismissActionMessageIfNeeded(actionMessage)
             }
         } else {
-            ContentUnavailableView(L10n.selectArticle, systemImage: "newspaper")
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            OS26LibraryUnavailableView(
+                title: L10n.selectArticle,
+                systemImage: "newspaper"
+            )
                 .navigationTitle(showsNavigationChrome ? L10n.spotlight : "")
         }
     }
@@ -149,32 +151,28 @@ private struct SpotlightArticleHeader: View {
                         systemImage: isSaved ? "star.fill" : "star"
                     )
                 }
-                .labelStyle(.iconOnly)
-                .buttonStyle(.bordered)
+                .os26GlassIconButton(prominent: isSaved)
                 .controlSize(.small)
                 .help(isSaved ? L10n.removeSavedArticle : L10n.saveArticle)
 
                 ShareLink(item: article.articleURL) {
                     Label(L10n.share, systemImage: "square.and.arrow.up")
                 }
-                .labelStyle(.iconOnly)
-                .buttonStyle(.bordered)
+                .os26GlassIconButton()
                 .controlSize(.small)
                 .help(L10n.share)
 
                 Button(action: copyLink) {
                     Label(L10n.copyLink, systemImage: "link")
                 }
-                .labelStyle(.iconOnly)
-                .buttonStyle(.bordered)
+                .os26GlassIconButton()
                 .controlSize(.small)
                 .help(L10n.copyLink)
 
                 Link(destination: article.articleURL) {
                     Label(L10n.openInPixiv, systemImage: "safari")
                 }
-                .labelStyle(.iconOnly)
-                .buttonStyle(.bordered)
+                .os26GlassIconButton()
                 .controlSize(.small)
                 .help(L10n.openInPixiv)
             }

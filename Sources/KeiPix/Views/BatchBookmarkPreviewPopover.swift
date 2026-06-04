@@ -58,8 +58,11 @@ struct BatchBookmarkPreviewPopover: View {
     @ViewBuilder
     private var candidatesSection: some View {
         if preview.applyArtworks.isEmpty {
-            ContentUnavailableView(preview.scope.emptyStateTitle, systemImage: "bookmark")
-                .frame(minHeight: 150)
+            OS26InlineUnavailableView(
+                title: preview.scope.emptyStateTitle,
+                systemImage: "bookmark",
+                minHeight: 150
+            )
         } else {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 8) {

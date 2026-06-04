@@ -59,11 +59,7 @@ private struct PixivLinkDropOverlay: View {
             }
             .padding(.horizontal, 28)
             .padding(.vertical, 22)
-            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-            .overlay {
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .strokeBorder(.quaternary, lineWidth: 1)
-            }
+            .keiGlass(18)
             .shadow(color: .black.opacity(0.12), radius: 24, y: 8)
         }
     }
