@@ -1,5 +1,7 @@
+import CoreGraphics
 import Foundation
 import Testing
+@testable import KeiPix
 
 struct NativeBoundaryTests {
     @Test("Package stays on the native macOS SwiftPM route")
@@ -221,12 +223,16 @@ struct NativeBoundaryTests {
         #expect(contentView.contains(".buttonStyle(.glassProminent)"))
         #expect(contentView.contains("ArtworkDetailView(store: store, showsNavigationChrome: false)"))
         #expect(contentView.contains("SpotlightArticleDetailView(store: store, showsNavigationChrome: false)"))
+        #expect(contentView.contains("@State private var isCompactArtworkDetailPresented = false"))
         #expect(contentView.contains("@State private var isArtworkDetailPanelUserEnabled = false"))
         #expect(contentView.contains("toggleArtworkDetailPanel(hidesSidebar: showsSidebarToggle)"))
         #expect(contentView.contains("toggleSpotlightDetailPanel(hidesSidebar: showsSidebarToggle)"))
         #expect(contentView.contains("isArtworkDetailPanelUserEnabled ? L10n.hideDetails : L10n.showDetails"))
         #expect(contentView.contains("isSpotlightDetailPanelUserEnabled ? L10n.hideDetails : L10n.showDetails"))
-        #expect(contentView.contains("if isArtworkDetailPanelUserEnabled {\n                        presentArtworkDetail(for: artwork, hidesSidebar: showsSidebarToggle)"))
+        #expect(contentView.contains("presentArtworkDetail(for: artwork, usesCompactSheet: true)"))
+        #expect(contentView.contains(".sheet(isPresented: compactArtworkDetailBinding)"))
+        #expect(contentView.contains("private func iPadArtworkDetailSheet(close: @escaping () -> Void) -> some View"))
+        #expect(contentView.contains("private var compactArtworkDetailBinding: Binding<Bool>"))
         #expect(contentView.contains("private var isArtworkDetailPanelVisible: Bool"))
         #expect(contentView.contains("private var isSpotlightDetailPanelVisible: Bool"))
         #expect(contentView.contains("dismissArtworkDetail(clearSelection: false)"))
@@ -273,6 +279,7 @@ struct NativeBoundaryTests {
         #expect(contentView.contains("IPadToolbarMenuAction.downloadSelectedArtwork"))
         #expect(contentView.contains("IPadToolbarMenuAction.searchImageSource"))
         #expect(contentView.contains("IPadToolbarMenuAction.openCreatorProfile"))
+        #expect(contentView.contains("IPadToolbarMenuAction.openArtworkDetails"))
         #expect(contentView.contains("IPadToolbarMenuAction.openReaderWindow"))
         #expect(contentView.contains("IPadToolbarMenuAction.openSelectedArtworkInPixiv"))
         #expect(contentView.contains("IPadToolbarMenuAction.copySelectedArtworkLink"))
@@ -301,6 +308,7 @@ struct NativeBoundaryTests {
         #expect(contentView.contains("systemName: \"checkmark\"") == false)
         #expect(contentView.contains("private var sidebarToggleButton: some View") == false)
         #expect(contentView.contains("usesLandscapeSidebar(for size: CGSize)"))
+        #expect(contentView.contains("MobileWorkspaceLayout(size: size, platform: currentMobilePlatform).usesLandscapeSidebar"))
         #expect(contentView.contains("case settings"))
         #expect(contentView.contains("ToolbarItem(placement: .topBarLeading)"))
         #expect(contentView.contains("private var routeMenu: some View"))
@@ -374,6 +382,19 @@ struct NativeBoundaryTests {
         #expect(spotlightView.contains("private var loadMoreSpan") == false)
         #expect(spotlightDetailView.contains("var showsNavigationChrome = true"))
         #expect(spotlightDetailView.contains("showsNavigationChrome ? (article.pureTitle.isEmpty ? L10n.spotlight : article.pureTitle) : \"\""))
+    }
+
+    @Test("Mobile workspace keeps portrait and phone layouts compact")
+    func mobileWorkspaceKeepsPortraitAndPhoneLayoutsCompact() {
+        let iPhonePortrait = MobileWorkspaceLayout(size: CGSize(width: 393, height: 852), platform: .phone)
+        let iPhoneLandscape = MobileWorkspaceLayout(size: CGSize(width: 852, height: 393), platform: .phone)
+        let iPadPortrait = MobileWorkspaceLayout(size: CGSize(width: 834, height: 1194), platform: .pad)
+        let iPadLandscape = MobileWorkspaceLayout(size: CGSize(width: 1194, height: 834), platform: .pad)
+
+        #expect(iPhonePortrait.usesCompactTabs)
+        #expect(iPhoneLandscape.usesCompactTabs)
+        #expect(iPadPortrait.usesCompactTabs)
+        #expect(iPadLandscape.usesLandscapeSidebar)
     }
 
     @Test("Pixiv signed-out surfaces share one native login state")
@@ -905,6 +926,8 @@ struct NativeBoundaryTests {
         #expect(galleryView.contains("store.isLoading ? [.loading] : [.empty]"))
         #expect(feedHeader.contains("enum FeedHeaderPresentation"))
         #expect(feedHeader.contains("case iPadCompact"))
+        #expect(feedHeader.contains("ViewThatFits(in: .horizontal)"))
+        #expect(feedHeader.contains("iPadCompactHeaderStackedActions"))
         #expect(feedHeader.contains("NativeInlineFilterField("))
         #expect(feedHeader.contains("iPadFeedHeaderActionChrome()"))
         #expect(store.contains("var artworkNavigationIntentSerial = 0"))

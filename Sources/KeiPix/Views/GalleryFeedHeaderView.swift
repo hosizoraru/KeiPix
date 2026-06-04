@@ -73,28 +73,22 @@ struct FeedHeaderView: View {
 
     @ViewBuilder
     private var iPadCompactHeaderActions: some View {
+        ViewThatFits(in: .horizontal) {
+            iPadCompactHeaderInlineActions
+            iPadCompactHeaderStackedActions
+        }
+        .frame(maxWidth: .infinity, alignment: .trailing)
+    }
+
+    @ViewBuilder
+    private var iPadCompactHeaderInlineActions: some View {
         HStack(spacing: 7) {
             if store.artworks.isEmpty == false {
-                #if os(iOS)
-                NativeInlineFilterField(
-                    text: $store.clientFilterQuery,
-                    placeholder: L10n.filterArtworks,
-                    accessibilityLabel: L10n.filterArtworks
-                )
-                .frame(minWidth: 180, idealWidth: 240, maxWidth: 300, minHeight: 34, maxHeight: 34)
-                .layoutPriority(1)
-                #else
-                EmptyView()
-                #endif
+                iPadCompactFilterField
+                    .frame(minWidth: 180, idealWidth: 240, maxWidth: 300, minHeight: 34, maxHeight: 34)
+                    .layoutPriority(1)
 
-                Button {
-                    _ = store.randomFromCurrentFeed()
-                } label: {
-                    Label(L10n.randomFromFeed, systemImage: "shuffle")
-                }
-                .help(L10n.randomFromFeed)
-                .accessibilityLabel(L10n.randomFromFeed)
-                .iPadFeedHeaderActionChrome()
+                iPadCompactRandomButton
             }
 
             if store.selectedRoute.isOwnBookmarkRoute {
@@ -119,6 +113,68 @@ struct FeedHeaderView: View {
             compactMoreActionsMenu
         }
         .frame(maxWidth: .infinity, alignment: .trailing)
+    }
+
+    @ViewBuilder
+    private var iPadCompactHeaderStackedActions: some View {
+        VStack(alignment: .trailing, spacing: 7) {
+            if store.artworks.isEmpty == false {
+                iPadCompactFilterField
+                    .frame(maxWidth: .infinity, minHeight: 34, maxHeight: 34)
+            }
+
+            HStack(spacing: 7) {
+                if store.artworks.isEmpty == false {
+                    iPadCompactRandomButton
+                }
+
+                if store.selectedRoute.isOwnBookmarkRoute {
+                    bookmarkFiltersMenu
+                }
+
+                if hasActiveArtworkSearch {
+                    Button {
+                        clearArtworkSearch()
+                    } label: {
+                        Label(L10n.clearSearch, systemImage: "xmark.circle.fill")
+                    }
+                    .help(L10n.clearSearch)
+                    .accessibilityLabel(L10n.clearSearch)
+                    .iPadFeedHeaderActionChrome()
+                }
+
+                if store.artworks.isEmpty == false {
+                    compactSelectionMenu
+                }
+
+                compactMoreActionsMenu
+            }
+        }
+    }
+
+    #if os(iOS)
+    private var iPadCompactFilterField: some View {
+        NativeInlineFilterField(
+            text: $store.clientFilterQuery,
+            placeholder: L10n.filterArtworks,
+            accessibilityLabel: L10n.filterArtworks
+        )
+    }
+    #else
+    private var iPadCompactFilterField: some View {
+        EmptyView()
+    }
+    #endif
+
+    private var iPadCompactRandomButton: some View {
+        Button {
+            _ = store.randomFromCurrentFeed()
+        } label: {
+            Label(L10n.randomFromFeed, systemImage: "shuffle")
+        }
+        .help(L10n.randomFromFeed)
+        .accessibilityLabel(L10n.randomFromFeed)
+        .iPadFeedHeaderActionChrome()
     }
 
     @ViewBuilder

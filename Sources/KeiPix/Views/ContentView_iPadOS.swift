@@ -1,5 +1,6 @@
 #if os(iOS)
 import SwiftUI
+import UIKit
 
 /// iPadOS-specific ContentView with a split landscape shell and compact tabs.
 ///
@@ -12,6 +13,7 @@ struct ContentView: View {
     @State private var splitColumnVisibility: NavigationSplitViewVisibility = .all
     @State private var selectedSidebarItem: KeiPixSidebarDestination = .route(.home)
     @State private var isArtworkDetailPresented = false
+    @State private var isCompactArtworkDetailPresented = false
     @State private var isArtworkDetailPanelUserEnabled = false
     @State private var isSpotlightDetailPresented = false
     @State private var isSpotlightDetailPanelUserEnabled = false
@@ -316,7 +318,7 @@ struct ContentView: View {
                                 systemImage: store.galleryLayoutMode.systemImage,
                                 accessibilityLabel: L10n.galleryLayout,
                                 menu: galleryLayoutMenu,
-                                select: handleNativeToolbarMenuAction
+                                select: { handleNativeToolbarMenuAction($0, showsSidebarToggle: showsSidebarToggle) }
                             )
                             .fixedSize(horizontal: true, vertical: false)
                         }
@@ -362,7 +364,7 @@ struct ContentView: View {
                                 systemImage: selectedArtworkMenuSystemImage,
                                 accessibilityLabel: L10n.currentArtwork,
                                 menu: artworkActionsMenu,
-                                select: handleNativeToolbarMenuAction
+                                select: { handleNativeToolbarMenuAction($0, showsSidebarToggle: showsSidebarToggle) }
                             )
                             .fixedSize(horizontal: true, vertical: false)
                         }
@@ -373,7 +375,7 @@ struct ContentView: View {
                             systemImage: "ellipsis.circle",
                             accessibilityLabel: L10n.appControls,
                             menu: appControlsMenu,
-                            select: handleNativeToolbarMenuAction
+                            select: { handleNativeToolbarMenuAction($0, showsSidebarToggle: showsSidebarToggle) }
                         )
                         .fixedSize(horizontal: true, vertical: false)
                     }
@@ -397,8 +399,12 @@ struct ContentView: View {
                 }
                 .onChange(of: store.artworkNavigationIntentSerial) { _, _ in
                     guard let artwork = store.selectedArtwork else { return }
-                    if isArtworkDetailPanelUserEnabled {
-                        presentArtworkDetail(for: artwork, hidesSidebar: showsSidebarToggle)
+                    if showsSidebarToggle {
+                        if isArtworkDetailPanelUserEnabled {
+                            presentArtworkDetail(for: artwork, hidesSidebar: true)
+                        }
+                    } else {
+                        presentArtworkDetail(for: artwork, usesCompactSheet: true)
                     }
                 }
                 .onChange(of: store.selectedRoute) { _, route in
@@ -425,6 +431,14 @@ struct ContentView: View {
                         }
                         .os26SheetChrome(.reader)
                     }
+                }
+                .sheet(isPresented: compactArtworkDetailBinding) {
+                    NavigationStack {
+                        iPadArtworkDetailSheet {
+                            dismissCompactArtworkDetail(clearSelection: false)
+                        }
+                    }
+                    .os26SheetChrome(.detail)
                 }
         }
     }
@@ -536,6 +550,15 @@ struct ContentView: View {
     }
 
     private func iPadArtworkDetailPanel(close: @escaping () -> Void) -> some View {
+        VStack(spacing: 0) {
+            iPadArtworkDetailHeader(close: close)
+
+            ArtworkDetailView(store: store, showsNavigationChrome: false)
+        }
+        .background(.background)
+    }
+
+    private func iPadArtworkDetailSheet(close: @escaping () -> Void) -> some View {
         VStack(spacing: 0) {
             iPadArtworkDetailHeader(close: close)
 
@@ -737,6 +760,12 @@ struct ContentView: View {
                             isEnabled: hasSelection
                         ),
                         .action(
+                            id: IPadToolbarMenuAction.openArtworkDetails,
+                            title: L10n.details,
+                            systemImage: "info.circle",
+                            isEnabled: hasSelection
+                        ),
+                        .action(
                             id: IPadToolbarMenuAction.openReaderWindow,
                             title: L10n.openReaderWindow,
                             systemImage: "rectangle.inset.filled",
@@ -916,7 +945,7 @@ struct ContentView: View {
         )
     }
 
-    private func handleNativeToolbarMenuAction(_ id: String) {
+    private func handleNativeToolbarMenuAction(_ id: String, showsSidebarToggle: Bool) {
         if let mode = IPadToolbarMenuAction.galleryLayoutMode(from: id) {
             store.setGalleryLayoutMode(mode)
             return
@@ -954,6 +983,17 @@ struct ContentView: View {
             Task { await store.openSelectedArtworkCreatorFeed(.userIllustrations) }
         case IPadToolbarMenuAction.creatorManga:
             Task { await store.openSelectedArtworkCreatorFeed(.userManga) }
+        case IPadToolbarMenuAction.openArtworkDetails:
+            if let artwork = store.selectedArtwork {
+                if showsSidebarToggle {
+                    isArtworkDetailPanelUserEnabled = true
+                }
+                presentArtworkDetail(
+                    for: artwork,
+                    hidesSidebar: showsSidebarToggle,
+                    usesCompactSheet: showsSidebarToggle == false
+                )
+            }
         case IPadToolbarMenuAction.openReaderWindow:
             store.prepareSelectedReaderWindow()
         case IPadToolbarMenuAction.openSelectedArtworkInPixiv:
@@ -1075,9 +1115,23 @@ struct ContentView: View {
     }
 
     private func presentArtworkDetail(for artwork: PixivArtwork, hidesSidebar: Bool) {
+        presentArtworkDetail(for: artwork, hidesSidebar: hidesSidebar, usesCompactSheet: false)
+    }
+
+    private func presentArtworkDetail(
+        for artwork: PixivArtwork,
+        hidesSidebar: Bool = false,
+        usesCompactSheet: Bool
+    ) {
         guard store.selectedRoute.usesArtworkFeed else { return }
         if store.selectedArtwork?.id != artwork.id {
             store.selectedArtwork = artwork
+        }
+        if usesCompactSheet {
+            withAnimation(.snappy(duration: 0.2)) {
+                isCompactArtworkDetailPresented = true
+            }
+            return
         }
         withAnimation(.snappy(duration: 0.24)) {
             if hidesSidebar {
@@ -1091,6 +1145,16 @@ struct ContentView: View {
         withAnimation(.snappy(duration: 0.22)) {
             isArtworkDetailPanelUserEnabled = false
             isArtworkDetailPresented = false
+            isCompactArtworkDetailPresented = false
+            if clearSelection {
+                store.selectedArtwork = nil
+            }
+        }
+    }
+
+    private func dismissCompactArtworkDetail(clearSelection: Bool) {
+        withAnimation(.snappy(duration: 0.2)) {
+            isCompactArtworkDetailPresented = false
             if clearSelection {
                 store.selectedArtwork = nil
             }
@@ -1213,7 +1277,11 @@ struct ContentView: View {
     }
 
     private func usesLandscapeSidebar(for size: CGSize) -> Bool {
-        size.width >= 700 && size.width > size.height
+        MobileWorkspaceLayout(size: size, platform: currentMobilePlatform).usesLandscapeSidebar
+    }
+
+    private var currentMobilePlatform: ReaderPlatformKind {
+        UIDevice.current.userInterfaceIdiom == .phone ? .phone : .pad
     }
 
     private var iPadSidebarVisible: Bool {
@@ -1301,6 +1369,16 @@ struct ContentView: View {
             }
         }
     }
+
+    private var compactArtworkDetailBinding: Binding<Bool> {
+        Binding {
+            isCompactArtworkDetailPresented && store.selectedArtwork != nil
+        } set: { newValue in
+            if newValue == false {
+                dismissCompactArtworkDetail(clearSelection: false)
+            }
+        }
+    }
 }
 
 private enum IPadToolbarMenuAction {
@@ -1317,6 +1395,7 @@ private enum IPadToolbarMenuAction {
     static let openCreatorProfile = "open-creator-profile"
     static let creatorIllustrations = "creator-illustrations"
     static let creatorManga = "creator-manga"
+    static let openArtworkDetails = "open-artwork-details"
     static let openReaderWindow = "open-reader-window"
     static let openSelectedArtworkInPixiv = "open-selected-artwork-in-pixiv"
     static let copySelectedArtworkLink = "copy-selected-artwork-link"

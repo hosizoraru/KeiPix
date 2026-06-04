@@ -29,6 +29,9 @@ struct NovelGalleryView: View {
         .navigationTitle(store.selectedRoute.title)
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
+                #if os(iOS)
+                novelLayoutMenu
+                #else
                 Picker(L10n.galleryLayout, selection: Binding(
                     get: { store.novelGalleryLayoutMode },
                     set: { store.setNovelGalleryLayoutMode($0) }
@@ -41,6 +44,7 @@ struct NovelGalleryView: View {
                 .pickerStyle(.segmented)
                 .labelsHidden()
                 .frame(maxWidth: 140)
+                #endif
             }
         }
         .task(id: novelTaskID) {
@@ -151,6 +155,25 @@ struct NovelGalleryView: View {
             Spacer()
         }
         .padding(.vertical, 12)
+    }
+
+    private var novelLayoutMenu: some View {
+        Menu {
+            Section(L10n.galleryLayout) {
+                ForEach(NovelGalleryLayoutMode.allCases) { mode in
+                    Button {
+                        store.setNovelGalleryLayoutMode(mode)
+                    } label: {
+                        Label(mode.title, systemImage: store.novelGalleryLayoutMode == mode ? "checkmark" : mode.systemImage)
+                    }
+                }
+            }
+        } label: {
+            Label(store.novelGalleryLayoutMode.title, systemImage: store.novelGalleryLayoutMode.systemImage)
+                .lineLimit(1)
+        }
+        .help(L10n.galleryLayout)
+        .accessibilityLabel("\(L10n.galleryLayout): \(store.novelGalleryLayoutMode.title)")
     }
 
     @ViewBuilder
