@@ -700,13 +700,18 @@ struct NativeGalleryCollectionView: UIViewRepresentable {
             snapshot.appendItems(parent.items, toSection: 0)
             lastSnapshotItemIDs = itemIDs
             lastContentReloadToken = parent.contentReloadToken
-            dataSource?.apply(snapshot, animatingDifferences: false) { [weak self, weak collectionView] in
+            let completion: () -> Void = { [weak self, weak collectionView] in
                 guard let self, let collectionView else { return }
                 if contentChanged && itemsChanged == false && needsInitialSnapshot == false {
                     self.reconfigureVisibleItems(in: collectionView)
                 }
                 self.lastHighlightedArtworkIDs = self.parent.highlightedArtworkIDs
                 self.scrollToSelectionIfNeeded(in: collectionView)
+            }
+            if needsInitialSnapshot || itemsChanged {
+                dataSource?.applySnapshotUsingReloadData(snapshot, completion: completion)
+            } else {
+                dataSource?.apply(snapshot, animatingDifferences: false, completion: completion)
             }
         }
 
@@ -799,6 +804,7 @@ private final class NativeGalleryMasonryUICollectionViewLayout: UICollectionView
     )
 
     private var cachedAttributes: [IndexPath: UICollectionViewLayoutAttributes] = [:]
+    private var previousCachedAttributes: [IndexPath: UICollectionViewLayoutAttributes] = [:]
     private var cachedContentSize: CGSize = .zero
 
     override var collectionViewContentSize: CGSize {
@@ -807,6 +813,8 @@ private final class NativeGalleryMasonryUICollectionViewLayout: UICollectionView
 
     override func prepare() {
         super.prepare()
+
+        previousCachedAttributes = cachedAttributes
 
         guard let collectionView else {
             cachedAttributes = [:]
@@ -845,11 +853,28 @@ private final class NativeGalleryMasonryUICollectionViewLayout: UICollectionView
     }
 
     override func layoutAttributesForItem(at indexPath: IndexPath) -> UICollectionViewLayoutAttributes? {
-        cachedAttributes[indexPath]
+        cachedAttributes[indexPath] ?? previousCachedAttributes[indexPath]
+    }
+
+    override func initialLayoutAttributesForAppearingItem(
+        at itemIndexPath: IndexPath
+    ) -> UICollectionViewLayoutAttributes? {
+        copiedAttributes(for: itemIndexPath)
+    }
+
+    override func finalLayoutAttributesForDisappearingItem(
+        at itemIndexPath: IndexPath
+    ) -> UICollectionViewLayoutAttributes? {
+        copiedAttributes(for: itemIndexPath)
     }
 
     override func shouldInvalidateLayout(forBoundsChange newBounds: CGRect) -> Bool {
         true
+    }
+
+    private func copiedAttributes(for indexPath: IndexPath) -> UICollectionViewLayoutAttributes? {
+        (cachedAttributes[indexPath] ?? previousCachedAttributes[indexPath])?.copy()
+            as? UICollectionViewLayoutAttributes
     }
 }
 

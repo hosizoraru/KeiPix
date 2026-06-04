@@ -56,7 +56,7 @@ struct UserProfileRecentWorksSection: View {
                     .foregroundStyle(.secondary)
                     .padding(.horizontal, 6)
                     .padding(.vertical, 1)
-                    .background(.quaternary, in: Capsule())
+                    .glassEffect(.regular, in: Capsule(style: .continuous))
             }
 
             Spacer()
@@ -67,7 +67,8 @@ struct UserProfileRecentWorksSection: View {
                 } label: {
                     Label(L10n.retry, systemImage: "arrow.clockwise")
                 }
-                .buttonStyle(.bordered)
+                .buttonStyle(.glass)
+                .buttonBorderShape(.capsule)
                 .controlSize(.small)
             }
 
@@ -76,7 +77,8 @@ struct UserProfileRecentWorksSection: View {
             } label: {
                 Label(L10n.viewAllWorks, systemImage: "arrow.right.circle")
             }
-            .buttonStyle(.bordered)
+            .buttonStyle(.glass)
+            .buttonBorderShape(.capsule)
             .controlSize(.small)
         }
     }
@@ -93,7 +95,7 @@ struct UserProfileRecentWorksSection: View {
                     }
             }
         }
-        .frame(height: cardHeight)
+        .frame(height: artworkShelfHeight)
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
@@ -118,7 +120,7 @@ struct UserProfileRecentWorksSection: View {
     private var carousel: some View {
         NativeCreatorPreviewCollectionView(
             items: artworkShelfItems,
-            layout: .horizontalShelf(itemWidth: cardWidth, itemHeight: cardHeight)
+            layout: artworkShelfLayout
         ) { item in
             switch item {
             case .artwork(let artwork):
@@ -127,7 +129,7 @@ struct UserProfileRecentWorksSection: View {
                 return AnyView(EmptyView())
             }
         }
-        .frame(height: cardHeight)
+        .frame(height: artworkShelfHeight)
         // Fade the leading + trailing edges so users get a visual cue that
         // the native carousel scrolls. Lifted from Apple's Music shelves.
         .mask {
@@ -139,6 +141,14 @@ struct UserProfileRecentWorksSection: View {
                     .frame(width: 14)
             }
         }
+    }
+
+    private var artworkShelfLayout: NativeCreatorPreviewCollectionLayout {
+        .horizontalShelf(itemWidth: cardWidth, itemHeight: cardHeight)
+    }
+
+    private var artworkShelfHeight: CGFloat {
+        artworkShelfLayout.viewportHeight ?? cardHeight
     }
 
     private var artworkShelfItems: [NativeCreatorPreviewCollectionItem] {

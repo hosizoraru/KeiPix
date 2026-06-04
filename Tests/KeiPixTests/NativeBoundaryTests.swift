@@ -203,6 +203,9 @@ struct NativeBoundaryTests {
         #expect(contentView.contains("splitColumnVisibility != .detailOnly ? .sidebarCompanion : .full"))
         #expect(contentView.contains("@State private var isArtworkDetailPresented = false"))
         #expect(contentView.contains("@State private var isSpotlightDetailPresented = false"))
+        #expect(contentView.contains("@State private var creatorProfileVisualQAUser: PixivUser?"))
+        #expect(contentView.contains("VisualQALaunchArgument.contains(.creatorProfile)"))
+        #expect(contentView.contains("visualQADetail: VisualQASampleData.creatorProfileDetail"))
         #expect(contentView.contains("@State private var isSpotlightDetailPanelUserEnabled = false"))
         #expect(contentView.contains("@State private var isSpotlightArticlePushPresented = false"))
         #expect(contentView.contains(".navigationDestination(isPresented: $isSpotlightArticlePushPresented)"))
@@ -476,17 +479,58 @@ struct NativeBoundaryTests {
             contentsOf: root.appending(path: "Sources/KeiPix/Support/SheetHeaderRail.swift"),
             encoding: .utf8
         )
+        let sheetChrome = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Support/SheetCloseButton.swift"),
+            encoding: .utf8
+        )
+        let userProfileHeader = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/UserProfileSheetHeader.swift"),
+            encoding: .utf8
+        )
+        let userProfileSheet = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/UserProfileSheet.swift"),
+            encoding: .utf8
+        )
+        let userProfileInfoSections = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/UserProfileInfoSections.swift"),
+            encoding: .utf8
+        )
+        let userProfileCreatorTags = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/UserProfileCreatorTagsSection.swift"),
+            encoding: .utf8
+        )
 
         #expect(glassSupport.contains("func platformGlassControlBar("))
         #expect(glassSupport.contains(".keiGlass(20)"))
         #expect(gallery.contains(".platformGlassControlBar(verticalPadding: 6"))
         #expect(gallery.contains(".glassEffect(.regular, in: Capsule(style: .continuous))"))
         #expect(sheetHeader.contains(".platformGlassControlBar(verticalPadding: 12"))
+        #expect(sheetHeader.contains(".buttonStyle(.glass)"))
+        #expect(sheetHeader.contains(".buttonBorderShape(.capsule)"))
+        #expect(sheetChrome.contains("func os26SheetChrome(_ style: OS26SheetPresentationStyle = .standard)"))
+        #expect(sheetChrome.contains(".presentationBackground(.regularMaterial)"))
+        #expect(sheetChrome.contains(".presentationCornerRadius(style.cornerRadius)"))
+        #expect(userProfileHeader.contains("GlassEffectContainer(spacing: 8)"))
+        #expect(userProfileHeader.contains("ViewThatFits(in: .horizontal)"))
+        #expect(userProfileHeader.contains("ProfileSheetHeaderButtonDisplayStyle"))
+        #expect(userProfileHeader.contains("profileLinkButtons"))
+        #expect(userProfileHeader.contains("ProfileHeaderLinkEntry"))
+        #expect(userProfileHeader.contains("detail?.profile.webpage"))
+        #expect(userProfileSheet.contains("UserProfileLinksSection") == false)
+        #expect(userProfileInfoSections.contains("struct UserProfileLinksSection") == false)
+        #expect(userProfileCreatorTags.contains("private var tagCloud: some View"))
+        #expect(userProfileCreatorTags.contains("FlowLayout(spacing: 8)"))
+        #expect(userProfileCreatorTags.contains("CreatorArtworkTagChip"))
+        #expect(userProfileCreatorTags.contains(".glassEffect(.regular.interactive(), in: RoundedRectangle(cornerRadius: 18"))
+        #expect(userProfileCreatorTags.contains("Divider()") == false)
 
         for file in swiftFiles {
             let source = try String(contentsOf: file, encoding: .utf8)
             #expect(source.contains(".background(.bar)") == false, "\(file.lastPathComponent) should not use legacy bar fills for OS 26 chrome")
             #expect(source.contains(".background(.thinMaterial, in: Capsule())") == false, "\(file.lastPathComponent) should use glassEffect for status capsules")
+            if file.lastPathComponent != "SheetCloseButton.swift" {
+                #expect(source.contains(".iPadFriendlySheet()") == false, "\(file.lastPathComponent) should declare OS 26 sheet intent with os26SheetChrome")
+            }
         }
     }
 
@@ -707,6 +751,10 @@ struct NativeBoundaryTests {
         #expect(nativeCollection.contains("reloadHighlightDeltaIfNeeded"))
         #expect(nativeCollection.contains("reconfigureVisibleItems"))
         #expect(nativeCollection.contains("symmetricDifference"))
+        #expect(nativeCollection.contains("applySnapshotUsingReloadData"))
+        #expect(nativeCollection.contains("previousCachedAttributes"))
+        #expect(nativeCollection.contains("initialLayoutAttributesForAppearingItem"))
+        #expect(nativeCollection.contains("finalLayoutAttributesForDisappearingItem"))
         #expect(nativeCollection.contains("UIPointerInteractionDelegate"))
         #expect(nativeCollection.contains("UIPointerStyle(effect: .lift"))
         #expect(nativeCollection.contains("showsLargeContentViewer = true"))
@@ -1147,19 +1195,26 @@ struct NativeBoundaryTests {
         )
 
         #expect(recentWorks.contains("NativeCreatorPreviewCollectionView("))
+        #expect(recentWorks.contains("private var artworkShelfLayout: NativeCreatorPreviewCollectionLayout"))
         #expect(recentWorks.contains(".horizontalShelf(itemWidth: cardWidth, itemHeight: cardHeight)"))
+        #expect(recentWorks.contains("artworkShelfLayout.viewportHeight ?? cardHeight"))
+        #expect(recentWorks.contains(".frame(height: artworkShelfHeight)"))
         #expect(recentWorks.contains("artworkShelfItems"))
         #expect(recentWorks.contains("ScrollView(.horizontal)") == false)
         #expect(recentWorks.contains("LazyHStack") == false)
 
         #expect(relatedCreators.contains("NativeCreatorPreviewCollectionView("))
+        #expect(relatedCreators.contains("private var relatedCreatorShelfLayout: NativeCreatorPreviewCollectionLayout"))
         #expect(relatedCreators.contains(".horizontalShelf(itemWidth: relatedCreatorShelfItemWidth, itemHeight: cardHeight)"))
+        #expect(relatedCreators.contains("relatedCreatorShelfLayout.viewportHeight ?? cardHeight"))
+        #expect(relatedCreators.contains(".frame(height: relatedCreatorShelfHeight)"))
         #expect(relatedCreators.contains("relatedCreatorShelfItems"))
         #expect(relatedCreators.contains("ScrollView(.horizontal)") == false)
         #expect(relatedCreators.contains("LazyHStack") == false)
 
         #expect(nativeCollection.contains("case artwork(PixivArtwork)"))
         #expect(nativeCollection.contains("case horizontalShelf(itemWidth: CGFloat, itemHeight: CGFloat)"))
+        #expect(nativeCollection.contains("var viewportHeight: CGFloat?"))
         #expect(nativeCollection.contains("flowLayout.scrollDirection = parent.layout.nsScrollDirection"))
         #expect(nativeCollection.contains("flowLayout.scrollDirection = parent.layout.uiScrollDirection"))
         #expect(nativeCollection.contains("refreshVisibleHostedContent(in: collectionView)"))

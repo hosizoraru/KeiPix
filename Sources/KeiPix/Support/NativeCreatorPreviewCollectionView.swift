@@ -65,6 +65,12 @@ enum NativeCreatorPreviewCollectionLayout: Equatable {
         return EdgeInsets(top: 14, leading: 18, bottom: 20, trailing: 18)
     }
 
+    var viewportHeight: CGFloat? {
+        guard case .horizontalShelf(_, let itemHeight) = self else { return nil }
+        let insets = sectionInsets
+        return itemHeight + insets.top + insets.bottom
+    }
+
     func itemSize(for item: NativeCreatorPreviewCollectionItem, containerWidth: CGFloat) -> CGSize {
         if case .horizontalShelf(let itemWidth, let itemHeight) = self {
             return CGSize(width: itemWidth, height: itemHeight)

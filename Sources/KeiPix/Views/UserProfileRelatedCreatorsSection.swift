@@ -56,7 +56,7 @@ struct UserProfileRelatedCreatorsSection: View {
                     .foregroundStyle(.secondary)
                     .padding(.horizontal, 6)
                     .padding(.vertical, 1)
-                    .background(.quaternary, in: Capsule())
+                    .glassEffect(.regular, in: Capsule(style: .continuous))
             }
 
             Spacer()
@@ -67,7 +67,8 @@ struct UserProfileRelatedCreatorsSection: View {
                 } label: {
                     Label(L10n.retry, systemImage: "arrow.clockwise")
                 }
-                .buttonStyle(.bordered)
+                .buttonStyle(.glass)
+                .buttonBorderShape(.capsule)
                 .controlSize(.small)
             }
 
@@ -77,7 +78,8 @@ struct UserProfileRelatedCreatorsSection: View {
                 } label: {
                     Label(L10n.viewAllRelatedCreators, systemImage: "arrow.right.circle")
                 }
-                .buttonStyle(.bordered)
+                .buttonStyle(.glass)
+                .buttonBorderShape(.capsule)
                 .controlSize(.small)
             }
         }
@@ -111,14 +113,14 @@ struct UserProfileRelatedCreatorsSection: View {
                     }
             }
         }
-        .frame(height: cardHeight)
+        .frame(height: relatedCreatorShelfHeight)
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private var carousel: some View {
         NativeCreatorPreviewCollectionView(
             items: relatedCreatorShelfItems,
-            layout: .horizontalShelf(itemWidth: relatedCreatorShelfItemWidth, itemHeight: cardHeight)
+            layout: relatedCreatorShelfLayout
         ) { item in
             switch item {
             case .preview(let preview):
@@ -142,7 +144,7 @@ struct UserProfileRelatedCreatorsSection: View {
                 return AnyView(EmptyView())
             }
         }
-        .frame(height: cardHeight)
+        .frame(height: relatedCreatorShelfHeight)
         .mask {
             HStack(spacing: 0) {
                 LinearGradient(colors: [.clear, .black], startPoint: .leading, endPoint: .trailing)
@@ -152,6 +154,14 @@ struct UserProfileRelatedCreatorsSection: View {
                     .frame(width: 14)
             }
         }
+    }
+
+    private var relatedCreatorShelfLayout: NativeCreatorPreviewCollectionLayout {
+        .horizontalShelf(itemWidth: relatedCreatorShelfItemWidth, itemHeight: cardHeight)
+    }
+
+    private var relatedCreatorShelfHeight: CGFloat {
+        relatedCreatorShelfLayout.viewportHeight ?? cardHeight
     }
 
     private var relatedCreatorShelfItemWidth: CGFloat {
@@ -322,7 +332,8 @@ private struct RelatedCreatorCard: View {
                     Label(L10n.unfollow, systemImage: "person.crop.circle.badge.minus")
                         .frame(maxWidth: .infinity)
                 }
-                .buttonStyle(.bordered)
+                .buttonStyle(.glass)
+                .buttonBorderShape(.capsule)
                 .controlSize(.small)
                 .disabled(isUpdatingFollow)
             } else {
@@ -344,7 +355,8 @@ private struct RelatedCreatorCard: View {
                         .frame(maxWidth: .infinity)
                 }
                 .menuStyle(.borderlessButton)
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(.glassProminent)
+                .buttonBorderShape(.capsule)
                 .controlSize(.small)
                 .disabled(isUpdatingFollow)
             }
@@ -355,7 +367,8 @@ private struct RelatedCreatorCard: View {
                 Label(L10n.illustrations, systemImage: "photo")
             }
             .labelStyle(.iconOnly)
-            .buttonStyle(.bordered)
+            .buttonStyle(.glass)
+            .buttonBorderShape(.capsule)
             .controlSize(.small)
             .help(L10n.illustrations)
         }

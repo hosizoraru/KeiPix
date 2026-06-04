@@ -19,6 +19,9 @@ struct ContentView: View {
     @State private var isPixivIDOpenPresented = false
     @State private var feedbackRequest: FeedbackReportRequest?
     @State private var statusMessage: String?
+    #if DEBUG
+    @State private var creatorProfileVisualQAUser: PixivUser?
+    #endif
 
     enum iPadTab: String, CaseIterable {
         case feed
@@ -52,29 +55,52 @@ struct ContentView: View {
             .onAppear {
                 KeiPixStoreLocator.shared.register(store: store)
             }
+            #if DEBUG
+            .task {
+                if VisualQALaunchArgument.contains(.creatorProfile) {
+                    store.activateVisualQASampleSession()
+                    store.selectedRoute = .recommendedUsers
+                    selectedSidebarItem = .route(.recommendedUsers)
+                    selectedTab = .feed
+                    creatorProfileVisualQAUser = VisualQASampleData.creatorProfileDetail.user
+                }
+            }
+            #endif
             .sheet(isPresented: $store.isLoginPresented) {
                 LoginSheetView(store: store)
-                    .iPadFriendlySheet()
+                    .os26SheetChrome(.immersive)
             }
             .sheet(isPresented: $store.isTokenLoginPresented) {
                 TokenLoginSheetView(store: store)
-                    .iPadFriendlySheet()
+                    .os26SheetChrome(.form)
             }
             .sheet(item: $store.imageSourceSearchRequest) { request in
                 ImageSourceSearchSheet(store: store, request: request)
-                    .iPadFriendlySheet()
+                    .os26SheetChrome(.detail)
             }
             .sheet(item: $store.presentedUserProfile) { user in
                 UserProfileSheet(user: user, store: store)
-                    .iPadFriendlySheet()
+                    .os26SheetChrome(.detail)
             }
+            #if DEBUG
+            .sheet(item: $creatorProfileVisualQAUser) { user in
+                UserProfileSheet(
+                    user: user,
+                    store: store,
+                    visualQADetail: VisualQASampleData.creatorProfileDetail,
+                    visualQARelatedUsers: VisualQASampleData.creatorProfileRelatedUsers,
+                    visualQARecentWorks: VisualQASampleData.creatorProfileRecentWorks
+                )
+                .os26SheetChrome(.detail)
+            }
+            #endif
             .sheet(isPresented: $isPixivIDOpenPresented) {
                 PixivIDOpenSheet(store: store, showStatus: { _ in })
-                    .iPadFriendlySheet()
+                    .os26SheetChrome(.form)
             }
             .sheet(item: $feedbackRequest) { request in
                 FeedbackReportSheet(request: request, localMuteAction: {}) { _ in }
-                    .iPadFriendlySheet()
+                    .os26SheetChrome(.form)
             }
             .confirmationDialog(
                 store.pendingDangerAction?.title ?? L10n.moreActions,
