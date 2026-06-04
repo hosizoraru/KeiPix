@@ -10,7 +10,7 @@ struct ContentView: View {
     @Bindable var store: KeiPixStore
     @State private var selectedTab: iPadTab = .feed
     @State private var splitColumnVisibility: NavigationSplitViewVisibility = .all
-    @State private var selectedSidebarItem: iPadSidebarItem = .route(.home)
+    @State private var selectedSidebarItem: KeiPixSidebarDestination = .route(.home)
     @State private var isArtworkDetailPresented = false
     @State private var isArtworkDetailPanelUserEnabled = false
     @State private var isSpotlightDetailPresented = false
@@ -183,7 +183,13 @@ struct ContentView: View {
 
     private var landscapeSplitRoot: some View {
         NavigationSplitView(columnVisibility: $splitColumnVisibility) {
-            iPadSidebar
+            SidebarView(
+                store: store,
+                selection: $selectedSidebarItem,
+                columnWidth: .iPadOS,
+                includesSettingsDestination: true
+            )
+            .navigationTitle("KeiPix")
         } detail: {
             landscapeDetail
         }
@@ -204,57 +210,6 @@ struct ContentView: View {
 
     private var feedTab: some View {
         feedNavigationStack(showsSidebarToggle: false)
-    }
-
-    private var iPadSidebar: some View {
-        List {
-            ForEach(PixivRoute.sidebarSections) { section in
-                Section(section.title) {
-                    ForEach(section.routes) { route in
-                        Button {
-                            selectRoute(route)
-                        } label: {
-                            iPadSidebarRow(
-                                title: route.title,
-                                systemImage: route.systemImage,
-                                isSelected: selectedSidebarItem == .route(route)
-                            )
-                        }
-                        .buttonStyle(.plain)
-                    }
-                }
-            }
-
-            Section(L10n.settings) {
-                Button {
-                    selectedSidebarItem = .settings
-                    selectedTab = .settings
-                } label: {
-                    iPadSidebarRow(
-                        title: L10n.settings,
-                        systemImage: "gearshape",
-                        isSelected: selectedSidebarItem == .settings
-                    )
-                }
-                .buttonStyle(.plain)
-            }
-        }
-        .listStyle(.sidebar)
-        .navigationSplitViewColumnWidth(min: 190, ideal: 218, max: 252)
-        .navigationTitle("KeiPix")
-    }
-
-    private func iPadSidebarRow(title: String, systemImage: String, isSelected: Bool) -> some View {
-        Label {
-            Text(title)
-                .lineLimit(1)
-                .frame(maxWidth: .infinity, alignment: .leading)
-        } icon: {
-            Image(systemName: systemImage)
-                .frame(width: 18)
-        }
-        .foregroundStyle(isSelected ? Color.accentColor : Color.primary)
-        .contentShape(Rectangle())
     }
 
     @ViewBuilder
@@ -280,6 +235,17 @@ struct ContentView: View {
                 }
                 .toolbar {
                     if showsSidebarToggle {
+                        ToolbarItem(placement: .topBarLeading) {
+                            Button {
+                                toggleIPadSidebar()
+                            } label: {
+                                Label(sidebarVisibilityTitle, systemImage: "sidebar.leading")
+                            }
+                            .labelStyle(.iconOnly)
+                            .help(sidebarVisibilityTitle)
+                            .accessibilityLabel(sidebarVisibilityTitle)
+                        }
+
                         if splitColumnVisibility == .detailOnly {
                             ToolbarItem(placement: .topBarLeading) {
                                 routeMenu
@@ -1213,6 +1179,20 @@ struct ContentView: View {
         size.width >= 700 && size.width > size.height
     }
 
+    private var iPadSidebarVisible: Bool {
+        splitColumnVisibility != .detailOnly
+    }
+
+    private var sidebarVisibilityTitle: String {
+        iPadSidebarVisible ? L10n.hideSidebar : L10n.showSidebar
+    }
+
+    private func toggleIPadSidebar() {
+        withAnimation(.snappy(duration: 0.22)) {
+            splitColumnVisibility = iPadSidebarVisible ? .detailOnly : .all
+        }
+    }
+
     private func syncSidebarSelectionFromCurrentTab() {
         switch selectedTab {
         case .feed:
@@ -1224,7 +1204,7 @@ struct ContentView: View {
         }
     }
 
-    private func selectSidebarItem(_ item: iPadSidebarItem) {
+    private func selectSidebarItem(_ item: KeiPixSidebarDestination) {
         switch item {
         case .route(let route):
             selectRoute(route, clearsArtworkDetail: false)
@@ -1284,11 +1264,6 @@ struct ContentView: View {
             }
         }
     }
-}
-
-private enum iPadSidebarItem: Hashable {
-    case route(PixivRoute)
-    case settings
 }
 
 private enum IPadToolbarMenuAction {

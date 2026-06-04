@@ -1,51 +1,93 @@
-#if os(macOS)
 import SwiftUI
+
+enum KeiPixSidebarDestination: Hashable {
+    case route(PixivRoute)
+    case settings
+}
+
+struct SidebarColumnWidth {
+    let min: CGFloat
+    let ideal: CGFloat
+    let max: CGFloat
+
+    static let macOS = SidebarColumnWidth(min: 246, ideal: 266, max: 310)
+    static let iPadOS = SidebarColumnWidth(min: 196, ideal: 218, max: 250)
+}
 
 struct SidebarView: View {
     @Bindable var store: KeiPixStore
+    @Binding var selection: KeiPixSidebarDestination
+
+    var columnWidth: SidebarColumnWidth = .macOS
+    var includesSettingsDestination = false
+
     @State private var expansion = SidebarSectionExpansion()
 
     var body: some View {
-        List(selection: $store.selectedRoute) {
-            #if DEBUG
+        List(selection: optionalSelection) {
             Section {
                 AccountHeader(store: store)
             }
-            #endif
 
             ForEach(PixivRoute.sidebarSections) { section in
                 Section(isExpanded: expansion.binding(for: section)) {
                     ForEach(section.routes) { route in
                         sidebarRow(route)
+                            .tag(KeiPixSidebarDestination.route(route))
                     }
                 } header: {
                     Text(section.title)
                 }
             }
+
+            if includesSettingsDestination {
+                Section(L10n.settings) {
+                    sidebarRow(title: L10n.settings, systemImage: "gearshape")
+                        .tag(KeiPixSidebarDestination.settings)
+                }
+            }
         }
         .listStyle(.sidebar)
-        .navigationSplitViewColumnWidth(
-            min: store.showsSidebarAccountIdentity ? 238 : 218,
-            ideal: store.showsSidebarAccountIdentity ? 258 : 232,
-            max: store.showsSidebarAccountIdentity ? 300 : 270
+        .frame(
+            minWidth: columnWidth.min,
+            idealWidth: columnWidth.ideal,
+            maxWidth: columnWidth.max
         )
-        .onChange(of: store.selectedRoute) { _, newValue in
-            guard newValue.isSidebarRoute else { return }
-            store.select(newValue)
+        .navigationSplitViewColumnWidth(
+            min: columnWidth.min,
+            ideal: columnWidth.ideal,
+            max: columnWidth.max
+        )
+    }
+
+    private var optionalSelection: Binding<KeiPixSidebarDestination?> {
+        Binding {
+            selection
+        } set: { newValue in
+            if let newValue {
+                selection = newValue
+            }
         }
     }
 
     private func sidebarRow(_ route: PixivRoute) -> some View {
+        sidebarRow(title: route.title, systemImage: route.systemImage)
+            .help(route.title)
+            .accessibilityLabel(route.title)
+    }
+
+    private func sidebarRow(title: String, systemImage: String) -> some View {
         Label {
-            Text(route.title)
+            Text(title)
                 .lineLimit(1)
+                .truncationMode(.tail)
                 .frame(maxWidth: .infinity, alignment: .leading)
         } icon: {
-            Image(systemName: route.systemImage)
-                .frame(width: 16)
+            Image(systemName: systemImage)
+                .symbolRenderingMode(.hierarchical)
+                .frame(width: 17)
         }
-            .tag(route)
-            .help(route.title)
+        .contentShape(Rectangle())
     }
 }
 
@@ -95,7 +137,6 @@ final class SidebarSectionExpansion {
     }
 }
 
-#if DEBUG
 private struct AccountHeader: View {
     @Bindable var store: KeiPixStore
 
@@ -121,18 +162,26 @@ private struct AccountHeader: View {
                         Button {
                             Task { await store.switchAccount(userID: account.id) }
                         } label: {
-                            Label {
-                                VStack(alignment: .leading, spacing: 1) {
-                                    Text(store.showsSidebarAccountIdentity ? account.name : L10n.hidden)
-                                    Text(store.showsSidebarAccountIdentity ? "@\(account.account)" : L10n.accountIdentityHidden)
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
-                                }
-                            } icon: {
-                                Image(systemName: store.accountSessionMode == .real && store.session?.user.id == account.id ? "checkmark.circle.fill" : "person.crop.circle")
-                            }
+                            StoredAccountMenuLabel(
+                                account: account,
+                                isCurrent: store.accountSessionMode == .real && store.session?.user.id == account.id,
+                                showIdentity: store.showsSidebarAccountIdentity
+                            )
                         }
                     }
+                }
+            }
+
+            Section(L10n.privacyAndIdentity) {
+                Toggle(L10n.showAccountIdentity, isOn: showAccountIdentityBinding)
+
+                Button {
+                    store.setPrivacyModeEnabled(!store.privacyModeEnabled)
+                } label: {
+                    Label(
+                        store.privacyModeEnabled ? L10n.disablePrivacyMode : L10n.enablePrivacyMode,
+                        systemImage: store.privacyModeEnabled ? "eye.slash.fill" : "eye"
+                    )
                 }
             }
 
@@ -161,8 +210,9 @@ private struct AccountHeader: View {
             headerLabel
         }
         .buttonStyle(.plain)
-        .padding(.vertical, showIdentity ? 4 : 7)
+        .padding(.vertical, 6)
         .help(headerHelp)
+        .accessibilityLabel(headerHelp)
     }
 
     private var headerLabel: some View {
@@ -178,33 +228,47 @@ private struct AccountHeader: View {
                     Text(title)
                         .font(.headline)
                         .lineLimit(1)
+                        .truncationMode(.tail)
                     Text(subtitle)
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
+                        .truncationMode(.middle)
                 }
-                Spacer(minLength: 0)
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
 
             if showIdentity == false {
                 Spacer(minLength: 0)
             }
         }
+        .frame(maxWidth: .infinity, alignment: showIdentity ? .leading : .center)
     }
 
     @ViewBuilder
     private var avatar: some View {
-        if let session = store.session {
-            RemoteImageView(url: session.user.profileImageURL)
+        if let avatarURL {
+            RemoteImageView(url: avatarURL)
                 .frame(width: 34, height: 34)
                 .clipShape(Circle())
         } else {
-            Image(systemName: "person.crop.circle")
+            Image(systemName: accountIconName)
                 .font(.system(size: 34))
                 .symbolRenderingMode(.hierarchical)
                 .foregroundStyle(.secondary)
                 .frame(width: 34, height: 34)
         }
+    }
+
+    private var avatarURL: URL? {
+        if let session = store.session {
+            return session.user.profileImageURL
+        }
+        return store.storedAccounts.first?.profileImageURL
+    }
+
+    private var accountIconName: String {
+        store.session == nil ? "person.crop.circle" : "person.crop.circle.fill"
     }
 
     private var showIdentity: Bool {
@@ -225,7 +289,7 @@ private struct AccountHeader: View {
             }
             return L10n.accountIdentityHidden
         }
-        return L10n.signedOut
+        return store.storedAccounts.isEmpty ? L10n.signedOut : L10n.realAccount
     }
 
     private var headerHelp: String {
@@ -233,6 +297,33 @@ private struct AccountHeader: View {
             return "\(session.user.name) @\(session.user.account)"
         }
         return store.accountSessionMode.title
+    }
+
+    private var showAccountIdentityBinding: Binding<Bool> {
+        Binding {
+            store.showAccountIdentity
+        } set: { value in
+            store.setShowAccountIdentity(value)
+        }
+    }
+}
+
+private struct StoredAccountMenuLabel: View {
+    let account: PixivStoredAccount
+    let isCurrent: Bool
+    let showIdentity: Bool
+
+    var body: some View {
+        Label {
+            VStack(alignment: .leading, spacing: 1) {
+                Text(showIdentity ? account.name : L10n.hidden)
+                Text(showIdentity ? "@\(account.account)" : L10n.accountIdentityHidden)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        } icon: {
+            Image(systemName: isCurrent ? "checkmark.circle.fill" : "person.crop.circle")
+        }
     }
 }
 
@@ -253,5 +344,3 @@ private struct AccountModeMenuLabel: View {
         }
     }
 }
-#endif
-#endif

@@ -8,9 +8,9 @@ enum MainWindowSizing {
     static let minimumHeight: CGFloat = 760
     static let defaultSize = CGSize(width: 1440, height: 860)
 
-    static func minimumWidth(sidebarVisible: Bool, accountIdentityVisible: Bool = true) -> CGFloat {
+    static func minimumWidth(sidebarVisible: Bool) -> CGFloat {
         if sidebarVisible {
-            accountIdentityVisible ? 1240 : 1200
+            1240
         } else {
             920
         }
@@ -38,16 +38,16 @@ enum WindowSizePreset: String, CaseIterable, Identifiable {
         }
     }
 
-    func size(sidebarVisible: Bool, accountIdentityVisible: Bool = true) -> CGSize {
+    func size(sidebarVisible: Bool) -> CGSize {
         switch (self, sidebarVisible) {
         case (.small, true):
-            CGSize(width: MainWindowSizing.minimumWidth(sidebarVisible: true, accountIdentityVisible: accountIdentityVisible), height: MainWindowSizing.minimumHeight)
+            CGSize(width: MainWindowSizing.minimumWidth(sidebarVisible: true), height: MainWindowSizing.minimumHeight)
         case (.balanced, true):
-            accountIdentityVisible ? MainWindowSizing.defaultSize : CGSize(width: 1360, height: MainWindowSizing.defaultSize.height)
+            MainWindowSizing.defaultSize
         case (.wide, true):
-            CGSize(width: accountIdentityVisible ? 1640 : 1580, height: 940)
+            CGSize(width: 1640, height: 940)
         case (.reading, true):
-            CGSize(width: accountIdentityVisible ? 1500 : 1440, height: 940)
+            CGSize(width: 1500, height: 940)
         case (.small, false):
             CGSize(width: MainWindowSizing.minimumWidth(sidebarVisible: false), height: 720)
         case (.balanced, false):
@@ -61,9 +61,9 @@ enum WindowSizePreset: String, CaseIterable, Identifiable {
 
     #if os(macOS)
     @MainActor
-    func apply(sidebarVisible: Bool, accountIdentityVisible: Bool = true) {
+    func apply(sidebarVisible: Bool) {
         guard let window = NSApp.keyWindow ?? NSApp.mainWindow else { return }
-        let targetSize = size(sidebarVisible: sidebarVisible, accountIdentityVisible: accountIdentityVisible)
+        let targetSize = size(sidebarVisible: sidebarVisible)
         let visibleFrame = window.screen?.visibleFrame ?? NSScreen.main?.visibleFrame ?? window.frame
         let fittedSize = CGSize(
             width: min(targetSize.width, visibleFrame.width),

@@ -104,8 +104,8 @@ struct GallerySelectionTests {
         #expect(layout.resolvedColumnCount(for: 371) == 2)
     }
 
-    @Test("Auto masonry restores three columns in balanced real-account windows")
-    func autoMasonryRestoresThreeColumnsInBalancedRealAccountWindows() {
+    @Test("Auto masonry keeps three columns when account privacy changes")
+    func autoMasonryKeepsThreeColumnsWhenAccountPrivacyChanges() {
         let layout = MasonryLayout(
             spacing: 12,
             preferredColumnWidth: 224,
@@ -113,19 +113,14 @@ struct GallerySelectionTests {
             maxColumnWidth: 260
         )
 
-        let visibleIdentityMasonryWidth = WindowSizePreset.balanced.size(
-            sidebarVisible: true,
-            accountIdentityVisible: true
-        ).width - 258 - 440 - 36
-        let hiddenIdentityMasonryWidth = WindowSizePreset.balanced.size(
-            sidebarVisible: true,
-            accountIdentityVisible: false
-        ).width - 232 - 440 - 36
+        let masonryWidth = WindowSizePreset.balanced.size(sidebarVisible: true).width
+            - SidebarColumnWidth.macOS.ideal
+            - 440
+            - 36
 
-        #expect(visibleIdentityMasonryWidth >= 640)
-        #expect(hiddenIdentityMasonryWidth >= 640)
-        #expect(layout.resolvedColumnCount(for: visibleIdentityMasonryWidth) == 3)
-        #expect(layout.resolvedColumnCount(for: hiddenIdentityMasonryWidth) == 3)
+        #expect(masonryWidth >= 640)
+        #expect(layout.resolvedColumnCount(for: masonryWidth) == 3)
+        #expect(WindowSizePreset.balanced.size(sidebarVisible: true).width == MainWindowSizing.defaultSize.width)
     }
 
     @Test("Artwork masonry placement keeps full-width native collection strips outside columns")

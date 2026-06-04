@@ -5,6 +5,7 @@ struct ContentView: View {
     @Bindable var store: KeiPixStore
     @State private var columnVisibility: NavigationSplitViewVisibility = .all
     @State private var isSidebarPresented = true
+    @State private var sidebarSelection: KeiPixSidebarDestination = .route(.home)
     @State private var statusMessage: String?
     @State private var isPixivIDOpenPresented = false
     @State private var isPixivLinkDropTargeted = false
@@ -15,7 +16,11 @@ struct ContentView: View {
 
     var body: some View {
         NavigationSplitView(columnVisibility: $columnVisibility) {
-            SidebarView(store: store)
+            SidebarView(
+                store: store,
+                selection: $sidebarSelection,
+                columnWidth: .macOS
+            )
                 .toolbar(removing: .sidebarToggle)
         } content: {
             ContentColumnView(store: store)
@@ -131,10 +136,7 @@ struct ContentView: View {
         .mainWindowSizing(
             minimumWidth: minimumWindowWidth,
             minimumHeight: MainWindowSizing.minimumHeight,
-            preferredDefaultSize: WindowSizePreset.balanced.size(
-                sidebarVisible: sidebarVisible,
-                accountIdentityVisible: store.showsSidebarAccountIdentity
-            )
+            preferredDefaultSize: WindowSizePreset.balanced.size(sidebarVisible: sidebarVisible)
         )
         .sheet(isPresented: $store.isLoginPresented) {
             LoginSheetView(store: store)
@@ -303,6 +305,23 @@ struct ContentView: View {
             }
         }
         .statusMessageAutoDismiss($store.errorMessage, duration: .seconds(8))
+        .onAppear {
+            syncSidebarSelectionFromRoute()
+        }
+        .onChange(of: store.selectedRoute) { _, _ in
+            syncSidebarSelectionFromRoute()
+        }
+        .onChange(of: sidebarSelection) { _, destination in
+            switch destination {
+            case .route(let route):
+                selectSidebarRoute(route)
+            case .settings:
+                break
+            }
+        }
+        .onChange(of: columnVisibility) { _, newValue in
+            isSidebarPresented = newValue != .doubleColumn && newValue != .detailOnly
+        }
         .alert(
             L10n.updateAvailableTitle,
             isPresented: Binding(
@@ -390,10 +409,7 @@ struct ContentView: View {
                 Menu {
                     ForEach(WindowSizePreset.allCases) { preset in
                         Button(preset.title) {
-                            preset.apply(
-                                sidebarVisible: sidebarVisible,
-                                accountIdentityVisible: store.showsSidebarAccountIdentity
-                            )
+                            preset.apply(sidebarVisible: sidebarVisible)
                         }
                     }
                 } label: {
@@ -447,8 +463,28 @@ struct ContentView: View {
     }
 
     private func toggleSidebar() {
-        isSidebarPresented.toggle()
-        columnVisibility = isSidebarPresented ? .all : .doubleColumn
+        if sidebarVisible {
+            isSidebarPresented = false
+            columnVisibility = .doubleColumn
+        } else {
+            isSidebarPresented = true
+            columnVisibility = .all
+        }
+    }
+
+    private func selectSidebarRoute(_ route: PixivRoute) {
+        guard route.isSidebarRoute else { return }
+        if store.selectedRoute != route {
+            store.select(route)
+        }
+    }
+
+    private func syncSidebarSelectionFromRoute() {
+        guard store.selectedRoute.isSidebarRoute else { return }
+        let destination = KeiPixSidebarDestination.route(store.selectedRoute)
+        if sidebarSelection != destination {
+            sidebarSelection = destination
+        }
     }
 
     private func registerCurrentUndoAction() {
@@ -497,10 +533,7 @@ struct ContentView: View {
     }
 
     private var minimumWindowWidth: CGFloat {
-        MainWindowSizing.minimumWidth(
-            sidebarVisible: sidebarVisible,
-            accountIdentityVisible: store.showsSidebarAccountIdentity
-        )
+        MainWindowSizing.minimumWidth(sidebarVisible: sidebarVisible)
     }
 
     @ViewBuilder
