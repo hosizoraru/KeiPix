@@ -61,6 +61,7 @@ struct ContentView: View {
     ]
     private static let maximumPortraitShortcutCount = 8
     private static let defaultPortraitShortcutRouteIDs = defaultPortraitShortcutRoutes.map(\.rawValue).joined(separator: ",")
+    private static let portraitShortcutContentMaxWidth: CGFloat = 860
 
     var body: some View {
         adaptiveRoot
@@ -1383,10 +1384,11 @@ struct ContentView: View {
                 .padding(.horizontal, 16)
                 .padding(.top, 10)
                 .padding(.bottom, 18)
-                .frame(maxWidth: 760, alignment: .leading)
-                .frame(maxWidth: .infinity, alignment: .topLeading)
+                .frame(maxWidth: Self.portraitShortcutContentMaxWidth, alignment: .leading)
+                .frame(maxWidth: .infinity, alignment: .top)
             }
-            .navigationTitle(L10n.shortcuts)
+            .navigationTitle("")
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
                     portraitShortcutCustomizationMenu

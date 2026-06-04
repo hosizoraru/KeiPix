@@ -3,6 +3,7 @@ import SwiftUI
 struct SettingsView: View {
     @Bindable var store: KeiPixStore
     @State private var coordinator = SettingsCoordinator()
+    private let compactContentMaxWidth: CGFloat = 860
 
     var body: some View {
         settingsRoot
@@ -171,9 +172,9 @@ struct SettingsView: View {
                 .environment(\.os26SettingsPageShowsHeader, false)
                 .environment(\.os26SettingsPageUsesAdaptiveGrid, true)
                 .transition(.opacity.combined(with: .move(edge: .trailing)))
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background(.clear)
     }
 
@@ -196,6 +197,8 @@ struct SettingsView: View {
                 categoryRail
             }
         }
+        .frame(maxWidth: compactContentMaxWidth, alignment: .leading)
+        .frame(maxWidth: .infinity, alignment: .center)
         .padding(.horizontal, 16)
         .padding(.top, 6)
         .padding(.bottom, 6)

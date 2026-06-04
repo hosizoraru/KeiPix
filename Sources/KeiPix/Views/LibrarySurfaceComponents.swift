@@ -448,10 +448,14 @@ struct OS26SettingsPage<Content: View>: View {
                 .padding(.horizontal, metrics.horizontalPadding)
                 .padding(.top, metrics.topPadding)
                 .padding(.bottom, metrics.bottomPadding)
+                .frame(maxWidth: .infinity, alignment: metrics.pageAlignment)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .navigationTitle(title)
+        .navigationTitle(showsHeader ? title : "")
+        #if !os(macOS)
+        .navigationBarTitleDisplayMode(showsHeader ? .automatic : .inline)
+        #endif
     }
 }
 
@@ -535,6 +539,14 @@ private struct OS26SettingsPageMetrics {
         return 20
         #else
         return availableWidth < 900 ? 14 : 20
+        #endif
+    }
+
+    var pageAlignment: Alignment {
+        #if os(macOS)
+        return .topLeading
+        #else
+        return .top
         #endif
     }
 }

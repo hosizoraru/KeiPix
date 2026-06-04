@@ -53,7 +53,7 @@ struct AboutView: View {
                 .frame(width: 640, height: 620)
         case .settings:
             scrollContent
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: presentation.viewportAlignment)
         }
     }
 
@@ -68,8 +68,12 @@ struct AboutView: View {
             .padding(.horizontal, presentation.horizontalPadding)
             .padding(.top, presentation.topPadding)
             .padding(.bottom, presentation.bottomPadding)
+            .frame(maxWidth: .infinity, alignment: presentation.scrollContentAlignment)
         }
-        .navigationTitle(L10n.aboutKeiPix)
+        .navigationTitle(presentation.navigationTitle)
+        #if !os(macOS)
+        .navigationBarTitleDisplayMode(presentation == .settings ? .inline : .automatic)
+        #endif
     }
 
     private var heroCard: some View {
@@ -393,6 +397,45 @@ private struct AboutPill: View {
 }
 
 private extension AboutView.Presentation {
+    var viewportAlignment: Alignment {
+        switch self {
+        case .window:
+            .topLeading
+        case .settings:
+            #if os(macOS)
+            .topLeading
+            #else
+            .top
+            #endif
+        }
+    }
+
+    var navigationTitle: String {
+        switch self {
+        case .window:
+            L10n.aboutKeiPix
+        case .settings:
+            #if os(macOS)
+            L10n.aboutKeiPix
+            #else
+            ""
+            #endif
+        }
+    }
+
+    var scrollContentAlignment: Alignment {
+        switch self {
+        case .window:
+            .topLeading
+        case .settings:
+            #if os(macOS)
+            .topLeading
+            #else
+            .top
+            #endif
+        }
+    }
+
     var contentMaxWidth: CGFloat {
         switch self {
         case .window:
