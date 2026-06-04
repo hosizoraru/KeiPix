@@ -18,8 +18,7 @@ struct BookmarkTagsView: View {
             if store.session == nil {
                 PixivSignedOutStateView(store: store)
             } else if isLoading {
-                ProgressView(L10n.loading)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                OS26LibraryLoadingView(title: L10n.loading, systemImage: "tag")
             } else {
                 VStack(spacing: 0) {
                     header
@@ -76,49 +75,55 @@ struct BookmarkTagsView: View {
     }
 
     private var header: some View {
-        FlowLayout(spacing: 8) {
-            TextField(L10n.searchBookmarkTags, text: $filterText)
-                .textFieldStyle(.roundedBorder)
-                .frame(minWidth: 170, idealWidth: 220, maxWidth: 260)
+        GlassEffectContainer(spacing: 8) {
+            FlowLayout(spacing: 8) {
+                OS26LibrarySearchField(
+                    text: $filterText,
+                    placeholder: L10n.searchBookmarkTags,
+                    minWidth: 170,
+                    idealWidth: 220,
+                    maxWidth: 280
+                )
 
-            Button {
-                filterText = ""
-            } label: {
-                Label(L10n.clearSearch, systemImage: "xmark.circle")
-            }
-            .labelStyle(.iconOnly)
-            .disabled(filterText.isEmpty)
-            .help(L10n.clearSearch)
-
-            Picker(L10n.defaultBookmarkVisibility, selection: $selectedRestrict) {
-                ForEach(BookmarkRestrict.allCases) { restrict in
-                    Text(restrict.title).tag(restrict)
+                Picker(L10n.defaultBookmarkVisibility, selection: $selectedRestrict) {
+                    ForEach(BookmarkRestrict.allCases) { restrict in
+                        Text(restrict.title).tag(restrict)
+                    }
                 }
-            }
-            .pickerStyle(.segmented)
-            .labelsHidden()
-            .frame(minWidth: 96, idealWidth: 112, maxWidth: 128)
-            .accessibilityLabel(L10n.defaultBookmarkVisibility)
-
-            Menu {
-                Button {
-                    Task { await load(showFeedback: true) }
-                } label: {
-                    Label(L10n.refresh, systemImage: "arrow.clockwise")
-                }
-                .disabled(isLoading)
+                .pickerStyle(.segmented)
+                .labelsHidden()
+                .frame(minWidth: 96, idealWidth: 112, maxWidth: 128)
+                .accessibilityLabel(L10n.defaultBookmarkVisibility)
 
                 Button {
-                    copyVisibleTags()
+                    filterText = ""
                 } label: {
-                    Label(L10n.copyTag, systemImage: "doc.on.doc")
+                    Label(L10n.clearSearch, systemImage: "xmark.circle")
                 }
-                .disabled(filteredTags.isEmpty)
-            } label: {
-                Label(L10n.moreActions, systemImage: "ellipsis.circle")
-                    .labelStyle(.iconOnly)
+                .os26GlassIconButton()
+                .disabled(filterText.isEmpty)
+                .help(L10n.clearSearch)
+
+                Menu {
+                    Button {
+                        Task { await load(showFeedback: true) }
+                    } label: {
+                        Label(L10n.refresh, systemImage: "arrow.clockwise")
+                    }
+                    .disabled(isLoading)
+
+                    Button {
+                        copyVisibleTags()
+                    } label: {
+                        Label(L10n.copyTag, systemImage: "doc.on.doc")
+                    }
+                    .disabled(filteredTags.isEmpty)
+                } label: {
+                    Label(L10n.moreActions, systemImage: "ellipsis.circle")
+                }
+                .os26GlassIconButton()
+                .help(L10n.moreActions)
             }
-            .help(L10n.moreActions)
         }
         .controlSize(.small)
     }
@@ -126,21 +131,18 @@ struct BookmarkTagsView: View {
     @ViewBuilder
     private var tagCollectionContent: some View {
         if tags.isEmpty, let errorMessage {
-            ContentUnavailableView {
-                Label(L10n.errorTitle, systemImage: "exclamationmark.triangle")
-            } description: {
-                Text(errorMessage)
-            } actions: {
+            OS26LibraryUnavailableView(
+                title: L10n.errorTitle,
+                subtitle: errorMessage,
+                systemImage: "exclamationmark.triangle"
+            ) {
                 Button {
                     Task { await load(showFeedback: true) }
                 } label: {
                     Label(L10n.retry, systemImage: "arrow.clockwise")
                 }
-                .buttonStyle(.borderedProminent)
+                .os26GlassButton(prominent: true)
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .padding(.horizontal, 18)
-            .padding(.top, 14)
         } else {
             NativeBookmarkTagCollectionView(
                 items: bookmarkTagCollectionItems,
@@ -224,14 +226,14 @@ struct BookmarkTagsView: View {
             )
         case .loadMore(let isLoading):
             return AnyView(
-                Button {
+                OS26LoadMoreButton(
+                    title: L10n.loadMore,
+                    loadingTitle: L10n.loading,
+                    systemImage: "arrow.down.circle",
+                    isLoading: isLoading
+                ) {
                     Task { await loadMore() }
-                } label: {
-                    Label(isLoading ? L10n.loading : L10n.loadMore, systemImage: "arrow.down.circle")
-                        .frame(maxWidth: .infinity)
                 }
-                .buttonStyle(.bordered)
-                .disabled(isLoading)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             )
         }

@@ -97,21 +97,44 @@ struct WatchLaterView: View {
     }
 
     private var header: some View {
-        HStack(spacing: 8) {
-            TextField(L10n.searchHistory, text: $searchText)
-                .textFieldStyle(.roundedBorder)
-                .frame(minWidth: 180, idealWidth: 220, maxWidth: 260)
+        GlassEffectContainer(spacing: 8) {
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 10) {
+                    watchLaterSearchField
+                        .frame(minWidth: 220, idealWidth: 320, maxWidth: 520)
+                    watchLaterActionRail
+                    Spacer(minLength: 0)
+                }
 
+                VStack(alignment: .leading, spacing: 10) {
+                    watchLaterSearchField
+                    watchLaterActionRail
+                }
+            }
+        }
+        .controlSize(.small)
+    }
+
+    private var watchLaterSearchField: some View {
+        OS26LibrarySearchField(
+            text: $searchText,
+            placeholder: L10n.searchHistory,
+            minWidth: 180,
+            idealWidth: 260,
+            maxWidth: 420
+        )
+    }
+
+    private var watchLaterActionRail: some View {
+        OS26LibraryActionRail {
             Button {
                 searchText = ""
             } label: {
                 Label(L10n.clearSearch, systemImage: "xmark.circle")
             }
-            .labelStyle(.iconOnly)
+            .os26GlassIconButton()
             .disabled(searchText.isEmpty)
             .help(L10n.clearSearch)
-
-            Spacer(minLength: 0)
 
             Menu {
                 Button(role: .destructive) {
@@ -122,11 +145,10 @@ struct WatchLaterView: View {
                 .disabled(store.watchLaterQueue.isEmpty)
             } label: {
                 Label(L10n.moreActions, systemImage: "ellipsis.circle")
-                    .labelStyle(.iconOnly)
             }
+            .os26GlassIconButton()
             .help(L10n.moreActions)
         }
-        .controlSize(.small)
     }
 
     private var content: some View {
@@ -162,8 +184,8 @@ private struct WatchLaterCard: View {
             VStack(alignment: .leading, spacing: 6) {
                 RemoteImageView(url: item.thumbnailURL)
                     .aspectRatio(CGFloat(max(item.aspectRatio, 0.5)), contentMode: .fill)
-                    .frame(height: 180)
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .frame(height: 170)
+                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                     .overlay(alignment: .topTrailing) {
                         if item.contentBadges.isEmpty == false {
                             ArtworkContentBadgesView(badges: item.contentBadges)
@@ -182,8 +204,12 @@ private struct WatchLaterCard: View {
                 }
                 .padding(.horizontal, 4)
             }
+            .padding(10)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         }
         .buttonStyle(.plain)
+        .keiInteractiveGlass(18)
         .contextMenu {
             Button {
                 onRemove()

@@ -90,63 +90,69 @@ struct BrowsingHistoryView: View {
     }
 
     private var header: some View {
-        FlowLayout(spacing: 8) {
-            Picker(L10n.historySource, selection: $source) {
-                ForEach(BrowsingHistorySource.allCases) { source in
-                    Text(source.title).tag(source)
+        GlassEffectContainer(spacing: 8) {
+            FlowLayout(spacing: 8) {
+                Picker(L10n.historySource, selection: $source) {
+                    ForEach(BrowsingHistorySource.allCases) { source in
+                        Text(source.title).tag(source)
+                    }
                 }
-            }
-            .pickerStyle(.segmented)
-            .labelsHidden()
-            .frame(minWidth: 120, idealWidth: 132, maxWidth: 150)
-            .accessibilityLabel(L10n.historySource)
+                .pickerStyle(.segmented)
+                .labelsHidden()
+                .frame(minWidth: 120, idealWidth: 132, maxWidth: 150)
+                .accessibilityLabel(L10n.historySource)
 
-            if source == .local {
-                TextField(L10n.searchHistory, text: $localSearchText)
-                    .textFieldStyle(.roundedBorder)
-                    .frame(minWidth: 180, idealWidth: 220, maxWidth: 260)
+                if source == .local {
+                    OS26LibrarySearchField(
+                        text: $localSearchText,
+                        placeholder: L10n.searchHistory,
+                        minWidth: 180,
+                        idealWidth: 220,
+                        maxWidth: 280
+                    )
 
-                Button {
-                    localSearchText = ""
+                    Button {
+                        localSearchText = ""
+                    } label: {
+                        Label(L10n.clearSearch, systemImage: "xmark.circle")
+                    }
+                    .os26GlassIconButton()
+                    .disabled(localSearchText.isEmpty)
+                    .help(L10n.clearSearch)
+                }
+
+                Menu {
+                    switch source {
+                    case .local:
+                        Button {
+                            exportHistory()
+                        } label: {
+                            Label(L10n.exportHistory, systemImage: "square.and.arrow.up")
+                        }
+                        .disabled(store.localBrowsingHistory.isEmpty)
+
+                        Divider()
+
+                        Button(role: .destructive) {
+                            isClearConfirmationPresented = true
+                        } label: {
+                            Label(L10n.clearHistory, systemImage: "trash")
+                        }
+                        .disabled(store.localBrowsingHistory.isEmpty)
+                    case .pixiv:
+                        Button {
+                            Task { await reloadPixivHistory(showFeedback: true) }
+                        } label: {
+                            Label(L10n.refresh, systemImage: "arrow.clockwise")
+                        }
+                        .disabled(store.isLoading)
+                    }
                 } label: {
-                    Label(L10n.clearSearch, systemImage: "xmark.circle")
+                    Label(L10n.moreActions, systemImage: "ellipsis.circle")
                 }
-                .labelStyle(.iconOnly)
-                .disabled(localSearchText.isEmpty)
-                .help(L10n.clearSearch)
+                .os26GlassIconButton()
+                .help(L10n.moreActions)
             }
-
-            Menu {
-                switch source {
-                case .local:
-                    Button {
-                        exportHistory()
-                    } label: {
-                        Label(L10n.exportHistory, systemImage: "square.and.arrow.up")
-                    }
-                    .disabled(store.localBrowsingHistory.isEmpty)
-
-                    Divider()
-
-                    Button(role: .destructive) {
-                        isClearConfirmationPresented = true
-                    } label: {
-                        Label(L10n.clearHistory, systemImage: "trash")
-                    }
-                    .disabled(store.localBrowsingHistory.isEmpty)
-                case .pixiv:
-                    Button {
-                        Task { await reloadPixivHistory(showFeedback: true) }
-                    } label: {
-                        Label(L10n.refresh, systemImage: "arrow.clockwise")
-                    }
-                    .disabled(store.isLoading)
-                }
-            } label: {
-                Label(L10n.moreActions, systemImage: "ellipsis.circle")
-                    .labelStyle(.iconOnly)
-            }
-            .help(L10n.moreActions)
         }
         .controlSize(.small)
     }
@@ -174,22 +180,20 @@ struct BrowsingHistoryView: View {
     private var pixivHistoryContent: some View {
         Group {
             if store.isLoading {
-                ProgressView(L10n.loading)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                OS26LibraryLoadingView(title: L10n.loading, systemImage: "clock")
             } else if store.artworks.isEmpty {
-                ContentUnavailableView {
-                    Label(L10n.noPixivHistoryTitle, systemImage: "clock.badge.questionmark")
-                } description: {
-                    Text(store.errorMessage ?? L10n.noPixivHistorySubtitle)
-                } actions: {
+                OS26LibraryUnavailableView(
+                    title: L10n.noPixivHistoryTitle,
+                    subtitle: store.errorMessage ?? L10n.noPixivHistorySubtitle,
+                    systemImage: "clock.badge.questionmark"
+                ) {
                     Button {
                         Task { await reloadPixivHistory(showFeedback: true) }
                     } label: {
                         Label(L10n.retry, systemImage: "arrow.clockwise")
                     }
-                    .buttonStyle(.borderedProminent)
+                    .os26GlassButton(prominent: true)
                 }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 NativeBrowsingHistoryCollectionView(
                     items: pixivHistoryItems,
@@ -253,13 +257,14 @@ struct BrowsingHistoryView: View {
             )
         case .loadMore:
             return AnyView(
-                Button {
+                OS26LoadMoreButton(
+                    title: L10n.loadMore,
+                    loadingTitle: L10n.loading,
+                    systemImage: "arrow.down.circle",
+                    isLoading: store.isLoadingMore
+                ) {
                     Task { await loadMorePixivHistory() }
-                } label: {
-                    Label(L10n.loadMore, systemImage: "arrow.down.circle")
-                        .frame(maxWidth: .infinity, minHeight: 132)
                 }
-                .buttonStyle(.bordered)
             )
         case .local:
             return AnyView(EmptyView())
@@ -424,8 +429,7 @@ private struct LocalHistoryCard: View {
             } label: {
                 Label(L10n.moreActions, systemImage: "ellipsis.circle")
             }
-            .labelStyle(.iconOnly)
-            .buttonStyle(.bordered)
+            .os26GlassIconButton()
             .controlSize(.small)
             .help(L10n.moreActions)
             .padding(8)

@@ -1,0 +1,245 @@
+import SwiftUI
+
+struct OS26LibrarySearchField: View {
+    @Binding private var text: String
+    private let placeholder: String
+    private let suggestions: [String]
+    private let minWidth: CGFloat
+    private let idealWidth: CGFloat
+    private let maxWidth: CGFloat
+    private let onSubmit: () -> Void
+
+    init(
+        text: Binding<String>,
+        placeholder: String,
+        suggestions: [String] = [],
+        minWidth: CGFloat = 180,
+        idealWidth: CGFloat = 240,
+        maxWidth: CGFloat = 320,
+        onSubmit: @escaping () -> Void = {}
+    ) {
+        _text = text
+        self.placeholder = placeholder
+        self.suggestions = suggestions
+        self.minWidth = minWidth
+        self.idealWidth = idealWidth
+        self.maxWidth = maxWidth
+        self.onSubmit = onSubmit
+    }
+
+    var body: some View {
+        NativeSearchField(
+            text: $text,
+            placeholder: placeholder,
+            suggestions: suggestions,
+            onSubmit: onSubmit,
+            onTextChange: { text = $0 }
+        )
+        .frame(minWidth: minWidth, idealWidth: idealWidth, maxWidth: maxWidth)
+        .accessibilityLabel(placeholder)
+    }
+}
+
+struct OS26LibraryTextEntryField: View {
+    @Binding private var text: String
+    private let placeholder: String
+    private let minWidth: CGFloat
+
+    init(
+        text: Binding<String>,
+        placeholder: String,
+        minWidth: CGFloat = 180
+    ) {
+        _text = text
+        self.placeholder = placeholder
+        self.minWidth = minWidth
+    }
+
+    var body: some View {
+        TextField(placeholder, text: $text)
+            .textFieldStyle(.plain)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 7)
+            .frame(minWidth: minWidth, minHeight: 32)
+            .keiInteractiveGlass(14)
+            .accessibilityLabel(placeholder)
+    }
+}
+
+struct OS26LibraryActionRail<Content: View>: View {
+    private let content: Content
+
+    init(@ViewBuilder content: () -> Content) {
+        self.content = content()
+    }
+
+    var body: some View {
+        GlassEffectContainer(spacing: 8) {
+            HStack(spacing: 8) {
+                content
+            }
+        }
+    }
+}
+
+struct OS26LibraryLoadingView: View {
+    let title: String
+    let systemImage: String
+
+    var body: some View {
+        GlassEffectContainer(spacing: 18) {
+            VStack(alignment: .leading, spacing: 18) {
+                HStack(spacing: 12) {
+                    Image(systemName: systemImage)
+                        .font(.title2.weight(.semibold))
+                        .symbolRenderingMode(.hierarchical)
+                        .foregroundStyle(.secondary)
+                        .frame(width: 46, height: 46)
+                        .keiGlass(18)
+
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text(title)
+                            .font(.headline)
+                        SkeletonPlaceholder(width: 220, height: 12, cornerRadius: 6)
+                    }
+                }
+
+                VStack(alignment: .leading, spacing: 10) {
+                    ForEach(0..<5, id: \.self) { index in
+                        SkeletonPlaceholder(
+                            width: index.isMultiple(of: 2) ? nil : 280,
+                            height: 18,
+                            cornerRadius: 9
+                        )
+                    }
+                }
+            }
+            .padding(24)
+            .frame(maxWidth: 520, alignment: .leading)
+            .keiGlass(30)
+        }
+        .padding(28)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+}
+
+struct OS26LibraryUnavailableView<Actions: View>: View {
+    let title: String
+    let subtitle: String?
+    let systemImage: String
+    private let actions: Actions
+
+    init(
+        title: String,
+        subtitle: String? = nil,
+        systemImage: String,
+        @ViewBuilder actions: () -> Actions
+    ) {
+        self.title = title
+        self.subtitle = subtitle
+        self.systemImage = systemImage
+        self.actions = actions()
+    }
+
+    var body: some View {
+        GlassEffectContainer(spacing: 18) {
+            VStack(spacing: 16) {
+                Image(systemName: systemImage)
+                    .font(.system(size: 44, weight: .semibold))
+                    .symbolRenderingMode(.hierarchical)
+                    .foregroundStyle(.secondary)
+                    .frame(width: 72, height: 72)
+                    .keiGlass(24)
+
+                VStack(spacing: 7) {
+                    Text(title)
+                        .font(.title3.weight(.semibold))
+                        .multilineTextAlignment(.center)
+
+                    if let subtitle, subtitle.isEmpty == false {
+                        Text(subtitle)
+                            .font(.callout)
+                            .foregroundStyle(.secondary)
+                            .multilineTextAlignment(.center)
+                            .textSelection(.enabled)
+                            .frame(maxWidth: 420)
+                    }
+                }
+
+                actions
+            }
+            .padding(28)
+            .frame(maxWidth: 520)
+            .keiGlass(30)
+        }
+        .padding(28)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+}
+
+extension OS26LibraryUnavailableView where Actions == EmptyView {
+    init(title: String, subtitle: String? = nil, systemImage: String) {
+        self.init(title: title, subtitle: subtitle, systemImage: systemImage) {
+            EmptyView()
+        }
+    }
+}
+
+struct OS26LoadMoreButton: View {
+    let title: String
+    let loadingTitle: String
+    let systemImage: String
+    let isLoading: Bool
+    var minHeight: CGFloat = 132
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: 8) {
+                Image(systemName: isLoading ? "arrow.triangle.2.circlepath" : systemImage)
+                    .font(.title3.weight(.semibold))
+                    .symbolRenderingMode(.hierarchical)
+
+                Text(isLoading ? loadingTitle : title)
+                    .font(.caption.weight(.medium))
+                    .multilineTextAlignment(.center)
+            }
+            .frame(maxWidth: .infinity, minHeight: minHeight)
+            .contentShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .keiInteractiveGlass(16)
+        .disabled(isLoading)
+        .accessibilityLabel(isLoading ? loadingTitle : title)
+    }
+}
+
+extension View {
+    @ViewBuilder
+    func os26GlassButton(prominent: Bool = false) -> some View {
+        if prominent {
+            self
+                .buttonStyle(.glassProminent)
+                .buttonBorderShape(.capsule)
+        } else {
+            self
+                .buttonStyle(.glass)
+                .buttonBorderShape(.capsule)
+        }
+    }
+
+    @ViewBuilder
+    func os26GlassIconButton(prominent: Bool = false) -> some View {
+        if prominent {
+            self
+                .labelStyle(.iconOnly)
+                .buttonStyle(.glassProminent)
+                .buttonBorderShape(.capsule)
+        } else {
+            self
+                .labelStyle(.iconOnly)
+                .buttonStyle(.glass)
+                .buttonBorderShape(.capsule)
+        }
+    }
+}

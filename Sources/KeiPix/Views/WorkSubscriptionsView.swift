@@ -51,32 +51,57 @@ struct WorkSubscriptionsView: View {
     }
 
     private var header: some View {
-        FlowLayout(spacing: 8) {
-            TextField(L10n.searchHistory, text: $searchText)
-                .textFieldStyle(.roundedBorder)
-                .frame(minWidth: 180, idealWidth: 220, maxWidth: 260)
+        GlassEffectContainer(spacing: 8) {
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 10) {
+                    subscriptionSearchField
+                        .frame(minWidth: 220, idealWidth: 320, maxWidth: 520)
+                    subscriptionActionRail
+                    Spacer(minLength: 0)
+                }
 
+                VStack(alignment: .leading, spacing: 10) {
+                    subscriptionSearchField
+                    subscriptionActionRail
+                }
+            }
+        }
+        .controlSize(.small)
+    }
+
+    private var subscriptionSearchField: some View {
+        OS26LibrarySearchField(
+            text: $searchText,
+            placeholder: L10n.searchHistory,
+            minWidth: 180,
+            idealWidth: 260,
+            maxWidth: 420
+        )
+    }
+
+    private var subscriptionActionRail: some View {
+        OS26LibraryActionRail {
             Button {
                 searchText = ""
             } label: {
                 Label(L10n.clearSearch, systemImage: "xmark.circle")
             }
-            .labelStyle(.iconOnly)
+            .os26GlassIconButton()
             .disabled(searchText.isEmpty)
             .help(L10n.clearSearch)
-
-            Spacer(minLength: 0)
 
             Button {
                 Task { await checkForUpdates() }
             } label: {
-                Label(L10n.workSubscriptionsCheckNow, systemImage: "arrow.clockwise")
+                Label(
+                    L10n.workSubscriptionsCheckNow,
+                    systemImage: isChecking ? "arrow.triangle.2.circlepath" : "arrow.clockwise"
+                )
             }
-            .labelStyle(.iconOnly)
+            .os26GlassIconButton()
             .help(L10n.workSubscriptionsCheckNow)
             .disabled(isChecking || store.session == nil)
         }
-        .controlSize(.small)
     }
 
     @ViewBuilder
@@ -168,8 +193,8 @@ private struct SubscriptionCard: View {
                                 .font(.caption2.weight(.bold))
                                 .padding(.horizontal, 6)
                                 .padding(.vertical, 2)
-                                .background(.tint, in: Capsule())
-                                .foregroundStyle(.white)
+                                .foregroundStyle(.tint)
+                                .glassEffect(.regular, in: Capsule(style: .continuous))
                         }
                     }
 
@@ -191,11 +216,7 @@ private struct SubscriptionCard: View {
             .contentShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
         }
         .buttonStyle(.plain)
-        .keiInteractiveGlass(12)
-        .overlay {
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .strokeBorder(.separator.opacity(0.4), lineWidth: 1)
-        }
+        .keiInteractiveGlass(16)
         .contextMenu {
             Button(L10n.workSubscriptionsUnsubscribe, role: .destructive, action: unsubscribe)
         }
