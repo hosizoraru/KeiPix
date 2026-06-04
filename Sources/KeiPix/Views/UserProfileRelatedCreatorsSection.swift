@@ -41,8 +41,8 @@ struct UserProfileRelatedCreatorsSection: View {
                     .textSelection(.enabled)
             }
         }
-        .padding(16)
-        .keiPanel(16)
+        .padding(14)
+        .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
     }
 
     private var header: some View {

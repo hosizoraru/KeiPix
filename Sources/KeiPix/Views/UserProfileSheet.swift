@@ -79,39 +79,12 @@ struct UserProfileSheet: View {
     // MARK: - Body
 
     var body: some View {
-        VStack(spacing: 0) {
-            UserProfileSheetHeader(
-                user: currentUser,
-                detail: detail,
-                isLoading: isLoading,
-                isFollowed: isFollowed,
-                isUpdatingFollow: isUpdatingFollow,
-                followRestrict: followRestrict,
-                toggleFollow: { restrict in
-                    Task { await toggleFollow(restrict: restrict) }
-                },
-                updateFollowVisibility: { restrict in
-                    Task { await updateFollowVisibility(restrict) }
-                },
-                requestUnfollow: {
-                    pendingDangerAction = AppDangerAction(kind: .unfollowCreator(currentUser, followRestrict))
-                },
-                isPinned: store.isPinnedCreator(currentUser),
-                togglePin: togglePinnedCreator,
-                openInPixivURL: currentUser.pixivURL,
-                copyLink: copyProfileLink,
-                isMuted: store.mutedUsers[currentUser.id] != nil,
-                toggleMute: toggleCreatorMute,
-                requestFeedback: {
-                    feedbackRequest = .creator(currentUser)
-                }
-            )
-
-            Divider()
-
-            bodyContent
-        }
-        .frame(width: 760)
+        sheetContent
+        #if os(macOS)
+        .frame(width: 820)
+        #else
+        .frame(maxWidth: 780)
+        #endif
         .frame(minHeight: 560, idealHeight: 720, maxHeight: .infinity)
         .task(id: user.id) {
             await loadDetail()
@@ -146,6 +119,42 @@ struct UserProfileSheet: View {
             if let pendingDangerAction {
                 Text(pendingDangerAction.confirmationMessage)
             }
+        }
+    }
+
+    private var sheetContent: some View {
+        VStack(spacing: 0) {
+            UserProfileSheetHeader(
+                user: currentUser,
+                detail: detail,
+                isLoading: isLoading,
+                isFollowed: isFollowed,
+                isUpdatingFollow: isUpdatingFollow,
+                followRestrict: followRestrict,
+                toggleFollow: { restrict in
+                    Task { await toggleFollow(restrict: restrict) }
+                },
+                updateFollowVisibility: { restrict in
+                    Task { await updateFollowVisibility(restrict) }
+                },
+                requestUnfollow: {
+                    pendingDangerAction = AppDangerAction(kind: .unfollowCreator(currentUser, followRestrict))
+                },
+                isPinned: store.isPinnedCreator(currentUser),
+                togglePin: togglePinnedCreator,
+                openInPixivURL: currentUser.pixivURL,
+                copyLink: copyProfileLink,
+                isMuted: store.mutedUsers[currentUser.id] != nil,
+                toggleMute: toggleCreatorMute,
+                requestFeedback: {
+                    feedbackRequest = .creator(currentUser)
+                }
+            )
+
+            Divider()
+                .opacity(0.35)
+
+            bodyContent
         }
     }
 
@@ -195,24 +204,16 @@ struct UserProfileSheet: View {
     private var loadedScroll: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                // Stats strip + network rail collapse the old hero +
-                // collection-shortcuts duplication into a single compact
-                // navigation hub. Each stat number is itself a tappable
-                // route into the matching feed/list, mirroring Pixiv
-                // Web's profile stats row.
-                UserProfileStatsSection(
+                UserProfileOverviewSection(
                     profile: detail?.profile,
+                    relatedUsersCount: relatedUsers.count,
+                    isLoadingRelatedUsers: isLoadingRelatedUsers,
                     openIllustrations: { openFeed(.userIllustrations) },
                     openManga: { openFeed(.userManga) },
                     openPublicBookmarks: { openFeed(.userPublicBookmarks) },
                     openFollowing: {
                         relationshipListMode = .userFollowing(currentUser)
-                    }
-                )
-
-                UserProfileNetworkLinks(
-                    relatedUsersCount: relatedUsers.count,
-                    isLoadingRelatedUsers: isLoadingRelatedUsers,
+                    },
                     openFollowers: {
                         relationshipListMode = .userFollowers(currentUser)
                     },
@@ -277,9 +278,10 @@ struct UserProfileSheet: View {
                         .textSelection(.enabled)
                 }
             }
-            .padding(.horizontal, 20)
-            .padding(.vertical, 18)
+            .padding(.horizontal, 18)
+            .padding(.vertical, 16)
         }
+        .scrollEdgeEffectStyle(.soft, for: .top)
     }
 
     @ViewBuilder

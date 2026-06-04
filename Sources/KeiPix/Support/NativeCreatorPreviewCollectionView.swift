@@ -106,7 +106,7 @@ enum NativeCreatorPreviewCollectionLayout: Equatable {
     private func itemHeight(forWidth width: CGFloat) -> CGFloat {
         switch self {
         case .single:
-            return 390
+            return 342
         case .auto, .twoUp:
             let previewHeight = max(width / 2.4, 118)
             return 54 + previewHeight + 28 + 28 + 36 + 28

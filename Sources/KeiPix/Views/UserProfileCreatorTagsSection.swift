@@ -11,13 +11,12 @@ struct UserProfileCreatorTagsSection: View {
     @State private var isLoading = false
     @State private var errorMessage: String?
 
-    private let collapsedCap = 14
-    private let expandedCap = 48
+    private let collapsedCap = 18
+    private let expandedCap = 60
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            header
-            searchField
+            headerAndSearch
 
             if isLoading {
                 loadingRow
@@ -27,14 +26,38 @@ struct UserProfileCreatorTagsSection: View {
                 tagCloud
             }
         }
-        .padding(16)
-        .keiPanel(16)
+        .padding(14)
+        .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
         .task(id: user.id) {
             await loadTags()
         }
     }
 
-    private var header: some View {
+    private var headerAndSearch: some View {
+        ViewThatFits(in: .horizontal) {
+            HStack(alignment: .center, spacing: 12) {
+                titleCluster
+
+                Spacer(minLength: 12)
+
+                searchField
+                    .frame(maxWidth: 420)
+
+                retryButton
+            }
+
+            VStack(alignment: .leading, spacing: 10) {
+                HStack(alignment: .firstTextBaseline, spacing: 10) {
+                    titleCluster
+                    Spacer(minLength: 0)
+                    retryButton
+                }
+                searchField
+            }
+        }
+    }
+
+    private var titleCluster: some View {
         HStack(alignment: .firstTextBaseline, spacing: 10) {
             Label(L10n.creatorTags, systemImage: "number")
                 .font(.headline)
@@ -46,19 +69,6 @@ struct UserProfileCreatorTagsSection: View {
                     .padding(.horizontal, 6)
                     .padding(.vertical, 1)
                     .glassEffect(.regular, in: Capsule(style: .continuous))
-            }
-
-            Spacer()
-
-            if errorMessage != nil {
-                Button {
-                    Task { await loadTags() }
-                } label: {
-                    Label(L10n.retry, systemImage: "arrow.clockwise")
-                }
-                .buttonStyle(.glass)
-                .buttonBorderShape(.capsule)
-                .controlSize(.small)
             }
         }
     }
@@ -75,7 +85,7 @@ struct UserProfileCreatorTagsSection: View {
                 onSubmit: {},
                 onTextChange: { query = $0 }
             )
-            .frame(maxWidth: 360)
+            .frame(minWidth: 180, maxWidth: .infinity)
 
             if query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false {
                 Button {
@@ -88,10 +98,22 @@ struct UserProfileCreatorTagsSection: View {
                 .buttonBorderShape(.capsule)
                 .help(L10n.clearSearch)
             }
-
-            Spacer(minLength: 0)
         }
         .controlSize(.small)
+    }
+
+    @ViewBuilder
+    private var retryButton: some View {
+        if errorMessage != nil {
+            Button {
+                Task { await loadTags() }
+            } label: {
+                Label(L10n.retry, systemImage: "arrow.clockwise")
+            }
+            .buttonStyle(.glass)
+            .buttonBorderShape(.capsule)
+            .controlSize(.small)
+        }
     }
 
     private var loadingRow: some View {
@@ -232,7 +254,7 @@ private struct CreatorArtworkTagChip: View {
             }
             .padding(.horizontal, 12)
             .padding(.vertical, tag.displaySubtitle == nil ? 8 : 7)
-            .frame(minWidth: 132, maxWidth: 260, alignment: .leading)
+            .frame(minWidth: 150, maxWidth: 218, alignment: .leading)
             .contentShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         }
         .buttonStyle(.plain)

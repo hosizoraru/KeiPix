@@ -1,157 +1,145 @@
 import SwiftUI
 
-/// Tappable stats strip — the sheet's primary navigation hub.
+/// Compact overview hub for creator profile sheets.
 ///
-/// In the previous layout the same four totals (illustrations, manga,
-/// public saves, following) were rendered twice: once as a static hero
-/// strip, then again as a 6-cell "Collection Shortcuts" grid that
-/// duplicated each number under a tappable card. That wasted ~120 pt of
-/// vertical space on every sheet without adding new information.
-///
-/// Pixiv Web's profile collapses the duplication by making the **stats
-/// themselves** the navigation: tapping `1.2K Illustrations` opens the
-/// illustrations feed; tapping `3.4K Following` opens the following
-/// list. Apple's Music artist sheet does the same for `Songs` /
-/// `Albums` / `Followers`. We follow that pattern here so the numbers
-/// stay scannable *and* every cell does double duty as a routing hub.
-struct UserProfileStatsSection: View {
+/// Stats and relationship entry points are one conceptual area: "where can I
+/// go next for this creator?" Keeping them in one glass surface gives iPadOS
+/// more first-viewport content and makes the macOS sheet feel less like a
+/// stack of old preference cards.
+struct UserProfileOverviewSection: View {
     let profile: PixivUserProfile?
+    let relatedUsersCount: Int
+    let isLoadingRelatedUsers: Bool
     let openIllustrations: () -> Void
     let openManga: () -> Void
     let openPublicBookmarks: () -> Void
     let openFollowing: () -> Void
+    let openFollowers: () -> Void
+    let openRelated: () -> Void
 
-    private var entries: [Entry] {
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            GlassEffectContainer(spacing: 8) {
+                ViewThatFits(in: .horizontal) {
+                    wideOverviewRow
+                    compactOverviewStack
+                }
+            }
+        }
+        .padding(10)
+        .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+    }
+
+    private var wideOverviewRow: some View {
+        HStack(spacing: 8) {
+            statsRow
+            Divider()
+                .frame(height: 34)
+                .opacity(0.45)
+            Spacer(minLength: 8)
+            networkRail
+        }
+    }
+
+    private var compactOverviewStack: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            statsRow
+                .frame(maxWidth: .infinity, alignment: .leading)
+            networkRail
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    private var statsRow: some View {
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: 8) {
+                ForEach(statEntries) { entry in
+                    ProfileStatCell(entry: entry)
+                }
+            }
+
+            compactStatsGrid
+        }
+    }
+
+    private var compactStatsGrid: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 8) {
+                ForEach(statEntries.prefix(2)) { entry in
+                    ProfileStatCell(entry: entry)
+                }
+            }
+
+            HStack(spacing: 8) {
+                ForEach(statEntries.dropFirst(2)) { entry in
+                    ProfileStatCell(entry: entry)
+                }
+            }
+        }
+    }
+
+    private var networkRail: some View {
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: 8) {
+                followersChip
+                relatedCreatorsChip
+            }
+
+            VStack(alignment: .leading, spacing: 8) {
+                followersChip
+                relatedCreatorsChip
+            }
+        }
+    }
+
+    private var followersChip: some View {
+        networkChip(
+            title: L10n.followers,
+            badge: nil,
+            systemImage: "person.2",
+            isLoading: false,
+            action: openFollowers
+        )
+    }
+
+    private var relatedCreatorsChip: some View {
+        networkChip(
+            title: L10n.relatedCreators,
+            badge: relatedUsersCount > 0 ? "\(relatedUsersCount.formatted())+" : nil,
+            systemImage: "person.3",
+            isLoading: isLoadingRelatedUsers,
+            action: openRelated
+        )
+        .disabled(isLoadingRelatedUsers)
+    }
+
+    private var statEntries: [UserProfileStatEntry] {
         [
-            Entry(
+            UserProfileStatEntry(
                 title: L10n.illustrations,
                 value: profile?.totalIllusts ?? 0,
                 systemImage: "photo",
                 action: openIllustrations
             ),
-            Entry(
+            UserProfileStatEntry(
                 title: L10n.manga,
                 value: profile?.totalManga ?? 0,
                 systemImage: "book.pages",
                 action: openManga
             ),
-            Entry(
+            UserProfileStatEntry(
                 title: L10n.publicSaves,
                 value: profile?.totalIllustBookmarksPublic ?? 0,
                 systemImage: "bookmark",
                 action: openPublicBookmarks
             ),
-            Entry(
+            UserProfileStatEntry(
                 title: L10n.followingCreators,
                 value: profile?.totalFollowUsers ?? 0,
                 systemImage: "person.2",
                 action: openFollowing
             )
         ]
-    }
-
-    var body: some View {
-        HStack(alignment: .center, spacing: 0) {
-            ForEach(entries) { entry in
-                if entry.id != entries.first?.id {
-                    Divider()
-                        .frame(height: 36)
-                }
-                ProfileStatCell(entry: entry)
-                    .frame(maxWidth: .infinity)
-            }
-        }
-        .padding(.horizontal, 6)
-        .padding(.vertical, 8)
-        .keiPanel(14)
-    }
-
-    fileprivate struct Entry: Identifiable {
-        let title: String
-        let value: Int
-        let systemImage: String
-        let action: () -> Void
-
-        var id: String { title }
-    }
-}
-
-private struct ProfileStatCell: View {
-    let entry: UserProfileStatsSection.Entry
-    @State private var isHovering = false
-
-    var body: some View {
-        Button(action: entry.action) {
-            VStack(spacing: 4) {
-                HStack(alignment: .firstTextBaseline, spacing: 6) {
-                    Image(systemName: entry.systemImage)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                    Text(entry.value.formatted(.number.notation(.compactName)))
-                        .font(.title3.weight(.semibold).monospacedDigit())
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.8)
-                }
-                Text(entry.title)
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-            }
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 8)
-            .padding(.horizontal, 6)
-            .contentShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
-            .background {
-                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .fill(Color.primary.opacity(isHovering ? 0.06 : 0))
-            }
-        }
-        .buttonStyle(.plain)
-        .keiPixHoverTracker { isHovering = $0 }
-        .animation(.snappy(duration: 0.16), value: isHovering)
-        .help("\(entry.title) · \(entry.value.formatted())")
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(entry.title): \(entry.value.formatted())")
-        .accessibilityAddTraits(.isButton)
-    }
-}
-
-/// Compact "network" rail: followers + related creators.
-///
-/// These two routes don't have a numerical hero stat (we don't get a
-/// follower count from Pixiv's app API, and "related" is dynamic), so
-/// they don't fit into `UserProfileStatsSection`. Splitting them off
-/// into a chip rail mirrors Pixiv Web's `Following / Followers / 朋友`
-/// sub-row right under the main stats.
-struct UserProfileNetworkLinks: View {
-    let relatedUsersCount: Int
-    let isLoadingRelatedUsers: Bool
-    let openFollowers: () -> Void
-    let openRelated: () -> Void
-
-    var body: some View {
-        HStack(spacing: 8) {
-            networkChip(
-                title: L10n.followers,
-                badge: nil,
-                systemImage: "person.2",
-                isLoading: false,
-                action: openFollowers
-            )
-
-            networkChip(
-                title: L10n.relatedCreators,
-                badge: relatedUsersCount > 0
-                    ? "\(relatedUsersCount.formatted())+"
-                    : nil,
-                systemImage: "person.3",
-                isLoading: isLoadingRelatedUsers,
-                action: openRelated
-            )
-            .disabled(isLoadingRelatedUsers)
-
-            Spacer(minLength: 0)
-        }
     }
 
     private func networkChip(
@@ -167,9 +155,11 @@ struct UserProfileNetworkLinks: View {
                     .imageScale(.small)
                 Text(title)
                     .font(.caption.weight(.medium))
+                    .lineLimit(1)
                 if let badge {
                     Text(badge)
                         .font(.caption2.monospacedDigit().weight(.semibold))
+                        .foregroundStyle(.secondary)
                         .padding(.horizontal, 5)
                         .padding(.vertical, 1)
                         .glassEffect(.regular, in: Capsule(style: .continuous))
@@ -177,15 +167,61 @@ struct UserProfileNetworkLinks: View {
                 if isLoading {
                     ProgressView().controlSize(.small)
                 }
-                Image(systemName: "chevron.forward")
-                    .font(.caption2)
-                    .foregroundStyle(.tertiary)
             }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 7)
+            .contentShape(Capsule(style: .continuous))
         }
-        .buttonStyle(.glass)
-        .buttonBorderShape(.capsule)
-        .controlSize(.small)
+        .buttonStyle(.plain)
+        .glassEffect(.regular.interactive(), in: Capsule(style: .continuous))
         .help(title)
+    }
+}
+
+private struct UserProfileStatEntry: Identifiable {
+    let title: String
+    let value: Int
+    let systemImage: String
+    let action: () -> Void
+
+    var id: String { title }
+}
+
+private struct ProfileStatCell: View {
+    let entry: UserProfileStatEntry
+    @State private var isHovering = false
+
+    var body: some View {
+        Button(action: entry.action) {
+            VStack(spacing: 3) {
+                HStack(alignment: .firstTextBaseline, spacing: 6) {
+                    Image(systemName: entry.systemImage)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Text(entry.value.formatted(.number.notation(.compactName)))
+                        .font(.title3.weight(.semibold).monospacedDigit())
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
+                }
+                Text(entry.title)
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+            }
+            .frame(minWidth: 92)
+            .padding(.vertical, 7)
+            .padding(.horizontal, 9)
+            .contentShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .glassEffect(.regular.interactive(), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .scaleEffect(isHovering ? 1.012 : 1)
+        .keiPixHoverTracker { isHovering = $0 }
+        .animation(.snappy(duration: 0.16), value: isHovering)
+        .help("\(entry.title) · \(entry.value.formatted())")
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(entry.title): \(entry.value.formatted())")
+        .accessibilityAddTraits(.isButton)
     }
 }
 
@@ -229,8 +265,8 @@ struct UserProfileDescriptionSection: View {
                     .fixedSize(horizontal: false, vertical: true)
                     .textSelection(.enabled)
             }
-            .padding(16)
-            .keiPanel(16)
+            .padding(14)
+            .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
         }
     }
 
@@ -294,8 +330,8 @@ struct UserProfileWorkspaceSection: View {
                         }
                     }
                 }
-                .padding(16)
-                .keiPanel(16)
+                .padding(14)
+                .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
             }
         }
     }

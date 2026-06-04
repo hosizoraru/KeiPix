@@ -38,8 +38,8 @@ struct UserProfileRecentWorksSection: View {
                 carousel
             }
         }
-        .padding(16)
-        .keiPanel(16)
+        .padding(14)
+        .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
         .task(id: user.id) {
             await loadArtworks()
         }

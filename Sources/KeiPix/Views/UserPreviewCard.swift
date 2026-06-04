@@ -58,9 +58,14 @@ struct UserPreviewCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             header
-            previewStrip
-            navigationRow
-            actionRail
+            if expandedPreview {
+                expandedCommandRail
+                previewStrip
+            } else {
+                previewStrip
+                navigationRow
+                actionRail
+            }
         }
         .padding(14)
         .keiInteractiveGlass(20)
@@ -356,6 +361,88 @@ struct UserPreviewCard: View {
         }
     }
 
+    private var expandedCommandRail: some View {
+        GlassEffectContainer(spacing: 8) {
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 8) {
+                    compactNavigationChip(
+                        title: L10n.creatorProfile,
+                        systemImage: "person.crop.circle",
+                        displayStyle: .titleAndIcon,
+                        action: openProfile
+                    )
+                    compactNavigationChip(
+                        title: L10n.illustrations,
+                        systemImage: "photo",
+                        displayStyle: .titleAndIcon,
+                        action: openIllustrations
+                    )
+                    compactNavigationChip(
+                        title: L10n.manga,
+                        systemImage: "book.closed",
+                        displayStyle: .titleAndIcon,
+                        action: openManga
+                    )
+
+                    Spacer(minLength: 8)
+
+                    actionChip(
+                        title: isPinned ? L10n.unpinCreator : L10n.pinCreator,
+                        systemImage: isPinned ? "pin.slash" : "pin",
+                        displayStyle: .iconOnly,
+                        action: togglePinnedCreator
+                    )
+                    pixivLink(displayStyle: .titleAndIcon)
+                    actionChip(
+                        title: L10n.copyLink,
+                        systemImage: "link",
+                        displayStyle: .iconOnly,
+                        action: copyCreatorLink
+                    )
+                    overflowMenu
+                }
+
+                HStack(spacing: 8) {
+                    compactNavigationChip(
+                        title: L10n.creatorProfile,
+                        systemImage: "person.crop.circle",
+                        displayStyle: .iconOnly,
+                        action: openProfile
+                    )
+                    compactNavigationChip(
+                        title: L10n.illustrations,
+                        systemImage: "photo",
+                        displayStyle: .iconOnly,
+                        action: openIllustrations
+                    )
+                    compactNavigationChip(
+                        title: L10n.manga,
+                        systemImage: "book.closed",
+                        displayStyle: .iconOnly,
+                        action: openManga
+                    )
+
+                    Spacer(minLength: 8)
+
+                    actionChip(
+                        title: isPinned ? L10n.unpinCreator : L10n.pinCreator,
+                        systemImage: isPinned ? "pin.slash" : "pin",
+                        displayStyle: .iconOnly,
+                        action: togglePinnedCreator
+                    )
+                    pixivLink(displayStyle: .iconOnly)
+                    actionChip(
+                        title: L10n.copyLink,
+                        systemImage: "link",
+                        displayStyle: .iconOnly,
+                        action: copyCreatorLink
+                    )
+                    overflowMenu
+                }
+            }
+        }
+    }
+
     private func navigationChip(
         title: String,
         systemImage: String,
@@ -376,6 +463,27 @@ struct UserPreviewCard: View {
         .help(title)
         .accessibilityLabel(title)
     }
+
+    private func compactNavigationChip(
+        title: String,
+        systemImage: String,
+        displayStyle: CreatorCardButtonDisplayStyle,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            creatorButtonLabel(
+                title: title,
+                systemImage: systemImage,
+                displayStyle: displayStyle
+            )
+        }
+        .buttonStyle(.glass)
+        .buttonBorderShape(.capsule)
+        .controlSize(.small)
+        .help(title)
+        .accessibilityLabel(title)
+    }
+
 
     // MARK: - Action rail (high-frequency standalone buttons + overflow)
 
@@ -639,7 +747,7 @@ private struct ExpandedCreatorPreviewShelf: View {
     let copyArtworkLink: (PixivArtwork) -> Void
     let loadArtworks: (() async throws -> [PixivArtwork])?
 
-    private let tileHeight: CGFloat = 200
+    private let tileHeight: CGFloat = 178
     private var tileWidth: CGFloat { tileHeight * 4.0 / 5.0 }
     private let visibleCap = 24
 
