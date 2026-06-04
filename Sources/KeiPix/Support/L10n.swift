@@ -1,8 +1,18 @@
 import Foundation
 
+private enum L10nTable {
+    static let navigation = "Navigation"
+}
+
 enum L10n {
     static var discover: String { text("Discovery") }
     static var customizeDashboard: String { text("Customize Dashboard") }
+    static var shortcuts: String { text("Shortcuts", table: L10nTable.navigation) }
+    static var customizeShortcuts: String { text("Customize Shortcuts", table: L10nTable.navigation) }
+    static var resetShortcuts: String { text("Reset Shortcuts", table: L10nTable.navigation) }
+    static var portraitShortcuts: String { text("Portrait Shortcuts", table: L10nTable.navigation) }
+    static var portraitShortcutsHint: String { text("Choose the routes that appear in the iPad portrait shortcut menu. iPhone keeps its compact bottom tabs.", table: L10nTable.navigation) }
+    static var quickDestinations: String { text("Quick Destinations", table: L10nTable.navigation) }
     static var dashboardSections: String { text("Dashboard Sections") }
     static var resetDashboardSections: String { text("Reset to Default") }
     static var discoverDetailHint: String { text("Pick a Discover card to open a feed, creator list, ranking, or library view.") }
@@ -1650,25 +1660,25 @@ enum L10n {
         String(format: text("Page %d of %d"), locale: Locale.current, page, count)
     }
 
-    static func text(_ key: String) -> String {
+    static func text(_ key: String, table: String? = nil) -> String {
         let selected = UserDefaults.standard.string(forKey: "appLanguage")
             .flatMap(AppLanguage.init(rawValue:)) ?? .automatic
         let resourceBundle = Bundle.keipixResources
         if let lprojName = selected.lprojName,
            let path = resourceBundle.path(forResource: lprojName.lowercased(), ofType: "lproj") ?? resourceBundle.path(forResource: lprojName, ofType: "lproj"),
            let bundle = Bundle(path: path) {
-            return bundle.localizedString(forKey: key, value: key, table: nil)
+            return bundle.localizedString(forKey: key, value: key, table: table)
         }
-        return resourceBundle.localizedString(forKey: key, value: key, table: nil)
+        return resourceBundle.localizedString(forKey: key, value: key, table: table)
     }
 }
 
 extension Bundle {
-    /// Resource bundle that holds the localized `.lproj/Localizable.strings`
-    /// files compiled out of `Localizable.xcstrings` by the
-    /// `XCStringsBuilder` SwiftPM plugin, regardless of whether the app is
-    /// built via Swift Package Manager (where `Bundle.module` is generated)
-    /// or Xcode (where resources live in the main app bundle).
+    /// Resource bundle that holds localized `.lproj/<table>.strings` files
+    /// compiled out of the string catalogs by the `XCStringsBuilder` SwiftPM
+    /// plugin, regardless of whether the app is built via Swift Package
+    /// Manager (where `Bundle.module` is generated) or Xcode (where resources
+    /// live in the main app bundle).
     static var keipixResources: Bundle {
         #if SWIFT_PACKAGE
         return .module

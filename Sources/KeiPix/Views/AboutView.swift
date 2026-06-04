@@ -196,7 +196,8 @@ struct AboutView: View {
             AboutInfoCard(
                 title: L10n.aboutLicense,
                 systemImage: "checkmark.seal",
-                bodyText: L10n.aboutLicenseBody
+                bodyText: L10n.aboutLicenseBody,
+                minHeight: presentation.cardMinimumHeight
             ) {
                 Button {
                     copyLicenseSummary()
@@ -210,7 +211,8 @@ struct AboutView: View {
             AboutInfoCard(
                 title: L10n.aboutSourceRepository,
                 systemImage: "curlybraces.square",
-                bodyText: L10n.aboutRepositoryBody
+                bodyText: L10n.aboutRepositoryBody,
+                minHeight: presentation.cardMinimumHeight
             ) {
                 Button {
                     copyRepositoryURL()
@@ -224,25 +226,29 @@ struct AboutView: View {
             AboutInfoCard(
                 title: L10n.aboutPlatformSupport,
                 systemImage: "rectangle.3.group",
-                bodyText: L10n.aboutPlatformSupportBody
+                bodyText: L10n.aboutPlatformSupportBody,
+                minHeight: presentation.cardMinimumHeight
             )
 
             AboutInfoCard(
                 title: L10n.aboutAcknowledgments,
                 systemImage: "sparkles",
-                bodyText: L10n.aboutReferenceProjectsBody
+                bodyText: L10n.aboutReferenceProjectsBody,
+                minHeight: presentation.cardMinimumHeight
             )
 
             AboutInfoCard(
                 title: L10n.aboutLocalization,
                 systemImage: "globe",
-                bodyText: L10n.aboutLocalizationBody
+                bodyText: L10n.aboutLocalizationBody,
+                minHeight: presentation.cardMinimumHeight
             )
 
             AboutInfoCard(
                 title: L10n.aboutDesignPrinciples,
                 systemImage: "slider.horizontal.3",
-                bodyText: L10n.aboutDesignPrinciplesBody
+                bodyText: L10n.aboutDesignPrinciplesBody,
+                minHeight: presentation.cardMinimumHeight
             )
         }
     }
@@ -308,17 +314,20 @@ private struct AboutInfoCard<Actions: View>: View {
     let title: String
     let systemImage: String
     let bodyText: String
+    let minHeight: CGFloat
     @ViewBuilder var actions: () -> Actions
 
     init(
         title: String,
         systemImage: String,
         bodyText: String,
+        minHeight: CGFloat = 140,
         @ViewBuilder actions: @escaping () -> Actions
     ) {
         self.title = title
         self.systemImage = systemImage
         self.bodyText = bodyText
+        self.minHeight = minHeight
         self.actions = actions
     }
 
@@ -346,7 +355,7 @@ private struct AboutInfoCard<Actions: View>: View {
             actions()
         }
         .padding(16)
-        .frame(maxWidth: .infinity, minHeight: 154, alignment: .topLeading)
+        .frame(maxWidth: .infinity, minHeight: minHeight, alignment: .topLeading)
         .keiGlass(22)
     }
 }
@@ -355,12 +364,14 @@ private extension AboutInfoCard where Actions == EmptyView {
     init(
         title: String,
         systemImage: String,
-        bodyText: String
+        bodyText: String,
+        minHeight: CGFloat = 140
     ) {
         self.init(
             title: title,
             systemImage: systemImage,
             bodyText: bodyText,
+            minHeight: minHeight,
             actions: { EmptyView() }
         )
     }
@@ -387,7 +398,11 @@ private extension AboutView.Presentation {
         case .window:
             592
         case .settings:
+            #if os(macOS)
             1120
+            #else
+            860
+            #endif
         }
     }
 
@@ -409,7 +424,11 @@ private extension AboutView.Presentation {
         case .window:
             22
         case .settings:
+            #if os(macOS)
             18
+            #else
+            8
+            #endif
         }
     }
 
@@ -418,7 +437,11 @@ private extension AboutView.Presentation {
         case .window:
             22
         case .settings:
+            #if os(macOS)
             28
+            #else
+            16
+            #endif
         }
     }
 
@@ -427,7 +450,11 @@ private extension AboutView.Presentation {
         case .window:
             18
         case .settings:
+            #if os(macOS)
             20
+            #else
+            14
+            #endif
         }
     }
 
@@ -436,7 +463,11 @@ private extension AboutView.Presentation {
         case .window:
             78
         case .settings:
+            #if os(macOS)
             86
+            #else
+            70
+            #endif
         }
     }
 
@@ -445,7 +476,24 @@ private extension AboutView.Presentation {
         case .window:
             260
         case .settings:
+            #if os(macOS)
             320
+            #else
+            360
+            #endif
+        }
+    }
+
+    var cardMinimumHeight: CGFloat {
+        switch self {
+        case .window:
+            140
+        case .settings:
+            #if os(macOS)
+            154
+            #else
+            132
+            #endif
         }
     }
 }

@@ -21,6 +21,7 @@ struct ContentView: View {
     @State private var isPixivIDOpenPresented = false
     @State private var feedbackRequest: FeedbackReportRequest?
     @State private var statusMessage: String?
+    @AppStorage("mobilePortraitShortcutRouteIDs") private var portraitShortcutRouteIDs = ContentView.defaultPortraitShortcutRouteIDs
     #if DEBUG
     @State private var creatorProfileVisualQAUser: PixivUser?
     #endif
@@ -29,12 +30,14 @@ struct ContentView: View {
         case feed
         case library
         case settings
+        case shortcuts
 
         var title: String {
             switch self {
             case .feed: return L10n.feed
             case .library: return L10n.downloads
             case .settings: return L10n.settings
+            case .shortcuts: return L10n.shortcuts
             }
         }
 
@@ -43,9 +46,21 @@ struct ContentView: View {
             case .feed: return "photo.on.rectangle.angled"
             case .library: return "arrow.down.circle"
             case .settings: return "gearshape"
+            case .shortcuts: return "slider.horizontal.3"
             }
         }
     }
+
+    private static let defaultPortraitShortcutRoutes: [PixivRoute] = [
+        .home,
+        .illustrations,
+        .spotlight,
+        .savedSearches,
+        .history,
+        .watchLater
+    ]
+    private static let maximumPortraitShortcutCount = 8
+    private static let defaultPortraitShortcutRouteIDs = defaultPortraitShortcutRoutes.map(\.rawValue).joined(separator: ",")
 
     var body: some View {
         adaptiveRoot
@@ -159,15 +174,16 @@ struct ContentView: View {
     @ViewBuilder
     private var adaptiveRoot: some View {
         GeometryReader { geometry in
-            if usesLandscapeSidebar(for: geometry.size) {
+            let layout = MobileWorkspaceLayout(size: geometry.size, platform: currentMobilePlatform)
+            if layout.usesLandscapeSidebar {
                 landscapeSplitRoot
             } else {
-                compactTabRoot
+                compactTabRoot(layout: layout)
             }
         }
     }
 
-    private var compactTabRoot: some View {
+    private func compactTabRoot(layout: MobileWorkspaceLayout) -> some View {
         TabView(selection: $selectedTab) {
             Tab(L10n.feed, systemImage: "photo.on.rectangle.angled", value: .feed) {
                 feedTab
@@ -179,6 +195,17 @@ struct ContentView: View {
 
             Tab(L10n.settings, systemImage: "gearshape", value: .settings) {
                 settingsTab
+            }
+
+            if layout.usesPortraitTopCustomization {
+                Tab(L10n.shortcuts, systemImage: "slider.horizontal.3", value: .shortcuts) {
+                    portraitShortcutsTab
+                }
+            }
+        }
+        .onChange(of: layout.usesPortraitTopCustomization) { _, isEnabled in
+            if isEnabled == false, selectedTab == .shortcuts {
+                selectedTab = .feed
             }
         }
     }
@@ -1276,10 +1303,6 @@ struct ContentView: View {
         }
     }
 
-    private func usesLandscapeSidebar(for size: CGSize) -> Bool {
-        MobileWorkspaceLayout(size: size, platform: currentMobilePlatform).usesLandscapeSidebar
-    }
-
     private var currentMobilePlatform: ReaderPlatformKind {
         UIDevice.current.userInterfaceIdiom == .phone ? .phone : .pad
     }
@@ -1306,6 +1329,8 @@ struct ContentView: View {
             selectedSidebarItem = .route(.downloads)
         case .settings:
             selectedSidebarItem = .settings
+        case .shortcuts:
+            selectedSidebarItem = .route(store.selectedRoute)
         }
     }
 
@@ -1342,6 +1367,243 @@ struct ContentView: View {
     private var settingsTab: some View {
         NavigationStack {
             SettingsView(store: store)
+        }
+    }
+
+    // MARK: - Portrait Shortcuts Tab
+
+    private var portraitShortcutsTab: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    portraitShortcutsHero
+                    portraitShortcutGrid
+                    portraitShortcutSections
+                }
+                .padding(.horizontal, 16)
+                .padding(.top, 10)
+                .padding(.bottom, 18)
+                .frame(maxWidth: 760, alignment: .leading)
+                .frame(maxWidth: .infinity, alignment: .topLeading)
+            }
+            .navigationTitle(L10n.shortcuts)
+            .toolbar {
+                ToolbarItem(placement: .primaryAction) {
+                    portraitShortcutCustomizationMenu
+                }
+            }
+        }
+    }
+
+    private var portraitShortcutsHero: some View {
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: 14) {
+                portraitShortcutIcon
+                portraitShortcutHeroText
+                Spacer(minLength: 12)
+                portraitShortcutCountPill
+            }
+
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(spacing: 12) {
+                    portraitShortcutIcon
+                    portraitShortcutHeroText
+                }
+                portraitShortcutCountPill
+            }
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .keiGlass(24)
+    }
+
+    private var portraitShortcutIcon: some View {
+        Image(systemName: "slider.horizontal.3")
+            .font(.title2.weight(.semibold))
+            .symbolRenderingMode(.hierarchical)
+            .foregroundStyle(.secondary)
+            .frame(width: 52, height: 52)
+            .keiGlass(18)
+            .accessibilityHidden(true)
+    }
+
+    private var portraitShortcutHeroText: some View {
+        VStack(alignment: .leading, spacing: 5) {
+            Text(L10n.portraitShortcuts)
+                .font(.title3.weight(.bold))
+                .lineLimit(1)
+                .minimumScaleFactor(0.82)
+
+            Text(L10n.portraitShortcutsHint)
+                .font(.callout)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var portraitShortcutCountPill: some View {
+        Label("\(portraitShortcutRoutes.count)/\(Self.maximumPortraitShortcutCount)", systemImage: "pin")
+            .font(.caption.weight(.semibold))
+            .foregroundStyle(.secondary)
+            .lineLimit(1)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 6)
+            .glassEffect(.regular, in: Capsule(style: .continuous))
+            .accessibilityLabel(L10n.quickDestinations)
+    }
+
+    private var portraitShortcutGrid: some View {
+        FlowLayout(spacing: 10) {
+            ForEach(portraitShortcutRoutes) { route in
+                Button {
+                    selectRoute(route)
+                } label: {
+                    Label(route.title, systemImage: route.systemImage)
+                        .lineLimit(1)
+                }
+                .os26GlassButton(prominent: route == store.selectedRoute)
+                .controlSize(.regular)
+                .help(route.title)
+                .accessibilityLabel(route.title)
+            }
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .keiGlass(22)
+    }
+
+    private var portraitShortcutSections: some View {
+        LazyVStack(alignment: .leading, spacing: 12) {
+            ForEach(PixivRoute.sidebarSections) { section in
+                portraitShortcutSection(section)
+            }
+        }
+    }
+
+    private func portraitShortcutSection(_ section: PixivRouteSection) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Label(section.title, systemImage: portraitShortcutSectionSystemImage(section))
+                .font(.headline)
+                .lineLimit(1)
+
+            FlowLayout(spacing: 8) {
+                ForEach(section.routes) { route in
+                    portraitShortcutToggle(route)
+                }
+            }
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .keiGlass(20)
+    }
+
+    private func portraitShortcutToggle(_ route: PixivRoute) -> some View {
+        Button {
+            togglePortraitShortcut(route)
+        } label: {
+            Label(
+                route.title,
+                systemImage: isPortraitShortcutSelected(route) ? "checkmark.circle.fill" : route.systemImage
+            )
+            .lineLimit(1)
+        }
+        .os26GlassButton(prominent: isPortraitShortcutSelected(route))
+        .controlSize(.small)
+        .help(route.title)
+        .accessibilityLabel(route.title)
+    }
+
+    private var portraitShortcutCustomizationMenu: some View {
+        Menu {
+            Section(L10n.quickDestinations) {
+                ForEach(portraitShortcutRoutes) { route in
+                    Button {
+                        selectRoute(route)
+                    } label: {
+                        Label(route.title, systemImage: route.systemImage)
+                    }
+                }
+            }
+
+            ForEach(PixivRoute.sidebarSections) { section in
+                Section(section.title) {
+                    ForEach(section.routes) { route in
+                        Button {
+                            togglePortraitShortcut(route)
+                        } label: {
+                            Label(
+                                route.title,
+                                systemImage: isPortraitShortcutSelected(route) ? "checkmark.circle.fill" : route.systemImage
+                            )
+                        }
+                    }
+                }
+            }
+
+            Section {
+                Button {
+                    resetPortraitShortcuts()
+                } label: {
+                    Label(L10n.resetShortcuts, systemImage: "arrow.counterclockwise")
+                }
+            }
+        } label: {
+            Label(L10n.customizeShortcuts, systemImage: "slider.horizontal.3")
+                .lineLimit(1)
+        }
+        .os26GlassButton()
+        .controlSize(.regular)
+        .accessibilityLabel(L10n.customizeShortcuts)
+    }
+
+    private var portraitShortcutRoutes: [PixivRoute] {
+        let routes = portraitShortcutRouteIDs
+            .split(separator: ",")
+            .compactMap { PixivRoute(rawValue: String($0)) }
+            .filter(\.isSidebarRoute)
+            .uniqued { $0.rawValue }
+        return routes.isEmpty ? Self.defaultPortraitShortcutRoutes : routes
+    }
+
+    private func isPortraitShortcutSelected(_ route: PixivRoute) -> Bool {
+        portraitShortcutRoutes.contains(route)
+    }
+
+    private func togglePortraitShortcut(_ route: PixivRoute) {
+        var routes = portraitShortcutRoutes
+        if let index = routes.firstIndex(of: route) {
+            routes.remove(at: index)
+        } else {
+            routes.append(route)
+            if routes.count > Self.maximumPortraitShortcutCount {
+                routes.removeFirst(routes.count - Self.maximumPortraitShortcutCount)
+            }
+        }
+        if routes.isEmpty {
+            routes = Self.defaultPortraitShortcutRoutes
+        }
+        portraitShortcutRouteIDs = routes.map(\.rawValue).joined(separator: ",")
+    }
+
+    private func resetPortraitShortcuts() {
+        portraitShortcutRouteIDs = Self.defaultPortraitShortcutRouteIDs
+    }
+
+    private func portraitShortcutSectionSystemImage(_ section: PixivRouteSection) -> String {
+        switch section {
+        case .works:
+            "photo.stack"
+        case .ranking:
+            "chart.bar"
+        case .mangaRanking:
+            "chart.bar.doc.horizontal"
+        case .novels:
+            "books.vertical"
+        case .novelRanking:
+            "chart.line.uptrend.xyaxis"
+        case .library:
+            "tray.full"
         }
     }
 

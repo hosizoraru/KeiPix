@@ -196,8 +196,8 @@ struct SettingsView: View {
                 categoryRail
             }
         }
-        .padding(.horizontal, 18)
-        .padding(.top, 8)
+        .padding(.horizontal, 16)
+        .padding(.top, 6)
         .padding(.bottom, 6)
     }
 
@@ -231,25 +231,87 @@ struct SettingsView: View {
     }
 
     private var categoryRail: some View {
-        ScrollView(.horizontal) {
+        ViewThatFits(in: .horizontal) {
             HStack(spacing: 8) {
-                ForEach(coordinator.visibleCategories) { category in
-                    Button {
-                        withAnimation(.snappy(duration: 0.2)) {
-                            coordinator.selection = category
-                        }
-                    } label: {
-                        Label(category.title, systemImage: category.systemImage)
-                            .lineLimit(1)
+                ForEach(compactCategoryShortcuts) { category in
+                    categoryChip(category)
+                }
+
+                categoryMenu
+            }
+
+            ScrollView(.horizontal) {
+                HStack(spacing: 8) {
+                    ForEach(compactCategoryShortcuts) { category in
+                        categoryChip(category)
                     }
-                    .os26GlassButton(prominent: category == coordinator.selection)
-                    .controlSize(.small)
+
+                    categoryMenu
+                }
+                .padding(.horizontal, 2)
+                .padding(.vertical, 2)
+            }
+            .scrollIndicators(.hidden)
+        }
+    }
+
+    private func categoryChip(_ category: SettingsCategory) -> some View {
+        Button {
+            selectCompactCategory(category)
+        } label: {
+            Label(category.title, systemImage: category.systemImage)
+                .lineLimit(1)
+        }
+        .os26GlassButton(prominent: category == coordinator.selection)
+        .controlSize(.small)
+        .help(category.title)
+        .accessibilityLabel(category.title)
+    }
+
+    private var categoryMenu: some View {
+        Menu {
+            ForEach(coordinator.visibleCategories) { category in
+                Button {
+                    selectCompactCategory(category)
+                } label: {
+                    Label(
+                        category.title,
+                        systemImage: category == coordinator.selection ? "checkmark" : category.systemImage
+                    )
                 }
             }
-            .padding(.horizontal, 2)
-            .padding(.vertical, 2)
+        } label: {
+            Label(L10n.allCategories, systemImage: "line.3.horizontal.decrease.circle")
+                .lineLimit(1)
         }
-        .scrollIndicators(.hidden)
+        .os26GlassButton()
+        .controlSize(.small)
+        .help(L10n.allCategories)
+        .accessibilityLabel(L10n.allCategories)
+    }
+
+    private var compactCategoryShortcuts: [SettingsCategory] {
+        let visible = coordinator.visibleCategories
+        let searchIsEmpty = coordinator.searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        var preferred = searchIsEmpty
+            ? [.account, .general, .reading, .privacy, .downloads]
+            : Array(visible.prefix(4))
+
+        if visible.contains(coordinator.selection), preferred.contains(coordinator.selection) == false {
+            preferred.insert(coordinator.selection, at: min(2, preferred.count))
+        }
+
+        var result: [SettingsCategory] = []
+        for category in preferred where visible.contains(category) && result.contains(category) == false {
+            result.append(category)
+        }
+        return Array(result.prefix(5))
+    }
+
+    private func selectCompactCategory(_ category: SettingsCategory) {
+        withAnimation(.snappy(duration: 0.2)) {
+            coordinator.selection = category
+        }
     }
 
     @ViewBuilder

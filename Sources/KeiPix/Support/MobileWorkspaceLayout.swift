@@ -23,6 +23,13 @@ struct MobileWorkspaceLayout: Equatable, Sendable {
         usesLandscapeSidebar == false
     }
 
+    /// iPad portrait uses the compact root but still has enough top chrome
+    /// room for a portrait-only shortcut tab. Phones keep the smaller bottom
+    /// tab bar, and iPad landscape uses the sidebar instead.
+    var usesPortraitTopCustomization: Bool {
+        platform == .pad && usesCompactTabs && isPortrait
+    }
+
     var isPortrait: Bool {
         validHeight >= validWidth
     }

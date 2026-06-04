@@ -413,74 +413,128 @@ struct OS26SettingsPage<Content: View>: View {
     }
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 18) {
-                if showsHeader {
-                    OS26SettingsPageHeader(
-                        title: title,
-                        subtitle: subtitle,
-                        systemImage: systemImage
-                    )
-                }
+        GeometryReader { proxy in
+            let metrics = OS26SettingsPageMetrics(
+                availableWidth: proxy.size.width,
+                showsHeader: showsHeader,
+                usesAdaptiveGrid: usesAdaptiveGrid
+            )
 
-                if usesAdaptiveGrid {
-                    LazyVGrid(
-                        columns: adaptiveColumns,
-                        alignment: .leading,
-                        spacing: 16
-                    ) {
-                        content
+            ScrollView {
+                VStack(alignment: .leading, spacing: metrics.verticalSpacing) {
+                    if showsHeader {
+                        OS26SettingsPageHeader(
+                            title: title,
+                            subtitle: subtitle,
+                            systemImage: systemImage
+                        )
                     }
-                } else {
-                    VStack(alignment: .leading, spacing: 14) {
-                        content
+
+                    if usesAdaptiveGrid {
+                        LazyVGrid(
+                            columns: metrics.columns,
+                            alignment: .leading,
+                            spacing: metrics.gridSpacing
+                        ) {
+                            content
+                        }
+                    } else {
+                        VStack(alignment: .leading, spacing: 14) {
+                            content
+                        }
                     }
                 }
+                .frame(maxWidth: metrics.pageMaxWidth, alignment: .leading)
+                .padding(.horizontal, metrics.horizontalPadding)
+                .padding(.top, metrics.topPadding)
+                .padding(.bottom, metrics.bottomPadding)
             }
-            .frame(maxWidth: pageMaxWidth, alignment: .leading)
-            .padding(.horizontal, horizontalPadding)
-            .padding(.top, showsHeader ? 20 : 10)
-            .padding(.bottom, 20)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .navigationTitle(title)
     }
+}
 
-    private var adaptiveColumns: [GridItem] {
-        [
-            GridItem(
-                .adaptive(minimum: adaptiveColumnMinimum, maximum: 560),
-                spacing: 16,
-                alignment: .top
-            )
-        ]
+private struct OS26SettingsPageMetrics {
+    let availableWidth: CGFloat
+    let showsHeader: Bool
+    let usesAdaptiveGrid: Bool
+
+    var columns: [GridItem] {
+        Array(
+            repeating: GridItem(.flexible(minimum: 0), spacing: gridSpacing, alignment: .top),
+            count: columnCount
+        )
     }
 
-    private var adaptiveColumnMinimum: CGFloat {
+    var columnCount: Int {
+        guard usesAdaptiveGrid else { return 1 }
+        let width = contentWidth
         #if os(macOS)
-        360
+        if width >= 1040 { return 3 }
+        if width >= 680 { return 2 }
+        return 1
         #else
-        380
+        if width >= 900 { return 3 }
+        if width >= 590 { return 2 }
+        return 1
         #endif
     }
 
-    private var pageMaxWidth: CGFloat {
-        if usesAdaptiveGrid {
-            #if os(macOS)
-            1180
-            #else
-            1160
-            #endif
-        } else {
-            860
-        }
+    var contentWidth: CGFloat {
+        min(pageMaxWidth, max(0, availableWidth - horizontalPadding * 2))
     }
 
-    private var horizontalPadding: CGFloat {
+    var pageMaxWidth: CGFloat {
+        guard usesAdaptiveGrid else { return 860 }
         #if os(macOS)
-        28
+        return 1180
         #else
-        18
+        if availableWidth < 560 {
+            return 520
+        }
+        if availableWidth < 900 {
+            return 860
+        }
+        return 1160
+        #endif
+    }
+
+    var horizontalPadding: CGFloat {
+        #if os(macOS)
+        return 28
+        #else
+        if availableWidth < 430 {
+            return 12
+        }
+        if availableWidth < 900 {
+            return 16
+        }
+        return 18
+        #endif
+    }
+
+    var gridSpacing: CGFloat {
+        #if os(macOS)
+        return 16
+        #else
+        return availableWidth < 560 ? 12 : 14
+        #endif
+    }
+
+    var verticalSpacing: CGFloat {
+        showsHeader ? 18 : gridSpacing
+    }
+
+    var topPadding: CGFloat {
+        showsHeader ? 20 : 8
+    }
+
+    var bottomPadding: CGFloat {
+        #if os(macOS)
+        return 20
+        #else
+        return availableWidth < 900 ? 14 : 20
         #endif
     }
 }

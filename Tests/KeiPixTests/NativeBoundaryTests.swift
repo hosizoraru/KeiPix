@@ -307,8 +307,17 @@ struct NativeBoundaryTests {
         #expect(contentView.contains("Label(sidebarVisibilityTitle, systemImage: \"sidebar.leading\")"))
         #expect(contentView.contains("systemName: \"checkmark\"") == false)
         #expect(contentView.contains("private var sidebarToggleButton: some View") == false)
-        #expect(contentView.contains("usesLandscapeSidebar(for size: CGSize)"))
-        #expect(contentView.contains("MobileWorkspaceLayout(size: size, platform: currentMobilePlatform).usesLandscapeSidebar"))
+        #expect(contentView.contains("usesLandscapeSidebar(for size: CGSize)") == false)
+        #expect(contentView.contains("let layout = MobileWorkspaceLayout(size: geometry.size, platform: currentMobilePlatform)"))
+        #expect(contentView.contains("if layout.usesLandscapeSidebar"))
+        #expect(contentView.contains("layout.usesPortraitTopCustomization"))
+        #expect(contentView.contains("@AppStorage(\"mobilePortraitShortcutRouteIDs\")"))
+        #expect(contentView.contains("private var portraitShortcutsTab: some View"))
+        #expect(contentView.contains("if layout.usesPortraitTopCustomization {\n                Tab(L10n.shortcuts"))
+        #expect(contentView.contains("case .shortcuts"))
+        #expect(contentView.contains("selectedTab = .feed"))
+        #expect(contentView.contains("L10n.customizeShortcuts"))
+        #expect(contentView.contains("L10n.portraitShortcutsHint"))
         #expect(contentView.contains("case settings"))
         #expect(contentView.contains("ToolbarItem(placement: .topBarLeading)"))
         #expect(contentView.contains("private var routeMenu: some View"))
@@ -384,6 +393,37 @@ struct NativeBoundaryTests {
         #expect(spotlightDetailView.contains("showsNavigationChrome ? (article.pureTitle.isEmpty ? L10n.spotlight : article.pureTitle) : \"\""))
     }
 
+    @Test("Mobile portrait shortcuts ship localized labels")
+    func mobilePortraitShortcutsShipLocalizedLabels() throws {
+        let root = try packageRoot()
+        let navigationCatalog = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Resources/Navigation.xcstrings"),
+            encoding: .utf8
+        )
+        let l10n = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Support/L10n.swift"),
+            encoding: .utf8
+        )
+
+        for key in [
+            "Shortcuts",
+            "Customize Shortcuts",
+            "Reset Shortcuts",
+            "Portrait Shortcuts",
+            "Quick Destinations",
+            "Choose the routes that appear in the iPad portrait shortcut menu. iPhone keeps its compact bottom tabs."
+        ] {
+            #expect(navigationCatalog.contains("\"\(key)\""), "\(key) should be localized for the portrait shortcut UI")
+        }
+
+        #expect(navigationCatalog.contains("\"value\": \"快捷\""))
+        #expect(navigationCatalog.contains("\"value\": \"快捷入口\""))
+        #expect(l10n.contains("private enum L10nTable"))
+        #expect(l10n.contains("static let navigation = \"Navigation\""))
+        #expect(l10n.contains("static func text(_ key: String, table: String? = nil)"))
+        #expect(l10n.contains("table: L10nTable.navigation"))
+    }
+
     @Test("Mobile workspace keeps portrait and phone layouts compact")
     func mobileWorkspaceKeepsPortraitAndPhoneLayoutsCompact() {
         let iPhonePortrait = MobileWorkspaceLayout(size: CGSize(width: 393, height: 852), platform: .phone)
@@ -395,6 +435,9 @@ struct NativeBoundaryTests {
         #expect(iPhoneLandscape.usesCompactTabs)
         #expect(iPadPortrait.usesCompactTabs)
         #expect(iPadLandscape.usesLandscapeSidebar)
+        #expect(iPhonePortrait.usesPortraitTopCustomization == false)
+        #expect(iPadPortrait.usesPortraitTopCustomization)
+        #expect(iPadLandscape.usesPortraitTopCustomization == false)
         #expect(iPhonePortrait.usesCondensedChrome)
         #expect(iPadPortrait.usesCondensedChrome == false)
         #expect(iPhonePortrait.articleHorizontalPadding == 16)
@@ -940,6 +983,8 @@ struct NativeBoundaryTests {
         #expect(settingsView.contains("#else\n        compactSettingsWorkspace"))
         #expect(settingsView.contains("private var compactSettingsWorkspace: some View"))
         #expect(settingsView.contains("private var categoryRail: some View"))
+        #expect(settingsView.contains("private var categoryMenu: some View"))
+        #expect(settingsView.contains("private var compactCategoryShortcuts: [SettingsCategory]"))
         #expect(settingsView.contains("OS26LibrarySearchField("))
         #expect(settingsView.contains(".environment(\\.os26SettingsPageShowsHeader, false)"))
         #expect(settingsView.contains(".environment(\\.os26SettingsPageUsesAdaptiveGrid, true)"))
@@ -949,7 +994,10 @@ struct NativeBoundaryTests {
         #expect(settingsSurface.contains("struct OS26SettingsSection<Content: View>: View"))
         #expect(settingsSurface.contains("struct OS26SettingsActionButton: View"))
         #expect(settingsSurface.contains("LazyVGrid("))
-        #expect(settingsSurface.contains("GridItem(\n                .adaptive(minimum: adaptiveColumnMinimum"))
+        #expect(settingsSurface.contains("private struct OS26SettingsPageMetrics"))
+        #expect(settingsSurface.contains("let metrics = OS26SettingsPageMetrics("))
+        #expect(settingsSurface.contains("count: columnCount"))
+        #expect(settingsSurface.contains("if width >= 590 { return 2 }"))
         #expect(settingsSurface.contains(".keiGlass(22)"))
 
         let accountSettings = try String(
