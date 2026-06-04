@@ -117,4 +117,4 @@ UI 改动需要补对应视觉 QA surface。截图和 manifest 输出在 `artifa
 
 ## License
 
-仓库当前未附带正式 License 文件。在加入正式 License 之前，本项目源码版权归作者所有，仅供阅读与评估，不授予分发、再授权或衍生授权。
+KeiPix is licensed under the Apache License, Version 2.0. See [LICENSE](LICENSE) for the full license text.

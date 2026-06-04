@@ -67,7 +67,7 @@
     <key>NSPrincipalClass</key>
     <string>NSApplication</string>
     <key>NSHumanReadableCopyright</key>
-    <string>Copyright © 2026 KeiPix. All rights reserved.</string>
+    <string>Copyright © 2026 KeiPix contributors. Licensed under Apache-2.0.</string>
     <key>NSServices</key>
     <array>
         <dict>
