@@ -65,6 +65,10 @@ struct AboutViewTests {
             contentsOf: root.appending(path: "Sources/KeiPix/Views/SettingsView.swift"),
             encoding: .utf8
         )
+        let localizable = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Resources/Localizable.xcstrings"),
+            encoding: .utf8
+        )
 
         #expect(aboutView.contains("GlassEffectContainer(spacing: 10)"))
         #expect(aboutView.contains("AboutView(presentation: .settings)"))
@@ -78,10 +82,32 @@ struct AboutViewTests {
         #expect(aboutView.contains("var cardMinimumHeight: CGFloat"))
         #expect(aboutView.contains("#else\n            860"))
         #expect(aboutView.contains("#else\n            360"))
+        #expect(aboutView.contains("L10n.aboutPlatformMacOS"))
+        #expect(aboutView.contains("L10n.aboutPlatformiPadOS"))
+        #expect(aboutView.contains("L10n.aboutPlatformiOS"))
+        #expect(aboutView.contains("L10n.aboutDiagnosticsOS"))
+        #expect(aboutView.contains("L10n.aboutDiagnosticsLocale"))
+        #expect(aboutView.contains("L10n.aboutDiagnosticsRepository"))
+        #expect(aboutView.contains("L10n.aboutDiagnosticsLicense"))
+        #expect(aboutView.contains(#"AboutPill(title: "macOS 26""#) == false)
+        #expect(aboutView.contains(#"OS: \("#) == false)
+        #expect(aboutView.contains(#"Locale: \("#) == false)
+        #expect(aboutView.contains(#"Repository: \("#) == false)
+        #expect(aboutView.contains(#"License: \("#) == false)
         #expect(settingsView.contains("case .about:"))
         #expect(settingsView.contains("AboutView(presentation: .settings)"))
         #expect(SettingsCategory.allCases.contains(.about))
         #expect(SettingsCategory.about.searchTerms.contains(L10n.aboutApacheLicenseTitle))
+
+        #expect(localizable.contains("\"KeiPix is a native Pixiv client for macOS, iPadOS, and iOS.\""))
+        #expect(localizable.contains("\"value\": \"KeiPix 是面向 macOS、iPadOS 和 iOS 的原生 Pixiv 客户端。\""))
+        #expect(localizable.contains("\"value\": \"打开许可证\""))
+        #expect(localizable.contains("\"value\": \"复制版本信息\""))
+        #expect(localizable.contains("\"value\": \"复制许可证摘要\""))
+        #expect(localizable.contains("\"value\": \"复制仓库 URL\""))
+        #expect(localizable.contains("\"value\": \"平台支持\""))
+        #expect(localizable.contains("\"value\": \"设计原则\""))
+        #expect(localizable.contains("\"value\": \"项目在 GitHub 上开放开发。你可以在仓库中提交问题、查看提交，或审阅 Apache-2.0 源码。\""))
     }
 
     private func packageRoot() throws -> URL {

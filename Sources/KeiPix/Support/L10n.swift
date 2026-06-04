@@ -1142,6 +1142,9 @@ enum L10n {
     static var aboutSummary: String {
         text("KeiPix is a native Pixiv client for macOS, iPadOS, and iOS.")
     }
+    static var aboutPlatformMacOS: String { text("macOS 26") }
+    static var aboutPlatformiPadOS: String { text("iPadOS 26") }
+    static var aboutPlatformiOS: String { text("iOS 26") }
     static var aboutSourceRepository: String { text("Source Repository") }
     static var aboutOpenOnGitHub: String { text("Open on GitHub") }
     static var aboutCopyRepositoryURL: String { text("Copy Repository URL") }
@@ -1180,6 +1183,10 @@ enum L10n {
     static var aboutVersionInfoCopied: String { text("Version info copied") }
     static var aboutCopyDiagnostics: String { text("Copy Diagnostics Bundle") }
     static var aboutDiagnosticsCopied: String { text("Diagnostics copied") }
+    static var aboutDiagnosticsOS: String { text("OS") }
+    static var aboutDiagnosticsLocale: String { text("Locale") }
+    static var aboutDiagnosticsRepository: String { text("Repository") }
+    static var aboutDiagnosticsLicense: String { text("License") }
 
     // MARK: - Log viewer
 

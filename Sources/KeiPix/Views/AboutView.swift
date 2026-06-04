@@ -135,9 +135,9 @@ struct AboutView: View {
                 .fixedSize(horizontal: false, vertical: true)
 
             FlowLayout(spacing: 8) {
-                AboutPill(title: "macOS 26", systemImage: "macwindow")
-                AboutPill(title: "iPadOS 26", systemImage: "ipad.landscape")
-                AboutPill(title: "iOS 26", systemImage: "iphone")
+                AboutPill(title: L10n.aboutPlatformMacOS, systemImage: "macwindow")
+                AboutPill(title: L10n.aboutPlatformiPadOS, systemImage: "ipad.landscape")
+                AboutPill(title: L10n.aboutPlatformiOS, systemImage: "iphone")
             }
             .padding(.top, 2)
         }
@@ -289,10 +289,10 @@ struct AboutView: View {
     private var diagnosticsPayload: String {
         """
         \(versionInfoPayload)
-        OS: \(ProcessInfo.processInfo.operatingSystemVersionString)
-        Locale: \(Locale.current.identifier)
-        Repository: \(Self.repositoryURL.absoluteString)
-        License: \(Self.apacheLicenseURL.absoluteString)
+        \(L10n.aboutDiagnosticsOS): \(ProcessInfo.processInfo.operatingSystemVersionString)
+        \(L10n.aboutDiagnosticsLocale): \(Locale.current.identifier)
+        \(L10n.aboutDiagnosticsRepository): \(Self.repositoryURL.absoluteString)
+        \(L10n.aboutDiagnosticsLicense): \(Self.apacheLicenseURL.absoluteString)
         """
     }
 

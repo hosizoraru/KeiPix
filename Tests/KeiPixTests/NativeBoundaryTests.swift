@@ -996,6 +996,7 @@ struct NativeBoundaryTests {
         #expect(settingsView.contains(".environment(\\.os26SettingsPageShowsHeader, false)"))
         #expect(settingsView.contains(".environment(\\.os26SettingsPageUsesAdaptiveGrid, true)"))
         #expect(settingsView.contains(".frame(\n            minWidth: 820"))
+        #expect(settingsView.contains("Text(coordinator.selection.title)") == false)
 
         #expect(settingsSurface.contains("struct OS26SettingsPage<Content: View>: View"))
         #expect(settingsSurface.contains("struct OS26SettingsSection<Content: View>: View"))

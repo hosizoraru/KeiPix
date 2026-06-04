@@ -212,14 +212,10 @@ struct SettingsView: View {
                 .frame(width: 38, height: 38)
                 .keiGlass(14)
 
-            VStack(alignment: .leading, spacing: 2) {
-                Text(L10n.settings)
-                    .font(.title2.weight(.bold))
-                Text(coordinator.selection.title)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-            }
+            Text(L10n.settings)
+                .font(.title2.weight(.bold))
+                .lineLimit(1)
+                .minimumScaleFactor(0.82)
         }
     }
 
