@@ -155,7 +155,10 @@ struct UserProfileSheet: View {
                 .opacity(0.35)
 
             bodyContent
+                .id(contentState.animationID)
+                .transition(.opacity.combined(with: .scale(scale: 0.985)))
         }
+        .animation(.snappy(duration: 0.22), value: contentState)
     }
 
     // MARK: - Body content states
@@ -173,14 +176,7 @@ struct UserProfileSheet: View {
     }
 
     private var loadingState: some View {
-        VStack(spacing: 12) {
-            ProgressView()
-            Text(L10n.loading)
-                .font(.callout)
-                .foregroundStyle(.secondary)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .padding(40)
+        UserProfileLoadingSkeleton()
     }
 
     private func errorState(message: String) -> some View {
@@ -317,6 +313,17 @@ struct UserProfileSheet: View {
         case loading
         case error(String)
         case loaded
+
+        var animationID: String {
+            switch self {
+            case .loading:
+                "loading"
+            case .error:
+                "error"
+            case .loaded:
+                "loaded"
+            }
+        }
     }
 
     private var contentState: ContentState {
@@ -596,6 +603,111 @@ struct UserProfileSheet: View {
     }
 }
 
+private struct UserProfileLoadingSkeleton: View {
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                metricsSkeleton
+                tagsSkeleton
+                recentWorksSkeleton
+                descriptionSkeleton
+                relatedCreatorsSkeleton
+            }
+            .padding(.horizontal, 18)
+            .padding(.vertical, 16)
+        }
+        .scrollEdgeEffectStyle(.soft, for: .top)
+        .allowsHitTesting(false)
+        .accessibilityLabel(L10n.loading)
+    }
+
+    private var metricsSkeleton: some View {
+        LazyVGrid(columns: metricColumns, spacing: 10) {
+            ForEach(0..<6, id: \.self) { _ in
+                VStack(alignment: .leading, spacing: 8) {
+                    SkeletonPlaceholder(width: 86, height: 12, cornerRadius: 6)
+                    SkeletonPlaceholder(width: 54, height: 18, cornerRadius: 9)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(12)
+                .keiGlass(16)
+            }
+        }
+    }
+
+    private var tagsSkeleton: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            SkeletonPlaceholder(width: 130, height: 18, cornerRadius: 9)
+            FlowLayout(spacing: 8) {
+                ForEach([72, 96, 64, 118, 84, 104], id: \.self) { width in
+                    SkeletonPlaceholder(width: CGFloat(width), height: 28, cornerRadius: 14)
+                }
+            }
+        }
+        .padding(14)
+        .keiGlass(18)
+    }
+
+    private var recentWorksSkeleton: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                SkeletonPlaceholder(width: 118, height: 18, cornerRadius: 9)
+                Spacer(minLength: 0)
+                SkeletonPlaceholder(width: 88, height: 28, cornerRadius: 14)
+            }
+
+            HStack(spacing: 10) {
+                ForEach(0..<4, id: \.self) { _ in
+                    SkeletonPlaceholder(width: nil, height: 120, cornerRadius: 16)
+                }
+            }
+        }
+        .padding(14)
+        .keiGlass(18)
+    }
+
+    private var descriptionSkeleton: some View {
+        VStack(alignment: .leading, spacing: 9) {
+            SkeletonPlaceholder(width: 96, height: 18, cornerRadius: 9)
+            SkeletonPlaceholder(width: nil, height: 12, cornerRadius: 6)
+            SkeletonPlaceholder(width: nil, height: 12, cornerRadius: 6)
+            SkeletonPlaceholder(width: 260, height: 12, cornerRadius: 6)
+        }
+        .padding(14)
+        .keiGlass(18)
+    }
+
+    private var relatedCreatorsSkeleton: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            SkeletonPlaceholder(width: 132, height: 18, cornerRadius: 9)
+
+            HStack(spacing: 10) {
+                ForEach(0..<3, id: \.self) { _ in
+                    VStack(alignment: .leading, spacing: 10) {
+                        HStack(spacing: 10) {
+                            SkeletonPlaceholder(width: 38, height: 38, cornerRadius: 19)
+                            VStack(alignment: .leading, spacing: 7) {
+                                SkeletonPlaceholder(width: 92, height: 13, cornerRadius: 7)
+                                SkeletonPlaceholder(width: 64, height: 10, cornerRadius: 5)
+                            }
+                        }
+                        SkeletonPlaceholder(width: nil, height: 76, cornerRadius: 14)
+                    }
+                    .padding(12)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .keiGlass(16)
+                }
+            }
+        }
+        .padding(14)
+        .keiGlass(18)
+    }
+
+    private var metricColumns: [GridItem] {
+        [GridItem(.adaptive(minimum: 112, maximum: 160), spacing: 10)]
+    }
+}
+
 // MARK: - Child sheets
 
 /// Bundles the three child sheets the profile presents (related-user
@@ -617,7 +729,7 @@ private struct ChildSheetsModifier: ViewModifier {
                     .os26SheetChrome(.detail)
             }
             .sheet(item: $relationshipListMode) { mode in
-                UserPreviewListView(store: store, mode: mode)
+                UserPreviewListView(store: store, mode: mode, showsCloseButton: true)
                     .frame(width: 920, height: 680)
                     .os26SheetChrome(.detail)
             }

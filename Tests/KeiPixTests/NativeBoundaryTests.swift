@@ -1244,6 +1244,87 @@ struct NativeBoundaryTests {
         #expect(nativeDrop.contains("UTType.utf8PlainText"))
     }
 
+    @Test("Search clear actions reset route state and loading surfaces stay stable")
+    func searchClearActionsResetRouteStateAndLoadingSurfacesStayStable() throws {
+        let root = try packageRoot()
+        let storeSearch = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Stores/KeiPixStore+Search.swift"),
+            encoding: .utf8
+        )
+        let macContentView = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/ContentView.swift"),
+            encoding: .utf8
+        )
+        let iPadContentView = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/ContentView_iPadOS.swift"),
+            encoding: .utf8
+        )
+        let feedHeader = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/GalleryFeedHeaderView.swift"),
+            encoding: .utf8
+        )
+        let creatorList = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/UserPreviewListView.swift"),
+            encoding: .utf8
+        )
+        let creatorComponents = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/UserPreviewListComponents.swift"),
+            encoding: .utf8
+        )
+        let profileSheet = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/UserProfileSheet.swift"),
+            encoding: .utf8
+        )
+        let nativeSearch = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Support/SearchFieldNSView.swift"),
+            encoding: .utf8
+        )
+        let nativeInlineFilter = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Support/NativeInlineFilterField.swift"),
+            encoding: .utf8
+        )
+
+        #expect(storeSearch.contains("func clearSearchText()"))
+        #expect(storeSearch.contains("searchText = \"\""))
+        #expect(storeSearch.contains("searchSubmissionID += 1"))
+        #expect(storeSearch.contains("allSearchPopularPreviewArtworks = []"))
+        #expect(storeSearch.contains("clearNavigationHistory()"))
+
+        #expect(macContentView.contains(".searchable(text: globalSearchTextBinding"))
+        #expect(macContentView.contains("private var globalSearchTextBinding"))
+        #expect(macContentView.contains("private var hasActiveGlobalSearchText"))
+        #expect(macContentView.contains("store.clearSearchText()"))
+        #expect(iPadContentView.contains(".searchable(text: globalSearchTextBinding"))
+        #expect(iPadContentView.contains("private var globalSearchTextBinding"))
+        #expect(iPadContentView.contains("private var hasActiveGlobalSearchText"))
+        #expect(iPadContentView.contains("store.clearSearchText()"))
+
+        #expect(feedHeader.contains("private var hasActiveArtworkSearch"))
+        #expect(feedHeader.contains("private func clearArtworkSearch()"))
+        #expect(feedHeader.contains("Label(L10n.clearSearch, systemImage: \"xmark.circle.fill\")"))
+
+        #expect(creatorList.contains("isLoadingInitial: isLoading && previews.isEmpty"))
+        #expect(creatorList.contains("mode.requiresSearchKeyword == false || searchKeyword.isEmpty == false"))
+        #expect(creatorList.contains("globalSearchKeyword: searchKeyword"))
+        #expect(creatorList.contains("let showsCloseButton: Bool"))
+        #expect(creatorList.contains("showsCloseButton: Bool = false"))
+        #expect(creatorList.contains("if showsCloseButton"))
+        #expect(creatorComponents.contains("CreatorSearchScopeChip"))
+        #expect(creatorComponents.contains("CreatorPreviewListLoadingPlaceholder"))
+        #expect(creatorComponents.contains("CreatorPreviewSkeletonCard"))
+
+        #expect(profileSheet.contains("UserProfileLoadingSkeleton"))
+        #expect(profileSheet.contains("UserPreviewListView(store: store, mode: mode, showsCloseButton: true)"))
+        #expect(profileSheet.contains(".id(contentState.animationID)"))
+        #expect(profileSheet.contains(".animation(.snappy(duration: 0.22), value: contentState)"))
+        #expect(profileSheet.contains("FlowLayout(spacing: 8)"))
+
+        #expect(nativeSearch.contains("searchField.clearButtonMode = .always"))
+        #expect(nativeSearch.contains("func textFieldShouldClear(_ textField: UITextField) -> Bool"))
+        #expect(nativeSearch.contains("onTextChange(\"\")"))
+        #expect(nativeInlineFilter.contains("func textFieldShouldClear(_ textField: UITextField) -> Bool"))
+    }
+
     @Test("Search surfaces use native fields and OS 26 glass chrome")
     func searchSurfacesUseNativeFieldsAndOS26GlassChrome() throws {
         let root = try packageRoot()

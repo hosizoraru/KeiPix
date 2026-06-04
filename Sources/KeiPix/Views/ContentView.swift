@@ -28,7 +28,7 @@ struct ContentView: View {
             macBrowserWorkspace
         }
         .frame(minWidth: minimumWindowWidth, minHeight: MainWindowSizing.minimumHeight)
-        .searchable(text: $store.searchText, prompt: L10n.searchPlaceholder)
+        .searchable(text: globalSearchTextBinding, prompt: L10n.searchPlaceholder)
         .searchSuggestions {
             ForEach(store.matchingLocalSearchTerms(), id: \.self) { keyword in
                 SearchKeywordSuggestionRow(keyword: keyword, isSaved: store.savedSearches.containsCaseInsensitive(keyword))
@@ -106,6 +106,19 @@ struct ContentView: View {
             ToolbarSpacer(.fixed, placement: .primaryAction)
 
             ToolbarItemGroup(placement: .primaryAction) {
+                if hasActiveGlobalSearchText {
+                    Button {
+                        withAnimation(.snappy(duration: 0.16)) {
+                            store.clearSearchText()
+                        }
+                    } label: {
+                        Label(L10n.clearSearch, systemImage: "xmark.circle.fill")
+                    }
+                    .labelStyle(.iconOnly)
+                    .help(L10n.clearSearch)
+                    .accessibilityLabel(L10n.clearSearch)
+                }
+
                 if showsSearchFilters {
                     SearchFilterButton(store: store)
                 }
@@ -391,6 +404,22 @@ struct ContentView: View {
 
     private var showsPixivLinkDropOverlayForVisualQA: Bool {
         VisualQALaunchArgument.contains(.pixivLinkDrop)
+    }
+
+    private var globalSearchTextBinding: Binding<String> {
+        Binding {
+            store.searchText
+        } set: { value in
+            if value.isEmpty, store.searchText.isEmpty == false {
+                store.clearSearchText()
+            } else {
+                store.searchText = value
+            }
+        }
+    }
+
+    private var hasActiveGlobalSearchText: Bool {
+        store.searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false
     }
 
     private var appControlsMenu: some View {

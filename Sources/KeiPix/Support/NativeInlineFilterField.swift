@@ -67,6 +67,11 @@ struct NativeInlineFilterField: UIViewRepresentable {
             textField.resignFirstResponder()
             return true
         }
+
+        func textFieldShouldClear(_ textField: UITextField) -> Bool {
+            text.wrappedValue = ""
+            return true
+        }
     }
 }
 #endif

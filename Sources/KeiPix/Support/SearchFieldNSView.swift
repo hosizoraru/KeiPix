@@ -131,7 +131,7 @@ struct SearchFieldUIView: UIViewRepresentable {
         searchField.placeholder = placeholder
         searchField.borderStyle = .roundedRect
         searchField.returnKeyType = .search
-        searchField.clearButtonMode = .whileEditing
+        searchField.clearButtonMode = .always
         searchField.autocorrectionType = .no
         searchField.autocapitalizationType = .none
         searchField.delegate = context.coordinator
@@ -186,6 +186,12 @@ struct SearchFieldUIView: UIViewRepresentable {
         func textFieldShouldReturn(_ textField: UITextField) -> Bool {
             onSubmit()
             textField.resignFirstResponder()
+            return true
+        }
+
+        func textFieldShouldClear(_ textField: UITextField) -> Bool {
+            text = ""
+            onTextChange("")
             return true
         }
     }

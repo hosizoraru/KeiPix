@@ -101,6 +101,17 @@ struct FeedHeaderView: View {
                 bookmarkFiltersMenu
             }
 
+            if hasActiveArtworkSearch {
+                Button {
+                    clearArtworkSearch()
+                } label: {
+                    Label(L10n.clearSearch, systemImage: "xmark.circle.fill")
+                }
+                .help(L10n.clearSearch)
+                .accessibilityLabel(L10n.clearSearch)
+                .iPadFeedHeaderActionChrome()
+            }
+
             if store.artworks.isEmpty == false {
                 compactSelectionMenu
             }
@@ -148,6 +159,15 @@ struct FeedHeaderView: View {
 
         if store.selectedRoute == .search,
            store.searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false {
+            Button {
+                clearArtworkSearch()
+            } label: {
+                Label(L10n.clearSearch, systemImage: "xmark.circle.fill")
+            }
+            .help(L10n.clearSearch)
+            .accessibilityLabel(L10n.clearSearch)
+            .feedHeaderActionChrome()
+
             Menu {
                 if let pixivWebSearchURL {
                     Link(destination: pixivWebSearchURL) {
@@ -904,6 +924,10 @@ struct FeedHeaderView: View {
         store.searchText.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
+    private var hasActiveArtworkSearch: Bool {
+        store.selectedRoute == .search && normalizedSearchKeyword.isEmpty == false
+    }
+
     private var pixivWebSearchURL: URL? {
         PixivWebURLBuilder.searchURL(keyword: store.searchText, options: store.searchOptions)
     }
@@ -1128,6 +1152,13 @@ struct FeedHeaderView: View {
         store.resetSearchOptions()
         actionMessage = L10n.searchFiltersReset
         Task { await store.runSearch() }
+    }
+
+    private func clearArtworkSearch() {
+        withAnimation(.snappy(duration: 0.16)) {
+            store.clearSearchText()
+        }
+        actionMessage = L10n.clearSearch
     }
 
     private func resetBookmarkFilters() {

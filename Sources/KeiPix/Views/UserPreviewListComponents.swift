@@ -80,6 +80,8 @@ struct CreatorListSearchBar: View {
     let mode: UserPreviewListMode
     @Binding var restrict: BookmarkRestrict
     @Binding var creatorSearchText: String
+    let globalSearchKeyword: String
+    let clearGlobalSearch: () -> Void
 
     var body: some View {
         HStack(spacing: 10) {
@@ -92,6 +94,13 @@ struct CreatorListSearchBar: View {
                 .labelsHidden()
                 .frame(width: 96)
                 .accessibilityLabel(L10n.followingCreators)
+            }
+
+            if mode.requiresSearchKeyword, globalSearchKeyword.isEmpty == false {
+                CreatorSearchScopeChip(
+                    keyword: globalSearchKeyword,
+                    clear: clearGlobalSearch
+                )
             }
 
             HStack(spacing: 6) {
@@ -111,7 +120,9 @@ struct CreatorListSearchBar: View {
 
             if creatorSearchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false {
                 Button {
-                    creatorSearchText = ""
+                    withAnimation(.snappy(duration: 0.16)) {
+                        creatorSearchText = ""
+                    }
                 } label: {
                     Label(L10n.clearSearch, systemImage: "xmark.circle.fill")
                 }
@@ -124,6 +135,40 @@ struct CreatorListSearchBar: View {
             Spacer(minLength: 0)
         }
         .controlSize(.small)
+    }
+}
+
+private struct CreatorSearchScopeChip: View {
+    let keyword: String
+    let clear: () -> Void
+
+    var body: some View {
+        HStack(spacing: 7) {
+            Image(systemName: "magnifyingglass")
+                .imageScale(.small)
+                .foregroundStyle(.secondary)
+
+            Text(keyword)
+                .font(.callout.weight(.medium))
+                .lineLimit(1)
+                .truncationMode(.middle)
+                .frame(maxWidth: 220)
+
+            Button {
+                clear()
+            } label: {
+                Image(systemName: "xmark.circle.fill")
+                    .symbolRenderingMode(.hierarchical)
+            }
+            .buttonStyle(.plain)
+            .foregroundStyle(.secondary)
+            .help(L10n.clearSearch)
+            .accessibilityLabel(L10n.clearSearch)
+        }
+        .padding(.leading, 10)
+        .padding(.trailing, 8)
+        .frame(height: 32)
+        .keiInteractiveGlass(16)
     }
 }
 
@@ -366,6 +411,7 @@ struct CreatorPreviewListContent: View {
     let visiblePreviews: [PixivUserPreview]
     let nextURL: URL?
     let errorMessage: String?
+    let isLoadingInitial: Bool
     let isLoadingMore: Bool
     let followRestrictsByUserID: [Int: BookmarkRestrict]
     let updatingCreatorIDs: Set<Int>
@@ -394,6 +440,9 @@ struct CreatorPreviewListContent: View {
         if mode.requiresSearchKeyword, searchKeyword.isEmpty {
             ContentUnavailableView(L10n.enterSearchKeyword, systemImage: "magnifyingglass")
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
+        } else if isLoadingInitial {
+            CreatorPreviewListLoadingPlaceholder(layoutMode: layoutMode)
+                .transition(.opacity.combined(with: .scale(scale: 0.985)))
         } else if previews.isEmpty {
             emptyState
         } else if visiblePreviews.isEmpty {
@@ -511,6 +560,75 @@ struct CreatorPreviewListContent: View {
         case .artwork:
             return AnyView(EmptyView())
         }
+    }
+}
+
+private struct CreatorPreviewListLoadingPlaceholder: View {
+    let layoutMode: CreatorListLayoutMode
+
+    var body: some View {
+        ScrollView {
+            LazyVGrid(columns: columns, spacing: 14) {
+                ForEach(0..<placeholderCount, id: \.self) { _ in
+                    CreatorPreviewSkeletonCard(expanded: layoutMode.usesExpandedPreview)
+                }
+            }
+            .padding(.horizontal, 18)
+            .padding(.vertical, 14)
+        }
+        .scrollEdgeEffectStyle(.soft, for: .top)
+        .allowsHitTesting(false)
+        .accessibilityLabel(L10n.loading)
+    }
+
+    private var placeholderCount: Int {
+        layoutMode.usesExpandedPreview ? 4 : 8
+    }
+
+    private var columns: [GridItem] {
+        let minimum: CGFloat = layoutMode.usesExpandedPreview ? 360 : 250
+        return [
+            GridItem(.adaptive(minimum: minimum, maximum: layoutMode.usesExpandedPreview ? 520 : 360), spacing: 14)
+        ]
+    }
+}
+
+private struct CreatorPreviewSkeletonCard: View {
+    let expanded: Bool
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .center, spacing: 12) {
+                SkeletonPlaceholder(width: 52, height: 52, cornerRadius: 26)
+
+                VStack(alignment: .leading, spacing: 7) {
+                    SkeletonPlaceholder(width: 150, height: 16, cornerRadius: 8)
+                    SkeletonPlaceholder(width: 96, height: 12, cornerRadius: 6)
+                }
+
+                Spacer(minLength: 0)
+                SkeletonPlaceholder(width: 36, height: 30, cornerRadius: 15)
+            }
+
+            HStack(spacing: 8) {
+                SkeletonPlaceholder(width: 68, height: 24, cornerRadius: 12)
+                SkeletonPlaceholder(width: 88, height: 24, cornerRadius: 12)
+                SkeletonPlaceholder(width: 56, height: 24, cornerRadius: 12)
+                Spacer(minLength: 0)
+            }
+
+            if expanded {
+                HStack(spacing: 8) {
+                    ForEach(0..<3, id: \.self) { _ in
+                        SkeletonPlaceholder(width: nil, height: 118, cornerRadius: 14)
+                    }
+                }
+            } else {
+                SkeletonPlaceholder(width: nil, height: 92, cornerRadius: 14)
+            }
+        }
+        .padding(14)
+        .keiGlass(20)
     }
 }
 

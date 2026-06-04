@@ -3,6 +3,7 @@ import SwiftUI
 struct UserPreviewListView: View {
     @Bindable var store: KeiPixStore
     let mode: UserPreviewListMode
+    let showsCloseButton: Bool
     @Environment(\.undoManager) private var undoManager
 
     @State private var previews: [PixivUserPreview] = []
@@ -27,13 +28,20 @@ struct UserPreviewListView: View {
     @State private var feedbackRequest: FeedbackReportRequest?
     @State private var feedbackMuteUser: PixivUser?
 
+    init(
+        store: KeiPixStore,
+        mode: UserPreviewListMode,
+        showsCloseButton: Bool = false
+    ) {
+        self.store = store
+        self.mode = mode
+        self.showsCloseButton = showsCloseButton
+    }
+
     var body: some View {
         Group {
             if store.session == nil {
                 PixivSignedOutStateView(store: store)
-            } else if isLoading {
-                ProgressView(L10n.loading)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 creatorListSurface
             }
@@ -95,8 +103,10 @@ struct UserPreviewListView: View {
                 )
             }
 
-            ToolbarItem(placement: .confirmationAction) {
-                SheetCloseButton(style: .bordered)
+            if showsCloseButton {
+                ToolbarItem(placement: .confirmationAction) {
+                    SheetCloseButton(style: .bordered)
+                }
             }
         }
         .overlay(alignment: .bottom) {
@@ -172,7 +182,13 @@ struct UserPreviewListView: View {
             CreatorListSearchBar(
                 mode: mode,
                 restrict: restrictBinding,
-                creatorSearchText: $creatorSearchText
+                creatorSearchText: $creatorSearchText,
+                globalSearchKeyword: searchKeyword,
+                clearGlobalSearch: {
+                    withAnimation(.snappy(duration: 0.16)) {
+                        store.clearSearchText()
+                    }
+                }
             )
             .platformGlassControlBar(verticalPadding: 8, topPadding: 2)
 
@@ -184,6 +200,7 @@ struct UserPreviewListView: View {
                 visiblePreviews: visiblePreviews,
                 nextURL: nextURL,
                 errorMessage: errorMessage,
+                isLoadingInitial: isLoading && previews.isEmpty,
                 isLoadingMore: isLoadingMore,
                 followRestrictsByUserID: followRestrictsByUserID,
                 updatingCreatorIDs: updatingCreatorIDs,
@@ -352,9 +369,11 @@ struct UserPreviewListView: View {
     }
 
     private func resetCreatorListState() {
-        creatorSearchText = ""
-        creatorFilter = .all
-        creatorSort = .defaultOrder
+        withAnimation(.snappy(duration: 0.16)) {
+            creatorSearchText = ""
+            creatorFilter = .all
+            creatorSort = .defaultOrder
+        }
         bulkStatusText = L10n.resetCreatorFiltersDone
     }
 
@@ -492,6 +511,14 @@ struct UserPreviewListView: View {
 
     private func loadInitial() async {
         guard store.session != nil else { return }
+        guard mode.requiresSearchKeyword == false || searchKeyword.isEmpty == false else {
+            previews = []
+            nextURL = nil
+            followRestrictsByUserID = [:]
+            errorMessage = nil
+            isLoading = false
+            return
+        }
         isLoading = true
         errorMessage = nil
         defer { isLoading = false }

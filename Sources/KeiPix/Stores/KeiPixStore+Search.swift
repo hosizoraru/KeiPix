@@ -30,6 +30,28 @@ extension KeiPixStore {
         await reloadCurrentFeed()
     }
 
+    func clearSearchText() {
+        searchText = ""
+        searchSuggestions = []
+        errorMessage = nil
+        allSearchPopularPreviewArtworks = []
+        searchPopularPreviewArtworks = []
+        isLoadingSearchPopularPreview = false
+
+        guard selectedRoute == .search || selectedRoute == .searchUsers else { return }
+        searchSubmissionID += 1
+
+        if selectedRoute == .search {
+            activeFeedSnapshotRestoration = nil
+            allArtworks = []
+            artworks = []
+            nextURL = nil
+            selectedArtwork = nil
+            isLoading = false
+            clearNavigationHistory()
+        }
+    }
+
     func refreshSearchSuggestions() async {
         guard session != nil, usesLocalSampleAccount == false else {
             searchSuggestions = []

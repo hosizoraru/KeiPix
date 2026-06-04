@@ -290,6 +290,21 @@ struct ContentView: View {
                     }
 
                     ToolbarItem(placement: .primaryAction) {
+                        if hasActiveGlobalSearchText {
+                            Button {
+                                withAnimation(.snappy(duration: 0.16)) {
+                                    store.clearSearchText()
+                                }
+                            } label: {
+                                Label(L10n.clearSearch, systemImage: "xmark.circle.fill")
+                            }
+                            .labelStyle(.iconOnly)
+                            .help(L10n.clearSearch)
+                            .accessibilityLabel(L10n.clearSearch)
+                        }
+                    }
+
+                    ToolbarItem(placement: .primaryAction) {
                         if store.selectedRoute == .search {
                             SearchFilterButton(store: store)
                         }
@@ -363,7 +378,7 @@ struct ContentView: View {
                         .fixedSize(horizontal: true, vertical: false)
                     }
                 }
-                .searchable(text: $store.searchText, prompt: L10n.searchPlaceholder)
+                .searchable(text: globalSearchTextBinding, prompt: L10n.searchPlaceholder)
                 .searchSuggestions {
                     ForEach(store.matchingLocalSearchTerms(), id: \.self) { keyword in
                         SearchKeywordSuggestionRow(keyword: keyword, isSaved: store.savedSearches.containsCaseInsensitive(keyword))
@@ -1160,6 +1175,22 @@ struct ContentView: View {
                 store.readerWindowArtwork = nil
             }
         }
+    }
+
+    private var globalSearchTextBinding: Binding<String> {
+        Binding {
+            store.searchText
+        } set: { value in
+            if value.isEmpty, store.searchText.isEmpty == false {
+                store.clearSearchText()
+            } else {
+                store.searchText = value
+            }
+        }
+    }
+
+    private var hasActiveGlobalSearchText: Bool {
+        store.searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false
     }
 
     private var userPreviewMode: UserPreviewListMode {
