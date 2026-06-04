@@ -78,8 +78,10 @@ struct DownloadsSettingsPage: View {
 
     private var namingSection: some View {
         Section {
-            TextField(L10n.downloadNamingTemplate, text: store.settings_downloadNamingTemplateBinding)
-                .textFieldStyle(.roundedBorder)
+            OS26LibraryTextEntryField(
+                text: store.settings_downloadNamingTemplateBinding,
+                placeholder: L10n.downloadNamingTemplate
+            )
                 .font(.system(.body, design: .monospaced))
 
             // Live preview rows. Each scenario renders the user's current
@@ -127,6 +129,7 @@ struct DownloadsSettingsPage: View {
             } label: {
                 Label(L10n.resetTemplate, systemImage: "arrow.counterclockwise")
             }
+            .os26GlassButton()
         } header: {
             Text(L10n.downloadNamingTemplate)
         } footer: {

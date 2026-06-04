@@ -19,7 +19,10 @@ struct TokenLoginSheetView: View {
 
             VStack(alignment: .leading, spacing: 16) {
                 SecureField(L10n.refreshToken, text: $refreshToken)
-                    .textFieldStyle(.roundedBorder)
+                    .textFieldStyle(.plain)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 9)
+                    .keiInteractiveGlass(16)
                     .onSubmit {
                         importToken()
                     }
@@ -38,6 +41,7 @@ struct TokenLoginSheetView: View {
                     Button(L10n.cancel) {
                         closeSheet()
                     }
+                    .os26GlassButton()
                     .keyboardShortcut(.cancelAction)
 
                     Spacer()
@@ -51,8 +55,7 @@ struct TokenLoginSheetView: View {
                             Label(L10n.importToken, systemImage: "key.fill")
                         }
                     }
-                    .buttonStyle(.glassProminent)
-                    .buttonBorderShape(.capsule)
+                    .os26GlassButton(prominent: true)
                     .keyboardShortcut(.defaultAction)
                     .disabled(trimmedToken.isEmpty || isImporting)
                 }

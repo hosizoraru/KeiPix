@@ -23,12 +23,17 @@ struct ArtworkRelatedView: View {
         DisclosureGroup(isExpanded: $isExpanded) {
             VStack(alignment: .leading, spacing: 14) {
                 if isLoading {
-                    ProgressView()
-                        .frame(maxWidth: .infinity, alignment: .center)
-                        .padding(.vertical, 20)
+                    OS26InlineLoadingView(
+                        title: L10n.loading,
+                        systemImage: "sparkles.rectangle.stack",
+                        minHeight: 150
+                    )
                 } else if relatedArtworks.isEmpty {
-                    ContentUnavailableView(L10n.noRelatedArtworks, systemImage: "sparkles.rectangle.stack")
-                        .frame(maxWidth: .infinity)
+                    OS26InlineUnavailableView(
+                        title: L10n.noRelatedArtworks,
+                        systemImage: "sparkles.rectangle.stack",
+                        minHeight: 150
+                    )
                 } else {
                     LazyVGrid(columns: columns, spacing: 12) {
                         ForEach(relatedArtworks) { related in
@@ -100,19 +105,15 @@ struct ArtworkRelatedView: View {
                 }
 
                 if nextURL != nil {
-                    Button {
+                    OS26LoadMoreButton(
+                        title: L10n.loadMoreRelatedArtworks,
+                        loadingTitle: L10n.loading,
+                        systemImage: "ellipsis.circle",
+                        isLoading: isLoadingMore,
+                        minHeight: 96
+                    ) {
                         Task { await loadMore() }
-                    } label: {
-                        if isLoadingMore {
-                            ProgressView()
-                                .controlSize(.small)
-                        } else {
-                            Label(L10n.loadMoreRelatedArtworks, systemImage: "ellipsis.circle")
-                        }
                     }
-                    .buttonStyle(.bordered)
-                    .controlSize(.small)
-                    .disabled(isLoadingMore)
                 }
             }
             .padding(.top, 10)

@@ -17,7 +17,7 @@ struct KeyboardSettingsPage: View {
                 } label: {
                     Label(L10n.openKeyboardSystemSettings, systemImage: "keyboard.badge.eye")
                 }
-                .buttonStyle(.borderedProminent)
+                .os26GlassButton(prominent: true)
             } header: {
                 Text(L10n.keyboardCustomization)
             } footer: {
@@ -82,10 +82,7 @@ private struct ShortcutCatalogRow: View {
                 .foregroundStyle(.secondary)
                 .padding(.horizontal, 10)
                 .padding(.vertical, 4)
-                .background(
-                    RoundedRectangle(cornerRadius: 6, style: .continuous)
-                        .fill(.quaternary.opacity(0.6))
-                )
+                .os26SkeletonSurface(8)
                 .accessibilityLabel(accessibilityShortcutLabel)
         }
         .accessibilityElement(children: .combine)

@@ -28,8 +28,7 @@ struct LoginSheetView: View {
                     }
                 }
             } else {
-                ProgressView(L10n.loading)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                OS26LibraryLoadingView(title: L10n.loading, systemImage: "person.crop.circle.badge.plus")
             }
         }
         .task {

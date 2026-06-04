@@ -163,6 +163,7 @@ struct BookmarkEditorView: View {
                 } label: {
                     Label(L10n.removeBookmark, systemImage: "bookmark.slash")
                 }
+                .os26GlassButton()
                 .disabled(isSaving)
             }
 
@@ -175,6 +176,7 @@ struct BookmarkEditorView: View {
                     showActionMessage(L10n.noBookmarkChanges)
                 }
             }
+            .os26GlassButton()
             .disabled(isSaving || isLoading)
 
             Button {
@@ -186,7 +188,7 @@ struct BookmarkEditorView: View {
                     Label(L10n.saveBookmark, systemImage: "checkmark")
                 }
             }
-            .buttonStyle(.glassProminent)
+            .os26GlassButton(prominent: true)
             .keyboardShortcut(.defaultAction)
             .disabled(isSaving || isLoading || canSave == false)
         }
@@ -218,25 +220,45 @@ struct BookmarkEditorView: View {
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 10)
-        .keiPanel(12)
+        .keiGlass(14)
     }
 
     private var customTagRow: some View {
         VStack(alignment: .leading, spacing: 8) {
-            HStack(spacing: 8) {
-                TextField(L10n.tagName, text: $customTagInput)
-                    .textFieldStyle(.roundedBorder)
-                    .onSubmit(addCustomTag)
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 8) {
+                    OS26LibraryTextEntryField(text: $customTagInput, placeholder: L10n.tagName, minWidth: 180)
+                        .onSubmit(addCustomTag)
+                        .layoutPriority(1)
 
-                Button(action: addCustomTag) {
-                    Label(L10n.addTag, systemImage: "plus")
+                    addCustomTagButton
+
+                    if libraryTags.isEmpty == false || artwork.tags.isEmpty == false {
+                        OS26LibrarySearchField(
+                            text: $filterText,
+                            placeholder: L10n.bookmarkTagFilterPlaceholder,
+                            minWidth: 160,
+                            idealWidth: 200,
+                            maxWidth: 240
+                        )
+                    }
                 }
-                .disabled(trimmedCustomTag.isEmpty || isSaving)
 
-                if libraryTags.isEmpty == false || artwork.tags.isEmpty == false {
-                    TextField(L10n.bookmarkTagFilterPlaceholder, text: $filterText)
-                        .textFieldStyle(.roundedBorder)
-                        .frame(maxWidth: 220)
+                VStack(alignment: .leading, spacing: 8) {
+                    OS26LibraryTextEntryField(text: $customTagInput, placeholder: L10n.tagName)
+                        .onSubmit(addCustomTag)
+                    HStack(spacing: 8) {
+                        addCustomTagButton
+                        if libraryTags.isEmpty == false || artwork.tags.isEmpty == false {
+                            OS26LibrarySearchField(
+                                text: $filterText,
+                                placeholder: L10n.bookmarkTagFilterPlaceholder,
+                                minWidth: 180,
+                                idealWidth: 220,
+                                maxWidth: 280
+                            )
+                        }
+                    }
                 }
             }
 
@@ -251,7 +273,15 @@ struct BookmarkEditorView: View {
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 10)
-        .keiPanel(12)
+        .keiGlass(14)
+    }
+
+    private var addCustomTagButton: some View {
+        Button(action: addCustomTag) {
+            Label(L10n.addTag, systemImage: "plus")
+        }
+        .os26GlassButton(prominent: true)
+        .disabled(trimmedCustomTag.isEmpty || isSaving)
     }
 
     /// Custom chips live above the three primary buckets so the user can
@@ -284,18 +314,16 @@ struct BookmarkEditorView: View {
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 10)
-        .keiPanel(12)
+        .keiGlass(14)
     }
 
     private var emptyStatePanel: some View {
-        ContentUnavailableView(
-            L10n.noBookmarkTags,
+        OS26InlineUnavailableView(
+            title: L10n.noBookmarkTags,
+            subtitle: L10n.bookmarkTagNoCandidates,
             systemImage: "tag",
-            description: Text(L10n.bookmarkTagNoCandidates)
+            minHeight: 180
         )
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 20)
-        .keiPanel(12)
     }
 
     private func tagSectionPanel(
@@ -337,7 +365,7 @@ struct BookmarkEditorView: View {
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 12)
-        .keiPanel(12)
+        .keiGlass(14)
     }
 
     @ViewBuilder

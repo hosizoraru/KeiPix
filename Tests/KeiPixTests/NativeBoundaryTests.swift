@@ -1310,6 +1310,55 @@ struct NativeBoundaryTests {
         #expect(logViewer.contains(".textFieldStyle(.roundedBorder)") == false)
     }
 
+    @Test("Bookmark, login, related, and settings sheets avoid legacy chrome")
+    func bookmarkLoginRelatedAndSettingsSheetsAvoidLegacyChrome() throws {
+        let root = try packageRoot()
+        let relativePaths = [
+            "Sources/KeiPix/Views/BookmarkEditorView.swift",
+            "Sources/KeiPix/Views/TokenLoginSheetView.swift",
+            "Sources/KeiPix/Views/LoginSheetView.swift",
+            "Sources/KeiPix/Views/ArtworkRelatedView.swift",
+            "Sources/KeiPix/Views/NovelRelatedView.swift",
+            "Sources/KeiPix/Views/Settings/DownloadsSettingsPage.swift",
+            "Sources/KeiPix/Views/Settings/GeneralSettingsPage.swift",
+            "Sources/KeiPix/Views/Settings/SharingSettingsPage.swift",
+            "Sources/KeiPix/Views/Settings/KeyboardSettingsPage.swift"
+        ]
+
+        for relativePath in relativePaths {
+            let source = try String(contentsOf: root.appending(path: relativePath), encoding: .utf8)
+            #expect(source.contains("ContentUnavailableView") == false, "\(relativePath) should use OS26 unavailable surfaces")
+            #expect(source.contains(".textFieldStyle(.roundedBorder)") == false, "\(relativePath) should use native/glass text entry")
+            #expect(source.contains(".buttonStyle(.bordered)") == false, "\(relativePath) should use glass actions")
+            #expect(source.contains(".buttonStyle(.borderedProminent)") == false, "\(relativePath) should use prominent glass actions")
+            #expect(source.contains(".keiPanel(") == false, "\(relativePath) should avoid legacy panel material")
+            #expect(source.contains(".background(.regularMaterial") == false, "\(relativePath) should avoid old material cards")
+            #expect(source.contains(".background(.thinMaterial") == false, "\(relativePath) should avoid old material cards")
+        }
+
+        let bookmarkEditor = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/BookmarkEditorView.swift"),
+            encoding: .utf8
+        )
+        #expect(bookmarkEditor.contains("OS26LibraryTextEntryField(text: $customTagInput"))
+        #expect(bookmarkEditor.contains("OS26LibrarySearchField("))
+        #expect(bookmarkEditor.contains("OS26InlineUnavailableView("))
+
+        let relatedArtworks = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/ArtworkRelatedView.swift"),
+            encoding: .utf8
+        )
+        #expect(relatedArtworks.contains("OS26InlineLoadingView("))
+        #expect(relatedArtworks.contains("OS26LoadMoreButton("))
+
+        let tokenLogin = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/TokenLoginSheetView.swift"),
+            encoding: .utf8
+        )
+        #expect(tokenLogin.contains("SecureField(L10n.refreshToken"))
+        #expect(tokenLogin.contains(".keiInteractiveGlass(16)"))
+    }
+
     @Test("Creator list, search, menu, and drop use native P2 bridges")
     func creatorListSearchMenuAndDropUseNativeP2Bridges() throws {
         let root = try packageRoot()

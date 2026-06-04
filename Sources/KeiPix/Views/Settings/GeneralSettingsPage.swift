@@ -106,19 +106,15 @@ struct GeneralSettingsPage: View {
                     }
                     .pickerStyle(.segmented)
 
-                    TextField(
-                        L10n.proxyHost,
+                    OS26LibraryTextEntryField(
                         text: store.settings_proxyConfigurationHostBinding,
-                        prompt: Text(L10n.proxyHostPlaceholder)
+                        placeholder: L10n.proxyHostPlaceholder
                     )
-                    .textFieldStyle(.roundedBorder)
 
-                    TextField(
-                        L10n.proxyPort,
+                    OS26LibraryTextEntryField(
                         text: store.settings_proxyConfigurationPortBinding,
-                        prompt: Text(L10n.proxyPortPlaceholder)
+                        placeholder: L10n.proxyPortPlaceholder
                     )
-                    .textFieldStyle(.roundedBorder)
                 }
             } header: {
                 Text(L10n.network)
@@ -144,6 +140,7 @@ struct GeneralSettingsPage: View {
                     }
                 }
                 .disabled(store.isCheckingForUpdates)
+                .os26GlassButton()
             } footer: {
                 Text(L10n.checkForUpdatesOnLaunchHint)
                     .font(.caption)

@@ -20,8 +20,8 @@ struct SharingSettingsPage: View {
                     .font(.system(.body, design: .monospaced))
                     .frame(minHeight: 110)
                     .scrollContentBackground(.hidden)
-                    .background(.quaternary.opacity(0.35),
-                                in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                    .padding(10)
+                    .keiInteractiveGlass(14)
 
                 LabeledContent(L10n.templatePreview) {
                     Text(store.artworkCopyTemplatePreview)
@@ -40,11 +40,11 @@ struct SharingSettingsPage: View {
                 } label: {
                     Label(L10n.resetArtworkCopyTemplate, systemImage: "arrow.counterclockwise")
                 }
+                .os26GlassButton()
             }
 
             Section(L10n.creatorCopyTemplate) {
-                TextField(L10n.creatorCopyTemplate, text: creatorTemplateBinding)
-                    .textFieldStyle(.roundedBorder)
+                OS26LibraryTextEntryField(text: creatorTemplateBinding, placeholder: L10n.creatorCopyTemplate)
 
                 LabeledContent(L10n.templatePreview) {
                     Text(store.creatorCopyTemplatePreview)
@@ -63,6 +63,7 @@ struct SharingSettingsPage: View {
                 } label: {
                     Label(L10n.resetCreatorCopyTemplate, systemImage: "arrow.counterclockwise")
                 }
+                .os26GlassButton()
             }
         }
         .formStyle(.grouped)
