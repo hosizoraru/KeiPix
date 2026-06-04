@@ -31,7 +31,11 @@ struct StorageSettingsPage: View {
     }()
 
     var body: some View {
-        Form {
+        OS26SettingsPage(
+            title: L10n.settingsStorage,
+            subtitle: L10n.storageHint,
+            systemImage: SettingsCategory.storage.systemImage
+        ) {
             overviewSection
             ForEach(categories) { snapshot in
                 categorySection(snapshot)
@@ -39,29 +43,21 @@ struct StorageSettingsPage: View {
             backupSection
             footerSection
         }
-        .formStyle(.grouped)
-        .navigationTitle(L10n.settingsStorage)
         .onAppear { reloadSnapshots() }
     }
 
     private var overviewSection: some View {
-        Section {
+        OS26SettingsSection(L10n.storageOverview, systemImage: "internaldrive", footer: L10n.storageHint) {
             LabeledContent(L10n.totalCacheSize) {
                 Text(formattedTotal)
                     .monospacedDigit()
                     .foregroundStyle(.secondary)
             }
-        } header: {
-            Text(L10n.storageOverview)
-        } footer: {
-            Text(L10n.storageHint)
-                .font(.caption)
-                .foregroundStyle(.secondary)
         }
     }
 
     private func categorySection(_ snapshot: CacheCategorySnapshot) -> some View {
-        Section {
+        OS26SettingsSection(snapshot.title, systemImage: "externaldrive", footer: snapshot.detail) {
             VStack(alignment: .leading, spacing: 6) {
                 HStack(alignment: .firstTextBaseline) {
                     Text(snapshot.title)
@@ -71,16 +67,14 @@ struct StorageSettingsPage: View {
                         .monospacedDigit()
                         .foregroundStyle(.secondary)
                 }
-                Text(snapshot.detail)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
                 HStack {
                     Spacer()
-                    Button {
+                    OS26SettingsActionButton(
+                        title: L10n.clearCategory,
+                        systemImage: "trash",
+                        role: .destructive
+                    ) {
                         clear(snapshot.id)
-                    } label: {
-                        Label(L10n.clearCategory, systemImage: "trash")
                     }
                     .disabled(snapshot.isEmpty)
                 }
@@ -90,11 +84,13 @@ struct StorageSettingsPage: View {
     }
 
     private var footerSection: some View {
-        Section {
-            Button(role: .destructive) {
+        OS26SettingsSection(L10n.clearAllCaches, systemImage: "trash.slash") {
+            OS26SettingsActionButton(
+                title: L10n.clearAllCaches,
+                systemImage: "trash.slash",
+                role: .destructive
+            ) {
                 clearAll()
-            } label: {
-                Label(L10n.clearAllCaches, systemImage: "trash.slash")
             }
             .disabled(categories.allSatisfy(\.isEmpty))
         }
@@ -107,27 +103,20 @@ struct StorageSettingsPage: View {
     /// "what's on my disk" mental model in one place, the same way
     /// macOS Time Machine settings live under General → Storage.
     private var backupSection: some View {
-        Section {
-            HStack {
-                Button {
+        OS26SettingsSection(L10n.backupAndRestore, systemImage: "archivebox", footer: L10n.backupHint) {
+            FlowLayout(spacing: 8) {
+                OS26SettingsActionButton(
+                    title: L10n.exportBackup,
+                    systemImage: "square.and.arrow.up",
+                    isProminent: true
+                ) {
                     exportBackup()
-                } label: {
-                    Label(L10n.exportBackup, systemImage: "square.and.arrow.up")
                 }
-                Button {
+                OS26SettingsActionButton(title: L10n.importBackup, systemImage: "square.and.arrow.down") {
                     importBackup()
-                } label: {
-                    Label(L10n.importBackup, systemImage: "square.and.arrow.down")
                 }
             }
             .padding(.vertical, 2)
-        } header: {
-            Text(L10n.backupAndRestore)
-        } footer: {
-            Text(L10n.backupHint)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
         }
     }
 

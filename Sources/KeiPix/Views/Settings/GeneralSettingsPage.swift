@@ -4,8 +4,12 @@ struct GeneralSettingsPage: View {
     @Bindable var store: KeiPixStore
 
     var body: some View {
-        Form {
-            Section {
+        OS26SettingsPage(
+            title: L10n.settingsGeneral,
+            subtitle: L10n.themeHint,
+            systemImage: SettingsCategory.general.systemImage
+        ) {
+            OS26SettingsSection(L10n.appearance, systemImage: "paintpalette", footer: L10n.themeHint) {
                 Picker(L10n.language, selection: store.settings_languageBinding) {
                     ForEach(AppLanguage.allCases) { language in
                         Text(language.title).tag(language)
@@ -20,15 +24,13 @@ struct GeneralSettingsPage: View {
                     }
                 }
                 .pickerStyle(.segmented)
-            } header: {
-                Text(L10n.appearance)
-            } footer: {
-                Text(L10n.themeHint)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
             }
 
-            Section {
+            OS26SettingsSection(
+                L10n.imageQualityTierSection,
+                systemImage: "photo.on.rectangle.angled",
+                footer: L10n.imageQualityTierHint
+            ) {
                 Picker(L10n.feedPreviewQuality, selection: store.settings_feedPreviewImageQualityTierBinding) {
                     ForEach(ArtworkImageQualityTier.allCases) { tier in
                         Label(tier.title, systemImage: tier.systemImage).tag(tier)
@@ -51,15 +53,9 @@ struct GeneralSettingsPage: View {
                 .pickerStyle(.menu)
 
                 Toggle(L10n.showTranslatedTags, isOn: store.settings_showTranslatedTagsBinding)
-            } header: {
-                Text(L10n.imageQualityTierSection)
-            } footer: {
-                Text(L10n.imageQualityTierHint)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
             }
 
-            Section {
+            OS26SettingsSection(L10n.layout, systemImage: "rectangle.3.group", footer: L10n.emphasizeFollowingArtistsHint) {
                 Picker(L10n.galleryLayout, selection: store.settings_galleryLayoutBinding) {
                     ForEach(GalleryLayoutMode.allCases) { mode in
                         Text(mode.title).tag(mode)
@@ -68,15 +64,9 @@ struct GeneralSettingsPage: View {
                 .pickerStyle(.segmented)
 
                 Toggle(L10n.emphasizeFollowingArtists, isOn: store.settings_emphasizeFollowingArtistsBinding)
-            } header: {
-                Text(L10n.layout)
-            } footer: {
-                Text(L10n.emphasizeFollowingArtistsHint)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
             }
 
-            Section {
+            OS26SettingsSection(L10n.openAtLaunch, systemImage: "arrow.up.forward.app", footer: L10n.openAtLaunchHint) {
                 Picker(L10n.openAtLaunch, selection: store.settings_launchDestinationBinding) {
                     ForEach(LaunchDestination.allCases) { destination in
                         Label(destination.title, systemImage: destination.systemImage)
@@ -84,13 +74,13 @@ struct GeneralSettingsPage: View {
                     }
                 }
                 .pickerStyle(.menu)
-            } footer: {
-                Text(L10n.openAtLaunchHint)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
             }
 
-            Section {
+            OS26SettingsSection(
+                L10n.network,
+                systemImage: "network",
+                footer: "\(L10n.proxyConfigurationHint)\n\(L10n.proxyConfigurationRestartHint)"
+            ) {
                 Picker(L10n.proxyConfiguration, selection: store.settings_proxyConfigurationModeBinding) {
                     Text(L10n.proxyConfigurationModeSystem).tag(ProxyConfigurationMode.system)
                     Text(L10n.proxyConfigurationModeDirect).tag(ProxyConfigurationMode.direct)
@@ -116,38 +106,19 @@ struct GeneralSettingsPage: View {
                         placeholder: L10n.proxyPortPlaceholder
                     )
                 }
-            } header: {
-                Text(L10n.network)
-            } footer: {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(L10n.proxyConfigurationHint)
-                    Text(L10n.proxyConfigurationRestartHint)
-                }
-                .font(.caption)
-                .foregroundStyle(.secondary)
             }
 
-            Section {
+            OS26SettingsSection(L10n.checkForUpdates, systemImage: "arrow.down.circle", footer: L10n.checkForUpdatesOnLaunchHint) {
                 Toggle(L10n.checkForUpdatesOnLaunch, isOn: store.settings_checkForUpdatesOnLaunchBinding)
 
-                Button {
+                OS26SettingsActionButton(
+                    title: store.isCheckingForUpdates ? L10n.checkingForUpdates : L10n.checkForUpdates,
+                    systemImage: store.isCheckingForUpdates ? "arrow.triangle.2.circlepath" : "arrow.down.circle"
+                ) {
                     Task { await store.checkForReleaseUpdateNow() }
-                } label: {
-                    if store.isCheckingForUpdates {
-                        Label(L10n.checkingForUpdates, systemImage: "arrow.triangle.2.circlepath")
-                    } else {
-                        Label(L10n.checkForUpdates, systemImage: "arrow.down.circle")
-                    }
                 }
                 .disabled(store.isCheckingForUpdates)
-                .os26GlassButton()
-            } footer: {
-                Text(L10n.checkForUpdatesOnLaunchHint)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
             }
         }
-        .formStyle(.grouped)
-        .navigationTitle(L10n.settingsGeneral)
     }
 }

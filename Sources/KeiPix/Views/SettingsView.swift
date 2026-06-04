@@ -5,6 +5,140 @@ struct SettingsView: View {
     @State private var coordinator = SettingsCoordinator()
 
     var body: some View {
+        settingsRoot
+            .overlay(alignment: .bottom) {
+                VStack(spacing: 8) {
+                    if let actionMessage = coordinator.actionMessage {
+                        FloatingStatusBanner(maxWidth: 520) {
+                            Text(actionMessage)
+                                .font(.callout)
+                                .foregroundStyle(.secondary)
+                                .textSelection(.enabled)
+                        }
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                    }
+
+                    if let undoAction = store.undoAction {
+                        AppUndoBar(action: undoAction) {
+                            Task { await store.performUndo(undoAction) }
+                        }
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                    }
+                }
+                .padding(.horizontal, 18)
+                .padding(.bottom, 14)
+            }
+            .animation(.snappy(duration: 0.18), value: coordinator.actionMessage)
+            .animation(.snappy(duration: 0.18), value: store.undoAction?.id)
+            .task(id: coordinator.actionMessage) {
+                await dismissActionMessageIfNeeded(coordinator.actionMessage)
+            }
+            .task {
+                applyVisualQAInitialSelection()
+                if store.session != nil, store.restrictedModeEnabled == nil {
+                    await store.refreshRestrictedModeSetting()
+                }
+                if store.session != nil, store.aiShowEnabled == nil {
+                    await store.refreshAIShowSetting()
+                }
+            }
+            .sheet(isPresented: $coordinator.isAccountLoginPresented) {
+                LoginSheetView(store: store)
+                    .frame(width: 900, height: 680)
+                    .os26SheetChrome(.immersive)
+            }
+            .sheet(isPresented: $coordinator.isTokenLoginPresented) {
+                TokenLoginSheetView(store: store)
+                    .frame(width: 460, height: 300)
+                    .os26SheetChrome(.form)
+            }
+            .confirmationDialog(
+                L10n.logout,
+                isPresented: $coordinator.isLogoutConfirmationPresented,
+                titleVisibility: .visible
+            ) {
+                Button(L10n.logout, role: .destructive) {
+                    Task { await store.logout() }
+                }
+                Button(L10n.cancel, role: .cancel) {}
+            } message: {
+                Text(L10n.logoutConfirmation)
+            }
+            .confirmationDialog(
+                coordinator.accountRemovalCandidate
+                    .map { String(format: L10n.removeAccountConfirmationFormat, $0.name) }
+                    ?? L10n.removeAccount,
+                isPresented: coordinator.accountRemovalBinding,
+                titleVisibility: .visible,
+                presenting: coordinator.accountRemovalCandidate
+            ) { account in
+                Button(L10n.removeAccount, role: .destructive) {
+                    Task {
+                        await store.removeStoredAccount(userID: account.id)
+                        coordinator.setActionMessage(
+                            String(format: L10n.removedAccountFormat, account.name)
+                        )
+                    }
+                }
+                Button(L10n.cancel, role: .cancel) {
+                    coordinator.accountRemovalCandidate = nil
+                }
+            } message: { account in
+                Text(String(format: L10n.removeAccountConfirmationFormat, account.name))
+            }
+            .confirmationDialog(
+                L10n.copyRefreshToken,
+                isPresented: $coordinator.isRefreshTokenCopyConfirmationPresented,
+                titleVisibility: .visible
+            ) {
+                Button(L10n.copyRefreshToken) {
+                    copyCurrentRefreshToken()
+                }
+                Button(L10n.cancel, role: .cancel) {}
+            } message: {
+                Text(L10n.copyRefreshTokenConfirmationMessage)
+            }
+            .confirmationDialog(
+                L10n.syncMutedContentConfirmation,
+                isPresented: $coordinator.isMutedContentSyncConfirmationPresented,
+                titleVisibility: .visible
+            ) {
+                Button(L10n.syncFromPixiv) {
+                    Task { await syncMutedContentFromPixiv() }
+                }
+                Button(L10n.cancel, role: .cancel) {}
+            } message: {
+                Text(L10n.syncMutedContentConfirmationMessage)
+            }
+            .confirmationDialog(
+                L10n.uploadMutedContentConfirmation,
+                isPresented: $coordinator.isMutedContentUploadConfirmationPresented,
+                titleVisibility: .visible
+            ) {
+                Button(L10n.uploadToPixiv, role: .destructive) {
+                    Task { await uploadMutedContentToPixiv() }
+                }
+                Button(L10n.cancel, role: .cancel) {}
+            } message: {
+                Text(L10n.uploadMutedContentConfirmationMessage)
+            }
+            .confirmationDialog(
+                L10n.importMutedContentConfirmation,
+                isPresented: $coordinator.isMutedContentImportConfirmationPresented,
+                titleVisibility: .visible
+            ) {
+                Button(L10n.importMutedContent) {
+                    importLocalMutedContent()
+                }
+                Button(L10n.cancel, role: .cancel) {}
+            } message: {
+                Text(L10n.importMutedContentConfirmationMessage)
+            }
+    }
+
+    @ViewBuilder
+    private var settingsRoot: some View {
+        #if os(macOS)
         NavigationSplitView {
             sidebar
         } detail: {
@@ -19,134 +153,96 @@ struct SettingsView: View {
             idealHeight: 720,
             maxHeight: .infinity
         )
-        .overlay(alignment: .bottom) {
-            VStack(spacing: 8) {
-                if let actionMessage = coordinator.actionMessage {
-                    FloatingStatusBanner(maxWidth: 520) {
-                        Text(actionMessage)
-                            .font(.callout)
-                            .foregroundStyle(.secondary)
-                            .textSelection(.enabled)
-                    }
-                    .transition(.move(edge: .bottom).combined(with: .opacity))
+        #else
+        compactSettingsWorkspace
+        #endif
+    }
+
+    private var compactSettingsWorkspace: some View {
+        VStack(spacing: 0) {
+            compactHeader
+            categoryRail
+
+            detail
+                .id(coordinator.selection)
+                .transition(.opacity.combined(with: .move(edge: .trailing)))
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .background(.clear)
+    }
+
+    private var compactHeader: some View {
+        GlassEffectContainer(spacing: 10) {
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 12) {
+                    compactTitleBlock
+                    Spacer(minLength: 16)
+                    OS26LibrarySearchField(
+                        text: $coordinator.searchText,
+                        placeholder: L10n.searchSettings,
+                        minWidth: 220,
+                        idealWidth: 280,
+                        maxWidth: 360
+                    )
                 }
 
-                if let undoAction = store.undoAction {
-                    AppUndoBar(action: undoAction) {
-                        Task { await store.performUndo(undoAction) }
-                    }
-                    .transition(.move(edge: .bottom).combined(with: .opacity))
-                }
-            }
-            .padding(.horizontal, 18)
-            .padding(.bottom, 14)
-        }
-        .animation(.snappy(duration: 0.18), value: coordinator.actionMessage)
-        .animation(.snappy(duration: 0.18), value: store.undoAction?.id)
-        .task(id: coordinator.actionMessage) {
-            await dismissActionMessageIfNeeded(coordinator.actionMessage)
-        }
-        .task {
-            applyVisualQAInitialSelection()
-            if store.session != nil, store.restrictedModeEnabled == nil {
-                await store.refreshRestrictedModeSetting()
-            }
-            if store.session != nil, store.aiShowEnabled == nil {
-                await store.refreshAIShowSetting()
-            }
-        }
-        .sheet(isPresented: $coordinator.isAccountLoginPresented) {
-            LoginSheetView(store: store)
-                .frame(width: 900, height: 680)
-                .os26SheetChrome(.immersive)
-        }
-        .sheet(isPresented: $coordinator.isTokenLoginPresented) {
-            TokenLoginSheetView(store: store)
-                .frame(width: 460, height: 300)
-                .os26SheetChrome(.form)
-        }
-        .confirmationDialog(
-            L10n.logout,
-            isPresented: $coordinator.isLogoutConfirmationPresented,
-            titleVisibility: .visible
-        ) {
-            Button(L10n.logout, role: .destructive) {
-                Task { await store.logout() }
-            }
-            Button(L10n.cancel, role: .cancel) {}
-        } message: {
-            Text(L10n.logoutConfirmation)
-        }
-        .confirmationDialog(
-            coordinator.accountRemovalCandidate
-                .map { String(format: L10n.removeAccountConfirmationFormat, $0.name) }
-                ?? L10n.removeAccount,
-            isPresented: coordinator.accountRemovalBinding,
-            titleVisibility: .visible,
-            presenting: coordinator.accountRemovalCandidate
-        ) { account in
-            Button(L10n.removeAccount, role: .destructive) {
-                Task {
-                    await store.removeStoredAccount(userID: account.id)
-                    coordinator.setActionMessage(
-                        String(format: L10n.removedAccountFormat, account.name)
+                VStack(alignment: .leading, spacing: 12) {
+                    compactTitleBlock
+                    OS26LibrarySearchField(
+                        text: $coordinator.searchText,
+                        placeholder: L10n.searchSettings,
+                        minWidth: 180,
+                        idealWidth: 260,
+                        maxWidth: .infinity
                     )
                 }
             }
-            Button(L10n.cancel, role: .cancel) {
-                coordinator.accountRemovalCandidate = nil
-            }
-        } message: { account in
-            Text(String(format: L10n.removeAccountConfirmationFormat, account.name))
         }
-        .confirmationDialog(
-            L10n.copyRefreshToken,
-            isPresented: $coordinator.isRefreshTokenCopyConfirmationPresented,
-            titleVisibility: .visible
-        ) {
-            Button(L10n.copyRefreshToken) {
-                copyCurrentRefreshToken()
+        .padding(.horizontal, 18)
+        .padding(.top, 12)
+        .padding(.bottom, 8)
+    }
+
+    private var compactTitleBlock: some View {
+        HStack(spacing: 10) {
+            Image(systemName: coordinator.selection.systemImage)
+                .font(.title3.weight(.semibold))
+                .symbolRenderingMode(.hierarchical)
+                .frame(width: 38, height: 38)
+                .keiGlass(14)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(L10n.settings)
+                    .font(.title2.weight(.bold))
+                Text(coordinator.selection.title)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
             }
-            Button(L10n.cancel, role: .cancel) {}
-        } message: {
-            Text(L10n.copyRefreshTokenConfirmationMessage)
         }
-        .confirmationDialog(
-            L10n.syncMutedContentConfirmation,
-            isPresented: $coordinator.isMutedContentSyncConfirmationPresented,
-            titleVisibility: .visible
-        ) {
-            Button(L10n.syncFromPixiv) {
-                Task { await syncMutedContentFromPixiv() }
+    }
+
+    private var categoryRail: some View {
+        ScrollView(.horizontal) {
+            HStack(spacing: 8) {
+                ForEach(coordinator.visibleCategories) { category in
+                    Button {
+                        withAnimation(.snappy(duration: 0.2)) {
+                            coordinator.selection = category
+                        }
+                    } label: {
+                        Label(category.title, systemImage: category.systemImage)
+                            .lineLimit(1)
+                    }
+                    .os26GlassButton(prominent: category == coordinator.selection)
+                    .controlSize(.small)
+                }
             }
-            Button(L10n.cancel, role: .cancel) {}
-        } message: {
-            Text(L10n.syncMutedContentConfirmationMessage)
+            .padding(.horizontal, 18)
+            .padding(.vertical, 8)
         }
-        .confirmationDialog(
-            L10n.uploadMutedContentConfirmation,
-            isPresented: $coordinator.isMutedContentUploadConfirmationPresented,
-            titleVisibility: .visible
-        ) {
-            Button(L10n.uploadToPixiv, role: .destructive) {
-                Task { await uploadMutedContentToPixiv() }
-            }
-            Button(L10n.cancel, role: .cancel) {}
-        } message: {
-            Text(L10n.uploadMutedContentConfirmationMessage)
-        }
-        .confirmationDialog(
-            L10n.importMutedContentConfirmation,
-            isPresented: $coordinator.isMutedContentImportConfirmationPresented,
-            titleVisibility: .visible
-        ) {
-            Button(L10n.importMutedContent) {
-                importLocalMutedContent()
-            }
-            Button(L10n.cancel, role: .cancel) {}
-        } message: {
-            Text(L10n.importMutedContentConfirmationMessage)
-        }
+        .scrollIndicators(.hidden)
     }
 
     @ViewBuilder

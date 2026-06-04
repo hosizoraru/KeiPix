@@ -5,8 +5,12 @@ struct AccountSettingsPage: View {
     var coordinator: SettingsCoordinator
 
     var body: some View {
-        Form {
-            Section {
+        OS26SettingsPage(
+            title: L10n.account,
+            subtitle: accountPageSubtitle,
+            systemImage: SettingsCategory.account.systemImage
+        ) {
+            OS26SettingsSection(L10n.accountMode, systemImage: "person.crop.circle") {
                 Picker(L10n.accountMode, selection: accountSessionModeBinding) {
                     ForEach(AccountSessionMode.allCases) { mode in
                         Label(mode.title, systemImage: mode.systemImage)
@@ -23,12 +27,10 @@ struct AccountSettingsPage: View {
                             : L10n.hidden
                     )
                 }
-            } header: {
-                Text(L10n.accountMode)
             }
 
             if store.storedAccounts.isEmpty == false {
-                Section(L10n.currentAccount) {
+                OS26SettingsSection(L10n.currentAccount, systemImage: "person.text.rectangle") {
                     ForEach(store.storedAccounts) { account in
                         StoredAccountRow(
                             account: account,
@@ -51,41 +53,38 @@ struct AccountSettingsPage: View {
                 }
             }
 
-            Section {
-                Button {
-                    coordinator.isAccountLoginPresented = true
-                } label: {
-                    Label(L10n.addAccount, systemImage: "person.crop.circle.badge.plus")
-                }
-
-                Button {
-                    coordinator.isTokenLoginPresented = true
-                } label: {
-                    Label(L10n.importToken, systemImage: "key")
-                }
-
-                if store.accountSessionMode == .real, store.session != nil {
-                    Button {
-                        coordinator.isRefreshTokenCopyConfirmationPresented = true
-                    } label: {
-                        Label(L10n.copyRefreshToken, systemImage: "doc.on.doc")
+            OS26SettingsSection(
+                L10n.account,
+                systemImage: "person.badge.key",
+                footer: accountActionFooter
+            ) {
+                FlowLayout(spacing: 8) {
+                    OS26SettingsActionButton(
+                        title: L10n.addAccount,
+                        systemImage: "person.crop.circle.badge.plus",
+                        isProminent: true
+                    ) {
+                        coordinator.isAccountLoginPresented = true
                     }
 
-                    Button(role: .destructive) {
-                        coordinator.isLogoutConfirmationPresented = true
-                    } label: {
-                        Label(L10n.logout, systemImage: "rectangle.portrait.and.arrow.right")
+                    OS26SettingsActionButton(title: L10n.importToken, systemImage: "key") {
+                        coordinator.isTokenLoginPresented = true
                     }
-                }
-            } footer: {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(L10n.importTokenHint)
+
                     if store.accountSessionMode == .real, store.session != nil {
-                        Text(L10n.copyRefreshTokenHint)
+                        OS26SettingsActionButton(title: L10n.copyRefreshToken, systemImage: "doc.on.doc") {
+                            coordinator.isRefreshTokenCopyConfirmationPresented = true
+                        }
+
+                        OS26SettingsActionButton(
+                            title: L10n.logout,
+                            systemImage: "rectangle.portrait.and.arrow.right",
+                            role: .destructive
+                        ) {
+                            coordinator.isLogoutConfirmationPresented = true
+                        }
                     }
                 }
-                .font(.caption)
-                .foregroundStyle(.secondary)
             }
 
             // Apple-style deep-link section for things only the website can
@@ -95,18 +94,20 @@ struct AccountSettingsPage: View {
             // managers, and 2FA they already trust.
             if let profileURL = pixivProfileSettingsURL,
                let accountURL = pixivAccountSettingsURL {
-                Section {
-                    Link(destination: profileURL) {
-                        Label(L10n.editProfileOnPixiv, systemImage: "pencil")
-                    }
+                OS26SettingsSection(L10n.profile, systemImage: "safari", footer: L10n.accountWebSettingsHint) {
+                    FlowLayout(spacing: 8) {
+                        OS26SettingsLinkButton(
+                            title: L10n.editProfileOnPixiv,
+                            systemImage: "pencil",
+                            destination: profileURL
+                        )
 
-                    Link(destination: accountURL) {
-                        Label(L10n.manageAccountOnPixiv, systemImage: "safari")
+                        OS26SettingsLinkButton(
+                            title: L10n.manageAccountOnPixiv,
+                            systemImage: "safari",
+                            destination: accountURL
+                        )
                     }
-                } footer: {
-                    Text(L10n.accountWebSettingsHint)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
                 }
             }
 
@@ -118,34 +119,44 @@ struct AccountSettingsPage: View {
             // toggles inside the Apple ID section of System Settings.
             privacyAndIdentitySection
         }
-        .formStyle(.grouped)
-        .navigationTitle(L10n.account)
     }
 
     private var privacyAndIdentitySection: some View {
-        Section {
+        OS26SettingsSection(
+            L10n.privacyAndIdentity,
+            systemImage: SettingsCategory.privacy.systemImage,
+            footer: privacyFooter
+        ) {
             Toggle(L10n.privacyMode, isOn: store.settings_privacyModeBinding)
             if store.session != nil {
                 Toggle(L10n.showAccountIdentity, isOn: store.settings_accountIdentityBinding)
             }
 
-            Button {
+            OS26SettingsActionButton(title: L10n.openPrivacySettings, systemImage: SettingsCategory.privacy.systemImage) {
                 coordinator.selection = .privacy
-            } label: {
-                Label(L10n.openPrivacySettings, systemImage: SettingsCategory.privacy.systemImage)
             }
-        } header: {
-            Text(L10n.privacyAndIdentity)
-        } footer: {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(L10n.privacyModeHint)
-                if store.session != nil {
-                    Text(L10n.accountIdentityPrivacyHint)
-                }
-            }
-            .font(.caption)
-            .foregroundStyle(.secondary)
         }
+    }
+
+    private var accountPageSubtitle: String? {
+        if let session = store.session, store.showAccountIdentity {
+            return "\(session.user.name) @\(session.user.account)"
+        }
+        return L10n.importTokenHint
+    }
+
+    private var accountActionFooter: String {
+        guard store.accountSessionMode == .real, store.session != nil else {
+            return L10n.importTokenHint
+        }
+        return "\(L10n.importTokenHint)\n\(L10n.copyRefreshTokenHint)"
+    }
+
+    private var privacyFooter: String {
+        guard store.session != nil else {
+            return L10n.privacyModeHint
+        }
+        return "\(L10n.privacyModeHint)\n\(L10n.accountIdentityPrivacyHint)"
     }
 
     private var accountSessionModeBinding: Binding<AccountSessionMode> {

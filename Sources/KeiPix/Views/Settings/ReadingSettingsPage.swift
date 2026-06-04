@@ -4,8 +4,16 @@ struct ReadingSettingsPage: View {
     @Bindable var store: KeiPixStore
 
     var body: some View {
-        Form {
-            Section {
+        OS26SettingsPage(
+            title: L10n.readingWindow,
+            subtitle: L10n.defaultReadingModeHint,
+            systemImage: SettingsCategory.reading.systemImage
+        ) {
+            OS26SettingsSection(
+                L10n.readingWindow,
+                systemImage: "book.pages",
+                footer: "\(L10n.defaultReadingModeHint)\n\(L10n.restoreLastReadPageHint)"
+            ) {
                 Picker(L10n.defaultArtworkReadingMode, selection: store.settings_defaultArtworkReadingModeBinding) {
                     ForEach(ArtworkReadingMode.allCases) { mode in
                         Text(mode.title).tag(mode)
@@ -21,33 +29,18 @@ struct ReadingSettingsPage: View {
                 .pickerStyle(.segmented)
 
                 Toggle(L10n.restoreLastReadPage, isOn: store.settings_restoreReaderProgressBinding)
-            } header: {
-                Text(L10n.readingWindow)
-            } footer: {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(L10n.defaultReadingModeHint)
-                    Text(L10n.restoreLastReadPageHint)
-                }
-                .font(.caption)
-                .foregroundStyle(.secondary)
             }
 
-            Section {
+            OS26SettingsSection(L10n.translate, systemImage: "translate", footer: L10n.translationTargetLanguageHint) {
                 Picker(L10n.translationTargetLanguage, selection: store.settings_translationTargetLanguageBinding) {
                     ForEach(TranslationTargetLanguage.allCases) { language in
                         Text(language.title).tag(language)
                     }
                 }
                 .pickerStyle(.menu)
-            } header: {
-                Text(L10n.translate)
-            } footer: {
-                Text(L10n.translationTargetLanguageHint)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
             }
 
-            Section {
+            OS26SettingsSection(L10n.trackpad, systemImage: "trackpad") {
                 Toggle(L10n.enableTrackpadGestures, isOn: store.settings_trackpadGesturesBinding)
 
                 Picker(L10n.twoFingerSwipeBehavior, selection: store.settings_horizontalSwipeBehaviorBinding) {
@@ -56,11 +49,7 @@ struct ReadingSettingsPage: View {
                     }
                 }
                 .pickerStyle(.menu)
-            } header: {
-                Text(L10n.trackpad)
             }
         }
-        .formStyle(.grouped)
-        .navigationTitle(L10n.readingWindow)
     }
 }

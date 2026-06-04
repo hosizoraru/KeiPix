@@ -10,43 +10,40 @@ import SwiftUI
 /// its own recorder UI to honour user-customized bindings.
 struct KeyboardSettingsPage: View {
     var body: some View {
-        Form {
-            Section {
-                Button {
+        OS26SettingsPage(
+            title: L10n.settingsKeyboard,
+            subtitle: L10n.keyboardCustomizationHint,
+            systemImage: SettingsCategory.keyboard.systemImage
+        ) {
+            OS26SettingsSection(
+                L10n.keyboardCustomization,
+                systemImage: "keyboard.badge.eye",
+                footer: L10n.keyboardCustomizationHint
+            ) {
+                OS26SettingsActionButton(
+                    title: L10n.openKeyboardSystemSettings,
+                    systemImage: "keyboard.badge.eye",
+                    isProminent: true
+                ) {
                     openKeyboardSystemSettings()
-                } label: {
-                    Label(L10n.openKeyboardSystemSettings, systemImage: "keyboard.badge.eye")
                 }
-                .os26GlassButton(prominent: true)
-            } header: {
-                Text(L10n.keyboardCustomization)
-            } footer: {
-                Text(L10n.keyboardCustomizationHint)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
             }
 
             ForEach(ShortcutSurface.allCases) { surface in
                 let entries = KeyboardShortcutCatalog.entries(in: surface)
                 if entries.isEmpty == false {
-                    Section {
+                    OS26SettingsSection(
+                        surface.title,
+                        systemImage: surface == .readerInline ? "book.pages" : "command",
+                        footer: surface == .readerInline ? L10n.keyboardReaderInlineHint : nil
+                    ) {
                         ForEach(entries) { entry in
                             ShortcutCatalogRow(entry: entry)
-                        }
-                    } header: {
-                        Text(surface.title)
-                    } footer: {
-                        if surface == .readerInline {
-                            Text(L10n.keyboardReaderInlineHint)
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
                         }
                     }
                 }
             }
         }
-        .formStyle(.grouped)
-        .navigationTitle(L10n.settingsKeyboard)
     }
 
     /// Deep-links into System Settings → Keyboard → Keyboard Shortcuts.

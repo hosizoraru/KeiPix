@@ -5,17 +5,12 @@ struct SharingSettingsPage: View {
     var coordinator: SettingsCoordinator
 
     var body: some View {
-        Form {
-            Section {
-                VStack(alignment: .leading, spacing: 12) {
-                    Text(L10n.copyTemplateHint)
-                        .font(.callout)
-                        .foregroundStyle(.secondary)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                }
-            }
-
-            Section(L10n.artworkCopyTemplate) {
+        OS26SettingsPage(
+            title: L10n.sharing,
+            subtitle: L10n.copyTemplateHint,
+            systemImage: SettingsCategory.sharing.systemImage
+        ) {
+            OS26SettingsSection(L10n.artworkCopyTemplate, systemImage: "photo.on.rectangle", footer: L10n.copyTemplateHint) {
                 TextEditor(text: artworkTemplateBinding)
                     .font(.system(.body, design: .monospaced))
                     .frame(minHeight: 110)
@@ -43,7 +38,7 @@ struct SharingSettingsPage: View {
                 .os26GlassButton()
             }
 
-            Section(L10n.creatorCopyTemplate) {
+            OS26SettingsSection(L10n.creatorCopyTemplate, systemImage: "person.text.rectangle") {
                 OS26LibraryTextEntryField(text: creatorTemplateBinding, placeholder: L10n.creatorCopyTemplate)
 
                 LabeledContent(L10n.templatePreview) {
@@ -66,8 +61,6 @@ struct SharingSettingsPage: View {
                 .os26GlassButton()
             }
         }
-        .formStyle(.grouped)
-        .navigationTitle(L10n.sharing)
     }
 
     private var artworkTemplateBinding: Binding<String> {

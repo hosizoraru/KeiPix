@@ -5,17 +5,19 @@ struct DownloadsSettingsPage: View {
     var coordinator: SettingsCoordinator
 
     var body: some View {
-        Form {
+        OS26SettingsPage(
+            title: L10n.downloads,
+            subtitle: L10n.downloadNamingTemplateHint,
+            systemImage: SettingsCategory.downloads.systemImage
+        ) {
             folderSection
             queueSection
             namingSection
         }
-        .formStyle(.grouped)
-        .navigationTitle(L10n.downloads)
     }
 
     private var folderSection: some View {
-        Section {
+        OS26SettingsSection(L10n.downloadFolder, systemImage: "folder", footer: nil) {
             LabeledContent(L10n.downloadFolder) {
                 Text(store.downloads.downloadDirectoryPath)
                     .lineLimit(1)
@@ -32,6 +34,7 @@ struct DownloadsSettingsPage: View {
                 } label: {
                     Label(L10n.chooseFolder, systemImage: "folder.badge.gearshape")
                 }
+                .os26GlassButton(prominent: true)
 
                 Button {
                     coordinator.setActionMessage(
@@ -42,14 +45,17 @@ struct DownloadsSettingsPage: View {
                 } label: {
                     Label(L10n.openFolder, systemImage: "folder")
                 }
+                .os26GlassButton()
             }
-        } header: {
-            Text(L10n.downloadFolder)
         }
     }
 
     private var queueSection: some View {
-        Section {
+        OS26SettingsSection(
+            L10n.concurrentDownloads,
+            systemImage: "arrow.down.to.line.compact",
+            footer: "\(L10n.concurrentDownloadsHint)\n\(L10n.autoBookmarkDownloadedArtworksHint)\n\(L10n.notifyOnDownloadFinishHint)"
+        ) {
             Stepper(
                 value: store.settings_maxConcurrentDownloadsBinding,
                 in: 1...4,
@@ -65,19 +71,15 @@ struct DownloadsSettingsPage: View {
             Toggle(L10n.autoBookmarkDownloadedArtworks, isOn: store.settings_autoBookmarkDownloadsBinding)
 
             Toggle(L10n.notifyOnDownloadFinish, isOn: store.settings_notifyOnDownloadFinishBinding)
-        } footer: {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(L10n.concurrentDownloadsHint)
-                Text(L10n.autoBookmarkDownloadedArtworksHint)
-                Text(L10n.notifyOnDownloadFinishHint)
-            }
-            .font(.caption)
-            .foregroundStyle(.secondary)
         }
     }
 
     private var namingSection: some View {
-        Section {
+        OS26SettingsSection(
+            L10n.downloadNamingTemplate,
+            systemImage: "textformat.abc",
+            footer: L10n.downloadNamingTemplateHint
+        ) {
             OS26LibraryTextEntryField(
                 text: store.settings_downloadNamingTemplateBinding,
                 placeholder: L10n.downloadNamingTemplate
@@ -130,12 +132,6 @@ struct DownloadsSettingsPage: View {
                 Label(L10n.resetTemplate, systemImage: "arrow.counterclockwise")
             }
             .os26GlassButton()
-        } header: {
-            Text(L10n.downloadNamingTemplate)
-        } footer: {
-            Text(L10n.downloadNamingTemplateHint)
-                .font(.caption)
-                .foregroundStyle(.secondary)
         }
     }
 

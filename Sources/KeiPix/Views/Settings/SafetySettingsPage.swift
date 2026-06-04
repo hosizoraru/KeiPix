@@ -11,7 +11,11 @@ struct SafetySettingsPage: View {
     var exportLocalFile: () -> Void
 
     var body: some View {
-        Form {
+        OS26SettingsPage(
+            title: L10n.settingsSafety,
+            subtitle: L10n.maskSensitivePreviewsHint,
+            systemImage: SettingsCategory.safety.systemImage
+        ) {
             filtersSection
             mutedContentSection
             if store.session != nil {
@@ -19,29 +23,25 @@ struct SafetySettingsPage: View {
             }
             privacyShortcutSection
         }
-        .formStyle(.grouped)
-        .navigationTitle(L10n.settingsSafety)
     }
 
     private var filtersSection: some View {
-        Section {
+        OS26SettingsSection(L10n.contentFilters, systemImage: "line.3.horizontal.decrease.circle", footer: L10n.maskSensitivePreviewsHint) {
             Toggle(L10n.showContentBadges, isOn: store.settings_showContentBadgesBinding)
             Toggle(L10n.hideMutedContent, isOn: store.settings_hideMutedBinding)
             Toggle(L10n.hideAIArtworks, isOn: store.settings_hideAIBinding)
             Toggle(L10n.hideR18Artworks, isOn: store.settings_hideR18Binding)
             Toggle(L10n.hideR18GArtworks, isOn: store.settings_hideR18GBinding)
             Toggle(L10n.maskSensitivePreviews, isOn: store.settings_maskSensitivePreviewsBinding)
-        } header: {
-            Text(L10n.contentFilters)
-        } footer: {
-            Text(L10n.maskSensitivePreviewsHint)
-                .font(.caption)
-                .foregroundStyle(.secondary)
         }
     }
 
     private var pixivSafetySection: some View {
-        Section {
+        OS26SettingsSection(
+            L10n.pixivSection,
+            systemImage: "shield.lefthalf.filled",
+            footer: "\(L10n.pixivRestrictedModeHint)\n\(L10n.pixivAIDisplayHint)"
+        ) {
             HStack(spacing: 8) {
                 Toggle(L10n.pixivRestrictedMode, isOn: restrictedModeBinding)
                     .disabled(store.restrictedModeEnabled == nil || coordinator.isUpdatingRestrictedMode)
@@ -75,43 +75,28 @@ struct SafetySettingsPage: View {
                     .foregroundStyle(.red)
                     .textSelection(.enabled)
             }
-        } header: {
-            Text(L10n.pixivSection)
-        } footer: {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(L10n.pixivRestrictedModeHint)
-                Text(L10n.pixivAIDisplayHint)
-            }
-            .font(.caption)
-            .foregroundStyle(.secondary)
         }
     }
 
     private var mutedContentSection: some View {
-        Section {
+        OS26SettingsSection(L10n.mutedContent, systemImage: "eye.slash", footer: L10n.muteSyncHint) {
             LabeledContent(L10n.mutedContent) {
                 Text(String(format: L10n.mutedContentCountFormat, mutedContentCount))
                     .foregroundStyle(.secondary)
             }
 
-            Button {
+            OS26SettingsActionButton(title: L10n.openMutedContentManager, systemImage: "eye.slash", isProminent: true) {
                 store.select(.mutedContent)
-            } label: {
-                Label(L10n.openMutedContentManager, systemImage: "eye.slash")
             }
 
             FlowLayout(spacing: 8) {
-                Button {
+                OS26SettingsActionButton(title: L10n.syncFromPixiv, systemImage: "arrow.down.circle") {
                     coordinator.isMutedContentSyncConfirmationPresented = true
-                } label: {
-                    Label(L10n.syncFromPixiv, systemImage: "arrow.down.circle")
                 }
                 .disabled(coordinator.isSyncingMutedContent)
 
-                Button {
+                OS26SettingsActionButton(title: L10n.uploadToPixiv, systemImage: "arrow.up.circle") {
                     coordinator.isMutedContentUploadConfirmationPresented = true
-                } label: {
-                    Label(L10n.uploadToPixiv, systemImage: "arrow.up.circle")
                 }
                 .disabled(coordinator.isSyncingMutedContent
                           || (store.mutedTagList.isEmpty && store.mutedUserList.isEmpty))
@@ -123,20 +108,16 @@ struct SafetySettingsPage: View {
             }
 
             FlowLayout(spacing: 8) {
-                Button {
+                OS26SettingsActionButton(title: L10n.exportMutedContent, systemImage: "square.and.arrow.up") {
                     exportLocalFile()
-                } label: {
-                    Label(L10n.exportMutedContent, systemImage: "square.and.arrow.up")
                 }
                 .disabled(coordinator.isSyncingMutedContent
                           || (store.mutedTagList.isEmpty
                               && store.mutedUserList.isEmpty
                               && store.mutedArtworkList.isEmpty))
 
-                Button {
+                OS26SettingsActionButton(title: L10n.importMutedContent, systemImage: "square.and.arrow.down") {
                     coordinator.isMutedContentImportConfirmationPresented = true
-                } label: {
-                    Label(L10n.importMutedContent, systemImage: "square.and.arrow.down")
                 }
                 .disabled(coordinator.isSyncingMutedContent)
             }
@@ -147,12 +128,6 @@ struct SafetySettingsPage: View {
                     .foregroundStyle(coordinator.mutedContentMessageIsError ? .red : .secondary)
                     .textSelection(.enabled)
             }
-        } header: {
-            Text(L10n.mutedContent)
-        } footer: {
-            Text(L10n.muteSyncHint)
-                .font(.caption)
-                .foregroundStyle(.secondary)
         }
     }
 
@@ -161,18 +136,10 @@ struct SafetySettingsPage: View {
         // Settings → Privacy & Security). Keep a deep-link here so users
         // looking for "Privacy Mode" or "Show account identity" while
         // browsing Safety can pivot one click away.
-        Section {
-            Button {
+        OS26SettingsSection(L10n.privacy, systemImage: SettingsCategory.privacy.systemImage, footer: L10n.privacyHint) {
+            OS26SettingsActionButton(title: L10n.openPrivacySettings, systemImage: SettingsCategory.privacy.systemImage) {
                 coordinator.selection = .privacy
-            } label: {
-                Label(L10n.openPrivacySettings, systemImage: SettingsCategory.privacy.systemImage)
             }
-        } header: {
-            Text(L10n.privacy)
-        } footer: {
-            Text(L10n.privacyHint)
-                .font(.caption)
-                .foregroundStyle(.secondary)
         }
     }
 

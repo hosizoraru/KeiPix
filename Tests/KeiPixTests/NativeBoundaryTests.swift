@@ -755,11 +755,58 @@ struct NativeBoundaryTests {
         #expect(accountSettings.contains("L10n.copyRefreshToken"))
         #expect(accountSettings.contains("isRefreshTokenCopyConfirmationPresented = true"))
         #expect(accountSettings.contains("PasteboardWriter.copy") == false)
-        #expect(settingsView.contains("confirmationDialog(\n            L10n.copyRefreshToken"))
+        #expect(settingsView.contains("confirmationDialog("))
+        #expect(settingsView.contains("L10n.copyRefreshToken,\n                isPresented: $coordinator.isRefreshTokenCopyConfirmationPresented"))
         #expect(settingsView.contains("copyCurrentRefreshToken()"))
         #expect(settingsView.contains("PasteboardWriter.copy(refreshToken)"))
         #expect(settingsView.contains("L10n.copyRefreshTokenConfirmationMessage"))
         #expect(coordinator.contains("isRefreshTokenCopyConfirmationPresented"))
+    }
+
+    @Test("Settings workspace uses adaptive OS 26 layout")
+    func settingsWorkspaceUsesAdaptiveOS26Layout() throws {
+        let root = try packageRoot()
+        let settingsView = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/SettingsView.swift"),
+            encoding: .utf8
+        )
+        let settingsSurface = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/LibrarySurfaceComponents.swift"),
+            encoding: .utf8
+        )
+        let migratedPages = [
+            "Sources/KeiPix/Views/Settings/AccountSettingsPage.swift",
+            "Sources/KeiPix/Views/Settings/DiscoverySettingsPage.swift",
+            "Sources/KeiPix/Views/Settings/DownloadsSettingsPage.swift",
+            "Sources/KeiPix/Views/Settings/GeneralSettingsPage.swift",
+            "Sources/KeiPix/Views/Settings/KeyboardSettingsPage.swift",
+            "Sources/KeiPix/Views/Settings/PrivacySettingsPage.swift",
+            "Sources/KeiPix/Views/Settings/ReadingSettingsPage.swift",
+            "Sources/KeiPix/Views/Settings/SafetySettingsPage.swift",
+            "Sources/KeiPix/Views/Settings/SharingSettingsPage.swift",
+            "Sources/KeiPix/Views/Settings/StorageSettingsPage.swift"
+        ]
+
+        #expect(settingsView.contains("private var settingsRoot: some View"))
+        #expect(settingsView.contains("#if os(macOS)\n        NavigationSplitView"))
+        #expect(settingsView.contains("#else\n        compactSettingsWorkspace"))
+        #expect(settingsView.contains("private var compactSettingsWorkspace: some View"))
+        #expect(settingsView.contains("private var categoryRail: some View"))
+        #expect(settingsView.contains("OS26LibrarySearchField("))
+        #expect(settingsView.contains(".frame(\n            minWidth: 820"))
+
+        #expect(settingsSurface.contains("struct OS26SettingsPage<Content: View>: View"))
+        #expect(settingsSurface.contains("struct OS26SettingsSection<Content: View>: View"))
+        #expect(settingsSurface.contains("struct OS26SettingsActionButton: View"))
+        #expect(settingsSurface.contains(".keiGlass(22)"))
+
+        for relativePath in migratedPages {
+            let source = try String(contentsOf: root.appending(path: relativePath), encoding: .utf8)
+            #expect(source.contains("OS26SettingsPage("), "\(relativePath) should use the adaptive settings page shell")
+            #expect(source.contains("OS26SettingsSection("), "\(relativePath) should use OS26 settings cards")
+            #expect(source.contains("Form {") == false, "\(relativePath) should not keep the old grouped Form shell")
+            #expect(source.contains(".formStyle(.grouped)") == false, "\(relativePath) should not keep the old grouped Form shell")
+        }
     }
 
     @Test("Gallery feed layouts use a native collection bridge")

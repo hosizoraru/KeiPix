@@ -391,3 +391,203 @@ extension View {
         }
     }
 }
+
+struct OS26SettingsPage<Content: View>: View {
+    let title: String
+    let subtitle: String?
+    let systemImage: String
+    private let content: Content
+
+    init(
+        title: String,
+        subtitle: String? = nil,
+        systemImage: String,
+        @ViewBuilder content: () -> Content
+    ) {
+        self.title = title
+        self.subtitle = subtitle
+        self.systemImage = systemImage
+        self.content = content()
+    }
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 18) {
+                OS26SettingsPageHeader(
+                    title: title,
+                    subtitle: subtitle,
+                    systemImage: systemImage
+                )
+
+                content
+            }
+            .frame(maxWidth: 860, alignment: .leading)
+            .padding(.horizontal, horizontalPadding)
+            .padding(.vertical, 20)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .navigationTitle(title)
+    }
+
+    private var horizontalPadding: CGFloat {
+        #if os(macOS)
+        28
+        #else
+        18
+        #endif
+    }
+}
+
+struct OS26SettingsPageHeader: View {
+    let title: String
+    let subtitle: String?
+    let systemImage: String
+
+    var body: some View {
+        ViewThatFits(in: .horizontal) {
+            HStack(alignment: .center, spacing: 14) {
+                icon
+                titleBlock
+                Spacer(minLength: 0)
+            }
+
+            VStack(alignment: .leading, spacing: 10) {
+                icon
+                titleBlock
+            }
+        }
+        .padding(.top, 4)
+    }
+
+    private var icon: some View {
+        Image(systemName: systemImage)
+            .font(.title2.weight(.semibold))
+            .symbolRenderingMode(.hierarchical)
+            .foregroundStyle(.primary)
+            .frame(width: 50, height: 50)
+            .keiGlass(18)
+    }
+
+    private var titleBlock: some View {
+        VStack(alignment: .leading, spacing: 5) {
+            Text(title)
+                .font(.largeTitle.weight(.bold))
+                .lineLimit(2)
+                .fixedSize(horizontal: false, vertical: true)
+
+            if let subtitle, subtitle.isEmpty == false {
+                Text(subtitle)
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(3)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+    }
+}
+
+struct OS26SettingsSection<Content: View>: View {
+    let title: String
+    let systemImage: String?
+    let footer: String?
+    private let content: Content
+
+    init(
+        _ title: String,
+        systemImage: String? = nil,
+        footer: String? = nil,
+        @ViewBuilder content: () -> Content
+    ) {
+        self.title = title
+        self.systemImage = systemImage
+        self.footer = footer
+        self.content = content()
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                if let systemImage {
+                    Image(systemName: systemImage)
+                        .symbolRenderingMode(.hierarchical)
+                        .foregroundStyle(.secondary)
+                }
+
+                Text(title)
+                    .font(.headline)
+                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                Spacer(minLength: 0)
+            }
+
+            VStack(alignment: .leading, spacing: 12) {
+                content
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+
+            if let footer, footer.isEmpty == false {
+                Text(footer)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .textSelection(.enabled)
+            }
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .keiGlass(22)
+    }
+}
+
+struct OS26SettingsDivider: View {
+    var body: some View {
+        Divider()
+            .opacity(0.55)
+    }
+}
+
+struct OS26SettingsActionButton: View {
+    let title: String
+    let systemImage: String
+    var role: ButtonRole?
+    var isProminent = false
+    let action: () -> Void
+
+    var body: some View {
+        Button(role: role, action: action) {
+            Label(title, systemImage: systemImage)
+                .lineLimit(1)
+        }
+        .os26GlassButton(prominent: isProminent)
+    }
+}
+
+struct OS26SettingsLinkButton: View {
+    let title: String
+    let systemImage: String
+    let destination: URL
+
+    var body: some View {
+        Link(destination: destination) {
+            Label(title, systemImage: systemImage)
+                .lineLimit(1)
+        }
+        .os26GlassButton()
+    }
+}
+
+struct OS26SettingsStatusPill: View {
+    let title: String
+    let systemImage: String
+
+    var body: some View {
+        Label(title, systemImage: systemImage)
+            .font(.caption.weight(.semibold))
+            .foregroundStyle(.secondary)
+            .lineLimit(1)
+            .padding(.horizontal, 9)
+            .padding(.vertical, 5)
+            .glassEffect(.regular, in: Capsule(style: .continuous))
+    }
+}
