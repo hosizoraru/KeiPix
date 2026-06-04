@@ -431,6 +431,8 @@ struct CreatorPreviewListContent: View {
     let isPinnedCreator: (PixivUser) -> Bool
     let togglePinnedCreator: (PixivUser) -> Void
     let selectArtwork: (PixivArtwork) -> Void
+    let creatorPreviewArtworkCacheGeneration: Int
+    let cachedCreatorPreviewArtworks: (PixivUser) -> [PixivArtwork]
     /// Lazy fetcher used when `layoutMode == .single`. The single-card
     /// shelf calls into this to surface more than the 3 illustrations
     /// Pixiv ships in the recommended-users / related-users response.
@@ -438,7 +440,7 @@ struct CreatorPreviewListContent: View {
 
     var body: some View {
         if mode.requiresSearchKeyword, searchKeyword.isEmpty {
-            ContentUnavailableView(L10n.enterSearchKeyword, systemImage: "magnifyingglass")
+            CreatorSearchLandingState()
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else if isLoadingInitial {
             CreatorPreviewListLoadingPlaceholder(layoutMode: layoutMode)
@@ -456,7 +458,8 @@ struct CreatorPreviewListContent: View {
         } else {
             NativeCreatorPreviewCollectionView(
                 items: creatorCollectionItems,
-                layout: NativeCreatorPreviewCollectionLayout(mode: layoutMode)
+                layout: NativeCreatorPreviewCollectionLayout(mode: layoutMode),
+                contentReloadToken: creatorContentReloadToken
             ) { item in
                 nativeCreatorPreviewContent(for: item)
             }
@@ -525,6 +528,29 @@ struct CreatorPreviewListContent: View {
         return items
     }
 
+    private var creatorContentReloadToken: Int {
+        var hasher = Hasher()
+        hasher.combine(layoutMode.rawValue)
+        hasher.combine(showContentBadges)
+        hasher.combine(maskSensitivePreviews)
+        hasher.combine(isLoadingMore)
+        hasher.combine(creatorPreviewArtworkCacheGeneration)
+        for preview in visiblePreviews {
+            hasher.combine(preview.user)
+            hasher.combine(preview.isMuted)
+            hasher.combine(followRestrictsByUserID[preview.user.id])
+            hasher.combine(updatingCreatorIDs.contains(preview.user.id))
+            for artwork in preview.illusts.prefix(6) {
+                hasher.combine(artwork.id)
+                hasher.combine(artwork.thumbnailURL?.absoluteString)
+                hasher.combine(artwork.pageCount)
+                hasher.combine(artwork.xRestrict)
+                hasher.combine(artwork.isAI)
+            }
+        }
+        return hasher.finalize()
+    }
+
     private func nativeCreatorPreviewContent(for item: NativeCreatorPreviewCollectionItem) -> AnyView {
         switch item {
         case .preview(let preview):
@@ -548,9 +574,8 @@ struct CreatorPreviewListContent: View {
                     isPinned: isPinnedCreator(preview.user),
                     togglePinnedCreator: { togglePinnedCreator(preview.user) },
                     selectArtwork: selectArtwork,
-                    loadExpandedArtworks: layoutMode.usesExpandedPreview
-                        ? { try await loadCreatorPreviewArtworks(preview.user) }
-                        : nil
+                    cachedPreviewArtworks: cachedCreatorPreviewArtworks(preview.user),
+                    loadExpandedArtworks: { try await loadCreatorPreviewArtworks(preview.user) }
                 )
             )
         case .loadMore:
@@ -560,6 +585,44 @@ struct CreatorPreviewListContent: View {
         case .artwork:
             return AnyView(EmptyView())
         }
+    }
+}
+
+private struct CreatorSearchLandingState: View {
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Label {
+                VStack(alignment: .leading, spacing: 5) {
+                    Text(L10n.enterSearchKeyword)
+                        .font(.headline)
+                    Text(L10n.searchCreatorsInList)
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                }
+            } icon: {
+                Image(systemName: "person.crop.circle.badge.questionmark")
+                    .font(.title2)
+                    .symbolRenderingMode(.hierarchical)
+                    .foregroundStyle(.secondary)
+            }
+
+            HStack(spacing: 8) {
+                Label(L10n.searchCreators, systemImage: "magnifyingglass")
+                Text(L10n.search)
+                    .foregroundStyle(.secondary)
+            }
+            .font(.caption.weight(.medium))
+            .padding(.horizontal, 10)
+            .padding(.vertical, 6)
+            .glassEffect(.regular, in: Capsule(style: .continuous))
+        }
+        .padding(18)
+        .frame(maxWidth: 520, alignment: .leading)
+        .keiGlass(22)
+        .padding(.horizontal, 18)
+        .padding(.top, 18)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .accessibilityLabel(L10n.enterSearchKeyword)
     }
 }
 

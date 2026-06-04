@@ -48,6 +48,7 @@ struct UserPreviewCard: View {
     let isPinned: Bool
     let togglePinnedCreator: () -> Void
     let selectArtwork: (PixivArtwork) -> Void
+    var cachedPreviewArtworks: [PixivArtwork] = []
     /// Lazily fetches the creator's recent works for the expanded
     /// shelf. The Pixiv recommended/related-users endpoints only ship
     /// 3 illustrations per user, so when the user picks the single-card
@@ -224,12 +225,10 @@ struct UserPreviewCard: View {
 
     @ViewBuilder
     private var previewStrip: some View {
-        if preview.illusts.isEmpty == false {
-            if expandedPreview {
-                expandedPreviewStrip
-            } else {
-                compactPreviewStrip
-            }
+        if expandedPreview {
+            expandedPreviewStrip
+        } else {
+            compactPreviewStrip
         }
     }
 
@@ -237,19 +236,32 @@ struct UserPreviewCard: View {
     /// `auto` and `twoUp` layouts where each card already fits ~2 to
     /// 4 per row and a fixed three-up shelf reads cleanly.
     private var compactPreviewStrip: some View {
+        CompactCreatorPreviewStrip(
+            seedArtworks: preview.illusts,
+            cachedArtworks: cachedPreviewArtworks,
+            userID: preview.user.id,
+            showContentBadges: showContentBadges,
+            maskSensitivePreviews: maskSensitivePreviews,
+            selectArtwork: selectArtwork,
+            copyArtworkLink: copyArtworkLink,
+            loadArtworks: loadExpandedArtworks
+        )
+    }
+
+    private func compactPreviewStrip(artworks: [PixivArtwork]) -> some View {
         // GeometryReader hands us the card's placed width so the
         // three (or fewer) thumbnails can scale together as the
         // grid widens, instead of staying pinned to a static
         // 132-pt tile. Aspect is held at 4:5 so the row reads as a
         // consistent shelf regardless of card width.
         GeometryReader { proxy in
-            let count = min(preview.illusts.count, 3)
+            let count = min(artworks.count, 3)
             let spacing: CGFloat = 8
             let totalSpacing = spacing * CGFloat(max(0, count - 1))
             let tileWidth = max((proxy.size.width - totalSpacing) / CGFloat(count), 64)
 
             HStack(spacing: spacing) {
-                ForEach(preview.illusts.prefix(count)) { artwork in
+                ForEach(artworks.prefix(count)) { artwork in
                     artworkThumbButton(artwork, tileWidth: tileWidth)
                 }
             }
@@ -258,7 +270,7 @@ struct UserPreviewCard: View {
         // Match the strip aspect to the tile aspect so the
         // GeometryReader receives a height that the thumbnails can
         // honour — ~5/4 of tile width for the 4:5 portrait shelf.
-        .aspectRatio(previewStripAspect, contentMode: .fit)
+        .aspectRatio(previewStripAspect(for: artworks.count), contentMode: .fit)
     }
 
     /// Horizontally scrollable shelf used by the single-column layout.
@@ -268,6 +280,7 @@ struct UserPreviewCard: View {
     private var expandedPreviewStrip: some View {
         ExpandedCreatorPreviewShelf(
             seedArtworks: preview.illusts,
+            cachedArtworks: cachedPreviewArtworks,
             userID: preview.user.id,
             showContentBadges: showContentBadges,
             maskSensitivePreviews: maskSensitivePreviews,
@@ -302,8 +315,8 @@ struct UserPreviewCard: View {
     /// portrait tiles + 2 gutters land at roughly 1.92 — close enough
     /// that the `aspectRatio` modifier hands the GeometryReader a
     /// height that matches the tiles' natural 4:5 ratio.
-    private var previewStripAspect: CGFloat {
-        let count = CGFloat(max(min(preview.illusts.count, 3), 1))
+    private func previewStripAspect(for artworkCount: Int) -> CGFloat {
+        let count = CGFloat(max(min(artworkCount, 3), 1))
         // 4:5 portrait tiles -> tile height = tile width * 5/4
         // strip height = tile height; strip width = count * tile width + gutters
         // ratio = (count * tile + gutters) / (tile * 5/4)
@@ -680,6 +693,112 @@ private enum CreatorCardButtonDisplayStyle {
     case iconOnly
 }
 
+private struct CompactCreatorPreviewStrip: View {
+    let seedArtworks: [PixivArtwork]
+    let cachedArtworks: [PixivArtwork]
+    let userID: Int
+    let showContentBadges: Bool
+    let maskSensitivePreviews: Bool
+    let selectArtwork: (PixivArtwork) -> Void
+    let copyArtworkLink: (PixivArtwork) -> Void
+    let loadArtworks: (() async throws -> [PixivArtwork])?
+
+    @State private var fetchedArtworks: [PixivArtwork] = []
+    @State private var isLoading = false
+    @State private var didAttemptLoad = false
+
+    private var renderedArtworks: [PixivArtwork] {
+        if fetchedArtworks.isEmpty == false {
+            return fetchedArtworks
+        }
+        if cachedArtworks.isEmpty == false {
+            return cachedArtworks
+        }
+        return seedArtworks
+    }
+
+    var body: some View {
+        GeometryReader { proxy in
+            let visibleArtworks = Array(renderedArtworks.prefix(3))
+            let placeholderCount = visibleArtworks.isEmpty ? 3 : visibleArtworks.count
+            let spacing: CGFloat = 8
+            let totalSpacing = spacing * CGFloat(max(0, placeholderCount - 1))
+            let tileWidth = max((proxy.size.width - totalSpacing) / CGFloat(placeholderCount), 64)
+
+            HStack(spacing: spacing) {
+                if visibleArtworks.isEmpty {
+                    ForEach(0..<placeholderCount, id: \.self) { _ in
+                        SkeletonPlaceholder(width: tileWidth, height: tileWidth * 5.0 / 4.0, cornerRadius: 10)
+                            .overlay {
+                                Image(systemName: "photo")
+                                    .font(.caption.weight(.semibold))
+                                    .foregroundStyle(.secondary)
+                            }
+                    }
+                } else {
+                    ForEach(visibleArtworks) { artwork in
+                        Button {
+                            selectArtwork(artwork)
+                        } label: {
+                            ArtworkPreviewThumb(
+                                artwork: artwork,
+                                tileWidth: tileWidth,
+                                showContentBadges: showContentBadges,
+                                maskSensitivePreview: maskSensitivePreviews
+                            )
+                        }
+                        .buttonStyle(.plain)
+                        .contextMenu {
+                            Button(L10n.selectArtwork) { selectArtwork(artwork) }
+                            if let url = artwork.pixivURL {
+                                Link(L10n.openInPixiv, destination: url)
+                                Button(L10n.copyLink) { copyArtworkLink(artwork) }
+                            }
+                        }
+                    }
+                }
+            }
+            .opacity(isLoading && visibleArtworks.isEmpty ? 0.82 : 1)
+            .frame(width: proxy.size.width, height: proxy.size.height, alignment: .leading)
+        }
+        .aspectRatio(previewStripAspect(for: renderedArtworks.isEmpty ? 3 : renderedArtworks.count), contentMode: .fit)
+        .task(id: userID) {
+            resetFetchState()
+            await loadIfNeeded()
+        }
+    }
+
+    private func previewStripAspect(for artworkCount: Int) -> CGFloat {
+        CGFloat(max(min(artworkCount, 3), 1)) * (4.0 / 5.0)
+    }
+
+    private func loadIfNeeded() async {
+        guard seedArtworks.isEmpty,
+              cachedArtworks.isEmpty,
+              let loadArtworks,
+              didAttemptLoad == false else { return }
+        didAttemptLoad = true
+        isLoading = true
+        defer { isLoading = false }
+
+        do {
+            let loaded = try await loadArtworks()
+            if loaded.isEmpty == false {
+                fetchedArtworks = loaded
+            }
+        } catch {
+            // Keep the static placeholder. Creator cards are scannable
+            // even when Pixiv withholds user-preview thumbnails.
+        }
+    }
+
+    private func resetFetchState() {
+        fetchedArtworks = []
+        isLoading = false
+        didAttemptLoad = false
+    }
+}
+
 /// Self-sizing artwork thumbnail tile used by the creator preview
 /// strip. The tile pins its own (width, height) so SwiftUI's resizable
 /// image can't bleed past the layout frame — same fix that landed for
@@ -740,6 +859,7 @@ private struct ArtworkPreviewThumb: View {
 /// the cache the API layer keeps internally.
 private struct ExpandedCreatorPreviewShelf: View {
     let seedArtworks: [PixivArtwork]
+    let cachedArtworks: [PixivArtwork]
     let userID: Int
     let showContentBadges: Bool
     let maskSensitivePreviews: Bool
@@ -756,7 +876,13 @@ private struct ExpandedCreatorPreviewShelf: View {
     @State private var didAttemptLoad = false
 
     private var renderedArtworks: [PixivArtwork] {
-        fetchedArtworks.isEmpty ? seedArtworks : fetchedArtworks
+        if fetchedArtworks.isEmpty == false {
+            return fetchedArtworks
+        }
+        if cachedArtworks.isEmpty == false {
+            return cachedArtworks
+        }
+        return seedArtworks
     }
 
     var body: some View {
@@ -784,9 +910,12 @@ private struct ExpandedCreatorPreviewShelf: View {
                 }
 
                 if isLoading {
-                    ProgressView()
-                        .controlSize(.small)
-                        .frame(width: tileWidth, height: tileHeight)
+                    SkeletonPlaceholder(width: tileWidth, height: tileHeight, cornerRadius: 12)
+                        .overlay {
+                            Image(systemName: "photo")
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(.secondary)
+                        }
                 }
             }
         }
@@ -806,12 +935,15 @@ private struct ExpandedCreatorPreviewShelf: View {
         // (when SwiftUI recycles a view) re-fires the fetch for the
         // new creator instead of stale data.
         .task(id: userID) {
+            resetFetchState()
             await loadIfNeeded()
         }
     }
 
     private func loadIfNeeded() async {
-        guard let loadArtworks, didAttemptLoad == false else { return }
+        guard cachedArtworks.isEmpty,
+              let loadArtworks,
+              didAttemptLoad == false else { return }
         didAttemptLoad = true
         isLoading = true
         defer { isLoading = false }
@@ -829,5 +961,11 @@ private struct ExpandedCreatorPreviewShelf: View {
             // illustrations are still rendered, and the rest of the
             // card surfaces error reporting via the bulk-status banner.
         }
+    }
+
+    private func resetFetchState() {
+        fetchedArtworks = []
+        isLoading = false
+        didAttemptLoad = false
     }
 }

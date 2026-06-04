@@ -23,20 +23,46 @@ extension KeiPixStore {
         return filteredUserPreviewResponse(response)
     }
 
+    func cachedCreatorPreviewArtworks(for user: PixivUser) -> [PixivArtwork] {
+        creatorPreviewArtworkCache[user.id] ?? []
+    }
+
     func creatorPreviewArtworks(for user: PixivUser) async throws -> [PixivArtwork] {
-        async let illustrations = api.userIllusts(userID: user.id, type: "illust")
-        async let manga = api.userIllusts(userID: user.id, type: "manga")
-        let responses = try await [illustrations, manga]
-        var seenArtworkIDs = Set<Int>()
-        return responses
-            .flatMap(\.illusts)
-            .filter(passesContentFilters)
-            .filter { artwork in
-                seenArtworkIDs.insert(artwork.id).inserted
-            }
-            .sorted { first, second in
-                first.createDate > second.createDate
-            }
+        if let cached = creatorPreviewArtworkCache[user.id] {
+            return cached
+        }
+
+        if let request = creatorPreviewArtworkRequests[user.id] {
+            return try await request.value
+        }
+
+        let request = Task { [self] in
+            async let illustrations = api.userIllusts(userID: user.id, type: "illust")
+            async let manga = api.userIllusts(userID: user.id, type: "manga")
+            let responses = try await [illustrations, manga]
+            var seenArtworkIDs = Set<Int>()
+            return responses
+                .flatMap(\.illusts)
+                .filter(passesContentFilters)
+                .filter { artwork in
+                    seenArtworkIDs.insert(artwork.id).inserted
+                }
+                .sorted { first, second in
+                    first.createDate > second.createDate
+                }
+        }
+        creatorPreviewArtworkRequests[user.id] = request
+
+        do {
+            let artworks = try await request.value
+            creatorPreviewArtworkCache[user.id] = artworks
+            creatorPreviewArtworkCacheGeneration &+= 1
+            creatorPreviewArtworkRequests[user.id] = nil
+            return artworks
+        } catch {
+            creatorPreviewArtworkRequests[user.id] = nil
+            throw error
+        }
     }
 
     func creatorIllustTags(for user: PixivUser) async throws -> [CreatorArtworkTag] {

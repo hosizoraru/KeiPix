@@ -293,8 +293,15 @@ final class KeiPixStore {
     var allArtworks: [PixivArtwork] = []
     var allSearchPopularPreviewArtworks: [PixivArtwork] = []
     var nextURL: URL?
+    /// Advances when the shared creator-preview artwork cache changes.
+    /// Creator cards consume this lightweight token so native hosted
+    /// cells can refresh when profile sheets or card shelves fill the
+    /// same author's recent-work cache.
+    var creatorPreviewArtworkCacheGeneration = 0
     private var activeFeedRequestID: UUID?
     private var activeSearchPopularPreviewRequestID: UUID?
+    @ObservationIgnored var creatorPreviewArtworkCache: [Int: [PixivArtwork]] = [:]
+    @ObservationIgnored var creatorPreviewArtworkRequests: [Int: Task<[PixivArtwork], Error>] = [:]
     var mutedTags = Set(UserDefaults.standard.stringArray(forKey: "mutedTags") ?? [])
     var mutedUsers = KeiPixStore.loadIntStringDictionary("mutedUsers")
     var mutedArtworks = KeiPixStore.loadIntStringDictionary("mutedArtworks")

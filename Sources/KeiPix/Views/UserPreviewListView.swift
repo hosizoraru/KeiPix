@@ -220,6 +220,10 @@ struct UserPreviewListView: View {
                 isPinnedCreator: store.isPinnedCreator,
                 togglePinnedCreator: togglePinnedCreator,
                 selectArtwork: { store.selectedArtwork = $0 },
+                creatorPreviewArtworkCacheGeneration: store.creatorPreviewArtworkCacheGeneration,
+                cachedCreatorPreviewArtworks: { user in
+                    store.cachedCreatorPreviewArtworks(for: user)
+                },
                 loadCreatorPreviewArtworks: { user in
                     try await store.creatorPreviewArtworks(for: user)
                 }

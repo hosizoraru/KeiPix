@@ -85,14 +85,18 @@ struct UserProfileRecentWorksSection: View {
 
     private var placeholderRow: some View {
         HStack(spacing: 12) {
-            ForEach(0..<5, id: \.self) { _ in
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .fill(.quaternary)
-                    .frame(width: cardWidth, height: cardHeight)
-                    .overlay(alignment: .center) {
-                        ProgressView()
-                            .controlSize(.small)
-                    }
+            ForEach(0..<5, id: \.self) { index in
+                VStack(alignment: .leading, spacing: 8) {
+                    SkeletonPlaceholder(width: cardWidth, height: 178, cornerRadius: 14)
+                        .overlay {
+                            Image(systemName: "photo")
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(.secondary)
+                        }
+                    SkeletonPlaceholder(width: index.isMultiple(of: 2) ? 112 : 86, height: 12, cornerRadius: 6)
+                    SkeletonPlaceholder(width: 56, height: 10, cornerRadius: 5)
+                }
+                .frame(width: cardWidth, height: cardHeight, alignment: .topLeading)
             }
         }
         .frame(height: artworkShelfHeight)
@@ -120,7 +124,8 @@ struct UserProfileRecentWorksSection: View {
     private var carousel: some View {
         NativeCreatorPreviewCollectionView(
             items: artworkShelfItems,
-            layout: artworkShelfLayout
+            layout: artworkShelfLayout,
+            contentReloadToken: artworkShelfContentReloadToken
         ) { item in
             switch item {
             case .artwork(let artwork):
@@ -153,6 +158,23 @@ struct UserProfileRecentWorksSection: View {
 
     private var artworkShelfItems: [NativeCreatorPreviewCollectionItem] {
         artworks.prefix(visibleCap).map(NativeCreatorPreviewCollectionItem.artwork)
+    }
+
+    private var artworkShelfContentReloadToken: Int {
+        var hasher = Hasher()
+        hasher.combine(store.showContentBadges)
+        hasher.combine(store.maskSensitivePreviews)
+        hasher.combine(store.feedPreviewImageQualityTier.rawValue)
+        hasher.combine(store.emphasizeFollowingArtists)
+        for artwork in artworks.prefix(visibleCap) {
+            hasher.combine(artwork.id)
+            hasher.combine(artwork.thumbnailURL?.absoluteString)
+            hasher.combine(artwork.pageCount)
+            hasher.combine(artwork.isBookmarked)
+            hasher.combine(artwork.xRestrict)
+            hasher.combine(artwork.isAI)
+        }
+        return hasher.finalize()
     }
 
     private func artworkCard(_ artwork: PixivArtwork) -> some View {

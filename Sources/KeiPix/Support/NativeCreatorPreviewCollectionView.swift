@@ -124,7 +124,20 @@ enum NativeCreatorPreviewCollectionLayout: Equatable {
 struct NativeCreatorPreviewCollectionView {
     let items: [NativeCreatorPreviewCollectionItem]
     let layout: NativeCreatorPreviewCollectionLayout
+    let contentReloadToken: Int
     let content: (NativeCreatorPreviewCollectionItem) -> AnyView
+
+    init(
+        items: [NativeCreatorPreviewCollectionItem],
+        layout: NativeCreatorPreviewCollectionLayout,
+        contentReloadToken: Int = 0,
+        content: @escaping (NativeCreatorPreviewCollectionItem) -> AnyView
+    ) {
+        self.items = items
+        self.layout = layout
+        self.contentReloadToken = contentReloadToken
+        self.content = content
+    }
 }
 
 #if os(macOS)
@@ -182,6 +195,11 @@ extension NativeCreatorPreviewCollectionView: NSViewRepresentable {
     final class Coordinator: NSObject, NSCollectionViewDelegateFlowLayout {
         var parent: NativeCreatorPreviewCollectionView
         private var dataSource: NSCollectionViewDiffableDataSource<Int, NativeCreatorPreviewCollectionItem>?
+        private var lastSnapshotItemIDs: [String] = []
+        private var lastLayout: NativeCreatorPreviewCollectionLayout?
+        private var lastLayoutContainerWidth: CGFloat = 0
+        private var lastContentReloadToken: Int?
+        private let widthChangeTolerance: CGFloat = 0.5
 
         init(parent: NativeCreatorPreviewCollectionView) {
             self.parent = parent
@@ -204,6 +222,10 @@ extension NativeCreatorPreviewCollectionView: NSViewRepresentable {
         }
 
         func updateCollectionLayout(for collectionView: NSCollectionView) {
+            let containerWidth = collectionView.enclosingScrollView?.contentSize.width ?? collectionView.bounds.width
+            let layoutNeedsRefresh = lastLayout != parent.layout
+                || abs(lastLayoutContainerWidth - containerWidth) > widthChangeTolerance
+
             let flowLayout: NSCollectionViewFlowLayout
             if let current = collectionView.collectionViewLayout as? NSCollectionViewFlowLayout {
                 flowLayout = current
@@ -211,17 +233,28 @@ extension NativeCreatorPreviewCollectionView: NSViewRepresentable {
                 flowLayout = NSCollectionViewFlowLayout()
                 collectionView.collectionViewLayout = flowLayout
             }
+            guard layoutNeedsRefresh else { return }
             flowLayout.minimumInteritemSpacing = parent.layout.interitemSpacing
             flowLayout.minimumLineSpacing = parent.layout.lineSpacing
             flowLayout.sectionInset = parent.layout.nsSectionInsets
             flowLayout.scrollDirection = parent.layout.nsScrollDirection
             flowLayout.invalidateLayout()
+            rememberLayout(containerWidth: containerWidth)
         }
 
         func applySnapshot(to collectionView: NSCollectionView) {
+            let itemIDs = parent.items.map(\.id)
+            let itemsChanged = itemIDs != lastSnapshotItemIDs
+            let contentChanged = lastContentReloadToken != parent.contentReloadToken
+            let needsInitialSnapshot = dataSource?.snapshot().numberOfItems == 0
+
+            guard needsInitialSnapshot || itemsChanged || contentChanged else { return }
+
             var snapshot = NSDiffableDataSourceSnapshot<Int, NativeCreatorPreviewCollectionItem>()
             snapshot.appendSections([0])
             snapshot.appendItems(parent.items, toSection: 0)
+            lastSnapshotItemIDs = itemIDs
+            lastContentReloadToken = parent.contentReloadToken
             dataSource?.apply(snapshot, animatingDifferences: false) { [weak self, weak collectionView] in
                 guard let self, let collectionView else { return }
                 refreshVisibleHostedContent(in: collectionView)
@@ -236,6 +269,11 @@ extension NativeCreatorPreviewCollectionView: NSViewRepresentable {
                 }
                 item.configure(with: parent.content(parent.items[indexPath.item]))
             }
+        }
+
+        private func rememberLayout(containerWidth: CGFloat) {
+            lastLayout = parent.layout
+            lastLayoutContainerWidth = containerWidth
         }
 
         func collectionView(
@@ -356,6 +394,11 @@ extension NativeCreatorPreviewCollectionView: UIViewRepresentable {
     final class Coordinator: NSObject, UICollectionViewDelegateFlowLayout {
         var parent: NativeCreatorPreviewCollectionView
         private var dataSource: UICollectionViewDiffableDataSource<Int, NativeCreatorPreviewCollectionItem>?
+        private var lastSnapshotItemIDs: [String] = []
+        private var lastLayout: NativeCreatorPreviewCollectionLayout?
+        private var lastLayoutContainerWidth: CGFloat = 0
+        private var lastContentReloadToken: Int?
+        private let widthChangeTolerance: CGFloat = 0.5
 
         init(parent: NativeCreatorPreviewCollectionView) {
             self.parent = parent
@@ -378,6 +421,10 @@ extension NativeCreatorPreviewCollectionView: UIViewRepresentable {
         }
 
         func updateCollectionLayout(for collectionView: UICollectionView) {
+            let containerWidth = collectionView.bounds.width
+            let layoutNeedsRefresh = lastLayout != parent.layout
+                || abs(lastLayoutContainerWidth - containerWidth) > widthChangeTolerance
+
             let flowLayout: UICollectionViewFlowLayout
             if let current = collectionView.collectionViewLayout as? UICollectionViewFlowLayout {
                 flowLayout = current
@@ -385,20 +432,36 @@ extension NativeCreatorPreviewCollectionView: UIViewRepresentable {
                 flowLayout = UICollectionViewFlowLayout()
                 collectionView.setCollectionViewLayout(flowLayout, animated: false)
             }
+            guard layoutNeedsRefresh else { return }
             flowLayout.minimumInteritemSpacing = parent.layout.interitemSpacing
             flowLayout.minimumLineSpacing = parent.layout.lineSpacing
             flowLayout.sectionInset = parent.layout.uiSectionInsets
             flowLayout.scrollDirection = parent.layout.uiScrollDirection
             flowLayout.invalidateLayout()
+            rememberLayout(containerWidth: containerWidth)
         }
 
         func applySnapshot(to collectionView: UICollectionView) {
+            let itemIDs = parent.items.map(\.id)
+            let itemsChanged = itemIDs != lastSnapshotItemIDs
+            let contentChanged = lastContentReloadToken != parent.contentReloadToken
+            let needsInitialSnapshot = dataSource?.snapshot().numberOfItems == 0
+
+            guard needsInitialSnapshot || itemsChanged || contentChanged else { return }
+
             var snapshot = NSDiffableDataSourceSnapshot<Int, NativeCreatorPreviewCollectionItem>()
             snapshot.appendSections([0])
             snapshot.appendItems(parent.items, toSection: 0)
-            dataSource?.apply(snapshot, animatingDifferences: false) { [weak self, weak collectionView] in
+            lastSnapshotItemIDs = itemIDs
+            lastContentReloadToken = parent.contentReloadToken
+            let completion: () -> Void = { [weak self, weak collectionView] in
                 guard let self, let collectionView else { return }
                 refreshVisibleHostedContent(in: collectionView)
+            }
+            if needsInitialSnapshot || itemsChanged {
+                dataSource?.applySnapshotUsingReloadData(snapshot, completion: completion)
+            } else {
+                dataSource?.apply(snapshot, animatingDifferences: false, completion: completion)
             }
         }
 
@@ -410,6 +473,11 @@ extension NativeCreatorPreviewCollectionView: UIViewRepresentable {
                 }
                 cell.configure(with: parent.content(parent.items[indexPath.item]))
             }
+        }
+
+        private func rememberLayout(containerWidth: CGFloat) {
+            lastLayout = parent.layout
+            lastLayoutContainerWidth = containerWidth
         }
 
         func collectionView(
