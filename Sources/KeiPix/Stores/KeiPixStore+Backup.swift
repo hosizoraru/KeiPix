@@ -317,7 +317,7 @@ extension KeiPixStore {
     }
 
     private var appBundleShortVersion: String? {
-        Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String
+        AppVersion.current.marketingVersion
     }
 }
 

@@ -19,7 +19,7 @@ struct PixivisionArticleLinkAudit: Hashable, Sendable {
 enum PixivisionArticleLinkAuditor {
     static func audit(article: PixivSpotlightArticle, session: URLSession = .shared) async throws -> PixivisionArticleLinkAudit {
         var request = URLRequest(url: article.articleURL)
-        request.setValue("KeiPix/1.0", forHTTPHeaderField: "User-Agent")
+        request.setValue(AppVersion.current.userAgentProduct, forHTTPHeaderField: "User-Agent")
         let (data, _) = try await session.data(for: request)
         let html = String(data: data, encoding: .utf8)
             ?? String(data: data, encoding: .shiftJIS)

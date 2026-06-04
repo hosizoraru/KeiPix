@@ -18,7 +18,7 @@ enum SauceNAOClient {
         var request = URLRequest(url: URL(string: "https://saucenao.com/search.php")!)
         request.httpMethod = "POST"
         request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
-        request.setValue("KeiPix/1.0", forHTTPHeaderField: "User-Agent")
+        request.setValue(AppVersion.current.userAgentProduct, forHTTPHeaderField: "User-Agent")
         request.httpBody = multipartBody(
             imageData: normalizedImageData(imageData),
             filename: filename,

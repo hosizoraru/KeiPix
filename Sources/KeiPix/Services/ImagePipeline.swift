@@ -117,7 +117,7 @@ final class ImagePipeline: @unchecked Sendable {
         // every redirect chain too, not just the first request.
         configuration.httpAdditionalHeaders = [
             "Referer": "https://app-api.pixiv.net/",
-            "User-Agent": "KeiPix/1.0"
+            "User-Agent": AppVersion.current.userAgentProduct
         ]
         // Honor the user's app-level proxy preference at session init.
         // `nil` means "follow macOS network settings" — that's how
@@ -326,7 +326,7 @@ final class ImagePipeline: @unchecked Sendable {
         // and needs the Referer to follow.
         var request = URLRequest(url: url)
         request.setValue("https://app-api.pixiv.net/", forHTTPHeaderField: "Referer")
-        request.setValue("KeiPix/1.0", forHTTPHeaderField: "User-Agent")
+        request.setValue(AppVersion.current.userAgentProduct, forHTTPHeaderField: "User-Agent")
         return request
     }
 

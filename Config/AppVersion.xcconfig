@@ -1,0 +1,7 @@
+// KeiPix release metadata.
+//
+// MARKETING_VERSION maps to CFBundleShortVersionString and must stay in
+// x.y.z form. CURRENT_PROJECT_VERSION maps to CFBundleVersion and should
+// increase for every distributable build of the same marketing version.
+MARKETING_VERSION = 0.1.0
+CURRENT_PROJECT_VERSION = 1

@@ -63,6 +63,9 @@ jobs:
       - name: Resolve dependencies
         run: swift package resolve
 
+      - name: Check version settings
+        run: ./script/check_version_consistency.sh
+
       - name: Build (macOS)
         run: swift build
 
@@ -94,14 +97,16 @@ jobs:
         id: version
         run: |
           set -euo pipefail
-          version="$(git describe --tags --always --dirty 2>/dev/null || echo dev)"
-          echo "version=$version" >> "$GITHUB_OUTPUT"
-          echo "Version: $version"
+          source ./script/version_settings.sh
+          keipix_load_version_settings "$PWD"
+          echo "version=$KEIPIX_MARKETING_VERSION" >> "$GITHUB_OUTPUT"
+          echo "build=$KEIPIX_BUILD_NUMBER" >> "$GITHUB_OUTPUT"
+          echo "Version: $KEIPIX_MARKETING_VERSION ($KEIPIX_BUILD_NUMBER)"
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v7
         with:
-          name: KeiPix-${{ steps.version.outputs.version }}
+          name: KeiPix-${{ steps.version.outputs.version }}-build.${{ steps.version.outputs.build }}
           path: |
             artifacts/KeiPix-*.zip
             artifacts/KeiPix-*.dmg

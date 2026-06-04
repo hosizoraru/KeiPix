@@ -138,7 +138,7 @@ extension KeiPixStore {
     private func fetchPixivisionHTML(at url: URL) async throws -> String {
         var request = URLRequest(url: url)
         request.setValue(
-            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15 KeiPix/1.0",
+            AppVersion.current.desktopSafariUserAgent(safariVersion: "17.0"),
             forHTTPHeaderField: "User-Agent"
         )
         let (data, _) = try await URLSession.shared.data(for: request)

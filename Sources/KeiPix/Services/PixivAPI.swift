@@ -1225,9 +1225,7 @@ actor PixivAPI {
 
     private func applyPixivWebHeaders(to request: inout URLRequest) {
         request.setValue(
-            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
-                + "AppleWebKit/605.1.15 (KHTML, like Gecko) "
-                + "Version/26.0 Safari/605.1.15 KeiPix/1.0",
+            AppVersion.current.desktopSafariUserAgent(),
             forHTTPHeaderField: "User-Agent"
         )
         request.setValue("application/json", forHTTPHeaderField: "Accept")

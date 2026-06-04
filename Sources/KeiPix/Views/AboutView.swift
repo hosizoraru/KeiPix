@@ -13,9 +13,10 @@ struct AboutView: View {
     }
 
     private let presentation: Presentation
-    private let appName = Self.bundleDisplayName
-    private let version = Self.shortVersion
-    private let build = Self.bundleVersion
+    private let appVersion = AppVersion.current
+    private var appName: String { appVersion.displayName }
+    private var version: String { appVersion.marketingVersion }
+    private var build: String { appVersion.buildNumber }
 
     @State private var statusMessage: String?
 
@@ -298,20 +299,6 @@ struct AboutView: View {
 
     static let repositoryURL = URL(string: "https://github.com/hosizoraru/KeiPix")!
     static let apacheLicenseURL = URL(string: "https://www.apache.org/licenses/LICENSE-2.0")!
-
-    private static var bundleDisplayName: String {
-        Bundle.main.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String
-            ?? Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String
-            ?? "KeiPix"
-    }
-
-    private static var shortVersion: String {
-        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.0.0"
-    }
-
-    private static var bundleVersion: String {
-        Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "0"
-    }
 }
 
 private struct AboutInfoCard<Actions: View>: View {

@@ -19,8 +19,7 @@ extension KeiPixStore {
     /// directly, so the update banner stays silent there instead of
     /// firing a false positive against a placeholder version.
     var currentReleaseSemanticVersion: SemanticVersion {
-        let raw = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.0.0"
-        return SemanticVersion(raw) ?? SemanticVersion(major: 0, minor: 0, patch: 0)
+        AppVersion.current.releaseSemanticVersion
     }
 
     /// Launch-time entry point. Bails out unless the user opted in,

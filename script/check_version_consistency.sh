@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+# shellcheck source=version_settings.sh
+source "$ROOT_DIR/script/version_settings.sh"
+keipix_load_version_settings "$ROOT_DIR"
+
+read_project_setting() {
+  local key="$1"
+  sed -nE "s/^[[:space:]]*${key}:[[:space:]]*\"?([^\"[:space:]]+)\"?.*$/\1/p" "$ROOT_DIR/project.yml" | head -n 1
+}
+
+expect_file_contains() {
+  local file="$1"
+  local needle="$2"
+  if ! grep -Fq "$needle" "$ROOT_DIR/$file"; then
+    echo "$file does not contain expected text: $needle" >&2
+    exit 1
+  fi
+}
+
+project_marketing="$(read_project_setting MARKETING_VERSION)"
+project_build="$(read_project_setting CURRENT_PROJECT_VERSION)"
+
+if [ "$project_marketing" != "$KEIPIX_MARKETING_VERSION" ]; then
+  echo "project.yml MARKETING_VERSION ($project_marketing) does not match $KEIPIX_VERSION_CONFIG ($KEIPIX_MARKETING_VERSION)" >&2
+  exit 1
+fi
+
+if [ "$project_build" != "$KEIPIX_BUILD_NUMBER" ]; then
+  echo "project.yml CURRENT_PROJECT_VERSION ($project_build) does not match $KEIPIX_VERSION_CONFIG ($KEIPIX_BUILD_NUMBER)" >&2
+  exit 1
+fi
+
+for plist in App/Info.plist App/Info-iOS.plist App/Info-iPadOS.plist; do
+  expect_file_contains "$plist" '<key>CFBundleShortVersionString</key>'
+  expect_file_contains "$plist" '<string>$(MARKETING_VERSION)</string>'
+  expect_file_contains "$plist" '<key>CFBundleVersion</key>'
+  expect_file_contains "$plist" '<string>$(CURRENT_PROJECT_VERSION)</string>'
+done
+
+expect_file_contains script/build_and_run.sh "version_settings.sh"
+expect_file_contains script/build_release_app.sh "version_settings.sh"
+expect_file_contains .github/workflows/macos-build.yml "script/version_settings.sh"
+
+rg_output="$(mktemp)"
+trap 'rm -f "$rg_output"' EXIT
+if rg -n "KeiPix/1\\.0" "$ROOT_DIR/Sources" >"$rg_output"; then
+  cat "$rg_output" >&2
+  echo "replace hard-coded KeiPix/1.0 user agents with AppVersion.current.userAgentProduct" >&2
+  exit 1
+fi
+
+echo "KeiPix version settings are consistent: $KEIPIX_MARKETING_VERSION ($KEIPIX_BUILD_NUMBER)"

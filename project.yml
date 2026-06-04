@@ -19,6 +19,7 @@ settings:
     ENABLE_USER_SCRIPT_SANDBOXING: YES
     ENABLE_HARDENED_RUNTIME: YES
     DEAD_CODE_STRIPPING: YES
+    # Keep in sync with Config/AppVersion.xcconfig via script/set_app_version.sh.
     MARKETING_VERSION: "0.1.0"
     CURRENT_PROJECT_VERSION: "1"
   configs:

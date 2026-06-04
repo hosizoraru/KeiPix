@@ -90,7 +90,7 @@ enum Ascii2DClient {
         var request = URLRequest(url: URL(string: "https://ascii2d.net/search/file")!)
         request.httpMethod = "POST"
         request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
-        request.setValue("KeiPix/1.0", forHTTPHeaderField: "User-Agent")
+        request.setValue(AppVersion.current.userAgentProduct, forHTTPHeaderField: "User-Agent")
         request.setValue("https://ascii2d.net/", forHTTPHeaderField: "Referer")
         // Ascii2D answers `406 Not Acceptable` for clients that don't
         // explicitly opt into HTML — Flutter's http library trips on

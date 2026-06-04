@@ -5,8 +5,8 @@
 #
 # Output lands in ./artifacts/:
 #   - artifacts/KeiPix.app         (assembled bundle)
-#   - artifacts/KeiPix-<version>.zip   (ditto-archived, preserves attrs)
-#   - artifacts/KeiPix-<version>.dmg   (UDZO compressed)
+#   - artifacts/KeiPix-<version>-build.<build>.zip   (ditto-archived, preserves attrs)
+#   - artifacts/KeiPix-<version>-build.<build>.dmg   (UDZO compressed)
 #
 # Used by the macOS Build GitHub Actions workflow and reproducible
 # locally with the same command.
@@ -31,15 +31,16 @@ APP_RESOURCES="$APP_CONTENTS/Resources"
 APP_BINARY="$APP_MACOS/$APP_NAME"
 INFO_PLIST="$APP_CONTENTS/Info.plist"
 
-# `git describe` gives us tag-aware versions when the build runs from a
-# tagged commit and a stable short-sha fallback otherwise. CI checkouts
-# default to shallow clones, so we tolerate both.
-VERSION="$(git -C "$ROOT_DIR" describe --tags --always --dirty 2>/dev/null || echo dev)"
+# shellcheck source=version_settings.sh
+source "$ROOT_DIR/script/version_settings.sh"
+keipix_load_version_settings "$ROOT_DIR"
+VERSION="$KEIPIX_MARKETING_VERSION"
+BUILD_NUMBER="$KEIPIX_BUILD_NUMBER"
 
 cd "$ROOT_DIR"
 mkdir -p "$ARTIFACTS_DIR"
 
-echo "==> Building $APP_NAME ($VERSION) in release configuration"
+echo "==> Building $APP_NAME $VERSION ($BUILD_NUMBER) in release configuration"
 swift build -c release --product "$APP_NAME"
 
 BUILD_DIR="$(swift build -c release --show-bin-path)"
@@ -82,7 +83,7 @@ cat >"$INFO_PLIST" <<PLIST
   <key>CFBundleShortVersionString</key>
   <string>$VERSION</string>
   <key>CFBundleVersion</key>
-  <string>$VERSION</string>
+  <string>$BUILD_NUMBER</string>
   <key>CFBundlePackageType</key>
   <string>APPL</string>
   <key>CFBundleLocalizations</key>
@@ -142,7 +143,7 @@ codesign --force --deep --sign - --timestamp=none "$APP_BUNDLE"
 cd "$ARTIFACTS_DIR"
 
 write_zip() {
-  local zip_name="$APP_NAME-$VERSION.zip"
+  local zip_name="$APP_NAME-$VERSION-build.$BUILD_NUMBER.zip"
   rm -f "$zip_name"
   # `ditto -c -k` writes a PKZip archive that preserves macOS metadata
   # (resource forks, extended attrs, codesign seal). `zip` and `tar`
@@ -152,7 +153,7 @@ write_zip() {
 }
 
 write_dmg() {
-  local dmg_name="$APP_NAME-$VERSION.dmg"
+  local dmg_name="$APP_NAME-$VERSION-build.$BUILD_NUMBER.dmg"
   rm -f "$dmg_name"
   hdiutil create \
     -volname "$APP_NAME" \
