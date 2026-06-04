@@ -98,6 +98,7 @@ struct SidebarView: View {
 @Observable
 final class SidebarSectionExpansion {
     private static let storageKey = "sidebarSectionCollapsedIDs"
+    private let defaults: UserDefaults
 
     /// We persist the *collapsed* set rather than the expanded one. That way
     /// any newly introduced sidebar section is expanded by default without
@@ -105,6 +106,7 @@ final class SidebarSectionExpansion {
     private var collapsedIDs: Set<String>
 
     init(defaults: UserDefaults = .standard) {
+        self.defaults = defaults
         let stored = defaults.stringArray(forKey: Self.storageKey) ?? []
         self.collapsedIDs = Set(stored)
     }
@@ -133,7 +135,7 @@ final class SidebarSectionExpansion {
     }
 
     private func persist() {
-        UserDefaults.standard.set(Array(collapsedIDs), forKey: Self.storageKey)
+        defaults.set(Array(collapsedIDs), forKey: Self.storageKey)
     }
 }
 
@@ -216,30 +218,33 @@ private struct AccountHeader: View {
     }
 
     private var headerLabel: some View {
-        HStack(spacing: showIdentity ? 10 : 0) {
-            if showIdentity == false {
-                Spacer(minLength: 0)
-            }
-
-            avatar
-
+        Group {
             if showIdentity {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(title)
-                        .font(.headline)
-                        .lineLimit(1)
-                        .truncationMode(.tail)
-                    Text(subtitle)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
-                        .truncationMode(.middle)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-            }
+                HStack(spacing: 12) {
+                    avatar
 
-            if showIdentity == false {
-                Spacer(minLength: 0)
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text(title)
+                            .font(.headline)
+                            .lineLimit(1)
+                            .truncationMode(.tail)
+                        Text(subtitle)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                            .truncationMode(.middle)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .padding(.vertical, 8)
+                .padding(.horizontal, 2)
+            } else {
+                HStack {
+                    Spacer(minLength: 0)
+                    avatar
+                    Spacer(minLength: 0)
+                }
+                .padding(.vertical, 10)
             }
         }
         .frame(maxWidth: .infinity, alignment: showIdentity ? .leading : .center)
@@ -249,15 +254,27 @@ private struct AccountHeader: View {
     private var avatar: some View {
         if let avatarURL {
             RemoteImageView(url: avatarURL)
-                .frame(width: 34, height: 34)
+                .frame(width: avatarDiameter, height: avatarDiameter)
                 .clipShape(Circle())
+                .overlay {
+                    Circle().stroke(.quaternary, lineWidth: 1)
+                }
         } else {
             Image(systemName: accountIconName)
-                .font(.system(size: 34))
+                .font(.system(size: avatarSymbolSize))
                 .symbolRenderingMode(.hierarchical)
                 .foregroundStyle(.secondary)
-                .frame(width: 34, height: 34)
+                .frame(width: avatarDiameter, height: avatarDiameter)
+                .glassEffect(.regular.interactive(), in: Circle())
         }
+    }
+
+    private var avatarDiameter: CGFloat {
+        showIdentity ? 46 : 62
+    }
+
+    private var avatarSymbolSize: CGFloat {
+        showIdentity ? 36 : 48
     }
 
     private var avatarURL: URL? {
