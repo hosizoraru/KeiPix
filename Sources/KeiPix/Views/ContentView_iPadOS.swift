@@ -807,6 +807,7 @@ struct ContentView: View {
     private var appControlsMenu: NativeToolbarMenu {
         NativeToolbarMenu(
             title: L10n.appControls,
+            presentationStyle: .popover,
             sections: [
                 NativeToolbarMenuSection(
                     presentation: .palette,
@@ -814,17 +815,20 @@ struct ContentView: View {
                         .action(
                             id: IPadToolbarMenuAction.openPixivLinkFromClipboard,
                             title: L10n.openPixivLinkFromClipboard,
-                            systemImage: "link.badge.plus"
+                            systemImage: "link.badge.plus",
+                            paletteTitle: L10n.quickOpenLink
                         ),
                         .action(
                             id: IPadToolbarMenuAction.openPixivID,
                             title: L10n.openPixivID,
-                            systemImage: "number"
+                            systemImage: "number",
+                            paletteTitle: L10n.quickPixivID
                         ),
                         .action(
                             id: IPadToolbarMenuAction.searchLocalImageSource,
                             title: L10n.searchLocalImageSource,
-                            systemImage: "photo.badge.magnifyingglass"
+                            systemImage: "photo.badge.magnifyingglass",
+                            paletteTitle: L10n.quickImageSearch
                         )
                     ]
                 ),

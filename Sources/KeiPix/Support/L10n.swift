@@ -59,6 +59,9 @@ enum L10n {
     static var copyPixivWebSearchLink: String { text("Copy Pixiv Web Search Link") }
     static var copiedPixivWebSearchLink: String { text("Copied Pixiv Web Search Link") }
     static var openPixivLinkFromClipboard: String { text("Open Pixiv Link from Clipboard") }
+    static var quickOpenLink: String { text("Open Link") }
+    static var quickPixivID: String { text("Pixiv ID") }
+    static var quickImageSearch: String { text("Image Search") }
     static var openPixivID: String { text("Open Pixiv ID") }
     static var openPixivIDTarget: String { text("Pixiv ID Type") }
     static var openPixivIDHint: String { text("Open an artwork or creator directly by numeric Pixiv ID.") }
