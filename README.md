@@ -64,7 +64,7 @@ Sources/KeiPix/
 ├── App/              # App entry, AppDelegate, service wiring, dock/menu glue
 ├── Intents/          # AppIntents and Shortcuts
 ├── Models/           # Pixiv models, routing, reader state, QA models
-├── Resources/        # Localizable.xcstrings and bundled resources
+├── Resources/        # String catalogs and bundled resources
 ├── Services/         # PixivAPI, ImagePipeline, session, release, SauceNAO
 ├── Stores/           # KeiPixStore plus domain extensions
 ├── Support/          # Native bridges, platform abstractions, helpers

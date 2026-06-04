@@ -1,8 +1,8 @@
 import Foundation
 import PackagePlugin
 
-/// SwiftPM build-tool plugin that compiles `Localizable.xcstrings` into
-/// per-locale `.lproj/<stem>.strings` files at build time.
+/// SwiftPM build-tool plugin that compiles every `.xcstrings` catalog into
+/// per-locale `.lproj/<catalog>.strings` files at build time.
 ///
 /// SwiftPM 6.2 raw-copies `.xcstrings` files into the resource bundle but
 /// does not invoke `xcstringstool` automatically. Without this plugin the
