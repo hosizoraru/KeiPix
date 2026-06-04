@@ -77,6 +77,7 @@ Environment overrides:
   KEIPIX_IOS_DEVICE_TYPE=<simctl device type id>
   KEIPIX_IPADOS_DEVICE_TYPE=<simctl device type id>
   KEIPIX_DERIVED_DATA_PATH=<path>
+  KEIPIX_VERIFY_SETTLE_SECONDS=3
   KEIPIX_XCODEBUILD_VERBOSE=1
 USAGE
 }
@@ -284,7 +285,8 @@ case "$MODE" in
     launch_app
     SCREENSHOT_PATH="$ROOT_DIR/artifacts/simulator-${PLATFORM_KEY}-$(date -u +%Y%m%dT%H%M%SZ).png"
     mkdir -p "$(dirname "$SCREENSHOT_PATH")"
-    sleep 1
+    echo "==> Waiting ${KEIPIX_VERIFY_SETTLE_SECONDS:-3}s for first frame on $SIMULATOR_NAME ($SIMULATOR_ID)"
+    sleep "${KEIPIX_VERIFY_SETTLE_SECONDS:-3}"
     xcrun simctl io "$SIMULATOR_ID" screenshot "$SCREENSHOT_PATH" >/dev/null
     echo "==> Screenshot: $SCREENSHOT_PATH"
     ;;
