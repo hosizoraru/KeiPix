@@ -180,7 +180,7 @@ private struct ArtworkInspectorView: View {
     }
 
     private var effectiveReadingMode: ArtworkReadingMode {
-        readingMode.effectiveMode(forPageCount: pageCount)
+        readingMode.effectiveMode(forPageCount: pageCount, platform: .current)
     }
 
     private var usesArtworkDetailSocialVisualQA: Bool {

@@ -118,6 +118,9 @@ enum OS26SheetPresentationStyle {
     /// System web or reader surfaces that should start at the large
     /// detent and avoid presenting as a half sheet.
     case immersive
+    /// Reader surfaces need wider, page-like sizing on iPad/macOS while
+    /// staying full-height and touch-first on iPhone.
+    case reader
 
     var cornerRadius: CGFloat {
         switch self {
@@ -125,22 +128,28 @@ enum OS26SheetPresentationStyle {
             24
         case .standard:
             28
-        case .detail, .immersive:
+        case .detail, .immersive, .reader:
             32
         }
     }
 
     #if os(iOS)
+    @MainActor
     var detents: Set<PresentationDetent> {
         switch self {
         case .form:
-            [.medium, .large]
+            return [.medium, .large]
         case .standard:
-            [.medium, .large]
+            return [.medium, .large]
         case .detail:
-            [.large]
+            return [.large]
         case .immersive:
-            [.large]
+            return [.large]
+        case .reader:
+            if ReaderPlatformKind.current == .phone {
+                return [.large]
+            }
+            return [.fraction(0.88), .large]
         }
     }
     #endif
@@ -151,15 +160,30 @@ private struct OS26SheetChromeModifier: ViewModifier {
 
     func body(content: Content) -> some View {
         #if os(iOS)
-        content
+        sizedContent(content)
             .presentationDragIndicator(.visible)
             .presentationDetents(style.detents)
             .presentationBackground(.regularMaterial)
             .presentationCornerRadius(style.cornerRadius)
             .presentationContentInteraction(.scrolls)
         #else
-        content
+        sizedContent(content)
             .presentationDragIndicator(.visible)
         #endif
+    }
+
+    @ViewBuilder
+    private func sizedContent(_ content: Content) -> some View {
+        switch style {
+        case .form, .standard:
+            content
+                .presentationSizing(.form)
+        case .detail:
+            content
+                .presentationSizing(.page)
+        case .immersive, .reader:
+            content
+                .presentationSizing(.page)
+        }
     }
 }

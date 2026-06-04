@@ -409,7 +409,7 @@ struct ContentView: View {
                         dismissSpotlightDetail(clearSelection: true)
                     }
                 }
-                .fullScreenCover(isPresented: readerBinding) {
+                .sheet(isPresented: readerBinding) {
                     if let artwork = store.readerWindowArtwork {
                         NavigationStack {
                             ArtworkReaderWindowView(store: store, artworkID: artwork.id)
@@ -423,6 +423,7 @@ struct ContentView: View {
                                     }
                                 }
                         }
+                        .os26SheetChrome(.reader)
                     }
                 }
         }

@@ -43,6 +43,7 @@ struct NovelReaderView: View {
     @State private var swipeOffset: CGFloat = 0
     @State private var swipeEdgeLeading = false
     @State private var swipeEdgeTrailing = false
+    @State private var effectivePagedReadingMode: NovelReadingMode = .singlePage
 
     private var novelStore: NovelFeatureStore { store.novels }
 
@@ -70,11 +71,11 @@ struct NovelReaderView: View {
     }
 
     private var usesContinuousNovelReader: Bool {
-        #if os(iOS)
-        return true
-        #else
-        return false
-        #endif
+        ReaderAdaptiveLayout.usesContinuousNovelReader(platform: readerPlatform)
+    }
+
+    private var readerPlatform: ReaderPlatformKind {
+        .current
     }
 
     private var continuousReaderTokens: [NovelToken] {
@@ -412,17 +413,31 @@ struct NovelReaderView: View {
             continuousReaderLayout
         } else {
             GeometryReader { geo in
-                let mode = NovelReadingMode(rawValue: readingModeRaw) ?? .singlePage
-                let useDoublePage = mode == .doublePage || (geo.size.width >= 1200 && pages.count > 1)
-                if useDoublePage, pages.count > 1 {
-                    twoPageLayout(geo: geo)
-                } else {
-                    singlePageLayout
+                let mode = resolvedPagedReadingMode(for: geo.size)
+                Group {
+                    if mode == .doublePage, pages.count > 1 {
+                        twoPageLayout(geo: geo)
+                    } else {
+                        singlePageLayout
+                    }
+                }
+                .onAppear {
+                    effectivePagedReadingMode = mode
+                }
+                .onChange(of: geo.size) { _, _ in
+                    effectivePagedReadingMode = mode
+                }
+                .onChange(of: readingModeRaw) { _, _ in
+                    effectivePagedReadingMode = mode
+                }
+                .onChange(of: pages.count) { _, _ in
+                    effectivePagedReadingMode = mode
                 }
             }
             .animation(.snappy(duration: 0.2), value: pageIndex)
+            .animation(.snappy(duration: 0.2), value: readingModeRaw)
         }
-    }
+        }
 
     // MARK: - Continuous mobile layout
 
@@ -859,6 +874,15 @@ struct NovelReaderView: View {
 
     // MARK: - Page navigation
 
+    private func resolvedPagedReadingMode(for availableSize: CGSize) -> NovelReadingMode {
+        ReaderAdaptiveLayout.effectiveNovelMode(
+            preferredMode: NovelReadingMode(rawValue: readingModeRaw) ?? .singlePage,
+            pageCount: pages.count,
+            availableSize: availableSize,
+            platform: readerPlatform
+        )
+    }
+
     private func goToPage(_ target: Int) {
         let clamped = min(max(target, 0), pages.count - 1)
         guard clamped != pageIndex else { return }
@@ -897,8 +921,7 @@ struct NovelReaderView: View {
             accumulatedSwipeX = 0
             resetSwipeVisual()
 
-            let mode = NovelReadingMode(rawValue: readingModeRaw) ?? .singlePage
-            let effectiveDelta = mode == .doublePage ? delta * 2 : delta
+            let effectiveDelta = effectivePagedReadingMode == .doublePage ? delta * 2 : delta
             goToPage(pageIndex + effectiveDelta)
             return true
         }

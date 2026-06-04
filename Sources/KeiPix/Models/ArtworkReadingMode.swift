@@ -41,6 +41,14 @@ enum ArtworkReadingMode: String, CaseIterable, Identifiable {
     func effectiveMode(forPageCount pageCount: Int) -> ArtworkReadingMode {
         pageCount > 1 ? self : .singlePage
     }
+
+    func effectiveMode(forPageCount pageCount: Int, platform: ReaderPlatformKind) -> ArtworkReadingMode {
+        let mode = effectiveMode(forPageCount: pageCount)
+        if platform == .phone, mode == .doublePage {
+            return .singlePage
+        }
+        return mode
+    }
 }
 
 enum ArtworkReadingModePreferenceKind: String {

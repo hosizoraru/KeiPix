@@ -13,6 +13,7 @@ struct ArtworkReaderView: View {
 
     @State private var interaction = ArtworkReaderInteractionState()
     @State private var pageAspectRatios: [Int: CGFloat] = [:]
+    @State private var readerAvailableSize: CGSize = .zero
 
     var body: some View {
         Group {
@@ -64,6 +65,17 @@ struct ArtworkReaderView: View {
                 .padding(.horizontal, 18)
             }
         }
+        .background {
+            GeometryReader { proxy in
+                Color.clear
+                    .onAppear {
+                        updateReaderAvailableSize(proxy.size)
+                    }
+                    .onChange(of: proxy.size) { _, size in
+                        updateReaderAvailableSize(size)
+                    }
+            }
+        }
         .overlay {
             HStack {
                 Button(L10n.previousPage) { movePage(-1) }
@@ -101,7 +113,23 @@ struct ArtworkReaderView: View {
     }
 
     private var effectiveReadingMode: ArtworkReadingMode {
-        readingMode.effectiveMode(forPageCount: pageCount)
+        guard readerAvailableSize.width > 0, readerAvailableSize.height > 0 else {
+            return readingMode.effectiveMode(forPageCount: pageCount, platform: .current)
+        }
+        return ReaderAdaptiveLayout.effectiveArtworkMode(
+            preferredMode: readingMode,
+            pageCount: pageCount,
+            availableSize: readerAvailableSize,
+            platform: .current
+        )
+    }
+
+    private func updateReaderAvailableSize(_ size: CGSize) {
+        guard size.width.isFinite, size.height.isFinite, size.width >= 0, size.height >= 0 else {
+            return
+        }
+        guard readerAvailableSize != size else { return }
+        readerAvailableSize = size
     }
 
     private func movePage(_ delta: Int) {
@@ -202,7 +230,11 @@ struct ArtworkReaderControls: View {
     }
 
     private var effectiveReadingMode: ArtworkReadingMode {
-        readingMode.effectiveMode(forPageCount: pageCount)
+        readingMode.effectiveMode(forPageCount: pageCount, platform: .current)
+    }
+
+    private var navigationPageStep: Int {
+        effectiveReadingMode == .doublePage ? 2 : 1
     }
 
     private var readingModeMenu: some View {
@@ -223,7 +255,7 @@ struct ArtworkReaderControls: View {
 
     @ViewBuilder
     private var readingModeMenuItems: some View {
-        ForEach(ArtworkReadingMode.allCases) { mode in
+        ForEach(availableReadingModes) { mode in
             Button {
                 withAnimation(.snappy(duration: 0.18)) {
                     readingMode = mode
@@ -232,6 +264,13 @@ struct ArtworkReaderControls: View {
                 Label(mode.title, systemImage: mode == effectiveReadingMode ? "checkmark.circle.fill" : mode.systemImage)
             }
         }
+    }
+
+    private var availableReadingModes: [ArtworkReadingMode] {
+        if ReaderPlatformKind.current == .phone {
+            return ArtworkReadingMode.allCases.filter { $0 != .doublePage }
+        }
+        return ArtworkReadingMode.allCases
     }
 
     private var pageNavigationControls: some View {
@@ -254,7 +293,7 @@ struct ArtworkReaderControls: View {
     private var pageStepper: some View {
         ControlGroup {
             Button {
-                scrollToPage(pageIndex - 1)
+                scrollToPage(pageIndex - navigationPageStep)
             } label: {
                 Label(L10n.previousPage, systemImage: "chevron.left")
             }
@@ -263,12 +302,12 @@ struct ArtworkReaderControls: View {
             .accessibilityLabel(L10n.previousPage)
 
             Button {
-                scrollToPage(pageIndex + 1)
+                scrollToPage(pageIndex + navigationPageStep)
             } label: {
                 Label(L10n.nextPage, systemImage: "chevron.right")
             }
             .labelStyle(.iconOnly)
-            .disabled(pageIndex >= pageCount - 1)
+            .disabled(pageIndex + navigationPageStep >= pageCount)
             .accessibilityLabel(L10n.nextPage)
         }
     }

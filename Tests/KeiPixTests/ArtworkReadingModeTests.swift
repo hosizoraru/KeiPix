@@ -1,3 +1,4 @@
+import CoreGraphics
 import Foundation
 import Testing
 @testable import KeiPix
@@ -22,6 +23,67 @@ struct ArtworkReadingModeTests {
         #expect(ArtworkReadingMode.doublePage.effectiveMode(forPageCount: 2) == .doublePage)
         #expect(ArtworkReadingMode.continuous.effectiveMode(forPageCount: 2) == .continuous)
         #expect(ArtworkReadingMode.index.effectiveMode(forPageCount: 2) == .index)
+    }
+
+    @Test("Adaptive reader layout keeps phones continuous while iPad and macOS can use double pages")
+    func adaptiveReaderLayoutSupportsPlatformDoublePages() {
+        #expect(ReaderAdaptiveLayout.usesContinuousNovelReader(platform: .phone))
+        #expect(ReaderAdaptiveLayout.usesContinuousNovelReader(platform: .pad) == false)
+        #expect(ReaderAdaptiveLayout.usesContinuousNovelReader(platform: .mac) == false)
+
+        #expect(
+            ReaderAdaptiveLayout.effectiveNovelMode(
+                preferredMode: .doublePage,
+                pageCount: 8,
+                availableSize: CGSize(width: 900, height: 1_120),
+                platform: .pad
+            ) == .doublePage
+        )
+        #expect(
+            ReaderAdaptiveLayout.effectiveNovelMode(
+                preferredMode: .doublePage,
+                pageCount: 8,
+                availableSize: CGSize(width: 690, height: 1_120),
+                platform: .pad
+            ) == .singlePage
+        )
+        #expect(
+            ReaderAdaptiveLayout.effectiveNovelMode(
+                preferredMode: .doublePage,
+                pageCount: 8,
+                availableSize: CGSize(width: 1_000, height: 760),
+                platform: .mac
+            ) == .doublePage
+        )
+
+        #expect(
+            ArtworkReadingMode.doublePage.effectiveMode(
+                forPageCount: 6,
+                platform: .phone
+            ) == .singlePage
+        )
+        #expect(
+            ArtworkReadingMode.doublePage.effectiveMode(
+                forPageCount: 6,
+                platform: .pad
+            ) == .doublePage
+        )
+        #expect(
+            ReaderAdaptiveLayout.effectiveArtworkMode(
+                preferredMode: .doublePage,
+                pageCount: 6,
+                availableSize: CGSize(width: 690, height: 1_020),
+                platform: .pad
+            ) == .singlePage
+        )
+        #expect(
+            ReaderAdaptiveLayout.effectiveArtworkMode(
+                preferredMode: .doublePage,
+                pageCount: 6,
+                availableSize: CGSize(width: 1_120, height: 780),
+                platform: .mac
+            ) == .doublePage
+        )
     }
 
     @Test("Reader progress clamps and keeps recent entries first")

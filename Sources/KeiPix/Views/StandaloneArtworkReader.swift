@@ -127,7 +127,7 @@ struct StandaloneArtworkReader: View {
     }
 
     private var effectiveReadingMode: ArtworkReadingMode {
-        readingMode.effectiveMode(forPageCount: pageCount)
+        readingMode.effectiveMode(forPageCount: pageCount, platform: .current)
     }
 
     private func header(proxy: ScrollViewProxy) -> some View {

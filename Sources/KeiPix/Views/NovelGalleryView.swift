@@ -58,7 +58,7 @@ struct NovelGalleryView: View {
                 #if os(macOS)
                 .frame(minWidth: 720, minHeight: 540, idealHeight: 720)
                 #endif
-                .os26SheetChrome(.immersive)
+                .os26SheetChrome(.reader)
         }
     }
 
