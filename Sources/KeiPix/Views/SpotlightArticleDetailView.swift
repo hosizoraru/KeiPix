@@ -119,63 +119,94 @@ private struct SpotlightArticleHeader: View {
     let toggleSaved: () -> Void
 
     var body: some View {
+        ViewThatFits(in: .horizontal) {
+            horizontalLayout
+            compactLayout
+        }
+    }
+
+    private var horizontalLayout: some View {
         HStack(alignment: .center, spacing: 12) {
-            RemoteImageView(url: article.thumbnail)
-                .aspectRatio(16.0 / 9.0, contentMode: .fill)
-                .frame(width: 96, height: 54)
-                .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
-                .overlay {
-                    RoundedRectangle(cornerRadius: 8, style: .continuous)
-                        .stroke(.quaternary, lineWidth: 1)
-                }
+            thumbnail(width: 96, height: 54)
 
-            VStack(alignment: .leading, spacing: 4) {
-                Text(article.pureTitle.isEmpty ? article.title : article.pureTitle)
-                    .font(.headline)
-                    .lineLimit(2)
-                    .textSelection(.enabled)
+            titleBlock
 
+            actionRow
+        }
+    }
+
+    private var compactLayout: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .center, spacing: 10) {
+                thumbnail(width: 72, height: 41)
+                titleBlock
+            }
+
+            actionRow
+                .frame(maxWidth: .infinity, alignment: .trailing)
+        }
+    }
+
+    private func thumbnail(width: CGFloat, height: CGFloat) -> some View {
+        RemoteImageView(url: article.thumbnail)
+            .aspectRatio(16.0 / 9.0, contentMode: .fill)
+            .frame(width: width, height: height)
+            .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+            .overlay {
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .stroke(.quaternary, lineWidth: 1)
+            }
+    }
+
+    private var titleBlock: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(article.pureTitle.isEmpty ? article.title : article.pureTitle)
+                .font(.headline)
+                .lineLimit(2)
+                .textSelection(.enabled)
+
+            Label(
+                article.publishDate.formatted(date: .abbreviated, time: .omitted),
+                systemImage: "calendar"
+            )
+            .font(.caption)
+            .foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var actionRow: some View {
+        HStack(spacing: 8) {
+            Button(action: toggleSaved) {
                 Label(
-                    article.publishDate.formatted(date: .abbreviated, time: .omitted),
-                    systemImage: "calendar"
+                    isSaved ? L10n.removeSavedArticle : L10n.saveArticle,
+                    systemImage: isSaved ? "star.fill" : "star"
                 )
-                .font(.caption)
-                .foregroundStyle(.secondary)
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
+            .os26GlassIconButton(prominent: isSaved)
+            .controlSize(.small)
+            .help(isSaved ? L10n.removeSavedArticle : L10n.saveArticle)
 
-            HStack(spacing: 8) {
-                Button(action: toggleSaved) {
-                    Label(
-                        isSaved ? L10n.removeSavedArticle : L10n.saveArticle,
-                        systemImage: isSaved ? "star.fill" : "star"
-                    )
-                }
-                .os26GlassIconButton(prominent: isSaved)
-                .controlSize(.small)
-                .help(isSaved ? L10n.removeSavedArticle : L10n.saveArticle)
-
-                ShareLink(item: article.articleURL) {
-                    Label(L10n.share, systemImage: "square.and.arrow.up")
-                }
-                .os26GlassIconButton()
-                .controlSize(.small)
-                .help(L10n.share)
-
-                Button(action: copyLink) {
-                    Label(L10n.copyLink, systemImage: "link")
-                }
-                .os26GlassIconButton()
-                .controlSize(.small)
-                .help(L10n.copyLink)
-
-                Link(destination: article.articleURL) {
-                    Label(L10n.openInPixiv, systemImage: "safari")
-                }
-                .os26GlassIconButton()
-                .controlSize(.small)
-                .help(L10n.openInPixiv)
+            ShareLink(item: article.articleURL) {
+                Label(L10n.share, systemImage: "square.and.arrow.up")
             }
+            .os26GlassIconButton()
+            .controlSize(.small)
+            .help(L10n.share)
+
+            Button(action: copyLink) {
+                Label(L10n.copyLink, systemImage: "link")
+            }
+            .os26GlassIconButton()
+            .controlSize(.small)
+            .help(L10n.copyLink)
+
+            Link(destination: article.articleURL) {
+                Label(L10n.openInPixiv, systemImage: "safari")
+            }
+            .os26GlassIconButton()
+            .controlSize(.small)
+            .help(L10n.openInPixiv)
         }
     }
 }

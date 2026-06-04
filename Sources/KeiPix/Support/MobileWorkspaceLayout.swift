@@ -2,6 +2,8 @@ import CoreGraphics
 
 struct MobileWorkspaceLayout: Equatable, Sendable {
     static let iPadLandscapeSidebarMinimumWidth: CGFloat = 700
+    static let compactChromeMaximumWidth: CGFloat = 620
+    static let articleTextMaximumWidth: CGFloat = 720
 
     let size: CGSize
     let platform: ReaderPlatformKind
@@ -19,6 +21,28 @@ struct MobileWorkspaceLayout: Equatable, Sendable {
 
     var usesCompactTabs: Bool {
         usesLandscapeSidebar == false
+    }
+
+    var isPortrait: Bool {
+        validHeight >= validWidth
+    }
+
+    var usesCondensedChrome: Bool {
+        platform == .phone || validWidth < Self.compactChromeMaximumWidth
+    }
+
+    var articleHorizontalPadding: CGFloat {
+        if platform == .phone || validWidth < 500 {
+            return 16
+        }
+        if isPortrait {
+            return 22
+        }
+        return 28
+    }
+
+    var articleContentMaximumWidth: CGFloat {
+        min(Self.articleTextMaximumWidth, max(0, validWidth - articleHorizontalPadding * 2))
     }
 
     private var validWidth: CGFloat {

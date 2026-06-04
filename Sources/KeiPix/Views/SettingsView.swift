@@ -44,12 +44,16 @@ struct SettingsView: View {
             }
             .sheet(isPresented: $coordinator.isAccountLoginPresented) {
                 LoginSheetView(store: store)
+                    #if os(macOS)
                     .frame(width: 900, height: 680)
+                    #endif
                     .os26SheetChrome(.immersive)
             }
             .sheet(isPresented: $coordinator.isTokenLoginPresented) {
                 TokenLoginSheetView(store: store)
+                    #if os(macOS)
                     .frame(width: 460, height: 300)
+                    #endif
                     .os26SheetChrome(.form)
             }
             .confirmationDialog(

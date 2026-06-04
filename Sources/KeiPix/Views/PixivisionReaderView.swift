@@ -31,36 +31,39 @@ struct PixivisionReaderView: View {
     @State private var errorMessage: String?
 
     var body: some View {
-        ScrollView {
-            // VStack instead of LazyVStack on purpose. Pixivision
-            // articles top out at ~40 children (1 hero + 1 title + ~30
-            // prose/work blocks + 1 tags row + 3 related shelves);
-            // SwiftUI's lazy machinery is for thousands of items, and
-            // when child intrinsic sizes change as images decode, its
-            // _LazyLayoutViewCache.withMutableCacheState path re-runs
-            // sizeThatFits in a recursive loop (caught in the macOS
-            // cpu_resource diagnostic at 100% CPU for 90 s, with RAM
-            // ballooning past 400 MB on what should be a static page).
-            // Switching to a regular VStack keeps every cell mounted
-            // for the lifetime of the article: cells never get torn
-            // down, RemoteImageView state survives scroll-up, and the
-            // layout cache settles in one frame.
-            VStack(alignment: .leading, spacing: 22) {
-                hero
+        GeometryReader { proxy in
+            let layout = MobileWorkspaceLayout(size: proxy.size, platform: ReaderPlatformKind.current)
+            ScrollView {
+                // VStack instead of LazyVStack on purpose. Pixivision
+                // articles top out at ~40 children (1 hero + 1 title + ~30
+                // prose/work blocks + 1 tags row + 3 related shelves);
+                // SwiftUI's lazy machinery is for thousands of items, and
+                // when child intrinsic sizes change as images decode, its
+                // _LazyLayoutViewCache.withMutableCacheState path re-runs
+                // sizeThatFits in a recursive loop (caught in the macOS
+                // cpu_resource diagnostic at 100% CPU for 90 s, with RAM
+                // ballooning past 400 MB on what should be a static page).
+                // Switching to a regular VStack keeps every cell mounted
+                // for the lifetime of the article: cells never get torn
+                // down, RemoteImageView state survives scroll-up, and the
+                // layout cache settles in one frame.
+                VStack(alignment: .leading, spacing: layout.usesCondensedChrome ? 18 : 22) {
+                    hero(layout: layout)
 
-                titleBlock
+                    titleBlock(layout: layout)
 
-                contentBlocks
+                    contentBlocks
 
-                tagsRow
+                    tagsRow
 
-                relatedSections
+                    relatedSections
+                }
+                .padding(.horizontal, layout.articleHorizontalPadding)
+                .padding(.vertical, layout.usesCondensedChrome ? 16 : 22)
+                .frame(maxWidth: .infinity)
             }
-            .padding(.horizontal, 28)
-            .padding(.vertical, 22)
-            .frame(maxWidth: .infinity)
+            .scrollEdgeEffectStyle(.soft, for: .top)
         }
-        .scrollEdgeEffectStyle(.soft, for: .top)
         .task(id: article.id) {
             await load()
         }
@@ -69,7 +72,7 @@ struct PixivisionReaderView: View {
     // MARK: - Hero
 
     @ViewBuilder
-    private var hero: some View {
+    private func hero(layout: MobileWorkspaceLayout) -> some View {
         // Pixivision's `og:image` is a 16:9 share-card render, so a
         // 16:9 letterbox is the right shape. Fit (not fill) so the
         // cover never crops away part of the artwork — and the slot's
@@ -83,10 +86,10 @@ struct PixivisionReaderView: View {
                 RemoteImageView(url: heroURL, contentMode: .fit)
             }
             .aspectRatio(16.0 / 9.0, contentMode: .fit)
-            .frame(maxWidth: .infinity)
-            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .frame(maxWidth: layout.articleContentMaximumWidth, alignment: .leading)
+            .clipShape(RoundedRectangle(cornerRadius: layout.usesCondensedChrome ? 14 : 18, style: .continuous))
             .overlay {
-                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                RoundedRectangle(cornerRadius: layout.usesCondensedChrome ? 14 : 18, style: .continuous)
                     .stroke(.quaternary, lineWidth: 1)
             }
         }
@@ -94,7 +97,7 @@ struct PixivisionReaderView: View {
 
     // MARK: - Title block
 
-    private var titleBlock: some View {
+    private func titleBlock(layout: MobileWorkspaceLayout) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 8) {
                 if let category = (content?.category ?? "").isEmpty == false ? content?.category : nil {
@@ -119,19 +122,19 @@ struct PixivisionReaderView: View {
             }
 
             Text(resolvedTitle)
-                .font(.largeTitle.weight(.bold))
+                .font(layout.usesCondensedChrome ? .title.weight(.bold) : .largeTitle.weight(.bold))
                 .multilineTextAlignment(.leading)
                 .textSelection(.enabled)
 
             if let summary = content?.summary, summary.isEmpty == false {
                 Text(summary)
-                    .font(.title3)
+                    .font(layout.usesCondensedChrome ? .body : .title3)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.leading)
                     .textSelection(.enabled)
             }
         }
-        .frame(maxWidth: 720, alignment: .leading)
+        .frame(maxWidth: layout.articleContentMaximumWidth, alignment: .leading)
     }
 
     private var resolvedTitle: String {

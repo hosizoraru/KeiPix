@@ -395,6 +395,58 @@ struct NativeBoundaryTests {
         #expect(iPhoneLandscape.usesCompactTabs)
         #expect(iPadPortrait.usesCompactTabs)
         #expect(iPadLandscape.usesLandscapeSidebar)
+        #expect(iPhonePortrait.usesCondensedChrome)
+        #expect(iPadPortrait.usesCondensedChrome == false)
+        #expect(iPhonePortrait.articleHorizontalPadding == 16)
+        #expect(iPadPortrait.articleHorizontalPadding == 22)
+        #expect(iPadLandscape.articleHorizontalPadding == 28)
+        #expect(iPadLandscape.articleContentMaximumWidth == 720)
+    }
+
+    @Test("Mobile portrait reading surfaces avoid landscape-only chrome")
+    func mobilePortraitReadingSurfacesAvoidLandscapeOnlyChrome() throws {
+        let root = try packageRoot()
+        let mobileLayout = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Support/MobileWorkspaceLayout.swift"),
+            encoding: .utf8
+        )
+        let pixivisionReader = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/PixivisionReaderView.swift"),
+            encoding: .utf8
+        )
+        let spotlightDetail = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/SpotlightArticleDetailView.swift"),
+            encoding: .utf8
+        )
+        let novelReader = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/NovelReaderView.swift"),
+            encoding: .utf8
+        )
+        let novelDetail = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/NovelDetailView.swift"),
+            encoding: .utf8
+        )
+        let settings = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/SettingsView.swift"),
+            encoding: .utf8
+        )
+        let profileSheet = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/UserProfileSheet.swift"),
+            encoding: .utf8
+        )
+
+        #expect(mobileLayout.contains("var usesCondensedChrome: Bool"))
+        #expect(mobileLayout.contains("var articleHorizontalPadding: CGFloat"))
+        #expect(pixivisionReader.contains("MobileWorkspaceLayout(size: proxy.size, platform: ReaderPlatformKind.current)"))
+        #expect(pixivisionReader.contains(".font(layout.usesCondensedChrome ? .title.weight(.bold) : .largeTitle.weight(.bold))"))
+        #expect(spotlightDetail.contains("ViewThatFits(in: .horizontal)"))
+        #expect(spotlightDetail.contains("private var compactLayout: some View"))
+        #expect(novelReader.contains("private var compactHeader: some View"))
+        #expect(novelReader.contains("horizontalHeader\n                .frame(minWidth: 560)"))
+        #expect(novelDetail.contains("private var compactActionStack: some View"))
+        #expect(novelDetail.contains("openReaderButton(expands: true)"))
+        #expect(settings.contains("LoginSheetView(store: store)\n                    #if os(macOS)\n                    .frame(width: 900, height: 680)"))
+        #expect(profileSheet.contains("UserPreviewListView(store: store, mode: mode, showsCloseButton: true)\n                    #if os(macOS)\n                    .frame(width: 920, height: 680)"))
     }
 
     @Test("Pixiv signed-out surfaces share one native login state")

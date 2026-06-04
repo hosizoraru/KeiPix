@@ -259,67 +259,110 @@ struct NovelReaderView: View {
     // MARK: - Chrome
 
     private var header: some View {
+        ViewThatFits(in: .horizontal) {
+            horizontalHeader
+                .frame(minWidth: 560)
+            compactHeader
+        }
+        .padding(.horizontal, 18)
+        .padding(.vertical, 12)
+        .background(.thinMaterial)
+    }
+
+    private var horizontalHeader: some View {
         HStack(spacing: 12) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(novel.title)
-                    .font(.headline)
-                    .lineLimit(1)
-                    .truncationMode(.tail)
-                Text(novel.user.name)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-            }
+            novelTitleBlock
 
             Spacer(minLength: 0)
 
-            // Bookmark
-            Button {
-                Task {
-                    await novelStore.toggleBookmark(
-                        novel: novel,
-                        restrict: store.defaultBookmarkRestrict
-                    )
-                }
-            } label: {
-                Label(
-                    novel.isBookmarked ? L10n.novelRemoveBookmark : L10n.novelBookmark,
-                    systemImage: novel.isBookmarked ? "bookmark.fill" : "bookmark"
-                )
-                .labelStyle(.iconOnly)
+            readerActionCluster(includesCloseButton: true)
+        }
+    }
+
+    private var compactHeader: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .top, spacing: 10) {
+                novelTitleBlock
+                Spacer(minLength: 8)
+                closeButton
             }
-            .help(novel.isBookmarked ? L10n.novelRemoveBookmark : L10n.novelBookmark)
-            .keyboardShortcut("b", modifiers: [])
+
+            readerActionCluster(includesCloseButton: false)
+                .frame(maxWidth: .infinity, alignment: .trailing)
+        }
+    }
+
+    private var novelTitleBlock: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(novel.title)
+                .font(.headline)
+                .lineLimit(1)
+                .truncationMode(.tail)
+            Text(novel.user.name)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+        }
+        .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
+    }
+
+    @ViewBuilder
+    private func readerActionCluster(includesCloseButton: Bool) -> some View {
+        HStack(spacing: 12) {
+            bookmarkButton
 
             if usesContinuousNovelReader == false {
                 readingModeButton
             }
 
-            // Translation mode picker (bilingual / immersive)
             translationModeMenu
 
-            // Settings
-            Button {
-                isSettingsPresented = true
-            } label: {
-                Label(L10n.novelReaderSettings, systemImage: "textformat.size")
-                    .labelStyle(.iconOnly)
-            }
-            .help(L10n.novelReaderSettings)
-            .keyboardShortcut(",", modifiers: .command)
+            settingsButton
 
-            // Close
-            Button {
-                dismiss()
-            } label: {
-                Label(L10n.close, systemImage: "xmark")
-                    .labelStyle(.iconOnly)
+            if includesCloseButton {
+                closeButton
             }
-            .keyboardShortcut(.cancelAction)
         }
-        .padding(.horizontal, 18)
-        .padding(.vertical, 12)
-        .background(.thinMaterial)
+    }
+
+    private var bookmarkButton: some View {
+        Button {
+            Task {
+                await novelStore.toggleBookmark(
+                    novel: novel,
+                    restrict: store.defaultBookmarkRestrict
+                )
+            }
+        } label: {
+            Label(
+                novel.isBookmarked ? L10n.novelRemoveBookmark : L10n.novelBookmark,
+                systemImage: novel.isBookmarked ? "bookmark.fill" : "bookmark"
+            )
+            .labelStyle(.iconOnly)
+        }
+        .help(novel.isBookmarked ? L10n.novelRemoveBookmark : L10n.novelBookmark)
+        .keyboardShortcut("b", modifiers: [])
+    }
+
+    private var settingsButton: some View {
+        Button {
+            isSettingsPresented = true
+        } label: {
+            Label(L10n.novelReaderSettings, systemImage: "textformat.size")
+                .labelStyle(.iconOnly)
+        }
+        .help(L10n.novelReaderSettings)
+        .keyboardShortcut(",", modifiers: .command)
+    }
+
+    private var closeButton: some View {
+        Button {
+            dismiss()
+        } label: {
+            Label(L10n.close, systemImage: "xmark")
+                .labelStyle(.iconOnly)
+        }
+        .keyboardShortcut(.cancelAction)
     }
 
     private var readingModeButton: some View {

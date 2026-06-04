@@ -128,68 +128,105 @@ private struct NovelDetailContent: View {
     }
 
     private var actionRow: some View {
-        GeometryReader { geo in
+        ViewThatFits(in: .horizontal) {
+            wideActionRow
+                .frame(minWidth: 420)
+            compactActionStack
+        }
+    }
+
+    private var wideActionRow: some View {
+        HStack(spacing: 10) {
+            Spacer()
+
+            openReaderButton(expands: false)
+            bookmarkButton
+
+            if novel.pixivURL != nil {
+                openInPixivButton
+            }
+
+            novelMoreMenu(promotePixiv: true)
+
+            Spacer()
+        }
+    }
+
+    private var compactActionStack: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            openReaderButton(expands: true)
+
             HStack(spacing: 10) {
-                Spacer()
+                bookmarkButton
 
-                // Reader — primary CTA, always visible
-                Button {
-                    isReaderPresented = true
-                } label: {
-                    Label(L10n.openNovelReader, systemImage: "book.pages")
-                        .font(.callout.weight(.semibold))
-                        .lineLimit(1)
-                }
-                .labelStyle(.titleAndIcon)
-                .help(L10n.openNovelReader)
-                .accessibilityLabel(L10n.openNovelReader)
-                .buttonStyle(.glassProminent)
-                .buttonBorderShape(.capsule)
-                .controlSize(.regular)
-
-                // Bookmark — always visible
-                Button {
-                    Task {
-                        await novelStore.toggleBookmark(
-                            novel: novel,
-                            restrict: store.defaultBookmarkRestrict
-                        )
-                    }
-                } label: {
-                    Label(
-                        novel.isBookmarked ? L10n.novelRemoveBookmark : L10n.novelBookmark,
-                        systemImage: novel.isBookmarked ? "bookmark.fill" : "bookmark"
-                    )
-                }
-                .labelStyle(.iconOnly)
-                .help(novel.isBookmarked ? L10n.novelRemoveBookmark : L10n.novelBookmark)
-                .accessibilityLabel(novel.isBookmarked ? L10n.novelRemoveBookmark : L10n.novelBookmark)
-                .buttonStyle(.bordered)
-                .controlSize(.small)
-
-                // Open in Pixiv — promoted when wide enough
-                if geo.size.width >= 320, novel.pixivURL != nil {
-                    Button {
-                        if let url = novel.pixivURL {
-                            PlatformWorkspace.open(url)
-                        }
-                    } label: {
-                        Label(L10n.openInPixivNovel, systemImage: "arrow.up.right.square")
-                    }
-                    .labelStyle(.iconOnly)
-                    .help(L10n.openInPixivNovel)
-                    .accessibilityLabel(L10n.openInPixivNovel)
-                    .buttonStyle(.bordered)
-                    .controlSize(.small)
+                if novel.pixivURL != nil {
+                    openInPixivButton
                 }
 
-                // More — export, open in pixiv (when narrow), share
-                novelMoreMenu(promotePixiv: geo.size.width >= 320)
+                novelMoreMenu(promotePixiv: true)
 
-                Spacer()
+                Spacer(minLength: 0)
             }
         }
-        .frame(height: 38)
+    }
+
+    private func openReaderButton(expands: Bool) -> some View {
+        Button {
+            isReaderPresented = true
+        } label: {
+            if expands {
+                Label(L10n.openNovelReader, systemImage: "book.pages")
+                    .font(.callout.weight(.semibold))
+                    .lineLimit(1)
+                    .frame(maxWidth: .infinity)
+            } else {
+                Label(L10n.openNovelReader, systemImage: "book.pages")
+                    .font(.callout.weight(.semibold))
+                    .lineLimit(1)
+            }
+        }
+        .labelStyle(.titleAndIcon)
+        .help(L10n.openNovelReader)
+        .accessibilityLabel(L10n.openNovelReader)
+        .buttonStyle(.glassProminent)
+        .buttonBorderShape(.capsule)
+        .controlSize(.regular)
+    }
+
+    private var bookmarkButton: some View {
+        Button {
+            Task {
+                await novelStore.toggleBookmark(
+                    novel: novel,
+                    restrict: store.defaultBookmarkRestrict
+                )
+            }
+        } label: {
+            Label(
+                novel.isBookmarked ? L10n.novelRemoveBookmark : L10n.novelBookmark,
+                systemImage: novel.isBookmarked ? "bookmark.fill" : "bookmark"
+            )
+        }
+        .labelStyle(.iconOnly)
+        .help(novel.isBookmarked ? L10n.novelRemoveBookmark : L10n.novelBookmark)
+        .accessibilityLabel(novel.isBookmarked ? L10n.novelRemoveBookmark : L10n.novelBookmark)
+        .buttonStyle(.bordered)
+        .controlSize(.small)
+    }
+
+    private var openInPixivButton: some View {
+        Button {
+            if let url = novel.pixivURL {
+                PlatformWorkspace.open(url)
+            }
+        } label: {
+            Label(L10n.openInPixivNovel, systemImage: "arrow.up.right.square")
+        }
+        .labelStyle(.iconOnly)
+        .help(L10n.openInPixivNovel)
+        .accessibilityLabel(L10n.openInPixivNovel)
+        .buttonStyle(.bordered)
+        .controlSize(.small)
     }
 
     @ViewBuilder

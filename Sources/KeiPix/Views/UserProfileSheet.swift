@@ -727,7 +727,9 @@ private struct ChildSheetsModifier: ViewModifier {
             }
             .sheet(item: $relationshipListMode) { mode in
                 UserPreviewListView(store: store, mode: mode, showsCloseButton: true)
+                    #if os(macOS)
                     .frame(width: 920, height: 680)
+                    #endif
                     .os26SheetChrome(.detail)
             }
             .sheet(item: $feedbackRequest) { request in
