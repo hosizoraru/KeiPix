@@ -1157,6 +1157,57 @@ struct NativeBoundaryTests {
         #expect(nativeDrop.contains("UTType.utf8PlainText"))
     }
 
+    @Test("Search surfaces use native fields and OS 26 glass chrome")
+    func searchSurfacesUseNativeFieldsAndOS26GlassChrome() throws {
+        let root = try packageRoot()
+        let savedSearches = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/SavedSearchesView.swift"),
+            encoding: .utf8
+        )
+        let searchFilters = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/SearchFiltersView.swift"),
+            encoding: .utf8
+        )
+        let quickOpenSheet = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/PixivIDOpenSheet.swift"),
+            encoding: .utf8
+        )
+        let imageSourceSearch = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/ImageSourceSearchSheet.swift"),
+            encoding: .utf8
+        )
+        let creatorComponents = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/UserPreviewListComponents.swift"),
+            encoding: .utf8
+        )
+
+        #expect(savedSearches.contains("NativeSearchField("))
+        #expect(savedSearches.contains("savedSearchLibraryField"))
+        #expect(savedSearches.contains("libraryActionRail"))
+        #expect(savedSearches.contains("GlassEffectContainer(spacing: 8)"))
+        #expect(savedSearches.contains(".keiInteractiveGlass(16)"))
+        #expect(savedSearches.contains(".textFieldStyle(.roundedBorder)") == false)
+        #expect(savedSearches.contains(".buttonStyle(.bordered)") == false)
+
+        #expect(searchFilters.contains(".keiGlass(18)"))
+        #expect(searchFilters.contains("GlassEffectContainer(spacing: 8)"))
+        #expect(searchFilters.contains(".buttonStyle(.glassProminent)"))
+        #expect(searchFilters.contains(".textFieldStyle(.roundedBorder)") == false)
+
+        #expect(quickOpenSheet.contains("NativeSearchField("))
+        #expect(quickOpenSheet.contains(".keiInteractiveGlass(14)"))
+        #expect(quickOpenSheet.contains(".background(.quaternary") == false)
+
+        #expect(imageSourceSearch.contains("private func resultRow"))
+        #expect(imageSourceSearch.contains("LazyVStack(spacing: 8)"))
+        #expect(imageSourceSearch.contains(".keiInteractiveGlass(16)"))
+        #expect(imageSourceSearch.contains("List(results)") == false)
+
+        #expect(creatorComponents.contains(".buttonStyle(.borderless)") == false)
+        #expect(creatorComponents.contains(".buttonStyle(.borderedProminent)") == false)
+        #expect(creatorComponents.contains(".buttonStyle(.glassProminent)"))
+    }
+
     @Test("Creator cards use adaptive OS 26 glass actions")
     func creatorCardsUseAdaptiveOS26GlassActions() throws {
         let root = try packageRoot()

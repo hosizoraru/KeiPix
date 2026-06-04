@@ -11,6 +11,8 @@ struct SearchFilterButton: View {
             Label(filterButtonTitle, systemImage: filterButtonImage)
         }
         .labelStyle(.iconOnly)
+        .buttonStyle(.glass)
+        .buttonBorderShape(.capsule)
         .help(store.searchOptions.summary)
         .accessibilityLabel(filterButtonTitle)
         .popover(isPresented: $isPresented, arrowEdge: .bottom) {
@@ -47,6 +49,8 @@ private struct SearchFiltersView: View {
                     .textSelection(.enabled)
                     .accessibilityLabel(L10n.filterSummary)
             }
+            .padding(14)
+            .keiGlass(18)
 
             VStack(alignment: .leading, spacing: 10) {
                 filterPicker(L10n.matchType, selection: matchTypeBinding, options: SearchMatchType.allCases)
@@ -77,31 +81,41 @@ private struct SearchFiltersView: View {
                 filterPicker(L10n.aiFilter, selection: aiFilterBinding, options: SearchAIFilter.allCases)
                 filterPicker(L10n.ugoiraFilter, selection: ugoiraFilterBinding, options: SearchUgoiraFilter.allCases)
             }
+            .padding(14)
+            .keiGlass(18)
 
             if let statusMessage {
                 Text(statusMessage)
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .textSelection(.enabled)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                    .keiGlass(14)
             }
 
-            HStack {
-                Button(L10n.reset) {
-                    store.resetSearchOptions()
-                    showStatus(L10n.searchFiltersReset)
-                }
-                .disabled(store.searchOptions.isDefault)
-
-                Spacer()
-
-                Button(L10n.apply) {
-                    Task {
-                        await store.runSearch()
-                        showStatus(L10n.searchFiltersApplied)
-                        dismiss()
+            GlassEffectContainer(spacing: 8) {
+                HStack {
+                    Button(L10n.reset) {
+                        store.resetSearchOptions()
+                        showStatus(L10n.searchFiltersReset)
                     }
+                    .buttonStyle(.glass)
+                    .buttonBorderShape(.capsule)
+                    .disabled(store.searchOptions.isDefault)
+
+                    Spacer()
+
+                    Button(L10n.apply) {
+                        Task {
+                            await store.runSearch()
+                            showStatus(L10n.searchFiltersApplied)
+                            dismiss()
+                        }
+                    }
+                    .buttonStyle(.glassProminent)
+                    .buttonBorderShape(.capsule)
                 }
-                .buttonStyle(.glassProminent)
             }
         }
         .padding(18)
@@ -122,6 +136,8 @@ private struct SearchFiltersView: View {
             .pickerStyle(.menu)
             .labelsHidden()
             .frame(maxWidth: 190, alignment: .trailing)
+            .buttonStyle(.glass)
+            .buttonBorderShape(.capsule)
         }
         .font(.callout)
     }
@@ -156,6 +172,8 @@ private struct SearchFiltersView: View {
                 }
                 .menuStyle(.button)
                 .frame(maxWidth: 190, alignment: .trailing)
+                .buttonStyle(.glass)
+                .buttonBorderShape(.capsule)
             }
             .font(.callout)
 
@@ -281,9 +299,11 @@ private struct BookmarkThresholdField: View {
         LabeledContent(label) {
             HStack(spacing: 6) {
                 TextField(L10n.bookmarkPresetUnlimited, text: $draftText)
-                    .textFieldStyle(.roundedBorder)
+                    .textFieldStyle(.plain)
                     .multilineTextAlignment(.trailing)
-                    .frame(width: 110)
+                    .padding(.horizontal, 9)
+                    .frame(width: 110, height: 28)
+                    .keiGlass(12)
                     .focused($isFocused)
                     .onSubmit(commit)
                     .onChange(of: isFocused) { _, focused in
@@ -307,6 +327,8 @@ private struct BookmarkThresholdField: View {
                 }
                 .menuStyle(.borderlessButton)
                 .menuIndicator(.hidden)
+                .buttonStyle(.glass)
+                .buttonBorderShape(.capsule)
                 .fixedSize()
                 .help(L10n.bookmarkPresetUnlimited)
                 .accessibilityLabel(L10n.bookmarkCustomValue)

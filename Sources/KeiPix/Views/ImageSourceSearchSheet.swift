@@ -67,6 +67,8 @@ struct ImageSourceSearchSheet: View {
         .pickerStyle(.menu)
         .labelsHidden()
         .fixedSize()
+        .buttonStyle(.glass)
+        .buttonBorderShape(.capsule)
         .help(L10n.imageSourceSearchEngine)
         .accessibilityLabel(L10n.imageSourceSearchEngine)
     }
@@ -135,28 +137,30 @@ struct ImageSourceSearchSheet: View {
                 }
             } else {
                 VStack(alignment: .leading, spacing: 12) {
-                    Text(String(format: L10n.imageSourceResultsFormat, results.count))
-                        .font(.headline)
-                        .padding(.horizontal, 18)
-                        .padding(.top, 16)
+                    HStack(spacing: 8) {
+                        Label(L10n.imageSourceSearch, systemImage: "magnifyingglass")
+                            .font(.headline)
 
-                    List(results) { result in
-                        Button {
-                            Task { await open(result) }
-                        } label: {
-                            Label("#\(result.artworkID)", systemImage: "photo.on.rectangle")
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                        }
-                        .buttonStyle(.plain)
-                        .contextMenu {
-                            Button {
-                                PasteboardWriter.copy("https://www.pixiv.net/artworks/\(result.artworkID)")
-                            } label: {
-                                Label(L10n.copyLink, systemImage: "link")
+                        Text(String(format: L10n.imageSourceResultsFormat, results.count))
+                            .font(.caption.monospacedDigit().weight(.semibold))
+                            .foregroundStyle(.secondary)
+                            .padding(.horizontal, 7)
+                            .padding(.vertical, 3)
+                            .glassEffect(.regular, in: Capsule(style: .continuous))
+                    }
+                    .padding(.horizontal, 18)
+                    .padding(.top, 16)
+
+                    ScrollView {
+                        LazyVStack(spacing: 8) {
+                            ForEach(results) { result in
+                                resultRow(result)
                             }
                         }
+                        .padding(.horizontal, 18)
+                        .padding(.bottom, 18)
                     }
-                    .listStyle(.inset)
+                    .scrollEdgeEffectStyle(.soft, for: .top)
                 }
             }
         case .failed(let message):
@@ -179,6 +183,44 @@ struct ImageSourceSearchSheet: View {
         }
         .buttonStyle(.glassProminent)
         .buttonBorderShape(.capsule)
+    }
+
+    private func resultRow(_ result: SauceNAOSearchResult) -> some View {
+        Button {
+            Task { await open(result) }
+        } label: {
+            HStack(spacing: 10) {
+                Image(systemName: "photo.on.rectangle")
+                    .imageScale(.medium)
+                    .foregroundStyle(.secondary)
+
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("#\(result.artworkID)")
+                        .font(.callout.weight(.semibold))
+                    Text(L10n.openInPixiv)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+
+                Spacer(minLength: 0)
+
+                Image(systemName: "chevron.forward")
+                    .font(.caption2.weight(.semibold))
+                    .foregroundStyle(.tertiary)
+            }
+            .padding(12)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .keiInteractiveGlass(16)
+        .contextMenu {
+            Button {
+                PasteboardWriter.copy("https://www.pixiv.net/artworks/\(result.artworkID)")
+            } label: {
+                Label(L10n.copyLink, systemImage: "link")
+            }
+        }
     }
 
     // MARK: - Search

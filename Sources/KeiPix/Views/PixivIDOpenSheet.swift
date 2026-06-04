@@ -40,10 +40,14 @@ struct PixivIDOpenSheet: View {
                 }
                 .pickerStyle(.segmented)
 
-                TextField(target.placeholder, text: $rawID)
-                    .textFieldStyle(.roundedBorder)
-                    .font(.title3.monospacedDigit())
-                    .onSubmit(openID)
+                NativeSearchField(
+                    text: $rawID,
+                    placeholder: target.placeholder,
+                    suggestions: [],
+                    onSubmit: openID,
+                    onTextChange: { rawID = $0 }
+                )
+                .accessibilityLabel(target.title)
 
                 nativeDropTarget
 
@@ -61,6 +65,8 @@ struct PixivIDOpenSheet: View {
                 Button(L10n.cancel) {
                     dismiss()
                 }
+                .buttonStyle(.glass)
+                .buttonBorderShape(.capsule)
                 .keyboardShortcut(.cancelAction)
 
                 Spacer()
@@ -71,6 +77,7 @@ struct PixivIDOpenSheet: View {
                     Label(L10n.open, systemImage: target.systemImage)
                 }
                 .buttonStyle(.glassProminent)
+                .buttonBorderShape(.capsule)
                 .keyboardShortcut(.defaultAction)
                 .disabled(normalizedID == nil)
             }
@@ -105,11 +112,7 @@ struct PixivIDOpenSheet: View {
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 10)
-            .background(.quaternary.opacity(0.35), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-            .overlay {
-                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .strokeBorder(.quaternary, lineWidth: 1)
-            }
+            .keiInteractiveGlass(14)
         }
         #endif
     }

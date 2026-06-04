@@ -80,6 +80,9 @@ struct SavedSearchesView: View {
                             Label(L10n.clearSearchHistory, systemImage: "trash")
                         }
                         .disabled(store.searchHistory.isEmpty)
+                        .buttonStyle(.glass)
+                        .buttonBorderShape(.capsule)
+                        .controlSize(.small)
                     },
                     trailingAction: { keyword in
                         Menu {
@@ -156,17 +159,46 @@ struct SavedSearchesView: View {
     }
 
     private var header: some View {
-        FlowLayout(spacing: 8) {
-            TextField(L10n.searchSavedSearches, text: $librarySearchText)
-                .textFieldStyle(.roundedBorder)
-                .frame(minWidth: 180, idealWidth: 240, maxWidth: 300)
+        GlassEffectContainer(spacing: 8) {
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 10) {
+                    savedSearchLibraryField
+                        .frame(minWidth: 240, idealWidth: 320, maxWidth: 420)
 
+                    libraryActionRail
+                }
+
+                VStack(alignment: .leading, spacing: 10) {
+                    savedSearchLibraryField
+                    libraryActionRail
+                }
+            }
+        }
+        .controlSize(.small)
+        .padding(14)
+        .keiGlass(20)
+    }
+
+    private var savedSearchLibraryField: some View {
+        NativeSearchField(
+            text: $librarySearchText,
+            placeholder: L10n.searchSavedSearches,
+            suggestions: store.savedSearches + store.searchHistory,
+            onSubmit: {},
+            onTextChange: { librarySearchText = $0 }
+        )
+    }
+
+    private var libraryActionRail: some View {
+        HStack(spacing: 8) {
             Button {
                 librarySearchText = ""
             } label: {
                 Label(L10n.clearSearch, systemImage: "xmark.circle")
             }
             .labelStyle(.iconOnly)
+            .buttonStyle(.glass)
+            .buttonBorderShape(.capsule)
             .disabled(librarySearchText.isEmpty)
             .help(L10n.clearSearch)
 
@@ -176,6 +208,8 @@ struct SavedSearchesView: View {
                 Label(L10n.importSearchLibrary, systemImage: "square.and.arrow.down")
             }
             .labelStyle(.iconOnly)
+            .buttonStyle(.glass)
+            .buttonBorderShape(.capsule)
             .help(L10n.importSearchLibrary)
 
             Button {
@@ -184,10 +218,11 @@ struct SavedSearchesView: View {
                 Label(L10n.exportSearchLibrary, systemImage: "square.and.arrow.up")
             }
             .labelStyle(.iconOnly)
+            .buttonStyle(.glass)
+            .buttonBorderShape(.capsule)
             .help(L10n.exportSearchLibrary)
             .disabled(store.savedSearchPresets.isEmpty && store.savedSearches.isEmpty && store.searchHistory.isEmpty)
         }
-        .controlSize(.small)
     }
 
     private var savedSearchStatusText: String {
@@ -456,7 +491,7 @@ private struct SavedSearchPresetSection: View {
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(14)
-                    .keiPanel(14)
+                    .keiGlass(16)
             } else {
                 LazyVStack(spacing: 8) {
                     ForEach(presets) { preset in
@@ -506,11 +541,12 @@ private struct SavedSearchPresetSection: View {
                                 Label(L10n.moreActions, systemImage: "ellipsis.circle")
                             }
                             .labelStyle(.iconOnly)
-                            .buttonStyle(.bordered)
+                            .buttonStyle(.glass)
+                            .buttonBorderShape(.capsule)
                             .help(L10n.moreActions)
                         }
                         .padding(12)
-                        .keiPanel(14)
+                        .keiInteractiveGlass(16)
                     }
                 }
             }
@@ -563,7 +599,7 @@ private struct SavedSearchSection<TrailingAction: View, Footer: View>: View {
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(14)
-                    .keiPanel(14)
+                    .keiGlass(16)
             } else {
                 LazyVStack(spacing: 8) {
                     ForEach(keywords, id: \.self) { keyword in
@@ -578,10 +614,11 @@ private struct SavedSearchSection<TrailingAction: View, Footer: View>: View {
 
                             trailingAction(keyword)
                                 .labelStyle(.iconOnly)
-                                .buttonStyle(.bordered)
+                                .buttonStyle(.glass)
+                                .buttonBorderShape(.capsule)
                         }
                         .padding(12)
-                        .keiPanel(14)
+                        .keiInteractiveGlass(16)
                     }
                 }
             }

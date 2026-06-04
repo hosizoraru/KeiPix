@@ -23,7 +23,8 @@ struct CreatorListStatusBanner: View {
                         Button(L10n.undo) {
                             performUndo(undoAction)
                         }
-                        .buttonStyle(.bordered)
+                        .buttonStyle(.glass)
+                        .buttonBorderShape(.capsule)
                         .controlSize(.small)
                     }
                 }
@@ -115,7 +116,8 @@ struct CreatorListSearchBar: View {
                     Label(L10n.clearSearch, systemImage: "xmark.circle.fill")
                 }
                 .labelStyle(.iconOnly)
-                .buttonStyle(.borderless)
+                .buttonStyle(.glass)
+                .buttonBorderShape(.capsule)
                 .help(L10n.clearSearch)
             }
 
@@ -425,7 +427,8 @@ struct CreatorPreviewListContent: View {
                 } label: {
                     Label(L10n.retry, systemImage: "arrow.clockwise")
                 }
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(.glassProminent)
+                .buttonBorderShape(.capsule)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {
