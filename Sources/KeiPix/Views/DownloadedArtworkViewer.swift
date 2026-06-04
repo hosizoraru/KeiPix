@@ -10,7 +10,8 @@ struct DownloadedArtworkViewer: View {
 
     @Environment(\.dismiss) private var dismiss
     @State private var pageIndex = 0
-    @State private var isContinuous = true
+    @State private var readingMode: ArtworkReadingMode = .continuous
+    @State private var readerAvailableSize: CGSize = .zero
     @State private var actionMessage: String?
 
     var body: some View {
@@ -27,11 +28,7 @@ struct DownloadedArtworkViewer: View {
 
                 Divider()
 
-                if isContinuous {
-                    continuousReader
-                } else {
-                    singlePageReader
-                }
+                readerContent
             }
         }
         #if os(macOS)
@@ -80,10 +77,10 @@ struct DownloadedArtworkViewer: View {
                 .labelStyle(.iconOnly)
                 .help(L10n.nextPage)
                 .keyboardShortcut(.rightArrow, modifiers: [])
-                .disabled(pageIndex >= imageURLs.count - 1)
+                .disabled(pageIndex + navigationPageStep >= imageURLs.count)
 
                 Button {
-                    isContinuous.toggle()
+                    cycleReadingMode()
                 } label: {
                     Label(L10n.toggleReadingMode, systemImage: "rectangle.split.1x2")
                 }
@@ -107,12 +104,25 @@ struct DownloadedArtworkViewer: View {
 
             Spacer()
 
-            Picker(L10n.readingMode, selection: $isContinuous) {
-                Text(L10n.continuousReading).tag(true)
-                Text(L10n.singlePage).tag(false)
+            Menu {
+                Section(L10n.readingMode) {
+                    ForEach(availableReadingModes) { mode in
+                        Button {
+                            withAnimation(.snappy(duration: 0.18)) {
+                                readingMode = mode
+                            }
+                        } label: {
+                            Label(mode.title, systemImage: mode == effectiveReadingMode ? "checkmark.circle.fill" : mode.systemImage)
+                        }
+                    }
+                }
+            } label: {
+                Label(effectiveReadingMode.title, systemImage: effectiveReadingMode.systemImage)
             }
-            .pickerStyle(.segmented)
-            .frame(width: 260)
+            .menuStyle(.button)
+            .buttonStyle(.bordered)
+            .buttonBorderShape(.capsule)
+            .help(L10n.readingMode)
 
             Button {
                 revealCurrentPage()
@@ -189,6 +199,67 @@ struct DownloadedArtworkViewer: View {
         imageURLs[safe: pageIndex] ?? imageURLs[0]
     }
 
+    private var nextImageURL: URL? {
+        imageURLs[safe: pageIndex + 1]
+    }
+
+    private var effectiveReadingMode: ArtworkReadingMode {
+        guard readerAvailableSize.width > 0, readerAvailableSize.height > 0 else {
+            return readingMode.effectiveMode(forPageCount: imageURLs.count, platform: .current)
+        }
+        return ReaderAdaptiveLayout.effectiveArtworkMode(
+            preferredMode: readingMode,
+            pageCount: imageURLs.count,
+            availableSize: readerAvailableSize,
+            platform: .current
+        )
+    }
+
+    private var navigationPageStep: Int {
+        effectiveReadingMode == .doublePage ? 2 : 1
+    }
+
+    private var availableReadingModes: [ArtworkReadingMode] {
+        var modes: [ArtworkReadingMode] = [.continuous, .singlePage]
+        if imageURLs.count > 1, ReaderPlatformKind.current != .phone {
+            modes.append(.doublePage)
+        }
+        return modes
+    }
+
+    @ViewBuilder
+    private var readerContent: some View {
+        Group {
+            switch effectiveReadingMode {
+            case .continuous:
+                continuousReader
+            case .doublePage:
+                doublePageReader
+            case .singlePage, .index:
+                singlePageReader
+            }
+        }
+        .background {
+            GeometryReader { proxy in
+                Color.clear
+                    .onAppear {
+                        updateReaderAvailableSize(proxy.size)
+                    }
+                    .onChange(of: proxy.size) { _, size in
+                        updateReaderAvailableSize(size)
+                    }
+            }
+        }
+    }
+
+    private func updateReaderAvailableSize(_ size: CGSize) {
+        guard size.width.isFinite, size.height.isFinite, size.width >= 0, size.height >= 0 else {
+            return
+        }
+        guard readerAvailableSize != size else { return }
+        readerAvailableSize = size
+    }
+
     private var thumbnailRail: some View {
         ScrollViewReader { proxy in
             ScrollView {
@@ -261,40 +332,76 @@ struct DownloadedArtworkViewer: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .padding(18)
 
-            HStack(spacing: 12) {
-                Button {
-                    previousPage()
-                } label: {
-                    Label(L10n.previousPage, systemImage: "chevron.left")
-                }
-                .labelStyle(.iconOnly)
-                .help(L10n.previousPage)
-                .disabled(pageIndex == 0)
+            pageControls
+                .padding(.bottom, 16)
+        }
+    }
 
-                Text(L10n.pageStatus(pageIndex + 1, imageURLs.count))
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
-                    .frame(minWidth: 120)
+    private var doublePageReader: some View {
+        VStack(spacing: 12) {
+            Spacer(minLength: 0)
 
-                Button {
-                    nextPage()
-                } label: {
-                    Label(L10n.nextPage, systemImage: "chevron.right")
+            HStack(spacing: 14) {
+                ImageScrollView(imageURL: nil, localURL: currentImageURL)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+                if let nextImageURL {
+                    ImageScrollView(imageURL: nil, localURL: nextImageURL)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else {
+                    Color.clear
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
-                .labelStyle(.iconOnly)
-                .help(L10n.nextPage)
-                .disabled(pageIndex >= imageURLs.count - 1)
             }
-            .padding(.bottom, 16)
+            .padding(18)
+
+            pageControls
+                .padding(.bottom, 16)
+        }
+    }
+
+    private var pageControls: some View {
+        HStack(spacing: 12) {
+            Button {
+                previousPage()
+            } label: {
+                Label(L10n.previousPage, systemImage: "chevron.left")
+            }
+            .labelStyle(.iconOnly)
+            .help(L10n.previousPage)
+            .disabled(pageIndex == 0)
+
+            Text(L10n.pageStatus(pageIndex + 1, imageURLs.count))
+                .font(.callout)
+                .foregroundStyle(.secondary)
+                .frame(minWidth: 120)
+
+            Button {
+                nextPage()
+            } label: {
+                Label(L10n.nextPage, systemImage: "chevron.right")
+            }
+            .labelStyle(.iconOnly)
+            .help(L10n.nextPage)
+            .disabled(pageIndex + navigationPageStep >= imageURLs.count)
         }
     }
 
     private func previousPage() {
-        pageIndex = max(pageIndex - 1, 0)
+        pageIndex = max(pageIndex - navigationPageStep, 0)
     }
 
     private func nextPage() {
-        pageIndex = min(pageIndex + 1, imageURLs.count - 1)
+        pageIndex = min(pageIndex + navigationPageStep, imageURLs.count - 1)
+    }
+
+    private func cycleReadingMode() {
+        let modes = availableReadingModes
+        guard let currentIndex = modes.firstIndex(of: readingMode) else {
+            readingMode = modes.first ?? .singlePage
+            return
+        }
+        readingMode = modes[(currentIndex + 1) % modes.count]
     }
 
     private func revealCurrentPage() {

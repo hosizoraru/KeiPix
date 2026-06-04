@@ -123,15 +123,14 @@ struct DownloadQueueView: View {
     /// the body past the type-checker timeout.
     @ViewBuilder
     private func previewSheet(_ preview: DownloadedPreview) -> some View {
-        Group {
-            switch preview {
-            case .images(let item, let imageURLs):
-                DownloadedArtworkViewer(item: item, imageURLs: imageURLs, store: store)
-            case .ugoira(let item, let zipURL):
-                DownloadedUgoiraViewer(item: item, zipURL: zipURL)
-            }
+        switch preview {
+        case .images(let item, let imageURLs):
+            DownloadedArtworkViewer(item: item, imageURLs: imageURLs, store: store)
+                .os26SheetChrome(.reader)
+        case .ugoira(let item, let zipURL):
+            DownloadedUgoiraViewer(item: item, zipURL: zipURL)
+                .os26SheetChrome(.standard)
         }
-        .os26SheetChrome(.standard)
     }
 
     /// Pulled out of `body` so the type-checker doesn't have to chew
