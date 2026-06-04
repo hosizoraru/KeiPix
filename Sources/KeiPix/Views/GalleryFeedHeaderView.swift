@@ -97,6 +97,10 @@ struct FeedHeaderView: View {
                 .iPadFeedHeaderActionChrome()
             }
 
+            if store.selectedRoute.isOwnBookmarkRoute {
+                bookmarkFiltersMenu
+            }
+
             if store.artworks.isEmpty == false {
                 compactSelectionMenu
             }
@@ -413,53 +417,26 @@ struct FeedHeaderView: View {
 
     private var bookmarkFiltersMenu: some View {
         Menu {
-            Section(L10n.bookmarkVisibility) {
-                ForEach(BookmarkRestrict.allCases) { restrict in
-                    Button {
-                        store.setBookmarkFeedRestrict(restrict)
-                        actionMessage = restrict.title
-                    } label: {
-                        Label(
-                            restrict.title,
-                            systemImage: bookmarkRestrict == restrict ? "checkmark" : "bookmark"
-                        )
-                    }
-                }
-            }
+            bookmarkVisibilityMenu
+            bookmarkSortMenu
+            bookmarkAgeLimitMenu
 
-            Section(L10n.bookmarkSort) {
-                ForEach(BookmarkFeedSort.allCases) { sort in
-                    Button {
-                        store.setBookmarkFeedSort(sort)
-                        actionMessage = sort.title
-                    } label: {
-                        Label(
-                            sort.title,
-                            systemImage: store.bookmarkFeedOptions.sort == sort ? "checkmark" : sort.systemImage
-                        )
-                    }
-                }
-            }
-
-            Section(L10n.bookmarkAgeLimit) {
-                ForEach(BookmarkFeedAgeLimit.allCases) { ageLimit in
-                    Button {
-                        store.setBookmarkFeedAgeLimit(ageLimit)
-                        actionMessage = ageLimit.title
-                    } label: {
-                        Label(
-                            ageLimit.title,
-                            systemImage: store.bookmarkFeedOptions.ageLimit == ageLimit ? "checkmark" : ageLimit.systemImage
-                        )
-                    }
-                }
-            }
-
+            Divider()
             bookmarkArtworkTagMenu
             bookmarkTagMenu
 
             Divider()
+            bookmarkSupportMenu
+        } label: {
+            Label(bookmarkFilterTitle, systemImage: bookmarkFiltersActiveCount > 0 ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle")
+        }
+        .help(bookmarkFilterTitle)
+        .accessibilityLabel(bookmarkFilterTitle)
+        .feedHeaderActionChrome()
+    }
 
+    private var bookmarkSupportMenu: some View {
+        Menu {
             Button {
                 resetBookmarkFilters()
             } label: {
@@ -469,34 +446,65 @@ struct FeedHeaderView: View {
 
             if bookmarkWebURL != nil || bookmarkCollectionsURL != nil {
                 Divider()
-                Text(L10n.pixivWebBookmarkFiltersHint)
-
-                if let bookmarkWebURL {
-                    Link(destination: bookmarkWebURL) {
-                        Label(L10n.openPixivWebBookmarks, systemImage: "safari")
-                    }
-
-                    Button {
-                        copyPixivWebBookmarksLink(bookmarkWebURL)
-                    } label: {
-                        Label(L10n.copyPixivWebBookmarksLink, systemImage: "link")
-                    }
-                }
-
-                if let bookmarkCollectionsURL {
-                    Link(destination: bookmarkCollectionsURL) {
-                        Label(L10n.openPixivWebCollections, systemImage: "rectangle.stack.badge.person.crop")
-                    }
-                }
-
-                Text(L10n.pixivWebCollectionsHint)
+                bookmarkPixivWebMenu
             }
         } label: {
-            Label(bookmarkFilterTitle, systemImage: bookmarkFiltersActiveCount > 0 ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle")
+            Label(bookmarkFilterTitle, systemImage: bookmarkFiltersActiveCount > 0 ? "line.3.horizontal.decrease.circle.fill" : "ellipsis.circle")
         }
-        .help(bookmarkFilterTitle)
-        .accessibilityLabel(bookmarkFilterTitle)
-        .feedHeaderActionChrome()
+    }
+
+    private var bookmarkVisibilityMenu: some View {
+        Menu {
+            ForEach(BookmarkRestrict.allCases) { restrict in
+                Button {
+                    store.setBookmarkFeedRestrict(restrict)
+                    actionMessage = restrict.title
+                } label: {
+                    Label(
+                        restrict.title,
+                        systemImage: bookmarkRestrict == restrict ? "checkmark" : bookmarkRestrictSystemImage(restrict)
+                    )
+                }
+            }
+        } label: {
+            Label(bookmarkRestrict.title, systemImage: bookmarkRestrictSystemImage(bookmarkRestrict))
+        }
+    }
+
+    private var bookmarkSortMenu: some View {
+        Menu {
+            ForEach(BookmarkFeedSort.allCases) { sort in
+                Button {
+                    store.setBookmarkFeedSort(sort)
+                    actionMessage = sort.title
+                } label: {
+                    Label(
+                        sort.title,
+                        systemImage: store.bookmarkFeedOptions.sort == sort ? "checkmark" : sort.systemImage
+                    )
+                }
+            }
+        } label: {
+            Label(store.bookmarkFeedOptions.sort.title, systemImage: store.bookmarkFeedOptions.sort.systemImage)
+        }
+    }
+
+    private var bookmarkAgeLimitMenu: some View {
+        Menu {
+            ForEach(BookmarkFeedAgeLimit.allCases) { ageLimit in
+                Button {
+                    store.setBookmarkFeedAgeLimit(ageLimit)
+                    actionMessage = ageLimit.title
+                } label: {
+                    Label(
+                        ageLimit.title,
+                        systemImage: store.bookmarkFeedOptions.ageLimit == ageLimit ? "checkmark" : ageLimit.systemImage
+                    )
+                }
+            }
+        } label: {
+            Label(store.bookmarkFeedOptions.ageLimit.title, systemImage: store.bookmarkFeedOptions.ageLimit.systemImage)
+        }
     }
 
     private var bookmarkArtworkTagMenu: some View {
@@ -582,6 +590,43 @@ struct FeedHeaderView: View {
             }
         } label: {
             Label(bookmarkTagTitle, systemImage: "tag")
+        }
+    }
+
+    private var bookmarkPixivWebMenu: some View {
+        Menu {
+            Text(L10n.pixivWebBookmarkFiltersHint)
+
+            if let bookmarkWebURL {
+                Link(destination: bookmarkWebURL) {
+                    Label(L10n.openPixivWebBookmarks, systemImage: "safari")
+                }
+
+                Button {
+                    copyPixivWebBookmarksLink(bookmarkWebURL)
+                } label: {
+                    Label(L10n.copyPixivWebBookmarksLink, systemImage: "link")
+                }
+            }
+
+            if let bookmarkCollectionsURL {
+                Link(destination: bookmarkCollectionsURL) {
+                    Label(L10n.openPixivWebCollections, systemImage: "rectangle.stack.badge.person.crop")
+                }
+            }
+
+            Text(L10n.pixivWebCollectionsHint)
+        } label: {
+            Label(L10n.pixivWeb, systemImage: "safari")
+        }
+    }
+
+    private func bookmarkRestrictSystemImage(_ restrict: BookmarkRestrict) -> String {
+        switch restrict {
+        case .public:
+            "globe"
+        case .private:
+            "lock"
         }
     }
 

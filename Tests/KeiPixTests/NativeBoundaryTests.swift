@@ -642,15 +642,49 @@ struct NativeBoundaryTests {
         #expect(feedHeader.contains(".feedHeaderActionChrome()"))
         #expect(feedHeader.contains(".keiInteractiveGlass(16)"))
         #expect(feedHeader.contains("private var bookmarkFiltersMenu: some View"))
-        #expect(feedHeader.contains("Section(L10n.bookmarkVisibility)"))
-        #expect(feedHeader.contains("Section(L10n.bookmarkSort)"))
-        #expect(feedHeader.contains("Section(L10n.bookmarkAgeLimit)"))
+        #expect(feedHeader.contains("private var bookmarkVisibilityMenu: some View"))
+        #expect(feedHeader.contains("private var bookmarkSortMenu: some View"))
+        #expect(feedHeader.contains("private var bookmarkAgeLimitMenu: some View"))
+        #expect(feedHeader.contains("private var bookmarkSupportMenu: some View"))
         #expect(feedHeader.contains("bookmarkArtworkTagMenu"))
         #expect(feedHeaderActionChrome.contains(".buttonStyle(.plain)"))
         #expect(feedHeaderActionChrome.contains(".buttonStyle(.bordered)") == false)
 
         #expect(galleryView.contains(".padding(.horizontal, 18)\n            .padding(.top, 9)\n            .padding(.bottom, 7)"))
         #expect(galleryView.contains(".padding(.horizontal, 18)\n            .padding(.vertical, 5)\n            .background(.bar)") == false)
+    }
+
+    @Test("Bookmark filters stay reachable in regular and iPad compact feed headers")
+    func bookmarkFiltersStayReachableInFeedHeaders() throws {
+        let root = try packageRoot()
+        let feedHeader = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/GalleryFeedHeaderView.swift"),
+            encoding: .utf8
+        )
+        let compactHeader = feedHeader
+            .components(separatedBy: "private var iPadCompactHeaderActions: some View")
+            .dropFirst()
+            .first?
+            .components(separatedBy: "private var headerActions: some View")
+            .first ?? ""
+        let regularHeader = feedHeader
+            .components(separatedBy: "private var headerActions: some View")
+            .dropFirst()
+            .first?
+            .components(separatedBy: "private var macOSFilterField: some View")
+            .first ?? ""
+        let localizable = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Resources/Localizable.xcstrings"),
+            encoding: .utf8
+        )
+
+        #expect(feedHeader.contains("private var bookmarkFiltersMenu: some View"))
+        #expect(compactHeader.contains("if store.selectedRoute.isOwnBookmarkRoute {\n                bookmarkFiltersMenu"))
+        #expect(regularHeader.contains("if store.selectedRoute.isOwnBookmarkRoute {\n            bookmarkFiltersMenu"))
+        #expect(localizable.contains("\"Bookmark Filters\""))
+        #expect(localizable.contains("\"value\": \"收藏筛选\""))
+        #expect(localizable.contains("\"Pixiv Web only\""))
+        #expect(localizable.contains("\"value\": \"Pixiv Web 专属\""))
     }
 
     @Test("Refresh token export is explicit and confirmation gated")

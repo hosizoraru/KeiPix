@@ -30,6 +30,35 @@
         }
       }
     },
+    "%d active filters": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d active filters"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d 件のフィルター"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d 个筛选"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d 個篩選"
+          }
+        }
+      }
+    },
     "%@ is already muted": {
       "extractionState": "manual",
       "localizations": {
@@ -2669,6 +2698,35 @@
         }
       }
     },
+    "Artwork Tag": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Artwork Tag"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "作品タグ"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "作品标签"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "作品標籤"
+          }
+        }
+      }
+    },
     "Artwork detail and social": {
       "extractionState": "manual",
       "localizations": {
@@ -3162,6 +3220,122 @@
         }
       }
     },
+    "Bookmark Age Limit": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bookmark Age Limit"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "年齢制限"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "年龄分级"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "年齡分級"
+          }
+        }
+      }
+    },
+    "Bookmark Date": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bookmark Date"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ブックマーク日時"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "收藏时间"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "收藏時間"
+          }
+        }
+      }
+    },
+    "Bookmark Filters": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bookmark Filters"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ブックマークフィルター"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "收藏筛选"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "收藏篩選"
+          }
+        }
+      }
+    },
+    "Bookmark Sort": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bookmark Sort"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ブックマークの並び順"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "收藏排序"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "收藏排序"
+          }
+        }
+      }
+    },
     "Bookmark Tags": {
       "extractionState": "manual",
       "localizations": {
@@ -3187,6 +3361,64 @@
           "stringUnit": {
             "state": "translated",
             "value": "收藏標籤"
+          }
+        }
+      }
+    },
+    "Bookmark Visibility": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bookmark Visibility"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ブックマークの公開範囲"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "收藏可见性"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "收藏可見性"
+          }
+        }
+      }
+    },
+    "Bookmark filters reset": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bookmark filters reset"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ブックマークフィルターをリセットしました"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已重置收藏筛选"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已重設收藏篩選"
           }
         }
       }
@@ -5743,6 +5975,35 @@
         }
       }
     },
+    "Copied Pixiv Web bookmarks link": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copied Pixiv Web bookmarks link"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pixiv Webのブックマークリンクをコピーしました"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已复制 Pixiv Web 收藏链接"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已複製 Pixiv Web 收藏連結"
+          }
+        }
+      }
+    },
     "Copied QA Checklist": {
       "extractionState": "manual",
       "localizations": {
@@ -6493,6 +6754,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "複製 SauceNAO 連結"
+          }
+        }
+      }
+    },
+    "Copy Pixiv Web Bookmarks Link": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy Pixiv Web Bookmarks Link"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pixiv Webのブックマークリンクをコピー"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "复制 Pixiv Web 收藏链接"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "複製 Pixiv Web 收藏連結"
           }
         }
       }
@@ -16850,6 +17140,64 @@
         }
       }
     },
+    "Newest Artwork": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Newest Artwork"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "新しい作品順"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最新作品"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最新作品"
+          }
+        }
+      }
+    },
+    "Newest Bookmarked": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Newest Bookmarked"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "新しくブックマークした順"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最新收藏"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最新收藏"
+          }
+        }
+      }
+    },
     "Newest First": {
       "extractionState": "manual",
       "localizations": {
@@ -19112,6 +19460,64 @@
         }
       }
     },
+    "Oldest Artwork": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oldest Artwork"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "古い作品順"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最早作品"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最早作品"
+          }
+        }
+      }
+    },
+    "Oldest Bookmarked": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oldest Bookmarked"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "古くブックマークした順"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最早收藏"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最早收藏"
+          }
+        }
+      }
+    },
     "Oldest First": {
       "extractionState": "manual",
       "localizations": {
@@ -19663,6 +20069,64 @@
         }
       }
     },
+    "Open Pixiv Web Bookmarks": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Pixiv Web Bookmarks"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pixiv Webのブックマークを開く"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "打开 Pixiv Web 收藏"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "開啟 Pixiv Web 收藏"
+          }
+        }
+      }
+    },
+    "Open Pixiv Web Collections": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Pixiv Web Collections"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pixiv Webのコレクションを開く"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "打开 Pixiv Web 珍藏册"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "開啟 Pixiv Web 珍藏冊"
+          }
+        }
+      }
+    },
     "Open Pixiv Web Search": {
       "extractionState": "manual",
       "localizations": {
@@ -19688,6 +20152,122 @@
           "stringUnit": {
             "state": "translated",
             "value": "開啟 Pixiv Web 搜尋"
+          }
+        }
+      }
+    },
+    "Pixiv Web": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pixiv Web"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pixiv Web"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pixiv Web"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pixiv Web"
+          }
+        }
+      }
+    },
+    "Pixiv Web only": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pixiv Web only"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pixiv Web専用"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pixiv Web 专属"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pixiv Web 專屬"
+          }
+        }
+      }
+    },
+    "Artwork-tag and bookmark-date filters are Pixiv Web / Premium surfaces. KeiPix applies loaded-feed filters locally and links to Pixiv Web for the full picker.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Artwork-tag and bookmark-date filters are Pixiv Web / Premium surfaces. KeiPix applies loaded-feed filters locally and links to Pixiv Web for the full picker."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "作品タグとブックマーク日時のフィルターは Pixiv Web / Premium の機能です。KeiPix は読み込み済みフィードをローカルで絞り込み、完全なピッカーへは Pixiv Web リンクで移動します。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "作品标签和收藏时间筛选属于 Pixiv Web / Premium 功能。KeiPix 会对已加载作品做本地筛选，并提供 Pixiv Web 链接进入完整选择器。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "作品標籤和收藏時間篩選屬於 Pixiv Web / Premium 功能。KeiPix 會對已載入作品做本地篩選，並提供 Pixiv Web 連結進入完整選擇器。"
+          }
+        }
+      }
+    },
+    "Collections are currently exposed by Pixiv Web. Open the web tab to browse or manage them.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Collections are currently exposed by Pixiv Web. Open the web tab to browse or manage them."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "コレクションは現在 Pixiv Web で提供されています。Web ページを開いて閲覧または管理してください。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "珍藏册目前由 Pixiv Web 提供。打开 Web 页面浏览或管理。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "珍藏冊目前由 Pixiv Web 提供。開啟 Web 頁面瀏覽或管理。"
           }
         }
       }
@@ -37746,6 +38326,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "作品をフィルター..."
+          }
+        }
+      }
+    },
+    "Filter loaded bookmarks by artwork tag": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Filter loaded bookmarks by artwork tag"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "読み込んだブックマークを作品タグで絞り込み"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "按当前已加载作品标签筛选收藏"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "按目前已載入作品標籤篩選收藏"
           }
         }
       }
