@@ -22215,31 +22215,31 @@
         }
       }
     },
-    "Pixez and Pixes are GPL-licensed Flutter apps used as behavior references only. KeiPix's source is original Swift; reference-client implementation paths are blocked by NativeBoundaryTests.": {
+    "Pixez is GPL-3.0 and Pixes is MIT-licensed; both are behavior references only. KeiPix's source is original Swift; reference-client implementation paths are blocked by NativeBoundaryTests.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pixez and Pixes are GPL-licensed Flutter apps used as behavior references only. KeiPix's source is original Swift; reference-client implementation paths are blocked by NativeBoundaryTests."
+            "value": "Pixez is GPL-3.0 and Pixes is MIT-licensed; both are behavior references only. KeiPix's source is original Swift; reference-client implementation paths are blocked by NativeBoundaryTests."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pixez と Pixes は GPL ライセンスの Flutter アプリで、挙動参照のみに利用しています。KeiPix のソースはすべてオリジナルの Swift で書かれており、NativeBoundaryTests が参照クライアント由来の実装パスを遮断します。"
+            "value": "Pixez は GPL-3.0、Pixes は MIT ライセンスです。どちらも挙動参照のみに利用しています。KeiPix のソースはすべてオリジナルの Swift で書かれており、NativeBoundaryTests が参照クライアント由来の実装パスを遮断します。"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pixez 与 Pixes 为 GPL 许可的 Flutter 应用，仅作为行为参考。KeiPix 全部源码为原创 Swift；NativeBoundaryTests 会拦截参考客户端实现路径。"
+            "value": "Pixez 使用 GPL-3.0，Pixes 使用 MIT 许可；二者仅作为行为参考。KeiPix 全部源码为原创 Swift；NativeBoundaryTests 会拦截参考客户端实现路径。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pixez 與 Pixes 為 GPL 授權的 Flutter 應用，僅作為行為參考。KeiPix 全部原始碼為原創 Swift；NativeBoundaryTests 會攔截參考客戶端實作路徑。"
+            "value": "Pixez 使用 GPL-3.0，Pixes 使用 MIT 授權；二者僅作為行為參考。KeiPix 全部原始碼為原創 Swift；NativeBoundaryTests 會攔截參考客戶端實作路徑。"
           }
         }
       }

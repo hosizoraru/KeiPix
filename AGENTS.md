@@ -101,13 +101,16 @@ For new Pixiv-facing features or fixes in backend/API behavior, research more
 than one source before designing the Swift implementation.
 
 - Preferred behavior references:
-  - Pixez: `https://github.com/Notsfsssf/pixez-flutter`
-  - Pixes: `https://github.com/pixes-app/pixes`
+  - Pixez: `https://github.com/Notsfsssf/pixez-flutter` (GPL-3.0; behavior reference only)
+  - Pixes: `https://github.com/pixes-app/pixes` (MIT; behavior reference only)
   - Pixiv Web, especially when app APIs do not expose a feature directly.
 - Use those references to understand product behavior, request shape, edge
   cases, and user expectations. Do **not** copy implementation structure, UI
   layout, Dart, Kotlin, generated code, or licensing-sensitive source into
   KeiPix.
+- License nuance matters: Pixez is GPL-3.0 and Pixes is MIT-licensed, but
+  KeiPix's policy is the same for both reference clients: understand behavior,
+  then re-design and reimplement it in native Swift for Apple platforms.
 - Combine references instead of treating any single client as canonical. If
   Pixez, Pixes, and Pixiv Web disagree, document the tradeoff in code comments,
   tests, or the final handoff.

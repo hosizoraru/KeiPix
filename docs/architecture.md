@@ -114,4 +114,4 @@ The bridge rule is intentionally narrow: native views own rendering, layout reus
 
 ## Reference Client Boundary
 
-Pixez, Pixes and other clients are product/API references only. Their Flutter/Dart/Kotlin source structure is not copied into `Sources/KeiPix`; behavior is reimplemented with native Swift, AppKit/UIKit and SwiftUI glue, with boundary tests updated before high-risk migrations.
+Pixez (GPL-3.0), Pixes (MIT) and other clients are product/API references only. Their Flutter/Dart/Kotlin source structure is not copied into `Sources/KeiPix`; behavior is reimplemented with native Swift, AppKit/UIKit and SwiftUI glue, with boundary tests updated before high-risk migrations.

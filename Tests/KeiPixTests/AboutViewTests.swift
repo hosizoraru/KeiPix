@@ -107,6 +107,8 @@ struct AboutViewTests {
         #expect(localizable.contains("\"value\": \"复制仓库 URL\""))
         #expect(localizable.contains("\"value\": \"平台支持\""))
         #expect(localizable.contains("\"value\": \"设计原则\""))
+        #expect(localizable.contains("\"value\": \"Pixez 使用 GPL-3.0，Pixes 使用 MIT 许可；二者仅作为行为参考。KeiPix 全部源码为原创 Swift；NativeBoundaryTests 会拦截参考客户端实现路径。\""))
+        #expect(localizable.contains("Pixez 与 Pixes 为 GPL 许可") == false)
         #expect(localizable.contains("\"value\": \"项目在 GitHub 上开放开发。你可以在仓库中提交问题、查看提交，或审阅 Apache-2.0 源码。\""))
     }
 

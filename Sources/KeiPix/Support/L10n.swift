@@ -1155,7 +1155,7 @@ enum L10n {
     static var aboutAcknowledgments: String { text("Acknowledgments") }
     static var aboutReferenceProjects: String { text("Reference Projects") }
     static var aboutReferenceProjectsBody: String {
-        text("Pixez and Pixes are GPL-licensed Flutter apps used as behavior references only. " +
+        text("Pixez is GPL-3.0 and Pixes is MIT-licensed; both are behavior references only. " +
              "KeiPix's source is original Swift; reference-client implementation paths are blocked " +
              "by NativeBoundaryTests.")
     }
