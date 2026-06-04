@@ -419,7 +419,9 @@ struct ArtworkSeriesVisualQASheetView: View {
             )
             .padding(20)
         }
+        #if os(macOS)
         .frame(width: 860, height: 680)
+        #endif
         .navigationTitle(L10n.artworkSeries)
         .toolbar {
             ToolbarItem(placement: .confirmationAction) {

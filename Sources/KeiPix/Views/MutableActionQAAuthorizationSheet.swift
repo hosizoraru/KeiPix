@@ -46,7 +46,9 @@ struct MutableActionQAAuthorizationSheet: View {
             }
         }
         .padding(24)
+        #if os(macOS)
         .frame(width: 460)
+        #endif
     }
 
     private func runIfAuthorized() {

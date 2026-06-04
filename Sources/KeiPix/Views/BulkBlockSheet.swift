@@ -83,7 +83,9 @@ struct BulkBlockSheet: View {
             }
         }
         .padding(22)
+        #if os(macOS)
         .frame(width: 460)
+        #endif
     }
 
     private var totalSelectedCount: Int {

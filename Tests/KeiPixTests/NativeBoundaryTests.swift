@@ -449,6 +449,52 @@ struct NativeBoundaryTests {
         #expect(profileSheet.contains("UserPreviewListView(store: store, mode: mode, showsCloseButton: true)\n                    #if os(macOS)\n                    .frame(width: 920, height: 680)"))
     }
 
+    @Test("Mobile utility sheets avoid fixed desktop widths")
+    func mobileUtilitySheetsAvoidFixedDesktopWidths() throws {
+        let root = try packageRoot()
+        let expectedMacOnlyFrames = [
+            (
+                "Sources/KeiPix/Views/BookmarkEditorView.swift",
+                "#if os(macOS)\n        .frame(width: 720)"
+            ),
+            (
+                "Sources/KeiPix/Views/FeedbackReportSheet.swift",
+                "#if os(macOS)\n        .frame(width: 480)"
+            ),
+            (
+                "Sources/KeiPix/Views/BulkBlockSheet.swift",
+                "#if os(macOS)\n        .frame(width: 460)"
+            ),
+            (
+                "Sources/KeiPix/Views/PixivIDOpenSheet.swift",
+                "#if os(macOS)\n        .frame(width: 460)"
+            ),
+            (
+                "Sources/KeiPix/Views/MutableActionQAAuthorizationSheet.swift",
+                "#if os(macOS)\n        .frame(width: 460)"
+            ),
+            (
+                "Sources/KeiPix/Views/DownloadPageSelectionSheet.swift",
+                "#if os(macOS)\n        .frame(width: 540)"
+            ),
+            (
+                "Sources/KeiPix/Views/ArtworkSeriesView.swift",
+                "#if os(macOS)\n        .frame(width: 860, height: 680)"
+            )
+        ]
+
+        for (relativePath, expectedFrame) in expectedMacOnlyFrames {
+            let source = try String(contentsOf: root.appending(path: relativePath), encoding: .utf8)
+            #expect(source.contains(expectedFrame), "\(relativePath) should keep fixed desktop sizing macOS-only")
+        }
+
+        let pageSelection = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/DownloadPageSelectionSheet.swift"),
+            encoding: .utf8
+        )
+        #expect(pageSelection.contains("#if os(iOS)\n        [GridItem(.adaptive(minimum: 96), spacing: 10)]"))
+    }
+
     @Test("Pixiv signed-out surfaces share one native login state")
     func pixivSignedOutSurfacesShareOneNativeLoginState() throws {
         let root = try packageRoot()

@@ -105,8 +105,10 @@ struct BookmarkEditorView: View {
             Divider()
             footer
         }
+        #if os(macOS)
         .frame(width: 720)
         .frame(minHeight: 720, idealHeight: 820, maxHeight: 980)
+        #endif
         .overlay(alignment: .bottom) {
             if let actionMessage {
                 FloatingStatusBanner(maxWidth: 460) {

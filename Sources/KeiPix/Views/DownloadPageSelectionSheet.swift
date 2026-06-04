@@ -94,13 +94,19 @@ struct DownloadPageSelectionSheet: View {
             }
         }
         .padding(22)
+        #if os(macOS)
         .frame(width: 540)
+        #endif
     }
 
     private var gridColumns: [GridItem] {
+        #if os(iOS)
+        [GridItem(.adaptive(minimum: 96), spacing: 10)]
+        #else
         // Three columns at the chosen sheet width fit a 3:2 thumbnail nicely
         // without forcing the user to scroll for typical 4–8 page sets.
         Array(repeating: GridItem(.flexible(minimum: 110), spacing: 12), count: 3)
+        #endif
     }
 
     private func pageTile(index: Int) -> some View {

@@ -84,7 +84,9 @@ struct PixivIDOpenSheet: View {
             .padding(.horizontal, 20)
             .padding(.vertical, 14)
         }
+        #if os(macOS)
         .frame(width: 460)
+        #endif
     }
 
     private var normalizedID: Int? {
