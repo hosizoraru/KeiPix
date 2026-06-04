@@ -45,6 +45,58 @@ struct NativeNovelTextPageView: View {
     }
 }
 
+/// Native continuous reader for iOS/iPadOS long-form novel text.
+///
+/// The page view above is still useful for macOS book-style layouts. Mobile
+/// reading needs a different hot path: one vertically scrolling native text
+/// surface that owns selection, link interaction, Dynamic Type scaling, and
+/// scroll indicators without SwiftUI gesture overlays.
+struct NativeNovelContinuousTextView: View {
+    let tokens: [NovelToken]
+    let fontFamily: NovelReaderFontFamily
+    let textSize: Double
+    let lineSpacing: Double
+    let paragraphSpacing: Double
+    let theme: NovelReaderTheme
+    let translatedTexts: [Int: String]
+    let translationMode: NovelTranslationMode
+    let isTranslationActive: Bool
+    let isTranslating: Bool
+    let showChapterMarkers: Bool
+    let maxContentWidth: CGFloat
+
+    var body: some View {
+        let attributedString = NativeNovelTextAttributedStringBuilder.build(
+            tokens: tokens,
+            fontFamily: fontFamily,
+            textSize: textSize,
+            lineSpacing: lineSpacing,
+            paragraphSpacing: paragraphSpacing,
+            theme: theme,
+            translatedTexts: translatedTexts,
+            translationMode: translationMode,
+            isTranslationActive: isTranslationActive,
+            isTranslating: isTranslating,
+            showChapterMarkers: showChapterMarkers
+        )
+
+        #if os(iOS)
+        NativeNovelContinuousTextRepresentable(
+            attributedString: attributedString,
+            backgroundColor: PlatformColor(theme.backgroundColor),
+            textColor: PlatformColor(theme.foregroundColor),
+            maxContentWidth: maxContentWidth
+        )
+        #else
+        NativeNovelTextRepresentable(
+            attributedString: attributedString,
+            backgroundColor: PlatformColor(theme.backgroundColor),
+            textColor: PlatformColor(theme.foregroundColor)
+        )
+        #endif
+    }
+}
+
 private enum NativeNovelTextAttributedStringBuilder {
     static func build(
         tokens: [NovelToken],
@@ -322,6 +374,124 @@ private struct NativeNovelTextRepresentable: UIViewRepresentable {
         var lastSignature = ""
     }
 }
+
+private struct NativeNovelContinuousTextRepresentable: UIViewRepresentable {
+    let attributedString: NSAttributedString
+    let backgroundColor: UIColor
+    let textColor: UIColor
+    let maxContentWidth: CGFloat
+
+    func makeUIView(context: Context) -> NativeNovelContinuousTextContainerView {
+        let container = NativeNovelContinuousTextContainerView()
+        container.configure(maxContentWidth: maxContentWidth)
+
+        let textView = container.textView
+        textView.isEditable = false
+        textView.isSelectable = true
+        textView.isScrollEnabled = true
+        textView.alwaysBounceVertical = true
+        textView.showsVerticalScrollIndicator = true
+        textView.showsHorizontalScrollIndicator = false
+        textView.keyboardDismissMode = .interactive
+        textView.contentInsetAdjustmentBehavior = .never
+        textView.adjustsFontForContentSizeCategory = true
+        textView.backgroundColor = backgroundColor
+        textView.textColor = textColor
+        textView.textContainerInset = UIEdgeInsets(top: 24, left: 0, bottom: 36, right: 0)
+        textView.textContainer.lineFragmentPadding = 0
+        textView.linkTextAttributes = [
+            .foregroundColor: UIColor.link,
+            .underlineStyle: NSUnderlineStyle.single.rawValue
+        ]
+        textView.attributedText = attributedString
+
+        context.coordinator.lastSignature = renderSignature
+        context.coordinator.lastPlainText = attributedString.string
+        return container
+    }
+
+    func updateUIView(_ container: NativeNovelContinuousTextContainerView, context: Context) {
+        container.configure(maxContentWidth: maxContentWidth)
+
+        let textView = container.textView
+        textView.backgroundColor = backgroundColor
+        textView.textColor = textColor
+
+        guard context.coordinator.lastSignature != renderSignature else { return }
+
+        let shouldResetScroll = context.coordinator.lastPlainText != attributedString.string
+        let previousOffset = textView.contentOffset
+        textView.attributedText = attributedString
+        context.coordinator.lastSignature = renderSignature
+        context.coordinator.lastPlainText = attributedString.string
+
+        if shouldResetScroll {
+            textView.setContentOffset(.zero, animated: false)
+        } else {
+            textView.setContentOffset(previousOffset, animated: false)
+        }
+    }
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator()
+    }
+
+    private var renderSignature: String {
+        "\(attributedString.string.hashValue)-\(attributedString.length)-\(backgroundColor)-\(textColor)-\(maxContentWidth)"
+    }
+
+    final class Coordinator {
+        var lastSignature = ""
+        var lastPlainText = ""
+    }
+}
+
+private final class NativeNovelContinuousTextContainerView: UIView {
+    let textView = UITextView()
+
+    private var maxWidthConstraint: NSLayoutConstraint?
+
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        backgroundColor = .clear
+        directionalLayoutMargins = NSDirectionalEdgeInsets(top: 0, leading: 18, bottom: 0, trailing: 18)
+
+        textView.translatesAutoresizingMaskIntoConstraints = false
+        textView.backgroundColor = .clear
+        textView.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        textView.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        addSubview(textView)
+
+        let fillWidth = textView.widthAnchor.constraint(equalTo: layoutMarginsGuide.widthAnchor)
+        fillWidth.priority = .defaultHigh
+
+        NSLayoutConstraint.activate([
+            textView.topAnchor.constraint(equalTo: topAnchor),
+            textView.bottomAnchor.constraint(equalTo: bottomAnchor),
+            textView.centerXAnchor.constraint(equalTo: centerXAnchor),
+            textView.leadingAnchor.constraint(greaterThanOrEqualTo: layoutMarginsGuide.leadingAnchor),
+            textView.trailingAnchor.constraint(lessThanOrEqualTo: layoutMarginsGuide.trailingAnchor),
+            fillWidth
+        ])
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    func configure(maxContentWidth: CGFloat) {
+        let resolvedWidth = max(320, maxContentWidth)
+        if let maxWidthConstraint {
+            maxWidthConstraint.constant = resolvedWidth
+        } else {
+            let constraint = textView.widthAnchor.constraint(lessThanOrEqualToConstant: resolvedWidth)
+            constraint.priority = .required
+            constraint.isActive = true
+            maxWidthConstraint = constraint
+        }
+    }
+}
 #endif
 
 private enum NativeNovelFontWeight {
@@ -360,11 +530,14 @@ private func platformFont(
     }
     switch family {
     case .system:
-        return UIFont.systemFont(ofSize: CGFloat(size), weight: uiWeight)
+        let font = UIFont.systemFont(ofSize: CGFloat(size), weight: uiWeight)
+        return UIFontMetrics(forTextStyle: .body).scaledFont(for: font)
     case .serif:
-        return UIFont(descriptor: UIFontDescriptor(name: "Georgia", size: CGFloat(size)), size: CGFloat(size))
+        let font = UIFont(descriptor: UIFontDescriptor(name: "Georgia", size: CGFloat(size)), size: CGFloat(size))
+        return UIFontMetrics(forTextStyle: .body).scaledFont(for: font)
     case .monospaced:
-        return UIFont.monospacedSystemFont(ofSize: CGFloat(size), weight: uiWeight)
+        let font = UIFont.monospacedSystemFont(ofSize: CGFloat(size), weight: uiWeight)
+        return UIFontMetrics(forTextStyle: .body).scaledFont(for: font)
     }
     #endif
 }

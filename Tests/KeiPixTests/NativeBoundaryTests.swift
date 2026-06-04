@@ -952,10 +952,31 @@ struct NativeBoundaryTests {
 
         #expect(readerView.contains("usesNativeNovelTextPage"))
         #expect(readerView.contains("NativeNovelTextPageView("))
+        #expect(readerView.contains("usesContinuousNovelReader"))
+        #expect(readerView.contains("continuousReaderLayout"))
+        #expect(readerView.contains("NativeNovelContinuousTextView("))
+        #expect(readerView.contains("translateContinuousReaderPages(session: session)"))
+        #expect(readerView.contains("if usesContinuousNovelReader == false {\n                readingModeButton"))
+        #expect(readerView.contains("continuousReaderFooter"))
         #expect(nativeText.contains("NSTextView.scrollableTextView"))
         #expect(nativeText.contains("UITextView"))
         #expect(nativeText.contains("NSAttributedString"))
         #expect(nativeText.contains("NativeNovelTextAttributedStringBuilder"))
+        #expect(nativeText.contains("struct NativeNovelContinuousTextView"))
+        #expect(nativeText.contains("NativeNovelContinuousTextRepresentable"))
+        #expect(nativeText.contains("alwaysBounceVertical = true"))
+        #expect(nativeText.contains("showsVerticalScrollIndicator = true"))
+        #expect(nativeText.contains("keyboardDismissMode = .interactive"))
+        #expect(nativeText.contains("contentInsetAdjustmentBehavior = .never"))
+        #expect(nativeText.contains("UIFontMetrics(forTextStyle: .body).scaledFont"))
+
+        guard let continuousLayoutStart = readerView.range(of: "private var continuousReaderLayout"),
+              let pagedLayoutStart = readerView.range(of: "// MARK: - Single page layout") else {
+            Issue.record("Expected continuous and paged reader layout sections")
+            return
+        }
+        let continuousLayout = String(readerView[continuousLayoutStart.lowerBound..<pagedLayoutStart.lowerBound])
+        #expect(continuousLayout.contains(".readerGestures(") == false)
     }
 
     @Test("Artwork reader native scroll viewports keep SwiftUI height stable")

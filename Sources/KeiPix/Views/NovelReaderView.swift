@@ -69,6 +69,50 @@ struct NovelReaderView: View {
         return pages[next]
     }
 
+    private var usesContinuousNovelReader: Bool {
+        #if os(iOS)
+        return true
+        #else
+        return false
+        #endif
+    }
+
+    private var continuousReaderTokens: [NovelToken] {
+        pages.flatMap { $0 }
+    }
+
+    private var continuousTranslatedTexts: [Int: String] {
+        var translated: [Int: String] = [:]
+        var continuousIndex = 0
+
+        for pageIndex in pages.indices {
+            let page = pages[pageIndex]
+            for tokenIndex in page.indices {
+                if let value = translationEngine.translatedText(pageIndex: pageIndex, tokenIndex: tokenIndex) {
+                    translated[continuousIndex] = value
+                }
+                continuousIndex += 1
+            }
+        }
+
+        return translated
+    }
+
+    private var isContinuousTranslationInProgress: Bool {
+        pages.indices.contains { translationEngine.isTranslating(pageIndex: $0) }
+    }
+
+    private var isReaderTranslationInProgress: Bool {
+        usesContinuousNovelReader
+            ? isContinuousTranslationInProgress
+            : translationEngine.isTranslating(pageIndex: pageIndex)
+    }
+
+    private var showsReaderFooter: Bool {
+        guard usesContinuousNovelReader else { return true }
+        return novelStore.loadedNovelText?.seriesPrev != nil || novelStore.loadedNovelText?.seriesNext != nil
+    }
+
     // MARK: - Body
 
     var body: some View {
@@ -76,8 +120,10 @@ struct NovelReaderView: View {
             header
             Divider()
             content
-            Divider()
-            footer
+            if showsReaderFooter {
+                Divider()
+                footer
+            }
         }
         .background(theme.backgroundColor)
         .foregroundStyle(theme.foregroundColor)
@@ -100,6 +146,7 @@ struct NovelReaderView: View {
             }
         }
         .onChange(of: pageIndex) { _, _ in
+            guard usesContinuousNovelReader == false else { return }
             // Don't clear cached translations — they persist across
             // page navigation. Only trigger translation for the new
             // page if inline translation is active.
@@ -115,6 +162,7 @@ struct NovelReaderView: View {
             #endif
         }
         .onChange(of: readingModeRaw) { _, _ in
+            guard usesContinuousNovelReader == false else { return }
             // When switching to double-page mode, translate the next
             // page if translation is active.
             let mode = NovelReadingMode(rawValue: readingModeRaw) ?? .singlePage
@@ -124,11 +172,15 @@ struct NovelReaderView: View {
         }
         .translationTask(translationConfig) { session in
             guard translationEngine.isInlineTranslationActive else { return }
-            await translateCurrentPage(session: session)
-            // In double-page mode, also translate the next page
-            let mode = NovelReadingMode(rawValue: readingModeRaw) ?? .singlePage
-            if mode == .doublePage, pageIndex + 1 < pages.count {
-                await translatePage(pageIndex + 1, session: session)
+            if usesContinuousNovelReader {
+                await translateContinuousReaderPages(session: session)
+            } else {
+                await translateCurrentPage(session: session)
+                // In double-page mode, also translate the next page
+                let mode = NovelReadingMode(rawValue: readingModeRaw) ?? .singlePage
+                if mode == .doublePage, pageIndex + 1 < pages.count {
+                    await translatePage(pageIndex + 1, session: session)
+                }
             }
         }
         .sheet(isPresented: $isSettingsPresented) {
@@ -152,6 +204,13 @@ struct NovelReaderView: View {
 
     private func translateCurrentPage(session: TranslationSession) async {
         await translatePage(pageIndex, session: session)
+    }
+
+    private func translateContinuousReaderPages(session: TranslationSession) async {
+        for page in pages.indices {
+            guard translationEngine.isInlineTranslationActive else { return }
+            await translatePage(page, session: session)
+        }
     }
 
     private func translatePage(_ page: Int, session: TranslationSession) async {
@@ -231,17 +290,9 @@ struct NovelReaderView: View {
             .help(novel.isBookmarked ? L10n.novelRemoveBookmark : L10n.novelBookmark)
             .keyboardShortcut("b", modifiers: [])
 
-            // Reading mode (single / double page)
-            Button {
-                let current = NovelReadingMode(rawValue: readingModeRaw) ?? .singlePage
-                readingModeRaw = (current == .singlePage ? NovelReadingMode.doublePage : .singlePage).rawValue
-            } label: {
-                let current = NovelReadingMode(rawValue: readingModeRaw) ?? .singlePage
-                Label(current.title, systemImage: current.systemImage)
-                    .labelStyle(.iconOnly)
+            if usesContinuousNovelReader == false {
+                readingModeButton
             }
-            .help(L10n.readingMode)
-            .keyboardShortcut("d", modifiers: .command)
 
             // Translation mode picker (bilingual / immersive)
             translationModeMenu
@@ -268,6 +319,19 @@ struct NovelReaderView: View {
         .padding(.horizontal, 18)
         .padding(.vertical, 12)
         .background(.thinMaterial)
+    }
+
+    private var readingModeButton: some View {
+        Button {
+            let current = NovelReadingMode(rawValue: readingModeRaw) ?? .singlePage
+            readingModeRaw = (current == .singlePage ? NovelReadingMode.doublePage : .singlePage).rawValue
+        } label: {
+            let current = NovelReadingMode(rawValue: readingModeRaw) ?? .singlePage
+            Label(current.title, systemImage: current.systemImage)
+                .labelStyle(.iconOnly)
+        }
+        .help(L10n.readingMode)
+        .keyboardShortcut("d", modifiers: .command)
     }
 
     private var translationModeMenu: some View {
@@ -312,7 +376,7 @@ struct NovelReaderView: View {
             .tint(translationEngine.isInlineTranslationActive ? .accentColor : nil)
 
             // Progress indicator during translation
-            if translationEngine.isTranslating(pageIndex: pageIndex) {
+            if isReaderTranslationInProgress {
                 ProgressView(value: translationEngine.translationProgress)
                     .progressViewStyle(.circular)
                     .controlSize(.mini)
@@ -344,6 +408,8 @@ struct NovelReaderView: View {
             errorState(error)
         } else if novelStore.loadedNovelText == nil || novelStore.loadedNovelTokens.isEmpty {
             unavailableState
+        } else if usesContinuousNovelReader {
+            continuousReaderLayout
         } else {
             GeometryReader { geo in
                 let mode = NovelReadingMode(rawValue: readingModeRaw) ?? .singlePage
@@ -355,6 +421,56 @@ struct NovelReaderView: View {
                 }
             }
             .animation(.snappy(duration: 0.2), value: pageIndex)
+        }
+    }
+
+    // MARK: - Continuous mobile layout
+
+    @ViewBuilder
+    private var continuousReaderLayout: some View {
+        let tokens = continuousReaderTokens
+        if usesNativeNovelTextPage(tokens) {
+            NativeNovelContinuousTextView(
+                tokens: tokens,
+                fontFamily: fontFamily,
+                textSize: textSize,
+                lineSpacing: lineSpacing,
+                paragraphSpacing: paragraphSpacing,
+                theme: theme,
+                translatedTexts: continuousTranslatedTexts,
+                translationMode: translationEngine.translationMode,
+                isTranslationActive: translationEngine.isInlineTranslationActive,
+                isTranslating: isContinuousTranslationInProgress,
+                showChapterMarkers: showChapterMarkers,
+                maxContentWidth: CGFloat(maxContentWidth)
+            )
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(theme.backgroundColor)
+        } else {
+            ScrollView {
+                continuousTokenColumn
+                    .frame(maxWidth: CGFloat(maxContentWidth), alignment: .leading)
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 24)
+                    .textSelection(.enabled)
+            }
+            .scrollIndicators(.visible)
+            .background(theme.backgroundColor)
+        }
+    }
+
+    private var continuousTokenColumn: some View {
+        VStack(alignment: .leading, spacing: CGFloat(paragraphSpacing)) {
+            ForEach(pages.indices, id: \.self) { sectionIndex in
+                if sectionIndex > 0 {
+                    Divider()
+                        .padding(.vertical, 10)
+                }
+                ForEach(Array(pages[sectionIndex].enumerated()), id: \.offset) { tokenIndex, token in
+                    tokenView(token, tokenIndex: tokenIndex, pageIndex: sectionIndex)
+                }
+            }
         }
     }
 
@@ -651,18 +767,31 @@ struct NovelReaderView: View {
 
     // MARK: - Footer
 
+    @ViewBuilder
     private var footer: some View {
+        if usesContinuousNovelReader {
+            continuousReaderFooter
+        } else {
+            pagedReaderFooter
+        }
+    }
+
+    private var continuousReaderFooter: some View {
         HStack(spacing: 12) {
-            Button {
-                if let prev = novelStore.loadedNovelText?.seriesPrev {
-                    navigateToSeriesEntry(id: prev.id)
-                }
-            } label: {
-                Label(L10n.novelPreviousInSeries, systemImage: "chevron.backward.circle")
-                    .labelStyle(.iconOnly)
-            }
-            .disabled(novelStore.loadedNovelText?.seriesPrev == nil)
-            .help(L10n.novelPreviousInSeries)
+            seriesPreviousButton
+
+            Spacer(minLength: 0)
+
+            seriesNextButton
+        }
+        .padding(.horizontal, 18)
+        .padding(.vertical, 10)
+        .background(.thinMaterial)
+    }
+
+    private var pagedReaderFooter: some View {
+        HStack(spacing: 12) {
+            seriesPreviousButton
 
             Spacer(minLength: 0)
 
@@ -695,20 +824,37 @@ struct NovelReaderView: View {
 
             Spacer(minLength: 0)
 
-            Button {
-                if let next = novelStore.loadedNovelText?.seriesNext {
-                    navigateToSeriesEntry(id: next.id)
-                }
-            } label: {
-                Label(L10n.novelNextInSeries, systemImage: "chevron.forward.circle")
-                    .labelStyle(.iconOnly)
-            }
-            .disabled(novelStore.loadedNovelText?.seriesNext == nil)
-            .help(L10n.novelNextInSeries)
+            seriesNextButton
         }
         .padding(.horizontal, 18)
         .padding(.vertical, 10)
         .background(.thinMaterial)
+    }
+
+    private var seriesPreviousButton: some View {
+        Button {
+            if let prev = novelStore.loadedNovelText?.seriesPrev {
+                navigateToSeriesEntry(id: prev.id)
+            }
+        } label: {
+            Label(L10n.novelPreviousInSeries, systemImage: "chevron.backward.circle")
+                .labelStyle(.iconOnly)
+        }
+        .disabled(novelStore.loadedNovelText?.seriesPrev == nil)
+        .help(L10n.novelPreviousInSeries)
+    }
+
+    private var seriesNextButton: some View {
+        Button {
+            if let next = novelStore.loadedNovelText?.seriesNext {
+                navigateToSeriesEntry(id: next.id)
+            }
+        } label: {
+            Label(L10n.novelNextInSeries, systemImage: "chevron.forward.circle")
+                .labelStyle(.iconOnly)
+        }
+        .disabled(novelStore.loadedNovelText?.seriesNext == nil)
+        .help(L10n.novelNextInSeries)
     }
 
     // MARK: - Page navigation
