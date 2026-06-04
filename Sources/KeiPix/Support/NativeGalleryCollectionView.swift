@@ -1,6 +1,7 @@
 import SwiftUI
 
 enum NativeGalleryCollectionItem: Hashable, Identifiable {
+    case loading
     case empty
     case cachedStatus
     case popularPreview
@@ -9,6 +10,8 @@ enum NativeGalleryCollectionItem: Hashable, Identifiable {
 
     var id: String {
         switch self {
+        case .loading:
+            "loading"
         case .empty:
             "empty"
         case .cachedStatus:
@@ -36,7 +39,7 @@ enum NativeGalleryCollectionItem: Hashable, Identifiable {
 
     var isFullWidth: Bool {
         switch self {
-        case .empty, .cachedStatus, .popularPreview, .loadMore:
+        case .loading, .empty, .cachedStatus, .popularPreview, .loadMore:
             true
         case .artwork:
             false
@@ -45,6 +48,8 @@ enum NativeGalleryCollectionItem: Hashable, Identifiable {
 
     var pointerTitle: String? {
         switch self {
+        case .loading:
+            L10n.loading
         case .artwork(let artwork):
             "\(artwork.title) · \(artwork.user.name)"
         case .empty:
@@ -109,6 +114,8 @@ enum NativeGalleryCollectionLayout: Equatable {
 
     fileprivate func fullWidthHeight(for item: NativeGalleryCollectionItem) -> CGFloat {
         switch item {
+        case .loading:
+            620
         case .empty:
             420
         case .cachedStatus:

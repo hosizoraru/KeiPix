@@ -149,4 +149,30 @@ struct GallerySelectionTests {
         #expect(resolved.frames[3].minY >= resolved.frames[2].maxY)
         #expect(resolved.size.height >= resolved.frames[3].maxY)
     }
+
+    @Test("Wide artworks fill open columns instead of leaving row holes")
+    func wideArtworksFillOpenColumnsInsteadOfLeavingRowHoles() {
+        let resolved = ArtworkMasonryPlacement.resolve(
+            elements: [
+                .artwork(aspectRatio: 0.62),
+                .artwork(aspectRatio: 4.2),
+                .artwork(aspectRatio: 0.78)
+            ],
+            availableWidth: 720,
+            configuration: ArtworkMasonryLayoutConfiguration(
+                spacing: 12,
+                preferredColumnWidth: 224,
+                minColumnWidth: 176,
+                maxColumnWidth: 260
+            )
+        )
+
+        #expect(resolved.frames.count == 3)
+        #expect(resolved.frames[0].minX == 0)
+        #expect(resolved.frames[0].minY == 0)
+        #expect(resolved.frames[1].minY == 0)
+        #expect(resolved.frames[1].minX > resolved.frames[0].minX)
+        #expect(resolved.frames[1].width < 720)
+        #expect(resolved.frames[2].minY >= resolved.frames[1].maxY)
+    }
 }

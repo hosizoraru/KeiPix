@@ -11,9 +11,6 @@ struct GalleryView: View {
         Group {
             if store.session == nil {
                 PixivSignedOutStateView(store: store)
-            } else if store.isLoading {
-                ProgressView(L10n.loading)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 GalleryFeedView(
                     store: store,
@@ -186,13 +183,17 @@ private struct GalleryFeedView: View {
                     Section {
                         Group {
                             if store.artworks.isEmpty {
-                                EmptyStateView(
-                                    title: L10n.noArtworkTitle,
-                                    subtitle: L10n.noArtworkSubtitle,
-                                    systemImage: "photo.on.rectangle.angled"
-                                )
-                                .frame(maxWidth: .infinity)
-                                .frame(minHeight: 420)
+                                if store.isLoading {
+                                    GalleryFeedLoadingPlaceholder()
+                                } else {
+                                    EmptyStateView(
+                                        title: L10n.noArtworkTitle,
+                                        subtitle: L10n.noArtworkSubtitle,
+                                        systemImage: "photo.on.rectangle.angled"
+                                    )
+                                    .frame(maxWidth: .infinity)
+                                    .frame(minHeight: 420)
+                                }
                             } else {
                                 if let restoration = store.activeFeedSnapshotRestoration {
                                     CachedFeedStatusStrip(restoration: restoration) {
@@ -358,7 +359,7 @@ private struct GalleryFeedView: View {
 
     private var nativeGalleryItems: [NativeGalleryCollectionItem] {
         guard store.artworks.isEmpty == false else {
-            return [.empty]
+            return store.isLoading ? [.loading] : [.empty]
         }
 
         var items: [NativeGalleryCollectionItem] = []
@@ -428,6 +429,8 @@ private struct GalleryFeedView: View {
     @ViewBuilder
     private func nativeGalleryContent(for item: NativeGalleryCollectionItem) -> some View {
         switch item {
+        case .loading:
+            GalleryFeedLoadingPlaceholder()
         case .empty:
             EmptyStateView(
                 title: L10n.noArtworkTitle,
@@ -683,6 +686,43 @@ private struct GalleryFeedView: View {
         actionMessage = String(format: L10n.queuedDownloadsFormat, queuedCount)
         openWindow(id: "main")
         store.select(.downloads)
+    }
+}
+
+private struct GalleryFeedLoadingPlaceholder: View {
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(spacing: 10) {
+                SkeletonPlaceholder(width: 180, height: 18, cornerRadius: 9)
+                SkeletonPlaceholder(width: 96, height: 18, cornerRadius: 9)
+                Spacer(minLength: 0)
+            }
+            .padding(.horizontal, 4)
+
+            LazyVGrid(columns: columns, spacing: 12) {
+                ForEach(0..<10, id: \.self) { index in
+                    VStack(alignment: .leading, spacing: 8) {
+                        SkeletonPlaceholder(
+                            width: nil,
+                            height: index.isMultiple(of: 4) ? 220 : 168,
+                            cornerRadius: 16
+                        )
+                        SkeletonPlaceholder(width: 120, height: 13, cornerRadius: 7)
+                        SkeletonPlaceholder(width: 84, height: 11, cornerRadius: 6)
+                    }
+                    .padding(10)
+                    .keiGlass(18)
+                }
+            }
+        }
+        .padding(.horizontal, 18)
+        .padding(.vertical, 14)
+        .frame(maxWidth: .infinity, alignment: .topLeading)
+        .accessibilityLabel(L10n.loading)
+    }
+
+    private var columns: [GridItem] {
+        [GridItem(.adaptive(minimum: 158, maximum: 240), spacing: 12)]
     }
 }
 

@@ -83,12 +83,17 @@ enum ArtworkMasonryPlacement {
             }
 
             let presentation = ArtworkMasonryPresentation(aspectRatio: element.aspectRatio)
-            let span = min(
+            let preferredSpan = min(
                 presentation.span(
                     for: columnCount,
                     denseFixedColumns: configuration.denseFixedColumns
                 ),
                 columnCount
+            )
+            let span = resolvedArtworkSpan(
+                preferredSpan: preferredSpan,
+                columnHeights: columnHeights,
+                spacing: configuration.spacing
             )
             let spanWidth = CGFloat(span) * columnWidth + CGFloat(span - 1) * configuration.spacing
             let height = presentation.height(for: spanWidth, span: span, columnCount: columnCount)
@@ -113,6 +118,29 @@ enum ArtworkMasonryPlacement {
 
         let height = max(1, (columnHeights.max() ?? 0) - configuration.spacing)
         return Resolved(frames: frames, size: CGSize(width: normalizedWidth, height: height))
+    }
+
+    private static func resolvedArtworkSpan(
+        preferredSpan: Int,
+        columnHeights: [CGFloat],
+        spacing: CGFloat
+    ) -> Int {
+        guard preferredSpan >= columnHeights.count,
+              columnHeights.count > 1 else {
+            return preferredSpan
+        }
+
+        let minHeight = columnHeights.min() ?? 0
+        let maxHeight = columnHeights.max() ?? 0
+        guard maxHeight - minHeight > spacing else {
+            return preferredSpan
+        }
+
+        // A full-width artwork after a single short card leaves a very
+        // visible hole in the rest of that row. Keep true full-width
+        // treatment when the row is aligned, but let wide artworks fill
+        // the still-open columns when the masonry front is uneven.
+        return max(1, columnHeights.count - 1)
     }
 
     private static func originForNextItem(
