@@ -833,6 +833,7 @@ struct ContentView: View {
                     items: [
                         .submenu(
                             title: L10n.galleryLayout,
+                            subtitle: store.galleryLayoutMode.title,
                             systemImage: store.galleryLayoutMode.systemImage,
                             items: GalleryLayoutMode.allCases.map { mode in
                                 .action(

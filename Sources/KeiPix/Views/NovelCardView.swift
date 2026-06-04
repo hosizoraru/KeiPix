@@ -6,6 +6,7 @@ import SwiftUI
 struct NovelCardView: View {
     let novel: PixivNovel
     var isSelected: Bool = false
+    var openReader: (() -> Void)?
 
     var body: some View {
         HStack(alignment: .top, spacing: 14) {
@@ -53,6 +54,10 @@ struct NovelCardView: View {
 
                 if novel.tags.isEmpty == false {
                     tagStrip
+                }
+
+                if let openReader {
+                    readerActionButton(openReader)
                 }
             }
         }
@@ -129,6 +134,21 @@ struct NovelCardView: View {
             .replacingOccurrences(of: "<[^>]+>", with: "", options: .regularExpression)
             .trimmingCharacters(in: .whitespacesAndNewlines)
     }
+
+    private func readerActionButton(_ action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Label(L10n.openNovelReader, systemImage: "book.pages")
+                .font(.caption.weight(.semibold))
+                .lineLimit(1)
+        }
+        .labelStyle(.titleAndIcon)
+        .buttonStyle(.glassProminent)
+        .buttonBorderShape(.capsule)
+        .controlSize(.small)
+        .padding(.top, 2)
+        .help(L10n.openNovelReader)
+        .accessibilityLabel(L10n.openNovelReader)
+    }
 }
 
 private extension Color {
@@ -141,6 +161,7 @@ private extension Color {
 struct NovelGridCardView: View {
     let novel: PixivNovel
     var isSelected: Bool = false
+    var openReader: (() -> Void)?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -185,6 +206,10 @@ struct NovelGridCardView: View {
                 }
                 .font(.caption2)
                 .foregroundStyle(.secondary)
+
+                if let openReader {
+                    readerActionButton(openReader)
+                }
             }
             .padding(.horizontal, 8)
             .padding(.bottom, 10)
@@ -201,5 +226,21 @@ struct NovelGridCardView: View {
                 )
         )
         .help(novel.title)
+    }
+
+    private func readerActionButton(_ action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Label(L10n.openNovelReader, systemImage: "book.pages")
+                .font(.caption.weight(.semibold))
+                .lineLimit(1)
+                .frame(maxWidth: .infinity)
+        }
+        .labelStyle(.titleAndIcon)
+        .buttonStyle(.glassProminent)
+        .buttonBorderShape(.capsule)
+        .controlSize(.small)
+        .padding(.top, 2)
+        .help(L10n.openNovelReader)
+        .accessibilityLabel(L10n.openNovelReader)
     }
 }

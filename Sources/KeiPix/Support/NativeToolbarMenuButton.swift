@@ -106,11 +106,15 @@ struct NativeToolbarMenuSection {
             options.insert(.displayAsPalette)
         }
 
-        return UIMenu(
+        let menu = UIMenu(
             title: title,
             options: options,
             children: items.map { $0.uiElement(coordinator: coordinator) }
         )
+        if presentation == .palette {
+            menu.preferredElementSize = .large
+        }
+        return menu
     }
 }
 
@@ -125,6 +129,7 @@ enum NativeToolbarMenuItem {
     )
     case submenu(
         title: String,
+        subtitle: String? = nil,
         systemImage: String,
         items: [NativeToolbarMenuItem]
     )
@@ -144,12 +149,14 @@ enum NativeToolbarMenuItem {
             }
             return action
 
-        case .submenu(let title, let systemImage, let items):
-            return UIMenu(
+        case .submenu(let title, let subtitle, let systemImage, let items):
+            let menu = UIMenu(
                 title: title,
                 image: UIImage(systemName: systemImage),
                 children: items.map { $0.uiElement(coordinator: coordinator) }
             )
+            menu.subtitle = subtitle
+            return menu
         }
     }
 }

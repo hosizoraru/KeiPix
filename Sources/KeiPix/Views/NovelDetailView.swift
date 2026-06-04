@@ -137,12 +137,15 @@ private struct NovelDetailContent: View {
                     isReaderPresented = true
                 } label: {
                     Label(L10n.openNovelReader, systemImage: "book.pages")
+                        .font(.callout.weight(.semibold))
+                        .lineLimit(1)
                 }
-                .labelStyle(.iconOnly)
+                .labelStyle(.titleAndIcon)
                 .help(L10n.openNovelReader)
                 .accessibilityLabel(L10n.openNovelReader)
                 .buttonStyle(.glassProminent)
-                .controlSize(.small)
+                .buttonBorderShape(.capsule)
+                .controlSize(.regular)
 
                 // Bookmark — always visible
                 Button {
@@ -186,7 +189,7 @@ private struct NovelDetailContent: View {
                 Spacer()
             }
         }
-        .frame(height: 28)
+        .frame(height: 38)
     }
 
     @ViewBuilder

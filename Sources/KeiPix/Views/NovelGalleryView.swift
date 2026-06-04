@@ -10,6 +10,7 @@ import SwiftUI
 /// titles legible without truncation games.
 struct NovelGalleryView: View {
     @Bindable var store: KeiPixStore
+    @State private var readerNovel: PixivNovel?
 
     private var novelStore: NovelFeatureStore { store.novels }
 
@@ -52,6 +53,13 @@ struct NovelGalleryView: View {
         .refreshable {
             await novelStore.refresh(route: store.selectedRoute)
         }
+        .sheet(item: $readerNovel) { novel in
+            NovelReaderView(store: store, novel: novel)
+                #if os(macOS)
+                .frame(minWidth: 720, minHeight: 540, idealHeight: 720)
+                #endif
+                .os26SheetChrome(.immersive)
+        }
     }
 
     private var listContent: some View {
@@ -62,11 +70,12 @@ struct NovelGalleryView: View {
                     ForEach(novelStore.novels) { novel in
                         NovelGridCardView(
                             novel: novel,
-                            isSelected: novelStore.selectedNovel?.id == novel.id
+                            isSelected: novelStore.selectedNovel?.id == novel.id,
+                            openReader: directReaderAction(for: novel)
                         )
                         .contentShape(Rectangle())
                         .onTapGesture {
-                            Task { await novelStore.openNovel(novel) }
+                            openNovelCard(novel)
                         }
                         .contextMenu {
                             novelContextMenu(novel)
@@ -86,11 +95,12 @@ struct NovelGalleryView: View {
                     ForEach(novelStore.novels) { novel in
                         NovelCardView(
                             novel: novel,
-                            isSelected: novelStore.selectedNovel?.id == novel.id
+                            isSelected: novelStore.selectedNovel?.id == novel.id,
+                            openReader: directReaderAction(for: novel)
                         )
                         .contentShape(Rectangle())
                         .onTapGesture {
-                            Task { await novelStore.openNovel(novel) }
+                            openNovelCard(novel)
                         }
                         .contextMenu {
                             novelContextMenu(novel)
@@ -169,5 +179,30 @@ struct NovelGalleryView: View {
     /// the artwork gallery makes the intent obvious.
     private var novelTaskID: String {
         store.selectedRoute.rawValue
+    }
+
+    private var usesDirectReaderOpening: Bool {
+        #if os(iOS)
+        true
+        #else
+        false
+        #endif
+    }
+
+    private func directReaderAction(for novel: PixivNovel) -> (() -> Void)? {
+        usesDirectReaderOpening ? { presentNovelReader(novel) } : nil
+    }
+
+    private func openNovelCard(_ novel: PixivNovel) {
+        if usesDirectReaderOpening {
+            presentNovelReader(novel)
+        } else {
+            Task { await novelStore.openNovel(novel) }
+        }
+    }
+
+    private func presentNovelReader(_ novel: PixivNovel) {
+        readerNovel = novel
+        Task { await novelStore.openNovel(novel) }
     }
 }
