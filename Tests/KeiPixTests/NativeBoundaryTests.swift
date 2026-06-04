@@ -793,12 +793,23 @@ struct NativeBoundaryTests {
         #expect(settingsView.contains("private var compactSettingsWorkspace: some View"))
         #expect(settingsView.contains("private var categoryRail: some View"))
         #expect(settingsView.contains("OS26LibrarySearchField("))
+        #expect(settingsView.contains(".environment(\\.os26SettingsPageShowsHeader, false)"))
+        #expect(settingsView.contains(".environment(\\.os26SettingsPageUsesAdaptiveGrid, true)"))
         #expect(settingsView.contains(".frame(\n            minWidth: 820"))
 
         #expect(settingsSurface.contains("struct OS26SettingsPage<Content: View>: View"))
         #expect(settingsSurface.contains("struct OS26SettingsSection<Content: View>: View"))
         #expect(settingsSurface.contains("struct OS26SettingsActionButton: View"))
+        #expect(settingsSurface.contains("LazyVGrid("))
+        #expect(settingsSurface.contains("GridItem(\n                .adaptive(minimum: adaptiveColumnMinimum"))
         #expect(settingsSurface.contains(".keiGlass(22)"))
+
+        let accountSettings = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/Settings/AccountSettingsPage.swift"),
+            encoding: .utf8
+        )
+        #expect(accountSettings.contains("OS26SettingsSection(\n                L10n.session"))
+        #expect(accountSettings.contains("OS26SettingsSection(\n                L10n.account") == false)
 
         for relativePath in migratedPages {
             let source = try String(contentsOf: root.appending(path: relativePath), encoding: .utf8)

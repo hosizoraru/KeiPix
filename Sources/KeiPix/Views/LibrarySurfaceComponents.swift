@@ -397,6 +397,8 @@ struct OS26SettingsPage<Content: View>: View {
     let subtitle: String?
     let systemImage: String
     private let content: Content
+    @Environment(\.os26SettingsPageShowsHeader) private var showsHeader
+    @Environment(\.os26SettingsPageUsesAdaptiveGrid) private var usesAdaptiveGrid
 
     init(
         title: String,
@@ -413,20 +415,65 @@ struct OS26SettingsPage<Content: View>: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
-                OS26SettingsPageHeader(
-                    title: title,
-                    subtitle: subtitle,
-                    systemImage: systemImage
-                )
+                if showsHeader {
+                    OS26SettingsPageHeader(
+                        title: title,
+                        subtitle: subtitle,
+                        systemImage: systemImage
+                    )
+                }
 
-                content
+                if usesAdaptiveGrid {
+                    LazyVGrid(
+                        columns: adaptiveColumns,
+                        alignment: .leading,
+                        spacing: 16
+                    ) {
+                        content
+                    }
+                } else {
+                    VStack(alignment: .leading, spacing: 14) {
+                        content
+                    }
+                }
             }
-            .frame(maxWidth: 860, alignment: .leading)
+            .frame(maxWidth: pageMaxWidth, alignment: .leading)
             .padding(.horizontal, horizontalPadding)
-            .padding(.vertical, 20)
+            .padding(.top, showsHeader ? 20 : 10)
+            .padding(.bottom, 20)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .navigationTitle(title)
+    }
+
+    private var adaptiveColumns: [GridItem] {
+        [
+            GridItem(
+                .adaptive(minimum: adaptiveColumnMinimum, maximum: 560),
+                spacing: 16,
+                alignment: .top
+            )
+        ]
+    }
+
+    private var adaptiveColumnMinimum: CGFloat {
+        #if os(macOS)
+        360
+        #else
+        380
+        #endif
+    }
+
+    private var pageMaxWidth: CGFloat {
+        if usesAdaptiveGrid {
+            #if os(macOS)
+            1180
+            #else
+            1160
+            #endif
+        } else {
+            860
+        }
     }
 
     private var horizontalPadding: CGFloat {
@@ -589,5 +636,25 @@ struct OS26SettingsStatusPill: View {
             .padding(.horizontal, 9)
             .padding(.vertical, 5)
             .glassEffect(.regular, in: Capsule(style: .continuous))
+    }
+}
+
+private struct OS26SettingsPageShowsHeaderKey: EnvironmentKey {
+    static let defaultValue = true
+}
+
+private struct OS26SettingsPageUsesAdaptiveGridKey: EnvironmentKey {
+    static let defaultValue = true
+}
+
+extension EnvironmentValues {
+    var os26SettingsPageShowsHeader: Bool {
+        get { self[OS26SettingsPageShowsHeaderKey.self] }
+        set { self[OS26SettingsPageShowsHeaderKey.self] = newValue }
+    }
+
+    var os26SettingsPageUsesAdaptiveGrid: Bool {
+        get { self[OS26SettingsPageUsesAdaptiveGridKey.self] }
+        set { self[OS26SettingsPageUsesAdaptiveGridKey.self] = newValue }
     }
 }

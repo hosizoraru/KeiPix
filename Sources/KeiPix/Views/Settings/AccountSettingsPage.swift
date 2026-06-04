@@ -54,7 +54,7 @@ struct AccountSettingsPage: View {
             }
 
             OS26SettingsSection(
-                L10n.account,
+                L10n.session,
                 systemImage: "person.badge.key",
                 footer: accountActionFooter
             ) {

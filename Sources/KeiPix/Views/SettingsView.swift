@@ -161,10 +161,11 @@ struct SettingsView: View {
     private var compactSettingsWorkspace: some View {
         VStack(spacing: 0) {
             compactHeader
-            categoryRail
 
             detail
                 .id(coordinator.selection)
+                .environment(\.os26SettingsPageShowsHeader, false)
+                .environment(\.os26SettingsPageUsesAdaptiveGrid, true)
                 .transition(.opacity.combined(with: .move(edge: .trailing)))
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         }
@@ -174,34 +175,26 @@ struct SettingsView: View {
 
     private var compactHeader: some View {
         GlassEffectContainer(spacing: 10) {
-            ViewThatFits(in: .horizontal) {
-                HStack(spacing: 12) {
-                    compactTitleBlock
-                    Spacer(minLength: 16)
-                    OS26LibrarySearchField(
-                        text: $coordinator.searchText,
-                        placeholder: L10n.searchSettings,
-                        minWidth: 220,
-                        idealWidth: 280,
-                        maxWidth: 360
-                    )
+            VStack(alignment: .leading, spacing: 10) {
+                ViewThatFits(in: .horizontal) {
+                    HStack(spacing: 12) {
+                        compactTitleBlock
+                        Spacer(minLength: 16)
+                        compactSearchField(maxWidth: 340)
+                    }
+
+                    VStack(alignment: .leading, spacing: 10) {
+                        compactTitleBlock
+                        compactSearchField(maxWidth: .infinity)
+                    }
                 }
 
-                VStack(alignment: .leading, spacing: 12) {
-                    compactTitleBlock
-                    OS26LibrarySearchField(
-                        text: $coordinator.searchText,
-                        placeholder: L10n.searchSettings,
-                        minWidth: 180,
-                        idealWidth: 260,
-                        maxWidth: .infinity
-                    )
-                }
+                categoryRail
             }
         }
         .padding(.horizontal, 18)
-        .padding(.top, 12)
-        .padding(.bottom, 8)
+        .padding(.top, 8)
+        .padding(.bottom, 6)
     }
 
     private var compactTitleBlock: some View {
@@ -223,6 +216,16 @@ struct SettingsView: View {
         }
     }
 
+    private func compactSearchField(maxWidth: CGFloat) -> some View {
+        OS26LibrarySearchField(
+            text: $coordinator.searchText,
+            placeholder: L10n.searchSettings,
+            minWidth: 190,
+            idealWidth: 260,
+            maxWidth: maxWidth
+        )
+    }
+
     private var categoryRail: some View {
         ScrollView(.horizontal) {
             HStack(spacing: 8) {
@@ -239,8 +242,8 @@ struct SettingsView: View {
                     .controlSize(.small)
                 }
             }
-            .padding(.horizontal, 18)
-            .padding(.vertical, 8)
+            .padding(.horizontal, 2)
+            .padding(.vertical, 2)
         }
         .scrollIndicators(.hidden)
     }
