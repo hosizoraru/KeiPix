@@ -110,7 +110,7 @@ struct DiscoveryTrendingTagsStrip: View {
                     .labelStyle(.titleAndIcon)
                     .font(.callout.weight(.medium))
             }
-            .buttonStyle(.bordered)
+            .buttonStyle(.glass)
             .buttonBorderShape(.capsule)
             .controlSize(.small)
         }

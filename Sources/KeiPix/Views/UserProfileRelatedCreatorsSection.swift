@@ -90,12 +90,11 @@ struct UserProfileRelatedCreatorsSection: View {
         if isLoadingRelatedUsers {
             placeholderRow
         } else if relatedUsers.isEmpty {
-            ContentUnavailableView(
-                L10n.noRelatedCreators,
-                systemImage: "person.2.slash"
+            OS26InlineUnavailableView(
+                title: L10n.noRelatedCreators,
+                systemImage: "person.2.slash",
+                minHeight: 180
             )
-            .frame(maxWidth: .infinity)
-            .frame(minHeight: 180)
         } else {
             carousel
         }
@@ -107,10 +106,8 @@ struct UserProfileRelatedCreatorsSection: View {
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
                     .fill(.quaternary)
                     .frame(width: relatedCreatorShelfItemWidth, height: cardHeight)
-                    .overlay {
-                        ProgressView()
-                            .controlSize(.small)
-                    }
+                    .skeleton(cornerRadius: 16)
+                    .os26SkeletonSurface(16)
             }
         }
         .frame(height: relatedCreatorShelfHeight)

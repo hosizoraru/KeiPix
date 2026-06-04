@@ -329,7 +329,8 @@ struct NativeBoundaryTests {
         #expect(trendingStrip.contains("hasAttemptedLoad && isLoading == false && tags.isEmpty"))
         #expect(trendingStrip.contains("GlassEffectContainer(spacing: 12)"))
         #expect(trendingStrip.contains(".keiGlass(22)"))
-        #expect(trendingStrip.contains(".buttonStyle(.bordered)"))
+        #expect(trendingStrip.contains(".buttonStyle(.glass)"))
+        #expect(trendingStrip.contains(".buttonStyle(.bordered)") == false)
         #expect(trendingStrip.contains(".clipShape(RoundedRectangle(cornerRadius: 18"))
         #expect(trendingStrip.contains(".buttonStyle(.borderless)") == false)
         #expect(trendingStrip.contains("Color.black") == false)
@@ -1243,6 +1244,72 @@ struct NativeBoundaryTests {
         #expect(row.contains(".os26GlassIconButton(prominent: true)"))
     }
 
+    @Test("Loading placeholders and sheets avoid overlapping legacy chrome")
+    func loadingPlaceholdersAndSheetsAvoidOverlappingLegacyChrome() throws {
+        let root = try packageRoot()
+        let sharedComponents = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/LibrarySurfaceComponents.swift"),
+            encoding: .utf8
+        )
+        let creatorComponents = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/UserPreviewListComponents.swift"),
+            encoding: .utf8
+        )
+        let mutedContent = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/MutedContentView.swift"),
+            encoding: .utf8
+        )
+        let profileSheet = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/UserProfileSheet.swift"),
+            encoding: .utf8
+        )
+        let imageSourceSheet = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/ImageSourceSearchSheet.swift"),
+            encoding: .utf8
+        )
+        let spotlight = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/SpotlightView.swift"),
+            encoding: .utf8
+        )
+        let logViewer = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/LogViewerView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(sharedComponents.contains("struct OS26InlineLoadingView: View"))
+        #expect(sharedComponents.contains("struct OS26InlineUnavailableView<Actions: View>: View"))
+        #expect(sharedComponents.contains("struct OS26SkeletonCardSurface: ViewModifier"))
+        #expect(sharedComponents.contains("struct OS26GlassCompatibleSegmentedPicker"))
+
+        #expect(creatorComponents.contains("CreatorPreviewListLoadingPlaceholder"))
+        #expect(creatorComponents.contains("let minimum: CGFloat = layoutMode.usesExpandedPreview ? 380 : 280"))
+        #expect(creatorComponents.contains(".os26SkeletonSurface(20)"))
+        #expect(creatorComponents.contains("ContentUnavailableView") == false)
+
+        #expect(mutedContent.contains("OS26GlassCompatibleSegmentedPicker("))
+        #expect(mutedContent.contains("private var categoryControl: some View"))
+        #expect(mutedContent.contains("private var addTagButton: some View"))
+        #expect(mutedContent.contains(".os26GlassIconButton(prominent: true)"))
+        #expect(mutedContent.contains("ContentUnavailableView") == false)
+        #expect(mutedContent.contains(".textFieldStyle(.roundedBorder)") == false)
+
+        #expect(profileSheet.contains(".os26SkeletonSurface(18)"))
+        #expect(profileSheet.contains("OS26LibraryUnavailableView("))
+        #expect(profileSheet.contains("ContentUnavailableView") == false)
+
+        #expect(imageSourceSheet.contains("OS26InlineLoadingView("))
+        #expect(imageSourceSheet.contains("OS26InlineUnavailableView("))
+        #expect(imageSourceSheet.contains("ContentUnavailableView") == false)
+
+        #expect(spotlight.contains("OS26LibraryLoadingView(title: L10n.loading, systemImage: \"newspaper\")"))
+        #expect(spotlight.contains("OS26LibraryUnavailableView("))
+        #expect(spotlight.contains(".background(.regularMaterial") == false)
+
+        #expect(logViewer.contains("OS26LibrarySearchField("))
+        #expect(logViewer.contains("OS26LibraryLoadingView("))
+        #expect(logViewer.contains(".textFieldStyle(.roundedBorder)") == false)
+    }
+
     @Test("Creator list, search, menu, and drop use native P2 bridges")
     func creatorListSearchMenuAndDropUseNativeP2Bridges() throws {
         let root = try packageRoot()
@@ -1455,7 +1522,8 @@ struct NativeBoundaryTests {
 
         #expect(creatorComponents.contains(".buttonStyle(.borderless)") == false)
         #expect(creatorComponents.contains(".buttonStyle(.borderedProminent)") == false)
-        #expect(creatorComponents.contains(".buttonStyle(.glassProminent)"))
+        #expect(creatorComponents.contains(".os26GlassButton(prominent: true)"))
+        #expect(creatorComponents.contains("OS26LibraryUnavailableView("))
     }
 
     @Test("Creator cards use adaptive OS 26 glass actions")

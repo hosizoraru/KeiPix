@@ -87,39 +87,187 @@ struct OS26LibraryLoadingView: View {
     let systemImage: String
 
     var body: some View {
-        GlassEffectContainer(spacing: 18) {
-            VStack(alignment: .leading, spacing: 18) {
-                HStack(spacing: 12) {
-                    Image(systemName: systemImage)
-                        .font(.title2.weight(.semibold))
-                        .symbolRenderingMode(.hierarchical)
-                        .foregroundStyle(.secondary)
-                        .frame(width: 46, height: 46)
-                        .keiGlass(18)
+        VStack(alignment: .leading, spacing: 18) {
+            HStack(spacing: 12) {
+                Image(systemName: systemImage)
+                    .font(.title2.weight(.semibold))
+                    .symbolRenderingMode(.hierarchical)
+                    .foregroundStyle(.secondary)
+                    .frame(width: 46, height: 46)
+                    .keiGlass(18)
 
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text(title)
-                            .font(.headline)
-                        SkeletonPlaceholder(width: 220, height: 12, cornerRadius: 6)
-                    }
-                }
-
-                VStack(alignment: .leading, spacing: 10) {
-                    ForEach(0..<5, id: \.self) { index in
-                        SkeletonPlaceholder(
-                            width: index.isMultiple(of: 2) ? nil : 280,
-                            height: 18,
-                            cornerRadius: 9
-                        )
-                    }
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(title)
+                        .font(.headline)
+                    SkeletonPlaceholder(width: 220, height: 12, cornerRadius: 6)
                 }
             }
-            .padding(24)
-            .frame(maxWidth: 520, alignment: .leading)
-            .keiGlass(30)
+
+            VStack(alignment: .leading, spacing: 10) {
+                ForEach(0..<5, id: \.self) { index in
+                    SkeletonPlaceholder(
+                        width: index.isMultiple(of: 2) ? nil : 280,
+                        height: 18,
+                        cornerRadius: 9
+                    )
+                }
+            }
         }
+        .padding(24)
+        .frame(maxWidth: 520, alignment: .leading)
+        .keiGlass(30)
         .padding(28)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+}
+
+struct OS26InlineLoadingView: View {
+    let title: String
+    let systemImage: String
+    var minHeight: CGFloat = 140
+
+    var body: some View {
+        VStack(spacing: 12) {
+            Image(systemName: systemImage)
+                .font(.title2.weight(.semibold))
+                .symbolRenderingMode(.hierarchical)
+                .foregroundStyle(.secondary)
+                .frame(width: 48, height: 48)
+                .keiGlass(18)
+
+            VStack(spacing: 7) {
+                Text(title)
+                    .font(.headline)
+                SkeletonPlaceholder(width: 180, height: 12, cornerRadius: 6)
+            }
+        }
+        .padding(22)
+        .frame(maxWidth: .infinity, minHeight: minHeight)
+        .os26SkeletonSurface(24)
+    }
+}
+
+struct OS26InlineUnavailableView<Actions: View>: View {
+    let title: String
+    let subtitle: String?
+    let systemImage: String
+    var minHeight: CGFloat = 150
+    private let actions: Actions
+
+    init(
+        title: String,
+        subtitle: String? = nil,
+        systemImage: String,
+        minHeight: CGFloat = 150,
+        @ViewBuilder actions: () -> Actions
+    ) {
+        self.title = title
+        self.subtitle = subtitle
+        self.systemImage = systemImage
+        self.minHeight = minHeight
+        self.actions = actions()
+    }
+
+    var body: some View {
+        VStack(spacing: 12) {
+            Image(systemName: systemImage)
+                .font(.title2.weight(.semibold))
+                .symbolRenderingMode(.hierarchical)
+                .foregroundStyle(.secondary)
+
+            VStack(spacing: 5) {
+                Text(title)
+                    .font(.callout.weight(.semibold))
+                    .multilineTextAlignment(.center)
+
+                if let subtitle, subtitle.isEmpty == false {
+                    Text(subtitle)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                        .textSelection(.enabled)
+                        .frame(maxWidth: 420)
+                }
+            }
+
+            actions
+        }
+        .padding(20)
+        .frame(maxWidth: .infinity, minHeight: minHeight)
+        .os26SkeletonSurface(22)
+    }
+}
+
+extension OS26InlineUnavailableView where Actions == EmptyView {
+    init(title: String, subtitle: String? = nil, systemImage: String, minHeight: CGFloat = 150) {
+        self.init(title: title, subtitle: subtitle, systemImage: systemImage, minHeight: minHeight) {
+            EmptyView()
+        }
+    }
+}
+
+struct OS26SkeletonCardSurface: ViewModifier {
+    let cornerRadius: CGFloat
+
+    func body(content: Content) -> some View {
+        content
+            .background(Color.secondary.opacity(0.07), in: RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
+            .overlay {
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .strokeBorder(.separator.opacity(0.22), lineWidth: 1)
+            }
+    }
+}
+
+struct OS26GlassCompatibleSegmentedPicker<Selection: Hashable, Content: View>: View {
+    let title: String
+    @Binding var selection: Selection
+    let minWidth: CGFloat
+    let idealWidth: CGFloat
+    let maxWidth: CGFloat
+    private let content: Content
+
+    init(
+        _ title: String,
+        selection: Binding<Selection>,
+        minWidth: CGFloat,
+        idealWidth: CGFloat,
+        maxWidth: CGFloat,
+        @ViewBuilder content: () -> Content
+    ) {
+        self.title = title
+        _selection = selection
+        self.minWidth = minWidth
+        self.idealWidth = idealWidth
+        self.maxWidth = maxWidth
+        self.content = content()
+    }
+
+    var body: some View {
+        ViewThatFits(in: .horizontal) {
+            Picker(title, selection: $selection) {
+                content
+            }
+            .pickerStyle(.segmented)
+            .labelsHidden()
+            .frame(minWidth: minWidth, idealWidth: idealWidth, maxWidth: maxWidth)
+            .accessibilityLabel(title)
+
+            Picker(title, selection: $selection) {
+                content
+            }
+            .pickerStyle(.menu)
+            .labelsHidden()
+            .buttonStyle(.glass)
+            .buttonBorderShape(.capsule)
+            .accessibilityLabel(title)
+        }
+    }
+}
+
+extension View {
+    func os26SkeletonSurface(_ cornerRadius: CGFloat = 18) -> some View {
+        modifier(OS26SkeletonCardSurface(cornerRadius: cornerRadius))
     }
 }
 

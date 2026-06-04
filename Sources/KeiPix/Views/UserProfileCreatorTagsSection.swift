@@ -117,15 +117,7 @@ struct UserProfileCreatorTagsSection: View {
     }
 
     private var loadingRow: some View {
-        HStack(spacing: 8) {
-            ProgressView()
-                .controlSize(.small)
-            Text(L10n.loading)
-                .font(.callout)
-                .foregroundStyle(.secondary)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.vertical, 6)
+        OS26InlineLoadingView(title: L10n.loading, systemImage: "number", minHeight: 120)
     }
 
     @ViewBuilder
@@ -137,17 +129,17 @@ struct UserProfileCreatorTagsSection: View {
                 .textSelection(.enabled)
                 .frame(maxWidth: .infinity, alignment: .leading)
         } else if tags.isEmpty {
-            ContentUnavailableView(
-                L10n.noCreatorTags,
-                systemImage: "number"
+            OS26InlineUnavailableView(
+                title: L10n.noCreatorTags,
+                systemImage: "number",
+                minHeight: 120
             )
-            .frame(height: 120)
         } else {
-            ContentUnavailableView(
-                L10n.noMatchingCreatorTags,
-                systemImage: "line.3.horizontal.decrease.circle"
+            OS26InlineUnavailableView(
+                title: L10n.noMatchingCreatorTags,
+                systemImage: "line.3.horizontal.decrease.circle",
+                minHeight: 120
             )
-            .frame(height: 120)
         }
     }
 

@@ -26,9 +26,7 @@ struct LogViewerView: View {
     var body: some View {
         VStack(spacing: 0) {
             toolbar
-                .padding(.horizontal, 16)
-                .padding(.vertical, 10)
-            Divider()
+                .platformGlassControlBar(verticalPadding: 8, topPadding: 2)
             content
         }
         #if os(macOS)
@@ -59,21 +57,57 @@ struct LogViewerView: View {
     // MARK: - Toolbar
 
     private var toolbar: some View {
-        HStack(spacing: 12) {
-            TextField(L10n.filterLogs, text: $searchText)
-                .textFieldStyle(.roundedBorder)
-                .frame(maxWidth: 240)
+        GlassEffectContainer(spacing: 8) {
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 10) {
+                    logSearchField
+                    categoryMenu
+                    levelMenu
+                    toolbarActions
+                    Spacer(minLength: 0)
+                }
 
+                VStack(alignment: .leading, spacing: 10) {
+                    logSearchField
+                    HStack(spacing: 10) {
+                        categoryMenu
+                        levelMenu
+                        toolbarActions
+                    }
+                }
+            }
+        }
+        .controlSize(.small)
+    }
+
+    private var logSearchField: some View {
+        OS26LibrarySearchField(
+            text: $searchText,
+            placeholder: L10n.filterLogs,
+            minWidth: 180,
+            idealWidth: 240,
+            maxWidth: 320
+        )
+    }
+
+    private var categoryMenu: some View {
+        Menu {
             Picker(L10n.allCategories, selection: $selectedCategory) {
                 Text(L10n.allCategories).tag("")
                 ForEach(KeiPixLog.allCategories, id: \.self) { category in
                     Text(category).tag(category)
                 }
             }
-            .labelsHidden()
-            .pickerStyle(.menu)
-            .frame(maxWidth: 180)
+            .pickerStyle(.inline)
+        } label: {
+            Label(selectedCategory.isEmpty ? L10n.allCategories : selectedCategory, systemImage: "folder")
+        }
+        .os26GlassIconButton()
+        .help(L10n.allCategories)
+    }
 
+    private var levelMenu: some View {
+        Menu {
             Picker(L10n.minLevel, selection: $minimumLevel) {
                 Text(L10n.logLevelDebug).tag(OSLogEntryLog.Level.debug)
                 Text(L10n.logLevelInfo).tag(OSLogEntryLog.Level.info)
@@ -81,18 +115,22 @@ struct LogViewerView: View {
                 Text(L10n.logLevelError).tag(OSLogEntryLog.Level.error)
                 Text(L10n.logLevelFault).tag(OSLogEntryLog.Level.fault)
             }
-            .labelsHidden()
-            .pickerStyle(.menu)
-            .frame(maxWidth: 140)
+            .pickerStyle(.inline)
+        } label: {
+            Label(L10n.minLevel, systemImage: "line.3.horizontal.decrease.circle")
+        }
+        .os26GlassIconButton()
+        .help(L10n.minLevel)
+    }
 
-            Spacer()
-
+    private var toolbarActions: some View {
+        OS26LibraryActionRail {
             Button {
                 Task { await refresh() }
             } label: {
                 Label(L10n.refreshLogs, systemImage: "arrow.clockwise")
             }
-            .labelStyle(.iconOnly)
+            .os26GlassIconButton()
             .help(L10n.refreshLogs)
             .disabled(loading)
 
@@ -101,7 +139,7 @@ struct LogViewerView: View {
             } label: {
                 Label(L10n.copyVisibleLogs, systemImage: "doc.on.doc")
             }
-            .labelStyle(.iconOnly)
+            .os26GlassIconButton()
             .help(L10n.copyVisibleLogs)
             .disabled(filteredEntries.isEmpty)
 
@@ -110,7 +148,7 @@ struct LogViewerView: View {
             } label: {
                 Label(L10n.revealInConsole, systemImage: "arrow.up.right.square")
             }
-            .labelStyle(.iconOnly)
+            .os26GlassIconButton()
             .help(L10n.revealInConsole)
         }
     }
@@ -120,8 +158,7 @@ struct LogViewerView: View {
         if unavailable {
             unavailableState
         } else if loading && entries.isEmpty {
-            ProgressView()
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            OS26LibraryLoadingView(title: L10n.loading, systemImage: "list.bullet.rectangle")
         } else if filteredEntries.isEmpty {
             emptyState
         } else {
@@ -136,41 +173,26 @@ struct LogViewerView: View {
     }
 
     private var emptyState: some View {
-        VStack(spacing: 8) {
-            Image(systemName: "tray")
-                .font(.system(size: 32))
-                .foregroundStyle(.tertiary)
-            Text(L10n.noLogEntries)
-                .font(.headline)
-            Text(L10n.noLogEntriesHint)
-                .font(.callout)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 32)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        OS26LibraryUnavailableView(
+            title: L10n.noLogEntries,
+            subtitle: L10n.noLogEntriesHint,
+            systemImage: "tray"
+        )
     }
 
     private var unavailableState: some View {
-        VStack(spacing: 8) {
-            Image(systemName: "exclamationmark.triangle")
-                .font(.system(size: 32))
-                .foregroundStyle(.orange)
-            Text(L10n.logAccessUnavailable)
-                .font(.headline)
-            Text(L10n.logAccessUnavailableHint)
-                .font(.callout)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 32)
+        OS26LibraryUnavailableView(
+            title: L10n.logAccessUnavailable,
+            subtitle: L10n.logAccessUnavailableHint,
+            systemImage: "exclamationmark.triangle"
+        ) {
             Button {
                 revealInConsole()
             } label: {
                 Label(L10n.revealInConsole, systemImage: "arrow.up.right.square")
             }
-            .padding(.top, 4)
+            .os26GlassButton(prominent: true)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     // MARK: - Filtering

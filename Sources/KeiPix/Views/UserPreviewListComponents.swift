@@ -469,27 +469,24 @@ struct CreatorPreviewListContent: View {
     @ViewBuilder
     private var emptyState: some View {
         if let errorMessage {
-            ContentUnavailableView {
-                Label(L10n.errorTitle, systemImage: "exclamationmark.triangle")
-            } description: {
-                Text(errorMessage)
-            } actions: {
+            OS26LibraryUnavailableView(
+                title: L10n.errorTitle,
+                subtitle: errorMessage,
+                systemImage: "exclamationmark.triangle"
+            ) {
                 Button {
                     retry()
                 } label: {
                     Label(L10n.retry, systemImage: "arrow.clockwise")
                 }
-                .buttonStyle(.glassProminent)
-                .buttonBorderShape(.capsule)
+                .os26GlassButton(prominent: true)
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {
-            ContentUnavailableView(
-                emptyTitle,
-                systemImage: mode.emptySystemImage,
-                description: Text(emptyHint)
+            OS26LibraryUnavailableView(
+                title: emptyTitle,
+                subtitle: emptyHint,
+                systemImage: mode.emptySystemImage
             )
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
     }
 
@@ -509,9 +506,11 @@ struct CreatorPreviewListContent: View {
 
     private var noMatchingCreators: some View {
         VStack(spacing: 14) {
-            ContentUnavailableView(L10n.noMatchingCreators, systemImage: "person.crop.circle.badge.questionmark")
-                .frame(maxWidth: .infinity)
-                .frame(minHeight: 260)
+            OS26InlineUnavailableView(
+                title: L10n.noMatchingCreators,
+                systemImage: "person.crop.circle.badge.questionmark",
+                minHeight: 260
+            )
 
             if nextURL != nil {
                 CreatorLoadMoreButton(isLoadingMore: isLoadingMore, loadMore: loadMore)
@@ -649,9 +648,9 @@ private struct CreatorPreviewListLoadingPlaceholder: View {
     }
 
     private var columns: [GridItem] {
-        let minimum: CGFloat = layoutMode.usesExpandedPreview ? 360 : 250
+        let minimum: CGFloat = layoutMode.usesExpandedPreview ? 380 : 280
         return [
-            GridItem(.adaptive(minimum: minimum, maximum: layoutMode.usesExpandedPreview ? 520 : 360), spacing: 14)
+            GridItem(.adaptive(minimum: minimum, maximum: layoutMode.usesExpandedPreview ? 540 : 380), spacing: 16)
         ]
     }
 }
@@ -662,36 +661,40 @@ private struct CreatorPreviewSkeletonCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .center, spacing: 12) {
-                SkeletonPlaceholder(width: 52, height: 52, cornerRadius: 26)
+                SkeletonPlaceholder(width: 44, height: 44, cornerRadius: 22)
 
                 VStack(alignment: .leading, spacing: 7) {
-                    SkeletonPlaceholder(width: 150, height: 16, cornerRadius: 8)
-                    SkeletonPlaceholder(width: 96, height: 12, cornerRadius: 6)
+                    SkeletonPlaceholder(width: nil, height: 16, cornerRadius: 8)
+                        .frame(maxWidth: 150)
+                    SkeletonPlaceholder(width: nil, height: 12, cornerRadius: 6)
+                        .frame(maxWidth: 96)
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
 
-                Spacer(minLength: 0)
-                SkeletonPlaceholder(width: 36, height: 30, cornerRadius: 15)
+                SkeletonPlaceholder(width: 28, height: 28, cornerRadius: 14)
             }
 
             HStack(spacing: 8) {
-                SkeletonPlaceholder(width: 68, height: 24, cornerRadius: 12)
-                SkeletonPlaceholder(width: 88, height: 24, cornerRadius: 12)
-                SkeletonPlaceholder(width: 56, height: 24, cornerRadius: 12)
+                SkeletonPlaceholder(width: 54, height: 22, cornerRadius: 11)
+                SkeletonPlaceholder(width: 64, height: 22, cornerRadius: 11)
+                SkeletonPlaceholder(width: 44, height: 22, cornerRadius: 11)
                 Spacer(minLength: 0)
             }
 
             if expanded {
                 HStack(spacing: 8) {
                     ForEach(0..<3, id: \.self) { _ in
-                        SkeletonPlaceholder(width: nil, height: 118, cornerRadius: 14)
+                        SkeletonPlaceholder(width: nil, height: 108, cornerRadius: 14)
                     }
                 }
             } else {
-                SkeletonPlaceholder(width: nil, height: 92, cornerRadius: 14)
+                SkeletonPlaceholder(width: nil, height: 88, cornerRadius: 14)
             }
         }
         .padding(14)
-        .keiGlass(20)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .os26SkeletonSurface(20)
+        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
     }
 }
 

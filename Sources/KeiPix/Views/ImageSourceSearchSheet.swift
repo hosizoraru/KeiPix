@@ -119,22 +119,23 @@ struct ImageSourceSearchSheet: View {
     private var content: some View {
         switch state {
         case .idle, .loading:
-            VStack(spacing: 12) {
-                ProgressView()
-                Text(L10n.searchingImageSource)
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            OS26InlineLoadingView(
+                title: L10n.searchingImageSource,
+                systemImage: store.imageSourceSearchEngine.systemImage,
+                minHeight: 220
+            )
+            .padding(18)
         case .loaded(let results):
             if results.isEmpty {
-                ContentUnavailableView {
-                    Label(L10n.noImageSourceResults, systemImage: "magnifyingglass")
-                } description: {
-                    Text(L10n.noImageSourceResultsHint)
-                } actions: {
+                OS26InlineUnavailableView(
+                    title: L10n.noImageSourceResults,
+                    subtitle: L10n.noImageSourceResultsHint,
+                    systemImage: "magnifyingglass",
+                    minHeight: 220
+                ) {
                     retryButton
                 }
+                .padding(18)
             } else {
                 VStack(alignment: .leading, spacing: 12) {
                     HStack(spacing: 8) {
@@ -164,14 +165,15 @@ struct ImageSourceSearchSheet: View {
                 }
             }
         case .failed(let message):
-            ContentUnavailableView {
-                Label(L10n.imageSourceSearchFailed, systemImage: "exclamationmark.triangle")
-            } description: {
-                Text(message)
-                    .textSelection(.enabled)
-            } actions: {
+            OS26InlineUnavailableView(
+                title: L10n.imageSourceSearchFailed,
+                subtitle: message,
+                systemImage: "exclamationmark.triangle",
+                minHeight: 220
+            ) {
                 retryButton
             }
+            .padding(18)
         }
     }
 

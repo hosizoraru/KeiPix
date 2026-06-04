@@ -112,12 +112,11 @@ struct UserProfileRecentWorksSection: View {
                 .textSelection(.enabled)
                 .frame(maxWidth: .infinity, alignment: .leading)
         } else {
-            ContentUnavailableView(
-                L10n.noRecentCreatorWorks,
-                systemImage: "photo.on.rectangle.angled"
+            OS26InlineUnavailableView(
+                title: L10n.noRecentCreatorWorks,
+                systemImage: "photo.on.rectangle.angled",
+                minHeight: cardHeight
             )
-            .frame(maxWidth: .infinity)
-            .frame(height: cardHeight)
         }
     }
 

@@ -120,86 +120,114 @@ struct MutedContentView: View {
 
     private var header: some View {
         GlassEffectContainer(spacing: 8) {
-            FlowLayout(spacing: 8) {
-                Picker(L10n.mutedContent, selection: $category) {
-                    ForEach(MutedContentCategory.allCases) { category in
-                        Text(category.title).tag(category)
-                    }
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 10) {
+                    categoryControl
+
+                    searchField
+                        .layoutPriority(1)
+
+                    headerActions
+                    Spacer(minLength: 0)
                 }
-                .pickerStyle(.segmented)
-                .labelsHidden()
-                .frame(minWidth: 210, idealWidth: 250, maxWidth: 280)
 
-                OS26LibrarySearchField(
-                    text: $searchText,
-                    placeholder: L10n.searchMutedContent,
-                    minWidth: 170,
-                    idealWidth: 220,
-                    maxWidth: 280
-                )
-
-                OS26LibraryActionRail {
-                    Button {
-                        searchText = ""
-                    } label: {
-                        Label(L10n.clearSearch, systemImage: "xmark.circle")
+                VStack(alignment: .leading, spacing: 10) {
+                    categoryControl
+                    HStack(spacing: 10) {
+                        searchField
+                            .layoutPriority(1)
+                        headerActions
                     }
-                    .os26GlassIconButton()
-                    .disabled(searchText.isEmpty)
-                    .help(L10n.clearSearch)
-
-                    Menu {
-                        Button {
-                            isSyncConfirmationPresented = true
-                        } label: {
-                            Label(L10n.syncFromPixiv, systemImage: "arrow.down.circle")
-                        }
-                        .disabled(isSyncing)
-
-                        Button {
-                            isUploadConfirmationPresented = true
-                        } label: {
-                            Label(L10n.uploadToPixiv, systemImage: "arrow.up.circle")
-                        }
-                        .disabled(isSyncing || (store.mutedTagList.isEmpty && store.mutedUserList.isEmpty))
-
-                        Divider()
-
-                        Button {
-                            exportLocalMutedContent()
-                        } label: {
-                            Label(L10n.exportMutedContent, systemImage: "square.and.arrow.up")
-                        }
-                        .disabled(isSyncing || totalCount == 0)
-
-                        Button {
-                            isImportConfirmationPresented = true
-                        } label: {
-                            Label(L10n.importMutedContent, systemImage: "square.and.arrow.down")
-                        }
-                        .disabled(isSyncing)
-
-                        Divider()
-
-                        Button(role: .destructive) {
-                            isClearConfirmationPresented = true
-                        } label: {
-                            Label(L10n.clearMutedContent, systemImage: "trash")
-                        }
-                        .disabled(totalCount == 0)
-                    } label: {
-                        Label(
-                            L10n.moreActions,
-                            systemImage: isSyncing ? "arrow.triangle.2.circlepath" : "ellipsis.circle"
-                        )
-                    }
-                    .os26GlassIconButton()
-                    .disabled(isSyncing)
-                    .help(L10n.muteSyncHint)
                 }
             }
         }
         .controlSize(.small)
+    }
+
+    private var categoryControl: some View {
+        OS26GlassCompatibleSegmentedPicker(
+            L10n.mutedContent,
+            selection: $category,
+            minWidth: 380,
+            idealWidth: 420,
+            maxWidth: 470
+        ) {
+            ForEach(MutedContentCategory.allCases) { category in
+                Text(category.title).tag(category)
+            }
+        }
+    }
+
+    private var searchField: some View {
+        OS26LibrarySearchField(
+            text: $searchText,
+            placeholder: L10n.searchMutedContent,
+            minWidth: 180,
+            idealWidth: 260,
+            maxWidth: 360
+        )
+    }
+
+    private var headerActions: some View {
+        OS26LibraryActionRail {
+            Button {
+                searchText = ""
+            } label: {
+                Label(L10n.clearSearch, systemImage: "xmark.circle")
+            }
+            .os26GlassIconButton()
+            .disabled(searchText.isEmpty)
+            .help(L10n.clearSearch)
+
+            Menu {
+                Button {
+                    isSyncConfirmationPresented = true
+                } label: {
+                    Label(L10n.syncFromPixiv, systemImage: "arrow.down.circle")
+                }
+                .disabled(isSyncing)
+
+                Button {
+                    isUploadConfirmationPresented = true
+                } label: {
+                    Label(L10n.uploadToPixiv, systemImage: "arrow.up.circle")
+                }
+                .disabled(isSyncing || (store.mutedTagList.isEmpty && store.mutedUserList.isEmpty))
+
+                Divider()
+
+                Button {
+                    exportLocalMutedContent()
+                } label: {
+                    Label(L10n.exportMutedContent, systemImage: "square.and.arrow.up")
+                }
+                .disabled(isSyncing || totalCount == 0)
+
+                Button {
+                    isImportConfirmationPresented = true
+                } label: {
+                    Label(L10n.importMutedContent, systemImage: "square.and.arrow.down")
+                }
+                .disabled(isSyncing)
+
+                Divider()
+
+                Button(role: .destructive) {
+                    isClearConfirmationPresented = true
+                } label: {
+                    Label(L10n.clearMutedContent, systemImage: "trash")
+                }
+                .disabled(totalCount == 0)
+            } label: {
+                Label(
+                    L10n.moreActions,
+                    systemImage: isSyncing ? "arrow.triangle.2.circlepath" : "ellipsis.circle"
+                )
+            }
+            .os26GlassIconButton()
+            .disabled(isSyncing)
+            .help(L10n.muteSyncHint)
+        }
     }
 
     private var contentPanel: some View {
@@ -237,55 +265,58 @@ struct MutedContentView: View {
     }
 
     private var addTagRow: some View {
-        HStack(spacing: 10) {
-            OS26LibraryTextEntryField(text: $newTagText, placeholder: L10n.addMutedTag)
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: 10) {
+                OS26LibraryTextEntryField(text: $newTagText, placeholder: L10n.addMutedTag)
+                    .layoutPriority(1)
 
-            Button {
-                let normalized = newTagText.trimmingCharacters(in: .whitespacesAndNewlines)
-                let wasMuted = store.mutedTagList.contains {
-                    $0.localizedCaseInsensitiveCompare(normalized) == .orderedSame
-                }
-                store.muteTag(named: normalized)
-                statusMessageIsError = false
-                if wasMuted == false {
-                    store.undoAction = AppUndoAction(kind: .unmuteTag(normalized))
-                    statusMessage = String(format: L10n.mutedTagFormat, normalized)
-                } else {
-                    statusMessage = String(format: L10n.alreadyMutedTagFormat, normalized)
-                }
-                newTagText = ""
-            } label: {
-                Label(L10n.addTag, systemImage: "plus.circle")
+                addTagButton
             }
-            .os26GlassButton(prominent: true)
-            .disabled(newTagText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+
+            VStack(alignment: .leading, spacing: 8) {
+                OS26LibraryTextEntryField(text: $newTagText, placeholder: L10n.addMutedTag)
+                addTagButton
+            }
         }
+    }
+
+    private var addTagButton: some View {
+        Button {
+            let normalized = newTagText.trimmingCharacters(in: .whitespacesAndNewlines)
+            let wasMuted = store.mutedTagList.contains {
+                $0.localizedCaseInsensitiveCompare(normalized) == .orderedSame
+            }
+            store.muteTag(named: normalized)
+            statusMessageIsError = false
+            if wasMuted == false {
+                store.undoAction = AppUndoAction(kind: .unmuteTag(normalized))
+                statusMessage = String(format: L10n.mutedTagFormat, normalized)
+            } else {
+                statusMessage = String(format: L10n.alreadyMutedTagFormat, normalized)
+            }
+            newTagText = ""
+        } label: {
+            Label(L10n.addTag, systemImage: "plus.circle")
+        }
+        .os26GlassIconButton(prominent: true)
+        .disabled(newTagText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+        .help(L10n.addTag)
     }
 
     private var addCommentPhraseRow: some View {
         VStack(alignment: .leading, spacing: 6) {
-            HStack(spacing: 10) {
-                OS26LibraryTextEntryField(text: $newCommentPhraseText, placeholder: L10n.addMutedCommentPhrase)
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 10) {
+                    OS26LibraryTextEntryField(text: $newCommentPhraseText, placeholder: L10n.addMutedCommentPhrase)
+                        .layoutPriority(1)
 
-                Button {
-                    let normalized = store.normalizedCommentPhrase(newCommentPhraseText)
-                    let wasMuted = store.mutedCommentPhraseList.contains {
-                        $0.localizedCaseInsensitiveCompare(normalized) == .orderedSame
-                    }
-                    store.muteCommentPhrase(normalized)
-                    statusMessageIsError = false
-                    if wasMuted == false {
-                        store.undoAction = AppUndoAction(kind: .unmuteCommentPhrase(normalized))
-                        statusMessage = String(format: L10n.mutedCommentPhraseFormat, normalized)
-                    } else {
-                        statusMessage = String(format: L10n.alreadyMutedCommentPhraseFormat, normalized)
-                    }
-                    newCommentPhraseText = ""
-                } label: {
-                    Label(L10n.addPhrase, systemImage: "plus.circle")
+                    addCommentPhraseButton
                 }
-                .os26GlassButton(prominent: true)
-                .disabled(store.normalizedCommentPhrase(newCommentPhraseText).isEmpty)
+
+                VStack(alignment: .leading, spacing: 8) {
+                    OS26LibraryTextEntryField(text: $newCommentPhraseText, placeholder: L10n.addMutedCommentPhrase)
+                    addCommentPhraseButton
+                }
             }
 
             // Surfaces the /pattern/ regex syntax matching Pixez's BanTag
@@ -295,6 +326,29 @@ struct MutedContentView: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
+    }
+
+    private var addCommentPhraseButton: some View {
+        Button {
+            let normalized = store.normalizedCommentPhrase(newCommentPhraseText)
+            let wasMuted = store.mutedCommentPhraseList.contains {
+                $0.localizedCaseInsensitiveCompare(normalized) == .orderedSame
+            }
+            store.muteCommentPhrase(normalized)
+            statusMessageIsError = false
+            if wasMuted == false {
+                store.undoAction = AppUndoAction(kind: .unmuteCommentPhrase(normalized))
+                statusMessage = String(format: L10n.mutedCommentPhraseFormat, normalized)
+            } else {
+                statusMessage = String(format: L10n.alreadyMutedCommentPhraseFormat, normalized)
+            }
+            newCommentPhraseText = ""
+        } label: {
+            Label(L10n.addPhrase, systemImage: "plus.circle")
+        }
+        .os26GlassIconButton(prominent: true)
+        .disabled(store.normalizedCommentPhrase(newCommentPhraseText).isEmpty)
+        .help(L10n.addPhrase)
     }
 
     private var mutedTagsGrid: some View {
@@ -370,29 +424,19 @@ struct MutedContentView: View {
     }
 
     private var emptyState: some View {
-        VStack(spacing: 10) {
-            Image(systemName: category.systemImage)
-                .font(.title2.weight(.semibold))
-                .symbolRenderingMode(.hierarchical)
-                .foregroundStyle(.secondary)
-
-            Text(L10n.noMutedContent)
-                .font(.callout.weight(.semibold))
-
-            Text(L10n.noMutedContentHint)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-        }
-        .padding(22)
-        .frame(maxWidth: .infinity, minHeight: 180)
-        .keiGlass(18)
+        OS26InlineUnavailableView(
+            title: L10n.noMutedContent,
+            subtitle: L10n.noMutedContentHint,
+            systemImage: category.systemImage,
+            minHeight: 180
+        )
     }
 
     private func removableChip(title: String, systemImage: String, remove: @escaping () -> Void) -> some View {
         HStack(spacing: 6) {
             Label(title, systemImage: systemImage)
-                .lineLimit(1)
+                .lineLimit(2)
+                .fixedSize(horizontal: false, vertical: true)
 
             Button(role: .destructive, action: remove) {
                 Image(systemName: "xmark.circle.fill")
@@ -416,13 +460,16 @@ struct MutedContentView: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
                     .font(.callout.weight(.semibold))
-                    .lineLimit(1)
+                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
 
                 Text(subtitle)
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
+                    .truncationMode(.middle)
             }
+            .layoutPriority(1)
 
             Spacer()
 

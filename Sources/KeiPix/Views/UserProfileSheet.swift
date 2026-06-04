@@ -180,21 +180,18 @@ struct UserProfileSheet: View {
     }
 
     private func errorState(message: String) -> some View {
-        ContentUnavailableView {
-            Label(L10n.errorTitle, systemImage: "exclamationmark.triangle")
-        } description: {
-            Text(message)
-                .textSelection(.enabled)
-        } actions: {
+        OS26LibraryUnavailableView(
+            title: L10n.errorTitle,
+            subtitle: message,
+            systemImage: "exclamationmark.triangle"
+        ) {
             Button {
                 Task { await loadDetail() }
             } label: {
                 Label(L10n.retry, systemImage: "arrow.clockwise")
             }
-            .buttonStyle(.glassProminent)
-            .buttonBorderShape(.capsule)
+            .os26GlassButton(prominent: true)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     private var loadedScroll: some View {
@@ -630,7 +627,7 @@ private struct UserProfileLoadingSkeleton: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(12)
-                .keiGlass(16)
+                .os26SkeletonSurface(16)
             }
         }
     }
@@ -645,7 +642,7 @@ private struct UserProfileLoadingSkeleton: View {
             }
         }
         .padding(14)
-        .keiGlass(18)
+        .os26SkeletonSurface(18)
     }
 
     private var recentWorksSkeleton: some View {
@@ -663,7 +660,7 @@ private struct UserProfileLoadingSkeleton: View {
             }
         }
         .padding(14)
-        .keiGlass(18)
+        .os26SkeletonSurface(18)
     }
 
     private var descriptionSkeleton: some View {
@@ -674,7 +671,7 @@ private struct UserProfileLoadingSkeleton: View {
             SkeletonPlaceholder(width: 260, height: 12, cornerRadius: 6)
         }
         .padding(14)
-        .keiGlass(18)
+        .os26SkeletonSurface(18)
     }
 
     private var relatedCreatorsSkeleton: some View {
@@ -695,12 +692,12 @@ private struct UserProfileLoadingSkeleton: View {
                     }
                     .padding(12)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .keiGlass(16)
+                    .os26SkeletonSurface(16)
                 }
             }
         }
         .padding(14)
-        .keiGlass(18)
+        .os26SkeletonSurface(18)
     }
 
     private var metricColumns: [GridItem] {

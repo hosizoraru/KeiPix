@@ -17,28 +17,22 @@ struct SpotlightView: View {
             if store.session == nil {
                 PixivSignedOutStateView(store: store)
             } else if isLoading, collectionMode.fetchesFromNetwork {
-                ProgressView(L10n.loading)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                OS26LibraryLoadingView(title: L10n.loading, systemImage: "newspaper")
             } else if displayedArticles.isEmpty {
-                ContentUnavailableView {
-                    Label(emptyTitle, systemImage: collectionMode.systemImage)
-                } description: {
-                    if let errorMessage {
-                        Text(errorMessage)
-                    } else {
-                        Text(emptySubtitle)
-                    }
-                } actions: {
+                OS26LibraryUnavailableView(
+                    title: emptyTitle,
+                    subtitle: errorMessage ?? emptySubtitle,
+                    systemImage: collectionMode.systemImage
+                ) {
                     if collectionMode.fetchesFromNetwork {
                         Button {
                             Task { await load() }
                         } label: {
                             Label(L10n.retry, systemImage: "arrow.clockwise")
                         }
-                        .buttonStyle(.borderedProminent)
+                        .os26GlassButton(prominent: true)
                     }
                 }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 ScrollView {
                     VStack(spacing: 14) {
@@ -529,7 +523,7 @@ private struct SpotlightArticleCard: View {
         }
         .padding(10)
         .frame(maxWidth: .infinity, alignment: .topLeading)
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+        .keiInteractiveGlass(12)
         .overlay {
             RoundedRectangle(cornerRadius: 8, style: .continuous)
                 .stroke(
@@ -558,7 +552,7 @@ private struct SpotlightArticleCard: View {
         }
         .padding(12)
         .frame(maxWidth: .infinity, alignment: .topLeading)
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .keiInteractiveGlass(14)
         .overlay {
             RoundedRectangle(cornerRadius: 12, style: .continuous)
                 .stroke(
