@@ -1,6 +1,28 @@
 import Foundation
 
 enum PixivWebURLBuilder {
+    static func userBookmarkArtworksURL(userID: String) -> URL? {
+        let trimmed = userID.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard trimmed.isEmpty == false else { return nil }
+
+        var components = URLComponents()
+        components.scheme = "https"
+        components.host = "www.pixiv.net"
+        components.path = "/users/\(trimmed)/bookmarks/artworks"
+        return components.url
+    }
+
+    static func userBookmarkCollectionsURL(userID: String) -> URL? {
+        let trimmed = userID.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard trimmed.isEmpty == false else { return nil }
+
+        var components = URLComponents()
+        components.scheme = "https"
+        components.host = "www.pixiv.net"
+        components.path = "/users/\(trimmed)/collections"
+        return components.url
+    }
+
     static func tagURL(tagName: String) -> URL? {
         let trimmed = tagName.trimmingCharacters(in: .whitespacesAndNewlines)
         guard trimmed.isEmpty == false else { return nil }

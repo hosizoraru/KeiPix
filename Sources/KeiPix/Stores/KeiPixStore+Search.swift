@@ -24,6 +24,7 @@ extension KeiPixStore {
         }
         focusedUser = nil
         bookmarkTagFilter = nil
+        bookmarkFeedOptions = .defaultValue
         selectedSpotlightArticle = nil
         selectedRoute = .search
         await reloadCurrentFeed()

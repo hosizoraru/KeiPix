@@ -68,6 +68,7 @@ final class KeiPixStore {
     var savedSearches = UserDefaults.standard.stringArray(forKey: "savedSearches") ?? []
     var savedSearchPresets = KeiPixStore.loadSavedSearchPresets()
     var bookmarkTagFilter: String?
+    var bookmarkFeedOptions = BookmarkFeedOptions.defaultValue
     var creatorArtworkTagFilter: CreatorArtworkTagFilter?
     var localBrowsingHistory = KeiPixStore.loadLocalBrowsingHistory()
     var watchLaterQueue = KeiPixStore.loadWatchLaterQueue()
@@ -397,6 +398,9 @@ final class KeiPixStore {
         if route != selectedRoute || route.isOwnBookmarkRoute == false {
             bookmarkTagFilter = nil
         }
+        if route.isOwnBookmarkRoute == false {
+            bookmarkFeedOptions = .defaultValue
+        }
         selectedRoute = route
         HandoffManager.shared.updateActivity(route: route.rawValue)
         if route != .spotlight {
@@ -436,6 +440,7 @@ final class KeiPixStore {
     func openUserFeed(user: PixivUser, route: PixivRoute) async {
         focusedUser = user
         bookmarkTagFilter = nil
+        bookmarkFeedOptions = .defaultValue
         creatorArtworkTagFilter = nil
         selectedSpotlightArticle = nil
         errorMessage = nil
@@ -447,6 +452,7 @@ final class KeiPixStore {
     func openCreatorTagFeed(user: PixivUser, tag: CreatorArtworkTag) async {
         focusedUser = user
         bookmarkTagFilter = nil
+        bookmarkFeedOptions = .defaultValue
         creatorArtworkTagFilter = CreatorArtworkTagFilter(
             userID: user.id,
             tag: tag.name,
@@ -469,6 +475,7 @@ final class KeiPixStore {
             let artwork = try await api.illustDetail(illustID: artworkID)
             focusedUser = nil
             bookmarkTagFilter = nil
+            bookmarkFeedOptions = .defaultValue
             creatorArtworkTagFilter = nil
             selectedSpotlightArticle = nil
             selectedRoute = .illustrations
@@ -786,7 +793,10 @@ final class KeiPixStore {
 
     func applyContentFilters() {
         let selectedID = selectedArtwork?.id
-        artworks = allArtworks.filter(passesContentFilters)
+        let visibleArtworks = allArtworks.filter(passesContentFilters)
+        artworks = selectedRoute.isOwnBookmarkRoute
+            ? bookmarkFeedOptions.applying(to: visibleArtworks)
+            : visibleArtworks
         searchPopularPreviewArtworks = allSearchPopularPreviewArtworks.filter(passesContentFilters)
         if let selectedID, let selected = artworks.first(where: { $0.id == selectedID }) {
             selectedArtwork = selected
@@ -811,6 +821,7 @@ final class KeiPixStore {
             searchText: searchText.trimmingCharacters(in: .whitespacesAndNewlines),
             searchSubmissionID: searchSubmissionID,
             bookmarkTagFilter: bookmarkTagFilter,
+            bookmarkFeedOptions: bookmarkFeedOptions,
             creatorArtworkTagFilter: creatorArtworkTagFilter,
             useRankingDate: useRankingDate,
             rankingDate: rankingDate,
@@ -1107,6 +1118,7 @@ struct FeedRequestContext: Equatable {
     let searchText: String
     let searchSubmissionID: Int
     let bookmarkTagFilter: String?
+    let bookmarkFeedOptions: BookmarkFeedOptions
     let creatorArtworkTagFilter: CreatorArtworkTagFilter?
     let useRankingDate: Bool
     let rankingDate: Date

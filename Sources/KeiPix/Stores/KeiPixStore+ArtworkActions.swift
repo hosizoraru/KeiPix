@@ -82,6 +82,39 @@ extension KeiPixStore {
         Task { await reloadCurrentFeed() }
     }
 
+    func setBookmarkFeedRestrict(_ restrict: BookmarkRestrict) {
+        guard selectedRoute.isOwnBookmarkRoute else { return }
+        let route: PixivRoute = restrict == .private ? .privateBookmarks : .publicBookmarks
+        if selectedRoute != route {
+            selectedRoute = route
+        }
+        Task { await reloadCurrentFeed() }
+    }
+
+    func setBookmarkFeedSort(_ sort: BookmarkFeedSort) {
+        bookmarkFeedOptions.sort = sort
+        applyContentFilters()
+    }
+
+    func setBookmarkFeedAgeLimit(_ ageLimit: BookmarkFeedAgeLimit) {
+        bookmarkFeedOptions.ageLimit = ageLimit
+        applyContentFilters()
+    }
+
+    func setBookmarkArtworkTagFilter(_ tag: String) {
+        bookmarkFeedOptions.artworkTagFilter = tag
+        applyContentFilters()
+    }
+
+    func resetBookmarkFeedOptions() {
+        bookmarkTagFilter = nil
+        bookmarkFeedOptions = .defaultValue
+        if selectedRoute.isOwnBookmarkRoute {
+            selectedRoute = .publicBookmarks
+        }
+        Task { await reloadCurrentFeed() }
+    }
+
     func openBookmarks(restrict: BookmarkRestrict, tag: String?) {
         focusedUser = nil
         bookmarkTagFilter = tag

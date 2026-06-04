@@ -641,6 +641,11 @@ struct NativeBoundaryTests {
         #expect(feedHeader.contains(".layoutPriority(1)"))
         #expect(feedHeader.contains(".feedHeaderActionChrome()"))
         #expect(feedHeader.contains(".keiInteractiveGlass(16)"))
+        #expect(feedHeader.contains("private var bookmarkFiltersMenu: some View"))
+        #expect(feedHeader.contains("Section(L10n.bookmarkVisibility)"))
+        #expect(feedHeader.contains("Section(L10n.bookmarkSort)"))
+        #expect(feedHeader.contains("Section(L10n.bookmarkAgeLimit)"))
+        #expect(feedHeader.contains("bookmarkArtworkTagMenu"))
         #expect(feedHeaderActionChrome.contains(".buttonStyle(.plain)"))
         #expect(feedHeaderActionChrome.contains(".buttonStyle(.bordered)") == false)
 

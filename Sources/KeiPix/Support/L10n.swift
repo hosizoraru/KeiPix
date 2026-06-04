@@ -399,6 +399,26 @@ enum L10n {
     static var saveBookmark: String { text("Save Bookmark") }
     static var savedBookmarkFormat: String { text("Saved bookmark for %@") }
     static var bookmarkTags: String { text("Bookmark Tags") }
+    static var bookmarkFilters: String { text("Bookmark Filters") }
+    static var bookmarkVisibility: String { text("Bookmark Visibility") }
+    static var bookmarkSort: String { text("Bookmark Sort") }
+    static var newestBookmarked: String { text("Newest Bookmarked") }
+    static var oldestBookmarked: String { text("Oldest Bookmarked") }
+    static var newestArtwork: String { text("Newest Artwork") }
+    static var oldestArtwork: String { text("Oldest Artwork") }
+    static var bookmarkAgeLimit: String { text("Bookmark Age Limit") }
+    static var bookmarkArtworkTag: String { text("Artwork Tag") }
+    static var bookmarkArtworkTagPrompt: String { text("Filter loaded bookmarks by artwork tag") }
+    static var bookmarkDate: String { text("Bookmark Date") }
+    static var bookmarkFilterSummaryFormat: String { text("%d active filters") }
+    static var bookmarkFiltersReset: String { text("Bookmark filters reset") }
+    static var openPixivWebBookmarks: String { text("Open Pixiv Web Bookmarks") }
+    static var copyPixivWebBookmarksLink: String { text("Copy Pixiv Web Bookmarks Link") }
+    static var copiedPixivWebBookmarksLink: String { text("Copied Pixiv Web bookmarks link") }
+    static var openPixivWebCollections: String { text("Open Pixiv Web Collections") }
+    static var pixivWebOnly: String { text("Pixiv Web only") }
+    static var pixivWebBookmarkFiltersHint: String { text("Artwork-tag and bookmark-date filters are Pixiv Web / Premium surfaces. KeiPix applies loaded-feed filters locally and links to Pixiv Web for the full picker.") }
+    static var pixivWebCollectionsHint: String { text("Collections are currently exposed by Pixiv Web. Open the web tab to browse or manage them.") }
     static var allBookmarkTags: String { text("All Bookmark Tags") }
     static var searchBookmarkTags: String { text("Search bookmark tags") }
     static var unclassified: String { text("Unclassified") }

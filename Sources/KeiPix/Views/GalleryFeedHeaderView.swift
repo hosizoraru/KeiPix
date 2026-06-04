@@ -196,46 +196,7 @@ struct FeedHeaderView: View {
         }
 
         if store.selectedRoute.isOwnBookmarkRoute {
-            Menu {
-                Button {
-                    store.setBookmarkTagFilter(nil)
-                } label: {
-                    Label(L10n.allBookmarkTags, systemImage: store.bookmarkTagFilter == nil ? "checkmark" : "tag")
-                }
-
-                Divider()
-
-                if isLoadingBookmarkTags {
-                    ProgressView()
-                } else if bookmarkTags.isEmpty {
-                    Text(L10n.noBookmarkTags)
-                } else {
-                    ForEach(bookmarkTags) { tag in
-                        Button {
-                            store.setBookmarkTagFilter(tag.name)
-                        } label: {
-                            HStack {
-                                Label(
-                                    tag.name,
-                                    systemImage: store.bookmarkTagFilter == tag.name ? "checkmark" : "tag"
-                                )
-                                Spacer()
-                                Text(tag.count.formatted())
-                            }
-                        }
-                    }
-                }
-
-                if let bookmarkTagErrorMessage {
-                    Divider()
-                    Text(bookmarkTagErrorMessage)
-                }
-            } label: {
-                Label(L10n.bookmarkTags, systemImage: "tag")
-            }
-            .help(bookmarkTagTitle)
-            .accessibilityLabel(bookmarkTagTitle)
-            .feedHeaderActionChrome()
+            bookmarkFiltersMenu
         }
 
         if store.selectedRoute.isRankingRoute {
@@ -450,6 +411,180 @@ struct FeedHeaderView: View {
     }
     #endif
 
+    private var bookmarkFiltersMenu: some View {
+        Menu {
+            Section(L10n.bookmarkVisibility) {
+                ForEach(BookmarkRestrict.allCases) { restrict in
+                    Button {
+                        store.setBookmarkFeedRestrict(restrict)
+                        actionMessage = restrict.title
+                    } label: {
+                        Label(
+                            restrict.title,
+                            systemImage: bookmarkRestrict == restrict ? "checkmark" : "bookmark"
+                        )
+                    }
+                }
+            }
+
+            Section(L10n.bookmarkSort) {
+                ForEach(BookmarkFeedSort.allCases) { sort in
+                    Button {
+                        store.setBookmarkFeedSort(sort)
+                        actionMessage = sort.title
+                    } label: {
+                        Label(
+                            sort.title,
+                            systemImage: store.bookmarkFeedOptions.sort == sort ? "checkmark" : sort.systemImage
+                        )
+                    }
+                }
+            }
+
+            Section(L10n.bookmarkAgeLimit) {
+                ForEach(BookmarkFeedAgeLimit.allCases) { ageLimit in
+                    Button {
+                        store.setBookmarkFeedAgeLimit(ageLimit)
+                        actionMessage = ageLimit.title
+                    } label: {
+                        Label(
+                            ageLimit.title,
+                            systemImage: store.bookmarkFeedOptions.ageLimit == ageLimit ? "checkmark" : ageLimit.systemImage
+                        )
+                    }
+                }
+            }
+
+            bookmarkArtworkTagMenu
+            bookmarkTagMenu
+
+            Divider()
+
+            Button {
+                resetBookmarkFilters()
+            } label: {
+                Label(L10n.reset, systemImage: "arrow.counterclockwise")
+            }
+            .disabled(bookmarkFiltersActiveCount == 0)
+
+            if bookmarkWebURL != nil || bookmarkCollectionsURL != nil {
+                Divider()
+                Text(L10n.pixivWebBookmarkFiltersHint)
+
+                if let bookmarkWebURL {
+                    Link(destination: bookmarkWebURL) {
+                        Label(L10n.openPixivWebBookmarks, systemImage: "safari")
+                    }
+
+                    Button {
+                        copyPixivWebBookmarksLink(bookmarkWebURL)
+                    } label: {
+                        Label(L10n.copyPixivWebBookmarksLink, systemImage: "link")
+                    }
+                }
+
+                if let bookmarkCollectionsURL {
+                    Link(destination: bookmarkCollectionsURL) {
+                        Label(L10n.openPixivWebCollections, systemImage: "rectangle.stack.badge.person.crop")
+                    }
+                }
+
+                Text(L10n.pixivWebCollectionsHint)
+            }
+        } label: {
+            Label(bookmarkFilterTitle, systemImage: bookmarkFiltersActiveCount > 0 ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle")
+        }
+        .help(bookmarkFilterTitle)
+        .accessibilityLabel(bookmarkFilterTitle)
+        .feedHeaderActionChrome()
+    }
+
+    private var bookmarkArtworkTagMenu: some View {
+        Menu {
+            Button {
+                store.setBookmarkArtworkTagFilter("")
+                actionMessage = L10n.allWorks
+            } label: {
+                Label(
+                    L10n.allWorks,
+                    systemImage: store.bookmarkFeedOptions.normalizedArtworkTagFilter == nil ? "checkmark" : "number"
+                )
+            }
+
+            Text(L10n.bookmarkArtworkTagPrompt)
+
+            if bookmarkArtworkTagCandidates.isEmpty {
+                Text(L10n.noMatchingBookmarkTags)
+            } else {
+                ForEach(bookmarkArtworkTagCandidates) { tag in
+                    Button {
+                        store.setBookmarkArtworkTagFilter(tag.name)
+                        actionMessage = "#\(tag.name)"
+                    } label: {
+                        HStack {
+                            Label(
+                                tag.name,
+                                systemImage: store.bookmarkFeedOptions.normalizedArtworkTagFilter == tag.name ? "checkmark" : "number"
+                            )
+                            Spacer()
+                            Text(tag.count.formatted())
+                        }
+                    }
+                }
+            }
+
+            Divider()
+            Button {} label: {
+                Label(L10n.bookmarkDate, systemImage: "calendar.badge.clock")
+            }
+            .disabled(true)
+
+            Text(L10n.pixivWebOnly)
+        } label: {
+            Label(bookmarkArtworkTagTitle, systemImage: "number")
+        }
+    }
+
+    private var bookmarkTagMenu: some View {
+        Menu {
+            Button {
+                store.setBookmarkTagFilter(nil)
+                actionMessage = L10n.allBookmarkTags
+            } label: {
+                Label(L10n.allBookmarkTags, systemImage: store.bookmarkTagFilter == nil ? "checkmark" : "tag")
+            }
+
+            if isLoadingBookmarkTags {
+                ProgressView()
+            } else if bookmarkTags.isEmpty {
+                Text(L10n.noBookmarkTags)
+            } else {
+                ForEach(bookmarkTags) { tag in
+                    Button {
+                        store.setBookmarkTagFilter(tag.name)
+                        actionMessage = "#\(tag.name)"
+                    } label: {
+                        HStack {
+                            Label(
+                                tag.name,
+                                systemImage: store.bookmarkTagFilter == tag.name ? "checkmark" : "tag"
+                            )
+                            Spacer()
+                            Text(tag.count.formatted())
+                        }
+                    }
+                }
+            }
+
+            if let bookmarkTagErrorMessage {
+                Divider()
+                Text(bookmarkTagErrorMessage)
+            }
+        } label: {
+            Label(bookmarkTagTitle, systemImage: "tag")
+        }
+    }
+
     private var compactSelectionMenu: some View {
         Menu {
             Toggle(isOn: selectionModeBinding) {
@@ -653,8 +788,63 @@ struct FeedHeaderView: View {
         store.artworks.compactMap { $0.pixivURL?.absoluteString }
     }
 
+    private var bookmarkFilterTitle: String {
+        guard bookmarkFiltersActiveCount > 0 else { return L10n.bookmarkFilters }
+        return String(format: L10n.bookmarkFilterSummaryFormat, bookmarkFiltersActiveCount)
+    }
+
+    private var bookmarkFiltersActiveCount: Int {
+        var count = store.bookmarkFeedOptions.activeFilterCount
+        if store.bookmarkTagFilter != nil {
+            count += 1
+        }
+        if bookmarkRestrict == .private {
+            count += 1
+        }
+        return count
+    }
+
     private var bookmarkTagTitle: String {
         store.bookmarkTagFilter.map { "#\($0)" } ?? L10n.bookmarkTags
+    }
+
+    private var bookmarkArtworkTagTitle: String {
+        store.bookmarkFeedOptions.normalizedArtworkTagFilter.map { "#\($0)" } ?? L10n.bookmarkArtworkTag
+    }
+
+    private var bookmarkArtworkTagCandidates: [PixivBookmarkTag] {
+        let selected = store.bookmarkFeedOptions.normalizedArtworkTagFilter
+        let counts = store.allArtworks
+            .flatMap(\.tags)
+            .map(\.name)
+            .reduce(into: [String: Int]()) { partialResult, tag in
+                let trimmed = tag.trimmingCharacters(in: .whitespacesAndNewlines)
+                guard trimmed.isEmpty == false else { return }
+                partialResult[trimmed, default: 0] += 1
+            }
+
+        let sorted = counts.sorted { lhs, rhs in
+            if lhs.key == selected { return true }
+            if rhs.key == selected { return false }
+            if lhs.value != rhs.value {
+                return lhs.value > rhs.value
+            }
+            return lhs.key.localizedStandardCompare(rhs.key) == .orderedAscending
+        }
+
+        return sorted
+            .prefix(16)
+            .map { PixivBookmarkTag(name: $0.key, count: $0.value) }
+    }
+
+    private var bookmarkWebURL: URL? {
+        guard let userID = store.session?.user.id else { return nil }
+        return PixivWebURLBuilder.userBookmarkArtworksURL(userID: userID)
+    }
+
+    private var bookmarkCollectionsURL: URL? {
+        guard let userID = store.session?.user.id else { return nil }
+        return PixivWebURLBuilder.userBookmarkCollectionsURL(userID: userID)
     }
 
     private var searchSummary: String {
@@ -884,10 +1074,20 @@ struct FeedHeaderView: View {
         actionMessage = L10n.copiedPixivWebSearchLink
     }
 
+    private func copyPixivWebBookmarksLink(_ url: URL) {
+        PasteboardWriter.copy(url.absoluteString)
+        actionMessage = L10n.copiedPixivWebBookmarksLink
+    }
+
     private func resetSearchFilters() {
         store.resetSearchOptions()
         actionMessage = L10n.searchFiltersReset
         Task { await store.runSearch() }
+    }
+
+    private func resetBookmarkFilters() {
+        store.resetBookmarkFeedOptions()
+        actionMessage = L10n.bookmarkFiltersReset
     }
 
     private func dismissActionMessageIfNeeded(_ message: String?) async {

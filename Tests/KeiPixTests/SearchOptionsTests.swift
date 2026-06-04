@@ -216,4 +216,13 @@ struct SearchOptionsTests {
         #expect(queryItems["s_mode"] == "s_tc")
         #expect(queryItems["order"] == "popular_male_d")
     }
+
+    @Test("Pixiv Web bookmark URLs point at profile bookmark surfaces")
+    func pixivWebBookmarkURLs() throws {
+        let bookmarksURL = try #require(PixivWebURLBuilder.userBookmarkArtworksURL(userID: "41657557"))
+        let collectionsURL = try #require(PixivWebURLBuilder.userBookmarkCollectionsURL(userID: "41657557"))
+
+        #expect(bookmarksURL.absoluteString == "https://www.pixiv.net/users/41657557/bookmarks/artworks")
+        #expect(collectionsURL.absoluteString == "https://www.pixiv.net/users/41657557/collections")
+    }
 }
