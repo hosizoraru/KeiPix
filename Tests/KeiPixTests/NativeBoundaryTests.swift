@@ -1192,6 +1192,57 @@ struct NativeBoundaryTests {
         #expect(watchLater.contains("ScrollView {") == false)
     }
 
+    @Test("Library management surfaces use OS 26 native search and glass actions")
+    func libraryManagementSurfacesUseOS26NativeSearchAndGlassActions() throws {
+        let root = try packageRoot()
+        let sharedComponents = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/LibrarySurfaceComponents.swift"),
+            encoding: .utf8
+        )
+        let pagePaths = [
+            "Sources/KeiPix/Views/BookmarkTagsView.swift",
+            "Sources/KeiPix/Views/BrowsingHistoryView.swift",
+            "Sources/KeiPix/Views/WatchLaterView.swift",
+            "Sources/KeiPix/Views/WorkSubscriptionsView.swift",
+            "Sources/KeiPix/Views/MutedContentView.swift",
+            "Sources/KeiPix/Views/MangaWatchlistView.swift",
+            "Sources/KeiPix/Views/DownloadQueueView.swift",
+            "Sources/KeiPix/Views/DownloadQueueRow.swift"
+        ]
+
+        #expect(sharedComponents.contains("struct OS26LibrarySearchField: View"))
+        #expect(sharedComponents.contains("NativeSearchField("))
+        #expect(sharedComponents.contains("struct OS26LibraryTextEntryField: View"))
+        #expect(sharedComponents.contains("struct OS26LibraryLoadingView: View"))
+        #expect(sharedComponents.contains("struct OS26LibraryUnavailableView<Actions: View>: View"))
+        #expect(sharedComponents.contains("struct OS26LoadMoreButton: View"))
+        #expect(sharedComponents.contains("GlassEffectContainer(spacing: 8)"))
+
+        for path in pagePaths {
+            let source = try String(contentsOf: root.appending(path: path), encoding: .utf8)
+            #expect(source.contains(".textFieldStyle(.roundedBorder)") == false, "\(path) should not use legacy rounded fields")
+            #expect(source.contains(".buttonStyle(.bordered)") == false, "\(path) should not use legacy bordered buttons")
+            #expect(source.contains(".buttonStyle(.borderedProminent)") == false, "\(path) should not use legacy prominent bordered buttons")
+            #expect(source.contains("ProgressView(L10n.loading)") == false, "\(path) should not use full-page spinner loading")
+            #expect(source.contains("ContentUnavailableView") == false, "\(path) should not use old unavailable chrome")
+        }
+
+        for path in pagePaths.dropLast() {
+            let source = try String(contentsOf: root.appending(path: path), encoding: .utf8)
+            #expect(source.contains("OS26LibrarySearchField("), "\(path) should use native search field chrome")
+            #expect(source.contains(".platformGlassControlBar("), "\(path) should keep shared page toolbar chrome")
+        }
+
+        let row = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/DownloadQueueRow.swift"),
+            encoding: .utf8
+        )
+        #expect(row.contains("ViewThatFits(in: .horizontal)"))
+        #expect(row.contains("compactActionRail"))
+        #expect(row.contains(".keiInteractiveGlass(18)"))
+        #expect(row.contains(".os26GlassIconButton(prominent: true)"))
+    }
+
     @Test("Creator list, search, menu, and drop use native P2 bridges")
     func creatorListSearchMenuAndDropUseNativeP2Bridges() throws {
         let root = try packageRoot()

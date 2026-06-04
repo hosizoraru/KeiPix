@@ -119,78 +119,85 @@ struct MutedContentView: View {
     }
 
     private var header: some View {
-        FlowLayout(spacing: 8) {
-            Picker(L10n.mutedContent, selection: $category) {
-                ForEach(MutedContentCategory.allCases) { category in
-                    Text(category.title).tag(category)
+        GlassEffectContainer(spacing: 8) {
+            FlowLayout(spacing: 8) {
+                Picker(L10n.mutedContent, selection: $category) {
+                    ForEach(MutedContentCategory.allCases) { category in
+                        Text(category.title).tag(category)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .labelsHidden()
+                .frame(minWidth: 210, idealWidth: 250, maxWidth: 280)
+
+                OS26LibrarySearchField(
+                    text: $searchText,
+                    placeholder: L10n.searchMutedContent,
+                    minWidth: 170,
+                    idealWidth: 220,
+                    maxWidth: 280
+                )
+
+                OS26LibraryActionRail {
+                    Button {
+                        searchText = ""
+                    } label: {
+                        Label(L10n.clearSearch, systemImage: "xmark.circle")
+                    }
+                    .os26GlassIconButton()
+                    .disabled(searchText.isEmpty)
+                    .help(L10n.clearSearch)
+
+                    Menu {
+                        Button {
+                            isSyncConfirmationPresented = true
+                        } label: {
+                            Label(L10n.syncFromPixiv, systemImage: "arrow.down.circle")
+                        }
+                        .disabled(isSyncing)
+
+                        Button {
+                            isUploadConfirmationPresented = true
+                        } label: {
+                            Label(L10n.uploadToPixiv, systemImage: "arrow.up.circle")
+                        }
+                        .disabled(isSyncing || (store.mutedTagList.isEmpty && store.mutedUserList.isEmpty))
+
+                        Divider()
+
+                        Button {
+                            exportLocalMutedContent()
+                        } label: {
+                            Label(L10n.exportMutedContent, systemImage: "square.and.arrow.up")
+                        }
+                        .disabled(isSyncing || totalCount == 0)
+
+                        Button {
+                            isImportConfirmationPresented = true
+                        } label: {
+                            Label(L10n.importMutedContent, systemImage: "square.and.arrow.down")
+                        }
+                        .disabled(isSyncing)
+
+                        Divider()
+
+                        Button(role: .destructive) {
+                            isClearConfirmationPresented = true
+                        } label: {
+                            Label(L10n.clearMutedContent, systemImage: "trash")
+                        }
+                        .disabled(totalCount == 0)
+                    } label: {
+                        Label(
+                            L10n.moreActions,
+                            systemImage: isSyncing ? "arrow.triangle.2.circlepath" : "ellipsis.circle"
+                        )
+                    }
+                    .os26GlassIconButton()
+                    .disabled(isSyncing)
+                    .help(L10n.muteSyncHint)
                 }
             }
-            .pickerStyle(.segmented)
-            .labelsHidden()
-            .frame(minWidth: 210, idealWidth: 250, maxWidth: 280)
-
-            TextField(L10n.searchMutedContent, text: $searchText)
-                .textFieldStyle(.roundedBorder)
-                .frame(minWidth: 170, idealWidth: 220, maxWidth: 260)
-
-            Button {
-                searchText = ""
-            } label: {
-                Label(L10n.clearSearch, systemImage: "xmark.circle")
-            }
-            .labelStyle(.iconOnly)
-                .disabled(searchText.isEmpty)
-                .help(L10n.clearSearch)
-
-            Menu {
-                Button {
-                    isSyncConfirmationPresented = true
-                } label: {
-                    Label(L10n.syncFromPixiv, systemImage: "arrow.down.circle")
-                }
-                .disabled(isSyncing)
-
-                Button {
-                    isUploadConfirmationPresented = true
-                } label: {
-                    Label(L10n.uploadToPixiv, systemImage: "arrow.up.circle")
-                }
-                .disabled(isSyncing || (store.mutedTagList.isEmpty && store.mutedUserList.isEmpty))
-
-                Divider()
-
-                Button {
-                    exportLocalMutedContent()
-                } label: {
-                    Label(L10n.exportMutedContent, systemImage: "square.and.arrow.up")
-                }
-                .disabled(isSyncing || totalCount == 0)
-
-                Button {
-                    isImportConfirmationPresented = true
-                } label: {
-                    Label(L10n.importMutedContent, systemImage: "square.and.arrow.down")
-                }
-                .disabled(isSyncing)
-
-                Divider()
-
-                Button(role: .destructive) {
-                    isClearConfirmationPresented = true
-                } label: {
-                    Label(L10n.clearMutedContent, systemImage: "trash")
-                }
-                .disabled(totalCount == 0)
-            } label: {
-                if isSyncing {
-                    ProgressView()
-                        .controlSize(.small)
-                } else {
-                    Label(L10n.moreActions, systemImage: "ellipsis.circle")
-                }
-            }
-            .labelStyle(.iconOnly)
-            .help(L10n.muteSyncHint)
         }
         .controlSize(.small)
     }
@@ -226,13 +233,12 @@ struct MutedContentView: View {
             }
         }
         .padding(14)
-        .keiGlass(18)
+        .keiGlass(22)
     }
 
     private var addTagRow: some View {
         HStack(spacing: 10) {
-            TextField(L10n.addMutedTag, text: $newTagText)
-                .textFieldStyle(.roundedBorder)
+            OS26LibraryTextEntryField(text: $newTagText, placeholder: L10n.addMutedTag)
 
             Button {
                 let normalized = newTagText.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -251,6 +257,7 @@ struct MutedContentView: View {
             } label: {
                 Label(L10n.addTag, systemImage: "plus.circle")
             }
+            .os26GlassButton(prominent: true)
             .disabled(newTagText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
         }
     }
@@ -258,8 +265,7 @@ struct MutedContentView: View {
     private var addCommentPhraseRow: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 10) {
-                TextField(L10n.addMutedCommentPhrase, text: $newCommentPhraseText)
-                    .textFieldStyle(.roundedBorder)
+                OS26LibraryTextEntryField(text: $newCommentPhraseText, placeholder: L10n.addMutedCommentPhrase)
 
                 Button {
                     let normalized = store.normalizedCommentPhrase(newCommentPhraseText)
@@ -278,6 +284,7 @@ struct MutedContentView: View {
                 } label: {
                     Label(L10n.addPhrase, systemImage: "plus.circle")
                 }
+                .os26GlassButton(prominent: true)
                 .disabled(store.normalizedCommentPhrase(newCommentPhraseText).isEmpty)
             }
 
@@ -363,12 +370,23 @@ struct MutedContentView: View {
     }
 
     private var emptyState: some View {
-        ContentUnavailableView(
-            L10n.noMutedContent,
-            systemImage: category.systemImage,
-            description: Text(L10n.noMutedContentHint)
-        )
+        VStack(spacing: 10) {
+            Image(systemName: category.systemImage)
+                .font(.title2.weight(.semibold))
+                .symbolRenderingMode(.hierarchical)
+                .foregroundStyle(.secondary)
+
+            Text(L10n.noMutedContent)
+                .font(.callout.weight(.semibold))
+
+            Text(L10n.noMutedContentHint)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+        }
+        .padding(22)
         .frame(maxWidth: .infinity, minHeight: 180)
+        .keiGlass(18)
     }
 
     private func removableChip(title: String, systemImage: String, remove: @escaping () -> Void) -> some View {
@@ -386,7 +404,7 @@ struct MutedContentView: View {
         .font(.callout)
         .padding(.horizontal, 10)
         .padding(.vertical, 7)
-        .background(.regularMaterial, in: Capsule())
+        .keiGlass(16)
     }
 
     private func removableRow(title: String, subtitle: String, systemImage: String, remove: @escaping () -> Void) -> some View {
@@ -416,7 +434,7 @@ struct MutedContentView: View {
             .help(L10n.deleteFromMutedContent)
         }
         .padding(10)
-        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .keiInteractiveGlass(14)
     }
 
     private var filteredTags: [String] {

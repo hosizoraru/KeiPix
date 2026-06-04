@@ -86,120 +86,16 @@ struct DownloadQueueRow: View {
 
             Spacer(minLength: 10)
 
-            if item.status == .failed {
-                Button {
-                    retry()
-                } label: {
-                    Label(L10n.retry, systemImage: "arrow.clockwise")
-                }
-                .labelStyle(.iconOnly)
-                .buttonStyle(.bordered)
-                .disabled(item.sourceImageURLs?.isEmpty != false)
-                .help(L10n.retry)
-            }
-
-            if item.status == .queued || item.status == .downloading {
-                Button {
-                    cancel()
-                } label: {
-                    Label(L10n.cancelDownload, systemImage: "xmark.circle")
-                }
-                .labelStyle(.iconOnly)
-                .buttonStyle(.bordered)
-                .help(L10n.cancelDownload)
-            }
-
-            Button {
-                open()
-            } label: {
-                Label(L10n.openDownloadedArtwork, systemImage: "book")
-            }
-            .labelStyle(.iconOnly)
-            .buttonStyle(.borderedProminent)
-            .disabled(canOpen == false)
-            .help(L10n.openDownloadedArtwork)
-
-            // Quick Look — same affordance Finder hands to a selected
-            // file via the space bar. Disabled for queued / failed
-            // rows where there's no on-disk artifact yet. The space
-            // shortcut is wired at the row level (focused() + .onKeyPress)
-            // rather than on the button so multiple rendered buttons
-            // don't fight over a single accelerator.
-            Button {
-                quickLook()
-            } label: {
-                Label(L10n.quickLook, systemImage: "eye")
-            }
-            .labelStyle(.iconOnly)
-            .buttonStyle(.bordered)
-            .disabled(canOpen == false)
-            .help(L10n.quickLookHint)
-
-            Button {
-                reveal()
-            } label: {
-                Label(L10n.revealInFinder, systemImage: "folder")
-            }
-            .labelStyle(.iconOnly)
-            .buttonStyle(.bordered)
-            .help(L10n.revealInFinder)
-
-            Menu {
-                if let pixivURL = item.pixivURL {
-                    Button {
-                        PlatformWorkspace.open(pixivURL)
-                    } label: {
-                        Label(L10n.openInPixiv, systemImage: "safari")
-                    }
-
-                    Button {
-                        PasteboardWriter.copy(pixivURL.absoluteString)
-                        copied()
-                    } label: {
-                        Label(L10n.copyLink, systemImage: "link")
-                    }
-                }
-
-                Button {
-                    quickLook()
-                } label: {
-                    Label(L10n.quickLook, systemImage: "eye")
-                }
-                .disabled(canOpen == false)
-
-                Button {
-                    reveal()
-                } label: {
-                    Label(L10n.revealInFinder, systemImage: "folder")
-                }
-
-                Divider()
-
-                if item.status == .queued || item.status == .downloading {
-                    Button(role: .destructive, action: cancel) {
-                        Label(L10n.cancelDownload, systemImage: "xmark.circle")
-                    }
-                }
-
-                Button(role: .destructive, action: delete) {
-                    Label(L10n.deleteDownload, systemImage: "trash")
-                }
-                .disabled(item.status == .downloading)
-            } label: {
-                Label(L10n.moreActions, systemImage: "ellipsis.circle")
-            }
-            .labelStyle(.iconOnly)
-            .buttonStyle(.bordered)
-            .help(L10n.moreActions)
+            actionRail
         }
         .padding(12)
-        .keiPanel(16)
+        .keiInteractiveGlass(18)
         // Subtle accent ring on the focused row so users can see which
         // entry the space bar will preview. Mirrors how Finder's list
         // view paints a halo around the selected file.
         .overlay {
             if isFocused {
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
                     .stroke(Color.accentColor.opacity(0.65), lineWidth: 2)
             }
         }
@@ -239,6 +135,150 @@ struct DownloadQueueRow: View {
         }
     }
 
+    private var actionRail: some View {
+        GlassEffectContainer(spacing: 8) {
+            ViewThatFits(in: .horizontal) {
+                expandedActionRail
+                compactActionRail
+            }
+        }
+    }
+
+    private var expandedActionRail: some View {
+        HStack(spacing: 8) {
+            if item.status == .failed {
+                retryButton
+            }
+
+            if item.status == .queued || item.status == .downloading {
+                cancelButton
+            }
+
+            openButton
+            quickLookButton
+            revealButton
+            moreMenu
+        }
+    }
+
+    private var compactActionRail: some View {
+        HStack(spacing: 8) {
+            if item.status == .failed {
+                retryButton
+            } else if item.status == .queued || item.status == .downloading {
+                cancelButton
+            }
+
+            openButton
+            moreMenu
+        }
+    }
+
+    private var retryButton: some View {
+        Button {
+            retry()
+        } label: {
+            Label(L10n.retry, systemImage: "arrow.clockwise")
+        }
+        .os26GlassIconButton()
+        .disabled(item.sourceImageURLs?.isEmpty != false)
+        .help(L10n.retry)
+    }
+
+    private var cancelButton: some View {
+        Button {
+            cancel()
+        } label: {
+            Label(L10n.cancelDownload, systemImage: "xmark.circle")
+        }
+        .os26GlassIconButton()
+        .help(L10n.cancelDownload)
+    }
+
+    private var openButton: some View {
+        Button {
+            open()
+        } label: {
+            Label(L10n.openDownloadedArtwork, systemImage: "book")
+        }
+        .os26GlassIconButton(prominent: true)
+        .disabled(canOpen == false)
+        .help(L10n.openDownloadedArtwork)
+    }
+
+    private var quickLookButton: some View {
+        // Quick Look — same affordance Finder hands to a selected file
+        // via the space bar. The shortcut is wired at the row level so
+        // multiple rendered buttons do not fight over one accelerator.
+        Button {
+            quickLook()
+        } label: {
+            Label(L10n.quickLook, systemImage: "eye")
+        }
+        .os26GlassIconButton()
+        .disabled(canOpen == false)
+        .help(L10n.quickLookHint)
+    }
+
+    private var revealButton: some View {
+        Button {
+            reveal()
+        } label: {
+            Label(L10n.revealInFinder, systemImage: "folder")
+        }
+        .os26GlassIconButton()
+        .help(L10n.revealInFinder)
+    }
+
+    private var moreMenu: some View {
+        Menu {
+            if let pixivURL = item.pixivURL {
+                Button {
+                    PlatformWorkspace.open(pixivURL)
+                } label: {
+                    Label(L10n.openInPixiv, systemImage: "safari")
+                }
+
+                Button {
+                    PasteboardWriter.copy(pixivURL.absoluteString)
+                    copied()
+                } label: {
+                    Label(L10n.copyLink, systemImage: "link")
+                }
+            }
+
+            Button {
+                quickLook()
+            } label: {
+                Label(L10n.quickLook, systemImage: "eye")
+            }
+            .disabled(canOpen == false)
+
+            Button {
+                reveal()
+            } label: {
+                Label(L10n.revealInFinder, systemImage: "folder")
+            }
+
+            Divider()
+
+            if item.status == .queued || item.status == .downloading {
+                Button(role: .destructive, action: cancel) {
+                    Label(L10n.cancelDownload, systemImage: "xmark.circle")
+                }
+            }
+
+            Button(role: .destructive, action: delete) {
+                Label(L10n.deleteDownload, systemImage: "trash")
+            }
+            .disabled(item.status == .downloading)
+        } label: {
+            Label(L10n.moreActions, systemImage: "ellipsis.circle")
+        }
+        .os26GlassIconButton()
+        .help(L10n.moreActions)
+    }
+
     @ViewBuilder
     private var statusIcon: some View {
         switch item.status {
@@ -246,8 +286,9 @@ struct DownloadQueueRow: View {
             Image(systemName: "clock")
                 .foregroundStyle(.secondary)
         case .downloading:
-            ProgressView()
-                .controlSize(.small)
+            Image(systemName: "arrow.down.circle.fill")
+                .symbolRenderingMode(.hierarchical)
+                .foregroundStyle(.tint)
         case .completed:
             Image(systemName: "checkmark.circle.fill")
                 .foregroundStyle(.green)

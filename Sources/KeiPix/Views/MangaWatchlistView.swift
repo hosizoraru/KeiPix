@@ -24,8 +24,7 @@ struct MangaWatchlistView: View {
             if showsSignedOutState {
                 PixivSignedOutStateView(store: store)
             } else if isLoading && usesVisualQASample == false {
-                ProgressView(L10n.loading)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                OS26LibraryLoadingView(title: L10n.loading, systemImage: "book.pages")
             } else {
                 watchlistSurface
             }
@@ -99,26 +98,15 @@ struct MangaWatchlistView: View {
     }
 
     private var loadMoreButton: some View {
-        Button {
+        OS26LoadMoreButton(
+            title: L10n.loadMoreWatchlist,
+            loadingTitle: L10n.loading,
+            systemImage: "arrow.down.circle",
+            isLoading: isLoadingMore,
+            minHeight: 170
+        ) {
             Task { await loadMore() }
-        } label: {
-            VStack(spacing: 8) {
-                if isLoadingMore {
-                    ProgressView()
-                } else {
-                    Image(systemName: "arrow.down.circle")
-                        .font(.title3)
-                    Text(L10n.loadMoreWatchlist)
-                        .font(.caption.weight(.medium))
-                }
-            }
-            .frame(maxWidth: .infinity)
-            .frame(height: 170)
-            .contentShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         }
-        .buttonStyle(.plain)
-        .keiInteractiveGlass(16)
-        .disabled(isLoadingMore)
     }
 
     private var watchlistSurface: some View {
@@ -131,32 +119,40 @@ struct MangaWatchlistView: View {
     }
 
     private var header: some View {
-        FlowLayout(spacing: 8) {
-            TextField(L10n.searchWatchlistSeries, text: $watchlistSearchText)
-                .textFieldStyle(.roundedBorder)
-                .frame(minWidth: 180, idealWidth: 240, maxWidth: 300)
+        GlassEffectContainer(spacing: 8) {
+            FlowLayout(spacing: 8) {
+                OS26LibrarySearchField(
+                    text: $watchlistSearchText,
+                    placeholder: L10n.searchWatchlistSeries,
+                    minWidth: 180,
+                    idealWidth: 250,
+                    maxWidth: 320
+                )
 
-            Button {
-                watchlistSearchText = ""
-            } label: {
-                Label(L10n.clearSearch, systemImage: "xmark.circle")
-            }
-            .labelStyle(.iconOnly)
-            .disabled(normalizedWatchlistSearchText.isEmpty)
-            .help(L10n.clearSearch)
+                OS26LibraryActionRail {
+                    Button {
+                        watchlistSearchText = ""
+                    } label: {
+                        Label(L10n.clearSearch, systemImage: "xmark.circle")
+                    }
+                    .os26GlassIconButton()
+                    .disabled(normalizedWatchlistSearchText.isEmpty)
+                    .help(L10n.clearSearch)
 
-            Menu {
-                Button {
-                    Task { await loadInitial(showFeedback: true) }
-                } label: {
-                    Label(L10n.refresh, systemImage: "arrow.clockwise")
+                    Menu {
+                        Button {
+                            Task { await loadInitial(showFeedback: true) }
+                        } label: {
+                            Label(L10n.refresh, systemImage: "arrow.clockwise")
+                        }
+                        .disabled(isLoading)
+                    } label: {
+                        Label(L10n.moreActions, systemImage: "ellipsis.circle")
+                    }
+                    .os26GlassIconButton()
+                    .help(L10n.moreActions)
                 }
-                .disabled(isLoading)
-            } label: {
-                Label(L10n.moreActions, systemImage: "ellipsis.circle")
-                    .labelStyle(.iconOnly)
             }
-            .help(L10n.moreActions)
         }
         .controlSize(.small)
     }
@@ -164,21 +160,18 @@ struct MangaWatchlistView: View {
     @ViewBuilder
     private var watchlistContent: some View {
         if visibleSeries.isEmpty {
-            ContentUnavailableView {
-                Label(L10n.noWatchlistSeries, systemImage: "rectangle.stack.badge.person.crop")
-            } description: {
-                if let errorMessage {
-                    Text(errorMessage)
-                }
-            } actions: {
+            OS26LibraryUnavailableView(
+                title: L10n.noWatchlistSeries,
+                subtitle: errorMessage,
+                systemImage: "rectangle.stack.badge.person.crop"
+            ) {
                 Button {
                     Task { await loadInitial(showFeedback: true) }
                 } label: {
                     Label(L10n.retry, systemImage: "arrow.clockwise")
                 }
-                .buttonStyle(.borderedProminent)
+                .os26GlassButton(prominent: true)
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else if filteredSeries.isEmpty {
             EmptyStateView(
                 title: L10n.noMatchingWatchlistSeries,
@@ -414,10 +407,10 @@ private struct MangaWatchlistCard: View {
                     if updateStatus.hasUpdate {
                         Text(updateBadgeText)
                             .font(.caption2.weight(.semibold))
-                            .foregroundStyle(.white)
+                            .foregroundStyle(.orange)
                             .padding(.horizontal, 7)
                             .padding(.vertical, 3)
-                            .background(.orange.gradient, in: Capsule())
+                            .glassEffect(.regular, in: Capsule(style: .continuous))
                     }
                 }
 
@@ -444,7 +437,7 @@ private struct MangaWatchlistCard: View {
                 } label: {
                     Label(L10n.openLatestArtwork, systemImage: "arrow.right.circle")
                 }
-                .buttonStyle(.bordered)
+                .os26GlassButton(prominent: updateStatus.hasUpdate)
 
                 Spacer()
 
@@ -469,15 +462,12 @@ private struct MangaWatchlistCard: View {
                         Label(L10n.removeFromWatchlist, systemImage: "minus.circle")
                     }
                 } label: {
-                    if isRemoving {
-                        ProgressView()
-                            .controlSize(.small)
-                    } else {
-                        Label(L10n.moreActions, systemImage: "ellipsis.circle")
-                    }
+                    Label(
+                        L10n.moreActions,
+                        systemImage: isRemoving ? "arrow.triangle.2.circlepath" : "ellipsis.circle"
+                    )
                 }
-                .labelStyle(.iconOnly)
-                .buttonStyle(.bordered)
+                .os26GlassIconButton()
                 .disabled(isRemoving)
                 .help(L10n.moreActions)
             }
@@ -524,7 +514,7 @@ private struct MangaWatchlistCard: View {
                         .foregroundStyle(.primary)
                         .padding(.horizontal, 7)
                         .padding(.vertical, 4)
-                        .background(.regularMaterial, in: Capsule())
+                        .keiGlass(12)
                         .padding(8)
                 }
             }
