@@ -5,6 +5,8 @@ struct ContentView: View {
     @Bindable var store: KeiPixStore
     @State private var columnVisibility: NavigationSplitViewVisibility = .all
     @State private var isSidebarPresented = true
+    @SceneStorage("KeiPix.macOS.detailPanelUserEnabled") private var isMacDetailPanelUserEnabled = true
+    @State private var isMacDetailPanelCurrentlyVisible = false
     @State private var sidebarSelection: KeiPixSidebarDestination = .route(.home)
     @State private var statusMessage: String?
     @State private var isPixivIDOpenPresented = false
@@ -22,14 +24,8 @@ struct ContentView: View {
                 columnWidth: .macOS
             )
                 .toolbar(removing: .sidebarToggle)
-        } content: {
-            ContentColumnView(store: store)
-                .navigationSplitViewColumnWidth(
-                    min: contentColumnMinWidth,
-                    ideal: contentColumnIdealWidth
-                )
         } detail: {
-            detailColumn
+            macBrowserWorkspace
         }
         .frame(minWidth: minimumWindowWidth, minHeight: MainWindowSizing.minimumHeight)
         .searchable(text: $store.searchText, prompt: L10n.searchPlaceholder)
@@ -83,6 +79,20 @@ struct ContentView: View {
                 }
                 .labelStyle(.iconOnly)
                 .help(sidebarVisible ? L10n.hideSidebar : L10n.showSidebar)
+
+                if showsMacDetailPanelToggle {
+                    Button {
+                        toggleMacDetailPanel()
+                    } label: {
+                        Label(
+                            macDetailPanelToggleTitle,
+                            systemImage: isMacDetailPanelCurrentlyVisible ? "sidebar.trailing" : "rectangle.trailingthird.inset.filled"
+                        )
+                    }
+                    .labelStyle(.iconOnly)
+                    .help(macDetailPanelToggleTitle)
+                    .accessibilityLabel(macDetailPanelToggleTitle)
+                }
 
                 Button {
                     store.requestRouteRefresh()
@@ -465,7 +475,7 @@ struct ContentView: View {
     private func toggleSidebar() {
         if sidebarVisible {
             isSidebarPresented = false
-            columnVisibility = .doubleColumn
+            columnVisibility = .detailOnly
         } else {
             isSidebarPresented = true
             columnVisibility = .all
@@ -537,31 +547,155 @@ struct ContentView: View {
     }
 
     @ViewBuilder
-    private var detailColumn: some View {
-        if store.selectedRoute == .home {
-            DiscoveryDashboardDetailPlaceholder()
-                .navigationSplitViewColumnWidth(min: 360, ideal: 440)
-        } else if store.selectedRoute == .spotlight {
-            SpotlightArticleDetailView(store: store)
-                .navigationSplitViewColumnWidth(min: 420, ideal: 560)
-        } else if store.selectedRoute.isCreatorRoute {
-            CreatorListDetailPlaceholder(route: store.selectedRoute)
-                .navigationSplitViewColumnWidth(min: 280, ideal: 320, max: 360)
-        } else if store.selectedRoute.usesNovelFeed {
-            NovelDetailView(store: store)
-                .navigationSplitViewColumnWidth(min: 380, ideal: 500)
-        } else {
-            ArtworkDetailView(store: store, showsNavigationChrome: false)
-                .navigationSplitViewColumnWidth(min: 360, ideal: 460)
+    private var macBrowserWorkspace: some View {
+        GeometryReader { proxy in
+            let layout = MacBrowserWorkspaceLayout(
+                availableWidth: proxy.size.width,
+                route: store.selectedRoute,
+                isDetailRequested: isMacDetailPanelUserEnabled,
+                hasSelection: macDetailPanelHasSelection
+            )
+
+            HStack(spacing: 0) {
+                ContentColumnView(store: store)
+                    .frame(
+                        minWidth: layout.feedMinimumWidth,
+                        idealWidth: layout.feedWidth,
+                        maxWidth: .infinity,
+                        maxHeight: .infinity
+                    )
+                    .layoutPriority(1)
+
+                if layout.showsDetailPanel {
+                    Divider()
+
+                    macDetailPanel
+                        .frame(width: layout.detailWidth)
+                        .frame(maxHeight: .infinity)
+                        .transition(.move(edge: .trailing).combined(with: .opacity))
+                }
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .animation(.snappy(duration: 0.24), value: layout.showsDetailPanel)
+            .animation(.snappy(duration: 0.18), value: layout.detailWidth)
+            .onAppear {
+                isMacDetailPanelCurrentlyVisible = layout.showsDetailPanel
+            }
+            .onChange(of: layout.showsDetailPanel) { _, isVisible in
+                isMacDetailPanelCurrentlyVisible = isVisible
+            }
         }
     }
 
-    private var contentColumnMinWidth: CGFloat {
-        store.selectedRoute.isCreatorRoute ? 720 : 560
+    private var macDetailPanel: some View {
+        VStack(spacing: 0) {
+            macDetailPanelHeader
+
+            macDetailPanelContent
+        }
+        .background(.background)
     }
 
-    private var contentColumnIdealWidth: CGFloat {
-        store.selectedRoute.isCreatorRoute ? 1040 : 760
+    private var macDetailPanelHeader: some View {
+        GlassEffectContainer(spacing: 10) {
+            HStack(spacing: 12) {
+                Image(systemName: macDetailPanelSystemImage)
+                    .font(.headline.weight(.semibold))
+                    .symbolRenderingMode(.hierarchical)
+                    .foregroundStyle(.secondary)
+                    .frame(width: 34, height: 34)
+                    .keiGlass(14)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(macDetailPanelTitle)
+                        .font(.headline.weight(.semibold))
+                        .lineLimit(1)
+
+                    if let subtitle = macDetailPanelSubtitle {
+                        Text(subtitle)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                            .truncationMode(.middle)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+                Button {
+                    withAnimation(.snappy(duration: 0.22)) {
+                        isMacDetailPanelUserEnabled = false
+                    }
+                } label: {
+                    Label(L10n.hideDetails, systemImage: "xmark.circle.fill")
+                        .labelStyle(.iconOnly)
+                        .font(.title3)
+                        .symbolRenderingMode(.hierarchical)
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(.secondary)
+                .help(L10n.hideDetails)
+                .accessibilityLabel(L10n.hideDetails)
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 10)
+            .keiGlass(20)
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 8)
+    }
+
+    @ViewBuilder
+    private var macDetailPanelContent: some View {
+        if store.selectedRoute == .spotlight {
+            SpotlightArticleDetailView(store: store, showsNavigationChrome: false)
+        } else if store.selectedRoute.usesNovelFeed {
+            NovelDetailView(store: store)
+        } else {
+            ArtworkDetailView(store: store, showsNavigationChrome: false)
+        }
+    }
+
+    private var macDetailPanelHasSelection: Bool {
+        if store.selectedRoute == .spotlight {
+            store.selectedSpotlightArticle != nil
+        } else if store.selectedRoute.usesNovelFeed {
+            store.novels.selectedNovel != nil
+        } else if store.selectedRoute.usesArtworkFeed {
+            store.selectedArtwork != nil
+        } else {
+            false
+        }
+    }
+
+    private var macDetailPanelTitle: String {
+        if store.selectedRoute == .spotlight {
+            L10n.spotlight
+        } else if store.selectedRoute.usesNovelFeed {
+            L10n.novels
+        } else {
+            L10n.details
+        }
+    }
+
+    private var macDetailPanelSubtitle: String? {
+        if store.selectedRoute == .spotlight {
+            guard let article = store.selectedSpotlightArticle else { return nil }
+            return article.pureTitle.isEmpty ? article.title : article.pureTitle
+        } else if store.selectedRoute.usesNovelFeed {
+            return store.novels.selectedNovel?.title
+        } else {
+            return store.selectedArtwork?.title
+        }
+    }
+
+    private var macDetailPanelSystemImage: String {
+        if store.selectedRoute == .spotlight {
+            "newspaper"
+        } else if store.selectedRoute.usesNovelFeed {
+            "book"
+        } else {
+            "sidebar.trailing"
+        }
     }
 
     private var showsSearchFilters: Bool {
@@ -574,6 +708,33 @@ struct ContentView: View {
 
     private var showsArtworkNavigationControls: Bool {
         store.selectedRoute.usesArtworkFeed
+    }
+
+    private var showsMacDetailPanelToggle: Bool {
+        store.selectedRoute == .spotlight || store.selectedRoute.usesArtworkFeed || store.selectedRoute.usesNovelFeed
+    }
+
+    private var macDetailPanelToggleTitle: String {
+        isMacDetailPanelCurrentlyVisible ? L10n.hideDetails : L10n.showDetails
+    }
+
+    private func toggleMacDetailPanel() {
+        if isMacDetailPanelUserEnabled, isMacDetailPanelCurrentlyVisible {
+            withAnimation(.snappy(duration: 0.22)) {
+                isMacDetailPanelUserEnabled = false
+            }
+            return
+        }
+
+        if store.selectedRoute.usesArtworkFeed,
+           store.selectedArtwork == nil,
+           let artwork = store.clientFilteredArtworks.first ?? store.artworks.first {
+            store.selectedArtwork = artwork
+        }
+
+        withAnimation(.snappy(duration: 0.24)) {
+            isMacDetailPanelUserEnabled = true
+        }
     }
 
     private var galleryLayoutBinding: Binding<GalleryLayoutMode> {
