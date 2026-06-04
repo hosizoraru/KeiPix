@@ -23,6 +23,7 @@ enum SettingsCategory: String, CaseIterable, Identifiable, Hashable {
     case sharing
     case storage
     case keyboard
+    case about
     case advancedQA
 
     var id: String { rawValue }
@@ -39,6 +40,7 @@ enum SettingsCategory: String, CaseIterable, Identifiable, Hashable {
         case .storage: L10n.settingsStorage
         case .account: L10n.account
         case .keyboard: L10n.settingsKeyboard
+        case .about: L10n.aboutKeiPix
         case .advancedQA: L10n.settingsAdvancedQA
         }
     }
@@ -55,6 +57,7 @@ enum SettingsCategory: String, CaseIterable, Identifiable, Hashable {
         case .storage: "internaldrive"
         case .account: "person.crop.circle"
         case .keyboard: "keyboard"
+        case .about: "info.circle"
         case .advancedQA: "wrench.and.screwdriver"
         }
     }
@@ -189,6 +192,17 @@ enum SettingsCategory: String, CaseIterable, Identifiable, Hashable {
                 L10n.readerWindow,
                 L10n.shortcutSurfaceMain,
                 L10n.shortcutSurfaceReaderInline
+            ]
+        case .about:
+            return [
+                title,
+                L10n.aboutLicense,
+                L10n.aboutApacheLicenseTitle,
+                L10n.aboutSourceRepository,
+                L10n.aboutOpenOnGitHub,
+                L10n.aboutCopyDiagnostics,
+                L10n.aboutAcknowledgments,
+                L10n.aboutLocalization
             ]
         case .advancedQA:
             return [

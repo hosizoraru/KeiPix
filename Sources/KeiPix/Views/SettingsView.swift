@@ -317,6 +317,8 @@ struct SettingsView: View {
             AccountSettingsPage(store: store, coordinator: coordinator)
         case .keyboard:
             KeyboardSettingsPage()
+        case .about:
+            AboutView(presentation: .settings)
         case .advancedQA:
             AdvancedQASettingsPage(store: store, coordinator: coordinator)
         }

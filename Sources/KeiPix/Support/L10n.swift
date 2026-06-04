@@ -1127,10 +1127,15 @@ enum L10n {
         String(format: text("Build %@"), locale: Locale.current, value)
     }
     static var aboutSummary: String {
-        text("KeiPix is a native macOS Pixiv client written in Swift and SwiftUI.")
+        text("KeiPix is a native Pixiv client for macOS, iPadOS, and iOS.")
     }
     static var aboutSourceRepository: String { text("Source Repository") }
     static var aboutOpenOnGitHub: String { text("Open on GitHub") }
+    static var aboutCopyRepositoryURL: String { text("Copy Repository URL") }
+    static var aboutRepositoryCopied: String { text("Repository URL copied") }
+    static var aboutRepositoryBody: String {
+        text("The project is developed in the open on GitHub. File issues, inspect commits, or review the Apache-2.0 source from the repository.")
+    }
     static var aboutAcknowledgments: String { text("Acknowledgments") }
     static var aboutReferenceProjects: String { text("Reference Projects") }
     static var aboutReferenceProjectsBody: String {
@@ -1143,10 +1148,23 @@ enum L10n {
         text("English, Simplified Chinese, Traditional Chinese, Japanese.")
     }
     static var aboutLicense: String { text("License") }
+    static var aboutApacheLicenseTitle: String { text("Apache License 2.0") }
     static var aboutLicenseBody: String {
-        text("Source available for personal evaluation. No formal license has been published; " +
-             "all rights reserved by the author.")
+        text("KeiPix is licensed under the Apache License, Version 2.0. You may use, modify, and distribute it under the license terms.")
     }
+    static var aboutOpenLicense: String { text("Open License") }
+    static var aboutCopyLicenseSummary: String { text("Copy License Summary") }
+    static var aboutLicenseCopied: String { text("License summary copied") }
+    static var aboutPlatformSupport: String { text("Platform Support") }
+    static var aboutPlatformSupportBody: String {
+        text("The interface is tuned separately for Mac windows, iPad multitasking, and iPhone-size layouts while sharing one codebase.")
+    }
+    static var aboutDesignPrinciples: String { text("Design Principles") }
+    static var aboutDesignPrinciplesBody: String {
+        text("High-frequency browsing and reading paths prefer AppKit/UIKit-backed native behavior, with SwiftUI composing the app chrome and settings surfaces.")
+    }
+    static var aboutCopyVersionInfo: String { text("Copy Version Info") }
+    static var aboutVersionInfoCopied: String { text("Version info copied") }
     static var aboutCopyDiagnostics: String { text("Copy Diagnostics Bundle") }
     static var aboutDiagnosticsCopied: String { text("Diagnostics copied") }
 

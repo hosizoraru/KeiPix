@@ -88,7 +88,7 @@ struct KeiPixApp: App {
 
         #if os(macOS)
         Window(L10n.aboutKeiPix, id: "about") {
-            AboutView()
+            AboutView(presentation: .window)
                 .environment(\.locale, store.appLanguage.locale ?? .current)
                 .preferredColorScheme(store.appColorScheme.preferredColorScheme)
         }
