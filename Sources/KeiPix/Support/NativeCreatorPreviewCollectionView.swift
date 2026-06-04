@@ -86,9 +86,9 @@ enum NativeCreatorPreviewCollectionLayout: Equatable {
         case .single:
             return availableWidth
         case .twoUp:
-            return max((availableWidth - interitemSpacing) / 2, 280)
+            return max((availableWidth - interitemSpacing) / 2, 300)
         case .auto:
-            let minimumWidth: CGFloat = 320
+            let minimumWidth: CGFloat = 300
             let spacing = interitemSpacing
             let columns = max(1, Int((availableWidth + spacing) / (minimumWidth + spacing)))
             return floor((availableWidth - spacing * CGFloat(columns - 1)) / CGFloat(columns))

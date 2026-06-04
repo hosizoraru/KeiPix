@@ -495,6 +495,7 @@ enum L10n {
     static var unpinnedCreatorFormat: String { text("Unpinned %@") }
     static var noPinnedCreators: String { text("No pinned creators") }
     static var noPinnedCreatorsHint: String { text("Pin creators from recommended, search, following, or profile views to build a local creator collection.") }
+    static var creatorListDetailHint: String { text("Use the creator cards to open profiles, illustrations, manga, or Pixiv links without leaving this list.") }
     static var followVisibilityUpdatedFormat: String { text("Checked follow visibility for %d creators") }
     static var followVisibilityPartiallyUpdatedFormat: String { text("Checked follow visibility for %d creators, %d failed") }
     static var followedCreatorFormat: String { text("Followed %@") }

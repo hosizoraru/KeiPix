@@ -104,9 +104,9 @@ struct CreatorListSearchBar: View {
                     onSubmit: {},
                     onTextChange: { creatorSearchText = $0 }
                 )
-                .frame(maxWidth: .infinity)
+                .frame(minWidth: 220, maxWidth: .infinity)
             }
-            .frame(maxWidth: 360)
+            .frame(maxWidth: 560)
 
             if creatorSearchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false {
                 Button {

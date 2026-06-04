@@ -19,21 +19,12 @@ struct ContentView: View {
                 .toolbar(removing: .sidebarToggle)
         } content: {
             ContentColumnView(store: store)
-                .navigationSplitViewColumnWidth(min: 560, ideal: 760)
+                .navigationSplitViewColumnWidth(
+                    min: contentColumnMinWidth,
+                    ideal: contentColumnIdealWidth
+                )
         } detail: {
-            if store.selectedRoute == .home {
-                DiscoveryDashboardDetailPlaceholder()
-                    .navigationSplitViewColumnWidth(min: 360, ideal: 440)
-            } else if store.selectedRoute == .spotlight {
-                SpotlightArticleDetailView(store: store)
-                    .navigationSplitViewColumnWidth(min: 420, ideal: 560)
-            } else if store.selectedRoute.usesNovelFeed {
-                NovelDetailView(store: store)
-                    .navigationSplitViewColumnWidth(min: 380, ideal: 500)
-            } else {
-                ArtworkDetailView(store: store, showsNavigationChrome: false)
-                    .navigationSplitViewColumnWidth(min: 360, ideal: 460)
-            }
+            detailColumn
         }
         .frame(minWidth: minimumWindowWidth, minHeight: MainWindowSizing.minimumHeight)
         .searchable(text: $store.searchText, prompt: L10n.searchPlaceholder)
@@ -512,6 +503,34 @@ struct ContentView: View {
         )
     }
 
+    @ViewBuilder
+    private var detailColumn: some View {
+        if store.selectedRoute == .home {
+            DiscoveryDashboardDetailPlaceholder()
+                .navigationSplitViewColumnWidth(min: 360, ideal: 440)
+        } else if store.selectedRoute == .spotlight {
+            SpotlightArticleDetailView(store: store)
+                .navigationSplitViewColumnWidth(min: 420, ideal: 560)
+        } else if store.selectedRoute.isCreatorRoute {
+            CreatorListDetailPlaceholder(route: store.selectedRoute)
+                .navigationSplitViewColumnWidth(min: 280, ideal: 320, max: 360)
+        } else if store.selectedRoute.usesNovelFeed {
+            NovelDetailView(store: store)
+                .navigationSplitViewColumnWidth(min: 380, ideal: 500)
+        } else {
+            ArtworkDetailView(store: store, showsNavigationChrome: false)
+                .navigationSplitViewColumnWidth(min: 360, ideal: 460)
+        }
+    }
+
+    private var contentColumnMinWidth: CGFloat {
+        store.selectedRoute.isCreatorRoute ? 720 : 560
+    }
+
+    private var contentColumnIdealWidth: CGFloat {
+        store.selectedRoute.isCreatorRoute ? 1040 : 760
+    }
+
     private var showsSearchFilters: Bool {
         store.selectedRoute == .search
     }
@@ -591,6 +610,18 @@ private struct DiscoveryDashboardDetailPlaceholder: View {
     }
 }
 
+private struct CreatorListDetailPlaceholder: View {
+    let route: PixivRoute
+
+    var body: some View {
+        EmptyStateView(
+            title: route.title,
+            subtitle: L10n.creatorListDetailHint,
+            systemImage: route.systemImage
+        )
+    }
+}
+
 private struct ContentColumnView: View {
     @Bindable var store: KeiPixStore
 
@@ -619,7 +650,7 @@ private struct ContentColumnView: View {
             WorkSubscriptionsView(store: store)
         } else if store.selectedRoute == .mutedContent {
             MutedContentView(store: store)
-        } else if store.selectedRoute == .followingCreators || store.selectedRoute == .pinnedCreators || store.selectedRoute == .recommendedUsers || store.selectedRoute == .searchUsers {
+        } else if store.selectedRoute.isCreatorRoute {
             UserPreviewListView(store: store, mode: userPreviewMode)
         } else if store.selectedRoute.usesNovelFeed {
             NovelGalleryView(store: store)

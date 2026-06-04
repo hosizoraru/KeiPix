@@ -7048,6 +7048,35 @@
         }
       }
     },
+    "Use the creator cards to open profiles, illustrations, manga, or Pixiv links without leaving this list.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use the creator cards to open profiles, illustrations, manga, or Pixiv links without leaving this list."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "クリエイターカードからプロフィール、イラスト、マンガ、Pixivリンクをこの一覧のまま開けます。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "可直接在作者卡片中打开资料、插画、漫画或 Pixiv 链接，无需离开当前列表。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "可直接在作者卡片中開啟資料、插畫、漫畫或 Pixiv 連結，無需離開目前列表。"
+          }
+        }
+      }
+    },
     "Creator Filter": {
       "extractionState": "manual",
       "localizations": {

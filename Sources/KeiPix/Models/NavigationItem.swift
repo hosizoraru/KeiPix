@@ -301,6 +301,18 @@ enum PixivRoute: String, CaseIterable, Identifiable, Codable {
         }
     }
 
+    var isCreatorRoute: Bool {
+        switch self {
+        case .followingCreators,
+             .pinnedCreators,
+             .recommendedUsers,
+             .searchUsers:
+            true
+        default:
+            false
+        }
+    }
+
     var usesNovelFeed: Bool {
         switch self {
         case .novelRecommended,

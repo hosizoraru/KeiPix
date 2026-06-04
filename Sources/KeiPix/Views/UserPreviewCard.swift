@@ -63,7 +63,7 @@ struct UserPreviewCard: View {
             actionRail
         }
         .padding(14)
-        .keiInteractiveGlass(16)
+        .keiInteractiveGlass(20)
         .contextMenu { creatorContextMenu }
     }
 
@@ -78,6 +78,8 @@ struct UserPreviewCard: View {
                     Text(preview.user.name)
                         .font(.headline)
                         .lineLimit(1)
+                        .truncationMode(.tail)
+                        .layoutPriority(1)
                     if isPinned {
                         Image(systemName: "pin.fill")
                             .imageScale(.small)
@@ -91,9 +93,11 @@ struct UserPreviewCard: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
+                    .truncationMode(.middle)
 
                 statusLine
             }
+            .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
 
             Spacer(minLength: 8)
 
@@ -177,7 +181,8 @@ struct UserPreviewCard: View {
                     Label(L10n.following, systemImage: "person.crop.circle.badge.checkmark")
                 }
             }
-            .buttonStyle(.bordered)
+            .buttonStyle(.glass)
+            .buttonBorderShape(.capsule)
             .controlSize(.small)
             .disabled(isUpdating)
             .help(L10n.followVisibility)
@@ -203,6 +208,7 @@ struct UserPreviewCard: View {
                 }
             }
             .buttonStyle(.glassProminent)
+            .buttonBorderShape(.capsule)
             .controlSize(.small)
             .disabled(isUpdating)
             .help(L10n.follow)
@@ -303,88 +309,183 @@ struct UserPreviewCard: View {
     // MARK: - Navigation row
 
     private var navigationRow: some View {
-        HStack(spacing: 8) {
-            navigationChip(
-                title: L10n.creatorProfile,
-                systemImage: "person.crop.circle",
-                action: openProfile
-            )
-            navigationChip(
-                title: L10n.illustrations,
-                systemImage: "photo",
-                action: openIllustrations
-            )
-            navigationChip(
-                title: L10n.manga,
-                systemImage: "book.closed",
-                action: openManga
-            )
+        GlassEffectContainer(spacing: 8) {
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 8) {
+                    navigationChip(
+                        title: L10n.creatorProfile,
+                        systemImage: "person.crop.circle",
+                        displayStyle: .titleAndIcon,
+                        action: openProfile
+                    )
+                    navigationChip(
+                        title: L10n.illustrations,
+                        systemImage: "photo",
+                        displayStyle: .titleAndIcon,
+                        action: openIllustrations
+                    )
+                    navigationChip(
+                        title: L10n.manga,
+                        systemImage: "book.closed",
+                        displayStyle: .titleAndIcon,
+                        action: openManga
+                    )
+                }
+
+                HStack(spacing: 8) {
+                    navigationChip(
+                        title: L10n.creatorProfile,
+                        systemImage: "person.crop.circle",
+                        displayStyle: .iconOnly,
+                        action: openProfile
+                    )
+                    navigationChip(
+                        title: L10n.illustrations,
+                        systemImage: "photo",
+                        displayStyle: .iconOnly,
+                        action: openIllustrations
+                    )
+                    navigationChip(
+                        title: L10n.manga,
+                        systemImage: "book.closed",
+                        displayStyle: .iconOnly,
+                        action: openManga
+                    )
+                }
+            }
         }
     }
 
     private func navigationChip(
         title: String,
         systemImage: String,
+        displayStyle: CreatorCardButtonDisplayStyle,
         action: @escaping () -> Void
     ) -> some View {
         Button(action: action) {
-            HStack(spacing: 5) {
-                Image(systemName: systemImage)
-                Text(title)
-                    .lineLimit(1)
-            }
+            creatorButtonLabel(
+                title: title,
+                systemImage: systemImage,
+                displayStyle: displayStyle
+            )
             .frame(maxWidth: .infinity)
         }
-        .buttonStyle(.bordered)
+        .buttonStyle(.glass)
+        .buttonBorderShape(.capsule)
         .controlSize(.small)
         .help(title)
+        .accessibilityLabel(title)
     }
 
     // MARK: - Action rail (high-frequency standalone buttons + overflow)
 
     private var actionRail: some View {
-        HStack(spacing: 8) {
-            actionChip(
-                title: isPinned ? L10n.unpinCreator : L10n.pinCreator,
-                systemImage: isPinned ? "pin.slash" : "pin",
-                action: togglePinnedCreator
-            )
+        GlassEffectContainer(spacing: 8) {
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 8) {
+                    actionChip(
+                        title: isPinned ? L10n.unpinCreator : L10n.pinCreator,
+                        systemImage: isPinned ? "pin.slash" : "pin",
+                        displayStyle: .iconOnly,
+                        action: togglePinnedCreator
+                    )
 
-            if let url = preview.user.pixivURL {
-                Link(destination: url) {
-                    Label(L10n.openInPixiv, systemImage: "safari")
+                    pixivLink(displayStyle: .titleAndIcon)
+
+                    actionChip(
+                        title: L10n.copyLink,
+                        systemImage: "link",
+                        displayStyle: .iconOnly,
+                        action: copyCreatorLink
+                    )
+
+                    Spacer(minLength: 8)
+
+                    overflowMenu
                 }
-                .buttonStyle(.bordered)
-                .controlSize(.small)
-                .help(L10n.openInPixiv)
-                .accessibilityLabel(L10n.openInPixiv)
+
+                HStack(spacing: 8) {
+                    actionChip(
+                        title: isPinned ? L10n.unpinCreator : L10n.pinCreator,
+                        systemImage: isPinned ? "pin.slash" : "pin",
+                        displayStyle: .iconOnly,
+                        action: togglePinnedCreator
+                    )
+
+                    pixivLink(displayStyle: .iconOnly)
+
+                    actionChip(
+                        title: L10n.copyLink,
+                        systemImage: "link",
+                        displayStyle: .iconOnly,
+                        action: copyCreatorLink
+                    )
+
+                    Spacer(minLength: 8)
+
+                    overflowMenu
+                }
             }
-
-            actionChip(
-                title: L10n.copyLink,
-                systemImage: "link",
-                action: copyCreatorLink
-            )
-
-            Spacer(minLength: 8)
-
-            overflowMenu
         }
     }
 
     private func actionChip(
         title: String,
         systemImage: String,
+        displayStyle: CreatorCardButtonDisplayStyle,
         action: @escaping () -> Void
     ) -> some View {
         Button(action: action) {
-            Label(title, systemImage: systemImage)
+            creatorButtonLabel(
+                title: title,
+                systemImage: systemImage,
+                displayStyle: displayStyle
+            )
         }
-        .labelStyle(.iconOnly)
-        .buttonStyle(.bordered)
+        .buttonStyle(.glass)
+        .buttonBorderShape(.capsule)
         .controlSize(.small)
         .help(title)
         .accessibilityLabel(title)
+    }
+
+    @ViewBuilder
+    private func pixivLink(displayStyle: CreatorCardButtonDisplayStyle) -> some View {
+        if let url = preview.user.pixivURL {
+            Link(destination: url) {
+                creatorButtonLabel(
+                    title: L10n.openInPixiv,
+                    systemImage: "safari",
+                    displayStyle: displayStyle
+                )
+            }
+            .buttonStyle(.glass)
+            .buttonBorderShape(.capsule)
+            .controlSize(.small)
+            .help(L10n.openInPixiv)
+            .accessibilityLabel(L10n.openInPixiv)
+        }
+    }
+
+    @ViewBuilder
+    private func creatorButtonLabel(
+        title: String,
+        systemImage: String,
+        displayStyle: CreatorCardButtonDisplayStyle
+    ) -> some View {
+        switch displayStyle {
+        case .titleAndIcon:
+            Label {
+                Text(title)
+                    .lineLimit(1)
+                    .fixedSize(horizontal: true, vertical: false)
+            } icon: {
+                Image(systemName: systemImage)
+            }
+        case .iconOnly:
+            Image(systemName: systemImage)
+                .frame(minWidth: 18)
+        }
     }
 
     private var overflowMenu: some View {
@@ -407,7 +508,8 @@ struct UserPreviewCard: View {
         }
         .labelStyle(.iconOnly)
         .menuStyle(.borderlessButton)
-        .buttonStyle(.bordered)
+        .buttonStyle(.glass)
+        .buttonBorderShape(.capsule)
         .controlSize(.small)
         .disabled(isUpdating)
         .help(L10n.moreActions)
@@ -463,6 +565,11 @@ struct UserPreviewCard: View {
             Label(L10n.muteCreator, systemImage: "eye.slash")
         }
     }
+}
+
+private enum CreatorCardButtonDisplayStyle {
+    case titleAndIcon
+    case iconOnly
 }
 
 /// Self-sizing artwork thumbnail tile used by the creator preview
@@ -616,4 +723,3 @@ private struct ExpandedCreatorPreviewShelf: View {
         }
     }
 }
-

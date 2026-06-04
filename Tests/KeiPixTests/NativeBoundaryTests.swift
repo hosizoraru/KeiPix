@@ -299,6 +299,7 @@ struct NativeBoundaryTests {
         #expect(contentView.contains("SpotlightView(store: store)"))
         #expect(contentView.contains("BookmarkTagsView(store: store)"))
         #expect(contentView.contains("BrowsingHistoryView(store: store)"))
+        #expect(contentView.contains("store.selectedRoute.isCreatorRoute"))
         #expect(contentView.contains("UserPreviewListView(store: store, mode: userPreviewMode)"))
         #expect(contentView.contains("store.requestRouteRefresh()"))
         #expect(contentView.contains("Task { await store.reloadCurrentFeed() }") == false)
@@ -499,7 +500,9 @@ struct NativeBoundaryTests {
 
         #expect(contentView.contains("NavigationSplitView(columnVisibility: $columnVisibility)"))
         #expect(contentView.contains("ArtworkDetailView(store: store, showsNavigationChrome: false)"))
-        #expect(contentView.contains(".navigationSplitViewColumnWidth(min: 560, ideal: 760)"))
+        #expect(contentView.contains("contentColumnMinWidth"))
+        #expect(contentView.contains("store.selectedRoute.isCreatorRoute ? 720 : 560"))
+        #expect(contentView.contains("CreatorListDetailPlaceholder(route: store.selectedRoute)"))
         #expect(contentView.contains(".navigationSplitViewColumnWidth(min: 360, ideal: 440)"))
         #expect(contentView.contains(".navigationSplitViewColumnWidth(min: 420, ideal: 560)"))
         #expect(contentView.contains(".frame(minWidth: minimumWindowWidth, minHeight: MainWindowSizing.minimumHeight)"))
@@ -1084,6 +1087,7 @@ struct NativeBoundaryTests {
 
         #expect(creatorComponents.contains("NativeCreatorPreviewCollectionView("))
         #expect(creatorComponents.contains("NativeSearchField("))
+        #expect(creatorComponents.contains(".frame(maxWidth: 560)"))
         #expect(creatorComponents.contains("EnhancedMenu("))
         #expect(creatorComponents.contains("nativeCreatorPreviewContent"))
         #expect(quickOpenSheet.contains("CustomDropTarget("))
@@ -1103,6 +1107,27 @@ struct NativeBoundaryTests {
         #expect(nativeDrop.contains("NSDraggingInfo"))
         #expect(nativeDrop.contains("NativeDropPayload"))
         #expect(nativeDrop.contains("UTType.utf8PlainText"))
+    }
+
+    @Test("Creator cards use adaptive OS 26 glass actions")
+    func creatorCardsUseAdaptiveOS26GlassActions() throws {
+        let root = try packageRoot()
+        let creatorCard = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/UserPreviewCard.swift"),
+            encoding: .utf8
+        )
+        let nativeCollection = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Support/NativeCreatorPreviewCollectionView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(creatorCard.contains("GlassEffectContainer(spacing: 8)"))
+        #expect(creatorCard.contains("ViewThatFits(in: .horizontal)"))
+        #expect(creatorCard.contains("CreatorCardButtonDisplayStyle"))
+        #expect(creatorCard.contains(".buttonStyle(.glass)"))
+        #expect(creatorCard.contains(".buttonBorderShape(.capsule)"))
+        #expect(creatorCard.contains(".truncationMode(.middle)"))
+        #expect(nativeCollection.contains("let minimumWidth: CGFloat = 300"))
     }
 
     @Test("Creator profile shelves use native horizontal collection bridges")

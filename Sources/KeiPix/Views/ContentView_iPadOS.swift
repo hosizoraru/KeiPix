@@ -1151,7 +1151,7 @@ struct ContentView: View {
             WorkSubscriptionsView(store: store)
         } else if store.selectedRoute == .mutedContent {
             MutedContentView(store: store)
-        } else if store.selectedRoute == .followingCreators || store.selectedRoute == .pinnedCreators || store.selectedRoute == .recommendedUsers || store.selectedRoute == .searchUsers {
+        } else if store.selectedRoute.isCreatorRoute {
             UserPreviewListView(store: store, mode: userPreviewMode)
         } else if store.selectedRoute.usesNovelFeed {
             NovelGalleryView(store: store)
