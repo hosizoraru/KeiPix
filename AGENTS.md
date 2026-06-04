@@ -383,6 +383,19 @@ New native bridge:
 - If XcodeGen output changes unexpectedly, inspect the diff carefully before
   staging.
 
+## Versioning
+
+- `Config/AppVersion.xcconfig` is the human-edited source for
+  `MARKETING_VERSION` and `CURRENT_PROJECT_VERSION`.
+- Use `./script/set_app_version.sh <marketing-version> <build-number>` when
+  changing app versions so `Config/AppVersion.xcconfig` and `project.yml` stay
+  aligned.
+- Run `./script/check_version_consistency.sh` after version, plist, packaging,
+  CI, release-update, backup, About, or User-Agent changes.
+- Runtime code should read bundle metadata through `AppVersion.current`. Do not
+  reintroduce ad hoc `Bundle.main` version reads or hard-coded `KeiPix/1.0`
+  User-Agent strings.
+
 ## UI And Interaction Style
 
 - Prefer OS 26 glass and native control patterns already present in

@@ -106,6 +106,7 @@ UI 改动需要补对应视觉 QA surface。截图和 manifest 输出在 `artifa
 | [Quality Assurance](docs/quality-assurance.md) | 单元测试、Runtime Readiness、视觉 QA |
 | [Safety & Privacy](docs/safety-and-privacy.md) | 凭据、内容安全、远端写入边界 |
 | [Localization](docs/localization.md) | String Catalog 与多语言策略 |
+| [Release Versioning](docs/release-versioning.md) | 版本号、构建号、CI artifact 与更新检查 |
 | [Contributing](docs/contributing.md) | 分支、提交、PR、视觉 QA 要求 |
 | [Hybrid UI Plan](HYBRID_UI_PLAN.md) | AppKit/UIKit 优先迁移计划与阶段进度 |
 

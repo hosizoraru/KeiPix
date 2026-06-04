@@ -70,6 +70,7 @@
   - QA → `docs/quality-assurance.md`
   - 安全 / 隐私 → `docs/safety-and-privacy.md`
   - 本地化 → `docs/localization.md`
+  - 版本 / 发版 → `docs/release-versioning.md`
   - 贡献 → `docs/contributing.md`（本文件）
 - 进度快照 / 缺口审计放 `readme/`，文件名带日期
 - 任何新增 surface 都要把 launch mode 列入 [`docs/quality-assurance.md`](quality-assurance.md)

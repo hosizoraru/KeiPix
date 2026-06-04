@@ -149,6 +149,7 @@ GitHub Actions workflow 位于 `.github/workflows/macos-build.yml`：
 
 - 选择 Xcode 26 toolchain
 - `swift package resolve`
+- `./script/check_version_consistency.sh`
 - `swift build`
 - `swift test --parallel`
 - `./script/build_release_app.sh` 生成 `.zip` 或 `.dmg`
@@ -174,10 +175,14 @@ GitHub Actions workflow 位于 `.github/workflows/macos-build.yml`：
 
 | 文件 | 用途 |
 | --- | --- |
+| `Config/AppVersion.xcconfig` | 版本号和构建号的人类维护入口，详见 [Release Versioning](release-versioning.md) |
 | `App/Info.plist` | Xcode 构建使用的 plist 模板 |
 | `App/Info-iOS.plist` | iOS target 使用的 plist 模板，包含 `keipix://` / `pixiv://` 路由、后台刷新、照片保存说明和 iPhone 方向声明 |
 | `App/Info-iPadOS.plist` | iPadOS target 使用的 plist 模板，包含 `keipix://` / `pixiv://` 路由、后台刷新、照片保存说明和 iPad 方向声明 |
 | `App/KeiPix.entitlements` | App Sandbox、网络、用户选择文件、下载、打印 entitlement |
+| `script/version_settings.sh` | 本地脚本和 CI 共享的版本读取与校验 helper |
+| `script/check_version_consistency.sh` | 发布前版本一致性检查 |
+| `script/set_app_version.sh` | 同步设置 `Config/AppVersion.xcconfig` 与 `project.yml` 里的版本字段 |
 | `script/build_and_run.sh` | SwiftPM 本地 `.app` 构建与运行脚本 |
 | `script/build_and_run_ios.sh` | iOS Simulator 快速构建、安装和启动脚本 |
 | `script/build_and_run_ipados.sh` | iPadOS Simulator 快速构建、安装和启动脚本 |
@@ -185,7 +190,7 @@ GitHub Actions workflow 位于 `.github/workflows/macos-build.yml`：
 | `script/build_release_app.sh` | CI/release 打包脚本 |
 | `project.yml` | XcodeGen 项目描述 |
 
-修改 entitlement、bundle metadata 或 URL/document type 时，要同步 Xcode 路径和脚本路径。
+修改 entitlement、bundle metadata 或 URL/document type 时，要同步 Xcode 路径和脚本路径。修改版本号时优先使用 `./script/set_app_version.sh <version> <build>`，然后运行 `./script/check_version_consistency.sh`。
 
 ## iOS And iPadOS Targets
 
