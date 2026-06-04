@@ -78,7 +78,8 @@ struct FeedbackReportSheet: View {
                         Label(localMuteTitle, systemImage: "eye.slash")
                             .frame(maxWidth: .infinity)
                     }
-                    .buttonStyle(.bordered)
+                    .buttonStyle(.glass)
+                    .buttonBorderShape(.capsule)
                     .controlSize(.regular)
                 }
             }

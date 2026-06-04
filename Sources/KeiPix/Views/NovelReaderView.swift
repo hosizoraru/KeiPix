@@ -144,7 +144,7 @@ struct NovelReaderView: View {
                 readingModeRaw: $readingModeRaw,
                 translationModeRaw: $translationModeRaw
             )
-            .iPadFriendlySheet()
+            .os26SheetChrome(.form)
         }
     }
 

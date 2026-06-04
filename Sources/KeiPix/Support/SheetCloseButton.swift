@@ -56,13 +56,14 @@ struct SheetCloseButton: View {
             switch style {
             case .plain:
                 content
-                    .buttonStyle(.plain)
+                    .buttonStyle(.glass)
+                    .buttonBorderShape(.capsule)
+                    .controlSize(.small)
                     .foregroundStyle(.secondary)
-                    .padding(6)
-                    .contentShape(Circle())
             case .bordered:
                 content
-                    .buttonStyle(.bordered)
+                    .buttonStyle(.glass)
+                    .buttonBorderShape(.capsule)
                     .controlSize(.small)
             }
         }
@@ -81,19 +82,84 @@ extension View {
         }
     }
 
-    /// Apply standard sheet chrome that travels well to iPadOS / iOS.
+    /// Applies the shared OS 26 sheet presentation contract.
     ///
-    /// On macOS the call is largely a no-op — `presentationDragIndicator`
-    /// has no visible effect when the sheet is rendered as a window — but
-    /// having it baked into every sheet means we don't have to grep
-    /// through the codebase when we ship the iPad build. iPad users get
-    /// the system grabber + drag-to-dismiss for free, matching every
-    /// other modal sheet on the platform.
+    /// SwiftUI's own sheet surface already picks up most Liquid Glass
+    /// behavior. This modifier keeps the app-level contract consistent:
+    /// iPhone/iPad sheets get system grabbers, detents, material
+    /// presentation backgrounds, and rounded presentation corners, while
+    /// macOS sheets stay inside the native sheet/window presentation
+    /// without custom opaque chrome fighting the system.
     ///
-    /// Pair this with a `SheetCloseButton` (or `SheetHeaderRail`) inside
-    /// the sheet body so pointer users always have a visible escape
-    /// hatch, even on platforms where there's no Esc key handy.
+    /// Pair this with `SheetHeaderRail` or `SheetCloseButton` inside the
+    /// sheet body so pointer and keyboard users always have an explicit
+    /// dismissal path.
+    func os26SheetChrome(_ style: OS26SheetPresentationStyle = .standard) -> some View {
+        modifier(OS26SheetChromeModifier(style: style))
+    }
+
+    /// Back-compatibility for existing call sites. New sheet code should
+    /// prefer `os26SheetChrome(_:)` so the intended presentation size is
+    /// visible at the call site.
     func iPadFriendlySheet() -> some View {
-        self.presentationDragIndicator(.visible)
+        os26SheetChrome()
+    }
+}
+
+enum OS26SheetPresentationStyle {
+    /// Form-sized sheet for compact utility tasks such as token import,
+    /// quick-open, feedback, and dashboard customization.
+    case form
+    /// Balanced default for sheets with moderate scrollable content.
+    case standard
+    /// Full-height editorial/detail sheet, e.g. creator profiles and
+    /// reverse image search.
+    case detail
+    /// System web or reader surfaces that should start at the large
+    /// detent and avoid presenting as a half sheet.
+    case immersive
+
+    var cornerRadius: CGFloat {
+        switch self {
+        case .form:
+            24
+        case .standard:
+            28
+        case .detail, .immersive:
+            32
+        }
+    }
+
+    #if os(iOS)
+    var detents: Set<PresentationDetent> {
+        switch self {
+        case .form:
+            [.medium, .large]
+        case .standard:
+            [.medium, .large]
+        case .detail:
+            [.large]
+        case .immersive:
+            [.large]
+        }
+    }
+    #endif
+}
+
+private struct OS26SheetChromeModifier: ViewModifier {
+    let style: OS26SheetPresentationStyle
+
+    func body(content: Content) -> some View {
+        #if os(iOS)
+        content
+            .presentationDragIndicator(.visible)
+            .presentationDetents(style.detents)
+            .presentationBackground(.regularMaterial)
+            .presentationCornerRadius(style.cornerRadius)
+            .presentationContentInteraction(.scrolls)
+        #else
+        content
+            .presentationDragIndicator(.visible)
+        #endif
     }
 }

@@ -139,11 +139,11 @@ private struct GalleryFeedView: View {
             } onComplete: { message in
                 actionMessage = message
             }
-            .iPadFriendlySheet()
+            .os26SheetChrome(.form)
         }
         .sheet(item: $seriesArtwork) { artwork in
             ArtworkSeriesSheet(artwork: artwork, store: store)
-                .iPadFriendlySheet()
+                .os26SheetChrome(.detail)
         }
         .onChange(of: store.artworks.map(\.id)) { _, visibleArtworkIDs in
             artworkSelection.prune(visibleArtworkIDs: visibleArtworkIDs)

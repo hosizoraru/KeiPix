@@ -8,27 +8,17 @@ struct LoginSheetView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(L10n.loginTitle)
-                        .font(.headline)
-                    Text(L10n.loginHint)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-                Spacer()
-                Button {
-                    store.isLoginPresented = false
-                    dismiss()
-                } label: {
-                    Image(systemName: "xmark")
-                }
-                .buttonStyle(.borderless)
-                .keyboardShortcut(.cancelAction)
-                .help(L10n.close)
-                .accessibilityLabel(L10n.close)
-            }
-            .platformGlassControlBar(verticalPadding: 10, topPadding: 10, bottomPadding: 8)
+            SheetHeaderRail(
+                title: L10n.loginTitle,
+                subtitle: L10n.loginHint,
+                leading: {
+                    SheetHeaderIcon(
+                        systemImage: "person.crop.circle.badge.plus",
+                        tint: .accentColor
+                    )
+                },
+                closeAction: closeSheet
+            )
 
             if let loginURL {
                 PixivLoginWebView(url: loginURL) { code in
@@ -45,6 +35,11 @@ struct LoginSheetView: View {
         .task {
             loginURL = await store.loginURL()
         }
+    }
+
+    private func closeSheet() {
+        store.isLoginPresented = false
+        dismiss()
     }
 }
 

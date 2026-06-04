@@ -131,7 +131,7 @@ struct DownloadQueueView: View {
                 DownloadedUgoiraViewer(item: item, zipURL: zipURL)
             }
         }
-        .iPadFriendlySheet()
+        .os26SheetChrome(.standard)
     }
 
     /// Pulled out of `body` so the type-checker doesn't have to chew

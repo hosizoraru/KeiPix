@@ -77,7 +77,7 @@ private struct NovelDetailContent: View {
                 #if os(macOS)
                 .frame(minWidth: 720, minHeight: 540, idealHeight: 720)
                 #endif
-                .iPadFriendlySheet()
+                .os26SheetChrome(.immersive)
         }
     }
 

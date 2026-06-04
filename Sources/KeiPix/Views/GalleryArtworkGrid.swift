@@ -76,11 +76,11 @@ struct GalleryContentGrid: View {
             } onComplete: { message in
                 actionMessage = message
             }
-            .iPadFriendlySheet()
+            .os26SheetChrome(.form)
         }
         .sheet(item: $seriesArtwork) { artwork in
             ArtworkSeriesSheet(artwork: artwork, store: store)
-                .iPadFriendlySheet()
+                .os26SheetChrome(.detail)
         }
     }
 

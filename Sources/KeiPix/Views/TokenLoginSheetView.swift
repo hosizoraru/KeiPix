@@ -7,67 +7,58 @@ struct TokenLoginSheetView: View {
     @State private var isImporting = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            HStack(alignment: .top, spacing: 12) {
-                Image(systemName: "key")
-                    .font(.title2)
-                    .symbolRenderingMode(.hierarchical)
-                    .foregroundStyle(.secondary)
-                    .frame(width: 32)
+        VStack(alignment: .leading, spacing: 0) {
+            SheetHeaderRail(
+                title: L10n.importToken,
+                subtitle: L10n.importTokenHint,
+                leading: {
+                    SheetHeaderIcon(systemImage: "key", tint: .accentColor)
+                },
+                closeAction: closeSheet
+            )
 
-                VStack(alignment: .leading, spacing: 5) {
-                    Text(L10n.importToken)
-                        .font(.headline)
-                    Text(L10n.importTokenHint)
-                        .font(.callout)
-                        .foregroundStyle(.secondary)
+            VStack(alignment: .leading, spacing: 16) {
+                SecureField(L10n.refreshToken, text: $refreshToken)
+                    .textFieldStyle(.roundedBorder)
+                    .onSubmit {
+                        importToken()
+                    }
+
+                if let errorMessage = store.errorMessage, isImporting == false {
+                    Text(errorMessage)
+                        .font(.caption)
+                        .foregroundStyle(.red)
+                        .textSelection(.enabled)
                         .fixedSize(horizontal: false, vertical: true)
                 }
 
                 Spacer(minLength: 0)
 
-                SheetCloseButton(action: closeSheet, style: .plain)
-            }
-
-            SecureField(L10n.refreshToken, text: $refreshToken)
-                .textFieldStyle(.roundedBorder)
-                .onSubmit {
-                    importToken()
-                }
-
-            if let errorMessage = store.errorMessage, isImporting == false {
-                Text(errorMessage)
-                    .font(.caption)
-                    .foregroundStyle(.red)
-                    .textSelection(.enabled)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-
-            Spacer(minLength: 0)
-
-            HStack {
-                Button(L10n.cancel) {
-                    closeSheet()
-                }
-                .keyboardShortcut(.cancelAction)
-
-                Spacer()
-                Button {
-                    importToken()
-                } label: {
-                    if isImporting {
-                        ProgressView()
-                            .controlSize(.small)
-                    } else {
-                        Label(L10n.importToken, systemImage: "key.fill")
+                HStack {
+                    Button(L10n.cancel) {
+                        closeSheet()
                     }
+                    .keyboardShortcut(.cancelAction)
+
+                    Spacer()
+                    Button {
+                        importToken()
+                    } label: {
+                        if isImporting {
+                            ProgressView()
+                                .controlSize(.small)
+                        } else {
+                            Label(L10n.importToken, systemImage: "key.fill")
+                        }
+                    }
+                    .buttonStyle(.glassProminent)
+                    .buttonBorderShape(.capsule)
+                    .keyboardShortcut(.defaultAction)
+                    .disabled(trimmedToken.isEmpty || isImporting)
                 }
-                .buttonStyle(.borderedProminent)
-                .keyboardShortcut(.defaultAction)
-                .disabled(trimmedToken.isEmpty || isImporting)
             }
+            .padding(20)
         }
-        .padding(20)
     }
 
     private func closeSheet() {

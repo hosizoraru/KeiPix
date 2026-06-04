@@ -26,6 +26,7 @@ struct DiscoveryDashboardView: View {
         .platformPageNavigationChrome(title: L10n.discover, status: navigationSubtitle)
         .sheet(isPresented: $isCustomizationPresented) {
             DashboardCustomizationSheet(store: store)
+                .os26SheetChrome(.form)
         }
     }
 

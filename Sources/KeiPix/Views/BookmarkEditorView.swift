@@ -268,7 +268,7 @@ struct BookmarkEditorView: View {
                     .foregroundStyle(.secondary)
                     .padding(.horizontal, 6)
                     .padding(.vertical, 1)
-                    .background(.quaternary, in: Capsule())
+                    .glassEffect(.regular, in: Capsule(style: .continuous))
                 Spacer()
             }
             FlowLayout(spacing: 6) {
@@ -313,7 +313,7 @@ struct BookmarkEditorView: View {
                     .foregroundStyle(.secondary)
                     .padding(.horizontal, 6)
                     .padding(.vertical, 1)
-                    .background(.quaternary, in: Capsule())
+                    .glassEffect(.regular, in: Capsule(style: .continuous))
 
                 Spacer()
 
@@ -354,7 +354,8 @@ struct BookmarkEditorView: View {
                 for name in names { selectedTags.remove(name) }
                 showActionMessage(String(format: L10n.bookmarkTagSelectionSummaryFormat, selectedTags.count))
             }
-            .buttonStyle(.borderless)
+            .buttonStyle(.glass)
+            .buttonBorderShape(.capsule)
             .controlSize(.small)
             .disabled(isSaving || anySelected == false)
         } else {
@@ -362,7 +363,8 @@ struct BookmarkEditorView: View {
                 for name in names { selectedTags.insert(name) }
                 showActionMessage(String(format: L10n.bookmarkTagSelectionSummaryFormat, selectedTags.count))
             }
-            .buttonStyle(.borderless)
+            .buttonStyle(.glass)
+            .buttonBorderShape(.capsule)
             .controlSize(.small)
             .disabled(isSaving)
         }

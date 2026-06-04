@@ -19,7 +19,7 @@ import SwiftUI
 ///   3. an action rail of always-visible buttons,
 ///   4. the close button on the very trailing edge.
 ///
-/// The action rail follows Apple HIG: standalone bordered chips for
+/// The action rail follows Apple HIG: standalone glass chips for
 /// frequent actions, `.glassProminent` reserved for a single primary
 /// CTA. Keep the action count modest (≤ 3) and let truly low-priority
 /// destructive items live in a `Menu` next to the rail.
@@ -38,7 +38,7 @@ struct SheetHeaderRail<Leading: View, Trailing: View>: View {
     /// Caller-provided leading visual. Use `EmptyView()` to omit.
     @ViewBuilder var leading: () -> Leading
 
-    /// Caller-provided action rail. Render bordered `Button` chips
+    /// Caller-provided action rail. Render compact glass `Button` chips
     /// here — the close button is appended automatically.
     @ViewBuilder var trailing: () -> Trailing
 
@@ -185,7 +185,7 @@ struct SheetHeaderIcon: View {
 
 /// Standard chip for the action rail.
 ///
-/// Keeps the styling consistent (bordered, small) and the tooltip /
+/// Keeps the styling consistent (glass, small) and the tooltip /
 /// accessibility plumbing in one place so callers only have to think
 /// about what the action does.
 struct SheetHeaderActionButton: View {
@@ -199,7 +199,8 @@ struct SheetHeaderActionButton: View {
         Button(role: role, action: action) {
             Label(title, systemImage: systemImage)
         }
-        .buttonStyle(.bordered)
+        .buttonStyle(.glass)
+        .buttonBorderShape(.capsule)
         .controlSize(.small)
         .help(title)
         .accessibilityLabel(title)

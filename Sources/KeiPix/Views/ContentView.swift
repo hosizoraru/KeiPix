@@ -139,21 +139,21 @@ struct ContentView: View {
         .sheet(isPresented: $store.isLoginPresented) {
             LoginSheetView(store: store)
                 .frame(width: 900, height: 680)
-                .iPadFriendlySheet()
+                .os26SheetChrome(.immersive)
         }
         .sheet(isPresented: $store.isTokenLoginPresented) {
             TokenLoginSheetView(store: store)
                 .frame(width: 460, height: 300)
-                .iPadFriendlySheet()
+                .os26SheetChrome(.form)
         }
         .sheet(item: $store.imageSourceSearchRequest) { request in
             ImageSourceSearchSheet(store: store, request: request)
                 .frame(width: 720, height: 560)
-                .iPadFriendlySheet()
+                .os26SheetChrome(.detail)
         }
         .sheet(item: $store.presentedUserProfile) { user in
             UserProfileSheet(user: user, store: store)
-                .iPadFriendlySheet()
+                .os26SheetChrome(.detail)
         }
         #if DEBUG
         .sheet(item: $creatorProfileVisualQAUser) { user in
@@ -164,16 +164,16 @@ struct ContentView: View {
                 visualQARelatedUsers: VisualQASampleData.creatorProfileRelatedUsers,
                 visualQARecentWorks: VisualQASampleData.creatorProfileRecentWorks
             )
-            .iPadFriendlySheet()
+            .os26SheetChrome(.detail)
         }
         .sheet(isPresented: $isSeriesSheetVisualQAPresented) {
             ArtworkSeriesVisualQASheetView(store: store)
-                .iPadFriendlySheet()
+                .os26SheetChrome(.detail)
         }
         #endif
         .sheet(isPresented: $isPixivIDOpenPresented) {
             PixivIDOpenSheet(store: store, showStatus: showStatus)
-                .iPadFriendlySheet()
+                .os26SheetChrome(.form)
         }
         .sheet(item: $feedbackVisualQARequest) { request in
             FeedbackReportSheet(request: request, localMuteAction: {
@@ -181,7 +181,7 @@ struct ContentView: View {
             }) { message in
                 showStatus(message)
             }
-            .iPadFriendlySheet()
+            .os26SheetChrome(.form)
         }
         .confirmationDialog(
             store.pendingDangerAction?.title ?? L10n.moreActions,

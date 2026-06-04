@@ -65,7 +65,7 @@ struct SearchPopularPreviewStrip: View {
                 } onComplete: { message in
                     actionMessage = message
                 }
-                .iPadFriendlySheet()
+                .os26SheetChrome(.form)
             }
         }
     }

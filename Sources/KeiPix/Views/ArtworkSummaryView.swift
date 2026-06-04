@@ -97,7 +97,7 @@ struct ArtworkSummaryView: View {
         .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 15, style: .continuous))
         .sheet(isPresented: $isUserProfilePresented) {
             UserProfileSheet(user: artwork.user, store: store)
-                .iPadFriendlySheet()
+                .os26SheetChrome(.detail)
         }
     }
 
@@ -197,7 +197,7 @@ private struct CreatorQuickActionsMenu: View {
             } onComplete: { message in
                 showActionMessage(message)
             }
-            .iPadFriendlySheet()
+            .os26SheetChrome(.form)
         }
     }
 
@@ -257,7 +257,7 @@ private struct ArtworkActionStrip: View {
                 pageCount: pageCount,
                 onComplete: showPageRangeDownloadMessage
             )
-            .iPadFriendlySheet()
+            .os26SheetChrome(.form)
         }
         .sheet(isPresented: $isPageSelectionDownloadPresented) {
             DownloadPageSelectionSheet(
@@ -267,13 +267,13 @@ private struct ArtworkActionStrip: View {
                 pageCount: pageCount,
                 onComplete: showPageSelectionDownloadMessage
             )
-            .iPadFriendlySheet()
+            .os26SheetChrome(.standard)
         }
         .sheet(isPresented: $isBulkBlockPresented) {
             BulkBlockSheet(artwork: artwork, store: store) { applied in
                 showBulkBlockMessage(applied)
             }
-            .iPadFriendlySheet()
+            .os26SheetChrome(.form)
         }
     }
 
@@ -470,7 +470,7 @@ private struct AdaptiveActionRow: View {
             BookmarkEditorView(artwork: artwork, store: store) {
                 showActionMessage(String(format: L10n.savedBookmarkFormat, artwork.title))
             }
-            .iPadFriendlySheet()
+            .os26SheetChrome(.standard)
         }
     }
 
@@ -783,7 +783,7 @@ private struct AdaptiveActionRow: View {
             } onComplete: { message in
                 showActionMessage(message)
             }
-            .iPadFriendlySheet()
+            .os26SheetChrome(.form)
         }
     }
 }

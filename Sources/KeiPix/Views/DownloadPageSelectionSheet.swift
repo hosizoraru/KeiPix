@@ -87,7 +87,8 @@ struct DownloadPageSelectionSheet: View {
                 } label: {
                     Label(L10n.addToDownloadQueue, systemImage: "arrow.down.circle")
                 }
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(.glassProminent)
+                .buttonBorderShape(.capsule)
                 .keyboardShortcut(.defaultAction)
                 .disabled(selectedPages.isEmpty)
             }

@@ -177,7 +177,8 @@ struct ImageSourceSearchSheet: View {
         } label: {
             Label(L10n.retry, systemImage: "arrow.clockwise")
         }
-        .buttonStyle(.borderedProminent)
+        .buttonStyle(.glassProminent)
+        .buttonBorderShape(.capsule)
     }
 
     // MARK: - Search

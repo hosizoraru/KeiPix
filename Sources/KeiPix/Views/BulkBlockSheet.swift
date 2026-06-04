@@ -76,7 +76,8 @@ struct BulkBlockSheet: View {
                 } label: {
                     Label(L10n.blockSelected, systemImage: "hand.raised.fill")
                 }
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(.glassProminent)
+                .buttonBorderShape(.capsule)
                 .keyboardShortcut(.defaultAction)
                 .disabled(totalSelectedCount == 0)
             }

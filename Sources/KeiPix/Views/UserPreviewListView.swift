@@ -147,7 +147,7 @@ struct UserPreviewListView: View {
         }
         .sheet(item: $profileUser) { user in
             UserProfileSheet(user: user, store: store)
-                .iPadFriendlySheet()
+                .os26SheetChrome(.detail)
         }
         .sheet(item: $feedbackRequest) { request in
             FeedbackReportSheet(request: request) {
@@ -157,7 +157,7 @@ struct UserPreviewListView: View {
             } onComplete: { message in
                 bulkStatusText = message
             }
-            .iPadFriendlySheet()
+            .os26SheetChrome(.form)
         }
         .task(id: listRefreshKey) {
             await loadInitial()
