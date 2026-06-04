@@ -186,7 +186,8 @@ struct UserProfileSheet: View {
             } label: {
                 Label(L10n.retry, systemImage: "arrow.clockwise")
             }
-            .buttonStyle(.borderedProminent)
+            .buttonStyle(.glassProminent)
+            .buttonBorderShape(.capsule)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
@@ -237,8 +238,6 @@ struct UserProfileSheet: View {
                 )
 
                 UserProfileDescriptionSection(text: bioText)
-
-                UserProfileLinksSection(user: currentUser, profile: detail?.profile)
 
                 UserProfileWorkspaceSection(workspace: detail?.workspace)
 
@@ -613,12 +612,12 @@ private struct ChildSheetsModifier: ViewModifier {
         content
             .sheet(item: $selectedRelatedUser) { relatedUser in
                 UserProfileSheet(user: relatedUser, store: store)
-                    .iPadFriendlySheet()
+                    .os26SheetChrome(.detail)
             }
             .sheet(item: $relationshipListMode) { mode in
                 UserPreviewListView(store: store, mode: mode)
                     .frame(width: 920, height: 680)
-                    .iPadFriendlySheet()
+                    .os26SheetChrome(.detail)
             }
             .sheet(item: $feedbackRequest) { request in
                 FeedbackReportSheet(request: request) {
@@ -626,7 +625,7 @@ private struct ChildSheetsModifier: ViewModifier {
                 } onComplete: { message in
                     showStatus(message)
                 }
-                .iPadFriendlySheet()
+                .os26SheetChrome(.form)
             }
     }
 }

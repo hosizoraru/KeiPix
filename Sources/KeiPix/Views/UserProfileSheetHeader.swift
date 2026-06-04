@@ -83,6 +83,8 @@ struct UserProfileSheetHeader: View {
                 Text(user.name)
                     .font(.title3.weight(.semibold))
                     .lineLimit(1)
+                    .truncationMode(.tail)
+                    .layoutPriority(1)
                 if detail?.profile.isPremium == true {
                     Image(systemName: "checkmark.seal.fill")
                         .imageScale(.small)
@@ -104,6 +106,7 @@ struct UserProfileSheetHeader: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
+                    .truncationMode(.middle)
 
                 if let secondaryLine {
                     Text("·")
@@ -113,9 +116,11 @@ struct UserProfileSheetHeader: View {
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
+                        .truncationMode(.tail)
                 }
             }
         }
+        .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
     }
 
     /// Optional secondary status line shown next to `@account`. Adds
@@ -138,40 +143,47 @@ struct UserProfileSheetHeader: View {
     // MARK: - Action rail
 
     private var actionRail: some View {
-        HStack(spacing: 8) {
-            followButton
+        GlassEffectContainer(spacing: 8) {
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 8) {
+                    followButton(displayStyle: .titleAndIcon)
 
-            pinButton
+                    pinButton(displayStyle: .titleAndIcon)
 
-            if let openInPixivURL {
-                Link(destination: openInPixivURL) {
-                    Label(L10n.openInPixiv, systemImage: "safari")
+                    if openInPixivURL != nil {
+                        openInPixivLink(displayStyle: .titleAndIcon)
+                        copyButton(displayStyle: .iconOnly)
+                    }
+
+                    profileLinkButtons
+
+                    Spacer(minLength: 0)
+
+                    overflowMenu
                 }
-                .labelStyle(.iconOnly)
-                .buttonStyle(.bordered)
-                .controlSize(.small)
-                .help(L10n.openInPixiv)
 
-                Button {
-                    copyLink()
-                } label: {
-                    Label(L10n.copyLink, systemImage: "link")
+                HStack(spacing: 8) {
+                    followButton(displayStyle: .titleAndIcon)
+
+                    pinButton(displayStyle: .iconOnly)
+
+                    if openInPixivURL != nil {
+                        openInPixivLink(displayStyle: .iconOnly)
+                        copyButton(displayStyle: .iconOnly)
+                    }
+
+                    profileLinkButtons
+
+                    Spacer(minLength: 0)
+
+                    overflowMenu
                 }
-                .labelStyle(.iconOnly)
-                .buttonStyle(.bordered)
-                .controlSize(.small)
-                .help(L10n.copyLink)
-                .accessibilityLabel(L10n.copyLink)
             }
-
-            Spacer(minLength: 0)
-
-            overflowMenu
         }
     }
 
     @ViewBuilder
-    private var followButton: some View {
+    private func followButton(displayStyle: ProfileSheetHeaderButtonDisplayStyle) -> some View {
         if isFollowed {
             Menu {
                 Button(L10n.followPublicly) {
@@ -192,9 +204,14 @@ struct UserProfileSheetHeader: View {
                     Label(L10n.unfollow, systemImage: "person.crop.circle.badge.minus")
                 }
             } label: {
-                Label(followStatusTitle, systemImage: followStatusImage)
+                profileHeaderButtonLabel(
+                    title: followStatusTitle,
+                    systemImage: followStatusImage,
+                    displayStyle: displayStyle
+                )
             }
-            .buttonStyle(.bordered)
+            .buttonStyle(.glass)
+            .buttonBorderShape(.capsule)
             .controlSize(.small)
             .disabled(isLoading || isUpdatingFollow)
             .help(L10n.followVisibility)
@@ -213,9 +230,14 @@ struct UserProfileSheetHeader: View {
                     toggleFollow(.private)
                 }
             } label: {
-                Label(L10n.follow, systemImage: "person.crop.circle.badge.plus")
+                profileHeaderButtonLabel(
+                    title: L10n.follow,
+                    systemImage: "person.crop.circle.badge.plus",
+                    displayStyle: displayStyle
+                )
             }
             .buttonStyle(.glassProminent)
+            .buttonBorderShape(.capsule)
             .controlSize(.small)
             .disabled(isLoading || isUpdatingFollow)
             .help(L10n.follow)
@@ -226,18 +248,106 @@ struct UserProfileSheetHeader: View {
     /// so it lives outside the overflow menu. The button's appearance
     /// flips between pin / pin.slash so users can read the state at a
     /// glance.
-    private var pinButton: some View {
+    private func pinButton(displayStyle: ProfileSheetHeaderButtonDisplayStyle) -> some View {
         Button {
             togglePin()
         } label: {
-            Label(
-                isPinned ? L10n.unpinCreator : L10n.pinCreator,
-                systemImage: isPinned ? "pin.slash" : "pin"
+            profileHeaderButtonLabel(
+                title: isPinned ? L10n.unpinCreator : L10n.pinCreator,
+                systemImage: isPinned ? "pin.slash" : "pin",
+                displayStyle: displayStyle
             )
         }
-        .buttonStyle(.bordered)
+        .buttonStyle(.glass)
+        .buttonBorderShape(.capsule)
         .controlSize(.small)
         .help(isPinned ? L10n.unpinCreator : L10n.pinCreator)
+        .accessibilityLabel(isPinned ? L10n.unpinCreator : L10n.pinCreator)
+    }
+
+    @ViewBuilder
+    private func openInPixivLink(displayStyle: ProfileSheetHeaderButtonDisplayStyle) -> some View {
+        if let openInPixivURL {
+            Link(destination: openInPixivURL) {
+                profileHeaderButtonLabel(
+                    title: L10n.openInPixiv,
+                    systemImage: "safari",
+                    displayStyle: displayStyle
+                )
+            }
+            .buttonStyle(.glass)
+            .buttonBorderShape(.capsule)
+            .controlSize(.small)
+            .help(L10n.openInPixiv)
+            .accessibilityLabel(L10n.openInPixiv)
+        }
+    }
+
+    private func copyButton(displayStyle: ProfileSheetHeaderButtonDisplayStyle) -> some View {
+        Button {
+            copyLink()
+        } label: {
+            profileHeaderButtonLabel(
+                title: L10n.copyLink,
+                systemImage: "link",
+                displayStyle: displayStyle
+            )
+        }
+        .buttonStyle(.glass)
+        .buttonBorderShape(.capsule)
+        .controlSize(.small)
+        .help(L10n.copyLink)
+        .accessibilityLabel(L10n.copyLink)
+    }
+
+    @ViewBuilder
+    private var profileLinkButtons: some View {
+        ForEach(profileLinkEntries) { entry in
+            Link(destination: entry.url) {
+                Image(systemName: entry.systemImage)
+                    .frame(minWidth: 18)
+            }
+            .buttonStyle(.glass)
+            .buttonBorderShape(.capsule)
+            .controlSize(.small)
+            .help(entry.help)
+            .accessibilityLabel(entry.accessibilityLabel)
+        }
+    }
+
+    private var profileLinkEntries: [ProfileHeaderLinkEntry] {
+        var entries: [ProfileHeaderLinkEntry] = []
+        if let url = detail?.profile.webpage {
+            entries.append(ProfileHeaderLinkEntry(title: "Web", systemImage: "globe", url: url))
+        }
+        if let url = detail?.profile.twitterURL {
+            entries.append(ProfileHeaderLinkEntry(title: "X", systemImage: "at", url: url))
+        }
+        if let url = detail?.profile.pawooURL {
+            entries.append(ProfileHeaderLinkEntry(title: "Pawoo", systemImage: "bubble.left.and.bubble.right", url: url))
+        }
+        return entries
+    }
+
+    @ViewBuilder
+    private func profileHeaderButtonLabel(
+        title: String,
+        systemImage: String,
+        displayStyle: ProfileSheetHeaderButtonDisplayStyle
+    ) -> some View {
+        switch displayStyle {
+        case .titleAndIcon:
+            Label {
+                Text(title)
+                    .lineLimit(1)
+                    .fixedSize(horizontal: true, vertical: false)
+            } icon: {
+                Image(systemName: systemImage)
+            }
+        case .iconOnly:
+            Image(systemName: systemImage)
+                .frame(minWidth: 18)
+        }
     }
 
     @ViewBuilder
@@ -264,7 +374,8 @@ struct UserProfileSheetHeader: View {
         }
         .labelStyle(.iconOnly)
         .menuStyle(.borderlessButton)
-        .buttonStyle(.bordered)
+        .buttonStyle(.glass)
+        .buttonBorderShape(.capsule)
         .controlSize(.small)
         .help(L10n.moreActions)
     }
@@ -276,4 +387,19 @@ struct UserProfileSheetHeader: View {
     private var followStatusImage: String {
         followRestrict == .private ? "lock.circle" : "person.crop.circle.badge.checkmark"
     }
+}
+
+private enum ProfileSheetHeaderButtonDisplayStyle {
+    case titleAndIcon
+    case iconOnly
+}
+
+private struct ProfileHeaderLinkEntry: Identifiable {
+    let title: String
+    let systemImage: String
+    let url: URL
+
+    var id: String { "\(title)-\(url.absoluteString)" }
+    var help: String { "\(title) · \(url.absoluteString)" }
+    var accessibilityLabel: String { "\(L10n.links): \(title)" }
 }

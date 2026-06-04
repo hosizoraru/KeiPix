@@ -172,7 +172,7 @@ struct UserProfileNetworkLinks: View {
                         .font(.caption2.monospacedDigit().weight(.semibold))
                         .padding(.horizontal, 5)
                         .padding(.vertical, 1)
-                        .background(.quaternary, in: Capsule())
+                        .glassEffect(.regular, in: Capsule(style: .continuous))
                 }
                 if isLoading {
                     ProgressView().controlSize(.small)
@@ -182,7 +182,8 @@ struct UserProfileNetworkLinks: View {
                     .foregroundStyle(.tertiary)
             }
         }
-        .buttonStyle(.bordered)
+        .buttonStyle(.glass)
+        .buttonBorderShape(.capsule)
         .controlSize(.small)
         .help(title)
     }
@@ -215,7 +216,8 @@ struct UserProfileDescriptionSection: View {
                                 isExpanded.toggle()
                             }
                         }
-                        .buttonStyle(.borderless)
+                        .buttonStyle(.glass)
+                        .buttonBorderShape(.capsule)
                         .controlSize(.small)
                     }
                 }
@@ -239,96 +241,6 @@ struct UserProfileDescriptionSection: View {
     /// that mix CJK and Latin text.
     private func shouldOfferToggle(for text: String) -> Bool {
         text.contains("\n") || text.count > collapsedLineLimit * 52
-    }
-}
-
-/// Links chip rail.
-///
-/// Originally each link was a `.bordered` button which made every entry
-/// look like an action that needed clicking. Switching to chip-style
-/// links + a single inline "region · job" footer keeps the eye on what
-/// the section is actually about: contact + locale.
-struct UserProfileLinksSection: View {
-    let user: PixivUser
-    let profile: PixivUserProfile?
-
-    var body: some View {
-        if hasContent {
-            VStack(alignment: .leading, spacing: 10) {
-                Label(L10n.links, systemImage: "link")
-                    .font(.headline)
-
-                if visibleEntries.isEmpty == false {
-                    FlowLayout(spacing: 8) {
-                        ForEach(visibleEntries, id: \.title) { entry in
-                            Link(destination: entry.url) {
-                                HStack(spacing: 6) {
-                                    Image(systemName: entry.systemImage)
-                                        .imageScale(.small)
-                                    Text(entry.title)
-                                }
-                                .font(.caption.weight(.medium))
-                                .padding(.horizontal, 10)
-                                .padding(.vertical, 5)
-                                .background(.quinary, in: Capsule())
-                                .overlay {
-                                    Capsule().stroke(.quaternary, lineWidth: 1)
-                                }
-                            }
-                            .buttonStyle(.plain)
-                            .help(entry.url.absoluteString)
-                        }
-                    }
-                }
-
-                if regionAndJobLine.isEmpty == false {
-                    HStack(spacing: 6) {
-                        Image(systemName: "mappin.and.ellipse")
-                            .font(.caption2)
-                            .foregroundStyle(.tertiary)
-                        Text(regionAndJobLine)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                            .lineLimit(1)
-                    }
-                }
-            }
-            .padding(16)
-            .keiPanel(16)
-        }
-    }
-
-    private struct LinkEntry {
-        let title: String
-        let systemImage: String
-        let url: URL
-    }
-
-    private var visibleEntries: [LinkEntry] {
-        var entries: [LinkEntry] = []
-        if let url = user.pixivURL {
-            entries.append(LinkEntry(title: "Pixiv", systemImage: "safari", url: url))
-        }
-        if let url = profile?.webpage {
-            entries.append(LinkEntry(title: "Web", systemImage: "globe", url: url))
-        }
-        if let url = profile?.twitterURL {
-            entries.append(LinkEntry(title: "X", systemImage: "bird", url: url))
-        }
-        if let url = profile?.pawooURL {
-            entries.append(LinkEntry(title: "Pawoo", systemImage: "at", url: url))
-        }
-        return entries
-    }
-
-    private var regionAndJobLine: String {
-        let region = profile?.region?.trimmedNonEmpty
-        let job = profile?.job?.trimmedNonEmpty
-        return [region, job].compactMap { $0 }.joined(separator: " · ")
-    }
-
-    private var hasContent: Bool {
-        visibleEntries.isEmpty == false || regionAndJobLine.isEmpty == false
     }
 }
 

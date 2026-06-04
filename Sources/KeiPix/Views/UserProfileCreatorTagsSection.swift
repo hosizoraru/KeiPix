@@ -24,7 +24,7 @@ struct UserProfileCreatorTagsSection: View {
             } else if visibleTags.isEmpty {
                 emptyState
             } else {
-                tagList
+                tagCloud
             }
         }
         .padding(16)
@@ -45,7 +45,7 @@ struct UserProfileCreatorTagsSection: View {
                     .foregroundStyle(.secondary)
                     .padding(.horizontal, 6)
                     .padding(.vertical, 1)
-                    .background(.quaternary, in: Capsule())
+                    .glassEffect(.regular, in: Capsule(style: .continuous))
             }
 
             Spacer()
@@ -56,7 +56,8 @@ struct UserProfileCreatorTagsSection: View {
                 } label: {
                     Label(L10n.retry, systemImage: "arrow.clockwise")
                 }
-                .buttonStyle(.bordered)
+                .buttonStyle(.glass)
+                .buttonBorderShape(.capsule)
                 .controlSize(.small)
             }
         }
@@ -83,7 +84,8 @@ struct UserProfileCreatorTagsSection: View {
                     Label(L10n.clearSearch, systemImage: "xmark.circle.fill")
                 }
                 .labelStyle(.iconOnly)
-                .buttonStyle(.borderless)
+                .buttonStyle(.glass)
+                .buttonBorderShape(.capsule)
                 .help(L10n.clearSearch)
             }
 
@@ -127,46 +129,13 @@ struct UserProfileCreatorTagsSection: View {
         }
     }
 
-    private var tagList: some View {
-        VStack(spacing: 0) {
-            ForEach(visibleTags) { tag in
-                Button {
-                    openTag(tag)
-                } label: {
-                    HStack(spacing: 10) {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("# \(tag.name)")
-                                .font(.callout.weight(.semibold))
-                                .lineLimit(1)
-
-                            if let subtitle = tag.displaySubtitle {
-                                Text(subtitle)
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                                    .lineLimit(1)
-                            }
-                        }
-
-                        Spacer()
-
-                        Text(tag.count.formatted())
-                            .font(.caption.monospacedDigit().weight(.semibold))
-                            .foregroundStyle(.secondary)
-                            .padding(.horizontal, 7)
-                            .padding(.vertical, 3)
-                            .background(.quaternary, in: Capsule())
-
-                        Image(systemName: "chevron.forward")
-                            .font(.caption2)
-                            .foregroundStyle(.tertiary)
+    private var tagCloud: some View {
+        GlassEffectContainer(spacing: 8) {
+            FlowLayout(spacing: 8) {
+                ForEach(visibleTags) { tag in
+                    CreatorArtworkTagChip(tag: tag) {
+                        openTag(tag)
                     }
-                    .padding(.vertical, 8)
-                    .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-
-                if tag.id != visibleTags.last?.id {
-                    Divider()
                 }
             }
         }
@@ -228,5 +197,54 @@ struct UserProfileCreatorTagsSection: View {
                 }
                 return lhs.count > rhs.count
             }
+    }
+}
+
+private struct CreatorArtworkTagChip: View {
+    let tag: CreatorArtworkTag
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(alignment: .center, spacing: 8) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("# \(tag.name)")
+                        .font(.callout.weight(.semibold))
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+
+                    if let subtitle = tag.displaySubtitle {
+                        Text(subtitle)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                            .truncationMode(.tail)
+                    }
+                }
+                .layoutPriority(1)
+
+                Text(tag.count.formatted())
+                    .font(.caption.monospacedDigit().weight(.semibold))
+                    .foregroundStyle(.secondary)
+                    .padding(.horizontal, 7)
+                    .padding(.vertical, 3)
+                    .glassEffect(.regular, in: Capsule(style: .continuous))
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, tag.displaySubtitle == nil ? 8 : 7)
+            .frame(minWidth: 132, maxWidth: 260, alignment: .leading)
+            .contentShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .glassEffect(.regular.interactive(), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .help("# \(tag.name)")
+        .accessibilityLabel(accessibilityLabel)
+    }
+
+    private var accessibilityLabel: String {
+        if let subtitle = tag.displaySubtitle {
+            return "# \(tag.name), \(subtitle), \(tag.count.formatted())"
+        }
+        return "# \(tag.name), \(tag.count.formatted())"
     }
 }
