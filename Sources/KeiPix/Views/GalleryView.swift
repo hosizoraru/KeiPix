@@ -5,17 +5,17 @@ import SwiftUI
 
 struct GalleryView: View {
     @Bindable var store: KeiPixStore
-    let allowsMasonryLayout: Bool
+    let galleryLayoutAdaptation: GalleryLayoutAdaptation
     let onGalleryScrollDirectionChange: ((NativeGalleryScrollDirection) -> Void)?
     @State private var actionMessage: String?
 
     init(
         store: KeiPixStore,
-        allowsMasonryLayout: Bool = true,
+        galleryLayoutAdaptation: GalleryLayoutAdaptation = .fullMasonry,
         onGalleryScrollDirectionChange: ((NativeGalleryScrollDirection) -> Void)? = nil
     ) {
         self.store = store
-        self.allowsMasonryLayout = allowsMasonryLayout
+        self.galleryLayoutAdaptation = galleryLayoutAdaptation
         self.onGalleryScrollDirectionChange = onGalleryScrollDirectionChange
     }
 
@@ -29,7 +29,7 @@ struct GalleryView: View {
                     actionMessage: $actionMessage,
                     navigationTitle: navigationTitle,
                     gallerySubtitle: gallerySubtitle,
-                    allowsMasonryLayout: allowsMasonryLayout,
+                    galleryLayoutAdaptation: galleryLayoutAdaptation,
                     onGalleryScrollDirectionChange: onGalleryScrollDirectionChange
                 )
             }
@@ -126,7 +126,7 @@ private struct GalleryFeedView: View {
     @Binding var actionMessage: String?
     let navigationTitle: String
     let gallerySubtitle: String
-    let allowsMasonryLayout: Bool
+    let galleryLayoutAdaptation: GalleryLayoutAdaptation
     let onGalleryScrollDirectionChange: ((NativeGalleryScrollDirection) -> Void)?
     @State private var artworkSelection = GalleryArtworkSelection()
     @State private var batchBookmarkCommandRequest: BatchBookmarkCommandRequest?
@@ -363,23 +363,11 @@ private struct GalleryFeedView: View {
     }
 
     private var nativeMasonryConfiguration: ArtworkMasonryLayoutConfiguration {
-        let fixedColumnCount = effectiveGalleryLayoutMode.fixedColumnCount
-        let usesDenseThreeColumnLayout = fixedColumnCount == 3
-        return ArtworkMasonryLayoutConfiguration(
-            spacing: 12,
-            preferredColumnWidth: usesDenseThreeColumnLayout ? 168 : 224,
-            minColumnWidth: usesDenseThreeColumnLayout ? 116 : 176,
-            maxColumnWidth: 260,
-            fixedColumnCount: fixedColumnCount,
-            denseFixedColumns: usesDenseThreeColumnLayout
-        )
+        galleryLayoutAdaptation.masonryConfiguration(for: effectiveGalleryLayoutMode)
     }
 
     private var effectiveGalleryLayoutMode: GalleryLayoutMode {
-        guard allowsMasonryLayout || store.galleryLayoutMode.usesArtworkMasonry == false else {
-            return .compactGrid
-        }
-        return store.galleryLayoutMode
+        galleryLayoutAdaptation.effectiveMode(for: store.galleryLayoutMode)
     }
 
     private var nativeGalleryItems: [NativeGalleryCollectionItem] {

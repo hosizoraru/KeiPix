@@ -1341,10 +1341,17 @@ struct ContentView: View {
         } else {
             GalleryView(
                 store: store,
-                allowsMasonryLayout: showsSidebarToggle,
+                galleryLayoutAdaptation: galleryLayoutAdaptation(showsSidebarToggle: showsSidebarToggle),
                 onGalleryScrollDirectionChange: handleCompactGalleryScrollDirection
             )
         }
+    }
+
+    private func galleryLayoutAdaptation(showsSidebarToggle: Bool) -> GalleryLayoutAdaptation {
+        if showsSidebarToggle {
+            return .fullMasonry
+        }
+        return currentMobilePlatform == .pad ? .portraitTabletMasonry : .compactGridOnly
     }
 
     private var readerBinding: Binding<Bool> {
