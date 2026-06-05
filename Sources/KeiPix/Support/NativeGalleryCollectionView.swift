@@ -634,7 +634,7 @@ struct NativeGalleryCollectionView: UIViewRepresentable {
     let content: (NativeGalleryCollectionItem) -> AnyView
 
     func makeUIView(context: Context) -> UICollectionView {
-        let collectionView = UICollectionView(
+        let collectionView = NativeGalleryUICollectionView(
             frame: .zero,
             collectionViewLayout: context.coordinator.makeCollectionLayout()
         )
@@ -648,6 +648,9 @@ struct NativeGalleryCollectionView: UIViewRepresentable {
         )
         collectionView.delegate = context.coordinator
         collectionView.prefetchDataSource = context.coordinator
+        collectionView.onHierarchyAvailable = { [weak coordinator = context.coordinator] collectionView in
+            coordinator?.registerContentScrollViewIfNeeded(collectionView)
+        }
 
         context.coordinator.configureDataSource(for: collectionView)
         context.coordinator.update(parent: self, collectionView: collectionView)
@@ -679,7 +682,6 @@ struct NativeGalleryCollectionView: UIViewRepresentable {
         private var scrollDirectionAccumulator: CGFloat = 0
         private var lastReportedScrollDirection: NativeGalleryScrollDirection?
         private var isNearContentEndArmed = true
-        private var hasDeferredContentScrollRegistration = false
         private weak var registeredContentScrollViewController: UIViewController?
         private let widthChangeTolerance: CGFloat = 0.5
         private let scrollDirectionThreshold: CGFloat = 24
@@ -834,11 +836,9 @@ struct NativeGalleryCollectionView: UIViewRepresentable {
                 || (parent.layout.usesMasonry && contentChanged)
         }
 
-        private func registerContentScrollViewIfNeeded(_ collectionView: UICollectionView) {
-            guard let viewController = collectionView.enclosingViewController else {
-                deferContentScrollRegistration(for: collectionView)
-                return
-            }
+        func registerContentScrollViewIfNeeded(_ collectionView: UICollectionView) {
+            guard collectionView.window != nil else { return }
+            guard let viewController = collectionView.enclosingViewController else { return }
 
             if registeredContentScrollViewController !== viewController {
                 registeredContentScrollViewController?.setContentScrollView(nil, for: .bottom)
@@ -847,16 +847,6 @@ struct NativeGalleryCollectionView: UIViewRepresentable {
 
             guard viewController.contentScrollView(for: .bottom) !== collectionView else { return }
             viewController.setContentScrollView(collectionView, for: .bottom)
-        }
-
-        private func deferContentScrollRegistration(for collectionView: UICollectionView) {
-            guard hasDeferredContentScrollRegistration == false else { return }
-            hasDeferredContentScrollRegistration = true
-            Task { @MainActor [weak self, weak collectionView] in
-                self?.hasDeferredContentScrollRegistration = false
-                guard let collectionView else { return }
-                self?.registerContentScrollViewIfNeeded(collectionView)
-            }
         }
 
         @objc private func refreshRequested(_ sender: UIRefreshControl) {
@@ -1067,6 +1057,25 @@ struct NativeGalleryCollectionView: UIViewRepresentable {
                     .map { IndexPath(item: $0, section: 0) }
             })
         }
+    }
+}
+
+private final class NativeGalleryUICollectionView: UICollectionView {
+    var onHierarchyAvailable: ((UICollectionView) -> Void)?
+
+    override func didMoveToWindow() {
+        super.didMoveToWindow()
+        notifyHierarchyAvailableIfNeeded()
+    }
+
+    override func didMoveToSuperview() {
+        super.didMoveToSuperview()
+        notifyHierarchyAvailableIfNeeded()
+    }
+
+    private func notifyHierarchyAvailableIfNeeded() {
+        guard window != nil else { return }
+        onHierarchyAvailable?(self)
     }
 }
 

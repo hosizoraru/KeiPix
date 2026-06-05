@@ -652,11 +652,16 @@ struct NativeBoundaryTests {
         #expect(galleryBridge.contains("private weak var registeredContentScrollViewController: UIViewController?"))
         #expect(galleryBridge.contains("viewController?.setContentScrollView(nil, for: .bottom)"))
         #expect(galleryBridge.contains("registerContentScrollViewIfNeeded(collectionView)"))
+        #expect(galleryBridge.contains("NativeGalleryUICollectionView"))
+        #expect(galleryBridge.contains("override func didMoveToWindow()"))
+        #expect(galleryBridge.contains("onHierarchyAvailable?(self)"))
+        #expect(galleryBridge.contains("guard collectionView.window != nil else { return }"))
         #expect(galleryBridge.contains("guard viewController.contentScrollView(for: .bottom) !== collectionView else { return }"))
         #expect(galleryBridge.contains("viewController.setContentScrollView(collectionView, for: .bottom)"))
         #expect(galleryBridge.contains("private extension UIView"))
         #expect(galleryBridge.contains("var enclosingViewController: UIViewController?"))
-        #expect(galleryBridge.contains("Task { @MainActor [weak self, weak collectionView]"))
+        #expect(galleryBridge.contains("deferContentScrollRegistration") == false)
+        #expect(galleryBridge.contains("Task { @MainActor [weak self, weak collectionView]") == false)
     }
 
     @Test("Mobile portrait reading surfaces avoid landscape-only chrome")
