@@ -906,7 +906,6 @@ struct ContentView: View {
     private var appControlsMenu: NativeToolbarMenu {
         NativeToolbarMenu(
             title: L10n.appControls,
-            presentationStyle: .popover,
             sections: [
                 NativeToolbarMenuSection(
                     presentation: .palette,
