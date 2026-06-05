@@ -100,6 +100,12 @@ Use this order for non-trivial feature work or bug fixes:
 For new Pixiv-facing features or fixes in backend/API behavior, research more
 than one source before designing the Swift implementation.
 
+- For Apple-platform UI, layout, gestures, windowing, accessibility, OS 26
+  Liquid Glass, AppKit, UIKit, and SwiftUI behavior, consult current Apple
+  Developer documentation before making non-trivial design or API choices.
+  Treat Apple docs and Human Interface Guidelines as the primary design
+  baseline, then adapt Pixiv Web, Pixez, or Pixes behavior into native Apple
+  controls instead of copying their layout directly.
 - Preferred behavior references:
   - Pixez: `https://github.com/Notsfsssf/pixez-flutter` (GPL-3.0; behavior reference only)
   - Pixes: `https://github.com/pixes-app/pixes` (MIT; behavior reference only)
