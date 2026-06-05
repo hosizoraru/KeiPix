@@ -7,83 +7,54 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bottom Tabs"
+            "value": "Tab Bar"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "下部タブ"
+            "value": "タブバー"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "底栏"
+            "value": "标签栏"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "底欄"
+            "value": "標籤欄"
           }
         }
       }
     },
-    "Choose the routes that appear in the iPad portrait shortcut menu. iPhone keeps its compact bottom tabs.": {
+    "Choose the three destinations that stay next to Feed and Search on iPhone and iPad portrait.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Choose the routes that appear in the iPad portrait shortcut menu. iPhone uses a customizable bottom tab bar."
+            "value": "Choose the three destinations that stay next to Feed and Search on iPhone and iPad portrait."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "iPad縦向きのショートカットメニューに表示する項目を選びます。iPhoneではカスタマイズ可能な下部タブバーを使います。"
+            "value": "iPhoneとiPad縦向きでフィードと検索の横に固定表示する3つの移動先を選びます。"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "选择显示在 iPad 竖屏快捷菜单里的入口。iPhone 会使用可自定义底栏。"
+            "value": "选择 iPhone 和 iPad 竖屏上固定显示在作品流与搜索旁边的三个入口。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "選擇顯示在 iPad 直向快捷選單裡的入口。iPhone 會使用可自訂底欄。"
-          }
-        }
-      }
-    },
-    "Choose the three destinations that stay next to Feed and Search on iPhone.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Choose the three destinations that stay next to Feed and Search on iPhone."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "iPhoneでフィードと検索の横に固定表示する3つの移動先を選びます。"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "选择 iPhone 上固定显示在作品流与搜索旁边的三个入口。"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "選擇 iPhone 上固定顯示在作品流與搜尋旁邊的三個入口。"
+            "value": "選擇 iPhone 和 iPad 直向上固定顯示在作品流與搜尋旁邊的三個入口。"
           }
         }
       }
@@ -94,83 +65,25 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Customize Bottom Tabs"
+            "value": "Customize Tab Bar"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "下部タブをカスタマイズ"
+            "value": "タブバーをカスタマイズ"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "自定义底栏"
+            "value": "自定义标签栏"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "自訂底欄"
-          }
-        }
-      }
-    },
-    "Customize Shortcuts": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Customize Shortcuts"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ショートカットをカスタマイズ"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "自定义快捷入口"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "自訂快捷入口"
-          }
-        }
-      }
-    },
-    "Portrait Shortcuts": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Portrait Shortcuts"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "縦向きショートカット"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "竖屏快捷入口"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "直向快捷入口"
+            "value": "自訂標籤欄"
           }
         }
       }
@@ -204,89 +117,31 @@
         }
       }
     },
-    "Quick Destinations": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Quick Destinations"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "クイック移動先"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "快捷入口"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "快捷入口"
-          }
-        }
-      }
-    },
-    "Reset Shortcuts": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Reset Shortcuts"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ショートカットをリセット"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "重置快捷入口"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "重設快捷入口"
-          }
-        }
-      }
-    },
     "Reset Bottom Tabs": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Reset Bottom Tabs"
+            "value": "Reset Tab Bar"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "下部タブをリセット"
+            "value": "タブバーをリセット"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "重置底栏"
+            "value": "重置标签栏"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "重設底欄"
+            "value": "重設標籤欄"
           }
         }
       }
@@ -316,35 +171,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "已選入口"
-          }
-        }
-      }
-    },
-    "Shortcuts": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Shortcuts"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ショートカット"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "快捷"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "快捷"
           }
         }
       }

@@ -21,9 +21,9 @@ struct ContentView: View {
     @State private var isPixivIDOpenPresented = false
     @State private var isSettingsSheetPresented = false
     @State private var isMobileTabCustomizationPresented = false
+    @State private var isCompactCustomTabRootActive = false
     @State private var feedbackRequest: FeedbackReportRequest?
     @State private var statusMessage: String?
-    @AppStorage("mobilePortraitShortcutRouteIDs") private var portraitShortcutRouteIDs = ContentView.defaultPortraitShortcutRouteIDs
     @AppStorage("mobileBottomTabItemIDs") private var mobileBottomTabItemIDs = MobileBottomTabConfiguration.defaultStorageID
     #if DEBUG
     @State private var creatorProfileVisualQAUser: PixivUser?
@@ -33,7 +33,6 @@ struct ContentView: View {
         case feed
         case library
         case settings
-        case shortcuts
         case search
         case custom(MobileBottomTabItem)
 
@@ -42,7 +41,6 @@ struct ContentView: View {
             case .feed: return L10n.feed
             case .library: return L10n.downloads
             case .settings: return L10n.settings
-            case .shortcuts: return L10n.shortcuts
             case .search: return L10n.search
             case .custom(let item): return item.title
             }
@@ -53,24 +51,11 @@ struct ContentView: View {
             case .feed: return "photo.on.rectangle.angled"
             case .library: return "arrow.down.circle"
             case .settings: return "gearshape"
-            case .shortcuts: return "slider.horizontal.3"
             case .search: return "magnifyingglass"
             case .custom(let item): return item.systemImage
             }
         }
     }
-
-    private static let defaultPortraitShortcutRoutes: [PixivRoute] = [
-        .home,
-        .illustrations,
-        .spotlight,
-        .savedSearches,
-        .history,
-        .watchLater
-    ]
-    private static let maximumPortraitShortcutCount = 8
-    private static let defaultPortraitShortcutRouteIDs = defaultPortraitShortcutRoutes.map(\.rawValue).joined(separator: ",")
-    private static let portraitShortcutContentMaxWidth: CGFloat = 860
 
     var body: some View {
         adaptiveRoot
@@ -216,7 +201,7 @@ struct ContentView: View {
                 feedTab
             }
 
-            if layout.usesPhoneSearchTab {
+            if layout.usesCustomNavigationTabs {
                 ForEach(mobileBottomTabItems) { item in
                     Tab(item.title, systemImage: item.systemImage, value: iPadTab.custom(item)) {
                         mobileCustomTab(item)
@@ -232,25 +217,21 @@ struct ContentView: View {
                 }
             }
 
-            if layout.usesPortraitTopCustomization {
-                Tab(L10n.shortcuts, systemImage: "slider.horizontal.3", value: .shortcuts) {
-                    portraitShortcutsTab
-                }
-            }
-
-            if layout.usesPhoneSearchTab {
+            if layout.usesDedicatedSearchTab {
                 Tab(L10n.search, systemImage: "magnifyingglass", value: .search, role: .search) {
-                    phoneSearchTab
+                    compactSearchTab
                 }
             }
         }
-        .onChange(of: layout.usesPortraitTopCustomization) { _, isEnabled in
-            if isEnabled == false, selectedTab == .shortcuts {
+        .onAppear {
+            isCompactCustomTabRootActive = layout.usesCustomNavigationTabs
+        }
+        .onChange(of: layout.usesCustomNavigationTabs) { _, isEnabled in
+            isCompactCustomTabRootActive = isEnabled
+            if isEnabled == false, selectedTab == .search {
                 selectedTab = .feed
             }
-        }
-        .onChange(of: layout.usesPhoneSearchTab) { _, isEnabled in
-            if isEnabled == false, selectedTab == .search {
+            if isEnabled, selectedTab == .library || selectedTab == .settings {
                 selectedTab = .feed
             }
         }
@@ -274,6 +255,7 @@ struct ContentView: View {
             landscapeDetail
         }
         .onAppear {
+            isCompactCustomTabRootActive = false
             syncSidebarSelectionFromCurrentTab()
         }
         .onChange(of: selectedSidebarItem) { _, item in
@@ -461,7 +443,7 @@ struct ContentView: View {
                 .modifier(MobileGlobalSearchModifier(
                     store: store,
                     searchText: globalSearchTextBinding,
-                    isEnabled: currentMobilePlatform != .phone
+                    isEnabled: showsSidebarToggle
                 ))
                 .task(id: store.searchText) {
                     await store.refreshSearchSuggestions()
@@ -1098,11 +1080,11 @@ struct ContentView: View {
         case IPadToolbarMenuAction.customizeBottomTabs:
             isMobileTabCustomizationPresented = true
         case IPadToolbarMenuAction.settings:
-            if currentMobilePlatform == .phone, mobileBottomTabItems.contains(.settings) == false {
+            if isCompactCustomTabRootActive, mobileBottomTabItems.contains(.settings) == false {
                 isSettingsSheetPresented = true
             } else {
                 selectedSidebarItem = .settings
-                selectedTab = currentMobilePlatform == .phone ? .custom(.settings) : .settings
+                selectedTab = isCompactCustomTabRootActive ? .custom(.settings) : .settings
             }
         default:
             break
@@ -1398,8 +1380,6 @@ struct ContentView: View {
             selectedSidebarItem = .route(.downloads)
         case .settings:
             selectedSidebarItem = .settings
-        case .shortcuts:
-            selectedSidebarItem = .route(store.selectedRoute)
         case .search:
             selectedSidebarItem = .route(.search)
         case .custom(let item):
@@ -1432,12 +1412,12 @@ struct ContentView: View {
     }
 
     private func tab(for route: PixivRoute) -> iPadTab {
-        if route == .downloads, currentMobilePlatform != .phone {
-            return .library
-        }
-        if currentMobilePlatform == .phone,
+        if isCompactCustomTabRootActive,
            let item = mobileBottomTabItems.first(where: { $0.route == route }) {
             return .custom(item)
+        }
+        if route == .downloads, currentMobilePlatform != .phone {
+            return .library
         }
         return .feed
     }
@@ -1492,21 +1472,21 @@ struct ContentView: View {
         }
     }
 
-    // MARK: - Phone Search Tab
+    // MARK: - Compact Search Tab
 
-    private var phoneSearchTab: some View {
+    private var compactSearchTab: some View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
-                    phoneSearchHero
-                    phoneSearchFieldCard
+                    compactSearchHero
+                    compactSearchFieldCard
 
                     if store.searchSuggestions.isEmpty == false {
-                        phonePixivSuggestionSection
+                        compactPixivSuggestionSection
                     }
 
                     if store.savedSearches.isEmpty == false {
-                        phoneKeywordSection(
+                        compactKeywordSection(
                             title: L10n.savedSearches,
                             systemImage: "star",
                             keywords: Array(store.savedSearches.prefix(8)),
@@ -1515,7 +1495,7 @@ struct ContentView: View {
                     }
 
                     if store.searchHistory.isEmpty == false {
-                        phoneKeywordSection(
+                        compactKeywordSection(
                             title: L10n.recentSearches,
                             systemImage: "clock.arrow.circlepath",
                             keywords: Array(store.searchHistory.prefix(8)),
@@ -1553,7 +1533,7 @@ struct ContentView: View {
         }
     }
 
-    private var phoneSearchHero: some View {
+    private var compactSearchHero: some View {
         HStack(spacing: 14) {
             Image(systemName: "magnifyingglass")
                 .font(.title2.weight(.semibold))
@@ -1581,13 +1561,13 @@ struct ContentView: View {
         .keiGlass(24)
     }
 
-    private var phoneSearchFieldCard: some View {
+    private var compactSearchFieldCard: some View {
         VStack(alignment: .leading, spacing: 12) {
             NativeSearchField(
                 text: globalSearchTextBinding,
                 placeholder: L10n.searchPlaceholder,
                 suggestions: store.matchingLocalSearchTerms(),
-                onSubmit: { submitPhoneSearch() },
+                onSubmit: { submitCompactSearch() },
                 onTextChange: { store.searchText = $0 }
             )
             .frame(minHeight: 38)
@@ -1595,7 +1575,7 @@ struct ContentView: View {
 
             HStack(spacing: 10) {
                 Button {
-                    submitPhoneSearch()
+                    submitCompactSearch()
                 } label: {
                     Label(L10n.search, systemImage: "magnifyingglass")
                 }
@@ -1618,7 +1598,7 @@ struct ContentView: View {
         .keiGlass(22)
     }
 
-    private var phonePixivSuggestionSection: some View {
+    private var compactPixivSuggestionSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Label(L10n.searchSuggestions, systemImage: "tag")
                 .font(.headline)
@@ -1626,7 +1606,7 @@ struct ContentView: View {
             FlowLayout(spacing: 8) {
                 ForEach(store.searchSuggestions, id: \.name) { tag in
                     Button {
-                        submitPhoneSearch(keyword: tag.name)
+                        submitCompactSearch(keyword: tag.name)
                     } label: {
                         Label(tag.name, systemImage: "tag")
                             .lineLimit(1)
@@ -1640,7 +1620,7 @@ struct ContentView: View {
         .keiGlass(20)
     }
 
-    private func phoneKeywordSection(
+    private func compactKeywordSection(
         title: String,
         systemImage: String,
         keywords: [String],
@@ -1653,7 +1633,7 @@ struct ContentView: View {
             FlowLayout(spacing: 8) {
                 ForEach(keywords, id: \.self) { keyword in
                     Button {
-                        submitPhoneSearch(keyword: keyword)
+                        submitCompactSearch(keyword: keyword)
                     } label: {
                         Label(keyword, systemImage: saved ? "star.fill" : "clock.arrow.circlepath")
                             .lineLimit(1)
@@ -1667,7 +1647,7 @@ struct ContentView: View {
         .keiGlass(20)
     }
 
-    private func submitPhoneSearch(keyword: String? = nil) {
+    private func submitCompactSearch(keyword: String? = nil) {
         if let keyword {
             store.searchText = keyword
         }
@@ -1675,244 +1655,6 @@ struct ContentView: View {
             await store.runSearch()
             selectedSidebarItem = .route(.search)
             selectedTab = .feed
-        }
-    }
-
-    // MARK: - Portrait Shortcuts Tab
-
-    private var portraitShortcutsTab: some View {
-        NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 16) {
-                    portraitShortcutsHero
-                    portraitShortcutGrid
-                    portraitShortcutSections
-                }
-                .padding(.horizontal, 16)
-                .padding(.top, 10)
-                .padding(.bottom, 18)
-                .frame(maxWidth: Self.portraitShortcutContentMaxWidth, alignment: .leading)
-                .frame(maxWidth: .infinity, alignment: .top)
-            }
-            .navigationTitle("")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .primaryAction) {
-                    portraitShortcutCustomizationMenu
-                }
-            }
-        }
-    }
-
-    private var portraitShortcutsHero: some View {
-        ViewThatFits(in: .horizontal) {
-            HStack(spacing: 14) {
-                portraitShortcutIcon
-                portraitShortcutHeroText
-                Spacer(minLength: 12)
-                portraitShortcutCountPill
-            }
-
-            VStack(alignment: .leading, spacing: 12) {
-                HStack(spacing: 12) {
-                    portraitShortcutIcon
-                    portraitShortcutHeroText
-                }
-                portraitShortcutCountPill
-            }
-        }
-        .padding(16)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .keiGlass(24)
-    }
-
-    private var portraitShortcutIcon: some View {
-        Image(systemName: "slider.horizontal.3")
-            .font(.title2.weight(.semibold))
-            .symbolRenderingMode(.hierarchical)
-            .foregroundStyle(.secondary)
-            .frame(width: 52, height: 52)
-            .keiGlass(18)
-            .accessibilityHidden(true)
-    }
-
-    private var portraitShortcutHeroText: some View {
-        VStack(alignment: .leading, spacing: 5) {
-            Text(L10n.portraitShortcuts)
-                .font(.title3.weight(.bold))
-                .lineLimit(1)
-                .minimumScaleFactor(0.82)
-
-            Text(L10n.portraitShortcutsHint)
-                .font(.callout)
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
-
-    private var portraitShortcutCountPill: some View {
-        Label("\(portraitShortcutRoutes.count)/\(Self.maximumPortraitShortcutCount)", systemImage: "pin")
-            .font(.caption.weight(.semibold))
-            .foregroundStyle(.secondary)
-            .lineLimit(1)
-            .padding(.horizontal, 10)
-            .padding(.vertical, 6)
-            .glassEffect(.regular, in: Capsule(style: .continuous))
-            .accessibilityLabel(L10n.quickDestinations)
-    }
-
-    private var portraitShortcutGrid: some View {
-        FlowLayout(spacing: 10) {
-            ForEach(portraitShortcutRoutes) { route in
-                Button {
-                    selectRoute(route)
-                } label: {
-                    Label(route.title, systemImage: route.systemImage)
-                        .lineLimit(1)
-                }
-                .os26GlassButton(prominent: route == store.selectedRoute)
-                .controlSize(.regular)
-                .help(route.title)
-                .accessibilityLabel(route.title)
-            }
-        }
-        .padding(14)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .keiGlass(22)
-    }
-
-    private var portraitShortcutSections: some View {
-        LazyVStack(alignment: .leading, spacing: 12) {
-            ForEach(PixivRoute.sidebarSections) { section in
-                portraitShortcutSection(section)
-            }
-        }
-    }
-
-    private func portraitShortcutSection(_ section: PixivRouteSection) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Label(section.title, systemImage: portraitShortcutSectionSystemImage(section))
-                .font(.headline)
-                .lineLimit(1)
-
-            FlowLayout(spacing: 8) {
-                ForEach(section.routes) { route in
-                    portraitShortcutToggle(route)
-                }
-            }
-        }
-        .padding(14)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .keiGlass(20)
-    }
-
-    private func portraitShortcutToggle(_ route: PixivRoute) -> some View {
-        Button {
-            togglePortraitShortcut(route)
-        } label: {
-            Label(
-                route.title,
-                systemImage: isPortraitShortcutSelected(route) ? "checkmark.circle.fill" : route.systemImage
-            )
-            .lineLimit(1)
-        }
-        .os26GlassButton(prominent: isPortraitShortcutSelected(route))
-        .controlSize(.small)
-        .help(route.title)
-        .accessibilityLabel(route.title)
-    }
-
-    private var portraitShortcutCustomizationMenu: some View {
-        Menu {
-            Section(L10n.quickDestinations) {
-                ForEach(portraitShortcutRoutes) { route in
-                    Button {
-                        selectRoute(route)
-                    } label: {
-                        Label(route.title, systemImage: route.systemImage)
-                    }
-                }
-            }
-
-            ForEach(PixivRoute.sidebarSections) { section in
-                Section(section.title) {
-                    ForEach(section.routes) { route in
-                        Button {
-                            togglePortraitShortcut(route)
-                        } label: {
-                            Label(
-                                route.title,
-                                systemImage: isPortraitShortcutSelected(route) ? "checkmark.circle.fill" : route.systemImage
-                            )
-                        }
-                    }
-                }
-            }
-
-            Section {
-                Button {
-                    resetPortraitShortcuts()
-                } label: {
-                    Label(L10n.resetShortcuts, systemImage: "arrow.counterclockwise")
-                }
-            }
-        } label: {
-            Label(L10n.customizeShortcuts, systemImage: "slider.horizontal.3")
-                .lineLimit(1)
-        }
-        .os26GlassButton()
-        .controlSize(.regular)
-        .accessibilityLabel(L10n.customizeShortcuts)
-    }
-
-    private var portraitShortcutRoutes: [PixivRoute] {
-        let routes = portraitShortcutRouteIDs
-            .split(separator: ",")
-            .compactMap { PixivRoute(rawValue: String($0)) }
-            .filter(\.isSidebarRoute)
-            .uniqued { $0.rawValue }
-        return routes.isEmpty ? Self.defaultPortraitShortcutRoutes : routes
-    }
-
-    private func isPortraitShortcutSelected(_ route: PixivRoute) -> Bool {
-        portraitShortcutRoutes.contains(route)
-    }
-
-    private func togglePortraitShortcut(_ route: PixivRoute) {
-        var routes = portraitShortcutRoutes
-        if let index = routes.firstIndex(of: route) {
-            routes.remove(at: index)
-        } else {
-            routes.append(route)
-            if routes.count > Self.maximumPortraitShortcutCount {
-                routes.removeFirst(routes.count - Self.maximumPortraitShortcutCount)
-            }
-        }
-        if routes.isEmpty {
-            routes = Self.defaultPortraitShortcutRoutes
-        }
-        portraitShortcutRouteIDs = routes.map(\.rawValue).joined(separator: ",")
-    }
-
-    private func resetPortraitShortcuts() {
-        portraitShortcutRouteIDs = Self.defaultPortraitShortcutRouteIDs
-    }
-
-    private func portraitShortcutSectionSystemImage(_ section: PixivRouteSection) -> String {
-        switch section {
-        case .works:
-            "photo.stack"
-        case .ranking:
-            "chart.bar"
-        case .mangaRanking:
-            "chart.bar.doc.horizontal"
-        case .novels:
-            "books.vertical"
-        case .novelRanking:
-            "chart.line.uptrend.xyaxis"
-        case .library:
-            "tray.full"
         }
     }
 

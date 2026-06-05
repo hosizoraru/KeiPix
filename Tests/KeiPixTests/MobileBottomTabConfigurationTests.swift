@@ -3,7 +3,7 @@ import Testing
 
 @Suite("Mobile bottom tab configuration")
 struct MobileBottomTabConfigurationTests {
-    @Test("Default iPhone bottom tabs keep three customizable destinations")
+    @Test("Default compact tabs keep three customizable destinations")
     func defaultItemsKeepThreeCustomizableDestinations() {
         #expect(MobileBottomTabConfiguration.defaultItems == [.illustrations, .manga, .publicBookmarks])
         #expect(MobileBottomTabConfiguration.defaultItems.count == MobileBottomTabConfiguration.maximumCustomItemCount)

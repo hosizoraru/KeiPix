@@ -315,25 +315,24 @@ struct NativeBoundaryTests {
         #expect(contentView.contains("usesLandscapeSidebar(for size: CGSize)") == false)
         #expect(contentView.contains("let layout = MobileWorkspaceLayout(size: geometry.size, platform: currentMobilePlatform)"))
         #expect(contentView.contains("if layout.usesLandscapeSidebar"))
-        #expect(contentView.contains("layout.usesPortraitTopCustomization"))
-        #expect(contentView.contains("@AppStorage(\"mobilePortraitShortcutRouteIDs\")"))
+        #expect(contentView.contains("layout.usesCustomNavigationTabs"))
+        #expect(contentView.contains("layout.usesDedicatedSearchTab"))
+        #expect(contentView.contains("@AppStorage(\"mobilePortraitShortcutRouteIDs\")") == false)
         #expect(contentView.contains("@AppStorage(\"mobileBottomTabItemIDs\")"))
-        #expect(contentView.contains("private var portraitShortcutsTab: some View"))
+        #expect(contentView.contains("private var portraitShortcutsTab: some View") == false)
         #expect(mobileBottomTabCustomization.contains("struct MobileBottomTabCustomizationView: View"))
         #expect(mobileBottomTabCustomization.contains("MobileBottomTabConfiguration.replacing("))
         #expect(mobileBottomTabCustomization.contains(".keiGlass(24)"))
         #expect(mobileBottomTabCustomization.contains("L10n.fixedTabs"))
         #expect(mobileBottomTabCustomization.contains("L10n.selectedDestinations"))
-        #expect(contentView.contains("private static let portraitShortcutContentMaxWidth: CGFloat = 860"))
-        #expect(contentView.contains(".frame(maxWidth: Self.portraitShortcutContentMaxWidth, alignment: .leading)"))
-        #expect(contentView.contains(".frame(maxWidth: .infinity, alignment: .top)"))
-        #expect(contentView.contains(".navigationTitle(\"\")"))
+        #expect(contentView.contains("private static let portraitShortcutContentMaxWidth: CGFloat = 860") == false)
+        #expect(contentView.contains("if layout.usesCustomNavigationTabs {\n                ForEach(mobileBottomTabItems)"))
+        #expect(contentView.contains("if layout.usesDedicatedSearchTab {\n                Tab(L10n.search"))
         #expect(contentView.contains(".navigationBarTitleDisplayMode(.inline)"))
-        #expect(contentView.contains("if layout.usesPortraitTopCustomization {\n                Tab(L10n.shortcuts"))
-        #expect(contentView.contains("case .shortcuts"))
+        #expect(contentView.contains("Tab(L10n.shortcuts") == false)
+        #expect(contentView.contains("case .shortcuts") == false)
         #expect(contentView.contains("selectedTab = .feed"))
-        #expect(contentView.contains("L10n.customizeShortcuts"))
-        #expect(contentView.contains("L10n.portraitShortcutsHint"))
+        #expect(contentView.contains("L10n.customizeBottomTabs"))
         #expect(contentView.contains("case settings"))
         #expect(contentView.contains("ToolbarItem(placement: .topBarLeading)"))
         #expect(contentView.contains("private var routeMenu: some View"))
@@ -412,8 +411,8 @@ struct NativeBoundaryTests {
         #expect(spotlightDetailView.contains("showsNavigationChrome ? (article.pureTitle.isEmpty ? L10n.spotlight : article.pureTitle) : \"\""))
     }
 
-    @Test("Mobile portrait shortcuts ship localized labels")
-    func mobilePortraitShortcutsShipLocalizedLabels() throws {
+    @Test("Mobile customizable tabs ship localized labels")
+    func mobileCustomizableTabsShipLocalizedLabels() throws {
         let root = try packageRoot()
         let navigationCatalog = try String(
             contentsOf: root.appending(path: "Sources/KeiPix/Resources/Navigation.xcstrings"),
@@ -425,26 +424,19 @@ struct NativeBoundaryTests {
         )
 
         for key in [
-            "Shortcuts",
-            "Customize Shortcuts",
-            "Reset Shortcuts",
-            "Portrait Shortcuts",
-            "Quick Destinations",
-            "Choose the routes that appear in the iPad portrait shortcut menu. iPhone keeps its compact bottom tabs.",
             "Bottom Tabs",
             "Customize Bottom Tabs",
             "Reset Bottom Tabs",
             "Fixed Tabs",
             "Selected Destinations",
             "Slot %d",
-            "Choose the three destinations that stay next to Feed and Search on iPhone."
+            "Choose the three destinations that stay next to Feed and Search on iPhone and iPad portrait."
         ] {
             #expect(navigationCatalog.contains("\"\(key)\""), "\(key) should be localized for the mobile navigation UI")
         }
 
-        #expect(navigationCatalog.contains("\"value\": \"快捷\""))
-        #expect(navigationCatalog.contains("\"value\": \"快捷入口\""))
-        #expect(navigationCatalog.contains("\"value\": \"自定义底栏\""))
+        #expect(navigationCatalog.contains("\"value\": \"标签栏\""))
+        #expect(navigationCatalog.contains("\"value\": \"自定义标签栏\""))
         #expect(l10n.contains("private enum L10nTable"))
         #expect(l10n.contains("static let navigation = \"Navigation\""))
         #expect(l10n.contains("static func text(_ key: String, table: String? = nil)"))
@@ -462,12 +454,18 @@ struct NativeBoundaryTests {
         #expect(iPhoneLandscape.usesCompactTabs)
         #expect(iPadPortrait.usesCompactTabs)
         #expect(iPadLandscape.usesLandscapeSidebar)
-        #expect(iPhonePortrait.usesPortraitTopCustomization == false)
-        #expect(iPadPortrait.usesPortraitTopCustomization)
-        #expect(iPadLandscape.usesPortraitTopCustomization == false)
+        #expect(iPhonePortrait.usesIPadPortraitTopTabs == false)
+        #expect(iPadPortrait.usesIPadPortraitTopTabs)
+        #expect(iPadLandscape.usesIPadPortraitTopTabs == false)
         #expect(iPhonePortrait.usesPhoneSearchTab)
         #expect(iPhoneLandscape.usesPhoneSearchTab)
         #expect(iPadPortrait.usesPhoneSearchTab == false)
+        #expect(iPhonePortrait.usesCustomNavigationTabs)
+        #expect(iPadPortrait.usesCustomNavigationTabs)
+        #expect(iPadLandscape.usesCustomNavigationTabs == false)
+        #expect(iPhonePortrait.usesDedicatedSearchTab)
+        #expect(iPadPortrait.usesDedicatedSearchTab)
+        #expect(iPadLandscape.usesDedicatedSearchTab == false)
         #expect(iPhonePortrait.usesCondensedChrome)
         #expect(iPadPortrait.usesCondensedChrome == false)
         #expect(iPhonePortrait.articleHorizontalPadding == 16)
@@ -476,8 +474,8 @@ struct NativeBoundaryTests {
         #expect(iPadLandscape.articleContentMaximumWidth == 720)
     }
 
-    @Test("iPhone search is opt-in instead of persistent in every content surface")
-    func iPhoneSearchIsOptInInsteadOfPersistentEverywhere() throws {
+    @Test("Compact search is opt-in instead of persistent in every content surface")
+    func compactSearchIsOptInInsteadOfPersistentEverywhere() throws {
         let root = try packageRoot()
         let mobileLayout = try String(
             contentsOf: root.appending(path: "Sources/KeiPix/Support/MobileWorkspaceLayout.swift"),
@@ -505,19 +503,23 @@ struct NativeBoundaryTests {
         )
 
         #expect(mobileLayout.contains("var usesPhoneSearchTab: Bool"))
+        #expect(mobileLayout.contains("var usesIPadPortraitTopTabs: Bool"))
+        #expect(mobileLayout.contains("var usesCustomNavigationTabs: Bool"))
+        #expect(mobileLayout.contains("var usesDedicatedSearchTab: Bool"))
         #expect(iPadContentView.contains("Tab(L10n.search, systemImage: \"magnifyingglass\", value: .search, role: .search)"))
-        #expect(iPadContentView.contains("if layout.usesPhoneSearchTab {"))
+        #expect(iPadContentView.contains("if layout.usesCustomNavigationTabs {"))
+        #expect(iPadContentView.contains("if layout.usesDedicatedSearchTab {"))
         #expect(iPadContentView.contains("ForEach(mobileBottomTabItems) { item in"))
         #expect(iPadContentView.contains("value: iPadTab.custom(item)"))
         #expect(iPadContentView.contains("private var mobileBottomTabItemsBinding: Binding<[MobileBottomTabItem]>"))
         #expect(iPadContentView.contains("MobileBottomTabConfiguration.storageID(for: items)"))
         #expect(iPadContentView.contains("IPadToolbarMenuAction.customizeBottomTabs"))
         #expect(iPadContentView.contains("isMobileTabCustomizationPresented = true"))
-        #expect(iPadContentView.contains("private var phoneSearchTab: some View"))
+        #expect(iPadContentView.contains("private var compactSearchTab: some View"))
         #expect(iPadContentView.contains(".task(id: store.searchText)"))
         #expect(iPadContentView.contains("await store.refreshSearchSuggestions()"))
         #expect(iPadContentView.contains("MobileGlobalSearchModifier("))
-        #expect(iPadContentView.contains("isEnabled: currentMobilePlatform != .phone"))
+        #expect(iPadContentView.contains("isEnabled: showsSidebarToggle"))
         #expect(iPadContentView.contains("selectedTab = .feed"))
         #expect(sharedComponents.contains("private var usesCollapsedPhoneSearch: Bool"))
         #expect(sharedComponents.contains("UIDevice.current.userInterfaceIdiom == .phone"))
@@ -896,6 +898,10 @@ struct NativeBoundaryTests {
             contentsOf: root.appending(path: "Sources/KeiPix/Views/SidebarView.swift"),
             encoding: .utf8
         )
+        let accountIdentityMenu = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/AccountIdentityMenuButton.swift"),
+            encoding: .utf8
+        )
         let windowSizePreset = try String(
             contentsOf: root.appending(path: "Sources/KeiPix/Models/WindowSizePreset.swift"),
             encoding: .utf8
@@ -917,14 +923,16 @@ struct NativeBoundaryTests {
         #expect(sidebarView.contains("static let macOS = SidebarColumnWidth(min: 246, ideal: 266, max: 310)"))
         #expect(sidebarView.contains("static let iPadOS = SidebarColumnWidth(min: 196, ideal: 218, max: 250)"))
         #expect(sidebarView.contains("AccountHeader(store: store)"))
-        #expect(sidebarView.contains("Toggle(L10n.showAccountIdentity, isOn: showAccountIdentityBinding)"))
+        #expect(sidebarView.contains("AccountIdentityMenuButton(store: store, displayStyle: .sidebar)"))
+        #expect(accountIdentityMenu.contains("Toggle(L10n.showAccountIdentity, isOn: showAccountIdentityBinding)"))
         #expect(sidebarView.contains("#if DEBUG") == false)
         #expect(sidebarView.contains("navigationSplitViewColumnWidth(\n            min: columnWidth.min"))
         #expect(sidebarView.contains("private let defaults: UserDefaults"))
         #expect(sidebarView.contains("defaults.set(Array(collapsedIDs), forKey: Self.storageKey)"))
-        #expect(sidebarView.contains("private var avatarDiameter: CGFloat"))
-        #expect(sidebarView.contains("showIdentity ? 46 : 62"))
-        #expect(sidebarView.contains(".glassEffect(.regular.interactive(), in: Circle())"))
+        #expect(accountIdentityMenu.contains("private var avatarDiameter: CGFloat"))
+        #expect(accountIdentityMenu.contains("showIdentity ? 46 : 62"))
+        #expect(accountIdentityMenu.contains("case heroAvatar(diameter: CGFloat, symbolSize: CGFloat)"))
+        #expect(accountIdentityMenu.contains(".glassEffect(.regular.interactive(), in: Circle())"))
         #expect(windowStyler.contains("struct MainWindowSizingModifier: ViewModifier"))
         #expect(windowStyler.contains("private final class MainWindowSizingHostView: NSView"))
         #expect(windowStyler.contains("override func viewDidMoveToWindow()"))

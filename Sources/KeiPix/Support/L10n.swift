@@ -9,15 +9,9 @@ enum L10n {
     static var discoveryHighlights: String { text("Discovery Highlights") }
     static var discoveryForYou: String { text("For You") }
     static var customizeDashboard: String { text("Customize Dashboard") }
-    static var shortcuts: String { text("Shortcuts", table: L10nTable.navigation) }
-    static var customizeShortcuts: String { text("Customize Shortcuts", table: L10nTable.navigation) }
-    static var resetShortcuts: String { text("Reset Shortcuts", table: L10nTable.navigation) }
-    static var portraitShortcuts: String { text("Portrait Shortcuts", table: L10nTable.navigation) }
-    static var portraitShortcutsHint: String { text("Choose the routes that appear in the iPad portrait shortcut menu. iPhone keeps its compact bottom tabs.", table: L10nTable.navigation) }
-    static var quickDestinations: String { text("Quick Destinations", table: L10nTable.navigation) }
     static var bottomTabs: String { text("Bottom Tabs", table: L10nTable.navigation) }
     static var customizeBottomTabs: String { text("Customize Bottom Tabs", table: L10nTable.navigation) }
-    static var bottomTabsHint: String { text("Choose the three destinations that stay next to Feed and Search on iPhone.", table: L10nTable.navigation) }
+    static var bottomTabsHint: String { text("Choose the three destinations that stay next to Feed and Search on iPhone and iPad portrait.", table: L10nTable.navigation) }
     static var fixedTabs: String { text("Fixed Tabs", table: L10nTable.navigation) }
     static var selectedDestinations: String { text("Selected Destinations", table: L10nTable.navigation) }
     static var bottomTabSlotFormat: String { text("Slot %d", table: L10nTable.navigation) }

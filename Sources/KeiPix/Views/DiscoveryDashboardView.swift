@@ -203,32 +203,29 @@ private struct DiscoveryDashboardHeroCard: View {
     let surprise: () -> Void
     let customize: () -> Void
 
-    @ScaledMetric(relativeTo: .headline) private var compactIconSize: CGFloat = 20
-    @ScaledMetric(relativeTo: .largeTitle) private var fullIconSize: CGFloat = 30
+    @ScaledMetric(relativeTo: .headline) private var compactAvatarSymbolSize: CGFloat = 28
+    @ScaledMetric(relativeTo: .largeTitle) private var fullAvatarSymbolSize: CGFloat = 36
 
     var body: some View {
         HStack(alignment: .center, spacing: style == .full ? 16 : 12) {
-            Image(systemName: "sparkles.rectangle.stack")
-                .font(.system(size: style == .full ? fullIconSize : compactIconSize, weight: .semibold))
-                .symbolRenderingMode(.hierarchical)
-                .foregroundStyle(.secondary)
-                .frame(width: style.iconSide, height: style.iconSide)
-                .keiGlass(style == .full ? 20 : 16)
+            AccountIdentityMenuButton(
+                store: store,
+                displayStyle: .heroAvatar(
+                    diameter: style.iconSide,
+                    symbolSize: style == .full ? fullAvatarSymbolSize : compactAvatarSymbolSize
+                )
+            )
 
-            VStack(alignment: .leading, spacing: style == .full ? 8 : 5) {
+            VStack(alignment: .leading, spacing: style == .full ? 5 : 3) {
                 Text(L10n.discover)
                     .font(style == .full ? .title2.weight(.semibold) : .headline.weight(.semibold))
                     .lineLimit(1)
 
-                FlowLayout(spacing: 7) {
-                    DashboardStatusPill(title: L10n.currentRoute, value: store.selectedRoute.title, systemImage: "location")
-                    if style == .full {
-                        DashboardStatusPill(title: L10n.feed, value: store.artworks.count.formatted(), systemImage: "photo.on.rectangle")
-                        DashboardStatusPill(title: L10n.downloads, value: store.downloads.items.count.formatted(), systemImage: "arrow.down.circle")
-                    } else {
-                        DashboardStatusPill(title: L10n.session, value: L10n.signedIn, systemImage: "person.crop.circle.badge.checkmark")
-                    }
-                }
+                Text(accountSubtitle)
+                    .font(style == .full ? .callout : .caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
 
@@ -237,6 +234,16 @@ private struct DiscoveryDashboardHeroCard: View {
         .padding(style == .full ? 16 : 13)
         .frame(maxWidth: .infinity, alignment: .leading)
         .keiGlass(style.cornerRadius)
+    }
+
+    private var accountSubtitle: String {
+        guard let session = store.session else {
+            return store.storedAccounts.isEmpty ? L10n.signedOut : L10n.realAccount
+        }
+        guard store.showsSidebarAccountIdentity else {
+            return L10n.accountIdentityHidden
+        }
+        return store.accountSessionMode == .real ? "@\(session.user.account)" : store.accountSessionMode.title
     }
 
     private var heroActions: some View {
@@ -533,27 +540,6 @@ private struct DiscoveryDashboardRouteCard: View {
 
     private var strokeStyle: Color {
         isSelected ? Color.accentColor.opacity(0.48) : Color.secondary.opacity(isHovering ? 0.18 : 0.08)
-    }
-}
-
-private struct DashboardStatusPill: View {
-    let title: String
-    let value: String
-    let systemImage: String
-
-    var body: some View {
-        Label {
-            Text("\(title): \(value)")
-                .lineLimit(1)
-        } icon: {
-            Image(systemName: systemImage)
-                .symbolRenderingMode(.hierarchical)
-        }
-        .font(.caption.weight(.medium))
-        .foregroundStyle(.secondary)
-        .padding(.horizontal, 8)
-        .padding(.vertical, 4)
-        .glassEffect(.regular, in: Capsule(style: .continuous))
     }
 }
 
