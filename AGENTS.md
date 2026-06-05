@@ -319,6 +319,64 @@ For iPadOS/iOS work, use Simulator screenshots or `snapshot_ui` after
 navigation, rotation, or layout changes. Verify both the route and the actual
 device name/UDID when multiple simulators are running.
 
+### Codex In-Browser Simulator Review
+
+For interactive iOS/iPadOS review inside Codex, prefer the Build iOS Apps
+plugin's in-browser Simulator loop. It keeps the review in Codex while still
+driving a real Apple Simulator.
+
+1. Check XcodeBuildMCP defaults first with `session_show_defaults`. Confirm the
+   project, scheme, bundle id, simulator name, and simulator UDID are for
+   KeiPix, not another worktree.
+2. Build, install, and launch on a dedicated KeiPix simulator. When using repo
+   scripts, pass `KEIPIX_IOS_SIMULATOR_ID` or `KEIPIX_IPADOS_SIMULATOR_ID`.
+   When using XcodeBuildMCP, set session defaults explicitly before
+   `build_run_sim`.
+3. Start `serve-sim` for the exact UDID. Always scope cleanup to the same UDID;
+   never use an unscoped `serve-sim --kill` because another Codex thread may be
+   mirroring a different simulator.
+
+```bash
+SIM="<simulator-udid>"
+cleanup_serve_sim() {
+  npx --yes serve-sim@latest --kill "$SIM" >/dev/null 2>&1 || true
+}
+trap cleanup_serve_sim EXIT INT TERM HUP
+cleanup_serve_sim
+npx --yes serve-sim@latest "$SIM"
+```
+
+4. Open the exact local URL printed by `serve-sim`, commonly
+   `http://localhost:3200`, in the Codex in-app browser.
+5. Verify a real app frame before reporting success. A useful proof screenshot
+   shows the simulator device chrome, the current KeiPix screen, and the green
+   `live` status from `serve-sim`.
+6. Browser clicks, scrolls, typing, and gestures count as real simulator
+   interactions. Capture another screenshot or `snapshot_ui` after a meaningful
+   state change when validating a flow.
+7. When finished, stop the launched app and clean up only this mirror and this
+   simulator. Do not shut down or kill unrelated booted simulators.
+
+### SwiftUI Preview Hot Reload Boundary
+
+The Build iOS Apps plugin can render and hot reload Swift Package-backed
+`PreviewProvider` and `#Preview` surfaces in Simulator. Use this for lightweight
+SwiftUI shells, settings components, or app chrome when the surface is already
+package-importable and the preview path is faster than a full app run.
+
+- Do not edit `KeiPix.xcodeproj`, schemes, generated project files, or build
+  settings just to force preview support.
+- Keep AppKit/UIKit hot paths, native collection views, image readers, and text
+  readers validated through the real app or Visual QA surfaces even when their
+  SwiftUI wrapper has a preview.
+- If stable preview hot reload becomes important for a surface, propose a small
+  importable preview/package target through `project.yml` and `Package.swift`,
+  then add Visual QA or tests for the same surface.
+- Useful tooling references are `serve-sim`
+  (`https://github.com/EvanBacon/serve-sim`) and `SnapshotPreviews`
+  (`https://github.com/getsentry/SnapshotPreviews`). Treat them as optional
+  workflow references, not required KeiPix dependencies.
+
 ### New Visual QA Surface Protocol
 
 Add a new `--visual-qa-*` surface when a new major view, sheet, reader mode,
