@@ -30,6 +30,25 @@ extension KeiPixStore {
         await reloadCurrentFeed()
     }
 
+    func runArtworkSearch() async {
+        selectedRoute = .search
+        await runSearch()
+    }
+
+    func runCreatorSearch() async {
+        selectedRoute = .searchUsers
+        await runSearch()
+    }
+
+    func runNovelSearch() async {
+        searchSuggestions = []
+        errorMessage = nil
+        let keyword = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard keyword.isEmpty == false else { return }
+        recordSearch(keyword)
+        select(.novelSearch)
+    }
+
     func clearSearchText() {
         searchText = ""
         searchSuggestions = []

@@ -22,11 +22,10 @@ struct ContentView: View {
     @State private var isSettingsSheetPresented = false
     @State private var isMobileTabCustomizationPresented = false
     @State private var isCompactCustomTabRootActive = false
-    @State private var compactFeedRoute: PixivRoute = .home
     @State private var isCompactTabDockCollapsed = false
     @State private var feedbackRequest: FeedbackReportRequest?
     @State private var statusMessage: String?
-    @AppStorage("mobileBottomTabItemIDs") private var mobileBottomTabItemIDs = MobileBottomTabConfiguration.defaultStorageID
+    @AppStorage("mobileBottomTabItemIDs") private var mobileBottomTabDefaultRouteIDs = MobileBottomTabConfiguration.defaultStorageID
     #if DEBUG
     @State private var creatorProfileVisualQAUser: PixivUser?
     #endif
@@ -36,7 +35,7 @@ struct ContentView: View {
         case library
         case settings
         case search
-        case custom(MobileBottomTabItem)
+        case mobile(MobileBottomTabKind)
 
         var title: String {
             switch self {
@@ -44,7 +43,7 @@ struct ContentView: View {
             case .library: return L10n.downloads
             case .settings: return L10n.settings
             case .search: return L10n.search
-            case .custom(let item): return item.title
+            case .mobile(let kind): return kind.title
             }
         }
 
@@ -54,7 +53,7 @@ struct ContentView: View {
             case .library: return "arrow.down.circle"
             case .settings: return "gearshape"
             case .search: return "magnifyingglass"
-            case .custom(let item): return item.systemImage
+            case .mobile(let kind): return kind.systemImage
             }
         }
     }
@@ -125,7 +124,7 @@ struct ContentView: View {
             }
             .sheet(isPresented: $isMobileTabCustomizationPresented) {
                 NavigationStack {
-                    MobileBottomTabCustomizationView(items: mobileBottomTabItemsBinding)
+                    MobileBottomTabCustomizationView(defaultRoutes: mobileBottomTabDefaultRoutesBinding)
                 }
                 .os26SheetChrome(.form)
             }
@@ -199,29 +198,29 @@ struct ContentView: View {
 
     private func compactTabRoot(layout: MobileWorkspaceLayout) -> some View {
         TabView(selection: $selectedTab) {
-            Tab(L10n.feed, systemImage: "photo.on.rectangle.angled", value: .feed) {
-                feedTab
-            }
-
             if layout.usesCustomNavigationTabs {
-                ForEach(mobileBottomTabItems) { item in
-                    Tab(item.title, systemImage: item.systemImage, value: iPadTab.custom(item)) {
-                        mobileCustomTab(item)
+                ForEach(MobileBottomTabKind.allCases) { kind in
+                    Tab(kind.title, systemImage: kind.systemImage, value: iPadTab.mobile(kind)) {
+                        mobileSectionTab(kind)
+                    }
+                }
+
+                if layout.usesDedicatedSearchTab {
+                    Tab(L10n.search, systemImage: "magnifyingglass", value: .search, role: .search) {
+                        compactSearchTab
                     }
                 }
             } else {
+                Tab(L10n.feed, systemImage: "photo.on.rectangle.angled", value: .feed) {
+                    feedTab
+                }
+
                 Tab(L10n.downloads, systemImage: "arrow.down.circle", value: .library) {
                     libraryTab
                 }
 
                 Tab(L10n.settings, systemImage: "gearshape", value: .settings) {
                     settingsTab
-                }
-            }
-
-            if layout.usesDedicatedSearchTab {
-                Tab(L10n.search, systemImage: "magnifyingglass", value: .search, role: .search) {
-                    compactSearchTab
                 }
             }
         }
@@ -244,23 +243,16 @@ struct ContentView: View {
         .onChange(of: layout.usesCustomNavigationTabs) { _, isEnabled in
             isCompactCustomTabRootActive = isEnabled
             setCompactTabDockCollapsed(false)
-            if isEnabled == false, selectedTab == .search {
-                selectedTab = .feed
-            }
             if isEnabled, selectedTab == .library || selectedTab == .settings {
-                selectedTab = .feed
+                selectedTab = .mobile(.illustrations)
             }
             if isEnabled {
                 syncCompactTabSelectionWithCurrentRoute()
             }
         }
-        .onChange(of: mobileBottomTabItemIDs) { _, _ in
+        .onChange(of: mobileBottomTabDefaultRouteIDs) { _, _ in
             setCompactTabDockCollapsed(false)
-            if case .custom(let item) = selectedTab, mobileBottomTabItems.contains(item) == false {
-                selectedTab = .feed
-            }
             if isCompactCustomTabRootActive {
-                compactFeedRoute = sanitizedCompactFeedRoute(compactFeedRoute)
                 syncCompactTabSelectionWithCurrentRoute()
             }
         }
@@ -784,17 +776,20 @@ struct ContentView: View {
     }
 
     private var routeMenuSections: [MobileRouteMenuSection] {
-        MobileRouteMenuConfiguration.sections(
-            pinnedItems: isCompactCustomTabRootActive ? mobileBottomTabItems : [],
-            includesDedicatedSearch: isCompactCustomTabRootActive
-        )
+        guard isCompactCustomTabRootActive else {
+            return PixivRoute.sidebarSections.map { section in
+                MobileRouteMenuSection(
+                    id: section.id,
+                    title: section.title,
+                    routes: section.routes
+                )
+            }
+        }
+        return activeMobileTabKind.menuSections
     }
 
     private func showsRouteMenu(showsSidebarToggle: Bool) -> Bool {
-        if showsSidebarToggle {
-            return true
-        }
-        return isCompactCustomTabRootActive == false || selectedTab == .feed
+        showsSidebarToggle || (isCompactCustomTabRootActive && selectedTab != .search)
     }
 
     private func showsArtworkDetailToggle(showsSidebarToggle: Bool) -> Bool {
@@ -1148,11 +1143,11 @@ struct ContentView: View {
         case IPadToolbarMenuAction.customizeBottomTabs:
             isMobileTabCustomizationPresented = true
         case IPadToolbarMenuAction.settings:
-            if isCompactCustomTabRootActive, mobileBottomTabItems.contains(.settings) == false {
+            if isCompactCustomTabRootActive {
                 isSettingsSheetPresented = true
             } else {
                 selectedSidebarItem = .settings
-                selectedTab = isCompactCustomTabRootActive ? .custom(.settings) : .settings
+                selectedTab = .settings
             }
         default:
             break
@@ -1352,6 +1347,10 @@ struct ContentView: View {
             SpotlightView(store: store) { article in
                 presentSpotlightArticle(article, usesPanel: showsSidebarToggle)
             }
+        } else if store.selectedRoute == .search,
+                  isCompactCustomTabRootActive,
+                  hasActiveGlobalSearchText == false {
+            compactSearchContent
         } else if store.selectedRoute == .bookmarkTags {
             BookmarkTagsView(store: store)
         } else if store.selectedRoute == .history {
@@ -1413,8 +1412,8 @@ struct ContentView: View {
         }
     }
 
-    private var mobileBottomTabItems: [MobileBottomTabItem] {
-        MobileBottomTabConfiguration.items(from: mobileBottomTabItemIDs)
+    private var mobileBottomTabDefaultRoutes: [MobileBottomTabKind: PixivRoute] {
+        MobileBottomTabConfiguration.defaultRouteMap(from: mobileBottomTabDefaultRouteIDs)
     }
 
     private var compactTabBarMinimizeBehavior: TabBarMinimizeBehavior {
@@ -1429,12 +1428,19 @@ struct ContentView: View {
         currentMobilePlatform == .phone && isCompactCustomTabRootActive
     }
 
-    private var mobileBottomTabItemsBinding: Binding<[MobileBottomTabItem]> {
+    private var mobileBottomTabDefaultRoutesBinding: Binding<[MobileBottomTabKind: PixivRoute]> {
         Binding {
-            mobileBottomTabItems
-        } set: { items in
-            mobileBottomTabItemIDs = MobileBottomTabConfiguration.storageID(for: items)
+            mobileBottomTabDefaultRoutes
+        } set: { routeMap in
+            mobileBottomTabDefaultRouteIDs = MobileBottomTabConfiguration.storageID(for: routeMap)
         }
+    }
+
+    private var activeMobileTabKind: MobileBottomTabKind {
+        if case .mobile(let kind) = selectedTab {
+            return kind
+        }
+        return MobileBottomTabKind.kind(containing: store.selectedRoute) ?? .illustrations
     }
 
     private var currentMobilePlatform: ReaderPlatformKind {
@@ -1484,13 +1490,10 @@ struct ContentView: View {
         case .settings:
             selectedSidebarItem = .settings
         case .search:
-            selectedSidebarItem = .route(.search)
-        case .custom(let item):
-            if let route = item.route {
-                selectedSidebarItem = .route(route)
-            } else {
-                selectedSidebarItem = .settings
-            }
+            let route = MobileSearchTabConfiguration.contains(store.selectedRoute) ? store.selectedRoute : .search
+            selectedSidebarItem = .route(route)
+        case .mobile(let kind):
+            selectedSidebarItem = .route(mobileDefaultRoute(for: kind))
         }
     }
 
@@ -1504,9 +1507,6 @@ struct ContentView: View {
     }
 
     private func selectRoute(_ route: PixivRoute, clearsArtworkDetail: Bool = true) {
-        if isCompactCustomTabRootActive, selectedTab == .feed {
-            compactFeedRoute = sanitizedCompactFeedRoute(route)
-        }
         selectedSidebarItem = .route(route)
         selectedTab = tab(for: route)
         if clearsArtworkDetail {
@@ -1519,8 +1519,12 @@ struct ContentView: View {
 
     private func tab(for route: PixivRoute) -> iPadTab {
         if isCompactCustomTabRootActive,
-           let item = mobileBottomTabItems.first(where: { $0.route == route }) {
-            return .custom(item)
+           MobileSearchTabConfiguration.contains(route) {
+            return .search
+        }
+        if isCompactCustomTabRootActive,
+           let kind = MobileBottomTabKind.kind(containing: route) {
+            return .mobile(kind)
         }
         if route == .downloads, currentMobilePlatform != .phone {
             return .library
@@ -1528,13 +1532,21 @@ struct ContentView: View {
         return .feed
     }
 
-    private func selectMobileBottomTabItem(_ item: MobileBottomTabItem) {
-        selectedTab = .custom(item)
-        guard let route = item.route else {
-            selectedSidebarItem = .settings
-            return
+    private func selectMobileBottomTabKind(_ kind: MobileBottomTabKind) {
+        selectedTab = .mobile(kind)
+        let route = mobileDefaultRoute(for: kind)
+        selectedSidebarItem = .route(route)
+        if route.usesArtworkFeed == false {
+            dismissArtworkDetail(clearSelection: true)
         }
+        if store.selectedRoute != route {
+            store.select(route)
+        }
+    }
 
+    private func selectCompactSearchTab() {
+        selectedTab = .search
+        let route = MobileSearchTabConfiguration.contains(store.selectedRoute) ? store.selectedRoute : PixivRoute.search
         selectedSidebarItem = .route(route)
         if route.usesArtworkFeed == false {
             dismissArtworkDetail(clearSelection: true)
@@ -1548,13 +1560,11 @@ struct ContentView: View {
         guard isCompactCustomTabRootActive else { return }
 
         switch tab {
-        case .feed:
-            restoreCompactFeedRoute()
+        case .mobile(let kind):
+            selectMobileBottomTabKind(kind)
         case .search:
-            selectedSidebarItem = .route(.search)
-        case .custom(let item):
-            selectMobileBottomTabItem(item)
-        case .library, .settings:
+            selectCompactSearchTab()
+        case .feed, .library, .settings:
             break
         }
     }
@@ -1562,30 +1572,17 @@ struct ContentView: View {
     private func syncCompactTabSelectionWithCurrentRoute() {
         guard isCompactCustomTabRootActive else { return }
 
-        if let item = mobileBottomTabItems.first(where: { $0.route == store.selectedRoute }) {
-            selectedTab = .custom(item)
+        if MobileSearchTabConfiguration.contains(store.selectedRoute) {
+            selectedTab = .search
+        } else if let kind = MobileBottomTabKind.kind(containing: store.selectedRoute) {
+            selectedTab = .mobile(kind)
         } else {
-            compactFeedRoute = sanitizedCompactFeedRoute(store.selectedRoute)
+            selectedTab = .mobile(.illustrations)
         }
     }
 
-    private func restoreCompactFeedRoute() {
-        let route = sanitizedCompactFeedRoute(compactFeedRoute)
-        compactFeedRoute = route
-        selectedSidebarItem = .route(route)
-        if route.usesArtworkFeed == false {
-            dismissArtworkDetail(clearSelection: true)
-        }
-        if store.selectedRoute != route {
-            store.select(route)
-        }
-    }
-
-    private func sanitizedCompactFeedRoute(_ route: PixivRoute) -> PixivRoute {
-        if mobileBottomTabItems.contains(where: { $0.route == route }) {
-            return .home
-        }
-        return route
+    private func mobileDefaultRoute(for kind: MobileBottomTabKind) -> PixivRoute {
+        mobileBottomTabDefaultRoutes[kind] ?? kind.defaultRoute
     }
 
     // MARK: - Library Tab
@@ -1604,82 +1601,64 @@ struct ContentView: View {
         }
     }
 
-    // MARK: - Mobile Custom Tabs
+    // MARK: - Mobile Section Tabs
 
     @ViewBuilder
-    private func mobileCustomTab(_ item: MobileBottomTabItem) -> some View {
-        if item == .settings {
-            settingsTab
-                .onAppear {
-                    selectedSidebarItem = .settings
-                    selectedTab = .custom(item)
-                }
-        } else {
-            feedNavigationStack(showsSidebarToggle: false)
-                .onAppear {
-                    selectMobileBottomTabItem(item)
-                }
-        }
+    private func mobileSectionTab(_ kind: MobileBottomTabKind) -> some View {
+        feedNavigationStack(showsSidebarToggle: false)
+            .onAppear {
+                selectMobileBottomTabKind(kind)
+            }
     }
 
-    // MARK: - Compact Search Tab
-
     private var compactSearchTab: some View {
-        NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 16) {
-                    compactSearchHero
-                    compactSearchFieldCard
+        feedNavigationStack(showsSidebarToggle: false)
+            .onAppear {
+                selectCompactSearchTab()
+            }
+    }
 
-                    if store.searchSuggestions.isEmpty == false {
-                        compactPixivSuggestionSection
-                    }
+    // MARK: - Compact Search
 
-                    if store.savedSearches.isEmpty == false {
-                        compactKeywordSection(
-                            title: L10n.savedSearches,
-                            systemImage: "star",
-                            keywords: Array(store.savedSearches.prefix(8)),
-                            saved: true
-                        )
-                    }
+    private var compactSearchContent: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                compactSearchHero
+                compactSearchFieldCard
+                compactSearchModeSection
 
-                    if store.searchHistory.isEmpty == false {
-                        compactKeywordSection(
-                            title: L10n.recentSearches,
-                            systemImage: "clock.arrow.circlepath",
-                            keywords: Array(store.searchHistory.prefix(8)),
-                            saved: false
-                        )
-                    }
+                if store.searchSuggestions.isEmpty == false {
+                    compactPixivSuggestionSection
                 }
-                .padding(.horizontal, 16)
-                .padding(.top, 10)
-                .padding(.bottom, 24)
-                .frame(maxWidth: 560, alignment: .leading)
-                .frame(maxWidth: .infinity, alignment: .top)
-            }
-            .navigationTitle(L10n.search)
-            .navigationBarTitleDisplayMode(.inline)
-            .task(id: store.searchText) {
-                await store.refreshSearchSuggestions()
-            }
-            .toolbar {
-                if hasActiveGlobalSearchText {
-                    ToolbarItem(placement: .primaryAction) {
-                        Button {
-                            withAnimation(.snappy(duration: 0.16)) {
-                                store.clearSearchText()
-                            }
-                        } label: {
-                            Label(L10n.clearSearch, systemImage: "xmark.circle.fill")
-                        }
-                        .labelStyle(.iconOnly)
-                        .help(L10n.clearSearch)
-                        .accessibilityLabel(L10n.clearSearch)
-                    }
+
+                if store.savedSearches.isEmpty == false {
+                    compactKeywordSection(
+                        title: L10n.savedSearches,
+                        systemImage: "star",
+                        keywords: Array(store.savedSearches.prefix(8)),
+                        saved: true
+                    )
+                }
+
+                if store.searchHistory.isEmpty == false {
+                    compactKeywordSection(
+                        title: L10n.recentSearches,
+                        systemImage: "clock.arrow.circlepath",
+                        keywords: Array(store.searchHistory.prefix(8)),
+                        saved: false
+                    )
                 }
             }
+            .padding(.horizontal, 16)
+            .padding(.top, 10)
+            .padding(.bottom, 24)
+            .frame(maxWidth: 560, alignment: .leading)
+            .frame(maxWidth: .infinity, alignment: .top)
+        }
+        .navigationTitle(L10n.search)
+        .navigationBarTitleDisplayMode(.inline)
+        .task(id: store.searchText) {
+            await store.refreshSearchSuggestions()
         }
     }
 
@@ -1717,7 +1696,7 @@ struct ContentView: View {
                 text: globalSearchTextBinding,
                 placeholder: L10n.searchPlaceholder,
                 suggestions: store.matchingLocalSearchTerms(),
-                onSubmit: { submitCompactSearch() },
+                onSubmit: { submitCompactArtworkSearch() },
                 onTextChange: { store.searchText = $0 }
             )
             .frame(minHeight: 38)
@@ -1725,7 +1704,7 @@ struct ContentView: View {
 
             HStack(spacing: 10) {
                 Button {
-                    submitCompactSearch()
+                    submitCompactArtworkSearch()
                 } label: {
                     Label(L10n.search, systemImage: "magnifyingglass")
                 }
@@ -1748,6 +1727,67 @@ struct ContentView: View {
         .keiGlass(22)
     }
 
+    private var compactSearchModeSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Label(L10n.searchActions, systemImage: "square.grid.2x2")
+                .font(.headline)
+
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 148), spacing: 10)], spacing: 10) {
+                compactSearchModeButton(
+                    title: L10n.works,
+                    systemImage: "photo.on.rectangle",
+                    isEnabled: hasActiveGlobalSearchText,
+                    action: { submitCompactArtworkSearch() }
+                )
+
+                compactSearchModeButton(
+                    title: L10n.searchCreators,
+                    systemImage: "person.crop.circle.badge.questionmark",
+                    isEnabled: hasActiveGlobalSearchText,
+                    action: { submitCompactCreatorSearch() }
+                )
+
+                compactSearchModeButton(
+                    title: L10n.searchNovels,
+                    systemImage: "text.magnifyingglass",
+                    isEnabled: hasActiveGlobalSearchText,
+                    action: { submitCompactNovelSearch() }
+                )
+
+                compactSearchModeButton(
+                    title: L10n.trendingTags,
+                    systemImage: "number",
+                    action: { selectCompactSearchRoute(.trendingTags) }
+                )
+
+                compactSearchModeButton(
+                    title: L10n.savedSearches,
+                    systemImage: "tag.circle",
+                    action: { selectCompactSearchRoute(.savedSearches) }
+                )
+            }
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .keiGlass(20)
+    }
+
+    private func compactSearchModeButton(
+        title: String,
+        systemImage: String,
+        isEnabled: Bool = true,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            Label(title, systemImage: systemImage)
+                .font(.callout.weight(.semibold))
+                .lineLimit(1)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .os26GlassButton()
+        .disabled(isEnabled == false)
+    }
+
     private var compactPixivSuggestionSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Label(L10n.searchSuggestions, systemImage: "tag")
@@ -1756,7 +1796,7 @@ struct ContentView: View {
             FlowLayout(spacing: 8) {
                 ForEach(store.searchSuggestions, id: \.name) { tag in
                     Button {
-                        submitCompactSearch(keyword: tag.name)
+                        submitCompactArtworkSearch(keyword: tag.name)
                     } label: {
                         Label(tag.name, systemImage: "tag")
                             .lineLimit(1)
@@ -1783,7 +1823,7 @@ struct ContentView: View {
             FlowLayout(spacing: 8) {
                 ForEach(keywords, id: \.self) { keyword in
                     Button {
-                        submitCompactSearch(keyword: keyword)
+                        submitCompactArtworkSearch(keyword: keyword)
                     } label: {
                         Label(keyword, systemImage: saved ? "star.fill" : "clock.arrow.circlepath")
                             .lineLimit(1)
@@ -1797,15 +1837,42 @@ struct ContentView: View {
         .keiGlass(20)
     }
 
-    private func submitCompactSearch(keyword: String? = nil) {
+    private func submitCompactArtworkSearch(keyword: String? = nil) {
         if let keyword {
             store.searchText = keyword
         }
+        guard hasActiveGlobalSearchText else { return }
         Task {
-            await store.runSearch()
+            await store.runArtworkSearch()
             selectedSidebarItem = .route(.search)
-            compactFeedRoute = .search
-            selectedTab = .feed
+            selectedTab = .search
+        }
+    }
+
+    private func submitCompactCreatorSearch() {
+        guard hasActiveGlobalSearchText else { return }
+        Task {
+            await store.runCreatorSearch()
+            selectedSidebarItem = .route(.searchUsers)
+            selectedTab = .search
+        }
+    }
+
+    private func submitCompactNovelSearch() {
+        guard hasActiveGlobalSearchText else { return }
+        Task {
+            await store.runNovelSearch()
+            selectedSidebarItem = .route(.novelSearch)
+            selectedTab = .search
+        }
+    }
+
+    private func selectCompactSearchRoute(_ route: PixivRoute) {
+        selectedTab = .search
+        selectedSidebarItem = .route(route)
+        dismissArtworkDetail(clearSelection: true)
+        if store.selectedRoute != route {
+            store.select(route)
         }
     }
 

@@ -2,19 +2,20 @@
 import SwiftUI
 
 struct MobileBottomTabCustomizationView: View {
-    @Binding var items: [MobileBottomTabItem]
+    @Binding var defaultRoutes: [MobileBottomTabKind: PixivRoute]
     @Environment(\.dismiss) private var dismiss
 
-    private var normalizedItems: [MobileBottomTabItem] {
-        MobileBottomTabConfiguration.items(from: MobileBottomTabConfiguration.storageID(for: items))
+    private var normalizedDefaultRoutes: [MobileBottomTabKind: PixivRoute] {
+        MobileBottomTabConfiguration.defaultRouteMap(
+            from: MobileBottomTabConfiguration.storageID(for: defaultRoutes)
+        )
     }
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 hero
-                fixedTabsSection
-                selectedDestinationsSection
+                tabDefaultsSection
             }
             .padding(.horizontal, 16)
             .padding(.top, 12)
@@ -36,7 +37,7 @@ struct MobileBottomTabCustomizationView: View {
             ToolbarItem(placement: .primaryAction) {
                 Button {
                     withAnimation(.snappy(duration: 0.18)) {
-                        items = MobileBottomTabConfiguration.defaultItems
+                        defaultRoutes = MobileBottomTabConfiguration.defaultRouteMap
                     }
                 } label: {
                     Label(L10n.resetBottomTabs, systemImage: "arrow.counterclockwise")
@@ -75,41 +76,15 @@ struct MobileBottomTabCustomizationView: View {
         .keiGlass(24)
     }
 
-    private var fixedTabsSection: some View {
+    private var tabDefaultsSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Label(L10n.fixedTabs, systemImage: "lock")
-                .font(.headline)
-                .lineLimit(1)
-
-            HStack(spacing: 10) {
-                fixedTabChip(title: L10n.feed, systemImage: "photo.on.rectangle.angled")
-                fixedTabChip(title: L10n.search, systemImage: "magnifyingglass")
-            }
-        }
-        .padding(14)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .keiGlass(20)
-    }
-
-    private func fixedTabChip(title: String, systemImage: String) -> some View {
-        Label(title, systemImage: systemImage)
-            .font(.callout.weight(.semibold))
-            .lineLimit(1)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
-            .glassEffect(.regular, in: Capsule(style: .continuous))
-            .accessibilityLabel(title)
-    }
-
-    private var selectedDestinationsSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Label(L10n.selectedDestinations, systemImage: "rectangle.3.group")
+            Label(L10n.defaultTabPages, systemImage: "rectangle.3.group")
                 .font(.headline)
                 .lineLimit(1)
 
             VStack(spacing: 10) {
-                ForEach(0..<MobileBottomTabConfiguration.maximumCustomItemCount, id: \.self) { index in
-                    destinationSlot(index: index)
+                ForEach(MobileBottomTabKind.allCases) { kind in
+                    defaultRouteSlot(for: kind)
                 }
             }
         }
@@ -118,33 +93,44 @@ struct MobileBottomTabCustomizationView: View {
         .keiGlass(20)
     }
 
-    private func destinationSlot(index: Int) -> some View {
-        let currentItem = normalizedItems[index]
+    private func defaultRouteSlot(for kind: MobileBottomTabKind) -> some View {
+        let currentRoute = normalizedDefaultRoutes[kind] ?? kind.defaultRoute
         return Menu {
-            ForEach(MobileBottomTabItem.allCases) { candidate in
-                Button {
-                    withAnimation(.snappy(duration: 0.18)) {
-                        items = MobileBottomTabConfiguration.replacing(
-                            itemAt: index,
-                            with: candidate,
-                            in: normalizedItems
-                        )
+            ForEach(kind.menuSections) { section in
+                Section(section.title) {
+                    ForEach(section.routes) { route in
+                        Button {
+                            withAnimation(.snappy(duration: 0.18)) {
+                                defaultRoutes = MobileBottomTabConfiguration.replacingDefaultRoute(
+                                    for: kind,
+                                    with: route,
+                                    in: normalizedDefaultRoutes
+                                )
+                            }
+                        } label: {
+                            Label(
+                                route.title,
+                                systemImage: currentRoute == route ? "checkmark.circle.fill" : route.systemImage
+                            )
+                        }
                     }
-                } label: {
-                    Label(
-                        candidate.title,
-                        systemImage: currentItem == candidate ? "checkmark.circle.fill" : candidate.systemImage
-                    )
                 }
             }
         } label: {
             HStack(spacing: 12) {
+                Image(systemName: kind.systemImage)
+                    .font(.headline.weight(.semibold))
+                    .symbolRenderingMode(.hierarchical)
+                    .foregroundStyle(.secondary)
+                    .frame(width: 34, height: 34)
+                    .glassEffect(.regular, in: Circle())
+
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(String(format: L10n.bottomTabSlotFormat, index + 1))
+                    Text(kind.title)
                         .font(.caption.weight(.semibold))
                         .foregroundStyle(.secondary)
 
-                    Label(currentItem.title, systemImage: currentItem.systemImage)
+                    Label(currentRoute.title, systemImage: currentRoute.systemImage)
                         .font(.callout.weight(.semibold))
                         .lineLimit(1)
                 }
@@ -158,7 +144,7 @@ struct MobileBottomTabCustomizationView: View {
             .padding(.vertical, 10)
             .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
         }
-        .accessibilityLabel(String(format: L10n.bottomTabSlotFormat, index + 1))
+        .accessibilityLabel("\(kind.title): \(currentRoute.title)")
     }
 }
 #endif

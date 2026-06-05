@@ -30,6 +30,35 @@
         }
       }
     },
+    "Bookmark Tab": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bookmarks"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ブックマーク"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "书签"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "書籤"
+          }
+        }
+      }
+    },
     "Choose the three destinations that stay next to Feed and Search on iPhone and iPad portrait.": {
       "extractionState": "manual",
       "localizations": {
@@ -59,6 +88,35 @@
         }
       }
     },
+    "Choose the default page for each iPhone and iPad portrait tab.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose the default page for each iPhone and iPad portrait tab."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iPhoneとiPad縦向きで、各タブを開いたときの既定ページを選びます。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "选择 iPhone 和 iPad 竖屏中每个底栏标签默认打开的页面。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "選擇 iPhone 和 iPad 直向中每個底欄標籤預設開啟的頁面。"
+          }
+        }
+      }
+    },
     "Customize Bottom Tabs": {
       "extractionState": "manual",
       "localizations": {
@@ -84,6 +142,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "自訂標籤欄"
+          }
+        }
+      }
+    },
+    "Default Tab Pages": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Default Pages"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "既定ページ"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "默认页面"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "預設頁面"
           }
         }
       }

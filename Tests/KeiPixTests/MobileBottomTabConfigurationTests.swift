@@ -3,72 +3,108 @@ import Testing
 
 @Suite("Mobile bottom tab configuration")
 struct MobileBottomTabConfigurationTests {
-    @Test("Default compact tabs keep three customizable destinations")
-    func defaultItemsKeepThreeCustomizableDestinations() {
-        #expect(MobileBottomTabConfiguration.defaultItems == [.illustrations, .manga, .publicBookmarks])
-        #expect(MobileBottomTabConfiguration.defaultItems.count == MobileBottomTabConfiguration.maximumCustomItemCount)
-        #expect(MobileBottomTabConfiguration.defaultItems.contains(.downloads) == false)
-        #expect(MobileBottomTabConfiguration.defaultItems.contains(.settings) == false)
+    @Test("Compact tabs are four fixed content families")
+    func compactTabsAreFourFixedContentFamilies() {
+        #expect(MobileBottomTabConfiguration.fixedKinds == [.illustrations, .manga, .novels, .bookmarks])
+        #expect(MobileBottomTabConfiguration.defaultRouteMap[.illustrations] == .illustrations)
+        #expect(MobileBottomTabConfiguration.defaultRouteMap[.manga] == .mangaRecommended)
+        #expect(MobileBottomTabConfiguration.defaultRouteMap[.novels] == .novelRecommended)
+        #expect(MobileBottomTabConfiguration.defaultRouteMap[.bookmarks] == .publicBookmarks)
     }
 
-    @Test("Stored tab ids are sanitized and backfilled to five visible tabs with Feed and Search")
-    func storedIDsAreSanitizedAndBackfilled() {
-        let items = MobileBottomTabConfiguration.items(from: "downloads,downloads,settings,unknown")
+    @Test("Default route storage round-trips every fixed content family")
+    func defaultRouteStorageRoundTripsEveryFixedContentFamily() {
+        let routeMap: [MobileBottomTabKind: PixivRoute] = [
+            .illustrations: .newIllustrations,
+            .manga: .mangaRankingWeekly,
+            .novels: .novelRankingMonthly,
+            .bookmarks: .downloads
+        ]
+        let storageID = MobileBottomTabConfiguration.storageID(for: routeMap)
+        let restored = MobileBottomTabConfiguration.defaultRouteMap(from: storageID)
 
-        #expect(items == [.downloads, .settings, .illustrations])
-        #expect(items.count == MobileBottomTabConfiguration.maximumCustomItemCount)
-        #expect(Set(items).count == items.count)
+        #expect(restored[.illustrations] == .newIllustrations)
+        #expect(restored[.manga] == .mangaRankingWeekly)
+        #expect(restored[.novels] == .novelRankingMonthly)
+        #expect(restored[.bookmarks] == .downloads)
     }
 
-    @Test("Replacing a slot keeps exactly three unique custom items")
-    func replacingSlotKeepsExactlyThreeUniqueItems() {
-        let updated = MobileBottomTabConfiguration.replacing(
-            itemAt: 1,
-            with: .spotlight,
-            in: [.illustrations, .manga, .publicBookmarks]
+    @Test("Invalid defaults fall back inside their own content family")
+    func invalidDefaultsFallBackInsideTheirOwnContentFamily() {
+        let routeMap: [MobileBottomTabKind: PixivRoute] = [
+            .illustrations: .novelRecommended,
+            .manga: .publicBookmarks,
+            .novels: .mangaRecommended,
+            .bookmarks: .rankingDaily
+        ]
+        let restored = MobileBottomTabConfiguration.defaultRouteMap(
+            from: MobileBottomTabConfiguration.storageID(for: routeMap)
         )
 
-        #expect(updated == [.illustrations, .spotlight, .publicBookmarks])
-        #expect(updated.count == MobileBottomTabConfiguration.maximumCustomItemCount)
-        #expect(Set(updated).count == updated.count)
+        #expect(restored[.illustrations] == .illustrations)
+        #expect(restored[.manga] == .mangaRecommended)
+        #expect(restored[.novels] == .novelRecommended)
+        #expect(restored[.bookmarks] == .publicBookmarks)
     }
 
-    @Test("Replacing with an existing item preserves uniqueness by swapping positions")
-    func replacingWithExistingItemSwapsPositions() {
-        let updated = MobileBottomTabConfiguration.replacing(
-            itemAt: 0,
-            with: .publicBookmarks,
-            in: [.illustrations, .manga, .publicBookmarks]
+    @Test("Legacy three-slot storage is migrated into category defaults")
+    func legacyThreeSlotStorageMigratesIntoCategoryDefaults() {
+        let restored = MobileBottomTabConfiguration.defaultRouteMap(
+            from: "downloads,novels,spotlight"
         )
 
-        #expect(updated == [.publicBookmarks, .manga, .illustrations])
-        #expect(Set(updated).count == updated.count)
+        #expect(restored[.illustrations] == .spotlight)
+        #expect(restored[.manga] == .mangaRecommended)
+        #expect(restored[.novels] == .novelRecommended)
+        #expect(restored[.bookmarks] == .downloads)
     }
 
-    @Test("Compact route menu excludes destinations already pinned in the tab bar")
-    func compactRouteMenuExcludesPinnedDestinations() {
-        let sections = MobileRouteMenuConfiguration.sections(
-            pinnedItems: [.illustrations, .manga, .publicBookmarks],
-            includesDedicatedSearch: true
-        )
-        let routes = sections.flatMap(\.routes)
+    @Test("Route menus are split by the four bottom tab families")
+    func routeMenusAreSplitByFourBottomTabFamilies() {
+        let illustrationRoutes = MobileRouteMenuConfiguration.sections(for: .illustrations).flatMap(\.routes)
+        let mangaRoutes = MobileRouteMenuConfiguration.sections(for: .manga).flatMap(\.routes)
+        let novelRoutes = MobileRouteMenuConfiguration.sections(for: .novels).flatMap(\.routes)
+        let bookmarkRoutes = MobileRouteMenuConfiguration.sections(for: .bookmarks).flatMap(\.routes)
 
-        #expect(routes.contains(.home))
-        #expect(routes.contains(.trendingTags))
-        #expect(routes.contains(.illustrations) == false)
-        #expect(routes.contains(.mangaRecommended) == false)
-        #expect(routes.contains(.publicBookmarks) == false)
-        #expect(routes.contains(.search) == false)
+        #expect(illustrationRoutes.contains(.illustrations))
+        #expect(illustrationRoutes.contains(.search) == false)
+        #expect(illustrationRoutes.contains(.searchUsers) == false)
+        #expect(illustrationRoutes.contains(.savedSearches) == false)
+        #expect(illustrationRoutes.contains(.trendingTags) == false)
+        #expect(illustrationRoutes.contains(.rankingDaily))
+        #expect(illustrationRoutes.contains(.mangaRecommended) == false)
+
+        #expect(mangaRoutes.contains(.mangaRecommended))
+        #expect(mangaRoutes.contains(.mangaRankingDaily))
+        #expect(mangaRoutes.contains(.novelRecommended) == false)
+
+        #expect(novelRoutes.contains(.novelRecommended))
+        #expect(novelRoutes.contains(.novelSearch) == false)
+        #expect(novelRoutes.contains(.novelRankingWeekly))
+        #expect(novelRoutes.contains(.publicBookmarks) == false)
+
+        #expect(bookmarkRoutes.contains(.publicBookmarks))
+        #expect(bookmarkRoutes.contains(.followingCreators))
+        #expect(bookmarkRoutes.contains(.downloads))
+        #expect(bookmarkRoutes.contains(.search) == false)
     }
 
-    @Test("Regular route menu keeps the complete sidebar route set")
-    func regularRouteMenuKeepsCompleteSidebarRouteSet() {
-        let sections = MobileRouteMenuConfiguration.sections(
-            pinnedItems: [],
-            includesDedicatedSearch: false
-        )
-        let routes = sections.flatMap(\.routes)
+    @Test("Dedicated search tab owns search-related routes")
+    func dedicatedSearchTabOwnsSearchRelatedRoutes() {
+        #expect(MobileSearchTabConfiguration.routes == [.search, .searchUsers, .novelSearch, .trendingTags, .savedSearches])
+        #expect(MobileSearchTabConfiguration.contains(.search))
+        #expect(MobileSearchTabConfiguration.contains(.searchUsers))
+        #expect(MobileSearchTabConfiguration.contains(.novelSearch))
+        #expect(MobileSearchTabConfiguration.contains(.trendingTags))
+        #expect(MobileSearchTabConfiguration.contains(.savedSearches))
+        #expect(MobileSearchTabConfiguration.contains(.illustrations) == false)
+    }
 
-        #expect(routes == PixivRoute.sidebarSections.flatMap(\.routes))
+    @Test("Route kind detection keeps tab selection stable")
+    func routeKindDetectionKeepsTabSelectionStable() {
+        #expect(MobileBottomTabKind.kind(containing: .rankingWeekly) == .illustrations)
+        #expect(MobileBottomTabKind.kind(containing: .mangaRankingMonthly) == .manga)
+        #expect(MobileBottomTabKind.kind(containing: .novelSearch) == nil)
+        #expect(MobileBottomTabKind.kind(containing: .watchLater) == .bookmarks)
     }
 }
