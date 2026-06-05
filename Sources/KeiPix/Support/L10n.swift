@@ -6,6 +6,8 @@ private enum L10nTable {
 
 enum L10n {
     static var discover: String { text("Discovery") }
+    static var discoveryHighlights: String { text("Discovery Highlights") }
+    static var discoveryForYou: String { text("For You") }
     static var customizeDashboard: String { text("Customize Dashboard") }
     static var shortcuts: String { text("Shortcuts", table: L10nTable.navigation) }
     static var customizeShortcuts: String { text("Customize Shortcuts", table: L10nTable.navigation) }

@@ -51,7 +51,8 @@ struct DiscoveryDashboardView: View {
                 LazyVStack(alignment: .leading, spacing: 18) {
                     header
 
-                    DiscoveryTrendingTagsStrip(store: store)
+                    DiscoveryDashboardHighlightsSection(store: store, style: .full)
+                    DiscoveryDashboardForYouSection(store: store, style: .full)
 
                     ForEach(store.visibleDashboardSections) { section in
                         DiscoveryDashboardRouteSection(section: section, store: store)
@@ -70,8 +71,9 @@ struct DiscoveryDashboardView: View {
             GlassEffectContainer(spacing: 14) {
                 LazyVStack(alignment: .leading, spacing: 14) {
                     compactHeader
+                    DiscoveryDashboardHighlightsSection(store: store, style: .compact)
                     companionOverview
-                    DiscoveryTrendingTagsStrip(store: store)
+                    DiscoveryDashboardForYouSection(store: store, style: .compact)
                 }
             }
             .padding(.horizontal, 14)

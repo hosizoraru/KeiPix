@@ -1,3 +1,4 @@
+import Foundation
 import Testing
 @testable import KeiPix
 
@@ -29,5 +30,62 @@ struct DiscoveryDashboardTests {
         #expect(PixivRoute.rankingRoutes(for: .illustration).allSatisfy { $0.rankingFamily == .illustration })
         #expect(PixivRoute.rankingRoutes(for: .manga).allSatisfy { $0.rankingFamily == .manga })
         #expect(PixivRoute.illustrations.rankingFamily == nil)
+    }
+
+    @Test("Discovery dashboard leads with Highlights and For You")
+    func dashboardLeadsWithHighlightsAndForYou() throws {
+        let root = try packageRoot()
+        let dashboard = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/DiscoveryDashboardView.swift"),
+            encoding: .utf8
+        )
+        let trendingStrip = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/DiscoveryTrendingTagsStrip.swift"),
+            encoding: .utf8
+        )
+        let recommendationSections = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/DiscoveryDashboardRecommendationSections.swift"),
+            encoding: .utf8
+        )
+        let localizable = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Resources/Localizable.xcstrings"),
+            encoding: .utf8
+        )
+
+        let highlights = try #require(dashboard.range(of: "DiscoveryDashboardHighlightsSection(store: store, style: .full)"))
+        let forYou = try #require(dashboard.range(of: "DiscoveryDashboardForYouSection(store: store, style: .full)"))
+        let routeSections = try #require(dashboard.range(of: "ForEach(store.visibleDashboardSections)"))
+
+        #expect(highlights.lowerBound < forYou.lowerBound)
+        #expect(forYou.lowerBound < routeSections.lowerBound)
+        #expect(dashboard.contains("header\n\n                    DiscoveryTrendingTagsStrip(store: store)") == false)
+        #expect(recommendationSections.contains("DiscoveryTrendingTagsStrip(store: store, showsHeader: false)"))
+        #expect(recommendationSections.contains("struct DiscoveryDashboardHighlightsSection: View"))
+        #expect(recommendationSections.contains("struct DiscoveryDashboardForYouSection: View"))
+        #expect(trendingStrip.contains("init(store: KeiPixStore, showsHeader: Bool = true)"))
+        #expect(localizable.contains("\"Discovery Highlights\""))
+        #expect(localizable.contains("\"value\": \"亮点\""))
+        #expect(localizable.contains("\"For You\""))
+        #expect(localizable.contains("\"value\": \"为你推荐\""))
+    }
+
+    private func packageRoot() throws -> URL {
+        var candidate = URL(fileURLWithPath: FileManager.default.currentDirectoryPath, isDirectory: true)
+        for _ in 0..<8 {
+            if FileManager.default.fileExists(atPath: candidate.appending(path: "Package.swift").path(percentEncoded: false)) {
+                return candidate
+            }
+            candidate.deleteLastPathComponent()
+        }
+
+        var fileBased = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
+        for _ in 0..<10 {
+            if FileManager.default.fileExists(atPath: fileBased.appending(path: "Package.swift").path(percentEncoded: false)) {
+                return fileBased
+            }
+            fileBased.deleteLastPathComponent()
+        }
+
+        throw CocoaError(.fileNoSuchFile)
     }
 }

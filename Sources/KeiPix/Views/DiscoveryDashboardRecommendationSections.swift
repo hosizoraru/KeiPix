@@ -1,0 +1,382 @@
+import SwiftUI
+
+enum DiscoveryDashboardFeatureSectionStyle: Equatable {
+    case full
+    case compact
+
+    var sectionPadding: CGFloat {
+        switch self {
+        case .full:
+            14
+        case .compact:
+            12
+        }
+    }
+
+    var cornerRadius: CGFloat {
+        switch self {
+        case .full:
+            22
+        case .compact:
+            20
+        }
+    }
+
+    var highlightCardWidth: CGFloat {
+        switch self {
+        case .full:
+            286
+        case .compact:
+            224
+        }
+    }
+
+    var highlightCardHeight: CGFloat {
+        switch self {
+        case .full:
+            136
+        case .compact:
+            118
+        }
+    }
+
+    var recommendationCardWidth: CGFloat {
+        switch self {
+        case .full:
+            194
+        case .compact:
+            168
+        }
+    }
+}
+
+private struct DiscoveryDashboardFeature: Identifiable {
+    let id: String
+    let title: String
+    let subtitle: String
+    let systemImage: String
+    let route: PixivRoute
+    let accent: Color
+
+    init(
+        route: PixivRoute,
+        title: String? = nil,
+        subtitle: String,
+        systemImage: String? = nil,
+        accent: Color
+    ) {
+        self.id = route.rawValue
+        self.title = title ?? route.title
+        self.subtitle = subtitle
+        self.systemImage = systemImage ?? route.systemImage
+        self.route = route
+        self.accent = accent
+    }
+}
+
+struct DiscoveryDashboardHighlightsSection: View {
+    @Bindable var store: KeiPixStore
+    let style: DiscoveryDashboardFeatureSectionStyle
+
+    private var features: [DiscoveryDashboardFeature] {
+        [
+            DiscoveryDashboardFeature(
+                route: .spotlight,
+                title: L10n.spotlight,
+                subtitle: L10n.recommendedArticles,
+                systemImage: "newspaper",
+                accent: .pink
+            ),
+            DiscoveryDashboardFeature(
+                route: .rankingDaily,
+                title: L10n.ranking,
+                subtitle: L10n.daily,
+                systemImage: "chart.bar",
+                accent: .orange
+            ),
+            DiscoveryDashboardFeature(
+                route: .newIllustrations,
+                title: L10n.newIllustrations,
+                subtitle: L10n.works,
+                systemImage: "sparkle.magnifyingglass",
+                accent: .cyan
+            )
+        ]
+    }
+
+    var body: some View {
+        GlassEffectContainer(spacing: 12) {
+            VStack(alignment: .leading, spacing: 12) {
+                DiscoveryDashboardFeatureSectionHeader(
+                    title: L10n.discoveryHighlights,
+                    systemImage: "sparkles.rectangle.stack",
+                    actionTitle: L10n.viewAll
+                ) {
+                    store.select(.spotlight)
+                }
+
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(alignment: .top, spacing: 12) {
+                        ForEach(features) { feature in
+                            DiscoveryDashboardHighlightCard(
+                                feature: feature,
+                                style: style,
+                                isSelected: store.selectedRoute == feature.route
+                            ) {
+                                store.select(feature.route)
+                            }
+                        }
+                    }
+                    .padding(.horizontal, 1)
+                    .padding(.bottom, 1)
+                }
+            }
+            .padding(style.sectionPadding)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .keiGlass(style.cornerRadius)
+        }
+    }
+}
+
+struct DiscoveryDashboardForYouSection: View {
+    @Bindable var store: KeiPixStore
+    let style: DiscoveryDashboardFeatureSectionStyle
+
+    private var features: [DiscoveryDashboardFeature] {
+        [
+            DiscoveryDashboardFeature(
+                route: .trendingTags,
+                title: L10n.trendingTags,
+                subtitle: L10n.explore,
+                systemImage: "number",
+                accent: .purple
+            ),
+            DiscoveryDashboardFeature(
+                route: .recommendedUsers,
+                title: L10n.recommendedCreators,
+                subtitle: L10n.creatorNetwork,
+                systemImage: "person.crop.circle.badge.plus",
+                accent: .indigo
+            ),
+            DiscoveryDashboardFeature(
+                route: .mangaRecommended,
+                title: L10n.manga,
+                subtitle: L10n.works,
+                systemImage: "book.closed",
+                accent: .green
+            ),
+            DiscoveryDashboardFeature(
+                route: .novelRecommended,
+                title: L10n.recommendedNovels,
+                subtitle: L10n.novels,
+                systemImage: "book",
+                accent: .teal
+            )
+        ]
+    }
+
+    var body: some View {
+        GlassEffectContainer(spacing: 12) {
+            VStack(alignment: .leading, spacing: 12) {
+                DiscoveryDashboardFeatureSectionHeader(
+                    title: L10n.discoveryForYou,
+                    systemImage: "person.crop.circle.badge.sparkles"
+                )
+
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(alignment: .top, spacing: 10) {
+                        ForEach(features) { feature in
+                            DiscoveryDashboardRecommendationChip(
+                                feature: feature,
+                                style: style,
+                                isSelected: store.selectedRoute == feature.route
+                            ) {
+                                store.select(feature.route)
+                            }
+                        }
+                    }
+                    .padding(.horizontal, 1)
+                    .padding(.bottom, 1)
+                }
+
+                DiscoveryTrendingTagsStrip(store: store, showsHeader: false)
+            }
+            .padding(style.sectionPadding)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .keiGlass(style.cornerRadius)
+        }
+    }
+}
+
+private struct DiscoveryDashboardFeatureSectionHeader: View {
+    let title: String
+    let systemImage: String
+    var actionTitle: String?
+    var action: (() -> Void)?
+
+    var body: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 8) {
+            Label(title, systemImage: systemImage)
+                .font(.headline.weight(.semibold))
+                .foregroundStyle(.primary)
+                .lineLimit(1)
+
+            Spacer(minLength: 0)
+
+            if let actionTitle, let action {
+                Button(action: action) {
+                    Label(actionTitle, systemImage: "chevron.right")
+                        .labelStyle(.titleAndIcon)
+                        .font(.callout.weight(.medium))
+                        .lineLimit(1)
+                }
+                .buttonStyle(.glass)
+                .buttonBorderShape(.capsule)
+                .controlSize(.small)
+            }
+        }
+    }
+}
+
+private struct DiscoveryDashboardHighlightCard: View {
+    let feature: DiscoveryDashboardFeature
+    let style: DiscoveryDashboardFeatureSectionStyle
+    let isSelected: Bool
+    let action: () -> Void
+
+    @State private var isHovering = false
+
+    var body: some View {
+        Button(action: action) {
+            ZStack(alignment: .bottomLeading) {
+                decorativeBackground
+
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack(alignment: .center, spacing: 10) {
+                        Image(systemName: feature.systemImage)
+                            .font(.title3.weight(.semibold))
+                            .symbolRenderingMode(.hierarchical)
+                            .foregroundStyle(feature.accent)
+                            .frame(width: 42, height: 42)
+                            .keiGlass(16)
+
+                        Spacer(minLength: 0)
+
+                        Image(systemName: isSelected ? "checkmark.circle.fill" : "chevron.right.circle")
+                            .font(.title3.weight(.semibold))
+                            .symbolRenderingMode(.hierarchical)
+                            .foregroundStyle(isSelected ? Color.accentColor : Color.secondary)
+                    }
+
+                    Spacer(minLength: 0)
+
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(feature.title)
+                            .font(.headline.weight(.semibold))
+                            .foregroundStyle(.primary)
+                            .lineLimit(1)
+
+                        Text(feature.subtitle)
+                            .font(.caption.weight(.medium))
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                    }
+                }
+                .padding(14)
+            }
+            .frame(width: style.highlightCardWidth, height: style.highlightCardHeight, alignment: .leading)
+            .contentShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .keiInteractiveGlass(22)
+        .overlay {
+            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                .strokeBorder(strokeStyle, lineWidth: isSelected ? 1.2 : 0.8)
+        }
+        .shadow(color: .black.opacity(isHovering ? 0.12 : 0.03), radius: isHovering ? 14 : 5, y: isHovering ? 8 : 2)
+        .animation(.snappy(duration: 0.16), value: isHovering)
+        .animation(.snappy(duration: 0.16), value: isSelected)
+        .keiPixHoverTracker { isHovering = $0 }
+        .help(feature.title)
+        .accessibilityLabel("\(feature.title), \(feature.subtitle)")
+    }
+
+    private var decorativeBackground: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                .fill(feature.accent.opacity(isHovering ? 0.16 : 0.10))
+
+            Circle()
+                .fill(feature.accent.opacity(isHovering ? 0.26 : 0.16))
+                .frame(width: 126, height: 126)
+                .blur(radius: 18)
+                .offset(x: 92, y: -48)
+
+            Circle()
+                .fill(Color.accentColor.opacity(isHovering ? 0.18 : 0.10))
+                .frame(width: 112, height: 112)
+                .blur(radius: 22)
+                .offset(x: -96, y: 54)
+        }
+        .allowsHitTesting(false)
+    }
+
+    private var strokeStyle: Color {
+        isSelected ? Color.accentColor.opacity(0.48) : Color.secondary.opacity(isHovering ? 0.18 : 0.08)
+    }
+}
+
+private struct DiscoveryDashboardRecommendationChip: View {
+    let feature: DiscoveryDashboardFeature
+    let style: DiscoveryDashboardFeatureSectionStyle
+    let isSelected: Bool
+    let action: () -> Void
+
+    @State private var isHovering = false
+
+    var body: some View {
+        Button(action: action) {
+            HStack(alignment: .center, spacing: 10) {
+                Image(systemName: feature.systemImage)
+                    .font(.subheadline.weight(.semibold))
+                    .symbolRenderingMode(.hierarchical)
+                    .foregroundStyle(isSelected ? Color.accentColor : feature.accent)
+                    .frame(width: 34, height: 34)
+                    .keiGlass(14)
+
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(feature.title)
+                        .font(.callout.weight(.semibold))
+                        .foregroundStyle(.primary)
+                        .lineLimit(1)
+
+                    Text(feature.subtitle)
+                        .font(.caption.weight(.medium))
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                }
+
+                Spacer(minLength: 0)
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 10)
+            .frame(width: style.recommendationCardWidth, alignment: .leading)
+            .contentShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .keiInteractiveGlass(18)
+        .overlay {
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .strokeBorder(strokeStyle, lineWidth: isSelected ? 1.1 : 0.8)
+        }
+        .animation(.snappy(duration: 0.16), value: isHovering)
+        .animation(.snappy(duration: 0.16), value: isSelected)
+        .keiPixHoverTracker { isHovering = $0 }
+        .help(feature.title)
+        .accessibilityLabel("\(feature.title), \(feature.subtitle)")
+    }
+
+    private var strokeStyle: Color {
+        isSelected ? Color.accentColor.opacity(0.42) : Color.secondary.opacity(isHovering ? 0.16 : 0.07)
+    }
+}

@@ -22,11 +22,17 @@ import SwiftUI
 ///   empty rail.
 struct DiscoveryTrendingTagsStrip: View {
     @Bindable var store: KeiPixStore
+    let showsHeader: Bool
 
     @State private var tags: [PixivTrendingTag] = []
     @State private var isLoading = false
     @State private var loadFailed = false
     @State private var hasAttemptedLoad = false
+
+    init(store: KeiPixStore, showsHeader: Bool = true) {
+        self.store = store
+        self.showsHeader = showsHeader
+    }
 
     /// Cap the rail at 12 tags. Pixiv Web's discovery rail surfaces a
     /// similar count and the dashboard already feels dense; more than
@@ -53,13 +59,15 @@ struct DiscoveryTrendingTagsStrip: View {
     private var section: some View {
         GlassEffectContainer(spacing: 12) {
             VStack(alignment: .leading, spacing: 12) {
-                header
+                if showsHeader {
+                    header
+                }
 
                 if (isLoading || hasAttemptedLoad == false) && tags.isEmpty {
                     HStack(spacing: 8) {
                         ProgressView()
                             .controlSize(.small)
-                        Text(L10n.trendingTags)
+                        Text(showsHeader ? L10n.trendingTags : L10n.loading)
                             .font(.caption.weight(.medium))
                             .foregroundStyle(.secondary)
                     }
@@ -86,7 +94,7 @@ struct DiscoveryTrendingTagsStrip: View {
                     }
                 }
             }
-            .padding(14)
+            .padding(showsHeader ? 14 : 10)
             .frame(maxWidth: .infinity, alignment: .leading)
             .keiGlass(22)
         }
