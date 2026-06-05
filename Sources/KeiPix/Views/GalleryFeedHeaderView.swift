@@ -237,7 +237,7 @@ struct FeedHeaderView: View {
 
     private var iPadCompactRandomButton: some View {
         Button {
-            _ = store.randomFromCurrentFeed()
+            _ = store.randomFromCurrentFeed(opensDetail: false)
         } label: {
             Label(L10n.randomFromFeed, systemImage: "shuffle")
         }

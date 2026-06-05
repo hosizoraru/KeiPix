@@ -715,9 +715,13 @@ final class KeiPixStore {
         return true
     }
 
-    func randomFromCurrentFeed() -> Bool {
+    func randomFromCurrentFeed(opensDetail: Bool = true) -> Bool {
         guard let artwork = artworks.randomElement() else { return false }
-        navigateToArtwork(artwork)
+        if opensDetail {
+            navigateToArtwork(artwork)
+        } else {
+            selectedArtwork = artwork
+        }
         return true
     }
 

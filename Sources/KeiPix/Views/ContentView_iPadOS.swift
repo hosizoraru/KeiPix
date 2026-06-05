@@ -448,7 +448,7 @@ struct ContentView: View {
                             NativeToolbarMenuButton(
                                 systemImage: selectedArtworkMenuSystemImage,
                                 accessibilityLabel: L10n.currentArtwork,
-                                menu: artworkActionsMenu,
+                                menu: artworkActionsMenu(showsSidebarToggle: showsSidebarToggle),
                                 select: { handleNativeToolbarMenuAction($0, showsSidebarToggle: showsSidebarToggle) }
                             )
                             .fixedSize(horizontal: true, vertical: false)
@@ -843,49 +843,56 @@ struct ContentView: View {
         )
     }
 
-    private var artworkActionsMenu: NativeToolbarMenu {
+    private func artworkActionsMenu(showsSidebarToggle: Bool) -> NativeToolbarMenu {
         let selectedArtwork = store.selectedArtwork
         let hasSelection = selectedArtwork != nil
         let hasPixivLink = selectedArtwork?.pixivURL != nil
+        var primaryItems: [NativeToolbarMenuItem] = [
+            .action(
+                id: IPadToolbarMenuAction.previousArtwork,
+                title: L10n.previousArtwork,
+                systemImage: "chevron.up",
+                isEnabled: canSelectAdjacentArtwork(delta: -1)
+            ),
+            .action(
+                id: IPadToolbarMenuAction.nextArtwork,
+                title: L10n.nextArtwork,
+                systemImage: "chevron.down",
+                isEnabled: canSelectAdjacentArtwork(delta: 1)
+            ),
+            .action(
+                id: IPadToolbarMenuAction.toggleBookmark,
+                title: selectedArtwork?.isBookmarked == true ? L10n.removeBookmark : L10n.bookmark,
+                systemImage: selectedArtwork?.isBookmarked == true ? "bookmark.fill" : "bookmark",
+                isSelected: selectedArtwork?.isBookmarked == true,
+                isEnabled: hasSelection
+            ),
+            .action(
+                id: IPadToolbarMenuAction.openReaderWindow,
+                title: L10n.openReaderWindow,
+                systemImage: "rectangle.inset.filled",
+                isEnabled: hasSelection
+            )
+        ]
+
+        if showsSidebarToggle {
+            primaryItems.insert(
+                .action(
+                    id: IPadToolbarMenuAction.openArtworkDetails,
+                    title: L10n.details,
+                    systemImage: "info.circle",
+                    isEnabled: hasSelection
+                ),
+                at: 3
+            )
+        }
 
         return NativeToolbarMenu(
             title: L10n.currentArtwork,
             sections: [
                 NativeToolbarMenuSection(
                     presentation: .palette,
-                    items: [
-                        .action(
-                            id: IPadToolbarMenuAction.previousArtwork,
-                            title: L10n.previousArtwork,
-                            systemImage: "chevron.up",
-                            isEnabled: canSelectAdjacentArtwork(delta: -1)
-                        ),
-                        .action(
-                            id: IPadToolbarMenuAction.nextArtwork,
-                            title: L10n.nextArtwork,
-                            systemImage: "chevron.down",
-                            isEnabled: canSelectAdjacentArtwork(delta: 1)
-                        ),
-                        .action(
-                            id: IPadToolbarMenuAction.toggleBookmark,
-                            title: selectedArtwork?.isBookmarked == true ? L10n.removeBookmark : L10n.bookmark,
-                            systemImage: selectedArtwork?.isBookmarked == true ? "bookmark.fill" : "bookmark",
-                            isSelected: selectedArtwork?.isBookmarked == true,
-                            isEnabled: hasSelection
-                        ),
-                        .action(
-                            id: IPadToolbarMenuAction.openArtworkDetails,
-                            title: L10n.details,
-                            systemImage: "info.circle",
-                            isEnabled: hasSelection
-                        ),
-                        .action(
-                            id: IPadToolbarMenuAction.openReaderWindow,
-                            title: L10n.openReaderWindow,
-                            systemImage: "rectangle.inset.filled",
-                            isEnabled: hasSelection
-                        )
-                    ]
+                    items: primaryItems
                 ),
                 NativeToolbarMenuSection(
                     title: L10n.artwork,
@@ -966,31 +973,12 @@ struct ContentView: View {
                             title: L10n.openPixivID,
                             systemImage: "number",
                             paletteTitle: L10n.quickPixivID
-                        ),
-                        .action(
-                            id: IPadToolbarMenuAction.searchLocalImageSource,
-                            title: L10n.searchLocalImageSource,
-                            systemImage: "photo.badge.magnifyingglass",
-                            paletteTitle: L10n.quickImageSearch
                         )
                     ]
                 ),
                 NativeToolbarMenuSection(
                     title: L10n.viewOptions,
                     items: [
-                        .submenu(
-                            title: L10n.galleryLayout,
-                            subtitle: store.galleryLayoutMode.title,
-                            systemImage: store.galleryLayoutMode.systemImage,
-                            items: GalleryLayoutMode.allCases.map { mode in
-                                .action(
-                                    id: IPadToolbarMenuAction.galleryLayout(mode),
-                                    title: mode.title,
-                                    systemImage: mode.systemImage,
-                                    isSelected: store.galleryLayoutMode == mode
-                                )
-                            }
-                        ),
                         .action(
                             id: IPadToolbarMenuAction.showContentBadges,
                             title: L10n.showContentBadges,
@@ -1035,17 +1023,6 @@ struct ContentView: View {
                     ]
                 ),
                 NativeToolbarMenuSection(
-                    title: L10n.privacyMode,
-                    items: [
-                        .action(
-                            id: IPadToolbarMenuAction.privacyMode,
-                            title: store.privacyModeEnabled ? L10n.disablePrivacyMode : L10n.enablePrivacyMode,
-                            systemImage: store.privacyModeEnabled ? "eye.slash.fill" : "eye",
-                            isSelected: store.privacyModeEnabled
-                        )
-                    ]
-                ),
-                NativeToolbarMenuSection(
                     title: L10n.bottomTabs,
                     items: [
                         .action(
@@ -1079,8 +1056,6 @@ struct ContentView: View {
             Task { await openPixivLinkFromClipboard() }
         case IPadToolbarMenuAction.openPixivID:
             isPixivIDOpenPresented = true
-        case IPadToolbarMenuAction.searchLocalImageSource:
-            store.presentLocalImageSourceSearch()
         case IPadToolbarMenuAction.goBack:
             store.navigateBack()
         case IPadToolbarMenuAction.goForward:
@@ -1138,8 +1113,6 @@ struct ContentView: View {
             store.setHideR18Artworks(!store.hideR18Artworks)
         case IPadToolbarMenuAction.hideR18GArtworks:
             store.setHideR18GArtworks(!store.hideR18GArtworks)
-        case IPadToolbarMenuAction.privacyMode:
-            store.setPrivacyModeEnabled(!store.privacyModeEnabled)
         case IPadToolbarMenuAction.customizeBottomTabs:
             isMobileTabCustomizationPresented = true
         case IPadToolbarMenuAction.settings:
@@ -1755,6 +1728,12 @@ struct ContentView: View {
                 )
 
                 compactSearchModeButton(
+                    title: L10n.searchLocalImageSource,
+                    systemImage: "photo.badge.magnifyingglass",
+                    action: { store.presentLocalImageSourceSearch() }
+                )
+
+                compactSearchModeButton(
                     title: L10n.trendingTags,
                     systemImage: "number",
                     action: { selectCompactSearchRoute(.trendingTags) }
@@ -1947,7 +1926,6 @@ private struct MobileGlobalSearchModifier: ViewModifier {
 private enum IPadToolbarMenuAction {
     static let openPixivLinkFromClipboard = "open-pixiv-link-from-clipboard"
     static let openPixivID = "open-pixiv-id"
-    static let searchLocalImageSource = "search-local-image-source"
     static let goBack = "go-back"
     static let goForward = "go-forward"
     static let previousArtwork = "previous-artwork"
@@ -1968,7 +1946,6 @@ private enum IPadToolbarMenuAction {
     static let hideAIArtworks = "hide-ai-artworks"
     static let hideR18Artworks = "hide-r18-artworks"
     static let hideR18GArtworks = "hide-r18g-artworks"
-    static let privacyMode = "privacy-mode"
     static let customizeBottomTabs = "customize-bottom-tabs"
     static let settings = "settings"
 

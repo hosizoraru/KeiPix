@@ -457,15 +457,6 @@ struct ContentView: View {
                 } label: {
                     Label(L10n.windowSize, systemImage: "macwindow")
                 }
-
-                Button {
-                    store.setPrivacyModeEnabled(!store.privacyModeEnabled)
-                } label: {
-                    Label(
-                        store.privacyModeEnabled ? L10n.disablePrivacyMode : L10n.enablePrivacyMode,
-                        systemImage: store.privacyModeEnabled ? "eye.slash.fill" : "eye"
-                    )
-                }
             }
 
             Section(L10n.viewOptions) {
