@@ -19,19 +19,23 @@ struct ContentView: View {
     @State private var isSpotlightDetailPanelUserEnabled = false
     @State private var isSpotlightArticlePushPresented = false
     @State private var isPixivIDOpenPresented = false
+    @State private var isSettingsSheetPresented = false
+    @State private var isMobileTabCustomizationPresented = false
     @State private var feedbackRequest: FeedbackReportRequest?
     @State private var statusMessage: String?
     @AppStorage("mobilePortraitShortcutRouteIDs") private var portraitShortcutRouteIDs = ContentView.defaultPortraitShortcutRouteIDs
+    @AppStorage("mobileBottomTabItemIDs") private var mobileBottomTabItemIDs = MobileBottomTabConfiguration.defaultStorageID
     #if DEBUG
     @State private var creatorProfileVisualQAUser: PixivUser?
     #endif
 
-    enum iPadTab: String, CaseIterable {
+    enum iPadTab: Hashable {
         case feed
         case library
         case settings
         case shortcuts
         case search
+        case custom(MobileBottomTabItem)
 
         var title: String {
             switch self {
@@ -40,6 +44,7 @@ struct ContentView: View {
             case .settings: return L10n.settings
             case .shortcuts: return L10n.shortcuts
             case .search: return L10n.search
+            case .custom(let item): return item.title
             }
         }
 
@@ -50,6 +55,7 @@ struct ContentView: View {
             case .settings: return "gearshape"
             case .shortcuts: return "slider.horizontal.3"
             case .search: return "magnifyingglass"
+            case .custom(let item): return item.systemImage
             }
         }
     }
@@ -123,6 +129,18 @@ struct ContentView: View {
             .sheet(isPresented: $isPixivIDOpenPresented) {
                 PixivIDOpenSheet(store: store, showStatus: { _ in })
                     .os26SheetChrome(.form)
+            }
+            .sheet(isPresented: $isSettingsSheetPresented) {
+                NavigationStack {
+                    SettingsView(store: store)
+                }
+                .os26SheetChrome(.form)
+            }
+            .sheet(isPresented: $isMobileTabCustomizationPresented) {
+                NavigationStack {
+                    MobileBottomTabCustomizationView(items: mobileBottomTabItemsBinding)
+                }
+                .os26SheetChrome(.form)
             }
             .sheet(item: $feedbackRequest) { request in
                 FeedbackReportSheet(request: request, localMuteAction: {}) { _ in }
@@ -198,12 +216,20 @@ struct ContentView: View {
                 feedTab
             }
 
-            Tab(L10n.downloads, systemImage: "arrow.down.circle", value: .library) {
-                libraryTab
-            }
+            if layout.usesPhoneSearchTab {
+                ForEach(mobileBottomTabItems) { item in
+                    Tab(item.title, systemImage: item.systemImage, value: iPadTab.custom(item)) {
+                        mobileCustomTab(item)
+                    }
+                }
+            } else {
+                Tab(L10n.downloads, systemImage: "arrow.down.circle", value: .library) {
+                    libraryTab
+                }
 
-            Tab(L10n.settings, systemImage: "gearshape", value: .settings) {
-                settingsTab
+                Tab(L10n.settings, systemImage: "gearshape", value: .settings) {
+                    settingsTab
+                }
             }
 
             if layout.usesPortraitTopCustomization {
@@ -225,6 +251,11 @@ struct ContentView: View {
         }
         .onChange(of: layout.usesPhoneSearchTab) { _, isEnabled in
             if isEnabled == false, selectedTab == .search {
+                selectedTab = .feed
+            }
+        }
+        .onChange(of: mobileBottomTabItemIDs) { _, _ in
+            if case .custom(let item) = selectedTab, mobileBottomTabItems.contains(item) == false {
                 selectedTab = .feed
             }
         }
@@ -250,7 +281,7 @@ struct ContentView: View {
         }
         .onChange(of: store.selectedRoute) { _, route in
             selectedSidebarItem = .route(route)
-            selectedTab = route == .downloads ? .library : .feed
+            selectedTab = tab(for: route)
         }
         .navigationSplitViewStyle(.balanced)
     }
@@ -971,6 +1002,16 @@ struct ContentView: View {
                     ]
                 ),
                 NativeToolbarMenuSection(
+                    title: L10n.bottomTabs,
+                    items: [
+                        .action(
+                            id: IPadToolbarMenuAction.customizeBottomTabs,
+                            title: L10n.customizeBottomTabs,
+                            systemImage: "rectangle.bottomthird.inset.filled"
+                        )
+                    ]
+                ),
+                NativeToolbarMenuSection(
                     items: [
                         .action(
                             id: IPadToolbarMenuAction.settings,
@@ -1055,9 +1096,15 @@ struct ContentView: View {
             store.setHideR18GArtworks(!store.hideR18GArtworks)
         case IPadToolbarMenuAction.privacyMode:
             store.setPrivacyModeEnabled(!store.privacyModeEnabled)
+        case IPadToolbarMenuAction.customizeBottomTabs:
+            isMobileTabCustomizationPresented = true
         case IPadToolbarMenuAction.settings:
-            selectedSidebarItem = .settings
-            selectedTab = .settings
+            if currentMobilePlatform == .phone, mobileBottomTabItems.contains(.settings) == false {
+                isSettingsSheetPresented = true
+            } else {
+                selectedSidebarItem = .settings
+                selectedTab = currentMobilePlatform == .phone ? .custom(.settings) : .settings
+            }
         default:
             break
         }
@@ -1314,6 +1361,18 @@ struct ContentView: View {
         }
     }
 
+    private var mobileBottomTabItems: [MobileBottomTabItem] {
+        MobileBottomTabConfiguration.items(from: mobileBottomTabItemIDs)
+    }
+
+    private var mobileBottomTabItemsBinding: Binding<[MobileBottomTabItem]> {
+        Binding {
+            mobileBottomTabItems
+        } set: { items in
+            mobileBottomTabItemIDs = MobileBottomTabConfiguration.storageID(for: items)
+        }
+    }
+
     private var currentMobilePlatform: ReaderPlatformKind {
         UIDevice.current.userInterfaceIdiom == .phone ? .phone : .pad
     }
@@ -1344,6 +1403,12 @@ struct ContentView: View {
             selectedSidebarItem = .route(store.selectedRoute)
         case .search:
             selectedSidebarItem = .route(.search)
+        case .custom(let item):
+            if let route = item.route {
+                selectedSidebarItem = .route(route)
+            } else {
+                selectedSidebarItem = .settings
+            }
         }
     }
 
@@ -1358,8 +1423,35 @@ struct ContentView: View {
 
     private func selectRoute(_ route: PixivRoute, clearsArtworkDetail: Bool = true) {
         selectedSidebarItem = .route(route)
-        selectedTab = route == .downloads ? .library : .feed
+        selectedTab = tab(for: route)
         if clearsArtworkDetail {
+            dismissArtworkDetail(clearSelection: true)
+        }
+        if store.selectedRoute != route {
+            store.select(route)
+        }
+    }
+
+    private func tab(for route: PixivRoute) -> iPadTab {
+        if route == .downloads, currentMobilePlatform != .phone {
+            return .library
+        }
+        if currentMobilePlatform == .phone,
+           let item = mobileBottomTabItems.first(where: { $0.route == route }) {
+            return .custom(item)
+        }
+        return .feed
+    }
+
+    private func selectMobileBottomTabItem(_ item: MobileBottomTabItem) {
+        selectedTab = .custom(item)
+        guard let route = item.route else {
+            selectedSidebarItem = .settings
+            return
+        }
+
+        selectedSidebarItem = .route(route)
+        if route.usesArtworkFeed == false {
             dismissArtworkDetail(clearSelection: true)
         }
         if store.selectedRoute != route {
@@ -1380,6 +1472,24 @@ struct ContentView: View {
     private var settingsTab: some View {
         NavigationStack {
             SettingsView(store: store)
+        }
+    }
+
+    // MARK: - Mobile Custom Tabs
+
+    @ViewBuilder
+    private func mobileCustomTab(_ item: MobileBottomTabItem) -> some View {
+        if item == .settings {
+            settingsTab
+                .onAppear {
+                    selectedSidebarItem = .settings
+                    selectedTab = .custom(item)
+                }
+        } else {
+            feedNavigationStack(showsSidebarToggle: false)
+                .onAppear {
+                    selectMobileBottomTabItem(item)
+                }
         }
     }
 
@@ -1900,6 +2010,7 @@ private enum IPadToolbarMenuAction {
     static let hideR18Artworks = "hide-r18-artworks"
     static let hideR18GArtworks = "hide-r18g-artworks"
     static let privacyMode = "privacy-mode"
+    static let customizeBottomTabs = "customize-bottom-tabs"
     static let settings = "settings"
 
     private static let galleryLayoutPrefix = "gallery-layout:"

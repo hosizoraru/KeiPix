@@ -15,6 +15,13 @@ enum L10n {
     static var portraitShortcuts: String { text("Portrait Shortcuts", table: L10nTable.navigation) }
     static var portraitShortcutsHint: String { text("Choose the routes that appear in the iPad portrait shortcut menu. iPhone keeps its compact bottom tabs.", table: L10nTable.navigation) }
     static var quickDestinations: String { text("Quick Destinations", table: L10nTable.navigation) }
+    static var bottomTabs: String { text("Bottom Tabs", table: L10nTable.navigation) }
+    static var customizeBottomTabs: String { text("Customize Bottom Tabs", table: L10nTable.navigation) }
+    static var bottomTabsHint: String { text("Choose the three destinations that stay next to Feed and Search on iPhone.", table: L10nTable.navigation) }
+    static var fixedTabs: String { text("Fixed Tabs", table: L10nTable.navigation) }
+    static var selectedDestinations: String { text("Selected Destinations", table: L10nTable.navigation) }
+    static var bottomTabSlotFormat: String { text("Slot %d", table: L10nTable.navigation) }
+    static var resetBottomTabs: String { text("Reset Bottom Tabs", table: L10nTable.navigation) }
     static var dashboardSections: String { text("Dashboard Sections") }
     static var resetDashboardSections: String { text("Reset to Default") }
     static var discoverDetailHint: String { text("Pick a Discover card to open a feed, creator list, ranking, or library view.") }

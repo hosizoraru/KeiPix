@@ -178,6 +178,10 @@ struct NativeBoundaryTests {
             contentsOf: root.appending(path: "Sources/KeiPix/Views/ContentView_iPadOS.swift"),
             encoding: .utf8
         )
+        let mobileBottomTabCustomization = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/MobileBottomTabCustomizationView.swift"),
+            encoding: .utf8
+        )
         let dashboardView = try String(
             contentsOf: root.appending(path: "Sources/KeiPix/Views/DiscoveryDashboardView.swift"),
             encoding: .utf8
@@ -312,7 +316,13 @@ struct NativeBoundaryTests {
         #expect(contentView.contains("if layout.usesLandscapeSidebar"))
         #expect(contentView.contains("layout.usesPortraitTopCustomization"))
         #expect(contentView.contains("@AppStorage(\"mobilePortraitShortcutRouteIDs\")"))
+        #expect(contentView.contains("@AppStorage(\"mobileBottomTabItemIDs\")"))
         #expect(contentView.contains("private var portraitShortcutsTab: some View"))
+        #expect(mobileBottomTabCustomization.contains("struct MobileBottomTabCustomizationView: View"))
+        #expect(mobileBottomTabCustomization.contains("MobileBottomTabConfiguration.replacing("))
+        #expect(mobileBottomTabCustomization.contains(".keiGlass(24)"))
+        #expect(mobileBottomTabCustomization.contains("L10n.fixedTabs"))
+        #expect(mobileBottomTabCustomization.contains("L10n.selectedDestinations"))
         #expect(contentView.contains("private static let portraitShortcutContentMaxWidth: CGFloat = 860"))
         #expect(contentView.contains(".frame(maxWidth: Self.portraitShortcutContentMaxWidth, alignment: .leading)"))
         #expect(contentView.contains(".frame(maxWidth: .infinity, alignment: .top)"))
@@ -416,13 +426,21 @@ struct NativeBoundaryTests {
             "Reset Shortcuts",
             "Portrait Shortcuts",
             "Quick Destinations",
-            "Choose the routes that appear in the iPad portrait shortcut menu. iPhone keeps its compact bottom tabs."
+            "Choose the routes that appear in the iPad portrait shortcut menu. iPhone keeps its compact bottom tabs.",
+            "Bottom Tabs",
+            "Customize Bottom Tabs",
+            "Reset Bottom Tabs",
+            "Fixed Tabs",
+            "Selected Destinations",
+            "Slot %d",
+            "Choose the three destinations that stay next to Feed and Search on iPhone."
         ] {
-            #expect(navigationCatalog.contains("\"\(key)\""), "\(key) should be localized for the portrait shortcut UI")
+            #expect(navigationCatalog.contains("\"\(key)\""), "\(key) should be localized for the mobile navigation UI")
         }
 
         #expect(navigationCatalog.contains("\"value\": \"快捷\""))
         #expect(navigationCatalog.contains("\"value\": \"快捷入口\""))
+        #expect(navigationCatalog.contains("\"value\": \"自定义底栏\""))
         #expect(l10n.contains("private enum L10nTable"))
         #expect(l10n.contains("static let navigation = \"Navigation\""))
         #expect(l10n.contains("static func text(_ key: String, table: String? = nil)"))
@@ -484,6 +502,13 @@ struct NativeBoundaryTests {
 
         #expect(mobileLayout.contains("var usesPhoneSearchTab: Bool"))
         #expect(iPadContentView.contains("Tab(L10n.search, systemImage: \"magnifyingglass\", value: .search, role: .search)"))
+        #expect(iPadContentView.contains("if layout.usesPhoneSearchTab {"))
+        #expect(iPadContentView.contains("ForEach(mobileBottomTabItems) { item in"))
+        #expect(iPadContentView.contains("value: iPadTab.custom(item)"))
+        #expect(iPadContentView.contains("private var mobileBottomTabItemsBinding: Binding<[MobileBottomTabItem]>"))
+        #expect(iPadContentView.contains("MobileBottomTabConfiguration.storageID(for: items)"))
+        #expect(iPadContentView.contains("IPadToolbarMenuAction.customizeBottomTabs"))
+        #expect(iPadContentView.contains("isMobileTabCustomizationPresented = true"))
         #expect(iPadContentView.contains("private var phoneSearchTab: some View"))
         #expect(iPadContentView.contains(".task(id: store.searchText)"))
         #expect(iPadContentView.contains("await store.refreshSearchSuggestions()"))
