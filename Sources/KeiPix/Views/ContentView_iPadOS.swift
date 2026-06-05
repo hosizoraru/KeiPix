@@ -9,6 +9,7 @@ import UIKit
 /// touch-first tab layout so the UI does not spend half the screen on chrome.
 struct ContentView: View {
     @Bindable var store: KeiPixStore
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var selectedTab: iPadTab = .feed
     @State private var splitColumnVisibility: NavigationSplitViewVisibility = .all
     @State private var selectedSidebarItem: KeiPixSidebarDestination = .route(.home)
@@ -22,6 +23,7 @@ struct ContentView: View {
     @State private var isSettingsSheetPresented = false
     @State private var isMobileTabCustomizationPresented = false
     @State private var isCompactCustomTabRootActive = false
+    @State private var compactContentTransitionEdge: Edge = .trailing
     @State private var feedbackRequest: FeedbackReportRequest?
     @State private var statusMessage: String?
     @AppStorage("mobileBottomTabItemIDs") private var mobileBottomTabDefaultRouteIDs = MobileBottomTabConfiguration.defaultStorageID
@@ -53,6 +55,16 @@ struct ContentView: View {
             case .settings: return "gearshape"
             case .search: return "magnifyingglass"
             case .mobile(let kind): return kind.systemImage
+            }
+        }
+
+        var transitionID: String {
+            switch self {
+            case .feed: "feed"
+            case .library: "library"
+            case .settings: "settings"
+            case .search: "search"
+            case .mobile(let kind): "mobile-\(kind.rawValue)"
             }
         }
     }
@@ -1275,46 +1287,51 @@ struct ContentView: View {
         discoveryPresentation: DiscoveryDashboardPresentation,
         showsSidebarToggle: Bool
     ) -> some View {
-        if store.selectedRoute == .home {
-            DiscoveryDashboardView(store: store, presentation: discoveryPresentation)
-        } else if store.selectedRoute == .mangaWatchlist {
-            MangaWatchlistView(store: store)
-        } else if store.selectedRoute == .novelWatchlist {
-            NovelWatchlistView(store: store)
-        } else if store.selectedRoute == .downloads {
-            DownloadQueueView(store: store)
-        } else if store.selectedRoute == .savedSearches {
-            SavedSearchesView(store: store)
-        } else if store.selectedRoute == .trendingTags {
-            TrendingTagsView(store: store)
-        } else if store.selectedRoute == .spotlight {
-            SpotlightView(store: store) { article in
-                presentSpotlightArticle(article, usesPanel: showsSidebarToggle)
+        Group {
+            if store.selectedRoute == .home {
+                DiscoveryDashboardView(store: store, presentation: discoveryPresentation)
+            } else if store.selectedRoute == .mangaWatchlist {
+                MangaWatchlistView(store: store)
+            } else if store.selectedRoute == .novelWatchlist {
+                NovelWatchlistView(store: store)
+            } else if store.selectedRoute == .downloads {
+                DownloadQueueView(store: store)
+            } else if store.selectedRoute == .savedSearches {
+                SavedSearchesView(store: store)
+            } else if store.selectedRoute == .trendingTags {
+                TrendingTagsView(store: store)
+            } else if store.selectedRoute == .spotlight {
+                SpotlightView(store: store) { article in
+                    presentSpotlightArticle(article, usesPanel: showsSidebarToggle)
+                }
+            } else if store.selectedRoute == .search,
+                      isCompactCustomTabRootActive,
+                      hasActiveGlobalSearchText == false {
+                compactSearchContent
+            } else if store.selectedRoute == .bookmarkTags {
+                BookmarkTagsView(store: store)
+            } else if store.selectedRoute == .history {
+                BrowsingHistoryView(store: store)
+            } else if store.selectedRoute == .watchLater {
+                WatchLaterView(store: store)
+            } else if store.selectedRoute == .workSubscriptions {
+                WorkSubscriptionsView(store: store)
+            } else if store.selectedRoute == .mutedContent {
+                MutedContentView(store: store)
+            } else if store.selectedRoute.isCreatorRoute {
+                UserPreviewListView(store: store, mode: userPreviewMode)
+            } else if store.selectedRoute.usesNovelFeed {
+                NovelGalleryView(store: store)
+            } else {
+                GalleryView(
+                    store: store,
+                    galleryLayoutAdaptation: galleryLayoutAdaptation(showsSidebarToggle: showsSidebarToggle)
+                )
             }
-        } else if store.selectedRoute == .search,
-                  isCompactCustomTabRootActive,
-                  hasActiveGlobalSearchText == false {
-            compactSearchContent
-        } else if store.selectedRoute == .bookmarkTags {
-            BookmarkTagsView(store: store)
-        } else if store.selectedRoute == .history {
-            BrowsingHistoryView(store: store)
-        } else if store.selectedRoute == .watchLater {
-            WatchLaterView(store: store)
-        } else if store.selectedRoute == .workSubscriptions {
-            WorkSubscriptionsView(store: store)
-        } else if store.selectedRoute == .mutedContent {
-            MutedContentView(store: store)
-        } else if store.selectedRoute.isCreatorRoute {
-            UserPreviewListView(store: store, mode: userPreviewMode)
-        } else if store.selectedRoute.usesNovelFeed {
-            NovelGalleryView(store: store)
-        } else {
-            GalleryView(
-                store: store,
-                galleryLayoutAdaptation: galleryLayoutAdaptation(showsSidebarToggle: showsSidebarToggle)
-            )
         }
+        .id(feedContentTransitionID)
+        .transition(compactContentTransition)
+        .animation(compactContentTransitionAnimation, value: feedContentTransitionID)
     }
 
     private func galleryLayoutAdaptation(showsSidebarToggle: Bool) -> GalleryLayoutAdaptation {
@@ -1429,18 +1446,22 @@ struct ContentView: View {
         case .route(let route):
             selectRoute(route, clearsArtworkDetail: false)
         case .settings:
-            selectedTab = .settings
+            withCompactContentTransition(to: .downloads) {
+                selectedTab = .settings
+            }
         }
     }
 
     private func selectRoute(_ route: PixivRoute, clearsArtworkDetail: Bool = true) {
-        selectedSidebarItem = .route(route)
-        selectedTab = tab(for: route)
-        if clearsArtworkDetail {
-            dismissArtworkDetail(clearSelection: true)
-        }
-        if store.selectedRoute != route {
-            store.select(route)
+        withCompactContentTransition(to: route) {
+            selectedSidebarItem = .route(route)
+            selectedTab = tab(for: route)
+            if clearsArtworkDetail {
+                dismissArtworkDetail(clearSelection: true)
+            }
+            if store.selectedRoute != route {
+                store.select(route)
+            }
         }
     }
 
@@ -1460,26 +1481,30 @@ struct ContentView: View {
     }
 
     private func selectMobileBottomTabKind(_ kind: MobileBottomTabKind) {
-        selectedTab = .mobile(kind)
         let route = mobileDefaultRoute(for: kind)
-        selectedSidebarItem = .route(route)
-        if route.usesArtworkFeed == false {
-            dismissArtworkDetail(clearSelection: true)
-        }
-        if store.selectedRoute != route {
-            store.select(route)
+        withCompactContentTransition(to: route) {
+            selectedTab = .mobile(kind)
+            selectedSidebarItem = .route(route)
+            if route.usesArtworkFeed == false {
+                dismissArtworkDetail(clearSelection: true)
+            }
+            if store.selectedRoute != route {
+                store.select(route)
+            }
         }
     }
 
     private func selectCompactSearchTab() {
-        selectedTab = .search
         let route = MobileSearchTabConfiguration.contains(store.selectedRoute) ? store.selectedRoute : PixivRoute.search
-        selectedSidebarItem = .route(route)
-        if route.usesArtworkFeed == false {
-            dismissArtworkDetail(clearSelection: true)
-        }
-        if store.selectedRoute != route {
-            store.select(route)
+        withCompactContentTransition(to: route) {
+            selectedTab = .search
+            selectedSidebarItem = .route(route)
+            if route.usesArtworkFeed == false {
+                dismissArtworkDetail(clearSelection: true)
+            }
+            if store.selectedRoute != route {
+                store.select(route)
+            }
         }
     }
 
@@ -1510,6 +1535,59 @@ struct ContentView: View {
 
     private func mobileDefaultRoute(for kind: MobileBottomTabKind) -> PixivRoute {
         mobileBottomTabDefaultRoutes[kind] ?? kind.defaultRoute
+    }
+
+    private var feedContentTransitionID: String {
+        [
+            selectedTab.transitionID,
+            store.selectedRoute.rawValue,
+            isCompactCustomTabRootActive ? "compact" : "regular"
+        ]
+        .joined(separator: "|")
+    }
+
+    private var compactContentTransition: AnyTransition {
+        if reduceMotion {
+            return .opacity
+        }
+        return .asymmetric(
+            insertion: .move(edge: compactContentTransitionEdge).combined(with: .opacity),
+            removal: .move(edge: compactContentTransitionRemovalEdge).combined(with: .opacity)
+        )
+    }
+
+    private var compactContentTransitionRemovalEdge: Edge {
+        compactContentTransitionEdge == .leading ? .trailing : .leading
+    }
+
+    private var compactContentTransitionAnimation: Animation {
+        reduceMotion ? .easeOut(duration: 0.12) : .snappy(duration: 0.22)
+    }
+
+    private func withCompactContentTransition(to route: PixivRoute, updates: () -> Void) {
+        prepareCompactContentTransition(to: route)
+        withAnimation(compactContentTransitionAnimation) {
+            updates()
+        }
+    }
+
+    private func prepareCompactContentTransition(to route: PixivRoute) {
+        let oldIndex = compactContentTransitionIndex(for: store.selectedRoute)
+        let newIndex = compactContentTransitionIndex(for: route)
+        compactContentTransitionEdge = newIndex < oldIndex ? .leading : .trailing
+    }
+
+    private func compactContentTransitionIndex(for route: PixivRoute) -> Int {
+        if let searchIndex = MobileSearchTabConfiguration.routes.firstIndex(of: route) {
+            return MobileBottomTabKind.allCases.count * 100 + searchIndex
+        }
+
+        guard let kind = MobileBottomTabKind.kind(containing: route),
+              let kindIndex = MobileBottomTabKind.allCases.firstIndex(of: kind) else {
+            return -1
+        }
+        let routeIndex = kind.routes.firstIndex(of: route) ?? 0
+        return kindIndex * 100 + routeIndex
     }
 
     // MARK: - Library Tab
@@ -1777,8 +1855,10 @@ struct ContentView: View {
         guard hasActiveGlobalSearchText else { return }
         Task {
             await store.runArtworkSearch()
-            selectedSidebarItem = .route(.search)
-            selectedTab = .search
+            withCompactContentTransition(to: .search) {
+                selectedSidebarItem = .route(.search)
+                selectedTab = .search
+            }
         }
     }
 
@@ -1786,8 +1866,10 @@ struct ContentView: View {
         guard hasActiveGlobalSearchText else { return }
         Task {
             await store.runCreatorSearch()
-            selectedSidebarItem = .route(.searchUsers)
-            selectedTab = .search
+            withCompactContentTransition(to: .searchUsers) {
+                selectedSidebarItem = .route(.searchUsers)
+                selectedTab = .search
+            }
         }
     }
 
@@ -1795,17 +1877,21 @@ struct ContentView: View {
         guard hasActiveGlobalSearchText else { return }
         Task {
             await store.runNovelSearch()
-            selectedSidebarItem = .route(.novelSearch)
-            selectedTab = .search
+            withCompactContentTransition(to: .novelSearch) {
+                selectedSidebarItem = .route(.novelSearch)
+                selectedTab = .search
+            }
         }
     }
 
     private func selectCompactSearchRoute(_ route: PixivRoute) {
-        selectedTab = .search
-        selectedSidebarItem = .route(route)
-        dismissArtworkDetail(clearSelection: true)
-        if store.selectedRoute != route {
-            store.select(route)
+        withCompactContentTransition(to: route) {
+            selectedTab = .search
+            selectedSidebarItem = .route(route)
+            dismissArtworkDetail(clearSelection: true)
+            if store.selectedRoute != route {
+                store.select(route)
+            }
         }
     }
 
