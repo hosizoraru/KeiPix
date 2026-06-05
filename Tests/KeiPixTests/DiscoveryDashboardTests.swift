@@ -60,12 +60,14 @@ struct DiscoveryDashboardTests {
             encoding: .utf8
         )
 
-        let highlights = try #require(dashboard.range(of: "DiscoveryDashboardHighlightsSection(store: store, style: .full)"))
-        let forYou = try #require(dashboard.range(of: "DiscoveryDashboardForYouSection(store: store, style: .full)"))
+        let highlights = try #require(dashboard.range(of: "DiscoveryDashboardHighlightsSection(store: store, style: featureStyle)"))
+        let forYou = try #require(dashboard.range(of: "DiscoveryDashboardForYouSection(store: store, style: featureStyle)"))
         let routeSections = try #require(dashboard.range(of: "ForEach(store.visibleDashboardSections)"))
 
         #expect(highlights.lowerBound < forYou.lowerBound)
         #expect(forYou.lowerBound < routeSections.lowerBound)
+        #expect(dashboard.contains("MobileWorkspaceLayout(size: proxy.size, platform: ReaderPlatformKind.current)"))
+        #expect(dashboard.contains("layout.usesCondensedChrome ? .compact : .full"))
         #expect(dashboard.contains("header\n\n                    DiscoveryTrendingTagsStrip(store: store)") == false)
         #expect(recommendationSections.contains("DiscoveryTrendingTagsStrip(store: store, showsHeader: false)"))
         #expect(recommendationSections.contains("struct DiscoveryDashboardHighlightsSection: View"))

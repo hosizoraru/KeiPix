@@ -46,24 +46,33 @@ struct DiscoveryDashboardView: View {
     }
 
     private var fullDashboardContent: some View {
-        ScrollView {
-            GlassEffectContainer(spacing: 18) {
-                LazyVStack(alignment: .leading, spacing: 18) {
-                    header
+        GeometryReader { proxy in
+            let layout = MobileWorkspaceLayout(size: proxy.size, platform: ReaderPlatformKind.current)
+            let featureStyle: DiscoveryDashboardFeatureSectionStyle = layout.usesCondensedChrome ? .compact : .full
 
-                    DiscoveryDashboardHighlightsSection(store: store, style: .full)
-                    DiscoveryDashboardForYouSection(store: store, style: .full)
+            ScrollView {
+                GlassEffectContainer(spacing: 18) {
+                    LazyVStack(alignment: .leading, spacing: 18) {
+                        if featureStyle == .compact {
+                            compactHeader
+                        } else {
+                            header
+                        }
 
-                    ForEach(store.visibleDashboardSections) { section in
-                        DiscoveryDashboardRouteSection(section: section, store: store)
+                        DiscoveryDashboardHighlightsSection(store: store, style: featureStyle)
+                        DiscoveryDashboardForYouSection(store: store, style: featureStyle)
+
+                        ForEach(store.visibleDashboardSections) { section in
+                            DiscoveryDashboardRouteSection(section: section, store: store)
+                        }
                     }
                 }
+                .padding(.horizontal, 18)
+                .padding(.top, 16)
+                .padding(.bottom, 24)
             }
-            .padding(.horizontal, 18)
-            .padding(.top, 16)
-            .padding(.bottom, 24)
+            .scrollEdgeEffectStyle(.soft, for: .top)
         }
-        .scrollEdgeEffectStyle(.soft, for: .top)
     }
 
     private var sidebarCompanionContent: some View {

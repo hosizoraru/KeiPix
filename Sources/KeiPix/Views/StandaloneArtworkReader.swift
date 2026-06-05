@@ -130,132 +130,191 @@ struct StandaloneArtworkReader: View {
         readingMode.effectiveMode(forPageCount: pageCount, platform: .current)
     }
 
+    @ViewBuilder
     private func header(proxy: ScrollViewProxy) -> some View {
+        if ReaderPlatformKind.current == .phone {
+            compactHeader(proxy: proxy)
+        } else {
+            regularHeader(proxy: proxy)
+        }
+    }
+
+    private func regularHeader(proxy: ScrollViewProxy) -> some View {
         HStack(spacing: 12) {
-            VStack(alignment: .leading, spacing: 3) {
-                Text(artwork.title)
-                    .font(.headline)
-                    .lineLimit(1)
-                Text(L10n.creatorPageHeader(artwork.user.name, pageCount))
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
+            readerTitleBlock
+                .layoutPriority(1)
 
-            Spacer()
+            Spacer(minLength: 12)
 
-            // Inline quality toggle — flips the per-content quality preset
-            // so the user can switch between original and standard previews
-            // without diving into Settings. The button reads/writes the
-            // illust or manga preset based on the artwork's kind, so a
-            // user reading manga doesn't accidentally flip the illust
-            // default. Mirrors the HD-style affordance Pixez/Pixes ship.
-            Button {
-                store.setPreferOriginalImages(
-                    !store.preferOriginalImages(for: artwork, pageCount: pageCount),
-                    for: artwork,
-                    pageCount: pageCount
-                )
-            } label: {
-                let isOriginal = store.preferOriginalImages(for: artwork, pageCount: pageCount)
-                Label(
-                    isOriginal ? L10n.imageQualityOriginal : L10n.imageQualityStandard,
-                    systemImage: isOriginal ? "photo.badge.checkmark.fill" : "photo"
-                )
+            readerActionRail(proxy: proxy)
+        }
+    }
+
+    private func compactHeader(proxy: ScrollViewProxy) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            readerTitleBlock
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            ScrollView(.horizontal) {
+                readerActionRail(proxy: proxy)
+                    .padding(.horizontal, 1)
+                    .padding(.vertical, 1)
             }
-            .labelStyle(.iconOnly)
-            .help(L10n.imageQualityToggleHint)
+            .scrollIndicators(.hidden)
+        }
+    }
+
+    private var readerTitleBlock: some View {
+        VStack(alignment: .leading, spacing: 3) {
+            Text(artwork.title)
+                .font(.headline)
+                .lineLimit(1)
+            Text(L10n.creatorPageHeader(artwork.user.name, pageCount))
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+        }
+        .accessibilityElement(children: .combine)
+    }
+
+    private func readerActionRail(proxy: ScrollViewProxy) -> some View {
+        HStack(spacing: 12) {
+            qualityButton
 
             if effectiveReadingMode == .continuous {
-                Button {
-                    snapToPageBoundaries.toggle()
-                } label: {
-                    Label(
-                        L10n.snapToPages,
-                        systemImage: snapToPageBoundaries ? "arrow.down.to.line" : "arrow.down.to.line.compact"
-                    )
-                }
-                .labelStyle(.iconOnly)
-                .help(L10n.snapToPages)
+                snapToPagesButton
             }
 
-            Menu {
-                Button {
-                    imageRotation -= 90
-                } label: {
-                    Label(L10n.rotateLeft, systemImage: "rotate.left")
-                }
-                Button {
-                    imageRotation += 90
-                } label: {
-                    Label(L10n.rotateRight, systemImage: "rotate.right")
-                }
-                Divider()
-                Button {
-                    isImageFlippedHorizontally.toggle()
-                } label: {
-                    Label(L10n.flipHorizontal, systemImage: "arrow.left.and.right.righttriangle.left.righttriangle.right")
-                }
-                Button {
-                    isImageFlippedVertically.toggle()
-                } label: {
-                    Label(L10n.flipVertical, systemImage: "arrow.up.and.down.righttriangle.up.righttriangle.down")
-                }
-                Divider()
-                Button {
-                    imageRotation = 0
-                    isImageFlippedHorizontally = false
-                    isImageFlippedVertically = false
-                } label: {
-                    Label(L10n.resetTransform, systemImage: "arrow.counterclockwise")
-                }
-            } label: {
-                Label(L10n.imageTransform, systemImage: "crop.rotate")
-            }
-            .labelStyle(.iconOnly)
-            .help(L10n.imageTransform)
-
-            Button {
-                isPageJumpPresented = true
-            } label: {
-                Label(L10n.pageJump, systemImage: "number")
-            }
-            .labelStyle(.iconOnly)
-            .help(L10n.pageJump)
-            .disabled(pageCount <= 1)
-            .shortcut(.readerJumpToPage)
-
-            Button {
-                enterFocusPreset()
-            } label: {
-                Label(L10n.fullScreenReading, systemImage: "arrow.up.left.and.arrow.down.right")
-            }
-            .labelStyle(.iconOnly)
-            .help(L10n.fullScreenReading)
-            .shortcut(.readerToggleFullscreen)
-
-            Button {
-                scrollToPage(pageIndex - 1, proxy: proxy)
-            } label: {
-                Label(L10n.previousPage, systemImage: "chevron.left")
-            }
-            .labelStyle(.iconOnly)
-            .help(L10n.previousPage)
-            .disabled(pageIndex <= 0)
-
-            Text(L10n.pageStatus(pageIndex + 1, pageCount))
-                .font(.callout.monospacedDigit())
-                .foregroundStyle(.secondary)
-                .frame(minWidth: 110)
-
-            Button {
-                scrollToPage(pageIndex + 1, proxy: proxy)
-            } label: {
-                Label(L10n.nextPage, systemImage: "chevron.right")
-            }
-            .labelStyle(.iconOnly)
-            .help(L10n.nextPage)
-            .disabled(pageIndex >= pageCount - 1)
+            imageTransformMenu
+            pageJumpButton
+            focusButton
+            previousPageButton(proxy: proxy)
+            pageStatusText
+            nextPageButton(proxy: proxy)
         }
+    }
+
+    // Inline quality toggle — flips the per-content quality preset without
+    // sending users into Settings while preserving separate illust/manga defaults.
+    private var qualityButton: some View {
+        Button {
+            store.setPreferOriginalImages(
+                !store.preferOriginalImages(for: artwork, pageCount: pageCount),
+                for: artwork,
+                pageCount: pageCount
+            )
+        } label: {
+            let isOriginal = store.preferOriginalImages(for: artwork, pageCount: pageCount)
+            Label(
+                isOriginal ? L10n.imageQualityOriginal : L10n.imageQualityStandard,
+                systemImage: isOriginal ? "photo.badge.checkmark.fill" : "photo"
+            )
+        }
+        .labelStyle(.iconOnly)
+        .help(L10n.imageQualityToggleHint)
+    }
+
+    private var snapToPagesButton: some View {
+        Button {
+            snapToPageBoundaries.toggle()
+        } label: {
+            Label(
+                L10n.snapToPages,
+                systemImage: snapToPageBoundaries ? "arrow.down.to.line" : "arrow.down.to.line.compact"
+            )
+        }
+        .labelStyle(.iconOnly)
+        .help(L10n.snapToPages)
+    }
+
+    private var imageTransformMenu: some View {
+        Menu {
+            Button {
+                imageRotation -= 90
+            } label: {
+                Label(L10n.rotateLeft, systemImage: "rotate.left")
+            }
+            Button {
+                imageRotation += 90
+            } label: {
+                Label(L10n.rotateRight, systemImage: "rotate.right")
+            }
+            Divider()
+            Button {
+                isImageFlippedHorizontally.toggle()
+            } label: {
+                Label(L10n.flipHorizontal, systemImage: "arrow.left.and.right.righttriangle.left.righttriangle.right")
+            }
+            Button {
+                isImageFlippedVertically.toggle()
+            } label: {
+                Label(L10n.flipVertical, systemImage: "arrow.up.and.down.righttriangle.up.righttriangle.down")
+            }
+            Divider()
+            Button {
+                imageRotation = 0
+                isImageFlippedHorizontally = false
+                isImageFlippedVertically = false
+            } label: {
+                Label(L10n.resetTransform, systemImage: "arrow.counterclockwise")
+            }
+        } label: {
+            Label(L10n.imageTransform, systemImage: "crop.rotate")
+        }
+        .labelStyle(.iconOnly)
+        .help(L10n.imageTransform)
+    }
+
+    private var pageJumpButton: some View {
+        Button {
+            isPageJumpPresented = true
+        } label: {
+            Label(L10n.pageJump, systemImage: "number")
+        }
+        .labelStyle(.iconOnly)
+        .help(L10n.pageJump)
+        .disabled(pageCount <= 1)
+        .shortcut(.readerJumpToPage)
+    }
+
+    private var focusButton: some View {
+        Button {
+            enterFocusPreset()
+        } label: {
+            Label(L10n.fullScreenReading, systemImage: "arrow.up.left.and.arrow.down.right")
+        }
+        .labelStyle(.iconOnly)
+        .help(L10n.fullScreenReading)
+        .shortcut(.readerToggleFullscreen)
+    }
+
+    private func previousPageButton(proxy: ScrollViewProxy) -> some View {
+        Button {
+            scrollToPage(pageIndex - 1, proxy: proxy)
+        } label: {
+            Label(L10n.previousPage, systemImage: "chevron.left")
+        }
+        .labelStyle(.iconOnly)
+        .help(L10n.previousPage)
+        .disabled(pageIndex <= 0)
+    }
+
+    private var pageStatusText: some View {
+        Text(L10n.pageStatus(pageIndex + 1, pageCount))
+            .font(.callout.monospacedDigit())
+            .foregroundStyle(.secondary)
+            .frame(minWidth: 96)
+    }
+
+    private func nextPageButton(proxy: ScrollViewProxy) -> some View {
+        Button {
+            scrollToPage(pageIndex + 1, proxy: proxy)
+        } label: {
+            Label(L10n.nextPage, systemImage: "chevron.right")
+        }
+        .labelStyle(.iconOnly)
+        .help(L10n.nextPage)
+        .disabled(pageIndex >= pageCount - 1)
     }
 
     private func focusOverlay(proxy: ScrollViewProxy) -> some View {

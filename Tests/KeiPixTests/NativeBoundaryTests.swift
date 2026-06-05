@@ -1215,6 +1215,10 @@ struct NativeBoundaryTests {
             contentsOf: root.appending(path: "Sources/KeiPix/Views/ArtworkSummaryView.swift"),
             encoding: .utf8
         )
+        let standaloneReader = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/StandaloneArtworkReader.swift"),
+            encoding: .utf8
+        )
         let interactionModels = try String(
             contentsOf: root.appending(path: "Sources/KeiPix/Models/ReaderInteractionModels.swift"),
             encoding: .utf8
@@ -1246,6 +1250,11 @@ struct NativeBoundaryTests {
         #expect(readerView.contains(".buttonStyle(.bordered)"))
         #expect(readerView.contains("private var pageIndicator: some View"))
         #expect(readerView.contains(".pickerStyle(.segmented)") == false)
+        #expect(standaloneReader.contains("if ReaderPlatformKind.current == .phone"))
+        #expect(standaloneReader.contains("private func compactHeader(proxy: ScrollViewProxy) -> some View"))
+        #expect(standaloneReader.contains("ScrollView(.horizontal)"))
+        #expect(standaloneReader.contains("readerActionRail(proxy: proxy)"))
+        #expect(standaloneReader.contains(".layoutPriority(1)"))
         #expect(imageScrollView.contains("func handleMagnificationChanged(_ magnification: CGFloat)"))
         #expect(imageScrollView.contains("private func centerDocument()"))
         #expect(imageScrollView.contains("scrollView.contentInsets = NSEdgeInsets("))
