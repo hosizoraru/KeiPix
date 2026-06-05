@@ -398,7 +398,7 @@ struct ContentView: View {
                     }
 
                     ToolbarItem(placement: .primaryAction) {
-                        if showsGalleryLayoutPicker {
+                        if showsGalleryLayoutPicker(showsSidebarToggle: showsSidebarToggle) {
                             NativeToolbarMenuButton(
                                 systemImage: store.galleryLayoutMode.systemImage,
                                 accessibilityLabel: L10n.galleryLayout,
@@ -800,8 +800,8 @@ struct ContentView: View {
         showsSidebarToggle && store.selectedRoute == .spotlight
     }
 
-    private var showsGalleryLayoutPicker: Bool {
-        store.selectedRoute.usesArtworkFeed
+    private func showsGalleryLayoutPicker(showsSidebarToggle: Bool) -> Bool {
+        showsSidebarToggle && store.selectedRoute.usesArtworkFeed
     }
 
     private var showsArtworkNavigationControls: Bool {
@@ -1341,6 +1341,7 @@ struct ContentView: View {
         } else {
             GalleryView(
                 store: store,
+                allowsMasonryLayout: showsSidebarToggle,
                 onGalleryScrollDirectionChange: handleCompactGalleryScrollDirection
             )
         }

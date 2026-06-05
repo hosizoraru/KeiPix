@@ -5,14 +5,17 @@ import SwiftUI
 
 struct GalleryView: View {
     @Bindable var store: KeiPixStore
+    let allowsMasonryLayout: Bool
     let onGalleryScrollDirectionChange: ((NativeGalleryScrollDirection) -> Void)?
     @State private var actionMessage: String?
 
     init(
         store: KeiPixStore,
+        allowsMasonryLayout: Bool = true,
         onGalleryScrollDirectionChange: ((NativeGalleryScrollDirection) -> Void)? = nil
     ) {
         self.store = store
+        self.allowsMasonryLayout = allowsMasonryLayout
         self.onGalleryScrollDirectionChange = onGalleryScrollDirectionChange
     }
 
@@ -26,6 +29,7 @@ struct GalleryView: View {
                     actionMessage: $actionMessage,
                     navigationTitle: navigationTitle,
                     gallerySubtitle: gallerySubtitle,
+                    allowsMasonryLayout: allowsMasonryLayout,
                     onGalleryScrollDirectionChange: onGalleryScrollDirectionChange
                 )
             }
@@ -122,6 +126,7 @@ private struct GalleryFeedView: View {
     @Binding var actionMessage: String?
     let navigationTitle: String
     let gallerySubtitle: String
+    let allowsMasonryLayout: Bool
     let onGalleryScrollDirectionChange: ((NativeGalleryScrollDirection) -> Void)?
     @State private var artworkSelection = GalleryArtworkSelection()
     @State private var batchBookmarkCommandRequest: BatchBookmarkCommandRequest?
@@ -337,27 +342,28 @@ private struct GalleryFeedView: View {
     #endif
 
     private var usesNativeGalleryCollection: Bool {
-        store.galleryLayoutMode.usesArtworkMasonry
-            || store.galleryLayoutMode.usesCompactGrid
-            || store.galleryLayoutMode.usesListRow
+        effectiveGalleryLayoutMode.usesArtworkMasonry
+            || effectiveGalleryLayoutMode.usesCompactGrid
+            || effectiveGalleryLayoutMode.usesListRow
     }
 
     private var nativeGalleryLayout: NativeGalleryCollectionLayout {
-        let loadMoreHeight: CGFloat = store.compactArtworkCards ? 150 : 210
-        if store.galleryLayoutMode.usesListRow {
+        let usesCompactCards = effectiveGalleryLayoutMode.usesCompactGrid
+        let loadMoreHeight: CGFloat = usesCompactCards ? 150 : 210
+        if effectiveGalleryLayoutMode.usesListRow {
             return .listRow(rowHeight: 122, loadMoreHeight: loadMoreHeight)
         }
-        if store.galleryLayoutMode.usesArtworkMasonry {
+        if effectiveGalleryLayoutMode.usesArtworkMasonry {
             return .masonry(configuration: nativeMasonryConfiguration, loadMoreHeight: 210)
         }
         return .compactGrid(
-            cardHeight: store.compactArtworkCards ? 152 : 222,
+            cardHeight: usesCompactCards ? 152 : 222,
             loadMoreHeight: loadMoreHeight
         )
     }
 
     private var nativeMasonryConfiguration: ArtworkMasonryLayoutConfiguration {
-        let fixedColumnCount = store.galleryLayoutMode.fixedColumnCount
+        let fixedColumnCount = effectiveGalleryLayoutMode.fixedColumnCount
         let usesDenseThreeColumnLayout = fixedColumnCount == 3
         return ArtworkMasonryLayoutConfiguration(
             spacing: 12,
@@ -367,6 +373,13 @@ private struct GalleryFeedView: View {
             fixedColumnCount: fixedColumnCount,
             denseFixedColumns: usesDenseThreeColumnLayout
         )
+    }
+
+    private var effectiveGalleryLayoutMode: GalleryLayoutMode {
+        guard allowsMasonryLayout || store.galleryLayoutMode.usesArtworkMasonry == false else {
+            return .compactGrid
+        }
+        return store.galleryLayoutMode
     }
 
     private var nativeGalleryItems: [NativeGalleryCollectionItem] {
@@ -398,7 +411,7 @@ private struct GalleryFeedView: View {
 
     private var nativeGalleryContentReloadToken: Int {
         var hasher = Hasher()
-        hasher.combine(store.galleryLayoutMode.rawValue)
+        hasher.combine(effectiveGalleryLayoutMode.rawValue)
         hasher.combine(store.showContentBadges)
         hasher.combine(store.maskSensitivePreviews)
         hasher.combine(store.feedPreviewImageQualityTier.rawValue)
@@ -460,9 +473,9 @@ private struct GalleryFeedView: View {
         case .popularPreview:
             SearchPopularPreviewStrip(store: store, actionMessage: $actionMessage)
         case .artwork(let artwork):
-            if store.galleryLayoutMode.usesListRow {
+            if effectiveGalleryLayoutMode.usesListRow {
                 nativeListRow(artwork)
-            } else if store.galleryLayoutMode.usesCompactGrid {
+            } else if effectiveGalleryLayoutMode.usesCompactGrid {
                 nativeCompactArtworkTile(artwork)
             } else {
                 nativeMasonryArtworkTile(artwork)
@@ -498,7 +511,7 @@ private struct GalleryFeedView: View {
         ArtworkCardView(
             artwork: artwork,
             isSelected: store.selectedArtwork?.id == artwork.id,
-            isCompact: store.compactArtworkCards,
+            isCompact: effectiveGalleryLayoutMode.usesCompactGrid,
             showContentBadges: store.showContentBadges,
             maskSensitivePreview: store.maskSensitivePreviews,
             downloadState: store.downloads.downloadState(for: artwork.id),
