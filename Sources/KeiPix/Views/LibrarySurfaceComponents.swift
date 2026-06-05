@@ -1,4 +1,7 @@
 import SwiftUI
+#if os(iOS)
+import UIKit
+#endif
 
 struct OS26LibrarySearchField: View {
     @Binding private var text: String
@@ -8,6 +11,7 @@ struct OS26LibrarySearchField: View {
     private let idealWidth: CGFloat
     private let maxWidth: CGFloat
     private let onSubmit: () -> Void
+    @State private var isExpanded = false
 
     init(
         text: Binding<String>,
@@ -28,6 +32,49 @@ struct OS26LibrarySearchField: View {
     }
 
     var body: some View {
+        #if os(iOS)
+        if usesCollapsedPhoneSearch {
+            Button {
+                withAnimation(.snappy(duration: 0.18)) {
+                    isExpanded = true
+                }
+            } label: {
+                Label(L10n.search, systemImage: "magnifyingglass")
+                    .lineLimit(1)
+            }
+            .os26GlassButton()
+            .accessibilityLabel(placeholder)
+        } else if isPhone {
+            HStack(spacing: 8) {
+                nativeField
+                    .frame(minWidth: minWidth, idealWidth: idealWidth, maxWidth: maxWidth)
+
+                if text.isEmpty {
+                    Button {
+                        withAnimation(.snappy(duration: 0.16)) {
+                            isExpanded = false
+                        }
+                    } label: {
+                        Label(L10n.close, systemImage: "xmark.circle.fill")
+                    }
+                    .labelStyle(.iconOnly)
+                    .buttonStyle(.plain)
+                    .foregroundStyle(.secondary)
+                    .help(L10n.close)
+                    .accessibilityLabel(L10n.close)
+                }
+            }
+        } else {
+            nativeField
+                .frame(minWidth: minWidth, idealWidth: idealWidth, maxWidth: maxWidth)
+        }
+        #else
+        nativeField
+            .frame(minWidth: minWidth, idealWidth: idealWidth, maxWidth: maxWidth)
+        #endif
+    }
+
+    private var nativeField: some View {
         NativeSearchField(
             text: $text,
             placeholder: placeholder,
@@ -35,9 +82,18 @@ struct OS26LibrarySearchField: View {
             onSubmit: onSubmit,
             onTextChange: { text = $0 }
         )
-        .frame(minWidth: minWidth, idealWidth: idealWidth, maxWidth: maxWidth)
         .accessibilityLabel(placeholder)
     }
+
+    #if os(iOS)
+    private var usesCollapsedPhoneSearch: Bool {
+        isPhone && text.isEmpty && isExpanded == false
+    }
+
+    private var isPhone: Bool {
+        UIDevice.current.userInterfaceIdiom == .phone
+    }
+    #endif
 }
 
 struct OS26LibraryTextEntryField: View {

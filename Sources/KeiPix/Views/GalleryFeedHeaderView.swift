@@ -1,4 +1,7 @@
 import SwiftUI
+#if os(iOS)
+import UIKit
+#endif
 
 enum FeedHeaderPresentation {
     case regular
@@ -24,6 +27,7 @@ struct FeedHeaderView: View {
     @State private var isApplyingBatchBookmark = false
     @State private var draftUseRankingDate = false
     @State private var draftRankingDate = KeiPixStore.latestSelectableRankingDate()
+    @State private var isInlineFilterExpanded = false
 
     init(
         store: KeiPixStore,
@@ -84,9 +88,7 @@ struct FeedHeaderView: View {
     private var iPadCompactHeaderInlineActions: some View {
         HStack(spacing: 7) {
             if store.artworks.isEmpty == false {
-                iPadCompactFilterField
-                    .frame(minWidth: 180, idealWidth: 240, maxWidth: 300, minHeight: 34, maxHeight: 34)
-                    .layoutPriority(1)
+                iPadCompactFilterControl(expandedWidth: 300)
 
                 iPadCompactRandomButton
             }
@@ -118,12 +120,15 @@ struct FeedHeaderView: View {
     @ViewBuilder
     private var iPadCompactHeaderStackedActions: some View {
         VStack(alignment: .trailing, spacing: 7) {
-            if store.artworks.isEmpty == false {
-                iPadCompactFilterField
-                    .frame(maxWidth: .infinity, minHeight: 34, maxHeight: 34)
+            if store.artworks.isEmpty == false, showsExpandedInlineFilter {
+                iPadCompactFilterControl(expandedWidth: nil)
             }
 
             HStack(spacing: 7) {
+                if store.artworks.isEmpty == false, showsExpandedInlineFilter == false {
+                    iPadCompactFilterControl(expandedWidth: nil)
+                }
+
                 if store.artworks.isEmpty == false {
                     iPadCompactRandomButton
                 }
@@ -160,9 +165,73 @@ struct FeedHeaderView: View {
             accessibilityLabel: L10n.filterArtworks
         )
     }
+
+    @ViewBuilder
+    private func iPadCompactFilterControl(expandedWidth: CGFloat?) -> some View {
+        if usesPhoneFilterDisclosure, isInlineFilterExpanded == false, store.clientFilterQuery.isEmpty {
+            Button {
+                withAnimation(.snappy(duration: 0.18)) {
+                    isInlineFilterExpanded = true
+                }
+            } label: {
+                Label(L10n.filterArtworks, systemImage: "line.3.horizontal.decrease.circle")
+            }
+            .help(L10n.filterArtworks)
+            .accessibilityLabel(L10n.filterArtworks)
+            .iPadFeedHeaderActionChrome()
+        } else {
+            HStack(spacing: 7) {
+                iPadCompactFilterField
+                    .frame(
+                        minWidth: usesPhoneFilterDisclosure ? 170 : 180,
+                        idealWidth: usesPhoneFilterDisclosure ? 220 : 240,
+                        maxWidth: expandedWidth ?? .infinity,
+                        minHeight: 34,
+                        maxHeight: 34
+                    )
+                    .layoutPriority(1)
+
+                if usesPhoneFilterDisclosure {
+                    Button {
+                        withAnimation(.snappy(duration: 0.16)) {
+                            if store.clientFilterQuery.isEmpty {
+                                isInlineFilterExpanded = false
+                            } else {
+                                store.clientFilterQuery = ""
+                            }
+                        }
+                    } label: {
+                        Label(
+                            store.clientFilterQuery.isEmpty ? L10n.close : L10n.clearSearch,
+                            systemImage: "xmark.circle.fill"
+                        )
+                    }
+                    .help(store.clientFilterQuery.isEmpty ? L10n.close : L10n.clearSearch)
+                    .accessibilityLabel(store.clientFilterQuery.isEmpty ? L10n.close : L10n.clearSearch)
+                    .iPadFeedHeaderActionChrome()
+                }
+            }
+        }
+    }
+
+    private var showsExpandedInlineFilter: Bool {
+        usesPhoneFilterDisclosure && (isInlineFilterExpanded || store.clientFilterQuery.isEmpty == false)
+    }
+
+    private var usesPhoneFilterDisclosure: Bool {
+        UIDevice.current.userInterfaceIdiom == .phone
+    }
     #else
     private var iPadCompactFilterField: some View {
         EmptyView()
+    }
+
+    private func iPadCompactFilterControl(expandedWidth: CGFloat?) -> some View {
+        iPadCompactFilterField
+    }
+
+    private var showsExpandedInlineFilter: Bool {
+        false
     }
     #endif
 

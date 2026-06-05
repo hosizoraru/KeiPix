@@ -30,6 +30,10 @@ struct MobileWorkspaceLayout: Equatable, Sendable {
         platform == .pad && usesCompactTabs && isPortrait
     }
 
+    var usesPhoneSearchTab: Bool {
+        platform == .phone && usesCompactTabs
+    }
+
     var isPortrait: Bool {
         validHeight >= validWidth
     }

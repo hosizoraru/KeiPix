@@ -31,6 +31,7 @@ struct ContentView: View {
         case library
         case settings
         case shortcuts
+        case search
 
         var title: String {
             switch self {
@@ -38,6 +39,7 @@ struct ContentView: View {
             case .library: return L10n.downloads
             case .settings: return L10n.settings
             case .shortcuts: return L10n.shortcuts
+            case .search: return L10n.search
             }
         }
 
@@ -47,6 +49,7 @@ struct ContentView: View {
             case .library: return "arrow.down.circle"
             case .settings: return "gearshape"
             case .shortcuts: return "slider.horizontal.3"
+            case .search: return "magnifyingglass"
             }
         }
     }
@@ -208,9 +211,20 @@ struct ContentView: View {
                     portraitShortcutsTab
                 }
             }
+
+            if layout.usesPhoneSearchTab {
+                Tab(L10n.search, systemImage: "magnifyingglass", value: .search, role: .search) {
+                    phoneSearchTab
+                }
+            }
         }
         .onChange(of: layout.usesPortraitTopCustomization) { _, isEnabled in
             if isEnabled == false, selectedTab == .shortcuts {
+                selectedTab = .feed
+            }
+        }
+        .onChange(of: layout.usesPhoneSearchTab) { _, isEnabled in
+            if isEnabled == false, selectedTab == .search {
                 selectedTab = .feed
             }
         }
@@ -413,20 +427,11 @@ struct ContentView: View {
                         .fixedSize(horizontal: true, vertical: false)
                     }
                 }
-                .searchable(text: globalSearchTextBinding, prompt: L10n.searchPlaceholder)
-                .searchSuggestions {
-                    ForEach(store.matchingLocalSearchTerms(), id: \.self) { keyword in
-                        SearchKeywordSuggestionRow(keyword: keyword, isSaved: store.savedSearches.containsCaseInsensitive(keyword))
-                            .searchCompletion(keyword)
-                    }
-                    ForEach(store.searchSuggestions, id: \.name) { suggestion in
-                        SearchSuggestionRow(tag: suggestion)
-                            .searchCompletion(suggestion.name)
-                    }
-                }
-                .onSubmit(of: .search) {
-                    Task { await store.runSearch() }
-                }
+                .modifier(MobileGlobalSearchModifier(
+                    store: store,
+                    searchText: globalSearchTextBinding,
+                    isEnabled: currentMobilePlatform != .phone
+                ))
                 .task(id: store.searchText) {
                     await store.refreshSearchSuggestions()
                 }
@@ -1337,6 +1342,8 @@ struct ContentView: View {
             selectedSidebarItem = .settings
         case .shortcuts:
             selectedSidebarItem = .route(store.selectedRoute)
+        case .search:
+            selectedSidebarItem = .route(.search)
         }
     }
 
@@ -1373,6 +1380,192 @@ struct ContentView: View {
     private var settingsTab: some View {
         NavigationStack {
             SettingsView(store: store)
+        }
+    }
+
+    // MARK: - Phone Search Tab
+
+    private var phoneSearchTab: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    phoneSearchHero
+                    phoneSearchFieldCard
+
+                    if store.searchSuggestions.isEmpty == false {
+                        phonePixivSuggestionSection
+                    }
+
+                    if store.savedSearches.isEmpty == false {
+                        phoneKeywordSection(
+                            title: L10n.savedSearches,
+                            systemImage: "star",
+                            keywords: Array(store.savedSearches.prefix(8)),
+                            saved: true
+                        )
+                    }
+
+                    if store.searchHistory.isEmpty == false {
+                        phoneKeywordSection(
+                            title: L10n.recentSearches,
+                            systemImage: "clock.arrow.circlepath",
+                            keywords: Array(store.searchHistory.prefix(8)),
+                            saved: false
+                        )
+                    }
+                }
+                .padding(.horizontal, 16)
+                .padding(.top, 10)
+                .padding(.bottom, 24)
+                .frame(maxWidth: 560, alignment: .leading)
+                .frame(maxWidth: .infinity, alignment: .top)
+            }
+            .navigationTitle(L10n.search)
+            .navigationBarTitleDisplayMode(.inline)
+            .task(id: store.searchText) {
+                await store.refreshSearchSuggestions()
+            }
+            .toolbar {
+                if hasActiveGlobalSearchText {
+                    ToolbarItem(placement: .primaryAction) {
+                        Button {
+                            withAnimation(.snappy(duration: 0.16)) {
+                                store.clearSearchText()
+                            }
+                        } label: {
+                            Label(L10n.clearSearch, systemImage: "xmark.circle.fill")
+                        }
+                        .labelStyle(.iconOnly)
+                        .help(L10n.clearSearch)
+                        .accessibilityLabel(L10n.clearSearch)
+                    }
+                }
+            }
+        }
+    }
+
+    private var phoneSearchHero: some View {
+        HStack(spacing: 14) {
+            Image(systemName: "magnifyingglass")
+                .font(.title2.weight(.semibold))
+                .symbolRenderingMode(.hierarchical)
+                .foregroundStyle(.secondary)
+                .frame(width: 52, height: 52)
+                .keiGlass(18)
+                .accessibilityHidden(true)
+
+            VStack(alignment: .leading, spacing: 5) {
+                Text(L10n.search)
+                    .font(.title3.weight(.bold))
+                    .lineLimit(1)
+
+                Text(L10n.searchPlaceholder)
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.86)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .keiGlass(24)
+    }
+
+    private var phoneSearchFieldCard: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            NativeSearchField(
+                text: globalSearchTextBinding,
+                placeholder: L10n.searchPlaceholder,
+                suggestions: store.matchingLocalSearchTerms(),
+                onSubmit: { submitPhoneSearch() },
+                onTextChange: { store.searchText = $0 }
+            )
+            .frame(minHeight: 38)
+            .accessibilityLabel(L10n.search)
+
+            HStack(spacing: 10) {
+                Button {
+                    submitPhoneSearch()
+                } label: {
+                    Label(L10n.search, systemImage: "magnifyingglass")
+                }
+                .os26GlassButton(prominent: true)
+                .disabled(hasActiveGlobalSearchText == false)
+
+                if hasActiveGlobalSearchText {
+                    Button {
+                        withAnimation(.snappy(duration: 0.16)) {
+                            store.clearSearchText()
+                        }
+                    } label: {
+                        Label(L10n.clearSearch, systemImage: "xmark.circle")
+                    }
+                    .os26GlassButton()
+                }
+            }
+        }
+        .padding(14)
+        .keiGlass(22)
+    }
+
+    private var phonePixivSuggestionSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Label(L10n.searchSuggestions, systemImage: "tag")
+                .font(.headline)
+
+            FlowLayout(spacing: 8) {
+                ForEach(store.searchSuggestions, id: \.name) { tag in
+                    Button {
+                        submitPhoneSearch(keyword: tag.name)
+                    } label: {
+                        Label(tag.name, systemImage: "tag")
+                            .lineLimit(1)
+                    }
+                    .os26GlassButton()
+                }
+            }
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .keiGlass(20)
+    }
+
+    private func phoneKeywordSection(
+        title: String,
+        systemImage: String,
+        keywords: [String],
+        saved: Bool
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Label(title, systemImage: systemImage)
+                .font(.headline)
+
+            FlowLayout(spacing: 8) {
+                ForEach(keywords, id: \.self) { keyword in
+                    Button {
+                        submitPhoneSearch(keyword: keyword)
+                    } label: {
+                        Label(keyword, systemImage: saved ? "star.fill" : "clock.arrow.circlepath")
+                            .lineLimit(1)
+                    }
+                    .os26GlassButton()
+                }
+            }
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .keiGlass(20)
+    }
+
+    private func submitPhoneSearch(keyword: String? = nil) {
+        if let keyword {
+            store.searchText = keyword
+        }
+        Task {
+            await store.runSearch()
+            selectedSidebarItem = .route(.search)
+            selectedTab = .feed
         }
     }
 
@@ -1646,6 +1839,38 @@ struct ContentView: View {
             if newValue == false {
                 dismissCompactArtworkDetail(clearSelection: false)
             }
+        }
+    }
+}
+
+private struct MobileGlobalSearchModifier: ViewModifier {
+    @Bindable var store: KeiPixStore
+    let searchText: Binding<String>
+    let isEnabled: Bool
+
+    @ViewBuilder
+    func body(content: Content) -> some View {
+        if isEnabled {
+            content
+                .searchable(text: searchText, prompt: L10n.searchPlaceholder)
+                .searchSuggestions {
+                    ForEach(store.matchingLocalSearchTerms(), id: \.self) { keyword in
+                        SearchKeywordSuggestionRow(
+                            keyword: keyword,
+                            isSaved: store.savedSearches.containsCaseInsensitive(keyword)
+                        )
+                        .searchCompletion(keyword)
+                    }
+                    ForEach(store.searchSuggestions, id: \.name) { suggestion in
+                        SearchSuggestionRow(tag: suggestion)
+                            .searchCompletion(suggestion.name)
+                    }
+                }
+                .onSubmit(of: .search) {
+                    Task { await store.runSearch() }
+                }
+        } else {
+            content
         }
     }
 }

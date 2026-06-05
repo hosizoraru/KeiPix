@@ -443,12 +443,60 @@ struct NativeBoundaryTests {
         #expect(iPhonePortrait.usesPortraitTopCustomization == false)
         #expect(iPadPortrait.usesPortraitTopCustomization)
         #expect(iPadLandscape.usesPortraitTopCustomization == false)
+        #expect(iPhonePortrait.usesPhoneSearchTab)
+        #expect(iPhoneLandscape.usesPhoneSearchTab)
+        #expect(iPadPortrait.usesPhoneSearchTab == false)
         #expect(iPhonePortrait.usesCondensedChrome)
         #expect(iPadPortrait.usesCondensedChrome == false)
         #expect(iPhonePortrait.articleHorizontalPadding == 16)
         #expect(iPadPortrait.articleHorizontalPadding == 22)
         #expect(iPadLandscape.articleHorizontalPadding == 28)
         #expect(iPadLandscape.articleContentMaximumWidth == 720)
+    }
+
+    @Test("iPhone search is opt-in instead of persistent in every content surface")
+    func iPhoneSearchIsOptInInsteadOfPersistentEverywhere() throws {
+        let root = try packageRoot()
+        let mobileLayout = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Support/MobileWorkspaceLayout.swift"),
+            encoding: .utf8
+        )
+        let iPadContentView = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/ContentView_iPadOS.swift"),
+            encoding: .utf8
+        )
+        let sharedComponents = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/LibrarySurfaceComponents.swift"),
+            encoding: .utf8
+        )
+        let feedHeader = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/GalleryFeedHeaderView.swift"),
+            encoding: .utf8
+        )
+        let l10n = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Support/L10n.swift"),
+            encoding: .utf8
+        )
+        let localizable = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Resources/Localizable.xcstrings"),
+            encoding: .utf8
+        )
+
+        #expect(mobileLayout.contains("var usesPhoneSearchTab: Bool"))
+        #expect(iPadContentView.contains("Tab(L10n.search, systemImage: \"magnifyingglass\", value: .search, role: .search)"))
+        #expect(iPadContentView.contains("private var phoneSearchTab: some View"))
+        #expect(iPadContentView.contains(".task(id: store.searchText)"))
+        #expect(iPadContentView.contains("await store.refreshSearchSuggestions()"))
+        #expect(iPadContentView.contains("MobileGlobalSearchModifier("))
+        #expect(iPadContentView.contains("isEnabled: currentMobilePlatform != .phone"))
+        #expect(iPadContentView.contains("selectedTab = .feed"))
+        #expect(sharedComponents.contains("private var usesCollapsedPhoneSearch: Bool"))
+        #expect(sharedComponents.contains("UIDevice.current.userInterfaceIdiom == .phone"))
+        #expect(feedHeader.contains("private var usesPhoneFilterDisclosure: Bool"))
+        #expect(feedHeader.contains("@State private var isInlineFilterExpanded = false"))
+        #expect(feedHeader.contains("iPadCompactFilterControl(expandedWidth: 300)"))
+        #expect(l10n.contains("static var searchSuggestions: String"))
+        #expect(localizable.contains("\"Search Suggestions\""))
     }
 
     @Test("Mobile portrait reading surfaces avoid landscape-only chrome")
@@ -1530,6 +1578,8 @@ struct NativeBoundaryTests {
 
         #expect(sharedComponents.contains("struct OS26LibrarySearchField: View"))
         #expect(sharedComponents.contains("NativeSearchField("))
+        #expect(sharedComponents.contains("usesCollapsedPhoneSearch"))
+        #expect(sharedComponents.contains("isPhone && text.isEmpty && isExpanded == false"))
         #expect(sharedComponents.contains("struct OS26LibraryTextEntryField: View"))
         #expect(sharedComponents.contains("struct OS26LibraryLoadingView: View"))
         #expect(sharedComponents.contains("struct OS26LibraryUnavailableView<Actions: View>: View"))
@@ -1805,7 +1855,9 @@ struct NativeBoundaryTests {
         #expect(macContentView.contains("private var globalSearchTextBinding"))
         #expect(macContentView.contains("private var hasActiveGlobalSearchText"))
         #expect(macContentView.contains("store.clearSearchText()"))
-        #expect(iPadContentView.contains(".searchable(text: globalSearchTextBinding"))
+        #expect(iPadContentView.contains("MobileGlobalSearchModifier("))
+        #expect(iPadContentView.contains("searchText: globalSearchTextBinding"))
+        #expect(iPadContentView.contains(".searchable(text: searchText"))
         #expect(iPadContentView.contains("private var globalSearchTextBinding"))
         #expect(iPadContentView.contains("private var hasActiveGlobalSearchText"))
         #expect(iPadContentView.contains("store.clearSearchText()"))

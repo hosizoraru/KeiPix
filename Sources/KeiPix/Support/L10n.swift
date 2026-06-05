@@ -57,6 +57,7 @@ enum L10n {
     static var savedArticleCountFormat: String { text("%d saved articles") }
     static var articleHistoryCountFormat: String { text("%d history articles") }
     static var search: String { text("Search") }
+    static var searchSuggestions: String { text("Search Suggestions") }
     static var searchCreators: String { text("Search Creators") }
     static var savedSearches: String { text("Saved Searches") }
     static var savedSearchPresets: String { text("Saved Search Presets") }
