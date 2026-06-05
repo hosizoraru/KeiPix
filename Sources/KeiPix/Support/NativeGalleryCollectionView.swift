@@ -75,6 +75,13 @@ enum NativeGalleryScrollDirection: Sendable {
     case towardContentStart
 }
 
+enum NativeGalleryBoundsInvalidation {
+    static func shouldInvalidate(oldSize: CGSize, newSize: CGSize, tolerance: CGFloat = 0.5) -> Bool {
+        abs(oldSize.width - newSize.width) > tolerance
+            || abs(oldSize.height - newSize.height) > tolerance
+    }
+}
+
 enum NativeGalleryCollectionLayout: Equatable {
     case compactGrid(cardHeight: CGFloat, loadMoreHeight: CGFloat)
     case listRow(rowHeight: CGFloat, loadMoreHeight: CGFloat)
@@ -492,7 +499,11 @@ private final class NativeGalleryMasonryNSCollectionViewLayout: NSCollectionView
     }
 
     override func shouldInvalidateLayout(forBoundsChange newBounds: NSRect) -> Bool {
-        true
+        guard let collectionView else { return false }
+        return NativeGalleryBoundsInvalidation.shouldInvalidate(
+            oldSize: collectionView.bounds.size,
+            newSize: newBounds.size
+        )
     }
 }
 
@@ -922,7 +933,11 @@ private final class NativeGalleryMasonryUICollectionViewLayout: UICollectionView
     }
 
     override func shouldInvalidateLayout(forBoundsChange newBounds: CGRect) -> Bool {
-        true
+        guard let collectionView else { return false }
+        return NativeGalleryBoundsInvalidation.shouldInvalidate(
+            oldSize: collectionView.bounds.size,
+            newSize: newBounds.size
+        )
     }
 
     private func copiedAttributes(for indexPath: IndexPath) -> UICollectionViewLayoutAttributes? {
