@@ -16,6 +16,7 @@ struct ArtworkCardView: View {
     /// surfaces forward `KeiPixStore.feedPreviewImageQualityTier`.
     var feedPreviewTier: ArtworkImageQualityTier = .medium
     var downloadedFileURL: URL? = nil
+    var isScrollPerformanceOptimized = false
     /// When true and the artwork's author is followed, the card draws a
     /// thicker accent-tinted border so the user can spot following-artist
     /// works inside mixed feeds (search, ranking, recommendation). Mirrors
@@ -28,37 +29,36 @@ struct ArtworkCardView: View {
 
     var body: some View {
         Button(action: action) {
-            if fillsAvailableHeight {
+            if fillsAvailableHeight && isScrollPerformanceOptimized == false {
                 GeometryReader { proxy in
                     cardContent(height: proxy.size.height)
                 }
             } else {
-                cardContent(height: renderedImageHeight)
+                cardContent(height: fillsAvailableHeight ? nil : renderedImageHeight)
             }
         }
         .buttonStyle(.plain)
+        .frame(maxWidth: .infinity, maxHeight: fillsAvailableHeight ? .infinity : nil)
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         .overlay {
             RoundedRectangle(cornerRadius: 18, style: .continuous)
                 .stroke(borderColor, lineWidth: borderLineWidth)
         }
-        .shadow(color: .black.opacity(isHovering ? 0.18 : 0.08), radius: isHovering ? 12 : 5, y: isHovering ? 8 : 3)
-        .scaleEffect(isHovering ? 1.012 : 1)
-        .animation(.snappy(duration: 0.16), value: isHovering)
-        .animation(.snappy(duration: 0.16), value: isSelected)
-        .keiPixHoverTracker { isHovering = $0 }
-        // Drag the artwork's Pixiv URL out of the card. macOS turns a
-        // URL drop on Finder into a `.webloc` bookmark, while drops
-        // into Safari, Notes, or Messages paste the link verbatim —
-        // matches the affordance Pixes/Pixez expose through their
-        // "Copy link" action but without the round-trip through the
-        // pasteboard. Falls back to the canonical
-        // `https://www.pixiv.net/artworks/<id>` URL if the artwork
-        // payload didn't carry one.
-        .draggable(dragContent)
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel(accessibilityDescription)
-        .accessibilityHint(L10n.artworkCardHint)
+        .modifier(
+            ArtworkCardMotionModifier(
+                isEnabled: isScrollPerformanceOptimized == false,
+                isHovering: isHovering,
+                isSelected: isSelected,
+                onHoverChange: { isHovering = $0 }
+            )
+        )
+        .modifier(
+            ArtworkCardInteractionModifier(
+                isEnabled: isScrollPerformanceOptimized == false,
+                dragContent: dragContent,
+                accessibilityDescription: accessibilityDescription
+            )
+        )
     }
 
     private var accessibilityDescription: String {
@@ -104,11 +104,12 @@ struct ArtworkCardView: View {
         artwork.pixivURL ?? URL(string: "https://www.pixiv.net/artworks/\(artwork.id)")!
     }
 
-    private func cardContent(height: CGFloat) -> some View {
+    private func cardContent(height: CGFloat?) -> some View {
         ZStack(alignment: .bottomLeading) {
             RemoteImageView(url: artwork.feedPreviewURL(tier: feedPreviewTier) ?? artwork.thumbnailURL)
                 .sensitiveArtworkPreviewMasked(shouldMaskSensitivePreview, badges: artwork.contentBadges)
                 .frame(height: height)
+                .frame(maxHeight: height == nil ? .infinity : nil)
                 .frame(maxWidth: .infinity)
                 .overlay(alignment: .bottom) {
                     LinearGradient(
@@ -116,7 +117,7 @@ struct ArtworkCardView: View {
                         startPoint: .center,
                         endPoint: .bottom
                     )
-                    .frame(height: height * resolvedDisplayStyle.overlayFraction)
+                    .frame(height: height.map { $0 * resolvedDisplayStyle.overlayFraction })
                 }
 
             if showContentBadges {
@@ -140,11 +141,7 @@ struct ArtworkCardView: View {
                         .fixedSize(horizontal: false, vertical: true)
                     Spacer(minLength: 6)
                     if artwork.pageCount > 1 {
-                        Text(L10n.pageCountShort(artwork.pageCount))
-                            .font(.caption2.weight(.semibold))
-                            .padding(.horizontal, 7)
-                            .padding(.vertical, 3)
-                            .keiGlass(10)
+                        pageCountBadge
                     }
                 }
 
@@ -177,6 +174,24 @@ struct ArtworkCardView: View {
                 .minimumScaleFactor(0.76)
             }
             .padding(10)
+        }
+        .frame(maxWidth: .infinity, maxHeight: height == nil ? .infinity : nil)
+    }
+
+    @ViewBuilder
+    private var pageCountBadge: some View {
+        let badge = Text(L10n.pageCountShort(artwork.pageCount))
+            .font(.caption2.weight(.semibold))
+            .padding(.horizontal, 7)
+            .padding(.vertical, 3)
+
+        if isScrollPerformanceOptimized {
+            badge
+                .foregroundStyle(.white)
+                .background(.black.opacity(0.42), in: Capsule())
+        } else {
+            badge
+                .keiGlass(10)
         }
     }
 
@@ -219,6 +234,59 @@ private struct ArtworkDownloadStateBadge: View {
             .green
         case .failed:
             .orange
+        }
+    }
+}
+
+private struct ArtworkCardMotionModifier: ViewModifier {
+    let isEnabled: Bool
+    let isHovering: Bool
+    let isSelected: Bool
+    let onHoverChange: (Bool) -> Void
+
+    @ViewBuilder
+    func body(content: Content) -> some View {
+        if isEnabled {
+            content
+                .shadow(
+                    color: .black.opacity(isHovering ? 0.18 : 0.08),
+                    radius: isHovering ? 12 : 5,
+                    y: isHovering ? 8 : 3
+                )
+                .scaleEffect(isHovering ? 1.012 : 1)
+                .animation(.snappy(duration: 0.16), value: isHovering)
+                .animation(.snappy(duration: 0.16), value: isSelected)
+                .keiPixHoverTracker(onChange: onHoverChange)
+        } else {
+            content
+                .contentShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+        }
+    }
+}
+
+private struct ArtworkCardInteractionModifier: ViewModifier {
+    let isEnabled: Bool
+    let dragContent: URL
+    let accessibilityDescription: String
+
+    @ViewBuilder
+    func body(content: Content) -> some View {
+        if isEnabled {
+            // Drag the artwork's Pixiv URL out of the card. macOS turns a
+            // URL drop on Finder into a `.webloc` bookmark, while drops
+            // into Safari, Notes, or Messages paste the link verbatim —
+            // matches the affordance Pixes/Pixez expose through their
+            // "Copy link" action but without the round-trip through the
+            // pasteboard. Falls back to the canonical
+            // `https://www.pixiv.net/artworks/<id>` URL if the artwork
+            // payload didn't carry one.
+            content
+                .draggable(dragContent)
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel(accessibilityDescription)
+                .accessibilityHint(L10n.artworkCardHint)
+        } else {
+            content
         }
     }
 }

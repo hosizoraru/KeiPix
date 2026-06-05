@@ -22,7 +22,6 @@ struct ContentView: View {
     @State private var isSettingsSheetPresented = false
     @State private var isMobileTabCustomizationPresented = false
     @State private var isCompactCustomTabRootActive = false
-    @State private var isCompactTabDockCollapsed = false
     @State private var feedbackRequest: FeedbackReportRequest?
     @State private var statusMessage: String?
     @AppStorage("mobileBottomTabItemIDs") private var mobileBottomTabDefaultRouteIDs = MobileBottomTabConfiguration.defaultStorageID
@@ -228,21 +227,17 @@ struct ContentView: View {
         .background {
             TabBarMinimizeBehaviorBridge(
                 behavior: compactUITabBarMinimizeBehavior,
-                isTabBarHidden: isCompactTabDockCollapsed
+                isTabBarHidden: false,
+                usesTransparentBackground: layout.usesCompactTabs
             )
                 .allowsHitTesting(false)
         }
-        .overlay(alignment: .bottom) {
-            compactCollapsedTabDock
-        }
         .onAppear {
             isCompactCustomTabRootActive = layout.usesCustomNavigationTabs
-            setCompactTabDockCollapsed(false)
             syncCompactTabSelectionWithCurrentRoute()
         }
         .onChange(of: layout.usesCustomNavigationTabs) { _, isEnabled in
             isCompactCustomTabRootActive = isEnabled
-            setCompactTabDockCollapsed(false)
             if isEnabled, selectedTab == .library || selectedTab == .settings {
                 selectedTab = .mobile(.illustrations)
             }
@@ -251,13 +246,11 @@ struct ContentView: View {
             }
         }
         .onChange(of: mobileBottomTabDefaultRouteIDs) { _, _ in
-            setCompactTabDockCollapsed(false)
             if isCompactCustomTabRootActive {
                 syncCompactTabSelectionWithCurrentRoute()
             }
         }
         .onChange(of: selectedTab) { _, tab in
-            setCompactTabDockCollapsed(false)
             handleCompactTabSelection(tab)
         }
     }
@@ -276,7 +269,6 @@ struct ContentView: View {
         }
         .onAppear {
             isCompactCustomTabRootActive = false
-            setCompactTabDockCollapsed(false)
             syncSidebarSelectionFromCurrentTab()
         }
         .onChange(of: selectedSidebarItem) { _, item in
@@ -752,27 +744,6 @@ struct ContentView: View {
                 .lineLimit(1)
         }
         .accessibilityLabel("\(L10n.currentRoute): \(store.selectedRoute.title)")
-    }
-
-    @ViewBuilder
-    private var compactCollapsedTabDock: some View {
-        if usesCompactTabDockCollapse, isCompactTabDockCollapsed {
-            Button {
-                setCompactTabDockCollapsed(false)
-            } label: {
-                Image(systemName: selectedTab.systemImage)
-                    .font(.headline.weight(.semibold))
-                    .symbolRenderingMode(.hierarchical)
-                    .frame(width: 52, height: 42)
-            }
-            .buttonStyle(.glassProminent)
-            .buttonBorderShape(.capsule)
-            .controlSize(.large)
-            .help(L10n.showBottomTabs)
-            .accessibilityLabel(L10n.showBottomTabs)
-            .padding(.bottom, 10)
-            .transition(.move(edge: .bottom).combined(with: .opacity))
-        }
     }
 
     private var routeMenuSections: [MobileRouteMenuSection] {
@@ -1341,8 +1312,7 @@ struct ContentView: View {
         } else {
             GalleryView(
                 store: store,
-                galleryLayoutAdaptation: galleryLayoutAdaptation(showsSidebarToggle: showsSidebarToggle),
-                onGalleryScrollDirectionChange: handleCompactGalleryScrollDirection
+                galleryLayoutAdaptation: galleryLayoutAdaptation(showsSidebarToggle: showsSidebarToggle)
             )
         }
     }
@@ -1351,7 +1321,7 @@ struct ContentView: View {
         if showsSidebarToggle {
             return .fullMasonry
         }
-        return currentMobilePlatform == .pad ? .portraitTabletMasonry : .compactGridOnly
+        return currentMobilePlatform == .pad ? .portraitTabletMasonry : .phoneTwoColumnMasonry
     }
 
     private var readerBinding: Binding<Bool> {
@@ -1398,15 +1368,11 @@ struct ContentView: View {
     }
 
     private var compactTabBarMinimizeBehavior: TabBarMinimizeBehavior {
-        currentMobilePlatform == .phone ? .onScrollDown : .automatic
+        currentMobilePlatform == .phone && isCompactCustomTabRootActive ? .onScrollDown : .automatic
     }
 
     private var compactUITabBarMinimizeBehavior: UITabBarController.MinimizeBehavior {
-        currentMobilePlatform == .phone ? .onScrollDown : .automatic
-    }
-
-    private var usesCompactTabDockCollapse: Bool {
-        currentMobilePlatform == .phone && isCompactCustomTabRootActive
+        currentMobilePlatform == .phone && isCompactCustomTabRootActive ? .onScrollDown : .automatic
     }
 
     private var mobileBottomTabDefaultRoutesBinding: Binding<[MobileBottomTabKind: PixivRoute]> {
@@ -1439,26 +1405,6 @@ struct ContentView: View {
     private func toggleIPadSidebar() {
         withAnimation(.snappy(duration: 0.22)) {
             splitColumnVisibility = iPadSidebarVisible ? .detailOnly : .all
-        }
-    }
-
-    private func handleCompactGalleryScrollDirection(_ direction: NativeGalleryScrollDirection) {
-        guard usesCompactTabDockCollapse else { return }
-
-        switch direction {
-        case .towardContentEnd:
-            setCompactTabDockCollapsed(true)
-        case .towardContentStart:
-            setCompactTabDockCollapsed(false)
-        }
-    }
-
-    private func setCompactTabDockCollapsed(_ isCollapsed: Bool) {
-        guard usesCompactTabDockCollapse || isCollapsed == false else { return }
-        guard isCompactTabDockCollapsed != isCollapsed else { return }
-
-        withAnimation(.snappy(duration: 0.18)) {
-            isCompactTabDockCollapsed = isCollapsed
         }
     }
 

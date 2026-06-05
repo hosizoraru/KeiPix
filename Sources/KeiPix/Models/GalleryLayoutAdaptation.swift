@@ -3,14 +3,14 @@ import CoreGraphics
 enum GalleryLayoutAdaptation: Equatable, Sendable {
     case fullMasonry
     case portraitTabletMasonry
-    case compactGridOnly
+    case phoneTwoColumnMasonry
 
     func effectiveMode(for preferredMode: GalleryLayoutMode) -> GalleryLayoutMode {
         switch self {
         case .fullMasonry, .portraitTabletMasonry:
             preferredMode
-        case .compactGridOnly:
-            preferredMode.usesArtworkMasonry ? .compactGrid : preferredMode
+        case .phoneTwoColumnMasonry:
+            .twoColumnMasonry
         }
     }
 
@@ -18,7 +18,9 @@ enum GalleryLayoutAdaptation: Equatable, Sendable {
         switch self {
         case .portraitTabletMasonry:
             portraitTabletMasonryConfiguration
-        case .fullMasonry, .compactGridOnly:
+        case .phoneTwoColumnMasonry:
+            phoneTwoColumnMasonryConfiguration
+        case .fullMasonry:
             fullMasonryConfiguration(for: mode)
         }
     }
@@ -31,6 +33,17 @@ enum GalleryLayoutAdaptation: Equatable, Sendable {
             maxColumnWidth: 280,
             fixedColumnCount: nil,
             denseFixedColumns: true
+        )
+    }
+
+    var phoneTwoColumnMasonryConfiguration: ArtworkMasonryLayoutConfiguration {
+        ArtworkMasonryLayoutConfiguration(
+            spacing: 8,
+            preferredColumnWidth: 168,
+            minColumnWidth: 126,
+            maxColumnWidth: 220,
+            fixedColumnCount: 2,
+            denseFixedColumns: false
         )
     }
 

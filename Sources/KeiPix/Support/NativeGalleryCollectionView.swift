@@ -202,6 +202,7 @@ struct NativeGalleryCollectionView: NSViewRepresentable {
     let onRefresh: (() async -> Void)?
     let onScrollDirectionChange: ((NativeGalleryScrollDirection) -> Void)?
     let onNearContentEnd: (() -> Void)?
+    let onPrefetchItems: (([NativeGalleryCollectionItem]) -> Void)?
     let content: (NativeGalleryCollectionItem) -> AnyView
 
     func makeNSView(context: Context) -> NSScrollView {
@@ -629,6 +630,7 @@ struct NativeGalleryCollectionView: UIViewRepresentable {
     let onRefresh: (() async -> Void)?
     let onScrollDirectionChange: ((NativeGalleryScrollDirection) -> Void)?
     let onNearContentEnd: (() -> Void)?
+    let onPrefetchItems: (([NativeGalleryCollectionItem]) -> Void)?
     let content: (NativeGalleryCollectionItem) -> AnyView
 
     func makeUIView(context: Context) -> UICollectionView {
@@ -638,27 +640,23 @@ struct NativeGalleryCollectionView: UIViewRepresentable {
         )
         collectionView.backgroundColor = .clear
         collectionView.alwaysBounceVertical = true
+        collectionView.contentInsetAdjustmentBehavior = .automatic
         collectionView.showsVerticalScrollIndicator = true
         collectionView.register(
             NativeGalleryHostingCollectionCell.self,
             forCellWithReuseIdentifier: NativeGalleryHostingCollectionCell.reuseIdentifier
         )
         collectionView.delegate = context.coordinator
+        collectionView.prefetchDataSource = context.coordinator
 
         context.coordinator.configureDataSource(for: collectionView)
-        context.coordinator.parent = self
-        context.coordinator.updateCollectionLayout(for: collectionView)
-        context.coordinator.configureRefreshControl(for: collectionView)
-        context.coordinator.applySnapshot(to: collectionView)
+        context.coordinator.update(parent: self, collectionView: collectionView)
 
         return collectionView
     }
 
     func updateUIView(_ collectionView: UICollectionView, context: Context) {
-        context.coordinator.parent = self
-        context.coordinator.updateCollectionLayout(for: collectionView)
-        context.coordinator.configureRefreshControl(for: collectionView)
-        context.coordinator.applySnapshot(to: collectionView)
+        context.coordinator.update(parent: self, collectionView: collectionView)
     }
 
     func makeCoordinator() -> Coordinator {
@@ -666,7 +664,7 @@ struct NativeGalleryCollectionView: UIViewRepresentable {
     }
 
     @MainActor
-    final class Coordinator: NSObject, UICollectionViewDelegateFlowLayout {
+    final class Coordinator: NSObject, UICollectionViewDelegateFlowLayout, UICollectionViewDataSourcePrefetching {
         var parent: NativeGalleryCollectionView
         private var dataSource: UICollectionViewDiffableDataSource<Int, NativeGalleryCollectionItem>?
         private var lastSnapshotItemIDs: [String] = []
@@ -676,15 +674,72 @@ struct NativeGalleryCollectionView: UIViewRepresentable {
         private var lastHighlightedArtworkIDs: Set<Int> = []
         private var lastContentReloadToken: Int?
         private var lastScrollTarget: Int?
+        private var lastRefreshControlEnabled: Bool?
         private var lastScrollOffsetY: CGFloat = 0
         private var scrollDirectionAccumulator: CGFloat = 0
         private var lastReportedScrollDirection: NativeGalleryScrollDirection?
         private var isNearContentEndArmed = true
+        private var hasDeferredContentScrollRegistration = false
+        private weak var registeredContentScrollViewController: UIViewController?
         private let widthChangeTolerance: CGFloat = 0.5
         private let scrollDirectionThreshold: CGFloat = 24
 
         init(parent: NativeGalleryCollectionView) {
             self.parent = parent
+        }
+
+        deinit {
+            let viewController = registeredContentScrollViewController
+            Task { @MainActor in
+                viewController?.setContentScrollView(nil, for: .bottom)
+            }
+        }
+
+        func update(parent newParent: NativeGalleryCollectionView, collectionView: UICollectionView) {
+            parent = newParent
+            registerContentScrollViewIfNeeded(collectionView)
+
+            let itemIDs = parent.itemIDs
+            let itemsChanged = itemIDs != lastSnapshotItemIDs
+            let contentChanged = lastContentReloadToken != parent.contentReloadToken
+            let needsInitialSnapshot = dataSource?.snapshot().numberOfItems == 0
+            let highlightsChanged = lastHighlightedArtworkIDs != parent.highlightedArtworkIDs
+            let scrollTargetChanged = parent.scrollToArtworkID != nil
+                && parent.scrollToArtworkID != lastScrollTarget
+            let refreshControlChanged = lastRefreshControlEnabled != (parent.onRefresh != nil)
+            let layoutMayNeedRefresh = collectionLayoutMayNeedRefresh(
+                in: collectionView,
+                itemsChanged: itemsChanged,
+                contentChanged: contentChanged
+            )
+
+            guard needsInitialSnapshot
+                || itemsChanged
+                || contentChanged
+                || highlightsChanged
+                || scrollTargetChanged
+                || refreshControlChanged
+                || layoutMayNeedRefresh else {
+                return
+            }
+
+            if layoutMayNeedRefresh {
+                updateCollectionLayout(
+                    for: collectionView,
+                    itemsChanged: itemsChanged,
+                    contentChanged: contentChanged
+                )
+            }
+            if refreshControlChanged {
+                configureRefreshControl(for: collectionView)
+            }
+            applySnapshot(
+                to: collectionView,
+                itemIDs: itemIDs,
+                itemsChanged: itemsChanged,
+                contentChanged: contentChanged,
+                needsInitialSnapshot: needsInitialSnapshot
+            )
         }
 
         func makeCollectionLayout() -> UICollectionViewLayout {
@@ -694,12 +749,25 @@ struct NativeGalleryCollectionView: UIViewRepresentable {
             return UICollectionViewFlowLayout()
         }
 
-        func updateCollectionLayout(for collectionView: UICollectionView) {
-            let layoutFingerprint = parent.layoutFingerprint
+        func updateCollectionLayout(
+            for collectionView: UICollectionView,
+            itemsChanged: Bool,
+            contentChanged: Bool
+        ) {
             let containerWidth = collectionView.bounds.width
+            let layoutModeChanged = lastLayout != parent.layout
+            let widthChanged = abs(lastLayoutContainerWidth - containerWidth) > widthChangeTolerance
+            let shouldRecomputeFingerprint = lastLayoutFingerprint.isEmpty
+                || layoutModeChanged
+                || widthChanged
+                || itemsChanged
+                || (parent.layout.usesMasonry && contentChanged)
+            let layoutFingerprint = shouldRecomputeFingerprint
+                ? parent.layoutFingerprint
+                : lastLayoutFingerprint
             let layoutNeedsRefresh = lastLayout != parent.layout
                 || lastLayoutFingerprint != layoutFingerprint
-                || abs(lastLayoutContainerWidth - containerWidth) > widthChangeTolerance
+                || widthChanged
 
             if parent.layout.usesMasonry {
                 let masonryLayout: NativeGalleryMasonryUICollectionViewLayout
@@ -741,6 +809,7 @@ struct NativeGalleryCollectionView: UIViewRepresentable {
         }
 
         func configureRefreshControl(for collectionView: UICollectionView) {
+            lastRefreshControlEnabled = parent.onRefresh != nil
             guard parent.onRefresh != nil else {
                 collectionView.refreshControl = nil
                 return
@@ -750,6 +819,43 @@ struct NativeGalleryCollectionView: UIViewRepresentable {
                 let refreshControl = UIRefreshControl()
                 refreshControl.addTarget(self, action: #selector(refreshRequested(_:)), for: .valueChanged)
                 collectionView.refreshControl = refreshControl
+            }
+        }
+
+        private func collectionLayoutMayNeedRefresh(
+            in collectionView: UICollectionView,
+            itemsChanged: Bool,
+            contentChanged: Bool
+        ) -> Bool {
+            lastLayout != parent.layout
+                || lastLayoutFingerprint.isEmpty
+                || itemsChanged
+                || abs(lastLayoutContainerWidth - collectionView.bounds.width) > widthChangeTolerance
+                || (parent.layout.usesMasonry && contentChanged)
+        }
+
+        private func registerContentScrollViewIfNeeded(_ collectionView: UICollectionView) {
+            guard let viewController = collectionView.enclosingViewController else {
+                deferContentScrollRegistration(for: collectionView)
+                return
+            }
+
+            if registeredContentScrollViewController !== viewController {
+                registeredContentScrollViewController?.setContentScrollView(nil, for: .bottom)
+                registeredContentScrollViewController = viewController
+            }
+
+            guard viewController.contentScrollView(for: .bottom) !== collectionView else { return }
+            viewController.setContentScrollView(collectionView, for: .bottom)
+        }
+
+        private func deferContentScrollRegistration(for collectionView: UICollectionView) {
+            guard hasDeferredContentScrollRegistration == false else { return }
+            hasDeferredContentScrollRegistration = true
+            Task { @MainActor [weak self, weak collectionView] in
+                self?.hasDeferredContentScrollRegistration = false
+                guard let collectionView else { return }
+                self?.registerContentScrollViewIfNeeded(collectionView)
             }
         }
 
@@ -776,12 +882,13 @@ struct NativeGalleryCollectionView: UIViewRepresentable {
             }
         }
 
-        func applySnapshot(to collectionView: UICollectionView) {
-            let itemIDs = parent.itemIDs
-            let itemsChanged = itemIDs != lastSnapshotItemIDs
-            let contentChanged = lastContentReloadToken != parent.contentReloadToken
-            let needsInitialSnapshot = dataSource?.snapshot().numberOfItems == 0
-
+        func applySnapshot(
+            to collectionView: UICollectionView,
+            itemIDs: [String],
+            itemsChanged: Bool,
+            contentChanged: Bool,
+            needsInitialSnapshot: Bool
+        ) {
             guard needsInitialSnapshot || itemsChanged || contentChanged else {
                 reloadHighlightDeltaIfNeeded(in: collectionView)
                 scrollToSelectionIfNeeded(in: collectionView)
@@ -880,6 +987,18 @@ struct NativeGalleryCollectionView: UIViewRepresentable {
             }
             isNearContentEndArmed = false
             parent.onNearContentEnd?()
+        }
+
+        func collectionView(_ collectionView: UICollectionView, prefetchItemsAt indexPaths: [IndexPath]) {
+            guard let onPrefetchItems = parent.onPrefetchItems else { return }
+            let items = indexPaths
+                .sorted()
+                .compactMap { indexPath -> NativeGalleryCollectionItem? in
+                    guard indexPath.item < parent.items.count else { return nil }
+                    return parent.items[indexPath.item]
+                }
+            guard items.isEmpty == false else { return }
+            onPrefetchItems(items)
         }
 
         private func scrollToSelectionIfNeeded(in collectionView: UICollectionView) {
@@ -1054,10 +1173,9 @@ private final class NativeGalleryHostingCollectionCell: UICollectionViewCell {
     }
 
     func configure(with content: AnyView, item: NativeGalleryCollectionItem) {
-        largeContentTitle = item.pointerTitle
-        largeContentImage = nil
         if let hostingController {
             hostingController.rootView = content
+            configureAccessibility(for: item)
             return
         }
 
@@ -1072,11 +1190,18 @@ private final class NativeGalleryHostingCollectionCell: UICollectionViewCell {
             hostingController.view.bottomAnchor.constraint(equalTo: contentView.bottomAnchor)
         ])
         self.hostingController = hostingController
+        configureAccessibility(for: item)
     }
 
     override func prepareForReuse() {
         super.prepareForReuse()
         largeContentTitle = nil
+        largeContentImage = nil
+        isAccessibilityElement = false
+        accessibilityLabel = nil
+        accessibilityTraits = []
+        contentView.accessibilityElementsHidden = false
+        hostingController?.view.accessibilityElementsHidden = false
         hostingController?.rootView = AnyView(EmptyView())
     }
 
@@ -1085,11 +1210,31 @@ private final class NativeGalleryHostingCollectionCell: UICollectionViewCell {
         selectedBackgroundView = UIView()
         contentView.backgroundColor = .clear
         contentView.clipsToBounds = false
-        showsLargeContentViewer = true
+        showsLargeContentViewer = false
 
         let pointerInteraction = UIPointerInteraction(delegate: self)
         contentView.addInteraction(pointerInteraction)
         self.pointerInteraction = pointerInteraction
+    }
+
+    private func configureAccessibility(for item: NativeGalleryCollectionItem) {
+        largeContentTitle = nil
+        largeContentImage = nil
+
+        guard case .artwork = item else {
+            isAccessibilityElement = false
+            accessibilityLabel = nil
+            accessibilityTraits = []
+            contentView.accessibilityElementsHidden = false
+            hostingController?.view.accessibilityElementsHidden = false
+            return
+        }
+
+        isAccessibilityElement = true
+        accessibilityLabel = item.pointerTitle
+        accessibilityTraits = [.button, .image]
+        contentView.accessibilityElementsHidden = true
+        hostingController?.view.accessibilityElementsHidden = true
     }
 }
 
@@ -1118,6 +1263,19 @@ private extension NativeGalleryCollectionLayout {
             bottom: insets.bottom,
             right: insets.trailing
         )
+    }
+}
+
+private extension UIView {
+    var enclosingViewController: UIViewController? {
+        var responder: UIResponder? = self
+        while let nextResponder = responder?.next {
+            if let viewController = nextResponder as? UIViewController {
+                return viewController
+            }
+            responder = nextResponder
+        }
+        return nil
     }
 }
 #endif

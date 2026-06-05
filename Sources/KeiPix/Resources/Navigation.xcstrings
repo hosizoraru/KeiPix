@@ -262,35 +262,6 @@
         }
       }
     },
-    "Show Tab Bar": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Show Tab Bar"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "タブバーを表示"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "显示标签栏"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "顯示標籤欄"
-          }
-        }
-      }
-    },
     "Slot %d": {
       "extractionState": "manual",
       "localizations": {

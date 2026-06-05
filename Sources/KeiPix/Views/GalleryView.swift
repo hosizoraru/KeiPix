@@ -121,6 +121,18 @@ struct GalleryView: View {
     }
 }
 
+private struct GalleryArtworkListFingerprint: Equatable {
+    let count: Int
+    let firstID: Int?
+    let lastID: Int?
+
+    init(artworks: [PixivArtwork]) {
+        count = artworks.count
+        firstID = artworks.first?.id
+        lastID = artworks.last?.id
+    }
+}
+
 private struct GalleryFeedView: View {
     @Bindable var store: KeiPixStore
     @Binding var actionMessage: String?
@@ -135,6 +147,7 @@ private struct GalleryFeedView: View {
     @State private var feedbackArtwork: PixivArtwork?
     @State private var seriesArtwork: PixivArtwork?
     @State private var lastAutoLoadMoreURL: URL?
+    @State private var nativePrefetchScheduler = GalleryImagePrefetchScheduler()
     @Environment(\.openWindow) private var openWindow
 
     var body: some View {
@@ -159,8 +172,8 @@ private struct GalleryFeedView: View {
             ArtworkSeriesSheet(artwork: artwork, store: store)
                 .os26SheetChrome(.detail)
         }
-        .onChange(of: store.artworks.map(\.id)) { _, visibleArtworkIDs in
-            artworkSelection.prune(visibleArtworkIDs: visibleArtworkIDs)
+        .onChange(of: artworkSelectionPruneFingerprint) { _, _ in
+            artworkSelection.prune(visibleArtworkIDs: store.artworks.map(\.id))
         }
         .onChange(of: store.selectedRoute) { oldRoute, _ in
             // Save scroll position for old route
@@ -168,7 +181,11 @@ private struct GalleryFeedView: View {
                 savedScrollPositions[oldRoute.rawValue] = "\(firstVisible)"
             }
             lastAutoLoadMoreURL = nil
+            cancelNativePrefetch()
             artworkSelection.clear()
+        }
+        .onDisappear {
+            cancelNativePrefetch()
         }
         .task(id: store.selectedRoute.rawValue) {
             // Restore scroll position for new route after content loads
@@ -259,7 +276,11 @@ private struct GalleryFeedView: View {
     }
 
     private var nativeFeed: some View {
-        VStack(spacing: 0) {
+        let galleryItems = nativeGalleryItems
+        let contentReloadToken = nativeGalleryContentReloadToken(for: galleryItems)
+        let highlightedArtworkIDs = nativeHighlightedArtworkIDs
+
+        return VStack(spacing: 0) {
             #if os(iOS)
             iPadNativeFeedHeader
             #else
@@ -275,21 +296,25 @@ private struct GalleryFeedView: View {
             #endif
 
             NativeGalleryCollectionView(
-                items: nativeGalleryItems,
+                items: galleryItems,
                 layout: nativeGalleryLayout,
-                highlightedArtworkIDs: nativeHighlightedArtworkIDs,
+                highlightedArtworkIDs: highlightedArtworkIDs,
                 scrollToArtworkID: store.selectedArtwork?.id,
-                contentReloadToken: nativeGalleryContentReloadToken,
+                contentReloadToken: contentReloadToken,
                 onRefresh: {
                     lastAutoLoadMoreURL = nil
                     await store.reloadCurrentFeed()
                 },
                 onScrollDirectionChange: onGalleryScrollDirectionChange,
-                onNearContentEnd: triggerAutomaticLoadMoreIfNeeded
+                onNearContentEnd: triggerAutomaticLoadMoreIfNeeded,
+                onPrefetchItems: prefetchNativeGalleryItems
             ) { item in
                 AnyView(nativeGalleryContent(for: item))
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
+            #if os(iOS)
+            .backgroundExtensionEffect(isEnabled: usesMobileGalleryCardPerformanceMode)
+            #endif
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
@@ -395,6 +420,19 @@ private struct GalleryFeedView: View {
         return items
     }
 
+    private var usesMobileGalleryCardPerformanceMode: Bool {
+        #if os(iOS)
+        switch galleryLayoutAdaptation {
+        case .phoneTwoColumnMasonry, .portraitTabletMasonry:
+            true
+        case .fullMasonry:
+            false
+        }
+        #else
+        false
+        #endif
+    }
+
     private var nativeHighlightedArtworkIDs: Set<Int> {
         var ids = artworkSelection.selectedIDs
         if let selectedArtworkID = store.selectedArtwork?.id {
@@ -403,7 +441,11 @@ private struct GalleryFeedView: View {
         return ids
     }
 
-    private var nativeGalleryContentReloadToken: Int {
+    private var artworkSelectionPruneFingerprint: GalleryArtworkListFingerprint {
+        GalleryArtworkListFingerprint(artworks: store.artworks)
+    }
+
+    private func nativeGalleryContentReloadToken(for items: [NativeGalleryCollectionItem]) -> Int {
         var hasher = Hasher()
         hasher.combine(effectiveGalleryLayoutMode.rawValue)
         hasher.combine(store.showContentBadges)
@@ -416,7 +458,7 @@ private struct GalleryFeedView: View {
         for artwork in store.searchPopularPreviewArtworks {
             hashNativeGalleryArtworkContent(artwork, into: &hasher)
         }
-        for item in nativeGalleryItems {
+        for item in items {
             hashNativeGalleryItemContent(item, into: &hasher)
         }
         return hasher.finalize()
@@ -435,7 +477,28 @@ private struct GalleryFeedView: View {
         _ artwork: PixivArtwork,
         into hasher: inout Hasher
     ) {
-        hasher.combine(artwork)
+        hasher.combine(artwork.id)
+        hasher.combine(artwork.title)
+        hasher.combine(artwork.type)
+        hasher.combine(artwork.pageCount)
+        hasher.combine(artwork.width)
+        hasher.combine(artwork.height)
+        hasher.combine(artwork.totalView)
+        hasher.combine(artwork.totalBookmarks)
+        hasher.combine(artwork.isBookmarked)
+        hasher.combine(artwork.isMuted)
+        hasher.combine(artwork.isAI)
+        hasher.combine(artwork.xRestrict)
+        hasher.combine(artwork.user.id)
+        hasher.combine(artwork.user.name)
+        hasher.combine(artwork.user.account)
+        hasher.combine(artwork.user.isFollowed)
+        hasher.combine(artwork.feedPreviewURL(tier: store.feedPreviewImageQualityTier)?.absoluteString)
+        hasher.combine(artwork.thumbnailURL?.absoluteString)
+        for tag in artwork.tags.prefix(12) {
+            hasher.combine(tag.name)
+            hasher.combine(tag.translatedName)
+        }
         hasher.combine(store.downloads.downloadState(for: artwork.id).rawValue)
         hasher.combine(store.downloads.downloadedImageURL(artworkID: artwork.id, pageIndex: 0)?.absoluteString)
     }
@@ -493,6 +556,28 @@ private struct GalleryFeedView: View {
         Task { await store.loadMore() }
     }
 
+    private func prefetchNativeGalleryItems(_ items: [NativeGalleryCollectionItem]) {
+        let artworks = items.compactMap { item -> PixivArtwork? in
+            guard case .artwork(let artwork) = item else { return nil }
+            return artwork
+        }
+        let urls = GalleryImagePrefetchPolicy.previewURLs(
+            for: artworks,
+            tier: store.feedPreviewImageQualityTier
+        )
+        guard urls.isEmpty == false else { return }
+
+        Task(priority: .utility) {
+            await nativePrefetchScheduler.enqueue(urls)
+        }
+    }
+
+    private func cancelNativePrefetch() {
+        Task(priority: .utility) {
+            await nativePrefetchScheduler.cancel()
+        }
+    }
+
     private func nativeListRow(_ artwork: PixivArtwork) -> some View {
         ListRowArtworkCard(
             artwork: artwork,
@@ -525,6 +610,7 @@ private struct GalleryFeedView: View {
             downloadState: store.downloads.downloadState(for: artwork.id),
             feedPreviewTier: store.feedPreviewImageQualityTier,
             downloadedFileURL: store.downloads.downloadedImageURL(artworkID: artwork.id, pageIndex: 0),
+            isScrollPerformanceOptimized: usesMobileGalleryCardPerformanceMode,
             emphasizeFollowing: store.emphasizeFollowingArtists
         ) {
             activate(artwork)
@@ -555,6 +641,7 @@ private struct GalleryFeedView: View {
             fillsAvailableHeight: true,
             feedPreviewTier: store.feedPreviewImageQualityTier,
             downloadedFileURL: store.downloads.downloadedImageURL(artworkID: artwork.id, pageIndex: 0),
+            isScrollPerformanceOptimized: usesMobileGalleryCardPerformanceMode,
             emphasizeFollowing: store.emphasizeFollowingArtists
         ) {
             activate(artwork)

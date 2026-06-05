@@ -11,7 +11,6 @@ enum L10n {
     static var customizeDashboard: String { text("Customize Dashboard") }
     static var bottomTabs: String { text("Bottom Tabs", table: L10nTable.navigation) }
     static var mobileBookmarkTab: String { text("Bookmark Tab", table: L10nTable.navigation) }
-    static var showBottomTabs: String { text("Show Tab Bar", table: L10nTable.navigation) }
     static var customizeBottomTabs: String { text("Customize Bottom Tabs", table: L10nTable.navigation) }
     static var bottomTabsHint: String { text("Choose the default page for each iPhone and iPad portrait tab.", table: L10nTable.navigation) }
     static var fixedTabs: String { text("Fixed Tabs", table: L10nTable.navigation) }

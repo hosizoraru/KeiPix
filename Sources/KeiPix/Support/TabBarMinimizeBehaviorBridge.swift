@@ -5,19 +5,35 @@ import UIKit
 struct TabBarMinimizeBehaviorBridge: UIViewControllerRepresentable {
     let behavior: UITabBarController.MinimizeBehavior
     let isTabBarHidden: Bool
+    let usesTransparentBackground: Bool
 
     func makeUIViewController(context: Context) -> Controller {
-        Controller(behavior: behavior, isTabBarHidden: isTabBarHidden)
+        Controller(
+            behavior: behavior,
+            isTabBarHidden: isTabBarHidden,
+            usesTransparentBackground: usesTransparentBackground
+        )
     }
 
     func updateUIViewController(_ controller: Controller, context: Context) {
-        controller.behavior = behavior
-        controller.isTabBarHidden = isTabBarHidden
+        if controller.behavior != behavior {
+            controller.behavior = behavior
+        }
+        if controller.isTabBarHidden != isTabBarHidden {
+            controller.isTabBarHidden = isTabBarHidden
+        }
+        if controller.usesTransparentBackground != usesTransparentBackground {
+            controller.usesTransparentBackground = usesTransparentBackground
+        }
     }
 
     final class Controller: UIViewController {
         private var hasDeferredApply = false
         private var hasAppliedTabBarState = false
+        private weak var appliedTabBarController: UITabBarController?
+        private var lastAppliedBehavior: UITabBarController.MinimizeBehavior?
+        private var lastAppliedTabBarHidden: Bool?
+        private var lastAppliedTransparentBackground: Bool?
 
         var behavior: UITabBarController.MinimizeBehavior {
             didSet {
@@ -31,9 +47,20 @@ struct TabBarMinimizeBehaviorBridge: UIViewControllerRepresentable {
             }
         }
 
-        init(behavior: UITabBarController.MinimizeBehavior, isTabBarHidden: Bool) {
+        var usesTransparentBackground: Bool {
+            didSet {
+                applyBehavior()
+            }
+        }
+
+        init(
+            behavior: UITabBarController.MinimizeBehavior,
+            isTabBarHidden: Bool,
+            usesTransparentBackground: Bool
+        ) {
             self.behavior = behavior
             self.isTabBarHidden = isTabBarHidden
+            self.usesTransparentBackground = usesTransparentBackground
             super.init(nibName: nil, bundle: nil)
         }
 
@@ -70,11 +97,41 @@ struct TabBarMinimizeBehaviorBridge: UIViewControllerRepresentable {
                 return
             }
             hasDeferredApply = false
-            tabBarController.tabBarMinimizeBehavior = behavior
-            if tabBarController.isTabBarHidden != isTabBarHidden {
+            if appliedTabBarController !== tabBarController {
+                appliedTabBarController = tabBarController
+                lastAppliedBehavior = nil
+                lastAppliedTabBarHidden = nil
+                lastAppliedTransparentBackground = nil
+            }
+            applyAppearance(to: tabBarController.tabBar)
+            if lastAppliedBehavior != behavior || tabBarController.tabBarMinimizeBehavior != behavior {
+                tabBarController.tabBarMinimizeBehavior = behavior
+                lastAppliedBehavior = behavior
+            }
+            if lastAppliedTabBarHidden != isTabBarHidden || tabBarController.isTabBarHidden != isTabBarHidden {
                 tabBarController.setTabBarHidden(isTabBarHidden, animated: hasAppliedTabBarState)
+                lastAppliedTabBarHidden = isTabBarHidden
             }
             hasAppliedTabBarState = true
+        }
+
+        private func applyAppearance(to tabBar: UITabBar) {
+            guard lastAppliedTransparentBackground != usesTransparentBackground else { return }
+
+            let appearance = UITabBarAppearance()
+            if usesTransparentBackground {
+                appearance.configureWithTransparentBackground()
+                appearance.backgroundColor = .clear
+                appearance.shadowColor = .clear
+                appearance.shadowImage = nil
+                tabBar.isTranslucent = true
+                tabBar.backgroundColor = .clear
+            } else {
+                appearance.configureWithDefaultBackground()
+            }
+            tabBar.standardAppearance = appearance
+            tabBar.scrollEdgeAppearance = usesTransparentBackground ? appearance : nil
+            lastAppliedTransparentBackground = usesTransparentBackground
         }
 
         private func resolvedTabBarController() -> UITabBarController? {
