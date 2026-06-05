@@ -201,6 +201,7 @@ struct NativeGalleryCollectionView: NSViewRepresentable {
     let contentReloadToken: Int
     let onRefresh: (() async -> Void)?
     let onScrollDirectionChange: ((NativeGalleryScrollDirection) -> Void)?
+    let onNearContentEnd: (() -> Void)?
     let content: (NativeGalleryCollectionItem) -> AnyView
 
     func makeNSView(context: Context) -> NSScrollView {
@@ -226,9 +227,11 @@ struct NativeGalleryCollectionView: NSViewRepresentable {
         scrollView.borderType = .noBorder
         scrollView.scrollerStyle = .overlay
         scrollView.verticalScrollElasticity = .allowed
+        scrollView.contentView.postsBoundsChangedNotifications = true
 
         context.coordinator.configureDataSource(for: collectionView)
         context.coordinator.parent = self
+        context.coordinator.observeBoundsChanges(for: scrollView)
         context.coordinator.updateCollectionLayout(for: collectionView)
         context.coordinator.applySnapshot(to: collectionView)
 
@@ -238,6 +241,7 @@ struct NativeGalleryCollectionView: NSViewRepresentable {
     func updateNSView(_ scrollView: NSScrollView, context: Context) {
         guard let collectionView = scrollView.documentView as? NSCollectionView else { return }
         context.coordinator.parent = self
+        context.coordinator.observeBoundsChanges(for: scrollView)
         context.coordinator.updateCollectionLayout(for: collectionView)
         context.coordinator.applySnapshot(to: collectionView)
     }
@@ -257,10 +261,16 @@ struct NativeGalleryCollectionView: NSViewRepresentable {
         private var lastHighlightedArtworkIDs: Set<Int> = []
         private var lastContentReloadToken: Int?
         private var lastScrollTarget: Int?
+        private weak var observedScrollView: NSScrollView?
+        private var isNearContentEndArmed = true
         private let widthChangeTolerance: CGFloat = 0.5
 
         init(parent: NativeGalleryCollectionView) {
             self.parent = parent
+        }
+
+        deinit {
+            NotificationCenter.default.removeObserver(self)
         }
 
         func makeCollectionLayout() -> NSCollectionViewLayout {
@@ -356,7 +366,59 @@ struct NativeGalleryCollectionView: NSViewRepresentable {
                 }
                 self.lastHighlightedArtworkIDs = self.parent.highlightedArtworkIDs
                 self.scrollToSelectionIfNeeded(in: collectionView)
+                if let scrollView = collectionView.enclosingScrollView {
+                    self.triggerNearContentEndIfNeeded(in: scrollView)
+                }
             }
+        }
+
+        func observeBoundsChanges(for scrollView: NSScrollView) {
+            guard observedScrollView !== scrollView else { return }
+            NotificationCenter.default.removeObserver(
+                self,
+                name: NSView.boundsDidChangeNotification,
+                object: observedScrollView?.contentView
+            )
+            scrollView.contentView.postsBoundsChangedNotifications = true
+            observedScrollView = scrollView
+            NotificationCenter.default.addObserver(
+                self,
+                selector: #selector(scrollBoundsDidChange(_:)),
+                name: NSView.boundsDidChangeNotification,
+                object: scrollView.contentView
+            )
+        }
+
+        @objc private func scrollBoundsDidChange(_ notification: Notification) {
+            guard let scrollView = observedScrollView else { return }
+            triggerNearContentEndIfNeeded(in: scrollView)
+        }
+
+        private func triggerNearContentEndIfNeeded(in scrollView: NSScrollView) {
+            guard parent.onNearContentEnd != nil,
+                  parent.items.contains(.loadMore),
+                  let documentView = scrollView.documentView else {
+                isNearContentEndArmed = true
+                return
+            }
+
+            let contentOffsetY = scrollView.contentView.bounds.origin.y
+            let viewportHeight = scrollView.contentView.bounds.height
+            let contentHeight = documentView.bounds.height
+            let isNearContentEnd = GalleryAutoLoadMorePolicy.isNearContentEnd(
+                contentOffsetY: contentOffsetY,
+                viewportHeight: viewportHeight,
+                contentHeight: contentHeight
+            )
+            guard isNearContentEnd else {
+                isNearContentEndArmed = true
+                return
+            }
+            guard isNearContentEndArmed else {
+                return
+            }
+            isNearContentEndArmed = false
+            parent.onNearContentEnd?()
         }
 
         func collectionView(
@@ -566,6 +628,7 @@ struct NativeGalleryCollectionView: UIViewRepresentable {
     let contentReloadToken: Int
     let onRefresh: (() async -> Void)?
     let onScrollDirectionChange: ((NativeGalleryScrollDirection) -> Void)?
+    let onNearContentEnd: (() -> Void)?
     let content: (NativeGalleryCollectionItem) -> AnyView
 
     func makeUIView(context: Context) -> UICollectionView {
@@ -616,6 +679,7 @@ struct NativeGalleryCollectionView: UIViewRepresentable {
         private var lastScrollOffsetY: CGFloat = 0
         private var scrollDirectionAccumulator: CGFloat = 0
         private var lastReportedScrollDirection: NativeGalleryScrollDirection?
+        private var isNearContentEndArmed = true
         private let widthChangeTolerance: CGFloat = 0.5
         private let scrollDirectionThreshold: CGFloat = 24
 
@@ -736,6 +800,7 @@ struct NativeGalleryCollectionView: UIViewRepresentable {
                 }
                 self.lastHighlightedArtworkIDs = self.parent.highlightedArtworkIDs
                 self.scrollToSelectionIfNeeded(in: collectionView)
+                self.triggerNearContentEndIfNeeded(in: collectionView)
             }
             if needsInitialSnapshot || itemsChanged {
                 dataSource?.applySnapshotUsingReloadData(snapshot, completion: completion)
@@ -757,6 +822,8 @@ struct NativeGalleryCollectionView: UIViewRepresentable {
         }
 
         func scrollViewDidScroll(_ scrollView: UIScrollView) {
+            triggerNearContentEndIfNeeded(in: scrollView)
+
             let offsetY = scrollView.contentOffset.y
             defer { lastScrollOffsetY = offsetY }
 
@@ -789,6 +856,30 @@ struct NativeGalleryCollectionView: UIViewRepresentable {
             lastReportedScrollDirection = direction
             scrollDirectionAccumulator = 0
             parent.onScrollDirectionChange?(direction)
+        }
+
+        private func triggerNearContentEndIfNeeded(in scrollView: UIScrollView) {
+            guard parent.onNearContentEnd != nil,
+                  parent.items.contains(.loadMore) else {
+                isNearContentEndArmed = true
+                return
+            }
+
+            let isNearContentEnd = GalleryAutoLoadMorePolicy.isNearContentEnd(
+                contentOffsetY: scrollView.contentOffset.y,
+                viewportHeight: scrollView.bounds.height,
+                contentHeight: scrollView.contentSize.height,
+                adjustedBottomInset: scrollView.adjustedContentInset.bottom
+            )
+            guard isNearContentEnd else {
+                isNearContentEndArmed = true
+                return
+            }
+            guard isNearContentEndArmed else {
+                return
+            }
+            isNearContentEndArmed = false
+            parent.onNearContentEnd?()
         }
 
         private func scrollToSelectionIfNeeded(in collectionView: UICollectionView) {

@@ -134,6 +134,7 @@ private struct GalleryFeedView: View {
     @State private var feedbackRequest: FeedbackReportRequest?
     @State private var feedbackArtwork: PixivArtwork?
     @State private var seriesArtwork: PixivArtwork?
+    @State private var lastAutoLoadMoreURL: URL?
     @Environment(\.openWindow) private var openWindow
 
     var body: some View {
@@ -166,6 +167,7 @@ private struct GalleryFeedView: View {
             if let firstVisible = store.artworks.first?.id {
                 savedScrollPositions[oldRoute.rawValue] = "\(firstVisible)"
             }
+            lastAutoLoadMoreURL = nil
             artworkSelection.clear()
         }
         .task(id: store.selectedRoute.rawValue) {
@@ -223,7 +225,8 @@ private struct GalleryFeedView: View {
                                 GalleryContentGrid(
                                     store: store,
                                     actionMessage: $actionMessage,
-                                    artworkSelection: $artworkSelection
+                                    artworkSelection: $artworkSelection,
+                                    onAutomaticLoadMore: triggerAutomaticLoadMoreIfNeeded
                                 )
                             }
                         }
@@ -243,6 +246,7 @@ private struct GalleryFeedView: View {
             }
             .scrollEdgeEffectStyle(.soft, for: .top)
             .refreshable {
+                lastAutoLoadMoreURL = nil
                 await store.reloadCurrentFeed()
             }
             .onChange(of: store.selectedArtwork?.id) { _, newID in
@@ -277,9 +281,11 @@ private struct GalleryFeedView: View {
                 scrollToArtworkID: store.selectedArtwork?.id,
                 contentReloadToken: nativeGalleryContentReloadToken,
                 onRefresh: {
+                    lastAutoLoadMoreURL = nil
                     await store.reloadCurrentFeed()
                 },
-                onScrollDirectionChange: onGalleryScrollDirectionChange
+                onScrollDirectionChange: onGalleryScrollDirectionChange,
+                onNearContentEnd: triggerAutomaticLoadMoreIfNeeded
             ) { item in
                 AnyView(nativeGalleryContent(for: item))
             }
@@ -471,6 +477,20 @@ private struct GalleryFeedView: View {
         case .loadMore:
             LoadMoreTile(store: store)
         }
+    }
+
+    private func triggerAutomaticLoadMoreIfNeeded() {
+        let nextURL = store.nextURL
+        guard GalleryAutoLoadMorePolicy.shouldTrigger(
+            nextURL: nextURL,
+            isLoadingMore: store.isLoadingMore,
+            hasRestoration: store.activeFeedSnapshotRestoration != nil,
+            lastTriggeredURL: lastAutoLoadMoreURL
+        ) else {
+            return
+        }
+        lastAutoLoadMoreURL = nextURL
+        Task { await store.loadMore() }
     }
 
     private func nativeListRow(_ artwork: PixivArtwork) -> some View {

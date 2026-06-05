@@ -7,6 +7,7 @@ struct GalleryContentGrid: View {
     @Bindable var store: KeiPixStore
     @Binding var actionMessage: String?
     @Binding var artworkSelection: GalleryArtworkSelection
+    let onAutomaticLoadMore: () -> Void
     @State private var feedbackRequest: FeedbackReportRequest?
     @State private var feedbackArtwork: PixivArtwork?
     @State private var seriesArtwork: PixivArtwork?
@@ -38,7 +39,7 @@ struct GalleryContentGrid: View {
                     }
 
                     if store.hasNextPage, store.activeFeedSnapshotRestoration == nil {
-                        LoadMoreTile(store: store)
+                        LoadMoreTile(store: store, onAutomaticLoadMore: onAutomaticLoadMore)
                     }
                 }
             } else if store.galleryLayoutMode.usesCompactGrid {
@@ -48,7 +49,7 @@ struct GalleryContentGrid: View {
                     }
 
                     if store.hasNextPage, store.activeFeedSnapshotRestoration == nil {
-                        LoadMoreTile(store: store)
+                        LoadMoreTile(store: store, onAutomaticLoadMore: onAutomaticLoadMore)
                     }
                 }
             } else {
@@ -63,7 +64,7 @@ struct GalleryContentGrid: View {
                     )
 
                     if store.hasNextPage, store.activeFeedSnapshotRestoration == nil {
-                        LoadMoreTile(store: store)
+                        LoadMoreTile(store: store, onAutomaticLoadMore: onAutomaticLoadMore)
                     }
                 }
             }
@@ -492,6 +493,7 @@ struct ArtworkSeriesSheet: View {
 
 struct LoadMoreTile: View {
     @Bindable var store: KeiPixStore
+    var onAutomaticLoadMore: (() -> Void)? = nil
 
     var body: some View {
         Button {
@@ -512,7 +514,11 @@ struct LoadMoreTile: View {
             .contentShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         }
         .buttonStyle(.plain)
+        .disabled(store.isLoadingMore)
         .keiInteractiveGlass(18)
+        .onAppear {
+            onAutomaticLoadMore?()
+        }
     }
 }
 
