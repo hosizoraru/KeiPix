@@ -44,4 +44,31 @@ struct MobileBottomTabConfigurationTests {
         #expect(updated == [.publicBookmarks, .manga, .illustrations])
         #expect(Set(updated).count == updated.count)
     }
+
+    @Test("Compact route menu excludes destinations already pinned in the tab bar")
+    func compactRouteMenuExcludesPinnedDestinations() {
+        let sections = MobileRouteMenuConfiguration.sections(
+            pinnedItems: [.illustrations, .manga, .publicBookmarks],
+            includesDedicatedSearch: true
+        )
+        let routes = sections.flatMap(\.routes)
+
+        #expect(routes.contains(.home))
+        #expect(routes.contains(.trendingTags))
+        #expect(routes.contains(.illustrations) == false)
+        #expect(routes.contains(.mangaRecommended) == false)
+        #expect(routes.contains(.publicBookmarks) == false)
+        #expect(routes.contains(.search) == false)
+    }
+
+    @Test("Regular route menu keeps the complete sidebar route set")
+    func regularRouteMenuKeepsCompleteSidebarRouteSet() {
+        let sections = MobileRouteMenuConfiguration.sections(
+            pinnedItems: [],
+            includesDedicatedSearch: false
+        )
+        let routes = sections.flatMap(\.routes)
+
+        #expect(routes == PixivRoute.sidebarSections.flatMap(\.routes))
+    }
 }

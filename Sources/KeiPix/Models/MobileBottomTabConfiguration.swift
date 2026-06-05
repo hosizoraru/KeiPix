@@ -150,3 +150,27 @@ enum MobileBottomTabConfiguration {
         return MobileBottomTabItem(rawValue: storageID)
     }
 }
+
+struct MobileRouteMenuSection: Identifiable {
+    let section: PixivRouteSection
+    let routes: [PixivRoute]
+
+    var id: String { section.id }
+    var title: String { section.title }
+}
+
+enum MobileRouteMenuConfiguration {
+    static func sections(
+        pinnedItems: [MobileBottomTabItem],
+        includesDedicatedSearch: Bool
+    ) -> [MobileRouteMenuSection] {
+        let pinnedRoutes = Set(pinnedItems.compactMap(\.route))
+        let excludedRoutes = includesDedicatedSearch ? pinnedRoutes.union([.search]) : pinnedRoutes
+
+        return PixivRoute.sidebarSections.compactMap { section in
+            let routes = section.routes.filter { excludedRoutes.contains($0) == false }
+            guard routes.isEmpty == false else { return nil }
+            return MobileRouteMenuSection(section: section, routes: routes)
+        }
+    }
+}

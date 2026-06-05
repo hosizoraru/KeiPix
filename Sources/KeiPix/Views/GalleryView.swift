@@ -5,7 +5,16 @@ import SwiftUI
 
 struct GalleryView: View {
     @Bindable var store: KeiPixStore
+    let onGalleryScrollDirectionChange: ((NativeGalleryScrollDirection) -> Void)?
     @State private var actionMessage: String?
+
+    init(
+        store: KeiPixStore,
+        onGalleryScrollDirectionChange: ((NativeGalleryScrollDirection) -> Void)? = nil
+    ) {
+        self.store = store
+        self.onGalleryScrollDirectionChange = onGalleryScrollDirectionChange
+    }
 
     var body: some View {
         Group {
@@ -16,7 +25,8 @@ struct GalleryView: View {
                     store: store,
                     actionMessage: $actionMessage,
                     navigationTitle: navigationTitle,
-                    gallerySubtitle: gallerySubtitle
+                    gallerySubtitle: gallerySubtitle,
+                    onGalleryScrollDirectionChange: onGalleryScrollDirectionChange
                 )
             }
         }
@@ -112,6 +122,7 @@ private struct GalleryFeedView: View {
     @Binding var actionMessage: String?
     let navigationTitle: String
     let gallerySubtitle: String
+    let onGalleryScrollDirectionChange: ((NativeGalleryScrollDirection) -> Void)?
     @State private var artworkSelection = GalleryArtworkSelection()
     @State private var batchBookmarkCommandRequest: BatchBookmarkCommandRequest?
     @State private var savedScrollPositions: [String: String] = [:]
@@ -262,7 +273,8 @@ private struct GalleryFeedView: View {
                 contentReloadToken: nativeGalleryContentReloadToken,
                 onRefresh: {
                     await store.reloadCurrentFeed()
-                }
+                },
+                onScrollDirectionChange: onGalleryScrollDirectionChange
             ) { item in
                 AnyView(nativeGalleryContent(for: item))
             }

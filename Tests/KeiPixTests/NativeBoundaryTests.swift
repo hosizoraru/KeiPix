@@ -182,6 +182,10 @@ struct NativeBoundaryTests {
             contentsOf: root.appending(path: "Sources/KeiPix/Views/MobileBottomTabCustomizationView.swift"),
             encoding: .utf8
         )
+        let mobileBottomTabConfiguration = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Models/MobileBottomTabConfiguration.swift"),
+            encoding: .utf8
+        )
         let dashboardView = try String(
             contentsOf: root.appending(path: "Sources/KeiPix/Views/DiscoveryDashboardView.swift"),
             encoding: .utf8
@@ -336,7 +340,17 @@ struct NativeBoundaryTests {
         #expect(contentView.contains("case settings"))
         #expect(contentView.contains("ToolbarItem(placement: .topBarLeading)"))
         #expect(contentView.contains("private var routeMenu: some View"))
-        #expect(contentView.contains("ForEach(PixivRoute.sidebarSections)"))
+        #expect(contentView.contains("ForEach(routeMenuSections)"))
+        #expect(contentView.contains("private var routeMenuSections: [MobileRouteMenuSection]"))
+        #expect(contentView.contains("MobileRouteMenuConfiguration.sections("))
+        #expect(contentView.contains("pinnedItems: isCompactCustomTabRootActive ? mobileBottomTabItems : []"))
+        #expect(contentView.contains("includesDedicatedSearch: isCompactCustomTabRootActive"))
+        #expect(contentView.contains("private func showsRouteMenu(showsSidebarToggle: Bool) -> Bool"))
+        #expect(contentView.contains("return isCompactCustomTabRootActive == false || selectedTab == .feed"))
+        #expect(mobileBottomTabConfiguration.contains("struct MobileRouteMenuSection: Identifiable"))
+        #expect(mobileBottomTabConfiguration.contains("enum MobileRouteMenuConfiguration"))
+        #expect(mobileBottomTabConfiguration.contains("let pinnedRoutes = Set(pinnedItems.compactMap(\\.route))"))
+        #expect(mobileBottomTabConfiguration.contains("let excludedRoutes = includesDedicatedSearch ? pinnedRoutes.union([.search]) : pinnedRoutes"))
         #expect(contentView.contains("store.select(route)"))
         #expect(contentView.contains("if store.selectedRoute == .home"))
         #expect(contentView.contains("NovelGalleryView(store: store)"))
@@ -485,6 +499,10 @@ struct NativeBoundaryTests {
             contentsOf: root.appending(path: "Sources/KeiPix/Views/ContentView_iPadOS.swift"),
             encoding: .utf8
         )
+        let tabBarBridge = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Support/TabBarMinimizeBehaviorBridge.swift"),
+            encoding: .utf8
+        )
         let sharedComponents = try String(
             contentsOf: root.appending(path: "Sources/KeiPix/Views/LibrarySurfaceComponents.swift"),
             encoding: .utf8
@@ -501,6 +519,10 @@ struct NativeBoundaryTests {
             contentsOf: root.appending(path: "Sources/KeiPix/Resources/Localizable.xcstrings"),
             encoding: .utf8
         )
+        let navigationCatalog = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Resources/Navigation.xcstrings"),
+            encoding: .utf8
+        )
 
         #expect(mobileLayout.contains("var usesPhoneSearchTab: Bool"))
         #expect(mobileLayout.contains("var usesIPadPortraitTopTabs: Bool"))
@@ -509,6 +531,19 @@ struct NativeBoundaryTests {
         #expect(iPadContentView.contains("Tab(L10n.search, systemImage: \"magnifyingglass\", value: .search, role: .search)"))
         #expect(iPadContentView.contains("if layout.usesCustomNavigationTabs {"))
         #expect(iPadContentView.contains("if layout.usesDedicatedSearchTab {"))
+        #expect(iPadContentView.contains(".tabBarMinimizeBehavior(compactTabBarMinimizeBehavior)"))
+        #expect(iPadContentView.contains("TabBarMinimizeBehaviorBridge("))
+        #expect(iPadContentView.contains("isTabBarHidden: isCompactTabDockCollapsed"))
+        #expect(iPadContentView.contains("private var compactTabBarMinimizeBehavior: TabBarMinimizeBehavior"))
+        #expect(iPadContentView.contains("private var compactUITabBarMinimizeBehavior: UITabBarController.MinimizeBehavior"))
+        #expect(iPadContentView.contains("currentMobilePlatform == .phone ? .onScrollDown : .automatic"))
+        #expect(tabBarBridge.contains("struct TabBarMinimizeBehaviorBridge: UIViewControllerRepresentable"))
+        #expect(tabBarBridge.contains("let behavior: UITabBarController.MinimizeBehavior"))
+        #expect(tabBarBridge.contains("let isTabBarHidden: Bool"))
+        #expect(tabBarBridge.contains("tabBarController.tabBarMinimizeBehavior = behavior"))
+        #expect(tabBarBridge.contains("tabBarController.setTabBarHidden(isTabBarHidden, animated: hasAppliedTabBarState)"))
+        #expect(tabBarBridge.contains("private func resolvedTabBarController() -> UITabBarController?"))
+        #expect(tabBarBridge.contains("view.window?.rootViewController?.firstTabBarController()"))
         #expect(iPadContentView.contains("ForEach(mobileBottomTabItems) { item in"))
         #expect(iPadContentView.contains("value: iPadTab.custom(item)"))
         #expect(iPadContentView.contains("private var mobileBottomTabItemsBinding: Binding<[MobileBottomTabItem]>"))
@@ -520,6 +555,17 @@ struct NativeBoundaryTests {
         #expect(iPadContentView.contains("await store.refreshSearchSuggestions()"))
         #expect(iPadContentView.contains("MobileGlobalSearchModifier("))
         #expect(iPadContentView.contains("isEnabled: showsSidebarToggle"))
+        #expect(iPadContentView.contains("@State private var compactFeedRoute: PixivRoute = .home"))
+        #expect(iPadContentView.contains("@State private var isCompactTabDockCollapsed = false"))
+        #expect(iPadContentView.contains("private func restoreCompactFeedRoute()"))
+        #expect(iPadContentView.contains("private func sanitizedCompactFeedRoute(_ route: PixivRoute) -> PixivRoute"))
+        #expect(iPadContentView.contains("compactFeedRoute = .search"))
+        #expect(iPadContentView.contains("private var compactCollapsedTabDock: some View"))
+        #expect(iPadContentView.contains("private func handleCompactGalleryScrollDirection(_ direction: NativeGalleryScrollDirection)"))
+        #expect(iPadContentView.contains("private func setCompactTabDockCollapsed(_ isCollapsed: Bool)"))
+        #expect(iPadContentView.contains("onGalleryScrollDirectionChange: handleCompactGalleryScrollDirection"))
+        #expect(iPadContentView.contains("L10n.showBottomTabs"))
+        #expect(iPadContentView.contains("case .search:\n            selectedSidebarItem = .route(.search)\n        case .custom(let item):"))
         #expect(iPadContentView.contains("selectedTab = .feed"))
         #expect(sharedComponents.contains("private var usesCollapsedPhoneSearch: Bool"))
         #expect(sharedComponents.contains("UIDevice.current.userInterfaceIdiom == .phone"))
@@ -527,7 +573,9 @@ struct NativeBoundaryTests {
         #expect(feedHeader.contains("@State private var isInlineFilterExpanded = false"))
         #expect(feedHeader.contains("iPadCompactFilterControl(expandedWidth: 300)"))
         #expect(l10n.contains("static var searchSuggestions: String"))
+        #expect(l10n.contains("static var showBottomTabs: String"))
         #expect(localizable.contains("\"Search Suggestions\""))
+        #expect(navigationCatalog.contains("\"Show Tab Bar\""))
     }
 
     @Test("Mobile portrait reading surfaces avoid landscape-only chrome")
@@ -1160,6 +1208,8 @@ struct NativeBoundaryTests {
         #expect(galleryView.contains("usesNativeGalleryCollection"))
         #expect(galleryView.contains("usesArtworkMasonry"))
         #expect(galleryView.contains("NativeGalleryCollectionView("))
+        #expect(galleryView.contains("let onGalleryScrollDirectionChange: ((NativeGalleryScrollDirection) -> Void)?"))
+        #expect(galleryView.contains("onScrollDirectionChange: onGalleryScrollDirectionChange"))
         #expect(galleryView.contains("iPadNativeFeedHeader"))
         #expect(galleryView.contains("navigationBarTitleDisplayMode(.inline)"))
         #expect(galleryView.contains("presentation: .iPadCompact"))
@@ -1173,6 +1223,10 @@ struct NativeBoundaryTests {
         #expect(feedHeader.contains("iPadCompactHeaderStackedActions"))
         #expect(feedHeader.contains("NativeInlineFilterField("))
         #expect(feedHeader.contains("iPadFeedHeaderActionChrome()"))
+        #expect(nativeCollection.contains("enum NativeGalleryScrollDirection: Sendable"))
+        #expect(nativeCollection.contains("let onScrollDirectionChange: ((NativeGalleryScrollDirection) -> Void)?"))
+        #expect(nativeCollection.contains("func scrollViewDidScroll(_ scrollView: UIScrollView)"))
+        #expect(nativeCollection.contains("parent.onScrollDirectionChange?(direction)"))
         #expect(store.contains("var artworkNavigationIntentSerial = 0"))
         #expect(navigationHistory.contains("artworkNavigationIntentSerial += 1"))
         #expect(artworkCard.contains(".minimumScaleFactor(0.82)"))

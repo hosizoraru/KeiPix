@@ -22,6 +22,8 @@ struct ContentView: View {
     @State private var isSettingsSheetPresented = false
     @State private var isMobileTabCustomizationPresented = false
     @State private var isCompactCustomTabRootActive = false
+    @State private var compactFeedRoute: PixivRoute = .home
+    @State private var isCompactTabDockCollapsed = false
     @State private var feedbackRequest: FeedbackReportRequest?
     @State private var statusMessage: String?
     @AppStorage("mobileBottomTabItemIDs") private var mobileBottomTabItemIDs = MobileBottomTabConfiguration.defaultStorageID
@@ -223,22 +225,48 @@ struct ContentView: View {
                 }
             }
         }
+        .tabBarMinimizeBehavior(compactTabBarMinimizeBehavior)
+        .background {
+            TabBarMinimizeBehaviorBridge(
+                behavior: compactUITabBarMinimizeBehavior,
+                isTabBarHidden: isCompactTabDockCollapsed
+            )
+                .allowsHitTesting(false)
+        }
+        .overlay(alignment: .bottom) {
+            compactCollapsedTabDock
+        }
         .onAppear {
             isCompactCustomTabRootActive = layout.usesCustomNavigationTabs
+            setCompactTabDockCollapsed(false)
+            syncCompactTabSelectionWithCurrentRoute()
         }
         .onChange(of: layout.usesCustomNavigationTabs) { _, isEnabled in
             isCompactCustomTabRootActive = isEnabled
+            setCompactTabDockCollapsed(false)
             if isEnabled == false, selectedTab == .search {
                 selectedTab = .feed
             }
             if isEnabled, selectedTab == .library || selectedTab == .settings {
                 selectedTab = .feed
             }
+            if isEnabled {
+                syncCompactTabSelectionWithCurrentRoute()
+            }
         }
         .onChange(of: mobileBottomTabItemIDs) { _, _ in
+            setCompactTabDockCollapsed(false)
             if case .custom(let item) = selectedTab, mobileBottomTabItems.contains(item) == false {
                 selectedTab = .feed
             }
+            if isCompactCustomTabRootActive {
+                compactFeedRoute = sanitizedCompactFeedRoute(compactFeedRoute)
+                syncCompactTabSelectionWithCurrentRoute()
+            }
+        }
+        .onChange(of: selectedTab) { _, tab in
+            setCompactTabDockCollapsed(false)
+            handleCompactTabSelection(tab)
         }
     }
 
@@ -256,6 +284,7 @@ struct ContentView: View {
         }
         .onAppear {
             isCompactCustomTabRootActive = false
+            setCompactTabDockCollapsed(false)
             syncSidebarSelectionFromCurrentTab()
         }
         .onChange(of: selectedSidebarItem) { _, item in
@@ -310,12 +339,16 @@ struct ContentView: View {
 
                         if splitColumnVisibility == .detailOnly {
                             ToolbarItem(placement: .topBarLeading) {
-                                routeMenu
+                                if showsRouteMenu(showsSidebarToggle: showsSidebarToggle) {
+                                    routeMenu
+                                }
                             }
                         }
                     } else {
                         ToolbarItem(placement: .topBarLeading) {
-                            routeMenu
+                            if showsRouteMenu(showsSidebarToggle: showsSidebarToggle) {
+                                routeMenu
+                            }
                         }
                     }
 
@@ -711,7 +744,7 @@ struct ContentView: View {
 
     private var routeMenu: some View {
         Menu {
-            ForEach(PixivRoute.sidebarSections) { section in
+            ForEach(routeMenuSections) { section in
                 Section(section.title) {
                     ForEach(section.routes) { route in
                         Button {
@@ -727,6 +760,41 @@ struct ContentView: View {
                 .lineLimit(1)
         }
         .accessibilityLabel("\(L10n.currentRoute): \(store.selectedRoute.title)")
+    }
+
+    @ViewBuilder
+    private var compactCollapsedTabDock: some View {
+        if usesCompactTabDockCollapse, isCompactTabDockCollapsed {
+            Button {
+                setCompactTabDockCollapsed(false)
+            } label: {
+                Image(systemName: selectedTab.systemImage)
+                    .font(.headline.weight(.semibold))
+                    .symbolRenderingMode(.hierarchical)
+                    .frame(width: 52, height: 42)
+            }
+            .buttonStyle(.glassProminent)
+            .buttonBorderShape(.capsule)
+            .controlSize(.large)
+            .help(L10n.showBottomTabs)
+            .accessibilityLabel(L10n.showBottomTabs)
+            .padding(.bottom, 10)
+            .transition(.move(edge: .bottom).combined(with: .opacity))
+        }
+    }
+
+    private var routeMenuSections: [MobileRouteMenuSection] {
+        MobileRouteMenuConfiguration.sections(
+            pinnedItems: isCompactCustomTabRootActive ? mobileBottomTabItems : [],
+            includesDedicatedSearch: isCompactCustomTabRootActive
+        )
+    }
+
+    private func showsRouteMenu(showsSidebarToggle: Bool) -> Bool {
+        if showsSidebarToggle {
+            return true
+        }
+        return isCompactCustomTabRootActive == false || selectedTab == .feed
     }
 
     private func showsArtworkDetailToggle(showsSidebarToggle: Bool) -> Bool {
@@ -1299,7 +1367,10 @@ struct ContentView: View {
         } else if store.selectedRoute.usesNovelFeed {
             NovelGalleryView(store: store)
         } else {
-            GalleryView(store: store)
+            GalleryView(
+                store: store,
+                onGalleryScrollDirectionChange: handleCompactGalleryScrollDirection
+            )
         }
     }
 
@@ -1346,6 +1417,18 @@ struct ContentView: View {
         MobileBottomTabConfiguration.items(from: mobileBottomTabItemIDs)
     }
 
+    private var compactTabBarMinimizeBehavior: TabBarMinimizeBehavior {
+        currentMobilePlatform == .phone ? .onScrollDown : .automatic
+    }
+
+    private var compactUITabBarMinimizeBehavior: UITabBarController.MinimizeBehavior {
+        currentMobilePlatform == .phone ? .onScrollDown : .automatic
+    }
+
+    private var usesCompactTabDockCollapse: Bool {
+        currentMobilePlatform == .phone && isCompactCustomTabRootActive
+    }
+
     private var mobileBottomTabItemsBinding: Binding<[MobileBottomTabItem]> {
         Binding {
             mobileBottomTabItems
@@ -1369,6 +1452,26 @@ struct ContentView: View {
     private func toggleIPadSidebar() {
         withAnimation(.snappy(duration: 0.22)) {
             splitColumnVisibility = iPadSidebarVisible ? .detailOnly : .all
+        }
+    }
+
+    private func handleCompactGalleryScrollDirection(_ direction: NativeGalleryScrollDirection) {
+        guard usesCompactTabDockCollapse else { return }
+
+        switch direction {
+        case .towardContentEnd:
+            setCompactTabDockCollapsed(true)
+        case .towardContentStart:
+            setCompactTabDockCollapsed(false)
+        }
+    }
+
+    private func setCompactTabDockCollapsed(_ isCollapsed: Bool) {
+        guard usesCompactTabDockCollapse || isCollapsed == false else { return }
+        guard isCompactTabDockCollapsed != isCollapsed else { return }
+
+        withAnimation(.snappy(duration: 0.18)) {
+            isCompactTabDockCollapsed = isCollapsed
         }
     }
 
@@ -1401,6 +1504,9 @@ struct ContentView: View {
     }
 
     private func selectRoute(_ route: PixivRoute, clearsArtworkDetail: Bool = true) {
+        if isCompactCustomTabRootActive, selectedTab == .feed {
+            compactFeedRoute = sanitizedCompactFeedRoute(route)
+        }
         selectedSidebarItem = .route(route)
         selectedTab = tab(for: route)
         if clearsArtworkDetail {
@@ -1436,6 +1542,50 @@ struct ContentView: View {
         if store.selectedRoute != route {
             store.select(route)
         }
+    }
+
+    private func handleCompactTabSelection(_ tab: iPadTab) {
+        guard isCompactCustomTabRootActive else { return }
+
+        switch tab {
+        case .feed:
+            restoreCompactFeedRoute()
+        case .search:
+            selectedSidebarItem = .route(.search)
+        case .custom(let item):
+            selectMobileBottomTabItem(item)
+        case .library, .settings:
+            break
+        }
+    }
+
+    private func syncCompactTabSelectionWithCurrentRoute() {
+        guard isCompactCustomTabRootActive else { return }
+
+        if let item = mobileBottomTabItems.first(where: { $0.route == store.selectedRoute }) {
+            selectedTab = .custom(item)
+        } else {
+            compactFeedRoute = sanitizedCompactFeedRoute(store.selectedRoute)
+        }
+    }
+
+    private func restoreCompactFeedRoute() {
+        let route = sanitizedCompactFeedRoute(compactFeedRoute)
+        compactFeedRoute = route
+        selectedSidebarItem = .route(route)
+        if route.usesArtworkFeed == false {
+            dismissArtworkDetail(clearSelection: true)
+        }
+        if store.selectedRoute != route {
+            store.select(route)
+        }
+    }
+
+    private func sanitizedCompactFeedRoute(_ route: PixivRoute) -> PixivRoute {
+        if mobileBottomTabItems.contains(where: { $0.route == route }) {
+            return .home
+        }
+        return route
     }
 
     // MARK: - Library Tab
@@ -1654,6 +1804,7 @@ struct ContentView: View {
         Task {
             await store.runSearch()
             selectedSidebarItem = .route(.search)
+            compactFeedRoute = .search
             selectedTab = .feed
         }
     }

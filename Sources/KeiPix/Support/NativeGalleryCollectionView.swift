@@ -70,6 +70,11 @@ enum NativeGalleryCollectionItem: Hashable, Identifiable {
     }
 }
 
+enum NativeGalleryScrollDirection: Sendable {
+    case towardContentEnd
+    case towardContentStart
+}
+
 enum NativeGalleryCollectionLayout: Equatable {
     case compactGrid(cardHeight: CGFloat, loadMoreHeight: CGFloat)
     case listRow(rowHeight: CGFloat, loadMoreHeight: CGFloat)
@@ -188,6 +193,7 @@ struct NativeGalleryCollectionView: NSViewRepresentable {
     let scrollToArtworkID: Int?
     let contentReloadToken: Int
     let onRefresh: (() async -> Void)?
+    let onScrollDirectionChange: ((NativeGalleryScrollDirection) -> Void)?
     let content: (NativeGalleryCollectionItem) -> AnyView
 
     func makeNSView(context: Context) -> NSScrollView {
@@ -548,6 +554,7 @@ struct NativeGalleryCollectionView: UIViewRepresentable {
     let scrollToArtworkID: Int?
     let contentReloadToken: Int
     let onRefresh: (() async -> Void)?
+    let onScrollDirectionChange: ((NativeGalleryScrollDirection) -> Void)?
     let content: (NativeGalleryCollectionItem) -> AnyView
 
     func makeUIView(context: Context) -> UICollectionView {
@@ -595,7 +602,11 @@ struct NativeGalleryCollectionView: UIViewRepresentable {
         private var lastHighlightedArtworkIDs: Set<Int> = []
         private var lastContentReloadToken: Int?
         private var lastScrollTarget: Int?
+        private var lastScrollOffsetY: CGFloat = 0
+        private var scrollDirectionAccumulator: CGFloat = 0
+        private var lastReportedScrollDirection: NativeGalleryScrollDirection?
         private let widthChangeTolerance: CGFloat = 0.5
+        private let scrollDirectionThreshold: CGFloat = 24
 
         init(parent: NativeGalleryCollectionView) {
             self.parent = parent
@@ -732,6 +743,41 @@ struct NativeGalleryCollectionView: UIViewRepresentable {
                 for: parent.items[indexPath.item],
                 containerWidth: collectionView.bounds.width
             )
+        }
+
+        func scrollViewDidScroll(_ scrollView: UIScrollView) {
+            let offsetY = scrollView.contentOffset.y
+            defer { lastScrollOffsetY = offsetY }
+
+            guard parent.onScrollDirectionChange != nil else { return }
+            guard scrollView.isDragging || scrollView.isDecelerating else { return }
+
+            let minimumOffsetY = -scrollView.adjustedContentInset.top
+            let maximumOffsetY = max(
+                minimumOffsetY,
+                scrollView.contentSize.height
+                    - scrollView.bounds.height
+                    + scrollView.adjustedContentInset.bottom
+            )
+            guard maximumOffsetY - minimumOffsetY > scrollDirectionThreshold else { return }
+            guard offsetY >= minimumOffsetY, offsetY <= maximumOffsetY else { return }
+
+            let deltaY = offsetY - lastScrollOffsetY
+            guard abs(deltaY) > 0.5 else { return }
+
+            let direction: NativeGalleryScrollDirection = deltaY > 0
+                ? .towardContentEnd
+                : .towardContentStart
+            if direction == lastReportedScrollDirection {
+                scrollDirectionAccumulator += abs(deltaY)
+            } else {
+                scrollDirectionAccumulator = abs(deltaY)
+            }
+
+            guard scrollDirectionAccumulator >= scrollDirectionThreshold else { return }
+            lastReportedScrollDirection = direction
+            scrollDirectionAccumulator = 0
+            parent.onScrollDirectionChange?(direction)
         }
 
         private func scrollToSelectionIfNeeded(in collectionView: UICollectionView) {
