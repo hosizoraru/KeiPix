@@ -249,7 +249,7 @@ private struct DiscoveryDashboardHighlightCard: View {
     var body: some View {
         Button(action: action) {
             ZStack(alignment: .bottomLeading) {
-                decorativeBackground
+                cardBackground
 
                 VStack(alignment: .leading, spacing: 12) {
                     HStack(alignment: .center, spacing: 10) {
@@ -285,15 +285,16 @@ private struct DiscoveryDashboardHighlightCard: View {
                 .padding(14)
             }
             .frame(width: style.highlightCardWidth, height: style.highlightCardHeight, alignment: .leading)
-            .contentShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+            .clipShape(cardShape)
+            .containerShape(cardShape)
+            .contentShape(cardShape)
         }
         .buttonStyle(.plain)
-        .keiInteractiveGlass(22)
+        .glassEffect(.regular.interactive(), in: cardShape)
         .overlay {
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
+            cardShape
                 .strokeBorder(strokeStyle, lineWidth: isSelected ? 1.2 : 0.8)
         }
-        .shadow(color: .black.opacity(isHovering ? 0.12 : 0.03), radius: isHovering ? 14 : 5, y: isHovering ? 8 : 2)
         .animation(.snappy(duration: 0.16), value: isHovering)
         .animation(.snappy(duration: 0.16), value: isSelected)
         .keiPixHoverTracker { isHovering = $0 }
@@ -301,24 +302,39 @@ private struct DiscoveryDashboardHighlightCard: View {
         .accessibilityLabel("\(feature.title), \(feature.subtitle)")
     }
 
-    private var decorativeBackground: some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .fill(feature.accent.opacity(isHovering ? 0.16 : 0.10))
+    private var cardShape: RoundedRectangle {
+        RoundedRectangle(cornerRadius: 22, style: .continuous)
+    }
 
-            Circle()
-                .fill(feature.accent.opacity(isHovering ? 0.26 : 0.16))
-                .frame(width: 126, height: 126)
-                .blur(radius: 18)
-                .offset(x: 92, y: -48)
-
-            Circle()
-                .fill(Color.accentColor.opacity(isHovering ? 0.18 : 0.10))
-                .frame(width: 112, height: 112)
-                .blur(radius: 22)
-                .offset(x: -96, y: 54)
-        }
-        .allowsHitTesting(false)
+    private var cardBackground: some View {
+        cardShape
+            .fill(
+                LinearGradient(
+                    stops: [
+                        .init(color: feature.accent.opacity(isHovering ? 0.20 : 0.14), location: 0),
+                        .init(color: Color.accentColor.opacity(isHovering ? 0.10 : 0.06), location: 0.58),
+                        .init(color: Color.primary.opacity(0.02), location: 1)
+                    ],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+            )
+            .overlay(alignment: .topTrailing) {
+                cardShape
+                    .fill(
+                        RadialGradient(
+                            colors: [
+                                feature.accent.opacity(isHovering ? 0.20 : 0.12),
+                                .clear
+                            ],
+                            center: .topTrailing,
+                            startRadius: 0,
+                            endRadius: 145
+                        )
+                    )
+                    .allowsHitTesting(false)
+            }
+            .allowsHitTesting(false)
     }
 
     private var strokeStyle: Color {

@@ -264,6 +264,9 @@ struct ContentView: View {
         }
         #if DEBUG
         .task {
+            if VisualQALaunchArgument.contains(.discoverDashboard) {
+                store.presentDiscoverDashboardVisualQA()
+            }
             if VisualQALaunchArgument.contains(.mangaWatchlist) {
                 store.activateVisualQASampleSession()
                 store.selectedRoute = .mangaWatchlist

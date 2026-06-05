@@ -22,10 +22,10 @@ source "$ROOT_DIR/script/version_settings.sh"
 keipix_load_version_settings "$ROOT_DIR"
 
 case "$MODE" in
-  run|--debug|debug|--logs|logs|--telemetry|telemetry|--verify|verify|--package|package|--visual-qa-pixiv-link-drop|visual-qa-pixiv-link-drop|--visual-qa-pixiv-id-open|visual-qa-pixiv-id-open|--visual-qa-creator-profile|visual-qa-creator-profile|--visual-qa-feedback-sheet|visual-qa-feedback-sheet|--visual-qa-artwork-detail-social|visual-qa-artwork-detail-social|--visual-qa-manga-watchlist|visual-qa-manga-watchlist|--visual-qa-series-sheet|visual-qa-series-sheet|--visual-qa-cached-feed|visual-qa-cached-feed|--visual-qa-ranking|visual-qa-ranking|--visual-qa-muted-content|visual-qa-muted-content|--visual-qa-settings-window|visual-qa-settings-window|--visual-qa-runtime-readiness|visual-qa-runtime-readiness|--visual-qa-sharing-templates|visual-qa-sharing-templates|--visual-qa-ugoira-player|visual-qa-ugoira-player|--visual-qa-downloaded-reader|visual-qa-downloaded-reader|--visual-qa-gallery-auto|visual-qa-gallery-auto|--visual-qa-gallery-two-column|visual-qa-gallery-two-column|--visual-qa-gallery-three-column|visual-qa-gallery-three-column|--visual-qa-gallery-compact|visual-qa-gallery-compact)
+  run|--debug|debug|--logs|logs|--telemetry|telemetry|--verify|verify|--package|package|--visual-qa-discover-dashboard|visual-qa-discover-dashboard|--visual-qa-pixiv-link-drop|visual-qa-pixiv-link-drop|--visual-qa-pixiv-id-open|visual-qa-pixiv-id-open|--visual-qa-creator-profile|visual-qa-creator-profile|--visual-qa-feedback-sheet|visual-qa-feedback-sheet|--visual-qa-artwork-detail-social|visual-qa-artwork-detail-social|--visual-qa-manga-watchlist|visual-qa-manga-watchlist|--visual-qa-series-sheet|visual-qa-series-sheet|--visual-qa-cached-feed|visual-qa-cached-feed|--visual-qa-ranking|visual-qa-ranking|--visual-qa-muted-content|visual-qa-muted-content|--visual-qa-settings-window|visual-qa-settings-window|--visual-qa-runtime-readiness|visual-qa-runtime-readiness|--visual-qa-sharing-templates|visual-qa-sharing-templates|--visual-qa-ugoira-player|visual-qa-ugoira-player|--visual-qa-downloaded-reader|visual-qa-downloaded-reader|--visual-qa-gallery-auto|visual-qa-gallery-auto|--visual-qa-gallery-two-column|visual-qa-gallery-two-column|--visual-qa-gallery-three-column|visual-qa-gallery-three-column|--visual-qa-gallery-compact|visual-qa-gallery-compact)
     ;;
   *)
-    echo "usage: $0 [run|--debug|--logs|--telemetry|--verify|--package|--visual-qa-pixiv-link-drop|--visual-qa-pixiv-id-open|--visual-qa-creator-profile|--visual-qa-feedback-sheet|--visual-qa-artwork-detail-social|--visual-qa-manga-watchlist|--visual-qa-series-sheet|--visual-qa-cached-feed|--visual-qa-ranking|--visual-qa-muted-content|--visual-qa-settings-window|--visual-qa-runtime-readiness|--visual-qa-sharing-templates|--visual-qa-ugoira-player|--visual-qa-downloaded-reader|--visual-qa-gallery-auto|--visual-qa-gallery-two-column|--visual-qa-gallery-three-column|--visual-qa-gallery-compact]" >&2
+    echo "usage: $0 [run|--debug|--logs|--telemetry|--verify|--package|--visual-qa-discover-dashboard|--visual-qa-pixiv-link-drop|--visual-qa-pixiv-id-open|--visual-qa-creator-profile|--visual-qa-feedback-sheet|--visual-qa-artwork-detail-social|--visual-qa-manga-watchlist|--visual-qa-series-sheet|--visual-qa-cached-feed|--visual-qa-ranking|--visual-qa-muted-content|--visual-qa-settings-window|--visual-qa-runtime-readiness|--visual-qa-sharing-templates|--visual-qa-ugoira-player|--visual-qa-downloaded-reader|--visual-qa-gallery-auto|--visual-qa-gallery-two-column|--visual-qa-gallery-three-column|--visual-qa-gallery-compact]" >&2
     exit 2
     ;;
 esac
@@ -140,6 +140,11 @@ case "$MODE" in
     sleep 1
     pgrep -x "$APP_NAME" >/dev/null
     ;;
+  --visual-qa-discover-dashboard|visual-qa-discover-dashboard)
+    open_app --visual-qa-discover-dashboard
+    sleep 1
+    pgrep -x "$APP_NAME" >/dev/null
+    ;;
   --visual-qa-pixiv-link-drop|visual-qa-pixiv-link-drop)
     open_app --visual-qa-pixiv-link-drop
     sleep 1
@@ -241,7 +246,7 @@ case "$MODE" in
     echo "$APP_BUNDLE"
     ;;
   *)
-    echo "usage: $0 [run|--debug|--logs|--telemetry|--verify|--package|--visual-qa-pixiv-link-drop|--visual-qa-pixiv-id-open|--visual-qa-creator-profile|--visual-qa-feedback-sheet|--visual-qa-artwork-detail-social|--visual-qa-manga-watchlist|--visual-qa-series-sheet|--visual-qa-cached-feed|--visual-qa-ranking|--visual-qa-muted-content|--visual-qa-settings-window|--visual-qa-runtime-readiness|--visual-qa-sharing-templates|--visual-qa-ugoira-player|--visual-qa-downloaded-reader|--visual-qa-gallery-auto|--visual-qa-gallery-two-column|--visual-qa-gallery-three-column|--visual-qa-gallery-compact]" >&2
+    echo "usage: $0 [run|--debug|--logs|--telemetry|--verify|--package|--visual-qa-discover-dashboard|--visual-qa-pixiv-link-drop|--visual-qa-pixiv-id-open|--visual-qa-creator-profile|--visual-qa-feedback-sheet|--visual-qa-artwork-detail-social|--visual-qa-manga-watchlist|--visual-qa-series-sheet|--visual-qa-cached-feed|--visual-qa-ranking|--visual-qa-muted-content|--visual-qa-settings-window|--visual-qa-runtime-readiness|--visual-qa-sharing-templates|--visual-qa-ugoira-player|--visual-qa-downloaded-reader|--visual-qa-gallery-auto|--visual-qa-gallery-two-column|--visual-qa-gallery-three-column|--visual-qa-gallery-compact]" >&2
     exit 2
     ;;
 esac

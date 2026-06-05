@@ -728,6 +728,19 @@ extension KeiPixStore {
         activateVisualQATestMode(preserveStoredAccounts: false, persist: false)
     }
 
+    func presentDiscoverDashboardVisualQA() {
+        activateVisualQASampleSession()
+        selectedRoute = .home
+        focusedUser = nil
+        bookmarkTagFilter = nil
+        selectedSpotlightArticle = nil
+        selectedArtwork = nil
+        errorMessage = nil
+        isLoading = false
+        isLoadingMore = false
+        activeFeedSnapshotRestoration = nil
+    }
+
     func presentGalleryLayoutVisualQA(mode: GalleryLayoutMode) {
         activateVisualQASampleSession()
         selectedRoute = .illustrations

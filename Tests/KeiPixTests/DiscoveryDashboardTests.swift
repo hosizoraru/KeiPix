@@ -51,6 +51,14 @@ struct DiscoveryDashboardTests {
             contentsOf: root.appending(path: "Sources/KeiPix/Resources/Localizable.xcstrings"),
             encoding: .utf8
         )
+        let iPadContent = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/ContentView_iPadOS.swift"),
+            encoding: .utf8
+        )
+        let visualQASampleData = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Support/VisualQASampleData.swift"),
+            encoding: .utf8
+        )
 
         let highlights = try #require(dashboard.range(of: "DiscoveryDashboardHighlightsSection(store: store, style: .full)"))
         let forYou = try #require(dashboard.range(of: "DiscoveryDashboardForYouSection(store: store, style: .full)"))
@@ -62,6 +70,16 @@ struct DiscoveryDashboardTests {
         #expect(recommendationSections.contains("DiscoveryTrendingTagsStrip(store: store, showsHeader: false)"))
         #expect(recommendationSections.contains("struct DiscoveryDashboardHighlightsSection: View"))
         #expect(recommendationSections.contains("struct DiscoveryDashboardForYouSection: View"))
+        #expect(recommendationSections.contains(".clipShape(cardShape)"))
+        #expect(recommendationSections.contains(".containerShape(cardShape)"))
+        #expect(recommendationSections.contains(".shadow(color:") == false)
+        #expect(recommendationSections.contains(".blur(radius:") == false)
+        #expect(recommendationSections.contains("RadialGradient"))
+        #expect(recommendationSections.contains("GlassEffectContainer(spacing: 12)"))
+        #expect(iPadContent.contains("VisualQALaunchArgument.contains(.discoverDashboard)"))
+        #expect(iPadContent.contains("store.presentDiscoverDashboardVisualQA()"))
+        #expect(visualQASampleData.contains("func presentDiscoverDashboardVisualQA()"))
+        #expect(visualQASampleData.contains("selectedRoute = .home"))
         #expect(trendingStrip.contains("init(store: KeiPixStore, showsHeader: Bool = true)"))
         #expect(localizable.contains("\"Discovery Highlights\""))
         #expect(localizable.contains("\"value\": \"亮点\""))

@@ -75,6 +75,11 @@ struct ContentView: View {
             }
             #if DEBUG
             .task {
+                if VisualQALaunchArgument.contains(.discoverDashboard) {
+                    store.presentDiscoverDashboardVisualQA()
+                    selectedSidebarItem = .route(.home)
+                    selectedTab = .feed
+                }
                 if VisualQALaunchArgument.contains(.creatorProfile) {
                     store.activateVisualQASampleSession()
                     store.selectedRoute = .recommendedUsers
