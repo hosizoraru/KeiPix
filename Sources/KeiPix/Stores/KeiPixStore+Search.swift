@@ -15,6 +15,7 @@ extension KeiPixStore {
             _ = await openPixivID(request.id, target: request.target)
             return
         }
+        feedNarrowingContext = nil
         if selectedRoute == .searchUsers {
             searchSubmissionID += 1
             allSearchPopularPreviewArtworks = []

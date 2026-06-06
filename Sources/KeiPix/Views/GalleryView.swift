@@ -104,6 +104,9 @@ struct GalleryView: View {
             feedStatusText,
             store.activeFeedSnapshotRestoration == nil && store.hasNextPage ? L10n.nextPageAvailable : L10n.noMorePages
         ]
+        if let feedNarrowingContext = store.feedNarrowingContext {
+            parts.insert(String(format: L10n.pixivIDResultFormat, feedNarrowingContext.artworkID), at: 0)
+        }
         if let focusedUser = store.focusedUser {
             parts.append("\(focusedUser.name) @\(focusedUser.account)")
         }

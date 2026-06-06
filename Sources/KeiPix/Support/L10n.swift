@@ -82,6 +82,7 @@ enum L10n {
     static var openPixivIDTarget: String { text("Pixiv ID Type") }
     static var openPixivIDHint: String { text("Open an artwork or creator directly by numeric Pixiv ID.") }
     static var pixivIDQuickOpenHint: String { text("Search also accepts illust:123 and user:123.") }
+    static var pixivIDResultFormat: String { text("Pixiv ID #%d") }
     static var artworkIDPlaceholder: String { text("Enter artwork ID") }
     static var creatorIDPlaceholder: String { text("Enter creator ID") }
     static var openedPixivIDFormat: String { text("Opened %@ %d") }
@@ -157,6 +158,11 @@ enum L10n {
     static var clearedWatchLaterFormat: String { text("Cleared %d watch later items") }
     static var watchLaterClear: String { text("Clear Watch Later") }
     static var clearSearch: String { text("Clear Search") }
+    static var clearFeedFilter: String { text("Clear Feed Filter") }
+    static var feedFilterCleared: String { text("Feed filter cleared") }
+    static var activeArtworkFilterFormat: String { text("Filter: %@") }
+    static var activeFeedFiltersFormat: String { text("%d active filters") }
+    static var creatorTagFilterFormat: String { text("Creator tag #%@") }
     static var clearHistory: String { text("Clear History") }
     static var clearHistoryConfirmation: String { text("Clear all local browsing history?") }
     static var deleteHistoryItemConfirmationFormat: String { text("Delete %@ from local history?") }

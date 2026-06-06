@@ -70,6 +70,7 @@ final class KeiPixStore {
     var bookmarkTagFilter: String?
     var bookmarkFeedOptions = BookmarkFeedOptions.defaultValue
     var creatorArtworkTagFilter: CreatorArtworkTagFilter?
+    var feedNarrowingContext: FeedNarrowingContext?
     var localBrowsingHistory = KeiPixStore.loadLocalBrowsingHistory()
     var watchLaterQueue = KeiPixStore.loadWatchLaterQueue()
     var spotlightFavoriteArticles = KeiPixStore.loadSpotlightArticles(key: "spotlightFavoriteArticles")
@@ -393,6 +394,7 @@ final class KeiPixStore {
         searchSuggestions = []
         nextURL = nil
         creatorArtworkTagFilter = nil
+        feedNarrowingContext = nil
         activeFeedRequestID = nil
         activeSearchPopularPreviewRequestID = nil
         recordedBrowsingHistoryIDs.removeAll()
@@ -401,6 +403,7 @@ final class KeiPixStore {
     func select(_ route: PixivRoute) {
         focusedUser = nil
         creatorArtworkTagFilter = nil
+        feedNarrowingContext = nil
         errorMessage = nil
         clearNavigationHistory()
         if route != selectedRoute || route.isOwnBookmarkRoute == false {
@@ -450,6 +453,7 @@ final class KeiPixStore {
         bookmarkTagFilter = nil
         bookmarkFeedOptions = .defaultValue
         creatorArtworkTagFilter = nil
+        feedNarrowingContext = nil
         selectedSpotlightArticle = nil
         errorMessage = nil
         clearNavigationHistory()
@@ -461,6 +465,7 @@ final class KeiPixStore {
         focusedUser = user
         bookmarkTagFilter = nil
         bookmarkFeedOptions = .defaultValue
+        feedNarrowingContext = nil
         creatorArtworkTagFilter = CreatorArtworkTagFilter(
             userID: user.id,
             tag: tag.name,
@@ -485,6 +490,7 @@ final class KeiPixStore {
             bookmarkTagFilter = nil
             bookmarkFeedOptions = .defaultValue
             creatorArtworkTagFilter = nil
+            feedNarrowingContext = .directArtwork(id: artworkID)
             selectedSpotlightArticle = nil
             selectedRoute = .illustrations
             allArtworks = [artwork]
@@ -492,6 +498,7 @@ final class KeiPixStore {
             activeFeedSnapshotRestoration = nil
             allSearchPopularPreviewArtworks = []
             searchPopularPreviewArtworks = []
+            nextURL = nil
             navigateToArtwork(artwork)
             await recordBrowsingHistory(for: artwork)
         } catch {
@@ -501,6 +508,7 @@ final class KeiPixStore {
 
     func reloadCurrentFeed() async {
         let context = currentFeedRequestContext()
+        feedNarrowingContext = nil
         if usesLocalSampleAccount {
             presentLocalSampleFeed(for: context.route)
             return
@@ -574,6 +582,20 @@ final class KeiPixStore {
                 let appError = AppError.from(error)
                 errorMessage = appError.displayMessage
             }
+        }
+    }
+
+    func clearFeedNarrowingContext() async {
+        guard feedNarrowingContext != nil else { return }
+        let preservedArtwork = selectedArtwork
+        feedNarrowingContext = nil
+        if selectedRoute.usesArtworkFeed {
+            await reloadCurrentFeed()
+            if let preservedArtwork {
+                selectedArtwork = artworks.first(where: { $0.id == preservedArtwork.id }) ?? preservedArtwork
+            }
+        } else {
+            routeRefreshGeneration += 1
         }
     }
 

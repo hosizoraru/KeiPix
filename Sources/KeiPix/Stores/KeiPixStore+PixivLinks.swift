@@ -64,11 +64,16 @@ extension KeiPixStore {
             let artwork = try await api.illustDetail(illustID: id)
             focusedUser = nil
             bookmarkTagFilter = nil
+            bookmarkFeedOptions = .defaultValue
+            creatorArtworkTagFilter = nil
             selectedSpotlightArticle = nil
             selectedRoute = .illustrations
+            feedNarrowingContext = .directArtwork(id: id)
             allArtworks = [artwork]
             artworks = [artwork]
             activeFeedSnapshotRestoration = nil
+            allSearchPopularPreviewArtworks = []
+            searchPopularPreviewArtworks = []
             navigateToArtwork(artwork)
             nextURL = nil
             await recordBrowsingHistory(for: artwork)
@@ -81,6 +86,7 @@ extension KeiPixStore {
         case .creatorSearch(let keyword):
             focusedUser = nil
             bookmarkTagFilter = nil
+            feedNarrowingContext = nil
             selectedSpotlightArticle = nil
             searchText = keyword
             selectedRoute = .searchUsers
@@ -88,6 +94,7 @@ extension KeiPixStore {
         case .pixivisionArticle(let id, let url):
             focusedUser = nil
             bookmarkTagFilter = nil
+            feedNarrowingContext = nil
             selectedArtwork = nil
             allArtworks = []
             artworks = []

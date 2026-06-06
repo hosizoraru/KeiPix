@@ -87,6 +87,8 @@ struct FeedHeaderView: View {
     @ViewBuilder
     private var iPadCompactHeaderInlineActions: some View {
         HStack(spacing: 7) {
+            activeFeedClearChip
+
             if store.artworks.isEmpty == false {
                 iPadCompactFilterControl(expandedWidth: 300)
 
@@ -125,6 +127,8 @@ struct FeedHeaderView: View {
             }
 
             HStack(spacing: 7) {
+                activeFeedClearChip
+
                 if store.artworks.isEmpty == false, showsExpandedInlineFilter == false {
                     iPadCompactFilterControl(expandedWidth: nil)
                 }
@@ -248,6 +252,8 @@ struct FeedHeaderView: View {
 
     @ViewBuilder
     private var headerActions: some View {
+        activeFeedClearChip
+
         if store.artworks.isEmpty == false {
             #if os(macOS)
             macOSFilterField
@@ -1053,6 +1059,65 @@ struct FeedHeaderView: View {
         store.selectedRoute == .search && normalizedSearchKeyword.isEmpty == false
     }
 
+    @ViewBuilder
+    private var activeFeedClearChip: some View {
+        if let context = activeFeedClearContext {
+            FeedFilterClearChip(
+                title: context.title,
+                clearLabel: L10n.clearFeedFilter,
+                systemImage: context.systemImage
+            ) {
+                clearActiveFeedNarrowing(context.action)
+            }
+            .transition(.opacity.combined(with: .scale(scale: 0.96)))
+        }
+    }
+
+    private var activeFeedClearContext: FeedClearChipContext? {
+        if let feedNarrowingContext = store.feedNarrowingContext {
+            return FeedClearChipContext(
+                action: .feedNarrowing,
+                title: String(format: L10n.pixivIDResultFormat, feedNarrowingContext.artworkID),
+                systemImage: "number.circle.fill"
+            )
+        }
+
+        let localFilter = store.clientFilterQuery.trimmingCharacters(in: .whitespacesAndNewlines)
+        if localFilter.isEmpty == false {
+            return FeedClearChipContext(
+                action: .localFilter,
+                title: String(format: L10n.activeArtworkFilterFormat, localFilter),
+                systemImage: "line.3.horizontal.decrease.circle.fill"
+            )
+        }
+
+        if store.selectedRoute.isOwnBookmarkRoute, bookmarkFiltersActiveCount > 0 {
+            return FeedClearChipContext(
+                action: .bookmarkFilters,
+                title: String(format: L10n.activeFeedFiltersFormat, bookmarkFiltersActiveCount),
+                systemImage: "tag.circle.fill"
+            )
+        }
+
+        if let creatorArtworkTagFilter = store.creatorArtworkTagFilter {
+            return FeedClearChipContext(
+                action: .creatorTag,
+                title: String(format: L10n.creatorTagFilterFormat, creatorArtworkTagFilter.tag),
+                systemImage: "person.crop.circle.badge.number"
+            )
+        }
+
+        if store.selectedRoute == .search, store.searchOptions.isDefault == false {
+            return FeedClearChipContext(
+                action: .searchFilters,
+                title: L10n.activeSearchFilters,
+                systemImage: "slider.horizontal.3"
+            )
+        }
+
+        return nil
+    }
+
     private var pixivWebSearchURL: URL? {
         PixivWebURLBuilder.searchURL(keyword: store.searchText, options: store.searchOptions)
     }
@@ -1286,6 +1351,34 @@ struct FeedHeaderView: View {
         actionMessage = L10n.clearSearch
     }
 
+    private func clearActiveFeedNarrowing(_ action: FeedClearChipAction) {
+        withAnimation(.snappy(duration: 0.16)) {
+            switch action {
+            case .feedNarrowing:
+                Task { await store.clearFeedNarrowingContext() }
+                actionMessage = L10n.feedFilterCleared
+            case .localFilter:
+                store.clientFilterQuery = ""
+                actionMessage = L10n.feedFilterCleared
+            case .bookmarkFilters:
+                resetBookmarkFilters()
+            case .creatorTag:
+                let focusedUser = store.focusedUser
+                store.creatorArtworkTagFilter = nil
+                Task {
+                    if let focusedUser {
+                        await store.openUserFeed(user: focusedUser, route: .userIllustrations)
+                    } else {
+                        await store.reloadCurrentFeed()
+                    }
+                }
+                actionMessage = L10n.feedFilterCleared
+            case .searchFilters:
+                resetSearchFilters()
+            }
+        }
+    }
+
     private func resetBookmarkFilters() {
         store.resetBookmarkFeedOptions()
         actionMessage = L10n.bookmarkFiltersReset
@@ -1298,6 +1391,20 @@ struct FeedHeaderView: View {
             actionMessage = nil
         }
     }
+}
+
+private enum FeedClearChipAction: Equatable {
+    case feedNarrowing
+    case localFilter
+    case bookmarkFilters
+    case creatorTag
+    case searchFilters
+}
+
+private struct FeedClearChipContext: Equatable {
+    let action: FeedClearChipAction
+    let title: String
+    let systemImage: String
 }
 
 private extension View {

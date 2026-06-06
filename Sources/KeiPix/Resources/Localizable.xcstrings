@@ -610,6 +610,35 @@
         }
       }
     },
+    "%d active filters": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d active filters"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "有効なフィルター %d 件"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d 个过滤条件"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d 個過濾條件"
+          }
+        }
+      }
+    },
     "%d results for %@": {
       "extractionState": "manual",
       "localizations": {
@@ -5424,6 +5453,35 @@
         }
       }
     },
+    "Clear Feed Filter": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear Feed Filter"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "フィードフィルターを解除"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "解除作品流过滤"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "解除作品流過濾"
+          }
+        }
+      }
+    },
     "Clear Search": {
       "extractionState": "manual",
       "localizations": {
@@ -8233,6 +8291,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "作者標籤"
+          }
+        }
+      }
+    },
+    "Creator tag #%@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Creator tag #%@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "作者タグ #%@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "作者标签 #%@"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "作者標籤 #%@"
           }
         }
       }
@@ -11278,6 +11365,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "作品流"
+          }
+        }
+      }
+    },
+    "Feed filter cleared": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Feed filter cleared"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "フィードフィルターを解除しました"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已解除作品流过滤"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已解除作品流過濾"
           }
         }
       }
@@ -20790,6 +20906,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "Pixiv ID"
+          }
+        }
+      }
+    },
+    "Pixiv ID #%d": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pixiv ID #%d"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pixiv ID #%d"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pixiv ID #%d"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pixiv ID #%d"
           }
         }
       }
@@ -39086,6 +39231,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@ を書き出し完了"
+          }
+        }
+      }
+    },
+    "Filter: %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Filter: %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "フィルター: %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "筛选：%@"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "篩選：%@"
           }
         }
       }

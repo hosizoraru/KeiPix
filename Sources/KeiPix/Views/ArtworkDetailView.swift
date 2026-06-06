@@ -52,6 +52,7 @@ private struct ArtworkInspectorView: View {
     @State private var pageIndex = 0
     @State private var readingMode: ArtworkReadingMode
     @State private var scrollTarget: Int?
+    @State private var detailFeedClearMessage: String?
 
     init(artwork: PixivArtwork, store: KeiPixStore) {
         self.artwork = artwork
@@ -67,6 +68,10 @@ private struct ArtworkInspectorView: View {
                     Color.clear
                         .frame(height: 0)
                         .id(Self.topAnchorID)
+
+                    activeDetailFeedClearChip
+                        .padding(.horizontal, 18)
+                        .padding(.top, 14)
 
                     if pageCount > 1 {
                         ArtworkReaderControls(
@@ -183,6 +188,87 @@ private struct ArtworkInspectorView: View {
         readingMode.effectiveMode(forPageCount: pageCount, platform: .current)
     }
 
+    @ViewBuilder
+    private var activeDetailFeedClearChip: some View {
+        if let context = activeDetailFeedClearContext {
+            VStack(alignment: .leading, spacing: 6) {
+                FeedFilterClearChip(
+                    title: context.title,
+                    clearLabel: L10n.clearFeedFilter,
+                    systemImage: context.systemImage,
+                    maximumWidth: 260
+                ) {
+                    clearDetailFeedNarrowing(context.action)
+                }
+
+                if let detailFeedClearMessage {
+                    Text(detailFeedClearMessage)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .transition(.opacity.combined(with: .scale(scale: 0.96)))
+        }
+    }
+
+    private var activeDetailFeedClearContext: DetailFeedClearContext? {
+        if let feedNarrowingContext = store.feedNarrowingContext {
+            return DetailFeedClearContext(
+                action: .feedNarrowing,
+                title: String(format: L10n.pixivIDResultFormat, feedNarrowingContext.artworkID),
+                systemImage: "number.circle.fill"
+            )
+        }
+
+        let localFilter = store.clientFilterQuery.trimmingCharacters(in: .whitespacesAndNewlines)
+        if localFilter.isEmpty == false {
+            return DetailFeedClearContext(
+                action: .localFilter,
+                title: String(format: L10n.activeArtworkFilterFormat, localFilter),
+                systemImage: "line.3.horizontal.decrease.circle.fill"
+            )
+        }
+
+        if store.selectedRoute.isOwnBookmarkRoute, detailBookmarkFiltersActiveCount > 0 {
+            return DetailFeedClearContext(
+                action: .bookmarkFilters,
+                title: String(format: L10n.activeFeedFiltersFormat, detailBookmarkFiltersActiveCount),
+                systemImage: "tag.circle.fill"
+            )
+        }
+
+        if let creatorArtworkTagFilter = store.creatorArtworkTagFilter {
+            return DetailFeedClearContext(
+                action: .creatorTag,
+                title: String(format: L10n.creatorTagFilterFormat, creatorArtworkTagFilter.tag),
+                systemImage: "person.crop.circle.badge.number"
+            )
+        }
+
+        if store.selectedRoute == .search, store.searchOptions.isDefault == false {
+            return DetailFeedClearContext(
+                action: .searchFilters,
+                title: L10n.activeSearchFilters,
+                systemImage: "slider.horizontal.3"
+            )
+        }
+
+        return nil
+    }
+
+    private var detailBookmarkFiltersActiveCount: Int {
+        var count = store.bookmarkFeedOptions.activeFilterCount
+        if store.bookmarkTagFilter != nil {
+            count += 1
+        }
+        if store.selectedRoute == .privateBookmarks {
+            count += 1
+        }
+        return count
+    }
+
     private var usesArtworkDetailSocialVisualQA: Bool {
         #if DEBUG
         return VisualQALaunchArgument.contains(.artworkDetailSocial)
@@ -232,6 +318,33 @@ private struct ArtworkInspectorView: View {
         }
     }
 
+    private func clearDetailFeedNarrowing(_ action: DetailFeedClearAction) {
+        withAnimation(.snappy(duration: 0.16)) {
+            switch action {
+            case .feedNarrowing:
+                Task { await store.clearFeedNarrowingContext() }
+            case .localFilter:
+                store.clientFilterQuery = ""
+            case .bookmarkFilters:
+                store.resetBookmarkFeedOptions()
+            case .creatorTag:
+                let focusedUser = store.focusedUser
+                store.creatorArtworkTagFilter = nil
+                Task {
+                    if let focusedUser {
+                        await store.openUserFeed(user: focusedUser, route: .userIllustrations)
+                    } else {
+                        await store.reloadCurrentFeed()
+                    }
+                }
+            case .searchFilters:
+                store.resetSearchOptions()
+                Task { await store.reloadCurrentFeed() }
+            }
+            detailFeedClearMessage = L10n.feedFilterCleared
+        }
+    }
+
     private func scrollToPage(_ index: Int, proxy: ScrollViewProxy) {
         let clamped = min(max(index, 0), pageCount - 1)
         pageIndex = clamped
@@ -266,4 +379,18 @@ private struct ArtworkInspectorView: View {
             await ImagePipeline.shared.prefetch(urls)
         }
     }
+}
+
+private enum DetailFeedClearAction: Equatable {
+    case feedNarrowing
+    case localFilter
+    case bookmarkFilters
+    case creatorTag
+    case searchFilters
+}
+
+private struct DetailFeedClearContext: Equatable {
+    let action: DetailFeedClearAction
+    let title: String
+    let systemImage: String
 }

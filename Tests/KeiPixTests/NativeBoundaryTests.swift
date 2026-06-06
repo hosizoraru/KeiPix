@@ -1207,6 +1207,57 @@ struct NativeBoundaryTests {
         #expect(localizable.contains("\"value\": \"Pixiv Web 专属\""))
     }
 
+    @Test("Feed narrowing and filters expose a visible clear chip")
+    func feedNarrowingAndFiltersExposeVisibleClearChip() throws {
+        let root = try packageRoot()
+        let store = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Stores/KeiPixStore.swift"),
+            encoding: .utf8
+        )
+        let pixivLinks = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Stores/KeiPixStore+PixivLinks.swift"),
+            encoding: .utf8
+        )
+        let feedHeader = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/GalleryFeedHeaderView.swift"),
+            encoding: .utf8
+        )
+        let artworkDetail = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/ArtworkDetailView.swift"),
+            encoding: .utf8
+        )
+        let clearChip = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/FeedFilterClearChip.swift"),
+            encoding: .utf8
+        )
+        let l10n = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Support/L10n.swift"),
+            encoding: .utf8
+        )
+        let localizable = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Resources/Localizable.xcstrings"),
+            encoding: .utf8
+        )
+
+        #expect(store.contains("var feedNarrowingContext: FeedNarrowingContext?"))
+        #expect(store.contains("func clearFeedNarrowingContext() async"))
+        #expect(store.contains("let preservedArtwork = selectedArtwork"))
+        #expect(store.contains("selectedArtwork = artworks.first(where: { $0.id == preservedArtwork.id }) ?? preservedArtwork"))
+        #expect(store.contains("feedNarrowingContext = nil"))
+        #expect(pixivLinks.contains("feedNarrowingContext = .directArtwork(id: id)"))
+        #expect(feedHeader.contains("private var activeFeedClearChip: some View"))
+        #expect(feedHeader.contains("FeedFilterClearChip("))
+        #expect(feedHeader.contains("clearActiveFeedNarrowing("))
+        #expect(artworkDetail.contains("private var activeDetailFeedClearChip: some View"))
+        #expect(artworkDetail.contains("clearDetailFeedNarrowing("))
+        #expect(clearChip.contains("struct FeedFilterClearChip: View"))
+        #expect(feedHeader.contains("L10n.clearFeedFilter"))
+        #expect(l10n.contains("static var clearFeedFilter"))
+        #expect(l10n.contains("static var pixivIDResultFormat"))
+        #expect(localizable.contains("\"Clear Feed Filter\""))
+        #expect(localizable.contains("\"Pixiv ID #%d\""))
+    }
+
     @Test("Refresh token export is explicit and confirmation gated")
     func refreshTokenExportIsExplicitAndConfirmationGated() throws {
         let root = try packageRoot()
