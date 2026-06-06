@@ -53,6 +53,15 @@ struct PixivisionArticleListParserTests {
         #expect(articles[1].articleURL.absoluteString == "https://www.pixivision.net/zh/a/11556")
     }
 
+    @Test("Pixivision category picker only exposes working list endpoints")
+    func categoryPickerExcludesUnavailableCosplayListing() {
+        #expect(SpotlightArticleCategory.pickerCases == [.all, .illust, .manga])
+        #expect(SpotlightArticleCategory.pickerCases.contains(.cosplay) == false)
+        #expect(SpotlightArticleCategory.cosplay.apiValue == nil)
+        #expect(SpotlightArticleCategory.illust.apiValue == "illust")
+        #expect(SpotlightArticleCategory.manga.apiValue == "manga")
+    }
+
     @Test("Duplicate summary cards are deduplicated by article id")
     func deduplicatesByArticleID() {
         let body = Self.summaryCardHTML(articleID: 9001, title: "Alpha")
@@ -79,6 +88,29 @@ struct PixivisionArticleListParserTests {
             sourceURL: URL(string: "https://www.pixivision.net/zh/c/recommend")!
         )
         #expect(categoryArticles.isEmpty)
+    }
+
+    @Test("Unavailable category pages do not parse sidebar articles as results")
+    func missingCategoryIgnoresSidebarCards() {
+        let html = """
+        <html><body>
+        <div class="_medium-wide-container without-breadcrumb">
+        <div class="sidebar-layout-container">
+        <div class="main-column-container">暂无此页</div>
+        <aside class="sidebar-container">
+        <section class="_articles-list-card" data-gtm-category="Ranking Area">
+        \(Self.summaryCardHTML(articleID: 11521, title: "Sidebar ranking should not leak"))
+        </section>
+        </aside>
+        </div>
+        </div>
+        </body></html>
+        """
+        let articles = PixivisionArticleListParser.parseCategoryListing(
+            html: html,
+            sourceURL: URL(string: "https://www.pixivision.net/zh/c/cosplay")!
+        )
+        #expect(articles.isEmpty)
     }
 
     @Test("Tag-stripped titles handle HTML entities and inline tags")

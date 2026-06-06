@@ -104,12 +104,10 @@ enum SpotlightArticleCollectionMode: String, CaseIterable, Identifiable {
         }
     }
 
-    /// True when the user can pick a category filter (illust / manga
-    /// / cosplay) for this collection. The category filter goes
-    /// through the Pixiv app API, which only accepts the four enum
-    /// values; ranking and recommend pull a fixed list from
-    /// Pixivision Web instead, and favorites / history are local
-    /// state.
+    /// True when the user can pick a category filter. The picker only
+    /// exposes categories backed by working list endpoints; Cosplay is
+    /// intentionally omitted because Pixivision Web currently returns
+    /// a 404 / empty page and the app API rejects it with HTTP 400.
     var supportsCategoryFilter: Bool {
         self == .latest
     }
@@ -135,8 +133,11 @@ enum SpotlightArticleCollectionMode: String, CaseIterable, Identifiable {
     }
 }
 
-/// Pixiv spotlight article category. Maps to the `category` query parameter
-/// the Pixiv app endpoint accepts and Pixez exposes via its spotlight UI.
+/// Pixivision article category. Most values map to the Pixiv app
+/// endpoint's `category` query parameter. Cosplay is kept as a
+/// documented unavailable case because Pixivision exposes dead
+/// `/c/cosplay` alternate links while the app API rejects the same
+/// category with HTTP 400.
 enum SpotlightArticleCategory: String, CaseIterable, Identifiable {
     case all
     case illust
@@ -145,8 +146,21 @@ enum SpotlightArticleCategory: String, CaseIterable, Identifiable {
 
     var id: String { rawValue }
 
-    /// Pixiv expects the raw enum value as the `category` form parameter.
-    var apiValue: String { rawValue }
+    static var pickerCases: [SpotlightArticleCategory] {
+        [.all, .illust, .manga]
+    }
+
+    /// Pixiv app API category parameter. `nil` means this category is
+    /// not backed by a working list endpoint and should not be shown
+    /// in the picker.
+    var apiValue: String? {
+        switch self {
+        case .all, .illust, .manga:
+            rawValue
+        case .cosplay:
+            nil
+        }
+    }
 
     var title: String {
         switch self {

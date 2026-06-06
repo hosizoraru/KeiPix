@@ -242,7 +242,7 @@ struct SpotlightView: View {
 
     @ViewBuilder
     private var paginationFooter: some View {
-        if collectionMode == .latest {
+        if collectionMode == .latest, category.apiValue != nil {
             HStack {
                 Spacer(minLength: 0)
 
@@ -301,16 +301,14 @@ struct SpotlightView: View {
             }
             .pickerStyle(.inline)
 
-            // Category filter only applies to the live "latest" feed
-            // (the Pixiv app API only accepts illust/manga/cosplay,
-            // and the local + Pixivision-Web collections don't take
-            // a category). Hide it for collections where it would be
-            // a no-op.
+            // Category filter only applies to the live "latest" feed.
+            // Use the vetted picker cases so dead Pixivision alternates
+            // like Cosplay don't route into a 400 app-API request.
             if collectionMode.supportsCategoryFilter, usesCompactSpotlightChrome == false {
                 Divider()
 
                 Picker(L10n.spotlightCategoryAll, selection: $category) {
-                    ForEach(SpotlightArticleCategory.allCases) { category in
+                    ForEach(SpotlightArticleCategory.pickerCases) { category in
                         Label(category.title, systemImage: category.systemImage).tag(category)
                     }
                 }
@@ -334,7 +332,7 @@ struct SpotlightView: View {
                     Divider()
 
                     Picker(L10n.spotlightCategoryAll, selection: $category) {
-                        ForEach(SpotlightArticleCategory.allCases) { category in
+                        ForEach(SpotlightArticleCategory.pickerCases) { category in
                             Label(category.title, systemImage: category.systemImage).tag(category)
                         }
                     }
@@ -418,9 +416,14 @@ struct SpotlightView: View {
         do {
             switch collectionMode {
             case .latest:
-                let response = try await store.spotlightArticles(category: category.apiValue)
-                articles = response.articles
-                nextURL = response.nextURL
+                if let apiValue = category.apiValue {
+                    let response = try await store.spotlightArticles(category: apiValue)
+                    articles = response.articles
+                    nextURL = response.nextURL
+                } else {
+                    articles = []
+                    nextURL = nil
+                }
             case .recommend:
                 // The Pixiv app API rejects `category=recommend` with
                 // HTTP 400 — Recommended is a Pixivision-Web-only

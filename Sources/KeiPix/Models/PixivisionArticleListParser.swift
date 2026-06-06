@@ -41,15 +41,14 @@ enum PixivisionArticleListParser {
     }
 
     /// Pulls every article card out of a category landing page (e.g.
-    /// `/zh/c/recommend`, `/en/c/illustration`). Pixivision wraps the
-    /// listing in `<div class="_medium-wide-container ...">` but the
-    /// rows themselves are the same `<article class=
-    /// "_article-summary-card">` blocks the homepage uses, so we
-    /// scan the whole document — `_article-summary-card` doesn't
-    /// appear outside the listing on these pages.
+    /// `/zh/c/recommend`, `/en/c/illustration`). When the page uses
+    /// Pixivision's sidebar layout, scan only `main-column-container`
+    /// so a missing category page does not leak sidebar ranking /
+    /// recommendation cards into the result.
     static func parseCategoryListing(html: String, sourceURL: URL) -> [PixivSpotlightArticle] {
         guard html.isEmpty == false else { return [] }
-        return parseSummaryCards(in: html, sourceURL: sourceURL)
+        let listingHTML = mainColumnHTML(in: html) ?? html
+        return parseSummaryCards(in: listingHTML, sourceURL: sourceURL)
     }
 
     /// Exposed for tests and for callers that already have the
@@ -130,6 +129,24 @@ enum PixivisionArticleListParser {
     }
 
     // MARK: - HTML helpers (mirrors PixivisionArticleParser)
+
+    private static func mainColumnHTML(in html: String) -> String? {
+        guard let startRange = html.range(
+            of: #"<div[^>]*class="[^"]*main-column-container[^"]*"[^>]*>"#,
+            options: [.regularExpression]
+        ) else {
+            return nil
+        }
+        let searchRange = startRange.upperBound..<html.endIndex
+        guard let asideRange = html.range(
+            of: #"<aside[^>]*class="[^"]*sidebar-container[^"]*"[^>]*>"#,
+            options: [.regularExpression],
+            range: searchRange
+        ) else {
+            return nil
+        }
+        return String(html[startRange.upperBound..<asideRange.lowerBound])
+    }
 
     private static func firstMatchedGroup(
         in html: String,
