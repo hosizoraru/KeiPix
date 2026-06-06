@@ -220,10 +220,11 @@ struct PixivSignedOutStateView: View {
     }
 }
 
-struct PlatformPageTitleHeader: View {
+struct PlatformPageTitleHeader<Trailing: View>: View {
     let title: String
     let status: String
     var statusSystemImage: String?
+    @ViewBuilder var trailing: () -> Trailing
 
     var body: some View {
         #if os(iOS)
@@ -231,11 +232,16 @@ struct PlatformPageTitleHeader: View {
             HStack(alignment: .firstTextBaseline, spacing: 10) {
                 titleText
                 statusPill
+                trailing()
                 Spacer(minLength: 0)
             }
 
             VStack(alignment: .leading, spacing: 8) {
-                titleText
+                HStack(alignment: .firstTextBaseline, spacing: 10) {
+                    titleText
+                    trailing()
+                    Spacer(minLength: 0)
+                }
                 statusPill
             }
         }
@@ -290,12 +296,25 @@ struct PlatformPageTitleHeader: View {
 extension View {
     @ViewBuilder
     func platformPageHeader(title: String, status: String, statusSystemImage: String? = nil) -> some View {
+        platformPageHeader(title: title, status: status, statusSystemImage: statusSystemImage) {
+            EmptyView()
+        }
+    }
+
+    @ViewBuilder
+    func platformPageHeader<Trailing: View>(
+        title: String,
+        status: String,
+        statusSystemImage: String? = nil,
+        @ViewBuilder trailing: @escaping () -> Trailing
+    ) -> some View {
         #if os(iOS)
         VStack(spacing: 0) {
             PlatformPageTitleHeader(
                 title: title,
                 status: status,
-                statusSystemImage: statusSystemImage
+                statusSystemImage: statusSystemImage,
+                trailing: trailing
             )
             self
                 .frame(maxWidth: .infinity, maxHeight: .infinity)

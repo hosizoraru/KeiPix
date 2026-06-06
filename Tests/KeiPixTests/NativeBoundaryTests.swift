@@ -495,6 +495,18 @@ struct NativeBoundaryTests {
         #expect(spotlightView.contains(".help(L10n.loadMoreSpotlightArticles)"))
         #expect(spotlightView.contains(".gridCellColumns(loadMoreSpan)") == false)
         #expect(spotlightView.contains("private var loadMoreSpan") == false)
+        #expect(spotlightView.contains("@Environment(\\.horizontalSizeClass) private var horizontalSizeClass"))
+        #expect(spotlightView.contains("private var usesCompactSpotlightChrome: Bool"))
+        #expect(spotlightView.contains("private var collectionModePicker: some View"))
+        #expect(spotlightView.contains("compactCollectionMenu"))
+        #expect(spotlightView.contains("if usesCompactSpotlightChrome == false"))
+        #expect(spotlightView.contains("if collectionMode.supportsCategoryFilter, usesCompactSpotlightChrome == false"))
+        #expect(spotlightView.contains(".accessibilityLabel(\"\\(L10n.spotlightCollection): \\(collectionMode.title)\""))
+        #expect(spotlightView.contains("title: L10n.spotlight,\n            status: spotlightNavigationStatus\n        )"))
+        #expect(spotlightView.contains("displayedArticles.count.formatted()"))
+        #expect(spotlightView.contains("L10n.savedArticleCountFormat") == false)
+        #expect(spotlightView.contains("L10n.articleHistoryCountFormat") == false)
+        #expect(spotlightView.contains("statusSystemImage: \"newspaper\"") == false)
         #expect(spotlightDetailView.contains("var showsNavigationChrome = true"))
         #expect(spotlightDetailView.contains("showsNavigationChrome ? (article.pureTitle.isEmpty ? L10n.spotlight : article.pureTitle) : \"\""))
     }
@@ -909,8 +921,10 @@ struct NativeBoundaryTests {
             "Sources/KeiPix/Views/DownloadQueueView.swift"
         ]
 
-        #expect(emptyState.contains("struct PlatformPageTitleHeader: View"))
+        #expect(emptyState.contains("struct PlatformPageTitleHeader<Trailing: View>: View"))
         #expect(emptyState.contains("func platformPageHeader(title: String, status: String, statusSystemImage: String? = nil)"))
+        #expect(emptyState.contains("func platformPageHeader<Trailing: View>("))
+        #expect(emptyState.contains("@ViewBuilder trailing: @escaping () -> Trailing"))
         #expect(emptyState.contains("ViewThatFits(in: .horizontal)"))
         #expect(emptyState.contains(".navigationBarTitleDisplayMode(.inline)"))
         #expect(emptyState.contains(".glassEffect(.regular, in: Capsule(style: .continuous))"))
