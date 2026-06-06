@@ -2320,11 +2320,16 @@ struct NativeBoundaryTests {
             contentsOf: root.appending(path: "Sources/KeiPix/Views/UserPreviewListView.swift"),
             encoding: .utf8
         )
+        let searchBarStart = try #require(creatorComponents.range(of: "struct CreatorListSearchBar: View"))
+        let searchBarEnd = try #require(creatorComponents.range(of: "private struct CreatorSearchScopeChip: View"))
+        let searchBarSource = String(creatorComponents[searchBarStart.lowerBound..<searchBarEnd.lowerBound])
 
         #expect(creatorComponents.contains("NativeCreatorPreviewCollectionView("))
         #expect(creatorComponents.contains(".frame(maxWidth: .infinity, maxHeight: .infinity)"))
         #expect(creatorComponents.contains(".backgroundExtensionEffect(isEnabled: true)"))
         #expect(creatorComponents.contains("NativeSearchField("))
+        #expect(searchBarSource.contains("NativeSearchField("))
+        #expect(searchBarSource.contains("Image(systemName: \"magnifyingglass\")") == false)
         #expect(creatorComponents.contains(".frame(maxWidth: 560)"))
         #expect(creatorComponents.contains("EnhancedMenu("))
         #expect(creatorComponents.contains("nativeCreatorPreviewContent"))

@@ -103,19 +103,13 @@ struct CreatorListSearchBar: View {
                 )
             }
 
-            HStack(spacing: 6) {
-                Image(systemName: "magnifyingglass")
-                    .foregroundStyle(.secondary)
-
-                NativeSearchField(
-                    text: $creatorSearchText,
-                    placeholder: L10n.searchCreatorsInList,
-                    suggestions: [],
-                    onSubmit: {},
-                    onTextChange: { creatorSearchText = $0 }
-                )
-                .frame(minWidth: 220, maxWidth: .infinity)
-            }
+            NativeSearchField(
+                text: $creatorSearchText,
+                placeholder: L10n.searchCreatorsInList,
+                suggestions: [],
+                onSubmit: {},
+                onTextChange: { creatorSearchText = $0 }
+            )
             .frame(maxWidth: 560)
 
             if creatorSearchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false {
