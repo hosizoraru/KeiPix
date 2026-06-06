@@ -15,6 +15,7 @@ struct ContentView: View {
     @State private var selectedSidebarItem: KeiPixSidebarDestination = .route(.home)
     @State private var isArtworkDetailPresented = false
     @State private var isCompactArtworkDetailPresented = false
+    @State private var compactArtworkDetailPresentationToken = 0
     @State private var isArtworkDetailPanelUserEnabled = false
     @State private var pendingCompactArtworkDetailAfterPixivIDOpen = false
     @State private var isSpotlightDetailPresented = false
@@ -150,6 +151,31 @@ struct ContentView: View {
             .sheet(item: $feedbackRequest) { request in
                 FeedbackReportSheet(request: request, localMuteAction: {}) { _ in }
                     .os26SheetChrome(.form)
+            }
+            .sheet(isPresented: readerBinding) {
+                if let artwork = store.readerWindowArtwork {
+                    NavigationStack {
+                        ArtworkReaderWindowView(store: store, artworkID: artwork.id)
+                            .toolbar {
+                                ToolbarItem(placement: .cancellationAction) {
+                                    Button {
+                                        store.readerWindowArtwork = nil
+                                    } label: {
+                                        Label(L10n.close, systemImage: "xmark")
+                                    }
+                                }
+                            }
+                    }
+                    .os26SheetChrome(.reader)
+                }
+            }
+            .sheet(isPresented: compactArtworkDetailBinding) {
+                NavigationStack {
+                    iPadArtworkDetailSheet {
+                        dismissCompactArtworkDetail(clearSelection: false)
+                    }
+                }
+                .os26SheetChrome(.detail)
             }
             .confirmationDialog(
                 store.pendingDangerAction?.title ?? L10n.moreActions,
@@ -529,31 +555,6 @@ struct ContentView: View {
                 .onChange(of: store.creatorArtworkTagFilter) { _, _ in
                     guard showsSidebarToggle == false else { return }
                     dismissCompactArtworkDetail(clearSelection: false)
-                }
-                .sheet(isPresented: readerBinding) {
-                    if let artwork = store.readerWindowArtwork {
-                        NavigationStack {
-                            ArtworkReaderWindowView(store: store, artworkID: artwork.id)
-                                .toolbar {
-                                    ToolbarItem(placement: .cancellationAction) {
-                                        Button {
-                                            store.readerWindowArtwork = nil
-                                        } label: {
-                                            Label(L10n.close, systemImage: "xmark")
-                                        }
-                                    }
-                                }
-                        }
-                        .os26SheetChrome(.reader)
-                    }
-                }
-                .sheet(isPresented: compactArtworkDetailBinding) {
-                    NavigationStack {
-                        iPadArtworkDetailSheet {
-                            dismissCompactArtworkDetail(clearSelection: false)
-                        }
-                    }
-                    .os26SheetChrome(.detail)
                 }
         }
     }
@@ -1264,9 +1265,7 @@ struct ContentView: View {
             store.selectedArtwork = artwork
         }
         if usesCompactSheet {
-            withAnimation(.snappy(duration: 0.2)) {
-                isCompactArtworkDetailPresented = true
-            }
+            deferCompactArtworkDetailPresentation(for: artwork)
             return
         }
         withAnimation(.snappy(duration: 0.24)) {
@@ -1277,7 +1276,28 @@ struct ContentView: View {
         }
     }
 
+    private func deferCompactArtworkDetailPresentation(for artwork: PixivArtwork) {
+        if isCompactArtworkDetailPresented, store.selectedArtwork?.id == artwork.id {
+            return
+        }
+
+        compactArtworkDetailPresentationToken += 1
+        let requestID = compactArtworkDetailPresentationToken
+        let route = store.selectedRoute
+
+        Task { @MainActor [requestID, artworkID = artwork.id] in
+            await Task.yield()
+            guard compactArtworkDetailPresentationToken == requestID else { return }
+            guard store.selectedRoute == route else { return }
+            guard store.selectedArtwork?.id == artworkID else { return }
+            withAnimation(.snappy(duration: 0.2)) {
+                isCompactArtworkDetailPresented = true
+            }
+        }
+    }
+
     private func dismissArtworkDetail(clearSelection: Bool) {
+        compactArtworkDetailPresentationToken += 1
         withAnimation(.snappy(duration: 0.22)) {
             isArtworkDetailPanelUserEnabled = false
             isArtworkDetailPresented = false
@@ -1289,6 +1309,7 @@ struct ContentView: View {
     }
 
     private func dismissCompactArtworkDetail(clearSelection: Bool) {
+        compactArtworkDetailPresentationToken += 1
         withAnimation(.snappy(duration: 0.2)) {
             isCompactArtworkDetailPresented = false
             if clearSelection {
