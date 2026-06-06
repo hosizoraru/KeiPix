@@ -46,20 +46,31 @@ enum NativeBookmarkTagCollectionItem: Hashable, Identifiable {
 }
 
 struct NativeBookmarkTagCollectionLayout: Equatable {
-    var minimumItemWidth: CGFloat = 190
-    var maximumItemWidth: CGFloat = 280
-    var itemHeight: CGFloat = 76
-    var emptyMessageHeight: CGFloat = 88
+    var minimumTagItemWidth: CGFloat = 132
+    var maximumTagItemWidth: CGFloat = 220
+    var minimumShortcutItemWidth: CGFloat = 142
+    var maximumShortcutItemWidth: CGFloat = 240
+    var tagItemHeight: CGFloat = 52
+    var shortcutItemHeight: CGFloat = 60
+    var emptyMessageHeight: CGFloat = 104
     var loadMoreHeight: CGFloat = 64
-    var spacing: CGFloat = 12
-    var sectionInsets = EdgeInsets(top: 14, leading: 18, bottom: 20, trailing: 18)
+    var spacing: CGFloat = 8
+    var sectionInsets = EdgeInsets(top: 10, leading: 14, bottom: 24, trailing: 14)
 
     func itemSize(for item: NativeBookmarkTagCollectionItem, containerWidth: CGFloat) -> CGSize {
         let availableWidth = max(containerWidth - sectionInsets.leading - sectionInsets.trailing, 1)
         if item.isFullWidth {
             return CGSize(width: availableWidth, height: fullWidthHeight(for: item))
         }
-        return CGSize(width: itemWidth(in: availableWidth), height: itemHeight)
+        let metrics = itemMetrics(for: item)
+        return CGSize(
+            width: itemWidth(
+                in: availableWidth,
+                minimumWidth: metrics.minimumWidth,
+                maximumWidth: metrics.maximumWidth
+            ),
+            height: metrics.height
+        )
     }
 
     private func fullWidthHeight(for item: NativeBookmarkTagCollectionItem) -> CGFloat {
@@ -69,25 +80,54 @@ struct NativeBookmarkTagCollectionLayout: Equatable {
         case .loadMore:
             loadMoreHeight
         case .all, .unclassified, .tag:
-            itemHeight
+            itemMetrics(for: item).height
         }
     }
 
-    private func itemWidth(in availableWidth: CGFloat) -> CGFloat {
-        var columns = max(1, Int((availableWidth + spacing) / (minimumItemWidth + spacing)))
+    private func itemMetrics(for item: NativeBookmarkTagCollectionItem) -> ItemMetrics {
+        switch item {
+        case .all, .unclassified:
+            ItemMetrics(
+                minimumWidth: minimumShortcutItemWidth,
+                maximumWidth: maximumShortcutItemWidth,
+                height: shortcutItemHeight
+            )
+        case .tag:
+            ItemMetrics(
+                minimumWidth: minimumTagItemWidth,
+                maximumWidth: maximumTagItemWidth,
+                height: tagItemHeight
+            )
+        case .emptyMessage, .loadMore:
+            ItemMetrics(
+                minimumWidth: minimumTagItemWidth,
+                maximumWidth: maximumTagItemWidth,
+                height: fullWidthHeight(for: item)
+            )
+        }
+    }
+
+    private func itemWidth(in availableWidth: CGFloat, minimumWidth: CGFloat, maximumWidth: CGFloat) -> CGFloat {
+        var columns = max(1, Int((availableWidth + spacing) / (minimumWidth + spacing)))
         var width = floor((availableWidth - spacing * CGFloat(columns - 1)) / CGFloat(columns))
 
-        while width > maximumItemWidth, columns < 24 {
+        while width > maximumWidth, columns < 24 {
             columns += 1
             width = floor((availableWidth - spacing * CGFloat(columns - 1)) / CGFloat(columns))
         }
 
-        if width < minimumItemWidth, columns > 1 {
+        if width < minimumWidth, columns > 1 {
             columns -= 1
             width = floor((availableWidth - spacing * CGFloat(columns - 1)) / CGFloat(columns))
         }
 
-        return max(min(width, maximumItemWidth), min(minimumItemWidth, availableWidth))
+        return max(min(width, maximumWidth), min(minimumWidth, availableWidth))
+    }
+
+    private struct ItemMetrics {
+        let minimumWidth: CGFloat
+        let maximumWidth: CGFloat
+        let height: CGFloat
     }
 }
 
