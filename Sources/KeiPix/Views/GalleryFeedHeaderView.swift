@@ -554,7 +554,6 @@ struct FeedHeaderView: View {
 
     private var bookmarkFiltersMenu: some View {
         Menu {
-            bookmarkVisibilityMenu
             bookmarkSortMenu
             bookmarkAgeLimitMenu
 
@@ -565,7 +564,7 @@ struct FeedHeaderView: View {
             Divider()
             bookmarkSupportMenu
         } label: {
-            Label(bookmarkFilterTitle, systemImage: bookmarkFiltersActiveCount > 0 ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle")
+            Label(bookmarkFilterTitle, systemImage: bookmarkFilterSystemImage)
         }
         .help(bookmarkFilterTitle)
         .accessibilityLabel(bookmarkFilterTitle)
@@ -586,25 +585,7 @@ struct FeedHeaderView: View {
                 bookmarkPixivWebMenu
             }
         } label: {
-            Label(bookmarkFilterTitle, systemImage: bookmarkFiltersActiveCount > 0 ? "line.3.horizontal.decrease.circle.fill" : "ellipsis.circle")
-        }
-    }
-
-    private var bookmarkVisibilityMenu: some View {
-        Menu {
-            ForEach(BookmarkRestrict.allCases) { restrict in
-                Button {
-                    store.setBookmarkFeedRestrict(restrict)
-                    actionMessage = restrict.title
-                } label: {
-                    Label(
-                        restrict.title,
-                        systemImage: bookmarkRestrict == restrict ? "checkmark" : bookmarkRestrictSystemImage(restrict)
-                    )
-                }
-            }
-        } label: {
-            Label(bookmarkRestrict.title, systemImage: bookmarkRestrictSystemImage(bookmarkRestrict))
+            Label(L10n.moreActions, systemImage: "ellipsis.circle")
         }
     }
 
@@ -622,7 +603,7 @@ struct FeedHeaderView: View {
                 }
             }
         } label: {
-            Label(store.bookmarkFeedOptions.sort.title, systemImage: store.bookmarkFeedOptions.sort.systemImage)
+            Label(store.bookmarkFeedOptions.sort.title, systemImage: "arrow.up.arrow.down.circle")
         }
     }
 
@@ -755,15 +736,6 @@ struct FeedHeaderView: View {
             Text(L10n.pixivWebCollectionsHint)
         } label: {
             Label(L10n.pixivWeb, systemImage: "safari")
-        }
-    }
-
-    private func bookmarkRestrictSystemImage(_ restrict: BookmarkRestrict) -> String {
-        switch restrict {
-        case .public:
-            "globe"
-        case .private:
-            "lock"
         }
     }
 
@@ -980,10 +952,11 @@ struct FeedHeaderView: View {
         if store.bookmarkTagFilter != nil {
             count += 1
         }
-        if bookmarkRestrict == .private {
-            count += 1
-        }
         return count
+    }
+
+    private var bookmarkFilterSystemImage: String {
+        bookmarkFiltersActiveCount > 0 ? "tag.circle.fill" : "tag.circle"
     }
 
     private var bookmarkTagTitle: String {

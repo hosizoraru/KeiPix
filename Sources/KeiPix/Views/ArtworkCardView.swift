@@ -1,4 +1,7 @@
 import SwiftUI
+#if os(iOS)
+import UIKit
+#endif
 
 struct ArtworkCardView: View {
     let artwork: PixivArtwork
@@ -152,14 +155,7 @@ struct ArtworkCardView: View {
                     .minimumScaleFactor(0.82)
 
                 if shouldEmphasizeFollowing {
-                    Label(L10n.following, systemImage: "checkmark.seal.fill")
-                        .font(.caption2.weight(.semibold))
-                        .labelStyle(.titleAndIcon)
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, 7)
-                        .padding(.vertical, 3)
-                        .background(Color.accentColor.opacity(0.78), in: Capsule())
-                        .help(L10n.followingArtistEmphasizedHelp)
+                    followBadge
                 }
 
                 HStack(spacing: 10) {
@@ -203,9 +199,77 @@ struct ArtworkCardView: View {
         isCompact ? .compact : displayStyle
     }
 
+    private var followBadge: some View {
+        HStack(spacing: followBadgeStyle.spacing) {
+            Image(systemName: "checkmark.seal.fill")
+                .font(followBadgeStyle.iconFont)
+                .symbolRenderingMode(.hierarchical)
+            Text(L10n.following)
+                .font(followBadgeStyle.textFont)
+                .lineLimit(1)
+                .minimumScaleFactor(0.82)
+        }
+        .foregroundStyle(.white)
+        .padding(.horizontal, followBadgeStyle.horizontalPadding)
+        .padding(.vertical, followBadgeStyle.verticalPadding)
+        .background(Color.accentColor.opacity(0.78), in: Capsule())
+        .help(L10n.followingArtistEmphasizedHelp)
+        .accessibilityLabel(L10n.followingArtistEmphasizedHelp)
+    }
+
+    private var followBadgeStyle: ArtworkFollowBadgeStyle {
+        if usesPhoneFollowBadge {
+            return .phone
+        }
+        if isCompact || resolvedDisplayStyle == .wide {
+            return .compact
+        }
+        return .regular
+    }
+
+    private var usesPhoneFollowBadge: Bool {
+        #if os(iOS)
+        UIDevice.current.userInterfaceIdiom == .phone
+        #else
+        false
+        #endif
+    }
+
     private var shouldMaskSensitivePreview: Bool {
         maskSensitivePreview && artwork.requiresScreenCaptureProtection
     }
+}
+
+private struct ArtworkFollowBadgeStyle {
+    let textFont: Font
+    let iconFont: Font
+    let spacing: CGFloat
+    let horizontalPadding: CGFloat
+    let verticalPadding: CGFloat
+
+    static let regular = ArtworkFollowBadgeStyle(
+        textFont: .caption2.weight(.semibold),
+        iconFont: .caption2.weight(.semibold),
+        spacing: 4,
+        horizontalPadding: 7,
+        verticalPadding: 3
+    )
+
+    static let compact = ArtworkFollowBadgeStyle(
+        textFont: .caption2.weight(.semibold),
+        iconFont: .caption2.weight(.semibold),
+        spacing: 3,
+        horizontalPadding: 6,
+        verticalPadding: 2
+    )
+
+    static let phone = ArtworkFollowBadgeStyle(
+        textFont: .system(size: 10.5, weight: .semibold),
+        iconFont: .system(size: 10.5, weight: .semibold),
+        spacing: 3,
+        horizontalPadding: 5,
+        verticalPadding: 2
+    )
 }
 
 private struct ArtworkDownloadStateBadge: View {

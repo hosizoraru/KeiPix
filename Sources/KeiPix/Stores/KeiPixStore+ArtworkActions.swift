@@ -109,9 +109,6 @@ extension KeiPixStore {
     func resetBookmarkFeedOptions() {
         bookmarkTagFilter = nil
         bookmarkFeedOptions = .defaultValue
-        if selectedRoute.isOwnBookmarkRoute {
-            selectedRoute = .publicBookmarks
-        }
         Task { await reloadCurrentFeed() }
     }
 

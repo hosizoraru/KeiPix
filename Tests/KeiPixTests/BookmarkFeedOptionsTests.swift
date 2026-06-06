@@ -49,6 +49,30 @@ struct BookmarkFeedOptionsTests {
         #expect(options.normalizedArtworkTagFilter == "land")
     }
 
+    @MainActor
+    @Test("Resetting bookmark filters preserves the current bookmark route")
+    func resettingBookmarkFiltersPreservesCurrentBookmarkRoute() {
+        let store = KeiPixStore(
+            downloads: ArtworkDownloadStore(completionNotifier: DownloadCompletionNotifier(
+                center: FakeUserNotificationCenter(isAuthorized: false),
+                authorizationStore: InMemoryAuthorizationCacheStore(hasRequested: true),
+                coalesceWindowSeconds: 0.05
+            )),
+            bootstrapsAutomatically: false
+        )
+        store.selectedRoute = .privateBookmarks
+        store.bookmarkTagFilter = "landscape"
+        store.bookmarkFeedOptions.sort = .oldestArtwork
+        store.bookmarkFeedOptions.ageLimit = .r18
+        store.bookmarkFeedOptions.artworkTagFilter = "land"
+
+        store.resetBookmarkFeedOptions()
+
+        #expect(store.selectedRoute == .privateBookmarks)
+        #expect(store.bookmarkTagFilter == nil)
+        #expect(store.bookmarkFeedOptions == .defaultValue)
+    }
+
     private func artwork(
         id: Int,
         createdAt: TimeInterval = 0,
