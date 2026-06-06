@@ -2170,6 +2170,7 @@ struct NativeBoundaryTests {
 
         #expect(creatorComponents.contains("NativeCreatorPreviewCollectionView("))
         #expect(creatorComponents.contains(".frame(maxWidth: .infinity, maxHeight: .infinity)"))
+        #expect(creatorComponents.contains(".backgroundExtensionEffect(isEnabled: true)"))
         #expect(creatorComponents.contains("NativeSearchField("))
         #expect(creatorComponents.contains(".frame(maxWidth: 560)"))
         #expect(creatorComponents.contains("EnhancedMenu("))

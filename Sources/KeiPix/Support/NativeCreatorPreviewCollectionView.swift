@@ -551,6 +551,16 @@ private final class NativeCreatorPreviewHostingCollectionCell: UICollectionViewC
 
     private var hostingController: UIHostingController<AnyView>?
 
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        configureAppearance()
+    }
+
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        configureAppearance()
+    }
+
     func configure(with content: AnyView) {
         if let hostingController {
             hostingController.rootView = content
@@ -573,6 +583,13 @@ private final class NativeCreatorPreviewHostingCollectionCell: UICollectionViewC
     override func prepareForReuse() {
         super.prepareForReuse()
         hostingController?.rootView = AnyView(EmptyView())
+    }
+
+    private func configureAppearance() {
+        backgroundColor = .clear
+        selectedBackgroundView = UIView()
+        contentView.backgroundColor = .clear
+        contentView.clipsToBounds = false
     }
 }
 

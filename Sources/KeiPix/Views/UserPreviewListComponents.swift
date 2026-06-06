@@ -464,6 +464,9 @@ struct CreatorPreviewListContent: View {
                 nativeCreatorPreviewContent(for: item)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
+            #if os(iOS)
+            .backgroundExtensionEffect(isEnabled: true)
+            #endif
         }
     }
 
