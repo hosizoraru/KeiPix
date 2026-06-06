@@ -10,6 +10,8 @@ struct MobileBottomTabConfigurationTests {
         #expect(MobileBottomTabConfiguration.defaultRouteMap[.manga] == .mangaRecommended)
         #expect(MobileBottomTabConfiguration.defaultRouteMap[.novels] == .novelRecommended)
         #expect(MobileBottomTabConfiguration.defaultRouteMap[.bookmarks] == .publicBookmarks)
+        #expect(MobileBottomTabConfiguration.defaultLaunchTarget == .lastUsed)
+        #expect(MobileBottomTabConfiguration.defaultRemembersLastRoute)
     }
 
     @Test("Default route storage round-trips every fixed content family")
@@ -45,6 +47,63 @@ struct MobileBottomTabConfigurationTests {
         #expect(restored[.manga] == .mangaRecommended)
         #expect(restored[.novels] == .novelRecommended)
         #expect(restored[.bookmarks] == .publicBookmarks)
+    }
+
+    @Test("Launch target resolves fixed tabs and last used tab")
+    func launchTargetResolvesFixedTabsAndLastUsedTab() {
+        #expect(MobileBottomTabLaunchTarget.illustrations.resolvedKind(lastUsedKindID: "bookmarks") == .illustrations)
+        #expect(MobileBottomTabLaunchTarget.manga.resolvedKind(lastUsedKindID: "bookmarks") == .manga)
+        #expect(MobileBottomTabLaunchTarget.lastUsed.resolvedKind(lastUsedKindID: "bookmarks") == .bookmarks)
+        #expect(MobileBottomTabLaunchTarget.lastUsed.resolvedKind(lastUsedKindID: "not-a-tab") == .illustrations)
+    }
+
+    @Test("Remembered routes restore the last concrete page only when enabled")
+    func rememberedRoutesRestoreLastConcretePageOnlyWhenEnabled() {
+        let defaultRoutes: [MobileBottomTabKind: PixivRoute] = [
+            .illustrations: .newIllustrations,
+            .manga: .mangaRecommended,
+            .novels: .novelRecommended,
+            .bookmarks: .publicBookmarks
+        ]
+        let rememberedRoutes: [MobileBottomTabKind: PixivRoute] = [
+            .illustrations: .rankingWeekly,
+            .manga: .mangaWatchlist,
+            .novels: .novelRankingDaily,
+            .bookmarks: .history
+        ]
+        let defaultStorageID = MobileBottomTabConfiguration.storageID(for: defaultRoutes)
+        let rememberedStorageID = MobileBottomTabConfiguration.storageID(for: rememberedRoutes)
+
+        #expect(MobileBottomTabConfiguration.route(
+            for: .illustrations,
+            defaultRouteStorageID: defaultStorageID,
+            rememberedRouteStorageID: rememberedStorageID,
+            remembersLastRoute: true
+        ) == .rankingWeekly)
+        #expect(MobileBottomTabConfiguration.route(
+            for: .illustrations,
+            defaultRouteStorageID: defaultStorageID,
+            rememberedRouteStorageID: rememberedStorageID,
+            remembersLastRoute: false
+        ) == .newIllustrations)
+    }
+
+    @Test("Remembered route storage sanitizes routes into their tab family")
+    func rememberedRouteStorageSanitizesRoutesIntoTheirTabFamily() {
+        let storageID = MobileBottomTabConfiguration.recordingRememberedRoute(
+            .novelRankingWeekly,
+            in: MobileBottomTabConfiguration.defaultStorageID
+        )
+        let restored = MobileBottomTabConfiguration.defaultRouteMap(from: storageID)
+
+        #expect(restored[.novels] == .novelRankingWeekly)
+        #expect(restored[.illustrations] == .illustrations)
+
+        let unchanged = MobileBottomTabConfiguration.recordingRememberedRoute(
+            .search,
+            in: storageID
+        )
+        #expect(unchanged == storageID)
     }
 
     @Test("Legacy three-slot storage is migrated into category defaults")

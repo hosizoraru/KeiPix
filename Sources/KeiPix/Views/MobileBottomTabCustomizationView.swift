@@ -3,6 +3,8 @@ import SwiftUI
 
 struct MobileBottomTabCustomizationView: View {
     @Binding var defaultRoutes: [MobileBottomTabKind: PixivRoute]
+    @Binding var launchTarget: MobileBottomTabLaunchTarget
+    @Binding var remembersLastRoute: Bool
     @Environment(\.dismiss) private var dismiss
 
     private var normalizedDefaultRoutes: [MobileBottomTabKind: PixivRoute] {
@@ -15,6 +17,8 @@ struct MobileBottomTabCustomizationView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 hero
+                launchSection
+                behaviorSection
                 tabDefaultsSection
             }
             .padding(.horizontal, 16)
@@ -38,6 +42,8 @@ struct MobileBottomTabCustomizationView: View {
                 Button {
                     withAnimation(.snappy(duration: 0.18)) {
                         defaultRoutes = MobileBottomTabConfiguration.defaultRouteMap
+                        launchTarget = MobileBottomTabConfiguration.defaultLaunchTarget
+                        remembersLastRoute = MobileBottomTabConfiguration.defaultRemembersLastRoute
                     }
                 } label: {
                     Label(L10n.resetBottomTabs, systemImage: "arrow.counterclockwise")
@@ -74,6 +80,84 @@ struct MobileBottomTabCustomizationView: View {
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
         .keiGlass(24)
+    }
+
+    private var launchSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Label(L10n.mobileBottomTabLaunchTarget, systemImage: "arrow.up.forward.app")
+                .font(.headline)
+                .lineLimit(1)
+
+            Text(L10n.mobileBottomTabLaunchHint)
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+
+            Menu {
+                ForEach(MobileBottomTabLaunchTarget.allCases) { target in
+                    Button {
+                        withAnimation(.snappy(duration: 0.18)) {
+                            launchTarget = target
+                        }
+                    } label: {
+                        Label(
+                            target.title,
+                            systemImage: launchTarget == target ? "checkmark.circle.fill" : target.systemImage
+                        )
+                    }
+                }
+            } label: {
+                HStack(spacing: 12) {
+                    Image(systemName: launchTarget.systemImage)
+                        .font(.headline.weight(.semibold))
+                        .symbolRenderingMode(.hierarchical)
+                        .foregroundStyle(.secondary)
+                        .frame(width: 34, height: 34)
+                        .glassEffect(.regular, in: Circle())
+
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(L10n.mobileBottomTabLaunchTarget)
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(.secondary)
+
+                        Text(launchTarget.title)
+                            .font(.callout.weight(.semibold))
+                            .lineLimit(1)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+
+                    Image(systemName: "chevron.up.chevron.down")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.tertiary)
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 10)
+                .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+            }
+            .accessibilityLabel("\(L10n.mobileBottomTabLaunchTarget): \(launchTarget.title)")
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .keiGlass(20)
+    }
+
+    private var behaviorSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Toggle(isOn: $remembersLastRoute) {
+                Label(L10n.rememberMobileBottomTabPages, systemImage: "arrow.trianglehead.2.clockwise")
+                    .font(.headline)
+                    .lineLimit(2)
+            }
+            .toggleStyle(.switch)
+
+            Text(L10n.rememberMobileBottomTabPagesHint)
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .keiGlass(20)
     }
 
     private var tabDefaultsSection: some View {

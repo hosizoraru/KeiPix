@@ -13,6 +13,11 @@ enum L10n {
     static var mobileBookmarkTab: String { text("Bookmark Tab", table: L10nTable.navigation) }
     static var customizeBottomTabs: String { text("Customize Bottom Tabs", table: L10nTable.navigation) }
     static var bottomTabsHint: String { text("Choose the default page for each iPhone and iPad portrait tab.", table: L10nTable.navigation) }
+    static var mobileBottomTabLaunchTarget: String { text("Launch Tab", table: L10nTable.navigation) }
+    static var mobileBottomTabLaunchHint: String { text("Choose which tab iPhone and iPad portrait should open after a cold start.", table: L10nTable.navigation) }
+    static var mobileBottomTabLaunchLastUsed: String { text("Last Used Tab", table: L10nTable.navigation) }
+    static var rememberMobileBottomTabPages: String { text("Remember Each Tab's Last Page", table: L10nTable.navigation) }
+    static var rememberMobileBottomTabPagesHint: String { text("When switching tabs, return to the last page used in that tab. Turn this off to always open the default page.", table: L10nTable.navigation) }
     static var fixedTabs: String { text("Fixed Tabs", table: L10nTable.navigation) }
     static var defaultTabPages: String { text("Default Tab Pages", table: L10nTable.navigation) }
     static var selectedDestinations: String { text("Selected Destinations", table: L10nTable.navigation) }

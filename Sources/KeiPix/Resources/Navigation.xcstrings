@@ -117,6 +117,35 @@
         }
       }
     },
+    "Choose which tab iPhone and iPad portrait should open after a cold start.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose which tab iPhone and iPad portrait should open after a cold start."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iPhoneとiPad縦向きで、コールドスタート後に開くタブを選びます。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "选择 iPhone 和 iPad 竖屏冷启动后默认打开的底栏标签。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "選擇 iPhone 和 iPad 直向冷啟動後預設開啟的底欄標籤。"
+          }
+        }
+      }
+    },
     "Customize Bottom Tabs": {
       "extractionState": "manual",
       "localizations": {
@@ -200,6 +229,122 @@
           "stringUnit": {
             "state": "translated",
             "value": "固定入口"
+          }
+        }
+      }
+    },
+    "Last Used Tab": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Last Used Tab"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最後に使ったタブ"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "上次停留的标签"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "上次停留的標籤"
+          }
+        }
+      }
+    },
+    "Launch Tab": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Launch Tab"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "起動時のタブ"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "启动标签"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "啟動標籤"
+          }
+        }
+      }
+    },
+    "Remember Each Tab's Last Page": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remember Each Tab's Last Page"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "各タブの最後のページを記憶"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "记住每个标签的上次页面"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "記住每個標籤的上次頁面"
+          }
+        }
+      }
+    },
+    "When switching tabs, return to the last page used in that tab. Turn this off to always open the default page.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "When switching tabs, return to the last page used in that tab. Turn this off to always open the default page."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "タブを切り替えたとき、そのタブで最後に使ったページへ戻ります。オフにすると常に既定ページを開きます。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "切换底栏标签时回到该标签上次使用的页面。关闭后每次都会打开默认页面。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "切換底欄標籤時回到該標籤上次使用的頁面。關閉後每次都會開啟預設頁面。"
           }
         }
       }

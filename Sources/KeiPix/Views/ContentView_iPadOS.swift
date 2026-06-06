@@ -25,10 +25,16 @@ struct ContentView: View {
     @State private var isSettingsSheetPresented = false
     @State private var isMobileTabCustomizationPresented = false
     @State private var isCompactCustomTabRootActive = false
+    @State private var hasAppliedMobileBottomTabLaunchTarget = false
+    @State private var skipsNextCompactTabSelectionHandler = false
     @State private var compactContentTransitionEdge: Edge = .trailing
     @State private var feedbackRequest: FeedbackReportRequest?
     @State private var statusMessage: String?
     @AppStorage("mobileBottomTabItemIDs") private var mobileBottomTabDefaultRouteIDs = MobileBottomTabConfiguration.defaultStorageID
+    @AppStorage("mobileBottomTabLaunchTarget") private var mobileBottomTabLaunchTargetID = MobileBottomTabConfiguration.defaultLaunchTarget.rawValue
+    @AppStorage("mobileBottomTabRemembersLastRoute") private var mobileBottomTabRemembersLastRoute = MobileBottomTabConfiguration.defaultRemembersLastRoute
+    @AppStorage("mobileBottomTabLastKind") private var mobileBottomTabLastKindID = MobileBottomTabConfiguration.defaultLastUsedKind.rawValue
+    @AppStorage("mobileBottomTabRememberedRouteIDs") private var mobileBottomTabRememberedRouteIDs = MobileBottomTabConfiguration.defaultStorageID
     #if DEBUG
     @State private var creatorProfileVisualQAUser: PixivUser?
     #endif
@@ -80,6 +86,9 @@ struct ContentView: View {
             }
             .onAppear {
                 KeiPixStoreLocator.shared.register(store: store)
+            }
+            .onChange(of: store.selectedRoute) { _, route in
+                recordMobileBottomTabRouteIfNeeded(route)
             }
             #if DEBUG
             .task {
@@ -144,7 +153,11 @@ struct ContentView: View {
             }
             .sheet(isPresented: $isMobileTabCustomizationPresented) {
                 NavigationStack {
-                    MobileBottomTabCustomizationView(defaultRoutes: mobileBottomTabDefaultRoutesBinding)
+                    MobileBottomTabCustomizationView(
+                        defaultRoutes: mobileBottomTabDefaultRoutesBinding,
+                        launchTarget: mobileBottomTabLaunchTargetBinding,
+                        remembersLastRoute: $mobileBottomTabRemembersLastRoute
+                    )
                 }
                 .os26SheetChrome(.form)
             }
@@ -281,20 +294,29 @@ struct ContentView: View {
         }
         .onAppear {
             isCompactCustomTabRootActive = layout.usesCustomNavigationTabs
-            syncCompactTabSelectionWithCurrentRoute()
+            if layout.usesCustomNavigationTabs {
+                applyMobileBottomTabLaunchTargetIfNeeded()
+            } else {
+                syncCompactTabSelectionWithCurrentRoute()
+            }
         }
         .onChange(of: layout.usesCustomNavigationTabs) { _, isEnabled in
             isCompactCustomTabRootActive = isEnabled
             if isEnabled, selectedTab == .library || selectedTab == .settings {
-                selectedTab = .mobile(.illustrations)
+                setCompactSelectedTab(.mobile(mobileBottomTabLaunchKind), skipsHandler: true)
             }
             if isEnabled {
-                syncCompactTabSelectionWithCurrentRoute()
+                applyMobileBottomTabLaunchTargetIfNeeded()
             }
         }
         .onChange(of: mobileBottomTabDefaultRouteIDs) { _, _ in
             if isCompactCustomTabRootActive {
                 syncCompactTabSelectionWithCurrentRoute()
+            }
+        }
+        .onChange(of: mobileBottomTabLaunchTargetID) { _, _ in
+            if isCompactCustomTabRootActive, hasAppliedMobileBottomTabLaunchTarget == false {
+                applyMobileBottomTabLaunchTargetIfNeeded()
             }
         }
         .onChange(of: selectedTab) { _, tab in
@@ -1456,6 +1478,15 @@ struct ContentView: View {
         MobileBottomTabConfiguration.defaultRouteMap(from: mobileBottomTabDefaultRouteIDs)
     }
 
+    private var mobileBottomTabLaunchTarget: MobileBottomTabLaunchTarget {
+        MobileBottomTabLaunchTarget(rawValue: mobileBottomTabLaunchTargetID)
+            ?? MobileBottomTabConfiguration.defaultLaunchTarget
+    }
+
+    private var mobileBottomTabLaunchKind: MobileBottomTabKind {
+        mobileBottomTabLaunchTarget.resolvedKind(lastUsedKindID: mobileBottomTabLastKindID)
+    }
+
     private var compactTabBarMinimizeBehavior: TabBarMinimizeBehavior {
         currentMobilePlatform == .phone && isCompactCustomTabRootActive ? .onScrollDown : .automatic
     }
@@ -1469,6 +1500,14 @@ struct ContentView: View {
             mobileBottomTabDefaultRoutes
         } set: { routeMap in
             mobileBottomTabDefaultRouteIDs = MobileBottomTabConfiguration.storageID(for: routeMap)
+        }
+    }
+
+    private var mobileBottomTabLaunchTargetBinding: Binding<MobileBottomTabLaunchTarget> {
+        Binding {
+            mobileBottomTabLaunchTarget
+        } set: { target in
+            mobileBottomTabLaunchTargetID = target.rawValue
         }
     }
 
@@ -1523,7 +1562,7 @@ struct ContentView: View {
             selectRoute(route, clearsArtworkDetail: false)
         case .settings:
             withCompactContentTransition(to: .downloads) {
-                selectedTab = .settings
+                setCompactSelectedTab(.settings, skipsHandler: true)
             }
         }
     }
@@ -1531,7 +1570,7 @@ struct ContentView: View {
     private func selectRoute(_ route: PixivRoute, clearsArtworkDetail: Bool = true) {
         withCompactContentTransition(to: route) {
             selectedSidebarItem = .route(route)
-            selectedTab = tab(for: route)
+            setCompactSelectedTab(tab(for: route), skipsHandler: true)
             if clearsArtworkDetail {
                 dismissArtworkDetail(clearSelection: true)
             }
@@ -1557,9 +1596,10 @@ struct ContentView: View {
     }
 
     private func selectMobileBottomTabKind(_ kind: MobileBottomTabKind) {
-        let route = mobileDefaultRoute(for: kind)
+        let route = mobileRoute(for: kind)
         withCompactContentTransition(to: route) {
-            selectedTab = .mobile(kind)
+            mobileBottomTabLastKindID = kind.rawValue
+            setCompactSelectedTab(.mobile(kind), skipsHandler: false)
             selectedSidebarItem = .route(route)
             if route.usesArtworkFeed == false {
                 dismissArtworkDetail(clearSelection: true)
@@ -1573,7 +1613,7 @@ struct ContentView: View {
     private func selectCompactSearchTab() {
         let route = MobileSearchTabConfiguration.contains(store.selectedRoute) ? store.selectedRoute : PixivRoute.search
         withCompactContentTransition(to: route) {
-            selectedTab = .search
+            setCompactSelectedTab(.search, skipsHandler: false)
             selectedSidebarItem = .route(route)
             if route.usesArtworkFeed == false {
                 dismissArtworkDetail(clearSelection: true)
@@ -1586,6 +1626,10 @@ struct ContentView: View {
 
     private func handleCompactTabSelection(_ tab: iPadTab) {
         guard isCompactCustomTabRootActive else { return }
+        if skipsNextCompactTabSelectionHandler {
+            skipsNextCompactTabSelectionHandler = false
+            return
+        }
 
         switch tab {
         case .mobile(let kind):
@@ -1601,16 +1645,57 @@ struct ContentView: View {
         guard isCompactCustomTabRootActive else { return }
 
         if MobileSearchTabConfiguration.contains(store.selectedRoute) {
-            selectedTab = .search
+            setCompactSelectedTab(.search, skipsHandler: true)
         } else if let kind = MobileBottomTabKind.kind(containing: store.selectedRoute) {
-            selectedTab = .mobile(kind)
+            setCompactSelectedTab(.mobile(kind), skipsHandler: true)
         } else {
-            selectedTab = .mobile(.illustrations)
+            setCompactSelectedTab(.mobile(.illustrations), skipsHandler: true)
         }
     }
 
     private func mobileDefaultRoute(for kind: MobileBottomTabKind) -> PixivRoute {
         mobileBottomTabDefaultRoutes[kind] ?? kind.defaultRoute
+    }
+
+    private func mobileRoute(for kind: MobileBottomTabKind) -> PixivRoute {
+        if MobileBottomTabKind.kind(containing: store.selectedRoute) == kind,
+           mobileBottomTabRemembersLastRoute {
+            return store.selectedRoute
+        }
+        return MobileBottomTabConfiguration.route(
+            for: kind,
+            defaultRouteStorageID: mobileBottomTabDefaultRouteIDs,
+            rememberedRouteStorageID: mobileBottomTabRememberedRouteIDs,
+            remembersLastRoute: mobileBottomTabRemembersLastRoute
+        )
+    }
+
+    private func applyMobileBottomTabLaunchTargetIfNeeded() {
+        guard isCompactCustomTabRootActive else { return }
+        guard hasAppliedMobileBottomTabLaunchTarget == false else {
+            syncCompactTabSelectionWithCurrentRoute()
+            return
+        }
+
+        hasAppliedMobileBottomTabLaunchTarget = true
+        selectMobileBottomTabKind(mobileBottomTabLaunchKind)
+    }
+
+    private func setCompactSelectedTab(_ tab: iPadTab, skipsHandler: Bool) {
+        guard selectedTab != tab else { return }
+        if skipsHandler {
+            skipsNextCompactTabSelectionHandler = true
+        }
+        selectedTab = tab
+    }
+
+    private func recordMobileBottomTabRouteIfNeeded(_ route: PixivRoute) {
+        guard let kind = MobileBottomTabKind.kind(containing: route) else { return }
+        mobileBottomTabLastKindID = kind.rawValue
+        mobileBottomTabRememberedRouteIDs = MobileBottomTabConfiguration.recordingRememberedRoute(
+            route,
+            in: mobileBottomTabRememberedRouteIDs
+        )
     }
 
     private var feedContentTransitionID: String {
@@ -1933,7 +2018,7 @@ struct ContentView: View {
             await store.runArtworkSearch()
             withCompactContentTransition(to: .search) {
                 selectedSidebarItem = .route(.search)
-                selectedTab = .search
+                setCompactSelectedTab(.search, skipsHandler: true)
             }
         }
     }
@@ -1944,7 +2029,7 @@ struct ContentView: View {
             await store.runCreatorSearch()
             withCompactContentTransition(to: .searchUsers) {
                 selectedSidebarItem = .route(.searchUsers)
-                selectedTab = .search
+                setCompactSelectedTab(.search, skipsHandler: true)
             }
         }
     }
@@ -1955,14 +2040,14 @@ struct ContentView: View {
             await store.runNovelSearch()
             withCompactContentTransition(to: .novelSearch) {
                 selectedSidebarItem = .route(.novelSearch)
-                selectedTab = .search
+                setCompactSelectedTab(.search, skipsHandler: true)
             }
         }
     }
 
     private func selectCompactSearchRoute(_ route: PixivRoute) {
         withCompactContentTransition(to: route) {
-            selectedTab = .search
+            setCompactSelectedTab(.search, skipsHandler: true)
             selectedSidebarItem = .route(route)
             dismissArtworkDetail(clearSelection: true)
             if store.selectedRoute != route {

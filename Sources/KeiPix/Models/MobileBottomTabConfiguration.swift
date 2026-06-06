@@ -59,6 +59,53 @@ struct MobileBottomTabDefaultRoute: Identifiable, Equatable {
     var id: String { kind.id }
 }
 
+enum MobileBottomTabLaunchTarget: String, CaseIterable, Codable, Hashable, Identifiable, Sendable {
+    case lastUsed
+    case illustrations
+    case manga
+    case novels
+    case bookmarks
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .lastUsed: L10n.mobileBottomTabLaunchLastUsed
+        case .illustrations: MobileBottomTabKind.illustrations.title
+        case .manga: MobileBottomTabKind.manga.title
+        case .novels: MobileBottomTabKind.novels.title
+        case .bookmarks: MobileBottomTabKind.bookmarks.title
+        }
+    }
+
+    var systemImage: String {
+        switch self {
+        case .lastUsed: "clock.arrow.circlepath"
+        case .illustrations: MobileBottomTabKind.illustrations.systemImage
+        case .manga: MobileBottomTabKind.manga.systemImage
+        case .novels: MobileBottomTabKind.novels.systemImage
+        case .bookmarks: MobileBottomTabKind.bookmarks.systemImage
+        }
+    }
+
+    var fixedKind: MobileBottomTabKind? {
+        switch self {
+        case .lastUsed: nil
+        case .illustrations: .illustrations
+        case .manga: .manga
+        case .novels: .novels
+        case .bookmarks: .bookmarks
+        }
+    }
+
+    func resolvedKind(lastUsedKindID: String) -> MobileBottomTabKind {
+        if let fixedKind {
+            return fixedKind
+        }
+        return MobileBottomTabKind(rawValue: lastUsedKindID) ?? .illustrations
+    }
+}
+
 enum MobileSearchTabConfiguration {
     static let routes: [PixivRoute] = [
         .search,
@@ -75,6 +122,9 @@ enum MobileSearchTabConfiguration {
 
 enum MobileBottomTabConfiguration {
     static let fixedKinds = MobileBottomTabKind.allCases
+    static let defaultLaunchTarget = MobileBottomTabLaunchTarget.lastUsed
+    static let defaultLastUsedKind = MobileBottomTabKind.illustrations
+    static let defaultRemembersLastRoute = true
 
     static var defaultRouteMap: [MobileBottomTabKind: PixivRoute] {
         Dictionary(uniqueKeysWithValues: fixedKinds.map { kind in
@@ -113,6 +163,18 @@ enum MobileBottomTabConfiguration {
         defaultRouteMap(from: storageID)[kind] ?? kind.defaultRoute
     }
 
+    static func route(
+        for kind: MobileBottomTabKind,
+        defaultRouteStorageID: String,
+        rememberedRouteStorageID: String,
+        remembersLastRoute: Bool
+    ) -> PixivRoute {
+        if remembersLastRoute {
+            return defaultRoute(for: kind, from: rememberedRouteStorageID)
+        }
+        return defaultRoute(for: kind, from: defaultRouteStorageID)
+    }
+
     static func defaultRoutes(from storageID: String) -> [MobileBottomTabDefaultRoute] {
         let routeMap = defaultRouteMap(from: storageID)
         return fixedKinds.map { kind in
@@ -139,6 +201,18 @@ enum MobileBottomTabConfiguration {
         }
         result[kind] = sanitized(route, for: kind)
         return result
+    }
+
+    static func recordingRememberedRoute(_ route: PixivRoute, in storageID: String) -> String {
+        guard let kind = MobileBottomTabKind.kind(containing: route) else {
+            return storageID
+        }
+        let routeMap = replacingDefaultRoute(
+            for: kind,
+            with: route,
+            in: defaultRouteMap(from: storageID)
+        )
+        return self.storageID(for: routeMap)
     }
 
     private static func legacyDefaultRouteMap(from storageID: String) -> [MobileBottomTabKind: PixivRoute] {
