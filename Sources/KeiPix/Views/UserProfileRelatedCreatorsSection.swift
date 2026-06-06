@@ -23,6 +23,7 @@ struct UserProfileRelatedCreatorsSection: View {
     let requestMuteCreator: (PixivUser) -> Void
     let copied: () -> Void
     let selectArtwork: (PixivArtwork) -> Void
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
     private let cardWidth: CGFloat = 196
     private let cardHeight: CGFloat = 230
@@ -101,17 +102,41 @@ struct UserProfileRelatedCreatorsSection: View {
     }
 
     private var placeholderRow: some View {
-        HStack(spacing: 12) {
-            ForEach(0..<4, id: \.self) { _ in
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .fill(.quaternary)
-                    .frame(width: relatedCreatorShelfItemWidth, height: cardHeight)
-                    .skeleton(cornerRadius: 16)
-                    .os26SkeletonSurface(16)
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: 12) {
+                ForEach(0..<3, id: \.self) { _ in
+                    relatedCreatorPlaceholderCard(width: relatedCreatorShelfItemWidth, height: cardHeight)
+                }
             }
+
+            HStack(spacing: 8) {
+                ForEach(0..<2, id: \.self) { _ in
+                    relatedCreatorPlaceholderCard(width: 156, height: 174)
+                }
+            }
+
+            relatedCreatorPlaceholderCard(width: nil, height: 160)
+                .frame(maxWidth: .infinity)
         }
-        .frame(height: relatedCreatorShelfHeight)
+        .frame(height: relatedCreatorPlaceholderHeight)
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private func relatedCreatorPlaceholderCard(width: CGFloat?, height: CGFloat) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 10) {
+                SkeletonPlaceholder(width: 38, height: 38, cornerRadius: 19)
+                VStack(alignment: .leading, spacing: 7) {
+                    SkeletonPlaceholder(width: 92, height: 13, cornerRadius: 7)
+                    SkeletonPlaceholder(width: 64, height: 10, cornerRadius: 5)
+                }
+            }
+
+            SkeletonPlaceholder(width: nil, height: max(70, height - 86), cornerRadius: 14)
+        }
+        .padding(12)
+        .frame(width: width, height: height, alignment: .topLeading)
+        .os26SkeletonSurface(16)
     }
 
     private var carousel: some View {
@@ -159,6 +184,10 @@ struct UserProfileRelatedCreatorsSection: View {
 
     private var relatedCreatorShelfHeight: CGFloat {
         relatedCreatorShelfLayout.viewportHeight ?? cardHeight
+    }
+
+    private var relatedCreatorPlaceholderHeight: CGFloat {
+        horizontalSizeClass == .compact ? 174 : relatedCreatorShelfHeight
     }
 
     private var relatedCreatorShelfItemWidth: CGFloat {

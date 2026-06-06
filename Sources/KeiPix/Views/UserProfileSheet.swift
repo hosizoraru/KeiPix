@@ -35,6 +35,7 @@ struct UserProfileSheet: View {
     private let visualQARecentWorks: [PixivArtwork]?
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
     // Detail loading
     @State private var detail: PixivUserDetail?
@@ -83,9 +84,9 @@ struct UserProfileSheet: View {
         #if os(macOS)
         .frame(width: 820)
         #else
-        .frame(maxWidth: 780)
+        .frame(maxWidth: profileSheetMaximumWidth)
         #endif
-        .frame(minHeight: 560, idealHeight: 720, maxHeight: .infinity)
+        .frame(minHeight: profileSheetMinimumHeight, idealHeight: 720, maxHeight: .infinity)
         .task(id: user.id) {
             await loadDetail()
             await loadRelatedUsers()
@@ -203,6 +204,7 @@ struct UserProfileSheet: View {
                     isLoadingRelatedUsers: isLoadingRelatedUsers,
                     openIllustrations: { openFeed(.userIllustrations) },
                     openManga: { openFeed(.userManga) },
+                    openNovels: { openFeed(.userNovels) },
                     openPublicBookmarks: { openFeed(.userPublicBookmarks) },
                     openFollowing: {
                         relationshipListMode = .userFollowing(currentUser)
@@ -271,8 +273,8 @@ struct UserProfileSheet: View {
                         .textSelection(.enabled)
                 }
             }
-            .padding(.horizontal, 18)
-            .padding(.vertical, 16)
+            .padding(.horizontal, profileSheetContentHorizontalPadding)
+            .padding(.vertical, profileSheetContentVerticalPadding)
         }
         .scrollEdgeEffectStyle(.soft, for: .top)
     }
@@ -299,6 +301,32 @@ struct UserProfileSheet: View {
         }
         .padding(.horizontal, 18)
         .padding(.bottom, 14)
+    }
+
+    private var isCompactProfileSheet: Bool {
+        horizontalSizeClass == .compact
+    }
+
+    #if !os(macOS)
+    private var profileSheetMaximumWidth: CGFloat? {
+        isCompactProfileSheet ? nil : 780
+    }
+    #endif
+
+    private var profileSheetMinimumHeight: CGFloat? {
+        #if os(macOS)
+        560
+        #else
+        isCompactProfileSheet ? 480 : 560
+        #endif
+    }
+
+    private var profileSheetContentHorizontalPadding: CGFloat {
+        isCompactProfileSheet ? 12 : 18
+    }
+
+    private var profileSheetContentVerticalPadding: CGFloat {
+        isCompactProfileSheet ? 12 : 16
     }
 
     // MARK: - Derived state
@@ -601,51 +629,60 @@ struct UserProfileSheet: View {
 }
 
 private struct UserProfileLoadingSkeleton: View {
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
-                metricsSkeleton
-                tagsSkeleton
-                recentWorksSkeleton
-                descriptionSkeleton
-                relatedCreatorsSkeleton
+        GeometryReader { proxy in
+            let layout = UserProfileLoadingSkeletonLayout(
+                width: proxy.size.width,
+                isCompactSizeClass: horizontalSizeClass == .compact
+            )
+
+            ScrollView {
+                VStack(alignment: .leading, spacing: layout.sectionSpacing) {
+                    metricsSkeleton(layout)
+                    tagsSkeleton(layout)
+                    recentWorksSkeleton(layout)
+                    descriptionSkeleton(layout)
+                    relatedCreatorsSkeleton(layout)
+                }
+                .padding(.horizontal, layout.outerHorizontalPadding)
+                .padding(.vertical, layout.outerVerticalPadding)
             }
-            .padding(.horizontal, 18)
-            .padding(.vertical, 16)
+            .scrollEdgeEffectStyle(.soft, for: .top)
         }
-        .scrollEdgeEffectStyle(.soft, for: .top)
         .allowsHitTesting(false)
         .accessibilityLabel(L10n.loading)
     }
 
-    private var metricsSkeleton: some View {
-        LazyVGrid(columns: metricColumns, spacing: 10) {
+    private func metricsSkeleton(_ layout: UserProfileLoadingSkeletonLayout) -> some View {
+        LazyVGrid(columns: layout.metricColumns, spacing: layout.itemSpacing) {
             ForEach(0..<6, id: \.self) { _ in
                 VStack(alignment: .leading, spacing: 8) {
-                    SkeletonPlaceholder(width: 86, height: 12, cornerRadius: 6)
-                    SkeletonPlaceholder(width: 54, height: 18, cornerRadius: 9)
+                    SkeletonPlaceholder(width: layout.metricTitleWidth, height: 12, cornerRadius: 6)
+                    SkeletonPlaceholder(width: layout.metricValueWidth, height: 18, cornerRadius: 9)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(12)
+                .padding(layout.compact ? 10 : 12)
                 .os26SkeletonSurface(16)
             }
         }
     }
 
-    private var tagsSkeleton: some View {
+    private func tagsSkeleton(_ layout: UserProfileLoadingSkeletonLayout) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             SkeletonPlaceholder(width: 130, height: 18, cornerRadius: 9)
             FlowLayout(spacing: 8) {
-                ForEach([72, 96, 64, 118, 84, 104], id: \.self) { width in
-                    SkeletonPlaceholder(width: CGFloat(width), height: 28, cornerRadius: 14)
+                ForEach(layout.tagChipWidths, id: \.self) { width in
+                    SkeletonPlaceholder(width: width, height: layout.tagChipHeight, cornerRadius: layout.tagChipHeight / 2)
                 }
             }
         }
-        .padding(14)
+        .padding(layout.sectionPadding)
         .os26SkeletonSurface(18)
     }
 
-    private var recentWorksSkeleton: some View {
+    private func recentWorksSkeleton(_ layout: UserProfileLoadingSkeletonLayout) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 SkeletonPlaceholder(width: 118, height: 18, cornerRadius: 9)
@@ -653,33 +690,33 @@ private struct UserProfileLoadingSkeleton: View {
                 SkeletonPlaceholder(width: 88, height: 28, cornerRadius: 14)
             }
 
-            HStack(spacing: 10) {
-                ForEach(0..<4, id: \.self) { _ in
-                    SkeletonPlaceholder(width: nil, height: 120, cornerRadius: 16)
+            LazyVGrid(columns: layout.artworkColumns, spacing: layout.itemSpacing) {
+                ForEach(0..<layout.artworkPlaceholderCount, id: \.self) { _ in
+                    SkeletonPlaceholder(width: nil, height: layout.artworkPlaceholderHeight, cornerRadius: 16)
                 }
             }
         }
-        .padding(14)
+        .padding(layout.sectionPadding)
         .os26SkeletonSurface(18)
     }
 
-    private var descriptionSkeleton: some View {
+    private func descriptionSkeleton(_ layout: UserProfileLoadingSkeletonLayout) -> some View {
         VStack(alignment: .leading, spacing: 9) {
             SkeletonPlaceholder(width: 96, height: 18, cornerRadius: 9)
             SkeletonPlaceholder(width: nil, height: 12, cornerRadius: 6)
             SkeletonPlaceholder(width: nil, height: 12, cornerRadius: 6)
-            SkeletonPlaceholder(width: 260, height: 12, cornerRadius: 6)
+            SkeletonPlaceholder(width: layout.descriptionShortLineWidth, height: 12, cornerRadius: 6)
         }
-        .padding(14)
+        .padding(layout.sectionPadding)
         .os26SkeletonSurface(18)
     }
 
-    private var relatedCreatorsSkeleton: some View {
+    private func relatedCreatorsSkeleton(_ layout: UserProfileLoadingSkeletonLayout) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             SkeletonPlaceholder(width: 132, height: 18, cornerRadius: 9)
 
-            HStack(spacing: 10) {
-                ForEach(0..<3, id: \.self) { _ in
+            LazyVGrid(columns: layout.relatedCreatorColumns, spacing: layout.itemSpacing) {
+                ForEach(0..<layout.relatedCreatorPlaceholderCount, id: \.self) { _ in
                     VStack(alignment: .leading, spacing: 10) {
                         HStack(spacing: 10) {
                             SkeletonPlaceholder(width: 38, height: 38, cornerRadius: 19)
@@ -696,12 +733,93 @@ private struct UserProfileLoadingSkeleton: View {
                 }
             }
         }
-        .padding(14)
+        .padding(layout.sectionPadding)
         .os26SkeletonSurface(18)
     }
+}
 
-    private var metricColumns: [GridItem] {
-        [GridItem(.adaptive(minimum: 112, maximum: 160), spacing: 10)]
+private struct UserProfileLoadingSkeletonLayout {
+    let width: CGFloat
+    let isCompactSizeClass: Bool
+
+    var compact: Bool {
+        isCompactSizeClass || width < 520
+    }
+
+    var outerHorizontalPadding: CGFloat {
+        compact ? 12 : 18
+    }
+
+    var outerVerticalPadding: CGFloat {
+        compact ? 12 : 16
+    }
+
+    var sectionPadding: CGFloat {
+        compact ? 12 : 14
+    }
+
+    var sectionSpacing: CGFloat {
+        compact ? 12 : 16
+    }
+
+    var itemSpacing: CGFloat {
+        compact ? 8 : 10
+    }
+
+    var contentWidth: CGFloat {
+        max(width - outerHorizontalPadding * 2, 1)
+    }
+
+    var metricColumns: [GridItem] {
+        if compact {
+            return [
+                GridItem(.flexible(minimum: 0, maximum: .infinity), spacing: itemSpacing),
+                GridItem(.flexible(minimum: 0, maximum: .infinity), spacing: itemSpacing)
+            ]
+        }
+        return [GridItem(.adaptive(minimum: 112, maximum: 160), spacing: itemSpacing)]
+    }
+
+    var metricTitleWidth: CGFloat {
+        compact ? 70 : 86
+    }
+
+    var metricValueWidth: CGFloat {
+        compact ? 48 : 54
+    }
+
+    var tagChipWidths: [CGFloat] {
+        compact ? [112, 132, 94, 124, 104, 118] : [72, 96, 64, 118, 84, 104]
+    }
+
+    var tagChipHeight: CGFloat {
+        compact ? 26 : 28
+    }
+
+    var artworkColumns: [GridItem] {
+        let count = compact ? 2 : 4
+        return Array(repeating: GridItem(.flexible(minimum: 0, maximum: .infinity), spacing: itemSpacing), count: count)
+    }
+
+    var artworkPlaceholderCount: Int {
+        compact ? 4 : 4
+    }
+
+    var artworkPlaceholderHeight: CGFloat {
+        compact ? 92 : 120
+    }
+
+    var descriptionShortLineWidth: CGFloat {
+        min(compact ? 190 : 260, max(contentWidth - sectionPadding * 2, 120))
+    }
+
+    var relatedCreatorColumns: [GridItem] {
+        let count = compact ? 1 : 3
+        return Array(repeating: GridItem(.flexible(minimum: 0, maximum: .infinity), spacing: itemSpacing), count: count)
+    }
+
+    var relatedCreatorPlaceholderCount: Int {
+        compact ? 1 : 3
     }
 }
 

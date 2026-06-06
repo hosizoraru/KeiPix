@@ -432,6 +432,26 @@ actor PixivAPI {
         let trimmedTag = tagName.trimmingCharacters(in: .whitespacesAndNewlines)
         guard trimmedTag.isEmpty == false else { return .empty }
 
+        do {
+            return try await creatorTaggedIllustsFromWebProfile(
+                user: user,
+                tagName: trimmedTag,
+                expectedCount: expectedCount
+            )
+        } catch {
+            return try await creatorTaggedIllustsFromAppAPI(
+                user: user,
+                tagName: trimmedTag,
+                expectedCount: expectedCount
+            )
+        }
+    }
+
+    private func creatorTaggedIllustsFromWebProfile(
+        user: PixivUser,
+        tagName: String,
+        expectedCount: Int?
+    ) async throws -> PixivFeedResponse {
         let all = try await creatorProfileAll(userID: user.id)
         var matches: [PixivArtwork] = []
 
@@ -439,7 +459,7 @@ actor PixivAPI {
             let response = try await creatorProfileIllusts(userID: user.id, ids: ids)
             let worksByID = Dictionary(uniqueKeysWithValues: response.works.map { ($0.id, $0) })
             for id in ids {
-                guard let work = worksByID[id], work.containsTag(trimmedTag) else { continue }
+                guard let work = worksByID[id], work.containsTag(tagName) else { continue }
                 matches.append(work.artwork(fallbackUser: user))
                 if let expectedCount, matches.count >= expectedCount {
                     return PixivFeedResponse(illusts: Self.sortedCreatorTaggedArtworks(matches), nextURL: nil)
@@ -448,6 +468,32 @@ actor PixivAPI {
         }
 
         return PixivFeedResponse(illusts: Self.sortedCreatorTaggedArtworks(matches), nextURL: nil)
+    }
+
+    private func creatorTaggedIllustsFromAppAPI(
+        user: PixivUser,
+        tagName: String,
+        expectedCount: Int?
+    ) async throws -> PixivFeedResponse {
+        var response = try await userIllusts(userID: user.id, type: "illust")
+        var matches: [PixivArtwork] = []
+        var seenIDs = Set<Int>()
+
+        while true {
+            for artwork in response.illusts where artwork.containsTag(tagName) {
+                if seenIDs.insert(artwork.id).inserted {
+                    matches.append(artwork)
+                }
+                if let expectedCount, matches.count >= expectedCount {
+                    return PixivFeedResponse(illusts: Self.sortedCreatorTaggedArtworks(matches), nextURL: nil)
+                }
+            }
+
+            guard let nextURL = response.nextURL else {
+                return PixivFeedResponse(illusts: Self.sortedCreatorTaggedArtworks(matches), nextURL: nil)
+            }
+            response = try await requestFeed(url: nextURL)
+        }
     }
 
     func search(keyword: String, options: SearchOptions) async throws -> PixivFeedResponse {

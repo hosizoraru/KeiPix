@@ -117,5 +117,7 @@ struct CreatorTagModelsTests {
         #expect(artwork.isBookmarked == false)
         #expect(artwork.thumbnailURL != nil)
         #expect(artwork.isPixivWebProfileSummary)
+        #expect(artwork.containsTag("ふたば"))
+        #expect(artwork.containsTag("FGO") == false)
     }
 }

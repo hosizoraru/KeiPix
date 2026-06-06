@@ -12,176 +12,111 @@ struct UserProfileOverviewSection: View {
     let isLoadingRelatedUsers: Bool
     let openIllustrations: () -> Void
     let openManga: () -> Void
+    let openNovels: () -> Void
     let openPublicBookmarks: () -> Void
     let openFollowing: () -> Void
     let openFollowers: () -> Void
     let openRelated: () -> Void
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: isCompact ? 8 : 10) {
             GlassEffectContainer(spacing: 8) {
-                ViewThatFits(in: .horizontal) {
-                    wideOverviewRow
-                    compactOverviewStack
-                }
+                overviewGrid
             }
         }
-        .padding(10)
+        .padding(isCompact ? 8 : 10)
         .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
     }
 
-    private var wideOverviewRow: some View {
-        HStack(spacing: 8) {
-            statsRow
-            Divider()
-                .frame(height: 34)
-                .opacity(0.45)
-            Spacer(minLength: 8)
-            networkRail
-        }
-    }
-
-    private var compactOverviewStack: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            statsRow
-                .frame(maxWidth: .infinity, alignment: .leading)
-            networkRail
-                .frame(maxWidth: .infinity, alignment: .leading)
-        }
-    }
-
-    private var statsRow: some View {
-        ViewThatFits(in: .horizontal) {
-            HStack(spacing: 8) {
-                ForEach(statEntries) { entry in
-                    ProfileStatCell(entry: entry)
-                }
-            }
-
-            compactStatsGrid
-        }
-    }
-
-    private var compactStatsGrid: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack(spacing: 8) {
-                ForEach(statEntries.prefix(2)) { entry in
-                    ProfileStatCell(entry: entry)
-                }
-            }
-
-            HStack(spacing: 8) {
-                ForEach(statEntries.dropFirst(2)) { entry in
-                    ProfileStatCell(entry: entry)
-                }
+    private var overviewGrid: some View {
+        LazyVGrid(columns: overviewColumns, alignment: .leading, spacing: 8) {
+            ForEach(overviewEntries) { entry in
+                ProfileStatCell(entry: entry, isCompact: isCompact || isNarrowRegularWidth)
             }
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    private var networkRail: some View {
-        ViewThatFits(in: .horizontal) {
-            HStack(spacing: 8) {
-                followersChip
-                relatedCreatorsChip
-            }
-
-            VStack(alignment: .leading, spacing: 8) {
-                followersChip
-                relatedCreatorsChip
-            }
-        }
-    }
-
-    private var followersChip: some View {
-        networkChip(
-            title: L10n.followers,
-            badge: nil,
-            systemImage: "person.2",
-            isLoading: false,
-            action: openFollowers
-        )
-    }
-
-    private var relatedCreatorsChip: some View {
-        networkChip(
-            title: L10n.relatedCreators,
-            badge: relatedUsersCount > 0 ? "\(relatedUsersCount.formatted())+" : nil,
-            systemImage: "person.3",
-            isLoading: isLoadingRelatedUsers,
-            action: openRelated
-        )
-        .disabled(isLoadingRelatedUsers)
-    }
-
-    private var statEntries: [UserProfileStatEntry] {
+    private var overviewEntries: [UserProfileStatEntry] {
         [
             UserProfileStatEntry(
                 title: L10n.illustrations,
-                value: profile?.totalIllusts ?? 0,
+                valueLabel: (profile?.totalIllusts ?? 0).formatted(),
                 systemImage: "photo",
                 action: openIllustrations
             ),
             UserProfileStatEntry(
                 title: L10n.manga,
-                value: profile?.totalManga ?? 0,
+                valueLabel: (profile?.totalManga ?? 0).formatted(),
                 systemImage: "book.pages",
                 action: openManga
             ),
             UserProfileStatEntry(
+                title: L10n.novels,
+                valueLabel: L10n.open,
+                systemImage: "text.book.closed",
+                action: openNovels
+            ),
+            UserProfileStatEntry(
                 title: L10n.publicSaves,
-                value: profile?.totalIllustBookmarksPublic ?? 0,
+                valueLabel: (profile?.totalIllustBookmarksPublic ?? 0).formatted(),
                 systemImage: "bookmark",
                 action: openPublicBookmarks
             ),
             UserProfileStatEntry(
                 title: L10n.followingCreators,
-                value: profile?.totalFollowUsers ?? 0,
+                valueLabel: (profile?.totalFollowUsers ?? 0).formatted(),
                 systemImage: "person.2",
                 action: openFollowing
+            ),
+            UserProfileStatEntry(
+                title: L10n.followers,
+                valueLabel: L10n.open,
+                systemImage: "person.2.wave.2",
+                action: openFollowers
+            ),
+            UserProfileStatEntry(
+                title: L10n.relatedCreators,
+                valueLabel: relatedUsersCount > 0 ? "\(relatedUsersCount.formatted())+" : L10n.open,
+                systemImage: isLoadingRelatedUsers ? "hourglass" : "person.3",
+                isEnabled: isLoadingRelatedUsers == false,
+                action: openRelated
             )
         ]
     }
 
-    private func networkChip(
-        title: String,
-        badge: String?,
-        systemImage: String,
-        isLoading: Bool,
-        action: @escaping () -> Void
-    ) -> some View {
-        Button(action: action) {
-            HStack(spacing: 6) {
-                Image(systemName: systemImage)
-                    .imageScale(.small)
-                Text(title)
-                    .font(.caption.weight(.medium))
-                    .lineLimit(1)
-                if let badge {
-                    Text(badge)
-                        .font(.caption2.monospacedDigit().weight(.semibold))
-                        .foregroundStyle(.secondary)
-                        .padding(.horizontal, 5)
-                        .padding(.vertical, 1)
-                        .glassEffect(.regular, in: Capsule(style: .continuous))
-                }
-                if isLoading {
-                    ProgressView().controlSize(.small)
-                }
-            }
-            .padding(.horizontal, 10)
-            .padding(.vertical, 7)
-            .contentShape(Capsule(style: .continuous))
+    private var isCompact: Bool {
+        horizontalSizeClass == .compact
+    }
+
+    private var isNarrowRegularWidth: Bool {
+        #if os(macOS)
+        false
+        #else
+        horizontalSizeClass != .regular
+        #endif
+    }
+
+    private var overviewColumns: [GridItem] {
+        if isCompact {
+            return [
+                GridItem(.flexible(minimum: 0, maximum: .infinity), spacing: 8),
+                GridItem(.flexible(minimum: 0, maximum: .infinity), spacing: 8),
+                GridItem(.flexible(minimum: 0, maximum: .infinity), spacing: 8)
+            ]
         }
-        .buttonStyle(.plain)
-        .glassEffect(.regular.interactive(), in: Capsule(style: .continuous))
-        .help(title)
+        return [
+            GridItem(.adaptive(minimum: 92, maximum: 122), spacing: 8)
+        ]
     }
 }
 
 private struct UserProfileStatEntry: Identifiable {
     let title: String
-    let value: Int
+    let valueLabel: String
     let systemImage: String
+    var isEnabled = true
     let action: () -> Void
 
     var id: String { title }
@@ -189,38 +124,41 @@ private struct UserProfileStatEntry: Identifiable {
 
 private struct ProfileStatCell: View {
     let entry: UserProfileStatEntry
+    let isCompact: Bool
     @State private var isHovering = false
 
     var body: some View {
         Button(action: entry.action) {
-            VStack(spacing: 3) {
+            VStack(spacing: isCompact ? 2 : 3) {
                 HStack(alignment: .firstTextBaseline, spacing: 6) {
                     Image(systemName: entry.systemImage)
-                        .font(.caption)
+                        .font(isCompact ? .caption2 : .caption)
                         .foregroundStyle(.secondary)
-                    Text(entry.value.formatted(.number.notation(.compactName)))
-                        .font(.title3.weight(.semibold).monospacedDigit())
+                    Text(entry.valueLabel)
+                        .font((isCompact ? Font.subheadline : Font.title3).weight(.semibold).monospacedDigit())
                         .lineLimit(1)
-                        .minimumScaleFactor(0.8)
+                        .minimumScaleFactor(0.72)
                 }
                 Text(entry.title)
                     .font(.caption2)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
+                    .minimumScaleFactor(0.72)
             }
-            .frame(minWidth: 92)
-            .padding(.vertical, 7)
-            .padding(.horizontal, 9)
+            .frame(minWidth: isCompact ? 0 : 92, maxWidth: .infinity)
+            .padding(.vertical, isCompact ? 6 : 7)
+            .padding(.horizontal, isCompact ? 5 : 9)
             .contentShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
         }
         .buttonStyle(.plain)
         .glassEffect(.regular.interactive(), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .disabled(entry.isEnabled == false)
         .scaleEffect(isHovering ? 1.012 : 1)
         .keiPixHoverTracker { isHovering = $0 }
         .animation(.snappy(duration: 0.16), value: isHovering)
-        .help("\(entry.title) · \(entry.value.formatted())")
+        .help("\(entry.title) · \(entry.valueLabel)")
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(entry.title): \(entry.value.formatted())")
+        .accessibilityLabel("\(entry.title): \(entry.valueLabel)")
         .accessibilityAddTraits(.isButton)
     }
 }

@@ -21,6 +21,7 @@ struct UserProfileRecentWorksSection: View {
     @State private var artworks: [PixivArtwork] = []
     @State private var isLoading = false
     @State private var errorMessage: String?
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
     private let cardWidth: CGFloat = 168
     private let cardHeight: CGFloat = 218
@@ -84,23 +85,43 @@ struct UserProfileRecentWorksSection: View {
     }
 
     private var placeholderRow: some View {
-        HStack(spacing: 12) {
-            ForEach(0..<5, id: \.self) { index in
-                VStack(alignment: .leading, spacing: 8) {
-                    SkeletonPlaceholder(width: cardWidth, height: 178, cornerRadius: 14)
-                        .overlay {
-                            Image(systemName: "photo")
-                                .font(.caption.weight(.semibold))
-                                .foregroundStyle(.secondary)
-                        }
-                    SkeletonPlaceholder(width: index.isMultiple(of: 2) ? 112 : 86, height: 12, cornerRadius: 6)
-                    SkeletonPlaceholder(width: 56, height: 10, cornerRadius: 5)
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: 12) {
+                ForEach(0..<4, id: \.self) { index in
+                    placeholderCard(index: index, width: cardWidth, imageHeight: 178)
+                        .frame(width: cardWidth, height: cardHeight, alignment: .topLeading)
                 }
-                .frame(width: cardWidth, height: cardHeight, alignment: .topLeading)
+            }
+
+            HStack(spacing: 8) {
+                ForEach(0..<3, id: \.self) { index in
+                    placeholderCard(index: index, width: 104, imageHeight: 104)
+                        .frame(width: 104, height: compactPlaceholderHeight, alignment: .topLeading)
+                }
+            }
+
+            HStack(spacing: 8) {
+                ForEach(0..<2, id: \.self) { index in
+                    placeholderCard(index: index, width: 136, imageHeight: 112)
+                        .frame(width: 136, height: compactPlaceholderHeight, alignment: .topLeading)
+                }
             }
         }
-        .frame(height: artworkShelfHeight)
+        .frame(height: placeholderShelfHeight)
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private func placeholderCard(index: Int, width: CGFloat, imageHeight: CGFloat) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            SkeletonPlaceholder(width: width, height: imageHeight, cornerRadius: 14)
+                .overlay {
+                    Image(systemName: "photo")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                }
+            SkeletonPlaceholder(width: min(index.isMultiple(of: 2) ? 112 : 86, width * 0.72), height: 12, cornerRadius: 6)
+            SkeletonPlaceholder(width: min(56, width * 0.55), height: 10, cornerRadius: 5)
+        }
     }
 
     @ViewBuilder
@@ -153,6 +174,14 @@ struct UserProfileRecentWorksSection: View {
 
     private var artworkShelfHeight: CGFloat {
         artworkShelfLayout.viewportHeight ?? cardHeight
+    }
+
+    private var placeholderShelfHeight: CGFloat {
+        horizontalSizeClass == .compact ? compactPlaceholderHeight : artworkShelfHeight
+    }
+
+    private var compactPlaceholderHeight: CGFloat {
+        148
     }
 
     private var artworkShelfItems: [NativeCreatorPreviewCollectionItem] {

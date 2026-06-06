@@ -28,7 +28,7 @@ struct CreatorArtworkTag: Decodable, Identifiable, Hashable, Sendable {
     }
 }
 
-struct CreatorArtworkTagFilter: Equatable, Sendable {
+struct CreatorArtworkTagFilter: Equatable, Hashable, Sendable {
     let userID: Int
     let tag: String
     let expectedCount: Int?
@@ -249,6 +249,10 @@ struct EmptyJSONValue: Decodable, Hashable, Sendable {
 }
 
 extension PixivArtwork {
+    func containsTag(_ tag: String) -> Bool {
+        tags.contains { $0.name.localizedCaseInsensitiveCompare(tag) == .orderedSame }
+    }
+
     var isPixivWebProfileSummary: Bool {
         guard let image = images.first,
               image.original == nil,

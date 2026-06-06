@@ -15,16 +15,23 @@ struct NovelGalleryView: View {
     private var novelStore: NovelFeatureStore { store.novels }
 
     var body: some View {
-        Group {
-            if store.session == nil {
-                PixivSignedOutStateView(store: store)
-            } else if novelStore.isLoading && novelStore.novels.isEmpty {
-                loadingState
-            } else if novelStore.novels.isEmpty {
-                emptyState
-            } else {
-                listContent
+        VStack(alignment: .leading, spacing: 0) {
+            if store.session != nil {
+                creatorFeedContextCard
             }
+
+            Group {
+                if store.session == nil {
+                    PixivSignedOutStateView(store: store)
+                } else if novelStore.isLoading && novelStore.novels.isEmpty {
+                    loadingState
+                } else if novelStore.novels.isEmpty {
+                    emptyState
+                } else {
+                    listContent
+                }
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .navigationTitle(store.selectedRoute.title)
         .toolbar {
@@ -63,6 +70,29 @@ struct NovelGalleryView: View {
                 .frame(minWidth: 720, minHeight: 540, idealHeight: 720)
                 #endif
                 .os26SheetChrome(.reader)
+        }
+    }
+
+    @ViewBuilder
+    private var creatorFeedContextCard: some View {
+        if let focusedUser = store.focusedUser, store.selectedRoute.rawValue.hasPrefix("user") {
+            CreatorFeedContextCard(
+                user: focusedUser,
+                route: store.selectedRoute,
+                filter: nil,
+                loadedCount: novelStore.novels.count,
+                visibleCount: novelStore.novels.count,
+                contentSystemImage: "book.pages",
+                openProfile: {
+                    store.presentedUserProfile = focusedUser
+                },
+                clearContext: {
+                    Task { await store.clearCreatorFeedContext() }
+                }
+            )
+            .padding(.horizontal, 16)
+            .padding(.top, 12)
+            .padding(.bottom, 4)
         }
     }
 

@@ -13,7 +13,7 @@ struct SnapshotTests {
         history.push(1)
         history.push(2)
         history.push(3)
-        #expect(history.entries == [1, 2, 3])
+        #expect(history.entries == [.artwork(1), .artwork(2), .artwork(3)])
         #expect(history.cursor == 2)
 
         _ = history.goBack()

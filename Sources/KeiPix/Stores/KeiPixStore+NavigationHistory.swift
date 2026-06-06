@@ -2,10 +2,33 @@ import Foundation
 
 // MARK: - Navigation history engine
 
-/// Pure, testable browser-style back/forward history for artwork IDs.
+struct CreatorFeedNavigationTarget: Equatable, Hashable, Sendable {
+    let user: PixivUser
+    let route: PixivRoute
+    let tagFilter: CreatorArtworkTagFilter?
+
+    init(user: PixivUser, route: PixivRoute, tagFilter: CreatorArtworkTagFilter? = nil) {
+        self.user = user
+        self.route = route
+        self.tagFilter = tagFilter
+    }
+}
+
+enum NavigationHistoryTarget: Equatable, Hashable, Sendable {
+    case artwork(Int)
+    case route(PixivRoute)
+    case creatorFeed(CreatorFeedNavigationTarget)
+
+    var artworkID: Int? {
+        guard case .artwork(let id) = self else { return nil }
+        return id
+    }
+}
+
+/// Pure, testable browser-style back/forward history for artwork and feed targets.
 struct NavigationHistory {
     private let maxEntries: Int
-    private(set) var entries: [Int] = []
+    private(set) var entries: [NavigationHistoryTarget] = []
     private(set) var cursor: Int = -1
 
     init(maxEntries: Int = 100) {
@@ -18,16 +41,22 @@ struct NavigationHistory {
     /// Push an artwork ID onto the history stack.
     /// Truncates forward history and deduplicates consecutive same-ID entries.
     mutating func push(_ artworkID: Int) {
+        push(.artwork(artworkID))
+    }
+
+    /// Push a browser target onto the history stack.
+    /// Truncates forward history and deduplicates consecutive same-target entries.
+    mutating func push(_ target: NavigationHistoryTarget) {
         // Truncate forward history (like a browser when you click a
         // link after pressing Back).
         if cursor >= 0, cursor < entries.count - 1 {
             entries = Array(entries.prefix(cursor + 1))
         }
 
-        // Deduplicate consecutive same-ID entries.
-        if entries.last == artworkID { return }
+        // Deduplicate consecutive same-target entries.
+        if entries.last == target { return }
 
-        entries.append(artworkID)
+        entries.append(target)
 
         // Cap at max entries.
         if entries.count > maxEntries {
@@ -40,7 +69,7 @@ struct NavigationHistory {
 
     /// Move cursor back. Returns the artwork ID to resolve, or nil if
     /// already at the start.
-    mutating func goBack() -> Int? {
+    mutating func goBack() -> NavigationHistoryTarget? {
         guard canGoBack else { return nil }
         cursor -= 1
         return entries[cursor]
@@ -48,7 +77,7 @@ struct NavigationHistory {
 
     /// Move cursor forward. Returns the artwork ID to resolve, or nil
     /// if already at the end.
-    mutating func goForward() -> Int? {
+    mutating func goForward() -> NavigationHistoryTarget? {
         guard canGoForward else { return nil }
         cursor += 1
         return entries[cursor]
@@ -84,14 +113,14 @@ extension KeiPixStore {
 
     /// Navigate backward in history.
     func navigateBack() {
-        guard let id = navigationHistory.goBack() else { return }
-        resolveAndSelectArtwork(id: id)
+        guard let target = navigationHistory.goBack() else { return }
+        restoreNavigationTarget(target)
     }
 
     /// Navigate forward in history.
     func navigateForward() {
-        guard let id = navigationHistory.goForward() else { return }
-        resolveAndSelectArtwork(id: id)
+        guard let target = navigationHistory.goForward() else { return }
+        restoreNavigationTarget(target)
     }
 
     /// Clear the navigation history. Called on major context changes
@@ -118,33 +147,49 @@ extension KeiPixStore {
         }
     }
 
-    private func resolveCreatorTagSummaryIfNeeded(_ artwork: PixivArtwork) {
-        guard let filter = creatorArtworkTagFilter, artwork.isPixivWebProfileSummary else { return }
-
-        let artworkID = artwork.id
-        Task {
-            do {
-                let detailedArtwork = try await api.illustDetail(illustID: artworkID)
-                guard creatorArtworkTagFilter == filter else { return }
-                replaceLoadedArtwork(detailedArtwork)
-                if selectedArtwork?.id == artworkID {
-                    selectedArtwork = detailedArtwork
-                    WidgetDataProvider.saveArtwork(detailedArtwork)
-                }
-            } catch {
-                if selectedArtwork?.id == artworkID {
-                    errorMessage = error.localizedDescription
-                }
-            }
+    private func restoreNavigationTarget(_ target: NavigationHistoryTarget) {
+        switch target {
+        case .artwork(let id):
+            resolveAndSelectArtwork(id: id)
+        case .route(let route):
+            restoreRouteNavigation(route)
+        case .creatorFeed(let feed):
+            restoreCreatorFeedNavigation(feed)
         }
     }
 
-    private func replaceLoadedArtwork(_ artwork: PixivArtwork) {
-        if let index = allArtworks.firstIndex(where: { $0.id == artwork.id }) {
-            allArtworks[index] = artwork
-        }
-        if let index = artworks.firstIndex(where: { $0.id == artwork.id }) {
-            artworks[index] = artwork
-        }
+    private func restoreRouteNavigation(_ route: PixivRoute) {
+        focusedUser = nil
+        bookmarkTagFilter = nil
+        bookmarkFeedOptions = .defaultValue
+        creatorArtworkTagFilter = nil
+        resetCreatorTagHydrationState()
+        feedNarrowingContext = nil
+        selectedSpotlightArticle = nil
+        errorMessage = nil
+        selectedRoute = route
+        Task { await refreshSelectedRouteContent() }
+    }
+
+    private func restoreCreatorFeedNavigation(_ target: CreatorFeedNavigationTarget) {
+        focusedUser = target.user
+        bookmarkTagFilter = nil
+        bookmarkFeedOptions = .defaultValue
+        resetCreatorTagHydrationState()
+        creatorArtworkTagFilter = target.tagFilter
+        feedNarrowingContext = nil
+        selectedSpotlightArticle = nil
+        errorMessage = nil
+        selectedRoute = target.route
+        Task { await refreshSelectedRouteContent() }
+    }
+
+    private func resolveCreatorTagSummaryIfNeeded(_ artwork: PixivArtwork) {
+        guard artwork.isPixivWebProfileSummary else { return }
+        hydrateCreatorTagSummariesIfNeeded(
+            for: [artwork],
+            limit: 1,
+            reportsSelectionErrors: true
+        )
     }
 }

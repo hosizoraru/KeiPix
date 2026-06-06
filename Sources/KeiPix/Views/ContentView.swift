@@ -731,6 +731,9 @@ struct ContentView: View {
 
     private var showsArtworkNavigationControls: Bool {
         store.selectedRoute.usesArtworkFeed
+            || store.selectedRoute.usesNovelFeed
+            || store.canNavigateBack
+            || store.canNavigateForward
     }
 
     private var showsMacDetailPanelToggle: Bool {

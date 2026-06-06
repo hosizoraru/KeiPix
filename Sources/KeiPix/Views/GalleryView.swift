@@ -312,20 +312,44 @@ private struct GalleryFeedView: View {
 
     #if os(iOS)
     private var iPadNativeFeedHeader: some View {
-        ViewThatFits(in: .horizontal) {
-            HStack(alignment: .center, spacing: 12) {
-                iPadFeedTitleLine
-                    .frame(minWidth: 210, maxWidth: .infinity, alignment: .leading)
-                    .layoutPriority(1)
+        Group {
+            if let focusedUser = store.focusedUser {
+                VStack(alignment: .leading, spacing: 8) {
+                    CreatorFeedContextCard(
+                        user: focusedUser,
+                        route: store.selectedRoute,
+                        filter: store.creatorArtworkTagFilter,
+                        loadedCount: store.artworks.count,
+                        visibleCount: store.clientFilteredArtworks.count,
+                        openProfile: {
+                            store.presentedUserProfile = focusedUser
+                        },
+                        clearContext: {
+                            actionMessage = L10n.feedFilterCleared
+                            Task { await store.clearCreatorFeedContext() }
+                        }
+                    )
 
-                iPadCompactFeedActions
-                    .frame(maxWidth: 430, alignment: .trailing)
-            }
+                    iPadCompactFeedActions(showsFeedCountBadge: false, showsActiveFeedClearChip: false)
+                        .frame(maxWidth: .infinity, alignment: .trailing)
+                }
+            } else {
+                ViewThatFits(in: .horizontal) {
+                    HStack(alignment: .center, spacing: 12) {
+                        iPadFeedTitleLine
+                            .frame(minWidth: 210, maxWidth: .infinity, alignment: .leading)
+                            .layoutPriority(1)
 
-            VStack(alignment: .leading, spacing: 8) {
-                iPadFeedTitleLine
-                iPadCompactFeedActions
-                    .frame(maxWidth: .infinity, alignment: .trailing)
+                        iPadCompactFeedActions()
+                            .frame(maxWidth: 430, alignment: .trailing)
+                    }
+
+                    VStack(alignment: .leading, spacing: 8) {
+                        iPadFeedTitleLine
+                        iPadCompactFeedActions()
+                            .frame(maxWidth: .infinity, alignment: .trailing)
+                    }
+                }
             }
         }
         .platformGlassControlBar(verticalPadding: 6, topPadding: 2, bottomPadding: 8)
@@ -352,13 +376,18 @@ private struct GalleryFeedView: View {
         }
     }
 
-    private var iPadCompactFeedActions: some View {
+    private func iPadCompactFeedActions(
+        showsFeedCountBadge: Bool = true,
+        showsActiveFeedClearChip: Bool = true
+    ) -> some View {
         FeedHeaderView(
             store: store,
             actionMessage: $actionMessage,
             artworkSelection: $artworkSelection,
             batchBookmarkCommandRequest: $batchBookmarkCommandRequest,
-            presentation: .iPadCompact
+            presentation: .iPadCompact,
+            showsFeedCountBadge: showsFeedCountBadge,
+            showsActiveFeedClearChip: showsActiveFeedClearChip
         )
     }
     #endif
@@ -552,6 +581,8 @@ private struct GalleryFeedView: View {
             guard case .artwork(let artwork) = item else { return nil }
             return artwork
         }
+        store.hydrateCreatorTagSummariesIfNeeded(for: artworks, limit: 8)
+
         let urls = GalleryImagePrefetchPolicy.previewURLs(
             for: artworks,
             tier: store.feedPreviewImageQualityTier

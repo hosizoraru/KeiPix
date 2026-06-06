@@ -14,6 +14,8 @@ struct FeedHeaderView: View {
     @Binding var artworkSelection: GalleryArtworkSelection
     @Binding var batchBookmarkCommandRequest: BatchBookmarkCommandRequest?
     let presentation: FeedHeaderPresentation
+    let showsFeedCountBadge: Bool
+    let showsActiveFeedClearChip: Bool
     @State private var isBatchDownloadPresented = false
     @State private var batchDownloadLimit = 30
     @State private var batchActionArtworks: [PixivArtwork] = []
@@ -34,13 +36,17 @@ struct FeedHeaderView: View {
         actionMessage: Binding<String?>,
         artworkSelection: Binding<GalleryArtworkSelection>,
         batchBookmarkCommandRequest: Binding<BatchBookmarkCommandRequest?>,
-        presentation: FeedHeaderPresentation = .regular
+        presentation: FeedHeaderPresentation = .regular,
+        showsFeedCountBadge: Bool = true,
+        showsActiveFeedClearChip: Bool = true
     ) {
         self.store = store
         self._actionMessage = actionMessage
         self._artworkSelection = artworkSelection
         self._batchBookmarkCommandRequest = batchBookmarkCommandRequest
         self.presentation = presentation
+        self.showsFeedCountBadge = showsFeedCountBadge
+        self.showsActiveFeedClearChip = showsActiveFeedClearChip
     }
 
     var body: some View {
@@ -87,8 +93,12 @@ struct FeedHeaderView: View {
     @ViewBuilder
     private var iPadCompactHeaderInlineActions: some View {
         HStack(spacing: 7) {
-            feedCountBadge
-            activeFeedClearChip
+            if showsFeedCountBadge {
+                feedCountBadge
+            }
+            if showsActiveFeedClearChip {
+                activeFeedClearChip
+            }
 
             if store.artworks.isEmpty == false {
                 iPadCompactFilterControl(expandedWidth: 300)
@@ -98,17 +108,6 @@ struct FeedHeaderView: View {
 
             if store.selectedRoute.isOwnBookmarkRoute {
                 bookmarkFiltersMenu
-            }
-
-            if hasActiveArtworkSearch {
-                Button {
-                    clearArtworkSearch()
-                } label: {
-                    Label(L10n.clearSearch, systemImage: "xmark.circle.fill")
-                }
-                .help(L10n.clearSearch)
-                .accessibilityLabel(L10n.clearSearch)
-                .iPadFeedHeaderActionChrome()
             }
 
             if store.artworks.isEmpty == false {
@@ -128,8 +127,12 @@ struct FeedHeaderView: View {
             }
 
             HStack(spacing: 7) {
-                feedCountBadge
-                activeFeedClearChip
+                if showsFeedCountBadge {
+                    feedCountBadge
+                }
+                if showsActiveFeedClearChip {
+                    activeFeedClearChip
+                }
 
                 if store.artworks.isEmpty == false, showsExpandedInlineFilter == false {
                     iPadCompactFilterControl(expandedWidth: nil)
@@ -141,17 +144,6 @@ struct FeedHeaderView: View {
 
                 if store.selectedRoute.isOwnBookmarkRoute {
                     bookmarkFiltersMenu
-                }
-
-                if hasActiveArtworkSearch {
-                    Button {
-                        clearArtworkSearch()
-                    } label: {
-                        Label(L10n.clearSearch, systemImage: "xmark.circle.fill")
-                    }
-                    .help(L10n.clearSearch)
-                    .accessibilityLabel(L10n.clearSearch)
-                    .iPadFeedHeaderActionChrome()
                 }
 
                 if store.artworks.isEmpty == false {
@@ -293,15 +285,6 @@ struct FeedHeaderView: View {
 
         if store.selectedRoute == .search,
            store.searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false {
-            Button {
-                clearArtworkSearch()
-            } label: {
-                Label(L10n.clearSearch, systemImage: "xmark.circle.fill")
-            }
-            .help(L10n.clearSearch)
-            .accessibilityLabel(L10n.clearSearch)
-            .feedHeaderActionChrome()
-
             Menu {
                 if let pixivWebSearchURL {
                     Link(destination: pixivWebSearchURL) {
@@ -1155,6 +1138,22 @@ struct FeedHeaderView: View {
             )
         }
 
+        if let focusedUser = store.focusedUser, store.selectedRoute.rawValue.hasPrefix("user") {
+            return FeedClearChipContext(
+                action: .creatorContext,
+                title: "\(store.selectedRoute.title) · \(focusedUser.name)",
+                systemImage: "person.crop.circle"
+            )
+        }
+
+        if hasActiveArtworkSearch {
+            return FeedClearChipContext(
+                action: .artworkSearch,
+                title: normalizedSearchKeyword,
+                systemImage: "magnifyingglass.circle.fill"
+            )
+        }
+
         if store.selectedRoute == .search, store.searchOptions.isDefault == false {
             return FeedClearChipContext(
                 action: .searchFilters,
@@ -1411,16 +1410,15 @@ struct FeedHeaderView: View {
             case .bookmarkFilters:
                 resetBookmarkFilters()
             case .creatorTag:
-                let focusedUser = store.focusedUser
-                store.creatorArtworkTagFilter = nil
                 Task {
-                    if let focusedUser {
-                        await store.openUserFeed(user: focusedUser, route: .userIllustrations)
-                    } else {
-                        await store.reloadCurrentFeed()
-                    }
+                    await store.clearCreatorFeedContext()
                 }
                 actionMessage = L10n.feedFilterCleared
+            case .creatorContext:
+                Task { await store.clearCreatorFeedContext() }
+                actionMessage = L10n.feedFilterCleared
+            case .artworkSearch:
+                clearArtworkSearch()
             case .searchFilters:
                 resetSearchFilters()
             }
@@ -1446,6 +1444,8 @@ private enum FeedClearChipAction: Equatable {
     case localFilter
     case bookmarkFilters
     case creatorTag
+    case creatorContext
+    case artworkSearch
     case searchFilters
 }
 

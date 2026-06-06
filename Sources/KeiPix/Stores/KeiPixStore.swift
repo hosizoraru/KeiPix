@@ -301,6 +301,9 @@ final class KeiPixStore {
     var creatorPreviewArtworkCacheGeneration = 0
     private var activeFeedRequestID: UUID?
     private var activeSearchPopularPreviewRequestID: UUID?
+    @ObservationIgnored private var hydratingCreatorTagArtworkIDs: Set<Int> = []
+    @ObservationIgnored private var hydratedCreatorTagArtworkIDs: Set<Int> = []
+    @ObservationIgnored private var failedCreatorTagArtworkIDs: Set<Int> = []
     @ObservationIgnored var creatorPreviewArtworkCache: [Int: [PixivArtwork]] = [:]
     @ObservationIgnored var creatorPreviewArtworkRequests: [Int: Task<[PixivArtwork], Error>] = [:]
     var mutedTags = Set(UserDefaults.standard.stringArray(forKey: "mutedTags") ?? [])
@@ -312,17 +315,20 @@ final class KeiPixStore {
     var workSubscriptions = KeiPixStore.loadSubscriptions()
     var recordedBrowsingHistoryIDs = Set<Int>()
 
-    init() {
-        let api = PixivAPI()
+    init(
+        api: PixivAPI = PixivAPI(),
+        downloads: ArtworkDownloadStore? = nil,
+        bootstrapsAutomatically: Bool = true
+    ) {
         self.api = api
-        self.downloads = ArtworkDownloadStore()
+        self.downloads = downloads ?? ArtworkDownloadStore()
         self.novels = NovelFeatureStore(api: api)
 
         // Wire CoreSpotlight side effects so finishing or removing a
         // download keeps the system index in sync. The sink stays
         // optional on the download store side, which lets that store
         // stay testable without dragging in the indexer.
-        downloads.spotlightSink = ArtworkDownloadStore.SpotlightSink(
+        self.downloads.spotlightSink = ArtworkDownloadStore.SpotlightSink(
             didComplete: { [weak self] item in
                 self?.registerDownloadInSpotlight(item)
             },
@@ -355,26 +361,28 @@ final class KeiPixStore {
             self?.focusedUser?.id
         }
 
-        if VisualQALaunchArgument.isActive {
-            activateVisualQASampleSession()
-        } else if accountSessionMode == .guest {
-            Task { @MainActor in
-                storedAccounts = (try? await api.storedAccounts()) ?? []
-                activateGuestMode()
+        if bootstrapsAutomatically {
+            if VisualQALaunchArgument.isActive {
+                activateVisualQASampleSession()
+            } else if accountSessionMode == .guest {
+                Task { @MainActor in
+                    storedAccounts = (try? await api.storedAccounts()) ?? []
+                    activateGuestMode()
+                }
+            } else if accountSessionMode == .visualQA {
+                Task { @MainActor in
+                    storedAccounts = (try? await api.storedAccounts()) ?? []
+                    activateVisualQATestMode()
+                }
             }
-        } else if accountSessionMode == .visualQA {
-            Task { @MainActor in
-                storedAccounts = (try? await api.storedAccounts()) ?? []
-                activateVisualQATestMode()
-            }
-        }
 
-        if let visualQAGalleryLayoutMode = VisualQALaunchArgument.activeGalleryLayoutMode {
-            presentGalleryLayoutVisualQA(mode: visualQAGalleryLayoutMode)
-        } else if VisualQALaunchArgument.contains(.cachedFeed) {
-            presentCachedFeedVisualQA()
-        } else if VisualQALaunchArgument.isActive == false, accountSessionMode == .real {
-            Task { await bootstrap() }
+            if let visualQAGalleryLayoutMode = VisualQALaunchArgument.activeGalleryLayoutMode {
+                presentGalleryLayoutVisualQA(mode: visualQAGalleryLayoutMode)
+            } else if VisualQALaunchArgument.contains(.cachedFeed) {
+                presentCachedFeedVisualQA()
+            } else if VisualQALaunchArgument.isActive == false, accountSessionMode == .real {
+                Task { await bootstrap() }
+            }
         }
     }
 
@@ -394,6 +402,7 @@ final class KeiPixStore {
         searchSuggestions = []
         nextURL = nil
         creatorArtworkTagFilter = nil
+        resetCreatorTagHydrationState()
         feedNarrowingContext = nil
         activeFeedRequestID = nil
         activeSearchPopularPreviewRequestID = nil
@@ -403,6 +412,7 @@ final class KeiPixStore {
     func select(_ route: PixivRoute) {
         focusedUser = nil
         creatorArtworkTagFilter = nil
+        resetCreatorTagHydrationState()
         feedNarrowingContext = nil
         errorMessage = nil
         clearNavigationHistory()
@@ -448,34 +458,63 @@ final class KeiPixStore {
         }
     }
 
-    func openUserFeed(user: PixivUser, route: PixivRoute) async {
+    func openUserFeed(user: PixivUser, route: PixivRoute, recordsNavigation: Bool = true) async {
         focusedUser = user
         bookmarkTagFilter = nil
         bookmarkFeedOptions = .defaultValue
         creatorArtworkTagFilter = nil
+        resetCreatorTagHydrationState()
         feedNarrowingContext = nil
         selectedSpotlightArticle = nil
         errorMessage = nil
-        clearNavigationHistory()
         selectedRoute = route
-        await reloadCurrentFeed()
+        if recordsNavigation {
+            navigationHistory.push(.creatorFeed(CreatorFeedNavigationTarget(user: user, route: route)))
+        }
+        await refreshSelectedRouteContent()
     }
 
-    func openCreatorTagFeed(user: PixivUser, tag: CreatorArtworkTag) async {
+    func openCreatorTagFeed(user: PixivUser, tag: CreatorArtworkTag, recordsNavigation: Bool = true) async {
         focusedUser = user
         bookmarkTagFilter = nil
         bookmarkFeedOptions = .defaultValue
         feedNarrowingContext = nil
-        creatorArtworkTagFilter = CreatorArtworkTagFilter(
+        resetCreatorTagHydrationState()
+        let tagFilter = CreatorArtworkTagFilter(
             userID: user.id,
             tag: tag.name,
             expectedCount: tag.count
         )
+        creatorArtworkTagFilter = tagFilter
         selectedSpotlightArticle = nil
         errorMessage = nil
-        clearNavigationHistory()
         selectedRoute = .userIllustrations
-        await reloadCurrentFeed()
+        if recordsNavigation {
+            navigationHistory.push(.creatorFeed(CreatorFeedNavigationTarget(
+                user: user,
+                route: .userIllustrations,
+                tagFilter: tagFilter
+            )))
+        }
+        await refreshSelectedRouteContent()
+    }
+
+    func clearCreatorFeedContext() async {
+        if creatorArtworkTagFilter != nil, let focusedUser {
+            await openUserFeed(user: focusedUser, route: .userIllustrations, recordsNavigation: true)
+            return
+        }
+
+        guard focusedUser != nil else { return }
+        focusedUser = nil
+        creatorArtworkTagFilter = nil
+        resetCreatorTagHydrationState()
+        feedNarrowingContext = nil
+        selectedSpotlightArticle = nil
+        errorMessage = nil
+        selectedRoute = routeAfterClearingCreatorContext(from: selectedRoute)
+        navigationHistory.push(.route(selectedRoute))
+        await refreshSelectedRouteContent()
     }
 
     func openArtworkFromWebLink(_ artworkID: Int) async {
@@ -490,6 +529,7 @@ final class KeiPixStore {
             bookmarkTagFilter = nil
             bookmarkFeedOptions = .defaultValue
             creatorArtworkTagFilter = nil
+            resetCreatorTagHydrationState()
             feedNarrowingContext = .directArtwork(id: artworkID)
             selectedSpotlightArticle = nil
             selectedRoute = .illustrations
@@ -555,6 +595,7 @@ final class KeiPixStore {
             applyContentFilters()
             activeFeedSnapshotRestoration = nil
             storeFeedSnapshot(response, for: context)
+            hydrateCreatorTagSummariesIfNeeded(for: artworks, limit: 12)
         } catch {
             guard isCancellationLike(error) == false else { return }
             guard currentFeedRequestContext() == context else { return }
@@ -569,6 +610,7 @@ final class KeiPixStore {
                     applyContentFilters()
                     activeFeedSnapshotRestoration = nil
                     storeFeedSnapshot(response, for: currentFeedRequestContext())
+                    hydrateCreatorTagSummariesIfNeeded(for: artworks, limit: 12)
                     errorMessage = L10n.rankingDateFallbackMessage
                 } catch {
                     guard isCancellationLike(error) == false else { return }
@@ -602,8 +644,48 @@ final class KeiPixStore {
     func requestRouteRefresh() {
         if selectedRoute.usesArtworkFeed {
             Task { await reloadCurrentFeed() }
+        } else if selectedRoute.usesNovelFeed {
+            Task { await novels.refresh(route: selectedRoute) }
         } else {
             routeRefreshGeneration += 1
+        }
+    }
+
+    func refreshSelectedRouteContent() async {
+        if selectedRoute.usesArtworkFeed {
+            await reloadCurrentFeed()
+        } else if selectedRoute.usesNovelFeed {
+            clearArtworkPipelineForNonArtworkRoute()
+            guard session != nil else { return }
+            await novels.refresh(route: selectedRoute)
+        } else {
+            clearArtworkPipelineForNonArtworkRoute()
+            routeRefreshGeneration += 1
+        }
+    }
+
+    private func clearArtworkPipelineForNonArtworkRoute() {
+        activeFeedRequestID = nil
+        allArtworks = []
+        artworks = []
+        activeFeedSnapshotRestoration = nil
+        allSearchPopularPreviewArtworks = []
+        searchPopularPreviewArtworks = []
+        nextURL = nil
+        isLoading = false
+        isLoadingMore = false
+    }
+
+    private func routeAfterClearingCreatorContext(from route: PixivRoute) -> PixivRoute {
+        switch route {
+        case .userManga:
+            .mangaRecommended
+        case .userPublicBookmarks:
+            .publicBookmarks
+        case .userNovels, .userNovelBookmarks:
+            .novelRecommended
+        default:
+            .illustrations
         }
     }
 
@@ -630,6 +712,7 @@ final class KeiPixStore {
             applyContentFilters()
             activeFeedSnapshotRestoration = nil
             storeFeedSnapshot(PixivFeedResponse(illusts: allArtworks, nextURL: response.nextURL), for: context)
+            hydrateCreatorTagSummariesIfNeeded(for: artworks, limit: 8)
         } catch {
             guard isCancellationLike(error) == false else { return }
             errorMessage = error.localizedDescription
@@ -837,6 +920,63 @@ final class KeiPixStore {
         } else {
             selectedArtwork = artworks.first
         }
+    }
+
+    func hydrateCreatorTagSummariesIfNeeded(
+        for candidates: some Sequence<PixivArtwork>,
+        limit: Int = 8,
+        reportsSelectionErrors: Bool = false
+    ) {
+        guard let filter = creatorArtworkTagFilter else { return }
+        let ids = candidates
+            .lazy
+            .filter(\.isPixivWebProfileSummary)
+            .map(\.id)
+            .filter { id in
+                self.hydratingCreatorTagArtworkIDs.contains(id) == false
+                    && self.hydratedCreatorTagArtworkIDs.contains(id) == false
+                    && self.failedCreatorTagArtworkIDs.contains(id) == false
+            }
+            .prefix(limit)
+        let idArray = Array(ids)
+        guard idArray.isEmpty == false else { return }
+
+        hydratingCreatorTagArtworkIDs.formUnion(idArray)
+        Task { [filter, idArray, reportsSelectionErrors] in
+            for artworkID in idArray {
+                do {
+                    let detailedArtwork = try await api.illustDetail(illustID: artworkID)
+                    guard creatorArtworkTagFilter == filter else { return }
+                    replaceLoadedArtwork(detailedArtwork)
+                    hydratedCreatorTagArtworkIDs.insert(artworkID)
+                    if selectedArtwork?.id == artworkID {
+                        selectedArtwork = detailedArtwork
+                        WidgetDataProvider.saveArtwork(detailedArtwork)
+                    }
+                } catch {
+                    failedCreatorTagArtworkIDs.insert(artworkID)
+                    if reportsSelectionErrors, selectedArtwork?.id == artworkID {
+                        self.errorMessage = error.localizedDescription
+                    }
+                }
+                hydratingCreatorTagArtworkIDs.remove(artworkID)
+            }
+        }
+    }
+
+    private func replaceLoadedArtwork(_ artwork: PixivArtwork) {
+        if let index = allArtworks.firstIndex(where: { $0.id == artwork.id }) {
+            allArtworks[index] = artwork
+        }
+        if let index = artworks.firstIndex(where: { $0.id == artwork.id }) {
+            artworks[index] = artwork
+        }
+    }
+
+    func resetCreatorTagHydrationState() {
+        hydratingCreatorTagArtworkIDs.removeAll()
+        hydratedCreatorTagArtworkIDs.removeAll()
+        failedCreatorTagArtworkIDs.removeAll()
     }
 
     func filteredFeedResponse(_ response: PixivFeedResponse) -> PixivFeedResponse {

@@ -10,12 +10,13 @@ struct UserProfileCreatorTagsSection: View {
     @State private var query = ""
     @State private var isLoading = false
     @State private var errorMessage: String?
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
     private let collapsedCap = 18
     private let expandedCap = 60
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: isCompact ? 10 : 12) {
             headerAndSearch
 
             if isLoading {
@@ -26,7 +27,7 @@ struct UserProfileCreatorTagsSection: View {
                 tagCloud
             }
         }
-        .padding(14)
+        .padding(isCompact ? 12 : 14)
         .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
         .task(id: user.id) {
             await loadTags()
@@ -75,9 +76,6 @@ struct UserProfileCreatorTagsSection: View {
 
     private var searchField: some View {
         HStack(spacing: 8) {
-            Image(systemName: "magnifyingglass")
-                .foregroundStyle(.secondary)
-
             NativeSearchField(
                 text: $query,
                 placeholder: L10n.searchCreatorTags,
@@ -85,7 +83,7 @@ struct UserProfileCreatorTagsSection: View {
                 onSubmit: {},
                 onTextChange: { query = $0 }
             )
-            .frame(minWidth: 180, maxWidth: .infinity)
+            .frame(minWidth: isCompact ? 120 : 180, maxWidth: .infinity)
 
             if query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false {
                 Button {
@@ -145,10 +143,21 @@ struct UserProfileCreatorTagsSection: View {
 
     private var tagCloud: some View {
         GlassEffectContainer(spacing: 8) {
-            FlowLayout(spacing: 8) {
-                ForEach(visibleTags) { tag in
-                    CreatorArtworkTagChip(tag: tag) {
-                        openTag(tag)
+            if isCompact {
+                CreatorArtworkTagTwoColumnLayout(spacing: 8) {
+                    ForEach(visibleTags) { tag in
+                        CreatorArtworkTagChip(tag: tag, fillsAvailableWidth: true) {
+                            openTag(tag)
+                        }
+                        .layoutValue(key: CreatorArtworkTagFullWidthKey.self, value: tag.prefersFullWidthChip)
+                    }
+                }
+            } else {
+                FlowLayout(spacing: 8) {
+                    ForEach(visibleTags) { tag in
+                        CreatorArtworkTagChip(tag: tag, fillsAvailableWidth: false) {
+                            openTag(tag)
+                        }
                     }
                 }
             }
@@ -159,6 +168,10 @@ struct UserProfileCreatorTagsSection: View {
     private var visibleTags: [CreatorArtworkTag] {
         let filtered = tags.filter { $0.matches(query) }
         return Array(filtered.prefix(query.trimmedNonEmpty == nil ? collapsedCap : expandedCap))
+    }
+
+    private var isCompact: Bool {
+        horizontalSizeClass == .compact
     }
 
     private func loadTags() async {
@@ -214,24 +227,96 @@ struct UserProfileCreatorTagsSection: View {
     }
 }
 
+private struct CreatorArtworkTagFullWidthKey: LayoutValueKey {
+    static let defaultValue = false
+}
+
+private struct CreatorArtworkTagTwoColumnLayout: Layout {
+    var spacing: CGFloat
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let width = proposal.width ?? 320
+        return resolvedLayout(in: width, subviews: subviews).size
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        for item in resolvedLayout(in: bounds.width, subviews: subviews).items {
+            subviews[item.index].place(
+                at: CGPoint(x: bounds.minX + item.frame.minX, y: bounds.minY + item.frame.minY),
+                proposal: ProposedViewSize(item.frame.size)
+            )
+        }
+    }
+
+    private func resolvedLayout(in width: CGFloat, subviews: Subviews) -> (items: [(index: Int, frame: CGRect)], size: CGSize) {
+        let availableWidth = max(width, 1)
+        let columnWidth = max((availableWidth - spacing) / 2, 1)
+        var items: [(index: Int, frame: CGRect)] = []
+        var y: CGFloat = 0
+        var halfRow: [(index: Int, size: CGSize)] = []
+
+        func appendHalfRow() {
+            guard halfRow.isEmpty == false else { return }
+            let rowHeight = halfRow.map(\.size.height).max() ?? 0
+            for (offset, item) in halfRow.enumerated() {
+                let x = offset == 0 ? CGFloat(0) : columnWidth + spacing
+                items.append((
+                    item.index,
+                    CGRect(x: x, y: y, width: columnWidth, height: rowHeight)
+                ))
+            }
+            y += rowHeight + spacing
+            halfRow.removeAll()
+        }
+
+        for (index, subview) in subviews.enumerated() {
+            if subview[CreatorArtworkTagFullWidthKey.self] {
+                appendHalfRow()
+                let size = subview.sizeThatFits(ProposedViewSize(width: availableWidth, height: nil))
+                items.append((
+                    index,
+                    CGRect(x: 0, y: y, width: availableWidth, height: size.height)
+                ))
+                y += size.height + spacing
+            } else {
+                let size = subview.sizeThatFits(ProposedViewSize(width: columnWidth, height: nil))
+                halfRow.append((index, size))
+                if halfRow.count == 2 {
+                    appendHalfRow()
+                }
+            }
+        }
+
+        appendHalfRow()
+        if y > 0 {
+            y -= spacing
+        }
+        return (items, CGSize(width: availableWidth, height: max(y, 0)))
+    }
+}
+
 private struct CreatorArtworkTagChip: View {
     let tag: CreatorArtworkTag
+    let fillsAvailableWidth: Bool
     let action: () -> Void
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
     var body: some View {
         Button(action: action) {
-            HStack(alignment: .center, spacing: 8) {
+            HStack(alignment: .center, spacing: isCompact ? 6 : 8) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("# \(tag.name)")
-                        .font(.callout.weight(.semibold))
+                        .font(isCompact ? .subheadline.weight(.semibold) : .callout.weight(.semibold))
                         .lineLimit(1)
+                        .minimumScaleFactor(0.76)
                         .truncationMode(.tail)
 
                     if let subtitle = tag.displaySubtitle {
                         Text(subtitle)
-                            .font(.caption)
+                            .font(isCompact ? .caption2 : .caption)
                             .foregroundStyle(.secondary)
                             .lineLimit(1)
+                            .minimumScaleFactor(0.78)
                             .truncationMode(.tail)
                     }
                 }
@@ -240,13 +325,17 @@ private struct CreatorArtworkTagChip: View {
                 Text(tag.count.formatted())
                     .font(.caption.monospacedDigit().weight(.semibold))
                     .foregroundStyle(.secondary)
-                    .padding(.horizontal, 7)
-                    .padding(.vertical, 3)
+                    .padding(.horizontal, isCompact ? 6 : 7)
+                    .padding(.vertical, isCompact ? 2 : 3)
                     .glassEffect(.regular, in: Capsule(style: .continuous))
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, tag.displaySubtitle == nil ? 8 : 7)
-            .frame(minWidth: 150, maxWidth: 218, alignment: .leading)
+            .padding(.horizontal, isCompact ? 10 : 12)
+            .padding(.vertical, compactVerticalPadding)
+            .frame(
+                minWidth: fillsAvailableWidth ? 0 : chipMinimumWidth,
+                maxWidth: fillsAvailableWidth ? .infinity : chipMaximumWidth,
+                alignment: .leading
+            )
             .contentShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         }
         .buttonStyle(.plain)
@@ -255,10 +344,44 @@ private struct CreatorArtworkTagChip: View {
         .accessibilityLabel(accessibilityLabel)
     }
 
+    private var isCompact: Bool {
+        horizontalSizeClass == .compact
+    }
+
+    private var chipMinimumWidth: CGFloat {
+        isCompact ? 124 : 150
+    }
+
+    private var chipMaximumWidth: CGFloat {
+        isCompact ? 156 : 218
+    }
+
+    private var compactVerticalPadding: CGFloat {
+        if isCompact {
+            return tag.displaySubtitle == nil ? 7 : 6
+        }
+        return tag.displaySubtitle == nil ? 8 : 7
+    }
+
     private var accessibilityLabel: String {
         if let subtitle = tag.displaySubtitle {
             return "# \(tag.name), \(subtitle), \(tag.count.formatted())"
         }
         return "# \(tag.name), \(tag.count.formatted())"
+    }
+}
+
+private extension CreatorArtworkTag {
+    var prefersFullWidthChip: Bool {
+        name.estimatedDisplayColumns > 14
+            || (displaySubtitle?.estimatedDisplayColumns ?? 0) > 22
+    }
+}
+
+private extension String {
+    var estimatedDisplayColumns: Int {
+        unicodeScalars.reduce(0) { partialResult, scalar in
+            partialResult + (scalar.isASCII ? 1 : 2)
+        }
     }
 }
