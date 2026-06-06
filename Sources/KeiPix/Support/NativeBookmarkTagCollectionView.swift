@@ -54,12 +54,13 @@ struct NativeBookmarkTagCollectionLayout: Equatable {
     var shortcutItemHeight: CGFloat = 60
     var emptyMessageHeight: CGFloat = 104
     var loadMoreHeight: CGFloat = 64
+    var fullWidthTagDisplayWidthThreshold: Double = 10.0
     var spacing: CGFloat = 8
     var sectionInsets = EdgeInsets(top: 10, leading: 14, bottom: 24, trailing: 14)
 
     func itemSize(for item: NativeBookmarkTagCollectionItem, containerWidth: CGFloat) -> CGSize {
         let availableWidth = max(containerWidth - sectionInsets.leading - sectionInsets.trailing, 1)
-        if item.isFullWidth {
+        if item.isFullWidth || usesFullWidthTagItem(for: item) {
             return CGSize(width: availableWidth, height: fullWidthHeight(for: item))
         }
         let metrics = itemMetrics(for: item)
@@ -122,6 +123,24 @@ struct NativeBookmarkTagCollectionLayout: Equatable {
         }
 
         return max(min(width, maximumWidth), min(minimumWidth, availableWidth))
+    }
+
+    private func usesFullWidthTagItem(for item: NativeBookmarkTagCollectionItem) -> Bool {
+        guard case .tag(let tag) = item else { return false }
+        return displayWidthScore(for: tag.name) >= fullWidthTagDisplayWidthThreshold
+    }
+
+    private func displayWidthScore(for text: String) -> Double {
+        text.reduce(0) { score, character in
+            let scalar = character.unicodeScalars.first?.value ?? 0
+            if scalar < 0x0080 {
+                return score + 0.55
+            }
+            if (0xFF61...0xFF9F).contains(scalar) {
+                return score + 0.65
+            }
+            return score + 1.0
+        }
     }
 
     private struct ItemMetrics {
@@ -317,7 +336,7 @@ extension NativeBookmarkTagCollectionView: UIViewRepresentable {
     func makeUIView(context: Context) -> UICollectionView {
         let collectionView = UICollectionView(
             frame: .zero,
-            collectionViewLayout: UICollectionViewFlowLayout()
+            collectionViewLayout: NativeBookmarkTagLeftAlignedFlowLayout()
         )
         collectionView.backgroundColor = .clear
         collectionView.alwaysBounceVertical = true
@@ -372,7 +391,7 @@ extension NativeBookmarkTagCollectionView: UIViewRepresentable {
             if let current = collectionView.collectionViewLayout as? UICollectionViewFlowLayout {
                 flowLayout = current
             } else {
-                flowLayout = UICollectionViewFlowLayout()
+                flowLayout = NativeBookmarkTagLeftAlignedFlowLayout()
                 collectionView.setCollectionViewLayout(flowLayout, animated: false)
             }
             flowLayout.minimumInteritemSpacing = parent.layout.spacing
@@ -412,6 +431,33 @@ extension NativeBookmarkTagCollectionView: UIViewRepresentable {
                 containerWidth: collectionView.bounds.width
             )
         }
+    }
+}
+
+private final class NativeBookmarkTagLeftAlignedFlowLayout: UICollectionViewFlowLayout {
+    override func layoutAttributesForElements(in rect: CGRect) -> [UICollectionViewLayoutAttributes]? {
+        guard let copiedAttributes = super.layoutAttributesForElements(in: rect)?.map({
+            $0.copy() as? UICollectionViewLayoutAttributes
+        }) else {
+            return nil
+        }
+
+        var left = sectionInset.left
+        var rowMaxY: CGFloat = -1
+        for attributes in copiedAttributes where attributes?.representedElementCategory == .cell {
+            guard let attributes else { continue }
+            if attributes.frame.minY >= rowMaxY {
+                left = sectionInset.left
+            }
+            attributes.frame.origin.x = left
+            left += attributes.frame.width + minimumInteritemSpacing
+            rowMaxY = max(rowMaxY, attributes.frame.maxY)
+        }
+        return copiedAttributes.compactMap { $0 }
+    }
+
+    override func shouldInvalidateLayout(forBoundsChange newBounds: CGRect) -> Bool {
+        true
     }
 }
 

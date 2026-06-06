@@ -33,7 +33,9 @@ struct BookmarkTagsView: View {
             title: L10n.bookmarkTags,
             status: bookmarkTagNavigationStatus,
             statusSystemImage: "tag"
-        )
+        ) {
+            bookmarkRestrictScopeMenu
+        }
         .platformPageNavigationChrome(title: L10n.bookmarkTags, status: bookmarkTagNavigationStatus)
         .overlay(alignment: .bottom) {
             VStack(spacing: 8) {
@@ -87,17 +89,9 @@ struct BookmarkTagsView: View {
                     maxWidth: 300
                 )
 
-                OS26GlassCompatibleSegmentedPicker(
-                    L10n.defaultBookmarkVisibility,
-                    selection: $selectedRestrict,
-                    minWidth: 104,
-                    idealWidth: 124,
-                    maxWidth: 150
-                ) {
-                    ForEach(BookmarkRestrict.allCases) { restrict in
-                        Text(restrict.title).tag(restrict)
-                    }
-                }
+                #if os(macOS)
+                bookmarkRestrictScopeMenu
+                #endif
 
                 sortMenu
 
@@ -116,13 +110,6 @@ struct BookmarkTagsView: View {
 
                 Menu {
                     Button {
-                        Task { await load(showFeedback: true) }
-                    } label: {
-                        Label(L10n.refresh, systemImage: "arrow.clockwise")
-                    }
-                    .disabled(isLoading)
-
-                    Button {
                         copyVisibleTags()
                     } label: {
                         Label(L10n.copyTag, systemImage: "doc.on.doc")
@@ -136,6 +123,26 @@ struct BookmarkTagsView: View {
             }
         }
         .controlSize(.small)
+    }
+
+    @ViewBuilder
+    private var bookmarkRestrictScopeMenu: some View {
+        if store.session != nil {
+            Menu {
+                Picker(L10n.bookmarkVisibility, selection: $selectedRestrict) {
+                    ForEach(BookmarkRestrict.allCases) { restrict in
+                        Label(restrict.title, systemImage: restrict.systemImage).tag(restrict)
+                    }
+                }
+            } label: {
+                Label(selectedRestrict.title, systemImage: selectedRestrict.systemImage)
+                    .lineLimit(1)
+            }
+            .controlSize(.small)
+            .os26GlassButton()
+            .help("\(L10n.bookmarkVisibility): \(selectedRestrict.title)")
+            .accessibilityLabel("\(L10n.bookmarkVisibility): \(selectedRestrict.title)")
+        }
     }
 
     private var sortMenu: some View {
@@ -489,5 +496,16 @@ private struct BookmarkTagCard: View {
             return "\(title), \(count.formatted())"
         }
         return title
+    }
+}
+
+private extension BookmarkRestrict {
+    var systemImage: String {
+        switch self {
+        case .public:
+            "globe"
+        case .private:
+            "lock"
+        }
     }
 }

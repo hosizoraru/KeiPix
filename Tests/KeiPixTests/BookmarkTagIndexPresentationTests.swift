@@ -1,3 +1,4 @@
+import CoreGraphics
 import Testing
 @testable import KeiPix
 
@@ -38,5 +39,24 @@ struct BookmarkTagIndexPresentationTests {
         )
 
         #expect(visible.map(\.name) == ["city landscape", "landscape"])
+    }
+
+    @Test("Bookmark tag collection lets long tags span the row")
+    func collectionLayoutLetsLongTagsSpanTheRow() {
+        let layout = NativeBookmarkTagCollectionLayout()
+        let containerWidth: CGFloat = 368
+        let availableWidth = containerWidth - layout.sectionInsets.leading - layout.sectionInsets.trailing
+
+        let shortSize = layout.itemSize(
+            for: .tag(PixivBookmarkTag(name: "sese", count: 1)),
+            containerWidth: containerWidth
+        )
+        let longSize = layout.itemSize(
+            for: .tag(PixivBookmarkTag(name: "ケイ(ブルーアーカイブ)", count: 5)),
+            containerWidth: containerWidth
+        )
+
+        #expect(shortSize.width < availableWidth)
+        #expect(longSize.width == availableWidth)
     }
 }
