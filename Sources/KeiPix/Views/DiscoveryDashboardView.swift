@@ -49,6 +49,9 @@ struct DiscoveryDashboardView: View {
         GeometryReader { proxy in
             let layout = MobileWorkspaceLayout(size: proxy.size, platform: ReaderPlatformKind.current)
             let featureStyle: DiscoveryDashboardFeatureSectionStyle = layout.usesCondensedChrome ? .compact : .full
+            let routeLayout: DiscoveryDashboardRouteSectionLayout = layout.usesCustomNavigationTabs || layout.usesCondensedChrome
+                ? .compactPreview
+                : .regular
 
             ScrollView {
                 GlassEffectContainer(spacing: 18) {
@@ -63,7 +66,7 @@ struct DiscoveryDashboardView: View {
                         DiscoveryDashboardForYouSection(store: store, style: featureStyle)
 
                         ForEach(store.visibleDashboardSections) { section in
-                            DiscoveryDashboardRouteSection(section: section, store: store)
+                            DiscoveryDashboardRouteSection(section: section, store: store, layout: routeLayout)
                         }
                     }
                 }
@@ -389,39 +392,143 @@ private struct DashboardMetricTile: View {
     }
 }
 
+private enum DiscoveryDashboardRouteSectionLayout: Equatable {
+    case regular
+    case compactPreview
+
+    var columns: [GridItem] {
+        switch self {
+        case .regular:
+            [
+                GridItem(.adaptive(minimum: 180, maximum: 270), spacing: 12, alignment: .top)
+            ]
+        case .compactPreview:
+            [
+                GridItem(.flexible(minimum: 118), spacing: 10, alignment: .top),
+                GridItem(.flexible(minimum: 118), spacing: 10, alignment: .top)
+            ]
+        }
+    }
+
+    var sectionSpacing: CGFloat {
+        switch self {
+        case .regular:
+            12
+        case .compactPreview:
+            10
+        }
+    }
+
+    var cardSpacing: CGFloat {
+        switch self {
+        case .regular:
+            12
+        case .compactPreview:
+            10
+        }
+    }
+
+    var sectionPadding: CGFloat {
+        switch self {
+        case .regular:
+            14
+        case .compactPreview:
+            12
+        }
+    }
+
+    var cornerRadius: CGFloat {
+        switch self {
+        case .regular:
+            22
+        case .compactPreview:
+            20
+        }
+    }
+}
+
 private struct DiscoveryDashboardRouteSection: View {
     let section: DiscoveryDashboardSection
     @Bindable var store: KeiPixStore
-
-    private let columns = [
-        GridItem(.adaptive(minimum: 180, maximum: 270), spacing: 12, alignment: .top)
-    ]
+    let layout: DiscoveryDashboardRouteSectionLayout
 
     var body: some View {
-        GlassEffectContainer(spacing: 12) {
-            VStack(alignment: .leading, spacing: 12) {
+        let preview = routePreview
+
+        GlassEffectContainer(spacing: layout.sectionSpacing) {
+            VStack(alignment: .leading, spacing: layout.sectionSpacing) {
                 DiscoveryDashboardSectionHeader(
                     title: section.title,
                     systemImage: section.systemImage,
-                    count: section.routes.count
-                )
+                    count: section.routes.count,
+                    isExpanded: store.isDashboardRouteSectionExpanded(section),
+                    isExpandable: layout == .compactPreview && section.routes.count > DiscoveryDashboardRoutePreview.compactRouteLimit,
+                    isTruncated: preview.isTruncated
+                ) {
+                    store.setDashboardRouteSectionExpanded(
+                        store.isDashboardRouteSectionExpanded(section) == false,
+                        for: section
+                    )
+                }
 
-                LazyVGrid(columns: columns, alignment: .leading, spacing: 12) {
-                    ForEach(section.routes) { route in
+                LazyVGrid(columns: layout.columns, alignment: .leading, spacing: layout.cardSpacing) {
+                    ForEach(preview.routes) { route in
                         DiscoveryDashboardRouteCard(
                             route: route,
                             metric: metric(for: route),
-                            isSelected: store.selectedRoute == route
+                            isSelected: store.selectedRoute == route,
+                            layout: layout
                         ) {
                             store.select(route)
                         }
                     }
                 }
+                .animation(.snappy(duration: 0.22), value: preview.routes)
+
+                if isExpandable {
+                    Button {
+                        store.setDashboardRouteSectionExpanded(
+                            store.isDashboardRouteSectionExpanded(section) == false,
+                            for: section
+                        )
+                    } label: {
+                        Label(
+                            store.isDashboardRouteSectionExpanded(section) ? L10n.showLess : L10n.showMore,
+                            systemImage: store.isDashboardRouteSectionExpanded(section) ? "chevron.up" : "chevron.down"
+                        )
+                            .font(.caption.weight(.semibold))
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.glass)
+                    .buttonBorderShape(.capsule)
+                    .controlSize(.small)
+                    .accessibilityLabel(store.isDashboardRouteSectionExpanded(section) ? L10n.showLess : L10n.showMore)
+                }
             }
-            .padding(14)
+            .padding(layout.sectionPadding)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .keiGlass(22)
+            .keiGlass(layout.cornerRadius)
         }
+    }
+
+    private var routePreview: DiscoveryDashboardRoutePreview {
+        if layout == .compactPreview {
+            DiscoveryDashboardRoutePreview(
+                section: section,
+                isExpanded: store.isDashboardRouteSectionExpanded(section),
+                selectedRoute: store.selectedRoute
+            )
+        } else {
+            DiscoveryDashboardRoutePreview(
+                section: section,
+                isExpanded: true,
+                selectedRoute: store.selectedRoute
+            )
+        }
+    }
+
+    private var isExpandable: Bool {
+        layout == .compactPreview && section.routes.count > DiscoveryDashboardRoutePreview.compactRouteLimit
     }
 
     private func metric(for route: PixivRoute) -> String? {
@@ -449,6 +556,10 @@ private struct DiscoveryDashboardSectionHeader: View {
     let title: String
     let systemImage: String
     let count: Int
+    let isExpanded: Bool
+    let isExpandable: Bool
+    let isTruncated: Bool
+    let toggleExpansion: () -> Void
 
     var body: some View {
         HStack(alignment: .center, spacing: 10) {
@@ -471,6 +582,19 @@ private struct DiscoveryDashboardSectionHeader: View {
                 .padding(.horizontal, 9)
                 .padding(.vertical, 4)
                 .glassEffect(.regular, in: Capsule(style: .continuous))
+
+            if isExpandable {
+                Button(action: toggleExpansion) {
+                    Label(isExpanded ? L10n.showLess : L10n.showMore, systemImage: isExpanded ? "chevron.up" : "chevron.down")
+                        .labelStyle(.iconOnly)
+                }
+                .buttonStyle(.glass)
+                .buttonBorderShape(.capsule)
+                .controlSize(.small)
+                .help(isExpanded ? L10n.showLess : L10n.showMore)
+                .accessibilityLabel(isExpanded ? L10n.showLess : L10n.showMore)
+                .accessibilityHint(isTruncated ? L10n.showMore : L10n.showLess)
+            }
         }
     }
 }
@@ -479,23 +603,24 @@ private struct DiscoveryDashboardRouteCard: View {
     let route: PixivRoute
     let metric: String?
     let isSelected: Bool
+    let layout: DiscoveryDashboardRouteSectionLayout
     let action: () -> Void
 
     @State private var isHovering = false
 
     var body: some View {
         Button(action: action) {
-            HStack(alignment: .top, spacing: 10) {
+            HStack(alignment: .top, spacing: layout == .compactPreview ? 8 : 10) {
                 Image(systemName: route.systemImage)
-                    .font(.system(size: 18, weight: .semibold))
+                    .font(.system(size: layout == .compactPreview ? 16 : 18, weight: .semibold))
                     .symbolRenderingMode(.hierarchical)
                     .foregroundStyle(isSelected ? Color.accentColor : Color.secondary)
-                    .frame(width: 34, height: 34)
-                    .keiGlass(14)
+                    .frame(width: layout == .compactPreview ? 30 : 34, height: layout == .compactPreview ? 30 : 34)
+                    .keiGlass(layout == .compactPreview ? 12 : 14)
 
-                VStack(alignment: .leading, spacing: 6) {
+                VStack(alignment: .leading, spacing: layout == .compactPreview ? 4 : 6) {
                     Text(route.title)
-                        .font(.callout.weight(.semibold))
+                        .font(layout == .compactPreview ? .caption.weight(.semibold) : .callout.weight(.semibold))
                         .foregroundStyle(.primary)
                         .lineLimit(2)
                         .multilineTextAlignment(.leading)
@@ -521,14 +646,14 @@ private struct DiscoveryDashboardRouteCard: View {
                         .foregroundStyle(.tint)
                 }
             }
-            .padding(12)
-            .frame(maxWidth: .infinity, minHeight: 82, alignment: .topLeading)
-            .contentShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .padding(layout == .compactPreview ? 10 : 12)
+            .frame(maxWidth: .infinity, minHeight: layout == .compactPreview ? 66 : 82, alignment: .topLeading)
+            .contentShape(RoundedRectangle(cornerRadius: layout == .compactPreview ? 16 : 18, style: .continuous))
         }
         .buttonStyle(.plain)
-        .keiInteractiveGlass(18)
+        .keiInteractiveGlass(layout == .compactPreview ? 16 : 18)
         .overlay {
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
+            RoundedRectangle(cornerRadius: layout == .compactPreview ? 16 : 18, style: .continuous)
                 .strokeBorder(strokeStyle, lineWidth: isSelected ? 1.2 : 0.8)
         }
         .shadow(color: .black.opacity(isHovering ? 0.10 : 0), radius: isHovering ? 12 : 0, y: isHovering ? 7 : 0)
@@ -576,8 +701,7 @@ private struct DashboardCustomizationSheet: View {
 
                 Section {
                     Button(L10n.resetDashboardSections) {
-                        store.hiddenDashboardSectionIDs.removeAll()
-                        UserDefaults.standard.removeObject(forKey: "hiddenDashboardSectionIDs")
+                        store.resetDashboardSections()
                     }
                     .foregroundStyle(.secondary)
                 }

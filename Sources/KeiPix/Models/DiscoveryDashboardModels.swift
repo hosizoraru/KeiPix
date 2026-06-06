@@ -121,3 +121,33 @@ struct DiscoveryDashboardSection: Identifiable {
         all.flatMap(\.routes)
     }
 }
+
+struct DiscoveryDashboardRoutePreview: Equatable {
+    static let compactRouteLimit = 4
+
+    let routes: [PixivRoute]
+    let isTruncated: Bool
+
+    init(
+        section: DiscoveryDashboardSection,
+        isExpanded: Bool,
+        selectedRoute: PixivRoute?,
+        compactRouteLimit: Int = Self.compactRouteLimit
+    ) {
+        guard isExpanded == false, section.routes.count > compactRouteLimit else {
+            routes = section.routes
+            isTruncated = false
+            return
+        }
+
+        var visibleRoutes = Array(section.routes.prefix(compactRouteLimit))
+        if let selectedRoute,
+           section.routes.contains(selectedRoute),
+           visibleRoutes.contains(selectedRoute) == false {
+            visibleRoutes.append(selectedRoute)
+        }
+
+        routes = visibleRoutes
+        isTruncated = true
+    }
+}

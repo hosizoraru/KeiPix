@@ -20,6 +20,48 @@ struct DiscoveryDashboardTests {
         #expect(dashboardRoutes.count == Set(dashboardRoutes).count)
     }
 
+    @Test("Compact dashboard route previews keep density without hiding selection")
+    func compactDashboardRoutePreviewsKeepDensityWithoutHidingSelection() throws {
+        let ranking = try #require(DiscoveryDashboardSection.all.first { $0.id == "ranking" })
+        let collapsed = DiscoveryDashboardRoutePreview(
+            section: ranking,
+            isExpanded: false,
+            selectedRoute: nil
+        )
+
+        #expect(collapsed.routes == Array(ranking.routes.prefix(4)))
+        #expect(collapsed.isTruncated)
+
+        let hiddenSelection = try #require(ranking.routes.last)
+        let selectedCollapsed = DiscoveryDashboardRoutePreview(
+            section: ranking,
+            isExpanded: false,
+            selectedRoute: hiddenSelection
+        )
+
+        #expect(selectedCollapsed.routes == Array(ranking.routes.prefix(4)) + [hiddenSelection])
+        #expect(selectedCollapsed.isTruncated)
+
+        let expanded = DiscoveryDashboardRoutePreview(
+            section: ranking,
+            isExpanded: true,
+            selectedRoute: hiddenSelection
+        )
+
+        #expect(expanded.routes == ranking.routes)
+        #expect(expanded.isTruncated == false)
+
+        let mangaRanking = try #require(DiscoveryDashboardSection.all.first { $0.id == "manga-ranking" })
+        let shortSection = DiscoveryDashboardRoutePreview(
+            section: mangaRanking,
+            isExpanded: false,
+            selectedRoute: nil
+        )
+
+        #expect(shortSection.routes == mangaRanking.routes)
+        #expect(shortSection.isTruncated == false)
+    }
+
     @Test("Ranking route families support in-page mode switching")
     func rankingRouteFamiliesSupportInPageModeSwitching() {
         let rankingSection = PixivRoute.sidebarSections.first { $0 == .ranking }?.routes ?? []

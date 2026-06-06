@@ -402,6 +402,26 @@ extension KeiPixStore {
         DiscoveryDashboardSection.all.filter { isDashboardSectionVisible($0) }
     }
 
+    func isDashboardRouteSectionExpanded(_ section: DiscoveryDashboardSection) -> Bool {
+        expandedDashboardRouteSectionIDs.contains(section.id)
+    }
+
+    func setDashboardRouteSectionExpanded(_ expanded: Bool, for section: DiscoveryDashboardSection) {
+        if expanded {
+            expandedDashboardRouteSectionIDs.insert(section.id)
+        } else {
+            expandedDashboardRouteSectionIDs.remove(section.id)
+        }
+        UserDefaults.standard.set(Array(expandedDashboardRouteSectionIDs), forKey: "expandedDashboardRouteSectionIDs")
+    }
+
+    func resetDashboardSections() {
+        hiddenDashboardSectionIDs.removeAll()
+        expandedDashboardRouteSectionIDs.removeAll()
+        UserDefaults.standard.removeObject(forKey: "hiddenDashboardSectionIDs")
+        UserDefaults.standard.removeObject(forKey: "expandedDashboardRouteSectionIDs")
+    }
+
     func setTrackpadGesturesEnabled(_ value: Bool) {
         persist("trackpadGesturesEnabled", value: value, to: \.trackpadGesturesEnabled)
     }
