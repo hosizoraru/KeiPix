@@ -356,20 +356,25 @@ extension NativeCreatorPreviewCollectionView: UIViewRepresentable {
     }
 
     func makeUIView(context: Context) -> UICollectionView {
-        let collectionView = UICollectionView(
+        let collectionView = NativeCreatorPreviewUICollectionView(
             frame: .zero,
             collectionViewLayout: UICollectionViewFlowLayout()
         )
         collectionView.backgroundColor = .clear
+        collectionView.contentInsetAdjustmentBehavior = .automatic
         configureScrollBehavior(for: collectionView)
         collectionView.register(
             NativeCreatorPreviewHostingCollectionCell.self,
             forCellWithReuseIdentifier: NativeCreatorPreviewHostingCollectionCell.reuseIdentifier
         )
         collectionView.delegate = context.coordinator
+        collectionView.onHierarchyAvailable = { [weak coordinator = context.coordinator] collectionView in
+            coordinator?.registerContentScrollViewIfNeeded(collectionView)
+        }
 
         context.coordinator.configureDataSource(for: collectionView)
         context.coordinator.parent = self
+        context.coordinator.registerContentScrollViewIfNeeded(collectionView)
         context.coordinator.updateCollectionLayout(for: collectionView)
         context.coordinator.applySnapshot(to: collectionView)
 
@@ -379,11 +384,13 @@ extension NativeCreatorPreviewCollectionView: UIViewRepresentable {
     func updateUIView(_ collectionView: UICollectionView, context: Context) {
         configureScrollBehavior(for: collectionView)
         context.coordinator.parent = self
+        context.coordinator.registerContentScrollViewIfNeeded(collectionView)
         context.coordinator.updateCollectionLayout(for: collectionView)
         context.coordinator.applySnapshot(to: collectionView)
     }
 
     private func configureScrollBehavior(for collectionView: UICollectionView) {
+        collectionView.contentInsetAdjustmentBehavior = layout.scrollDirection == .vertical ? .automatic : .never
         collectionView.alwaysBounceVertical = layout.scrollDirection == .vertical
         collectionView.alwaysBounceHorizontal = layout.scrollDirection == .horizontal
         collectionView.showsVerticalScrollIndicator = layout.scrollDirection == .vertical
@@ -398,10 +405,36 @@ extension NativeCreatorPreviewCollectionView: UIViewRepresentable {
         private var lastLayout: NativeCreatorPreviewCollectionLayout?
         private var lastLayoutContainerWidth: CGFloat = 0
         private var lastContentReloadToken: Int?
+        private weak var registeredContentScrollViewController: UIViewController?
         private let widthChangeTolerance: CGFloat = 0.5
 
         init(parent: NativeCreatorPreviewCollectionView) {
             self.parent = parent
+        }
+
+        deinit {
+            let viewController = registeredContentScrollViewController
+            Task { @MainActor in
+                viewController?.setContentScrollView(nil, for: .bottom)
+            }
+        }
+
+        func registerContentScrollViewIfNeeded(_ collectionView: UICollectionView) {
+            guard parent.layout.scrollDirection == .vertical else {
+                registeredContentScrollViewController?.setContentScrollView(nil, for: .bottom)
+                registeredContentScrollViewController = nil
+                return
+            }
+            guard collectionView.window != nil else { return }
+            guard let viewController = collectionView.enclosingViewController else { return }
+
+            if registeredContentScrollViewController !== viewController {
+                registeredContentScrollViewController?.setContentScrollView(nil, for: .bottom)
+                registeredContentScrollViewController = viewController
+            }
+
+            guard viewController.contentScrollView(for: .bottom) !== collectionView else { return }
+            viewController.setContentScrollView(collectionView, for: .bottom)
         }
 
         func configureDataSource(for collectionView: UICollectionView) {
@@ -494,6 +527,25 @@ extension NativeCreatorPreviewCollectionView: UIViewRepresentable {
     }
 }
 
+private final class NativeCreatorPreviewUICollectionView: UICollectionView {
+    var onHierarchyAvailable: ((UICollectionView) -> Void)?
+
+    override func didMoveToWindow() {
+        super.didMoveToWindow()
+        notifyHierarchyAvailableIfNeeded()
+    }
+
+    override func didMoveToSuperview() {
+        super.didMoveToSuperview()
+        notifyHierarchyAvailableIfNeeded()
+    }
+
+    private func notifyHierarchyAvailableIfNeeded() {
+        guard window != nil else { return }
+        onHierarchyAvailable?(self)
+    }
+}
+
 private final class NativeCreatorPreviewHostingCollectionCell: UICollectionViewCell {
     static let reuseIdentifier = "NativeCreatorPreviewHostingCollectionCell"
 
@@ -544,6 +596,19 @@ private extension NativeCreatorPreviewCollectionLayout {
 
     var uiScrollDirection: UICollectionView.ScrollDirection {
         scrollDirection == .horizontal ? .horizontal : .vertical
+    }
+}
+
+private extension UIView {
+    var enclosingViewController: UIViewController? {
+        var responder: UIResponder? = self
+        while let nextResponder = responder?.next {
+            if let viewController = nextResponder as? UIViewController {
+                return viewController
+            }
+            responder = nextResponder
+        }
+        return nil
     }
 }
 #endif

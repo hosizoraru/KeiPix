@@ -228,7 +228,9 @@ struct UserPreviewListView: View {
                     try await store.creatorPreviewArtworks(for: user)
                 }
             )
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     /// Two-way bridge between the header's segmented Picker and the

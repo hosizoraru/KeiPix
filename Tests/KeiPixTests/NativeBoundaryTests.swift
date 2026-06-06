@@ -2163,8 +2163,13 @@ struct NativeBoundaryTests {
             contentsOf: root.appending(path: "Sources/KeiPix/Support/DragDropNSView.swift"),
             encoding: .utf8
         )
+        let userPreviewList = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/UserPreviewListView.swift"),
+            encoding: .utf8
+        )
 
         #expect(creatorComponents.contains("NativeCreatorPreviewCollectionView("))
+        #expect(creatorComponents.contains(".frame(maxWidth: .infinity, maxHeight: .infinity)"))
         #expect(creatorComponents.contains("NativeSearchField("))
         #expect(creatorComponents.contains(".frame(maxWidth: 560)"))
         #expect(creatorComponents.contains("EnhancedMenu("))
@@ -2178,9 +2183,15 @@ struct NativeBoundaryTests {
         #expect(nativeCollection.contains("UICollectionViewDiffableDataSource"))
         #expect(nativeCollection.contains("NSHostingView"))
         #expect(nativeCollection.contains("UIHostingController"))
+        #expect(nativeCollection.contains("collectionView.contentInsetAdjustmentBehavior = .automatic"))
+        #expect(nativeCollection.contains("registerContentScrollViewIfNeeded(collectionView)"))
+        #expect(nativeCollection.contains("viewController.setContentScrollView(collectionView, for: .bottom)"))
+        #expect(nativeCollection.contains("registeredContentScrollViewController?.setContentScrollView(nil, for: .bottom)"))
         #expect(nativeCollection.contains("let contentReloadToken: Int"))
         #expect(nativeCollection.contains("lastContentReloadToken"))
         #expect(nativeCollection.contains("applySnapshotUsingReloadData"))
+        #expect(userPreviewList.contains("CreatorPreviewListContent("))
+        #expect(userPreviewList.contains(".frame(maxWidth: .infinity, maxHeight: .infinity)"))
         #expect(store.contains("creatorPreviewArtworkCacheGeneration"))
         #expect(store.contains("creatorPreviewArtworkRequests"))
         #expect(storeSocial.contains("func cachedCreatorPreviewArtworks(for user: PixivUser)"))

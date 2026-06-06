@@ -463,6 +463,7 @@ struct CreatorPreviewListContent: View {
             ) { item in
                 nativeCreatorPreviewContent(for: item)
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
     }
 
