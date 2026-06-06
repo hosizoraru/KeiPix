@@ -227,6 +227,9 @@ enum SettingsCategory: String, CaseIterable, Identifiable, Hashable {
     /// snapshot lands on the right page. Computed synchronously at coordinator
     /// init time so the first frame already shows the requested destination.
     static var visualQAOverride: SettingsCategory? {
+        if VisualQALaunchArgument.contains(.about) {
+            return .about
+        }
         if VisualQALaunchArgument.contains(.runtimeReadiness) {
             return .advancedQA
         }

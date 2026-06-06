@@ -81,6 +81,9 @@ struct ContentView: View {
             }
             #if DEBUG
             .task {
+                if VisualQALaunchArgument.contains(.about) {
+                    isSettingsSheetPresented = true
+                }
                 if VisualQALaunchArgument.contains(.discoverDashboard) {
                     store.presentDiscoverDashboardVisualQA()
                     selectedSidebarItem = .route(.home)

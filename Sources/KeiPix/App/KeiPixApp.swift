@@ -53,7 +53,8 @@ struct KeiPixApp: App {
                 }
                 #if os(macOS)
                 .task {
-                    if VisualQALaunchArgument.contains(.settingsWindow)
+                    if VisualQALaunchArgument.contains(.about)
+                        || VisualQALaunchArgument.contains(.settingsWindow)
                         || VisualQALaunchArgument.contains(.runtimeReadiness)
                         || VisualQALaunchArgument.contains(.sharingTemplates) {
                         openSettings()

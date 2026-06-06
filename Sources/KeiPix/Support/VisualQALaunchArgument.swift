@@ -21,6 +21,7 @@ enum VisualQALaunchArgument: String, CaseIterable {
     case downloadedReader = "--visual-qa-downloaded-reader"
     case feedbackSheet = "--visual-qa-feedback-sheet"
     case artworkDetailSocial = "--visual-qa-artwork-detail-social"
+    case about = "--visual-qa-about"
 
     var surface: VisualQASurface {
         switch self {
@@ -64,6 +65,8 @@ enum VisualQALaunchArgument: String, CaseIterable {
             .feedbackSheet
         case .artworkDetailSocial:
             .artworkDetailSocial
+        case .about:
+            .about
         }
     }
 

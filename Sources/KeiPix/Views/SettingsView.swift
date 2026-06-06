@@ -405,7 +405,9 @@ struct SettingsView: View {
     }
 
     private func applyVisualQAInitialSelection() {
-        if VisualQALaunchArgument.contains(.runtimeReadiness) {
+        if VisualQALaunchArgument.contains(.about) {
+            coordinator.selection = .about
+        } else if VisualQALaunchArgument.contains(.runtimeReadiness) {
             coordinator.selection = .advancedQA
         } else if VisualQALaunchArgument.contains(.sharingTemplates) {
             coordinator.selection = .sharing

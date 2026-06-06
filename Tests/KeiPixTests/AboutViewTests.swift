@@ -65,6 +65,18 @@ struct AboutViewTests {
             contentsOf: root.appending(path: "Sources/KeiPix/Views/SettingsView.swift"),
             encoding: .utf8
         )
+        let settingsCategory = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/Settings/SettingsCategory.swift"),
+            encoding: .utf8
+        )
+        let mobileContentView = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/ContentView_iPadOS.swift"),
+            encoding: .utf8
+        )
+        let appIconView = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Support/KeiPixAppIconView.swift"),
+            encoding: .utf8
+        )
         let localizable = try String(
             contentsOf: root.appending(path: "Sources/KeiPix/Resources/Localizable.xcstrings"),
             encoding: .utf8
@@ -89,6 +101,14 @@ struct AboutViewTests {
         #expect(aboutView.contains("L10n.aboutDiagnosticsLocale"))
         #expect(aboutView.contains("L10n.aboutDiagnosticsRepository"))
         #expect(aboutView.contains("L10n.aboutDiagnosticsLicense"))
+        #expect(aboutView.contains("KeiPixAppIconView(cornerRadius: 24)"))
+        #expect(aboutView.contains(#"Image(systemName: "photo.stack.fill")"#) == false)
+        #expect(appIconView.contains(#"static let iconAssetName = "keipixiv""#))
+        #expect(appIconView.contains("NSImage.applicationIconName"))
+        #expect(appIconView.contains("CFBundleIconFiles"))
+        #expect(appIconView.contains("UIImage(contentsOfFile: url.path)"))
+        #expect(appIconView.contains("UIImage(named: iconAssetName") == false)
+        #expect(appIconView.contains("private var fallbackIcon: some View"))
         #expect(aboutView.contains(#"AboutPill(title: "macOS 26""#) == false)
         #expect(aboutView.contains(#"OS: \("#) == false)
         #expect(aboutView.contains(#"Locale: \("#) == false)
@@ -96,6 +116,9 @@ struct AboutViewTests {
         #expect(aboutView.contains(#"License: \("#) == false)
         #expect(settingsView.contains("case .about:"))
         #expect(settingsView.contains("AboutView(presentation: .settings)"))
+        #expect(settingsView.contains("VisualQALaunchArgument.contains(.about)"))
+        #expect(settingsCategory.contains("VisualQALaunchArgument.contains(.about)"))
+        #expect(mobileContentView.contains("isSettingsSheetPresented = true"))
         #expect(SettingsCategory.allCases.contains(.about))
         #expect(SettingsCategory.about.searchTerms.contains(L10n.aboutApacheLicenseTitle))
 

@@ -100,27 +100,9 @@ struct AboutView: View {
     }
 
     private var appIcon: some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .fill(
-                    LinearGradient(
-                        colors: [
-                            Color.accentColor,
-                            Color.accentColor.opacity(0.62)
-                        ],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
-
-            Image(systemName: "photo.stack.fill")
-                .font(.system(size: 42, weight: .semibold))
-                .foregroundStyle(.white)
-                .symbolRenderingMode(.hierarchical)
-        }
+        KeiPixAppIconView(cornerRadius: 24)
         .frame(width: presentation.iconSize, height: presentation.iconSize)
         .shadow(color: .black.opacity(0.12), radius: 18, y: 10)
-        .accessibilityHidden(true)
     }
 
     private var heroText: some View {
