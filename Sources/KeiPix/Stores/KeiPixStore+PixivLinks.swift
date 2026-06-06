@@ -29,7 +29,6 @@ extension KeiPixStore {
     func openPixivLinkFromClipboard() async -> String {
         guard let rawText = PasteboardWriter.currentString(),
               let url = PixivWebLinkResolver.firstSupportedURL(in: rawText) else {
-            errorMessage = L10n.noPixivLinkInClipboard
             return L10n.noPixivLinkInClipboard
         }
 

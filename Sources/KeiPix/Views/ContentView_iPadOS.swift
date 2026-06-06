@@ -16,6 +16,7 @@ struct ContentView: View {
     @State private var isArtworkDetailPresented = false
     @State private var isCompactArtworkDetailPresented = false
     @State private var isArtworkDetailPanelUserEnabled = false
+    @State private var pendingCompactArtworkDetailAfterPixivIDOpen = false
     @State private var isSpotlightDetailPresented = false
     @State private var isSpotlightDetailPanelUserEnabled = false
     @State private var isSpotlightArticlePushPresented = false
@@ -127,7 +128,11 @@ struct ContentView: View {
             }
             #endif
             .sheet(isPresented: $isPixivIDOpenPresented) {
-                PixivIDOpenSheet(store: store, showStatus: { _ in })
+                PixivIDOpenSheet(
+                    store: store,
+                    showStatus: showStatus,
+                    prepareForOpen: dismissTransientArtworkPresentationBeforeGlobalOpen
+                )
                     .os26SheetChrome(.form)
             }
             .sheet(isPresented: $isSettingsSheetPresented) {
@@ -185,13 +190,14 @@ struct ContentView: View {
                             },
                             onDismiss: {
                                 store.errorMessage = nil
-                            }
+                            },
+                            includesOuterPadding: false
                         )
                         .transition(.move(edge: .bottom).combined(with: .opacity))
                     }
                 }
                 .padding(.horizontal, 18)
-                .padding(.bottom, 14)
+                .padding(.bottom, feedbackOverlayBottomPadding)
             }
             .animation(.snappy(duration: 0.18), value: statusMessage)
             .animation(.snappy(duration: 0.2), value: store.errorMessage)
@@ -487,8 +493,24 @@ struct ContentView: View {
                             presentArtworkDetail(for: artwork, hidesSidebar: true)
                         }
                     } else {
+                        guard isPixivIDOpenPresented == false else {
+                            pendingCompactArtworkDetailAfterPixivIDOpen = true
+                            return
+                        }
                         presentArtworkDetail(for: artwork, usesCompactSheet: true)
                     }
+                }
+                .onChange(of: isPixivIDOpenPresented) { _, isPresented in
+                    guard isPresented == false, pendingCompactArtworkDetailAfterPixivIDOpen else {
+                        return
+                    }
+
+                    pendingCompactArtworkDetailAfterPixivIDOpen = false
+                    guard let artwork = store.selectedArtwork,
+                          store.selectedRoute.usesArtworkFeed else {
+                        return
+                    }
+                    presentArtworkDetail(for: artwork, usesCompactSheet: true)
                 }
                 .onChange(of: store.selectedRoute) { _, route in
                     if route.usesArtworkFeed == false {
@@ -1041,6 +1063,7 @@ struct ContentView: View {
         case IPadToolbarMenuAction.openPixivLinkFromClipboard:
             Task { await openPixivLinkFromClipboard() }
         case IPadToolbarMenuAction.openPixivID:
+            dismissTransientArtworkPresentationBeforeGlobalOpen()
             isPixivIDOpenPresented = true
         case IPadToolbarMenuAction.goBack:
             store.navigateBack()
@@ -1114,8 +1137,20 @@ struct ContentView: View {
     }
 
     private func openPixivLinkFromClipboard() async {
+        dismissTransientArtworkPresentationBeforeGlobalOpen()
+        store.errorMessage = nil
         let message = await store.openPixivLinkFromClipboard()
-        showStatus(message)
+        if store.errorMessage == nil {
+            showStatus(message)
+        }
+    }
+
+    private func dismissTransientArtworkPresentationBeforeGlobalOpen() {
+        withAnimation(.snappy(duration: 0.16)) {
+            isCompactArtworkDetailPresented = false
+            isArtworkDetailPresented = false
+            isArtworkDetailPanelUserEnabled = false
+        }
     }
 
     private func canSelectAdjacentArtwork(delta: Int) -> Bool {
@@ -1412,6 +1447,10 @@ struct ContentView: View {
 
     private var currentMobilePlatform: ReaderPlatformKind {
         UIDevice.current.userInterfaceIdiom == .phone ? .phone : .pad
+    }
+
+    private var feedbackOverlayBottomPadding: CGFloat {
+        isCompactCustomTabRootActive || currentMobilePlatform == .phone ? 92 : 14
     }
 
     private var iPadSidebarVisible: Bool {

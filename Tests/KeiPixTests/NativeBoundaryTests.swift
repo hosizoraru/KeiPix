@@ -231,6 +231,10 @@ struct NativeBoundaryTests {
             contentsOf: root.appending(path: "Sources/KeiPix/Views/SpotlightArticleDetailView.swift"),
             encoding: .utf8
         )
+        let storePixivLinks = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Stores/KeiPixStore+PixivLinks.swift"),
+            encoding: .utf8
+        )
 
         #expect(contentView.contains("private func feedContent(\n        discoveryPresentation: DiscoveryDashboardPresentation,\n        showsSidebarToggle: Bool\n    ) -> some View"))
         #expect(contentView.contains("DiscoveryDashboardView(store: store, presentation: discoveryPresentation)"))
@@ -334,6 +338,16 @@ struct NativeBoundaryTests {
         #expect(contentView.contains("paletteTitle: L10n.quickOpenLink"))
         #expect(contentView.contains("paletteTitle: L10n.quickPixivID"))
         #expect(contentView.contains("paletteTitle: L10n.quickImageSearch") == false)
+        #expect(contentView.contains("PixivIDOpenSheet("))
+        #expect(contentView.contains("showStatus: showStatus"))
+        #expect(contentView.contains("prepareForOpen: dismissTransientArtworkPresentationBeforeGlobalOpen"))
+        #expect(contentView.contains("private func dismissTransientArtworkPresentationBeforeGlobalOpen()"))
+        #expect(contentView.contains("pendingCompactArtworkDetailAfterPixivIDOpen"))
+        #expect(contentView.contains(".onChange(of: isPixivIDOpenPresented)"))
+        #expect(contentView.contains("includesOuterPadding: false"))
+        #expect(contentView.contains("feedbackOverlayBottomPadding"))
+        #expect(contentView.contains("if store.errorMessage == nil {\n            showStatus(message)\n        }"))
+        #expect(storePixivLinks.contains("errorMessage = L10n.noPixivLinkInClipboard") == false)
         #expect(contentView.contains("L10n.showContentBadges"))
         #expect(contentView.contains("L10n.hideMutedContent"))
         #expect(contentView.contains("L10n.hideAIArtworks"))
@@ -2181,6 +2195,10 @@ struct NativeBoundaryTests {
             contentsOf: root.appending(path: "Sources/KeiPix/Views/PixivIDOpenSheet.swift"),
             encoding: .utf8
         )
+        let errorToast = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Support/ErrorToast.swift"),
+            encoding: .utf8
+        )
         let imageSourceSearch = try String(
             contentsOf: root.appending(path: "Sources/KeiPix/Views/ImageSourceSearchSheet.swift"),
             encoding: .utf8
@@ -2205,8 +2223,15 @@ struct NativeBoundaryTests {
         #expect(searchFilters.contains(".textFieldStyle(.roundedBorder)") == false)
 
         #expect(quickOpenSheet.contains("NativeSearchField("))
+        #expect(quickOpenSheet.contains("GeometryReader { proxy in"))
+        #expect(quickOpenSheet.contains("private struct PixivIDOpenSheetLayout: Equatable"))
+        #expect(quickOpenSheet.contains("layout.isCompact"))
+        #expect(quickOpenSheet.contains("compactPasteButton"))
+        #expect(quickOpenSheet.contains("presentationDetents(PixivIDOpenSheetLayout.mobilePresentationDetents)"))
         #expect(quickOpenSheet.contains(".keiInteractiveGlass(14)"))
         #expect(quickOpenSheet.contains(".background(.quaternary") == false)
+        #expect(errorToast.contains(".fixedSize(horizontal: true, vertical: false)"))
+        #expect(errorToast.contains("includesOuterPadding"))
 
         #expect(imageSourceSearch.contains("private func resultRow"))
         #expect(imageSourceSearch.contains("LazyVStack(spacing: 8)"))
