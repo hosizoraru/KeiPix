@@ -73,6 +73,10 @@ struct AboutViewTests {
             contentsOf: root.appending(path: "Sources/KeiPix/Views/ContentView_iPadOS.swift"),
             encoding: .utf8
         )
+        let macOSRunner = try String(
+            contentsOf: root.appending(path: "script/build_and_run.sh"),
+            encoding: .utf8
+        )
         let appIconView = try String(
             contentsOf: root.appending(path: "Sources/KeiPix/Support/KeiPixAppIconView.swift"),
             encoding: .utf8
@@ -119,6 +123,13 @@ struct AboutViewTests {
         #expect(settingsView.contains("VisualQALaunchArgument.contains(.about)"))
         #expect(settingsCategory.contains("VisualQALaunchArgument.contains(.about)"))
         #expect(mobileContentView.contains("isSettingsSheetPresented = true"))
+        #expect(macOSRunner.contains("--visual-qa-about|visual-qa-about"))
+        #expect(macOSRunner.contains("open_app --visual-qa-about"))
+        #expect(macOSRunner.contains("APP_PROCESS_SUFFIX"))
+        #expect(macOSRunner.contains("terminate_running_app"))
+        #expect(macOSRunner.contains("assert_app_running"))
+        #expect(!macOSRunner.contains("pkill -x \"$APP_NAME\""))
+        #expect(!macOSRunner.contains("pgrep -x \"$APP_NAME\""))
         #expect(SettingsCategory.allCases.contains(.about))
         #expect(SettingsCategory.about.searchTerms.contains(L10n.aboutApacheLicenseTitle))
 

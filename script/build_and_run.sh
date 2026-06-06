@@ -13,6 +13,7 @@ APP_CONTENTS="$APP_BUNDLE/Contents"
 APP_MACOS="$APP_CONTENTS/MacOS"
 APP_RESOURCES="$APP_CONTENTS/Resources"
 APP_BINARY="$APP_MACOS/$APP_NAME"
+APP_PROCESS_SUFFIX="/$APP_NAME.app/Contents/MacOS/$APP_NAME"
 INFO_PLIST="$APP_CONTENTS/Info.plist"
 
 cd "$ROOT_DIR"
@@ -22,19 +23,46 @@ source "$ROOT_DIR/script/version_settings.sh"
 keipix_load_version_settings "$ROOT_DIR"
 
 case "$MODE" in
-  run|--debug|debug|--logs|logs|--telemetry|telemetry|--verify|verify|--package|package|--visual-qa-discover-dashboard|visual-qa-discover-dashboard|--visual-qa-pixiv-link-drop|visual-qa-pixiv-link-drop|--visual-qa-pixiv-id-open|visual-qa-pixiv-id-open|--visual-qa-creator-profile|visual-qa-creator-profile|--visual-qa-feedback-sheet|visual-qa-feedback-sheet|--visual-qa-artwork-detail-social|visual-qa-artwork-detail-social|--visual-qa-manga-watchlist|visual-qa-manga-watchlist|--visual-qa-series-sheet|visual-qa-series-sheet|--visual-qa-cached-feed|visual-qa-cached-feed|--visual-qa-ranking|visual-qa-ranking|--visual-qa-muted-content|visual-qa-muted-content|--visual-qa-settings-window|visual-qa-settings-window|--visual-qa-runtime-readiness|visual-qa-runtime-readiness|--visual-qa-sharing-templates|visual-qa-sharing-templates|--visual-qa-ugoira-player|visual-qa-ugoira-player|--visual-qa-downloaded-reader|visual-qa-downloaded-reader|--visual-qa-gallery-auto|visual-qa-gallery-auto|--visual-qa-gallery-two-column|visual-qa-gallery-two-column|--visual-qa-gallery-three-column|visual-qa-gallery-three-column|--visual-qa-gallery-compact|visual-qa-gallery-compact)
+  run|--debug|debug|--logs|logs|--telemetry|telemetry|--verify|verify|--package|package|--visual-qa-discover-dashboard|visual-qa-discover-dashboard|--visual-qa-pixiv-link-drop|visual-qa-pixiv-link-drop|--visual-qa-pixiv-id-open|visual-qa-pixiv-id-open|--visual-qa-creator-profile|visual-qa-creator-profile|--visual-qa-feedback-sheet|visual-qa-feedback-sheet|--visual-qa-artwork-detail-social|visual-qa-artwork-detail-social|--visual-qa-manga-watchlist|visual-qa-manga-watchlist|--visual-qa-series-sheet|visual-qa-series-sheet|--visual-qa-cached-feed|visual-qa-cached-feed|--visual-qa-ranking|visual-qa-ranking|--visual-qa-muted-content|visual-qa-muted-content|--visual-qa-about|visual-qa-about|--visual-qa-settings-window|visual-qa-settings-window|--visual-qa-runtime-readiness|visual-qa-runtime-readiness|--visual-qa-sharing-templates|visual-qa-sharing-templates|--visual-qa-ugoira-player|visual-qa-ugoira-player|--visual-qa-downloaded-reader|visual-qa-downloaded-reader|--visual-qa-gallery-auto|visual-qa-gallery-auto|--visual-qa-gallery-two-column|visual-qa-gallery-two-column|--visual-qa-gallery-three-column|visual-qa-gallery-three-column|--visual-qa-gallery-compact|visual-qa-gallery-compact)
     ;;
   *)
-    echo "usage: $0 [run|--debug|--logs|--telemetry|--verify|--package|--visual-qa-discover-dashboard|--visual-qa-pixiv-link-drop|--visual-qa-pixiv-id-open|--visual-qa-creator-profile|--visual-qa-feedback-sheet|--visual-qa-artwork-detail-social|--visual-qa-manga-watchlist|--visual-qa-series-sheet|--visual-qa-cached-feed|--visual-qa-ranking|--visual-qa-muted-content|--visual-qa-settings-window|--visual-qa-runtime-readiness|--visual-qa-sharing-templates|--visual-qa-ugoira-player|--visual-qa-downloaded-reader|--visual-qa-gallery-auto|--visual-qa-gallery-two-column|--visual-qa-gallery-three-column|--visual-qa-gallery-compact]" >&2
+    echo "usage: $0 [run|--debug|--logs|--telemetry|--verify|--package|--visual-qa-discover-dashboard|--visual-qa-pixiv-link-drop|--visual-qa-pixiv-id-open|--visual-qa-creator-profile|--visual-qa-feedback-sheet|--visual-qa-artwork-detail-social|--visual-qa-manga-watchlist|--visual-qa-series-sheet|--visual-qa-cached-feed|--visual-qa-ranking|--visual-qa-muted-content|--visual-qa-about|--visual-qa-settings-window|--visual-qa-runtime-readiness|--visual-qa-sharing-templates|--visual-qa-ugoira-player|--visual-qa-downloaded-reader|--visual-qa-gallery-auto|--visual-qa-gallery-two-column|--visual-qa-gallery-three-column|--visual-qa-gallery-compact]" >&2
     exit 2
     ;;
 esac
+
+running_app_pids() {
+  /bin/ps -axo pid=,command= | /usr/bin/awk -v suffix="$APP_PROCESS_SUFFIX" 'index($0, suffix) > 0 { print $1 }'
+}
+
+terminate_running_app() {
+  local pids
+  pids="$(running_app_pids)"
+
+  if [ -z "$pids" ]; then
+    return 0
+  fi
+
+  # shellcheck disable=SC2086
+  /bin/kill $pids >/dev/null 2>&1 || true
+  sleep 0.5
+
+  pids="$(running_app_pids)"
+  if [ -n "$pids" ]; then
+    # shellcheck disable=SC2086
+    /bin/kill -9 $pids >/dev/null 2>&1 || true
+  fi
+}
+
+assert_app_running() {
+  running_app_pids | /usr/bin/grep -q .
+}
 
 case "$MODE" in
   --package|package)
     ;;
   *)
-    pkill -x "$APP_NAME" >/dev/null 2>&1 || true
+    terminate_running_app
     ;;
 esac
 
@@ -138,107 +166,112 @@ case "$MODE" in
   --verify|verify)
     open_app --visual-qa-cached-feed
     sleep 1
-    pgrep -x "$APP_NAME" >/dev/null
+    assert_app_running
     ;;
   --visual-qa-discover-dashboard|visual-qa-discover-dashboard)
     open_app --visual-qa-discover-dashboard
     sleep 1
-    pgrep -x "$APP_NAME" >/dev/null
+    assert_app_running
     ;;
   --visual-qa-pixiv-link-drop|visual-qa-pixiv-link-drop)
     open_app --visual-qa-pixiv-link-drop
     sleep 1
-    pgrep -x "$APP_NAME" >/dev/null
+    assert_app_running
     ;;
   --visual-qa-pixiv-id-open|visual-qa-pixiv-id-open)
     open_app --visual-qa-pixiv-id-open
     sleep 1
-    pgrep -x "$APP_NAME" >/dev/null
+    assert_app_running
     ;;
   --visual-qa-creator-profile|visual-qa-creator-profile)
     open_app --visual-qa-creator-profile
     sleep 1
-    pgrep -x "$APP_NAME" >/dev/null
+    assert_app_running
     ;;
   --visual-qa-feedback-sheet|visual-qa-feedback-sheet)
     open_app --visual-qa-feedback-sheet
     sleep 1
-    pgrep -x "$APP_NAME" >/dev/null
+    assert_app_running
     ;;
   --visual-qa-artwork-detail-social|visual-qa-artwork-detail-social)
     open_app --visual-qa-artwork-detail-social
     sleep 2
-    pgrep -x "$APP_NAME" >/dev/null
+    assert_app_running
     ;;
   --visual-qa-manga-watchlist|visual-qa-manga-watchlist)
     open_app --visual-qa-manga-watchlist
     sleep 1
-    pgrep -x "$APP_NAME" >/dev/null
+    assert_app_running
     ;;
   --visual-qa-series-sheet|visual-qa-series-sheet)
     open_app --visual-qa-series-sheet
     sleep 1
-    pgrep -x "$APP_NAME" >/dev/null
+    assert_app_running
     ;;
   --visual-qa-cached-feed|visual-qa-cached-feed)
     open_app --visual-qa-cached-feed
     sleep 1
-    pgrep -x "$APP_NAME" >/dev/null
+    assert_app_running
     ;;
   --visual-qa-ranking|visual-qa-ranking)
     open_app --visual-qa-ranking
     sleep 1
-    pgrep -x "$APP_NAME" >/dev/null
+    assert_app_running
     ;;
   --visual-qa-muted-content|visual-qa-muted-content)
     open_app --visual-qa-muted-content
     sleep 1
-    pgrep -x "$APP_NAME" >/dev/null
+    assert_app_running
+    ;;
+  --visual-qa-about|visual-qa-about)
+    open_app --visual-qa-about
+    sleep 2
+    assert_app_running
     ;;
   --visual-qa-settings-window|visual-qa-settings-window)
     open_app --visual-qa-settings-window
     sleep 2
-    pgrep -x "$APP_NAME" >/dev/null
+    assert_app_running
     ;;
   --visual-qa-runtime-readiness|visual-qa-runtime-readiness)
     open_app --visual-qa-runtime-readiness
     sleep 2
-    pgrep -x "$APP_NAME" >/dev/null
+    assert_app_running
     ;;
   --visual-qa-sharing-templates|visual-qa-sharing-templates)
     open_app --visual-qa-sharing-templates
     sleep 2
-    pgrep -x "$APP_NAME" >/dev/null
+    assert_app_running
     ;;
   --visual-qa-ugoira-player|visual-qa-ugoira-player)
     open_app --visual-qa-ugoira-player
     sleep 3
-    pgrep -x "$APP_NAME" >/dev/null
+    assert_app_running
     ;;
   --visual-qa-downloaded-reader|visual-qa-downloaded-reader)
     open_app --visual-qa-downloaded-reader
     sleep 2
-    pgrep -x "$APP_NAME" >/dev/null
+    assert_app_running
     ;;
   --visual-qa-gallery-auto|visual-qa-gallery-auto)
     open_app --visual-qa-gallery-auto
     sleep 1
-    pgrep -x "$APP_NAME" >/dev/null
+    assert_app_running
     ;;
   --visual-qa-gallery-two-column|visual-qa-gallery-two-column)
     open_app --visual-qa-gallery-two-column
     sleep 1
-    pgrep -x "$APP_NAME" >/dev/null
+    assert_app_running
     ;;
   --visual-qa-gallery-three-column|visual-qa-gallery-three-column)
     open_app --visual-qa-gallery-three-column
     sleep 1
-    pgrep -x "$APP_NAME" >/dev/null
+    assert_app_running
     ;;
   --visual-qa-gallery-compact|visual-qa-gallery-compact)
     open_app --visual-qa-gallery-compact
     sleep 1
-    pgrep -x "$APP_NAME" >/dev/null
+    assert_app_running
     ;;
   --package|package)
     plutil -lint "$INFO_PLIST"
@@ -246,7 +279,7 @@ case "$MODE" in
     echo "$APP_BUNDLE"
     ;;
   *)
-    echo "usage: $0 [run|--debug|--logs|--telemetry|--verify|--package|--visual-qa-discover-dashboard|--visual-qa-pixiv-link-drop|--visual-qa-pixiv-id-open|--visual-qa-creator-profile|--visual-qa-feedback-sheet|--visual-qa-artwork-detail-social|--visual-qa-manga-watchlist|--visual-qa-series-sheet|--visual-qa-cached-feed|--visual-qa-ranking|--visual-qa-muted-content|--visual-qa-settings-window|--visual-qa-runtime-readiness|--visual-qa-sharing-templates|--visual-qa-ugoira-player|--visual-qa-downloaded-reader|--visual-qa-gallery-auto|--visual-qa-gallery-two-column|--visual-qa-gallery-three-column|--visual-qa-gallery-compact]" >&2
+    echo "usage: $0 [run|--debug|--logs|--telemetry|--verify|--package|--visual-qa-discover-dashboard|--visual-qa-pixiv-link-drop|--visual-qa-pixiv-id-open|--visual-qa-creator-profile|--visual-qa-feedback-sheet|--visual-qa-artwork-detail-social|--visual-qa-manga-watchlist|--visual-qa-series-sheet|--visual-qa-cached-feed|--visual-qa-ranking|--visual-qa-muted-content|--visual-qa-about|--visual-qa-settings-window|--visual-qa-runtime-readiness|--visual-qa-sharing-templates|--visual-qa-ugoira-player|--visual-qa-downloaded-reader|--visual-qa-gallery-auto|--visual-qa-gallery-two-column|--visual-qa-gallery-three-column|--visual-qa-gallery-compact]" >&2
     exit 2
     ;;
 esac
