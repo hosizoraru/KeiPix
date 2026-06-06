@@ -87,6 +87,7 @@ struct FeedHeaderView: View {
     @ViewBuilder
     private var iPadCompactHeaderInlineActions: some View {
         HStack(spacing: 7) {
+            feedCountBadge
             activeFeedClearChip
 
             if store.artworks.isEmpty == false {
@@ -127,6 +128,7 @@ struct FeedHeaderView: View {
             }
 
             HStack(spacing: 7) {
+                feedCountBadge
                 activeFeedClearChip
 
                 if store.artworks.isEmpty == false, showsExpandedInlineFilter == false {
@@ -252,6 +254,7 @@ struct FeedHeaderView: View {
 
     @ViewBuilder
     private var headerActions: some View {
+        feedCountBadge
         activeFeedClearChip
 
         if store.artworks.isEmpty == false {
@@ -1071,6 +1074,51 @@ struct FeedHeaderView: View {
             }
             .transition(.opacity.combined(with: .scale(scale: 0.96)))
         }
+    }
+
+    @ViewBuilder
+    private var feedCountBadge: some View {
+        if shouldShowFeedCountBadge {
+            Text(compactFeedCountText)
+                .font(.caption.weight(.semibold).monospacedDigit())
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.78)
+                .padding(.horizontal, 10)
+                .frame(minWidth: 34)
+                .frame(height: 34)
+                .glassEffect(.regular, in: Capsule(style: .continuous))
+                .accessibilityLabel(compactFeedCountAccessibilityText)
+        }
+    }
+
+    private var shouldShowFeedCountBadge: Bool {
+        store.selectedRoute.usesArtworkFeed
+            && (store.artworks.isEmpty == false || store.clientFilterQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false)
+    }
+
+    private var compactFeedCountText: String {
+        let loadedCount = store.artworks.count
+        let visibleCount = compactVisibleFeedCount
+        guard visibleCount != loadedCount else {
+            return loadedCount.formatted()
+        }
+        return "\(visibleCount.formatted())/\(loadedCount.formatted())"
+    }
+
+    private var compactFeedCountAccessibilityText: String {
+        let loadedCount = store.artworks.count
+        let visibleCount = compactVisibleFeedCount
+        guard visibleCount != loadedCount else {
+            return "\(loadedCount.formatted()) \(L10n.results)"
+        }
+        return "\(visibleCount.formatted()) / \(loadedCount.formatted()) \(L10n.results)"
+    }
+
+    private var compactVisibleFeedCount: Int {
+        store.clientFilterQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            ? store.artworks.count
+            : store.clientFilteredArtworks.count
     }
 
     private var activeFeedClearContext: FeedClearChipContext? {

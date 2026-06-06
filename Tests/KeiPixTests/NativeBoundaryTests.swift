@@ -1258,6 +1258,46 @@ struct NativeBoundaryTests {
         #expect(localizable.contains("\"Pixiv ID #%d\""))
     }
 
+    @Test("Feed and library status chrome uses compact counts")
+    func feedAndLibraryStatusChromeUsesCompactCounts() throws {
+        let root = try packageRoot()
+        let galleryView = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/GalleryView.swift"),
+            encoding: .utf8
+        )
+        let feedHeader = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/GalleryFeedHeaderView.swift"),
+            encoding: .utf8
+        )
+        let bookmarkTags = try String(contentsOf: root.appending(path: "Sources/KeiPix/Views/BookmarkTagsView.swift"), encoding: .utf8)
+        let browsingHistory = try String(contentsOf: root.appending(path: "Sources/KeiPix/Views/BrowsingHistoryView.swift"), encoding: .utf8)
+        let mangaWatchlist = try String(contentsOf: root.appending(path: "Sources/KeiPix/Views/MangaWatchlistView.swift"), encoding: .utf8)
+        let novelWatchlist = try String(contentsOf: root.appending(path: "Sources/KeiPix/Views/NovelWatchlistView.swift"), encoding: .utf8)
+        let trendingTags = try String(contentsOf: root.appending(path: "Sources/KeiPix/Views/TrendingTagsView.swift"), encoding: .utf8)
+        let userPreviewList = try String(contentsOf: root.appending(path: "Sources/KeiPix/Views/UserPreviewListView.swift"), encoding: .utf8)
+        let workSubscriptions = try String(contentsOf: root.appending(path: "Sources/KeiPix/Views/WorkSubscriptionsView.swift"), encoding: .utf8)
+
+        #expect(galleryView.contains("private var feedContextSummary: String"))
+        #expect(galleryView.contains("private var feedDetailSummary: String") == false)
+        #expect(galleryView.contains("private var feedStatusText: String") == false)
+        #expect(galleryView.contains("L10n.nextPageAvailable") == false)
+        #expect(galleryView.contains("L10n.noMorePages") == false)
+        #expect(feedHeader.contains("private var feedCountBadge: some View"))
+        #expect(feedHeader.contains("private var compactFeedCountText: String"))
+        #expect(feedHeader.contains("private var compactFeedCountAccessibilityText: String"))
+        #expect(feedHeader.contains("store.clientFilteredArtworks.count"))
+        #expect(feedHeader.contains("L10n.nextPageAvailable") == false)
+        #expect(feedHeader.contains("L10n.noMorePages") == false)
+        #expect(bookmarkTags.contains("private var bookmarkTagSummary: String {\n        filteredTags.count.formatted()\n    }"))
+        #expect(browsingHistory.contains("case .pixiv:\n            store.artworks.count.formatted()"))
+        #expect(mangaWatchlist.contains("return visibleSeries.count.formatted()"))
+        #expect(mangaWatchlist.contains("return \"\\(filteredSeries.count.formatted())/\\(visibleSeries.count.formatted())\""))
+        #expect(novelWatchlist.contains("return novelStore.watchlistSeries.count.formatted()"))
+        #expect(trendingTags.contains("return tags.count.formatted()"))
+        #expect(userPreviewList.contains("let counts = \"\\(visiblePreviews.count.formatted())/\\(previews.count.formatted())\""))
+        #expect(workSubscriptions.contains("var parts = [count.formatted()]"))
+    }
+
     @Test("Refresh token export is explicit and confirmation gated")
     func refreshTokenExportIsExplicitAndConfirmationGated() throws {
         let root = try packageRoot()

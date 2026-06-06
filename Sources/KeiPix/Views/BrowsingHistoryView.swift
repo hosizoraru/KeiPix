@@ -312,7 +312,7 @@ struct BrowsingHistoryView: View {
         case .local:
             localHistoryCountText
         case .pixiv:
-            "\(store.artworks.count.formatted()) \(L10n.results)"
+            store.artworks.count.formatted()
         }
     }
 

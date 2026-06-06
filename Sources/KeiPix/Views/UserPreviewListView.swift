@@ -324,17 +324,14 @@ struct UserPreviewListView: View {
         "\(modeKey)-\(store.routeRefreshGeneration)"
     }
 
-    /// Subtitle shown beneath the navigation title — the visible /
-    /// total count plus pagination state, plus the search keyword
-    /// when relevant. Replaces the old toolbar `.status` chip which
-    /// HIG would expect to read more like an inline metadata strip.
+    /// Subtitle shown beside the navigation title. Keep it compact:
+    /// visible/total count plus the search keyword when relevant.
     private var navigationSubtitle: String {
-        let counts = "\(visiblePreviews.count.formatted()) / \(previews.count.formatted()) \(L10n.results)"
-        let pagination = nextURL == nil ? L10n.noMorePages : L10n.nextPageAvailable
+        let counts = "\(visiblePreviews.count.formatted())/\(previews.count.formatted())"
         if mode.requiresSearchKeyword, searchKeyword.isEmpty == false {
-            return "\(searchKeyword) · \(counts) · \(pagination)"
+            return "\(searchKeyword) · \(counts)"
         }
-        return "\(counts) · \(pagination)"
+        return counts
     }
 
     private var creatorNavigationStatus: String {

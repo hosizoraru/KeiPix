@@ -120,7 +120,7 @@ struct TrendingTagsView: View {
 
     private var trendingTagsStatusText: String {
         guard store.session != nil else { return "" }
-        return "\(tags.count.formatted()) \(L10n.results)"
+        return tags.count.formatted()
     }
 
     private func load() async {

@@ -139,7 +139,7 @@ struct WorkSubscriptionsView: View {
         guard store.session != nil else { return "" }
         let count = filteredSubscriptions.count
         let newCount = filteredSubscriptions.reduce(0) { $0 + $1.newArtworkCount }
-        var parts = ["\(count) \(L10n.results)"]
+        var parts = [count.formatted()]
         if newCount > 0 {
             parts.append("\(newCount) \(L10n.workSubscriptionsNewWorks)")
         }

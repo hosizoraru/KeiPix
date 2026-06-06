@@ -240,8 +240,7 @@ struct BookmarkTagsView: View {
     }
 
     private var bookmarkTagSummary: String {
-        let paging = nextURL == nil ? L10n.noMorePages : L10n.nextPageAvailable
-        return "\(filteredTags.count.formatted()) \(L10n.results) · \(paging)"
+        filteredTags.count.formatted()
     }
 
     private var filteredTags: [PixivBookmarkTag] {

@@ -55,14 +55,14 @@ struct GalleryView: View {
         #endif
     }
 
-    /// Subtitle string shown beneath the navigation title (replaces
-    /// the old `.status` toolbar chip). Empty string for surfaces that
-    /// don't render an artwork feed so the title stays uncluttered.
+    /// Context string shown near the route title. Counts live in the
+    /// feed action row so compact devices do not spend a full line on
+    /// verbose "results / more available" copy.
     private var gallerySubtitle: String {
         guard store.session != nil, store.selectedRoute.usesArtworkFeed else {
             return ""
         }
-        return feedDetailSummary
+        return feedContextSummary
     }
 
     private var navigationTitle: String {
@@ -88,24 +88,10 @@ struct GalleryView: View {
         #endif
     }
 
-    private var feedStatusText: String {
-        var parts = ["\(store.artworks.count.formatted()) \(L10n.results)"]
+    private var feedContextSummary: String {
+        var parts: [String] = []
         if store.activeFeedSnapshotRestoration != nil {
             parts.append(L10n.cachedFeed)
-        }
-        if store.selectedRoute == .search, store.searchOptions.isDefault == false {
-            parts.append(L10n.activeSearchFilters)
-        }
-        return parts.joined(separator: " · ")
-    }
-
-    private var feedDetailSummary: String {
-        var parts = [
-            feedStatusText,
-            store.activeFeedSnapshotRestoration == nil && store.hasNextPage ? L10n.nextPageAvailable : L10n.noMorePages
-        ]
-        if let feedNarrowingContext = store.feedNarrowingContext {
-            parts.insert(String(format: L10n.pixivIDResultFormat, feedNarrowingContext.artworkID), at: 0)
         }
         if let focusedUser = store.focusedUser {
             parts.append("\(focusedUser.name) @\(focusedUser.account)")
@@ -118,7 +104,9 @@ struct GalleryView: View {
             if keyword.isEmpty == false {
                 parts.append(keyword)
             }
-            parts.append(store.searchOptions.summary)
+            if store.searchOptions.isDefault == false {
+                parts.append(L10n.activeSearchFilters)
+            }
         }
         return parts.joined(separator: " · ")
     }

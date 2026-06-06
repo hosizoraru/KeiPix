@@ -69,9 +69,7 @@ struct NovelWatchlistView: View {
 
     private var novelWatchlistStatusText: String {
         guard store.session != nil else { return "" }
-        let count = novelStore.watchlistSeries.count.formatted()
-        let pagination = novelStore.watchlistNextURL == nil ? L10n.noMorePages : L10n.nextPageAvailable
-        return "\(count) \(L10n.results) · \(pagination)"
+        return novelStore.watchlistSeries.count.formatted()
     }
 
     private var novelWatchlistGridItems: [NovelWatchlistGridItem] {

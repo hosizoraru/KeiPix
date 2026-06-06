@@ -225,11 +225,10 @@ struct MangaWatchlistView: View {
     }
 
     private var watchlistStatusText: String {
-        let paging = showsLoadMoreEntry ? L10n.nextPageAvailable : L10n.noMorePages
         if normalizedWatchlistSearchText.isEmpty {
-            return "\(visibleSeries.count.formatted()) \(L10n.results) · \(paging)"
+            return visibleSeries.count.formatted()
         }
-        return "\(filteredSeries.count.formatted()) / \(visibleSeries.count.formatted()) \(L10n.results) · \(paging)"
+        return "\(filteredSeries.count.formatted())/\(visibleSeries.count.formatted())"
     }
 
     private var watchlistNavigationStatus: String {
