@@ -2369,6 +2369,26 @@ struct NativeBoundaryTests {
         #expect(nativeDrop.contains("UTType.utf8PlainText"))
     }
 
+    @Test("Creator list transient status is scoped and expires")
+    func creatorListTransientStatusIsScopedAndExpires() throws {
+        let root = try packageRoot()
+        let userPreviewList = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/UserPreviewListView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(userPreviewList.contains(".task(id: bulkStatusText)"))
+        #expect(userPreviewList.contains(".task(id: undoAction?.id)"))
+        #expect(userPreviewList.contains("await dismissUndoActionIfNeeded(undoAction?.id)"))
+        #expect(userPreviewList.contains(".onChange(of: modeKey)"))
+        #expect(userPreviewList.contains("clearTransientCreatorListChrome()"))
+        #expect(userPreviewList.contains(".padding(.bottom, statusBannerBottomPadding)"))
+        #expect(userPreviewList.contains("private var statusBannerBottomPadding: CGFloat"))
+        #expect(userPreviewList.contains("presentCreatorListError(error)"))
+        #expect(userPreviewList.contains("error is CancellationError"))
+        #expect(userPreviewList.contains("NSURLErrorCancelled"))
+    }
+
     @Test("Search clear actions reset route state and loading surfaces stay stable")
     func searchClearActionsResetRouteStateAndLoadingSurfacesStayStable() throws {
         let root = try packageRoot()

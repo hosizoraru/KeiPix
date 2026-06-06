@@ -1,3 +1,4 @@
+import Foundation
 import SwiftUI
 
 struct UserPreviewListView: View {
@@ -5,6 +6,7 @@ struct UserPreviewListView: View {
     let mode: UserPreviewListMode
     let showsCloseButton: Bool
     @Environment(\.undoManager) private var undoManager
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
     @State private var previews: [PixivUserPreview] = []
     @State private var nextURL: URL?
@@ -120,7 +122,7 @@ struct UserPreviewListView: View {
                     performUndo: { action in Task { await performUndo(action) } }
                 )
                 .padding(.horizontal, 18)
-                .padding(.bottom, 14)
+                .padding(.bottom, statusBannerBottomPadding)
                 .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
@@ -174,6 +176,12 @@ struct UserPreviewListView: View {
         }
         .task(id: bulkStatusText) {
             await dismissBulkStatusTextIfNeeded(bulkStatusText)
+        }
+        .task(id: undoAction?.id) {
+            await dismissUndoActionIfNeeded(undoAction?.id)
+        }
+        .onChange(of: modeKey) {
+            clearTransientCreatorListChrome()
         }
     }
 
@@ -250,6 +258,14 @@ struct UserPreviewListView: View {
             || isRunningBulkAction
             || isCheckingFollowVisibility
             || undoAction != nil
+    }
+
+    private var statusBannerBottomPadding: CGFloat {
+        #if os(iOS)
+        UIDevice.current.userInterfaceIdiom == .phone || horizontalSizeClass == .compact ? 92 : 14
+        #else
+        14
+        #endif
     }
 
     private var visibleFollowedPreviews: [PixivUserPreview] {
@@ -371,6 +387,15 @@ struct UserPreviewListView: View {
         feedbackRequest = .creator(user)
     }
 
+    private func clearTransientCreatorListChrome() {
+        bulkStatusText = nil
+        undoAction = nil
+        errorMessage = nil
+        pendingBulkAction = nil
+        pendingDangerAction = nil
+        isShowingBulkConfirmation = false
+    }
+
     private func resetCreatorListState() {
         withAnimation(.snappy(duration: 0.16)) {
             creatorSearchText = ""
@@ -454,7 +479,7 @@ struct UserPreviewListView: View {
                 updateFollowState(userID: target.user.id, isFollowed: true, restrict: restrict)
                 followedUsers.append(target.user)
             } catch {
-                errorMessage = error.localizedDescription
+                presentCreatorListError(error)
             }
         }
         return followedUsers
@@ -469,7 +494,7 @@ struct UserPreviewListView: View {
                 updateFollowState(userID: target.user.id, isFollowed: false, restrict: nil)
                 restores.append(CreatorFollowRestore(user: target.user, restrict: restrict))
             } catch {
-                errorMessage = error.localizedDescription
+                presentCreatorListError(error)
             }
         }
         return restores
@@ -500,8 +525,9 @@ struct UserPreviewListView: View {
                     updatedCount += 1
                 }
             } catch {
-                failedCount += 1
-                errorMessage = error.localizedDescription
+                if presentCreatorListError(error) {
+                    failedCount += 1
+                }
             }
         }
 
@@ -548,7 +574,7 @@ struct UserPreviewListView: View {
             followRestrictsByUserID = inferredFollowRestricts(for: loadedPreviews)
             nextURL = response.nextURL
         } catch {
-            errorMessage = error.localizedDescription
+            presentCreatorListError(error)
         }
     }
 
@@ -571,7 +597,7 @@ struct UserPreviewListView: View {
             followRestrictsByUserID.merge(inferredFollowRestricts(for: loadedPreviews)) { _, new in new }
             self.nextURL = response.nextURL
         } catch {
-            errorMessage = error.localizedDescription
+            presentCreatorListError(error)
         }
     }
 
@@ -587,7 +613,7 @@ struct UserPreviewListView: View {
             presentUndo(CreatorUndoAction(kind: .unfollowUsers([user])))
             bulkStatusText = String(format: L10n.followedCreatorFormat, user.name)
         } catch {
-            errorMessage = error.localizedDescription
+            presentCreatorListError(error)
         }
     }
 
@@ -609,7 +635,7 @@ struct UserPreviewListView: View {
                 bulkStatusText = String(format: L10n.unfollowedCreatorFormat, action.user.name)
                 await refreshCurrentAccountFollowingListIfNeeded()
             } catch {
-                errorMessage = error.localizedDescription
+                presentCreatorListError(error)
             }
         case .mute:
             store.muteUser(action.user)
@@ -639,7 +665,7 @@ struct UserPreviewListView: View {
                     updateFollowState(userID: restore.user.id, isFollowed: true, restrict: restore.restrict)
                     restoredCount += 1
                 } catch {
-                    errorMessage = error.localizedDescription
+                    presentCreatorListError(error)
                 }
             }
         case .unmuteUsers(let users):
@@ -655,7 +681,7 @@ struct UserPreviewListView: View {
                     updateFollowState(userID: user.id, isFollowed: false, restrict: nil)
                     restoredCount += 1
                 } catch {
-                    errorMessage = error.localizedDescription
+                    presentCreatorListError(error)
                 }
             }
         }
@@ -781,5 +807,36 @@ struct UserPreviewListView: View {
         if bulkStatusText == message {
             bulkStatusText = nil
         }
+    }
+
+    private func dismissUndoActionIfNeeded(_ actionID: UUID?) async {
+        guard let actionID else { return }
+        do {
+            try await Task.sleep(for: .seconds(4))
+        } catch {
+            return
+        }
+        if undoAction?.id == actionID {
+            undoAction = nil
+        }
+    }
+
+    @discardableResult
+    private func presentCreatorListError(_ error: Error) -> Bool {
+        guard isCreatorListCancellationError(error) == false else {
+            return false
+        }
+        errorMessage = error.localizedDescription
+        return true
+    }
+
+    private func isCreatorListCancellationError(_ error: Error) -> Bool {
+        if error is CancellationError {
+            return true
+        }
+
+        let nsError = error as NSError
+        return nsError.domain == NSURLErrorDomain
+            && nsError.code == NSURLErrorCancelled
     }
 }
