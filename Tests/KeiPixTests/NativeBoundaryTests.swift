@@ -144,6 +144,31 @@ struct NativeBoundaryTests {
         #expect(plist.contains("<string>UIInterfaceOrientationLandscapeRight</string>"))
     }
 
+    @Test("App targets use the Icon Composer app icon package")
+    func appTargetsUseIconComposerAppIconPackage() throws {
+        let root = try packageRoot()
+        let project = try String(
+            contentsOf: root.appending(path: "project.yml"),
+            encoding: .utf8
+        )
+        let iconPackage = root.appending(path: "Sources/KeiPix/Resources/keipixiv.icon", directoryHint: .isDirectory)
+        let iconJSONURL = iconPackage.appending(path: "icon.json")
+        let iconData = try Data(contentsOf: iconJSONURL)
+        let iconJSON = try #require(JSONSerialization.jsonObject(with: iconData) as? [String: Any])
+        let supportedPlatforms = try #require(iconJSON["supported-platforms"] as? [String: Any])
+        let circlePlatforms = try #require(supportedPlatforms["circles"] as? [String])
+
+        #expect(project.components(separatedBy: "ASSETCATALOG_COMPILER_APPICON_NAME: keipixiv").count == 4)
+        #expect(project.contains("ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon") == false)
+        #expect(FileManager.default.fileExists(atPath: iconPackage.path(percentEncoded: false)))
+        #expect(FileManager.default.fileExists(atPath: iconJSONURL.path(percentEncoded: false)))
+        #expect(FileManager.default.fileExists(atPath: iconPackage.appending(path: "Assets/1.png").path(percentEncoded: false)))
+        #expect(FileManager.default.fileExists(atPath: iconPackage.appending(path: "Assets/2.png").path(percentEncoded: false)))
+        #expect(FileManager.default.fileExists(atPath: iconPackage.appending(path: "Assets/new-logo-2025-0122-en.svg").path(percentEncoded: false)))
+        #expect(supportedPlatforms["squares"] as? String == "shared")
+        #expect(circlePlatforms.contains("watchOS"))
+    }
+
     @Test("Simulator run scripts cover iOS and iPadOS schemes")
     func simulatorRunScriptsCoverMobileSchemes() throws {
         let root = try packageRoot()
