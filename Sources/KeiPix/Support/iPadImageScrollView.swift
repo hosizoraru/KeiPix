@@ -115,6 +115,7 @@ struct ImageScrollView: UIViewRepresentable {
         private var fitZoomScale: CGFloat = 1
         private var lastViewportSize: CGSize = .zero
         private var lastReportedLogicalZoom: CGFloat?
+        private var isImageReloadInProgress = false
 
         private static let viewportSizeTolerance: CGFloat = 1
         private static let zoomReportTolerance: CGFloat = 0.005
@@ -134,6 +135,7 @@ struct ImageScrollView: UIViewRepresentable {
             let loadKey = Self.loadKey(imageURL: imageURL, localURL: localURL)
             guard force || loadKey != currentLoadKey else { return }
             currentLoadKey = loadKey
+            beginImageReload()
 
             if let localURL, let image = UIImage(contentsOf: localURL) {
                 applyImage(image)
@@ -142,6 +144,8 @@ struct ImageScrollView: UIViewRepresentable {
 
             guard let imageURL else {
                 imageView?.image = nil
+                scrollView?.contentSize = .zero
+                isImageReloadInProgress = false
                 return
             }
 
@@ -151,6 +155,8 @@ struct ImageScrollView: UIViewRepresentable {
                 guard Self.loadKey(imageURL: imageURL, localURL: localURL) == currentLoadKey else { return }
                 if let loadedImage {
                     applyImage(loadedImage)
+                } else {
+                    finishImageReloadWithoutImage()
                 }
             }
         }
@@ -168,6 +174,7 @@ struct ImageScrollView: UIViewRepresentable {
 
         func refitAfterViewportChangeIfNeeded() {
             guard let scrollView else { return }
+            guard isImageReloadInProgress == false else { return }
             let size = scrollView.bounds.size
             guard size.width > 0,
                   size.height > 0,
@@ -222,8 +229,9 @@ struct ImageScrollView: UIViewRepresentable {
         }
 
         func resetZoom(animated: Bool) {
-            scrollView?.setZoomScale(fitZoomScale, animated: animated)
-            reportZoom(zoomScale: fitZoomScale)
+            scrollView?.setZoomScale(fitZoomScale, animated: animated && isImageReloadInProgress == false)
+            scrollView?.setContentOffset(.zero, animated: false)
+            reportZoom(zoomScale: fitZoomScale, force: true)
         }
 
         func toggleSmartZoom(animated: Bool) {
@@ -255,10 +263,35 @@ struct ImageScrollView: UIViewRepresentable {
             imageView.image = image
             imageView.frame = CGRect(origin: .zero, size: size)
             scrollView.contentSize = size
+            lastViewportSize = scrollView.bounds.size
+            lastReportedLogicalZoom = nil
+            isImageReloadInProgress = false
+            updateFitZoomScale(preservingLogicalZoom: false)
+            scrollView.setContentOffset(.zero, animated: false)
+            onImageLoaded?(image)
+        }
+
+        private func beginImageReload() {
+            isImageReloadInProgress = true
+            lastReportedLogicalZoom = nil
+            guard let scrollView else {
+                onZoomChanged?(ArtworkReaderInteractionState.minimumScale)
+                return
+            }
+            scrollView.layer.removeAllAnimations()
+            imageView?.layer.removeAllAnimations()
+            if fitZoomScale > 0 {
+                scrollView.setZoomScale(fitZoomScale, animated: false)
+            }
+            scrollView.setContentOffset(.zero, animated: false)
+            onZoomChanged?(ArtworkReaderInteractionState.minimumScale)
+        }
+
+        private func finishImageReloadWithoutImage() {
+            isImageReloadInProgress = false
             lastViewportSize = .zero
             lastReportedLogicalZoom = nil
-            updateFitZoomScale(preservingLogicalZoom: false)
-            onImageLoaded?(image)
+            onZoomChanged?(ArtworkReaderInteractionState.minimumScale)
         }
 
         private func updateFitZoomScale(preservingLogicalZoom: Bool) {
@@ -283,7 +316,7 @@ struct ImageScrollView: UIViewRepresentable {
             let nextLogicalZoom = preservingLogicalZoom ? previousLogicalZoom : 1
             scrollView.setZoomScale(fitZoomScale * nextLogicalZoom, animated: false)
             centerImage()
-            reportZoom(zoomScale: scrollView.zoomScale)
+            reportZoom(zoomScale: scrollView.zoomScale, force: preservingLogicalZoom == false)
         }
 
         private func centerImage() {
@@ -296,10 +329,12 @@ struct ImageScrollView: UIViewRepresentable {
             )
         }
 
-        private func reportZoom(zoomScale: CGFloat) {
+        private func reportZoom(zoomScale: CGFloat, force: Bool = false) {
+            guard isImageReloadInProgress == false else { return }
             guard fitZoomScale > 0 else { return }
             let logicalZoom = max(1, zoomScale / fitZoomScale)
-            if let lastReportedLogicalZoom,
+            if force == false,
+               let lastReportedLogicalZoom,
                abs(logicalZoom - lastReportedLogicalZoom) <= Self.zoomReportTolerance {
                 return
             }

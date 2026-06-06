@@ -416,8 +416,11 @@ private struct ArtworkSinglePageReader: View {
                             } label: {
                                 Label(L10n.resetZoom, systemImage: "arrow.down.right.and.arrow.up.left")
                             }
+                            .labelStyle(.iconOnly)
                             .buttonStyle(.plain)
                             .controlSize(.small)
+                            .accessibilityLabel(L10n.resetZoom)
+                            .help(L10n.resetZoom)
                             .keiInteractiveGlass(12)
                         }
 
