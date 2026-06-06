@@ -488,7 +488,7 @@ struct ContentView: View {
                 }
                 .onChange(of: store.artworkNavigationIntentSerial) { _, _ in
                     guard let artwork = store.selectedArtwork else { return }
-                    if showsSidebarToggle {
+                    if showsSidebarToggle, store.selectedRoute.usesArtworkFeed {
                         if isArtworkDetailPanelUserEnabled {
                             presentArtworkDetail(for: artwork, hidesSidebar: true)
                         }
@@ -513,12 +513,22 @@ struct ContentView: View {
                     presentArtworkDetail(for: artwork, usesCompactSheet: true)
                 }
                 .onChange(of: store.selectedRoute) { _, route in
-                    if route.usesArtworkFeed == false {
+                    if showsSidebarToggle == false {
+                        dismissCompactArtworkDetail(clearSelection: route.usesArtworkFeed == false)
+                    } else if route.usesArtworkFeed == false {
                         dismissArtworkDetail(clearSelection: true)
                     }
                     if route != .spotlight {
                         dismissSpotlightDetail(clearSelection: true)
                     }
+                }
+                .onChange(of: store.focusedUser?.id) { _, _ in
+                    guard showsSidebarToggle == false else { return }
+                    dismissCompactArtworkDetail(clearSelection: false)
+                }
+                .onChange(of: store.creatorArtworkTagFilter) { _, _ in
+                    guard showsSidebarToggle == false else { return }
+                    dismissCompactArtworkDetail(clearSelection: false)
                 }
                 .sheet(isPresented: readerBinding) {
                     if let artwork = store.readerWindowArtwork {
@@ -814,6 +824,9 @@ struct ContentView: View {
 
     private var showsArtworkNavigationControls: Bool {
         store.selectedRoute.usesArtworkFeed
+            || store.selectedRoute.usesNovelFeed
+            || store.canNavigateBack
+            || store.canNavigateForward
     }
 
     private var showsArtworkActionsMenu: Bool {
@@ -1246,7 +1259,7 @@ struct ContentView: View {
         hidesSidebar: Bool = false,
         usesCompactSheet: Bool
     ) {
-        guard store.selectedRoute.usesArtworkFeed else { return }
+        guard usesCompactSheet || store.selectedRoute.usesArtworkFeed else { return }
         if store.selectedArtwork?.id != artwork.id {
             store.selectedArtwork = artwork
         }

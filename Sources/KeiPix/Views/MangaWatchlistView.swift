@@ -12,11 +12,12 @@ struct MangaWatchlistView: View {
     @State private var actionMessage: String?
     @State private var pendingRemoval: PixivMangaSeriesPreview?
     @State private var watchlistSearchText = ""
+    @State private var openingSeriesIDs = Set<Int>()
 
     private let gridLayout = NativeAdaptiveGridCollectionLayout(
         minimumItemWidth: 220,
         maximumItemWidth: 320,
-        itemHeight: 330
+        itemHeight: 292
     )
 
     var body: some View {
@@ -129,28 +130,18 @@ struct MangaWatchlistView: View {
                     maxWidth: 320
                 )
 
-                OS26LibraryActionRail {
-                    Button {
-                        watchlistSearchText = ""
-                    } label: {
-                        Label(L10n.clearSearch, systemImage: "xmark.circle")
-                    }
-                    .os26GlassIconButton()
-                    .disabled(normalizedWatchlistSearchText.isEmpty)
-                    .help(L10n.clearSearch)
-
-                    Menu {
+                if normalizedWatchlistSearchText.isEmpty == false {
+                    OS26LibraryActionRail {
                         Button {
-                            Task { await loadInitial(showFeedback: true) }
+                            withAnimation(.snappy(duration: 0.16)) {
+                                watchlistSearchText = ""
+                            }
                         } label: {
-                            Label(L10n.refresh, systemImage: "arrow.clockwise")
+                            Label(L10n.clearSearch, systemImage: "xmark.circle")
                         }
-                        .disabled(isLoading)
-                    } label: {
-                        Label(L10n.moreActions, systemImage: "ellipsis.circle")
+                        .os26GlassIconButton()
+                        .help(L10n.clearSearch)
                     }
-                    .os26GlassIconButton()
-                    .help(L10n.moreActions)
                 }
             }
         }
@@ -203,13 +194,10 @@ struct MangaWatchlistView: View {
                 MangaWatchlistCard(
                     series: item,
                     updateStatus: store.mangaWatchlistUpdateStatus(for: item),
+                    isOpening: openingSeriesIDs.contains(item.id),
                     isRemoving: removingSeriesIDs.contains(item.id),
                     openLatest: {
-                        Task {
-                            if await store.openLatestArtwork(in: item) {
-                                store.markMangaWatchlistSeriesRead(item)
-                            }
-                        }
+                        Task { await openLatest(item) }
                     },
                     markRead: {
                         store.markMangaWatchlistSeriesRead(item)
@@ -361,6 +349,20 @@ struct MangaWatchlistView: View {
         }
     }
 
+    private func openLatest(_ item: PixivMangaSeriesPreview) async {
+        guard openingSeriesIDs.insert(item.id).inserted else { return }
+        errorMessage = nil
+        defer { openingSeriesIDs.remove(item.id) }
+
+        if await store.openLatestArtwork(in: item) {
+            store.markMangaWatchlistSeriesRead(item)
+        } else if let message = store.errorMessage, message.isEmpty == false {
+            errorMessage = message
+        } else {
+            errorMessage = L10n.errorInvalidPixivResponse
+        }
+    }
+
     private var removalBinding: Binding<Bool> {
         Binding {
             pendingRemoval != nil
@@ -388,20 +390,22 @@ private enum MangaWatchlistGridItem: Hashable, Sendable {
 private struct MangaWatchlistCard: View {
     let series: PixivMangaSeriesPreview
     let updateStatus: MangaWatchlistUpdateStatus
+    let isOpening: Bool
     let isRemoving: Bool
     let openLatest: () -> Void
     let markRead: () -> Void
     let remove: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            cover
+        VStack(alignment: .leading, spacing: 10) {
+            mangaWatchlistCoverAction
 
             VStack(alignment: .leading, spacing: 5) {
                 HStack(alignment: .firstTextBaseline, spacing: 8) {
                     Text(series.title)
                         .font(.headline)
                         .lineLimit(2)
+                        .layoutPriority(1)
 
                     if updateStatus.hasUpdate {
                         Text(updateBadgeText)
@@ -419,59 +423,11 @@ private struct MangaWatchlistCard: View {
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
                 }
-
-                HStack(spacing: 8) {
-                    Label(series.publishedContentCount.formatted(), systemImage: "rectangle.stack")
-                    if let date = series.lastPublishedContentDate {
-                        Text(date.formatted(date: .abbreviated, time: .omitted))
-                    }
-                }
-                .font(.caption)
-                .foregroundStyle(.secondary)
             }
 
-            HStack(spacing: 8) {
-                Button {
-                    openLatest()
-                } label: {
-                    Label(L10n.openLatestArtwork, systemImage: "arrow.right.circle")
-                }
-                .os26GlassButton(prominent: updateStatus.hasUpdate)
-
-                Spacer()
-
-                Menu {
-                    if let url = series.pixivURL {
-                        Link(L10n.openSeriesInPixiv, destination: url)
-                    }
-
-                    if updateStatus.hasUpdate {
-                        Button {
-                            markRead()
-                        } label: {
-                            Label(L10n.markWatchlistRead, systemImage: "checkmark.circle")
-                        }
-                    }
-
-                    Divider()
-
-                    Button(role: .destructive) {
-                        remove()
-                    } label: {
-                        Label(L10n.removeFromWatchlist, systemImage: "minus.circle")
-                    }
-                } label: {
-                    Label(
-                        L10n.moreActions,
-                        systemImage: isRemoving ? "arrow.triangle.2.circlepath" : "ellipsis.circle"
-                    )
-                }
-                .os26GlassIconButton()
-                .disabled(isRemoving)
-                .help(L10n.moreActions)
-            }
+            mangaWatchlistAuxiliaryActions
         }
-        .padding(12)
+        .padding(10)
         .keiInteractiveGlass(16)
         .contextMenu {
             Button(L10n.openLatestArtwork) {
@@ -491,6 +447,100 @@ private struct MangaWatchlistCard: View {
             } label: {
                 Text(L10n.removeFromWatchlist)
             }
+        }
+    }
+
+    private var mangaWatchlistCoverAction: some View {
+        Button {
+            openLatest()
+        } label: {
+            cover
+                .overlay(alignment: .bottomTrailing) {
+                    openLatestOverlayGlyph
+                }
+        }
+        .buttonStyle(.plain)
+        .disabled(isOpening || series.latestContentID <= 0)
+        .contentShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .help(L10n.openLatestArtwork)
+        .accessibilityLabel(L10n.openLatestArtwork)
+    }
+
+    private var mangaWatchlistAuxiliaryActions: some View {
+        HStack(spacing: 8) {
+            HStack(spacing: 8) {
+                Label(series.publishedContentCount.formatted(), systemImage: "rectangle.stack")
+                if let date = series.lastPublishedContentDate {
+                    Text(date.formatted(date: .abbreviated, time: .omitted))
+                }
+            }
+            .font(.caption)
+            .foregroundStyle(.secondary)
+            .lineLimit(1)
+            .layoutPriority(1)
+
+            Spacer(minLength: 4)
+
+            if updateStatus.hasUpdate {
+                Button {
+                    markRead()
+                } label: {
+                    Label(L10n.markWatchlistRead, systemImage: "checkmark.circle")
+                }
+                .os26GlassIconButton()
+                .help(L10n.markWatchlistRead)
+                .accessibilityLabel(L10n.markWatchlistRead)
+            }
+
+            mangaWatchlistSeriesLink
+
+            Menu {
+                Button(role: .destructive) {
+                    remove()
+                } label: {
+                    Label(L10n.removeFromWatchlist, systemImage: "minus.circle")
+                }
+            } label: {
+                Label(
+                    L10n.moreActions,
+                    systemImage: isRemoving ? "arrow.triangle.2.circlepath" : "ellipsis.circle"
+                )
+            }
+            .os26GlassIconButton()
+            .disabled(isRemoving)
+            .help(L10n.moreActions)
+            .accessibilityLabel(L10n.moreActions)
+        }
+        .controlSize(.small)
+    }
+
+    private var openLatestOverlayGlyph: some View {
+        ZStack {
+            if isOpening {
+                ProgressView()
+                    .controlSize(.small)
+            } else {
+                Label(L10n.openLatestArtwork, systemImage: "arrow.right.circle")
+                    .font(.title3.weight(.semibold))
+                    .symbolRenderingMode(.hierarchical)
+                    .labelStyle(.iconOnly)
+            }
+        }
+        .frame(width: 34, height: 34)
+        .foregroundStyle(.primary)
+        .glassEffect(.regular.interactive(), in: Circle())
+        .padding(8)
+    }
+
+    @ViewBuilder
+    private var mangaWatchlistSeriesLink: some View {
+        if let url = series.pixivURL {
+            Link(destination: url) {
+                Label(L10n.openSeriesInPixiv, systemImage: "safari")
+            }
+            .os26GlassIconButton()
+            .help(L10n.openSeriesInPixiv)
+            .accessibilityLabel(L10n.openSeriesInPixiv)
         }
     }
 

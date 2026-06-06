@@ -281,7 +281,7 @@ struct NativeBoundaryTests {
         #expect(contentView.contains("private func presentArtworkDetail(for artwork: PixivArtwork, hidesSidebar: Bool)"))
         #expect(contentView.contains("private func toggleSpotlightDetailPanel(hidesSidebar: Bool)"))
         #expect(contentView.contains("private func presentSpotlightArticle(_ article: PixivSpotlightArticle, usesPanel: Bool)"))
-        #expect(contentView.contains("guard store.selectedRoute.usesArtworkFeed else { return }"))
+        #expect(contentView.contains("guard usesCompactSheet || store.selectedRoute.usesArtworkFeed else { return }"))
         #expect(contentView.contains("splitColumnVisibility = .detailOnly"))
         #expect(contentView.contains("dismissArtworkDetail(clearSelection: true)"))
         #expect(contentView.contains("dismissSpotlightDetail(clearSelection: true)"))
@@ -999,20 +999,25 @@ struct NativeBoundaryTests {
         #expect(userProfileHeader.contains("detail?.profile.webpage"))
         #expect(userProfileSheet.contains("private var sheetContent: some View"))
         #expect(userProfileSheet.contains(".frame(width: 820)"))
-        #expect(userProfileSheet.contains(".frame(maxWidth: 780)"))
+        #expect(userProfileSheet.contains(".frame(maxWidth: profileSheetMaximumWidth)"))
+        #expect(userProfileSheet.contains("UserProfileLoadingSkeletonLayout"))
         #expect(userProfileSheet.contains("UserProfileOverviewSection("))
+        #expect(userProfileSheet.contains("openNovels: { openFeed(.userNovels) }"))
         #expect(userProfileSheet.contains("UserProfileStatsSection(") == false)
         #expect(userProfileSheet.contains("UserProfileNetworkLinks(") == false)
         #expect(userProfileSheet.contains(".scrollEdgeEffectStyle(.soft, for: .top)"))
         #expect(userProfileInfoSections.contains("struct UserProfileOverviewSection"))
         #expect(userProfileInfoSections.contains("relatedUsersCount: Int"))
-        #expect(userProfileInfoSections.contains("wideOverviewRow"))
-        #expect(userProfileInfoSections.contains("compactOverviewStack"))
-        #expect(userProfileInfoSections.contains("networkRail"))
-        #expect(userProfileInfoSections.contains("compactStatsGrid"))
-        #expect(userProfileInfoSections.contains("followersChip"))
-        #expect(userProfileInfoSections.contains("relatedCreatorsChip"))
-        #expect(userProfileInfoSections.contains(".glassEffect(.regular.interactive(), in: Capsule(style: .continuous))"))
+        #expect(userProfileInfoSections.contains("let openNovels: () -> Void"))
+        #expect(userProfileInfoSections.contains("title: L10n.novels"))
+        #expect(userProfileInfoSections.contains("action: openNovels"))
+        #expect(userProfileInfoSections.contains("overviewGrid"))
+        #expect(userProfileInfoSections.contains("overviewEntries"))
+        #expect(userProfileInfoSections.contains("overviewColumns"))
+        #expect(userProfileInfoSections.contains("GridItem(.flexible(minimum: 0, maximum: .infinity)"))
+        #expect(userProfileInfoSections.contains("L10n.followers"))
+        #expect(userProfileInfoSections.contains("L10n.relatedCreators"))
+        #expect(userProfileInfoSections.contains(".glassEffect(.regular.interactive(), in: RoundedRectangle(cornerRadius: 12"))
         #expect(userProfileInfoSections.contains("struct UserProfileStatsSection") == false)
         #expect(userProfileInfoSections.contains("struct UserProfileNetworkLinks") == false)
         #expect(userProfileInfoSections.contains("private struct UserProfileStatEntry"))
@@ -1021,9 +1026,13 @@ struct NativeBoundaryTests {
         #expect(userProfileCreatorTags.contains("private let collapsedCap = 18"))
         #expect(userProfileCreatorTags.contains("private var headerAndSearch: some View"))
         #expect(userProfileCreatorTags.contains("private var tagCloud: some View"))
+        #expect(userProfileCreatorTags.contains("Image(systemName: \"magnifyingglass\")") == false)
+        #expect(userProfileCreatorTags.contains("CreatorArtworkTagTwoColumnLayout(spacing: 8)"))
+        #expect(userProfileCreatorTags.contains("CreatorArtworkTagFullWidthKey"))
         #expect(userProfileCreatorTags.contains("FlowLayout(spacing: 8)"))
         #expect(userProfileCreatorTags.contains("CreatorArtworkTagChip"))
-        #expect(userProfileCreatorTags.contains(".frame(minWidth: 150, maxWidth: 218"))
+        #expect(userProfileCreatorTags.contains("fillsAvailableWidth: true"))
+        #expect(userProfileCreatorTags.contains("prefersFullWidthChip"))
         #expect(userProfileCreatorTags.contains(".glassEffect(.regular.interactive(), in: RoundedRectangle(cornerRadius: 18"))
         #expect(userProfileCreatorTags.contains("Divider()") == false)
 
@@ -1435,6 +1444,14 @@ struct NativeBoundaryTests {
             contentsOf: root.appending(path: "Sources/KeiPix/Stores/KeiPixStore+NavigationHistory.swift"),
             encoding: .utf8
         )
+        let pixivAPI = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Services/PixivAPI.swift"),
+            encoding: .utf8
+        )
+        let creatorTagModels = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Models/CreatorTagModels.swift"),
+            encoding: .utf8
+        )
         let nativeCollection = try String(
             contentsOf: root.appending(path: "Sources/KeiPix/Support/NativeGalleryCollectionView.swift"),
             encoding: .utf8
@@ -1449,6 +1466,18 @@ struct NativeBoundaryTests {
         )
         let feedHeader = try String(
             contentsOf: root.appending(path: "Sources/KeiPix/Views/GalleryFeedHeaderView.swift"),
+            encoding: .utf8
+        )
+        let iPadContentView = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/ContentView_iPadOS.swift"),
+            encoding: .utf8
+        )
+        let novelGalleryView = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/NovelGalleryView.swift"),
+            encoding: .utf8
+        )
+        let creatorFeedContextCard = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/CreatorFeedContextCard.swift"),
             encoding: .utf8
         )
 
@@ -1467,6 +1496,7 @@ struct NativeBoundaryTests {
         #expect(galleryView.contains("onPrefetchItems: prefetchNativeGalleryItems"))
         #expect(galleryView.contains("@State private var nativePrefetchScheduler = GalleryImagePrefetchScheduler()"))
         #expect(galleryView.contains("GalleryImagePrefetchPolicy.previewURLs("))
+        #expect(galleryView.contains("store.hydrateCreatorTagSummariesIfNeeded(for: artworks, limit: 8)"))
         #expect(galleryView.contains("await nativePrefetchScheduler.enqueue(urls)"))
         let prefetchScheduler = try String(
             contentsOf: root.appending(path: "Sources/KeiPix/Support/GalleryImagePrefetchScheduler.swift"),
@@ -1479,8 +1509,42 @@ struct NativeBoundaryTests {
         #expect(prefetchScheduler.contains("concurrency: GalleryImagePrefetchPolicy.concurrency"))
         #expect(galleryView.contains("GalleryAutoLoadMorePolicy.shouldTrigger("))
         #expect(galleryView.contains("iPadNativeFeedHeader"))
+        #expect(galleryView.contains("CreatorFeedContextCard("))
+        #expect(galleryView.contains("store.presentedUserProfile = focusedUser"))
+        #expect(galleryView.contains("await store.clearCreatorFeedContext()"))
+        #expect(novelGalleryView.contains("creatorFeedContextCard"))
+        #expect(novelGalleryView.contains("CreatorFeedContextCard("))
+        #expect(novelGalleryView.contains("store.presentedUserProfile = focusedUser"))
+        #expect(novelGalleryView.contains("await store.clearCreatorFeedContext()"))
+        #expect(creatorFeedContextCard.contains("struct CreatorFeedContextCard: View"))
+        #expect(creatorFeedContextCard.contains("let contentSystemImage: String"))
+        #expect(galleryView.contains("showsFeedCountBadge: false"))
+        #expect(galleryView.contains("showsActiveFeedClearChip: false"))
         #expect(galleryView.contains("navigationBarTitleDisplayMode(.inline)"))
         #expect(galleryView.contains("presentation: .iPadCompact"))
+        #expect(feedHeader.contains("let showsFeedCountBadge: Bool"))
+        #expect(feedHeader.contains("let showsActiveFeedClearChip: Bool"))
+        #expect(feedHeader.contains("if showsFeedCountBadge"))
+        #expect(feedHeader.contains("if showsActiveFeedClearChip"))
+        #expect(iPadContentView.contains("dismissCompactArtworkDetail(clearSelection: route.usesArtworkFeed == false)"))
+        #expect(iPadContentView.contains(".onChange(of: store.focusedUser?.id)"))
+        #expect(iPadContentView.contains(".onChange(of: store.creatorArtworkTagFilter)"))
+        #expect(store.contains("@ObservationIgnored private var hydratingCreatorTagArtworkIDs"))
+        #expect(store.contains("@ObservationIgnored private var hydratedCreatorTagArtworkIDs"))
+        #expect(store.contains("@ObservationIgnored private var failedCreatorTagArtworkIDs"))
+        #expect(store.contains("func hydrateCreatorTagSummariesIfNeeded("))
+        #expect(store.contains(".filter(\\.isPixivWebProfileSummary)"))
+        #expect(store.contains("let detailedArtwork = try await api.illustDetail(illustID: artworkID)"))
+        #expect(store.contains("replaceLoadedArtwork(detailedArtwork)"))
+        #expect(store.contains("resetCreatorTagHydrationState()"))
+        #expect(navigationHistory.contains("hydrateCreatorTagSummariesIfNeeded("))
+        #expect(navigationHistory.contains("enum NavigationHistoryTarget"))
+        #expect(navigationHistory.contains("case route(PixivRoute)"))
+        #expect(navigationHistory.contains("case creatorFeed(CreatorFeedNavigationTarget)"))
+        #expect(pixivAPI.contains("creatorTaggedIllustsFromWebProfile("))
+        #expect(pixivAPI.contains("creatorTaggedIllustsFromAppAPI("))
+        #expect(pixivAPI.contains("response = try await requestFeed(url: nextURL)"))
+        #expect(creatorTagModels.contains("func containsTag(_ tag: String)"))
         #expect(galleryView.contains("nativeHighlightedArtworkIDs"))
         #expect(galleryView.contains("nativeGalleryContentReloadToken(for: galleryItems)"))
         #expect(galleryView.contains("hashNativeGalleryArtworkContent(artwork, into: &hasher)"))
@@ -1908,6 +1972,31 @@ struct NativeBoundaryTests {
         #expect(nativeGrid.contains("refreshVisibleHostedContent(in: collectionView)"))
     }
 
+    @Test("Manga watchlist keeps content primary and actions compact")
+    func mangaWatchlistKeepsContentPrimaryAndActionsCompact() throws {
+        let root = try packageRoot()
+        let watchlist = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/MangaWatchlistView.swift"),
+            encoding: .utf8
+        )
+        let socialStore = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Stores/KeiPixStore+Social.swift"),
+            encoding: .utf8
+        )
+
+        #expect(watchlist.contains("mangaWatchlistCoverAction"))
+        #expect(watchlist.contains("mangaWatchlistAuxiliaryActions"))
+        #expect(watchlist.contains("mangaWatchlistPrimaryActions") == false)
+        #expect(watchlist.contains("mangaWatchlistSeriesLink"))
+        #expect(watchlist.contains("Link(destination: url)"))
+        #expect(watchlist.contains("Label(L10n.openLatestArtwork, systemImage: \"arrow.right.circle\")"))
+        #expect(watchlist.contains("Label(L10n.openSeriesInPixiv, systemImage: \"safari\")"))
+        #expect(watchlist.contains(".os26GlassButton(prominent: updateStatus.hasUpdate)") == false)
+        #expect(watchlist.contains("Label(L10n.refresh, systemImage: \"arrow.clockwise\")") == false)
+        #expect(socialStore.contains("let artwork = try await api.illustDetail(illustID: series.latestContentID)"))
+        #expect(socialStore.contains("navigateToArtwork(artwork)"))
+    }
+
     @Test("Novel watchlist uses a native adaptive grid")
     func novelWatchlistUsesNativeAdaptiveGrid() throws {
         let root = try packageRoot()
@@ -2261,16 +2350,22 @@ struct NativeBoundaryTests {
         #expect(macContentView.contains("private var globalSearchTextBinding"))
         #expect(macContentView.contains("private var hasActiveGlobalSearchText"))
         #expect(macContentView.contains("store.clearSearchText()"))
+        #expect(macContentView.contains("|| store.selectedRoute.usesNovelFeed"))
+        #expect(macContentView.contains("|| store.canNavigateBack"))
         #expect(iPadContentView.contains("MobileGlobalSearchModifier("))
         #expect(iPadContentView.contains("searchText: globalSearchTextBinding"))
         #expect(iPadContentView.contains(".searchable(text: searchText"))
         #expect(iPadContentView.contains("private var globalSearchTextBinding"))
         #expect(iPadContentView.contains("private var hasActiveGlobalSearchText"))
         #expect(iPadContentView.contains("store.clearSearchText()"))
+        #expect(iPadContentView.contains("|| store.selectedRoute.usesNovelFeed"))
+        #expect(iPadContentView.contains("|| store.canNavigateBack"))
 
         #expect(feedHeader.contains("private var hasActiveArtworkSearch"))
         #expect(feedHeader.contains("private func clearArtworkSearch()"))
-        #expect(feedHeader.contains("Label(L10n.clearSearch, systemImage: \"xmark.circle.fill\")"))
+        #expect(feedHeader.contains("case .artworkSearch"))
+        #expect(feedHeader.contains("case .creatorContext"))
+        #expect(feedHeader.contains("action: .artworkSearch"))
 
         #expect(creatorList.contains("isLoadingInitial: isLoading && previews.isEmpty"))
         #expect(creatorList.contains("mode.requiresSearchKeyword == false || searchKeyword.isEmpty == false"))
@@ -2286,6 +2381,9 @@ struct NativeBoundaryTests {
         #expect(creatorComponents.contains("hasher.combine(creatorPreviewArtworkCacheGeneration)"))
 
         #expect(profileSheet.contains("UserProfileLoadingSkeleton"))
+        #expect(profileSheet.contains("UserProfileLoadingSkeletonLayout"))
+        #expect(profileSheet.contains("GeometryReader { proxy in"))
+        #expect(profileSheet.contains("layout.artworkColumns"))
         #expect(profileSheet.contains("UserPreviewListView(store: store, mode: mode, showsCloseButton: true)"))
         #expect(profileSheet.contains(".id(contentState.animationID)"))
         #expect(profileSheet.contains(".animation(.snappy(duration: 0.22), value: contentState)"))
@@ -2411,7 +2509,9 @@ struct NativeBoundaryTests {
         #expect(recentWorks.contains(".frame(height: artworkShelfHeight)"))
         #expect(recentWorks.contains("artworkShelfItems"))
         #expect(recentWorks.contains("contentReloadToken: artworkShelfContentReloadToken"))
-        #expect(recentWorks.contains("SkeletonPlaceholder(width: cardWidth, height: 178"))
+        #expect(recentWorks.contains("ViewThatFits(in: .horizontal)"))
+        #expect(recentWorks.contains("placeholderCard(index: index, width: cardWidth, imageHeight: 178)"))
+        #expect(recentWorks.contains("private var placeholderShelfHeight: CGFloat"))
         #expect(recentWorks.contains("ScrollView(.horizontal)") == false)
         #expect(recentWorks.contains("LazyHStack") == false)
 
@@ -2421,6 +2521,8 @@ struct NativeBoundaryTests {
         #expect(relatedCreators.contains("relatedCreatorShelfLayout.viewportHeight ?? cardHeight"))
         #expect(relatedCreators.contains(".frame(height: relatedCreatorShelfHeight)"))
         #expect(relatedCreators.contains("relatedCreatorShelfItems"))
+        #expect(relatedCreators.contains("relatedCreatorPlaceholderCard(width: 156, height: 174)"))
+        #expect(relatedCreators.contains("private var relatedCreatorPlaceholderHeight: CGFloat"))
         #expect(relatedCreators.contains("ScrollView(.horizontal)") == false)
         #expect(relatedCreators.contains("LazyHStack") == false)
 

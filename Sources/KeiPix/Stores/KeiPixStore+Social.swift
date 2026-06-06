@@ -219,11 +219,16 @@ extension KeiPixStore {
 
     @discardableResult
     func openLatestArtwork(in series: PixivMangaSeriesPreview) async -> Bool {
+        guard series.latestContentID > 0 else {
+            errorMessage = L10n.errorInvalidPixivResponse
+            return false
+        }
+
         do {
-            let response = try await api.illustSeries(seriesID: series.id)
-            let filtered = filteredArtworkSeriesResponse(response)
-            selectedArtwork = filtered.illusts.first(where: { $0.id == series.latestContentID }) ?? filtered.illusts.first
-            return selectedArtwork != nil
+            let artwork = try await api.illustDetail(illustID: series.latestContentID)
+            navigateToArtwork(artwork)
+            await recordBrowsingHistory(for: artwork)
+            return true
         } catch {
             errorMessage = error.localizedDescription
             return false
