@@ -405,6 +405,7 @@ private struct ArtworkSinglePageReader: View {
                         .disabled(pageIndex >= pageCount - 1)
                     }
                     .padding(.horizontal, 12)
+                    .zIndex(3)
                 }
 
                 VStack {
@@ -680,11 +681,13 @@ private struct PageNavigationButton: View {
         Button(action: action) {
             Image(systemName: systemImage)
                 .font(.title3.weight(.semibold))
-                .frame(width: 34, height: 46)
+                .frame(width: 44, height: 56)
         }
         .buttonStyle(.plain)
+        .contentShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         .accessibilityLabel(title)
         .keiInteractiveGlass(18)
+        .zIndex(4)
     }
 }
 

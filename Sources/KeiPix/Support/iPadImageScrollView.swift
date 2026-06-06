@@ -66,6 +66,8 @@ struct ImageScrollView: UIViewRepresentable {
             action: #selector(Coordinator.handleDoubleTap(_:))
         )
         doubleTap.numberOfTapsRequired = 2
+        doubleTap.cancelsTouchesInView = false
+        doubleTap.delegate = context.coordinator
         scrollView.addGestureRecognizer(doubleTap)
 
         scrollView.onLayout = {
@@ -99,7 +101,7 @@ struct ImageScrollView: UIViewRepresentable {
         )
     }
 
-    final class Coordinator: NSObject, UIScrollViewDelegate {
+    final class Coordinator: NSObject, UIScrollViewDelegate, UIGestureRecognizerDelegate {
         weak var scrollView: NativeImageUIScrollView?
         weak var imageView: UIImageView?
 
@@ -195,6 +197,19 @@ struct ImageScrollView: UIViewRepresentable {
 
         @objc func handleDoubleTap(_ gesture: UITapGestureRecognizer) {
             toggleSmartZoom(animated: true)
+        }
+
+        func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
+            guard gestureRecognizer is UITapGestureRecognizer else { return true }
+            return Self.isControlTouch(touch.view) == false
+        }
+
+        func gestureRecognizer(
+            _ gestureRecognizer: UIGestureRecognizer,
+            shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer
+        ) -> Bool {
+            guard gestureRecognizer is UITapGestureRecognizer else { return false }
+            return otherGestureRecognizer.view is UIScrollView
         }
 
         func viewForZooming(in scrollView: UIScrollView) -> UIView? {
@@ -299,6 +314,17 @@ struct ImageScrollView: UIViewRepresentable {
         private static func isMeaningfullyDifferent(_ lhs: CGSize, from rhs: CGSize) -> Bool {
             abs(lhs.width - rhs.width) > viewportSizeTolerance
                 || abs(lhs.height - rhs.height) > viewportSizeTolerance
+        }
+
+        private static func isControlTouch(_ view: UIView?) -> Bool {
+            var current = view
+            while let view = current {
+                if view is UIControl {
+                    return true
+                }
+                current = view.superview
+            }
+            return false
         }
     }
 }
