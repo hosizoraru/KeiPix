@@ -77,6 +77,14 @@ struct AboutViewTests {
             contentsOf: root.appending(path: "script/build_and_run.sh"),
             encoding: .utf8
         )
+        let macOSReleaseBuilder = try String(
+            contentsOf: root.appending(path: "script/build_release_app.sh"),
+            encoding: .utf8
+        )
+        let macOSIconBuilder = try String(
+            contentsOf: root.appending(path: "script/macos_app_icon.sh"),
+            encoding: .utf8
+        )
         let appIconView = try String(
             contentsOf: root.appending(path: "Sources/KeiPix/Support/KeiPixAppIconView.swift"),
             encoding: .utf8
@@ -90,6 +98,14 @@ struct AboutViewTests {
         #expect(aboutView.contains("AboutView(presentation: .settings)"))
         #expect(aboutView.contains(".buttonStyle(.glassProminent)"))
         #expect(aboutView.contains("L10n.aboutApacheLicenseTitle"))
+        #expect(aboutView.contains("private var metadataRail: some View"))
+        #expect(aboutView.contains("private var versionStack: some View") == false)
+        #expect(aboutView.contains("ViewThatFits(in: .horizontal)"))
+        #expect(aboutView.contains("HStack(spacing: 8)"))
+        #expect(aboutView.contains("FlowLayout(spacing: 8)"))
+        #expect(aboutView.contains("versionPill"))
+        #expect(aboutView.contains("buildPill"))
+        #expect(aboutView.contains("licensePill"))
         #expect(aboutView.contains("var viewportAlignment: Alignment"))
         #expect(aboutView.contains("var navigationTitle: String"))
         #expect(aboutView.contains(".navigationTitle(presentation.navigationTitle)"))
@@ -108,6 +124,8 @@ struct AboutViewTests {
         #expect(aboutView.contains("KeiPixAppIconView(cornerRadius: 24)"))
         #expect(aboutView.contains(#"Image(systemName: "photo.stack.fill")"#) == false)
         #expect(appIconView.contains(#"static let iconAssetName = "keipixiv""#))
+        #expect(appIconView.contains("bundle.image(forResource: iconAssetName)"))
+        #expect(appIconView.contains(#"withExtension: "icns""#))
         #expect(appIconView.contains("NSImage.applicationIconName"))
         #expect(appIconView.contains("CFBundleIconFiles"))
         #expect(appIconView.contains("UIImage(contentsOfFile: url.path)"))
@@ -130,6 +148,15 @@ struct AboutViewTests {
         #expect(macOSRunner.contains("assert_app_running"))
         #expect(!macOSRunner.contains("pkill -x \"$APP_NAME\""))
         #expect(!macOSRunner.contains("pgrep -x \"$APP_NAME\""))
+        #expect(macOSRunner.contains("source \"$ROOT_DIR/script/macos_app_icon.sh\""))
+        #expect(macOSRunner.contains("keipix_compile_macos_app_icon \"$ROOT_DIR\" \"$APP_RESOURCES\" \"$MIN_SYSTEM_VERSION\" \"$INFO_PLIST\""))
+        #expect(macOSReleaseBuilder.contains("source \"$ROOT_DIR/script/macos_app_icon.sh\""))
+        #expect(macOSReleaseBuilder.contains("keipix_compile_macos_app_icon \"$ROOT_DIR\" \"$APP_RESOURCES\" \"$MIN_SYSTEM_VERSION\" \"$INFO_PLIST\""))
+        #expect(macOSIconBuilder.contains("xcrun actool"))
+        #expect(macOSIconBuilder.contains("--app-icon \"$app_icon_name\""))
+        #expect(macOSIconBuilder.contains("CFBundleIconFile"))
+        #expect(macOSIconBuilder.contains("CFBundleIconName"))
+        #expect(macOSIconBuilder.contains(".icns"))
         #expect(SettingsCategory.allCases.contains(.about))
         #expect(SettingsCategory.about.searchTerms.contains(L10n.aboutApacheLicenseTitle))
 

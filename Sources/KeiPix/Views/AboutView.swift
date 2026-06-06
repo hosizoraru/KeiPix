@@ -81,9 +81,7 @@ struct AboutView: View {
         ViewThatFits(in: .horizontal) {
             HStack(alignment: .center, spacing: 18) {
                 appIcon
-                heroText
-                Spacer(minLength: 12)
-                versionStack
+                heroBody
             }
 
             VStack(alignment: .leading, spacing: 16) {
@@ -91,7 +89,13 @@ struct AboutView: View {
                     appIcon
                     heroText
                 }
-                versionStack
+                metadataRail
+            }
+
+            VStack(alignment: .leading, spacing: 14) {
+                appIcon
+                heroText
+                metadataRail
             }
         }
         .padding(presentation.heroPadding)
@@ -103,6 +107,14 @@ struct AboutView: View {
         KeiPixAppIconView(cornerRadius: 24)
         .frame(width: presentation.iconSize, height: presentation.iconSize)
         .shadow(color: .black.opacity(0.12), radius: 18, y: 10)
+    }
+
+    private var heroBody: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            heroText
+            metadataRail
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private var heroText: some View {
@@ -127,12 +139,33 @@ struct AboutView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    private var versionStack: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            AboutPill(title: L10n.versionLabel(version), systemImage: "number")
-            AboutPill(title: L10n.buildLabel(build), systemImage: "hammer")
-            AboutPill(title: L10n.aboutApacheLicenseTitle, systemImage: "checkmark.seal")
+    private var metadataRail: some View {
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: 8) {
+                versionPill
+                buildPill
+                licensePill
+            }
+
+            FlowLayout(spacing: 8) {
+                versionPill
+                buildPill
+                licensePill
+            }
         }
+        .padding(.top, 2)
+    }
+
+    private var versionPill: some View {
+        AboutPill(title: L10n.versionLabel(version), systemImage: "number")
+    }
+
+    private var buildPill: some View {
+        AboutPill(title: L10n.buildLabel(build), systemImage: "hammer")
+    }
+
+    private var licensePill: some View {
+        AboutPill(title: L10n.aboutApacheLicenseTitle, systemImage: "checkmark.seal")
     }
 
     private var actionRail: some View {

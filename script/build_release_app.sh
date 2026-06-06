@@ -34,6 +34,8 @@ INFO_PLIST="$APP_CONTENTS/Info.plist"
 # shellcheck source=version_settings.sh
 source "$ROOT_DIR/script/version_settings.sh"
 keipix_load_version_settings "$ROOT_DIR"
+# shellcheck source=macos_app_icon.sh
+source "$ROOT_DIR/script/macos_app_icon.sh"
 VERSION="$KEIPIX_MARKETING_VERSION"
 BUILD_NUMBER="$KEIPIX_BUILD_NUMBER"
 
@@ -132,6 +134,7 @@ cat >"$INFO_PLIST" <<PLIST
 </plist>
 PLIST
 
+keipix_compile_macos_app_icon "$ROOT_DIR" "$APP_RESOURCES" "$MIN_SYSTEM_VERSION" "$INFO_PLIST"
 plutil -lint "$INFO_PLIST" >/dev/null
 
 # Ad-hoc codesign keeps the bundle structurally valid (so launchd will

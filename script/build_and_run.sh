@@ -21,6 +21,8 @@ cd "$ROOT_DIR"
 # shellcheck source=version_settings.sh
 source "$ROOT_DIR/script/version_settings.sh"
 keipix_load_version_settings "$ROOT_DIR"
+# shellcheck source=macos_app_icon.sh
+source "$ROOT_DIR/script/macos_app_icon.sh"
 
 case "$MODE" in
   run|--debug|debug|--logs|logs|--telemetry|telemetry|--verify|verify|--package|package|--visual-qa-discover-dashboard|visual-qa-discover-dashboard|--visual-qa-pixiv-link-drop|visual-qa-pixiv-link-drop|--visual-qa-pixiv-id-open|visual-qa-pixiv-id-open|--visual-qa-creator-profile|visual-qa-creator-profile|--visual-qa-feedback-sheet|visual-qa-feedback-sheet|--visual-qa-artwork-detail-social|visual-qa-artwork-detail-social|--visual-qa-manga-watchlist|visual-qa-manga-watchlist|--visual-qa-series-sheet|visual-qa-series-sheet|--visual-qa-cached-feed|visual-qa-cached-feed|--visual-qa-ranking|visual-qa-ranking|--visual-qa-muted-content|visual-qa-muted-content|--visual-qa-about|visual-qa-about|--visual-qa-settings-window|visual-qa-settings-window|--visual-qa-runtime-readiness|visual-qa-runtime-readiness|--visual-qa-sharing-templates|visual-qa-sharing-templates|--visual-qa-ugoira-player|visual-qa-ugoira-player|--visual-qa-downloaded-reader|visual-qa-downloaded-reader|--visual-qa-gallery-auto|visual-qa-gallery-auto|--visual-qa-gallery-two-column|visual-qa-gallery-two-column|--visual-qa-gallery-three-column|visual-qa-gallery-three-column|--visual-qa-gallery-compact|visual-qa-gallery-compact)
@@ -139,6 +141,8 @@ cat >"$INFO_PLIST" <<PLIST
 </dict>
 </plist>
 PLIST
+
+keipix_compile_macos_app_icon "$ROOT_DIR" "$APP_RESOURCES" "$MIN_SYSTEM_VERSION" "$INFO_PLIST"
 
 open_app() {
   if [ "$#" -gt 0 ]; then

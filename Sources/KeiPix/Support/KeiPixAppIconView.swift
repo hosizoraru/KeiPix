@@ -9,6 +9,7 @@ import UIKit
 /// Shared brand icon surface for About, Settings, and future static chrome.
 ///
 /// The app icon is supplied by the Icon Composer package named `keipixiv`.
+/// macOS loads the compiled `keipixiv.icns` from the app bundle when available.
 /// UIKit can crash when loading that app-icon asset as a plain named image, so
 /// iOS uses the generated `CFBundleIconFiles` PNGs instead of `UIImage(named:)`.
 /// A small fallback remains for development-only resource failures.
@@ -63,10 +64,20 @@ struct KeiPixAppIconView: View {
 
     private static func loadPlatformIcon() -> PlatformImage? {
         #if os(macOS)
+        let bundles: [Bundle] = [.main, .keipixResources]
+        for bundle in bundles {
+            if let bundledIcon = bundle.image(forResource: iconAssetName) {
+                return bundledIcon
+            }
+            if let iconURL = bundle.url(forResource: iconAssetName, withExtension: "icns"),
+               let bundledIcon = NSImage(contentsOf: iconURL) {
+                return bundledIcon
+            }
+        }
         if let applicationIcon = NSImage(named: NSImage.applicationIconName) {
             return applicationIcon
         }
-        return Bundle.keipixResources.image(forResource: iconAssetName)
+        return nil
         #else
         let bundles: [Bundle] = [.keipixResources, .main]
         for bundle in bundles {
