@@ -102,9 +102,8 @@ struct MangaWatchlistView: View {
         }
     }
 
-    private var loadMoreButton: some View {
-        OS26LoadMoreButton(
-            title: L10n.loadMoreWatchlist,
+    private var paginationFooter: some View {
+        OS26PaginationFooter(
             loadingTitle: L10n.loading,
             systemImage: "arrow.down.circle",
             isLoading: isLoadingMore,
@@ -245,7 +244,7 @@ struct MangaWatchlistView: View {
                 )
             )
         case .loadMore:
-            return AnyView(loadMoreButton)
+            return AnyView(paginationFooter)
         }
     }
 

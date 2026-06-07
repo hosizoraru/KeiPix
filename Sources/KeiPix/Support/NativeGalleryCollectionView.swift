@@ -55,7 +55,7 @@ enum NativeGalleryCollectionItem: Hashable, Identifiable {
         case .empty:
             L10n.noArtworkTitle
         case .loadMore:
-            L10n.loadMore
+            L10n.loading
         case .cachedStatus, .popularPreview:
             nil
         }

@@ -498,28 +498,17 @@ struct LoadMoreTile: View {
     var onAutomaticLoadMore: (() -> Void)? = nil
 
     var body: some View {
-        Button {
-            Task { await store.loadMore() }
-        } label: {
-            VStack(spacing: 8) {
-                if store.isLoadingMore {
-                    ProgressView()
-                } else {
-                    Image(systemName: "arrow.down.circle")
-                        .font(.title3)
-                    Text(L10n.loadMore)
-                        .font(.caption.weight(.medium))
-                }
+        OS26PaginationFooter(
+            loadingTitle: L10n.loading,
+            systemImage: "arrow.down.circle",
+            isLoading: store.isLoadingMore,
+            minHeight: store.compactArtworkCards ? 150 : 210
+        ) {
+            if let onAutomaticLoadMore {
+                onAutomaticLoadMore()
+            } else {
+                Task { await store.loadMore() }
             }
-            .frame(maxWidth: .infinity)
-            .frame(height: store.compactArtworkCards ? 150 : 210)
-            .contentShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-        }
-        .buttonStyle(.plain)
-        .disabled(store.isLoadingMore)
-        .keiInteractiveGlass(18)
-        .onAppear {
-            onAutomaticLoadMore?()
         }
     }
 }

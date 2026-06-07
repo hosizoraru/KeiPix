@@ -53,18 +53,14 @@ struct ArtworkSeriesView: View {
                     }
 
                     if nextURL != nil {
-                        Button {
+                        OS26PaginationFooter(
+                            loadingTitle: L10n.loading,
+                            systemImage: "ellipsis.circle",
+                            isLoading: isLoadingMore,
+                            minHeight: 96
+                        ) {
                             Task { await loadMore() }
-                        } label: {
-                            if isLoadingMore {
-                                ProgressView()
-                                    .controlSize(.small)
-                            } else {
-                                Label(L10n.loadMoreSeriesArtworks, systemImage: "ellipsis.circle")
-                            }
                         }
-                        .buttonStyle(.bordered)
-                        .disabled(isLoadingMore)
                     }
                 }
                 .padding(.top, 12)
@@ -269,7 +265,7 @@ struct ArtworkSeriesView: View {
     }
 
     private func loadMore() async {
-        guard let nextURL else { return }
+        guard let nextURL, isLoadingMore == false else { return }
         isLoadingMore = true
         errorMessage = nil
         defer { isLoadingMore = false }

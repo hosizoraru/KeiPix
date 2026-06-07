@@ -390,16 +390,12 @@ struct BrowsingHistoryView: View {
             )
         case .loadMore:
             return AnyView(
-                OS26LoadMoreButton(
-                    title: L10n.loadMore,
+                OS26PaginationFooter(
                     loadingTitle: L10n.loading,
                     systemImage: "arrow.down.circle",
                     isLoading: store.isLoadingMore
                 ) {
-                    Task { await loadMorePixivHistory(showFeedback: true) }
-                }
-                .task {
-                    await loadMorePixivHistory(showFeedback: false)
+                    Task { await loadMorePixivHistory(showFeedback: false) }
                 }
             )
         case .local:

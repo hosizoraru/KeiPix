@@ -105,8 +105,7 @@ struct ArtworkRelatedView: View {
                 }
 
                 if nextURL != nil {
-                    OS26LoadMoreButton(
-                        title: L10n.loadMoreRelatedArtworks,
+                    OS26PaginationFooter(
                         loadingTitle: L10n.loading,
                         systemImage: "ellipsis.circle",
                         isLoading: isLoadingMore,
@@ -178,7 +177,7 @@ struct ArtworkRelatedView: View {
     }
 
     private func loadMore() async {
-        guard let nextURL else { return }
+        guard let nextURL, isLoadingMore == false else { return }
         isLoadingMore = true
         errorMessage = nil
         defer { isLoadingMore = false }

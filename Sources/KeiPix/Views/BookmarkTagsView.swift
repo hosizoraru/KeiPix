@@ -310,16 +310,12 @@ struct BookmarkTagsView: View {
             )
         case .loadMore(let isLoading):
             return AnyView(
-                OS26LoadMoreButton(
-                    title: L10n.loadMore,
+                OS26PaginationFooter(
                     loadingTitle: L10n.loading,
                     systemImage: "arrow.down.circle",
                     isLoading: isLoading
                 ) {
-                    Task { await loadMore() }
-                }
-                .task {
-                    await autoLoadMoreIfNeeded()
+                    Task { await autoLoadMoreIfNeeded() }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             )

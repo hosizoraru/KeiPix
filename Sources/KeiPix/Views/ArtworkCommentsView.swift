@@ -82,18 +82,14 @@ struct ArtworkCommentsView: View {
                 }
 
                 if nextURL != nil {
-                    Button {
+                    OS26PaginationFooter(
+                        loadingTitle: L10n.loading,
+                        systemImage: "ellipsis.circle",
+                        isLoading: isLoadingMore,
+                        minHeight: 56
+                    ) {
                         Task { await loadMore() }
-                    } label: {
-                        if isLoadingMore {
-                            ProgressView()
-                                .controlSize(.small)
-                        } else {
-                            Label(L10n.loadMoreComments, systemImage: "ellipsis.circle")
-                        }
                     }
-                    .buttonStyle(.bordered)
-                    .disabled(isLoadingMore)
                 }
             }
             .padding(.top, 10)
@@ -237,7 +233,7 @@ struct ArtworkCommentsView: View {
     }
 
     private func loadMore() async {
-        guard let nextURL else { return }
+        guard let nextURL, isLoadingMore == false else { return }
         isLoadingMore = true
         errorMessage = nil
         defer { isLoadingMore = false }
@@ -342,14 +338,14 @@ private struct CommentThreadRow: View {
                     }
 
                     if nextURL != nil {
-                        Button {
+                        OS26PaginationFooter(
+                            loadingTitle: L10n.loading,
+                            systemImage: "ellipsis.circle",
+                            isLoading: isLoadingReplies,
+                            minHeight: 44
+                        ) {
                             Task { await loadMoreReplies() }
-                        } label: {
-                            Label(isLoadingReplies ? L10n.loading : L10n.loadMoreComments, systemImage: "ellipsis.circle")
                         }
-                        .buttonStyle(.bordered)
-                        .controlSize(.small)
-                        .disabled(isLoadingReplies)
                         .padding(.leading, 28)
                     }
                 }
@@ -407,7 +403,7 @@ private struct CommentThreadRow: View {
     }
 
     private func loadMoreReplies() async {
-        guard let nextURL else { return }
+        guard let nextURL, isLoadingReplies == false else { return }
         isLoadingReplies = true
         errorMessage = nil
         defer { isLoadingReplies = false }

@@ -510,7 +510,11 @@ final class NovelFeatureStore {
     }
 
     func loadMoreRelatedNovels() async {
-        guard let nextURL = relatedNovelsNextURL else { return }
+        guard let nextURL = relatedNovelsNextURL, isLoadingRelatedNovels == false else { return }
+        isLoadingRelatedNovels = true
+        relatedNovelsError = nil
+        defer { isLoadingRelatedNovels = false }
+
         do {
             let response = try await api.nextNovelList(nextURL)
             relatedNovels.append(contentsOf: response.novels)

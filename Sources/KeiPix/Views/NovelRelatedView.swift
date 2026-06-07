@@ -41,8 +41,7 @@ struct NovelRelatedView: View {
                 }
 
                 if novelStore.relatedNovelsNextURL != nil {
-                    OS26LoadMoreButton(
-                        title: L10n.loadMoreRelatedNovels,
+                    OS26PaginationFooter(
                         loadingTitle: L10n.loading,
                         systemImage: "ellipsis.circle",
                         isLoading: novelStore.isLoadingRelatedNovels,

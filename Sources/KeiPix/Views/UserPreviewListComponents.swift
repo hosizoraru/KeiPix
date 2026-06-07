@@ -517,7 +517,7 @@ struct CreatorPreviewListContent: View {
             )
 
             if nextURL != nil {
-                CreatorLoadMoreButton(isLoadingMore: isLoadingMore, loadMore: loadMore)
+                CreatorPaginationFooter(isLoadingMore: isLoadingMore, loadMore: loadMore)
                     .task(id: sparseVisibleCreatorTopUpKey) {
                         autoTopUpSparseVisibleCreatorsIfNeeded()
                     }
@@ -625,7 +625,7 @@ struct CreatorPreviewListContent: View {
             )
         case .loadMore:
             return AnyView(
-                CreatorLoadMoreButton(isLoadingMore: isLoadingMore, loadMore: loadMore)
+                CreatorPaginationFooter(isLoadingMore: isLoadingMore, loadMore: loadMore)
                     .task(id: sparseVisibleCreatorTopUpKey) {
                         autoTopUpSparseVisibleCreatorsIfNeeded()
                     }
@@ -747,30 +747,18 @@ private struct CreatorPreviewSkeletonCard: View {
     }
 }
 
-private struct CreatorLoadMoreButton: View {
+private struct CreatorPaginationFooter: View {
     let isLoadingMore: Bool
     let loadMore: () -> Void
 
     var body: some View {
-        Button {
+        OS26PaginationFooter(
+            loadingTitle: L10n.loading,
+            systemImage: "arrow.down.circle",
+            isLoading: isLoadingMore,
+            minHeight: 160
+        ) {
             loadMore()
-        } label: {
-            VStack(spacing: 8) {
-                if isLoadingMore {
-                    ProgressView()
-                } else {
-                    Image(systemName: "arrow.down.circle")
-                        .font(.title3)
-                    Text(L10n.loadMoreCreators)
-                        .font(.caption.weight(.medium))
-                }
-            }
-            .frame(maxWidth: .infinity)
-            .frame(height: 160)
-            .contentShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         }
-        .buttonStyle(.plain)
-        .keiInteractiveGlass(16)
-        .disabled(isLoadingMore)
     }
 }

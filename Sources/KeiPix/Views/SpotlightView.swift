@@ -17,6 +17,7 @@ struct SpotlightView: View {
     @State private var actionMessage: String?
     @State private var collectionMode = SpotlightArticleCollectionMode.latest
     @State private var category = SpotlightArticleCategory.all
+    @State private var autoLoadedSpotlightPageURLs: Set<URL> = []
 
     var body: some View {
         Group {
@@ -59,6 +60,9 @@ struct SpotlightView: View {
                                 } removeFromHistory: {
                                     store.removeSpotlightArticleHistory(article)
                                     showActionMessage(L10n.removedArticleHistory)
+                                }
+                                .onAppear {
+                                    loadMoreIfNeeded(after: article)
                                 }
                             }
                         }
@@ -234,33 +238,13 @@ struct SpotlightView: View {
                 Spacer(minLength: 0)
 
                 if nextURL != nil {
-                    Button {
-                        Task { await loadMore(showFeedback: true) }
-                    } label: {
-                        HStack(spacing: 8) {
-                            if isLoadingMore {
-                                ProgressView()
-                                    .controlSize(.small)
-                            } else {
-                                Image(systemName: "arrow.down.circle.fill")
-                                    .symbolRenderingMode(.hierarchical)
-                            }
-
-                            Text(isLoadingMore ? L10n.loading : L10n.loadMore)
-                                .font(.callout.weight(.semibold))
-                        }
-                        .foregroundStyle(Color.accentColor)
-                        .padding(.horizontal, 18)
-                        .padding(.vertical, 8)
-                        .frame(minWidth: 168)
-                        .glassEffect(.regular.interactive(), in: Capsule(style: .continuous))
-                    }
-                    .buttonStyle(.plain)
-                    .disabled(isLoadingMore)
-                    .accessibilityLabel(isLoadingMore ? L10n.loading : L10n.loadMoreSpotlightArticles)
-                    .help(L10n.loadMoreSpotlightArticles)
-                    .task {
-                        await loadMore(showFeedback: false)
+                    OS26PaginationFooter(
+                        loadingTitle: L10n.loading,
+                        systemImage: "arrow.down.circle",
+                        isLoading: isLoadingMore,
+                        minHeight: 56
+                    ) {
+                        loadMoreFromPaginationFooter()
                     }
                 } else if displayedArticles.isEmpty == false {
                     Label(L10n.noMorePages, systemImage: "checkmark.circle")
@@ -410,9 +394,11 @@ struct SpotlightView: View {
                     let response = try await store.spotlightArticles(category: apiValue)
                     articles = response.articles
                     nextURL = response.nextURL
+                    autoLoadedSpotlightPageURLs.removeAll()
                 } else {
                     articles = []
                     nextURL = nil
+                    autoLoadedSpotlightPageURLs.removeAll()
                 }
             case .recommend:
                 // The Pixiv app API rejects `category=recommend` with
@@ -422,22 +408,45 @@ struct SpotlightView: View {
                 // Ranking scrapes the homepage.
                 articles = try await store.pixivisionRecommended()
                 nextURL = nil
+                autoLoadedSpotlightPageURLs.removeAll()
             case .monthlyRanking:
                 articles = try await store.pixivisionMonthlyRanking()
                 nextURL = nil
+                autoLoadedSpotlightPageURLs.removeAll()
             case .favorites, .history:
                 // Local-only collections; the picker just changes the
                 // backing source the view reads from.
                 articles = []
                 nextURL = nil
+                autoLoadedSpotlightPageURLs.removeAll()
             }
             selectStableArticle()
         } catch {
             articles = []
             store.selectedSpotlightArticle = nil
             nextURL = nil
+            autoLoadedSpotlightPageURLs.removeAll()
             errorMessage = error.localizedDescription
         }
+    }
+
+    private func loadMoreFromPaginationFooter() {
+        guard let nextURL, errorMessage == nil else { return }
+        guard autoLoadedSpotlightPageURLs.contains(nextURL) == false else { return }
+        autoLoadedSpotlightPageURLs.insert(nextURL)
+        Task { await loadMore(showFeedback: false) }
+    }
+
+    private func loadMoreIfNeeded(after article: PixivSpotlightArticle) {
+        guard collectionMode == .latest,
+              category.apiValue != nil,
+              displayedArticles.isEmpty == false,
+              let index = displayedArticles.firstIndex(where: { $0.id == article.id }) else {
+            return
+        }
+        let prefetchIndex = max(displayedArticles.count - 4, 0)
+        guard index >= prefetchIndex else { return }
+        loadMoreFromPaginationFooter()
     }
 
     private func loadMore(showFeedback: Bool = true) async {

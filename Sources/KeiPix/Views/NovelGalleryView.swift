@@ -118,9 +118,6 @@ struct NovelGalleryView: View {
 
                     if novelStore.nextURL != nil {
                         paginationFooter
-                            .task {
-                                await novelStore.loadMore(route: store.selectedRoute)
-                            }
                     }
                 }
                 .padding(16)
@@ -143,9 +140,6 @@ struct NovelGalleryView: View {
 
                     if novelStore.nextURL != nil {
                         paginationFooter
-                            .task {
-                                await novelStore.loadMore(route: store.selectedRoute)
-                            }
                     }
                 }
                 .padding(16)
@@ -172,19 +166,14 @@ struct NovelGalleryView: View {
     }
 
     private var paginationFooter: some View {
-        HStack {
-            Spacer()
-            if novelStore.isLoadingMore {
-                ProgressView()
-                    .controlSize(.small)
-            } else {
-                Text(L10n.loadMoreNovels)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-            Spacer()
+        OS26PaginationFooter(
+            loadingTitle: L10n.loading,
+            systemImage: "arrow.down.circle",
+            isLoading: novelStore.isLoadingMore,
+            minHeight: 64
+        ) {
+            Task { await novelStore.loadMore(route: store.selectedRoute) }
         }
-        .padding(.vertical, 12)
     }
 
     private var novelLayoutMenu: some View {

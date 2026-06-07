@@ -57,17 +57,13 @@ struct NovelWatchlistView: View {
     }
 
     private var paginationFooter: some View {
-        OS26LoadMoreButton(
-            title: L10n.loadMoreNovels,
+        OS26PaginationFooter(
             loadingTitle: L10n.loading,
             systemImage: "arrow.down.circle",
             isLoading: novelStore.isLoadingWatchlist,
             minHeight: 150
         ) {
             Task { await novelStore.loadMore(route: .novelWatchlist) }
-        }
-        .task {
-            await novelStore.loadMore(route: .novelWatchlist)
         }
     }
 

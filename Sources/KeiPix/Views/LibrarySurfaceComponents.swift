@@ -414,32 +414,35 @@ extension OS26LibraryUnavailableView where Actions == EmptyView {
     }
 }
 
-struct OS26LoadMoreButton: View {
-    let title: String
+struct OS26PaginationFooter: View {
     let loadingTitle: String
     let systemImage: String
     let isLoading: Bool
-    var minHeight: CGFloat = 132
-    let action: () -> Void
+    var minHeight: CGFloat = 88
+    var action: () -> Void = {}
 
     var body: some View {
-        Button(action: action) {
-            VStack(spacing: 8) {
-                Image(systemName: isLoading ? "arrow.triangle.2.circlepath" : systemImage)
-                    .font(.title3.weight(.semibold))
-                    .symbolRenderingMode(.hierarchical)
+        VStack(spacing: 8) {
+            if isLoading {
+                ProgressView()
+                    .controlSize(.small)
 
-                Text(isLoading ? loadingTitle : title)
-                    .font(.caption.weight(.medium))
+                Text(loadingTitle)
+                    .font(.caption.weight(.semibold))
                     .multilineTextAlignment(.center)
+            } else {
+                Color.clear
+                    .frame(width: 1, height: 1)
+                    .accessibilityHidden(true)
             }
-            .frame(maxWidth: .infinity, minHeight: minHeight)
-            .contentShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         }
-        .buttonStyle(.plain)
-        .keiInteractiveGlass(16)
-        .disabled(isLoading)
-        .accessibilityLabel(isLoading ? loadingTitle : title)
+        .foregroundStyle(.secondary)
+        .frame(maxWidth: .infinity, minHeight: minHeight)
+        .contentShape(Rectangle())
+        .allowsHitTesting(false)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(isLoading ? loadingTitle : "")
+        .onAppear(perform: action)
     }
 }
 
