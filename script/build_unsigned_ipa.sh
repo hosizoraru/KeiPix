@@ -39,9 +39,22 @@ PAYLOAD_DIR="$WORK_DIR/Payload"
 DERIVED_DATA_PATH="${KEIPIX_DERIVED_DATA_PATH:-$ROOT_DIR/.tmp/DerivedData-unsigned-ipa-$PLATFORM}"
 IPA_NAME="KeiPix-$ARTIFACT_PLATFORM-$VERSION-build.$BUILD_NUMBER-unsigned.ipa"
 IPA_PATH="$ARTIFACTS_DIR/$IPA_NAME"
+PROJECT_PATH="$ROOT_DIR/KeiPix.xcodeproj"
+PROJECT_SPEC="$ROOT_DIR/project.yml"
+
+ensure_xcode_project() {
+  if [ ! -d "$PROJECT_PATH" ] || [ "$PROJECT_SPEC" -nt "$PROJECT_PATH/project.pbxproj" ]; then
+    if ! command -v xcodegen >/dev/null 2>&1; then
+      echo "KeiPix.xcodeproj is missing or stale. Install XcodeGen first: brew install xcodegen" >&2
+      exit 1
+    fi
+    echo "==> Generating KeiPix.xcodeproj from project.yml"
+    xcodegen generate --spec "$PROJECT_SPEC" >/dev/null
+  fi
+}
 
 COMMON_XCODE_ARGS=(
-  -project "$ROOT_DIR/KeiPix.xcodeproj"
+  -project "$PROJECT_PATH"
   -scheme "$SCHEME"
   -configuration "$CONFIGURATION"
   -sdk iphoneos
@@ -54,6 +67,7 @@ COMMON_XCODE_ARGS=(
 )
 
 cd "$ROOT_DIR"
+ensure_xcode_project
 mkdir -p "$ARTIFACTS_DIR"
 rm -rf "$WORK_DIR"
 mkdir -p "$PAYLOAD_DIR"

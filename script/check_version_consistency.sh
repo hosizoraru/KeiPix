@@ -48,7 +48,17 @@ expect_file_contains .github/workflows/macos-build.yml "script/version_settings.
 
 rg_output="$(mktemp)"
 trap 'rm -f "$rg_output"' EXIT
-if rg -n "KeiPix/1\\.0" "$ROOT_DIR/Sources" >"$rg_output"; then
+if command -v rg >/dev/null 2>&1; then
+  search_legacy_user_agent() {
+    rg -n "KeiPix/1\\.0" "$ROOT_DIR/Sources"
+  }
+else
+  search_legacy_user_agent() {
+    grep -R -n "KeiPix/1\\.0" "$ROOT_DIR/Sources"
+  }
+fi
+
+if search_legacy_user_agent >"$rg_output"; then
   cat "$rg_output" >&2
   echo "replace hard-coded KeiPix/1.0 user agents with AppVersion.current.userAgentProduct" >&2
   exit 1

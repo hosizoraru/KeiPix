@@ -209,6 +209,23 @@ jobs:
           xcodebuild -version
           swift --version
 
+      - name: Install XcodeGen
+        run: |
+          set -euo pipefail
+          if command -v xcodegen >/dev/null 2>&1; then
+            xcodegen --version
+          else
+            brew install xcodegen
+          fi
+
+      - name: Cache Xcode build products
+        uses: actions/cache@v5
+        with:
+          path: .tmp/DerivedData-unsigned-ipa-${{ matrix.platform }}
+          key: xcode-unsigned-ipa-${{ runner.os }}-${{ runner.arch }}-${{ matrix.platform }}-${{ hashFiles('project.yml', 'App/**/*.plist', 'App/**/*.entitlements', 'PrivacyInfo.xcprivacy', 'Sources/**/*.swift', 'Sources/KeiPix/Resources/**') }}
+          restore-keys: |
+            xcode-unsigned-ipa-${{ runner.os }}-${{ runner.arch }}-${{ matrix.platform }}-
+
       - name: Check version settings
         run: ./script/check_version_consistency.sh
 

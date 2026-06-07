@@ -155,6 +155,7 @@ GitHub Actions workflow 位于 `.github/workflows/macos-build.yml`：
 - `./script/build_release_app.sh zip` 生成 macOS zipped `.app` artifact
 - `./script/build_unsigned_ipa.sh ios` 生成 iOS unsigned IPA artifact
 - `./script/build_unsigned_ipa.sh ipados` 生成 iPadOS unsigned IPA artifact
+- SwiftPM job 缓存 `.build` / SwiftPM cache，iOS 与 iPadOS 打包 job 缓存各自的 `.tmp/DerivedData-unsigned-ipa-*`
 - tag `v*` 时把 macOS `.zip` / `.dmg` 产物附加到 GitHub Release
 
 本地可复现同样的打包产物：
