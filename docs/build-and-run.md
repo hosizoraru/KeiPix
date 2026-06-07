@@ -152,8 +152,20 @@ GitHub Actions workflow 位于 `.github/workflows/macos-build.yml`：
 - `./script/check_version_consistency.sh`
 - `swift build`
 - `swift test --parallel`
-- `./script/build_release_app.sh` 生成 `.zip` 或 `.dmg`
-- tag `v*` 时把产物附加到 GitHub Release
+- `./script/build_release_app.sh zip` 生成 macOS zipped `.app` artifact
+- `./script/build_unsigned_ipa.sh ios` 生成 iOS unsigned IPA artifact
+- `./script/build_unsigned_ipa.sh ipados` 生成 iPadOS unsigned IPA artifact
+- tag `v*` 时把 macOS `.zip` / `.dmg` 产物附加到 GitHub Release
+
+本地可复现同样的打包产物：
+
+```bash
+./script/build_release_app.sh zip
+./script/build_unsigned_ipa.sh ios
+./script/build_unsigned_ipa.sh ipados
+```
+
+unsigned IPA 使用 `iphoneos` SDK 的 Release 构建，关闭 Xcode signing，并输出标准 `Payload/KeiPix.app` 结构，适合导入 LiveContainer 这类 live container / sideload 测试环境；它不是 App Store、TestFlight 或普通已签名真机安装包。
 
 ## Visual QA
 
@@ -188,6 +200,7 @@ GitHub Actions workflow 位于 `.github/workflows/macos-build.yml`：
 | `script/build_and_run_ipados.sh` | iPadOS Simulator 快速构建、安装和启动脚本 |
 | `script/build_and_run_simulator.sh` | iOS/iPadOS 两个入口共用的 XcodeGen / `xcodebuild` / `simctl` runner |
 | `script/build_release_app.sh` | CI/release 打包脚本 |
+| `script/build_unsigned_ipa.sh` | CI/本地 iOS 与 iPadOS unsigned IPA 打包脚本 |
 | `project.yml` | XcodeGen 项目描述 |
 
 修改 entitlement、bundle metadata 或 URL/document type 时，要同步 Xcode 路径和脚本路径。修改版本号时优先使用 `./script/set_app_version.sh <version> <build>`，然后运行 `./script/check_version_consistency.sh`。

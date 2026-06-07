@@ -87,8 +87,21 @@ KeiPix-0.1.0-build.1.zip
 KeiPix-0.1.0-build.1.dmg
 ```
 
-The GitHub Actions workflow uses the same metadata and uploads artifacts named
-`KeiPix-<marketing-version>-build.<build-number>`.
+`script/build_unsigned_ipa.sh ios` and `script/build_unsigned_ipa.sh ipados`
+write unsigned device IPA artifacts named like:
+
+```text
+KeiPix-iOS-0.1.0-build.1-unsigned.ipa
+KeiPix-iPadOS-0.1.0-build.1-unsigned.ipa
+```
+
+The GitHub Actions workflow uses the same metadata and uploads artifacts named:
+
+```text
+KeiPix-macOS-<marketing-version>-build.<build-number>-app
+KeiPix-iOS-<marketing-version>-build.<build-number>-unsigned-ipa
+KeiPix-iPadOS-<marketing-version>-build.<build-number>-unsigned-ipa
+```
 
 ## Release Tags
 

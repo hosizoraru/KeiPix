@@ -43,6 +43,7 @@ done
 
 expect_file_contains script/build_and_run.sh "version_settings.sh"
 expect_file_contains script/build_release_app.sh "version_settings.sh"
+expect_file_contains script/build_unsigned_ipa.sh "version_settings.sh"
 expect_file_contains .github/workflows/macos-build.yml "script/version_settings.sh"
 
 rg_output="$(mktemp)"

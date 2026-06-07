@@ -1,6 +1,6 @@
 # KeiPix
 
-[![Build & Test](https://github.com/hosizoraru/KeiPix/actions/workflows/macos-build.yml/badge.svg)](https://github.com/hosizoraru/KeiPix/actions/workflows/macos-build.yml)
+[![Build, Test & Package](https://github.com/hosizoraru/KeiPix/actions/workflows/macos-build.yml/badge.svg)](https://github.com/hosizoraru/KeiPix/actions/workflows/macos-build.yml)
 ![Swift 6.2+](https://img.shields.io/badge/Swift-6.2%2B-orange)
 ![macOS 26+](https://img.shields.io/badge/macOS-26%2B-blue)
 ![iOS 26+](https://img.shields.io/badge/iOS-26%2B-blue)
@@ -56,6 +56,29 @@ swift test
 ./script/build_and_run.sh --visual-qa-gallery-three-column
 ./script/capture_visual_qa.sh gallery-three-column
 ```
+
+## Local Packaging
+
+GitHub Actions 会在 PR、`master` push 和 tag 构建中分别上传：
+
+- macOS zipped `.app`：`KeiPix-macOS-<version>-build.<build>-app`
+- iOS unsigned IPA：`KeiPix-iOS-<version>-build.<build>-unsigned-ipa`
+- iPadOS unsigned IPA：`KeiPix-iPadOS-<version>-build.<build>-unsigned-ipa`
+
+本地也可以用同一套脚本生成可测试产物：
+
+```bash
+# macOS Release .app，输出 artifacts/KeiPix-<version>-build.<build>.zip
+./script/build_release_app.sh zip
+
+# iPhone 设备包，输出 artifacts/KeiPix-iOS-<version>-build.<build>-unsigned.ipa
+./script/build_unsigned_ipa.sh ios
+
+# iPad 设备包，输出 artifacts/KeiPix-iPadOS-<version>-build.<build>-unsigned.ipa
+./script/build_unsigned_ipa.sh ipados
+```
+
+`build_unsigned_ipa.sh` 使用 `iphoneos` SDK 的 Release 构建，并显式关闭 Xcode signing。生成的 IPA 采用标准 `Payload/KeiPix.app` 结构，适合导入 LiveContainer 这类 live container / sideload 测试环境；它不是 App Store、TestFlight 或普通已签名真机安装包。如果你的测试环境需要开发者证书或重签名，请在容器/签名工具侧完成那一步。
 
 ## Repository Map
 

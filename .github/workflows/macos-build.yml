@@ -1,4 +1,4 @@
-name: Build & Test
+name: Build, Test & Package
 
 on:
   push:
@@ -8,11 +8,10 @@ on:
     branches: [master]
   workflow_dispatch:
     inputs:
-      format:
-        description: "Artifact format"
-        type: choice
-        default: zip
-        options: [zip, dmg, both]
+      include_dmg:
+        description: "Also build a macOS DMG for manual runs"
+        type: boolean
+        default: false
 
 concurrency:
   group: build-${{ github.ref }}
@@ -23,8 +22,8 @@ permissions:
   actions: read
 
 jobs:
-  build:
-    name: Build & package KeiPix.app
+  test:
+    name: Build & test macOS
     runs-on: macos-26
     timeout-minutes: 25
 
@@ -72,26 +71,68 @@ jobs:
       - name: Run tests
         run: swift test --parallel
 
-      - name: Determine artifact format
-        id: format
+  package-macos:
+    name: Package macOS .app zip
+    needs: test
+    runs-on: macos-26
+    timeout-minutes: 25
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 50
+
+      - name: Select Xcode toolchain
+        run: |
+          set -euo pipefail
+          xcode_path=""
+          while IFS= read -r candidate; do
+            xcode_path="$candidate"
+          done < <(find /Applications -maxdepth 1 -type d -name 'Xcode_26*.app' | sort -V)
+          if [ -z "$xcode_path" ]; then
+            xcode_path="/Applications/Xcode.app"
+          fi
+          echo "Using $xcode_path"
+          sudo xcode-select -s "$xcode_path/Contents/Developer"
+          xcodebuild -version
+          swift --version
+
+      - name: Cache SwiftPM build products
+        uses: actions/cache@v5
+        with:
+          path: |
+            .build
+            ~/Library/Caches/org.swift.swiftpm
+            ~/Library/org.swift.swiftpm
+          key: spm-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('Package.resolved', 'Package.swift', 'Sources/**/*.swift') }}
+          restore-keys: |
+            spm-${{ runner.os }}-${{ runner.arch }}-
+
+      - name: Resolve dependencies
+        run: swift package resolve
+
+      - name: Check version settings
+        run: ./script/check_version_consistency.sh
+
+      - name: Determine macOS package format
+        id: macos-format
         env:
           EVENT_NAME: ${{ github.event_name }}
           REF: ${{ github.ref }}
-          DISPATCH_FORMAT: ${{ github.event.inputs.format }}
+          INCLUDE_DMG: ${{ github.event.inputs.include_dmg }}
         run: |
           set -euo pipefail
-          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
-            fmt="$DISPATCH_FORMAT"
-          elif [ "${REF#refs/tags/v}" != "$REF" ]; then
+          if [ "${REF#refs/tags/v}" != "$REF" ] || { [ "$EVENT_NAME" = "workflow_dispatch" ] && [ "$INCLUDE_DMG" = "true" ]; }; then
             fmt="both"
           else
             fmt="zip"
           fi
           echo "format=$fmt" >> "$GITHUB_OUTPUT"
-          echo "Artifact format: $fmt"
+          echo "macOS package format: $fmt"
 
       - name: Build release .app and package
-        run: ./script/build_release_app.sh "${{ steps.format.outputs.format }}"
+        run: ./script/build_release_app.sh "${{ steps.macos-format.outputs.format }}"
 
       - name: Resolve version
         id: version
@@ -103,13 +144,21 @@ jobs:
           echo "build=$KEIPIX_BUILD_NUMBER" >> "$GITHUB_OUTPUT"
           echo "Version: $KEIPIX_MARKETING_VERSION ($KEIPIX_BUILD_NUMBER)"
 
-      - name: Upload build artifact
+      - name: Upload macOS zipped .app artifact
         uses: actions/upload-artifact@v7
         with:
-          name: KeiPix-${{ steps.version.outputs.version }}-build.${{ steps.version.outputs.build }}
-          path: |
-            artifacts/KeiPix-*.zip
-            artifacts/KeiPix-*.dmg
+          name: KeiPix-macOS-${{ steps.version.outputs.version }}-build.${{ steps.version.outputs.build }}-app
+          path: artifacts/KeiPix-${{ steps.version.outputs.version }}-build.${{ steps.version.outputs.build }}.zip
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 0
+
+      - name: Upload macOS DMG artifact
+        if: steps.macos-format.outputs.format != 'zip'
+        uses: actions/upload-artifact@v7
+        with:
+          name: KeiPix-macOS-${{ steps.version.outputs.version }}-build.${{ steps.version.outputs.build }}-dmg
+          path: artifacts/KeiPix-${{ steps.version.outputs.version }}-build.${{ steps.version.outputs.build }}.dmg
           if-no-files-found: error
           retention-days: 14
           compression-level: 0
@@ -123,3 +172,64 @@ jobs:
             artifacts/KeiPix-*.dmg
           fail_on_unmatched_files: true
           generate_release_notes: true
+
+  package-ios:
+    name: Package unsigned ${{ matrix.display-name }} IPA
+    needs: test
+    runs-on: macos-26
+    timeout-minutes: 35
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: ios
+            display-name: iOS
+          - platform: ipados
+            display-name: iPadOS
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 50
+
+      - name: Select Xcode toolchain
+        run: |
+          set -euo pipefail
+          xcode_path=""
+          while IFS= read -r candidate; do
+            xcode_path="$candidate"
+          done < <(find /Applications -maxdepth 1 -type d -name 'Xcode_26*.app' | sort -V)
+          if [ -z "$xcode_path" ]; then
+            xcode_path="/Applications/Xcode.app"
+          fi
+          echo "Using $xcode_path"
+          sudo xcode-select -s "$xcode_path/Contents/Developer"
+          xcodebuild -version
+          swift --version
+
+      - name: Check version settings
+        run: ./script/check_version_consistency.sh
+
+      - name: Resolve version
+        id: version
+        run: |
+          set -euo pipefail
+          source ./script/version_settings.sh
+          keipix_load_version_settings "$PWD"
+          echo "version=$KEIPIX_MARKETING_VERSION" >> "$GITHUB_OUTPUT"
+          echo "build=$KEIPIX_BUILD_NUMBER" >> "$GITHUB_OUTPUT"
+          echo "Version: $KEIPIX_MARKETING_VERSION ($KEIPIX_BUILD_NUMBER)"
+
+      - name: Build unsigned ${{ matrix.display-name }} IPA
+        run: ./script/build_unsigned_ipa.sh "${{ matrix.platform }}"
+
+      - name: Upload unsigned ${{ matrix.display-name }} IPA artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: KeiPix-${{ matrix.display-name }}-${{ steps.version.outputs.version }}-build.${{ steps.version.outputs.build }}-unsigned-ipa
+          path: artifacts/KeiPix-${{ matrix.display-name }}-${{ steps.version.outputs.version }}-build.${{ steps.version.outputs.build }}-unsigned.ipa
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 0
