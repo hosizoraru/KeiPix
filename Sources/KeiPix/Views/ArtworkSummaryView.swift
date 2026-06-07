@@ -8,6 +8,7 @@ struct ArtworkSummaryView: View {
     @Bindable var store: KeiPixStore
     let pageIndex: Int
     let pageCount: Int
+    let showStatusMessage: (String) -> Void
     @State private var isUserProfilePresented = false
     @State private var creatorActionMessage: String?
 
@@ -21,7 +22,13 @@ struct ArtworkSummaryView: View {
                     .foregroundStyle(.secondary)
                     .textSelection(.enabled)
             }
-            ArtworkActionStrip(artwork: artwork, store: store, pageIndex: pageIndex, pageCount: pageCount)
+            ArtworkActionStrip(
+                artwork: artwork,
+                store: store,
+                pageIndex: pageIndex,
+                pageCount: pageCount,
+                showStatusMessage: showStatusMessage
+            )
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 12)
@@ -30,21 +37,11 @@ struct ArtworkSummaryView: View {
 
     private var summaryHeader: some View {
         VStack(alignment: .leading, spacing: 7) {
-            HStack(alignment: .top, spacing: 12) {
-                Text(artwork.title)
-                    .font(.title3.weight(.semibold))
-                    .lineLimit(2)
-                    .textSelection(.enabled)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-
-                Text("#\(artwork.id)")
-                    .font(.caption.weight(.semibold).monospacedDigit())
-                    .foregroundStyle(.secondary)
-                    .padding(.horizontal, 9)
-                    .padding(.vertical, 5)
-                    .glassEffect(.regular, in: Capsule(style: .continuous))
-                    .textSelection(.enabled)
-            }
+            Text(artwork.title)
+                .font(.title3.weight(.semibold))
+                .lineLimit(2)
+                .textSelection(.enabled)
+                .frame(maxWidth: .infinity, alignment: .leading)
 
             if store.showContentBadges {
                 ArtworkContentBadgesView(badges: artwork.contentBadges)
@@ -237,10 +234,10 @@ private struct ArtworkActionStrip: View {
     @Bindable var store: KeiPixStore
     let pageIndex: Int
     let pageCount: Int
+    let showStatusMessage: (String) -> Void
 
     @Environment(\.openWindow) private var openWindow
     @State private var isBookmarkEditorPresented = false
-    @State private var actionMessage: String?
     @State private var feedbackRequest: FeedbackReportRequest?
     @State private var isPageRangeDownloadPresented = false
     @State private var isPageSelectionDownloadPresented = false
@@ -250,13 +247,6 @@ private struct ArtworkActionStrip: View {
         GlassEffectContainer {
             VStack(alignment: .leading, spacing: 9) {
                 metricsRail
-
-                if let actionMessage {
-                    Text(actionMessage)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                }
 
                 if downloadState != .none {
                     DownloadStateSummary(state: downloadState)
@@ -298,13 +288,6 @@ private struct ArtworkActionStrip: View {
         FlowLayout(spacing: 8) {
             MetricView(title: L10n.views, value: artwork.totalView, systemImage: "eye")
             MetricView(title: L10n.saves, value: artwork.totalBookmarks, systemImage: "bookmark")
-            MetricView(title: L10n.comments, value: artwork.totalComments, systemImage: "text.bubble")
-            MetricView(
-                title: L10n.pages,
-                value: pageCount,
-                systemImage: "square.stack",
-                detail: pageCount > 1 ? "\(pageIndex + 1) / \(pageCount)" : nil
-            )
         }
     }
 
@@ -314,14 +297,7 @@ private struct ArtworkActionStrip: View {
     }
 
     private func showActionMessage(_ message: String) {
-        actionMessage = message
-
-        Task {
-            try? await Task.sleep(for: .seconds(2))
-            if actionMessage == message {
-                actionMessage = nil
-            }
-        }
+        showStatusMessage(message)
     }
 
     private func showPageRangeDownloadMessage(_ queuedCount: Int, _ oneBasedRange: ClosedRange<Int>) {
@@ -389,8 +365,8 @@ private struct ArtworkActionStrip: View {
 // MARK: - Adaptive action row
 
 /// Measures available width and promotes secondary actions by frequency.
-/// Compact platforms keep only the primary actions inline; wide panes can
-/// afford text-bearing pills for actions whose icon is ambiguous.
+/// Compact platforms keep frequent actions as icon-only controls; wide panes
+/// can afford text-bearing pills for actions whose icon is ambiguous.
 private struct AdaptiveActionRow: View {
     let artwork: PixivArtwork
     @Bindable var store: KeiPixStore
@@ -423,24 +399,18 @@ private struct AdaptiveActionRow: View {
                     bookmarkButton(showsTitle: layout.showsPrimaryTitles)
                     downloadButton(showsTitle: layout.showsPrimaryTitles)
 
-                    if layout.showsReader {
-                        openReaderButton(showsTitle: layout.showsSecondaryTitles)
+                    if artwork.pixivURL != nil {
+                        copyLinkButton(showsTitle: false)
                     }
+
+                    watchLaterButton(showsTitle: false)
 
                     if layout.showsShare, artwork.pixivURL != nil {
                         shareButton(showsTitle: layout.showsSecondaryTitles)
                     }
 
-                    if layout.showsCopyLink, artwork.pixivURL != nil {
-                        copyLinkButton(showsTitle: layout.showsSecondaryTitles)
-                    }
-
                     if layout.showsSearchImage, currentPageURL != nil || currentLocalPageURL != nil {
                         searchImageButton(showsTitle: layout.showsSecondaryTitles)
-                    }
-
-                    if layout.showsWatchLaterInline {
-                        watchLaterButton(showsTitle: true)
                     }
 
                     moreMenu(layout: layout)
@@ -450,6 +420,10 @@ private struct AdaptiveActionRow: View {
                 HStack(spacing: 8) {
                     bookmarkButton(showsTitle: false)
                     downloadButton(showsTitle: false)
+                    if artwork.pixivURL != nil {
+                        copyLinkButton(showsTitle: false)
+                    }
+                    watchLaterButton(showsTitle: false)
                     moreMenu(layout: .compactFallback)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -510,20 +484,6 @@ private struct AdaptiveActionRow: View {
         .touchTarget()
     }
 
-    private func openReaderButton(showsTitle: Bool) -> some View {
-        Button {
-            store.prepareReaderWindow(for: artwork)
-            openWindow(id: "artwork-reader", value: artwork.id)
-        } label: {
-            actionLabel(title: L10n.openReaderWindow, systemImage: "rectangle.inset.filled", showsTitle: showsTitle)
-        }
-        .buttonStyle(.bordered)
-        .controlSize(.small)
-        .help(L10n.openReaderWindow)
-        .accessibilityLabel(L10n.openReaderWindow)
-        .touchTarget()
-    }
-
     private func shareButton(showsTitle: Bool) -> some View {
         Group {
             if let url = artwork.pixivURL {
@@ -551,6 +511,7 @@ private struct AdaptiveActionRow: View {
                 .controlSize(.small)
                 .help(L10n.copyLink)
                 .accessibilityLabel(L10n.copyLink)
+                .touchTarget()
             }
         }
     }
@@ -580,7 +541,7 @@ private struct AdaptiveActionRow: View {
         } label: {
             actionLabel(
                 title: store.isInWatchLater(artwork.id) ? L10n.inWatchLater : L10n.watchLater,
-                systemImage: store.isInWatchLater(artwork.id) ? "clock.badge.checkmark" : "clock.badge.plus",
+                systemImage: store.isInWatchLater(artwork.id) ? "clock.badge.checkmark" : "clock",
                 showsTitle: showsTitle
             )
         }
@@ -611,17 +572,6 @@ private struct AdaptiveActionRow: View {
     @ViewBuilder
     private func moreMenu(layout: AdaptiveArtworkActionLayout) -> some View {
         Menu {
-            if layout.showsReader == false {
-                Button {
-                    store.prepareReaderWindow(for: artwork)
-                    openWindow(id: "artwork-reader", value: artwork.id)
-                } label: {
-                    Label(L10n.openReaderWindow, systemImage: "rectangle.inset.filled")
-                }
-
-                Divider()
-            }
-
             if let url = artwork.pixivURL {
                 if layout.showsShare == false {
                     ShareLink(item: url) {
@@ -637,15 +587,6 @@ private struct AdaptiveActionRow: View {
                     Label(L10n.shareSummary, systemImage: "text.bubble")
                 }
                 .help(L10n.shareSummaryHint)
-
-                if layout.showsCopyLink == false {
-                    Button {
-                        PasteboardWriter.copy(url.absoluteString)
-                        showActionMessage(L10n.copied)
-                    } label: {
-                        Label(L10n.copyLink, systemImage: "link")
-                    }
-                }
             }
 
             if let sharePageURL {
@@ -726,26 +667,6 @@ private struct AdaptiveActionRow: View {
                 #endif
             }
 
-            if layout.showsWatchLaterInline == false {
-                Divider()
-
-                if store.isInWatchLater(artwork.id) {
-                    Button {
-                        store.removeFromWatchLater(LocalArtworkHistoryItem(artwork: artwork))
-                        showActionMessage(L10n.watchLaterRemoved)
-                    } label: {
-                        Label(L10n.removeFromWatchLater, systemImage: "clock.badge.xmark")
-                    }
-                } else {
-                    Button {
-                        store.addToWatchLater(artwork)
-                        showActionMessage(L10n.watchLaterAdded)
-                    } label: {
-                        Label(L10n.addToWatchLater, systemImage: "clock.badge.plus")
-                    }
-                }
-            }
-
             Divider()
 
             Button {
@@ -809,21 +730,15 @@ private struct AdaptiveArtworkActionLayout {
     let spacing: CGFloat
     let showsPrimaryTitles: Bool
     let showsSecondaryTitles: Bool
-    let showsReader: Bool
     let showsShare: Bool
-    let showsCopyLink: Bool
     let showsSearchImage: Bool
-    let showsWatchLaterInline: Bool
 
     static let compactFallback = AdaptiveArtworkActionLayout(
         spacing: 8,
         showsPrimaryTitles: false,
         showsSecondaryTitles: false,
-        showsReader: false,
         showsShare: false,
-        showsCopyLink: false,
-        showsSearchImage: false,
-        showsWatchLaterInline: false
+        showsSearchImage: false
     )
 
     static func resolve(width: CGFloat, isPhone: Bool) -> AdaptiveArtworkActionLayout {
@@ -832,11 +747,8 @@ private struct AdaptiveArtworkActionLayout {
             spacing: effectiveWidth >= 520 ? 9 : 8,
             showsPrimaryTitles: effectiveWidth >= 560,
             showsSecondaryTitles: effectiveWidth >= 700,
-            showsReader: effectiveWidth >= 300,
             showsShare: effectiveWidth >= 420,
-            showsCopyLink: effectiveWidth >= 500,
-            showsSearchImage: effectiveWidth >= 560,
-            showsWatchLaterInline: effectiveWidth >= 640
+            showsSearchImage: effectiveWidth >= 560
         )
     }
 }

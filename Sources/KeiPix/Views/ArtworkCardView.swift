@@ -248,7 +248,7 @@ struct ArtworkCardView: View {
 
             if showsBookmarkedStatusBadge && artwork.isBookmarked {
                 artworkStatusBadge(
-                    title: L10n.bookmarked,
+                    title: L10n.bookmark,
                     systemImage: "bookmark.fill",
                     tint: .pink,
                     help: L10n.bookmarked

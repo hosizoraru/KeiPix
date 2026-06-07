@@ -117,7 +117,7 @@ struct ArtworkCommentsView: View {
 
     private var headerSubtitle: String? {
         let count = totalComments ?? artwork.totalComments
-        return count > 0 ? count.formatted() : nil
+        return count.formatted()
     }
 
     private var composer: some View {

@@ -698,7 +698,7 @@ private struct LocalHistoryCard: View {
 
             if item.isBookmarked {
                 historyStatusBadge(
-                    title: L10n.bookmarked,
+                    title: L10n.bookmark,
                     systemImage: "bookmark.fill",
                     tint: .pink
                 )

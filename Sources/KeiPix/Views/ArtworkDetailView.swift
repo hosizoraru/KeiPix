@@ -53,6 +53,7 @@ private struct ArtworkInspectorView: View {
     @State private var readingMode: ArtworkReadingMode
     @State private var scrollTarget: Int?
     @State private var detailFeedClearMessage: String?
+    @State private var detailActionMessage: String?
 
     init(artwork: PixivArtwork, store: KeiPixStore) {
         self.artwork = artwork
@@ -101,7 +102,13 @@ private struct ArtworkInspectorView: View {
                         )
                     }
 
-                    ArtworkSummaryView(artwork: artwork, store: store, pageIndex: pageIndex, pageCount: pageCount)
+                    ArtworkSummaryView(
+                        artwork: artwork,
+                        store: store,
+                        pageIndex: pageIndex,
+                        pageCount: pageCount,
+                        showStatusMessage: showDetailActionMessage
+                    )
                         .padding(.horizontal, 18)
 
                     // Artwork context and tags sit right under the
@@ -174,6 +181,21 @@ private struct ArtworkInspectorView: View {
                 await store.recordBrowsingHistory(for: artwork)
                 await scrollForVisualQA(proxy: proxy)
             }
+            .overlay(alignment: .bottom) {
+                if let detailActionMessage {
+                    FloatingStatusBanner(maxWidth: 420) {
+                        Text(detailActionMessage)
+                            .font(.callout)
+                            .foregroundStyle(.secondary)
+                            .textSelection(.enabled)
+                    }
+                    .padding(.horizontal, 18)
+                    .padding(.bottom, 14)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                }
+            }
+            .animation(.snappy(duration: 0.18), value: detailActionMessage)
+            .statusMessageAutoDismiss($detailActionMessage, duration: .seconds(2.5))
         }
     }
 
@@ -343,6 +365,10 @@ private struct ArtworkInspectorView: View {
             }
             detailFeedClearMessage = L10n.feedFilterCleared
         }
+    }
+
+    private func showDetailActionMessage(_ message: String) {
+        detailActionMessage = message
     }
 
     private func scrollToPage(_ index: Int, proxy: ScrollViewProxy) {
