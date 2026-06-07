@@ -513,9 +513,13 @@ struct NativeBoundaryTests {
 
         #expect(spotlightView.contains("var openArticle: ((PixivSpotlightArticle) -> Void)?"))
         #expect(spotlightView.contains("private var paginationFooter: some View"))
+        #expect(spotlightView.contains("OS26PaginationFooter("))
+        #expect(spotlightView.contains("loadMoreFromPaginationFooter()"))
+        #expect(spotlightView.contains(".onAppear {\n                                    loadMoreIfNeeded(after: article)\n                                }"))
+        #expect(spotlightView.contains("private func loadMoreIfNeeded(after article: PixivSpotlightArticle)"))
         #expect(spotlightView.contains("openArticle?(article)"))
-        #expect(spotlightView.contains(".accessibilityLabel(isLoadingMore ? L10n.loading : L10n.loadMoreSpotlightArticles)"))
-        #expect(spotlightView.contains(".help(L10n.loadMoreSpotlightArticles)"))
+        #expect(spotlightView.contains("Task { await loadMore(showFeedback: true) }") == false)
+        #expect(spotlightView.contains(".help(L10n.loadMoreSpotlightArticles)") == false)
         #expect(spotlightView.contains(".gridCellColumns(loadMoreSpan)") == false)
         #expect(spotlightView.contains("private var loadMoreSpan") == false)
         #expect(spotlightView.contains("@Environment(\\.horizontalSizeClass) private var horizontalSizeClass"))
@@ -2384,7 +2388,8 @@ struct NativeBoundaryTests {
         #expect(sharedComponents.contains("struct OS26LibraryTextEntryField: View"))
         #expect(sharedComponents.contains("struct OS26LibraryLoadingView: View"))
         #expect(sharedComponents.contains("struct OS26LibraryUnavailableView<Actions: View>: View"))
-        #expect(sharedComponents.contains("struct OS26LoadMoreButton: View"))
+        #expect(sharedComponents.contains("struct OS26PaginationFooter: View"))
+        #expect(sharedComponents.contains("struct OS26LoadMoreButton: View") == false)
         #expect(sharedComponents.contains("GlassEffectContainer(spacing: 8)"))
 
         for path in pagePaths {
@@ -2394,6 +2399,7 @@ struct NativeBoundaryTests {
             #expect(source.contains(".buttonStyle(.borderedProminent)") == false, "\(path) should not use legacy prominent bordered buttons")
             #expect(source.contains("ProgressView(L10n.loading)") == false, "\(path) should not use full-page spinner loading")
             #expect(source.contains("ContentUnavailableView") == false, "\(path) should not use old unavailable chrome")
+            #expect(source.contains("OS26LoadMoreButton(") == false, "\(path) should use scroll-triggered pagination, not a manual load-more button")
         }
 
         for path in pagePaths.dropLast() {
@@ -2561,7 +2567,30 @@ struct NativeBoundaryTests {
             encoding: .utf8
         )
         #expect(relatedArtworks.contains("OS26InlineLoadingView("))
-        #expect(relatedArtworks.contains("OS26LoadMoreButton("))
+        #expect(relatedArtworks.contains("OS26PaginationFooter("))
+        #expect(relatedArtworks.contains("OS26LoadMoreButton(") == false)
+
+        let novelRelated = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/NovelRelatedView.swift"),
+            encoding: .utf8
+        )
+        let novelWatchlist = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/NovelWatchlistView.swift"),
+            encoding: .utf8
+        )
+        let novelGallery = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/NovelGalleryView.swift"),
+            encoding: .utf8
+        )
+        let artworkSeries = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/ArtworkSeriesView.swift"),
+            encoding: .utf8
+        )
+        for source in [novelRelated, novelWatchlist, novelGallery, artworkSeries] {
+            #expect(source.contains("OS26PaginationFooter("))
+            #expect(source.contains("OS26LoadMoreButton(") == false)
+            #expect(source.contains("Label(L10n.loadMore") == false)
+        }
 
         let tokenLogin = try String(
             contentsOf: root.appending(path: "Sources/KeiPix/Views/TokenLoginSheetView.swift"),
