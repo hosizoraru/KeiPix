@@ -28,6 +28,17 @@ enum NativeBrowsingHistoryCollectionItem: Hashable, Identifiable {
         return false
     }
 
+    var artworkAspectRatio: CGFloat {
+        switch self {
+        case .local(let item):
+            CGFloat(item.aspectRatio)
+        case .pixiv(let artwork):
+            ArtworkMasonryPresentation(artwork: artwork).aspectRatio
+        case .loadMore:
+            ArtworkMasonryPresentation.fallbackAspectRatio
+        }
+    }
+
     static func == (lhs: NativeBrowsingHistoryCollectionItem, rhs: NativeBrowsingHistoryCollectionItem) -> Bool {
         lhs.id == rhs.id
     }
@@ -46,7 +57,7 @@ enum NativeBrowsingHistoryCollectionLayout: Equatable {
     var lineSpacing: CGFloat { 14 }
 
     var sectionInsets: EdgeInsets {
-        EdgeInsets(top: 18, leading: 18, bottom: 20, trailing: 18)
+        EdgeInsets(top: 14, leading: 18, bottom: 20, trailing: 18)
     }
 
     func itemSize(for item: NativeBrowsingHistoryCollectionItem, containerWidth: CGFloat) -> CGSize {
@@ -70,6 +81,38 @@ enum NativeBrowsingHistoryCollectionLayout: Equatable {
     }
 
     private var loadMoreHeight: CGFloat { 132 }
+
+    var usesMasonry: Bool { true }
+
+    var masonryConfiguration: ArtworkMasonryLayoutConfiguration {
+        switch self {
+        case .localCards:
+            ArtworkMasonryLayoutConfiguration(
+                spacing: interitemSpacing,
+                preferredColumnWidth: 196,
+                minColumnWidth: 154,
+                maxColumnWidth: 236,
+                fixedColumnCount: nil,
+                denseFixedColumns: false
+            )
+        case .pixivCards:
+            ArtworkMasonryLayoutConfiguration(
+                spacing: interitemSpacing,
+                preferredColumnWidth: 184,
+                minColumnWidth: 152,
+                maxColumnWidth: 224,
+                fixedColumnCount: nil,
+                denseFixedColumns: false
+            )
+        }
+    }
+
+    func masonryElement(for item: NativeBrowsingHistoryCollectionItem) -> ArtworkMasonryPlacement.Element {
+        if item.isFullWidth {
+            return .fullWidth(height: loadMoreHeight)
+        }
+        return .artwork(aspectRatio: item.artworkAspectRatio)
+    }
 
     private var minimumItemWidth: CGFloat {
         switch self {
@@ -132,7 +175,7 @@ extension NativeBrowsingHistoryCollectionView: NSViewRepresentable {
         let scrollView = NSScrollView()
         let collectionView = NSCollectionView()
 
-        collectionView.collectionViewLayout = NSCollectionViewFlowLayout()
+        collectionView.collectionViewLayout = NativeBrowsingHistoryMasonryNSCollectionViewLayout()
         collectionView.register(
             NativeBrowsingHistoryHostingCollectionItem.self,
             forItemWithIdentifier: NativeBrowsingHistoryHostingCollectionItem.reuseIdentifier
@@ -193,6 +236,20 @@ extension NativeBrowsingHistoryCollectionView: NSViewRepresentable {
         }
 
         func updateCollectionLayout(for collectionView: NSCollectionView) {
+            if parent.layout.usesMasonry {
+                let masonryLayout: NativeBrowsingHistoryMasonryNSCollectionViewLayout
+                if let current = collectionView.collectionViewLayout as? NativeBrowsingHistoryMasonryNSCollectionViewLayout {
+                    masonryLayout = current
+                } else {
+                    masonryLayout = NativeBrowsingHistoryMasonryNSCollectionViewLayout()
+                    collectionView.collectionViewLayout = masonryLayout
+                }
+                masonryLayout.items = parent.items
+                masonryLayout.nativeLayout = parent.layout
+                masonryLayout.invalidateLayout()
+                return
+            }
+
             let flowLayout: NSCollectionViewFlowLayout
             if let current = collectionView.collectionViewLayout as? NSCollectionViewFlowLayout {
                 flowLayout = current
@@ -237,6 +294,71 @@ extension NativeBrowsingHistoryCollectionView: NSViewRepresentable {
                 containerWidth: collectionView.enclosingScrollView?.contentSize.width ?? collectionView.bounds.width
             )
         }
+    }
+}
+
+private final class NativeBrowsingHistoryMasonryNSCollectionViewLayout: NSCollectionViewLayout {
+    var items: [NativeBrowsingHistoryCollectionItem] = []
+    var nativeLayout: NativeBrowsingHistoryCollectionLayout = .localCards
+
+    private var cachedAttributes: [IndexPath: NSCollectionViewLayoutAttributes] = [:]
+    private var cachedContentSize: CGSize = .zero
+
+    override var collectionViewContentSize: NSSize {
+        cachedContentSize
+    }
+
+    override func prepare() {
+        super.prepare()
+
+        guard let collectionView else {
+            cachedAttributes = [:]
+            cachedContentSize = .zero
+            return
+        }
+
+        let insets = nativeLayout.sectionInsets
+        let containerWidth = max(
+            collectionView.enclosingScrollView?.contentSize.width ?? collectionView.bounds.width,
+            1
+        )
+        let availableWidth = max(containerWidth - insets.leading - insets.trailing, 1)
+        let resolved = ArtworkMasonryPlacement.resolve(
+            elements: items.map { nativeLayout.masonryElement(for: $0) },
+            availableWidth: availableWidth,
+            configuration: nativeLayout.masonryConfiguration
+        )
+
+        var attributes: [IndexPath: NSCollectionViewLayoutAttributes] = [:]
+        attributes.reserveCapacity(resolved.frames.count)
+        for (index, frame) in resolved.frames.enumerated() {
+            let indexPath = IndexPath(item: index, section: 0)
+            let itemAttributes = NSCollectionViewLayoutAttributes(forItemWith: indexPath)
+            itemAttributes.frame = frame.offsetBy(dx: insets.leading, dy: insets.top)
+            attributes[indexPath] = itemAttributes
+        }
+
+        cachedAttributes = attributes
+        cachedContentSize = CGSize(
+            width: containerWidth,
+            height: resolved.size.height + insets.top + insets.bottom
+        )
+    }
+
+    override func layoutAttributesForElements(in rect: NSRect) -> [NSCollectionViewLayoutAttributes] {
+        cachedAttributes.values.filter { $0.frame.intersects(rect) }
+    }
+
+    override func layoutAttributesForItem(at indexPath: IndexPath) -> NSCollectionViewLayoutAttributes? {
+        cachedAttributes[indexPath]
+    }
+
+    override func shouldInvalidateLayout(forBoundsChange newBounds: NSRect) -> Bool {
+        guard let collectionView else { return false }
+        return NativeGalleryBoundsInvalidation.shouldInvalidate(
+            oldSize: collectionView.bounds.size,
+            newSize: newBounds.size
+        )
     }
 }
 
@@ -297,7 +419,7 @@ extension NativeBrowsingHistoryCollectionView: UIViewRepresentable {
     func makeUIView(context: Context) -> UICollectionView {
         let collectionView = NativeContentAwareCollectionView(
             frame: .zero,
-            collectionViewLayout: UICollectionViewFlowLayout()
+            collectionViewLayout: NativeBrowsingHistoryMasonryUICollectionViewLayout()
         )
         configureCollectionViewForBottomTabContent(collectionView)
         collectionView.register(
@@ -363,6 +485,20 @@ extension NativeBrowsingHistoryCollectionView: UIViewRepresentable {
         }
 
         func updateCollectionLayout(for collectionView: UICollectionView) {
+            if parent.layout.usesMasonry {
+                let masonryLayout: NativeBrowsingHistoryMasonryUICollectionViewLayout
+                if let current = collectionView.collectionViewLayout as? NativeBrowsingHistoryMasonryUICollectionViewLayout {
+                    masonryLayout = current
+                } else {
+                    masonryLayout = NativeBrowsingHistoryMasonryUICollectionViewLayout()
+                    collectionView.setCollectionViewLayout(masonryLayout, animated: false)
+                }
+                masonryLayout.items = parent.items
+                masonryLayout.nativeLayout = parent.layout
+                masonryLayout.invalidateLayout()
+                return
+            }
+
             let flowLayout: UICollectionViewFlowLayout
             if let current = collectionView.collectionViewLayout as? UICollectionViewFlowLayout {
                 flowLayout = current
@@ -407,6 +543,88 @@ extension NativeBrowsingHistoryCollectionView: UIViewRepresentable {
                 containerWidth: collectionView.bounds.width
             )
         }
+    }
+}
+
+private final class NativeBrowsingHistoryMasonryUICollectionViewLayout: UICollectionViewLayout {
+    var items: [NativeBrowsingHistoryCollectionItem] = []
+    var nativeLayout: NativeBrowsingHistoryCollectionLayout = .localCards
+
+    private var cachedAttributes: [IndexPath: UICollectionViewLayoutAttributes] = [:]
+    private var previousCachedAttributes: [IndexPath: UICollectionViewLayoutAttributes] = [:]
+    private var cachedContentSize: CGSize = .zero
+
+    override var collectionViewContentSize: CGSize {
+        cachedContentSize
+    }
+
+    override func prepare() {
+        super.prepare()
+
+        previousCachedAttributes = cachedAttributes
+
+        guard let collectionView else {
+            cachedAttributes = [:]
+            cachedContentSize = .zero
+            return
+        }
+
+        let insets = nativeLayout.sectionInsets
+        let containerWidth = max(collectionView.bounds.width, 1)
+        let availableWidth = max(containerWidth - insets.leading - insets.trailing, 1)
+        let resolved = ArtworkMasonryPlacement.resolve(
+            elements: items.map { nativeLayout.masonryElement(for: $0) },
+            availableWidth: availableWidth,
+            configuration: nativeLayout.masonryConfiguration
+        )
+
+        var attributes: [IndexPath: UICollectionViewLayoutAttributes] = [:]
+        attributes.reserveCapacity(resolved.frames.count)
+        for (index, frame) in resolved.frames.enumerated() {
+            let indexPath = IndexPath(item: index, section: 0)
+            let itemAttributes = UICollectionViewLayoutAttributes(forCellWith: indexPath)
+            itemAttributes.frame = frame.offsetBy(dx: insets.leading, dy: insets.top)
+            attributes[indexPath] = itemAttributes
+        }
+
+        cachedAttributes = attributes
+        cachedContentSize = CGSize(
+            width: containerWidth,
+            height: resolved.size.height + insets.top + insets.bottom
+        )
+    }
+
+    override func layoutAttributesForElements(in rect: CGRect) -> [UICollectionViewLayoutAttributes]? {
+        cachedAttributes.values.filter { $0.frame.intersects(rect) }
+    }
+
+    override func layoutAttributesForItem(at indexPath: IndexPath) -> UICollectionViewLayoutAttributes? {
+        cachedAttributes[indexPath] ?? previousCachedAttributes[indexPath]
+    }
+
+    override func initialLayoutAttributesForAppearingItem(
+        at itemIndexPath: IndexPath
+    ) -> UICollectionViewLayoutAttributes? {
+        copiedAttributes(for: itemIndexPath)
+    }
+
+    override func finalLayoutAttributesForDisappearingItem(
+        at itemIndexPath: IndexPath
+    ) -> UICollectionViewLayoutAttributes? {
+        copiedAttributes(for: itemIndexPath)
+    }
+
+    override func shouldInvalidateLayout(forBoundsChange newBounds: CGRect) -> Bool {
+        guard let collectionView else { return false }
+        return NativeGalleryBoundsInvalidation.shouldInvalidate(
+            oldSize: collectionView.bounds.size,
+            newSize: newBounds.size
+        )
+    }
+
+    private func copiedAttributes(for indexPath: IndexPath) -> UICollectionViewLayoutAttributes? {
+        (cachedAttributes[indexPath] ?? previousCachedAttributes[indexPath])?.copy()
+            as? UICollectionViewLayoutAttributes
     }
 }
 

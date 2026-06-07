@@ -25266,25 +25266,25 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Refresh Pixiv history after opening artworks from this account."
+            "value": "Pixiv history is server-side viewing history and may require Pixiv Premium. It may not include works opened only in a web browser."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "このアカウントで作品を開いた後に Pixiv 履歴を更新します。"
+            "value": "Pixiv 履歴はサーバー側の閲覧履歴で、Pixiv プレミアムが必要な場合があります。ブラウザだけで開いた作品は含まれないことがあります。"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "使用当前账号打开作品后，可以刷新 Pixiv 历史。"
+            "value": "Pixiv 历史是服务端浏览历史，可能需要 Pixiv Premium；仅在网页浏览器里打开的作品不一定会同步到这里。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "使用當前帳號開啟作品後，可以刷新 Pixiv 紀錄。"
+            "value": "Pixiv 紀錄是伺服器端瀏覽紀錄，可能需要 Pixiv Premium；僅在網頁瀏覽器開啟的作品不一定會同步到這裡。"
           }
         }
       }

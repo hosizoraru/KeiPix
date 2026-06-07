@@ -3,6 +3,47 @@ import SwiftUI
 import UIKit
 #endif
 
+struct ArtworkCoverCardChrome<Overlay: View, BottomContent: View>: View {
+    let imageURL: URL?
+    let contentBadges: [ArtworkContentBadge]
+    var showContentBadges = true
+    var maskSensitivePreview = false
+    var gradientFraction: CGFloat = ArtworkCardDisplayStyle.regular.overlayFraction
+    var imageHeight: CGFloat?
+    @ViewBuilder var overlay: () -> Overlay
+    @ViewBuilder var bottomContent: () -> BottomContent
+
+    var body: some View {
+        ZStack(alignment: .bottomLeading) {
+            RemoteImageView(url: imageURL)
+                .sensitiveArtworkPreviewMasked(maskSensitivePreview, badges: contentBadges)
+                .frame(height: imageHeight)
+                .frame(maxHeight: imageHeight == nil ? .infinity : nil)
+                .frame(maxWidth: .infinity)
+                .overlay(alignment: .bottom) {
+                    LinearGradient(
+                        colors: [.clear, .black.opacity(0.68)],
+                        startPoint: .center,
+                        endPoint: .bottom
+                    )
+                    .frame(height: imageHeight.map { $0 * gradientFraction })
+                }
+
+            if showContentBadges {
+                ArtworkContentBadgesView(badges: contentBadges, style: .overlay)
+                    .padding(8)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            }
+
+            overlay()
+
+            bottomContent()
+                .padding(10)
+        }
+        .frame(maxWidth: .infinity, maxHeight: imageHeight == nil ? .infinity : nil)
+    }
+}
+
 struct ArtworkCardView: View {
     let artwork: PixivArtwork
     let isSelected: Bool
@@ -108,33 +149,20 @@ struct ArtworkCardView: View {
     }
 
     private func cardContent(height: CGFloat?) -> some View {
-        ZStack(alignment: .bottomLeading) {
-            RemoteImageView(url: artwork.feedPreviewURL(tier: feedPreviewTier) ?? artwork.thumbnailURL)
-                .sensitiveArtworkPreviewMasked(shouldMaskSensitivePreview, badges: artwork.contentBadges)
-                .frame(height: height)
-                .frame(maxHeight: height == nil ? .infinity : nil)
-                .frame(maxWidth: .infinity)
-                .overlay(alignment: .bottom) {
-                    LinearGradient(
-                        colors: [.clear, .black.opacity(0.68)],
-                        startPoint: .center,
-                        endPoint: .bottom
-                    )
-                    .frame(height: height.map { $0 * resolvedDisplayStyle.overlayFraction })
-                }
-
-            if showContentBadges {
-                ArtworkContentBadgesView(badges: artwork.contentBadges, style: .overlay)
-                    .padding(8)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-            }
-
+        ArtworkCoverCardChrome(
+            imageURL: artwork.feedPreviewURL(tier: feedPreviewTier) ?? artwork.thumbnailURL,
+            contentBadges: artwork.contentBadges,
+            showContentBadges: showContentBadges,
+            maskSensitivePreview: shouldMaskSensitivePreview,
+            gradientFraction: resolvedDisplayStyle.overlayFraction,
+            imageHeight: height
+        ) {
             if downloadState != .none {
                 ArtworkDownloadStateBadge(state: downloadState)
                     .padding(8)
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
             }
-
+        } bottomContent: {
             VStack(alignment: .leading, spacing: 5) {
                 HStack(alignment: .firstTextBaseline, spacing: 6) {
                     Text(artwork.title)
@@ -169,9 +197,7 @@ struct ArtworkCardView: View {
                 .labelStyle(.titleAndIcon)
                 .minimumScaleFactor(0.76)
             }
-            .padding(10)
         }
-        .frame(maxWidth: .infinity, maxHeight: height == nil ? .infinity : nil)
     }
 
     @ViewBuilder

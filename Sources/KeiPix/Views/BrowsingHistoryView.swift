@@ -30,7 +30,10 @@ struct BrowsingHistoryView: View {
             title: L10n.history,
             status: historyStatusText,
             statusSystemImage: "clock.arrow.circlepath"
-        )
+        ) {
+            historySourceMenu
+                .controlSize(.small)
+        }
         .platformPageNavigationChrome(title: L10n.history, status: historyStatusText)
         .confirmationDialog(
             L10n.clearHistoryConfirmation,
@@ -93,15 +96,9 @@ struct BrowsingHistoryView: View {
     private var header: some View {
         GlassEffectContainer(spacing: 8) {
             FlowLayout(spacing: 8) {
-                Picker(L10n.historySource, selection: $source) {
-                    ForEach(BrowsingHistorySource.allCases) { source in
-                        Text(source.title).tag(source)
-                    }
-                }
-                .pickerStyle(.segmented)
-                .labelsHidden()
-                .frame(minWidth: 120, idealWidth: 132, maxWidth: 150)
-                .accessibilityLabel(L10n.historySource)
+                #if os(macOS)
+                historySourceMenu
+                #endif
 
                 if source == .local {
                     OS26LibrarySearchField(
@@ -158,6 +155,23 @@ struct BrowsingHistoryView: View {
             }
         }
         .controlSize(.small)
+    }
+
+    private var historySourceMenu: some View {
+        Menu {
+            Picker(L10n.historySource, selection: $source) {
+                ForEach(BrowsingHistorySource.allCases) { source in
+                    Label(source.title, systemImage: source.systemImage)
+                        .tag(source)
+                }
+            }
+        } label: {
+            Label(source.title, systemImage: source.systemImage)
+                .lineLimit(1)
+        }
+        .os26GlassButton()
+        .help(L10n.historySource)
+        .accessibilityLabel(L10n.historySource)
     }
 
     private var historyFilterMenu: some View {
@@ -285,6 +299,7 @@ struct BrowsingHistoryView: View {
                 item: historyItem,
                 isSelected: store.selectedArtwork?.id == historyItem.id,
                 showContentBadges: store.showContentBadges,
+                maskSensitivePreview: store.maskSensitivePreviews,
                 select: {
                     Task { await store.selectLocalHistoryItem(historyItem) }
                 },
@@ -466,16 +481,23 @@ private enum BrowsingHistorySource: String, CaseIterable, Identifiable {
         case .pixiv: L10n.pixivHistory
         }
     }
+
+    var systemImage: String {
+        switch self {
+        case .local: "clock"
+        case .pixiv: "sparkles.rectangle.stack"
+        }
+    }
 }
 
 private struct LocalHistoryCard: View {
     let item: LocalArtworkHistoryItem
     let isSelected: Bool
     let showContentBadges: Bool
+    let maskSensitivePreview: Bool
     let select: () -> Void
     let delete: () -> Void
     let copyLink: () -> Void
-    private let thumbnailHeight: CGFloat = 168
 
     var body: some View {
         ZStack(alignment: .topTrailing) {
@@ -507,42 +529,31 @@ private struct LocalHistoryCard: View {
     }
 
     private var cardContent: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            ZStack(alignment: .topLeading) {
-                RemoteImageView(url: item.thumbnailURL)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: thumbnailHeight)
-                    .clipped()
-
-                if showContentBadges {
-                    ArtworkContentBadgesView(badges: item.contentBadges, style: .overlay)
-                        .padding(8)
-                }
-
-                if hasStatusBadges {
-                    statusBadges
-                        .padding(8)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
-                }
-
-                if item.pageCount > 1 {
-                    pageCountBadge
-                        .padding(8)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
-                }
+        ArtworkCoverCardChrome(
+            imageURL: item.thumbnailURL,
+            contentBadges: item.contentBadges,
+            showContentBadges: showContentBadges,
+            maskSensitivePreview: maskSensitivePreview && item.requiresScreenCaptureProtection,
+            gradientFraction: ArtworkMasonryPresentation(aspectRatio: CGFloat(item.aspectRatio)).cardStyle.overlayFraction,
+            imageHeight: nil
+        ) {
+            if item.pageCount > 1 {
+                pageCountBadge
+                    .padding(8)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
             }
-            .frame(maxWidth: .infinity)
-            .frame(height: thumbnailHeight)
-            .clipped()
-
+        } bottomContent: {
             VStack(alignment: .leading, spacing: 5) {
                 Text(item.title)
-                    .font(.callout.weight(.semibold))
-                    .lineLimit(2)
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(.white)
+                    .lineLimit(ArtworkMasonryPresentation(aspectRatio: CGFloat(item.aspectRatio)).cardStyle.titleLineLimit)
+                    .minimumScaleFactor(0.82)
 
                 HStack(alignment: .firstTextBaseline, spacing: 8) {
                     Text(item.creatorName)
-                        .font(.caption)
+                        .font(.caption2)
+                        .foregroundStyle(.white.opacity(0.78))
                         .lineLimit(1)
 
                     Spacer(minLength: 8)
@@ -550,11 +561,14 @@ private struct LocalHistoryCard: View {
                     Label(BrowsingHistoryTimestampLabel.shortLabel(for: item.viewedAt), systemImage: "clock")
                         .font(.caption2)
                         .labelStyle(.titleAndIcon)
+                        .foregroundStyle(.white.opacity(0.78))
                         .lineLimit(1)
                 }
-                .foregroundStyle(.secondary)
+
+                if hasStatusBadges {
+                    statusBadges
+                }
             }
-            .padding(10)
         }
     }
 

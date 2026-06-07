@@ -66,6 +66,10 @@ struct LocalArtworkHistoryItem: Codable, Identifiable, Hashable, Sendable {
         return Double(width) / Double(height)
     }
 
+    var requiresScreenCaptureProtection: Bool {
+        isR18 || isR18G
+    }
+
     var contentBadges: [ArtworkContentBadge] {
         var badges: [ArtworkContentBadge] = []
         if isR18G {
