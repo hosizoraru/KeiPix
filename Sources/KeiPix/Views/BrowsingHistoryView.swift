@@ -10,6 +10,7 @@ struct BrowsingHistoryView: View {
     @State private var source = BrowsingHistorySource.local
     @State private var statusFilter = BrowsingHistoryStatusFilter.all
     @State private var localSearchText = ""
+    @State private var isSearchPopoverPresented = false
     @State private var isClearConfirmationPresented = false
     @State private var pendingDeleteItem: LocalArtworkHistoryItem?
     @State private var actionMessage: String?
@@ -101,6 +102,9 @@ struct BrowsingHistoryView: View {
                 #endif
 
                 if source == .local {
+                    #if os(iOS)
+                    compactHistorySearchButton
+                    #else
                     OS26LibrarySearchField(
                         text: $localSearchText,
                         placeholder: L10n.searchHistory,
@@ -117,6 +121,7 @@ struct BrowsingHistoryView: View {
                     .os26GlassIconButton()
                     .disabled(localSearchText.isEmpty)
                     .help(L10n.clearSearch)
+                    #endif
                 }
 
                 historyFilterMenu
@@ -161,17 +166,75 @@ struct BrowsingHistoryView: View {
         Menu {
             Picker(L10n.historySource, selection: $source) {
                 ForEach(BrowsingHistorySource.allCases) { source in
-                    Label(source.title, systemImage: source.systemImage)
+                    if source.requiresPixivPremiumForFullBehavior {
+                        PixivPremiumMenuLabel(
+                            title: source.title,
+                            systemImage: source.systemImage,
+                            isSelected: self.source == source
+                        )
                         .tag(source)
+                    } else {
+                        Label(source.title, systemImage: source.systemImage)
+                            .tag(source)
+                    }
                 }
             }
         } label: {
-            Label(source.title, systemImage: source.systemImage)
-                .lineLimit(1)
+            HStack(spacing: 6) {
+                Label(source.title, systemImage: source.systemImage)
+                    .lineLimit(1)
+                if source.requiresPixivPremiumForFullBehavior {
+                    PixivPremiumBadge()
+                }
+            }
         }
         .os26GlassButton()
         .help(L10n.historySource)
         .accessibilityLabel(L10n.historySource)
+    }
+
+    private var compactHistorySearchButton: some View {
+        Button {
+            isSearchPopoverPresented.toggle()
+        } label: {
+            Label(compactHistorySearchTitle, systemImage: localSearchText.isEmpty ? "magnifyingglass" : "magnifyingglass.circle.fill")
+                .lineLimit(1)
+        }
+        .os26GlassButton(prominent: localSearchText.isEmpty == false)
+        .help(L10n.searchHistory)
+        .accessibilityLabel(L10n.searchHistory)
+        .popover(isPresented: $isSearchPopoverPresented, arrowEdge: .bottom) {
+            VStack(alignment: .leading, spacing: 12) {
+                OS26LibrarySearchField(
+                    text: $localSearchText,
+                    placeholder: L10n.searchHistory,
+                    minWidth: 240,
+                    idealWidth: 280,
+                    maxWidth: 320
+                )
+
+                HStack {
+                    Text(localSearchText.isEmpty ? L10n.searchHistory : compactHistorySearchTitle)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+
+                    Spacer()
+
+                    Button {
+                        localSearchText = ""
+                    } label: {
+                        Label(L10n.clearSearch, systemImage: "xmark.circle")
+                    }
+                    .buttonStyle(.glass)
+                    .buttonBorderShape(.capsule)
+                    .disabled(localSearchText.isEmpty)
+                }
+            }
+            .padding(14)
+            .frame(width: 330)
+        }
     }
 
     private var historyFilterMenu: some View {
@@ -214,7 +277,8 @@ struct BrowsingHistoryView: View {
             } else {
                 NativeBrowsingHistoryCollectionView(
                     items: items.map(NativeBrowsingHistoryCollectionItem.local),
-                    layout: .localCards
+                    layout: .localCards,
+                    contentReloadToken: localHistoryContentReloadToken(for: items)
                 ) { item in
                     nativeLocalHistoryContent(for: item)
                 }
@@ -258,7 +322,8 @@ struct BrowsingHistoryView: View {
             } else {
                 NativeBrowsingHistoryCollectionView(
                     items: pixivHistoryItems,
-                    layout: .pixivCards
+                    layout: .pixivCards,
+                    contentReloadToken: pixivHistoryContentReloadToken
                 ) { item in
                     nativePixivHistoryContent(for: item)
                 }
@@ -287,6 +352,11 @@ struct BrowsingHistoryView: View {
     private var isLocalSearchOrFilterActive: Bool {
         localSearchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false
             || statusFilter.isActive
+    }
+
+    private var compactHistorySearchTitle: String {
+        let text = localSearchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        return text.isEmpty ? L10n.search : text
     }
 
     private func nativeLocalHistoryContent(for item: NativeBrowsingHistoryCollectionItem) -> AnyView {
@@ -326,7 +396,7 @@ struct BrowsingHistoryView: View {
                     feedPreviewTier: store.feedPreviewImageQualityTier,
                     emphasizeFollowing: store.emphasizeFollowingArtists
                 ) {
-                    store.selectedArtwork = artwork
+                    store.navigateToArtwork(artwork)
                 }
                 .contextMenu {
                     pixivHistoryMenu(for: artwork)
@@ -399,6 +469,48 @@ struct BrowsingHistoryView: View {
             }
             return visibleCount.formatted()
         }
+    }
+
+    private func localHistoryContentReloadToken(for items: [LocalArtworkHistoryItem]) -> Int {
+        var hasher = Hasher()
+        hasher.combine(store.selectedArtwork?.id)
+        hasher.combine(store.showContentBadges)
+        hasher.combine(store.maskSensitivePreviews)
+        for item in items {
+            hasher.combine(item.id)
+            hasher.combine(item.title)
+            hasher.combine(item.creatorName)
+            hasher.combine(item.pageCount)
+            hasher.combine(item.width)
+            hasher.combine(item.height)
+            hasher.combine(item.isBookmarked)
+            hasher.combine(item.isCreatorFollowed)
+            hasher.combine(item.viewedAt)
+        }
+        return hasher.finalize()
+    }
+
+    private var pixivHistoryContentReloadToken: Int {
+        var hasher = Hasher()
+        hasher.combine(store.selectedArtwork?.id)
+        hasher.combine(store.showContentBadges)
+        hasher.combine(store.maskSensitivePreviews)
+        hasher.combine(store.feedPreviewImageQualityTier.rawValue)
+        hasher.combine(store.emphasizeFollowingArtists)
+        for artwork in filteredPixivHistoryArtworks {
+            hasher.combine(artwork.id)
+            hasher.combine(artwork.title)
+            hasher.combine(artwork.pageCount)
+            hasher.combine(artwork.width)
+            hasher.combine(artwork.height)
+            hasher.combine(artwork.totalView)
+            hasher.combine(artwork.totalBookmarks)
+            hasher.combine(artwork.isBookmarked)
+            hasher.combine(artwork.user.id)
+            hasher.combine(artwork.user.name)
+            hasher.combine(artwork.user.isFollowed)
+        }
+        return hasher.finalize()
     }
 
     private func dismissActionMessageIfNeeded(_ message: String?) async {
@@ -488,6 +600,15 @@ private enum BrowsingHistorySource: String, CaseIterable, Identifiable {
         case .pixiv: "sparkles.rectangle.stack"
         }
     }
+
+    var requiresPixivPremiumForFullBehavior: Bool {
+        switch self {
+        case .local:
+            false
+        case .pixiv:
+            true
+        }
+    }
 }
 
 private struct LocalHistoryCard: View {
@@ -503,13 +624,13 @@ private struct LocalHistoryCard: View {
         ZStack(alignment: .topTrailing) {
             Button(action: select) {
                 cardContent
-                    .contentShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    .contentShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
             }
             .buttonStyle(.plain)
-            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
             .frame(maxWidth: .infinity)
             .overlay {
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
                     .strokeBorder(borderStyle, lineWidth: isSelected ? 2 : 1)
             }
             .contextMenu {
@@ -524,7 +645,7 @@ private struct LocalHistoryCard: View {
             .os26GlassIconButton()
             .controlSize(.small)
             .help(L10n.moreActions)
-            .padding(8)
+            .padding(9)
         }
     }
 
@@ -539,7 +660,7 @@ private struct LocalHistoryCard: View {
         ) {
             if item.pageCount > 1 {
                 pageCountBadge
-                    .padding(8)
+                    .padding(9)
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
             }
         } bottomContent: {

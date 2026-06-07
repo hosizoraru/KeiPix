@@ -2623,6 +2623,8 @@ struct NativeBoundaryTests {
         #expect(searchFilters.contains(".keiGlass(18)"))
         #expect(searchFilters.contains("GlassEffectContainer(spacing: 8)"))
         #expect(searchFilters.contains(".buttonStyle(.glassProminent)"))
+        #expect(searchFilters.contains("PixivPremiumMenuLabel("))
+        #expect(searchFilters.contains("showsPixivPremiumMarker(isPremium: isPremium)"))
         #expect(searchFilters.contains(".textFieldStyle(.roundedBorder)") == false)
 
         #expect(quickOpenSheet.contains("NativeSearchField("))
@@ -2645,6 +2647,53 @@ struct NativeBoundaryTests {
         #expect(creatorComponents.contains(".buttonStyle(.borderedProminent)") == false)
         #expect(creatorComponents.contains(".os26GlassButton(prominent: true)"))
         #expect(creatorComponents.contains("OS26LibraryUnavailableView("))
+    }
+
+    @Test("Pixiv Premium-only surfaces expose visible premium markers")
+    func pixivPremiumSurfacesExposeVisibleMarkers() throws {
+        let root = try packageRoot()
+        let premiumBadge = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/PixivPremiumBadge.swift"),
+            encoding: .utf8
+        )
+        let browsingHistory = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/BrowsingHistoryView.swift"),
+            encoding: .utf8
+        )
+        let galleryFeedHeader = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/GalleryFeedHeaderView.swift"),
+            encoding: .utf8
+        )
+        let popularPreview = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/GalleryPopularPreviewStrip.swift"),
+            encoding: .utf8
+        )
+        let mutedContent = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/MutedContentView.swift"),
+            encoding: .utf8
+        )
+        let safetySettings = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/Settings/SafetySettingsPage.swift"),
+            encoding: .utf8
+        )
+        let runtimeReadiness = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/RuntimeReadinessView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(premiumBadge.contains("struct PixivPremiumBadge: View"))
+        #expect(premiumBadge.contains("struct PixivPremiumMenuLabel: View"))
+        #expect(premiumBadge.contains("struct PixivPremiumInlineLabel: View"))
+        #expect(premiumBadge.contains("0.992"))
+
+        #expect(browsingHistory.contains("requiresPixivPremiumForFullBehavior"))
+        #expect(browsingHistory.contains("PixivPremiumMenuLabel("))
+        #expect(galleryFeedHeader.contains("requiresPixivPremiumForFullPixivWebBehavior"))
+        #expect(galleryFeedHeader.contains("PixivPremiumMenuLabel("))
+        #expect(popularPreview.contains("PixivPremiumBadge()"))
+        #expect(mutedContent.contains("PixivPremiumMenuLabel("))
+        #expect(safetySettings.contains("pixivPremiumSettingsActionButton"))
+        #expect(runtimeReadiness.contains("PixivPremiumInlineLabel("))
     }
 
     @Test("Creator cards use adaptive OS 26 glass actions")

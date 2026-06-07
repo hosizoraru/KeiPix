@@ -183,6 +183,31 @@ struct BrowsingHistoryPresentationTests {
         #expect(unbookmarkedItem.isBookmarked == false)
     }
 
+    @Test("Local history presentation merges the newest known artwork status")
+    @MainActor
+    func localHistoryPresentationMergesNewestKnownArtworkStatus() throws {
+        let store = KeiPixStore(
+            downloads: ArtworkDownloadStore(
+                completionNotifier: DownloadCompletionNotifier(
+                    center: NoopNotificationCenter(),
+                    authorizationStore: HistoryAuthorizationCacheStore()
+                )
+            ),
+            bootstrapsAutomatically: false
+        )
+        let stale = try Self.artwork(id: 11, isBookmarked: false, isFollowed: false, userID: 911)
+        let fresh = try Self.artwork(id: 11, isBookmarked: true, isFollowed: true, userID: 911)
+        store.localBrowsingHistory = [LocalArtworkHistoryItem(artwork: stale)]
+        store.selectedArtwork = fresh
+
+        let presented = try #require(store.presentedLocalBrowsingHistoryItems.first)
+
+        #expect(presented.isBookmarked)
+        #expect(presented.isCreatorFollowed)
+        #expect(BrowsingHistoryStatusFilter.bookmarkedWorks.includes(presented))
+        #expect(BrowsingHistoryStatusFilter.followedCreators.includes(presented))
+    }
+
     @Test("Selected-only artwork updates refresh detail and local history snapshots")
     @MainActor
     func selectedOnlyArtworkUpdatesRefreshDetailAndLocalHistorySnapshots() throws {

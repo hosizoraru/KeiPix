@@ -77,8 +77,7 @@ enum AppLaunchRouteResolver {
 
     private static var usesMobileBottomTabsOnCurrentPlatform: Bool {
         #if os(iOS)
-        let deviceFamilies = Bundle.main.object(forInfoDictionaryKey: "UIDeviceFamily") as? [Int]
-        return deviceFamilies?.contains(1) == true
+        true
         #else
         false
         #endif

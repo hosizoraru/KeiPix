@@ -86,6 +86,14 @@ struct LocalArtworkHistoryItem: Codable, Identifiable, Hashable, Sendable {
         return badges
     }
 
+    func mergingLatestStatus(from artwork: PixivArtwork?) -> LocalArtworkHistoryItem {
+        guard let artwork else { return self }
+        var copy = self
+        copy.isBookmarked = artwork.isBookmarked
+        copy.isCreatorFollowed = artwork.user.isFollowed
+        return copy
+    }
+
     func matches(_ query: String) -> Bool {
         let normalized = query.trimmingCharacters(in: .whitespacesAndNewlines)
         guard normalized.isEmpty == false else { return true }

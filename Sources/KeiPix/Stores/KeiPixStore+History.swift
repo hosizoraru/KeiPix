@@ -23,8 +23,14 @@ extension KeiPixStore {
     }
 
     func localHistoryItems(matching query: String) -> [LocalArtworkHistoryItem] {
-        localBrowsingHistory.filter { item in
+        presentedLocalBrowsingHistoryItems.filter { item in
             passesLocalHistoryFilters(item) && item.matches(query)
+        }
+    }
+
+    var presentedLocalBrowsingHistoryItems: [LocalArtworkHistoryItem] {
+        localBrowsingHistory.map { item in
+            item.mergingLatestStatus(from: allKnownArtwork(id: item.id))
         }
     }
 

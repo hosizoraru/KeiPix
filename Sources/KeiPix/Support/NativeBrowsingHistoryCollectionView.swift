@@ -85,26 +85,23 @@ enum NativeBrowsingHistoryCollectionLayout: Equatable {
     var usesMasonry: Bool { true }
 
     var masonryConfiguration: ArtworkMasonryLayoutConfiguration {
-        switch self {
-        case .localCards:
-            ArtworkMasonryLayoutConfiguration(
-                spacing: interitemSpacing,
-                preferredColumnWidth: 196,
-                minColumnWidth: 154,
-                maxColumnWidth: 236,
-                fixedColumnCount: nil,
-                denseFixedColumns: false
-            )
-        case .pixivCards:
-            ArtworkMasonryLayoutConfiguration(
-                spacing: interitemSpacing,
-                preferredColumnWidth: 184,
-                minColumnWidth: 152,
-                maxColumnWidth: 224,
-                fixedColumnCount: nil,
-                denseFixedColumns: false
-            )
+        #if os(iOS)
+        if Self.usesPhoneMasonryDefaults {
+            return GalleryLayoutAdaptation.phoneTwoColumnMasonry.masonryConfiguration(for: .twoColumnMasonry)
         }
+        return GalleryLayoutAdaptation.portraitTabletMasonry.masonryConfiguration(for: .autoMasonry)
+        #else
+        return GalleryLayoutAdaptation.fullMasonry.masonryConfiguration(for: .autoMasonry)
+        #endif
+    }
+
+    private static var usesPhoneMasonryDefaults: Bool {
+        #if os(iOS)
+        let families = Bundle.main.object(forInfoDictionaryKey: "UIDeviceFamily") as? [Int]
+        return families?.contains(1) == true && families?.contains(2) != true
+        #else
+        false
+        #endif
     }
 
     func masonryElement(for item: NativeBrowsingHistoryCollectionItem) -> ArtworkMasonryPlacement.Element {
@@ -162,6 +159,7 @@ enum NativeBrowsingHistoryCollectionLayout: Equatable {
 struct NativeBrowsingHistoryCollectionView {
     let items: [NativeBrowsingHistoryCollectionItem]
     let layout: NativeBrowsingHistoryCollectionLayout
+    var contentReloadToken = 0
     let content: (NativeBrowsingHistoryCollectionItem) -> AnyView
 }
 
@@ -214,6 +212,7 @@ extension NativeBrowsingHistoryCollectionView: NSViewRepresentable {
     final class Coordinator: NSObject, NSCollectionViewDelegateFlowLayout {
         var parent: NativeBrowsingHistoryCollectionView
         private var dataSource: NSCollectionViewDiffableDataSource<Int, NativeBrowsingHistoryCollectionItem>?
+        private var lastAppliedContentReloadToken = 0
 
         init(parent: NativeBrowsingHistoryCollectionView) {
             self.parent = parent
@@ -267,6 +266,11 @@ extension NativeBrowsingHistoryCollectionView: NSViewRepresentable {
             var snapshot = NSDiffableDataSourceSnapshot<Int, NativeBrowsingHistoryCollectionItem>()
             snapshot.appendSections([0])
             snapshot.appendItems(parent.items, toSection: 0)
+            let shouldRefreshVisibleContent = lastAppliedContentReloadToken != parent.contentReloadToken
+            lastAppliedContentReloadToken = parent.contentReloadToken
+            if shouldRefreshVisibleContent {
+                refreshVisibleHostedContent(in: collectionView)
+            }
             dataSource?.apply(snapshot, animatingDifferences: false) { [weak self, weak collectionView] in
                 guard let self, let collectionView else { return }
                 refreshVisibleHostedContent(in: collectionView)
@@ -452,6 +456,7 @@ extension NativeBrowsingHistoryCollectionView: UIViewRepresentable {
         var parent: NativeBrowsingHistoryCollectionView
         private var dataSource: UICollectionViewDiffableDataSource<Int, NativeBrowsingHistoryCollectionItem>?
         private let contentScrollRegistration = NativeContentScrollRegistration()
+        private var lastAppliedContentReloadToken = 0
 
         init(parent: NativeBrowsingHistoryCollectionView) {
             self.parent = parent
@@ -516,6 +521,11 @@ extension NativeBrowsingHistoryCollectionView: UIViewRepresentable {
             var snapshot = NSDiffableDataSourceSnapshot<Int, NativeBrowsingHistoryCollectionItem>()
             snapshot.appendSections([0])
             snapshot.appendItems(parent.items, toSection: 0)
+            let shouldRefreshVisibleContent = lastAppliedContentReloadToken != parent.contentReloadToken
+            lastAppliedContentReloadToken = parent.contentReloadToken
+            if shouldRefreshVisibleContent {
+                refreshVisibleHostedContent(in: collectionView)
+            }
             dataSource?.apply(snapshot, animatingDifferences: false) { [weak self, weak collectionView] in
                 guard let self, let collectionView else { return }
                 refreshVisibleHostedContent(in: collectionView)
