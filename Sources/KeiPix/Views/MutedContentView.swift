@@ -4,6 +4,7 @@ struct MutedContentView: View {
     @Bindable var store: KeiPixStore
     @State private var category = MutedContentCategory.tags
     @State private var searchText = ""
+    @State private var isSearchPresented = false
     @State private var newTagText = ""
     @State private var newCommentPhraseText = ""
     @State private var isSyncing = false
@@ -17,8 +18,11 @@ struct MutedContentView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            header
-                .platformGlassControlBar(verticalPadding: 8, topPadding: 2)
+            if showsMutedContentSearchBar {
+                header
+                    .platformGlassControlBar(verticalPadding: 8, topPadding: 2)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+            }
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
@@ -32,7 +36,9 @@ struct MutedContentView: View {
             title: L10n.mutedContent,
             status: totalCountText,
             statusSystemImage: "eye.slash"
-        )
+        ) {
+            mutedContentTitleActions
+        }
         .platformPageNavigationChrome(title: L10n.mutedContent, status: totalCountText)
         .overlay(alignment: .bottom) {
             if let statusMessage {
@@ -48,6 +54,7 @@ struct MutedContentView: View {
             }
         }
         .animation(.snappy(duration: 0.18), value: statusMessage)
+        .animation(.snappy(duration: 0.18), value: showsMutedContentSearchBar)
         .task(id: statusMessage) {
             await dismissStatusMessageIfNeeded(statusMessage)
         }
@@ -120,42 +127,14 @@ struct MutedContentView: View {
 
     private var header: some View {
         GlassEffectContainer(spacing: 8) {
-            ViewThatFits(in: .horizontal) {
-                HStack(spacing: 10) {
-                    categoryControl
-
-                    searchField
-                        .layoutPriority(1)
-
-                    headerActions
-                    Spacer(minLength: 0)
-                }
-
-                VStack(alignment: .leading, spacing: 10) {
-                    categoryControl
-                    HStack(spacing: 10) {
-                        searchField
-                            .layoutPriority(1)
-                        headerActions
-                    }
-                }
+            HStack(spacing: 10) {
+                searchField
+                    .frame(minWidth: 220, idealWidth: 320, maxWidth: 520)
+                    .layoutPriority(1)
+                Spacer(minLength: 0)
             }
         }
         .controlSize(.small)
-    }
-
-    private var categoryControl: some View {
-        OS26GlassCompatibleSegmentedPicker(
-            L10n.mutedContent,
-            selection: $category,
-            minWidth: 380,
-            idealWidth: 420,
-            maxWidth: 470
-        ) {
-            ForEach(MutedContentCategory.allCases) { category in
-                Text(category.title).tag(category)
-            }
-        }
     }
 
     private var searchField: some View {
@@ -164,76 +143,132 @@ struct MutedContentView: View {
             placeholder: L10n.searchMutedContent,
             minWidth: 180,
             idealWidth: 260,
-            maxWidth: 360
+            maxWidth: 420,
+            collapsesOnPhone: false
         )
     }
 
-    private var headerActions: some View {
+    private var mutedContentTitleActions: some View {
         OS26LibraryActionRail {
+            mutedCategoryMenu
+
             Button {
-                searchText = ""
+                withAnimation(.snappy(duration: 0.16)) {
+                    if showsMutedContentSearchBar, normalizedSearchText.isEmpty {
+                        isSearchPresented = false
+                    } else {
+                        isSearchPresented = true
+                    }
+                }
+            } label: {
+                Label(
+                    L10n.search,
+                    systemImage: normalizedSearchText.isEmpty ? "magnifyingglass" : "magnifyingglass.circle.fill"
+                )
+            }
+            .os26GlassIconButton(prominent: showsMutedContentSearchBar || normalizedSearchText.isEmpty == false)
+            .help(L10n.searchMutedContent)
+            .accessibilityLabel(L10n.searchMutedContent)
+
+            Button {
+                withAnimation(.snappy(duration: 0.16)) {
+                    searchText = ""
+                    isSearchPresented = false
+                }
             } label: {
                 Label(L10n.clearSearch, systemImage: "xmark.circle")
             }
             .os26GlassIconButton()
-            .disabled(searchText.isEmpty)
+            .disabled(normalizedSearchText.isEmpty && isSearchPresented == false)
             .help(L10n.clearSearch)
 
-            Menu {
-                Button {
-                    isSyncConfirmationPresented = true
-                } label: {
-                    PixivPremiumMenuLabel(
-                        title: L10n.syncFromPixiv,
-                        systemImage: "arrow.down.circle"
-                    )
+            mutedContentMoreMenu
+        }
+        .controlSize(.small)
+    }
+
+    private var mutedCategoryMenu: some View {
+        Menu {
+            Picker(L10n.mutedContent, selection: $category) {
+                ForEach(MutedContentCategory.allCases) { category in
+                    Label(category.title, systemImage: category.systemImage)
+                        .tag(category)
                 }
-                .disabled(isSyncing)
+            }
+        } label: {
+            ViewThatFits(in: .horizontal) {
+                Label(category.title, systemImage: category.systemImage)
+                Label(L10n.mutedContent, systemImage: category.systemImage)
+            }
+        }
+        .os26GlassButton()
+        .help("\(L10n.mutedContent): \(category.title)")
+        .accessibilityLabel("\(L10n.mutedContent): \(category.title)")
+    }
 
-                Button {
-                    isUploadConfirmationPresented = true
-                } label: {
-                    PixivPremiumMenuLabel(
-                        title: L10n.uploadToPixiv,
-                        systemImage: "arrow.up.circle"
-                    )
-                }
-                .disabled(isSyncing || (store.mutedTagList.isEmpty && store.mutedUserList.isEmpty))
-
-                Divider()
-
-                Button {
-                    exportLocalMutedContent()
-                } label: {
-                    Label(L10n.exportMutedContent, systemImage: "square.and.arrow.up")
-                }
-                .disabled(isSyncing || totalCount == 0)
-
-                Button {
-                    isImportConfirmationPresented = true
-                } label: {
-                    Label(L10n.importMutedContent, systemImage: "square.and.arrow.down")
-                }
-                .disabled(isSyncing)
-
-                Divider()
-
-                Button(role: .destructive) {
-                    isClearConfirmationPresented = true
-                } label: {
-                    Label(L10n.clearMutedContent, systemImage: "trash")
-                }
-                .disabled(totalCount == 0)
+    private var mutedContentMoreMenu: some View {
+        Menu {
+            Button {
+                isSyncConfirmationPresented = true
             } label: {
-                Label(
-                    L10n.moreActions,
-                    systemImage: isSyncing ? "arrow.triangle.2.circlepath" : "ellipsis.circle"
+                PixivPremiumMenuLabel(
+                    title: L10n.syncFromPixiv,
+                    systemImage: "arrow.down.circle"
                 )
             }
-            .os26GlassIconButton()
             .disabled(isSyncing)
-            .help(L10n.muteSyncHint)
+
+            Button {
+                isUploadConfirmationPresented = true
+            } label: {
+                PixivPremiumMenuLabel(
+                    title: L10n.uploadToPixiv,
+                    systemImage: "arrow.up.circle"
+                )
+            }
+            .disabled(isSyncing || (store.mutedTagList.isEmpty && store.mutedUserList.isEmpty))
+
+            Divider()
+
+            Button {
+                exportLocalMutedContent()
+            } label: {
+                Label(L10n.exportMutedContent, systemImage: "square.and.arrow.up")
+            }
+            .disabled(isSyncing || totalCount == 0)
+
+            Button {
+                isImportConfirmationPresented = true
+            } label: {
+                Label(L10n.importMutedContent, systemImage: "square.and.arrow.down")
+            }
+            .disabled(isSyncing)
+
+            Divider()
+
+            Button(role: .destructive) {
+                isClearConfirmationPresented = true
+            } label: {
+                Label(L10n.clearMutedContent, systemImage: "trash")
+            }
+            .disabled(totalCount == 0)
+        } label: {
+            Label(
+                L10n.moreActions,
+                systemImage: isSyncing ? "arrow.triangle.2.circlepath" : "ellipsis.circle"
+            )
         }
+        .os26GlassIconButton()
+        .disabled(isSyncing)
+        .help(L10n.muteSyncHint)
+    }
+
+    private var showsMutedContentSearchBar: Bool {
+        isSearchPresented || normalizedSearchText.isEmpty == false
+    }
+
+    private var normalizedSearchText: String {
+        searchText.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     private var contentPanel: some View {

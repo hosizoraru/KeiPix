@@ -18,6 +18,7 @@ struct DownloadQueueView: View {
     /// container owns keyboard focus and forwards Space to Quick Look,
     /// while SwiftUI keeps the selection value for row chrome.
     @State private var selectedDownloadID: UUID?
+    @State private var isDownloadSearchPresented = false
 
     var body: some View {
         let visibleItems = store.downloads.filteredItems
@@ -40,13 +41,16 @@ struct DownloadQueueView: View {
                 title: L10n.downloads,
                 status: downloadStatusText,
                 statusSystemImage: "arrow.down.circle"
-            )
+            ) {
+                downloadTitleActions
+            }
             .platformPageNavigationChrome(title: L10n.downloads, status: downloadStatusText)
             .quickLookPreview($quickLookURL)
             .overlay(alignment: .bottom) {
                 actionMessageOverlay
             }
             .animation(.snappy(duration: 0.18), value: actionMessage)
+            .animation(.snappy(duration: 0.18), value: showsDownloadSearchBar)
             .task(id: actionMessage) {
                 await dismissActionMessageIfNeeded(actionMessage)
             }
@@ -76,13 +80,11 @@ struct DownloadQueueView: View {
     @ViewBuilder
     private func queueColumn(visibleItems: [ArtworkDownloadItem]) -> some View {
         VStack(spacing: 0) {
-            DownloadQueueHeader(
-                downloads: store.downloads,
-                requestDangerAction: { pendingDangerAction = $0 },
-                copyVisibleLinks: copyVisibleLinks,
-                showActionMessage: showActionMessage
-            )
-            .platformGlassControlBar(verticalPadding: 8, topPadding: 2)
+            if showsDownloadSearchBar {
+                DownloadQueueSearchBar(downloads: store.downloads)
+                    .platformGlassControlBar(verticalPadding: 8, topPadding: 2)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+            }
 
             if store.downloads.items.isEmpty {
                 EmptyStateView(
@@ -100,6 +102,21 @@ struct DownloadQueueView: View {
                 downloadList(items: visibleItems)
             }
         }
+    }
+
+    private var downloadTitleActions: some View {
+        DownloadQueueActionRail(
+            downloads: store.downloads,
+            isSearchPresented: $isDownloadSearchPresented,
+            requestDangerAction: { pendingDangerAction = $0 },
+            copyVisibleLinks: copyVisibleLinks,
+            showActionMessage: showActionMessage
+        )
+    }
+
+    private var showsDownloadSearchBar: Bool {
+        isDownloadSearchPresented
+            || store.downloads.downloadSearchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false
     }
 
     @ViewBuilder
@@ -378,177 +395,221 @@ private enum DownloadedPreview: Identifiable {
     }
 }
 
-private struct DownloadQueueHeader: View {
+private struct DownloadQueueSearchBar: View {
     @Bindable var downloads: ArtworkDownloadStore
+
+    var body: some View {
+        GlassEffectContainer(spacing: 8) {
+            HStack(spacing: 10) {
+                OS26LibrarySearchField(
+                    text: downloadSearchBinding,
+                    placeholder: L10n.searchDownloads,
+                    minWidth: 170,
+                    idealWidth: 260,
+                    maxWidth: 420,
+                    collapsesOnPhone: false
+                )
+                .frame(minWidth: 220, idealWidth: 320, maxWidth: 520)
+                .layoutPriority(1)
+
+                Spacer(minLength: 0)
+            }
+        }
+        .controlSize(.small)
+    }
+
+    private var downloadSearchBinding: Binding<String> {
+        Binding {
+            downloads.downloadSearchText
+        } set: { value in
+            downloads.setDownloadSearchText(value)
+        }
+    }
+}
+
+private struct DownloadQueueActionRail: View {
+    @Bindable var downloads: ArtworkDownloadStore
+    @Binding var isSearchPresented: Bool
     let requestDangerAction: (DownloadDangerAction) -> Void
     let copyVisibleLinks: () -> Void
     let showActionMessage: (String) -> Void
 
     var body: some View {
-        GlassEffectContainer(spacing: 8) {
-            FlowLayout(spacing: 8) {
-                Menu {
-                    Button {
-                        openDownloadFolder()
-                    } label: {
-                        Label(L10n.openFolder, systemImage: "folder")
-                    }
-
-                    Button {
-                        PasteboardWriter.copy(downloads.downloadDirectoryPath)
-                        showActionMessage(L10n.copiedDownloadFolderPath)
-                    } label: {
-                        Label(L10n.copyDownloadFolderPath, systemImage: "doc.on.doc")
-                    }
+        OS26LibraryActionRail {
+            Menu {
+                Button {
+                    openDownloadFolder()
                 } label: {
-                    Label(L10n.downloadFolder, systemImage: "folder")
+                    Label(L10n.openFolder, systemImage: "folder")
                 }
-                .os26GlassIconButton()
-                .help(downloads.downloadDirectoryPath)
 
                 Button {
-                    if downloads.isPaused {
-                        if downloads.resumeQueue() {
-                            showActionMessage(L10n.downloadsResumed)
-                        } else {
-                            showActionMessage(L10n.noDownloadRecordsChanged)
-                        }
-                    } else {
-                        if downloads.pauseQueue() {
-                            showActionMessage(L10n.downloadsPaused)
-                        } else {
-                            showActionMessage(L10n.noDownloadRecordsChanged)
-                        }
-                    }
+                    PasteboardWriter.copy(downloads.downloadDirectoryPath)
+                    showActionMessage(L10n.copiedDownloadFolderPath)
                 } label: {
-                    Label(
-                        downloads.isPaused ? L10n.resumeDownloads : L10n.pauseDownloads,
-                        systemImage: downloads.isPaused ? "play.circle" : "pause.circle"
-                    )
+                    Label(L10n.copyDownloadFolderPath, systemImage: "doc.on.doc")
                 }
-                .os26GlassIconButton()
-                .disabled(downloads.isPaused ? downloads.hasQueuedItems == false : downloads.activeCount == 0)
-                .help(downloads.isPaused ? L10n.resumeDownloads : L10n.pauseDownloads)
-
-                OS26LibrarySearchField(
-                    text: downloadSearchBinding,
-                    placeholder: L10n.searchDownloads,
-                    minWidth: 170,
-                    idealWidth: 230,
-                    maxWidth: 300
-                )
-
-                Button {
-                    downloads.setDownloadSearchText("")
-                } label: {
-                    Label(L10n.clearSearch, systemImage: "xmark.circle")
-                }
-                .os26GlassIconButton()
-                .disabled(downloads.downloadSearchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                .help(L10n.clearSearch)
-
-                Menu {
-                    Picker(L10n.sortDownloads, selection: downloadSortBinding) {
-                        ForEach(DownloadQueueSort.allCases) { sort in
-                            Text(sort.title).tag(sort)
-                        }
-                    }
-                } label: {
-                    Label(downloads.downloadQueueSort.title, systemImage: "arrow.up.arrow.down")
-                }
-                .os26GlassIconButton()
-                .accessibilityLabel("\(L10n.sortDownloads): \(downloads.downloadQueueSort.title)")
-                .help("\(L10n.sortDownloads): \(downloads.downloadQueueSort.title)")
-
-                Menu {
-                    Picker(L10n.downloadFilter, selection: downloadFilterBinding) {
-                        ForEach(DownloadQueueFilter.allCases) { filter in
-                            Text(filter.title).tag(filter)
-                        }
-                    }
-                } label: {
-                    Label(downloads.downloadQueueFilter.title, systemImage: "line.3.horizontal.decrease.circle")
-                }
-                .os26GlassIconButton()
-                .accessibilityLabel("\(L10n.downloadFilter): \(downloads.downloadQueueFilter.title)")
-                .help("\(L10n.downloadFilter): \(downloads.downloadQueueFilter.title) · \(summaryHelpText)")
-
-                Menu {
-                    Button(action: copyVisibleLinks) {
-                        Label(L10n.copyVisibleDownloadLinks, systemImage: "link")
-                    }
-                    .disabled(downloads.filteredPixivLinks.isEmpty)
-
-                    Button {
-                        if downloads.revealFirstFilteredDownload() == false {
-                            showActionMessage(
-                                downloads.openDownloadDirectory()
-                                    ? L10n.openedDownloadFolder
-                                    : L10n.unableToOpenDownloadFolder
-                            )
-                        } else {
-                            showActionMessage(L10n.revealedDownloadInFinder)
-                        }
-                    } label: {
-                        Label(L10n.revealFirstVisibleDownload, systemImage: "folder")
-                    }
-                    .disabled(downloads.filteredItems.isEmpty)
-
-                    Button(role: .destructive) {
-                        requestDangerAction(.cancelVisible(count: downloads.filteredCancellableCount))
-                    } label: {
-                        Label(L10n.cancelVisibleDownloads, systemImage: "xmark.circle")
-                    }
-                    .disabled(downloads.filteredCancellableCount == 0)
-
-                    Button(role: .destructive) {
-                        requestDangerAction(.deleteVisible(count: downloads.filteredDeletableCount))
-                    } label: {
-                        Label(L10n.deleteVisibleDownloads, systemImage: "trash")
-                    }
-                    .disabled(downloads.filteredDeletableCount == 0)
-
-                    Divider()
-
-                    Button {
-                        let count = downloads.retryFailedFilteredItems()
-                        showActionMessage(
-                            count > 0
-                                ? String(format: L10n.retriedDownloadsWithBackoffFormat, count)
-                                : L10n.noRetryableDownloads
-                        )
-                    } label: {
-                        Label(L10n.retryFailedDownloads, systemImage: "arrow.clockwise")
-                    }
-                    .disabled(downloads.failedFilteredCount == 0)
-
-                    Button(role: .destructive) {
-                        requestDangerAction(.clearFailed(count: downloads.failedFilteredCount))
-                    } label: {
-                        Label(L10n.clearFailedDownloads, systemImage: "trash")
-                    }
-                    .disabled(downloads.failedFilteredCount == 0)
-
-                    Divider()
-
-                    Button(role: .destructive) {
-                        requestDangerAction(.clearInvalid(count: downloads.invalidCompletedItems.count))
-                    } label: {
-                        Label(L10n.clearInvalidDownloads, systemImage: "exclamationmark.arrow.trianglehead.2.clockwise.rotate.90")
-                    }
-                    .disabled(downloads.invalidCompletedItems.isEmpty)
-
-                    Button(role: .destructive) {
-                        requestDangerAction(.clearCompleted(count: downloads.completedCount))
-                    } label: {
-                        Label(L10n.clearCompleted, systemImage: "checkmark.circle")
-                    }
-                    .disabled(downloads.completedCount == 0)
-                } label: {
-                    Label(L10n.downloadActions, systemImage: "ellipsis.circle")
-                }
-                .os26GlassIconButton()
+            } label: {
+                Label(L10n.downloadFolder, systemImage: "folder")
             }
+            .os26GlassIconButton()
+            .help(downloads.downloadDirectoryPath)
+
+            Button {
+                if downloads.isPaused {
+                    if downloads.resumeQueue() {
+                        showActionMessage(L10n.downloadsResumed)
+                    } else {
+                        showActionMessage(L10n.noDownloadRecordsChanged)
+                    }
+                } else {
+                    if downloads.pauseQueue() {
+                        showActionMessage(L10n.downloadsPaused)
+                    } else {
+                        showActionMessage(L10n.noDownloadRecordsChanged)
+                    }
+                }
+            } label: {
+                Label(
+                    downloads.isPaused ? L10n.resumeDownloads : L10n.pauseDownloads,
+                    systemImage: downloads.isPaused ? "play.circle" : "pause.circle"
+                )
+            }
+            .os26GlassIconButton()
+            .disabled(downloads.isPaused ? downloads.hasQueuedItems == false : downloads.activeCount == 0)
+            .help(downloads.isPaused ? L10n.resumeDownloads : L10n.pauseDownloads)
+
+            Button {
+                withAnimation(.snappy(duration: 0.16)) {
+                    if showsDownloadSearchBar, normalizedSearchText.isEmpty {
+                        isSearchPresented = false
+                    } else {
+                        isSearchPresented = true
+                    }
+                }
+            } label: {
+                Label(
+                    L10n.search,
+                    systemImage: normalizedSearchText.isEmpty ? "magnifyingglass" : "magnifyingglass.circle.fill"
+                )
+            }
+            .os26GlassIconButton(prominent: showsDownloadSearchBar || normalizedSearchText.isEmpty == false)
+            .help(L10n.searchDownloads)
+            .accessibilityLabel(L10n.searchDownloads)
+
+            Button {
+                withAnimation(.snappy(duration: 0.16)) {
+                    downloads.setDownloadSearchText("")
+                    isSearchPresented = false
+                }
+            } label: {
+                Label(L10n.clearSearch, systemImage: "xmark.circle")
+            }
+            .os26GlassIconButton()
+            .disabled(normalizedSearchText.isEmpty && isSearchPresented == false)
+            .help(L10n.clearSearch)
+
+            Menu {
+                Picker(L10n.sortDownloads, selection: downloadSortBinding) {
+                    ForEach(DownloadQueueSort.allCases) { sort in
+                        Text(sort.title).tag(sort)
+                    }
+                }
+            } label: {
+                Label(downloads.downloadQueueSort.title, systemImage: "arrow.up.arrow.down")
+            }
+            .os26GlassIconButton()
+            .accessibilityLabel("\(L10n.sortDownloads): \(downloads.downloadQueueSort.title)")
+            .help("\(L10n.sortDownloads): \(downloads.downloadQueueSort.title)")
+
+            Menu {
+                Picker(L10n.downloadFilter, selection: downloadFilterBinding) {
+                    ForEach(DownloadQueueFilter.allCases) { filter in
+                        Text(filter.title).tag(filter)
+                    }
+                }
+            } label: {
+                Label(downloads.downloadQueueFilter.title, systemImage: "line.3.horizontal.decrease.circle")
+            }
+            .os26GlassIconButton()
+            .accessibilityLabel("\(L10n.downloadFilter): \(downloads.downloadQueueFilter.title)")
+            .help("\(L10n.downloadFilter): \(downloads.downloadQueueFilter.title) · \(summaryHelpText)")
+
+            Menu {
+                Button(action: copyVisibleLinks) {
+                    Label(L10n.copyVisibleDownloadLinks, systemImage: "link")
+                }
+                .disabled(downloads.filteredPixivLinks.isEmpty)
+
+                Button {
+                    if downloads.revealFirstFilteredDownload() == false {
+                        showActionMessage(
+                            downloads.openDownloadDirectory()
+                                ? L10n.openedDownloadFolder
+                                : L10n.unableToOpenDownloadFolder
+                        )
+                    } else {
+                        showActionMessage(L10n.revealedDownloadInFinder)
+                    }
+                } label: {
+                    Label(L10n.revealFirstVisibleDownload, systemImage: "folder")
+                }
+                .disabled(downloads.filteredItems.isEmpty)
+
+                Button(role: .destructive) {
+                    requestDangerAction(.cancelVisible(count: downloads.filteredCancellableCount))
+                } label: {
+                    Label(L10n.cancelVisibleDownloads, systemImage: "xmark.circle")
+                }
+                .disabled(downloads.filteredCancellableCount == 0)
+
+                Button(role: .destructive) {
+                    requestDangerAction(.deleteVisible(count: downloads.filteredDeletableCount))
+                } label: {
+                    Label(L10n.deleteVisibleDownloads, systemImage: "trash")
+                }
+                .disabled(downloads.filteredDeletableCount == 0)
+
+                Divider()
+
+                Button {
+                    let count = downloads.retryFailedFilteredItems()
+                    showActionMessage(
+                        count > 0
+                            ? String(format: L10n.retriedDownloadsWithBackoffFormat, count)
+                            : L10n.noRetryableDownloads
+                    )
+                } label: {
+                    Label(L10n.retryFailedDownloads, systemImage: "arrow.clockwise")
+                }
+                .disabled(downloads.failedFilteredCount == 0)
+
+                Button(role: .destructive) {
+                    requestDangerAction(.clearFailed(count: downloads.failedFilteredCount))
+                } label: {
+                    Label(L10n.clearFailedDownloads, systemImage: "trash")
+                }
+                .disabled(downloads.failedFilteredCount == 0)
+
+                Divider()
+
+                Button(role: .destructive) {
+                    requestDangerAction(.clearInvalid(count: downloads.invalidCompletedItems.count))
+                } label: {
+                    Label(L10n.clearInvalidDownloads, systemImage: "exclamationmark.arrow.trianglehead.2.clockwise.rotate.90")
+                }
+                .disabled(downloads.invalidCompletedItems.isEmpty)
+
+                Button(role: .destructive) {
+                    requestDangerAction(.clearCompleted(count: downloads.completedCount))
+                } label: {
+                    Label(L10n.clearCompleted, systemImage: "checkmark.circle")
+                }
+                .disabled(downloads.completedCount == 0)
+            } label: {
+                Label(L10n.downloadActions, systemImage: "ellipsis.circle")
+            }
+            .os26GlassIconButton()
         }
         .controlSize(.small)
     }
@@ -558,14 +619,6 @@ private struct DownloadQueueHeader: View {
             downloads.downloadQueueFilter
         } set: { value in
             downloads.setDownloadQueueFilter(value)
-        }
-    }
-
-    private var downloadSearchBinding: Binding<String> {
-        Binding {
-            downloads.downloadSearchText
-        } set: { value in
-            downloads.setDownloadSearchText(value)
         }
     }
 
@@ -585,6 +638,14 @@ private struct DownloadQueueHeader: View {
             downloads.completedCount,
             downloads.filteredDownloadedSizeText
         )
+    }
+
+    private var showsDownloadSearchBar: Bool {
+        isSearchPresented || normalizedSearchText.isEmpty == false
+    }
+
+    private var normalizedSearchText: String {
+        downloads.downloadSearchText.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     private func openDownloadFolder() {

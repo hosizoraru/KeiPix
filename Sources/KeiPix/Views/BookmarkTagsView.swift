@@ -10,6 +10,7 @@ struct BookmarkTagsView: View {
     @State private var errorMessage: String?
     @State private var actionMessage: String?
     @State private var filterText = ""
+    @State private var isSearchPresented = false
     @State private var sortMode: BookmarkTagIndexSort = .mostUsed
     @State private var autoLoadedBookmarkTagPageURLs = Set<URL>()
 
@@ -23,8 +24,11 @@ struct BookmarkTagsView: View {
                 OS26LibraryLoadingView(title: L10n.loading, systemImage: "tag")
             } else {
                 VStack(spacing: 0) {
-                    header
-                        .platformGlassControlBar(verticalPadding: 6, topPadding: 2)
+                    if showsBookmarkTagSearchBar {
+                        header
+                            .platformGlassControlBar(verticalPadding: 6, topPadding: 2)
+                            .transition(.move(edge: .top).combined(with: .opacity))
+                    }
                     tagCollectionContent
                 }
             }
@@ -34,7 +38,7 @@ struct BookmarkTagsView: View {
             status: bookmarkTagNavigationStatus,
             statusSystemImage: "tag"
         ) {
-            bookmarkRestrictScopeMenu
+            bookmarkTagTitleActions
         }
         .platformPageNavigationChrome(title: L10n.bookmarkTags, status: bookmarkTagNavigationStatus)
         .overlay(alignment: .bottom) {
@@ -64,6 +68,7 @@ struct BookmarkTagsView: View {
         }
         .animation(.snappy(duration: 0.18), value: actionMessage)
         .animation(.snappy(duration: 0.18), value: errorMessage)
+        .animation(.snappy(duration: 0.18), value: showsBookmarkTagSearchBar)
         .task(id: bookmarkTagLoadKey) {
             await load()
         }
@@ -80,49 +85,65 @@ struct BookmarkTagsView: View {
 
     private var header: some View {
         GlassEffectContainer(spacing: 8) {
-            FlowLayout(spacing: 8) {
+            HStack(spacing: 10) {
                 OS26LibrarySearchField(
                     text: $filterText,
                     placeholder: L10n.searchBookmarkTags,
                     minWidth: 160,
                     idealWidth: 220,
-                    maxWidth: 300
+                    maxWidth: 420,
+                    collapsesOnPhone: false
                 )
-
-                #if os(macOS)
-                bookmarkRestrictScopeMenu
-                #endif
-
-                sortMenu
-
-                if filterText.isEmpty == false {
-                    Button {
-                        withAnimation(.snappy(duration: 0.16)) {
-                            filterText = ""
-                        }
-                    } label: {
-                        Label(L10n.clearSearch, systemImage: "xmark.circle.fill")
-                    }
-                    .os26GlassIconButton()
-                    .help(L10n.clearSearch)
-                    .transition(.scale.combined(with: .opacity))
-                }
-
-                Menu {
-                    Button {
-                        copyVisibleTags()
-                    } label: {
-                        Label(L10n.copyTag, systemImage: "doc.on.doc")
-                    }
-                    .disabled(filteredTags.isEmpty)
-                } label: {
-                    Label(L10n.moreActions, systemImage: "ellipsis.circle")
-                }
-                .os26GlassIconButton()
-                .help(L10n.moreActions)
+                .frame(minWidth: 220, idealWidth: 320, maxWidth: 520)
+                .layoutPriority(1)
+                Spacer(minLength: 0)
             }
         }
         .controlSize(.small)
+    }
+
+    @ViewBuilder
+    private var bookmarkTagTitleActions: some View {
+        if store.session != nil {
+            OS26LibraryActionRail {
+                bookmarkRestrictScopeMenu
+
+                Button {
+                    withAnimation(.snappy(duration: 0.16)) {
+                        if showsBookmarkTagSearchBar, normalizedFilterText.isEmpty {
+                            isSearchPresented = false
+                        } else {
+                            isSearchPresented = true
+                        }
+                    }
+                } label: {
+                    Label(
+                        L10n.search,
+                        systemImage: normalizedFilterText.isEmpty ? "magnifyingglass" : "magnifyingglass.circle.fill"
+                    )
+                }
+                .os26GlassIconButton(prominent: showsBookmarkTagSearchBar || normalizedFilterText.isEmpty == false)
+                .help(L10n.searchBookmarkTags)
+                .accessibilityLabel(L10n.searchBookmarkTags)
+
+                Button {
+                    withAnimation(.snappy(duration: 0.16)) {
+                        filterText = ""
+                        isSearchPresented = false
+                    }
+                } label: {
+                    Label(L10n.clearSearch, systemImage: "xmark.circle")
+                }
+                .os26GlassIconButton()
+                .disabled(normalizedFilterText.isEmpty && isSearchPresented == false)
+                .help(L10n.clearSearch)
+
+                sortMenu
+
+                bookmarkTagMoreMenu
+            }
+            .controlSize(.small)
+        }
     }
 
     @ViewBuilder
@@ -161,6 +182,29 @@ struct BookmarkTagsView: View {
         .os26GlassButton()
         .help("\(L10n.sort): \(sortMode.title)")
         .accessibilityLabel("\(L10n.sort): \(sortMode.title)")
+    }
+
+    private var bookmarkTagMoreMenu: some View {
+        Menu {
+            Button {
+                copyVisibleTags()
+            } label: {
+                Label(L10n.copyTag, systemImage: "doc.on.doc")
+            }
+            .disabled(filteredTags.isEmpty)
+        } label: {
+            Label(L10n.moreActions, systemImage: "ellipsis.circle")
+        }
+        .os26GlassIconButton()
+        .help(L10n.moreActions)
+    }
+
+    private var showsBookmarkTagSearchBar: Bool {
+        isSearchPresented || normalizedFilterText.isEmpty == false
+    }
+
+    private var normalizedFilterText: String {
+        filterText.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     @ViewBuilder

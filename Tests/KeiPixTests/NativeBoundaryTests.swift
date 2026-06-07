@@ -1036,7 +1036,8 @@ struct NativeBoundaryTests {
         #expect(emptyState.contains("@ViewBuilder trailing: @escaping () -> Trailing"))
         #expect(emptyState.contains("ViewThatFits(in: .horizontal)"))
         #expect(emptyState.contains("statusPill\n                Spacer(minLength: 0)\n                trailing()"))
-        #expect(emptyState.contains("titleText\n                    Spacer(minLength: 0)\n                    trailing()"))
+        #expect(emptyState.contains("titleText\n                    statusPill\n                    Spacer(minLength: 0)"))
+        #expect(emptyState.contains("Spacer(minLength: 0)\n                    trailing()"))
         #expect(emptyState.contains("if let statusSystemImage, showsStatusPillIcon"))
         #expect(emptyState.contains("UIDevice.current.userInterfaceIdiom != .phone"))
         #expect(emptyState.contains(".navigationBarTitleDisplayMode(.inline)"))
@@ -2318,6 +2319,50 @@ struct NativeBoundaryTests {
         #expect(row.contains(".os26GlassIconButton(prominent: true)"))
     }
 
+    @Test("Library management title chrome keeps filters and actions on the title row")
+    func libraryManagementTitleChromeKeepsFiltersAndActionsOnTitleRow() throws {
+        let root = try packageRoot()
+        let bookmarkTags = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/BookmarkTagsView.swift"),
+            encoding: .utf8
+        )
+        let browsingHistory = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/BrowsingHistoryView.swift"),
+            encoding: .utf8
+        )
+        let mutedContent = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/MutedContentView.swift"),
+            encoding: .utf8
+        )
+        let downloads = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/DownloadQueueView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(bookmarkTags.contains(".platformPageHeader(\n            title: L10n.bookmarkTags") && bookmarkTags.contains("bookmarkTagTitleActions"))
+        #expect(bookmarkTags.contains("if showsBookmarkTagSearchBar"))
+        #expect(bookmarkTags.contains("private var bookmarkTagTitleActions: some View"))
+        #expect(bookmarkTags.contains("bookmarkRestrictScopeMenu"))
+        #expect(bookmarkTags.contains("sortMenu"))
+
+        #expect(browsingHistory.contains(".platformPageHeader(\n            title: L10n.history") && browsingHistory.contains("historyTitleActions"))
+        #expect(browsingHistory.contains("if showsHistorySearchBar"))
+        #expect(browsingHistory.contains("private var historyTitleActions: some View"))
+        #expect(browsingHistory.contains("historySourceMenu"))
+        #expect(browsingHistory.contains("historyFilterMenu"))
+
+        #expect(mutedContent.contains(".platformPageHeader(\n            title: L10n.mutedContent") && mutedContent.contains("mutedContentTitleActions"))
+        #expect(mutedContent.contains("if showsMutedContentSearchBar"))
+        #expect(mutedContent.contains("private var mutedContentTitleActions: some View"))
+        #expect(mutedContent.contains("mutedCategoryMenu"))
+
+        #expect(downloads.contains(".platformPageHeader(\n                title: L10n.downloads") && downloads.contains("downloadTitleActions"))
+        #expect(downloads.contains("if showsDownloadSearchBar"))
+        #expect(downloads.contains("private var downloadTitleActions: some View"))
+        #expect(downloads.contains("DownloadQueueSearchBar("))
+        #expect(downloads.contains("DownloadQueueActionRail("))
+    }
+
     @Test("Loading placeholders and sheets avoid overlapping legacy chrome")
     func loadingPlaceholdersAndSheetsAvoidOverlappingLegacyChrome() throws {
         let root = try packageRoot()
@@ -2360,8 +2405,8 @@ struct NativeBoundaryTests {
         #expect(creatorComponents.contains(".os26SkeletonSurface(20)"))
         #expect(creatorComponents.contains("ContentUnavailableView") == false)
 
-        #expect(mutedContent.contains("OS26GlassCompatibleSegmentedPicker("))
-        #expect(mutedContent.contains("private var categoryControl: some View"))
+        #expect(mutedContent.contains("private var mutedCategoryMenu: some View"))
+        #expect(mutedContent.contains("Picker(L10n.mutedContent, selection: $category)"))
         #expect(mutedContent.contains("private var addTagButton: some View"))
         #expect(mutedContent.contains(".os26GlassIconButton(prominent: true)"))
         #expect(mutedContent.contains("ContentUnavailableView") == false)

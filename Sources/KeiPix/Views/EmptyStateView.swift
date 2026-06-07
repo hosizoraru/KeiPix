@@ -253,10 +253,13 @@ struct PlatformPageTitleHeader<Trailing: View>: View {
             VStack(alignment: .leading, spacing: 8) {
                 HStack(alignment: .firstTextBaseline, spacing: 10) {
                     titleText
+                    statusPill
+                    Spacer(minLength: 0)
+                }
+                HStack(spacing: 8) {
                     Spacer(minLength: 0)
                     trailing()
                 }
-                statusPill
             }
         }
         .padding(.horizontal, 18)

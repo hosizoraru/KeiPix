@@ -10,15 +10,18 @@ struct BrowsingHistoryView: View {
     @State private var source = BrowsingHistorySource.local
     @State private var statusFilter = BrowsingHistoryStatusFilter.all
     @State private var localSearchText = ""
-    @State private var isSearchPopoverPresented = false
+    @State private var isSearchPresented = false
     @State private var isClearConfirmationPresented = false
     @State private var pendingDeleteItem: LocalArtworkHistoryItem?
     @State private var actionMessage: String?
 
     var body: some View {
         VStack(spacing: 0) {
-            header
-                .platformGlassControlBar(verticalPadding: 8, topPadding: 2)
+            if showsHistorySearchBar {
+                header
+                    .platformGlassControlBar(verticalPadding: 8, topPadding: 2)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+            }
 
             switch source {
             case .local:
@@ -32,8 +35,7 @@ struct BrowsingHistoryView: View {
             status: historyStatusText,
             statusSystemImage: "clock.arrow.circlepath"
         ) {
-            historySourceMenu
-                .controlSize(.small)
+            historyTitleActions
         }
         .platformPageNavigationChrome(title: L10n.history, status: historyStatusText)
         .confirmationDialog(
@@ -89,6 +91,7 @@ struct BrowsingHistoryView: View {
             }
         }
         .animation(.snappy(duration: 0.18), value: actionMessage)
+        .animation(.snappy(duration: 0.18), value: showsHistorySearchBar)
         .task(id: actionMessage) {
             await dismissActionMessageIfNeeded(actionMessage)
         }
@@ -96,59 +99,64 @@ struct BrowsingHistoryView: View {
 
     private var header: some View {
         GlassEffectContainer(spacing: 8) {
-            FlowLayout(spacing: 8) {
-                #if os(macOS)
-                historySourceMenu
-                #endif
+            HStack(spacing: 10) {
+                OS26LibrarySearchField(
+                    text: $localSearchText,
+                    placeholder: L10n.searchHistory,
+                    minWidth: 180,
+                    idealWidth: 260,
+                    maxWidth: 420,
+                    collapsesOnPhone: false
+                )
+                .frame(minWidth: 220, idealWidth: 320, maxWidth: 520)
+                .layoutPriority(1)
+                Spacer(minLength: 0)
+            }
+        }
+        .controlSize(.small)
+    }
 
-                if source == .local {
-                    #if os(iOS)
-                    compactHistorySearchButton
-                    #else
-                    OS26LibrarySearchField(
-                        text: $localSearchText,
-                        placeholder: L10n.searchHistory,
-                        minWidth: 180,
-                        idealWidth: 220,
-                        maxWidth: 280
+    @ViewBuilder
+    private var historyTitleActions: some View {
+        OS26LibraryActionRail {
+            historySourceMenu
+
+            if source == .local {
+                Button {
+                    withAnimation(.snappy(duration: 0.16)) {
+                        if showsHistorySearchBar, normalizedLocalSearchText.isEmpty {
+                            isSearchPresented = false
+                        } else {
+                            isSearchPresented = true
+                        }
+                    }
+                } label: {
+                    Label(
+                        L10n.search,
+                        systemImage: normalizedLocalSearchText.isEmpty ? "magnifyingglass" : "magnifyingglass.circle.fill"
                     )
+                }
+                .os26GlassIconButton(prominent: showsHistorySearchBar || normalizedLocalSearchText.isEmpty == false)
+                .help(L10n.searchHistory)
+                .accessibilityLabel(L10n.searchHistory)
 
-                    Button {
+                Button {
+                    withAnimation(.snappy(duration: 0.16)) {
                         localSearchText = ""
-                    } label: {
-                        Label(L10n.clearSearch, systemImage: "xmark.circle")
+                        isSearchPresented = false
                     }
-                    .os26GlassIconButton()
-                    .disabled(localSearchText.isEmpty)
-                    .help(L10n.clearSearch)
-                    #endif
+                } label: {
+                    Label(L10n.clearSearch, systemImage: "xmark.circle")
                 }
+                .os26GlassIconButton()
+                .disabled(normalizedLocalSearchText.isEmpty && isSearchPresented == false)
+                .help(L10n.clearSearch)
+            }
 
-                historyFilterMenu
+            historyFilterMenu
 
-                if source == .local {
-                    Menu {
-                        Button {
-                            exportHistory()
-                        } label: {
-                            Label(L10n.exportHistory, systemImage: "square.and.arrow.up")
-                        }
-                        .disabled(store.localBrowsingHistory.isEmpty)
-
-                        Divider()
-
-                        Button(role: .destructive) {
-                            isClearConfirmationPresented = true
-                        } label: {
-                            Label(L10n.clearHistory, systemImage: "trash")
-                        }
-                        .disabled(store.localBrowsingHistory.isEmpty)
-                    } label: {
-                        Label(L10n.moreActions, systemImage: "ellipsis.circle")
-                    }
-                    .os26GlassIconButton()
-                    .help(L10n.moreActions)
-                }
+            if source == .local {
+                historyMoreMenu
             }
         }
         .controlSize(.small)
@@ -188,50 +196,6 @@ struct BrowsingHistoryView: View {
         .accessibilityLabel(L10n.historySource)
     }
 
-    private var compactHistorySearchButton: some View {
-        Button {
-            isSearchPopoverPresented.toggle()
-        } label: {
-            Label(compactHistorySearchTitle, systemImage: localSearchText.isEmpty ? "magnifyingglass" : "magnifyingglass.circle.fill")
-                .lineLimit(1)
-        }
-        .os26GlassButton(prominent: localSearchText.isEmpty == false)
-        .help(L10n.searchHistory)
-        .accessibilityLabel(L10n.searchHistory)
-        .popover(isPresented: $isSearchPopoverPresented, arrowEdge: .bottom) {
-            VStack(alignment: .leading, spacing: 12) {
-                OS26LibrarySearchField(
-                    text: $localSearchText,
-                    placeholder: L10n.searchHistory,
-                    minWidth: 240,
-                    idealWidth: 280,
-                    maxWidth: 320
-                )
-
-                HStack {
-                    Text(localSearchText.isEmpty ? L10n.searchHistory : compactHistorySearchTitle)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
-                        .truncationMode(.middle)
-
-                    Spacer()
-
-                    Button {
-                        localSearchText = ""
-                    } label: {
-                        Label(L10n.clearSearch, systemImage: "xmark.circle")
-                    }
-                    .buttonStyle(.glass)
-                    .buttonBorderShape(.capsule)
-                    .disabled(localSearchText.isEmpty)
-                }
-            }
-            .padding(14)
-            .frame(width: 330)
-        }
-    }
-
     private var historyFilterMenu: some View {
         Menu {
             Picker(L10n.historyFilters, selection: $statusFilter) {
@@ -258,6 +222,38 @@ struct BrowsingHistoryView: View {
         .os26GlassButton(prominent: statusFilter.isActive)
         .help(statusFilter.isActive ? statusFilter.title : L10n.historyFilters)
         .accessibilityLabel(L10n.historyFilters)
+    }
+
+    private var historyMoreMenu: some View {
+        Menu {
+            Button {
+                exportHistory()
+            } label: {
+                Label(L10n.exportHistory, systemImage: "square.and.arrow.up")
+            }
+            .disabled(store.localBrowsingHistory.isEmpty)
+
+            Divider()
+
+            Button(role: .destructive) {
+                isClearConfirmationPresented = true
+            } label: {
+                Label(L10n.clearHistory, systemImage: "trash")
+            }
+            .disabled(store.localBrowsingHistory.isEmpty)
+        } label: {
+            Label(L10n.moreActions, systemImage: "ellipsis.circle")
+        }
+        .os26GlassIconButton()
+        .help(L10n.moreActions)
+    }
+
+    private var showsHistorySearchBar: Bool {
+        source == .local && (isSearchPresented || normalizedLocalSearchText.isEmpty == false)
+    }
+
+    private var normalizedLocalSearchText: String {
+        localSearchText.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     private var localHistoryContent: some View {
@@ -347,11 +343,6 @@ struct BrowsingHistoryView: View {
     private var isLocalSearchOrFilterActive: Bool {
         localSearchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false
             || statusFilter.isActive
-    }
-
-    private var compactHistorySearchTitle: String {
-        let text = localSearchText.trimmingCharacters(in: .whitespacesAndNewlines)
-        return text.isEmpty ? L10n.search : text
     }
 
     private func nativeLocalHistoryContent(for item: NativeBrowsingHistoryCollectionItem) -> AnyView {
