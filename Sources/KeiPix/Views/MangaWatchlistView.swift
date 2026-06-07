@@ -12,6 +12,7 @@ struct MangaWatchlistView: View {
     @State private var actionMessage: String?
     @State private var pendingRemoval: PixivMangaSeriesPreview?
     @State private var watchlistSearchText = ""
+    @State private var isWatchlistSearchPresented = false
     @State private var openingSeriesIDs = Set<Int>()
 
     private let gridLayout = NativeAdaptiveGridCollectionLayout(
@@ -34,7 +35,9 @@ struct MangaWatchlistView: View {
             title: L10n.mangaWatchlist,
             status: watchlistNavigationStatus,
             statusSystemImage: "book.pages"
-        )
+        ) {
+            mangaWatchlistTitleActions
+        }
         .platformPageNavigationChrome(title: L10n.mangaWatchlist, status: watchlistNavigationStatus)
         .confirmationDialog(
             L10n.removeFromWatchlist,
@@ -86,6 +89,7 @@ struct MangaWatchlistView: View {
         .animation(.snappy(duration: 0.18), value: actionMessage)
         .animation(.snappy(duration: 0.18), value: store.undoAction?.id)
         .animation(.snappy(duration: 0.18), value: errorMessage)
+        .animation(.snappy(duration: 0.18), value: showsWatchlistSearchBar)
         .task(id: actionMessage) {
             await dismissActionMessageIfNeeded(actionMessage)
         }
@@ -112,8 +116,11 @@ struct MangaWatchlistView: View {
 
     private var watchlistSurface: some View {
         VStack(spacing: 0) {
-            header
-                .platformGlassControlBar(verticalPadding: 8, topPadding: 2)
+            if showsWatchlistSearchBar {
+                header
+                    .platformGlassControlBar(verticalPadding: 7, topPadding: 0)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+            }
 
             watchlistContent
         }
@@ -121,31 +128,59 @@ struct MangaWatchlistView: View {
 
     private var header: some View {
         GlassEffectContainer(spacing: 8) {
-            FlowLayout(spacing: 8) {
+            HStack(spacing: 10) {
                 OS26LibrarySearchField(
                     text: $watchlistSearchText,
                     placeholder: L10n.searchWatchlistSeries,
                     minWidth: 180,
                     idealWidth: 250,
-                    maxWidth: 320
+                    maxWidth: 360,
+                    collapsesOnPhone: false
                 )
-
-                if normalizedWatchlistSearchText.isEmpty == false {
-                    OS26LibraryActionRail {
-                        Button {
-                            withAnimation(.snappy(duration: 0.16)) {
-                                watchlistSearchText = ""
-                            }
-                        } label: {
-                            Label(L10n.clearSearch, systemImage: "xmark.circle")
-                        }
-                        .os26GlassIconButton()
-                        .help(L10n.clearSearch)
-                    }
-                }
+                .frame(minWidth: 220, idealWidth: 320, maxWidth: 520)
+                .layoutPriority(1)
+                Spacer(minLength: 0)
             }
         }
         .controlSize(.small)
+    }
+
+    @ViewBuilder
+    private var mangaWatchlistTitleActions: some View {
+        if showsSignedOutState == false {
+            OS26LibraryActionRail {
+                Button {
+                    withAnimation(.snappy(duration: 0.16)) {
+                        if showsWatchlistSearchBar, normalizedWatchlistSearchText.isEmpty {
+                            isWatchlistSearchPresented = false
+                        } else {
+                            isWatchlistSearchPresented = true
+                        }
+                    }
+                } label: {
+                    Label(
+                        L10n.search,
+                        systemImage: normalizedWatchlistSearchText.isEmpty ? "magnifyingglass" : "magnifyingglass.circle.fill"
+                    )
+                }
+                .os26GlassIconButton(prominent: showsWatchlistSearchBar || normalizedWatchlistSearchText.isEmpty == false)
+                .help(L10n.searchWatchlistSeries)
+                .accessibilityLabel(L10n.searchWatchlistSeries)
+
+                Button {
+                    withAnimation(.snappy(duration: 0.16)) {
+                        watchlistSearchText = ""
+                        isWatchlistSearchPresented = false
+                    }
+                } label: {
+                    Label(L10n.clearSearch, systemImage: "xmark.circle")
+                }
+                .os26GlassIconButton()
+                .disabled(normalizedWatchlistSearchText.isEmpty && isWatchlistSearchPresented == false)
+                .help(L10n.clearSearch)
+            }
+            .controlSize(.small)
+        }
     }
 
     @ViewBuilder
@@ -226,6 +261,10 @@ struct MangaWatchlistView: View {
 
     private var normalizedWatchlistSearchText: String {
         watchlistSearchText.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private var showsWatchlistSearchBar: Bool {
+        isWatchlistSearchPresented || normalizedWatchlistSearchText.isEmpty == false
     }
 
     private var filteredSeries: [PixivMangaSeriesPreview] {

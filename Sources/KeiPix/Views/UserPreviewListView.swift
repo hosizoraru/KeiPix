@@ -55,20 +55,21 @@ struct UserPreviewListView: View {
         )
         .platformPageNavigationChrome(title: mode.title, status: creatorNavigationStatus)
         .toolbar {
-            // macOS HIG keeps refresh / view-options / bulk-action
-            // entry points in the toolbar so the body stays focused on
-            // content. The previous version crammed all five into a
-            // FlowLayout band below the title — replaced with the
-            // standard pattern used by Mail / Photos / Music.
-            ToolbarItem(placement: .secondaryAction) {
-                Button {
-                    Task { await refreshCreatorList() }
-                } label: {
-                    Label(L10n.refresh, systemImage: "arrow.clockwise")
+            // Main routes use the outer route refresh button. Sheets do
+            // not have that parent chrome, so creator-list sheets keep a
+            // local refresh entry while the list body stays focused on
+            // content.
+            if showsCloseButton {
+                ToolbarItem(placement: .secondaryAction) {
+                    Button {
+                        Task { await refreshCreatorList() }
+                    } label: {
+                        Label(L10n.refresh, systemImage: "arrow.clockwise")
+                    }
+                    .labelStyle(.iconOnly)
+                    .help(L10n.refresh)
+                    .disabled(isLoading)
                 }
-                .labelStyle(.iconOnly)
-                .help(L10n.refresh)
-                .disabled(isLoading)
             }
 
             ToolbarItem(placement: .secondaryAction) {

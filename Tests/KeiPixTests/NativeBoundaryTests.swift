@@ -2126,6 +2126,9 @@ struct NativeBoundaryTests {
         #expect(watchlist.contains("NativeAdaptiveGridCollectionView("))
         #expect(watchlist.contains("mangaWatchlistGridItems"))
         #expect(watchlist.contains("mangaWatchlistGridContent(for: item)"))
+        #expect(watchlist.contains("mangaWatchlistTitleActions"))
+        #expect(watchlist.contains("showsWatchlistSearchBar"))
+        #expect(watchlist.contains(".platformPageHeader(\n            title: L10n.mangaWatchlist") && watchlist.contains("mangaWatchlistTitleActions"))
         #expect(watchlist.contains("LazyVGrid") == false)
         #expect(nativeGrid.contains("NSCollectionView"))
         #expect(nativeGrid.contains("UICollectionView"))
@@ -2185,8 +2188,55 @@ struct NativeBoundaryTests {
         #expect(subscriptions.contains("NativeAdaptiveGridCollectionView("))
         #expect(subscriptions.contains("gridLayout"))
         #expect(subscriptions.contains("SubscriptionCard("))
+        #expect(subscriptions.contains("subscriptionTitleActions"))
+        #expect(subscriptions.contains(".platformPageHeader(\n            title: L10n.workSubscriptions") && subscriptions.contains("subscriptionTitleActions"))
+        #expect(subscriptions.contains(".task(id: store.routeRefreshGeneration)"))
+        #expect(subscriptions.contains("await checkForUpdates(showFeedback: false)"))
+        #expect(subscriptions.contains("L10n.workSubscriptionsCheckNow") == false)
+        #expect(subscriptions.contains("systemImage: isChecking ? \"arrow.triangle.2.circlepath\" : \"arrow.clockwise\"") == false)
         #expect(subscriptions.contains("LazyVGrid") == false)
         #expect(subscriptions.contains("ScrollView {") == false)
+    }
+
+    @Test("Route refresh owns compact page refresh chrome")
+    func routeRefreshOwnsCompactPageRefreshChrome() throws {
+        let root = try packageRoot()
+        let browsingHistory = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/BrowsingHistoryView.swift"),
+            encoding: .utf8
+        )
+        let trendingTags = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/TrendingTagsView.swift"),
+            encoding: .utf8
+        )
+        let spotlight = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/SpotlightView.swift"),
+            encoding: .utf8
+        )
+        let mangaWatchlist = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/MangaWatchlistView.swift"),
+            encoding: .utf8
+        )
+        let creatorList = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/UserPreviewListView.swift"),
+            encoding: .utf8
+        )
+        let subscriptions = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/WorkSubscriptionsView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(browsingHistory.contains(".task(id: store.routeRefreshGeneration)"))
+        #expect(browsingHistory.contains("Label(L10n.refresh, systemImage: \"arrow.clockwise\")") == false)
+        #expect(trendingTags.contains(".task(id: store.routeRefreshGeneration)"))
+        #expect(trendingTags.contains("Label(L10n.refresh, systemImage: \"arrow.clockwise\")") == false)
+        #expect(spotlight.contains(".task(id: store.routeRefreshGeneration)"))
+        #expect(spotlight.contains("Label(L10n.refresh, systemImage: \"arrow.clockwise\")") == false)
+        #expect(mangaWatchlist.contains(".task(id: store.routeRefreshGeneration)"))
+        #expect(mangaWatchlist.contains("Label(L10n.refresh, systemImage: \"arrow.clockwise\")") == false)
+        #expect(creatorList.contains("if showsCloseButton {\n                ToolbarItem(placement: .secondaryAction)"))
+        #expect(subscriptions.contains(".task(id: store.routeRefreshGeneration)"))
+        #expect(subscriptions.contains("L10n.workSubscriptionsCheckNow") == false)
     }
 
     @Test("Watch later uses a native adaptive grid")

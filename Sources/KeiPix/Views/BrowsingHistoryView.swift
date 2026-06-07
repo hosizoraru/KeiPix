@@ -126,9 +126,8 @@ struct BrowsingHistoryView: View {
 
                 historyFilterMenu
 
-                Menu {
-                    switch source {
-                    case .local:
+                if source == .local {
+                    Menu {
                         Button {
                             exportHistory()
                         } label: {
@@ -144,19 +143,12 @@ struct BrowsingHistoryView: View {
                             Label(L10n.clearHistory, systemImage: "trash")
                         }
                         .disabled(store.localBrowsingHistory.isEmpty)
-                    case .pixiv:
-                        Button {
-                            Task { await reloadPixivHistory(showFeedback: true) }
-                        } label: {
-                            Label(L10n.refresh, systemImage: "arrow.clockwise")
-                        }
-                        .disabled(store.isLoading)
+                    } label: {
+                        Label(L10n.moreActions, systemImage: "ellipsis.circle")
                     }
-                } label: {
-                    Label(L10n.moreActions, systemImage: "ellipsis.circle")
+                    .os26GlassIconButton()
+                    .help(L10n.moreActions)
                 }
-                .os26GlassIconButton()
-                .help(L10n.moreActions)
             }
         }
         .controlSize(.small)

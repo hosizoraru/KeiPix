@@ -3,6 +3,7 @@ import SwiftUI
 struct WorkSubscriptionsView: View {
     @Bindable var store: KeiPixStore
     @State private var searchText = ""
+    @State private var isSearchPresented = false
     @State private var isChecking = false
     @State private var actionMessage: String?
 
@@ -22,8 +23,11 @@ struct WorkSubscriptionsView: View {
                 PixivSignedOutStateView(store: store)
             } else {
                 VStack(spacing: 0) {
-                    header
-                        .platformGlassControlBar(verticalPadding: 8, topPadding: 2)
+                    if showsSubscriptionSearchBar {
+                        header
+                            .platformGlassControlBar(verticalPadding: 7, topPadding: 0)
+                            .transition(.move(edge: .top).combined(with: .opacity))
+                    }
 
                     content
                 }
@@ -33,7 +37,9 @@ struct WorkSubscriptionsView: View {
             title: L10n.workSubscriptions,
             status: subtitle,
             statusSystemImage: "bell.badge"
-        )
+        ) {
+            subscriptionTitleActions
+        }
         .platformPageNavigationChrome(title: L10n.workSubscriptions, status: subtitle)
         .overlay(alignment: .bottom) {
             if let actionMessage {
@@ -48,22 +54,19 @@ struct WorkSubscriptionsView: View {
             }
         }
         .animation(.snappy(duration: 0.18), value: actionMessage)
+        .animation(.snappy(duration: 0.18), value: showsSubscriptionSearchBar)
+        .task(id: store.routeRefreshGeneration) {
+            await checkForUpdates(showFeedback: false)
+        }
     }
 
     private var header: some View {
         GlassEffectContainer(spacing: 8) {
-            ViewThatFits(in: .horizontal) {
-                HStack(spacing: 10) {
-                    subscriptionSearchField
-                        .frame(minWidth: 220, idealWidth: 320, maxWidth: 520)
-                    subscriptionActionRail
-                    Spacer(minLength: 0)
-                }
-
-                VStack(alignment: .leading, spacing: 10) {
-                    subscriptionSearchField
-                    subscriptionActionRail
-                }
+            HStack(spacing: 10) {
+                subscriptionSearchField
+                    .frame(minWidth: 220, idealWidth: 320, maxWidth: 520)
+                    .layoutPriority(1)
+                Spacer(minLength: 0)
             }
         }
         .controlSize(.small)
@@ -72,36 +75,51 @@ struct WorkSubscriptionsView: View {
     private var subscriptionSearchField: some View {
         OS26LibrarySearchField(
             text: $searchText,
-            placeholder: L10n.searchHistory,
+            placeholder: L10n.searchCreatorsInList,
             minWidth: 180,
             idealWidth: 260,
-            maxWidth: 420
+            maxWidth: 420,
+            collapsesOnPhone: false
         )
     }
 
-    private var subscriptionActionRail: some View {
-        OS26LibraryActionRail {
-            Button {
-                searchText = ""
-            } label: {
-                Label(L10n.clearSearch, systemImage: "xmark.circle")
-            }
-            .os26GlassIconButton()
-            .disabled(searchText.isEmpty)
-            .help(L10n.clearSearch)
+    @ViewBuilder
+    private var subscriptionTitleActions: some View {
+        if store.session != nil {
+            OS26LibraryActionRail {
+                Button {
+                    withAnimation(.snappy(duration: 0.16)) {
+                        if showsSubscriptionSearchBar, searchText.isEmpty {
+                            isSearchPresented = false
+                        } else {
+                            isSearchPresented = true
+                        }
+                    }
+                } label: {
+                    Label(L10n.search, systemImage: searchText.isEmpty ? "magnifyingglass" : "magnifyingglass.circle.fill")
+                }
+                .os26GlassIconButton(prominent: showsSubscriptionSearchBar || searchText.isEmpty == false)
+                .help(L10n.searchCreatorsInList)
+                .accessibilityLabel(L10n.searchCreatorsInList)
 
-            Button {
-                Task { await checkForUpdates() }
-            } label: {
-                Label(
-                    L10n.workSubscriptionsCheckNow,
-                    systemImage: isChecking ? "arrow.triangle.2.circlepath" : "arrow.clockwise"
-                )
+                Button {
+                    withAnimation(.snappy(duration: 0.16)) {
+                        searchText = ""
+                        isSearchPresented = false
+                    }
+                } label: {
+                    Label(L10n.clearSearch, systemImage: "xmark.circle")
+                }
+                .os26GlassIconButton()
+                .disabled(searchText.isEmpty && isSearchPresented == false)
+                .help(L10n.clearSearch)
             }
-            .os26GlassIconButton()
-            .help(L10n.workSubscriptionsCheckNow)
-            .disabled(isChecking || store.session == nil)
+            .controlSize(.small)
         }
+    }
+
+    private var showsSubscriptionSearchBar: Bool {
+        isSearchPresented || searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false
     }
 
     @ViewBuilder
@@ -147,12 +165,16 @@ struct WorkSubscriptionsView: View {
         return parts.joined(separator: " · ")
     }
 
-    private func checkForUpdates() async {
+    private func checkForUpdates(showFeedback: Bool = true) async {
+        guard store.session != nil,
+              store.workSubscriptions.isEmpty == false,
+              isChecking == false else { return }
         isChecking = true
+        defer { isChecking = false }
+
         await store.checkSubscriptionsForUpdates()
-        isChecking = false
         let newCount = store.workSubscriptions.reduce(0) { $0 + $1.newArtworkCount }
-        if newCount > 0 {
+        if showFeedback, newCount > 0 {
             actionMessage = "\(newCount) \(L10n.workSubscriptionsNewWorks)"
         }
     }

@@ -69,23 +69,6 @@ struct TrendingTagsView: View {
             statusSystemImage: "number"
         )
         .platformPageNavigationChrome(title: L10n.trendingTags, status: trendingTagsStatusText)
-        .toolbar {
-            if store.session != nil {
-                // Single-source surface: just a refresh action. Count
-                // metadata lives in platform page chrome so iPadOS
-                // doesn't burn a second title row on tiny subtitle text.
-                ToolbarItem(placement: .secondaryAction) {
-                    Button {
-                        Task { await load() }
-                    } label: {
-                        Label(L10n.refresh, systemImage: "arrow.clockwise")
-                    }
-                    .labelStyle(.iconOnly)
-                    .help(L10n.refresh)
-                    .disabled(isLoading)
-                }
-            }
-        }
         .overlay(alignment: .bottom) {
             VStack(spacing: 8) {
                 if let actionMessage {

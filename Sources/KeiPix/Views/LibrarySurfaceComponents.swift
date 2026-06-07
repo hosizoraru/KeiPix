@@ -10,6 +10,7 @@ struct OS26LibrarySearchField: View {
     private let minWidth: CGFloat
     private let idealWidth: CGFloat
     private let maxWidth: CGFloat
+    private let collapsesOnPhone: Bool
     private let onSubmit: () -> Void
     @State private var isExpanded = false
 
@@ -20,6 +21,7 @@ struct OS26LibrarySearchField: View {
         minWidth: CGFloat = 180,
         idealWidth: CGFloat = 240,
         maxWidth: CGFloat = 320,
+        collapsesOnPhone: Bool = true,
         onSubmit: @escaping () -> Void = {}
     ) {
         _text = text
@@ -28,6 +30,7 @@ struct OS26LibrarySearchField: View {
         self.minWidth = minWidth
         self.idealWidth = idealWidth
         self.maxWidth = maxWidth
+        self.collapsesOnPhone = collapsesOnPhone
         self.onSubmit = onSubmit
     }
 
@@ -87,7 +90,7 @@ struct OS26LibrarySearchField: View {
 
     #if os(iOS)
     private var usesCollapsedPhoneSearch: Bool {
-        isPhone && text.isEmpty && isExpanded == false
+        collapsesOnPhone && isPhone && text.isEmpty && isExpanded == false
     }
 
     private var isPhone: Bool {

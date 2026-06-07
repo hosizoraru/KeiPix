@@ -95,25 +95,12 @@ struct SpotlightView: View {
                         }
                 }
 
-                // Secondary toolbar: refresh + a single "view options"
-                // Menu that consolidates filter/sort/layout, plus a
-                // destructive "clear history" entry that only shows up
-                // for the History collection. Matching the Photos /
-                // Mail "View Options" affordance keeps the tab bar
-                // uncluttered while leaving every option discoverable.
-                if collectionMode.fetchesFromNetwork {
-                    ToolbarItem(placement: .secondaryAction) {
-                        Button {
-                            Task { await load() }
-                        } label: {
-                            Label(L10n.refresh, systemImage: "arrow.clockwise")
-                        }
-                        .labelStyle(.iconOnly)
-                        .help(L10n.refresh)
-                        .disabled(isLoading)
-                    }
-                }
-
+                // A single "view options" menu consolidates
+                // filter/sort/layout, plus a destructive "clear
+                // history" entry that only shows up for the History
+                // collection. Refresh is owned by the outer route
+                // toolbar so compact iOS does not show two refresh
+                // buttons for the same content.
                 ToolbarItem(placement: .secondaryAction) {
                     viewOptionsMenu
                 }
