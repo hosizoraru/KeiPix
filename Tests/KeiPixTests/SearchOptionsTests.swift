@@ -159,6 +159,9 @@ struct SearchOptionsTests {
         #expect(SearchSort.popularPreview.title(isPremium: true) == L10n.popular)
         #expect(SearchSort.popularPreview.requiresPixivPremium == false)
         #expect(SearchSort.popularPreview.apiValue == "popular_desc")
+        #expect(SearchSort.popularPreview.showsPixivPremiumMarker(isPremium: false))
+        #expect(SearchSort.popularPreview.showsPixivPremiumMarker(isPremium: true) == false)
+        #expect(SearchSort.popularMale.showsPixivPremiumMarker(isPremium: true))
     }
 
     @Test("Bookmark threshold tolerates negative input by clamping to unlimited")

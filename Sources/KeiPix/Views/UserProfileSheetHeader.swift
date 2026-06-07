@@ -86,11 +86,7 @@ struct UserProfileSheetHeader: View {
                     .truncationMode(.tail)
                     .layoutPriority(1)
                 if detail?.profile.isPremium == true {
-                    Image(systemName: "checkmark.seal.fill")
-                        .imageScale(.small)
-                        .foregroundStyle(.yellow)
-                        .help(L10n.premium)
-                        .accessibilityLabel(L10n.premium)
+                    PixivPremiumBadge()
                 }
                 if isPinned {
                     Image(systemName: "pin.fill")

@@ -15,6 +15,14 @@ struct BookmarkFeedOptionsTests {
         #expect(BookmarkFeedOptions.defaultValue.applying(to: artworks).map(\.id) == [1, 2, 3])
     }
 
+    @Test("Bookmark feed marks Pixiv Web Premium-only controls")
+    func bookmarkFeedMarksPixivWebPremiumControls() {
+        #expect(BookmarkFeedSort.newestBookmarked.requiresPixivPremiumForFullPixivWebBehavior == false)
+        #expect(BookmarkFeedSort.oldestBookmarked.requiresPixivPremiumForFullPixivWebBehavior)
+        #expect(BookmarkFeedOptions.artworkTagFilterRequiresPixivPremiumForFullPixivWebBehavior)
+        #expect(BookmarkFeedOptions.bookmarkDateFilterRequiresPixivPremiumForFullPixivWebBehavior)
+    }
+
     @Test("Artwork-date sorting is local and deterministic")
     func artworkDateSorting() {
         let artworks = [

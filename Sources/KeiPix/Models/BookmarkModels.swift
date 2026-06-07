@@ -49,6 +49,15 @@ enum BookmarkFeedSort: String, CaseIterable, Codable, Identifiable, Sendable {
             "calendar"
         }
     }
+
+    var requiresPixivPremiumForFullPixivWebBehavior: Bool {
+        switch self {
+        case .oldestBookmarked:
+            true
+        case .newestBookmarked, .newestArtwork, .oldestArtwork:
+            false
+        }
+    }
 }
 
 enum BookmarkFeedAgeLimit: String, CaseIterable, Codable, Identifiable, Sendable {
@@ -109,6 +118,9 @@ struct BookmarkFeedOptions: Codable, Hashable, Sendable {
         ageLimit: .all,
         artworkTagFilter: ""
     )
+
+    static let artworkTagFilterRequiresPixivPremiumForFullPixivWebBehavior = true
+    static let bookmarkDateFilterRequiresPixivPremiumForFullPixivWebBehavior = true
 
     var normalizedArtworkTagFilter: String? {
         let trimmed = artworkTagFilter.trimmingCharacters(in: .whitespacesAndNewlines)

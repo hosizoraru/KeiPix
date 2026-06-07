@@ -151,7 +151,15 @@ private struct SearchFiltersView: View {
                         Button {
                             store.setSearchSort(sort)
                         } label: {
-                            Label(sort.title(isPremium: isPremium), systemImage: sort == store.effectiveSearchSort ? "checkmark" : "line.3.horizontal.decrease.circle")
+                            if sort.showsPixivPremiumMarker(isPremium: isPremium) {
+                                PixivPremiumMenuLabel(
+                                    title: sort.title(isPremium: isPremium),
+                                    systemImage: "chart.line.uptrend.xyaxis",
+                                    isSelected: sort == store.effectiveSearchSort
+                                )
+                            } else {
+                                Label(sort.title(isPremium: isPremium), systemImage: sort == store.effectiveSearchSort ? "checkmark" : "line.3.horizontal.decrease.circle")
+                            }
                         }
                     }
 
@@ -161,14 +169,23 @@ private struct SearchFiltersView: View {
                             Button {
                                 showStatus(L10n.pixivPremiumSortsRequirePremium)
                             } label: {
-                                Label("\(sort.title) · \(L10n.pixivPremiumRequired)", systemImage: "lock")
+                                PixivPremiumMenuLabel(
+                                    title: sort.title,
+                                    systemImage: "chart.line.uptrend.xyaxis"
+                                )
                             }
                         }
                     }
                 } label: {
-                    Text(store.effectiveSearchSort.title(isPremium: isPremium))
-                        .frame(width: 190, alignment: .trailing)
-                        .contentShape(Rectangle())
+                    HStack(spacing: 6) {
+                        Text(store.effectiveSearchSort.title(isPremium: isPremium))
+                            .lineLimit(1)
+                        if store.effectiveSearchSort.showsPixivPremiumMarker(isPremium: isPremium) {
+                            PixivPremiumBadge()
+                        }
+                    }
+                    .frame(width: 190, alignment: .trailing)
+                    .contentShape(Rectangle())
                 }
                 .menuStyle(.button)
                 .frame(maxWidth: 190, alignment: .trailing)

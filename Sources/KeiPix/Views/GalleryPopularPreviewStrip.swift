@@ -14,6 +14,10 @@ struct SearchPopularPreviewStrip: View {
                     Label(L10n.popularPreview, systemImage: "flame")
                         .font(.headline)
 
+                    if store.session?.user.isPremium != true {
+                        PixivPremiumBadge()
+                    }
+
                     Text(L10n.popularPreviewHint)
                         .font(.caption)
                         .foregroundStyle(.secondary)

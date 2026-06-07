@@ -183,14 +183,20 @@ struct MutedContentView: View {
                 Button {
                     isSyncConfirmationPresented = true
                 } label: {
-                    Label(L10n.syncFromPixiv, systemImage: "arrow.down.circle")
+                    PixivPremiumMenuLabel(
+                        title: L10n.syncFromPixiv,
+                        systemImage: "arrow.down.circle"
+                    )
                 }
                 .disabled(isSyncing)
 
                 Button {
                     isUploadConfirmationPresented = true
                 } label: {
-                    Label(L10n.uploadToPixiv, systemImage: "arrow.up.circle")
+                    PixivPremiumMenuLabel(
+                        title: L10n.uploadToPixiv,
+                        systemImage: "arrow.up.circle"
+                    )
                 }
                 .disabled(isSyncing || (store.mutedTagList.isEmpty && store.mutedUserList.isEmpty))
 

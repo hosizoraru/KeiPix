@@ -91,6 +91,10 @@ enum SearchSort: String, CaseIterable, Identifiable, Codable, SearchFilterOption
         }
     }
 
+    func showsPixivPremiumMarker(isPremium: Bool) -> Bool {
+        requiresPixivPremium || (self == .popularPreview && isPremium == false)
+    }
+
     static func availableCases(isPremium: Bool) -> [SearchSort] {
         allCases.filter { isPremium || $0.requiresPixivPremium == false }
     }

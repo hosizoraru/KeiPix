@@ -361,7 +361,10 @@ struct RuntimeReadinessView: View {
                 Button {
                     Task { await runMuteSyncDiagnostics() }
                 } label: {
-                    Label(L10n.runMuteSyncDiagnostics, systemImage: "eye.slash")
+                    PixivPremiumInlineLabel(
+                        title: L10n.runMuteSyncDiagnostics,
+                        systemImage: "eye.slash"
+                    )
                 }
                 .disabled(isRunningMuteSyncDiagnostics)
 

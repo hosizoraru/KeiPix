@@ -90,12 +90,12 @@ struct SafetySettingsPage: View {
             }
 
             FlowLayout(spacing: 8) {
-                OS26SettingsActionButton(title: L10n.syncFromPixiv, systemImage: "arrow.down.circle") {
+                pixivPremiumSettingsActionButton(title: L10n.syncFromPixiv, systemImage: "arrow.down.circle") {
                     coordinator.isMutedContentSyncConfirmationPresented = true
                 }
                 .disabled(coordinator.isSyncingMutedContent)
 
-                OS26SettingsActionButton(title: L10n.uploadToPixiv, systemImage: "arrow.up.circle") {
+                pixivPremiumSettingsActionButton(title: L10n.uploadToPixiv, systemImage: "arrow.up.circle") {
                     coordinator.isMutedContentUploadConfirmationPresented = true
                 }
                 .disabled(coordinator.isSyncingMutedContent
@@ -145,6 +145,19 @@ struct SafetySettingsPage: View {
 
     private var mutedContentCount: Int {
         store.mutedTagList.count + store.mutedUserList.count + store.mutedArtworkList.count
+    }
+
+    private func pixivPremiumSettingsActionButton(
+        title: String,
+        systemImage: String,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            PixivPremiumInlineLabel(title: title, systemImage: systemImage)
+                .lineLimit(1)
+        }
+        .os26GlassButton()
+        .help(L10n.pixivPremiumRequired)
     }
 
     private var restrictedModeBinding: Binding<Bool> {

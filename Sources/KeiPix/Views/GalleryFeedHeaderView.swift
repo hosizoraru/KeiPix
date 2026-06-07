@@ -596,14 +596,27 @@ struct FeedHeaderView: View {
                     store.setBookmarkFeedSort(sort)
                     actionMessage = sort.title
                 } label: {
-                    Label(
-                        sort.title,
-                        systemImage: store.bookmarkFeedOptions.sort == sort ? "checkmark" : sort.systemImage
-                    )
+                    if sort.requiresPixivPremiumForFullPixivWebBehavior {
+                        PixivPremiumMenuLabel(
+                            title: sort.title,
+                            systemImage: sort.systemImage,
+                            isSelected: store.bookmarkFeedOptions.sort == sort
+                        )
+                    } else {
+                        Label(
+                            sort.title,
+                            systemImage: store.bookmarkFeedOptions.sort == sort ? "checkmark" : sort.systemImage
+                        )
+                    }
                 }
             }
         } label: {
-            Label(store.bookmarkFeedOptions.sort.title, systemImage: "arrow.up.arrow.down.circle")
+            HStack(spacing: 6) {
+                Label(store.bookmarkFeedOptions.sort.title, systemImage: "arrow.up.arrow.down.circle")
+                if store.bookmarkFeedOptions.sort.requiresPixivPremiumForFullPixivWebBehavior {
+                    PixivPremiumBadge()
+                }
+            }
         }
     }
 
@@ -637,7 +650,10 @@ struct FeedHeaderView: View {
                 )
             }
 
-            Text(L10n.bookmarkArtworkTagPrompt)
+            HStack(spacing: 8) {
+                Text(L10n.bookmarkArtworkTagPrompt)
+                PixivPremiumBadge()
+            }
 
             if bookmarkArtworkTagCandidates.isEmpty {
                 Text(L10n.noMatchingBookmarkTags)
@@ -661,13 +677,19 @@ struct FeedHeaderView: View {
 
             Divider()
             Button {} label: {
-                Label(L10n.bookmarkDate, systemImage: "calendar.badge.clock")
+                PixivPremiumMenuLabel(
+                    title: L10n.bookmarkDate,
+                    systemImage: "calendar.badge.clock"
+                )
             }
             .disabled(true)
 
             Text(L10n.pixivWebOnly)
         } label: {
-            Label(bookmarkArtworkTagTitle, systemImage: "number")
+            HStack(spacing: 6) {
+                Label(bookmarkArtworkTagTitle, systemImage: "number")
+                PixivPremiumBadge()
+            }
         }
     }
 
