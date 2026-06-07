@@ -185,6 +185,7 @@ struct BookmarkTagsView: View {
             ) { item in
                 nativeBookmarkTagContent(for: item)
             }
+            .nativeBottomTabContentSurface()
         }
     }
 

@@ -132,6 +132,7 @@ struct WorkSubscriptionsView: View {
                     )
                 )
             }
+            .nativeBottomTabContentSurface()
         }
     }
 

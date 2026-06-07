@@ -756,6 +756,89 @@ struct NativeBoundaryTests {
         #expect(galleryBridge.contains("Task { @MainActor [weak self, weak collectionView]") == false)
     }
 
+    @Test("Native iOS library collections register as bottom tab content scroll sources")
+    func nativeIOSLibraryCollectionsRegisterAsBottomTabContentScrollSources() throws {
+        let root = try packageRoot()
+        let helper = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Support/NativeContentScrollRegistration.swift"),
+            encoding: .utf8
+        )
+        let collectionFiles = [
+            "Sources/KeiPix/Support/NativeAdaptiveGridCollectionView.swift",
+            "Sources/KeiPix/Support/NativeBookmarkTagCollectionView.swift",
+            "Sources/KeiPix/Support/NativeBrowsingHistoryCollectionView.swift",
+            "Sources/KeiPix/Support/NativeDownloadQueueListView.swift"
+        ]
+
+        #expect(helper.contains("final class NativeContentScrollRegistration"))
+        #expect(helper.contains("scrollView.contentInsetAdjustmentBehavior = .automatic"))
+        #expect(helper.contains("viewController.setContentScrollView(scrollView, for: edge)"))
+        #expect(helper.contains("registeredContentScrollViewController?.setContentScrollView(nil, for: edge)"))
+        #expect(helper.contains("final class NativeContentAwareCollectionView: UICollectionView"))
+        #expect(helper.contains("onHierarchyAvailable?(self)"))
+
+        for path in collectionFiles {
+            let source = try String(contentsOf: root.appending(path: path), encoding: .utf8)
+            #expect(source.contains("NativeContentScrollRegistration()"), "\(path) should keep UIKit tab-bar scroll tracking explicit")
+            #expect(source.contains("configureCollectionViewForBottomTabContent(collectionView)"), "\(path) should use shared iOS bottom-tab scroll setup")
+            #expect(source.contains("registerContentScrollViewIfNeeded(collectionView)"), "\(path) should register after hierarchy changes")
+            #expect(source.contains("contentScrollRegistration.register(collectionView)"), "\(path) should hand UIKit its real scroll view")
+        }
+    }
+
+    @Test("iOS library content extends behind compact bottom tabs")
+    func iOSLibraryContentExtendsBehindCompactBottomTabs() throws {
+        let root = try packageRoot()
+        let helper = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Support/NativeContentScrollRegistration.swift"),
+            encoding: .utf8
+        )
+        let hostFiles = [
+            "Sources/KeiPix/Views/BookmarkTagsView.swift",
+            "Sources/KeiPix/Views/BrowsingHistoryView.swift",
+            "Sources/KeiPix/Views/DownloadQueueView.swift",
+            "Sources/KeiPix/Views/MangaWatchlistView.swift",
+            "Sources/KeiPix/Views/NovelWatchlistView.swift",
+            "Sources/KeiPix/Views/WatchLaterView.swift",
+            "Sources/KeiPix/Views/WorkSubscriptionsView.swift"
+        ]
+
+        #expect(helper.contains("func nativeBottomTabContentSurface(isEnabled: Bool = true)"))
+        #expect(helper.contains(".backgroundExtensionEffect(isEnabled: isEnabled)"))
+        #expect(helper.contains(".nativeBottomTabContentSurface()"))
+
+        for path in hostFiles {
+            let source = try String(contentsOf: root.appending(path: path), encoding: .utf8)
+            #expect(source.contains(".nativeBottomTabContentSurface()"), "\(path) should extend native content behind compact bottom tabs")
+        }
+    }
+
+    @Test("iOS library empty and loading states register as bottom tab content scroll sources")
+    func iOSLibraryEmptyAndLoadingStatesRegisterAsBottomTabContentScrollSources() throws {
+        let root = try packageRoot()
+        let helper = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Support/NativeContentScrollRegistration.swift"),
+            encoding: .utf8
+        )
+        let emptyState = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/EmptyStateView.swift"),
+            encoding: .utf8
+        )
+        let libraryComponents = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/LibrarySurfaceComponents.swift"),
+            encoding: .utf8
+        )
+
+        #expect(helper.contains("struct NativeBottomTabScrollContentHost<Content: View>: View"))
+        #expect(helper.contains("NativeContentScrollRegistrationAnchor"))
+        #expect(helper.contains("registerNearestScrollView(containing:"))
+        #expect(helper.contains("configureScrollViewForBottomTabContent(scrollView)"))
+        #expect(emptyState.contains("NativeBottomTabScrollContentHost"))
+        #expect(libraryComponents.contains("NativeBottomTabScrollContentHost"))
+        #expect(libraryComponents.contains("private var loadingCard"))
+        #expect(libraryComponents.contains("private var unavailableCard"))
+    }
+
     @Test("Mobile portrait reading surfaces avoid landscape-only chrome")
     func mobilePortraitReadingSurfacesAvoidLandscapeOnlyChrome() throws {
         let root = try packageRoot()
@@ -1346,7 +1429,9 @@ struct NativeBoundaryTests {
         #expect(bookmarkTags.contains("private var bookmarkTagSummary: String"))
         #expect(bookmarkTags.contains("return \"\\(filteredTags.count.formatted())/\\(tags.count.formatted())\""))
         #expect(bookmarkTags.contains("return filteredTags.count.formatted()"))
-        #expect(browsingHistory.contains("case .pixiv:\n            store.artworks.count.formatted()"))
+        #expect(browsingHistory.contains("let visibleCount = filteredPixivHistoryArtworks.count"))
+        #expect(browsingHistory.contains("return \"\\(visibleCount.formatted())/\\(store.artworks.count.formatted())\""))
+        #expect(browsingHistory.contains("return visibleCount.formatted()"))
         #expect(mangaWatchlist.contains("return visibleSeries.count.formatted()"))
         #expect(mangaWatchlist.contains("return \"\\(filteredSeries.count.formatted())/\\(visibleSeries.count.formatted())\""))
         #expect(novelWatchlist.contains("return novelStore.watchlistSeries.count.formatted()"))
@@ -1941,6 +2026,13 @@ struct NativeBoundaryTests {
         #expect(historyView.contains("NativeBrowsingHistoryCollectionView("))
         #expect(historyView.contains("nativeLocalHistoryContent"))
         #expect(historyView.contains("nativePixivHistoryContent"))
+        #expect(historyView.contains("@State private var statusFilter = BrowsingHistoryStatusFilter.all"))
+        #expect(historyView.contains("BrowsingHistoryStatusFilter.allCases"))
+        #expect(historyView.contains("BrowsingHistoryTimestampLabel.shortLabel("))
+        #expect(historyView.contains("item.isBookmarked"))
+        #expect(historyView.contains("item.isCreatorFollowed"))
+        #expect(historyView.contains("pageCountBadge"))
+        #expect(historyView.contains("Label(\"\\(item.pageCount) \\(L10n.pages)\", systemImage: \"square.stack\")") == false)
         #expect(nativeCollection.contains("NSCollectionView"))
         #expect(nativeCollection.contains("UICollectionView"))
         #expect(nativeCollection.contains("NSCollectionViewDiffableDataSource"))

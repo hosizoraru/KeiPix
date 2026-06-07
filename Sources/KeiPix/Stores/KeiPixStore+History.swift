@@ -47,6 +47,24 @@ extension KeiPixStore {
         persistLocalBrowsingHistory()
     }
 
+    func refreshLocalBrowsingHistoryStatus(for artwork: PixivArtwork) {
+        guard let index = localBrowsingHistory.firstIndex(where: { $0.id == artwork.id }) else { return }
+        localBrowsingHistory[index].isBookmarked = artwork.isBookmarked
+        localBrowsingHistory[index].isCreatorFollowed = artwork.user.isFollowed
+        persistLocalBrowsingHistory()
+    }
+
+    func updateLocalBrowsingHistoryFollowState(userID: Int, isFollowed: Bool) {
+        var didUpdate = false
+        for index in localBrowsingHistory.indices where localBrowsingHistory[index].creatorID == userID {
+            localBrowsingHistory[index].isCreatorFollowed = isFollowed
+            didUpdate = true
+        }
+        if didUpdate {
+            persistLocalBrowsingHistory()
+        }
+    }
+
     /// Pulls the signed-in account's server-side browsing history and merges it
     /// into the local list, mirroring Pixiv Web's "閲覧履歴" sync behaviour.
     ///

@@ -8,6 +8,7 @@ import SwiftUI
 struct BrowsingHistoryView: View {
     @Bindable var store: KeiPixStore
     @State private var source = BrowsingHistorySource.local
+    @State private var statusFilter = BrowsingHistoryStatusFilter.all
     @State private var localSearchText = ""
     @State private var isClearConfirmationPresented = false
     @State private var pendingDeleteItem: LocalArtworkHistoryItem?
@@ -121,6 +122,8 @@ struct BrowsingHistoryView: View {
                     .help(L10n.clearSearch)
                 }
 
+                historyFilterMenu
+
                 Menu {
                     switch source {
                     case .local:
@@ -157,8 +160,36 @@ struct BrowsingHistoryView: View {
         .controlSize(.small)
     }
 
+    private var historyFilterMenu: some View {
+        Menu {
+            Picker(L10n.historyFilters, selection: $statusFilter) {
+                ForEach(BrowsingHistoryStatusFilter.allCases) { filter in
+                    Label(filter.title, systemImage: filter.systemImage)
+                        .tag(filter)
+                }
+            }
+
+            if statusFilter.isActive {
+                Divider()
+
+                Button {
+                    withAnimation(.snappy(duration: 0.16)) {
+                        statusFilter = .all
+                    }
+                } label: {
+                    Label(L10n.all, systemImage: "line.3.horizontal.decrease.circle")
+                }
+            }
+        } label: {
+            Label(statusFilter.isActive ? statusFilter.title : L10n.historyFilters, systemImage: statusFilter.systemImage)
+        }
+        .os26GlassButton(prominent: statusFilter.isActive)
+        .help(statusFilter.isActive ? statusFilter.title : L10n.historyFilters)
+        .accessibilityLabel(L10n.historyFilters)
+    }
+
     private var localHistoryContent: some View {
-        let items = store.localHistoryItems(matching: localSearchText)
+        let items = filteredLocalHistoryItems
         return Group {
             if items.isEmpty {
                 EmptyStateView(
@@ -173,6 +204,7 @@ struct BrowsingHistoryView: View {
                 ) { item in
                     nativeLocalHistoryContent(for: item)
                 }
+                .nativeBottomTabContentSurface()
             }
         }
     }
@@ -194,6 +226,21 @@ struct BrowsingHistoryView: View {
                     }
                     .os26GlassButton(prominent: true)
                 }
+            } else if pixivHistoryItems.isEmpty {
+                OS26LibraryUnavailableView(
+                    title: L10n.noMatchingHistoryTitle,
+                    subtitle: L10n.noMatchingHistorySubtitle,
+                    systemImage: statusFilter.systemImage
+                ) {
+                    Button {
+                        withAnimation(.snappy(duration: 0.16)) {
+                            statusFilter = .all
+                        }
+                    } label: {
+                        Label(L10n.all, systemImage: "line.3.horizontal.decrease.circle")
+                    }
+                    .os26GlassButton(prominent: true)
+                }
             } else {
                 NativeBrowsingHistoryCollectionView(
                     items: pixivHistoryItems,
@@ -201,16 +248,31 @@ struct BrowsingHistoryView: View {
                 ) { item in
                     nativePixivHistoryContent(for: item)
                 }
+                .nativeBottomTabContentSurface()
             }
         }
     }
 
     private var pixivHistoryItems: [NativeBrowsingHistoryCollectionItem] {
-        var items = store.artworks.map(NativeBrowsingHistoryCollectionItem.pixiv)
-        if store.hasNextPage {
+        var items = filteredPixivHistoryArtworks.map(NativeBrowsingHistoryCollectionItem.pixiv)
+        if store.hasNextPage, statusFilter == .all {
             items.append(.loadMore)
         }
         return items
+    }
+
+    private var filteredLocalHistoryItems: [LocalArtworkHistoryItem] {
+        store.localHistoryItems(matching: localSearchText)
+            .filter(statusFilter.includes)
+    }
+
+    private var filteredPixivHistoryArtworks: [PixivArtwork] {
+        store.artworks.filter(statusFilter.includes)
+    }
+
+    private var isLocalSearchOrFilterActive: Bool {
+        localSearchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false
+            || statusFilter.isActive
     }
 
     private func nativeLocalHistoryContent(for item: NativeBrowsingHistoryCollectionItem) -> AnyView {
@@ -304,15 +366,23 @@ struct BrowsingHistoryView: View {
     }
 
     private var localHistoryCountText: String {
-        String(format: L10n.historyItemCountFormat, store.localHistoryItems(matching: localSearchText).count)
+        let visibleCount = filteredLocalHistoryItems.count
+        if isLocalSearchOrFilterActive {
+            return "\(visibleCount.formatted())/\(store.localBrowsingHistory.count.formatted())"
+        }
+        return visibleCount.formatted()
     }
 
     private var historyStatusText: String {
         switch source {
         case .local:
-            localHistoryCountText
+            return localHistoryCountText
         case .pixiv:
-            store.artworks.count.formatted()
+            let visibleCount = filteredPixivHistoryArtworks.count
+            if statusFilter.isActive {
+                return "\(visibleCount.formatted())/\(store.artworks.count.formatted())"
+            }
+            return visibleCount.formatted()
         }
     }
 
@@ -448,6 +518,18 @@ private struct LocalHistoryCard: View {
                     ArtworkContentBadgesView(badges: item.contentBadges, style: .overlay)
                         .padding(8)
                 }
+
+                if hasStatusBadges {
+                    statusBadges
+                        .padding(8)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
+                }
+
+                if item.pageCount > 1 {
+                    pageCountBadge
+                        .padding(8)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
+                }
             }
             .frame(maxWidth: .infinity)
             .frame(height: thumbnailHeight)
@@ -458,21 +540,89 @@ private struct LocalHistoryCard: View {
                     .font(.callout.weight(.semibold))
                     .lineLimit(2)
 
-                Text(item.creatorName)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                    Text(item.creatorName)
+                        .font(.caption)
+                        .lineLimit(1)
 
-                HStack(spacing: 8) {
-                    Label("\(item.pageCount) \(L10n.pages)", systemImage: "square.stack")
                     Spacer(minLength: 8)
-                    Text(item.viewedAt.formatted(date: .abbreviated, time: .shortened))
+
+                    Label(BrowsingHistoryTimestampLabel.shortLabel(for: item.viewedAt), systemImage: "clock")
+                        .font(.caption2)
+                        .labelStyle(.titleAndIcon)
+                        .lineLimit(1)
                 }
-                .font(.caption2)
                 .foregroundStyle(.secondary)
             }
             .padding(10)
         }
+    }
+
+    private var hasStatusBadges: Bool {
+        item.isCreatorFollowed || item.isBookmarked
+    }
+
+    private var statusBadges: some View {
+        FlowLayout(spacing: 5) {
+            if item.isCreatorFollowed {
+                historyStatusBadge(
+                    title: L10n.following,
+                    systemImage: "person.crop.circle.badge.checkmark",
+                    tint: .accentColor
+                )
+            }
+
+            if item.isBookmarked {
+                historyStatusBadge(
+                    title: L10n.bookmarked,
+                    systemImage: "bookmark.fill",
+                    tint: .pink
+                )
+            }
+        }
+    }
+
+    private var pageCountBadge: some View {
+        Text(L10n.pageCountShort(item.pageCount))
+            .font(.caption2.weight(.bold))
+            .foregroundStyle(.white)
+            .padding(.horizontal, 7)
+            .padding(.vertical, 4)
+            .background(.black.opacity(0.48), in: Capsule())
+            .help(L10n.pages)
+            .accessibilityLabel(L10n.pageCountShort(item.pageCount))
+    }
+
+    private func historyStatusBadge(title: String, systemImage: String, tint: Color) -> some View {
+        Label(title, systemImage: systemImage)
+            .font(historyStatusBadgeFont)
+            .labelStyle(.titleAndIcon)
+            .foregroundStyle(.white)
+            .padding(.horizontal, historyStatusBadgeHorizontalPadding)
+            .padding(.vertical, 3)
+            .background(tint.opacity(0.78), in: Capsule())
+            .lineLimit(1)
+            .minimumScaleFactor(0.78)
+            .help(title)
+            .accessibilityLabel(title)
+    }
+
+    private var historyStatusBadgeFont: Font {
+        #if os(iOS)
+        UIDevice.current.userInterfaceIdiom == .phone
+            ? .system(size: 10.5, weight: .bold)
+            : .caption2.weight(.bold)
+        #else
+        .caption2.weight(.bold)
+        #endif
+    }
+
+    private var historyStatusBadgeHorizontalPadding: CGFloat {
+        #if os(iOS)
+        UIDevice.current.userInterfaceIdiom == .phone ? 5 : 7
+        #else
+        7
+        #endif
     }
 
     @ViewBuilder

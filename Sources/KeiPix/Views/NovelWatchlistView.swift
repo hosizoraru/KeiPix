@@ -35,6 +35,7 @@ struct NovelWatchlistView: View {
                 ) { item in
                     novelWatchlistGridContent(for: item)
                 }
+                .nativeBottomTabContentSurface()
             }
         }
         .platformPageHeader(

@@ -216,21 +216,23 @@ extension NativeAdaptiveGridCollectionView: UIViewRepresentable {
     }
 
     func makeUIView(context: Context) -> UICollectionView {
-        let collectionView = UICollectionView(
+        let collectionView = NativeContentAwareCollectionView(
             frame: .zero,
             collectionViewLayout: UICollectionViewFlowLayout()
         )
-        collectionView.backgroundColor = .clear
-        collectionView.alwaysBounceVertical = true
-        collectionView.showsVerticalScrollIndicator = true
+        configureCollectionViewForBottomTabContent(collectionView)
         collectionView.register(
             NativeAdaptiveGridHostingCollectionCell.self,
             forCellWithReuseIdentifier: NativeAdaptiveGridHostingCollectionCell.reuseIdentifier
         )
         collectionView.delegate = context.coordinator
+        collectionView.onHierarchyAvailable = { [weak coordinator = context.coordinator] collectionView in
+            coordinator?.registerContentScrollViewIfNeeded(collectionView)
+        }
 
         context.coordinator.configureDataSource(for: collectionView)
         context.coordinator.parent = self
+        context.coordinator.registerContentScrollViewIfNeeded(collectionView)
         context.coordinator.updateCollectionLayout(for: collectionView)
         context.coordinator.applySnapshot(to: collectionView)
 
@@ -239,6 +241,7 @@ extension NativeAdaptiveGridCollectionView: UIViewRepresentable {
 
     func updateUIView(_ collectionView: UICollectionView, context: Context) {
         context.coordinator.parent = self
+        context.coordinator.registerContentScrollViewIfNeeded(collectionView)
         context.coordinator.updateCollectionLayout(for: collectionView)
         context.coordinator.applySnapshot(to: collectionView)
     }
@@ -247,9 +250,21 @@ extension NativeAdaptiveGridCollectionView: UIViewRepresentable {
     final class Coordinator: NSObject, UICollectionViewDelegateFlowLayout {
         var parent: NativeAdaptiveGridCollectionView
         private var dataSource: UICollectionViewDiffableDataSource<Int, Item>?
+        private let contentScrollRegistration = NativeContentScrollRegistration()
 
         init(parent: NativeAdaptiveGridCollectionView) {
             self.parent = parent
+        }
+
+        deinit {
+            let contentScrollRegistration = contentScrollRegistration
+            Task { @MainActor in
+                contentScrollRegistration.unregister()
+            }
+        }
+
+        func registerContentScrollViewIfNeeded(_ collectionView: UICollectionView) {
+            contentScrollRegistration.register(collectionView)
         }
 
         func configureDataSource(for collectionView: UICollectionView) {

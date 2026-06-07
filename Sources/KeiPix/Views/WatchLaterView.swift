@@ -164,6 +164,7 @@ struct WatchLaterView: View {
                 }
             )
         }
+        .nativeBottomTabContentSurface()
     }
 
     private func dismissActionMessageIfNeeded(_ message: String?) async {

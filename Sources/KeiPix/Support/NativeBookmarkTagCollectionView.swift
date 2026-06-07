@@ -334,21 +334,23 @@ extension NativeBookmarkTagCollectionView: UIViewRepresentable {
     }
 
     func makeUIView(context: Context) -> UICollectionView {
-        let collectionView = UICollectionView(
+        let collectionView = NativeContentAwareCollectionView(
             frame: .zero,
             collectionViewLayout: NativeBookmarkTagLeftAlignedFlowLayout()
         )
-        collectionView.backgroundColor = .clear
-        collectionView.alwaysBounceVertical = true
-        collectionView.showsVerticalScrollIndicator = true
+        configureCollectionViewForBottomTabContent(collectionView)
         collectionView.register(
             NativeBookmarkTagHostingCollectionCell.self,
             forCellWithReuseIdentifier: NativeBookmarkTagHostingCollectionCell.reuseIdentifier
         )
         collectionView.delegate = context.coordinator
+        collectionView.onHierarchyAvailable = { [weak coordinator = context.coordinator] collectionView in
+            coordinator?.registerContentScrollViewIfNeeded(collectionView)
+        }
 
         context.coordinator.configureDataSource(for: collectionView)
         context.coordinator.parent = self
+        context.coordinator.registerContentScrollViewIfNeeded(collectionView)
         context.coordinator.updateCollectionLayout(for: collectionView)
         context.coordinator.applySnapshot(to: collectionView)
 
@@ -357,6 +359,7 @@ extension NativeBookmarkTagCollectionView: UIViewRepresentable {
 
     func updateUIView(_ collectionView: UICollectionView, context: Context) {
         context.coordinator.parent = self
+        context.coordinator.registerContentScrollViewIfNeeded(collectionView)
         context.coordinator.updateCollectionLayout(for: collectionView)
         context.coordinator.applySnapshot(to: collectionView)
     }
@@ -365,9 +368,21 @@ extension NativeBookmarkTagCollectionView: UIViewRepresentable {
     final class Coordinator: NSObject, UICollectionViewDelegateFlowLayout {
         var parent: NativeBookmarkTagCollectionView
         private var dataSource: UICollectionViewDiffableDataSource<Int, NativeBookmarkTagCollectionItem>?
+        private let contentScrollRegistration = NativeContentScrollRegistration()
 
         init(parent: NativeBookmarkTagCollectionView) {
             self.parent = parent
+        }
+
+        deinit {
+            let contentScrollRegistration = contentScrollRegistration
+            Task { @MainActor in
+                contentScrollRegistration.unregister()
+            }
+        }
+
+        func registerContentScrollViewIfNeeded(_ collectionView: UICollectionView) {
+            contentScrollRegistration.register(collectionView)
         }
 
         func configureDataSource(for collectionView: UICollectionView) {

@@ -63,7 +63,7 @@ enum NativeBrowsingHistoryCollectionLayout: Equatable {
     private var itemHeight: CGFloat {
         switch self {
         case .localCards:
-            258
+            244
         case .pixivCards:
             152
         }
@@ -295,21 +295,23 @@ extension NativeBrowsingHistoryCollectionView: UIViewRepresentable {
     }
 
     func makeUIView(context: Context) -> UICollectionView {
-        let collectionView = UICollectionView(
+        let collectionView = NativeContentAwareCollectionView(
             frame: .zero,
             collectionViewLayout: UICollectionViewFlowLayout()
         )
-        collectionView.backgroundColor = .clear
-        collectionView.alwaysBounceVertical = true
-        collectionView.showsVerticalScrollIndicator = true
+        configureCollectionViewForBottomTabContent(collectionView)
         collectionView.register(
             NativeBrowsingHistoryHostingCollectionCell.self,
             forCellWithReuseIdentifier: NativeBrowsingHistoryHostingCollectionCell.reuseIdentifier
         )
         collectionView.delegate = context.coordinator
+        collectionView.onHierarchyAvailable = { [weak coordinator = context.coordinator] collectionView in
+            coordinator?.registerContentScrollViewIfNeeded(collectionView)
+        }
 
         context.coordinator.configureDataSource(for: collectionView)
         context.coordinator.parent = self
+        context.coordinator.registerContentScrollViewIfNeeded(collectionView)
         context.coordinator.updateCollectionLayout(for: collectionView)
         context.coordinator.applySnapshot(to: collectionView)
 
@@ -318,6 +320,7 @@ extension NativeBrowsingHistoryCollectionView: UIViewRepresentable {
 
     func updateUIView(_ collectionView: UICollectionView, context: Context) {
         context.coordinator.parent = self
+        context.coordinator.registerContentScrollViewIfNeeded(collectionView)
         context.coordinator.updateCollectionLayout(for: collectionView)
         context.coordinator.applySnapshot(to: collectionView)
     }
@@ -326,9 +329,21 @@ extension NativeBrowsingHistoryCollectionView: UIViewRepresentable {
     final class Coordinator: NSObject, UICollectionViewDelegateFlowLayout {
         var parent: NativeBrowsingHistoryCollectionView
         private var dataSource: UICollectionViewDiffableDataSource<Int, NativeBrowsingHistoryCollectionItem>?
+        private let contentScrollRegistration = NativeContentScrollRegistration()
 
         init(parent: NativeBrowsingHistoryCollectionView) {
             self.parent = parent
+        }
+
+        deinit {
+            let contentScrollRegistration = contentScrollRegistration
+            Task { @MainActor in
+                contentScrollRegistration.unregister()
+            }
+        }
+
+        func registerContentScrollViewIfNeeded(_ collectionView: UICollectionView) {
+            contentScrollRegistration.register(collectionView)
         }
 
         func configureDataSource(for collectionView: UICollectionView) {

@@ -222,19 +222,23 @@ extension NativeDownloadQueueListView: UIViewRepresentable {
         layout.sectionInset = UIEdgeInsets(top: 18, left: 18, bottom: 18, right: 18)
 
         let collectionView = NativeDownloadQueueCollectionView(frame: .zero, collectionViewLayout: layout)
-        collectionView.alwaysBounceVertical = true
-        collectionView.backgroundColor = .clear
+        configureCollectionViewForBottomTabContent(collectionView)
         collectionView.dataSource = context.coordinator
         collectionView.delegate = context.coordinator
         collectionView.register(UICollectionViewCell.self, forCellWithReuseIdentifier: Coordinator.cellIdentifier)
         collectionView.onSpace = { [weak coordinator = context.coordinator] in
             coordinator?.parent.quickLookSelectedItem()
         }
+        collectionView.onHierarchyAvailable = { [weak coordinator = context.coordinator] collectionView in
+            coordinator?.registerContentScrollViewIfNeeded(collectionView)
+        }
+        context.coordinator.registerContentScrollViewIfNeeded(collectionView)
         return collectionView
     }
 
     func updateUIView(_ collectionView: UICollectionView, context: Context) {
         context.coordinator.parent = self
+        context.coordinator.registerContentScrollViewIfNeeded(collectionView)
         context.coordinator.applyItems(to: collectionView)
         context.coordinator.restoreSelection(in: collectionView)
     }
@@ -245,9 +249,21 @@ extension NativeDownloadQueueListView: UIViewRepresentable {
 
         var parent: NativeDownloadQueueListView
         private var lastItemIDs: [UUID] = []
+        private let contentScrollRegistration = NativeContentScrollRegistration()
 
         init(parent: NativeDownloadQueueListView) {
             self.parent = parent
+        }
+
+        deinit {
+            let contentScrollRegistration = contentScrollRegistration
+            Task { @MainActor in
+                contentScrollRegistration.unregister()
+            }
+        }
+
+        func registerContentScrollViewIfNeeded(_ collectionView: UICollectionView) {
+            contentScrollRegistration.register(collectionView)
         }
 
         func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
@@ -335,6 +351,7 @@ extension NativeDownloadQueueListView: UIViewRepresentable {
 
 private final class NativeDownloadQueueCollectionView: UICollectionView {
     var onSpace: (() -> Void)?
+    var onHierarchyAvailable: ((UICollectionView) -> Void)?
 
     override var canBecomeFirstResponder: Bool { true }
 
@@ -347,10 +364,21 @@ private final class NativeDownloadQueueCollectionView: UICollectionView {
     override func didMoveToWindow() {
         super.didMoveToWindow()
         becomeFirstResponder()
+        notifyHierarchyAvailableIfNeeded()
+    }
+
+    override func didMoveToSuperview() {
+        super.didMoveToSuperview()
+        notifyHierarchyAvailableIfNeeded()
     }
 
     @objc private func handleSpaceKey() {
         onSpace?()
+    }
+
+    private func notifyHierarchyAvailableIfNeeded() {
+        guard window != nil else { return }
+        onHierarchyAvailable?(self)
     }
 }
 #endif

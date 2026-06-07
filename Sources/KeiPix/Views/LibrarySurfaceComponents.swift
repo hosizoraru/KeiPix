@@ -143,6 +143,17 @@ struct OS26LibraryLoadingView: View {
     let systemImage: String
 
     var body: some View {
+        #if os(iOS)
+        NativeBottomTabScrollContentHost {
+            loadingCard
+        }
+        #else
+        loadingCard
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        #endif
+    }
+
+    private var loadingCard: some View {
         VStack(alignment: .leading, spacing: 18) {
             HStack(spacing: 12) {
                 Image(systemName: systemImage)
@@ -173,7 +184,7 @@ struct OS26LibraryLoadingView: View {
         .frame(maxWidth: 520, alignment: .leading)
         .keiGlass(30)
         .padding(28)
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .frame(maxWidth: .infinity)
     }
 }
 
@@ -346,6 +357,17 @@ struct OS26LibraryUnavailableView<Actions: View>: View {
     }
 
     var body: some View {
+        #if os(iOS)
+        NativeBottomTabScrollContentHost {
+            unavailableCard
+        }
+        #else
+        unavailableCard
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        #endif
+    }
+
+    private var unavailableCard: some View {
         GlassEffectContainer(spacing: 18) {
             VStack(spacing: 16) {
                 Image(systemName: systemImage)
@@ -377,7 +399,7 @@ struct OS26LibraryUnavailableView<Actions: View>: View {
             .keiGlass(30)
         }
         .padding(28)
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .frame(maxWidth: .infinity)
     }
 }
 

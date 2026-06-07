@@ -340,6 +340,9 @@ extension KeiPixStore {
                 selectedArtwork = artworks[index]
             }
         }
+        if let artwork = allKnownArtwork(id: id) {
+            refreshLocalBrowsingHistoryStatus(for: artwork)
+        }
     }
 
     func updateFollowState(userID: Int, isFollowed: Bool) {
@@ -352,5 +355,6 @@ extension KeiPixStore {
         if selectedArtwork?.user.id == userID {
             selectedArtwork?.user.isFollowed = isFollowed
         }
+        updateLocalBrowsingHistoryFollowState(userID: userID, isFollowed: isFollowed)
     }
 }

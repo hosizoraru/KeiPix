@@ -142,6 +142,7 @@ enum L10n {
     static var localHistory: String { text("Local") }
     static var pixivHistory: String { text("Pixiv") }
     static var searchHistory: String { text("Search history") }
+    static var historyFilters: String { text("History Filters") }
     static var watchLater: String { text("Watch Later") }
     static var addToWatchLater: String { text("Add to Watch Later") }
     static var removeFromWatchLater: String { text("Remove from Watch Later") }
@@ -424,6 +425,8 @@ enum L10n {
     static var downloadQueueSummaryFormat: String { text("%d shown · %d active · %d completed") }
     static var downloadStorageSummaryFormat: String { text("Storage %@") }
     static var bookmark: String { text("Bookmark") }
+    static var bookmarked: String { text("Bookmarked") }
+    static var unbookmarked: String { text("Unbookmarked") }
     static var removeBookmark: String { text("Remove Bookmark") }
     static var editBookmark: String { text("Edit Bookmark") }
     static var saveBookmark: String { text("Save Bookmark") }

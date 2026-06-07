@@ -176,6 +176,7 @@ struct MangaWatchlistView: View {
             ) { item in
                 mangaWatchlistGridContent(for: item)
             }
+            .nativeBottomTabContentSurface()
         }
     }
 

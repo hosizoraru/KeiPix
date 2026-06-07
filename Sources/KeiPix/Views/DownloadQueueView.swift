@@ -153,6 +153,7 @@ struct DownloadQueueView: View {
             cancel: { pendingDangerAction = .cancelItem($0) },
             delete: { pendingDangerAction = .deleteItem($0) }
         )
+        .nativeBottomTabContentSurface()
     }
 
     private var downloadStatusText: String {

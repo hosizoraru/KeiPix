@@ -8,6 +8,17 @@ struct EmptyStateView: View {
     @ScaledMetric(relativeTo: .title) private var iconSize: CGFloat = 46
 
     var body: some View {
+        #if os(iOS)
+        NativeBottomTabScrollContentHost {
+            emptyContent
+        }
+        #else
+        emptyContent
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        #endif
+    }
+
+    private var emptyContent: some View {
         VStack(spacing: 12) {
             Image(systemName: systemImage)
                 .font(.system(size: iconSize, weight: .medium))
@@ -22,7 +33,7 @@ struct EmptyStateView: View {
                 .frame(maxWidth: 380)
         }
         .padding(28)
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .frame(maxWidth: .infinity)
     }
 }
 
