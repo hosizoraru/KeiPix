@@ -1773,6 +1773,7 @@ struct ContentView: View {
     private func mobileSectionTab(_ kind: MobileBottomTabKind) -> some View {
         feedNavigationStack(showsSidebarToggle: false)
             .onAppear {
+                guard selectedTab == .mobile(kind) else { return }
                 selectMobileBottomTabKind(kind)
             }
     }
@@ -1780,6 +1781,7 @@ struct ContentView: View {
     private var compactSearchTab: some View {
         feedNavigationStack(showsSidebarToggle: false)
             .onAppear {
+                guard selectedTab == .search else { return }
                 selectCompactSearchTab()
             }
     }

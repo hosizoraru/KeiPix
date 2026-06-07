@@ -1,3 +1,4 @@
+import Foundation
 import Testing
 @testable import KeiPix
 
@@ -165,5 +166,39 @@ struct MobileBottomTabConfigurationTests {
         #expect(MobileBottomTabKind.kind(containing: .mangaRankingMonthly) == .manga)
         #expect(MobileBottomTabKind.kind(containing: .novelSearch) == nil)
         #expect(MobileBottomTabKind.kind(containing: .watchLater) == .bookmarks)
+    }
+
+    @Test("Mobile cold launch restores the last concrete bottom-tab page")
+    func mobileColdLaunchRestoresLastConcreteBottomTabPage() {
+        let suiteName = "MobileBottomTabConfigurationTests.mobile.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+
+        let rememberedRoutes = MobileBottomTabConfiguration.storageID(for: [
+            .illustrations: .illustrations,
+            .manga: .mangaRecommended,
+            .novels: .novelRecommended,
+            .bookmarks: .bookmarkTags
+        ])
+        defaults.set(LaunchDestination.home.rawValue, forKey: AppLaunchRouteResolver.launchDestinationDefaultsKey)
+        defaults.set(MobileBottomTabLaunchTarget.lastUsed.rawValue, forKey: MobileBottomTabConfiguration.DefaultsKey.launchTarget)
+        defaults.set(MobileBottomTabKind.bookmarks.rawValue, forKey: MobileBottomTabConfiguration.DefaultsKey.lastKind)
+        defaults.set(true, forKey: MobileBottomTabConfiguration.DefaultsKey.remembersLastRoute)
+        defaults.set(rememberedRoutes, forKey: MobileBottomTabConfiguration.DefaultsKey.rememberedRouteIDs)
+
+        #expect(AppLaunchRouteResolver.initialRoute(defaults: defaults, usesMobileBottomTabs: true) == .bookmarkTags)
+    }
+
+    @Test("Desktop cold launch keeps the general launch destination")
+    func desktopColdLaunchKeepsGeneralLaunchDestination() {
+        let suiteName = "MobileBottomTabConfigurationTests.desktop.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+
+        defaults.set(LaunchDestination.spotlight.rawValue, forKey: AppLaunchRouteResolver.launchDestinationDefaultsKey)
+        defaults.set(MobileBottomTabLaunchTarget.lastUsed.rawValue, forKey: MobileBottomTabConfiguration.DefaultsKey.launchTarget)
+        defaults.set(MobileBottomTabKind.bookmarks.rawValue, forKey: MobileBottomTabConfiguration.DefaultsKey.lastKind)
+
+        #expect(AppLaunchRouteResolver.initialRoute(defaults: defaults, usesMobileBottomTabs: false) == .spotlight)
     }
 }

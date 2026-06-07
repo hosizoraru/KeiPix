@@ -121,6 +121,14 @@ enum MobileSearchTabConfiguration {
 }
 
 enum MobileBottomTabConfiguration {
+    enum DefaultsKey {
+        static let defaultRouteIDs = "mobileBottomTabItemIDs"
+        static let launchTarget = "mobileBottomTabLaunchTarget"
+        static let remembersLastRoute = "mobileBottomTabRemembersLastRoute"
+        static let lastKind = "mobileBottomTabLastKind"
+        static let rememberedRouteIDs = "mobileBottomTabRememberedRouteIDs"
+    }
+
     static let fixedKinds = MobileBottomTabKind.allCases
     static let defaultLaunchTarget = MobileBottomTabLaunchTarget.lastUsed
     static let defaultLastUsedKind = MobileBottomTabKind.illustrations

@@ -15,14 +15,7 @@ final class KeiPixStore {
 
     var session: PixivSession?
     var storedAccounts: [PixivStoredAccount] = []
-    var selectedRoute: PixivRoute = {
-        // Honor the user's launch destination preference at first init —
-        // KeiPixStore is created on app launch, so this single call keeps
-        // the initial route in sync with what they picked in General.
-        let raw = UserDefaults.standard.string(forKey: "launchDestination") ?? ""
-        let destination = LaunchDestination(rawValue: raw) ?? .home
-        return destination.route
-    }()
+    var selectedRoute: PixivRoute = AppLaunchRouteResolver.initialRoute()
     var artworks: [PixivArtwork] = [] {
         didSet { recomputeFilteredArtworks() }
     }

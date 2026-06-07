@@ -61,3 +61,53 @@ enum LaunchDestination: String, CaseIterable, Identifiable, Codable {
         }
     }
 }
+
+enum AppLaunchRouteResolver {
+    static let launchDestinationDefaultsKey = "launchDestination"
+
+    static func initialRoute(
+        defaults: UserDefaults = .standard,
+        usesMobileBottomTabs: Bool = usesMobileBottomTabsOnCurrentPlatform
+    ) -> PixivRoute {
+        if usesMobileBottomTabs {
+            return mobileBottomTabRoute(defaults: defaults)
+        }
+        return launchDestinationRoute(defaults: defaults)
+    }
+
+    private static var usesMobileBottomTabsOnCurrentPlatform: Bool {
+        #if os(iOS)
+        let deviceFamilies = Bundle.main.object(forInfoDictionaryKey: "UIDeviceFamily") as? [Int]
+        return deviceFamilies?.contains(1) == true
+        #else
+        false
+        #endif
+    }
+
+    private static func launchDestinationRoute(defaults: UserDefaults) -> PixivRoute {
+        let rawValue = defaults.string(forKey: launchDestinationDefaultsKey) ?? ""
+        return (LaunchDestination(rawValue: rawValue) ?? .home).route
+    }
+
+    private static func mobileBottomTabRoute(defaults: UserDefaults) -> PixivRoute {
+        let launchTarget = defaults.string(forKey: MobileBottomTabConfiguration.DefaultsKey.launchTarget)
+            .flatMap(MobileBottomTabLaunchTarget.init(rawValue:))
+            ?? MobileBottomTabConfiguration.defaultLaunchTarget
+        let lastKindID = defaults.string(forKey: MobileBottomTabConfiguration.DefaultsKey.lastKind)
+            ?? MobileBottomTabConfiguration.defaultLastUsedKind.rawValue
+        let kind = launchTarget.resolvedKind(lastUsedKindID: lastKindID)
+        let defaultRouteStorageID = defaults.string(forKey: MobileBottomTabConfiguration.DefaultsKey.defaultRouteIDs)
+            ?? MobileBottomTabConfiguration.defaultStorageID
+        let rememberedRouteStorageID = defaults.string(forKey: MobileBottomTabConfiguration.DefaultsKey.rememberedRouteIDs)
+            ?? MobileBottomTabConfiguration.defaultStorageID
+        let remembersLastRoute = defaults.object(forKey: MobileBottomTabConfiguration.DefaultsKey.remembersLastRoute) as? Bool
+            ?? MobileBottomTabConfiguration.defaultRemembersLastRoute
+
+        return MobileBottomTabConfiguration.route(
+            for: kind,
+            defaultRouteStorageID: defaultRouteStorageID,
+            rememberedRouteStorageID: rememberedRouteStorageID,
+            remembersLastRoute: remembersLastRoute
+        )
+    }
+}

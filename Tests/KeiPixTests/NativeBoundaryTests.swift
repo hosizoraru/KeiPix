@@ -398,6 +398,7 @@ struct NativeBoundaryTests {
         #expect(contentView.contains("if layout.usesCustomNavigationTabs {\n                ForEach(MobileBottomTabKind.allCases)"))
         #expect(contentView.contains("value: iPadTab.mobile(kind)"))
         #expect(contentView.contains("mobileSectionTab(kind)"))
+        #expect(contentView.contains("guard selectedTab == .mobile(kind) else { return }"))
         #expect(contentView.contains("Tab(L10n.search, systemImage: \"magnifyingglass\", value: .search, role: .search)"))
         #expect(contentView.contains("compactSearchTab"))
         #expect(contentView.contains(".navigationBarTitleDisplayMode(.inline)"))
