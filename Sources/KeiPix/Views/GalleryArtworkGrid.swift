@@ -151,7 +151,8 @@ struct GalleryContentGrid: View {
             downloadState: store.downloads.downloadState(for: artwork.id),
             feedPreviewTier: store.feedPreviewImageQualityTier,
             downloadedFileURL: store.downloads.downloadedImageURL(artworkID: artwork.id, pageIndex: 0),
-            emphasizeFollowing: store.emphasizeFollowingArtists
+            emphasizeFollowing: store.emphasizeFollowingArtists,
+            showsBookmarkedStatusBadge: store.selectedRoute.isOwnBookmarkRoute == false
         ) {
             activate(artwork)
         }
@@ -294,7 +295,8 @@ private struct MasonryArtworkGrid: View {
                     fillsAvailableHeight: true,
                     feedPreviewTier: store.feedPreviewImageQualityTier,
                     downloadedFileURL: store.downloads.downloadedImageURL(artworkID: artwork.id, pageIndex: 0),
-                    emphasizeFollowing: store.emphasizeFollowingArtists
+                    emphasizeFollowing: store.emphasizeFollowingArtists,
+                    showsBookmarkedStatusBadge: store.selectedRoute.isOwnBookmarkRoute == false
                 ) {
                     activate(artwork)
                 }

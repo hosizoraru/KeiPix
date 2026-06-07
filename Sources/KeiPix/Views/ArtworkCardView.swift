@@ -68,6 +68,11 @@ struct ArtworkCardView: View {
     /// `false` so legacy call sites stay untouched; the gallery wires this
     /// from `KeiPixStore.emphasizeFollowingArtists`.
     var emphasizeFollowing = false
+    /// Own bookmark feeds already imply every visible artwork is bookmarked,
+    /// so callers can hide the bookmark state badge there while keeping it in
+    /// mixed feeds such as following, search, ranking, history, and creator
+    /// pages where the state answers a real question.
+    var showsBookmarkedStatusBadge = true
     let action: () -> Void
     @State private var isHovering = false
 
@@ -107,7 +112,8 @@ struct ArtworkCardView: View {
 
     private var accessibilityDescription: String {
         var parts = [artwork.title, artwork.user.name]
-        if artwork.isBookmarked { parts.append(L10n.bookmark) }
+        if artwork.user.isFollowed { parts.append(L10n.following) }
+        if artwork.isBookmarked { parts.append(L10n.bookmarked) }
         if artwork.isAI { parts.append(L10n.aiGenerated) }
         return parts.joined(separator: ", ")
     }
@@ -182,8 +188,8 @@ struct ArtworkCardView: View {
                     .lineLimit(1)
                     .minimumScaleFactor(0.82)
 
-                if shouldEmphasizeFollowing {
-                    followBadge
+                if hasStatusBadges {
+                    statusBadges
                 }
 
                 HStack(spacing: 10) {
@@ -225,25 +231,51 @@ struct ArtworkCardView: View {
         isCompact ? .compact : displayStyle
     }
 
-    private var followBadge: some View {
-        HStack(spacing: followBadgeStyle.spacing) {
-            Image(systemName: "checkmark.seal.fill")
-                .font(followBadgeStyle.iconFont)
+    private var hasStatusBadges: Bool {
+        artwork.user.isFollowed || showsBookmarkedStatusBadge && artwork.isBookmarked
+    }
+
+    private var statusBadges: some View {
+        FlowLayout(spacing: statusBadgeStyle.spacing) {
+            if artwork.user.isFollowed {
+                artworkStatusBadge(
+                    title: L10n.following,
+                    systemImage: "person.crop.circle.badge.checkmark",
+                    tint: .accentColor,
+                    help: L10n.followingArtistEmphasizedHelp
+                )
+            }
+
+            if showsBookmarkedStatusBadge && artwork.isBookmarked {
+                artworkStatusBadge(
+                    title: L10n.bookmarked,
+                    systemImage: "bookmark.fill",
+                    tint: .pink,
+                    help: L10n.bookmarked
+                )
+            }
+        }
+    }
+
+    private func artworkStatusBadge(title: String, systemImage: String, tint: Color, help: String) -> some View {
+        HStack(spacing: statusBadgeStyle.spacing) {
+            Image(systemName: systemImage)
+                .font(statusBadgeStyle.iconFont)
                 .symbolRenderingMode(.hierarchical)
-            Text(L10n.following)
-                .font(followBadgeStyle.textFont)
+            Text(title)
+                .font(statusBadgeStyle.textFont)
                 .lineLimit(1)
                 .minimumScaleFactor(0.82)
         }
         .foregroundStyle(.white)
-        .padding(.horizontal, followBadgeStyle.horizontalPadding)
-        .padding(.vertical, followBadgeStyle.verticalPadding)
-        .background(Color.accentColor.opacity(0.78), in: Capsule())
-        .help(L10n.followingArtistEmphasizedHelp)
-        .accessibilityLabel(L10n.followingArtistEmphasizedHelp)
+        .padding(.horizontal, statusBadgeStyle.horizontalPadding)
+        .padding(.vertical, statusBadgeStyle.verticalPadding)
+        .background(tint.opacity(0.78), in: Capsule())
+        .help(help)
+        .accessibilityLabel(help)
     }
 
-    private var followBadgeStyle: ArtworkFollowBadgeStyle {
+    private var statusBadgeStyle: ArtworkFollowBadgeStyle {
         if usesPhoneFollowBadge {
             return .phone
         }

@@ -1763,6 +1763,46 @@ struct NativeBoundaryTests {
         #expect(nativeInlineFilter.contains("UITextFieldDelegate"))
     }
 
+    @Test("Artwork detail author menu exposes pinning without leaving the sheet")
+    func artworkDetailAuthorMenuExposesPinning() throws {
+        let root = try packageRoot()
+        let summary = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/ArtworkSummaryView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(summary.contains("private func togglePinnedCreator(_ user: PixivUser)"))
+        #expect(summary.contains("store.isPinnedCreator(artwork.user)"))
+        #expect(summary.contains("store.togglePinnedCreator(user)"))
+        #expect(summary.contains("L10n.pinCreator"))
+        #expect(summary.contains("L10n.unpinCreator"))
+        #expect(summary.contains("L10n.pinnedCreatorFormat"))
+        #expect(summary.contains("L10n.unpinnedCreatorFormat"))
+    }
+
+    @Test("Artwork cards surface bookmarked state alongside followed authors")
+    func artworkCardsSurfaceBookmarkedStateAlongsideFollowedAuthors() throws {
+        let root = try packageRoot()
+        let card = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/ArtworkCardView.swift"),
+            encoding: .utf8
+        )
+        let gallery = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/GalleryView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(card.contains("private var statusBadges: some View"))
+        #expect(card.contains("if artwork.user.isFollowed"))
+        #expect(card.contains("var showsBookmarkedStatusBadge = true"))
+        #expect(card.contains("if showsBookmarkedStatusBadge && artwork.isBookmarked"))
+        #expect(card.contains("L10n.bookmarked"))
+        #expect(card.contains("systemImage: \"bookmark.fill\""))
+        #expect(card.contains("emphasizeFollowing = false"))
+        #expect(gallery.contains("showsBookmarkedStatusBadge: store.selectedRoute.isOwnBookmarkRoute == false"))
+        #expect(gallery.contains("store.emphasizeFollowingArtists"))
+    }
+
     @Test("Search popular preview uses a native artwork shelf")
     func searchPopularPreviewUsesNativeArtworkShelf() throws {
         let root = try packageRoot()

@@ -633,7 +633,8 @@ private struct GalleryFeedView: View {
             feedPreviewTier: store.feedPreviewImageQualityTier,
             downloadedFileURL: store.downloads.downloadedImageURL(artworkID: artwork.id, pageIndex: 0),
             isScrollPerformanceOptimized: usesMobileGalleryCardPerformanceMode,
-            emphasizeFollowing: store.emphasizeFollowingArtists
+            emphasizeFollowing: store.emphasizeFollowingArtists,
+            showsBookmarkedStatusBadge: store.selectedRoute.isOwnBookmarkRoute == false
         ) {
             activate(artwork)
         }
@@ -664,7 +665,8 @@ private struct GalleryFeedView: View {
             feedPreviewTier: store.feedPreviewImageQualityTier,
             downloadedFileURL: store.downloads.downloadedImageURL(artworkID: artwork.id, pageIndex: 0),
             isScrollPerformanceOptimized: usesMobileGalleryCardPerformanceMode,
-            emphasizeFollowing: store.emphasizeFollowingArtists
+            emphasizeFollowing: store.emphasizeFollowingArtists,
+            showsBookmarkedStatusBadge: store.selectedRoute.isOwnBookmarkRoute == false
         ) {
             activate(artwork)
         }

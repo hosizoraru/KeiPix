@@ -141,6 +141,15 @@ private struct CreatorQuickActionsMenu: View {
                 }
             }
 
+            Button {
+                togglePinnedCreator(artwork.user)
+            } label: {
+                Label(
+                    store.isPinnedCreator(artwork.user) ? L10n.unpinCreator : L10n.pinCreator,
+                    systemImage: store.isPinnedCreator(artwork.user) ? "pin.slash" : "pin"
+                )
+            }
+
             Divider()
 
             if artwork.user.isFollowed {
@@ -212,6 +221,14 @@ private struct CreatorQuickActionsMenu: View {
         } catch {
             store.errorMessage = error.localizedDescription
         }
+    }
+
+    private func togglePinnedCreator(_ user: PixivUser) {
+        let isPinned = store.togglePinnedCreator(user)
+        showActionMessage(String(
+            format: isPinned ? L10n.pinnedCreatorFormat : L10n.unpinnedCreatorFormat,
+            user.name
+        ))
     }
 }
 
