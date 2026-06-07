@@ -103,7 +103,6 @@ struct DiscoveryDashboardSection: Identifiable {
                     .publicBookmarks,
                     .privateBookmarks,
                     .bookmarkTags,
-                    .allFollowing,
                     .following,
                     .privateFollowing,
                     .history,

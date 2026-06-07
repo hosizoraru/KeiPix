@@ -1299,6 +1299,7 @@ enum L10n {
     static var publicBookmarks: String { text("Public bookmarks") }
     static var privateBookmarks: String { text("Private bookmarks") }
     static var allFollowing: String { text("All Following") }
+    static var publicFollowing: String { text("Public Following") }
     static var privateFollowing: String { text("Private Following") }
     static var rankingDate: String { text("Ranking Date") }
     static var rankingMode: String { text("Ranking Mode") }

@@ -95,7 +95,6 @@ enum PixivRouteSection: Identifiable {
                 .publicBookmarks,
                 .privateBookmarks,
                 .bookmarkTags,
-                .allFollowing,
                 .following,
                 .privateFollowing,
                 .followingCreators,
@@ -228,7 +227,7 @@ enum PixivRoute: String, CaseIterable, Identifiable, Codable {
         case .privateBookmarks: L10n.privateBookmarks
         case .bookmarkTags: L10n.bookmarkTags
         case .allFollowing: L10n.allFollowing
-        case .following: L10n.following
+        case .following: L10n.publicFollowing
         case .privateFollowing: L10n.privateFollowing
         case .followingCreators: L10n.followingCreators
         case .pinnedCreators: L10n.pinnedCreators

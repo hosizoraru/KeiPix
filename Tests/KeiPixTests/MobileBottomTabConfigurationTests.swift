@@ -144,9 +144,25 @@ struct MobileBottomTabConfigurationTests {
         #expect(novelRoutes.contains(.publicBookmarks) == false)
 
         #expect(bookmarkRoutes.contains(.publicBookmarks))
+        #expect(bookmarkRoutes.contains(.allFollowing) == false)
         #expect(bookmarkRoutes.contains(.followingCreators))
         #expect(bookmarkRoutes.contains(.downloads))
         #expect(bookmarkRoutes.contains(.search) == false)
+    }
+
+    @Test("Following artwork menus expose public and private feeds without the aggregate route")
+    func followingArtworkMenusExposePublicAndPrivateFeedsWithoutAggregateRoute() throws {
+        let bookmarkSections = MobileRouteMenuConfiguration.sections(for: .bookmarks)
+        let followingSection = try #require(bookmarkSections.first { $0.id == "bookmarks-following" })
+
+        #expect(followingSection.routes.contains(.following))
+        #expect(followingSection.routes.contains(.privateFollowing))
+        #expect(followingSection.routes.contains(.allFollowing) == false)
+        #expect(PixivRoute.following.title == L10n.publicFollowing)
+        #expect(PixivRouteSection.library.routes.contains(.following))
+        #expect(PixivRouteSection.library.routes.contains(.privateFollowing))
+        #expect(PixivRouteSection.library.routes.contains(.allFollowing) == false)
+        #expect(DiscoveryDashboardSection.dashboardRoutes.contains(.allFollowing) == false)
     }
 
     @Test("Dedicated search tab owns search-related routes")

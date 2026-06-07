@@ -23694,6 +23694,35 @@
         }
       }
     },
+    "Public Following": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Public Following"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "公開フォロー中"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "公开关注作品"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "公開追蹤作品"
+          }
+        }
+      }
+    },
     "Private bookmark add/remove completed": {
       "extractionState": "manual",
       "localizations": {

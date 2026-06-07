@@ -354,7 +354,6 @@ enum MobileRouteMenuConfiguration {
                     id: "bookmarks-following",
                     title: L10n.following,
                     routes: [
-                        .allFollowing,
                         .following,
                         .privateFollowing,
                         .followingCreators,
