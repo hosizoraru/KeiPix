@@ -125,17 +125,20 @@ struct NativeCreatorPreviewCollectionView {
     let items: [NativeCreatorPreviewCollectionItem]
     let layout: NativeCreatorPreviewCollectionLayout
     let contentReloadToken: Int
+    let onNearContentEnd: (() -> Void)?
     let content: (NativeCreatorPreviewCollectionItem) -> AnyView
 
     init(
         items: [NativeCreatorPreviewCollectionItem],
         layout: NativeCreatorPreviewCollectionLayout,
         contentReloadToken: Int = 0,
+        onNearContentEnd: (() -> Void)? = nil,
         content: @escaping (NativeCreatorPreviewCollectionItem) -> AnyView
     ) {
         self.items = items
         self.layout = layout
         self.contentReloadToken = contentReloadToken
+        self.onNearContentEnd = onNearContentEnd
         self.content = content
     }
 }
@@ -169,6 +172,7 @@ extension NativeCreatorPreviewCollectionView: NSViewRepresentable {
 
         context.coordinator.configureDataSource(for: collectionView)
         context.coordinator.parent = self
+        context.coordinator.observeBoundsChanges(for: scrollView)
         context.coordinator.updateCollectionLayout(for: collectionView)
         context.coordinator.applySnapshot(to: collectionView)
 
@@ -179,6 +183,7 @@ extension NativeCreatorPreviewCollectionView: NSViewRepresentable {
         guard let collectionView = scrollView.documentView as? NSCollectionView else { return }
         configureScrollBehavior(for: scrollView, collectionView: collectionView)
         context.coordinator.parent = self
+        context.coordinator.observeBoundsChanges(for: scrollView)
         context.coordinator.updateCollectionLayout(for: collectionView)
         context.coordinator.applySnapshot(to: collectionView)
     }
@@ -199,10 +204,16 @@ extension NativeCreatorPreviewCollectionView: NSViewRepresentable {
         private var lastLayout: NativeCreatorPreviewCollectionLayout?
         private var lastLayoutContainerWidth: CGFloat = 0
         private var lastContentReloadToken: Int?
+        private weak var observedScrollView: NSScrollView?
+        private var isNearContentEndArmed = true
         private let widthChangeTolerance: CGFloat = 0.5
 
         init(parent: NativeCreatorPreviewCollectionView) {
             self.parent = parent
+        }
+
+        deinit {
+            NotificationCenter.default.removeObserver(self)
         }
 
         func configureDataSource(for collectionView: NSCollectionView) {
@@ -259,6 +270,51 @@ extension NativeCreatorPreviewCollectionView: NSViewRepresentable {
                 guard let self, let collectionView else { return }
                 refreshVisibleHostedContent(in: collectionView)
             }
+        }
+
+        func observeBoundsChanges(for scrollView: NSScrollView) {
+            guard observedScrollView !== scrollView else { return }
+            NotificationCenter.default.removeObserver(
+                self,
+                name: NSView.boundsDidChangeNotification,
+                object: observedScrollView?.contentView
+            )
+            scrollView.contentView.postsBoundsChangedNotifications = true
+            observedScrollView = scrollView
+            NotificationCenter.default.addObserver(
+                self,
+                selector: #selector(scrollBoundsDidChange(_:)),
+                name: NSView.boundsDidChangeNotification,
+                object: scrollView.contentView
+            )
+        }
+
+        @objc private func scrollBoundsDidChange(_ notification: Notification) {
+            guard let scrollView = observedScrollView else { return }
+            triggerNearContentEndIfNeeded(in: scrollView)
+        }
+
+        private func triggerNearContentEndIfNeeded(in scrollView: NSScrollView) {
+            guard parent.onNearContentEnd != nil,
+                  parent.layout.scrollDirection == .vertical,
+                  parent.items.contains(.loadMore),
+                  let documentView = scrollView.documentView else {
+                isNearContentEndArmed = true
+                return
+            }
+
+            let isNearContentEnd = GalleryAutoLoadMorePolicy.isNearContentEnd(
+                contentOffsetY: scrollView.contentView.bounds.origin.y,
+                viewportHeight: scrollView.contentView.bounds.height,
+                contentHeight: documentView.bounds.height
+            )
+            guard isNearContentEnd else {
+                isNearContentEndArmed = true
+                return
+            }
+            guard isNearContentEndArmed else { return }
+            isNearContentEndArmed = false
+            parent.onNearContentEnd?()
         }
 
         private func refreshVisibleHostedContent(in collectionView: NSCollectionView) {
@@ -406,6 +462,7 @@ extension NativeCreatorPreviewCollectionView: UIViewRepresentable {
         private var lastLayoutContainerWidth: CGFloat = 0
         private var lastContentReloadToken: Int?
         private weak var registeredContentScrollViewController: UIViewController?
+        private var isNearContentEndArmed = true
         private let widthChangeTolerance: CGFloat = 0.5
 
         init(parent: NativeCreatorPreviewCollectionView) {
@@ -523,6 +580,33 @@ extension NativeCreatorPreviewCollectionView: UIViewRepresentable {
                 for: parent.items[indexPath.item],
                 containerWidth: collectionView.bounds.width
             )
+        }
+
+        func scrollViewDidScroll(_ scrollView: UIScrollView) {
+            triggerNearContentEndIfNeeded(in: scrollView)
+        }
+
+        private func triggerNearContentEndIfNeeded(in scrollView: UIScrollView) {
+            guard parent.onNearContentEnd != nil,
+                  parent.layout.scrollDirection == .vertical,
+                  parent.items.contains(.loadMore) else {
+                isNearContentEndArmed = true
+                return
+            }
+
+            let isNearContentEnd = GalleryAutoLoadMorePolicy.isNearContentEnd(
+                contentOffsetY: scrollView.contentOffset.y,
+                viewportHeight: scrollView.bounds.height,
+                contentHeight: scrollView.contentSize.height,
+                adjustedBottomInset: scrollView.adjustedContentInset.bottom
+            )
+            guard isNearContentEnd else {
+                isNearContentEndArmed = true
+                return
+            }
+            guard isNearContentEndArmed else { return }
+            isNearContentEndArmed = false
+            parent.onNearContentEnd?()
         }
     }
 }

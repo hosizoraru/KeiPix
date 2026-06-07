@@ -144,18 +144,12 @@ struct UserPreviewCard: View {
         if preview.isMuted {
             return L10n.muted
         }
-        if preview.user.isFollowed, let followRestrict {
-            return followRestrict.creatorVisibilityTitle
-        }
         return nil
     }
 
     private var statusSystemImage: String? {
         if preview.isMuted {
             return "eye.slash"
-        }
-        if preview.user.isFollowed, let followRestrict {
-            return followRestrict.creatorVisibilitySystemImage
         }
         return nil
     }
@@ -184,7 +178,7 @@ struct UserPreviewCard: View {
                 if isUpdating {
                     ProgressView().controlSize(.small)
                 } else {
-                    Label(L10n.following, systemImage: "person.crop.circle.badge.checkmark")
+                    Label(followingButtonTitle, systemImage: "person.crop.circle.badge.checkmark")
                 }
             }
             .buttonStyle(.glass)
@@ -219,6 +213,10 @@ struct UserPreviewCard: View {
             .disabled(isUpdating)
             .help(L10n.follow)
         }
+    }
+
+    private var followingButtonTitle: String {
+        followRestrict?.creatorVisibilityTitle ?? L10n.following
     }
 
     // MARK: - Preview strip

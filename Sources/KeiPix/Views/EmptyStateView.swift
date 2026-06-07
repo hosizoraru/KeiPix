@@ -1,4 +1,7 @@
 import SwiftUI
+#if os(iOS)
+import UIKit
+#endif
 
 struct EmptyStateView: View {
     let title: String
@@ -243,15 +246,15 @@ struct PlatformPageTitleHeader<Trailing: View>: View {
             HStack(alignment: .firstTextBaseline, spacing: 10) {
                 titleText
                 statusPill
-                trailing()
                 Spacer(minLength: 0)
+                trailing()
             }
 
             VStack(alignment: .leading, spacing: 8) {
                 HStack(alignment: .firstTextBaseline, spacing: 10) {
                     titleText
-                    trailing()
                     Spacer(minLength: 0)
+                    trailing()
                 }
                 statusPill
             }
@@ -275,7 +278,7 @@ struct PlatformPageTitleHeader<Trailing: View>: View {
     @ViewBuilder
     private var statusPill: some View {
         if status.isEmpty == false {
-            if let statusSystemImage {
+            if let statusSystemImage, showsStatusPillIcon {
                 Label {
                     Text(status)
                         .lineLimit(1)
@@ -301,6 +304,14 @@ struct PlatformPageTitleHeader<Trailing: View>: View {
                     .accessibilityLabel(status)
             }
         }
+    }
+
+    private var showsStatusPillIcon: Bool {
+        #if os(iOS)
+        UIDevice.current.userInterfaceIdiom != .phone
+        #else
+        true
+        #endif
     }
 }
 

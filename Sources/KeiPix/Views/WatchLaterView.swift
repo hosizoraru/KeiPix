@@ -3,6 +3,7 @@ import SwiftUI
 struct WatchLaterView: View {
     @Bindable var store: KeiPixStore
     @State private var searchText = ""
+    @State private var isSearchPresented = false
     @State private var pendingDeleteItem: LocalArtworkHistoryItem?
     @State private var isClearConfirmationPresented = false
     @State private var actionMessage: String?
@@ -21,8 +22,11 @@ struct WatchLaterView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            header
-                .platformGlassControlBar(verticalPadding: 8, topPadding: 2)
+            if showsWatchLaterSearchBar {
+                header
+                    .platformGlassControlBar(verticalPadding: 7, topPadding: 0)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+            }
 
             if items.isEmpty {
                 EmptyStateView(
@@ -38,7 +42,9 @@ struct WatchLaterView: View {
             title: L10n.watchLater,
             status: watchLaterStatusText,
             statusSystemImage: "bookmark.circle"
-        )
+        ) {
+            watchLaterTitleActions
+        }
         .platformPageNavigationChrome(title: L10n.watchLater, status: watchLaterStatusText)
         .confirmationDialog(
             L10n.clearHistoryConfirmation,
@@ -74,6 +80,7 @@ struct WatchLaterView: View {
             Text(item.title)
         }
         .animation(.snappy(duration: 0.18), value: actionMessage)
+        .animation(.snappy(duration: 0.18), value: showsWatchLaterSearchBar)
         .task(id: actionMessage) {
             await dismissActionMessageIfNeeded(actionMessage)
         }
@@ -93,23 +100,16 @@ struct WatchLaterView: View {
     }
 
     private var watchLaterStatusText: String {
-        String(format: L10n.itemCountFormat, items.count)
+        items.count.formatted()
     }
 
     private var header: some View {
         GlassEffectContainer(spacing: 8) {
-            ViewThatFits(in: .horizontal) {
-                HStack(spacing: 10) {
-                    watchLaterSearchField
-                        .frame(minWidth: 220, idealWidth: 320, maxWidth: 520)
-                    watchLaterActionRail
-                    Spacer(minLength: 0)
-                }
-
-                VStack(alignment: .leading, spacing: 10) {
-                    watchLaterSearchField
-                    watchLaterActionRail
-                }
+            HStack(spacing: 10) {
+                watchLaterSearchField
+                    .frame(minWidth: 220, idealWidth: 320, maxWidth: 520)
+                    .layoutPriority(1)
+                Spacer(minLength: 0)
             }
         }
         .controlSize(.small)
@@ -121,19 +121,43 @@ struct WatchLaterView: View {
             placeholder: L10n.searchHistory,
             minWidth: 180,
             idealWidth: 260,
-            maxWidth: 420
+            maxWidth: 420,
+            collapsesOnPhone: false
         )
     }
 
-    private var watchLaterActionRail: some View {
+    private var watchLaterTitleActions: some View {
         OS26LibraryActionRail {
             Button {
-                searchText = ""
+                withAnimation(.snappy(duration: 0.16)) {
+                    if showsWatchLaterSearchBar, searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                        isSearchPresented = false
+                    } else {
+                        isSearchPresented = true
+                    }
+                }
+            } label: {
+                Label(
+                    L10n.search,
+                    systemImage: searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                        ? "magnifyingglass"
+                        : "magnifyingglass.circle.fill"
+                )
+            }
+            .os26GlassIconButton(prominent: showsWatchLaterSearchBar || searchText.isEmpty == false)
+            .help(L10n.searchHistory)
+            .accessibilityLabel(L10n.searchHistory)
+
+            Button {
+                withAnimation(.snappy(duration: 0.16)) {
+                    searchText = ""
+                    isSearchPresented = false
+                }
             } label: {
                 Label(L10n.clearSearch, systemImage: "xmark.circle")
             }
             .os26GlassIconButton()
-            .disabled(searchText.isEmpty)
+            .disabled(searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && isSearchPresented == false)
             .help(L10n.clearSearch)
 
             Menu {
@@ -149,6 +173,11 @@ struct WatchLaterView: View {
             .os26GlassIconButton()
             .help(L10n.moreActions)
         }
+        .controlSize(.small)
+    }
+
+    private var showsWatchLaterSearchBar: Bool {
+        isSearchPresented || searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false
     }
 
     private var content: some View {

@@ -78,6 +78,7 @@ struct CreatorListStatusBanner: View {
 /// moved into `UserPreviewListView.toolbar`.
 struct CreatorListSearchBar: View {
     let mode: UserPreviewListMode
+    var showsRestrictPicker = true
     @Binding var restrict: BookmarkRestrict
     @Binding var creatorSearchText: String
     let globalSearchKeyword: String
@@ -85,7 +86,7 @@ struct CreatorListSearchBar: View {
 
     var body: some View {
         HStack(spacing: 10) {
-            if mode.usesRestrictPicker {
+            if mode.usesRestrictPicker && showsRestrictPicker {
                 Picker(L10n.followingCreators, selection: $restrict) {
                     Text(L10n.publicRestrict).tag(BookmarkRestrict.public)
                     Text(L10n.privateRestrict).tag(BookmarkRestrict.private)
@@ -111,20 +112,6 @@ struct CreatorListSearchBar: View {
                 onTextChange: { creatorSearchText = $0 }
             )
             .frame(maxWidth: 560)
-
-            if creatorSearchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false {
-                Button {
-                    withAnimation(.snappy(duration: 0.16)) {
-                        creatorSearchText = ""
-                    }
-                } label: {
-                    Label(L10n.clearSearch, systemImage: "xmark.circle.fill")
-                }
-                .labelStyle(.iconOnly)
-                .buttonStyle(.glass)
-                .buttonBorderShape(.capsule)
-                .help(L10n.clearSearch)
-            }
 
             Spacer(minLength: 0)
         }
@@ -171,12 +158,24 @@ private struct CreatorSearchScopeChip: View {
 /// menu, Photos's "View Options" menu, and Music's "Sort By" menu all
 /// share this Picker(.inline) inside a Menu pattern.
 struct CreatorListViewOptionsMenu: View {
+    let mode: UserPreviewListMode
+    @Binding var restrict: BookmarkRestrict
     @Binding var creatorFilter: CreatorListFilter
     @Binding var creatorSort: CreatorListSort
     @Binding var layoutMode: CreatorListLayoutMode
 
     var body: some View {
         Menu {
+            if mode.usesRestrictPicker {
+                Picker(L10n.followingCreators, selection: $restrict) {
+                    Text(L10n.publicRestrict).tag(BookmarkRestrict.public)
+                    Text(L10n.privateRestrict).tag(BookmarkRestrict.private)
+                }
+                .pickerStyle(.inline)
+
+                Divider()
+            }
+
             Picker(L10n.creatorListLayout, selection: $layoutMode) {
                 ForEach(CreatorListLayoutMode.allCases) { mode in
                     Label(mode.title, systemImage: mode.systemImage).tag(mode)
@@ -425,12 +424,15 @@ struct CreatorPreviewListContent: View {
     let isPinnedCreator: (PixivUser) -> Bool
     let togglePinnedCreator: (PixivUser) -> Void
     let selectArtwork: (PixivArtwork) -> Void
+    let autoLoadContextKey: String
     let creatorPreviewArtworkCacheGeneration: Int
     let cachedCreatorPreviewArtworks: (PixivUser) -> [PixivArtwork]
     /// Lazy fetcher used when `layoutMode == .single`. The single-card
     /// shelf calls into this to surface more than the 3 illustrations
     /// Pixiv ships in the recommended-users / related-users response.
     let loadCreatorPreviewArtworks: (PixivUser) async throws -> [PixivArtwork]
+    @State private var sparseVisibleCreatorTopUpContext = ""
+    @State private var sparseVisibleCreatorTopUpCount = 0
 
     var body: some View {
         if mode.requiresSearchKeyword, searchKeyword.isEmpty {
@@ -453,11 +455,15 @@ struct CreatorPreviewListContent: View {
             NativeCreatorPreviewCollectionView(
                 items: creatorCollectionItems,
                 layout: NativeCreatorPreviewCollectionLayout(mode: layoutMode),
-                contentReloadToken: creatorContentReloadToken
+                contentReloadToken: creatorContentReloadToken,
+                onNearContentEnd: loadMoreFromNearContentEnd
             ) { item in
                 nativeCreatorPreviewContent(for: item)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .task(id: sparseVisibleCreatorTopUpKey) {
+                autoTopUpSparseVisibleCreatorsIfNeeded()
+            }
             #if os(iOS)
             .backgroundExtensionEffect(isEnabled: true)
             #endif
@@ -512,6 +518,9 @@ struct CreatorPreviewListContent: View {
 
             if nextURL != nil {
                 CreatorLoadMoreButton(isLoadingMore: isLoadingMore, loadMore: loadMore)
+                    .task(id: sparseVisibleCreatorTopUpKey) {
+                        autoTopUpSparseVisibleCreatorsIfNeeded()
+                    }
                     .frame(maxWidth: 420)
             }
         }
@@ -523,6 +532,45 @@ struct CreatorPreviewListContent: View {
             items.append(.loadMore)
         }
         return items
+    }
+
+    private var shouldAutoTopUpSparseVisibleCreators: Bool {
+        nextURL != nil
+            && isLoadingInitial == false
+            && isLoadingMore == false
+            && visiblePreviews.count < Self.minimumAutoFilledCreatorCount
+    }
+
+    private var sparseVisibleCreatorTopUpKey: String {
+        [
+            autoLoadContextKey,
+            visiblePreviews.count.description,
+            previews.count.description,
+            nextURL?.absoluteString ?? "end",
+            isLoadingMore.description
+        ].joined(separator: "-")
+    }
+
+    private static let minimumAutoFilledCreatorCount = 6
+    private static let maximumSparseAutoTopUpPages = 2
+
+    private func loadMoreFromNearContentEnd() {
+        if visiblePreviews.count < Self.minimumAutoFilledCreatorCount {
+            autoTopUpSparseVisibleCreatorsIfNeeded()
+        } else {
+            loadMore()
+        }
+    }
+
+    private func autoTopUpSparseVisibleCreatorsIfNeeded() {
+        guard shouldAutoTopUpSparseVisibleCreators else { return }
+        if sparseVisibleCreatorTopUpContext != autoLoadContextKey {
+            sparseVisibleCreatorTopUpContext = autoLoadContextKey
+            sparseVisibleCreatorTopUpCount = 0
+        }
+        guard sparseVisibleCreatorTopUpCount < Self.maximumSparseAutoTopUpPages else { return }
+        sparseVisibleCreatorTopUpCount += 1
+        loadMore()
     }
 
     private var creatorContentReloadToken: Int {
@@ -578,6 +626,9 @@ struct CreatorPreviewListContent: View {
         case .loadMore:
             return AnyView(
                 CreatorLoadMoreButton(isLoadingMore: isLoadingMore, loadMore: loadMore)
+                    .task(id: sparseVisibleCreatorTopUpKey) {
+                        autoTopUpSparseVisibleCreatorsIfNeeded()
+                    }
             )
         case .artwork:
             return AnyView(EmptyView())

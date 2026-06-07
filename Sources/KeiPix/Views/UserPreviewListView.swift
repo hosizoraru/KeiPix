@@ -16,6 +16,7 @@ struct UserPreviewListView: View {
     @State private var profileUser: PixivUser?
     @State private var errorMessage: String?
     @State private var creatorSearchText = ""
+    @State private var isCreatorSearchPresented = false
     @State private var creatorFilter: CreatorListFilter = .all
     @State private var creatorSort: CreatorListSort = .defaultOrder
     @State private var pendingBulkAction: CreatorBulkAction?
@@ -52,7 +53,9 @@ struct UserPreviewListView: View {
             title: mode.title,
             status: creatorNavigationStatus,
             statusSystemImage: "person.2"
-        )
+        ) {
+            creatorTitleActions
+        }
         .platformPageNavigationChrome(title: mode.title, status: creatorNavigationStatus)
         .toolbar {
             // Main routes use the outer route refresh button. Sheets do
@@ -74,6 +77,8 @@ struct UserPreviewListView: View {
 
             ToolbarItem(placement: .secondaryAction) {
                 CreatorListViewOptionsMenu(
+                    mode: mode,
+                    restrict: restrictBinding,
                     creatorFilter: $creatorFilter,
                     creatorSort: $creatorSort,
                     layoutMode: creatorLayoutBinding
@@ -81,7 +86,7 @@ struct UserPreviewListView: View {
             }
 
             ToolbarItem(placement: .secondaryAction) {
-                if hasActiveCreatorListState {
+                if hasActiveCreatorViewOptionState {
                     Button {
                         resetCreatorListState()
                     } label: {
@@ -128,6 +133,7 @@ struct UserPreviewListView: View {
             }
         }
         .animation(.snappy(duration: 0.18), value: isStatusBannerVisible)
+        .animation(.snappy(duration: 0.18), value: showsCreatorSearchBar)
         .confirmationDialog(
             pendingBulkAction?.title ?? L10n.creatorActions,
             isPresented: $isShowingBulkConfirmation,
@@ -188,18 +194,18 @@ struct UserPreviewListView: View {
 
     private var creatorListSurface: some View {
         VStack(spacing: 0) {
-            CreatorListSearchBar(
-                mode: mode,
-                restrict: restrictBinding,
-                creatorSearchText: $creatorSearchText,
-                globalSearchKeyword: searchKeyword,
-                clearGlobalSearch: {
-                    withAnimation(.snappy(duration: 0.16)) {
-                        store.clearSearchText()
-                    }
-                }
-            )
-            .platformGlassControlBar(verticalPadding: 8, topPadding: 2)
+            if showsCreatorSearchBar {
+                CreatorListSearchBar(
+                    mode: mode,
+                    showsRestrictPicker: false,
+                    restrict: restrictBinding,
+                    creatorSearchText: $creatorSearchText,
+                    globalSearchKeyword: searchKeyword,
+                    clearGlobalSearch: clearCreatorSearch
+                )
+                .platformGlassControlBar(verticalPadding: 7, topPadding: 0)
+                .transition(.move(edge: .top).combined(with: .opacity))
+            }
 
             CreatorPreviewListContent(
                 mode: mode,
@@ -229,6 +235,7 @@ struct UserPreviewListView: View {
                 isPinnedCreator: store.isPinnedCreator,
                 togglePinnedCreator: togglePinnedCreator,
                 selectArtwork: { store.selectedArtwork = $0 },
+                autoLoadContextKey: creatorAutoLoadContextKey,
                 creatorPreviewArtworkCacheGeneration: store.creatorPreviewArtworkCacheGeneration,
                 cachedCreatorPreviewArtworks: { user in
                     store.cachedCreatorPreviewArtworks(for: user)
@@ -280,10 +287,17 @@ struct UserPreviewListView: View {
         return false
     }
 
-    private var hasActiveCreatorListState: Bool {
+    private var hasActiveCreatorViewOptionState: Bool {
+        creatorFilter != .all || creatorSort != .defaultOrder
+    }
+
+    private var hasActiveCreatorSearchState: Bool {
         creatorSearchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false
-            || creatorFilter != .all
-            || creatorSort != .defaultOrder
+            || (mode.requiresSearchKeyword && searchKeyword.isEmpty == false)
+    }
+
+    private var showsCreatorSearchBar: Bool {
+        isCreatorSearchPresented || hasActiveCreatorSearchState
     }
 
     private var visiblePreviews: [PixivUserPreview] {
@@ -340,7 +354,20 @@ struct UserPreviewListView: View {
     }
 
     private var listRefreshKey: String {
-        "\(modeKey)-\(store.routeRefreshGeneration)"
+        "\(modeKey)-\(sessionRefreshKey)-\(store.routeRefreshGeneration)"
+    }
+
+    private var sessionRefreshKey: String {
+        store.session?.user.id ?? "signed-out"
+    }
+
+    private var creatorAutoLoadContextKey: String {
+        [
+            modeKey,
+            creatorSearchText.trimmingCharacters(in: .whitespacesAndNewlines),
+            creatorFilter.rawValue,
+            creatorSort.rawValue
+        ].joined(separator: "|")
     }
 
     /// Subtitle shown beside the navigation title. Keep it compact:
@@ -363,6 +390,41 @@ struct UserPreviewListView: View {
             restrict
         } set: { value in
             restrict = value
+        }
+    }
+
+    @ViewBuilder
+    private var creatorTitleActions: some View {
+        if store.session != nil {
+            OS26LibraryActionRail {
+                Button {
+                    withAnimation(.snappy(duration: 0.16)) {
+                        if showsCreatorSearchBar, hasActiveCreatorSearchState == false {
+                            isCreatorSearchPresented = false
+                        } else {
+                            isCreatorSearchPresented = true
+                        }
+                    }
+                } label: {
+                    Label(
+                        L10n.searchCreatorsInList,
+                        systemImage: hasActiveCreatorSearchState ? "magnifyingglass.circle.fill" : "magnifyingglass"
+                    )
+                }
+                .os26GlassIconButton(prominent: showsCreatorSearchBar || hasActiveCreatorSearchState)
+                .help(L10n.searchCreatorsInList)
+                .accessibilityLabel(L10n.searchCreatorsInList)
+
+                Button {
+                    clearCreatorSearch()
+                } label: {
+                    Label(L10n.clearSearch, systemImage: "xmark.circle")
+                }
+                .os26GlassIconButton()
+                .disabled(hasActiveCreatorSearchState == false && isCreatorSearchPresented == false)
+                .help(L10n.clearSearch)
+            }
+            .controlSize(.small)
         }
     }
 
@@ -399,11 +461,20 @@ struct UserPreviewListView: View {
 
     private func resetCreatorListState() {
         withAnimation(.snappy(duration: 0.16)) {
-            creatorSearchText = ""
             creatorFilter = .all
             creatorSort = .defaultOrder
         }
         bulkStatusText = L10n.resetCreatorFiltersDone
+    }
+
+    private func clearCreatorSearch() {
+        withAnimation(.snappy(duration: 0.16)) {
+            creatorSearchText = ""
+            if mode.requiresSearchKeyword {
+                store.clearSearchText()
+            }
+            isCreatorSearchPresented = false
+        }
     }
 
     private func bulkActionTargetCount(_ action: CreatorBulkAction) -> Int {
@@ -586,7 +657,7 @@ struct UserPreviewListView: View {
     }
 
     private func loadMore() async {
-        guard let nextURL else { return }
+        guard let nextURL, isLoadingMore == false else { return }
         isLoadingMore = true
         errorMessage = nil
         defer { isLoadingMore = false }
