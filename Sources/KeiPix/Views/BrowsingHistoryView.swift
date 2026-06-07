@@ -164,18 +164,21 @@ struct BrowsingHistoryView: View {
 
     private var historySourceMenu: some View {
         Menu {
-            Picker(L10n.historySource, selection: $source) {
-                ForEach(BrowsingHistorySource.allCases) { source in
+            ForEach(BrowsingHistorySource.allCases) { source in
+                Button {
+                    self.source = source
+                } label: {
                     if source.requiresPixivPremiumForFullBehavior {
                         PixivPremiumMenuLabel(
                             title: source.title,
                             systemImage: source.systemImage,
                             isSelected: self.source == source
                         )
-                        .tag(source)
                     } else {
-                        Label(source.title, systemImage: source.systemImage)
-                            .tag(source)
+                        Label(
+                            source.title,
+                            systemImage: self.source == source ? "checkmark" : source.systemImage
+                        )
                     }
                 }
             }

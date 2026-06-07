@@ -21171,31 +21171,31 @@
         }
       }
     },
-    "Artwork-tag and bookmark-date filters are Pixiv Web / Premium surfaces. KeiPix applies loaded-feed filters locally and links to Pixiv Web for the full picker.": {
+    "Bookmark-date filters use Pixiv Web / Premium. Artwork tags are filtered locally from loaded works.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Artwork-tag and bookmark-date filters are Pixiv Web / Premium surfaces. KeiPix applies loaded-feed filters locally and links to Pixiv Web for the full picker."
+            "value": "Bookmark-date filters use Pixiv Web / Premium. Artwork tags are filtered locally from loaded works."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "作品タグとブックマーク日時のフィルターは Pixiv Web / Premium の機能です。KeiPix は読み込み済みフィードをローカルで絞り込み、完全なピッカーへは Pixiv Web リンクで移動します。"
+            "value": "ブックマーク日時フィルターは Pixiv Web / Premium を使用します。作品タグは読み込み済み作品からローカルで絞り込みます。"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "作品标签和收藏时间筛选属于 Pixiv Web / Premium 功能。KeiPix 会对已加载作品做本地筛选，并提供 Pixiv Web 链接进入完整选择器。"
+            "value": "收藏时间筛选使用 Pixiv Web / Premium；作品标签会基于已加载作品在本地筛选。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "作品標籤和收藏時間篩選屬於 Pixiv Web / Premium 功能。KeiPix 會對已載入作品做本地篩選，並提供 Pixiv Web 連結進入完整選擇器。"
+            "value": "收藏時間篩選使用 Pixiv Web / Premium；作品標籤會基於已載入作品在本地篩選。"
           }
         }
       }

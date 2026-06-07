@@ -596,27 +596,14 @@ struct FeedHeaderView: View {
                     store.setBookmarkFeedSort(sort)
                     actionMessage = sort.title
                 } label: {
-                    if sort.requiresPixivPremiumForFullPixivWebBehavior {
-                        PixivPremiumMenuLabel(
-                            title: sort.title,
-                            systemImage: sort.systemImage,
-                            isSelected: store.bookmarkFeedOptions.sort == sort
-                        )
-                    } else {
-                        Label(
-                            sort.title,
-                            systemImage: store.bookmarkFeedOptions.sort == sort ? "checkmark" : sort.systemImage
-                        )
-                    }
+                    Label(
+                        sort.title,
+                        systemImage: store.bookmarkFeedOptions.sort == sort ? "checkmark" : sort.systemImage
+                    )
                 }
             }
         } label: {
-            HStack(spacing: 6) {
-                Label(store.bookmarkFeedOptions.sort.title, systemImage: "arrow.up.arrow.down.circle")
-                if store.bookmarkFeedOptions.sort.requiresPixivPremiumForFullPixivWebBehavior {
-                    PixivPremiumBadge()
-                }
-            }
+            Label(store.bookmarkFeedOptions.sort.title, systemImage: "arrow.up.arrow.down.circle")
         }
     }
 
@@ -650,10 +637,7 @@ struct FeedHeaderView: View {
                 )
             }
 
-            HStack(spacing: 8) {
-                Text(L10n.bookmarkArtworkTagPrompt)
-                PixivPremiumBadge()
-            }
+            Text(L10n.bookmarkArtworkTagPrompt)
 
             if bookmarkArtworkTagCandidates.isEmpty {
                 Text(L10n.noMatchingBookmarkTags)
@@ -676,20 +660,9 @@ struct FeedHeaderView: View {
             }
 
             Divider()
-            Button {} label: {
-                PixivPremiumMenuLabel(
-                    title: L10n.bookmarkDate,
-                    systemImage: "calendar.badge.clock"
-                )
-            }
-            .disabled(true)
-
-            Text(L10n.pixivWebOnly)
+            Text(L10n.pixivWebBookmarkFiltersHint)
         } label: {
-            HStack(spacing: 6) {
-                Label(bookmarkArtworkTagTitle, systemImage: "number")
-                PixivPremiumBadge()
-            }
+            Label(bookmarkArtworkTagTitle, systemImage: "number")
         }
     }
 
@@ -735,6 +708,14 @@ struct FeedHeaderView: View {
 
     private var bookmarkPixivWebMenu: some View {
         Menu {
+            Button {} label: {
+                PixivPremiumMenuLabel(
+                    title: L10n.bookmarkDate,
+                    systemImage: "calendar.badge.clock"
+                )
+            }
+            .disabled(true)
+
             Text(L10n.pixivWebBookmarkFiltersHint)
 
             if let bookmarkWebURL {

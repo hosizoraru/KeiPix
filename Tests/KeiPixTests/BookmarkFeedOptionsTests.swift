@@ -15,12 +15,21 @@ struct BookmarkFeedOptionsTests {
         #expect(BookmarkFeedOptions.defaultValue.applying(to: artworks).map(\.id) == [1, 2, 3])
     }
 
-    @Test("Bookmark feed marks Pixiv Web Premium-only controls")
-    func bookmarkFeedMarksPixivWebPremiumControls() {
-        #expect(BookmarkFeedSort.newestBookmarked.requiresPixivPremiumForFullPixivWebBehavior == false)
-        #expect(BookmarkFeedSort.oldestBookmarked.requiresPixivPremiumForFullPixivWebBehavior)
-        #expect(BookmarkFeedOptions.artworkTagFilterRequiresPixivPremiumForFullPixivWebBehavior)
-        #expect(BookmarkFeedOptions.bookmarkDateFilterRequiresPixivPremiumForFullPixivWebBehavior)
+    @Test("Bookmark feed sort and artwork-tag filters are local loaded-feed behavior")
+    func bookmarkFeedLoadedFiltersAreLocal() {
+        let artworks = [
+            artwork(id: 1, createdAt: 300, tags: ["landscape"]),
+            artwork(id: 2, createdAt: 100, tags: ["portrait"]),
+            artwork(id: 3, createdAt: 200, tags: ["landscape"])
+        ]
+
+        var oldestLoaded = BookmarkFeedOptions.defaultValue
+        oldestLoaded.sort = .oldestBookmarked
+        #expect(oldestLoaded.applying(to: artworks).map(\.id) == [3, 2, 1])
+
+        var landscape = BookmarkFeedOptions.defaultValue
+        landscape.artworkTagFilter = "land"
+        #expect(landscape.applying(to: artworks).map(\.id) == [1, 3])
     }
 
     @Test("Artwork-date sorting is local and deterministic")

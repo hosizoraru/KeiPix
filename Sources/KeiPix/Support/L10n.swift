@@ -451,7 +451,7 @@ enum L10n {
     static var openPixivWebCollections: String { text("Open Pixiv Web Collections") }
     static var pixivWeb: String { text("Pixiv Web") }
     static var pixivWebOnly: String { text("Pixiv Web only") }
-    static var pixivWebBookmarkFiltersHint: String { text("Artwork-tag and bookmark-date filters are Pixiv Web / Premium surfaces. KeiPix applies loaded-feed filters locally and links to Pixiv Web for the full picker.") }
+    static var pixivWebBookmarkFiltersHint: String { text("Bookmark-date filters use Pixiv Web / Premium. Artwork tags are filtered locally from loaded works.") }
     static var pixivWebCollectionsHint: String { text("Collections are currently exposed by Pixiv Web. Open the web tab to browse or manage them.") }
     static var allBookmarkTags: String { text("All Bookmark Tags") }
     static var searchBookmarkTags: String { text("Search bookmark tags") }

@@ -2687,9 +2687,11 @@ struct NativeBoundaryTests {
         #expect(premiumBadge.contains("0.992"))
 
         #expect(browsingHistory.contains("requiresPixivPremiumForFullBehavior"))
+        #expect(browsingHistory.contains("Picker(L10n.historySource") == false)
         #expect(browsingHistory.contains("PixivPremiumMenuLabel("))
-        #expect(galleryFeedHeader.contains("requiresPixivPremiumForFullPixivWebBehavior"))
         #expect(galleryFeedHeader.contains("PixivPremiumMenuLabel("))
+        #expect(galleryFeedHeader.contains("sort.requiresPixivPremiumForFullPixivWebBehavior") == false)
+        #expect(galleryFeedHeader.contains("artworkTagFilterRequiresPixivPremiumForFullPixivWebBehavior") == false)
         #expect(popularPreview.contains("PixivPremiumBadge()"))
         #expect(mutedContent.contains("PixivPremiumMenuLabel("))
         #expect(safetySettings.contains("pixivPremiumSettingsActionButton"))
