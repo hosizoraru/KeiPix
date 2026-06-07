@@ -237,7 +237,7 @@ struct PixivIDOpenSheet: View {
                 target = .creator
                 rawID = String(id)
                 return true
-            case .tag, .search, .creatorSearch, .pixivisionArticle:
+            case .collection, .tag, .search, .creatorSearch, .pixivisionArticle:
                 break
             }
         }
@@ -252,7 +252,7 @@ struct PixivIDOpenSheet: View {
                 target = .creator
                 rawID = String(id)
                 return true
-            case .tag, .search, .creatorSearch, .pixivisionArticle:
+            case .collection, .tag, .search, .creatorSearch, .pixivisionArticle:
                 break
             }
         }

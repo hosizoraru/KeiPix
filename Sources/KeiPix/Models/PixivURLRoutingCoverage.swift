@@ -23,6 +23,11 @@ enum PixivURLRoutingCoverage {
             expectedDestination: .user(789)
         ),
         PixivURLRoutingSample(
+            id: "collection-web",
+            input: "https://www.pixiv.net/collections/49895345339794251171",
+            expectedDestination: .collection(id: "49895345339794251171")
+        ),
+        PixivURLRoutingSample(
             id: "tag-web",
             input: "https://www.pixiv.net/tags/OC/artworks",
             expectedDestination: .tag("OC")

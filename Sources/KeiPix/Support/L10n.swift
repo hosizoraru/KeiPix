@@ -449,6 +449,12 @@ enum L10n {
     static var copyPixivWebBookmarksLink: String { text("Copy Pixiv Web Bookmarks Link") }
     static var copiedPixivWebBookmarksLink: String { text("Copied Pixiv Web bookmarks link") }
     static var openPixivWebCollections: String { text("Open Pixiv Web Collections") }
+    static var pixivCollections: String { text("Pixiv Collections") }
+    static var pixivCollection: String { text("Pixiv Collection") }
+    static var noPixivCollections: String { text("No Pixiv collections") }
+    static var pixivCollectionsEmptyHint: String { text("Collections from your Pixiv profile appear here. You can also paste a collection link to open it natively.") }
+    static var refreshedPixivCollectionsFormat: String { text("Refreshed %d Pixiv collections") }
+    static var collectionWorksCountFormat: String { text("%d works") }
     static var pixivWeb: String { text("Pixiv Web") }
     static var pixivWebOnly: String { text("Pixiv Web only") }
     static var pixivWebBookmarkFiltersHint: String { text("Bookmark-date filters use Pixiv Web / Premium. Artwork tags are filtered locally from loaded works.") }
@@ -1671,6 +1677,7 @@ enum L10n {
     // MARK: - Web link labels
 
     static var linkUserPrefixFormat: String { text("User #%lld") }
+    static var linkCollectionPrefixFormat: String { text("Collection %@") }
     static var linkPixivisionPrefixFormat: String { text("Pixivision #%lld") }
 
     // MARK: - Format / unit strings

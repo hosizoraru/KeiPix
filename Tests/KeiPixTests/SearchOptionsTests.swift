@@ -224,8 +224,10 @@ struct SearchOptionsTests {
     func pixivWebBookmarkURLs() throws {
         let bookmarksURL = try #require(PixivWebURLBuilder.userBookmarkArtworksURL(userID: "41657557"))
         let collectionsURL = try #require(PixivWebURLBuilder.userBookmarkCollectionsURL(userID: "41657557"))
+        let collectionURL = try #require(PixivWebURLBuilder.collectionURL(id: "49895345339794251171"))
 
         #expect(bookmarksURL.absoluteString == "https://www.pixiv.net/users/41657557/bookmarks/artworks")
         #expect(collectionsURL.absoluteString == "https://www.pixiv.net/users/41657557/collections")
+        #expect(collectionURL.absoluteString == "https://www.pixiv.net/collections/49895345339794251171")
     }
 }

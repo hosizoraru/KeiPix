@@ -416,6 +416,44 @@ actor PixivAPI {
         }
     }
 
+    func pixivCollectionDetail(id: String) async throws -> PixivCollectionDetail {
+        let trimmedID = id.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard trimmedID.isEmpty == false, trimmedID.allSatisfy(\.isNumber) else {
+            throw PixivAPIError.invalidResponse
+        }
+
+        let url = URL(string: "/ajax/collection/\(trimmedID)", relativeTo: Endpoint.webBase)!
+        let response: PixivWebResponse<PixivCollectionDetailResponse> = try await requestPixivWebJSON(url)
+        if response.error {
+            throw PixivAPIError.serverMessage(response.message)
+        }
+        return response.body.detail
+    }
+
+    func userCollectionIDs(userID: String) async throws -> [String] {
+        let trimmedID = userID.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard trimmedID.isEmpty == false, trimmedID.allSatisfy(\.isNumber) else {
+            throw PixivAPIError.invalidResponse
+        }
+
+        let url = URL(string: "/ajax/user/\(trimmedID)/profile/all", relativeTo: Endpoint.webBase)!
+        let response: PixivWebProfileAllResponse = try await requestPixivWebJSON(url)
+        return response.collectionIDs
+    }
+
+    func userCollectionDetails(userID: String, limit: Int = 48) async throws -> [PixivCollectionDetail] {
+        let ids = try await userCollectionIDs(userID: userID)
+        var details: [PixivCollectionDetail] = []
+        for id in ids.prefix(max(limit, 0)) {
+            do {
+                details.append(try await pixivCollectionDetail(id: id))
+            } catch {
+                continue
+            }
+        }
+        return details
+    }
+
     func creatorTaggedIllusts(user: PixivUser, tag: CreatorArtworkTag) async throws -> PixivFeedResponse {
         try await creatorTaggedIllusts(
             user: user,

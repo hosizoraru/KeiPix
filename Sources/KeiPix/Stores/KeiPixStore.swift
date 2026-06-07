@@ -41,6 +41,10 @@ final class KeiPixStore {
     var isLoadingSearchPopularPreview = false
     var presentedUserProfile: PixivUser?
     var selectedSpotlightArticle: PixivSpotlightArticle?
+    var pixivCollections: [PixivCollectionDetail] = []
+    var selectedPixivCollection: PixivCollectionDetail?
+    var isLoadingPixivCollections = false
+    var pixivCollectionErrorMessage: String?
     var readerWindowArtwork: PixivArtwork?
     /// Bounded registry mapping artwork ID → `PixivArtwork` for
     /// windows opened via the multi-window reader scene. Lets a
@@ -390,6 +394,9 @@ final class KeiPixStore {
         selectedArtwork = nil
         presentedUserProfile = nil
         selectedSpotlightArticle = nil
+        pixivCollections = []
+        selectedPixivCollection = nil
+        pixivCollectionErrorMessage = nil
         readerWindowArtwork = nil
         imageSourceSearchRequest = nil
         searchSuggestions = []
@@ -407,6 +414,9 @@ final class KeiPixStore {
         creatorArtworkTagFilter = nil
         resetCreatorTagHydrationState()
         feedNarrowingContext = nil
+        if route != .pixivCollectionWorks {
+            selectedPixivCollection = nil
+        }
         errorMessage = nil
         clearNavigationHistory()
         if route != selectedRoute || route.isOwnBookmarkRoute == false {
@@ -458,6 +468,7 @@ final class KeiPixStore {
         creatorArtworkTagFilter = nil
         resetCreatorTagHydrationState()
         feedNarrowingContext = nil
+        selectedPixivCollection = nil
         selectedSpotlightArticle = nil
         errorMessage = nil
         selectedRoute = route
@@ -472,6 +483,7 @@ final class KeiPixStore {
         bookmarkTagFilter = nil
         bookmarkFeedOptions = .defaultValue
         feedNarrowingContext = nil
+        selectedPixivCollection = nil
         resetCreatorTagHydrationState()
         let tagFilter = CreatorArtworkTagFilter(
             userID: user.id,
@@ -524,6 +536,7 @@ final class KeiPixStore {
             creatorArtworkTagFilter = nil
             resetCreatorTagHydrationState()
             feedNarrowingContext = .directArtwork(id: artworkID)
+            selectedPixivCollection = nil
             selectedSpotlightArticle = nil
             selectedRoute = .illustrations
             allArtworks = [artwork]
@@ -875,6 +888,13 @@ final class KeiPixStore {
             guard let focusedUser else { throw PixivAPIError.invalidResponse }
             return try await api.bookmarks(restrict: "public", userID: "\(focusedUser.id)")
 
+        // Pixiv Web collections
+        case .pixivCollectionWorks:
+            guard let selectedPixivCollection else { return .empty }
+            let detail = try await api.pixivCollectionDetail(id: selectedPixivCollection.id)
+            self.selectedPixivCollection = detail
+            return PixivFeedResponse(illusts: detail.artworks, nextURL: nil)
+
         // Own bookmarks
         case .publicBookmarks:
             guard let userID = session?.user.id else { throw PixivAPIError.missingSession }
@@ -990,6 +1010,7 @@ final class KeiPixStore {
             bookmarkTagFilter: bookmarkTagFilter,
             bookmarkFeedOptions: bookmarkFeedOptions,
             creatorArtworkTagFilter: creatorArtworkTagFilter,
+            pixivCollectionID: selectedPixivCollection?.id,
             useRankingDate: useRankingDate,
             rankingDate: rankingDate,
             searchOptions: searchOptions
@@ -1287,6 +1308,7 @@ struct FeedRequestContext: Equatable {
     let bookmarkTagFilter: String?
     let bookmarkFeedOptions: BookmarkFeedOptions
     let creatorArtworkTagFilter: CreatorArtworkTagFilter?
+    let pixivCollectionID: String?
     let useRankingDate: Bool
     let rankingDate: Date
     let searchOptions: SearchOptions

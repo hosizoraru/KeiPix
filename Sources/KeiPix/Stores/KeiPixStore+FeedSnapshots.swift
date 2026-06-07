@@ -64,6 +64,7 @@ extension FeedRequestContext {
             bookmarkFeedOptions.ageLimit.rawValue,
             bookmarkFeedOptions.normalizedArtworkTagFilter ?? "",
             creatorArtworkTagFilter?.snapshotKey ?? "",
+            pixivCollectionID ?? "",
             useRankingDate ? "\(rankingDate.timeIntervalSince1970)" : "",
             searchOptions.matchType.rawValue,
             searchOptions.sort.rawValue,
@@ -87,6 +88,9 @@ extension FeedRequestContext {
         }
         if let creatorArtworkTagFilter {
             return "\(route.title) · #\(creatorArtworkTagFilter.tag)"
+        }
+        if let pixivCollectionID {
+            return "\(route.title) · \(pixivCollectionID)"
         }
         return route.title
     }

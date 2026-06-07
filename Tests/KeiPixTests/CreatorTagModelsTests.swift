@@ -40,24 +40,29 @@ struct CreatorTagModelsTests {
         {
           "error": false,
           "message": "",
-          "body": {
-            "illusts": {
-              "15071700": null,
-              "13403320": null,
-              "10072276": null
-            },
-            "manga": {
-              "16273459": null
-            },
-            "novels": []
+            "body": {
+              "illusts": {
+                "15071700": null,
+                "13403320": null,
+                "10072276": null
+              },
+              "manga": {
+                "16273459": null
+              },
+              "collections": {
+                "49895345339794251171": null
+              },
+              "collectionIds": ["49895345339794251171"],
+              "novels": []
+            }
           }
-        }
         """
 
         let response = try JSONDecoder().decode(PixivWebProfileAllResponse.self, from: Data(json.utf8))
 
         #expect(response.illustIDs == [15_071_700, 13_403_320, 10_072_276])
         #expect(response.mangaIDs == [16_273_459])
+        #expect(response.collectionIDs == ["49895345339794251171"])
     }
 
     @Test("Pixiv Web profile/illusts summary maps into a gallery artwork")

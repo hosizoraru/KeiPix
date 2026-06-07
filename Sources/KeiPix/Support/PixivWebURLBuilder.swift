@@ -23,6 +23,17 @@ enum PixivWebURLBuilder {
         return components.url
     }
 
+    static func collectionURL(id: String) -> URL? {
+        let trimmed = id.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard trimmed.isEmpty == false else { return nil }
+
+        var components = URLComponents()
+        components.scheme = "https"
+        components.host = "www.pixiv.net"
+        components.path = "/collections/\(trimmed)"
+        return components.url
+    }
+
     static func tagURL(tagName: String) -> URL? {
         let trimmed = tagName.trimmingCharacters(in: .whitespacesAndNewlines)
         guard trimmed.isEmpty == false else { return nil }

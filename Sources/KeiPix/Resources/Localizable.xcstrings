@@ -59,6 +59,35 @@
         }
       }
     },
+    "%d works": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d works"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d件の作品"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d 个作品"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d 個作品"
+          }
+        }
+      }
+    },
     "%@ is already muted": {
       "extractionState": "manual",
       "localizations": {
@@ -142,6 +171,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "已用 %@ / %@"
+          }
+        }
+      }
+    },
+    "Collection %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Collection %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "コレクション %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "珍藏册 %@"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "珍藏冊 %@"
           }
         }
       }
@@ -18503,6 +18561,35 @@
         }
       }
     },
+    "No Pixiv collections": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No Pixiv collections"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pixivコレクションはありません"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "暂无 Pixiv 珍藏册"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "暫無 Pixiv 珍藏冊"
+          }
+        }
+      }
+    },
     "No bookmark changes": {
       "extractionState": "manual",
       "localizations": {
@@ -21113,6 +21200,64 @@
         }
       }
     },
+    "Pixiv Collection": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pixiv Collection"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pixivコレクション"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pixiv 珍藏册"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pixiv 珍藏冊"
+          }
+        }
+      }
+    },
+    "Pixiv Collections": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pixiv Collections"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pixivコレクション"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pixiv 珍藏册"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pixiv 珍藏冊"
+          }
+        }
+      }
+    },
     "Pixiv Web": {
       "extractionState": "manual",
       "localizations": {
@@ -21225,6 +21370,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "珍藏冊目前由 Pixiv Web 提供。開啟 Web 頁面瀏覽或管理。"
+          }
+        }
+      }
+    },
+    "Collections from your Pixiv profile appear here. You can also paste a collection link to open it natively.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Collections from your Pixiv profile appear here. You can also paste a collection link to open it natively."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pixivプロフィールのコレクションがここに表示されます。コレクションリンクを貼り付けてネイティブ表示で開くこともできます。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pixiv 个人资料里的珍藏册会显示在这里。你也可以粘贴珍藏册链接，用原生界面打开。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pixiv 個人資料裡的珍藏冊會顯示在這裡。你也可以貼上珍藏冊連結，用原生介面開啟。"
           }
         }
       }
@@ -25314,6 +25488,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "Pixiv 紀錄是伺服器端瀏覽紀錄，可能需要 Pixiv Premium；僅在網頁瀏覽器開啟的作品不一定會同步到這裡。"
+          }
+        }
+      }
+    },
+    "Refreshed %d Pixiv collections": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refreshed %d Pixiv collections"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pixivコレクションを%d件更新しました"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已刷新 %d 个 Pixiv 珍藏册"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已刷新 %d 個 Pixiv 珍藏冊"
           }
         }
       }

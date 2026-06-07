@@ -53,6 +53,7 @@ struct PixivWebResponse<Body: Decodable>: Decodable {
 struct PixivWebProfileAllResponse: Decodable, Sendable {
     let illustIDs: [Int]
     let mangaIDs: [Int]
+    let collectionIDs: [String]
 
     private enum CodingKeys: String, CodingKey {
         case body
@@ -61,11 +62,14 @@ struct PixivWebProfileAllResponse: Decodable, Sendable {
     private enum BodyKeys: String, CodingKey {
         case illusts
         case manga
+        case collections
+        case collectionIDs = "collectionIds"
     }
 
-    init(illustIDs: [Int], mangaIDs: [Int]) {
+    init(illustIDs: [Int], mangaIDs: [Int], collectionIDs: [String] = []) {
         self.illustIDs = illustIDs
         self.mangaIDs = mangaIDs
+        self.collectionIDs = collectionIDs
     }
 
     init(from decoder: Decoder) throws {
@@ -73,10 +77,16 @@ struct PixivWebProfileAllResponse: Decodable, Sendable {
         let body = try container.nestedContainer(keyedBy: BodyKeys.self, forKey: .body)
         illustIDs = Self.sortedIDs(from: try body.decodeIfPresent([String: EmptyJSONValue].self, forKey: .illusts) ?? [:])
         mangaIDs = Self.sortedIDs(from: try body.decodeIfPresent([String: EmptyJSONValue].self, forKey: .manga) ?? [:])
+        collectionIDs = try body.decodeIfPresent([String].self, forKey: .collectionIDs)
+            ?? Self.sortedCollectionIDs(from: try body.decodeIfPresent([String: EmptyJSONValue].self, forKey: .collections) ?? [:])
     }
 
     private static func sortedIDs(from dictionary: [String: EmptyJSONValue]) -> [Int] {
         dictionary.keys.compactMap(Int.init).sorted(by: >)
+    }
+
+    private static func sortedCollectionIDs(from dictionary: [String: EmptyJSONValue]) -> [String] {
+        dictionary.keys.sorted(by: >)
     }
 }
 

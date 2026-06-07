@@ -165,6 +165,7 @@ extension KeiPixStore {
         creatorArtworkTagFilter = nil
         resetCreatorTagHydrationState()
         feedNarrowingContext = nil
+        selectedPixivCollection = nil
         selectedSpotlightArticle = nil
         errorMessage = nil
         selectedRoute = route
@@ -178,6 +179,7 @@ extension KeiPixStore {
         resetCreatorTagHydrationState()
         creatorArtworkTagFilter = target.tagFilter
         feedNarrowingContext = nil
+        selectedPixivCollection = nil
         selectedSpotlightArticle = nil
         errorMessage = nil
         selectedRoute = target.route

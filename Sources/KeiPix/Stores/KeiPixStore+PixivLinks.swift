@@ -2,7 +2,7 @@ import Foundation
 
 @MainActor
 extension KeiPixStore {
-    /// Open a Pixiv URL (artwork, user, tag, search, pixivision).
+    /// Open a Pixiv URL (artwork, user, collection, tag, search, pixivision).
     @discardableResult
     func openPixivLink(_ url: URL) async -> String {
         guard let destination = PixivWebLinkResolver.destination(from: url) else {
@@ -67,6 +67,7 @@ extension KeiPixStore {
             bookmarkFeedOptions = .defaultValue
             creatorArtworkTagFilter = nil
             selectedSpotlightArticle = nil
+            selectedPixivCollection = nil
             selectedRoute = .illustrations
             feedNarrowingContext = .directArtwork(id: id)
             allArtworks = [artwork]
@@ -80,13 +81,17 @@ extension KeiPixStore {
         case .user(let id):
             let detail = try await api.userDetail(userID: id)
             await openUserFeed(user: detail.user, route: .userIllustrations)
+        case .collection(let id):
+            try await openPixivCollection(id: id)
         case .tag(let keyword), .search(let keyword):
+            selectedPixivCollection = nil
             searchText = keyword
             await runSearch()
         case .creatorSearch(let keyword):
             focusedUser = nil
             bookmarkTagFilter = nil
             feedNarrowingContext = nil
+            selectedPixivCollection = nil
             selectedSpotlightArticle = nil
             searchText = keyword
             selectedRoute = .searchUsers
@@ -95,6 +100,7 @@ extension KeiPixStore {
             focusedUser = nil
             bookmarkTagFilter = nil
             feedNarrowingContext = nil
+            selectedPixivCollection = nil
             selectedArtwork = nil
             allArtworks = []
             artworks = []

@@ -3,6 +3,7 @@ import Foundation
 enum PixivWebDestination: Hashable, Sendable {
     case artwork(Int)
     case user(Int)
+    case collection(id: String)
     case tag(String)
     case search(String)
     case creatorSearch(String)
@@ -152,6 +153,16 @@ enum PixivWebLinkResolver {
             return .user(id)
         }
 
+        if let index = normalized.firstIndex(where: { $0 == "collections" || $0 == "collection" }),
+           components.indices.contains(index + 1) {
+            let id = components[index + 1]
+                .removingPercentEncoding?
+                .trimmingCharacters(in: .whitespacesAndNewlines) ?? components[index + 1]
+            if id.isEmpty == false, id.allSatisfy(\.isNumber) {
+                return .collection(id: id)
+            }
+        }
+
         if let index = normalized.firstIndex(where: { $0 == "tags" || $0 == "tag" }),
            components.indices.contains(index + 1) {
             let tag = components[index + 1].removingPercentEncoding ?? components[index + 1]
@@ -286,6 +297,8 @@ extension PixivWebDestination {
             return "#\(id)"
         case .user(let id):
             return String(format: L10n.linkUserPrefixFormat, id)
+        case .collection(let id):
+            return String(format: L10n.linkCollectionPrefixFormat, id)
         case .tag(let tag), .search(let tag):
             return tag
         case .creatorSearch(let keyword):
