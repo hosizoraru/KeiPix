@@ -1,3 +1,4 @@
+import CoreGraphics
 import Foundation
 
 enum MobileBottomTabKind: String, CaseIterable, Codable, Hashable, Identifiable, Sendable {
@@ -373,5 +374,26 @@ enum MobileRouteMenuConfiguration {
                 )
             ]
         }
+    }
+}
+
+struct TabBarReselectionHitPolicy: Equatable {
+    let itemCount: Int
+    let selectedIndex: Int
+    let tabBarWidth: CGFloat
+
+    func isSelectedItemTap(at point: CGPoint) -> Bool {
+        guard itemCount > 0,
+              selectedIndex >= 0,
+              selectedIndex < itemCount,
+              tabBarWidth > 0,
+              point.x >= 0,
+              point.x < tabBarWidth else {
+            return false
+        }
+
+        let slotWidth = tabBarWidth / CGFloat(itemCount)
+        guard slotWidth > 0 else { return false }
+        return Int(point.x / slotWidth) == selectedIndex
     }
 }

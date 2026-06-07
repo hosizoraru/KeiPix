@@ -288,7 +288,8 @@ struct ContentView: View {
             TabBarMinimizeBehaviorBridge(
                 behavior: compactUITabBarMinimizeBehavior,
                 isTabBarHidden: false,
-                usesTransparentBackground: layout.usesCompactTabs
+                usesTransparentBackground: layout.usesCompactTabs,
+                scrollsToTopOnCurrentTabReselection: true
             )
                 .allowsHitTesting(false)
         }
