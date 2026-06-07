@@ -31,7 +31,10 @@ struct NovelWatchlistView: View {
             } else {
                 NativeAdaptiveGridCollectionView(
                     items: novelWatchlistGridItems,
-                    layout: gridLayout
+                    layout: gridLayout,
+                    onNearContentEnd: novelStore.watchlistNextURL != nil
+                        ? { Task { await novelStore.loadMore(route: .novelWatchlist) } }
+                        : nil
                 ) { item in
                     novelWatchlistGridContent(for: item)
                 }

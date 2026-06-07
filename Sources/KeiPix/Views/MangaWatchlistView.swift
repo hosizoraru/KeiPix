@@ -207,7 +207,8 @@ struct MangaWatchlistView: View {
         } else {
             NativeAdaptiveGridCollectionView(
                 items: mangaWatchlistGridItems,
-                layout: gridLayout
+                layout: gridLayout,
+                onNearContentEnd: showsLoadMoreEntry ? { Task { await loadMore() } } : nil
             ) { item in
                 mangaWatchlistGridContent(for: item)
             }
@@ -352,7 +353,7 @@ struct MangaWatchlistView: View {
     }
 
     private func loadMore() async {
-        guard let nextURL else { return }
+        guard let nextURL, isLoadingMore == false else { return }
         isLoadingMore = true
         errorMessage = nil
         defer { isLoadingMore = false }

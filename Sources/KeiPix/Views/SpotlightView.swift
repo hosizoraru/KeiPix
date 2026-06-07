@@ -235,7 +235,7 @@ struct SpotlightView: View {
 
                 if nextURL != nil {
                     Button {
-                        Task { await loadMore() }
+                        Task { await loadMore(showFeedback: true) }
                     } label: {
                         HStack(spacing: 8) {
                             if isLoadingMore {
@@ -259,6 +259,9 @@ struct SpotlightView: View {
                     .disabled(isLoadingMore)
                     .accessibilityLabel(isLoadingMore ? L10n.loading : L10n.loadMoreSpotlightArticles)
                     .help(L10n.loadMoreSpotlightArticles)
+                    .task {
+                        await loadMore(showFeedback: false)
+                    }
                 } else if displayedArticles.isEmpty == false {
                     Label(L10n.noMorePages, systemImage: "checkmark.circle")
                         .font(.caption.weight(.semibold))
@@ -437,7 +440,7 @@ struct SpotlightView: View {
         }
     }
 
-    private func loadMore() async {
+    private func loadMore(showFeedback: Bool = true) async {
         guard let nextURL, isLoadingMore == false else { return }
         isLoadingMore = true
         errorMessage = nil
@@ -448,6 +451,7 @@ struct SpotlightView: View {
             articles.append(contentsOf: response.articles)
             selectStableArticle()
             self.nextURL = response.nextURL
+            guard showFeedback else { return }
             if response.articles.isEmpty {
                 showActionMessage(L10n.noMorePages)
             } else {

@@ -43,7 +43,20 @@ struct NativeAdaptiveGridCollectionLayout: Equatable {
 struct NativeAdaptiveGridCollectionView<Item: Hashable & Sendable> {
     let items: [Item]
     let layout: NativeAdaptiveGridCollectionLayout
+    let onNearContentEnd: (() -> Void)?
     let content: (Item) -> AnyView
+
+    init(
+        items: [Item],
+        layout: NativeAdaptiveGridCollectionLayout,
+        onNearContentEnd: (() -> Void)? = nil,
+        content: @escaping (Item) -> AnyView
+    ) {
+        self.items = items
+        self.layout = layout
+        self.onNearContentEnd = onNearContentEnd
+        self.content = content
+    }
 }
 
 #if os(macOS)
@@ -78,6 +91,7 @@ extension NativeAdaptiveGridCollectionView: NSViewRepresentable {
 
         context.coordinator.configureDataSource(for: collectionView)
         context.coordinator.parent = self
+        context.coordinator.observeBoundsChanges(for: scrollView)
         context.coordinator.updateCollectionLayout(for: collectionView)
         context.coordinator.applySnapshot(to: collectionView)
 
@@ -87,6 +101,7 @@ extension NativeAdaptiveGridCollectionView: NSViewRepresentable {
     func updateNSView(_ scrollView: NSScrollView, context: Context) {
         guard let collectionView = scrollView.documentView as? NSCollectionView else { return }
         context.coordinator.parent = self
+        context.coordinator.observeBoundsChanges(for: scrollView)
         context.coordinator.updateCollectionLayout(for: collectionView)
         context.coordinator.applySnapshot(to: collectionView)
     }
@@ -95,9 +110,15 @@ extension NativeAdaptiveGridCollectionView: NSViewRepresentable {
     final class Coordinator: NSObject, NSCollectionViewDelegateFlowLayout {
         var parent: NativeAdaptiveGridCollectionView
         private var dataSource: NSCollectionViewDiffableDataSource<Int, Item>?
+        private weak var observedScrollView: NSScrollView?
+        private var isNearContentEndArmed = true
 
         init(parent: NativeAdaptiveGridCollectionView) {
             self.parent = parent
+        }
+
+        deinit {
+            NotificationCenter.default.removeObserver(self)
         }
 
         func configureDataSource(for collectionView: NSCollectionView) {
@@ -137,7 +158,53 @@ extension NativeAdaptiveGridCollectionView: NSViewRepresentable {
             dataSource?.apply(snapshot, animatingDifferences: false) { [weak self, weak collectionView] in
                 guard let self, let collectionView else { return }
                 refreshVisibleHostedContent(in: collectionView)
+                if let scrollView = collectionView.enclosingScrollView {
+                    triggerNearContentEndIfNeeded(in: scrollView)
+                }
             }
+        }
+
+        func observeBoundsChanges(for scrollView: NSScrollView) {
+            guard observedScrollView !== scrollView else { return }
+            NotificationCenter.default.removeObserver(
+                self,
+                name: NSView.boundsDidChangeNotification,
+                object: observedScrollView?.contentView
+            )
+            scrollView.contentView.postsBoundsChangedNotifications = true
+            observedScrollView = scrollView
+            NotificationCenter.default.addObserver(
+                self,
+                selector: #selector(scrollBoundsDidChange(_:)),
+                name: NSView.boundsDidChangeNotification,
+                object: scrollView.contentView
+            )
+        }
+
+        @objc private func scrollBoundsDidChange(_ notification: Notification) {
+            guard let scrollView = observedScrollView else { return }
+            triggerNearContentEndIfNeeded(in: scrollView)
+        }
+
+        private func triggerNearContentEndIfNeeded(in scrollView: NSScrollView) {
+            guard parent.onNearContentEnd != nil,
+                  let documentView = scrollView.documentView else {
+                isNearContentEndArmed = true
+                return
+            }
+
+            let isNearContentEnd = GalleryAutoLoadMorePolicy.isNearContentEnd(
+                contentOffsetY: scrollView.contentView.bounds.origin.y,
+                viewportHeight: scrollView.contentView.bounds.height,
+                contentHeight: documentView.bounds.height
+            )
+            guard isNearContentEnd else {
+                isNearContentEndArmed = true
+                return
+            }
+            guard isNearContentEndArmed else { return }
+            isNearContentEndArmed = false
+            parent.onNearContentEnd?()
         }
 
         private func refreshVisibleHostedContent(in collectionView: NSCollectionView) {
@@ -251,6 +318,7 @@ extension NativeAdaptiveGridCollectionView: UIViewRepresentable {
         var parent: NativeAdaptiveGridCollectionView
         private var dataSource: UICollectionViewDiffableDataSource<Int, Item>?
         private let contentScrollRegistration = NativeContentScrollRegistration()
+        private var isNearContentEndArmed = true
 
         init(parent: NativeAdaptiveGridCollectionView) {
             self.parent = parent
@@ -304,6 +372,7 @@ extension NativeAdaptiveGridCollectionView: UIViewRepresentable {
             dataSource?.apply(snapshot, animatingDifferences: false) { [weak self, weak collectionView] in
                 guard let self, let collectionView else { return }
                 refreshVisibleHostedContent(in: collectionView)
+                triggerNearContentEndIfNeeded(in: collectionView)
             }
         }
 
@@ -323,6 +392,31 @@ extension NativeAdaptiveGridCollectionView: UIViewRepresentable {
             sizeForItemAt indexPath: IndexPath
         ) -> CGSize {
             parent.layout.itemSize(containerWidth: collectionView.bounds.width)
+        }
+
+        func scrollViewDidScroll(_ scrollView: UIScrollView) {
+            triggerNearContentEndIfNeeded(in: scrollView)
+        }
+
+        private func triggerNearContentEndIfNeeded(in scrollView: UIScrollView) {
+            guard parent.onNearContentEnd != nil else {
+                isNearContentEndArmed = true
+                return
+            }
+
+            let isNearContentEnd = GalleryAutoLoadMorePolicy.isNearContentEnd(
+                contentOffsetY: scrollView.contentOffset.y,
+                viewportHeight: scrollView.bounds.height,
+                contentHeight: scrollView.contentSize.height,
+                adjustedBottomInset: scrollView.adjustedContentInset.bottom
+            )
+            guard isNearContentEnd else {
+                isNearContentEndArmed = true
+                return
+            }
+            guard isNearContentEndArmed else { return }
+            isNearContentEndArmed = false
+            parent.onNearContentEnd?()
         }
     }
 }

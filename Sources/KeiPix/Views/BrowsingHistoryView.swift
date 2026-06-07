@@ -405,7 +405,10 @@ struct BrowsingHistoryView: View {
                     systemImage: "arrow.down.circle",
                     isLoading: store.isLoadingMore
                 ) {
-                    Task { await loadMorePixivHistory() }
+                    Task { await loadMorePixivHistory(showFeedback: true) }
+                }
+                .task {
+                    await loadMorePixivHistory(showFeedback: false)
                 }
             )
         case .local:
@@ -539,10 +542,10 @@ struct BrowsingHistoryView: View {
         actionMessage = String(format: L10n.refreshedPixivHistoryFormat, store.artworks.count)
     }
 
-    private func loadMorePixivHistory() async {
+    private func loadMorePixivHistory(showFeedback: Bool = true) async {
         let previousCount = store.artworks.count
         await store.loadMore()
-        guard store.errorMessage == nil else { return }
+        guard showFeedback, store.errorMessage == nil else { return }
         let loadedCount = max(store.artworks.count - previousCount, 0)
         actionMessage = loadedCount > 0
             ? String(format: L10n.loadedPixivHistoryItemsFormat, loadedCount)
