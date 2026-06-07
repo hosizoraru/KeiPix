@@ -143,6 +143,84 @@ struct BrowsingHistoryPresentationTests {
         #expect(updatedSecond.isCreatorFollowed)
     }
 
+    @Test("Local history bookmark badges update even when artwork is not in the active feed")
+    @MainActor
+    func localHistoryBookmarkBadgesUpdateOutsideActiveFeed() throws {
+        let defaults = UserDefaults.standard
+        let key = "localBrowsingHistory"
+        let originalHistoryData = defaults.data(forKey: key)
+        defer {
+            if let originalHistoryData {
+                defaults.set(originalHistoryData, forKey: key)
+            } else {
+                defaults.removeObject(forKey: key)
+            }
+        }
+
+        let store = KeiPixStore(
+            downloads: ArtworkDownloadStore(
+                completionNotifier: DownloadCompletionNotifier(
+                    center: NoopNotificationCenter(),
+                    authorizationStore: HistoryAuthorizationCacheStore()
+                )
+            ),
+            bootstrapsAutomatically: false
+        )
+        let historyOnlyArtwork = try Self.artwork(id: 9, isBookmarked: false, isFollowed: false, userID: 900)
+        store.localBrowsingHistory = [LocalArtworkHistoryItem(artwork: historyOnlyArtwork)]
+        store.artworks = []
+        store.allArtworks = []
+        store.selectedArtwork = nil
+
+        store.updateLocalBrowsingHistoryBookmarkState(artworkID: historyOnlyArtwork.id, isBookmarked: true)
+
+        let bookmarkedItem = try #require(store.localBrowsingHistory.first { $0.id == historyOnlyArtwork.id })
+        #expect(bookmarkedItem.isBookmarked)
+
+        store.updateLocalBrowsingHistoryBookmarkState(artworkID: historyOnlyArtwork.id, isBookmarked: false)
+
+        let unbookmarkedItem = try #require(store.localBrowsingHistory.first { $0.id == historyOnlyArtwork.id })
+        #expect(unbookmarkedItem.isBookmarked == false)
+    }
+
+    @Test("Selected-only artwork updates refresh detail and local history snapshots")
+    @MainActor
+    func selectedOnlyArtworkUpdatesRefreshDetailAndLocalHistorySnapshots() throws {
+        let defaults = UserDefaults.standard
+        let key = "localBrowsingHistory"
+        let originalHistoryData = defaults.data(forKey: key)
+        defer {
+            if let originalHistoryData {
+                defaults.set(originalHistoryData, forKey: key)
+            } else {
+                defaults.removeObject(forKey: key)
+            }
+        }
+
+        let store = KeiPixStore(
+            downloads: ArtworkDownloadStore(
+                completionNotifier: DownloadCompletionNotifier(
+                    center: NoopNotificationCenter(),
+                    authorizationStore: HistoryAuthorizationCacheStore()
+                )
+            ),
+            bootstrapsAutomatically: false
+        )
+        let detailOnlyArtwork = try Self.artwork(id: 10, isBookmarked: false, isFollowed: false, userID: 901)
+        store.localBrowsingHistory = [LocalArtworkHistoryItem(artwork: detailOnlyArtwork)]
+        store.selectedArtwork = detailOnlyArtwork
+        store.artworks = []
+        store.allArtworks = []
+
+        store.updateArtwork(detailOnlyArtwork.id) { artwork in
+            artwork.isBookmarked = true
+        }
+
+        #expect(store.selectedArtwork?.isBookmarked == true)
+        let historyItem = try #require(store.localBrowsingHistory.first { $0.id == detailOnlyArtwork.id })
+        #expect(historyItem.isBookmarked)
+    }
+
     private static func date(
         year: Int,
         month: Int,

@@ -54,6 +54,15 @@ extension KeiPixStore {
         persistLocalBrowsingHistory()
     }
 
+    func updateLocalBrowsingHistoryBookmarkState(artworkID: Int, isBookmarked: Bool) {
+        guard let index = localBrowsingHistory.firstIndex(where: { $0.id == artworkID }),
+              localBrowsingHistory[index].isBookmarked != isBookmarked else {
+            return
+        }
+        localBrowsingHistory[index].isBookmarked = isBookmarked
+        persistLocalBrowsingHistory()
+    }
+
     func updateLocalBrowsingHistoryFollowState(userID: Int, isFollowed: Bool) {
         var didUpdate = false
         for index in localBrowsingHistory.indices where localBrowsingHistory[index].creatorID == userID {

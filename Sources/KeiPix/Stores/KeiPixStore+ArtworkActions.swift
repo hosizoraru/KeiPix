@@ -20,6 +20,7 @@ extension KeiPixStore {
                 tags: automaticBookmarkTags(for: artwork)
             )
             updateArtwork(artwork.id) { $0.isBookmarked = true }
+            updateLocalBrowsingHistoryBookmarkState(artworkID: artwork.id, isBookmarked: true)
             HapticFeedback.bookmark()
             if autoDownloadBookmarkedArtworks {
                 enqueueDownload(artwork)
@@ -52,6 +53,7 @@ extension KeiPixStore {
         let wasBookmarked = artwork.isBookmarked
         try await api.addBookmark(illustID: artwork.id, restrict: restrict, tags: tags)
         updateArtwork(artwork.id) { $0.isBookmarked = true }
+        updateLocalBrowsingHistoryBookmarkState(artworkID: artwork.id, isBookmarked: true)
         if wasBookmarked == false {
             if autoDownloadBookmarkedArtworks {
                 enqueueDownload(artwork)
@@ -122,6 +124,7 @@ extension KeiPixStore {
     func removeBookmark(_ artwork: PixivArtwork) async throws {
         try await api.deleteBookmark(illustID: artwork.id)
         updateArtwork(artwork.id) { $0.isBookmarked = false }
+        updateLocalBrowsingHistoryBookmarkState(artworkID: artwork.id, isBookmarked: false)
     }
 
     func automaticBookmarkTags(for artwork: PixivArtwork) -> [String] {
@@ -305,6 +308,7 @@ extension KeiPixStore {
                     tags: automaticBookmarkTags(for: artwork)
                 )
                 updateArtwork(artwork.id) { $0.isBookmarked = true }
+                updateLocalBrowsingHistoryBookmarkState(artworkID: artwork.id, isBookmarked: true)
                 await followCreatorAfterBookmarkIfNeeded(artwork)
             } catch {
                 errorMessage = error.localizedDescription
@@ -331,16 +335,26 @@ extension KeiPixStore {
     }
 
     func updateArtwork(_ id: Int, mutate: (inout PixivArtwork) -> Void) {
+        var updatedArtwork: PixivArtwork?
+
         if let index = allArtworks.firstIndex(where: { $0.id == id }) {
             mutate(&allArtworks[index])
+            updatedArtwork = allArtworks[index]
         }
         if let index = artworks.firstIndex(where: { $0.id == id }) {
             mutate(&artworks[index])
-            if selectedArtwork?.id == id {
-                selectedArtwork = artworks[index]
+            updatedArtwork = artworks[index]
+        }
+        if selectedArtwork?.id == id {
+            if let updatedArtwork {
+                selectedArtwork = updatedArtwork
+            } else if var selected = selectedArtwork {
+                mutate(&selected)
+                selectedArtwork = selected
+                updatedArtwork = selected
             }
         }
-        if let artwork = allKnownArtwork(id: id) {
+        if let artwork = updatedArtwork ?? allKnownArtwork(id: id) {
             refreshLocalBrowsingHistoryStatus(for: artwork)
         }
     }
