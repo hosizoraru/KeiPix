@@ -66,6 +66,9 @@ struct GalleryView: View {
     }
 
     private var navigationTitle: String {
+        if let collection = store.selectedPixivCollection {
+            return collection.title.isEmpty ? L10n.pixivCollection : collection.title
+        }
         if let focusedUser = store.focusedUser {
             return "\(store.selectedRoute.title) · \(focusedUser.name)"
         }
@@ -95,6 +98,12 @@ struct GalleryView: View {
         }
         if let focusedUser = store.focusedUser {
             parts.append("\(focusedUser.name) @\(focusedUser.account)")
+        }
+        if let collection = store.selectedPixivCollection {
+            parts.append(collection.owner.name)
+            if collection.tags.isEmpty == false {
+                parts.append(collection.tags.prefix(3).map { "#\($0.name)" }.joined(separator: " "))
+            }
         }
         if let creatorTag = store.creatorArtworkTagFilter?.tag {
             parts.append("#\(creatorTag)")

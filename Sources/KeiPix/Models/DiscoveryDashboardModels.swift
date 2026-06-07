@@ -103,6 +103,7 @@ struct DiscoveryDashboardSection: Identifiable {
                     .publicBookmarks,
                     .privateBookmarks,
                     .bookmarkTags,
+                    .pixivCollections,
                     .following,
                     .privateFollowing,
                     .history,

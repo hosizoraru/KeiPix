@@ -814,6 +814,7 @@ struct NativeBoundaryTests {
             "Sources/KeiPix/Views/DownloadQueueView.swift",
             "Sources/KeiPix/Views/MangaWatchlistView.swift",
             "Sources/KeiPix/Views/NovelWatchlistView.swift",
+            "Sources/KeiPix/Views/PixivCollectionsView.swift",
             "Sources/KeiPix/Views/WatchLaterView.swift",
             "Sources/KeiPix/Views/WorkSubscriptionsView.swift"
         ]
@@ -826,6 +827,34 @@ struct NativeBoundaryTests {
             let source = try String(contentsOf: root.appending(path: path), encoding: .utf8)
             #expect(source.contains(".nativeBottomTabContentSurface()"), "\(path) should extend native content behind compact bottom tabs")
         }
+    }
+
+    @Test("Pixiv collections stay native and reachable from compact navigation")
+    func pixivCollectionsStayNativeAndReachableFromCompactNavigation() throws {
+        let root = try packageRoot()
+        let collectionsView = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/PixivCollectionsView.swift"),
+            encoding: .utf8
+        )
+        let mobileConfiguration = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Models/MobileBottomTabConfiguration.swift"),
+            encoding: .utf8
+        )
+        let contentView = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/ContentView.swift"),
+            encoding: .utf8
+        )
+        let iPadContentView = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/ContentView_iPadOS.swift"),
+            encoding: .utf8
+        )
+
+        #expect(collectionsView.contains("NativeAdaptiveGridCollectionView("))
+        #expect(collectionsView.contains("store.openPixivCollection(collection)"))
+        #expect(mobileConfiguration.contains(".pixivCollections"))
+        #expect(mobileConfiguration.contains("route == .pixivCollectionWorks"))
+        #expect(contentView.contains("PixivCollectionsView(store: store)"))
+        #expect(iPadContentView.contains("PixivCollectionsView(store: store)"))
     }
 
     @Test("iOS library empty and loading states register as bottom tab content scroll sources")

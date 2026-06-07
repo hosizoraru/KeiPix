@@ -862,6 +862,8 @@ private struct ContentColumnView: View {
             SpotlightView(store: store)
         } else if store.selectedRoute == .bookmarkTags {
             BookmarkTagsView(store: store)
+        } else if store.selectedRoute == .pixivCollections {
+            PixivCollectionsView(store: store)
         } else if store.selectedRoute == .history {
             BrowsingHistoryView(store: store)
         } else if store.selectedRoute == .watchLater {
