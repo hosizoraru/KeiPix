@@ -1081,14 +1081,6 @@ struct FeedHeaderView: View {
     }
 
     private var activeFeedClearContext: FeedClearChipContext? {
-        if let collection = store.selectedPixivCollection {
-            return FeedClearChipContext(
-                action: .pixivCollection,
-                title: collection.title.isEmpty ? L10n.pixivCollection : collection.title,
-                systemImage: "rectangle.stack.fill"
-            )
-        }
-
         if let feedNarrowingContext = store.feedNarrowingContext {
             return FeedClearChipContext(
                 action: .feedNarrowing,
@@ -1405,9 +1397,6 @@ struct FeedHeaderView: View {
                 clearArtworkSearch()
             case .searchFilters:
                 resetSearchFilters()
-            case .pixivCollection:
-                Task { await store.clearPixivCollectionContext() }
-                actionMessage = L10n.feedFilterCleared
             }
         }
     }
@@ -1434,7 +1423,6 @@ private enum FeedClearChipAction: Equatable {
     case creatorContext
     case artworkSearch
     case searchFilters
-    case pixivCollection
 }
 
 private struct FeedClearChipContext: Equatable {

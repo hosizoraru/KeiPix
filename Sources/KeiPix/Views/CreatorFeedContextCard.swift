@@ -123,3 +123,362 @@ struct CreatorFeedContextCard: View {
             .glassEffect(.regular, in: Capsule(style: .continuous))
     }
 }
+
+struct PixivCollectionFeedContextCard: View {
+    let collection: PixivCollectionDetail
+    let loadedCount: Int
+    let visibleCount: Int
+    let openCreator: () -> Void
+    let copyLink: () -> Void
+    let clearContext: () -> Void
+
+    private let visibleTagLimit = 6
+
+    var body: some View {
+        ViewThatFits(in: .horizontal) {
+            regularLayout
+                .frame(minWidth: 560, alignment: .leading)
+            compactLayout
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 11)
+        .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .accessibilityElement(children: .contain)
+    }
+
+    private var regularLayout: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .top, spacing: 14) {
+                titleBlock
+                    .layoutPriority(1)
+
+                Spacer(minLength: 10)
+
+                actionRail
+            }
+
+            if metadataItems.isEmpty == false {
+                metadataRail
+            }
+
+            if collection.tags.isEmpty == false {
+                tagCloud
+            }
+
+            captionBlock
+        }
+    }
+
+    private var compactLayout: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .center, spacing: 10) {
+                kindLabel
+
+                Spacer(minLength: 8)
+
+                compactActionRail
+            }
+
+            titleText
+                .font(.title2.weight(.bold))
+                .lineLimit(3)
+                .minimumScaleFactor(0.88)
+                .fixedSize(horizontal: false, vertical: true)
+
+            ownerButton
+
+            if metadataItems.isEmpty == false {
+                metadataRail
+            }
+
+            if collection.tags.isEmpty == false {
+                tagCloud
+            }
+
+            captionBlock
+        }
+    }
+
+    private var titleBlock: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            kindLabel
+
+            titleText
+                .font(.title2.weight(.bold))
+                .lineLimit(2)
+                .minimumScaleFactor(0.88)
+                .fixedSize(horizontal: false, vertical: true)
+
+            ownerButton
+        }
+    }
+
+    private var titleText: some View {
+        Text(collection.title.isEmpty ? L10n.pixivCollection : collection.title)
+            .textSelection(.enabled)
+    }
+
+    private var kindLabel: some View {
+        Label(L10n.pixivCollection, systemImage: "rectangle.stack")
+            .font(.caption.weight(.semibold))
+            .foregroundStyle(.secondary)
+            .labelStyle(.titleAndIcon)
+            .lineLimit(1)
+    }
+
+    private var ownerButton: some View {
+        Button(action: openCreator) {
+            Label {
+                Text("\(collection.owner.name) @\(collection.owner.account)")
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+            } icon: {
+                RemoteImageView(url: collection.owner.avatarURL)
+                    .frame(width: 22, height: 22)
+                    .clipShape(Circle())
+                    .overlay {
+                        Circle().stroke(.quaternary, lineWidth: 1)
+                    }
+            }
+        }
+        .buttonStyle(.plain)
+        .font(.caption.weight(.medium))
+        .foregroundStyle(.secondary)
+        .help(L10n.openCreatorProfile)
+        .accessibilityLabel("\(L10n.openCreatorProfile), \(collection.owner.name)")
+    }
+
+    private var actionRail: some View {
+        HStack(spacing: 7) {
+            Button(action: openCreator) {
+                Label(L10n.openCreatorProfile, systemImage: "person.crop.circle")
+            }
+            .collectionHeaderIconButton(L10n.openCreatorProfile)
+
+            if let url = collection.pixivURL {
+                Link(destination: url) {
+                    Label(L10n.openInPixiv, systemImage: "safari")
+                }
+                .collectionHeaderIconButton(L10n.openInPixiv)
+
+                Button(action: copyLink) {
+                    Label(L10n.copyLink, systemImage: "link")
+                }
+                .collectionHeaderIconButton(L10n.copyLink)
+            }
+
+            Button(action: clearContext) {
+                Label(L10n.close, systemImage: "xmark.circle.fill")
+            }
+            .collectionHeaderIconButton(L10n.close)
+        }
+    }
+
+    private var compactActionRail: some View {
+        HStack(spacing: 7) {
+            Menu {
+                Button(action: openCreator) {
+                    Label(L10n.openCreatorProfile, systemImage: "person.crop.circle")
+                }
+
+                if let url = collection.pixivURL {
+                    Link(destination: url) {
+                        Label(L10n.openInPixiv, systemImage: "safari")
+                    }
+
+                    Button(action: copyLink) {
+                        Label(L10n.copyLink, systemImage: "link")
+                    }
+                }
+            } label: {
+                Label(L10n.moreActions, systemImage: "ellipsis.circle")
+            }
+            .collectionHeaderIconButton(L10n.moreActions)
+
+            Button(action: clearContext) {
+                Label(L10n.close, systemImage: "xmark.circle.fill")
+            }
+            .collectionHeaderIconButton(L10n.close)
+        }
+    }
+
+    private var metadataRail: some View {
+        FlowLayout(spacing: 7) {
+            ForEach(metadataItems) { item in
+                CollectionHeaderMetadataPill(item: item)
+            }
+        }
+    }
+
+    private var tagCloud: some View {
+        FlowLayout(spacing: 6) {
+            ForEach(collection.tags.prefix(visibleTagLimit), id: \.name) { tag in
+                PixivCollectionHeaderTagChip(tag: tag)
+            }
+
+            if collection.tags.count > visibleTagLimit {
+                Menu {
+                    ForEach(collection.tags.dropFirst(visibleTagLimit), id: \.name) { tag in
+                        Button("#\(tag.name)") {}
+                            .disabled(true)
+                    }
+                } label: {
+                    Label("+\(collection.tags.count - visibleTagLimit)", systemImage: "ellipsis")
+                }
+                .font(.caption.weight(.semibold))
+                .labelStyle(.titleAndIcon)
+                .padding(.horizontal, 9)
+                .frame(height: 28)
+                .keiInteractiveGlass(14)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var captionBlock: some View {
+        let caption = collection.caption.htmlStripped
+        if caption.isEmpty == false {
+            Text(caption)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .lineLimit(3)
+                .fixedSize(horizontal: false, vertical: true)
+                .textSelection(.enabled)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    private var metadataItems: [CollectionHeaderMetadataItem] {
+        var items: [CollectionHeaderMetadataItem] = [
+            CollectionHeaderMetadataItem(
+                id: "works",
+                title: L10n.works,
+                value: worksCountText,
+                systemImage: "photo.on.rectangle.angled"
+            ),
+            CollectionHeaderMetadataItem(
+                id: "bookmarks",
+                title: L10n.bookmarks,
+                value: collection.bookmarkCount.formatted(),
+                systemImage: "heart.fill"
+            ),
+            CollectionHeaderMetadataItem(
+                id: "views",
+                title: L10n.views,
+                value: collection.viewCount.formatted(),
+                systemImage: "eye.fill"
+            )
+        ]
+
+        if let publishedDate = collection.publishedDate {
+            items.append(
+                CollectionHeaderMetadataItem(
+                    id: "published",
+                    title: L10n.created,
+                    value: publishedDate.formatted(date: .abbreviated, time: .shortened),
+                    systemImage: "calendar"
+                )
+            )
+        }
+
+        if collection.relatedCollections.isEmpty == false {
+            items.append(
+                CollectionHeaderMetadataItem(
+                    id: "related",
+                    title: L10n.relatedPixivCollections,
+                    value: collection.relatedCollections.count.formatted(),
+                    systemImage: "rectangle.stack.badge.plus"
+                )
+            )
+        }
+
+        return items
+    }
+
+    private var worksCountText: String {
+        guard visibleCount != loadedCount else {
+            return loadedCount.formatted()
+        }
+        return "\(visibleCount.formatted())/\(loadedCount.formatted())"
+    }
+}
+
+private struct CollectionHeaderMetadataItem: Identifiable {
+    let id: String
+    let title: String
+    let value: String
+    let systemImage: String
+}
+
+private struct CollectionHeaderMetadataPill: View {
+    let item: CollectionHeaderMetadataItem
+
+    var body: some View {
+        Label {
+            HStack(spacing: 4) {
+                Text(item.value)
+                    .font(.caption.weight(.semibold).monospacedDigit())
+                    .foregroundStyle(.primary)
+                Text(item.title)
+                    .font(.caption2.weight(.medium))
+                    .foregroundStyle(.secondary)
+            }
+        } icon: {
+            Image(systemName: item.systemImage)
+                .font(.caption.weight(.semibold))
+                .symbolRenderingMode(.hierarchical)
+                .foregroundStyle(.secondary)
+        }
+        .labelStyle(.titleAndIcon)
+        .lineLimit(1)
+        .padding(.horizontal, 9)
+        .frame(height: 28)
+        .glassEffect(.regular, in: Capsule(style: .continuous))
+    }
+}
+
+private struct PixivCollectionHeaderTagChip: View {
+    let tag: PixivTag
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 1) {
+            Text("#\(tag.name)")
+                .font(.caption.weight(.semibold))
+                .lineLimit(1)
+            if let translatedName = tag.translatedName, translatedName.isEmpty == false {
+                Text(translatedName)
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+            }
+        }
+        .padding(.horizontal, 9)
+        .padding(.vertical, translatedNameExists ? 5 : 0)
+        .frame(height: translatedNameExists ? 42 : 28)
+        .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .accessibilityLabel(accessibilityLabel)
+    }
+
+    private var translatedNameExists: Bool {
+        tag.translatedName?.isEmpty == false
+    }
+
+    private var accessibilityLabel: String {
+        if let translatedName = tag.translatedName, translatedName.isEmpty == false {
+            return "#\(tag.name), \(translatedName)"
+        }
+        return "#\(tag.name)"
+    }
+}
+
+private extension View {
+    func collectionHeaderIconButton(_ accessibilityLabel: String) -> some View {
+        self
+            .labelStyle(.iconOnly)
+            .buttonStyle(.plain)
+            .frame(width: 34, height: 34)
+            .keiInteractiveGlass(17)
+            .help(accessibilityLabel)
+            .accessibilityLabel(accessibilityLabel)
+    }
+}

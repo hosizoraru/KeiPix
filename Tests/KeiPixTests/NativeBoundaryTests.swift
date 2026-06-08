@@ -842,6 +842,14 @@ struct NativeBoundaryTests {
             contentsOf: root.appending(path: "Sources/KeiPix/Views/GalleryView.swift"),
             encoding: .utf8
         )
+        let galleryFeedHeader = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/GalleryFeedHeaderView.swift"),
+            encoding: .utf8
+        )
+        let feedContextCards = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/CreatorFeedContextCard.swift"),
+            encoding: .utf8
+        )
         let galleryBridge = try String(
             contentsOf: root.appending(path: "Sources/KeiPix/Support/NativeGalleryCollectionView.swift"),
             encoding: .utf8
@@ -915,6 +923,18 @@ struct NativeBoundaryTests {
         #expect(galleryView.contains("appendRelatedPixivCollectionItems(to: &items)"))
         #expect(galleryView.contains("collection.relatedCollections.map(NativeGalleryCollectionItem.pixivCollection)"))
         #expect(galleryView.contains("RelatedPixivCollectionsHeader(count: count)"))
+        #expect(galleryView.contains("PixivCollectionFeedContextCard("))
+        #expect(galleryView.contains("iPadCompactFeedActions(showsFeedCountBadge: false, showsActiveFeedClearChip: false)"))
+        #expect(galleryView.contains("copyPixivCollectionLink(collection)"))
+        #expect(galleryFeedHeader.contains("case pixivCollection") == false)
+        #expect(feedContextCards.contains("struct PixivCollectionFeedContextCard: View"))
+        #expect(feedContextCards.contains("FlowLayout(spacing: 6)"))
+        #expect(feedContextCards.contains("collection.caption.htmlStripped"))
+        #expect(feedContextCards.contains("collection.publishedDate"))
+        #expect(feedContextCards.contains("collection.bookmarkCount"))
+        #expect(feedContextCards.contains("collection.viewCount"))
+        #expect(feedContextCards.contains("collection.relatedCollections.count"))
+        #expect(feedContextCards.contains("Link(destination: url)"))
         #expect(galleryView.contains("try await store.openPixivCollection(id: collection.id, sourceRoute: sourceRoute)"))
         #expect(galleryView.contains("collectionCoverURLs"))
         #expect(galleryView.contains("collection.coverImageURL"))

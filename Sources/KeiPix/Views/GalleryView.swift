@@ -99,12 +99,6 @@ struct GalleryView: View {
         if let focusedUser = store.focusedUser {
             parts.append("\(focusedUser.name) @\(focusedUser.account)")
         }
-        if let collection = store.selectedPixivCollection {
-            parts.append(collection.owner.name)
-            if collection.tags.isEmpty == false {
-                parts.append(collection.tags.prefix(3).map { "#\($0.name)" }.joined(separator: " "))
-            }
-        }
         if let creatorTag = store.creatorArtworkTagFilter?.tag {
             parts.append("#\(creatorTag)")
         }
@@ -284,15 +278,7 @@ private struct GalleryFeedView: View {
             #if os(iOS)
             iPadNativeFeedHeader
             #else
-            FeedHeaderView(
-                store: store,
-                actionMessage: $actionMessage,
-                artworkSelection: $artworkSelection,
-                batchBookmarkCommandRequest: $batchBookmarkCommandRequest
-            )
-            .padding(.horizontal, 18)
-            .padding(.top, 9)
-            .padding(.bottom, 7)
+            macOSNativeFeedHeader
             #endif
 
             NativeGalleryCollectionView(
@@ -319,10 +305,65 @@ private struct GalleryFeedView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
+    #if os(macOS)
+    private var macOSNativeFeedHeader: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            if let collection = store.selectedPixivCollection {
+                PixivCollectionFeedContextCard(
+                    collection: collection,
+                    loadedCount: store.artworks.count,
+                    visibleCount: store.clientFilteredArtworks.count,
+                    openCreator: {
+                        store.presentedUserProfile = collection.owner
+                    },
+                    copyLink: {
+                        copyPixivCollectionLink(collection)
+                    },
+                    clearContext: {
+                        clearPixivCollectionContext()
+                    }
+                )
+            }
+
+            FeedHeaderView(
+                store: store,
+                actionMessage: $actionMessage,
+                artworkSelection: $artworkSelection,
+                batchBookmarkCommandRequest: $batchBookmarkCommandRequest,
+                showsFeedCountBadge: store.selectedPixivCollection == nil,
+                showsActiveFeedClearChip: store.selectedPixivCollection == nil
+            )
+        }
+        .padding(.horizontal, 18)
+        .padding(.top, 9)
+        .padding(.bottom, 7)
+    }
+    #endif
+
     #if os(iOS)
     private var iPadNativeFeedHeader: some View {
         Group {
-            if let focusedUser = store.focusedUser {
+            if let collection = store.selectedPixivCollection {
+                VStack(alignment: .leading, spacing: 8) {
+                    PixivCollectionFeedContextCard(
+                        collection: collection,
+                        loadedCount: store.artworks.count,
+                        visibleCount: store.clientFilteredArtworks.count,
+                        openCreator: {
+                            store.presentedUserProfile = collection.owner
+                        },
+                        copyLink: {
+                            copyPixivCollectionLink(collection)
+                        },
+                        clearContext: {
+                            clearPixivCollectionContext()
+                        }
+                    )
+
+                    iPadCompactFeedActions(showsFeedCountBadge: false, showsActiveFeedClearChip: false)
+                        .frame(maxWidth: .infinity, alignment: .trailing)
+                }
+            } else if let focusedUser = store.focusedUser {
                 VStack(alignment: .leading, spacing: 8) {
                     CreatorFeedContextCard(
                         user: focusedUser,
@@ -627,6 +668,17 @@ private struct GalleryFeedView: View {
                 actionMessage = error.localizedDescription
             }
         }
+    }
+
+    private func clearPixivCollectionContext() {
+        actionMessage = L10n.feedFilterCleared
+        Task { await store.clearPixivCollectionContext() }
+    }
+
+    private func copyPixivCollectionLink(_ collection: PixivCollectionDetail) {
+        guard let url = collection.pixivURL else { return }
+        PasteboardWriter.copy(url.absoluteString)
+        actionMessage = L10n.copied
     }
 
     private func triggerAutomaticLoadMoreIfNeeded() {
