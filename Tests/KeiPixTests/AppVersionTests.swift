@@ -59,7 +59,13 @@ struct AppVersionTests {
         let marketingVersion = try #require(settings["MARKETING_VERSION"])
         let buildNumber = try #require(settings["CURRENT_PROJECT_VERSION"])
 
-        let output = try run(["/bin/bash", "script/version_settings.sh", "--print-json"], in: root)
+        let output = try run([
+            "/usr/bin/env",
+            "KEIPIX_BUILD_NUMBER_STRATEGY=config",
+            "/bin/bash",
+            "script/version_settings.sh",
+            "--print-json"
+        ], in: root)
         let data = try #require(output.data(using: .utf8))
         let json = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
 
