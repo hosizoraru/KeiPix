@@ -1362,7 +1362,10 @@ struct NativeBoundaryTests {
         )
 
         #expect(glassSupport.contains("func platformGlassControlBar("))
+        #expect(glassSupport.contains("GlassEffectContainer(spacing: 12)"))
         #expect(glassSupport.contains(".keiGlass(20)"))
+        #expect(glassSupport.contains("func keiPanel(_ radius: CGFloat = 16)"))
+        #expect(glassSupport.contains(".background(.thinMaterial") == false)
         #expect(gallery.contains(".platformGlassControlBar(verticalPadding: 6"))
         #expect(gallery.contains(".glassEffect(.regular, in: Capsule(style: .continuous))"))
         #expect(sheetHeader.contains(".platformGlassControlBar(verticalPadding: 12"))
@@ -1372,6 +1375,7 @@ struct NativeBoundaryTests {
         #expect(sheetChrome.contains("case reader"))
         #expect(sheetChrome.contains(".presentationSizing(.page)"))
         #expect(sheetChrome.contains("[.fraction(0.88), .large]"))
+        #expect(sheetChrome.contains("if #available(iOS 27.0, *)"))
         #expect(sheetChrome.contains(".presentationBackground(.regularMaterial)"))
         #expect(sheetChrome.contains(".presentationCornerRadius(style.cornerRadius)"))
         #expect(userProfileHeader.contains("GlassEffectContainer(spacing: 8)"))
@@ -2664,6 +2668,7 @@ struct NativeBoundaryTests {
         #expect(sharedComponents.contains("struct OS26PaginationFooter: View"))
         #expect(sharedComponents.contains("struct OS26LoadMoreButton: View") == false)
         #expect(sharedComponents.contains("GlassEffectContainer(spacing: 8)"))
+        #expect(sharedComponents.contains("ViewThatFits(in: .horizontal)"))
 
         for path in pagePaths {
             let source = try String(contentsOf: root.appending(path: path), encoding: .utf8)
@@ -2771,6 +2776,7 @@ struct NativeBoundaryTests {
         #expect(sharedComponents.contains("struct OS26InlineUnavailableView<Actions: View>: View"))
         #expect(sharedComponents.contains("struct OS26SkeletonCardSurface: ViewModifier"))
         #expect(sharedComponents.contains("struct OS26GlassCompatibleSegmentedPicker"))
+        #expect(sharedComponents.contains("ViewThatFits(in: .horizontal)"))
 
         #expect(creatorComponents.contains("CreatorPreviewListLoadingPlaceholder"))
         #expect(creatorComponents.contains("let minimum: CGFloat = layoutMode.usesExpandedPreview ? 380 : 280"))

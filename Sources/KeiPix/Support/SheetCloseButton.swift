@@ -82,14 +82,16 @@ extension View {
         }
     }
 
-    /// Applies the shared OS 26 sheet presentation contract.
+    /// Applies the shared OS 26+ sheet presentation contract.
     ///
     /// SwiftUI's own sheet surface already picks up most Liquid Glass
     /// behavior. This modifier keeps the app-level contract consistent:
-    /// iPhone/iPad sheets get system grabbers, detents, material
-    /// presentation backgrounds, and rounded presentation corners, while
-    /// macOS sheets stay inside the native sheet/window presentation
-    /// without custom opaque chrome fighting the system.
+    /// iPhone/iPad sheets get system grabbers, detents, and rounded
+    /// presentation corners. OS 27 lets the system own the sheet
+    /// background so Liquid Glass can adapt to scroll edges and the
+    /// presenting surface; OS 26 keeps a material fallback. macOS sheets
+    /// stay inside the native sheet/window presentation without custom
+    /// opaque chrome fighting the system.
     ///
     /// Pair this with `SheetHeaderRail` or `SheetCloseButton` inside the
     /// sheet body so pointer and keyboard users always have an explicit
@@ -160,12 +162,20 @@ private struct OS26SheetChromeModifier: ViewModifier {
 
     func body(content: Content) -> some View {
         #if os(iOS)
-        sizedContent(content)
-            .presentationDragIndicator(.visible)
-            .presentationDetents(style.detents)
-            .presentationBackground(.regularMaterial)
-            .presentationCornerRadius(style.cornerRadius)
-            .presentationContentInteraction(.scrolls)
+        if #available(iOS 27.0, *) {
+            sizedContent(content)
+                .presentationDragIndicator(.visible)
+                .presentationDetents(style.detents)
+                .presentationCornerRadius(style.cornerRadius)
+                .presentationContentInteraction(.scrolls)
+        } else {
+            sizedContent(content)
+                .presentationDragIndicator(.visible)
+                .presentationDetents(style.detents)
+                .presentationBackground(.regularMaterial)
+                .presentationCornerRadius(style.cornerRadius)
+                .presentationContentInteraction(.scrolls)
+        }
         #else
         sizedContent(content)
             .presentationDragIndicator(.visible)

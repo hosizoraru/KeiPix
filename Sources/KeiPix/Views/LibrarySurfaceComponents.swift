@@ -314,23 +314,25 @@ struct OS26GlassCompatibleSegmentedPicker<Selection: Hashable, Content: View>: V
     }
 
     var body: some View {
-        ViewThatFits(in: .horizontal) {
-            Picker(title, selection: $selection) {
-                content
-            }
-            .pickerStyle(.segmented)
-            .labelsHidden()
-            .frame(minWidth: minWidth, idealWidth: idealWidth, maxWidth: maxWidth)
-            .accessibilityLabel(title)
+        GlassEffectContainer(spacing: 8) {
+            ViewThatFits(in: .horizontal) {
+                Picker(title, selection: $selection) {
+                    content
+                }
+                .pickerStyle(.segmented)
+                .labelsHidden()
+                .frame(minWidth: minWidth, idealWidth: idealWidth, maxWidth: maxWidth)
+                .accessibilityLabel(title)
 
-            Picker(title, selection: $selection) {
-                content
+                Picker(title, selection: $selection) {
+                    content
+                }
+                .pickerStyle(.menu)
+                .labelsHidden()
+                .buttonStyle(.glass)
+                .buttonBorderShape(.capsule)
+                .accessibilityLabel(title)
             }
-            .pickerStyle(.menu)
-            .labelsHidden()
-            .buttonStyle(.glass)
-            .buttonBorderShape(.capsule)
-            .accessibilityLabel(title)
         }
     }
 }
