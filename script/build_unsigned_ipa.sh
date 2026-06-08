@@ -6,6 +6,10 @@
 # Output lands in ./artifacts/:
 #   - artifacts/KeiPix-iOS-<version>-build.<build>-unsigned.ipa
 #   - artifacts/KeiPix-iPadOS-<version>-build.<build>-unsigned.ipa
+if [ -z "${BASH_VERSION:-}" ] || shopt -oq posix 2>/dev/null; then
+  exec /usr/bin/env bash "$0" "$@"
+fi
+
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
