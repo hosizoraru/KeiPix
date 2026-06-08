@@ -861,6 +861,8 @@ struct NativeBoundaryTests {
 
         #expect(collectionsView.contains("NativeAdaptiveGridCollectionView("))
         #expect(collectionsView.contains("try await store.openPixivCollection(id: collection.id, sourceRoute: mode.route)"))
+        #expect(collectionsView.contains("private var emptyStateActions"))
+        #expect(collectionsView.contains("ViewThatFits"))
         #expect(mobileConfiguration.contains(".pixivCollections"))
         #expect(mobileConfiguration.contains(".savedPixivisionArticles"))
         #expect(mobileConfiguration.contains(".myPixivCollections"))

@@ -113,32 +113,57 @@ struct PixivCollectionsView: View {
             subtitle: emptyStateSubtitle,
             systemImage: "rectangle.stack.badge.person.crop"
         ) {
+            emptyStateActions
+        }
+    }
+
+    private var emptyStateActions: some View {
+        ViewThatFits(in: .horizontal) {
             HStack(spacing: 8) {
-                Button {
-                    Task { await refresh(showFeedback: true) }
-                } label: {
-                    Label(L10n.refresh, systemImage: "arrow.clockwise")
-                }
-                .os26GlassButton(prominent: true)
-
-                Button {
-                    Task {
-                        let message = await store.openPixivLinkFromClipboard()
-                        actionMessage = message
-                    }
-                } label: {
-                    Label(L10n.openPixivLinkFromClipboard, systemImage: "doc.on.clipboard")
-                }
-                .os26GlassButton()
-
-                if let webURL = collectionsWebURL {
-                    Link(destination: webURL) {
-                        Label(mode.webActionTitle, systemImage: "safari")
-                    }
-                    .os26GlassButton()
-                }
+                emptyStateActionButtons(fillWidth: false)
             }
-            .controlSize(.regular)
+
+            VStack(spacing: 8) {
+                emptyStateActionButtons(fillWidth: true)
+            }
+            .frame(maxWidth: 320)
+        }
+        .controlSize(.regular)
+    }
+
+    @ViewBuilder
+    private func emptyStateActionButtons(fillWidth: Bool) -> some View {
+        Button {
+            Task { await refresh(showFeedback: true) }
+        } label: {
+            Label(L10n.refresh, systemImage: "arrow.clockwise")
+        }
+        .os26GlassButton(prominent: true)
+        .lineLimit(2)
+        .fixedSize(horizontal: false, vertical: true)
+        .frame(maxWidth: fillWidth ? .infinity : nil)
+
+        Button {
+            Task {
+                let message = await store.openPixivLinkFromClipboard()
+                actionMessage = message
+            }
+        } label: {
+            Label(L10n.openPixivLinkFromClipboard, systemImage: "doc.on.clipboard")
+        }
+        .os26GlassButton()
+        .lineLimit(2)
+        .fixedSize(horizontal: false, vertical: true)
+        .frame(maxWidth: fillWidth ? .infinity : nil)
+
+        if let webURL = collectionsWebURL {
+            Link(destination: webURL) {
+                Label(mode.webActionTitle, systemImage: "safari")
+            }
+            .os26GlassButton()
+            .lineLimit(2)
+            .fixedSize(horizontal: false, vertical: true)
+            .frame(maxWidth: fillWidth ? .infinity : nil)
         }
     }
 
