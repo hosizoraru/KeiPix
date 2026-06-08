@@ -28,7 +28,7 @@ file_size_or_zero() {
     return 0
   fi
 
-  stat -f '%z' "$path" 2>/dev/null || stat -c '%s' "$path"
+  stat -c '%s' "$path" 2>/dev/null || stat -f '%z' "$path"
 }
 
 iso8601_now() {
