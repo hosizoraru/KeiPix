@@ -157,6 +157,7 @@ GitHub Actions workflow 位于 `.github/workflows/macos-build.yml`：
 - `./script/build_unsigned_ipa.sh ipados` 生成 iPadOS unsigned IPA artifact
 - macOS 测试、macOS `.app` 打包、iOS IPA 打包和 iPadOS IPA 打包并行执行；各 job 失败都会让 workflow 失败，但 artifact 不再等待测试 job 结束才开始构建
 - SwiftPM job 缓存 `.build` / SwiftPM cache，iOS 与 iPadOS 打包 job 缓存各自的 `.tmp/DerivedData-unsigned-ipa-*`；cache key 覆盖 Swift source、资源、XcodeGen spec、plist、entitlements 和版本配置
+- `master` push 且测试和两个 IPA job 都成功后，`publish-livecontainer-nightly` 会生成 `apps_nightly.json`，把 `nightly` tag / release 移到当前提交，并上传订阅源、iOS unsigned IPA、iPadOS unsigned IPA 三个 release assets
 - tag `v*` 时把 macOS `.zip` / `.dmg` 产物附加到 GitHub Release
 
 本地可复现同样的打包产物：
@@ -170,6 +171,12 @@ GitHub Actions workflow 位于 `.github/workflows/macos-build.yml`：
 脚本会自动按本机 logical CPU 数设置 SwiftPM / Xcode 并行 job 数；需要限制或放大时可设置 `KEIPIX_BUILD_JOBS=<n>`，IPA 构建也支持更具体的 `KEIPIX_XCODE_JOBS=<n>` 覆盖。
 
 unsigned IPA 使用 `iphoneos` SDK 的 Release 构建，关闭 Xcode signing，并输出标准 `Payload/KeiPix.app` 结构，适合导入 LiveContainer 这类 live container / sideload 测试环境；它不是 App Store、TestFlight 或普通已签名真机安装包。
+
+LiveContainer nightly 订阅源使用稳定 release asset URL，而不是 14 天保留的 Actions artifact URL：
+
+```text
+https://github.com/hosizoraru/KeiPix/releases/download/nightly/apps_nightly.json
+```
 
 ## Visual QA
 

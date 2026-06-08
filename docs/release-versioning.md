@@ -17,6 +17,13 @@ Those names intentionally match Apple build settings:
 
 - `MARKETING_VERSION` is written to `CFBundleShortVersionString`.
 - `CURRENT_PROJECT_VERSION` is written to `CFBundleVersion`.
+- `versionName` is the release/feed alias for `MARKETING_VERSION`.
+- `buildNumber` and `buildVersion` are release/feed aliases for
+  `CURRENT_PROJECT_VERSION`.
+- `versionCode` is the integer build code used by scripts and the
+  LiveContainer source. A plain integer build number is used directly; dotted
+  Apple build versions are packed with three digit components, so `7.8.9`
+  becomes `7008009`.
 
 Apple documents `CFBundleShortVersionString` as the release version string and
 `CFBundleVersion` as the bundle build version. KeiPix keeps the marketing
@@ -101,6 +108,32 @@ The GitHub Actions workflow uses the same metadata and uploads artifacts named:
 KeiPix-macOS-<marketing-version>-build.<build-number>-app
 KeiPix-iOS-<marketing-version>-build.<build-number>-unsigned-ipa
 KeiPix-iPadOS-<marketing-version>-build.<build-number>-unsigned-ipa
+```
+
+## LiveContainer Nightly Source
+
+`apps_nightly.json` is a LiveContainer/AltStore-style source for unsigned
+nightly IPA imports. The canonical subscription URL is:
+
+```text
+https://github.com/hosizoraru/KeiPix/releases/download/nightly/apps_nightly.json
+```
+
+The checked-in file is a valid seed generated from
+`Config/AppVersion.xcconfig`. On `master` pushes, GitHub Actions regenerates the
+source after both iOS and iPadOS unsigned IPA artifacts succeed, fills in the
+actual IPA sizes, commit, build date, and workflow URL, then uploads:
+
+```text
+apps_nightly.json
+KeiPix-iOS-<marketing-version>-build.<build-number>-unsigned.ipa
+KeiPix-iPadOS-<marketing-version>-build.<build-number>-unsigned.ipa
+```
+
+to the moving `nightly` GitHub Release. Local refreshes use the same generator:
+
+```bash
+./script/generate_livecontainer_apps_nightly.sh apps_nightly.json
 ```
 
 ## Release Tags
