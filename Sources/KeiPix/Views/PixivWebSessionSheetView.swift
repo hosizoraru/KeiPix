@@ -8,7 +8,14 @@ struct PixivWebSessionSheetView: View {
     @State private var isSaving = false
     @State private var message: String?
 
-    private let url = URL(string: "https://www.pixiv.net/collection")!
+    private var url: URL {
+        if let userID = store.session?.user.id,
+           let savedCollectionsURL = PixivWebURLBuilder.userBookmarkCollectionsURL(userID: String(userID)) {
+            return savedCollectionsURL
+        }
+        return PixivWebURLBuilder.collectionsURL()
+            ?? URL(string: "https://www.pixiv.net/collections")!
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -108,6 +115,7 @@ private struct PixivWebSessionWebView {
         configuration.websiteDataStore = .default()
         let webView = WKWebView(frame: .zero, configuration: configuration)
         webView.navigationDelegate = coordinator
+        webView.customUserAgent = AppVersion.current.desktopSafariUserAgent()
         cookieCapture.cookieStore = configuration.websiteDataStore.httpCookieStore
         webView.load(URLRequest(url: url))
         return webView

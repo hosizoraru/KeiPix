@@ -650,10 +650,15 @@ private struct GalleryFeedView: View {
         }
         store.hydrateCreatorTagSummariesIfNeeded(for: artworks, limit: 8)
 
-        let urls = GalleryImagePrefetchPolicy.previewURLs(
+        var urls = GalleryImagePrefetchPolicy.previewURLs(
             for: artworks,
             tier: store.feedPreviewImageQualityTier
         )
+        let collectionCoverURLs = items.compactMap { item -> URL? in
+            guard case .pixivCollection(let collection) = item else { return nil }
+            return collection.coverImageURL
+        }
+        urls.append(contentsOf: collectionCoverURLs)
         guard urls.isEmpty == false else { return }
 
         Task(priority: .utility) {

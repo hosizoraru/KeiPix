@@ -876,6 +876,10 @@ struct NativeBoundaryTests {
         #expect(collectionsView.contains("onNearContentEnd: nearContentEndAction"))
         #expect(collectionsView.contains("private var nearContentEndAction: (() -> Void)?"))
         #expect(collectionsView.contains("OS26PaginationFooter("))
+        #expect(collectionsView.contains("fixedColumnCount: 2"))
+        #expect(collectionsView.contains("horizontalSizeClass == .compact"))
+        #expect(collectionsView.contains("onPrefetchItems: prefetchNativeItems"))
+        #expect(collectionsView.contains("collection.coverImageURL"))
         #expect(collectionsView.contains("store.loadMorePixivCollections(mode: mode)"))
         #expect(collectionsView.contains("Label(L10n.refresh, systemImage: \"arrow.clockwise\")") == false)
         #expect(collectionsView.contains("store.isPixivWebSessionPresented = true"))
@@ -888,6 +892,8 @@ struct NativeBoundaryTests {
         #expect(galleryView.contains("collection.relatedCollections.map(NativeGalleryCollectionItem.pixivCollection)"))
         #expect(galleryView.contains("RelatedPixivCollectionsHeader(count: count)"))
         #expect(galleryView.contains("try await store.openPixivCollection(id: collection.id, sourceRoute: sourceRoute)"))
+        #expect(galleryView.contains("collectionCoverURLs"))
+        #expect(galleryView.contains("collection.coverImageURL"))
         #expect(collectionsView.contains("try await store.openPixivCollection(id: collection.id, sourceRoute: mode.route)"))
         #expect(collectionsView.contains("private var emptyStateActions"))
         #expect(collectionsView.contains("ViewThatFits"))
@@ -897,6 +903,10 @@ struct NativeBoundaryTests {
         #expect(collectionsStore.contains("loadMorePixivCollections(mode:"))
         #expect(collectionsStore.contains("mode == .saved, pixivWebSession == nil"))
         #expect(collectionsStore.contains("L10n.savedPixivCollectionsWebSessionRequiredHint"))
+        #expect(collectionsStore.contains(".appTransportSecurityRequiresSecureConnection"))
+        #expect(collectionsStore.contains("clearSavedPixivCollectionWebSessionAfterFailure"))
+        #expect(collectionsStore.contains("pixivWebSession = nil"))
+        #expect(galleryBridge.contains("collection.masonryAspectRatio"))
         #expect(mobileConfiguration.contains(".pixivCollections"))
         #expect(mobileConfiguration.contains(".savedPixivisionArticles"))
         #expect(mobileConfiguration.contains(".myPixivCollections"))
@@ -944,11 +954,26 @@ struct NativeBoundaryTests {
             contentsOf: root.appending(path: "Sources/KeiPix/Stores/KeiPixStore+Accounts.swift"),
             encoding: .utf8
         )
+        let collectionModels = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Models/PixivCollectionModels.swift"),
+            encoding: .utf8
+        )
 
         #expect(api.contains("private let webSessionStore = PixivWebSessionStore()"))
         #expect(api.contains("request.setValue(cookieHeader, forHTTPHeaderField: \"Cookie\")"))
+        #expect(api.contains("validatePixivWebSession("))
+        #expect(api.contains("pixivWebPageLooksSignedIn("))
+        #expect(api.contains("L10n.pixivWebSessionNotSignedIn"))
+        #expect(api.contains(#"href="/settings/profile""#))
+        #expect(api.contains(#"href="/logout""#))
+        #expect(api.contains("userBookmarkedCollectionsHTMLPage("))
+        #expect(api.contains("PixivCollectionHTMLParser.parseListPage"))
+        #expect(api.contains("apiPage.collections.isEmpty"))
         #expect(webSessionSheet.contains("configuration.websiteDataStore = .default()"))
-        #expect(webSessionSheet.contains("https://www.pixiv.net/collection"))
+        #expect(webSessionSheet.contains("PixivWebURLBuilder.userBookmarkCollectionsURL"))
+        #expect(webSessionSheet.contains("PixivWebURLBuilder.collectionsURL()"))
+        #expect(webSessionSheet.contains("https://www.pixiv.net/collections"))
+        #expect(webSessionSheet.contains("webView.customUserAgent = AppVersion.current.desktopSafariUserAgent()"))
         #expect(webSessionSheet.contains("PixivWebSessionCookie.pixivCookies(from: cookies)"))
         #expect(webSessionSheet.contains("Chrome") == false)
         #expect(accountSettings.contains("L10n.pixivWebSession"))
@@ -957,6 +982,8 @@ struct NativeBoundaryTests {
         #expect(iPadContentView.contains("PixivWebSessionSheetView(store: store)"))
         #expect(store.contains("func connectPixivWebSession(cookies: [PixivWebSessionCookie])"))
         #expect(store.contains("disconnectPixivWebSession()"))
+        #expect(collectionModels.contains("enum PixivCollectionHTMLParser"))
+        #expect(collectionModels.contains("data-ga4-label=\"collection_link\""))
     }
 
     @Test("iOS library empty and loading states register as bottom tab content scroll sources")

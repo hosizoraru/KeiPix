@@ -5,6 +5,9 @@ struct PixivCollectionsView: View {
     let mode: PixivCollectionListMode
     @State private var actionMessage: String?
     @State private var lastAutoLoadMoreOffset: Int?
+    #if os(iOS)
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    #endif
 
     init(store: KeiPixStore, mode: PixivCollectionListMode = .discovery) {
         self.store = store
@@ -52,6 +55,7 @@ struct PixivCollectionsView: View {
 
             nativeCollectionView
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
     }
 
     private var nativeCollectionView: some View {
@@ -64,11 +68,12 @@ struct PixivCollectionsView: View {
             onRefresh: nil,
             onScrollDirectionChange: nil,
             onNearContentEnd: nearContentEndAction,
-            onPrefetchItems: nil
+            onPrefetchItems: prefetchNativeItems
         ) { item in
             AnyView(nativeContent(for: item))
         }
         .nativeBottomTabContentSurface()
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     private var header: some View {
@@ -178,15 +183,32 @@ struct PixivCollectionsView: View {
 
     private var masonryLayout: NativeGalleryCollectionLayout {
         .masonry(
-            configuration: ArtworkMasonryLayoutConfiguration(
-                spacing: 12,
-                preferredColumnWidth: 176,
-                minColumnWidth: 136,
-                maxColumnWidth: 228,
-                fixedColumnCount: nil,
-                denseFixedColumns: true
-            ),
+            configuration: masonryConfiguration,
             loadMoreHeight: 118
+        )
+    }
+
+    private var masonryConfiguration: ArtworkMasonryLayoutConfiguration {
+        #if os(iOS)
+        if horizontalSizeClass == .compact {
+            return ArtworkMasonryLayoutConfiguration(
+                spacing: 10,
+                preferredColumnWidth: 150,
+                minColumnWidth: 120,
+                maxColumnWidth: 190,
+                fixedColumnCount: 2,
+                denseFixedColumns: false
+            )
+        }
+        #endif
+
+        return ArtworkMasonryLayoutConfiguration(
+            spacing: 12,
+            preferredColumnWidth: 176,
+            minColumnWidth: 136,
+            maxColumnWidth: 228,
+            fixedColumnCount: nil,
+            denseFixedColumns: true
         )
     }
 
@@ -194,7 +216,9 @@ struct PixivCollectionsView: View {
         var hasher = Hasher()
         hasher.combine(store.pixivCollections.count)
         hasher.combine(store.pixivCollections.first?.id)
+        hasher.combine(store.pixivCollections.first?.coverImageURL?.absoluteString)
         hasher.combine(store.pixivCollections.last?.id)
+        hasher.combine(store.pixivCollections.last?.coverImageURL?.absoluteString)
         hasher.combine(store.isLoadingMorePixivCollections)
         hasher.combine(store.hasMorePixivCollections)
         return hasher.finalize()
@@ -277,6 +301,19 @@ struct PixivCollectionsView: View {
         Task { await store.loadMorePixivCollections(mode: mode) }
     }
 
+    private func prefetchNativeItems(_ items: [NativeGalleryCollectionItem]) {
+        let urls = items.compactMap { item -> URL? in
+            guard case .pixivCollection(let collection) = item else {
+                return nil
+            }
+            return collection.coverImageURL
+        }
+        guard urls.isEmpty == false else { return }
+        Task(priority: .utility) {
+            await ImagePipeline.shared.prefetch(urls)
+        }
+    }
+
     private func openCollection(_ collection: PixivCollectionDetail) async {
         do {
             try await store.openPixivCollection(id: collection.id, sourceRoute: mode.route)
@@ -301,14 +338,17 @@ struct PixivCollectionCard: View {
     var body: some View {
         Button(action: open) {
             GeometryReader { proxy in
-                let textReserve: CGFloat = collection.tags.isEmpty ? 58 : 76
-                let thumbnailHeight = max(104, min(proxy.size.width, proxy.size.height - textReserve))
+                let isCompact = proxy.size.width < 190
+                let textReserve: CGFloat = collection.tags.isEmpty
+                    ? (isCompact ? 50 : 58)
+                    : (isCompact ? 66 : 76)
+                let thumbnailHeight = max(96, min(proxy.size.width, proxy.size.height - textReserve))
                 VStack(alignment: .leading, spacing: 8) {
                     collectionThumbnail(height: thumbnailHeight)
 
                     VStack(alignment: .leading, spacing: 4) {
                         Text(collection.title.isEmpty ? L10n.pixivCollection : collection.title)
-                            .font(.subheadline.weight(.semibold))
+                            .font((isCompact ? Font.caption : Font.subheadline).weight(.semibold))
                             .lineLimit(2)
 
                         Text(collection.subtitle)
@@ -323,16 +363,16 @@ struct PixivCollectionCard: View {
                                 .lineLimit(1)
                         }
                     }
-                    .padding(.horizontal, 4)
+                    .padding(.horizontal, isCompact ? 2 : 4)
                 }
-                .padding(10)
+                .padding(isCompact ? 8 : 10)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             .contentShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         }
         .buttonStyle(.plain)
-        .keiInteractiveGlass(18)
+        .keiInteractiveGlass(14)
         .contextMenu {
             if let url = collection.pixivURL {
                 Link(L10n.openInPixiv, destination: url)
@@ -346,14 +386,10 @@ struct PixivCollectionCard: View {
 
     @ViewBuilder
     private func collectionThumbnail(height: CGFloat) -> some View {
-        if let url = collection.thumbnailImageURL {
+        if let url = collection.coverImageURL {
             RemoteImageView(url: url, contentMode: .fill)
                 .frame(height: height)
-                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-        } else if let artwork = collection.artworks.first {
-            RemoteImageView(url: artwork.thumbnailURL, contentMode: .fill)
-                .frame(height: height)
-                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
         } else {
             ZStack {
                 Image(systemName: "rectangle.stack")
@@ -363,7 +399,7 @@ struct PixivCollectionCard: View {
             }
             .frame(maxWidth: .infinity)
             .frame(height: height)
-            .background(.quinary, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .background(.quinary, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
         }
     }
 }
