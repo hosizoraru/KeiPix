@@ -31,6 +31,38 @@ version in numeric `x.y.z` form and keeps the build number as one to three
 positive integer components. That makes App Store, Xcode, GitHub release, and
 the in-app update comparator easy to reason about.
 
+## Build Number Strategies
+
+`script/version_settings.sh` is the shared resolver for local scripts and CI.
+It always reads `MARKETING_VERSION` and the configured build number from
+`Config/AppVersion.xcconfig`, then chooses the effective build number with one
+of these strategies:
+
+- `config`: use `CURRENT_PROJECT_VERSION` exactly. This is the default for local
+  scripts and for `v*` release tag builds.
+- `git`: derive a moving build number from repository history. If a reachable
+  `v<MARKETING_VERSION>` tag exists, it uses that tag as the anchor. Otherwise
+  it uses the nearest reachable `v[0-9]*` tag. The effective build number is the
+  configured build number plus the number of commits since the anchor. If no
+  version tag exists, it falls back to the total `HEAD` commit count, never below
+  the configured build number. Dotted configured builds are first packed with the
+  same `versionCode` rule, so `7.8.9` becomes the integer baseline `7008009`
+  before any commit distance is added.
+- `override`: set `KEIPIX_BUILD_NUMBER_OVERRIDE=<number>` to force a specific
+  build number for a one-off local or CI run.
+
+GitHub Actions sets `KEIPIX_BUILD_NUMBER_STRATEGY=git` for non-tag builds so
+nightly LiveContainer updates naturally advance with commits. Release tag builds
+keep `config` so the maintainer can lock the final build number intentionally.
+
+Useful local checks:
+
+```bash
+./script/version_settings.sh --print-json
+KEIPIX_BUILD_NUMBER_STRATEGY=git ./script/version_settings.sh --print-json
+KEIPIX_BUILD_NUMBER_OVERRIDE=1001 ./script/version_settings.sh --print-json
+```
+
 Apple references:
 
 - [`CFBundleShortVersionString`](https://developer.apple.com/documentation/bundleresources/information_property_list/cfbundleshortversionstring)

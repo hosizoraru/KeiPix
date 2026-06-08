@@ -20,6 +20,7 @@ concurrency:
 env:
   HOMEBREW_NO_AUTO_UPDATE: "1"
   HOMEBREW_NO_INSTALL_CLEANUP: "1"
+  KEIPIX_BUILD_NUMBER_STRATEGY: ${{ startsWith(github.ref, 'refs/tags/v') && 'config' || 'git' }}
 
 permissions:
   contents: write
@@ -35,7 +36,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
         with:
-          fetch-depth: 1
+          fetch-depth: 0
+          fetch-tags: true
 
       - name: Select Xcode toolchain
         run: |
@@ -93,7 +95,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
         with:
-          fetch-depth: 1
+          fetch-depth: 0
+          fetch-tags: true
 
       - name: Select Xcode toolchain
         run: |
@@ -154,7 +157,7 @@ jobs:
           keipix_load_version_settings "$PWD"
           echo "version=$KEIPIX_MARKETING_VERSION" >> "$GITHUB_OUTPUT"
           echo "build=$KEIPIX_BUILD_NUMBER" >> "$GITHUB_OUTPUT"
-          echo "Version: $KEIPIX_MARKETING_VERSION ($KEIPIX_BUILD_NUMBER)"
+          echo "Version: $KEIPIX_MARKETING_VERSION ($KEIPIX_BUILD_NUMBER, source: $KEIPIX_BUILD_NUMBER_SOURCE, anchor: ${KEIPIX_BUILD_ANCHOR_TAG:-none}, commits: $KEIPIX_BUILD_COMMIT_COUNT)"
 
       - name: Upload macOS zipped .app artifact
         uses: actions/upload-artifact@v7
@@ -203,7 +206,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
         with:
-          fetch-depth: 1
+          fetch-depth: 0
+          fetch-tags: true
 
       - name: Select Xcode toolchain
         run: |
@@ -248,7 +252,7 @@ jobs:
           keipix_load_version_settings "$PWD"
           echo "version=$KEIPIX_MARKETING_VERSION" >> "$GITHUB_OUTPUT"
           echo "build=$KEIPIX_BUILD_NUMBER" >> "$GITHUB_OUTPUT"
-          echo "Version: $KEIPIX_MARKETING_VERSION ($KEIPIX_BUILD_NUMBER)"
+          echo "Version: $KEIPIX_MARKETING_VERSION ($KEIPIX_BUILD_NUMBER, source: $KEIPIX_BUILD_NUMBER_SOURCE, anchor: ${KEIPIX_BUILD_ANCHOR_TAG:-none}, commits: $KEIPIX_BUILD_COMMIT_COUNT)"
 
       - name: Build unsigned ${{ matrix.display-name }} IPA
         run: ./script/build_unsigned_ipa.sh "${{ matrix.platform }}"
@@ -273,7 +277,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
         with:
-          fetch-depth: 1
+          fetch-depth: 0
+          fetch-tags: true
 
       - name: Download unsigned IPA artifacts
         uses: actions/download-artifact@v7

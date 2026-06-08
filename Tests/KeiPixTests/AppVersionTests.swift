@@ -69,6 +69,79 @@ struct AppVersionTests {
         #expect(intValue(json["versionCode"]) == expectedVersionCode(from: buildNumber))
     }
 
+    @Test("Git build strategy derives build numbers from the nearest version tag distance")
+    func gitBuildStrategyUsesVersionTagDistance() throws {
+        let root = try packageRoot()
+        let fixture = try makeTemporaryVersionRepo(marketingVersion: "0.2.0", buildNumber: "10")
+        defer { try? FileManager.default.removeItem(at: fixture) }
+
+        try git(["config", "user.email", "keipix-tests@example.invalid"], in: fixture)
+        try git(["config", "user.name", "KeiPix Tests"], in: fixture)
+        try commitFixtureChange(in: fixture, name: "seed.txt", contents: "seed\n")
+        try git(["tag", "v0.1.0"], in: fixture)
+        try commitFixtureChange(in: fixture, name: "one.txt", contents: "one\n")
+        try commitFixtureChange(in: fixture, name: "two.txt", contents: "two\n")
+
+        let command = """
+        source \(shellQuote(root.appending(path: "script/version_settings.sh").path(percentEncoded: false)))
+        export KEIPIX_BUILD_NUMBER_STRATEGY=git
+        keipix_load_version_settings \(shellQuote(fixture.path(percentEncoded: false)))
+        printf '%s\\n' "$KEIPIX_BUILD_NUMBER"
+        printf '%s\\n' "$KEIPIX_BUILD_ANCHOR_TAG"
+        printf '%s\\n' "$KEIPIX_BUILD_COMMIT_COUNT"
+        """
+        let output = try run(["/bin/bash", "-c", command], in: root)
+        let lines = output.split(separator: "\n").map(String.init)
+
+        #expect(lines == ["12", "v0.1.0", "2"])
+    }
+
+    @Test("Git build strategy falls back to the total commit count when no version tag exists")
+    func gitBuildStrategyUsesCommitCountWithoutVersionTags() throws {
+        let root = try packageRoot()
+        let fixture = try makeTemporaryVersionRepo(marketingVersion: "0.1.0", buildNumber: "1")
+        defer { try? FileManager.default.removeItem(at: fixture) }
+
+        try git(["config", "user.email", "keipix-tests@example.invalid"], in: fixture)
+        try git(["config", "user.name", "KeiPix Tests"], in: fixture)
+        try commitFixtureChange(in: fixture, name: "one.txt", contents: "one\n")
+        try commitFixtureChange(in: fixture, name: "two.txt", contents: "two\n")
+
+        let command = """
+        source \(shellQuote(root.appending(path: "script/version_settings.sh").path(percentEncoded: false)))
+        export KEIPIX_BUILD_NUMBER_STRATEGY=git
+        keipix_load_version_settings \(shellQuote(fixture.path(percentEncoded: false)))
+        printf '%s,%s,%s\\n' "$KEIPIX_BUILD_NUMBER" "${KEIPIX_BUILD_ANCHOR_TAG:-}" "$KEIPIX_BUILD_COMMIT_COUNT"
+        """
+        let output = try run(["/bin/bash", "-c", command], in: root)
+
+        #expect(output.trimmingCharacters(in: .whitespacesAndNewlines) == "2,,2")
+    }
+
+    @Test("Git build strategy packs dotted config builds before adding tag distance")
+    func gitBuildStrategyPacksDottedConfigBuilds() throws {
+        let root = try packageRoot()
+        let fixture = try makeTemporaryVersionRepo(marketingVersion: "0.2.0", buildNumber: "7.8.9")
+        defer { try? FileManager.default.removeItem(at: fixture) }
+
+        try git(["config", "user.email", "keipix-tests@example.invalid"], in: fixture)
+        try git(["config", "user.name", "KeiPix Tests"], in: fixture)
+        try commitFixtureChange(in: fixture, name: "seed.txt", contents: "seed\n")
+        try git(["tag", "v0.2.0"], in: fixture)
+        try commitFixtureChange(in: fixture, name: "one.txt", contents: "one\n")
+        try commitFixtureChange(in: fixture, name: "two.txt", contents: "two\n")
+
+        let command = """
+        source \(shellQuote(root.appending(path: "script/version_settings.sh").path(percentEncoded: false)))
+        export KEIPIX_BUILD_NUMBER_STRATEGY=git
+        keipix_load_version_settings \(shellQuote(fixture.path(percentEncoded: false)))
+        printf '%s\\n' "$KEIPIX_BUILD_NUMBER"
+        """
+        let output = try run(["/bin/bash", "-c", command], in: root)
+
+        #expect(output.trimmingCharacters(in: .whitespacesAndNewlines) == "7008011")
+    }
+
     @Test("Bundle plist templates consume Xcode build settings for version fields")
     func plistTemplatesUseBuildSettings() throws {
         let root = try packageRoot()
@@ -86,6 +159,8 @@ struct AppVersionTests {
         let root = try packageRoot()
         let buildAndRun = try contents(of: root, path: "script/build_and_run.sh")
         let release = try contents(of: root, path: "script/build_release_app.sh")
+        let unsignedIPA = try contents(of: root, path: "script/build_unsigned_ipa.sh")
+        let simulatorRunner = try contents(of: root, path: "script/build_and_run_simulator.sh")
         let liveContainer = try contents(of: root, path: "script/generate_livecontainer_apps_nightly.sh")
         let workflow = try contents(of: root, path: ".github/workflows/macos-build.yml")
 
@@ -96,10 +171,20 @@ struct AppVersionTests {
         #expect(release.contains("KEIPIX_MARKETING_VERSION"))
         #expect(release.contains("KEIPIX_BUILD_NUMBER"))
         #expect(release.contains("git describe") == false)
+        #expect(unsignedIPA.contains("CURRENT_PROJECT_VERSION=\"$BUILD_NUMBER\""))
+        #expect(unsignedIPA.contains("\"${CI:-}\" = \"true\""))
+        #expect(unsignedIPA.contains("xcode_project_needs_regeneration"))
+        #expect(unsignedIPA.contains("\"$ROOT_DIR/Sources/KeiPix\""))
+        #expect(simulatorRunner.contains("\"${CI:-}\" = \"true\""))
+        #expect(simulatorRunner.contains("xcode_project_needs_regeneration"))
+        #expect(simulatorRunner.contains("\"$ROOT_DIR/Sources/KeiPix\""))
         #expect(liveContainer.contains("version_settings.sh"))
         #expect(liveContainer.contains("KEIPIX_VERSION_NAME"))
         #expect(liveContainer.contains("KEIPIX_VERSION_CODE"))
         #expect(workflow.contains("script/version_settings.sh"))
+        #expect(workflow.contains("KEIPIX_BUILD_NUMBER_STRATEGY"))
+        #expect(workflow.contains("fetch-depth: 0"))
+        #expect(workflow.contains("fetch-tags: true"))
         #expect(workflow.contains("script/generate_livecontainer_apps_nightly.sh"))
         #expect(workflow.contains("apps_nightly.json"))
         #expect(workflow.contains("steps.version.outputs.build"))
@@ -196,6 +281,32 @@ struct AppVersionTests {
     private func jsonObject(at url: URL) throws -> [String: Any] {
         let data = try Data(contentsOf: url)
         return try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
+    }
+
+    private func makeTemporaryVersionRepo(marketingVersion: String, buildNumber: String) throws -> URL {
+        let url = FileManager.default.temporaryDirectory
+            .appending(path: "KeiPixVersionTests-\(UUID().uuidString)", directoryHint: .isDirectory)
+        try FileManager.default.createDirectory(at: url.appending(path: "Config"), withIntermediateDirectories: true)
+        try """
+        MARKETING_VERSION = \(marketingVersion)
+        CURRENT_PROJECT_VERSION = \(buildNumber)
+        """.write(to: url.appending(path: "Config/AppVersion.xcconfig"), atomically: true, encoding: .utf8)
+        _ = try run(["/usr/bin/git", "init"], in: url)
+        return url
+    }
+
+    private func commitFixtureChange(in root: URL, name: String, contents: String) throws {
+        try contents.write(to: root.appending(path: name), atomically: true, encoding: .utf8)
+        try git(["add", name], in: root)
+        try git(["commit", "-m", "add \(name)"], in: root)
+    }
+
+    private func git(_ arguments: [String], in root: URL) throws {
+        _ = try run(["/usr/bin/git"] + arguments, in: root)
+    }
+
+    private func shellQuote(_ value: String) -> String {
+        "'" + value.replacingOccurrences(of: "'", with: "'\\''") + "'"
     }
 
     private func assertLiveContainerApp(

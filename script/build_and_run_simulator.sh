@@ -98,14 +98,39 @@ esac
 
 cd "$ROOT_DIR"
 
+xcode_project_needs_regeneration() {
+  local pbxproj="$PROJECT_PATH/project.pbxproj"
+  if [ "${CI:-}" = "true" ]; then
+    return 0
+  fi
+  if [ ! -f "$pbxproj" ] || [ "$PROJECT_SPEC" -nt "$pbxproj" ]; then
+    return 0
+  fi
+  if [ -f "$ROOT_DIR/PrivacyInfo.xcprivacy" ] && [ "$ROOT_DIR/PrivacyInfo.xcprivacy" -nt "$pbxproj" ]; then
+    return 0
+  fi
+
+  while IFS= read -r -d '' input_file; do
+    if [ "$input_file" -nt "$pbxproj" ]; then
+      return 0
+    fi
+  done < <(
+    /usr/bin/find "$ROOT_DIR/Sources/KeiPix" "$ROOT_DIR/App" \
+      -type f \( -name '*.swift' -o -name '*.plist' -o -name '*.entitlements' \) \
+      -print0
+  )
+
+  return 1
+}
+
 ensure_xcode_project() {
-  if [ ! -d "$PROJECT_PATH" ] || [ "$PROJECT_SPEC" -nt "$PROJECT_PATH/project.pbxproj" ]; then
+  if [ ! -d "$PROJECT_PATH" ] || xcode_project_needs_regeneration; then
     if ! command -v xcodegen >/dev/null 2>&1; then
       echo "KeiPix.xcodeproj is missing or stale. Install XcodeGen first: brew install xcodegen" >&2
       exit 1
     fi
-    echo "==> Generating KeiPix.xcodeproj from project.yml"
-    xcodegen generate >/dev/null
+    echo "==> Generating KeiPix.xcodeproj from project.yml and source tree"
+    xcodegen generate --spec "$PROJECT_SPEC" >/dev/null
   fi
 }
 

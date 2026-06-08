@@ -5,6 +5,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 # shellcheck source=version_settings.sh
 source "$ROOT_DIR/script/version_settings.sh"
+export KEIPIX_BUILD_NUMBER_STRATEGY=config
 keipix_load_version_settings "$ROOT_DIR"
 
 read_project_setting() {
@@ -29,8 +30,8 @@ if [ "$project_marketing" != "$KEIPIX_MARKETING_VERSION" ]; then
   exit 1
 fi
 
-if [ "$project_build" != "$KEIPIX_BUILD_NUMBER" ]; then
-  echo "project.yml CURRENT_PROJECT_VERSION ($project_build) does not match $KEIPIX_VERSION_CONFIG ($KEIPIX_BUILD_NUMBER)" >&2
+if [ "$project_build" != "$KEIPIX_CONFIG_BUILD_NUMBER" ]; then
+  echo "project.yml CURRENT_PROJECT_VERSION ($project_build) does not match $KEIPIX_VERSION_CONFIG ($KEIPIX_CONFIG_BUILD_NUMBER)" >&2
   exit 1
 fi
 
