@@ -38,6 +38,7 @@ case "$PLATFORM_KEY" in
     SIMULATOR_NAME="${KEIPIX_IOS_SIMULATOR_NAME:-KeiPix-iOS}"
     SIMULATOR_ID="${KEIPIX_SIMULATOR_ID:-${KEIPIX_IOS_SIMULATOR_ID:-}}"
     DEFAULT_DEVICE_TYPE="${KEIPIX_IOS_DEVICE_TYPE:-com.apple.CoreSimulator.SimDeviceType.iPhone-17-Pro}"
+    SIMULATOR_RUNTIME="${KEIPIX_SIMULATOR_RUNTIME:-${KEIPIX_IOS_SIMULATOR_RUNTIME:-}}"
     DEVICE_FAMILY_LABEL="iPhone"
     DERIVED_DATA_PATH="${KEIPIX_DERIVED_DATA_PATH:-${KEIPIX_IOS_DERIVED_DATA_PATH:-$ROOT_DIR/.tmp/DerivedData-iOS-script}}"
     ;;
@@ -47,6 +48,7 @@ case "$PLATFORM_KEY" in
     SIMULATOR_NAME="${KEIPIX_IPADOS_SIMULATOR_NAME:-KeiPix-iPadOS}"
     SIMULATOR_ID="${KEIPIX_SIMULATOR_ID:-${KEIPIX_IPADOS_SIMULATOR_ID:-}}"
     DEFAULT_DEVICE_TYPE="${KEIPIX_IPADOS_DEVICE_TYPE:-com.apple.CoreSimulator.SimDeviceType.iPad-Pro-13-inch-M5-12GB}"
+    SIMULATOR_RUNTIME="${KEIPIX_SIMULATOR_RUNTIME:-${KEIPIX_IPADOS_SIMULATOR_RUNTIME:-}}"
     DEVICE_FAMILY_LABEL="iPad"
     DERIVED_DATA_PATH="${KEIPIX_DERIVED_DATA_PATH:-${KEIPIX_IPADOS_DERIVED_DATA_PATH:-$ROOT_DIR/.tmp/DerivedData-iPadOS-script}}"
     ;;
@@ -74,12 +76,17 @@ Environment overrides:
   KEIPIX_IPADOS_SIMULATOR_ID=<udid>
   KEIPIX_IOS_SIMULATOR_NAME=KeiPix-iOS
   KEIPIX_IPADOS_SIMULATOR_NAME=KeiPix-iPadOS
+  KEIPIX_SIMULATOR_RUNTIME=<simctl runtime id>
+  KEIPIX_IOS_SIMULATOR_RUNTIME=<simctl runtime id>
+  KEIPIX_IPADOS_SIMULATOR_RUNTIME=<simctl runtime id>
   KEIPIX_IOS_DEVICE_TYPE=<simctl device type id>
   KEIPIX_IPADOS_DEVICE_TYPE=<simctl device type id>
   KEIPIX_DERIVED_DATA_PATH=<path>
   KEIPIX_OPEN_DEVICE_WINDOW=0              Skip opening Device Hub/Simulator UI
   KEIPIX_DEVICE_HUB_APP=<path>             Override Xcode 27 DeviceHub.app path
   KEIPIX_SIMULATOR_APP=<path>              Override legacy Simulator.app path
+  KEIPIX_LAUNCH_TIMEOUT_SECONDS=30
+  KEIPIX_SCREENSHOT_TIMEOUT_SECONDS=30
   KEIPIX_VERIFY_SETTLE_SECONDS=3
   KEIPIX_XCODEBUILD_VERBOSE=1
 USAGE
@@ -138,12 +145,33 @@ ensure_xcode_project() {
 }
 
 runtime_identifier() {
+  if [ -n "$SIMULATOR_RUNTIME" ]; then
+    if xcrun simctl list runtimes | grep -F "$SIMULATOR_RUNTIME" | grep -vq unavailable; then
+      printf '%s\n' "$SIMULATOR_RUNTIME"
+      return
+    fi
+    echo "Requested simulator runtime is unavailable: $SIMULATOR_RUNTIME" >&2
+    exit 1
+  fi
+
   xcrun simctl list runtimes | awk '
     /iOS .* - com.apple.CoreSimulator.SimRuntime.iOS/ && $0 !~ /unavailable/ {
       runtime = $NF
     }
     END {
       print runtime
+    }
+  '
+}
+
+runtime_device_list_name() {
+  local runtime="$1"
+  xcrun simctl list runtimes | awk -v runtime="$runtime" '
+    index($0, runtime) > 0 && $0 !~ /unavailable/ {
+      sub(/^[[:space:]]*/, "")
+      sub(/[[:space:]]*\(.*/, "")
+      print
+      exit
     }
   '
 }
@@ -166,9 +194,15 @@ fallback_device_type() {
 
 find_simulator_by_name() {
   local name="$1"
+  local runtime="$2"
+  local device_list_name
   local line
+  device_list_name="$(runtime_device_list_name "$runtime")"
+  if [ -z "$device_list_name" ]; then
+    device_list_name="$runtime"
+  fi
   line="$(
-    xcrun simctl list devices \
+    xcrun simctl list devices "$device_list_name" \
       | grep -F "$name (" \
       | head -n 1 || true
   )"
@@ -211,16 +245,16 @@ ensure_simulator() {
     return
   fi
 
-  SIMULATOR_ID="$(find_simulator_by_name "$SIMULATOR_NAME")"
-  if [ -n "$SIMULATOR_ID" ]; then
-    return
-  fi
-
   local runtime
   runtime="$(runtime_identifier)"
   if [ -z "$runtime" ]; then
     echo "No available iOS Simulator runtime found. Install an iOS runtime in Xcode first." >&2
     exit 1
+  fi
+
+  SIMULATOR_ID="$(find_simulator_by_name "$SIMULATOR_NAME" "$runtime")"
+  if [ -n "$SIMULATOR_ID" ]; then
+    return
   fi
 
   local device_type="$DEFAULT_DEVICE_TYPE"
@@ -294,11 +328,74 @@ install_app() {
 
 launch_app() {
   echo "==> Launching $BUNDLE_ID"
-  if [ "${#APP_ARGS[@]}" -gt 0 ]; then
-    xcrun simctl launch --terminate-running-process "$SIMULATOR_ID" "$BUNDLE_ID" "${APP_ARGS[@]}"
-  else
-    xcrun simctl launch --terminate-running-process "$SIMULATOR_ID" "$BUNDLE_ID"
+  local timeout_seconds="${KEIPIX_LAUNCH_TIMEOUT_SECONDS:-30}"
+  if [ "$timeout_seconds" = "0" ]; then
+    if [ "${#APP_ARGS[@]}" -gt 0 ]; then
+      xcrun simctl launch --terminate-running-process "$SIMULATOR_ID" "$BUNDLE_ID" "${APP_ARGS[@]}"
+    else
+      xcrun simctl launch --terminate-running-process "$SIMULATOR_ID" "$BUNDLE_ID"
+    fi
+    return
   fi
+  case "$timeout_seconds" in
+    *[!0-9]*|"")
+      echo "KEIPIX_LAUNCH_TIMEOUT_SECONDS must be a positive integer or 0." >&2
+      exit 2
+      ;;
+  esac
+
+  (
+    if [ "${#APP_ARGS[@]}" -gt 0 ]; then
+      exec xcrun simctl launch --terminate-running-process "$SIMULATOR_ID" "$BUNDLE_ID" "${APP_ARGS[@]}"
+    else
+      exec xcrun simctl launch --terminate-running-process "$SIMULATOR_ID" "$BUNDLE_ID"
+    fi
+  ) &
+  local launch_pid=$!
+  local elapsed=0
+  while kill -0 "$launch_pid" >/dev/null 2>&1; do
+    if [ "$elapsed" -ge "$timeout_seconds" ]; then
+      kill "$launch_pid" >/dev/null 2>&1 || true
+      wait "$launch_pid" >/dev/null 2>&1 || true
+      echo "Timed out launching $BUNDLE_ID after ${timeout_seconds}s on $SIMULATOR_NAME ($SIMULATOR_ID)." >&2
+      exit 1
+    fi
+    sleep 1
+    elapsed=$((elapsed + 1))
+  done
+  wait "$launch_pid"
+}
+
+capture_screenshot() {
+  local screenshot_path="$1"
+  local timeout_seconds="${KEIPIX_SCREENSHOT_TIMEOUT_SECONDS:-30}"
+  if [ "$timeout_seconds" = "0" ]; then
+    xcrun simctl io "$SIMULATOR_ID" screenshot "$screenshot_path" >/dev/null
+    return
+  fi
+  case "$timeout_seconds" in
+    *[!0-9]*|"")
+      echo "KEIPIX_SCREENSHOT_TIMEOUT_SECONDS must be a positive integer or 0." >&2
+      exit 2
+      ;;
+  esac
+
+  (
+    exec xcrun simctl io "$SIMULATOR_ID" screenshot "$screenshot_path"
+  ) >/dev/null &
+  local screenshot_pid=$!
+  local elapsed=0
+  while kill -0 "$screenshot_pid" >/dev/null 2>&1; do
+    if [ "$elapsed" -ge "$timeout_seconds" ]; then
+      kill "$screenshot_pid" >/dev/null 2>&1 || true
+      wait "$screenshot_pid" >/dev/null 2>&1 || true
+      echo "Timed out capturing screenshot after ${timeout_seconds}s on $SIMULATOR_NAME ($SIMULATOR_ID)." >&2
+      exit 1
+    fi
+    sleep 1
+    elapsed=$((elapsed + 1))
+  done
+  wait "$screenshot_pid"
 }
 
 ensure_xcode_project
@@ -331,7 +428,7 @@ case "$MODE" in
     mkdir -p "$(dirname "$SCREENSHOT_PATH")"
     echo "==> Waiting ${KEIPIX_VERIFY_SETTLE_SECONDS:-3}s for first frame on $SIMULATOR_NAME ($SIMULATOR_ID)"
     sleep "${KEIPIX_VERIFY_SETTLE_SECONDS:-3}"
-    xcrun simctl io "$SIMULATOR_ID" screenshot "$SCREENSHOT_PATH" >/dev/null
+    capture_screenshot "$SCREENSHOT_PATH"
     echo "==> Screenshot: $SCREENSHOT_PATH"
     ;;
   --logs|logs)

@@ -19,11 +19,33 @@ KeiPix 的移动端脚本继续用 `simctl` 做 boot、install、launch 和 scre
 OS 版本差异被隔离在 `script/os27/open_device_hub_window.sh` 和
 `script/os26/open_simulator_window.sh`；通用构建、安装、启动逻辑仍集中在
 `script/build_and_run_simulator.sh`，避免每个入口重复一份移动端 runner。
+开始验证 OS 27 行为时，使用独立的 OS27 wrappers；它们会使用独立设备名、
+独立 DerivedData，并显式选择 iOS 27 runtime：
+
+```bash
+./script/os27/build_and_run_ios.sh --verify
+./script/os27/build_and_run_ipados.sh --verify
+```
+
+Xcode 27 beta 的 `simctl create` 仍接受 runtime id，但
+`simctl list devices` 需要 `iOS 27.0` 这类显示名才能按 runtime 列出现有设备。
+通用 runner 会在查找阶段自动做这层映射，避免 OS27 wrapper 重复创建同名设备。
+如果 beta 期 Device Hub / CoreSimulator 的前台切换或截图命令卡住，runner 会用
+`KEIPIX_LAUNCH_TIMEOUT_SECONDS` 和 `KEIPIX_SCREENSHOT_TIMEOUT_SECONDS` 退出并报告
+设备名与 UDID，方便清理或重试。
+OS27 wrappers 的 `--verify` 默认把 `KEIPIX_VERIFY_SETTLE_SECONDS` 提高到 `45`，
+给 fresh install 后的 LaunchServices 注册和前台切换留出时间；常规 iOS/iPadOS
+脚本仍保持较短默认值。
 
 安装 Xcode 27 的 Developer Documentation 组件后，本地文档也会成为 Xcode
 MCP documentation tool 的数据源。公开 Apple 文档尚未同步 beta 细节时，优先
 用本机 Xcode 文档确认 OS 27 / SDK 27 API、弃用项和平台行为，再把结论落到
-代码或测试里。
+代码或测试里。当前 Xcode 27 beta 的 `xcodebuild -showComponent` 还没有暴露
+`DeveloperDocumentation` component；用下面的脚本记录可探测状态：
+
+```bash
+./script/os27/developer_documentation_status.sh
+```
 
 ## Build And Run The Local App
 
@@ -73,11 +95,15 @@ KEIPIX_IPADOS_SIMULATOR_ID=<ipad-udid> ./script/build_and_run_ipados.sh --verify
 | `KEIPIX_SIMULATOR_ID` | iOS/iPadOS 共用的 Simulator UDID override |
 | `KEIPIX_IOS_SIMULATOR_ID` / `KEIPIX_IPADOS_SIMULATOR_ID` | 单平台 Simulator UDID override |
 | `KEIPIX_IOS_SIMULATOR_NAME` / `KEIPIX_IPADOS_SIMULATOR_NAME` | 自动查找或创建的 Simulator 名称 |
+| `KEIPIX_SIMULATOR_RUNTIME` | iOS/iPadOS 共用的 `simctl` runtime id override |
+| `KEIPIX_IOS_SIMULATOR_RUNTIME` / `KEIPIX_IPADOS_SIMULATOR_RUNTIME` | 单平台 `simctl` runtime id override |
 | `KEIPIX_IOS_DEVICE_TYPE` / `KEIPIX_IPADOS_DEVICE_TYPE` | 自动创建时使用的 `simctl` device type id |
 | `KEIPIX_DERIVED_DATA_PATH` | 共用 DerivedData override |
 | `KEIPIX_OPEN_DEVICE_WINDOW=0` | 只跑命令行 boot/install/launch/screenshot，不打开 Device Hub 或 Simulator 图形窗口 |
 | `KEIPIX_DEVICE_HUB_APP` | 覆盖 Xcode 27 `DeviceHub.app` 路径 |
 | `KEIPIX_SIMULATOR_APP` | 覆盖旧版 `Simulator.app` 路径 |
+| `KEIPIX_LAUNCH_TIMEOUT_SECONDS` | `simctl launch` 超时，默认 `30`；设为 `0` 可关闭 |
+| `KEIPIX_SCREENSHOT_TIMEOUT_SECONDS` | `simctl io screenshot` 超时，默认 `30`；设为 `0` 可关闭 |
 | `KEIPIX_XCODEBUILD_VERBOSE=1` | 显示完整 `xcodebuild` 日志；默认使用 `-quiet` 保持脚本输出简洁 |
 
 ## Launch Modes
