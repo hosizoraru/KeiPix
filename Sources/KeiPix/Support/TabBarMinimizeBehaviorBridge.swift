@@ -178,8 +178,7 @@ struct TabBarMinimizeBehaviorBridge: UIViewControllerRepresentable {
         }
 
         private func scrollSelectedTabContentToTop() {
-            guard let scrollView = appliedTabBarController?.selectedViewController?
-                .firstRegisteredContentScrollView(for: .bottom) else {
+            guard let scrollView = selectedTabContentScrollView() else {
                 return
             }
 
@@ -190,6 +189,16 @@ struct TabBarMinimizeBehaviorBridge: UIViewControllerRepresentable {
             )
             guard abs(scrollView.contentOffset.y - target.y) > 1 else { return }
             scrollView.setContentOffset(target, animated: UIAccessibility.isReduceMotionEnabled == false)
+        }
+
+        private func selectedTabContentScrollView() -> UIScrollView? {
+            guard let selectedViewController = appliedTabBarController?.selectedViewController else {
+                return nil
+            }
+            if let scrollView = selectedViewController.firstRegisteredContentScrollView(for: .bottom) {
+                return scrollView
+            }
+            return selectedViewController.view.firstVisibleVerticalScrollView()
         }
 
         private func applyAppearance(to tabBar: UITabBar) {
@@ -228,9 +237,9 @@ struct TabBarMinimizeBehaviorBridge: UIViewControllerRepresentable {
         }
 
         deinit {
-            let tabBar = appliedReselectionTabBar
-            let recognizer = reselectionGestureRecognizer
-            Task { @MainActor in
+            MainActor.assumeIsolated {
+                let tabBar = appliedReselectionTabBar
+                let recognizer = reselectionGestureRecognizer
                 if let recognizer {
                     tabBar?.removeGestureRecognizer(recognizer)
                 }
@@ -311,6 +320,26 @@ private extension UIViewController {
 
         for child in children.reversed() {
             if let scrollView = child.firstRegisteredContentScrollView(for: edge) {
+                return scrollView
+            }
+        }
+
+        return nil
+    }
+}
+
+private extension UIView {
+    func firstVisibleVerticalScrollView() -> UIScrollView? {
+        if let scrollView = self as? UIScrollView,
+           scrollView.window != nil,
+           scrollView.isHidden == false,
+           scrollView.alpha > 0.01,
+           scrollView.contentSize.height > scrollView.bounds.height {
+            return scrollView
+        }
+
+        for subview in subviews.reversed() {
+            if let scrollView = subview.firstVisibleVerticalScrollView() {
                 return scrollView
             }
         }
