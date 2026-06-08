@@ -223,12 +223,14 @@ struct SearchOptionsTests {
     @Test("Pixiv Web bookmark URLs point at profile bookmark surfaces")
     func pixivWebBookmarkURLs() throws {
         let bookmarksURL = try #require(PixivWebURLBuilder.userBookmarkArtworksURL(userID: "41657557"))
-        let collectionsURL = try #require(PixivWebURLBuilder.userBookmarkCollectionsURL(userID: "41657557"))
+        let createdCollectionsURL = try #require(PixivWebURLBuilder.userPublishedCollectionsURL(userID: "41657557"))
+        let bookmarkedCollectionsURL = try #require(PixivWebURLBuilder.userBookmarkCollectionsURL(userID: "41657557"))
         let allCollectionsURL = try #require(PixivWebURLBuilder.collectionsURL())
         let collectionURL = try #require(PixivWebURLBuilder.collectionURL(id: "49895345339794251171"))
 
         #expect(bookmarksURL.absoluteString == "https://www.pixiv.net/users/41657557/bookmarks/artworks")
-        #expect(collectionsURL.absoluteString == "https://www.pixiv.net/users/41657557/collections")
+        #expect(createdCollectionsURL.absoluteString == "https://www.pixiv.net/users/41657557/collections")
+        #expect(bookmarkedCollectionsURL.absoluteString == "https://www.pixiv.net/users/41657557/bookmarks/collections")
         #expect(allCollectionsURL.absoluteString == "https://www.pixiv.net/collections")
         #expect(collectionURL.absoluteString == "https://www.pixiv.net/collections/49895345339794251171")
     }

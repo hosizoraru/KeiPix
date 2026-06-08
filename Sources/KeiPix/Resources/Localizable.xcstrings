@@ -21171,6 +21171,64 @@
         }
       }
     },
+    "Open My Pixiv Collections": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open My Pixiv Collections"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "自分のPixivコレクションを開く"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "打开我的 Pixiv 珍藏册"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "開啟我的 Pixiv 珍藏冊"
+          }
+        }
+      }
+    },
+    "Open Saved Pixiv Collections": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Saved Pixiv Collections"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保存したPixivコレクションを開く"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "打开收藏的 Pixiv 珍藏册"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "開啟收藏的 Pixiv 珍藏冊"
+          }
+        }
+      }
+    },
     "Open Pixiv Web Search": {
       "extractionState": "manual",
       "localizations": {
@@ -21283,6 +21341,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "收藏的 Pixivision"
+          }
+        }
+      }
+    },
+    "My Pixiv Collections": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "My Pixiv Collections"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "自分のPixivコレクション"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "我的 Pixiv 珍藏册"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "我的 Pixiv 珍藏冊"
           }
         }
       }
@@ -21461,6 +21548,35 @@
         }
       }
     },
+    "Collections you publish on Pixiv Web appear here. Paste a collection link to open it natively.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Collections you publish on Pixiv Web appear here. Paste a collection link to open it natively."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pixiv Webで公開したコレクションがここに表示されます。コレクションリンクを貼り付けてネイティブ表示で開けます。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "你在 Pixiv Web 发布的珍藏册会显示在这里。也可以粘贴珍藏册链接，用原生界面打开。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "你在 Pixiv Web 發布的珍藏冊會顯示在這裡。也可以貼上珍藏冊連結，用原生介面開啟。"
+          }
+        }
+      }
+    },
     "Bookmarked Pixiv collections appear here. Use Pixiv Collections discovery or Pixiv Web to save collections.": {
       "extractionState": "manual",
       "localizations": {
@@ -21486,6 +21602,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "收藏過的 Pixiv 珍藏冊會顯示在這裡。可以在 Pixiv 珍藏冊發現頁或 Pixiv Web 中收藏。"
+          }
+        }
+      }
+    },
+    "Pixiv keeps bookmarked collections behind the Web session. KeiPix can open collection links now, but syncing this list needs an explicit Pixiv Web session connection.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pixiv keeps bookmarked collections behind the Web session. KeiPix can open collection links now, but syncing this list needs an explicit Pixiv Web session connection."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ブックマークしたコレクションはPixiv Webセッションの内側にあります。KeiPixはコレクションリンクを開けますが、この一覧の同期には明示的なPixiv Webセッション接続が必要です。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pixiv 将收藏的珍藏册放在 Web 会话里。KeiPix 现在可以打开珍藏册链接，但同步这个列表需要你明确连接 Pixiv Web 会话。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pixiv 將收藏的珍藏冊放在 Web 會話裡。KeiPix 現在可以開啟珍藏冊連結，但同步這個列表需要你明確連接 Pixiv Web 會話。"
           }
         }
       }

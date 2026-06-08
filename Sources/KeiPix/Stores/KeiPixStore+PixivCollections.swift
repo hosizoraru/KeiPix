@@ -18,13 +18,18 @@ extension KeiPixStore {
             switch mode {
             case .discovery:
                 pixivCollections = try await api.discoverPixivCollections()
+            case .created:
+                pixivCollections = try await api.userPublishedCollectionDetails(userID: String(session.user.id))
             case .saved:
-                pixivCollections = try await api.userCollectionDetails(userID: String(session.user.id))
+                pixivCollections = try await api.userBookmarkedCollectionDetails(userID: String(session.user.id))
             }
         } catch is CancellationError {
             pixivCollectionErrorMessage = nil
         } catch let error as URLError where error.code == .cancelled {
             pixivCollectionErrorMessage = nil
+        } catch let PixivAPIError.status(code, _) where mode == .saved && [400, 401, 403, 404].contains(code) {
+            pixivCollections = []
+            pixivCollectionErrorMessage = L10n.savedPixivCollectionsWebSessionRequiredHint
         } catch {
             pixivCollections = []
             pixivCollectionErrorMessage = error.localizedDescription

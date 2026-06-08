@@ -870,6 +870,8 @@ private struct ContentColumnView: View {
             BookmarkTagsView(store: store)
         } else if store.selectedRoute == .pixivCollections {
             PixivCollectionsView(store: store)
+        } else if store.selectedRoute == .myPixivCollections {
+            PixivCollectionsView(store: store, mode: .created)
         } else if store.selectedRoute == .savedPixivCollections {
             PixivCollectionsView(store: store, mode: .saved)
         } else if store.selectedRoute == .history {

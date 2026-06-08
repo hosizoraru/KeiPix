@@ -149,4 +149,51 @@ struct PixivCollectionModelsTests {
         #expect(collections.last?.artworks.isEmpty == true)
         #expect(collections.last?.pixivURL?.absoluteString == "https://www.pixiv.net/collections/20446109143477266498")
     }
+
+    @Test("Pixiv Web user collection lists map owned and bookmarked collection cards")
+    func userCollectionListsMapOwnedAndBookmarkedCollectionCards() throws {
+        let json = """
+        {
+          "error": false,
+          "message": "",
+          "body": {
+            "works": [
+              {
+                "id": "49895345339794251171",
+                "userId": "110913610",
+                "userName": "HaiHome[ソルト]",
+                "profileImageUrl": "https://i.pximg.net/user-profile/img/2024/11/03/11/53/54/26556070_170.png",
+                "title": "❤️ソルト❤️",
+                "tags": ["私の推し", "ソルト", "音ゲー"],
+                "caption": "",
+                "bookmarkCount": 287,
+                "viewCount": 119719,
+                "thumbnailImageUrl": "https://embed.pixiv.net/next/collection/49895345339794251171/hash/2/288x288/thumbnail",
+                "status": "public",
+                "publishedDateTime": "2025-11-23 08:55:07"
+              }
+            ],
+            "total": 1
+          }
+        }
+        """
+
+        let owned = try JSONDecoder().decode(
+            PixivWebResponse<PixivUserCollectionsResponse>.self,
+            from: Data(json.utf8)
+        )
+        let bookmarked = try JSONDecoder().decode(
+            PixivWebResponse<PixivBookmarkedCollectionsResponse>.self,
+            from: Data(json.utf8)
+        )
+
+        #expect(owned.error == false)
+        #expect(owned.body.total == 1)
+        #expect(owned.body.collections.map(\.id) == ["49895345339794251171"])
+        #expect(owned.body.collections.first?.title == "❤️ソルト❤️")
+        #expect(owned.body.collections.first?.owner.id == 110_913_610)
+        #expect(owned.body.collections.first?.bookmarkCount == 287)
+        #expect(owned.body.collections.first?.pixivURL?.absoluteString == "https://www.pixiv.net/collections/49895345339794251171")
+        #expect(bookmarked.body.collections.map(\.id) == owned.body.collections.map(\.id))
+    }
 }

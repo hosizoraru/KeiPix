@@ -148,6 +148,7 @@ struct MobileBottomTabConfigurationTests {
         #expect(bookmarkRoutes.contains(.pixivCollections) == false)
         #expect(bookmarkRoutes.contains(.pixivCollectionWorks) == false)
         #expect(bookmarkRoutes.contains(.savedPixivisionArticles))
+        #expect(bookmarkRoutes.contains(.myPixivCollections))
         #expect(bookmarkRoutes.contains(.savedPixivCollections))
         #expect(bookmarkRoutes.contains(.allFollowing) == false)
         #expect(bookmarkRoutes.contains(.followingCreators))
@@ -190,6 +191,7 @@ struct MobileBottomTabConfigurationTests {
         #expect(MobileBottomTabKind.kind(containing: .pixivCollections) == .illustrations)
         #expect(MobileBottomTabKind.kind(containing: .pixivCollectionWorks) == .illustrations)
         #expect(MobileBottomTabKind.kind(containing: .savedPixivisionArticles) == .bookmarks)
+        #expect(MobileBottomTabKind.kind(containing: .myPixivCollections) == .bookmarks)
         #expect(MobileBottomTabKind.kind(containing: .savedPixivCollections) == .bookmarks)
     }
 

@@ -354,6 +354,7 @@ enum MobileRouteMenuConfiguration {
                         .privateBookmarks,
                         .bookmarkTags,
                         .savedPixivisionArticles,
+                        .myPixivCollections,
                         .savedPixivCollections
                     ]
                 ),

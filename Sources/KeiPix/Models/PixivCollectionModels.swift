@@ -2,12 +2,15 @@ import Foundation
 
 enum PixivCollectionListMode: String, Sendable {
     case discovery
+    case created
     case saved
 
     var route: PixivRoute {
         switch self {
         case .discovery:
             .pixivCollections
+        case .created:
+            .myPixivCollections
         case .saved:
             .savedPixivCollections
         }
@@ -17,6 +20,8 @@ enum PixivCollectionListMode: String, Sendable {
         switch self {
         case .discovery:
             L10n.pixivCollections
+        case .created:
+            L10n.myPixivCollections
         case .saved:
             L10n.savedPixivCollections
         }
@@ -26,8 +31,21 @@ enum PixivCollectionListMode: String, Sendable {
         switch self {
         case .discovery:
             L10n.pixivCollectionsEmptyHint
+        case .created:
+            L10n.myPixivCollectionsEmptyHint
         case .saved:
             L10n.savedPixivCollectionsEmptyHint
+        }
+    }
+
+    var webActionTitle: String {
+        switch self {
+        case .discovery:
+            L10n.openPixivWebCollections
+        case .created:
+            L10n.openPixivWebMyCollections
+        case .saved:
+            L10n.openPixivWebSavedCollections
         }
     }
 }
@@ -132,6 +150,57 @@ struct PixivCollectionSearchResponse: Decodable, Sendable {
             let summariesByID = Dictionary(uniqueKeysWithValues: summaries.map { ($0.id, $0) })
             collections = orderedIDs.compactMap { summariesByID[$0]?.detail(artworks: []) }
         }
+    }
+}
+
+struct PixivUserCollectionsResponse: Decodable, Sendable {
+    let collections: [PixivCollectionDetail]
+    let total: Int
+
+    private enum CodingKeys: String, CodingKey {
+        case works
+        case thumbnails
+        case total
+    }
+
+    private enum ThumbnailKeys: String, CodingKey {
+        case collection
+    }
+
+    init(collections: [PixivCollectionDetail], total: Int) {
+        self.collections = collections
+        self.total = total
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let works = try container.decodeIfPresent([PixivCollectionSummary].self, forKey: .works) ?? []
+        let thumbnailSummaries: [PixivCollectionSummary]
+        if let thumbnails = try? container.nestedContainer(keyedBy: ThumbnailKeys.self, forKey: .thumbnails) {
+            thumbnailSummaries = try thumbnails.decodeIfPresent([PixivCollectionSummary].self, forKey: .collection) ?? []
+        } else {
+            thumbnailSummaries = []
+        }
+
+        let summaries = works.isEmpty ? thumbnailSummaries : works
+        collections = summaries.map { $0.detail(artworks: []) }
+        total = try container.decodeIfPresent(Int.self, forKey: .total) ?? summaries.count
+    }
+}
+
+struct PixivBookmarkedCollectionsResponse: Decodable, Sendable {
+    let collections: [PixivCollectionDetail]
+    let total: Int
+
+    init(collections: [PixivCollectionDetail], total: Int) {
+        self.collections = collections
+        self.total = total
+    }
+
+    init(from decoder: Decoder) throws {
+        let response = try PixivUserCollectionsResponse(from: decoder)
+        collections = response.collections
+        total = response.total
     }
 }
 

@@ -94,11 +94,11 @@ struct PixivCollectionsView: View {
 
                 if let webURL = collectionsWebURL {
                     Link(destination: webURL) {
-                        Label(L10n.openPixivWebCollections, systemImage: "safari")
+                        Label(mode.webActionTitle, systemImage: "safari")
                     }
                     .os26GlassIconButton()
-                    .help(L10n.openPixivWebCollections)
-                    .accessibilityLabel(L10n.openPixivWebCollections)
+                    .help(mode.webActionTitle)
+                    .accessibilityLabel(mode.webActionTitle)
                 }
             }
         }
@@ -133,7 +133,7 @@ struct PixivCollectionsView: View {
 
                 if let webURL = collectionsWebURL {
                     Link(destination: webURL) {
-                        Label(L10n.openPixivWebCollections, systemImage: "safari")
+                        Label(mode.webActionTitle, systemImage: "safari")
                     }
                     .os26GlassButton()
                 }
@@ -160,6 +160,9 @@ struct PixivCollectionsView: View {
         switch mode {
         case .discovery:
             return PixivWebURLBuilder.collectionsURL()
+        case .created:
+            guard let userID = store.session?.user.id else { return nil }
+            return PixivWebURLBuilder.userPublishedCollectionsURL(userID: String(userID))
         case .saved:
             guard let userID = store.session?.user.id else { return nil }
             return PixivWebURLBuilder.userBookmarkCollectionsURL(userID: String(userID))

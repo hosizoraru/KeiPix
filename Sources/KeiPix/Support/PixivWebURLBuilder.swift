@@ -13,6 +13,10 @@ enum PixivWebURLBuilder {
     }
 
     static func userBookmarkCollectionsURL(userID: String) -> URL? {
+        userBookmarkedCollectionsURL(userID: userID)
+    }
+
+    static func userPublishedCollectionsURL(userID: String) -> URL? {
         let trimmed = userID.trimmingCharacters(in: .whitespacesAndNewlines)
         guard trimmed.isEmpty == false else { return nil }
 
@@ -20,6 +24,17 @@ enum PixivWebURLBuilder {
         components.scheme = "https"
         components.host = "www.pixiv.net"
         components.path = "/users/\(trimmed)/collections"
+        return components.url
+    }
+
+    static func userBookmarkedCollectionsURL(userID: String) -> URL? {
+        let trimmed = userID.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard trimmed.isEmpty == false else { return nil }
+
+        var components = URLComponents()
+        components.scheme = "https"
+        components.host = "www.pixiv.net"
+        components.path = "/users/\(trimmed)/bookmarks/collections"
         return components.url
     }
 
