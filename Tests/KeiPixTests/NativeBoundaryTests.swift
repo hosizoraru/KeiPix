@@ -850,6 +850,14 @@ struct NativeBoundaryTests {
             contentsOf: root.appending(path: "Sources/KeiPix/Stores/KeiPixStore+PixivCollections.swift"),
             encoding: .utf8
         )
+        let api = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Services/PixivAPI.swift"),
+            encoding: .utf8
+        )
+        let collectionModels = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Models/PixivCollectionModels.swift"),
+            encoding: .utf8
+        )
         let mobileConfiguration = try String(
             contentsOf: root.appending(path: "Sources/KeiPix/Models/MobileBottomTabConfiguration.swift"),
             encoding: .utf8
@@ -881,6 +889,22 @@ struct NativeBoundaryTests {
         #expect(collectionsView.contains("onPrefetchItems: prefetchNativeItems"))
         #expect(collectionsView.contains("collection.coverImageURL"))
         #expect(collectionsView.contains("store.loadMorePixivCollections(mode: mode)"))
+        #expect(collectionsView.contains("PixivCollectionDiscoveryScope.allCases"))
+        #expect(collectionsView.contains(".platformPageHeader("))
+        #expect(collectionsView.contains("pixivCollectionTitleActions"))
+        #expect(collectionsView.contains("OS26GlassCompatibleSegmentedPicker"))
+        #expect(collectionsView.contains("wideDiscoveryControls"))
+        #expect(collectionsView.contains("discoveryScopeSegmentOptions"))
+        #expect(collectionsView.contains("compactDiscoverySelectionMenu"))
+        #expect(collectionsView.contains("PixivCollectionDropdownMenuLabel"))
+        #expect(collectionsView.contains("discoveryTagMenu"))
+        #expect(collectionsView.contains("discoveryTagPicker"))
+        #expect(collectionsView.contains("pixivCollectionMoreMenu"))
+        #expect(collectionsView.contains("usesCompactDiscoveryChrome"))
+        #expect(collectionsView.contains("Label(mode.title, systemImage") == false)
+        #expect(collectionsView.contains("store.currentPixivCollectionDiscoverySelection.reloadID"))
+        #expect(collectionsView.contains("store.selectPixivCollectionDiscoveryScope(scope)"))
+        #expect(collectionsView.contains("store.selectPixivCollectionDiscoveryTag(tag)"))
         #expect(collectionsView.contains("Label(L10n.refresh, systemImage: \"arrow.clockwise\")") == false)
         #expect(collectionsView.contains("store.isPixivWebSessionPresented = true"))
         #expect(collectionsView.contains("L10n.connectPixivWebSession"))
@@ -901,11 +925,22 @@ struct NativeBoundaryTests {
         #expect(collectionsStore.contains("pixivCollectionNextOffset"))
         #expect(collectionsStore.contains("isLoadingMorePixivCollections"))
         #expect(collectionsStore.contains("loadMorePixivCollections(mode:"))
+        #expect(collectionsStore.contains("hydratePixivCollectionDiscoveryMetadataIfNeeded"))
+        #expect(collectionsStore.contains("api.pixivCollectionRecommendedTags()"))
+        #expect(collectionsStore.contains("api.pixivCollectionTop()"))
+        #expect(collectionsStore.contains("currentPixivCollectionDiscoverySelection.searchRequest"))
         #expect(collectionsStore.contains("mode == .saved, pixivWebSession == nil"))
         #expect(collectionsStore.contains("L10n.savedPixivCollectionsWebSessionRequiredHint"))
         #expect(collectionsStore.contains(".appTransportSecurityRequiresSecureConnection"))
         #expect(collectionsStore.contains("clearSavedPixivCollectionWebSessionAfterFailure"))
         #expect(collectionsStore.contains("pixivWebSession = nil"))
+        #expect(api.contains("/ajax/top/collection"))
+        #expect(api.contains("/ajax/collections/search/recommended_tags"))
+        #expect(api.contains("request.queryItems("))
+        #expect(collectionModels.contains("enum PixivCollectionDiscoveryScope"))
+        #expect(collectionModels.contains("struct PixivCollectionDiscoverySelection"))
+        #expect(collectionModels.contains("struct PixivCollectionTopResponse"))
+        #expect(collectionModels.contains("struct PixivCollectionRecommendedTagsResponse"))
         #expect(galleryBridge.contains("collection.masonryAspectRatio"))
         #expect(mobileConfiguration.contains(".pixivCollections"))
         #expect(mobileConfiguration.contains(".savedPixivisionArticles"))

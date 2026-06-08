@@ -18,10 +18,6 @@ struct PixivCollectionsView: View {
         Group {
             if store.session == nil {
                 PixivSignedOutStateView(store: store)
-            } else if store.isLoadingPixivCollections, store.pixivCollections.isEmpty {
-                OS26LibraryLoadingView(title: L10n.loading, systemImage: "rectangle.stack.badge.person.crop")
-            } else if store.pixivCollections.isEmpty {
-                emptyState
             } else {
                 content
             }
@@ -29,7 +25,17 @@ struct PixivCollectionsView: View {
         .task(id: refreshTaskID) {
             await refresh(showFeedback: false)
         }
+        .platformPageHeader(
+            title: mode.title,
+            status: statusText,
+            statusSystemImage: mode.route.systemImage
+        ) {
+            pixivCollectionTitleActions
+        }
         .platformPageNavigationChrome(title: mode.title, status: statusText)
+        .toolbar {
+            pixivCollectionToolbar
+        }
         .overlay(alignment: .bottom) {
             if let actionMessage {
                 FloatingStatusBanner(maxWidth: 520) {
@@ -50,12 +56,21 @@ struct PixivCollectionsView: View {
     }
 
     private var content: some View {
-        VStack(spacing: 0) {
-            header
+        contentBody
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+    }
 
+    @ViewBuilder
+    private var contentBody: some View {
+        if store.isLoadingPixivCollections, store.pixivCollections.isEmpty {
+            OS26LibraryLoadingView(title: L10n.loading, systemImage: "rectangle.stack.badge.person.crop")
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+        } else if store.pixivCollections.isEmpty {
+            emptyState
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+        } else {
             nativeCollectionView
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
     }
 
     private var nativeCollectionView: some View {
@@ -76,49 +91,192 @@ struct PixivCollectionsView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
-    private var header: some View {
-        HStack(spacing: 12) {
-            Label(mode.title, systemImage: mode.route.systemImage)
-                .font(.headline.weight(.semibold))
-                .lineLimit(1)
-                .frame(maxWidth: .infinity, alignment: .leading)
-
+    @ViewBuilder
+    private var pixivCollectionTitleActions: some View {
+        if store.session != nil {
             OS26LibraryActionRail {
-                Button {
-                    Task {
-                        let message = await store.openPixivLinkFromClipboard()
-                        actionMessage = message
-                    }
-                } label: {
-                    Label(L10n.openPixivLinkFromClipboard, systemImage: "doc.on.clipboard")
+                if mode == .discovery, usesCompactDiscoveryChrome {
+                    compactDiscoverySelectionMenu
                 }
-                .os26GlassIconButton()
-                .help(L10n.openPixivLinkFromClipboard)
-                .accessibilityLabel(L10n.openPixivLinkFromClipboard)
 
-                if let webURL = collectionsWebURL {
-                    Link(destination: webURL) {
-                        Label(mode.webActionTitle, systemImage: "safari")
-                    }
-                    .os26GlassIconButton()
-                    .help(mode.webActionTitle)
-                    .accessibilityLabel(mode.webActionTitle)
-                }
+                pixivCollectionMoreMenu
             }
+            .controlSize(.small)
         }
-        .padding(.horizontal, 18)
-        .padding(.vertical, 12)
-        .platformGlassControlBar(verticalPadding: 5, topPadding: 0, bottomPadding: 6)
     }
 
-    private var emptyState: some View {
-        OS26LibraryUnavailableView(
-            title: L10n.noPixivCollections,
-            subtitle: emptyStateSubtitle,
-            systemImage: "rectangle.stack.badge.person.crop"
-        ) {
-            emptyStateActions
+    @ToolbarContentBuilder
+    private var pixivCollectionToolbar: some ToolbarContent {
+        if store.session != nil {
+            #if os(iOS)
+            if mode == .discovery, usesCompactDiscoveryChrome == false {
+                ToolbarItem(placement: .principal) {
+                    wideDiscoveryControls
+                        .controlSize(.small)
+                }
+            }
+            #else
+            if mode == .discovery {
+                ToolbarItem(placement: .principal) {
+                    wideDiscoveryControls
+                        .controlSize(.small)
+                }
+            }
+
+            ToolbarItem(placement: .secondaryAction) {
+                pixivCollectionMoreMenu
+            }
+            #endif
         }
+    }
+
+    private var wideDiscoveryControls: some View {
+        GlassEffectContainer(spacing: 8) {
+            HStack(spacing: 8) {
+                OS26GlassCompatibleSegmentedPicker(
+                    L10n.pixivCollections,
+                    selection: discoveryScopeBinding,
+                    minWidth: 270,
+                    idealWidth: 330,
+                    maxWidth: 390
+                ) {
+                    discoveryScopeSegmentOptions
+                }
+
+                discoveryTagMenu
+            }
+        }
+    }
+
+    private var compactDiscoverySelectionMenu: some View {
+        Menu {
+            Picker(L10n.pixivCollections, selection: discoveryScopeBinding) {
+                discoveryScopePickerOptions
+            }
+            .pickerStyle(.inline)
+
+            if store.pixivCollectionDiscoveryScope != .everyone {
+                Divider()
+                discoveryTagPicker
+            }
+        } label: {
+            PixivCollectionDropdownMenuLabel(
+                title: compactDiscoverySelectionTitle,
+                fallbackTitle: store.pixivCollectionDiscoveryScope.title,
+                compactTitle: L10n.pixivCollections,
+                systemImage: store.pixivCollectionDiscoveryScope.systemImage,
+                maxWidth: 142
+            )
+        }
+        .os26GlassButton(prominent: store.currentPixivCollectionDiscoverySelection.tag != nil)
+        .help(compactDiscoveryAccessibilityTitle)
+        .accessibilityLabel(compactDiscoveryAccessibilityTitle)
+    }
+
+    @ViewBuilder
+    private var discoveryScopePickerOptions: some View {
+        ForEach(PixivCollectionDiscoveryScope.allCases) { scope in
+            Label(scope.title, systemImage: scope.systemImage).tag(scope)
+        }
+    }
+
+    @ViewBuilder
+    private var discoveryScopeSegmentOptions: some View {
+        ForEach(PixivCollectionDiscoveryScope.allCases) { scope in
+            Text(scope.title).tag(scope)
+        }
+    }
+
+    @ViewBuilder
+    private var discoveryTagMenu: some View {
+        if store.pixivCollectionDiscoveryScope == .everyone {
+            EmptyView()
+        } else {
+            Menu {
+                discoveryTagPicker
+            } label: {
+                PixivCollectionDropdownMenuLabel(
+                    title: discoverySecondaryTitle,
+                    fallbackTitle: L10n.pixivCollectionTags,
+                    compactTitle: L10n.pixivCollectionTags,
+                    systemImage: discoverySecondarySystemImage,
+                    maxWidth: 210
+                )
+            }
+            .os26GlassButton(prominent: store.currentPixivCollectionDiscoverySelection.tag != nil)
+            .help(L10n.pixivCollectionTags)
+            .accessibilityLabel("\(L10n.pixivCollectionTags): \(discoverySecondaryTitle)")
+        }
+    }
+
+    private var pixivCollectionMoreMenu: some View {
+        Menu {
+            if mode == .saved, store.pixivWebSession == nil {
+                Button {
+                    store.isPixivWebSessionPresented = true
+                } label: {
+                    Label(L10n.connectPixivWebSession, systemImage: "globe.badge.chevron.backward")
+                }
+
+                Divider()
+            }
+
+            Button {
+                Task {
+                    let message = await store.openPixivLinkFromClipboard()
+                    actionMessage = message
+                }
+            } label: {
+                Label(L10n.openPixivLinkFromClipboard, systemImage: "doc.on.clipboard")
+            }
+
+            if let webURL = collectionsWebURL {
+                Link(destination: webURL) {
+                    Label(mode.webActionTitle, systemImage: "safari")
+                }
+            }
+        } label: {
+            Label(L10n.moreActions, systemImage: "ellipsis.circle")
+        }
+        .os26GlassIconButton()
+        .help(L10n.moreActions)
+        .accessibilityLabel(L10n.moreActions)
+    }
+
+    private var discoveryTagPicker: some View {
+        Picker(L10n.pixivCollectionTags, selection: discoveryTagBinding) {
+            Label(defaultDiscoveryTagTitle, systemImage: "sparkles")
+                .tag(nil as String?)
+
+            ForEach(store.pixivCollectionDiscoveryTagsForCurrentScope) { tag in
+                Label(tag.displayTitle, systemImage: "number")
+                    .tag(Optional(tag.name))
+            }
+        }
+        .pickerStyle(.inline)
+    }
+
+    @ViewBuilder
+    private var emptyState: some View {
+        if showsEmptyStateActions {
+            OS26LibraryUnavailableView(
+                title: L10n.noPixivCollections,
+                subtitle: emptyStateSubtitle,
+                systemImage: "rectangle.stack.badge.person.crop"
+            ) {
+                emptyStateActions
+            }
+        } else {
+            OS26LibraryUnavailableView(
+                title: L10n.noPixivCollections,
+                subtitle: emptyStateSubtitle,
+                systemImage: "rectangle.stack.badge.person.crop"
+            )
+        }
+    }
+
+    private var showsEmptyStateActions: Bool {
+        mode == .saved && store.pixivWebSession == nil
     }
 
     private var emptyStateActions: some View {
@@ -144,29 +302,6 @@ struct PixivCollectionsView: View {
                 Label(L10n.connectPixivWebSession, systemImage: "globe.badge.chevron.backward")
             }
             .os26GlassButton(prominent: true)
-            .lineLimit(2)
-            .fixedSize(horizontal: false, vertical: true)
-            .frame(maxWidth: fillWidth ? .infinity : nil)
-        }
-
-        Button {
-            Task {
-                let message = await store.openPixivLinkFromClipboard()
-                actionMessage = message
-            }
-        } label: {
-            Label(L10n.openPixivLinkFromClipboard, systemImage: "doc.on.clipboard")
-        }
-        .os26GlassButton(prominent: mode != .saved || store.pixivWebSession != nil)
-        .lineLimit(2)
-        .fixedSize(horizontal: false, vertical: true)
-        .frame(maxWidth: fillWidth ? .infinity : nil)
-
-        if let webURL = collectionsWebURL {
-            Link(destination: webURL) {
-                Label(mode.webActionTitle, systemImage: "safari")
-            }
-            .os26GlassButton()
             .lineLimit(2)
             .fixedSize(horizontal: false, vertical: true)
             .frame(maxWidth: fillWidth ? .infinity : nil)
@@ -215,6 +350,7 @@ struct PixivCollectionsView: View {
     private var contentReloadToken: Int {
         var hasher = Hasher()
         hasher.combine(store.pixivCollections.count)
+        hasher.combine(store.currentPixivCollectionDiscoverySelection.reloadID)
         hasher.combine(store.pixivCollections.first?.id)
         hasher.combine(store.pixivCollections.first?.coverImageURL?.absoluteString)
         hasher.combine(store.pixivCollections.last?.id)
@@ -229,7 +365,73 @@ struct PixivCollectionsView: View {
     }
 
     private var refreshTaskID: String {
-        "\(mode.rawValue)-\(store.routeRefreshGeneration)"
+        if mode == .discovery {
+            return "\(mode.rawValue)-\(store.currentPixivCollectionDiscoverySelection.reloadID)-\(store.routeRefreshGeneration)"
+        }
+        return "\(mode.rawValue)-\(store.routeRefreshGeneration)"
+    }
+
+    private var discoveryScopeBinding: Binding<PixivCollectionDiscoveryScope> {
+        Binding {
+            store.pixivCollectionDiscoveryScope
+        } set: { scope in
+            lastAutoLoadMoreOffset = nil
+            store.selectPixivCollectionDiscoveryScope(scope)
+        }
+    }
+
+    private var discoveryTagBinding: Binding<String?> {
+        Binding {
+            store.pixivCollectionDiscoverySelectedTag
+        } set: { tagName in
+            lastAutoLoadMoreOffset = nil
+            guard let tagName,
+                  let tag = store.pixivCollectionDiscoveryTagsForCurrentScope.first(where: { $0.name == tagName }) else {
+                store.selectPixivCollectionDiscoveryTag(nil)
+                return
+            }
+            store.selectPixivCollectionDiscoveryTag(tag)
+        }
+    }
+
+    private var usesCompactDiscoveryChrome: Bool {
+        #if os(iOS)
+        if UIDevice.current.userInterfaceIdiom == .phone || horizontalSizeClass == .compact {
+            return true
+        }
+        #endif
+        return false
+    }
+
+    private var defaultDiscoveryTagTitle: String {
+        switch store.pixivCollectionDiscoveryScope {
+        case .discover:
+            return L10n.recommendedPixivCollections
+        case .everyone:
+            return L10n.popularPixivCollections
+        case .tags:
+            return L10n.recommendedPixivCollections
+        }
+    }
+
+    private var discoverySecondaryTitle: String {
+        store.currentPixivCollectionDiscoverySelection.tag.map { "#\($0)" } ?? defaultDiscoveryTagTitle
+    }
+
+    private var discoverySecondarySystemImage: String {
+        store.currentPixivCollectionDiscoverySelection.tag == nil ? "sparkles" : "number"
+    }
+
+    private var compactDiscoverySelectionTitle: String {
+        if let tag = store.currentPixivCollectionDiscoverySelection.tag {
+            return "#\(tag)"
+        }
+
+        return store.pixivCollectionDiscoveryScope.title
+    }
+
+    private var compactDiscoveryAccessibilityTitle: String {
+        "\(store.pixivCollectionDiscoveryScope.title): \(discoverySecondaryTitle)"
     }
 
     private var collectionsWebURL: URL? {
@@ -327,6 +529,41 @@ struct PixivCollectionsView: View {
         try? await Task.sleep(for: .seconds(2))
         if actionMessage == message {
             actionMessage = nil
+        }
+    }
+}
+
+private struct PixivCollectionDropdownMenuLabel: View {
+    let title: String
+    let fallbackTitle: String
+    let compactTitle: String
+    let systemImage: String
+    let maxWidth: CGFloat
+
+    var body: some View {
+        ViewThatFits(in: .horizontal) {
+            label(title)
+            label(fallbackTitle)
+            label(compactTitle)
+            Image(systemName: systemImage)
+                .symbolRenderingMode(.hierarchical)
+        }
+        .font(.subheadline.weight(.semibold))
+        .lineLimit(1)
+        .truncationMode(.middle)
+        .frame(maxWidth: maxWidth)
+    }
+
+    private func label(_ title: String) -> some View {
+        HStack(spacing: 6) {
+            Image(systemName: systemImage)
+                .symbolRenderingMode(.hierarchical)
+            Text(title)
+                .lineLimit(1)
+                .truncationMode(.middle)
+            Image(systemName: "chevron.down")
+                .font(.caption2.weight(.bold))
+                .foregroundStyle(.tertiary)
         }
     }
 }
