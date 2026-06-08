@@ -75,14 +75,52 @@ struct PixivWebProfileAllResponse: Decodable, Sendable {
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         let body = try container.nestedContainer(keyedBy: BodyKeys.self, forKey: .body)
-        illustIDs = Self.sortedIDs(from: try body.decodeIfPresent([String: EmptyJSONValue].self, forKey: .illusts) ?? [:])
-        mangaIDs = Self.sortedIDs(from: try body.decodeIfPresent([String: EmptyJSONValue].self, forKey: .manga) ?? [:])
-        collectionIDs = try body.decodeIfPresent([String].self, forKey: .collectionIDs)
-            ?? Self.sortedCollectionIDs(from: try body.decodeIfPresent([String: EmptyJSONValue].self, forKey: .collections) ?? [:])
+        illustIDs = Self.numericIDs(from: body, forKey: .illusts)
+        mangaIDs = Self.numericIDs(from: body, forKey: .manga)
+        collectionIDs = Self.collectionIDs(from: body)
     }
 
     private static func sortedIDs(from dictionary: [String: EmptyJSONValue]) -> [Int] {
         dictionary.keys.compactMap(Int.init).sorted(by: >)
+    }
+
+    private static func numericIDs(from body: KeyedDecodingContainer<BodyKeys>, forKey key: BodyKeys) -> [Int] {
+        if let dictionary = try? body.decode([String: EmptyJSONValue].self, forKey: key) {
+            return sortedIDs(from: dictionary)
+        }
+        if let stringIDs = try? body.decode([String].self, forKey: key) {
+            return stringIDs.compactMap(Int.init).sorted(by: >)
+        }
+        if let intIDs = try? body.decode([Int].self, forKey: key) {
+            return intIDs.sorted(by: >)
+        }
+        return []
+    }
+
+    private static func collectionIDs(from body: KeyedDecodingContainer<BodyKeys>) -> [String] {
+        if let ids = try? body.decode([String].self, forKey: .collectionIDs) {
+            return normalizedCollectionIDs(from: ids)
+        }
+        if let ids = try? body.decode([Int].self, forKey: .collectionIDs) {
+            return ids.map(String.init)
+        }
+        if let dictionary = try? body.decode([String: EmptyJSONValue].self, forKey: .collections) {
+            return sortedCollectionIDs(from: dictionary)
+        }
+        if let ids = try? body.decode([String].self, forKey: .collections) {
+            return normalizedCollectionIDs(from: ids)
+        }
+        if let ids = try? body.decode([Int].self, forKey: .collections) {
+            return ids.map(String.init)
+        }
+        return []
+    }
+
+    private static func normalizedCollectionIDs(from ids: [String]) -> [String] {
+        ids.compactMap { id in
+            let trimmed = id.trimmingCharacters(in: .whitespacesAndNewlines)
+            return trimmed.isEmpty ? nil : trimmed
+        }
     }
 
     private static func sortedCollectionIDs(from dictionary: [String: EmptyJSONValue]) -> [String] {

@@ -65,6 +65,29 @@ struct CreatorTagModelsTests {
         #expect(response.collectionIDs == ["49895345339794251171"])
     }
 
+    @Test("Pixiv Web profile/all tolerates empty array sections")
+    func profileAllToleratesEmptyArraySections() throws {
+        let json = """
+        {
+          "error": false,
+          "message": "",
+          "body": {
+            "illusts": [],
+            "manga": [],
+            "collections": [],
+            "collectionIds": [],
+            "novels": []
+          }
+        }
+        """
+
+        let response = try JSONDecoder().decode(PixivWebProfileAllResponse.self, from: Data(json.utf8))
+
+        #expect(response.illustIDs.isEmpty)
+        #expect(response.mangaIDs.isEmpty)
+        #expect(response.collectionIDs.isEmpty)
+    }
+
     @Test("Pixiv Web profile/illusts summary maps into a gallery artwork")
     func profileIllustSummaryMapsToArtwork() throws {
         let json = """
