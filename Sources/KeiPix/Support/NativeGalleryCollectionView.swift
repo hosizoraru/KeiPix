@@ -6,6 +6,7 @@ enum NativeGalleryCollectionItem: Hashable, Identifiable {
     case cachedStatus
     case popularPreview
     case artwork(PixivArtwork)
+    case pixivCollection(PixivCollectionDetail)
     case loadMore
 
     var id: String {
@@ -20,6 +21,8 @@ enum NativeGalleryCollectionItem: Hashable, Identifiable {
             "popular-preview"
         case .artwork(let artwork):
             "artwork-\(artwork.id)"
+        case .pixivCollection(let collection):
+            "pixiv-collection-\(collection.id)"
         case .loadMore:
             "load-more"
         }
@@ -31,17 +34,21 @@ enum NativeGalleryCollectionItem: Hashable, Identifiable {
     }
 
     var artworkAspectRatio: CGFloat {
-        guard case .artwork(let artwork) = self else {
+        switch self {
+        case .artwork(let artwork):
+            return ArtworkMasonryPresentation(artwork: artwork).aspectRatio
+        case .pixivCollection(let collection):
+            return collection.masonryAspectRatio
+        case .loading, .empty, .cachedStatus, .popularPreview, .loadMore:
             return ArtworkMasonryPresentation.fallbackAspectRatio
         }
-        return ArtworkMasonryPresentation(artwork: artwork).aspectRatio
     }
 
     var isFullWidth: Bool {
         switch self {
         case .loading, .empty, .cachedStatus, .popularPreview, .loadMore:
             true
-        case .artwork:
+        case .artwork, .pixivCollection:
             false
         }
     }
@@ -52,6 +59,8 @@ enum NativeGalleryCollectionItem: Hashable, Identifiable {
             L10n.loading
         case .artwork(let artwork):
             "\(artwork.title) · \(artwork.user.name)"
+        case .pixivCollection(let collection):
+            collection.title.isEmpty ? L10n.pixivCollection : "\(collection.title) · \(collection.owner.name)"
         case .empty:
             L10n.noArtworkTitle
         case .loadMore:
@@ -141,7 +150,7 @@ enum NativeGalleryCollectionLayout: Equatable {
                  .masonry(_, let loadMoreHeight):
                 loadMoreHeight
             }
-        case .artwork:
+        case .artwork, .pixivCollection:
             1
         }
     }

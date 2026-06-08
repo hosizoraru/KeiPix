@@ -863,7 +863,16 @@ struct NativeBoundaryTests {
             encoding: .utf8
         )
 
-        #expect(collectionsView.contains("NativeAdaptiveGridCollectionView("))
+        #expect(collectionsView.contains("NativeGalleryCollectionView("))
+        #expect(collectionsView.contains("NativeGalleryCollectionItem.pixivCollection"))
+        #expect(collectionsView.contains("onNearContentEnd: nearContentEndAction"))
+        #expect(collectionsView.contains("private var nearContentEndAction: (() -> Void)?"))
+        #expect(collectionsView.contains("OS26PaginationFooter("))
+        #expect(collectionsView.contains("store.loadMorePixivCollections(mode: mode)"))
+        #expect(collectionsView.contains("Label(L10n.refresh, systemImage: \"arrow.clockwise\")") == false)
+        #expect(collectionsView.contains("store.isPixivWebSessionPresented = true"))
+        #expect(collectionsView.contains("L10n.connectPixivWebSession"))
+        #expect(collectionsView.contains("pixivCollectionTotalCount"))
         #expect(collectionsView.contains("try await store.openPixivCollection(id: collection.id, sourceRoute: mode.route)"))
         #expect(collectionsView.contains("private var emptyStateActions"))
         #expect(collectionsView.contains("ViewThatFits"))

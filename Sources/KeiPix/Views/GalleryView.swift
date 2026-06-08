@@ -566,6 +566,8 @@ private struct GalleryFeedView: View {
             } else {
                 nativeMasonryArtworkTile(artwork)
             }
+        case .pixivCollection:
+            EmptyView()
         case .loadMore:
             LoadMoreTile(store: store)
         }

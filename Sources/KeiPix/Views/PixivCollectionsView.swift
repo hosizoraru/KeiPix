@@ -4,6 +4,7 @@ struct PixivCollectionsView: View {
     @Bindable var store: KeiPixStore
     let mode: PixivCollectionListMode
     @State private var actionMessage: String?
+    @State private var lastAutoLoadMoreOffset: Int?
 
     init(store: KeiPixStore, mode: PixivCollectionListMode = .discovery) {
         self.store = store
@@ -23,7 +24,7 @@ struct PixivCollectionsView: View {
             }
         }
         .task(id: refreshTaskID) {
-            await store.refreshPixivCollections(mode: mode)
+            await refresh(showFeedback: false)
         }
         .platformPageNavigationChrome(title: mode.title, status: statusText)
         .overlay(alignment: .bottom) {
@@ -49,18 +50,25 @@ struct PixivCollectionsView: View {
         VStack(spacing: 0) {
             header
 
-            NativeAdaptiveGridCollectionView(
-                items: store.pixivCollections,
-                layout: gridLayout
-            ) { collection in
-                AnyView(
-                    PixivCollectionCard(collection: collection) {
-                        Task { await openCollection(collection) }
-                    }
-                )
-            }
-            .nativeBottomTabContentSurface()
+            nativeCollectionView
         }
+    }
+
+    private var nativeCollectionView: some View {
+        NativeGalleryCollectionView(
+            items: nativeItems,
+            layout: masonryLayout,
+            highlightedArtworkIDs: Set<Int>(),
+            scrollToArtworkID: nil,
+            contentReloadToken: contentReloadToken,
+            onRefresh: nil,
+            onScrollDirectionChange: nil,
+            onNearContentEnd: nearContentEndAction,
+            onPrefetchItems: nil
+        ) { item in
+            AnyView(nativeContent(for: item))
+        }
+        .nativeBottomTabContentSurface()
     }
 
     private var header: some View {
@@ -71,15 +79,6 @@ struct PixivCollectionsView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
 
             OS26LibraryActionRail {
-                Button {
-                    Task { await refresh(showFeedback: true) }
-                } label: {
-                    Label(L10n.refresh, systemImage: "arrow.clockwise")
-                }
-                .os26GlassIconButton()
-                .help(L10n.refresh)
-                .accessibilityLabel(L10n.refresh)
-
                 Button {
                     Task {
                         let message = await store.openPixivLinkFromClipboard()
@@ -133,6 +132,18 @@ struct PixivCollectionsView: View {
 
     @ViewBuilder
     private func emptyStateActionButtons(fillWidth: Bool) -> some View {
+        if mode == .saved, store.pixivWebSession == nil {
+            Button {
+                store.isPixivWebSessionPresented = true
+            } label: {
+                Label(L10n.connectPixivWebSession, systemImage: "globe.badge.chevron.backward")
+            }
+            .os26GlassButton(prominent: true)
+            .lineLimit(2)
+            .fixedSize(horizontal: false, vertical: true)
+            .frame(maxWidth: fillWidth ? .infinity : nil)
+        }
+
         Button {
             Task {
                 let message = await store.openPixivLinkFromClipboard()
@@ -141,7 +152,7 @@ struct PixivCollectionsView: View {
         } label: {
             Label(L10n.openPixivLinkFromClipboard, systemImage: "doc.on.clipboard")
         }
-        .os26GlassButton(prominent: true)
+        .os26GlassButton(prominent: mode != .saved || store.pixivWebSession != nil)
         .lineLimit(2)
         .fixedSize(horizontal: false, vertical: true)
         .frame(maxWidth: fillWidth ? .infinity : nil)
@@ -157,14 +168,40 @@ struct PixivCollectionsView: View {
         }
     }
 
-    private var gridLayout: NativeAdaptiveGridCollectionLayout {
-        NativeAdaptiveGridCollectionLayout(
-            minimumItemWidth: 220,
-            maximumItemWidth: 320,
-            itemHeight: 292,
-            spacing: 14,
-            sectionInsets: EdgeInsets(top: 16, leading: 18, bottom: 26, trailing: 18)
+    private var nativeItems: [NativeGalleryCollectionItem] {
+        var items = store.pixivCollections.map(NativeGalleryCollectionItem.pixivCollection)
+        if store.hasMorePixivCollections {
+            items.append(.loadMore)
+        }
+        return items
+    }
+
+    private var masonryLayout: NativeGalleryCollectionLayout {
+        .masonry(
+            configuration: ArtworkMasonryLayoutConfiguration(
+                spacing: 12,
+                preferredColumnWidth: 176,
+                minColumnWidth: 136,
+                maxColumnWidth: 228,
+                fixedColumnCount: nil,
+                denseFixedColumns: true
+            ),
+            loadMoreHeight: 118
         )
+    }
+
+    private var contentReloadToken: Int {
+        var hasher = Hasher()
+        hasher.combine(store.pixivCollections.count)
+        hasher.combine(store.pixivCollections.first?.id)
+        hasher.combine(store.pixivCollections.last?.id)
+        hasher.combine(store.isLoadingMorePixivCollections)
+        hasher.combine(store.hasMorePixivCollections)
+        return hasher.finalize()
+    }
+
+    private var nearContentEndAction: (() -> Void)? {
+        store.hasMorePixivCollections ? { triggerAutomaticLoadMoreIfNeeded() } : nil
     }
 
     private var refreshTaskID: String {
@@ -191,6 +228,9 @@ struct PixivCollectionsView: View {
         if store.pixivCollections.isEmpty {
             return L10n.noStoredItems
         }
+        if store.pixivCollectionTotalCount > store.pixivCollections.count {
+            return "\(store.pixivCollections.count.formatted()) / \(store.pixivCollectionTotalCount.formatted())"
+        }
         return String(format: L10n.itemCountFormat, store.pixivCollections.count)
     }
 
@@ -199,10 +239,42 @@ struct PixivCollectionsView: View {
     }
 
     private func refresh(showFeedback: Bool) async {
+        lastAutoLoadMoreOffset = nil
         await store.refreshPixivCollections(mode: mode)
         if showFeedback, store.pixivCollectionErrorMessage == nil {
             actionMessage = String(format: L10n.refreshedPixivCollectionsFormat, store.pixivCollections.count)
         }
+    }
+
+    @ViewBuilder
+    private func nativeContent(for item: NativeGalleryCollectionItem) -> some View {
+        switch item {
+        case .pixivCollection(let collection):
+            PixivCollectionCard(collection: collection) {
+                Task { await openCollection(collection) }
+            }
+        case .loadMore:
+            OS26PaginationFooter(
+                loadingTitle: L10n.loading,
+                systemImage: "rectangle.stack.badge.person.crop",
+                isLoading: store.isLoadingMorePixivCollections,
+                minHeight: 96,
+                action: triggerAutomaticLoadMoreIfNeeded
+            )
+        case .loading, .empty, .cachedStatus, .popularPreview, .artwork:
+            EmptyView()
+        }
+    }
+
+    private func triggerAutomaticLoadMoreIfNeeded() {
+        guard let nextOffset = store.pixivCollectionNextOffset,
+              store.isLoadingPixivCollections == false,
+              store.isLoadingMorePixivCollections == false,
+              lastAutoLoadMoreOffset != nextOffset else {
+            return
+        }
+        lastAutoLoadMoreOffset = nextOffset
+        Task { await store.loadMorePixivCollections(mode: mode) }
     }
 
     private func openCollection(_ collection: PixivCollectionDetail) async {
@@ -228,29 +300,34 @@ private struct PixivCollectionCard: View {
 
     var body: some View {
         Button(action: open) {
-            VStack(alignment: .leading, spacing: 8) {
-                collectionThumbnail
+            GeometryReader { proxy in
+                let textReserve: CGFloat = collection.tags.isEmpty ? 58 : 76
+                let thumbnailHeight = max(104, min(proxy.size.width, proxy.size.height - textReserve))
+                VStack(alignment: .leading, spacing: 8) {
+                    collectionThumbnail(height: thumbnailHeight)
 
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(collection.title.isEmpty ? L10n.pixivCollection : collection.title)
-                        .font(.subheadline.weight(.semibold))
-                        .lineLimit(2)
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(collection.title.isEmpty ? L10n.pixivCollection : collection.title)
+                            .font(.subheadline.weight(.semibold))
+                            .lineLimit(2)
 
-                    Text(collection.subtitle)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
-
-                    if collection.tags.isEmpty == false {
-                        Text(collection.tags.prefix(3).map { "#\($0.name)" }.joined(separator: " "))
-                            .font(.caption2.weight(.medium))
-                            .foregroundStyle(.tertiary)
+                        Text(collection.subtitle)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
                             .lineLimit(1)
+
+                        if collection.tags.isEmpty == false {
+                            Text(collection.tags.prefix(3).map { "#\($0.name)" }.joined(separator: " "))
+                                .font(.caption2.weight(.medium))
+                                .foregroundStyle(.tertiary)
+                                .lineLimit(1)
+                        }
                     }
+                    .padding(.horizontal, 4)
                 }
-                .padding(.horizontal, 4)
+                .padding(10)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             }
-            .padding(10)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             .contentShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         }
@@ -268,14 +345,14 @@ private struct PixivCollectionCard: View {
     }
 
     @ViewBuilder
-    private var collectionThumbnail: some View {
+    private func collectionThumbnail(height: CGFloat) -> some View {
         if let url = collection.thumbnailImageURL {
             RemoteImageView(url: url, contentMode: .fill)
-                .frame(height: 168)
+                .frame(height: height)
                 .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
         } else if let artwork = collection.artworks.first {
             RemoteImageView(url: artwork.thumbnailURL, contentMode: .fill)
-                .frame(height: 168)
+                .frame(height: height)
                 .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
         } else {
             ZStack {
@@ -285,7 +362,7 @@ private struct PixivCollectionCard: View {
                     .foregroundStyle(.secondary)
             }
             .frame(maxWidth: .infinity)
-            .frame(height: 168)
+            .frame(height: height)
             .background(.quinary, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
         }
     }

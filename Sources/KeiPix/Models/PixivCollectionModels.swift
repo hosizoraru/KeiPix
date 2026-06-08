@@ -99,6 +99,17 @@ struct PixivCollectionDetail: Identifiable, Hashable, Sendable {
         }
         return parts.joined(separator: " · ")
     }
+
+    var masonryAspectRatio: CGFloat {
+        var textReserve: CGFloat = 0.28
+        if title.count > 24 {
+            textReserve += 0.08
+        }
+        if tags.isEmpty == false {
+            textReserve += 0.07
+        }
+        return max(0.62, 1.0 - textReserve)
+    }
 }
 
 struct PixivCollectionDetailResponse: Decodable, Sendable {
