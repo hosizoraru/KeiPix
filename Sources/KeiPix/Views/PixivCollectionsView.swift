@@ -134,16 +134,6 @@ struct PixivCollectionsView: View {
     @ViewBuilder
     private func emptyStateActionButtons(fillWidth: Bool) -> some View {
         Button {
-            Task { await refresh(showFeedback: true) }
-        } label: {
-            Label(L10n.refresh, systemImage: "arrow.clockwise")
-        }
-        .os26GlassButton(prominent: true)
-        .lineLimit(2)
-        .fixedSize(horizontal: false, vertical: true)
-        .frame(maxWidth: fillWidth ? .infinity : nil)
-
-        Button {
             Task {
                 let message = await store.openPixivLinkFromClipboard()
                 actionMessage = message
@@ -151,7 +141,7 @@ struct PixivCollectionsView: View {
         } label: {
             Label(L10n.openPixivLinkFromClipboard, systemImage: "doc.on.clipboard")
         }
-        .os26GlassButton()
+        .os26GlassButton(prominent: true)
         .lineLimit(2)
         .fixedSize(horizontal: false, vertical: true)
         .frame(maxWidth: fillWidth ? .infinity : nil)
