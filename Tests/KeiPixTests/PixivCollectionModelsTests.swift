@@ -3,6 +3,51 @@ import Testing
 @testable import KeiPix
 
 struct PixivCollectionModelsTests {
+    @Test("Pixiv Web session cookies are explicit pixiv cookies with a usable login cookie")
+    func pixivWebSessionCookiesFilterAndBuildHeader() throws {
+        let future = Date(timeIntervalSinceNow: 3_600)
+        let past = Date(timeIntervalSinceNow: -3_600)
+        let cookies = [
+            try #require(HTTPCookie(properties: [
+                .domain: ".pixiv.net",
+                .path: "/",
+                .name: "PHPSESSID",
+                .value: "session-token",
+                .expires: future,
+                .secure: "TRUE"
+            ])),
+            try #require(HTTPCookie(properties: [
+                .domain: "www.pixiv.net",
+                .path: "/",
+                .name: "device_token",
+                .value: "device-token",
+                .expires: future
+            ])),
+            try #require(HTTPCookie(properties: [
+                .domain: "example.com",
+                .path: "/",
+                .name: "PHPSESSID",
+                .value: "wrong-site",
+                .expires: future
+            ])),
+            try #require(HTTPCookie(properties: [
+                .domain: ".pixiv.net",
+                .path: "/",
+                .name: "expired",
+                .value: "old",
+                .expires: past
+            ]))
+        ]
+
+        let pixivCookies = PixivWebSessionCookie.pixivCookies(from: cookies)
+        let session = PixivWebSession(userID: "41657557", connectedAt: Date(), cookies: pixivCookies)
+
+        #expect(pixivCookies.map(\.name) == ["expired", "PHPSESSID", "device_token"])
+        #expect(session.validCookies.map(\.name) == ["PHPSESSID", "device_token"])
+        #expect(session.isUsable)
+        #expect(session.cookieHeader == "PHPSESSID=session-token; device_token=device-token")
+    }
+
     @Test("Pixiv Web collection detail maps metadata and works into a gallery feed")
     func collectionDetailMapsMetadataAndWorksIntoGalleryFeed() throws {
         let json = """

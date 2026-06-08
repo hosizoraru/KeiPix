@@ -14,6 +14,7 @@ final class KeiPixStore {
     let novels: NovelFeatureStore
 
     var session: PixivSession?
+    var pixivWebSession: PixivWebSession?
     var storedAccounts: [PixivStoredAccount] = []
     var selectedRoute: PixivRoute = AppLaunchRouteResolver.initialRoute()
     var artworks: [PixivArtwork] = [] {
@@ -46,6 +47,7 @@ final class KeiPixStore {
     var selectedPixivCollectionSourceRoute: PixivRoute?
     var isLoadingPixivCollections = false
     var pixivCollectionErrorMessage: String?
+    var isPixivWebSessionPresented = false
     var readerWindowArtwork: PixivArtwork?
     /// Bounded registry mapping artwork ID → `PixivArtwork` for
     /// windows opened via the multi-window reader scene. Lets a

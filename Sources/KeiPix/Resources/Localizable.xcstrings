@@ -6874,6 +6874,64 @@
         }
       }
     },
+    "Connect Pixiv Web Session": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connect Pixiv Web Session"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pixiv Web セッションを接続"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "连接 Pixiv Web 会话"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "連接 Pixiv Web 會話"
+          }
+        }
+      }
+    },
+    "Connected": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connected"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "接続済み"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已连接"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已連接"
+          }
+        }
+      }
+    },
     "Copied Search Summary": {
       "extractionState": "manual",
       "localizations": {
@@ -9567,6 +9625,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "完成"
+          }
+        }
+      }
+    },
+    "Disconnect Pixiv Web Session": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disconnect Pixiv Web Session"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pixiv Web セッションを解除"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "断开 Pixiv Web 会话"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "斷開 Pixiv Web 會話"
           }
         }
       }
@@ -13743,6 +13830,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "導入 Token"
+          }
+        }
+      }
+    },
+    "Save Pixiv Web Session": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save Pixiv Web Session"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pixiv Web セッションを保存"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保存 Pixiv Web 会话"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保存 Pixiv Web 會話"
           }
         }
       }
@@ -18567,25 +18683,25 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "No Pixiv collections"
+            "value": "No collections"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pixivコレクションはありません"
+            "value": "コレクションはありません"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "暂无 Pixiv 珍藏册"
+            "value": "暂无珍藏册"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "暫無 Pixiv 珍藏冊"
+            "value": "暫無珍藏冊"
           }
         }
       }
@@ -21264,25 +21380,25 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pixiv Collection"
+            "value": "Collection"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pixivコレクション"
+            "value": "コレクション"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pixiv 珍藏册"
+            "value": "珍藏册"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pixiv 珍藏冊"
+            "value": "珍藏冊"
           }
         }
       }
@@ -21293,25 +21409,25 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pixiv Collections"
+            "value": "Collections"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pixivコレクション"
+            "value": "コレクション"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pixiv 珍藏册"
+            "value": "珍藏册"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pixiv 珍藏冊"
+            "value": "珍藏冊"
           }
         }
       }
@@ -21351,25 +21467,25 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "My Pixiv Collections"
+            "value": "My Collections"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "自分のPixivコレクション"
+            "value": "自分のコレクション"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "我的 Pixiv 珍藏册"
+            "value": "我的珍藏册"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "我的 Pixiv 珍藏冊"
+            "value": "我的珍藏冊"
           }
         }
       }
@@ -21380,25 +21496,25 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Saved Pixiv Collections"
+            "value": "Saved Collections"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "保存したPixivコレクション"
+            "value": "保存したコレクション"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "收藏的 Pixiv 珍藏册"
+            "value": "收藏的珍藏册"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "收藏的 Pixiv 珍藏冊"
+            "value": "收藏的珍藏冊"
           }
         }
       }
@@ -21428,6 +21544,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "Pixiv Web"
+          }
+        }
+      }
+    },
+    "Pixiv Web Session": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pixiv Web Session"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pixiv Web セッション"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pixiv Web 会话"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pixiv Web 會話"
           }
         }
       }
@@ -21525,25 +21670,25 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Discover user-created Pixiv collections here. You can also paste a collection link to open it natively."
+            "value": "Discover user-created collections here. You can also paste a collection link to open it natively."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "ユーザーが作成したPixivコレクションをここで見つけられます。コレクションリンクを貼り付けてネイティブ表示で開くこともできます。"
+            "value": "ユーザーが作成したコレクションをここで見つけられます。コレクションリンクを貼り付けてネイティブ表示で開くこともできます。"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "在这里发现用户创建的 Pixiv 珍藏册。你也可以粘贴珍藏册链接，用原生界面打开。"
+            "value": "在这里发现用户创建的珍藏册。你也可以粘贴珍藏册链接，用原生界面打开。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "在這裡發現使用者建立的 Pixiv 珍藏冊。你也可以貼上珍藏冊連結，用原生介面開啟。"
+            "value": "在這裡發現使用者建立的珍藏冊。你也可以貼上珍藏冊連結，用原生介面開啟。"
           }
         }
       }
@@ -21583,25 +21728,25 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bookmarked Pixiv collections appear here. Use Pixiv Collections discovery or Pixiv Web to save collections."
+            "value": "Bookmarked collections appear here. Use Collections discovery or Pixiv Web to save collections."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "ブックマークしたPixivコレクションがここに表示されます。Pixivコレクションの発見ページまたはPixiv Webで保存できます。"
+            "value": "ブックマークしたコレクションがここに表示されます。コレクションの発見ページまたはPixiv Webで保存できます。"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "收藏过的 Pixiv 珍藏册会显示在这里。可以在 Pixiv 珍藏册发现页或 Pixiv Web 中收藏。"
+            "value": "收藏过的珍藏册会显示在这里。可以在珍藏册发现页或 Pixiv Web 中收藏。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "收藏過的 Pixiv 珍藏冊會顯示在這裡。可以在 Pixiv 珍藏冊發現頁或 Pixiv Web 中收藏。"
+            "value": "收藏過的珍藏冊會顯示在這裡。可以在珍藏冊發現頁或 Pixiv Web 中收藏。"
           }
         }
       }
@@ -22617,6 +22762,180 @@
           "stringUnit": {
             "state": "translated",
             "value": "貼上從其他客戶端導出的 Pixiv refresh token。KeiPix 會刷新一次，將新的登入態保存到安全本地存儲，並切換到導入帳號。"
+          }
+        }
+      }
+    },
+    "No Pixiv Web cookies were found yet. Sign in on the page first, then save again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No Pixiv Web cookies were found yet. Sign in on the page first, then save again."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pixiv Web cookie がまだ見つかりません。先にページでログインしてから、もう一度保存してください。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "还没有找到 Pixiv Web cookie。请先在页面里登录，然后再次保存。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "還沒有找到 Pixiv Web cookie。請先在頁面裡登入，然後再次保存。"
+          }
+        }
+      }
+    },
+    "Not connected": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not connected"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未接続"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未连接"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未連接"
+          }
+        }
+      }
+    },
+    "Pixiv Web login cookie was not found. Sign in on Pixiv Web first.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pixiv Web login cookie was not found. Sign in on Pixiv Web first."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pixiv Web のログイン cookie が見つかりません。先に Pixiv Web でログインしてください。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "没有找到 Pixiv Web 登录 cookie。请先登录 Pixiv Web。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "沒有找到 Pixiv Web 登入 cookie。請先登入 Pixiv Web。"
+          }
+        }
+      }
+    },
+    "Pixiv Web session connection failed.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pixiv Web session connection failed."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pixiv Web セッションの接続に失敗しました。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pixiv Web 会话连接失败。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pixiv Web 會話連接失敗。"
+          }
+        }
+      }
+    },
+    "Required only for Pixiv Web-only features such as saved collections. KeiPix stores this separately from the app API token and never imports browser cookies automatically.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Required only for Pixiv Web-only features such as saved collections. KeiPix stores this separately from the app API token and never imports browser cookies automatically."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保存したコレクションなど Pixiv Web 専用機能だけに必要です。KeiPix はアプリ API トークンとは別に保存し、ブラウザ cookie を自動インポートしません。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "只用于收藏的珍藏册等 Pixiv Web 专属功能。KeiPix 会把它和 App API token 分开保存，也不会自动导入浏览器 cookie。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "只用於收藏的珍藏冊等 Pixiv Web 專屬功能。KeiPix 會把它和 App API token 分開保存，也不會自動導入瀏覽器 cookie。"
+          }
+        }
+      }
+    },
+    "Sign in on Pixiv Web, then save this session so KeiPix can sync Web-only collection lists.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign in on Pixiv Web, then save this session so KeiPix can sync Web-only collection lists."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pixiv Web でログインしてからこのセッションを保存すると、KeiPix が Web 専用のコレクション一覧を同期できます。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在 Pixiv Web 登录后保存这个会话，KeiPix 才能同步 Web 专属的珍藏册列表。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在 Pixiv Web 登入後保存這個會話，KeiPix 才能同步 Web 專屬的珍藏冊列表。"
           }
         }
       }
@@ -25730,25 +26049,25 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Refreshed %d Pixiv collections"
+            "value": "Refreshed %d collections"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pixivコレクションを%d件更新しました"
+            "value": "コレクションを%d件更新しました"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "已刷新 %d 个 Pixiv 珍藏册"
+            "value": "已刷新 %d 个珍藏册"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "已刷新 %d 個 Pixiv 珍藏冊"
+            "value": "已刷新 %d 個珍藏冊"
           }
         }
       }

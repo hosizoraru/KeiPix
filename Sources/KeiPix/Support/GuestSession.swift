@@ -30,6 +30,7 @@ extension KeiPixStore {
         UserDefaults.standard.set(AccountSessionMode.guest.rawValue, forKey: "accountSessionMode")
         UserDefaults.standard.set(true, forKey: "accountSessionModeUserSelected")
         session = GuestSession.session
+        pixivWebSession = nil
         restrictedModeEnabled = false
         isLoginPresented = false
         #if DEBUG

@@ -890,6 +890,48 @@ struct NativeBoundaryTests {
         #expect(iPadContentView.contains("PixivCollectionsView(store: store, mode: .saved)"))
     }
 
+    @Test("Pixiv Web session connection is explicit and available on all app shells")
+    func pixivWebSessionConnectionIsExplicitAndAvailableOnAllAppShells() throws {
+        let root = try packageRoot()
+        let api = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Services/PixivAPI.swift"),
+            encoding: .utf8
+        )
+        let webSessionSheet = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/PixivWebSessionSheetView.swift"),
+            encoding: .utf8
+        )
+        let accountSettings = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/Settings/AccountSettingsPage.swift"),
+            encoding: .utf8
+        )
+        let macContentView = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/ContentView.swift"),
+            encoding: .utf8
+        )
+        let iPadContentView = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/ContentView_iPadOS.swift"),
+            encoding: .utf8
+        )
+        let store = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Stores/KeiPixStore+Accounts.swift"),
+            encoding: .utf8
+        )
+
+        #expect(api.contains("private let webSessionStore = PixivWebSessionStore()"))
+        #expect(api.contains("request.setValue(cookieHeader, forHTTPHeaderField: \"Cookie\")"))
+        #expect(webSessionSheet.contains("configuration.websiteDataStore = .default()"))
+        #expect(webSessionSheet.contains("https://www.pixiv.net/collection"))
+        #expect(webSessionSheet.contains("PixivWebSessionCookie.pixivCookies(from: cookies)"))
+        #expect(webSessionSheet.contains("Chrome") == false)
+        #expect(accountSettings.contains("L10n.pixivWebSession"))
+        #expect(accountSettings.contains("store.isPixivWebSessionPresented = true"))
+        #expect(macContentView.contains("PixivWebSessionSheetView(store: store)"))
+        #expect(iPadContentView.contains("PixivWebSessionSheetView(store: store)"))
+        #expect(store.contains("func connectPixivWebSession(cookies: [PixivWebSessionCookie])"))
+        #expect(store.contains("disconnectPixivWebSession()"))
+    }
+
     @Test("iOS library empty and loading states register as bottom tab content scroll sources")
     func iOSLibraryEmptyAndLoadingStatesRegisterAsBottomTabContentScrollSources() throws {
         let root = try packageRoot()

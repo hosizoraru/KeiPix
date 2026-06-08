@@ -117,6 +117,10 @@ struct ContentView: View {
                 TokenLoginSheetView(store: store)
                     .os26SheetChrome(.form)
             }
+            .sheet(isPresented: $store.isPixivWebSessionPresented) {
+                PixivWebSessionSheetView(store: store)
+                    .os26SheetChrome(.immersive)
+            }
             .sheet(item: $store.imageSourceSearchRequest) { request in
                 ImageSourceSearchSheet(store: store, request: request)
                     .os26SheetChrome(.detail)

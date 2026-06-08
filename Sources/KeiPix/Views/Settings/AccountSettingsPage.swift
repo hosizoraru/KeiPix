@@ -87,6 +87,41 @@ struct AccountSettingsPage: View {
                 }
             }
 
+            if store.accountSessionMode == .real, store.session != nil {
+                OS26SettingsSection(
+                    L10n.pixivWebSession,
+                    systemImage: "globe.badge.chevron.backward",
+                    footer: L10n.pixivWebSessionSettingsHint
+                ) {
+                    LabeledContent(
+                        L10n.status,
+                        value: store.pixivWebSession == nil
+                            ? L10n.pixivWebSessionNotConnected
+                            : L10n.pixivWebSessionConnected
+                    )
+
+                    FlowLayout(spacing: 8) {
+                        OS26SettingsActionButton(
+                            title: L10n.connectPixivWebSession,
+                            systemImage: "globe.badge.chevron.backward",
+                            isProminent: store.pixivWebSession == nil
+                        ) {
+                            store.isPixivWebSessionPresented = true
+                        }
+
+                        if store.pixivWebSession != nil {
+                            OS26SettingsActionButton(
+                                title: L10n.disconnectPixivWebSession,
+                                systemImage: "xmark.circle",
+                                role: .destructive
+                            ) {
+                                Task { await store.disconnectPixivWebSession() }
+                            }
+                        }
+                    }
+                }
+            }
+
             // Apple-style deep-link section for things only the website can
             // change (display name, email, password, profile picture). Pixez
             // opens the same page in a webview; on macOS we hand off to the

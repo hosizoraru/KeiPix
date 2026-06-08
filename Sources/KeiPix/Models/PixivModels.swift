@@ -7,6 +7,86 @@ struct PixivSession: Codable, Equatable, Sendable {
     var user: PixivAccountUser
 }
 
+struct PixivWebSession: Codable, Equatable, Sendable {
+    let userID: String
+    let connectedAt: Date
+    let cookies: [PixivWebSessionCookie]
+
+    var validCookies: [PixivWebSessionCookie] {
+        cookies.filter { $0.isExpired == false && $0.value.isEmpty == false }
+    }
+
+    var isUsable: Bool {
+        validCookies.contains { $0.name == "PHPSESSID" }
+    }
+
+    var cookieHeader: String? {
+        let fragments = validCookies.map { "\($0.name)=\($0.value)" }
+        return fragments.isEmpty ? nil : fragments.joined(separator: "; ")
+    }
+}
+
+struct PixivWebSessionCookie: Codable, Hashable, Sendable {
+    let name: String
+    let value: String
+    let domain: String
+    let path: String
+    let expiresAt: Date?
+    let isSecure: Bool
+
+    var isExpired: Bool {
+        guard let expiresAt else { return false }
+        return expiresAt <= Date()
+    }
+
+    init(
+        name: String,
+        value: String,
+        domain: String,
+        path: String,
+        expiresAt: Date? = nil,
+        isSecure: Bool = true
+    ) {
+        self.name = name
+        self.value = value
+        self.domain = domain
+        self.path = path
+        self.expiresAt = expiresAt
+        self.isSecure = isSecure
+    }
+
+    init?(cookie: HTTPCookie) {
+        let normalizedDomain = cookie.domain.lowercased()
+        guard normalizedDomain.contains("pixiv.net") else { return nil }
+        self.init(
+            name: cookie.name,
+            value: cookie.value,
+            domain: cookie.domain,
+            path: cookie.path,
+            expiresAt: cookie.expiresDate,
+            isSecure: cookie.isSecure
+        )
+    }
+
+    static func pixivCookies(from cookies: [HTTPCookie]) -> [PixivWebSessionCookie] {
+        var seen = Set<String>()
+        return cookies
+            .compactMap(PixivWebSessionCookie.init(cookie:))
+            .filter { cookie in
+                let key = "\(cookie.domain)|\(cookie.path)|\(cookie.name)"
+                guard seen.contains(key) == false else { return false }
+                seen.insert(key)
+                return true
+            }
+            .sorted { lhs, rhs in
+                if lhs.domain == rhs.domain {
+                    return lhs.name.localizedStandardCompare(rhs.name) == .orderedAscending
+                }
+                return lhs.domain.localizedStandardCompare(rhs.domain) == .orderedAscending
+            }
+    }
+}
+
 struct PixivStoredAccount: Codable, Identifiable, Equatable, Sendable {
     let id: String
     let name: String

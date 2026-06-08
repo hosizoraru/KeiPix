@@ -171,6 +171,11 @@ struct ContentView: View {
                 .frame(width: 460, height: 300)
                 .os26SheetChrome(.form)
         }
+        .sheet(isPresented: $store.isPixivWebSessionPresented) {
+            PixivWebSessionSheetView(store: store)
+                .frame(width: 980, height: 720)
+                .os26SheetChrome(.immersive)
+        }
         .sheet(item: $store.imageSourceSearchRequest) { request in
             ImageSourceSearchSheet(store: store, request: request)
                 .frame(width: 720, height: 560)

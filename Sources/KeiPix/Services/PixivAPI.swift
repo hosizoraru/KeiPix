@@ -27,10 +27,12 @@ actor PixivAPI {
     }
 
     private let tokenStore = PixivSessionStore()
+    private let webSessionStore = PixivWebSessionStore()
     private let urlSession: URLSession
     private let jsonDecoder: JSONDecoder
     private var codeVerifier: String?
     private var session: PixivSession?
+    private var webSession: PixivWebSession?
 
     init() {
         let configuration = URLSessionConfiguration.default
@@ -55,6 +57,7 @@ actor PixivAPI {
     func loadSession() throws -> PixivSession? {
         let stored = try tokenStore.load()
         session = stored
+        webSession = try stored.flatMap { try webSessionStore.load(userID: $0.user.id) }
         return stored
     }
 
@@ -66,6 +69,33 @@ actor PixivAPI {
         session
     }
 
+    func currentWebSession() -> PixivWebSession? {
+        webSession
+    }
+
+    func savePixivWebSession(cookies: [PixivWebSessionCookie], userID: String) throws -> PixivWebSession {
+        let connected = PixivWebSession(
+            userID: userID,
+            connectedAt: Date(),
+            cookies: cookies
+        )
+        guard connected.isUsable else {
+            throw PixivAPIError.serverMessage(L10n.pixivWebSessionMissingLoginCookie)
+        }
+        try webSessionStore.save(connected)
+        if session?.user.id == userID {
+            webSession = connected
+        }
+        return connected
+    }
+
+    func clearPixivWebSession(userID: String) throws {
+        try webSessionStore.delete(userID: userID)
+        if session?.user.id == userID {
+            webSession = nil
+        }
+    }
+
     func refreshCurrentSession() async throws -> PixivSession {
         try await refreshToken()
         guard let session else { throw PixivAPIError.missingSession }
@@ -75,18 +105,21 @@ actor PixivAPI {
     func selectAccount(userID: String) throws -> PixivSession? {
         let selected = try tokenStore.select(userID: userID)
         session = selected
+        webSession = try selected.flatMap { try webSessionStore.load(userID: $0.user.id) }
         return selected
     }
 
     func deleteAccount(userID: String) throws -> PixivSession? {
         let selected = try tokenStore.delete(userID: userID)
         session = selected
+        webSession = try selected.flatMap { try webSessionStore.load(userID: $0.user.id) }
         return selected
     }
 
     func clearSession() throws -> PixivSession? {
         let selected = try tokenStore.deleteCurrent()
         session = selected
+        webSession = try selected.flatMap { try webSessionStore.load(userID: $0.user.id) }
         return selected
     }
 
@@ -125,6 +158,7 @@ actor PixivAPI {
         let newSession = response.session
         session = newSession
         try tokenStore.save(newSession)
+        webSession = try webSessionStore.load(userID: newSession.user.id)
         return newSession
     }
 
@@ -139,6 +173,7 @@ actor PixivAPI {
         let newSession = response.session
         session = newSession
         try tokenStore.save(newSession)
+        webSession = try webSessionStore.load(userID: newSession.user.id)
         return newSession
     }
 
@@ -1232,6 +1267,7 @@ actor PixivAPI {
         let newSession = response.session
         self.session = newSession
         try tokenStore.save(newSession)
+        webSession = try webSessionStore.load(userID: newSession.user.id)
     }
 
     private func requestJSON<T: Decodable>(
@@ -1387,6 +1423,9 @@ actor PixivAPI {
             forHTTPHeaderField: "Accept-Language"
         )
         request.setValue("https://www.pixiv.net/", forHTTPHeaderField: "Referer")
+        if let cookieHeader = webSession?.cookieHeader {
+            request.setValue(cookieHeader, forHTTPHeaderField: "Cookie")
+        }
     }
 
     private static func batches<Element>(_ elements: [Element], size: Int) -> [[Element]] {

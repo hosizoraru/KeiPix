@@ -6,6 +6,7 @@ extension KeiPixStore {
         do {
             storedAccounts = try await api.storedAccounts()
             session = try await api.loadSession()
+            pixivWebSession = await api.currentWebSession()
             storedAccounts = try await api.storedAccounts()
             if session != nil {
                 await refreshRestrictedModeSetting()
@@ -30,6 +31,7 @@ extension KeiPixStore {
         do {
             setRealAccountMode()
             session = try await api.login(code: code)
+            pixivWebSession = await api.currentWebSession()
             storedAccounts = try await api.storedAccounts()
             isLoginPresented = false
             selectedRoute = .home
@@ -50,6 +52,7 @@ extension KeiPixStore {
         do {
             setRealAccountMode()
             session = try await api.login(refreshToken: refreshToken)
+            pixivWebSession = await api.currentWebSession()
             storedAccounts = try await api.storedAccounts()
             isTokenLoginPresented = false
             selectedRoute = .home
@@ -68,6 +71,7 @@ extension KeiPixStore {
         do {
             setRealAccountMode()
             session = try await api.clearSession()
+            pixivWebSession = await api.currentWebSession()
             storedAccounts = try await api.storedAccounts()
             resetLoadedSessionContent()
             if session != nil {
@@ -89,6 +93,7 @@ extension KeiPixStore {
         do {
             setRealAccountMode()
             session = try await api.selectAccount(userID: userID)
+            pixivWebSession = await api.currentWebSession()
             storedAccounts = try await api.storedAccounts()
             resetLoadedSessionContent()
             selectedRoute = .home
@@ -106,6 +111,7 @@ extension KeiPixStore {
     func removeStoredAccount(userID: String) async {
         do {
             session = try await api.deleteAccount(userID: userID)
+            pixivWebSession = await api.currentWebSession()
             storedAccounts = try await api.storedAccounts()
             resetLoadedSessionContent()
             if session != nil {
@@ -132,5 +138,38 @@ extension KeiPixStore {
         accountSessionMode = .real
         UserDefaults.standard.set(AccountSessionMode.real.rawValue, forKey: "accountSessionMode")
         UserDefaults.standard.set(true, forKey: "accountSessionModeUserSelected")
+    }
+
+    func connectPixivWebSession(cookies: [PixivWebSessionCookie]) async -> Bool {
+        guard let userID = session?.user.id else {
+            errorMessage = L10n.errorLoginRequired
+            isLoginPresented = true
+            return false
+        }
+
+        do {
+            pixivWebSession = try await api.savePixivWebSession(cookies: cookies, userID: userID)
+            isPixivWebSessionPresented = false
+            if selectedRoute == .savedPixivCollections {
+                await refreshPixivCollections(mode: .saved)
+            }
+            return true
+        } catch {
+            errorMessage = error.localizedDescription
+            return false
+        }
+    }
+
+    func disconnectPixivWebSession() async {
+        guard let userID = session?.user.id else { return }
+        do {
+            try await api.clearPixivWebSession(userID: userID)
+            pixivWebSession = nil
+            if selectedRoute == .savedPixivCollections {
+                await refreshPixivCollections(mode: .saved)
+            }
+        } catch {
+            errorMessage = error.localizedDescription
+        }
     }
 }

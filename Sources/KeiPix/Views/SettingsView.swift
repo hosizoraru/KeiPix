@@ -57,6 +57,13 @@ struct SettingsView: View {
                     #endif
                     .os26SheetChrome(.form)
             }
+            .sheet(isPresented: $store.isPixivWebSessionPresented) {
+                PixivWebSessionSheetView(store: store)
+                    #if os(macOS)
+                    .frame(width: 980, height: 720)
+                    #endif
+                    .os26SheetChrome(.immersive)
+            }
             .confirmationDialog(
                 L10n.logout,
                 isPresented: $coordinator.isLogoutConfirmationPresented,

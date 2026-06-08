@@ -716,6 +716,7 @@ extension KeiPixStore {
             UserDefaults.standard.set(true, forKey: "accountSessionModeUserSelected")
         }
         session = VisualQASampleData.sampleSession
+        pixivWebSession = nil
         if preserveStoredAccounts == false {
             storedAccounts = [PixivStoredAccount(session: VisualQASampleData.sampleSession)]
         }

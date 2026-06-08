@@ -807,6 +807,17 @@ enum L10n {
     static var copyRefreshTokenHint: String { text("Copy the current Pixiv refresh token so you can paste it into KeiPix on your iPad. Treat it like a password and clear the clipboard after transferring it.") }
     static var copyRefreshTokenConfirmationMessage: String { text("This copies a long-lived Pixiv credential. Only paste it into KeiPix on a device you control.") }
     static var copiedRefreshToken: String { text("Copied Refresh Token") }
+    static var pixivWebSession: String { text("Pixiv Web Session") }
+    static var connectPixivWebSession: String { text("Connect Pixiv Web Session") }
+    static var disconnectPixivWebSession: String { text("Disconnect Pixiv Web Session") }
+    static var savePixivWebSession: String { text("Save Pixiv Web Session") }
+    static var connectPixivWebSessionHint: String { text("Sign in on Pixiv Web, then save this session so KeiPix can sync Web-only collection lists.") }
+    static var pixivWebSessionSettingsHint: String { text("Required only for Pixiv Web-only features such as saved collections. KeiPix stores this separately from the app API token and never imports browser cookies automatically.") }
+    static var pixivWebSessionConnected: String { text("Connected") }
+    static var pixivWebSessionNotConnected: String { text("Not connected") }
+    static var pixivWebSessionNoCookies: String { text("No Pixiv Web cookies were found yet. Sign in on the page first, then save again.") }
+    static var pixivWebSessionConnectionFailed: String { text("Pixiv Web session connection failed.") }
+    static var pixivWebSessionMissingLoginCookie: String { text("Pixiv Web login cookie was not found. Sign in on Pixiv Web first.") }
     static var editProfileOnPixiv: String { text("Edit Profile on Pixiv") }
     static var enable: String { text("Enable") }
     static var disable: String { text("Disable") }
