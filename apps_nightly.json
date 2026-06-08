@@ -1,0 +1,101 @@
+{
+  "name": "KeiPix Nightly",
+  "identifier": "com.keipix.source.nightly",
+  "website": "https://github.com/hosizoraru/KeiPix",
+  "sourceURL": "https://github.com/hosizoraru/KeiPix/releases/download/nightly/apps_nightly.json",
+  "subtitle": "KeiPix nightly LiveContainer source.",
+  "description": "Nightly unsigned KeiPix IPA builds for LiveContainer-compatible sideload testing environments.",
+  "tintColor": "#0099FF",
+  "iconURL": "https://github.com/hosizoraru/KeiPix/raw/master/Sources/KeiPix/Resources/keipixiv.icon/Assets/1.png",
+  "apps": [
+    {
+      "beta": true,
+      "name": "KeiPix iOS",
+      "bundleIdentifier": "com.keipix.client.ios",
+      "developerName": "KeiPix contributors",
+      "subtitle": "Native Pixiv client for iPhone.",
+      "version": "0.1.0",
+      "versionName": "0.1.0",
+      "versionCode": 1,
+      "buildNumber": "1",
+      "buildVersion": "1",
+      "versionDate": "2026-06-08T00:00:00Z",
+      "versionDescription": "KeiPix iOS nightly 0.1.0 build 1 from nightly: Initial KeiPix nightly source",
+      "downloadURL": "https://github.com/hosizoraru/KeiPix/releases/download/nightly/KeiPix-iOS-0.1.0-build.1-unsigned.ipa",
+      "localizedDescription": "Native Swift Pixiv client packaged as an unsigned iPhone IPA for LiveContainer import.",
+      "iconURL": "https://github.com/hosizoraru/KeiPix/raw/master/Sources/KeiPix/Resources/keipixiv.icon/Assets/1.png",
+      "tintColor": "#0099FF",
+      "category": "utilities",
+      "size": 13997983,
+      "minOSVersion": "26.0",
+      "appPermissions": {
+        "privacy": {
+          "NSPhotoLibraryAddUsageDescription": "KeiPix saves downloaded artworks to the photo library only when the user chooses that action."
+        }
+      },
+      "versions": [
+        {
+          "version": "0.1.0",
+          "versionName": "0.1.0",
+          "versionCode": 1,
+          "buildNumber": "1",
+          "buildVersion": "1",
+          "date": "2026-06-08T00:00:00Z",
+          "localizedDescription": "KeiPix iOS nightly 0.1.0 build 1 from nightly: Initial KeiPix nightly source",
+          "downloadURL": "https://github.com/hosizoraru/KeiPix/releases/download/nightly/KeiPix-iOS-0.1.0-build.1-unsigned.ipa",
+          "size": 13997983,
+          "minOSVersion": "26.0",
+          "commit": "nightly",
+          "headline": "Initial KeiPix nightly source"
+        }
+      ],
+      "commit": "nightly",
+      "headline": "Initial KeiPix nightly source"
+    },
+    {
+      "beta": true,
+      "name": "KeiPix iPadOS",
+      "bundleIdentifier": "com.keipix.client.ipad",
+      "developerName": "KeiPix contributors",
+      "subtitle": "Native Pixiv client for iPad.",
+      "version": "0.1.0",
+      "versionName": "0.1.0",
+      "versionCode": 1,
+      "buildNumber": "1",
+      "buildVersion": "1",
+      "versionDate": "2026-06-08T00:00:00Z",
+      "versionDescription": "KeiPix iPadOS nightly 0.1.0 build 1 from nightly: Initial KeiPix nightly source",
+      "downloadURL": "https://github.com/hosizoraru/KeiPix/releases/download/nightly/KeiPix-iPadOS-0.1.0-build.1-unsigned.ipa",
+      "localizedDescription": "Native Swift Pixiv client packaged as an unsigned iPad IPA for LiveContainer import.",
+      "iconURL": "https://github.com/hosizoraru/KeiPix/raw/master/Sources/KeiPix/Resources/keipixiv.icon/Assets/1.png",
+      "tintColor": "#0099FF",
+      "category": "utilities",
+      "size": 13998045,
+      "minOSVersion": "26.0",
+      "appPermissions": {
+        "privacy": {
+          "NSPhotoLibraryAddUsageDescription": "KeiPix saves downloaded artworks to the photo library only when the user chooses that action."
+        }
+      },
+      "versions": [
+        {
+          "version": "0.1.0",
+          "versionName": "0.1.0",
+          "versionCode": 1,
+          "buildNumber": "1",
+          "buildVersion": "1",
+          "date": "2026-06-08T00:00:00Z",
+          "localizedDescription": "KeiPix iPadOS nightly 0.1.0 build 1 from nightly: Initial KeiPix nightly source",
+          "downloadURL": "https://github.com/hosizoraru/KeiPix/releases/download/nightly/KeiPix-iPadOS-0.1.0-build.1-unsigned.ipa",
+          "size": 13998045,
+          "minOSVersion": "26.0",
+          "commit": "nightly",
+          "headline": "Initial KeiPix nightly source"
+        }
+      ],
+      "commit": "nightly",
+      "headline": "Initial KeiPix nightly source"
+    }
+  ],
+  "news": []
+}

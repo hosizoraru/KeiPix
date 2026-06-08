@@ -261,3 +261,81 @@ jobs:
           if-no-files-found: error
           retention-days: 14
           compression-level: 0
+
+  publish-livecontainer-nightly:
+    name: Publish LiveContainer nightly source
+    runs-on: ubuntu-latest
+    needs: [test, package-ios]
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/master'
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+
+      - name: Download unsigned IPA artifacts
+        uses: actions/download-artifact@v7
+        with:
+          pattern: KeiPix-*-unsigned-ipa
+          path: artifacts
+          merge-multiple: true
+
+      - name: Generate LiveContainer source
+        env:
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          source ./script/version_settings.sh
+          keipix_load_version_settings "$PWD"
+          version_date="$(git show -s --format=%cI HEAD)"
+          commit="${GITHUB_SHA:0:12}"
+          headline="$(git log -1 --pretty=%s)"
+          KEIPIX_ARTIFACTS_DIR="$PWD/artifacts" \
+          KEIPIX_VERSION_DATE="$version_date" \
+          KEIPIX_COMMIT="$commit" \
+          KEIPIX_HEADLINE="$headline" \
+          KEIPIX_RUN_URL="$RUN_URL" \
+            ./script/generate_livecontainer_apps_nightly.sh apps_nightly.json
+          jq empty apps_nightly.json
+          cat > artifacts/nightly-release-notes.md <<NOTES
+          KeiPix nightly ${KEIPIX_VERSION_NAME} build ${KEIPIX_BUILD_NUMBER}
+
+          Commit: ${GITHUB_SHA}
+          Workflow: ${RUN_URL}
+
+          LiveContainer source:
+          https://github.com/hosizoraru/KeiPix/releases/download/nightly/apps_nightly.json
+          NOTES
+
+      - name: Upload LiveContainer source artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: KeiPix-LiveContainer-apps-nightly
+          path: apps_nightly.json
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 0
+
+      - name: Move nightly tag
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -f nightly "$GITHUB_SHA"
+          git push origin refs/tags/nightly --force
+
+      - name: Publish nightly release assets
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: nightly
+          name: KeiPix Nightly
+          body_path: artifacts/nightly-release-notes.md
+          prerelease: true
+          make_latest: false
+          files: |
+            apps_nightly.json
+            artifacts/KeiPix-iOS-*-unsigned.ipa
+            artifacts/KeiPix-iPadOS-*-unsigned.ipa
+          fail_on_unmatched_files: true

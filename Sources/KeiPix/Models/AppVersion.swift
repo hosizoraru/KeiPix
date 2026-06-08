@@ -32,6 +32,18 @@ struct AppVersion: Equatable, Sendable {
         "\(marketingVersion) (\(buildNumber))"
     }
 
+    var versionName: String {
+        marketingVersion
+    }
+
+    var buildVersion: String {
+        buildNumber
+    }
+
+    var versionCode: Int {
+        Self.versionCode(fromBuildNumber: buildNumber)
+    }
+
     var releaseSemanticVersion: SemanticVersion {
         SemanticVersion(marketingVersion) ?? SemanticVersion(major: 0, minor: 0, patch: 0)
     }
@@ -58,5 +70,15 @@ struct AppVersion: Equatable, Sendable {
             allowed.contains(scalar) ? Character(scalar) : "_"
         })
         return sanitized.isEmpty ? fallbackMarketingVersion : sanitized
+    }
+
+    private static func versionCode(fromBuildNumber value: String) -> Int {
+        let components = value.split(separator: ".").compactMap { Int($0) }
+        guard components.isEmpty == false else { return 0 }
+        guard components.count > 1 else { return components[0] }
+
+        return components.prefix(3).reduce(0) { partial, component in
+            partial * 1_000 + component
+        }
     }
 }

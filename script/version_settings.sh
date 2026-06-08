@@ -3,7 +3,10 @@
 #
 # Source this file and call `keipix_load_version_settings "$ROOT_DIR"` to export:
 #   KEIPIX_MARKETING_VERSION
+#   KEIPIX_VERSION_NAME
 #   KEIPIX_BUILD_NUMBER
+#   KEIPIX_BUILD_VERSION
+#   KEIPIX_VERSION_CODE
 #   KEIPIX_VERSION_CONFIG
 set -euo pipefail
 
@@ -33,10 +36,27 @@ keipix_validate_marketing_version() {
 
 keipix_validate_build_number() {
   local value="$1"
-  if [[ ! "$value" =~ ^[1-9][0-9]*(\.[0-9]+){0,2}$ ]]; then
-    echo "CURRENT_PROJECT_VERSION must be one to three positive integer components, got: $value" >&2
+  if [[ ! "$value" =~ ^[1-9][0-9]*(\.(0|[1-9][0-9]{0,2})){0,2}$ ]]; then
+    echo "CURRENT_PROJECT_VERSION must be one to three positive integer components; dotted components after the first must be 0-999, got: $value" >&2
     return 1
   fi
+}
+
+keipix_version_code_from_build_number() {
+  local value="$1"
+  IFS='.' read -r major minor patch _ <<< "$value"
+
+  if [ -z "${minor:-}" ]; then
+    printf '%s\n' "$major"
+    return 0
+  fi
+
+  local code="$major"
+  code=$((code * 1000 + minor))
+  if [ -n "${patch:-}" ]; then
+    code=$((code * 1000 + patch))
+  fi
+  printf '%s\n' "$code"
 }
 
 keipix_load_version_settings() {
@@ -62,7 +82,11 @@ keipix_load_version_settings() {
   keipix_validate_build_number "$build_number"
 
   export KEIPIX_MARKETING_VERSION="$marketing_version"
+  export KEIPIX_VERSION_NAME="$marketing_version"
   export KEIPIX_BUILD_NUMBER="$build_number"
+  export KEIPIX_BUILD_VERSION="$build_number"
+  export KEIPIX_VERSION_CODE
+  KEIPIX_VERSION_CODE="$(keipix_version_code_from_build_number "$build_number")"
   export KEIPIX_VERSION_CONFIG="$config_file"
 }
 
@@ -73,10 +97,18 @@ if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
   case "${1:---print-shell}" in
     --print-shell)
       printf 'KEIPIX_MARKETING_VERSION=%q\n' "$KEIPIX_MARKETING_VERSION"
+      printf 'KEIPIX_VERSION_NAME=%q\n' "$KEIPIX_VERSION_NAME"
       printf 'KEIPIX_BUILD_NUMBER=%q\n' "$KEIPIX_BUILD_NUMBER"
+      printf 'KEIPIX_BUILD_VERSION=%q\n' "$KEIPIX_BUILD_VERSION"
+      printf 'KEIPIX_VERSION_CODE=%q\n' "$KEIPIX_VERSION_CODE"
       ;;
     --print-json)
-      printf '{"marketingVersion":"%s","buildNumber":"%s"}\n' "$KEIPIX_MARKETING_VERSION" "$KEIPIX_BUILD_NUMBER"
+      printf '{"marketingVersion":"%s","versionName":"%s","buildNumber":"%s","buildVersion":"%s","versionCode":%s}\n' \
+        "$KEIPIX_MARKETING_VERSION" \
+        "$KEIPIX_VERSION_NAME" \
+        "$KEIPIX_BUILD_NUMBER" \
+        "$KEIPIX_BUILD_VERSION" \
+        "$KEIPIX_VERSION_CODE"
       ;;
     *)
       echo "usage: $0 [--print-shell|--print-json]" >&2

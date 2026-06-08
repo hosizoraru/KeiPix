@@ -80,6 +80,18 @@ GitHub Actions 会在 PR、`master` push 和 tag 构建中分别上传：
 
 `build_unsigned_ipa.sh` 使用 `iphoneos` SDK 的 Release 构建，并显式关闭 Xcode signing。生成的 IPA 采用标准 `Payload/KeiPix.app` 结构，适合导入 LiveContainer 这类 live container / sideload 测试环境；它不是 App Store、TestFlight 或普通已签名真机安装包。如果你的测试环境需要开发者证书或重签名，请在容器/签名工具侧完成那一步。
 
+Nightly LiveContainer 订阅源：
+
+```text
+https://github.com/hosizoraru/KeiPix/releases/download/nightly/apps_nightly.json
+```
+
+`apps_nightly.json` 使用同一套版本元数据：`versionName` 对应 `MARKETING_VERSION`，`buildNumber` / `buildVersion` 对应 `CURRENT_PROJECT_VERSION`，`versionCode` 是给订阅源和第三方工具消费的整数构建码。`master` 的 Actions 在 iOS 与 iPadOS IPA 都构建成功后，会把 `nightly` release 更新为最新的两个 unsigned IPA 和订阅源；本地需要刷新 seed 文件时可运行：
+
+```bash
+./script/generate_livecontainer_apps_nightly.sh apps_nightly.json
+```
+
 ## Repository Map
 
 ```text

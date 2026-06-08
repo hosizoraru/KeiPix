@@ -44,7 +44,30 @@ done
 expect_file_contains script/build_and_run.sh "version_settings.sh"
 expect_file_contains script/build_release_app.sh "version_settings.sh"
 expect_file_contains script/build_unsigned_ipa.sh "version_settings.sh"
+expect_file_contains script/generate_livecontainer_apps_nightly.sh "version_settings.sh"
+expect_file_contains script/generate_livecontainer_apps_nightly.sh "KEIPIX_VERSION_NAME"
+expect_file_contains script/generate_livecontainer_apps_nightly.sh "KEIPIX_VERSION_CODE"
 expect_file_contains .github/workflows/macos-build.yml "script/version_settings.sh"
+expect_file_contains .github/workflows/macos-build.yml "script/generate_livecontainer_apps_nightly.sh"
+expect_file_contains .github/workflows/macos-build.yml "apps_nightly.json"
+
+jq empty "$ROOT_DIR/apps_nightly.json"
+jq -e \
+  --arg version "$KEIPIX_VERSION_NAME" \
+  --arg build "$KEIPIX_BUILD_NUMBER" \
+  --argjson code "$KEIPIX_VERSION_CODE" \
+  '
+    .identifier == "com.keipix.source.nightly"
+    and (.sourceURL | endswith("/releases/download/nightly/apps_nightly.json"))
+    and ((.apps[] | select(.bundleIdentifier == "com.keipix.client.ios") | .versionName) == $version)
+    and ((.apps[] | select(.bundleIdentifier == "com.keipix.client.ios") | .versionCode) == $code)
+    and ((.apps[] | select(.bundleIdentifier == "com.keipix.client.ios") | .buildNumber) == $build)
+    and ((.apps[] | select(.bundleIdentifier == "com.keipix.client.ios") | .downloadURL) | endswith("/releases/download/nightly/KeiPix-iOS-\($version)-build.\($build)-unsigned.ipa"))
+    and ((.apps[] | select(.bundleIdentifier == "com.keipix.client.ipad") | .versionName) == $version)
+    and ((.apps[] | select(.bundleIdentifier == "com.keipix.client.ipad") | .versionCode) == $code)
+    and ((.apps[] | select(.bundleIdentifier == "com.keipix.client.ipad") | .buildNumber) == $build)
+    and ((.apps[] | select(.bundleIdentifier == "com.keipix.client.ipad") | .downloadURL) | endswith("/releases/download/nightly/KeiPix-iPadOS-\($version)-build.\($build)-unsigned.ipa"))
+  ' "$ROOT_DIR/apps_nightly.json" >/dev/null
 
 rg_output="$(mktemp)"
 trap 'rm -f "$rg_output"' EXIT
