@@ -193,6 +193,7 @@ struct AppVersionTests {
         #expect(workflow.contains("fetch-tags: true"))
         #expect(workflow.contains("script/generate_livecontainer_apps_nightly.sh"))
         #expect(workflow.contains("apps_nightly.json"))
+        #expect(workflow.contains("gh release delete-asset nightly"))
         #expect(workflow.contains("steps.version.outputs.build"))
     }
 

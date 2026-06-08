@@ -331,6 +331,23 @@ jobs:
           git tag -f nightly "$GITHUB_SHA"
           git push origin refs/tags/nightly --force
 
+      - name: Prune previous nightly release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if ! gh release view nightly >/dev/null 2>&1; then
+            exit 0
+          fi
+          while IFS= read -r asset; do
+            echo "Deleting previous nightly asset: $asset"
+            gh release delete-asset nightly "$asset" --yes
+          done < <(
+            gh release view nightly --json assets --jq '.assets[].name' \
+              | grep -E '^(apps_nightly\.json|KeiPix-(iOS|iPadOS)-.*-unsigned\.ipa)$' \
+              || true
+          )
+
       - name: Publish nightly release assets
         uses: softprops/action-gh-release@v3
         with:

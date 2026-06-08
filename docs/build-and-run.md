@@ -159,7 +159,7 @@ GitHub Actions workflow 位于 `.github/workflows/macos-build.yml`：
 - SwiftPM job 缓存 `.build` / SwiftPM cache，iOS 与 iPadOS 打包 job 缓存各自的 `.tmp/DerivedData-unsigned-ipa-*`；cache key 覆盖 Swift source、资源、XcodeGen spec、plist、entitlements 和版本配置
 - mobile packaging 在 CI 中会重新生成 `KeiPix.xcodeproj`；本地脚本也会在项目缺失、`project.yml`/source/plist/privacy 输入更新时重新生成，避免 stale Xcode project 漏掉新增 Swift 文件
 - checkout 使用完整 git history 和 tags。非 tag 构建设置 `KEIPIX_BUILD_NUMBER_STRATEGY=git`，优先按最近 `v*` 版本 tag 的提交距离派生 build number，没有版本 tag 时用 commit count 兜底；tag `v*` 构建保持 `CURRENT_PROJECT_VERSION`
-- `master` push 且测试和两个 IPA job 都成功后，`publish-livecontainer-nightly` 会生成 `apps_nightly.json`，把 `nightly` tag / release 移到当前提交，并上传订阅源、iOS unsigned IPA、iPadOS unsigned IPA 三个 release assets
+- `master` push 且测试和两个 IPA job 都成功后，`publish-livecontainer-nightly` 会生成 `apps_nightly.json`，把 `nightly` tag / release 移到当前提交，清理旧 nightly IPA/source assets，并上传订阅源、iOS unsigned IPA、iPadOS unsigned IPA 三个 release assets
 - tag `v*` 时把 macOS `.zip` / `.dmg` 产物附加到 GitHub Release
 
 本地可复现同样的打包产物：
