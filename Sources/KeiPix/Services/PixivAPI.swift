@@ -73,7 +73,7 @@ actor PixivAPI {
         webSession
     }
 
-    func savePixivWebSession(cookies: [PixivWebSessionCookie], userID: String) throws -> PixivWebSession {
+    func savePixivWebSession(cookies: [PixivWebSessionCookie], userID: String) async throws -> PixivWebSession {
         let connected = PixivWebSession(
             userID: userID,
             connectedAt: Date(),
@@ -82,6 +82,7 @@ actor PixivAPI {
         guard connected.isUsable else {
             throw PixivAPIError.serverMessage(L10n.pixivWebSessionMissingLoginCookie)
         }
+        try await validatePixivWebSession(connected)
         try webSessionStore.save(connected)
         if session?.user.id == userID {
             webSession = connected
@@ -94,6 +95,56 @@ actor PixivAPI {
         if session?.user.id == userID {
             webSession = nil
         }
+    }
+
+    private func validatePixivWebSession(_ candidate: PixivWebSession) async throws {
+        guard let cookieHeader = candidate.cookieHeader else {
+            throw PixivAPIError.serverMessage(L10n.pixivWebSessionMissingLoginCookie)
+        }
+
+        let url = URL(string: "/users/\(candidate.userID)/bookmarks/collections", relativeTo: Endpoint.webBase)!
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        applyPixivWebPageHeaders(to: &request)
+        request.setValue(cookieHeader, forHTTPHeaderField: "Cookie")
+
+        let (data, response) = try await urlSession.data(for: request)
+        guard let httpResponse = response as? HTTPURLResponse,
+              (200..<300).contains(httpResponse.statusCode),
+              let html = String(data: data, encoding: .utf8) else {
+            throw PixivAPIError.invalidResponse
+        }
+
+        guard pixivWebPageLooksSignedIn(html, userID: candidate.userID) else {
+            throw PixivAPIError.serverMessage(L10n.pixivWebSessionNotSignedIn)
+        }
+    }
+
+    private func pixivWebPageLooksSignedIn(_ html: String, userID: String) -> Bool {
+        let signedInMarkers = [
+            #"href="/settings/profile""#,
+            #"href="/logout""#,
+            #""/settings/profile""#,
+            #""/logout""#
+        ]
+        if signedInMarkers.contains(where: html.contains) {
+            return true
+        }
+
+        let trimmedID = userID.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard trimmedID.isEmpty == false else { return false }
+        let accountContextMarkers = [
+            "pixiv.context",
+            "currentUser",
+            "userData"
+        ]
+        let accountIDMarkers = [
+            #""id":"\#(trimmedID)""#,
+            #""userId":"\#(trimmedID)""#,
+            #""user_id":"\#(trimmedID)""#
+        ]
+        return accountContextMarkers.contains(where: html.contains)
+            && accountIDMarkers.contains(where: html.contains)
     }
 
     func refreshCurrentSession() async throws -> PixivSession {
@@ -559,15 +610,62 @@ actor PixivAPI {
         ]
         guard let url = components.url else { throw PixivAPIError.invalidResponse }
 
-        let response: PixivWebResponse<PixivBookmarkedCollectionsResponse> = try await requestPixivWebJSON(url)
-        if response.error {
-            throw PixivAPIError.serverMessage(response.message)
+        do {
+            let response: PixivWebResponse<PixivBookmarkedCollectionsResponse> = try await requestPixivWebJSON(url)
+            if response.error {
+                return try await userBookmarkedCollectionsHTMLPage(
+                    userID: trimmedID,
+                    limit: normalizedLimit,
+                    offset: normalizedOffset
+                )
+            }
+            let apiPage = PixivCollectionListPage(
+                collections: response.body.collections,
+                total: response.body.total,
+                offset: normalizedOffset,
+                limit: normalizedLimit
+            )
+            if normalizedOffset == 0, apiPage.collections.isEmpty {
+                let htmlPage = try await userBookmarkedCollectionsHTMLPage(
+                    userID: trimmedID,
+                    limit: normalizedLimit,
+                    offset: normalizedOffset
+                )
+                if htmlPage.collections.isEmpty == false || htmlPage.total > 0 {
+                    return htmlPage
+                }
+            }
+            return apiPage
+        } catch let PixivAPIError.status(code, _) where [400, 401, 403, 404].contains(code) {
+            return try await userBookmarkedCollectionsHTMLPage(
+                userID: trimmedID,
+                limit: normalizedLimit,
+                offset: normalizedOffset
+            )
         }
-        return PixivCollectionListPage(
-            collections: response.body.collections,
-            total: response.body.total,
-            offset: normalizedOffset,
-            limit: normalizedLimit
+    }
+
+    private func userBookmarkedCollectionsHTMLPage(
+        userID: String,
+        limit: Int,
+        offset: Int
+    ) async throws -> PixivCollectionListPage {
+        guard var components = URLComponents(
+            url: URL(string: "/users/\(userID)/bookmarks/collections", relativeTo: Endpoint.webBase)!,
+            resolvingAgainstBaseURL: true
+        ) else {
+            throw PixivAPIError.invalidResponse
+        }
+        let page = max(1, (offset / max(limit, 1)) + 1)
+        components.queryItems = page > 1 ? [URLQueryItem(name: "p", value: "\(page)")] : nil
+        guard let url = components.url else { throw PixivAPIError.invalidResponse }
+
+        let html = try await fetchPixivWebPage(url: url)
+        return PixivCollectionHTMLParser.parseListPage(
+            html,
+            sourceURL: url,
+            offset: offset,
+            limit: limit
         )
     }
 
@@ -1418,17 +1516,10 @@ actor PixivAPI {
     func fetchPixivWebPage(url: URL) async throws -> String {
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
-        // Use a browser-like UA for the web page, matching pixez's approach.
-        request.setValue(
-            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
-                + "AppleWebKit/605.1.15 (KHTML, like Gecko) "
-                + "Version/26.0 Safari/605.1.15",
-            forHTTPHeaderField: "User-Agent"
-        )
-        request.setValue(
-            Locale.current.identifier.replacingOccurrences(of: "_", with: "-"),
-            forHTTPHeaderField: "Accept-Language"
-        )
+        applyPixivWebPageHeaders(to: &request)
+        if let cookieHeader = webSession?.cookieHeader {
+            request.setValue(cookieHeader, forHTTPHeaderField: "Cookie")
+        }
         if let token = session?.accessToken {
             request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         }
@@ -1471,6 +1562,18 @@ actor PixivAPI {
         if let cookieHeader = webSession?.cookieHeader {
             request.setValue(cookieHeader, forHTTPHeaderField: "Cookie")
         }
+    }
+
+    private func applyPixivWebPageHeaders(to request: inout URLRequest) {
+        request.setValue(
+            AppVersion.current.desktopSafariUserAgent(),
+            forHTTPHeaderField: "User-Agent"
+        )
+        request.setValue(
+            Locale.current.identifier.replacingOccurrences(of: "_", with: "-"),
+            forHTTPHeaderField: "Accept-Language"
+        )
+        request.setValue("https://www.pixiv.net/", forHTTPHeaderField: "Referer")
     }
 
     private static func batches<Element>(_ elements: [Element], size: Int) -> [[Element]] {

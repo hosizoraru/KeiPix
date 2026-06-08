@@ -59,9 +59,17 @@ extension KeiPixStore {
             pixivCollectionErrorMessage = nil
         } catch let error as URLError where error.code == .cancelled {
             pixivCollectionErrorMessage = nil
+        } catch let error as URLError where mode == .saved
+            && error.code == .appTransportSecurityRequiresSecureConnection {
+            pixivCollections = []
+            await clearSavedPixivCollectionWebSessionAfterFailure(userID: String(session.user.id))
         } catch let PixivAPIError.status(code, _) where mode == .saved && [400, 401, 403, 404].contains(code) {
             pixivCollections = []
-            pixivCollectionErrorMessage = L10n.savedPixivCollectionsWebSessionRequiredHint
+            await clearSavedPixivCollectionWebSessionAfterFailure(userID: String(session.user.id))
+        } catch let PixivAPIError.serverMessage(message) where mode == .saved
+            && message == L10n.pixivWebSessionNotSignedIn {
+            pixivCollections = []
+            await clearSavedPixivCollectionWebSessionAfterFailure(userID: String(session.user.id))
         } catch {
             pixivCollections = []
             pixivCollectionErrorMessage = error.localizedDescription
@@ -113,12 +121,26 @@ extension KeiPixStore {
             pixivCollectionErrorMessage = nil
         } catch let error as URLError where error.code == .cancelled {
             pixivCollectionErrorMessage = nil
+        } catch let error as URLError where mode == .saved
+            && error.code == .appTransportSecurityRequiresSecureConnection {
+            pixivCollectionNextOffset = nil
+            await clearSavedPixivCollectionWebSessionAfterFailure(userID: String(session.user.id))
         } catch let PixivAPIError.status(code, _) where mode == .saved && [400, 401, 403, 404].contains(code) {
             pixivCollectionNextOffset = nil
-            pixivCollectionErrorMessage = L10n.savedPixivCollectionsWebSessionRequiredHint
+            await clearSavedPixivCollectionWebSessionAfterFailure(userID: String(session.user.id))
+        } catch let PixivAPIError.serverMessage(message) where mode == .saved
+            && message == L10n.pixivWebSessionNotSignedIn {
+            pixivCollectionNextOffset = nil
+            await clearSavedPixivCollectionWebSessionAfterFailure(userID: String(session.user.id))
         } catch {
             pixivCollectionErrorMessage = error.localizedDescription
         }
+    }
+
+    private func clearSavedPixivCollectionWebSessionAfterFailure(userID: String) async {
+        try? await api.clearPixivWebSession(userID: userID)
+        pixivWebSession = nil
+        pixivCollectionErrorMessage = L10n.savedPixivCollectionsWebSessionRequiredHint
     }
 
     private func applyPixivCollectionPage(_ page: PixivCollectionListPage, replacing: Bool) {

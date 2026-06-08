@@ -22853,6 +22853,35 @@
         }
       }
     },
+    "Pixiv Web did not report a signed-in session. Sign in on the page first, then save again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pixiv Web did not report a signed-in session. Sign in on the page first, then save again."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pixiv Web がログイン済みセッションを返しませんでした。ページでログインしてから、もう一度保存してください。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pixiv Web 没有确认这是已登录会话。请先在页面里登录，然后再保存。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pixiv Web 沒有確認這是已登入會話。請先在頁面裡登入，然後再儲存。"
+          }
+        }
+      }
+    },
     "Pixiv Web session connection failed.": {
       "extractionState": "manual",
       "localizations": {

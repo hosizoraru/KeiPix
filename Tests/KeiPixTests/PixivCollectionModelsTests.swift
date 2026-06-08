@@ -318,4 +318,102 @@ struct PixivCollectionModelsTests {
         #expect(owned.body.collections.first?.pixivURL?.absoluteString == "https://www.pixiv.net/collections/49895345339794251171")
         #expect(bookmarked.body.collections.map(\.id) == owned.body.collections.map(\.id))
     }
+
+    @Test("Pixiv Web bookmarked collection page HTML maps saved cards")
+    func bookmarkedCollectionHTMLMapsSavedCards() throws {
+        let html = """
+        <section>
+          <div>
+            <h2 font-size="20" color="text2">珍藏册</h2>
+            <div><span>1</span></div>
+          </div>
+          <div class="gap-x-24 gap-y-36 grid" data-ga4-label="grid_content">
+            <div class="flex flex-col gap-y-4" data-ga4-label="thumbnail">
+              <div class="aspect-square overflow-hidden relative">
+                <a class="block size-full" data-ga4-label="collection_link" data-ga4-entity-id="collection/49895345339794251171" href="/collections/49895345339794251171">
+                  <img class="size-full" loading="lazy" src="https://embed.pixiv.net/next/collection/49895345339794251171/c0af4441c6a85481/6/288x288/thumbnail?format=png">
+                </a>
+              </div>
+              <div class="flex items-center gap-x-4">
+                <a class="text-text1" data-ga4-label="title_link" data-ga4-entity-id="collection/49895345339794251171" href="/collections/49895345339794251171">
+                  <div class="charcoal-text-ellipsis" title="❤️ソルト❤️">❤️ソルト❤️</div>
+                </a>
+              </div>
+              <div class="flex items-center gap-x-4">
+                <span class="text-14 text-text2">创建者：</span>
+                <a data-gtm-value="110913610" data-ga4-label="user_icon_link" data-ga4-entity-id="user/110913610" href="/users/110913610">
+                  <div title="HaiHome[ソルト]" role="img">
+                    <img alt="HaiHome[ソルト]" width="24" height="24" src="https://i.pximg.net/user-profile/img/2024/11/03/11/53/54/26556070_e8d94c667a7fc4f433ab6162ffb795f9_170.png">
+                  </div>
+                </a>
+              </div>
+            </div>
+          </div>
+        </section>
+        <nav data-size="M" aria-label="Pagination">
+          <a hidden="" aria-label="Next" aria-disabled="true"></a>
+        </nav>
+        """
+
+        let page = PixivCollectionHTMLParser.parseListPage(
+            html,
+            sourceURL: try #require(URL(string: "https://www.pixiv.net/users/41657557/bookmarks/collections")),
+            offset: 0,
+            limit: 48
+        )
+        let collection = try #require(page.collections.first)
+
+        #expect(page.total == 1)
+        #expect(page.nextOffset == nil)
+        #expect(page.collections.count == 1)
+        #expect(collection.id == "49895345339794251171")
+        #expect(collection.title == "❤️ソルト❤️")
+        #expect(collection.owner.id == 110_913_610)
+        #expect(collection.owner.name == "HaiHome[ソルト]")
+        #expect(collection.thumbnailImageURL?.absoluteString == "https://embed.pixiv.net/next/collection/49895345339794251171/c0af4441c6a85481/6/288x288/thumbnail?format=png")
+        #expect(collection.coverImageURL == collection.thumbnailImageURL)
+        #expect(collection.pixivURL?.absoluteString == "https://www.pixiv.net/collections/49895345339794251171")
+    }
+
+    @Test("Pixiv Web collection HTML cards tolerate lazy srcset thumbnails")
+    func collectionHTMLCardsTolerateLazySrcsetThumbnails() throws {
+        let html = """
+        <section>
+          <h2>珍藏册</h2>
+          <div>
+            <a href="/collections/49895345339794251171" data-ga4-entity-id="collection/49895345339794251171">
+              <picture>
+                <source srcset="https://embed.pixiv.net/next/collection/49895345339794251171/hash/2/288x288/thumbnail 1x, https://embed.pixiv.net/next/collection/49895345339794251171/hash/2/540x540/thumbnail 2x">
+                <img loading="lazy" alt="">
+              </picture>
+            </a>
+            <a href="/collections/49895345339794251171" data-ga4-label="title_link">
+              <span title="❤️ソルト❤️">❤️ソルト❤️</span>
+            </a>
+            <a href="/users/110913610" data-ga4-entity-id="user/110913610">
+              <img alt="HaiHome[ソルト]" src="https://i.pximg.net/user-profile/img/2024/11/03/11/53/54/26556070_170.png">
+            </a>
+          </div>
+          <nav aria-label="Pagination">
+            <a href="/users/41657557/bookmarks/collections?p=2"></a>
+          </nav>
+        </section>
+        """
+
+        let page = PixivCollectionHTMLParser.parseListPage(
+            html,
+            sourceURL: try #require(URL(string: "https://www.pixiv.net/users/41657557/bookmarks/collections")),
+            offset: 0,
+            limit: 48
+        )
+        let collection = try #require(page.collections.first)
+
+        #expect(page.total == 2)
+        #expect(page.nextOffset == 1)
+        #expect(collection.id == "49895345339794251171")
+        #expect(collection.title == "❤️ソルト❤️")
+        #expect(collection.owner.id == 110_913_610)
+        #expect(collection.owner.name == "HaiHome[ソルト]")
+        #expect(collection.thumbnailImageURL?.absoluteString == "https://embed.pixiv.net/next/collection/49895345339794251171/hash/2/288x288/thumbnail?format=png")
+    }
 }

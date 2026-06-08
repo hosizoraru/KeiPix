@@ -819,6 +819,7 @@ enum L10n {
     static var pixivWebSessionNoCookies: String { text("No Pixiv Web cookies were found yet. Sign in on the page first, then save again.") }
     static var pixivWebSessionConnectionFailed: String { text("Pixiv Web session connection failed.") }
     static var pixivWebSessionMissingLoginCookie: String { text("Pixiv Web login cookie was not found. Sign in on Pixiv Web first.") }
+    static var pixivWebSessionNotSignedIn: String { text("Pixiv Web did not report a signed-in session. Sign in on the page first, then save again.") }
     static var editProfileOnPixiv: String { text("Edit Profile on Pixiv") }
     static var enable: String { text("Enable") }
     static var disable: String { text("Disable") }
