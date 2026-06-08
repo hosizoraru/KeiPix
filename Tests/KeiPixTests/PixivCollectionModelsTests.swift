@@ -48,6 +48,44 @@ struct PixivCollectionModelsTests {
         #expect(session.cookieHeader == "PHPSESSID=session-token; device_token=device-token")
     }
 
+    @Test("Pixiv collection list pages expose a next offset until the total is exhausted")
+    func collectionListPageExposesNextOffset() throws {
+        let collection = PixivCollectionDetail(
+            id: "49895345339794251171",
+            title: "❤️ソルト❤️",
+            owner: PixivUser(id: 110_913_610, name: "HaiHome[ソルト]", account: ""),
+            tags: [],
+            caption: "",
+            bookmarkCount: 287,
+            viewCount: 119_778,
+            thumbnailImageURL: URL(string: "https://embed.pixiv.net/next/collection/49895345339794251171/c0af4441c6a85481/6/288x288/thumbnail?format=png"),
+            status: "public",
+            publishedDate: nil,
+            artworks: []
+        )
+
+        let firstPage = PixivCollectionListPage(collections: [collection], total: 3, offset: 0, limit: 1)
+        let finalPage = PixivCollectionListPage(collections: [collection], total: 3, offset: 2, limit: 1)
+
+        #expect(firstPage.nextOffset == 1)
+        #expect(finalPage.nextOffset == nil)
+        #expect(PixivCollectionListPage.empty.nextOffset == nil)
+    }
+
+    @Test("Pixiv collection embed thumbnails use web image headers")
+    func collectionEmbedThumbnailsUseWebImageHeaders() throws {
+        let embedURL = try #require(
+            URL(string: "https://embed.pixiv.net/next/collection/49895345339794251171/c0af4441c6a85481/6/288x288/thumbnail?format=png")
+        )
+        let pximgURL = try #require(
+            URL(string: "https://i.pximg.net/c/250x250_80_a2/custom-thumb/img/2025/02/14/13/19/24/127225971_p0_custom1200.jpg")
+        )
+
+        #expect(ImagePipeline.requestHeaders(for: embedURL)["Referer"] == "https://www.pixiv.net/")
+        #expect(ImagePipeline.requestHeaders(for: embedURL)["User-Agent"]?.contains("Safari") == true)
+        #expect(ImagePipeline.requestHeaders(for: pximgURL)["Referer"] == "https://app-api.pixiv.net/")
+    }
+
     @Test("Pixiv Web collection detail maps metadata and works into a gallery feed")
     func collectionDetailMapsMetadataAndWorksIntoGalleryFeed() throws {
         let json = """
@@ -114,6 +152,7 @@ struct PixivCollectionModelsTests {
         #expect(collection.tags.map(\.name) == ["私の推し", "ソルト", "音ゲー", "maimai"])
         #expect(collection.bookmarkCount == 285)
         #expect(collection.viewCount == 119_071)
+        #expect(collection.thumbnailImageURL?.absoluteString == "https://embed.pixiv.net/next/collection/49895345339794251171/hash/2/288x288/thumbnail?format=png")
         #expect(collection.pixivURL?.absoluteString == "https://www.pixiv.net/collections/49895345339794251171")
         #expect(artwork.id == 127_225_971)
         #expect(artwork.title == "紗露朵 情人節巧可")
@@ -191,6 +230,7 @@ struct PixivCollectionModelsTests {
         #expect(collections.first?.title == "Portfolio")
         #expect(collections.last?.title == "大好きなオリジナル作品")
         #expect(collections.last?.tags.map(\.name) == ["ここ好き"])
+        #expect(collections.last?.thumbnailImageURL?.absoluteString == "https://embed.pixiv.net/next/collection/20446109143477266498/hash/1/288x288/thumbnail?format=png")
         #expect(collections.last?.artworks.isEmpty == true)
         #expect(collections.last?.pixivURL?.absoluteString == "https://www.pixiv.net/collections/20446109143477266498")
     }
@@ -238,6 +278,7 @@ struct PixivCollectionModelsTests {
         #expect(owned.body.collections.first?.title == "❤️ソルト❤️")
         #expect(owned.body.collections.first?.owner.id == 110_913_610)
         #expect(owned.body.collections.first?.bookmarkCount == 287)
+        #expect(owned.body.collections.first?.thumbnailImageURL?.absoluteString == "https://embed.pixiv.net/next/collection/49895345339794251171/hash/2/288x288/thumbnail?format=png")
         #expect(owned.body.collections.first?.pixivURL?.absoluteString == "https://www.pixiv.net/collections/49895345339794251171")
         #expect(bookmarked.body.collections.map(\.id) == owned.body.collections.map(\.id))
     }

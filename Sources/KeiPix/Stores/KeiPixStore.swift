@@ -46,6 +46,10 @@ final class KeiPixStore {
     var selectedPixivCollection: PixivCollectionDetail?
     var selectedPixivCollectionSourceRoute: PixivRoute?
     var isLoadingPixivCollections = false
+    var isLoadingMorePixivCollections = false
+    var pixivCollectionNextOffset: Int?
+    var pixivCollectionTotalCount = 0
+    var pixivCollectionListMode: PixivCollectionListMode = .discovery
     var pixivCollectionErrorMessage: String?
     var isPixivWebSessionPresented = false
     var readerWindowArtwork: PixivArtwork?

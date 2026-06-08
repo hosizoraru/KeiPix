@@ -50,6 +50,28 @@ enum PixivCollectionListMode: String, Sendable {
     }
 }
 
+struct PixivCollectionListPage: Equatable, Sendable {
+    let collections: [PixivCollectionDetail]
+    let total: Int
+    let offset: Int
+    let limit: Int
+
+    var nextOffset: Int? {
+        let loadedCount = offset + collections.count
+        guard collections.isEmpty == false, loadedCount < total else { return nil }
+        return loadedCount
+    }
+
+    init(collections: [PixivCollectionDetail], total: Int, offset: Int, limit: Int) {
+        self.collections = collections
+        self.total = max(total, collections.count)
+        self.offset = max(offset, 0)
+        self.limit = max(limit, 1)
+    }
+
+    static let empty = PixivCollectionListPage(collections: [], total: 0, offset: 0, limit: 1)
+}
+
 struct PixivCollectionDetail: Identifiable, Hashable, Sendable {
     let id: String
     let title: String
@@ -258,7 +280,9 @@ private struct PixivCollectionSummary: Decodable, Sendable {
         caption = try container.decodeIfPresent(String.self, forKey: .caption) ?? ""
         bookmarkCount = try container.decodeIfPresent(Int.self, forKey: .bookmarkCount) ?? 0
         viewCount = try container.decodeIfPresent(Int.self, forKey: .viewCount) ?? 0
-        thumbnailImageURL = container.decodeCleanURLIfPresent(forKey: .thumbnailImageURL)
+        thumbnailImageURL = Self.normalizedThumbnailImageURL(
+            container.decodeCleanURLIfPresent(forKey: .thumbnailImageURL)
+        )
         status = try container.decodeIfPresent(String.self, forKey: .status) ?? ""
         publishedDate = Self.parsePublishedDate(try container.decodeIfPresent(String.self, forKey: .publishedDateTime))
     }
@@ -287,5 +311,21 @@ private struct PixivCollectionSummary: Decodable, Sendable {
         formatter.timeZone = TimeZone(secondsFromGMT: 0)
         formatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
         return formatter.date(from: rawValue)
+    }
+
+    private static func normalizedThumbnailImageURL(_ url: URL?) -> URL? {
+        guard let url,
+              var components = URLComponents(url: url, resolvingAgainstBaseURL: false),
+              components.host?.lowercased() == "embed.pixiv.net",
+              components.path.contains("/next/collection/") else {
+            return url
+        }
+
+        var queryItems = components.queryItems ?? []
+        if queryItems.contains(where: { $0.name == "format" }) == false {
+            queryItems.append(URLQueryItem(name: "format", value: "png"))
+            components.queryItems = queryItems
+        }
+        return components.url ?? url
     }
 }

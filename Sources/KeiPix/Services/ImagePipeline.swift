@@ -115,10 +115,7 @@ final class ImagePipeline: @unchecked Sendable {
         // Pixiv's i.pximg.net CDN demands a `Referer` from the app
         // domain. Hoist it onto the session config so it's set on
         // every redirect chain too, not just the first request.
-        configuration.httpAdditionalHeaders = [
-            "Referer": "https://app-api.pixiv.net/",
-            "User-Agent": AppVersion.current.userAgentProduct
-        ]
+        configuration.httpAdditionalHeaders = Self.requestHeaders(for: EndpointHint.pixivImageURL)
         // Honor the user's app-level proxy preference at session init.
         // `nil` means "follow macOS network settings" — that's how
         // ProxyConfiguration.system stays in sync with the system pane
@@ -325,12 +322,31 @@ final class ImagePipeline: @unchecked Sendable {
         // URL that hits a different host than `app-api.pixiv.net`
         // and needs the Referer to follow.
         var request = URLRequest(url: url)
-        request.setValue("https://app-api.pixiv.net/", forHTTPHeaderField: "Referer")
-        request.setValue(AppVersion.current.userAgentProduct, forHTTPHeaderField: "User-Agent")
+        for (name, value) in Self.requestHeaders(for: url) {
+            request.setValue(value, forHTTPHeaderField: name)
+        }
         return request
+    }
+
+    static func requestHeaders(for url: URL) -> [String: String] {
+        if url.host?.lowercased() == "embed.pixiv.net" {
+            return [
+                "Referer": "https://www.pixiv.net/",
+                "User-Agent": AppVersion.current.desktopSafariUserAgent()
+            ]
+        }
+
+        return [
+            "Referer": "https://app-api.pixiv.net/",
+            "User-Agent": AppVersion.current.userAgentProduct
+        ]
     }
 
     private func removeInFlight(_ url: URL) {
         inFlightLock.withLock { _ = inFlight.removeValue(forKey: url) }
     }
+}
+
+private enum EndpointHint {
+    static let pixivImageURL = URL(string: "https://i.pximg.net/")!
 }

@@ -466,11 +466,17 @@ actor PixivAPI {
     }
 
     func discoverPixivCollections(limit: Int = 48, offset: Int = 0) async throws -> [PixivCollectionDetail] {
+        try await discoverPixivCollectionsPage(limit: limit, offset: offset).collections
+    }
+
+    func discoverPixivCollectionsPage(limit: Int = 48, offset: Int = 0) async throws -> PixivCollectionListPage {
         var components = URLComponents(url: URL(string: "/ajax/collections/search", relativeTo: Endpoint.webBase)!, resolvingAgainstBaseURL: true)!
+        let normalizedLimit = max(limit, 1)
+        let normalizedOffset = max(offset, 0)
         components.queryItems = [
             URLQueryItem(name: "mode", value: "all"),
-            URLQueryItem(name: "limit", value: "\(max(limit, 1))"),
-            URLQueryItem(name: "offset", value: "\(max(offset, 0))")
+            URLQueryItem(name: "limit", value: "\(normalizedLimit)"),
+            URLQueryItem(name: "offset", value: "\(normalizedOffset)")
         ]
         guard let url = components.url else { throw PixivAPIError.invalidResponse }
 
@@ -478,7 +484,12 @@ actor PixivAPI {
         if response.error {
             throw PixivAPIError.serverMessage(response.message)
         }
-        return response.body.collections
+        return PixivCollectionListPage(
+            collections: response.body.collections,
+            total: response.body.total,
+            offset: normalizedOffset,
+            limit: normalizedLimit
+        )
     }
 
     func userCollectionIDs(userID: String) async throws -> [String] {
@@ -493,8 +504,21 @@ actor PixivAPI {
     }
 
     func userPublishedCollectionDetails(userID: String, limit: Int = 48) async throws -> [PixivCollectionDetail] {
+        try await userPublishedCollectionsPage(userID: userID, limit: limit).collections
+    }
+
+    func userPublishedCollectionsPage(userID: String, limit: Int = 48, offset: Int = 0) async throws -> PixivCollectionListPage {
         let ids = try await userCollectionIDs(userID: userID)
-        return try await userCollectionDetails(userID: userID, ids: Array(ids.prefix(max(limit, 0))))
+        let normalizedLimit = max(limit, 1)
+        let normalizedOffset = max(offset, 0)
+        let pageIDs = Array(ids.dropFirst(normalizedOffset).prefix(normalizedLimit))
+        let collections = try await userCollectionDetails(userID: userID, ids: pageIDs)
+        return PixivCollectionListPage(
+            collections: collections,
+            total: ids.count,
+            offset: normalizedOffset,
+            limit: normalizedLimit
+        )
     }
 
     func userBookmarkedCollectionDetails(
@@ -503,18 +527,34 @@ actor PixivAPI {
         offset: Int = 0,
         rest: String = "show"
     ) async throws -> [PixivCollectionDetail] {
+        try await userBookmarkedCollectionsPage(
+            userID: userID,
+            limit: limit,
+            offset: offset,
+            rest: rest
+        ).collections
+    }
+
+    func userBookmarkedCollectionsPage(
+        userID: String,
+        limit: Int = 48,
+        offset: Int = 0,
+        rest: String = "show"
+    ) async throws -> PixivCollectionListPage {
         let trimmedID = userID.trimmingCharacters(in: .whitespacesAndNewlines)
         guard trimmedID.isEmpty == false, trimmedID.allSatisfy(\.isNumber) else {
             throw PixivAPIError.invalidResponse
         }
+        let normalizedLimit = max(limit, 1)
+        let normalizedOffset = max(offset, 0)
 
         var components = URLComponents(
             url: URL(string: "/ajax/user/\(trimmedID)/collections/bookmarks", relativeTo: Endpoint.webBase)!,
             resolvingAgainstBaseURL: true
         )!
         components.queryItems = [
-            URLQueryItem(name: "offset", value: "\(max(offset, 0))"),
-            URLQueryItem(name: "limit", value: "\(max(limit, 1))"),
+            URLQueryItem(name: "offset", value: "\(normalizedOffset)"),
+            URLQueryItem(name: "limit", value: "\(normalizedLimit)"),
             URLQueryItem(name: "rest", value: rest)
         ]
         guard let url = components.url else { throw PixivAPIError.invalidResponse }
@@ -523,7 +563,12 @@ actor PixivAPI {
         if response.error {
             throw PixivAPIError.serverMessage(response.message)
         }
-        return response.body.collections
+        return PixivCollectionListPage(
+            collections: response.body.collections,
+            total: response.body.total,
+            offset: normalizedOffset,
+            limit: normalizedLimit
+        )
     }
 
     func userCollectionDetails(userID: String, limit: Int = 48) async throws -> [PixivCollectionDetail] {
