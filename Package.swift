@@ -15,8 +15,12 @@ let package = Package(
     targets: [
         .executableTarget(
             name: "KeiPix",
+            exclude: [
+                "Resources/Localizable.xcstrings",
+                "Resources/Navigation.xcstrings"
+            ],
             resources: [
-                .process("Resources")
+                .process("Resources/keipixiv.icon")
             ],
             plugins: [
                 .plugin(name: "XCStringsBuilder")

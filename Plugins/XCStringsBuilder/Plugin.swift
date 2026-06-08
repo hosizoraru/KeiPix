@@ -19,20 +19,24 @@ import PackagePlugin
 struct XCStringsBuilder: BuildToolPlugin {
     func createBuildCommands(context: PluginContext, target: Target) async throws -> [Command] {
         guard let sourceModule = target as? SourceModuleTarget else { return [] }
-        let inputs = sourceModule.sourceFiles.filter { $0.url.pathExtension == "xcstrings" }
+        let resourcesDir = sourceModule.directoryURL.appendingPathComponent("Resources")
+        let inputs = try FileManager.default
+            .contentsOfDirectory(at: resourcesDir, includingPropertiesForKeys: nil)
+            .filter { $0.pathExtension == "xcstrings" }
+            .sorted { $0.lastPathComponent < $1.lastPathComponent }
         guard inputs.isEmpty == false else { return [] }
 
         let outDir = context.pluginWorkDirectoryURL.appendingPathComponent("xcstrings-out")
 
         return inputs.map { file in
             .prebuildCommand(
-                displayName: "Compile \(file.url.lastPathComponent)",
+                displayName: "Compile \(file.lastPathComponent)",
                 executable: URL(fileURLWithPath: "/usr/bin/xcrun"),
                 arguments: [
                     "xcstringstool",
                     "compile",
                     "--output-directory", outDir.path,
-                    file.url.path
+                    file.path
                 ],
                 outputFilesDirectory: outDir
             )
