@@ -450,9 +450,12 @@ enum L10n {
     static var copiedPixivWebBookmarksLink: String { text("Copied Pixiv Web bookmarks link") }
     static var openPixivWebCollections: String { text("Open Pixiv Web Collections") }
     static var pixivCollections: String { text("Pixiv Collections") }
+    static var savedPixivisionArticles: String { text("Saved Pixivision") }
+    static var savedPixivCollections: String { text("Saved Pixiv Collections") }
     static var pixivCollection: String { text("Pixiv Collection") }
     static var noPixivCollections: String { text("No Pixiv collections") }
     static var pixivCollectionsEmptyHint: String { text("Discover user-created Pixiv collections here. You can also paste a collection link to open it natively.") }
+    static var savedPixivCollectionsEmptyHint: String { text("Bookmarked Pixiv collections appear here. Use Pixiv Collections discovery or Pixiv Web to save collections.") }
     static var refreshedPixivCollectionsFormat: String { text("Refreshed %d Pixiv collections") }
     static var collectionWorksCountFormat: String { text("%d works") }
     static var pixivWeb: String { text("Pixiv Web") }

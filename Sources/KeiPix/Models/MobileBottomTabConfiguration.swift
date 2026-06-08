@@ -352,7 +352,9 @@ enum MobileRouteMenuConfiguration {
                     routes: [
                         .publicBookmarks,
                         .privateBookmarks,
-                        .bookmarkTags
+                        .bookmarkTags,
+                        .savedPixivisionArticles,
+                        .savedPixivCollections
                     ]
                 ),
                 MobileRouteMenuSection(

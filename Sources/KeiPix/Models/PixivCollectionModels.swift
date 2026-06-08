@@ -1,5 +1,37 @@
 import Foundation
 
+enum PixivCollectionListMode: String, Sendable {
+    case discovery
+    case saved
+
+    var route: PixivRoute {
+        switch self {
+        case .discovery:
+            .pixivCollections
+        case .saved:
+            .savedPixivCollections
+        }
+    }
+
+    var title: String {
+        switch self {
+        case .discovery:
+            L10n.pixivCollections
+        case .saved:
+            L10n.savedPixivCollections
+        }
+    }
+
+    var emptyHint: String {
+        switch self {
+        case .discovery:
+            L10n.pixivCollectionsEmptyHint
+        case .saved:
+            L10n.savedPixivCollectionsEmptyHint
+        }
+    }
+}
+
 struct PixivCollectionDetail: Identifiable, Hashable, Sendable {
     let id: String
     let title: String

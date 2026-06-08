@@ -104,6 +104,8 @@ struct DiscoveryDashboardSection: Identifiable {
                     .publicBookmarks,
                     .privateBookmarks,
                     .bookmarkTags,
+                    .savedPixivisionArticles,
+                    .savedPixivCollections,
                     .following,
                     .privateFollowing,
                     .history,

@@ -2,7 +2,13 @@ import SwiftUI
 
 struct PixivCollectionsView: View {
     @Bindable var store: KeiPixStore
+    let mode: PixivCollectionListMode
     @State private var actionMessage: String?
+
+    init(store: KeiPixStore, mode: PixivCollectionListMode = .discovery) {
+        self.store = store
+        self.mode = mode
+    }
 
     var body: some View {
         Group {
@@ -16,10 +22,10 @@ struct PixivCollectionsView: View {
                 content
             }
         }
-        .task(id: store.routeRefreshGeneration) {
-            await store.refreshPixivCollections()
+        .task(id: refreshTaskID) {
+            await store.refreshPixivCollections(mode: mode)
         }
-        .platformPageNavigationChrome(title: L10n.pixivCollections, status: statusText)
+        .platformPageNavigationChrome(title: mode.title, status: statusText)
         .overlay(alignment: .bottom) {
             if let actionMessage {
                 FloatingStatusBanner(maxWidth: 520) {
@@ -59,7 +65,7 @@ struct PixivCollectionsView: View {
 
     private var header: some View {
         HStack(spacing: 12) {
-            Label(L10n.pixivCollections, systemImage: "rectangle.stack.badge.person.crop")
+            Label(mode.title, systemImage: mode.route.systemImage)
                 .font(.headline.weight(.semibold))
                 .lineLimit(1)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -146,8 +152,18 @@ struct PixivCollectionsView: View {
         )
     }
 
+    private var refreshTaskID: String {
+        "\(mode.rawValue)-\(store.routeRefreshGeneration)"
+    }
+
     private var collectionsWebURL: URL? {
-        PixivWebURLBuilder.collectionsURL()
+        switch mode {
+        case .discovery:
+            return PixivWebURLBuilder.collectionsURL()
+        case .saved:
+            guard let userID = store.session?.user.id else { return nil }
+            return PixivWebURLBuilder.userBookmarkCollectionsURL(userID: String(userID))
+        }
     }
 
     private var statusText: String {
@@ -161,11 +177,11 @@ struct PixivCollectionsView: View {
     }
 
     private var emptyStateSubtitle: String {
-        store.pixivCollectionErrorMessage ?? L10n.pixivCollectionsEmptyHint
+        store.pixivCollectionErrorMessage ?? mode.emptyHint
     }
 
     private func refresh(showFeedback: Bool) async {
-        await store.refreshPixivCollections()
+        await store.refreshPixivCollections(mode: mode)
         if showFeedback, store.pixivCollectionErrorMessage == nil {
             actionMessage = String(format: L10n.refreshedPixivCollectionsFormat, store.pixivCollections.count)
         }
@@ -173,7 +189,7 @@ struct PixivCollectionsView: View {
 
     private func openCollection(_ collection: PixivCollectionDetail) async {
         do {
-            try await store.openPixivCollection(id: collection.id)
+            try await store.openPixivCollection(id: collection.id, sourceRoute: mode.route)
         } catch {
             actionMessage = error.localizedDescription
         }

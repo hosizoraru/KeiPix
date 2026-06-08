@@ -21258,6 +21258,64 @@
         }
       }
     },
+    "Saved Pixivision": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved Pixivision"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保存したPixivision"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "收藏的 Pixivision"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "收藏的 Pixivision"
+          }
+        }
+      }
+    },
+    "Saved Pixiv Collections": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved Pixiv Collections"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保存したPixivコレクション"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "收藏的 Pixiv 珍藏册"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "收藏的 Pixiv 珍藏冊"
+          }
+        }
+      }
+    },
     "Pixiv Web": {
       "extractionState": "manual",
       "localizations": {
@@ -21399,6 +21457,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "在這裡發現使用者建立的 Pixiv 珍藏冊。你也可以貼上珍藏冊連結，用原生介面開啟。"
+          }
+        }
+      }
+    },
+    "Bookmarked Pixiv collections appear here. Use Pixiv Collections discovery or Pixiv Web to save collections.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bookmarked Pixiv collections appear here. Use Pixiv Collections discovery or Pixiv Web to save collections."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ブックマークしたPixivコレクションがここに表示されます。Pixivコレクションの発見ページまたはPixiv Webで保存できます。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "收藏过的 Pixiv 珍藏册会显示在这里。可以在 Pixiv 珍藏册发现页或 Pixiv Web 中收藏。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "收藏過的 Pixiv 珍藏冊會顯示在這裡。可以在 Pixiv 珍藏冊發現頁或 Pixiv Web 中收藏。"
           }
         }
       }

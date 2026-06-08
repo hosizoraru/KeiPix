@@ -147,6 +147,8 @@ struct MobileBottomTabConfigurationTests {
         #expect(bookmarkRoutes.contains(.publicBookmarks))
         #expect(bookmarkRoutes.contains(.pixivCollections) == false)
         #expect(bookmarkRoutes.contains(.pixivCollectionWorks) == false)
+        #expect(bookmarkRoutes.contains(.savedPixivisionArticles))
+        #expect(bookmarkRoutes.contains(.savedPixivCollections))
         #expect(bookmarkRoutes.contains(.allFollowing) == false)
         #expect(bookmarkRoutes.contains(.followingCreators))
         #expect(bookmarkRoutes.contains(.downloads))
@@ -187,6 +189,8 @@ struct MobileBottomTabConfigurationTests {
         #expect(MobileBottomTabKind.kind(containing: .watchLater) == .bookmarks)
         #expect(MobileBottomTabKind.kind(containing: .pixivCollections) == .illustrations)
         #expect(MobileBottomTabKind.kind(containing: .pixivCollectionWorks) == .illustrations)
+        #expect(MobileBottomTabKind.kind(containing: .savedPixivisionArticles) == .bookmarks)
+        #expect(MobileBottomTabKind.kind(containing: .savedPixivCollections) == .bookmarks)
     }
 
     @Test("Mobile cold launch restores the last concrete bottom-tab page")

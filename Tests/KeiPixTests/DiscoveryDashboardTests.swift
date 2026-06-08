@@ -34,6 +34,20 @@ struct DiscoveryDashboardTests {
         #expect(dashboardLibrary.routes.contains(.pixivCollections) == false)
     }
 
+    @Test("Saved Pixivision and Pixiv collections are classified with the library")
+    func savedEditorialCollectionsAreClassifiedWithLibrary() throws {
+        let sidebarWorks = try #require(PixivRoute.sidebarSections.first { $0 == .works })
+        let sidebarLibrary = try #require(PixivRoute.sidebarSections.first { $0 == .library })
+        let dashboardLibrary = try #require(DiscoveryDashboardSection.all.first { $0.id == "library" })
+
+        #expect(sidebarWorks.routes.contains(.savedPixivisionArticles) == false)
+        #expect(sidebarWorks.routes.contains(.savedPixivCollections) == false)
+        #expect(sidebarLibrary.routes.contains(.savedPixivisionArticles))
+        #expect(sidebarLibrary.routes.contains(.savedPixivCollections))
+        #expect(dashboardLibrary.routes.contains(.savedPixivisionArticles))
+        #expect(dashboardLibrary.routes.contains(.savedPixivCollections))
+    }
+
     @Test("Compact dashboard route previews keep density without hiding selection")
     func compactDashboardRoutePreviewsKeepDensityWithoutHidingSelection() throws {
         let ranking = try #require(DiscoveryDashboardSection.all.first { $0.id == "ranking" })

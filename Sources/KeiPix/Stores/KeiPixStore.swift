@@ -43,6 +43,7 @@ final class KeiPixStore {
     var selectedSpotlightArticle: PixivSpotlightArticle?
     var pixivCollections: [PixivCollectionDetail] = []
     var selectedPixivCollection: PixivCollectionDetail?
+    var selectedPixivCollectionSourceRoute: PixivRoute?
     var isLoadingPixivCollections = false
     var pixivCollectionErrorMessage: String?
     var readerWindowArtwork: PixivArtwork?
@@ -396,6 +397,7 @@ final class KeiPixStore {
         selectedSpotlightArticle = nil
         pixivCollections = []
         selectedPixivCollection = nil
+        selectedPixivCollectionSourceRoute = nil
         pixivCollectionErrorMessage = nil
         readerWindowArtwork = nil
         imageSourceSearchRequest = nil
@@ -416,6 +418,7 @@ final class KeiPixStore {
         feedNarrowingContext = nil
         if route != .pixivCollectionWorks {
             selectedPixivCollection = nil
+            selectedPixivCollectionSourceRoute = nil
         }
         errorMessage = nil
         clearNavigationHistory()

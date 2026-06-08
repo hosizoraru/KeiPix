@@ -96,6 +96,8 @@ enum PixivRouteSection: Identifiable {
                 .publicBookmarks,
                 .privateBookmarks,
                 .bookmarkTags,
+                .savedPixivisionArticles,
+                .savedPixivCollections,
                 .following,
                 .privateFollowing,
                 .followingCreators,
@@ -151,6 +153,8 @@ enum PixivRoute: String, CaseIterable, Identifiable, Codable {
     case privateBookmarks
     case bookmarkTags
     case pixivCollections
+    case savedPixivisionArticles
+    case savedPixivCollections
     case pixivCollectionWorks
     case allFollowing
     case following
@@ -230,6 +234,8 @@ enum PixivRoute: String, CaseIterable, Identifiable, Codable {
         case .privateBookmarks: L10n.privateBookmarks
         case .bookmarkTags: L10n.bookmarkTags
         case .pixivCollections: L10n.pixivCollections
+        case .savedPixivisionArticles: L10n.savedPixivisionArticles
+        case .savedPixivCollections: L10n.savedPixivCollections
         case .pixivCollectionWorks: L10n.pixivCollection
         case .allFollowing: L10n.allFollowing
         case .following: L10n.publicFollowing
@@ -279,6 +285,8 @@ enum PixivRoute: String, CaseIterable, Identifiable, Codable {
              .spotlight,
              .bookmarkTags,
              .pixivCollections,
+             .savedPixivisionArticles,
+             .savedPixivCollections,
              .mutedContent,
              .watchLater,
              .novelRecommended,
@@ -474,6 +482,8 @@ enum PixivRoute: String, CaseIterable, Identifiable, Codable {
         case .publicBookmarks, .privateBookmarks: "bookmark"
         case .bookmarkTags: "tag"
         case .pixivCollections: "rectangle.stack.badge.person.crop"
+        case .savedPixivisionArticles: "star.square.on.square"
+        case .savedPixivCollections: "rectangle.stack.badge.person.crop"
         case .pixivCollectionWorks: "rectangle.stack"
         case .allFollowing: "person.2.wave.2"
         case .following: "person.2"

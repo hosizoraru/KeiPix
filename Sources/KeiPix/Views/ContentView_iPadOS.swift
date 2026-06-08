@@ -1399,6 +1399,14 @@ struct ContentView: View {
                 SpotlightView(store: store) { article in
                     presentSpotlightArticle(article, usesPanel: showsSidebarToggle)
                 }
+            } else if store.selectedRoute == .savedPixivisionArticles {
+                SpotlightView(
+                    store: store,
+                    fixedCollectionMode: .favorites,
+                    title: L10n.savedPixivisionArticles
+                ) { article in
+                    presentSpotlightArticle(article, usesPanel: showsSidebarToggle)
+                }
             } else if store.selectedRoute == .search,
                       isCompactCustomTabRootActive,
                       hasActiveGlobalSearchText == false {
@@ -1407,6 +1415,8 @@ struct ContentView: View {
                 BookmarkTagsView(store: store)
             } else if store.selectedRoute == .pixivCollections {
                 PixivCollectionsView(store: store)
+            } else if store.selectedRoute == .savedPixivCollections {
+                PixivCollectionsView(store: store, mode: .saved)
             } else if store.selectedRoute == .history {
                 BrowsingHistoryView(store: store)
             } else if store.selectedRoute == .watchLater {

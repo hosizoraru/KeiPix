@@ -860,10 +860,18 @@ private struct ContentColumnView: View {
             TrendingTagsView(store: store)
         } else if store.selectedRoute == .spotlight {
             SpotlightView(store: store)
+        } else if store.selectedRoute == .savedPixivisionArticles {
+            SpotlightView(
+                store: store,
+                fixedCollectionMode: .favorites,
+                title: L10n.savedPixivisionArticles
+            )
         } else if store.selectedRoute == .bookmarkTags {
             BookmarkTagsView(store: store)
         } else if store.selectedRoute == .pixivCollections {
             PixivCollectionsView(store: store)
+        } else if store.selectedRoute == .savedPixivCollections {
+            PixivCollectionsView(store: store, mode: .saved)
         } else if store.selectedRoute == .history {
             BrowsingHistoryView(store: store)
         } else if store.selectedRoute == .watchLater {

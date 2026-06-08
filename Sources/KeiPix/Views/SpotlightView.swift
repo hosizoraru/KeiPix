@@ -5,6 +5,8 @@ import UIKit
 
 struct SpotlightView: View {
     @Bindable var store: KeiPixStore
+    let fixedCollectionMode: SpotlightArticleCollectionMode?
+    let title: String
     var openArticle: ((PixivSpotlightArticle) -> Void)?
     #if os(iOS)
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
@@ -18,6 +20,19 @@ struct SpotlightView: View {
     @State private var collectionMode = SpotlightArticleCollectionMode.latest
     @State private var category = SpotlightArticleCategory.all
     @State private var autoLoadedSpotlightPageURLs: Set<URL> = []
+
+    init(
+        store: KeiPixStore,
+        fixedCollectionMode: SpotlightArticleCollectionMode? = nil,
+        title: String? = nil,
+        openArticle: ((PixivSpotlightArticle) -> Void)? = nil
+    ) {
+        self.store = store
+        self.fixedCollectionMode = fixedCollectionMode
+        self.title = title ?? L10n.spotlight
+        self.openArticle = openArticle
+        _collectionMode = State(initialValue: fixedCollectionMode ?? .latest)
+    }
 
     var body: some View {
         Group {
@@ -77,19 +92,19 @@ struct SpotlightView: View {
             }
         }
         .platformPageHeader(
-            title: L10n.spotlight,
+            title: title,
             status: spotlightNavigationStatus
         ) {
             compactCollectionMenu
         }
-        .platformPageNavigationChrome(title: L10n.spotlight, status: spotlightNavigationStatus)
+        .platformPageNavigationChrome(title: title, status: spotlightNavigationStatus)
         .toolbar {
             if store.session != nil {
                 // Principal placement works well on macOS and wide
                 // iPad layouts, but it becomes an extra floating tab
                 // strip on iPhone. Compact iOS moves the collection
                 // switcher into the title row instead.
-                if usesCompactSpotlightChrome == false {
+                if usesCompactSpotlightChrome == false, fixedCollectionMode == nil {
                     ToolbarItem(placement: .principal) {
                         collectionModePicker
                             .pickerStyle(.segmented)
@@ -150,6 +165,12 @@ struct SpotlightView: View {
         .animation(.snappy(duration: 0.18), value: errorMessage)
         .task(id: store.routeRefreshGeneration) {
             await load()
+        }
+        .onAppear {
+            applyFixedCollectionModeIfNeeded()
+        }
+        .onChange(of: fixedCollectionMode) { _, _ in
+            applyFixedCollectionModeIfNeeded()
         }
         .onChange(of: collectionMode) { previous, next in
             // Switching to a network-backed collection (.latest /
@@ -297,7 +318,7 @@ struct SpotlightView: View {
 
     @ViewBuilder
     private var compactCollectionMenu: some View {
-        if usesCompactSpotlightChrome, store.session != nil {
+        if usesCompactSpotlightChrome, store.session != nil, fixedCollectionMode == nil {
             Menu {
                 collectionModePicker
                     .pickerStyle(.inline)
@@ -383,6 +404,7 @@ struct SpotlightView: View {
 
     private func load() async {
         guard store.session != nil else { return }
+        applyFixedCollectionModeIfNeeded()
         isLoading = true
         errorMessage = nil
         defer { isLoading = false }
@@ -509,6 +531,11 @@ struct SpotlightView: View {
             store.selectedSpotlightArticle = displayedArticles.first
         }
         showActionMessage(L10n.clearedArticleHistory)
+    }
+
+    private func applyFixedCollectionModeIfNeeded() {
+        guard let fixedCollectionMode, collectionMode != fixedCollectionMode else { return }
+        collectionMode = fixedCollectionMode
     }
 }
 
