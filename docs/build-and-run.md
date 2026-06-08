@@ -5,11 +5,25 @@ KeiPix 同时支持 SwiftPM 与 XcodeGen 开发路径。SwiftPM 主要服务 mac
 ## Requirements
 
 - macOS 26.0 或更新
-- Xcode 26.x（`project.yml` 记录 `xcodeVersion: "26.3"`）
+- Xcode 26.x，或 Xcode 27 beta 的 platform support（`project.yml` 记录 `xcodeVersion: "26.3"`，CI 仍按稳定 toolchain 运行）
 - Swift 6.2+ toolchain（`Package.swift` 使用 `// swift-tools-version: 6.2`）
 - Homebrew + XcodeGen（仅 Xcode 路径需要）
 
 `project.yml` 的 `SWIFT_VERSION: "6.0"` 是 Swift language mode；实际命令行工具链仍以 Xcode/Swift 6.2+ 为准。
+
+Xcode 27 beta 把原来的独立 Simulator UI 迁移到 Xcode 内置的 Device Hub。
+KeiPix 的移动端脚本继续用 `simctl` 做 boot、install、launch 和 screenshot，
+只在需要显示图形窗口时优先打开 `DeviceHub.app`，旧版 Xcode 再回落到
+`com.apple.iphonesimulator`。如果在 CI 或无头环境中运行，可以设置
+`KEIPIX_OPEN_DEVICE_WINDOW=0`。
+OS 版本差异被隔离在 `script/os27/open_device_hub_window.sh` 和
+`script/os26/open_simulator_window.sh`；通用构建、安装、启动逻辑仍集中在
+`script/build_and_run_simulator.sh`，避免每个入口重复一份移动端 runner。
+
+安装 Xcode 27 的 Developer Documentation 组件后，本地文档也会成为 Xcode
+MCP documentation tool 的数据源。公开 Apple 文档尚未同步 beta 细节时，优先
+用本机 Xcode 文档确认 OS 27 / SDK 27 API、弃用项和平台行为，再把结论落到
+代码或测试里。
 
 ## Build And Run The Local App
 
@@ -61,6 +75,9 @@ KEIPIX_IPADOS_SIMULATOR_ID=<ipad-udid> ./script/build_and_run_ipados.sh --verify
 | `KEIPIX_IOS_SIMULATOR_NAME` / `KEIPIX_IPADOS_SIMULATOR_NAME` | 自动查找或创建的 Simulator 名称 |
 | `KEIPIX_IOS_DEVICE_TYPE` / `KEIPIX_IPADOS_DEVICE_TYPE` | 自动创建时使用的 `simctl` device type id |
 | `KEIPIX_DERIVED_DATA_PATH` | 共用 DerivedData override |
+| `KEIPIX_OPEN_DEVICE_WINDOW=0` | 只跑命令行 boot/install/launch/screenshot，不打开 Device Hub 或 Simulator 图形窗口 |
+| `KEIPIX_DEVICE_HUB_APP` | 覆盖 Xcode 27 `DeviceHub.app` 路径 |
+| `KEIPIX_SIMULATOR_APP` | 覆盖旧版 `Simulator.app` 路径 |
 | `KEIPIX_XCODEBUILD_VERBOSE=1` | 显示完整 `xcodebuild` 日志；默认使用 `-quiet` 保持脚本输出简洁 |
 
 ## Launch Modes
@@ -246,5 +263,6 @@ https://github.com/hosizoraru/KeiPix/releases/download/nightly/apps_nightly.json
 - 启动后闪退：用 `./script/build_and_run.sh --logs` 看 sandbox、resource 或 entitlement 错误。
 - 视觉 QA 截图为空：确认目标窗口面积不小于 240x240，并且先用对应 `--visual-qa-*` 启动。
 - Token 失效：Settings -> Runtime Readiness -> Account Health Check，或使用 `--verify` 走隔离 sample 模式验证 UI。
-- iOS / iPadOS 相关编译失败：先确认使用 Xcode 26+ SDK、正确 destination，并确认相关 AppKit-only bridge 有 `#if os(macOS)` 隔离。
+- Xcode 27 beta 找不到独立 Simulator：确认 `/Applications/Xcode-beta.app/Contents/Applications/DeviceHub.app` 存在；脚本会优先打开 Device Hub，仍用 `xcrun simctl` 完成自动化。
+- iOS / iPadOS 相关编译失败：先确认使用 Xcode 26+ 或 Xcode 27 beta SDK、正确 destination，并确认相关 AppKit-only bridge 有 `#if os(macOS)` 隔离。
 - 并行验收混到其他工作树：给脚本传 `KEIPIX_IOS_SIMULATOR_ID` 或 `KEIPIX_IPADOS_SIMULATOR_ID`，并使用独立 `KEIPIX_DERIVED_DATA_PATH`。

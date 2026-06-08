@@ -77,6 +77,9 @@ Environment overrides:
   KEIPIX_IOS_DEVICE_TYPE=<simctl device type id>
   KEIPIX_IPADOS_DEVICE_TYPE=<simctl device type id>
   KEIPIX_DERIVED_DATA_PATH=<path>
+  KEIPIX_OPEN_DEVICE_WINDOW=0              Skip opening Device Hub/Simulator UI
+  KEIPIX_DEVICE_HUB_APP=<path>             Override Xcode 27 DeviceHub.app path
+  KEIPIX_SIMULATOR_APP=<path>              Override legacy Simulator.app path
   KEIPIX_VERIFY_SETTLE_SECONDS=3
   KEIPIX_XCODEBUILD_VERBOSE=1
 USAGE
@@ -187,6 +190,22 @@ simulator_state() {
   fi
 }
 
+open_developer_device_window() {
+  if [ "${CI:-}" = "true" ] || [ "${KEIPIX_OPEN_DEVICE_WINDOW:-1}" = "0" ]; then
+    return
+  fi
+
+  local os27_opener="$ROOT_DIR/script/os27/open_device_hub_window.sh"
+  if [ -x "$os27_opener" ] && "$os27_opener" "$SIMULATOR_ID" >/dev/null 2>&1; then
+    return
+  fi
+
+  local os26_opener="$ROOT_DIR/script/os26/open_simulator_window.sh"
+  if [ -x "$os26_opener" ]; then
+    "$os26_opener" "$SIMULATOR_ID" >/dev/null 2>&1 || true
+  fi
+}
+
 ensure_simulator() {
   if [ -n "$SIMULATOR_ID" ]; then
     return
@@ -226,7 +245,7 @@ boot_simulator() {
     echo "==> Waiting for simulator boot"
     xcrun simctl bootstatus "$SIMULATOR_ID" -b >/dev/null
   fi
-  open -a Simulator --args -CurrentDeviceUDID "$SIMULATOR_ID" >/dev/null 2>&1 || true
+  open_developer_device_window
 }
 
 build_app() {

@@ -175,13 +175,19 @@ struct NativeBoundaryTests {
         let runnerURL = root.appending(path: "script/build_and_run_simulator.sh")
         let iOSURL = root.appending(path: "script/build_and_run_ios.sh")
         let iPadOSURL = root.appending(path: "script/build_and_run_ipados.sh")
+        let os26OpenerURL = root.appending(path: "script/os26/open_simulator_window.sh")
+        let os27OpenerURL = root.appending(path: "script/os27/open_device_hub_window.sh")
         let runner = try String(contentsOf: runnerURL, encoding: .utf8)
         let iOSWrapper = try String(contentsOf: iOSURL, encoding: .utf8)
         let iPadOSWrapper = try String(contentsOf: iPadOSURL, encoding: .utf8)
+        let os26Opener = try String(contentsOf: os26OpenerURL, encoding: .utf8)
+        let os27Opener = try String(contentsOf: os27OpenerURL, encoding: .utf8)
 
         #expect(FileManager.default.fileExists(atPath: runnerURL.path(percentEncoded: false)))
         #expect(FileManager.default.fileExists(atPath: iOSURL.path(percentEncoded: false)))
         #expect(FileManager.default.fileExists(atPath: iPadOSURL.path(percentEncoded: false)))
+        #expect(FileManager.default.fileExists(atPath: os26OpenerURL.path(percentEncoded: false)))
+        #expect(FileManager.default.fileExists(atPath: os27OpenerURL.path(percentEncoded: false)))
         #expect(runner.contains("KeiPix iOS"))
         #expect(runner.contains("KeiPix iPadOS"))
         #expect(runner.contains("com.keipix.client.ios"))
@@ -190,6 +196,17 @@ struct NativeBoundaryTests {
         #expect(runner.contains("-destination \"platform=iOS Simulator,id=$SIMULATOR_ID\""))
         #expect(runner.contains("xcrun simctl install \"$SIMULATOR_ID\""))
         #expect(runner.contains("xcrun simctl launch --terminate-running-process \"$SIMULATOR_ID\" \"$BUNDLE_ID\""))
+        #expect(runner.contains("open_developer_device_window"))
+        #expect(runner.contains("script/os27/open_device_hub_window.sh"))
+        #expect(runner.contains("script/os26/open_simulator_window.sh"))
+        #expect(runner.contains("open -a Simulator") == false)
+        #expect(runner.contains("KEIPIX_OPEN_DEVICE_WINDOW"))
+        #expect(runner.contains("KEIPIX_DEVICE_HUB_APP"))
+        #expect(runner.contains("KEIPIX_SIMULATOR_APP"))
+        #expect(os27Opener.contains("DeviceHub.app"))
+        #expect(os27Opener.contains("com.apple.dt.Devices"))
+        #expect(os26Opener.contains("com.apple.iphonesimulator"))
+        #expect(os26Opener.contains("CurrentDeviceUDID"))
         #expect(runner.contains("KEIPIX_IOS_SIMULATOR_ID"))
         #expect(runner.contains("KEIPIX_IPADOS_SIMULATOR_ID"))
         #expect(iOSWrapper.contains("build_and_run_simulator.sh\" ios"))
@@ -1517,6 +1534,12 @@ struct NativeBoundaryTests {
         let feedHeaderActionChrome = feedHeaderActionChromeTail
             .components(separatedBy: "func iPadFeedHeaderActionChrome() -> some View")
             .first ?? ""
+        let macOSNativeFeedHeader = galleryView
+            .components(separatedBy: "private var macOSNativeFeedHeader: some View")
+            .dropFirst()
+            .first?
+            .components(separatedBy: "#endif")
+            .first ?? ""
 
         #expect(feedHeader.contains("GlassEffectContainer"))
         #expect(feedHeader.contains("HStack(spacing: 8) {\n                        headerActions"))
@@ -1536,7 +1559,9 @@ struct NativeBoundaryTests {
         #expect(feedHeaderActionChrome.contains(".buttonStyle(.plain)"))
         #expect(feedHeaderActionChrome.contains(".buttonStyle(.bordered)") == false)
 
-        #expect(galleryView.contains(".padding(.horizontal, 18)\n            .padding(.top, 9)\n            .padding(.bottom, 7)"))
+        #expect(macOSNativeFeedHeader.contains(".padding(.horizontal, 18)"))
+        #expect(macOSNativeFeedHeader.contains(".padding(.top, 9)"))
+        #expect(macOSNativeFeedHeader.contains(".padding(.bottom, 7)"))
         #expect(galleryView.contains(".padding(.horizontal, 18)\n            .padding(.vertical, 5)\n            .background(.bar)") == false)
     }
 
