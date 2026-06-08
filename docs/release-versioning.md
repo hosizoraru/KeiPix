@@ -9,8 +9,8 @@ describe the same build.
 The human-edited version source is [`Config/AppVersion.xcconfig`](../Config/AppVersion.xcconfig):
 
 ```xcconfig
-MARKETING_VERSION = 0.1.0
-CURRENT_PROJECT_VERSION = 1
+MARKETING_VERSION = 0.27.0
+CURRENT_PROJECT_VERSION = 2700
 ```
 
 Those names intentionally match Apple build settings:
@@ -73,7 +73,7 @@ Apple references:
 Use the helper so the config file and XcodeGen settings stay aligned:
 
 ```bash
-./script/set_app_version.sh 0.2.0 2
+./script/set_app_version.sh 0.27.0 2700
 ```
 
 Then regenerate the Xcode project if you need to inspect Xcode project output:
@@ -112,7 +112,7 @@ working tree. The runtime metadata feeds:
 - About version and diagnostics copy.
 - Release-update comparison against GitHub release tags.
 - Backup/export metadata.
-- Product User-Agent strings such as `KeiPix/0.1.0`.
+- Product User-Agent strings such as `KeiPix/0.27.0`.
 
 ## Packaging
 
@@ -122,16 +122,16 @@ shared version fields.
 `script/build_release_app.sh` writes release artifacts named like:
 
 ```text
-KeiPix-0.1.0-build.1.zip
-KeiPix-0.1.0-build.1.dmg
+KeiPix-0.27.0-build.2700.zip
+KeiPix-0.27.0-build.2700.dmg
 ```
 
 `script/build_unsigned_ipa.sh ios` and `script/build_unsigned_ipa.sh ipados`
 write unsigned device IPA artifacts named like:
 
 ```text
-KeiPix-iOS-0.1.0-build.1-unsigned.ipa
-KeiPix-iPadOS-0.1.0-build.1-unsigned.ipa
+KeiPix-iOS-0.27.0-build.2700-unsigned.ipa
+KeiPix-iPadOS-0.27.0-build.2700-unsigned.ipa
 ```
 
 The GitHub Actions workflow uses the same metadata and uploads artifacts named:
@@ -173,7 +173,7 @@ to the moving `nightly` GitHub Release. Local refreshes use the same generator:
 Use GitHub release tags that match the marketing version:
 
 ```text
-v0.2.0
+v0.27.0
 ```
 
 The app's update checker strips the leading `v` and compares the tag against
