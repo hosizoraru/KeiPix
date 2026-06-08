@@ -54,6 +54,12 @@ actor PixivAPI {
         jsonDecoder.dateDecodingStrategy = .iso8601
     }
 
+    private var preferredPixivWebLanguageCode: String {
+        let identifier = Locale.preferredLanguages.first ?? "en"
+        let language = identifier.split(separator: "-").first.map(String.init) ?? identifier
+        return language.isEmpty ? "en" : language
+    }
+
     func loadSession() throws -> PixivSession? {
         let stored = try tokenStore.load()
         session = stored
@@ -516,19 +522,57 @@ actor PixivAPI {
         return response.body.detail
     }
 
-    func discoverPixivCollections(limit: Int = 48, offset: Int = 0) async throws -> [PixivCollectionDetail] {
-        try await discoverPixivCollectionsPage(limit: limit, offset: offset).collections
+    func pixivCollectionRecommendedTags() async throws -> [PixivCollectionDiscoveryTag] {
+        var components = URLComponents(
+            url: URL(string: "/ajax/collections/search/recommended_tags", relativeTo: Endpoint.webBase)!,
+            resolvingAgainstBaseURL: true
+        )!
+        components.queryItems = [URLQueryItem(name: "lang", value: preferredPixivWebLanguageCode)]
+        guard let url = components.url else { throw PixivAPIError.invalidResponse }
+
+        let response: PixivWebResponse<PixivCollectionRecommendedTagsResponse> = try await requestPixivWebJSON(url)
+        if response.error {
+            throw PixivAPIError.serverMessage(response.message)
+        }
+        return response.body.tags
     }
 
-    func discoverPixivCollectionsPage(limit: Int = 48, offset: Int = 0) async throws -> PixivCollectionListPage {
+    func pixivCollectionTop() async throws -> PixivCollectionTopResponse {
+        var components = URLComponents(
+            url: URL(string: "/ajax/top/collection", relativeTo: Endpoint.webBase)!,
+            resolvingAgainstBaseURL: true
+        )!
+        components.queryItems = [URLQueryItem(name: "lang", value: preferredPixivWebLanguageCode)]
+        guard let url = components.url else { throw PixivAPIError.invalidResponse }
+
+        let response: PixivWebResponse<PixivCollectionTopResponse> = try await requestPixivWebJSON(url)
+        if response.error {
+            throw PixivAPIError.serverMessage(response.message)
+        }
+        return response.body
+    }
+
+    func discoverPixivCollections(
+        limit: Int = 48,
+        offset: Int = 0,
+        request: PixivCollectionSearchRequest = .everyone
+    ) async throws -> [PixivCollectionDetail] {
+        try await discoverPixivCollectionsPage(limit: limit, offset: offset, request: request).collections
+    }
+
+    func discoverPixivCollectionsPage(
+        limit: Int = 48,
+        offset: Int = 0,
+        request: PixivCollectionSearchRequest = .everyone
+    ) async throws -> PixivCollectionListPage {
         var components = URLComponents(url: URL(string: "/ajax/collections/search", relativeTo: Endpoint.webBase)!, resolvingAgainstBaseURL: true)!
         let normalizedLimit = max(limit, 1)
         let normalizedOffset = max(offset, 0)
-        components.queryItems = [
-            URLQueryItem(name: "mode", value: "all"),
-            URLQueryItem(name: "limit", value: "\(normalizedLimit)"),
-            URLQueryItem(name: "offset", value: "\(normalizedOffset)")
-        ]
+        components.queryItems = request.queryItems(
+            limit: normalizedLimit,
+            offset: normalizedOffset,
+            languageCode: preferredPixivWebLanguageCode
+        )
         guard let url = components.url else { throw PixivAPIError.invalidResponse }
 
         let response: PixivWebResponse<PixivCollectionSearchResponse> = try await requestPixivWebJSON(url)
@@ -697,7 +741,10 @@ actor PixivAPI {
             throw PixivAPIError.serverMessage(response.message)
         }
 
-        let collectionsByID = Dictionary(uniqueKeysWithValues: response.body.collections.map { ($0.id, $0) })
+        var collectionsByID: [String: PixivCollectionDetail] = [:]
+        for collection in response.body.collections where collectionsByID[collection.id] == nil {
+            collectionsByID[collection.id] = collection
+        }
         return normalizedIDs.compactMap { collectionsByID[$0] }
     }
 

@@ -8,6 +8,51 @@ extension KeiPixStore {
         pixivCollectionNextOffset != nil
     }
 
+    var currentPixivCollectionDiscoverySelection: PixivCollectionDiscoverySelection {
+        PixivCollectionDiscoverySelection(
+            scope: pixivCollectionDiscoveryScope,
+            tag: pixivCollectionDiscoverySelectedTag
+        )
+    }
+
+    var pixivCollectionDiscoveryTagsForCurrentScope: [PixivCollectionDiscoveryTag] {
+        switch pixivCollectionDiscoveryScope {
+        case .discover:
+            return pixivCollectionRecommendedTags
+        case .everyone:
+            return []
+        case .tags:
+            return pixivCollectionPersonalizedTags.isEmpty
+                ? pixivCollectionRecommendedTags
+                : pixivCollectionPersonalizedTags
+        }
+    }
+
+    func selectPixivCollectionDiscoveryScope(_ scope: PixivCollectionDiscoveryScope) {
+        guard pixivCollectionDiscoveryScope != scope else { return }
+        pixivCollectionDiscoveryScope = scope
+        switch scope {
+        case .discover:
+            guard let selectedTag = pixivCollectionDiscoverySelectedTag else { return }
+            if pixivCollectionRecommendedTags.contains(where: { $0.name == selectedTag }) == false {
+                pixivCollectionDiscoverySelectedTag = nil
+            }
+        case .everyone:
+            pixivCollectionDiscoverySelectedTag = nil
+        case .tags:
+            guard let selectedTag = pixivCollectionDiscoverySelectedTag else { return }
+            if pixivCollectionDiscoveryTagsForCurrentScope.contains(where: { $0.name == selectedTag }) == false {
+                pixivCollectionDiscoverySelectedTag = nil
+            }
+        }
+    }
+
+    func selectPixivCollectionDiscoveryTag(_ tag: PixivCollectionDiscoveryTag?) {
+        let nextTag = tag?.name
+        guard pixivCollectionDiscoverySelectedTag != nextTag else { return }
+        pixivCollectionDiscoverySelectedTag = nextTag
+    }
+
     func refreshPixivCollections(mode: PixivCollectionListMode = .discovery) async {
         guard let session, usesLocalSampleAccount == false else {
             pixivCollections = []
@@ -42,7 +87,11 @@ extension KeiPixStore {
             let page: PixivCollectionListPage
             switch mode {
             case .discovery:
-                page = try await api.discoverPixivCollectionsPage(limit: pixivCollectionPageSize)
+                await hydratePixivCollectionDiscoveryMetadataIfNeeded()
+                page = try await api.discoverPixivCollectionsPage(
+                    limit: pixivCollectionPageSize,
+                    request: currentPixivCollectionDiscoverySelection.searchRequest
+                )
             case .created:
                 page = try await api.userPublishedCollectionsPage(
                     userID: String(session.user.id),
@@ -101,7 +150,8 @@ extension KeiPixStore {
             case .discovery:
                 page = try await api.discoverPixivCollectionsPage(
                     limit: pixivCollectionPageSize,
-                    offset: nextOffset
+                    offset: nextOffset,
+                    request: currentPixivCollectionDiscoverySelection.searchRequest
                 )
             case .created:
                 page = try await api.userPublishedCollectionsPage(
@@ -134,6 +184,45 @@ extension KeiPixStore {
             await clearSavedPixivCollectionWebSessionAfterFailure(userID: String(session.user.id))
         } catch {
             pixivCollectionErrorMessage = error.localizedDescription
+        }
+    }
+
+    private func hydratePixivCollectionDiscoveryMetadataIfNeeded() async {
+        guard pixivCollectionRecommendedTags.isEmpty || pixivCollectionPersonalizedTags.isEmpty else {
+            return
+        }
+
+        async let recommendedTags = fetchPixivCollectionRecommendedTagsSafely()
+        async let topPageResult = fetchPixivCollectionTopSafely()
+
+        let tags = await recommendedTags
+        if tags.isEmpty == false {
+            pixivCollectionRecommendedTags = uniquePixivCollectionTags(tags)
+        }
+
+        if let topPage = await topPageResult {
+            let topTags = topPage.recommendedTags
+            if topTags.isEmpty == false {
+                pixivCollectionPersonalizedTags = uniquePixivCollectionTags(topTags)
+            }
+            if pixivCollectionRecommendedTags.isEmpty {
+                pixivCollectionRecommendedTags = uniquePixivCollectionTags(topTags)
+            }
+        }
+    }
+
+    private func fetchPixivCollectionRecommendedTagsSafely() async -> [PixivCollectionDiscoveryTag] {
+        (try? await api.pixivCollectionRecommendedTags()) ?? []
+    }
+
+    private func fetchPixivCollectionTopSafely() async -> PixivCollectionTopResponse? {
+        try? await api.pixivCollectionTop()
+    }
+
+    private func uniquePixivCollectionTags(_ tags: [PixivCollectionDiscoveryTag]) -> [PixivCollectionDiscoveryTag] {
+        var seen = Set<String>()
+        return tags.filter { tag in
+            seen.insert(tag.name).inserted
         }
     }
 

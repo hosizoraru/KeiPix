@@ -72,6 +72,141 @@ struct PixivCollectionModelsTests {
         #expect(PixivCollectionListPage.empty.nextOffset == nil)
     }
 
+    @Test("Pixiv collection discovery exposes first-level scopes and second-level searches")
+    func collectionDiscoveryScopesExposeSearchRequests() throws {
+        #expect(PixivCollectionDiscoveryScope.allCases.map(\.rawValue) == ["discover", "everyone", "tags"])
+
+        let recommended = PixivCollectionDiscoverySelection(scope: .discover)
+        let discoveredTag = PixivCollectionDiscoverySelection(scope: .discover, tag: "私の推し")
+        let everyone = PixivCollectionDiscoverySelection(scope: .everyone)
+        let personalizedTag = PixivCollectionDiscoverySelection(scope: .tags, tag: "Aris")
+
+        #expect(recommended.title == L10n.recommendedPixivCollections)
+        #expect(recommended.searchRequest == .recommended)
+        #expect(recommended.reloadID == "discover|recommended")
+
+        #expect(discoveredTag.title == "#私の推し")
+        #expect(discoveredTag.searchRequest == PixivCollectionSearchRequest(tags: ["私の推し"], mode: .safe))
+        #expect(discoveredTag.reloadID == "discover|tag|私の推し")
+
+        #expect(everyone.title == L10n.everyonePixivCollections)
+        #expect(everyone.searchRequest == PixivCollectionSearchRequest(tags: [], mode: .safe))
+        #expect(everyone.reloadID == "everyone|popular")
+
+        #expect(personalizedTag.title == "#Aris")
+        #expect(personalizedTag.searchRequest == PixivCollectionSearchRequest(tags: ["Aris"], mode: .safe))
+        #expect(personalizedTag.reloadID == "tags|tag|Aris")
+    }
+
+    @Test("Pixiv collection search requests preserve repeated tag query items")
+    func collectionSearchRequestsPreserveRepeatedTagQueryItems() throws {
+        let request = PixivCollectionSearchRequest(tags: ["Aris", "ブルーアーカイブ"], mode: .safe)
+        let items = request.queryItems(limit: 20, offset: 40, languageCode: "zh")
+
+        #expect(items.map(\.name) == ["tags[]", "tags[]", "mode", "limit", "offset", "lang"])
+        #expect(items.map { $0.value ?? "" } == ["Aris", "ブルーアーカイブ", "safe", "20", "40", "zh"])
+    }
+
+    @Test("Pixiv Web collection top response maps recommended everyone and tag sections")
+    func collectionTopResponseMapsWebSections() throws {
+        let json = """
+        {
+          "error": false,
+          "message": "",
+          "body": {
+            "thumbnails": {
+              "collection": [
+                {
+                  "id": "90191766697883309998",
+                  "userId": "110913610",
+                  "userName": "Creator",
+                  "title": "Aris / Kei",
+                  "tags": ["Aris", "ブルーアーカイブ"],
+                  "bookmarkCount": 12,
+                  "viewCount": 34,
+                  "thumbnailImageUrl": "https://embed.pixiv.net/next/collection/90191766697883309998/hash/2/288x288/thumbnail",
+                  "status": "public"
+                },
+                {
+                  "id": "90191766697883309998",
+                  "userId": "110913610",
+                  "userName": "Creator",
+                  "title": "Duplicate Aris / Kei",
+                  "tags": ["Aris"],
+                  "bookmarkCount": 12,
+                  "viewCount": 34,
+                  "thumbnailImageUrl": "https://embed.pixiv.net/next/collection/90191766697883309998/hash/2/288x288/thumbnail",
+                  "status": "public"
+                },
+                {
+                  "id": "71694664232452732151",
+                  "userId": "40464763",
+                  "userName": "Popular Creator",
+                  "title": "Magical Fairy Tale",
+                  "tags": ["ポートフォリオ"],
+                  "bookmarkCount": 56,
+                  "viewCount": 78,
+                  "thumbnailImageUrl": "https://embed.pixiv.net/next/collection/71694664232452732151/hash/2/288x288/thumbnail",
+                  "status": "public"
+                }
+              ]
+            },
+            "page": {
+              "recommendCollectionIds": ["90191766697883309998"],
+              "everyoneCollectionIds": ["71694664232452732151"],
+              "tagRecommendCollectionIds": [
+                {
+                  "tag": "Aris",
+                  "ids": ["90191766697883309998", "missing"]
+                }
+              ]
+            }
+          }
+        }
+        """
+
+        let response = try JSONDecoder().decode(
+            PixivWebResponse<PixivCollectionTopResponse>.self,
+            from: Data(json.utf8)
+        )
+
+        #expect(response.error == false)
+        #expect(response.body.recommendedCollections.map(\.id) == ["90191766697883309998"])
+        #expect(response.body.everyoneCollections.map(\.id) == ["71694664232452732151"])
+        #expect(response.body.tagRecommendations.map(\.tag) == ["Aris"])
+        #expect(response.body.tagRecommendations.first?.collections.map(\.id) == ["90191766697883309998"])
+        #expect(response.body.recommendedTags.map(\.name) == ["Aris"])
+    }
+
+    @Test("Pixiv Web collection recommended tags response keeps translations")
+    func collectionRecommendedTagsResponseKeepsTranslations() throws {
+        let json = """
+        {
+          "error": false,
+          "message": "",
+          "body": {
+            "recommendedTags": ["私の推し", "メイキング"],
+            "tagTranslation": {
+              "メイキング": {
+                "en": "making-of",
+                "zh": "作画过程",
+                "zh_tw": "",
+                "romaji": "meikinngu"
+              }
+            }
+          }
+        }
+        """
+
+        let response = try JSONDecoder().decode(
+            PixivWebResponse<PixivCollectionRecommendedTagsResponse>.self,
+            from: Data(json.utf8)
+        )
+
+        #expect(response.body.tags.map(\.name) == ["私の推し", "メイキング"])
+        #expect(response.body.tags.map(\.translatedName) == [nil, "作画过程"])
+    }
+
     @Test("Pixiv collection embed thumbnails use web image headers")
     func collectionEmbedThumbnailsUseWebImageHeaders() throws {
         let embedURL = try #require(

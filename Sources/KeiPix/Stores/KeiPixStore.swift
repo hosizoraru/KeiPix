@@ -50,6 +50,10 @@ final class KeiPixStore {
     var pixivCollectionNextOffset: Int?
     var pixivCollectionTotalCount = 0
     var pixivCollectionListMode: PixivCollectionListMode = .discovery
+    var pixivCollectionDiscoveryScope: PixivCollectionDiscoveryScope = .discover
+    var pixivCollectionDiscoverySelectedTag: String?
+    var pixivCollectionRecommendedTags: [PixivCollectionDiscoveryTag] = []
+    var pixivCollectionPersonalizedTags: [PixivCollectionDiscoveryTag] = []
     var pixivCollectionErrorMessage: String?
     var isPixivWebSessionPresented = false
     var readerWindowArtwork: PixivArtwork?

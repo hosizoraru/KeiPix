@@ -50,6 +50,147 @@ enum PixivCollectionListMode: String, Sendable {
     }
 }
 
+enum PixivCollectionSearchMode: String, Sendable {
+    case all
+    case safe
+}
+
+struct PixivCollectionSearchRequest: Equatable, Hashable, Sendable {
+    var tags: [String]
+    var mode: PixivCollectionSearchMode
+
+    init(tags: [String] = [], mode: PixivCollectionSearchMode = .safe) {
+        self.tags = tags
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { $0.isEmpty == false }
+        self.mode = mode
+    }
+
+    static let recommended = PixivCollectionSearchRequest(tags: [], mode: .safe)
+    static let everyone = PixivCollectionSearchRequest(tags: [], mode: .safe)
+
+    func queryItems(limit: Int, offset: Int, languageCode: String = Locale.preferredLanguages.first ?? "en") -> [URLQueryItem] {
+        let normalizedLimit = max(limit, 1)
+        let normalizedOffset = max(offset, 0)
+        let normalizedLanguage = languageCode
+            .split(separator: "-")
+            .first
+            .map(String.init) ?? languageCode
+
+        var items = tags.map { URLQueryItem(name: "tags[]", value: $0) }
+        items.append(URLQueryItem(name: "mode", value: mode.rawValue))
+        items.append(URLQueryItem(name: "limit", value: "\(normalizedLimit)"))
+        items.append(URLQueryItem(name: "offset", value: "\(normalizedOffset)"))
+        items.append(URLQueryItem(name: "lang", value: normalizedLanguage))
+        return items
+    }
+}
+
+enum PixivCollectionDiscoveryScope: String, CaseIterable, Identifiable, Sendable {
+    case discover
+    case everyone
+    case tags
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .discover:
+            L10n.discover
+        case .everyone:
+            L10n.everyonePixivCollections
+        case .tags:
+            L10n.pixivCollectionTags
+        }
+    }
+
+    var systemImage: String {
+        switch self {
+        case .discover:
+            "sparkles.rectangle.stack"
+        case .everyone:
+            "person.2"
+        case .tags:
+            "number"
+        }
+    }
+}
+
+struct PixivCollectionDiscoverySelection: Equatable, Hashable, Sendable {
+    let scope: PixivCollectionDiscoveryScope
+    let tag: String?
+
+    init(scope: PixivCollectionDiscoveryScope, tag: String? = nil) {
+        self.scope = scope
+        let trimmedTag = tag?.trimmingCharacters(in: .whitespacesAndNewlines)
+        self.tag = trimmedTag?.isEmpty == false ? trimmedTag : nil
+    }
+
+    var title: String {
+        if let tag {
+            return "#\(tag)"
+        }
+
+        switch scope {
+        case .discover:
+            return L10n.recommendedPixivCollections
+        case .everyone:
+            return L10n.everyonePixivCollections
+        case .tags:
+            return L10n.pixivCollectionTags
+        }
+    }
+
+    var searchRequest: PixivCollectionSearchRequest {
+        if let tag {
+            return PixivCollectionSearchRequest(tags: [tag], mode: .safe)
+        }
+
+        switch scope {
+        case .discover:
+            return .recommended
+        case .everyone:
+            return .everyone
+        case .tags:
+            return .recommended
+        }
+    }
+
+    var reloadID: String {
+        if let tag {
+            return "\(scope.rawValue)|tag|\(tag)"
+        }
+
+        switch scope {
+        case .discover:
+            return "\(scope.rawValue)|recommended"
+        case .everyone:
+            return "\(scope.rawValue)|popular"
+        case .tags:
+            return "\(scope.rawValue)|recommended"
+        }
+    }
+}
+
+struct PixivCollectionDiscoveryTag: Identifiable, Equatable, Hashable, Sendable {
+    let name: String
+    let translatedName: String?
+
+    var id: String { name }
+    var displayTitle: String { "#\(name)" }
+    var accessibilityTitle: String {
+        if let translatedName, translatedName.isEmpty == false {
+            return "\(displayTitle), \(translatedName)"
+        }
+        return displayTitle
+    }
+}
+
+struct PixivCollectionTagRecommendation: Equatable, Sendable {
+    let tag: String
+    let collections: [PixivCollectionDetail]
+}
+
 struct PixivCollectionListPage: Equatable, Sendable {
     let collections: [PixivCollectionDetail]
     let total: Int
@@ -524,6 +665,97 @@ struct PixivCollectionDetailResponse: Decodable, Sendable {
     }
 }
 
+struct PixivCollectionRecommendedTagsResponse: Decodable, Sendable {
+    let tags: [PixivCollectionDiscoveryTag]
+
+    private enum CodingKeys: String, CodingKey {
+        case recommendedTags
+        case tagTranslation
+    }
+
+    init(tags: [PixivCollectionDiscoveryTag]) {
+        self.tags = tags
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let names = try container.decodeIfPresent([String].self, forKey: .recommendedTags) ?? []
+        let translations = try container.decodeIfPresent(
+            [String: PixivCollectionTagTranslation].self,
+            forKey: .tagTranslation
+        ) ?? [:]
+
+        tags = names.map { name in
+            PixivCollectionDiscoveryTag(
+                name: name,
+                translatedName: translations[name]?.displayName
+            )
+        }
+    }
+}
+
+struct PixivCollectionTopResponse: Decodable, Sendable {
+    let recommendedCollections: [PixivCollectionDetail]
+    let everyoneCollections: [PixivCollectionDetail]
+    let tagRecommendations: [PixivCollectionTagRecommendation]
+    let recommendedTags: [PixivCollectionDiscoveryTag]
+
+    private enum CodingKeys: String, CodingKey {
+        case thumbnails
+        case page
+    }
+
+    private enum ThumbnailKeys: String, CodingKey {
+        case collection
+    }
+
+    private enum PageKeys: String, CodingKey {
+        case recommendCollectionIds
+        case everyoneCollectionIds
+        case tagRecommendCollectionIds
+    }
+
+    init(
+        recommendedCollections: [PixivCollectionDetail],
+        everyoneCollections: [PixivCollectionDetail],
+        tagRecommendations: [PixivCollectionTagRecommendation],
+        recommendedTags: [PixivCollectionDiscoveryTag]
+    ) {
+        self.recommendedCollections = recommendedCollections
+        self.everyoneCollections = everyoneCollections
+        self.tagRecommendations = tagRecommendations
+        self.recommendedTags = recommendedTags
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let thumbnails = try container.nestedContainer(keyedBy: ThumbnailKeys.self, forKey: .thumbnails)
+        let summaries = try thumbnails.decodeIfPresent([PixivCollectionSummary].self, forKey: .collection) ?? []
+        var collectionsByID: [String: PixivCollectionDetail] = [:]
+        for summary in summaries where collectionsByID[summary.id] == nil {
+            collectionsByID[summary.id] = summary.detail(artworks: [])
+        }
+
+        let page = try container.nestedContainer(keyedBy: PageKeys.self, forKey: .page)
+        let recommendIDs = try page.decodeIfPresent([String].self, forKey: .recommendCollectionIds) ?? []
+        let everyoneIDs = try page.decodeIfPresent([String].self, forKey: .everyoneCollectionIds) ?? []
+        let tagGroups = try page.decodeIfPresent(
+            [PixivCollectionTopTagRecommendation].self,
+            forKey: .tagRecommendCollectionIds
+        ) ?? []
+
+        recommendedCollections = recommendIDs.compactMap { collectionsByID[$0] }
+        everyoneCollections = everyoneIDs.compactMap { collectionsByID[$0] }
+        tagRecommendations = tagGroups.map { group in
+            PixivCollectionTagRecommendation(
+                tag: group.tag,
+                collections: group.ids.compactMap { collectionsByID[$0] }
+            )
+        }
+        recommendedTags = tagGroups.map { PixivCollectionDiscoveryTag(name: $0.tag, translatedName: nil) }
+    }
+}
+
 struct PixivCollectionSearchResponse: Decodable, Sendable {
     let collections: [PixivCollectionDetail]
     let total: Int
@@ -559,7 +791,10 @@ struct PixivCollectionSearchResponse: Decodable, Sendable {
         if orderedIDs.isEmpty {
             collections = summaries.map { $0.detail(artworks: []) }
         } else {
-            let summariesByID = Dictionary(uniqueKeysWithValues: summaries.map { ($0.id, $0) })
+            var summariesByID: [String: PixivCollectionSummary] = [:]
+            for summary in summaries where summariesByID[summary.id] == nil {
+                summariesByID[summary.id] = summary
+            }
             collections = orderedIDs.compactMap { summariesByID[$0]?.detail(artworks: []) }
         }
     }
@@ -629,6 +864,34 @@ private struct PixivCollectionSummaryList: Decodable, Sendable {
         summaries = try container.allKeys.compactMap { key in
             try container.decodeIfPresent(PixivCollectionSummary.self, forKey: key)
         }
+    }
+}
+
+private struct PixivCollectionTopTagRecommendation: Decodable, Sendable {
+    let tag: String
+    let ids: [String]
+}
+
+private struct PixivCollectionTagTranslation: Decodable, Sendable {
+    let en: String?
+    let zh: String?
+    let zhTW: String?
+    let romaji: String?
+
+    private enum CodingKeys: String, CodingKey {
+        case en
+        case zh
+        case zhTW = "zh_tw"
+        case romaji
+    }
+
+    var displayName: String? {
+        [zh, zhTW, en, romaji]
+            .compactMap { value -> String? in
+                let trimmed = value?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+                return trimmed.isEmpty ? nil : trimmed
+            }
+            .first
     }
 }
 
