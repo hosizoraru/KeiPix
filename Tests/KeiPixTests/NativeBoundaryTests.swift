@@ -838,6 +838,10 @@ struct NativeBoundaryTests {
             contentsOf: root.appending(path: "Sources/KeiPix/Views/PixivCollectionsView.swift"),
             encoding: .utf8
         )
+        let collectionsStore = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Stores/KeiPixStore+PixivCollections.swift"),
+            encoding: .utf8
+        )
         let mobileConfiguration = try String(
             contentsOf: root.appending(path: "Sources/KeiPix/Models/MobileBottomTabConfiguration.swift"),
             encoding: .utf8
@@ -863,6 +867,9 @@ struct NativeBoundaryTests {
         #expect(collectionsView.contains("try await store.openPixivCollection(id: collection.id, sourceRoute: mode.route)"))
         #expect(collectionsView.contains("private var emptyStateActions"))
         #expect(collectionsView.contains("ViewThatFits"))
+        #expect(collectionsStore.contains("api.userBookmarkedCollectionDetails(userID: String(session.user.id))"))
+        #expect(collectionsStore.contains("if pixivCollections.isEmpty"))
+        #expect(collectionsStore.contains("L10n.savedPixivCollectionsWebSessionRequiredHint"))
         #expect(mobileConfiguration.contains(".pixivCollections"))
         #expect(mobileConfiguration.contains(".savedPixivisionArticles"))
         #expect(mobileConfiguration.contains(".myPixivCollections"))

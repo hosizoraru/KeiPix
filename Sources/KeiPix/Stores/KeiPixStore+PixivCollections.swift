@@ -22,6 +22,9 @@ extension KeiPixStore {
                 pixivCollections = try await api.userPublishedCollectionDetails(userID: String(session.user.id))
             case .saved:
                 pixivCollections = try await api.userBookmarkedCollectionDetails(userID: String(session.user.id))
+                if pixivCollections.isEmpty {
+                    pixivCollectionErrorMessage = L10n.savedPixivCollectionsWebSessionRequiredHint
+                }
             }
         } catch is CancellationError {
             pixivCollectionErrorMessage = nil
