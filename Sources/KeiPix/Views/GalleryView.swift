@@ -431,8 +431,12 @@ private struct GalleryFeedView: View {
     }
 
     private var nativeGalleryItems: [NativeGalleryCollectionItem] {
-        guard store.artworks.isEmpty == false else {
-            return store.isLoading ? [.loading] : [.empty]
+        if store.artworks.isEmpty {
+            var items: [NativeGalleryCollectionItem] = store.isLoading ? [.loading] : [.empty]
+            if store.isLoading == false {
+                appendRelatedPixivCollectionItems(to: &items)
+            }
+            return items
         }
 
         var items: [NativeGalleryCollectionItem] = []
@@ -443,10 +447,22 @@ private struct GalleryFeedView: View {
             items.append(.popularPreview)
         }
         items.append(contentsOf: store.clientFilteredArtworks.map(NativeGalleryCollectionItem.artwork))
+        appendRelatedPixivCollectionItems(to: &items)
         if store.hasNextPage, store.activeFeedSnapshotRestoration == nil {
             items.append(.loadMore)
         }
         return items
+    }
+
+    private func appendRelatedPixivCollectionItems(to items: inout [NativeGalleryCollectionItem]) {
+        guard store.selectedRoute == .pixivCollectionWorks,
+              let collection = store.selectedPixivCollection,
+              collection.relatedCollections.isEmpty == false else {
+            return
+        }
+
+        items.append(.pixivRelatedCollectionsHeader(collection.relatedCollections.count))
+        items.append(contentsOf: collection.relatedCollections.map(NativeGalleryCollectionItem.pixivCollection))
     }
 
     private var usesMobileGalleryCardPerformanceMode: Bool {
@@ -498,8 +514,16 @@ private struct GalleryFeedView: View {
         into hasher: inout Hasher
     ) {
         hasher.combine(item.id)
-        guard case .artwork(let artwork) = item else { return }
-        hashNativeGalleryArtworkContent(artwork, into: &hasher)
+        switch item {
+        case .artwork(let artwork):
+            hashNativeGalleryArtworkContent(artwork, into: &hasher)
+        case .pixivCollection(let collection):
+            hashPixivCollectionContent(collection, into: &hasher)
+        case .pixivRelatedCollectionsHeader(let count):
+            hasher.combine(count)
+        case .loading, .empty, .cachedStatus, .popularPreview, .loadMore:
+            break
+        }
     }
 
     private func hashNativeGalleryArtworkContent(
@@ -530,6 +554,23 @@ private struct GalleryFeedView: View {
         }
         hasher.combine(store.downloads.downloadState(for: artwork.id).rawValue)
         hasher.combine(store.downloads.downloadedImageURL(artworkID: artwork.id, pageIndex: 0)?.absoluteString)
+    }
+
+    private func hashPixivCollectionContent(
+        _ collection: PixivCollectionDetail,
+        into hasher: inout Hasher
+    ) {
+        hasher.combine(collection.id)
+        hasher.combine(collection.title)
+        hasher.combine(collection.owner.id)
+        hasher.combine(collection.owner.name)
+        hasher.combine(collection.thumbnailImageURL?.absoluteString)
+        hasher.combine(collection.bookmarkCount)
+        hasher.combine(collection.viewCount)
+        for tag in collection.tags.prefix(8) {
+            hasher.combine(tag.name)
+            hasher.combine(tag.translatedName)
+        }
     }
 
     private var shouldShowPopularPreview: Bool {
@@ -566,10 +607,25 @@ private struct GalleryFeedView: View {
             } else {
                 nativeMasonryArtworkTile(artwork)
             }
-        case .pixivCollection:
-            EmptyView()
+        case .pixivCollection(let collection):
+            PixivCollectionCard(collection: collection) {
+                openRelatedPixivCollection(collection)
+            }
+        case .pixivRelatedCollectionsHeader(let count):
+            RelatedPixivCollectionsHeader(count: count)
         case .loadMore:
             LoadMoreTile(store: store)
+        }
+    }
+
+    private func openRelatedPixivCollection(_ collection: PixivCollectionDetail) {
+        let sourceRoute = store.selectedPixivCollectionSourceRoute ?? .pixivCollections
+        Task {
+            do {
+                try await store.openPixivCollection(id: collection.id, sourceRoute: sourceRoute)
+            } catch {
+                actionMessage = error.localizedDescription
+            }
         }
     }
 
@@ -878,6 +934,31 @@ private struct GalleryFeedLoadingPlaceholder: View {
 
     private var columns: [GridItem] {
         [GridItem(.adaptive(minimum: 158, maximum: 240), spacing: 12)]
+    }
+}
+
+private struct RelatedPixivCollectionsHeader: View {
+    let count: Int
+
+    var body: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 10) {
+            Text(L10n.relatedPixivCollections)
+                .font(.title3.weight(.bold))
+
+            Text(count.formatted())
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.secondary)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .glassEffect(.regular, in: Capsule(style: .continuous))
+
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, 2)
+        .padding(.top, 20)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(L10n.relatedPixivCollections), \(count.formatted())")
     }
 }
 

@@ -261,7 +261,7 @@ struct PixivCollectionsView: View {
                 minHeight: 96,
                 action: triggerAutomaticLoadMoreIfNeeded
             )
-        case .loading, .empty, .cachedStatus, .popularPreview, .artwork:
+        case .loading, .empty, .cachedStatus, .popularPreview, .artwork, .pixivRelatedCollectionsHeader:
             EmptyView()
         }
     }
@@ -294,7 +294,7 @@ struct PixivCollectionsView: View {
     }
 }
 
-private struct PixivCollectionCard: View {
+struct PixivCollectionCard: View {
     let collection: PixivCollectionDetail
     let open: () -> Void
 

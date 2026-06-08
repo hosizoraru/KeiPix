@@ -463,6 +463,7 @@ enum L10n {
     static var savedPixivCollectionsWebSessionRequiredHint: String { text("Pixiv keeps bookmarked collections behind the Web session. KeiPix can open collection links now, but syncing this list needs an explicit Pixiv Web session connection.") }
     static var refreshedPixivCollectionsFormat: String { text("Refreshed %d Pixiv collections") }
     static var collectionWorksCountFormat: String { text("%d works") }
+    static var relatedPixivCollections: String { text("Related Collections") }
     static var pixivWeb: String { text("Pixiv Web") }
     static var pixivWebOnly: String { text("Pixiv Web only") }
     static var pixivWebBookmarkFiltersHint: String { text("Bookmark-date filters use Pixiv Web / Premium. Artwork tags are filtered locally from loaded works.") }

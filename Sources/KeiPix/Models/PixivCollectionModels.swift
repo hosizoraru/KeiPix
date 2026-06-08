@@ -84,6 +84,35 @@ struct PixivCollectionDetail: Identifiable, Hashable, Sendable {
     let status: String
     let publishedDate: Date?
     let artworks: [PixivArtwork]
+    let relatedCollections: [PixivCollectionDetail]
+
+    init(
+        id: String,
+        title: String,
+        owner: PixivUser,
+        tags: [PixivTag],
+        caption: String,
+        bookmarkCount: Int,
+        viewCount: Int,
+        thumbnailImageURL: URL?,
+        status: String,
+        publishedDate: Date?,
+        artworks: [PixivArtwork],
+        relatedCollections: [PixivCollectionDetail] = []
+    ) {
+        self.id = id
+        self.title = title
+        self.owner = owner
+        self.tags = tags
+        self.caption = caption
+        self.bookmarkCount = bookmarkCount
+        self.viewCount = viewCount
+        self.thumbnailImageURL = thumbnailImageURL
+        self.status = status
+        self.publishedDate = publishedDate
+        self.artworks = artworks
+        self.relatedCollections = relatedCollections
+    }
 
     var pixivURL: URL? {
         PixivWebURLBuilder.collectionURL(id: id)
@@ -116,7 +145,12 @@ struct PixivCollectionDetailResponse: Decodable, Sendable {
     let detail: PixivCollectionDetail
 
     private enum CodingKeys: String, CodingKey {
+        case data
         case thumbnails
+    }
+
+    private enum DataKeys: String, CodingKey {
+        case userCollections
     }
 
     private enum ThumbnailKeys: String, CodingKey {
@@ -141,7 +175,21 @@ struct PixivCollectionDetailResponse: Decodable, Sendable {
             )
         }
         let works = try thumbnails.decodeIfPresent([PixivWebProfileArtwork].self, forKey: .illust) ?? []
-        detail = summary.detail(artworks: works.map { $0.artwork() })
+
+        let relatedSummaries: [PixivCollectionSummary]
+        if let data = try? container.nestedContainer(keyedBy: DataKeys.self, forKey: .data),
+           let userCollections = try data.decodeIfPresent(PixivCollectionSummaryList.self, forKey: .userCollections) {
+            relatedSummaries = userCollections.summaries
+                .filter { $0.id != summary.id }
+                .sorted(by: PixivCollectionSummary.relatedSort)
+        } else {
+            relatedSummaries = []
+        }
+
+        detail = summary.detail(
+            artworks: works.map { $0.artwork() },
+            relatedCollections: relatedSummaries.map { $0.detail(artworks: []) }
+        )
     }
 }
 
@@ -237,6 +285,37 @@ struct PixivBookmarkedCollectionsResponse: Decodable, Sendable {
     }
 }
 
+private struct PixivCollectionSummaryList: Decodable, Sendable {
+    let summaries: [PixivCollectionSummary]
+
+    init(from decoder: Decoder) throws {
+        if let summaries = try? [PixivCollectionSummary](from: decoder) {
+            self.summaries = summaries
+            return
+        }
+
+        let container = try decoder.container(keyedBy: DynamicCodingKey.self)
+        summaries = try container.allKeys.compactMap { key in
+            try container.decodeIfPresent(PixivCollectionSummary.self, forKey: key)
+        }
+    }
+}
+
+private struct DynamicCodingKey: CodingKey {
+    let stringValue: String
+    let intValue: Int?
+
+    init?(stringValue: String) {
+        self.stringValue = stringValue
+        intValue = nil
+    }
+
+    init?(intValue: Int) {
+        stringValue = String(intValue)
+        self.intValue = intValue
+    }
+}
+
 private struct PixivCollectionSummary: Decodable, Sendable {
     let id: String
     let title: String
@@ -298,7 +377,10 @@ private struct PixivCollectionSummary: Decodable, Sendable {
         publishedDate = Self.parsePublishedDate(try container.decodeIfPresent(String.self, forKey: .publishedDateTime))
     }
 
-    func detail(artworks: [PixivArtwork]) -> PixivCollectionDetail {
+    func detail(
+        artworks: [PixivArtwork],
+        relatedCollections: [PixivCollectionDetail] = []
+    ) -> PixivCollectionDetail {
         PixivCollectionDetail(
             id: id,
             title: title,
@@ -310,8 +392,22 @@ private struct PixivCollectionSummary: Decodable, Sendable {
             thumbnailImageURL: thumbnailImageURL,
             status: status,
             publishedDate: publishedDate,
-            artworks: artworks
+            artworks: artworks,
+            relatedCollections: relatedCollections
         )
+    }
+
+    static func relatedSort(_ lhs: PixivCollectionSummary, _ rhs: PixivCollectionSummary) -> Bool {
+        switch (lhs.publishedDate, rhs.publishedDate) {
+        case let (lhsDate?, rhsDate?) where lhsDate != rhsDate:
+            return lhsDate > rhsDate
+        case (_?, nil):
+            return true
+        case (nil, _?):
+            return false
+        default:
+            return lhs.title.localizedStandardCompare(rhs.title) == .orderedAscending
+        }
     }
 
     private static func parsePublishedDate(_ rawValue: String?) -> Date? {

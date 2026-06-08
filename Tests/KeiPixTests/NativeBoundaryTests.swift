@@ -838,6 +838,14 @@ struct NativeBoundaryTests {
             contentsOf: root.appending(path: "Sources/KeiPix/Views/PixivCollectionsView.swift"),
             encoding: .utf8
         )
+        let galleryView = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/GalleryView.swift"),
+            encoding: .utf8
+        )
+        let galleryBridge = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Support/NativeGalleryCollectionView.swift"),
+            encoding: .utf8
+        )
         let collectionsStore = try String(
             contentsOf: root.appending(path: "Sources/KeiPix/Stores/KeiPixStore+PixivCollections.swift"),
             encoding: .utf8
@@ -873,6 +881,13 @@ struct NativeBoundaryTests {
         #expect(collectionsView.contains("store.isPixivWebSessionPresented = true"))
         #expect(collectionsView.contains("L10n.connectPixivWebSession"))
         #expect(collectionsView.contains("pixivCollectionTotalCount"))
+        #expect(collectionsView.contains("struct PixivCollectionCard: View"))
+        #expect(galleryBridge.contains("case pixivCollection(PixivCollectionDetail)"))
+        #expect(galleryBridge.contains("case pixivRelatedCollectionsHeader(Int)"))
+        #expect(galleryView.contains("appendRelatedPixivCollectionItems(to: &items)"))
+        #expect(galleryView.contains("collection.relatedCollections.map(NativeGalleryCollectionItem.pixivCollection)"))
+        #expect(galleryView.contains("RelatedPixivCollectionsHeader(count: count)"))
+        #expect(galleryView.contains("try await store.openPixivCollection(id: collection.id, sourceRoute: sourceRoute)"))
         #expect(collectionsView.contains("try await store.openPixivCollection(id: collection.id, sourceRoute: mode.route)"))
         #expect(collectionsView.contains("private var emptyStateActions"))
         #expect(collectionsView.contains("ViewThatFits"))

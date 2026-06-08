@@ -7,6 +7,7 @@ enum NativeGalleryCollectionItem: Hashable, Identifiable {
     case popularPreview
     case artwork(PixivArtwork)
     case pixivCollection(PixivCollectionDetail)
+    case pixivRelatedCollectionsHeader(Int)
     case loadMore
 
     var id: String {
@@ -23,6 +24,8 @@ enum NativeGalleryCollectionItem: Hashable, Identifiable {
             "artwork-\(artwork.id)"
         case .pixivCollection(let collection):
             "pixiv-collection-\(collection.id)"
+        case .pixivRelatedCollectionsHeader:
+            "pixiv-related-collections-header"
         case .loadMore:
             "load-more"
         }
@@ -39,14 +42,14 @@ enum NativeGalleryCollectionItem: Hashable, Identifiable {
             return ArtworkMasonryPresentation(artwork: artwork).aspectRatio
         case .pixivCollection(let collection):
             return collection.masonryAspectRatio
-        case .loading, .empty, .cachedStatus, .popularPreview, .loadMore:
+        case .loading, .empty, .cachedStatus, .popularPreview, .pixivRelatedCollectionsHeader, .loadMore:
             return ArtworkMasonryPresentation.fallbackAspectRatio
         }
     }
 
     var isFullWidth: Bool {
         switch self {
-        case .loading, .empty, .cachedStatus, .popularPreview, .loadMore:
+        case .loading, .empty, .cachedStatus, .popularPreview, .pixivRelatedCollectionsHeader, .loadMore:
             true
         case .artwork, .pixivCollection:
             false
@@ -61,6 +64,8 @@ enum NativeGalleryCollectionItem: Hashable, Identifiable {
             "\(artwork.title) · \(artwork.user.name)"
         case .pixivCollection(let collection):
             collection.title.isEmpty ? L10n.pixivCollection : "\(collection.title) · \(collection.owner.name)"
+        case .pixivRelatedCollectionsHeader:
+            L10n.relatedPixivCollections
         case .empty:
             L10n.noArtworkTitle
         case .loadMore:
@@ -143,6 +148,8 @@ enum NativeGalleryCollectionLayout: Equatable {
             82
         case .popularPreview:
             270
+        case .pixivRelatedCollectionsHeader:
+            72
         case .loadMore:
             switch self {
             case .compactGrid(_, let loadMoreHeight),

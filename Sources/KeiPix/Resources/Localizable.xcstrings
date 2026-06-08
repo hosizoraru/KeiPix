@@ -21264,25 +21264,25 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Open Pixiv Web Collections"
+            "value": "Open Web Collections"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pixiv Webのコレクションを開く"
+            "value": "Webのコレクションを開く"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "打开 Pixiv Web 珍藏册"
+            "value": "打开 Web 珍藏册"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "開啟 Pixiv Web 珍藏冊"
+            "value": "開啟 Web 珍藏冊"
           }
         }
       }
@@ -21299,19 +21299,19 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "自分のPixivコレクションを開く"
+            "value": "自分のコレクションを開く"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "打开我的 Pixiv 珍藏册"
+            "value": "打开我的珍藏册"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "開啟我的 Pixiv 珍藏冊"
+            "value": "開啟我的珍藏冊"
           }
         }
       }
@@ -21328,19 +21328,19 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "保存したPixivコレクションを開く"
+            "value": "保存したコレクションを開く"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "打开收藏的 Pixiv 珍藏册"
+            "value": "打开收藏的珍藏册"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "開啟收藏的 Pixiv 珍藏冊"
+            "value": "開啟收藏的珍藏冊"
           }
         }
       }
@@ -26300,6 +26300,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "相關作品"
+          }
+        }
+      }
+    },
+    "Related Collections": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Related Collections"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "関連するコレクション"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "相关珍藏册"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "相關珍藏冊"
           }
         }
       }

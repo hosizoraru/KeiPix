@@ -93,6 +93,38 @@ struct PixivCollectionModelsTests {
           "error": false,
           "message": "",
           "body": {
+            "data": {
+              "userCollections": {
+                "49895345339794251171": {
+                  "id": "49895345339794251171",
+                  "userId": "110913610",
+                  "userName": "HaiHome[ソルト]",
+                  "profileImageUrl": "https://i.pximg.net/user-profile/img/2024/11/03/11/53/54/26556070_170.png",
+                  "title": "❤️ソルト❤️",
+                  "tags": ["私の推し", "ソルト", "音ゲー", "maimai"],
+                  "caption": "",
+                  "bookmarkCount": 285,
+                  "viewCount": 119071,
+                  "thumbnailImageUrl": "https://embed.pixiv.net/next/collection/49895345339794251171/hash/2/288x288/thumbnail",
+                  "status": "public",
+                  "publishedDateTime": "2025-11-23 08:55:07"
+                },
+                "41719750128405781393": {
+                  "id": "41719750128405781393",
+                  "userId": "110913610",
+                  "userName": "HaiHome[ソルト]",
+                  "profileImageUrl": "https://i.pximg.net/user-profile/img/2024/11/03/11/53/54/26556070_170.png",
+                  "title": "Another Salt Collection",
+                  "tags": ["maimai", "ソルト"],
+                  "caption": "More works from the same creator.",
+                  "bookmarkCount": 12,
+                  "viewCount": 450,
+                  "thumbnailImageUrl": "https://embed.pixiv.net/next/collection/41719750128405781393/hash/1/288x288/thumbnail",
+                  "status": "public",
+                  "publishedDateTime": "2026-06-08 21:44:11"
+                }
+              }
+            },
             "thumbnails": {
               "illust": [
                 {
@@ -154,6 +186,10 @@ struct PixivCollectionModelsTests {
         #expect(collection.viewCount == 119_071)
         #expect(collection.thumbnailImageURL?.absoluteString == "https://embed.pixiv.net/next/collection/49895345339794251171/hash/2/288x288/thumbnail?format=png")
         #expect(collection.pixivURL?.absoluteString == "https://www.pixiv.net/collections/49895345339794251171")
+        #expect(collection.relatedCollections.map(\.id) == ["41719750128405781393"])
+        #expect(collection.relatedCollections.first?.title == "Another Salt Collection")
+        #expect(collection.relatedCollections.first?.artworks.isEmpty == true)
+        #expect(collection.relatedCollections.first?.thumbnailImageURL?.absoluteString == "https://embed.pixiv.net/next/collection/41719750128405781393/hash/1/288x288/thumbnail?format=png")
         #expect(artwork.id == 127_225_971)
         #expect(artwork.title == "紗露朵 情人節巧可")
         #expect(artwork.type == "illust")
