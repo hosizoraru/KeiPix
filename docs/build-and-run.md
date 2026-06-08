@@ -150,12 +150,13 @@ GitHub Actions workflow 位于 `.github/workflows/macos-build.yml`：
 - 选择 Xcode 26 toolchain
 - `swift package resolve`
 - `./script/check_version_consistency.sh`
-- `swift build`
-- `swift test --parallel`
+- `swift build --jobs <logical-cpu-count>`
+- `swift test --parallel --jobs <logical-cpu-count>`
 - `./script/build_release_app.sh zip` 生成 macOS zipped `.app` artifact
 - `./script/build_unsigned_ipa.sh ios` 生成 iOS unsigned IPA artifact
 - `./script/build_unsigned_ipa.sh ipados` 生成 iPadOS unsigned IPA artifact
-- SwiftPM job 缓存 `.build` / SwiftPM cache，iOS 与 iPadOS 打包 job 缓存各自的 `.tmp/DerivedData-unsigned-ipa-*`
+- macOS 测试、macOS `.app` 打包、iOS IPA 打包和 iPadOS IPA 打包并行执行；各 job 失败都会让 workflow 失败，但 artifact 不再等待测试 job 结束才开始构建
+- SwiftPM job 缓存 `.build` / SwiftPM cache，iOS 与 iPadOS 打包 job 缓存各自的 `.tmp/DerivedData-unsigned-ipa-*`；cache key 覆盖 Swift source、资源、XcodeGen spec、plist、entitlements 和版本配置
 - tag `v*` 时把 macOS `.zip` / `.dmg` 产物附加到 GitHub Release
 
 本地可复现同样的打包产物：
@@ -165,6 +166,8 @@ GitHub Actions workflow 位于 `.github/workflows/macos-build.yml`：
 ./script/build_unsigned_ipa.sh ios
 ./script/build_unsigned_ipa.sh ipados
 ```
+
+脚本会自动按本机 logical CPU 数设置 SwiftPM / Xcode 并行 job 数；需要限制或放大时可设置 `KEIPIX_BUILD_JOBS=<n>`，IPA 构建也支持更具体的 `KEIPIX_XCODE_JOBS=<n>` 覆盖。
 
 unsigned IPA 使用 `iphoneos` SDK 的 Release 构建，关闭 Xcode signing，并输出标准 `Payload/KeiPix.app` 结构，适合导入 LiveContainer 这类 live container / sideload 测试环境；它不是 App Store、TestFlight 或普通已签名真机安装包。
 

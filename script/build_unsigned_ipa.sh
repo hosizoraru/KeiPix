@@ -34,9 +34,12 @@ esac
 # shellcheck source=version_settings.sh
 source "$ROOT_DIR/script/version_settings.sh"
 keipix_load_version_settings "$ROOT_DIR"
+# shellcheck source=build_parallelism.sh
+source "$ROOT_DIR/script/build_parallelism.sh"
 
 VERSION="$KEIPIX_MARKETING_VERSION"
 BUILD_NUMBER="$KEIPIX_BUILD_NUMBER"
+XCODE_JOBS="$(keipix_resolve_build_jobs "${KEIPIX_XCODE_JOBS:-${KEIPIX_BUILD_JOBS:-}}")"
 ARTIFACTS_DIR="$ROOT_DIR/artifacts"
 WORK_DIR="$ROOT_DIR/.tmp/unsigned-ipa-$PLATFORM"
 PAYLOAD_DIR="$WORK_DIR/Payload"
@@ -68,6 +71,13 @@ COMMON_XCODE_ARGS=(
   CODE_SIGNING_REQUIRED=NO
   CODE_SIGN_IDENTITY=
   AD_HOC_CODE_SIGNING_ALLOWED=NO
+  COMPILER_INDEX_STORE_ENABLE=NO
+)
+
+BUILD_XCODE_ARGS=(
+  "${COMMON_XCODE_ARGS[@]}"
+  -parallelizeTargets
+  -jobs "$XCODE_JOBS"
 )
 
 cd "$ROOT_DIR"
@@ -76,8 +86,8 @@ mkdir -p "$ARTIFACTS_DIR"
 rm -rf "$WORK_DIR"
 mkdir -p "$PAYLOAD_DIR"
 
-echo "==> Building unsigned $ARTIFACT_PLATFORM IPA from '$SCHEME' ($CONFIGURATION)"
-xcodebuild "${COMMON_XCODE_ARGS[@]}" -quiet build
+echo "==> Building unsigned $ARTIFACT_PLATFORM IPA from '$SCHEME' ($CONFIGURATION, $XCODE_JOBS jobs)"
+xcodebuild "${BUILD_XCODE_ARGS[@]}" -quiet build
 
 BUILD_SETTINGS="$(xcodebuild "${COMMON_XCODE_ARGS[@]}" -showBuildSettings)"
 BUILT_PRODUCTS_DIR="$(

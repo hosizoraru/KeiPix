@@ -36,14 +36,17 @@ source "$ROOT_DIR/script/version_settings.sh"
 keipix_load_version_settings "$ROOT_DIR"
 # shellcheck source=macos_app_icon.sh
 source "$ROOT_DIR/script/macos_app_icon.sh"
+# shellcheck source=build_parallelism.sh
+source "$ROOT_DIR/script/build_parallelism.sh"
 VERSION="$KEIPIX_MARKETING_VERSION"
 BUILD_NUMBER="$KEIPIX_BUILD_NUMBER"
+BUILD_JOBS="$(keipix_resolve_build_jobs "${KEIPIX_BUILD_JOBS:-}")"
 
 cd "$ROOT_DIR"
 mkdir -p "$ARTIFACTS_DIR"
 
-echo "==> Building $APP_NAME $VERSION ($BUILD_NUMBER) in release configuration"
-swift build -c release --product "$APP_NAME"
+echo "==> Building $APP_NAME $VERSION ($BUILD_NUMBER) in release configuration with $BUILD_JOBS jobs"
+swift build -c release --product "$APP_NAME" --jobs "$BUILD_JOBS"
 
 BUILD_DIR="$(swift build -c release --show-bin-path)"
 BUILD_BINARY="$BUILD_DIR/$APP_NAME"
@@ -170,5 +173,14 @@ write_dmg() {
 case "$FORMAT" in
   zip)  write_zip ;;
   dmg)  write_dmg ;;
-  both) write_zip; write_dmg ;;
+  both)
+    write_zip &
+    zip_pid=$!
+    write_dmg &
+    dmg_pid=$!
+    status=0
+    wait "$zip_pid" || status=$?
+    wait "$dmg_pid" || status=$?
+    exit "$status"
+    ;;
 esac

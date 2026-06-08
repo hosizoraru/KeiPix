@@ -17,6 +17,10 @@ concurrency:
   group: build-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  HOMEBREW_NO_AUTO_UPDATE: "1"
+  HOMEBREW_NO_INSTALL_CLEANUP: "1"
+
 permissions:
   contents: write
   actions: read
@@ -48,16 +52,25 @@ jobs:
           xcodebuild -version
           swift --version
 
-      - name: Cache SwiftPM build products
+      - name: Cache SwiftPM debug build products
         uses: actions/cache@v5
         with:
           path: |
             .build
             ~/Library/Caches/org.swift.swiftpm
             ~/Library/org.swift.swiftpm
-          key: spm-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('Package.resolved', 'Package.swift', 'Sources/**/*.swift') }}
+          key: spm-debug-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('Package.resolved', 'Package.swift', 'Sources/**/*.swift', 'Sources/KeiPix/Resources/**') }}
           restore-keys: |
-            spm-${{ runner.os }}-${{ runner.arch }}-
+            spm-debug-${{ runner.os }}-${{ runner.arch }}-
+
+      - name: Resolve build parallelism
+        id: parallelism
+        run: |
+          set -euo pipefail
+          source ./script/build_parallelism.sh
+          jobs="$(keipix_resolve_build_jobs "${KEIPIX_BUILD_JOBS:-}")"
+          echo "jobs=$jobs" >> "$GITHUB_OUTPUT"
+          echo "Using $jobs Swift build jobs"
 
       - name: Resolve dependencies
         run: swift package resolve
@@ -66,14 +79,13 @@ jobs:
         run: ./script/check_version_consistency.sh
 
       - name: Build (macOS)
-        run: swift build
+        run: swift build --jobs "${{ steps.parallelism.outputs.jobs }}"
 
       - name: Run tests
-        run: swift test --parallel
+        run: swift test --parallel --jobs "${{ steps.parallelism.outputs.jobs }}"
 
   package-macos:
     name: Package macOS .app zip
-    needs: test
     runs-on: macos-26
     timeout-minutes: 25
 
@@ -98,16 +110,16 @@ jobs:
           xcodebuild -version
           swift --version
 
-      - name: Cache SwiftPM build products
+      - name: Cache SwiftPM release build products
         uses: actions/cache@v5
         with:
           path: |
             .build
             ~/Library/Caches/org.swift.swiftpm
             ~/Library/org.swift.swiftpm
-          key: spm-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('Package.resolved', 'Package.swift', 'Sources/**/*.swift') }}
+          key: spm-release-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('Package.resolved', 'Package.swift', 'Sources/**/*.swift', 'Sources/KeiPix/Resources/**') }}
           restore-keys: |
-            spm-${{ runner.os }}-${{ runner.arch }}-
+            spm-release-${{ runner.os }}-${{ runner.arch }}-
 
       - name: Resolve dependencies
         run: swift package resolve
@@ -175,7 +187,6 @@ jobs:
 
   package-ios:
     name: Package unsigned ${{ matrix.display-name }} IPA
-    needs: test
     runs-on: macos-26
     timeout-minutes: 35
 
@@ -222,7 +233,7 @@ jobs:
         uses: actions/cache@v5
         with:
           path: .tmp/DerivedData-unsigned-ipa-${{ matrix.platform }}
-          key: xcode-unsigned-ipa-${{ runner.os }}-${{ runner.arch }}-${{ matrix.platform }}-${{ hashFiles('project.yml', 'App/**/*.plist', 'App/**/*.entitlements', 'PrivacyInfo.xcprivacy', 'Sources/**/*.swift', 'Sources/KeiPix/Resources/**') }}
+          key: xcode-unsigned-ipa-${{ runner.os }}-${{ runner.arch }}-${{ matrix.platform }}-${{ hashFiles('project.yml', 'Config/**/*.xcconfig', 'App/**/*.plist', 'App/**/*.entitlements', 'PrivacyInfo.xcprivacy', 'Sources/**/*.swift', 'Sources/KeiPix/Resources/**') }}
           restore-keys: |
             xcode-unsigned-ipa-${{ runner.os }}-${{ runner.arch }}-${{ matrix.platform }}-
 
