@@ -51,6 +51,19 @@ extension View {
             }
     }
 
+    @ViewBuilder
+    func macOSWindowCompanionBackground() -> some View {
+        #if os(macOS)
+        if #available(macOS 27.0, *) {
+            self.background(.windowBackground)
+        } else {
+            self.background(.background)
+        }
+        #else
+        self.background(.background)
+        #endif
+    }
+
     func cardPadding() -> some View {
         padding(14)
     }

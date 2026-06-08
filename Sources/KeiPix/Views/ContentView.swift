@@ -154,6 +154,7 @@ struct ContentView: View {
                     .buttonStyle(.glassProminent)
                 }
             }
+            .sharedBackgroundVisibility(.hidden)
         }
         .windowStyler(unifiedToolbar: true)
         .mainWindowSizing(
@@ -621,7 +622,7 @@ struct ContentView: View {
 
             macDetailPanelContent
         }
-        .background(.background)
+        .macOSWindowCompanionBackground()
     }
 
     private var macDetailPanelHeader: some View {
