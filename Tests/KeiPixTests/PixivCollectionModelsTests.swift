@@ -77,4 +77,76 @@ struct PixivCollectionModelsTests {
         #expect(artwork.tags.map(\.name) == ["音ゲー", "maimai", "ソルト"])
         #expect(artwork.thumbnailURL != nil)
     }
+
+    @Test("Pixiv Web collection search maps public discovery cards")
+    func collectionSearchMapsPublicDiscoveryCards() throws {
+        let json = """
+        {
+          "error": false,
+          "message": "",
+          "body": {
+            "tagTranslation": [],
+            "thumbnails": {
+              "illust": [],
+              "novel": [],
+              "novelSeries": [],
+              "novelDraft": [],
+              "collection": [
+                {
+                  "id": "20446109143477266498",
+                  "userId": "113901640",
+                  "userName": "もも",
+                  "profileImageUrl": "https://i.pximg.net/user-profile/img/2025/08/23/08/44/44/27795970_170.jpg",
+                  "title": "大好きなオリジナル作品",
+                  "tags": ["ここ好き"],
+                  "caption": "私の好きな作品たちです！",
+                  "language": "ja",
+                  "visibilityScope": 0,
+                  "xRestrict": 0,
+                  "sl": 2,
+                  "bookmarkCount": 12,
+                  "viewCount": 345,
+                  "thumbnailImageUrl": "https://embed.pixiv.net/next/collection/20446109143477266498/hash/1/288x288/thumbnail",
+                  "status": "public",
+                  "publishedDateTime": "2026-06-08 01:23:45"
+                },
+                {
+                  "id": "67433614463687076313",
+                  "userId": "12345",
+                  "userName": "Creator",
+                  "title": "Portfolio",
+                  "tags": ["ポートフォリオ"],
+                  "caption": "",
+                  "bookmarkCount": 1,
+                  "viewCount": 2,
+                  "status": "public"
+                }
+              ]
+            },
+            "illustSeries": [],
+            "requests": [],
+            "users": [],
+            "data": {
+              "ids": ["67433614463687076313", "20446109143477266498"],
+              "total": 7436
+            }
+          }
+        }
+        """
+
+        let response = try JSONDecoder().decode(
+            PixivWebResponse<PixivCollectionSearchResponse>.self,
+            from: Data(json.utf8)
+        )
+        let collections = response.body.collections
+
+        #expect(response.error == false)
+        #expect(response.body.total == 7_436)
+        #expect(collections.map(\.id) == ["67433614463687076313", "20446109143477266498"])
+        #expect(collections.first?.title == "Portfolio")
+        #expect(collections.last?.title == "大好きなオリジナル作品")
+        #expect(collections.last?.tags.map(\.name) == ["ここ好き"])
+        #expect(collections.last?.artworks.isEmpty == true)
+        #expect(collections.last?.pixivURL?.absoluteString == "https://www.pixiv.net/collections/20446109143477266498")
+    }
 }

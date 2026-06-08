@@ -3,7 +3,7 @@ import Foundation
 @MainActor
 extension KeiPixStore {
     func refreshPixivCollections() async {
-        guard let userID = session?.user.id, usesLocalSampleAccount == false else {
+        guard session != nil, usesLocalSampleAccount == false else {
             pixivCollections = []
             pixivCollectionErrorMessage = nil
             isLoadingPixivCollections = false
@@ -15,7 +15,7 @@ extension KeiPixStore {
         defer { isLoadingPixivCollections = false }
 
         do {
-            pixivCollections = try await api.userCollectionDetails(userID: userID)
+            pixivCollections = try await api.discoverPixivCollections()
         } catch is CancellationError {
             pixivCollectionErrorMessage = nil
         } catch let error as URLError where error.code == .cancelled {

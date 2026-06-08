@@ -62,6 +62,47 @@ struct PixivCollectionDetailResponse: Decodable, Sendable {
     }
 }
 
+struct PixivCollectionSearchResponse: Decodable, Sendable {
+    let collections: [PixivCollectionDetail]
+    let total: Int
+
+    private enum CodingKeys: String, CodingKey {
+        case thumbnails
+        case data
+    }
+
+    private enum ThumbnailKeys: String, CodingKey {
+        case collection
+    }
+
+    private enum DataKeys: String, CodingKey {
+        case ids
+        case total
+    }
+
+    init(collections: [PixivCollectionDetail], total: Int) {
+        self.collections = collections
+        self.total = total
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let thumbnails = try container.nestedContainer(keyedBy: ThumbnailKeys.self, forKey: .thumbnails)
+        let summaries = try thumbnails.decodeIfPresent([PixivCollectionSummary].self, forKey: .collection) ?? []
+
+        let data = try container.nestedContainer(keyedBy: DataKeys.self, forKey: .data)
+        let orderedIDs = try data.decodeIfPresent([String].self, forKey: .ids) ?? []
+        total = try data.decodeIfPresent(Int.self, forKey: .total) ?? summaries.count
+
+        if orderedIDs.isEmpty {
+            collections = summaries.map { $0.detail(artworks: []) }
+        } else {
+            let summariesByID = Dictionary(uniqueKeysWithValues: summaries.map { ($0.id, $0) })
+            collections = orderedIDs.compactMap { summariesByID[$0]?.detail(artworks: []) }
+        }
+    }
+}
+
 private struct PixivCollectionSummary: Decodable, Sendable {
     let id: String
     let title: String

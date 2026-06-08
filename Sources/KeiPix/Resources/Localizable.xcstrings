@@ -21374,31 +21374,31 @@
         }
       }
     },
-    "Collections from your Pixiv profile appear here. You can also paste a collection link to open it natively.": {
+    "Discover user-created Pixiv collections here. You can also paste a collection link to open it natively.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Collections from your Pixiv profile appear here. You can also paste a collection link to open it natively."
+            "value": "Discover user-created Pixiv collections here. You can also paste a collection link to open it natively."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pixivプロフィールのコレクションがここに表示されます。コレクションリンクを貼り付けてネイティブ表示で開くこともできます。"
+            "value": "ユーザーが作成したPixivコレクションをここで見つけられます。コレクションリンクを貼り付けてネイティブ表示で開くこともできます。"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pixiv 个人资料里的珍藏册会显示在这里。你也可以粘贴珍藏册链接，用原生界面打开。"
+            "value": "在这里发现用户创建的 Pixiv 珍藏册。你也可以粘贴珍藏册链接，用原生界面打开。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pixiv 個人資料裡的珍藏冊會顯示在這裡。你也可以貼上珍藏冊連結，用原生介面開啟。"
+            "value": "在這裡發現使用者建立的 Pixiv 珍藏冊。你也可以貼上珍藏冊連結，用原生介面開啟。"
           }
         }
       }

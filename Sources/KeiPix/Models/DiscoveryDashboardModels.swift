@@ -18,7 +18,8 @@ struct DiscoveryDashboardSection: Identifiable {
                     .newIllustrations,
                     .newManga,
                     .trendingTags,
-                    .spotlight
+                    .spotlight,
+                    .pixivCollections
                 ]
             ),
             DiscoveryDashboardSection(
@@ -103,7 +104,6 @@ struct DiscoveryDashboardSection: Identifiable {
                     .publicBookmarks,
                     .privateBookmarks,
                     .bookmarkTags,
-                    .pixivCollections,
                     .following,
                     .privateFollowing,
                     .history,

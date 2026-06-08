@@ -145,6 +145,13 @@ struct DiscoveryDashboardForYouSection: View {
     private var features: [DiscoveryDashboardFeature] {
         [
             DiscoveryDashboardFeature(
+                route: .pixivCollections,
+                title: L10n.pixivCollections,
+                subtitle: L10n.works,
+                systemImage: "rectangle.stack.badge.person.crop",
+                accent: .blue
+            ),
+            DiscoveryDashboardFeature(
                 route: .trendingTags,
                 title: L10n.trendingTags,
                 subtitle: L10n.explore,

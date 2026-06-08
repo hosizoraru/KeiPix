@@ -844,16 +844,26 @@ struct NativeBoundaryTests {
             contentsOf: root.appending(path: "Sources/KeiPix/Views/ContentView.swift"),
             encoding: .utf8
         )
+        let dashboardRecommendations = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/DiscoveryDashboardRecommendationSections.swift"),
+            encoding: .utf8
+        )
+        let dashboardModels = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Models/DiscoveryDashboardModels.swift"),
+            encoding: .utf8
+        )
         let iPadContentView = try String(
             contentsOf: root.appending(path: "Sources/KeiPix/Views/ContentView_iPadOS.swift"),
             encoding: .utf8
         )
 
         #expect(collectionsView.contains("NativeAdaptiveGridCollectionView("))
-        #expect(collectionsView.contains("store.openPixivCollection(collection)"))
+        #expect(collectionsView.contains("try await store.openPixivCollection(id: collection.id)"))
         #expect(mobileConfiguration.contains(".pixivCollections"))
         #expect(mobileConfiguration.contains("route == .pixivCollectionWorks"))
         #expect(contentView.contains("PixivCollectionsView(store: store)"))
+        #expect(dashboardRecommendations.contains("route: .pixivCollections"))
+        #expect(dashboardModels.contains(".pixivCollections"))
         #expect(iPadContentView.contains("PixivCollectionsView(store: store)"))
     }
 

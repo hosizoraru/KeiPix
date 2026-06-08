@@ -49,7 +49,7 @@ struct PixivCollectionsView: View {
             ) { collection in
                 AnyView(
                     PixivCollectionCard(collection: collection) {
-                        Task { await store.openPixivCollection(collection) }
+                        Task { await openCollection(collection) }
                     }
                 )
             }
@@ -86,7 +86,7 @@ struct PixivCollectionsView: View {
                 .help(L10n.openPixivLinkFromClipboard)
                 .accessibilityLabel(L10n.openPixivLinkFromClipboard)
 
-                if let webURL = ownCollectionsWebURL {
+                if let webURL = collectionsWebURL {
                     Link(destination: webURL) {
                         Label(L10n.openPixivWebCollections, systemImage: "safari")
                     }
@@ -125,7 +125,7 @@ struct PixivCollectionsView: View {
                 }
                 .os26GlassButton()
 
-                if let webURL = ownCollectionsWebURL {
+                if let webURL = collectionsWebURL {
                     Link(destination: webURL) {
                         Label(L10n.openPixivWebCollections, systemImage: "safari")
                     }
@@ -146,9 +146,8 @@ struct PixivCollectionsView: View {
         )
     }
 
-    private var ownCollectionsWebURL: URL? {
-        guard let userID = store.session?.user.id else { return nil }
-        return PixivWebURLBuilder.userBookmarkCollectionsURL(userID: userID)
+    private var collectionsWebURL: URL? {
+        PixivWebURLBuilder.collectionsURL()
     }
 
     private var statusText: String {
@@ -169,6 +168,14 @@ struct PixivCollectionsView: View {
         await store.refreshPixivCollections()
         if showFeedback, store.pixivCollectionErrorMessage == nil {
             actionMessage = String(format: L10n.refreshedPixivCollectionsFormat, store.pixivCollections.count)
+        }
+    }
+
+    private func openCollection(_ collection: PixivCollectionDetail) async {
+        do {
+            try await store.openPixivCollection(id: collection.id)
+        } catch {
+            actionMessage = error.localizedDescription
         }
     }
 

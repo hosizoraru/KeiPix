@@ -430,6 +430,22 @@ actor PixivAPI {
         return response.body.detail
     }
 
+    func discoverPixivCollections(limit: Int = 48, offset: Int = 0) async throws -> [PixivCollectionDetail] {
+        var components = URLComponents(url: URL(string: "/ajax/collections/search", relativeTo: Endpoint.webBase)!, resolvingAgainstBaseURL: true)!
+        components.queryItems = [
+            URLQueryItem(name: "mode", value: "all"),
+            URLQueryItem(name: "limit", value: "\(max(limit, 1))"),
+            URLQueryItem(name: "offset", value: "\(max(offset, 0))")
+        ]
+        guard let url = components.url else { throw PixivAPIError.invalidResponse }
+
+        let response: PixivWebResponse<PixivCollectionSearchResponse> = try await requestPixivWebJSON(url)
+        if response.error {
+            throw PixivAPIError.serverMessage(response.message)
+        }
+        return response.body.collections
+    }
+
     func userCollectionIDs(userID: String) async throws -> [String] {
         let trimmedID = userID.trimmingCharacters(in: .whitespacesAndNewlines)
         guard trimmedID.isEmpty == false, trimmedID.allSatisfy(\.isNumber) else {

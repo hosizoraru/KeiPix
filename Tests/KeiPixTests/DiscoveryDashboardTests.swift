@@ -20,6 +20,20 @@ struct DiscoveryDashboardTests {
         #expect(dashboardRoutes.count == Set(dashboardRoutes).count)
     }
 
+    @Test("Pixiv collections are classified with work discovery")
+    func pixivCollectionsAreClassifiedWithWorkDiscovery() throws {
+        let sidebarWorks = try #require(PixivRoute.sidebarSections.first { $0 == .works })
+        let sidebarLibrary = try #require(PixivRoute.sidebarSections.first { $0 == .library })
+        let dashboardWorks = try #require(DiscoveryDashboardSection.all.first { $0.id == "works" })
+        let dashboardLibrary = try #require(DiscoveryDashboardSection.all.first { $0.id == "library" })
+
+        #expect(sidebarWorks.routes.contains(.spotlight))
+        #expect(sidebarWorks.routes.contains(.pixivCollections))
+        #expect(sidebarLibrary.routes.contains(.pixivCollections) == false)
+        #expect(dashboardWorks.routes.contains(.pixivCollections))
+        #expect(dashboardLibrary.routes.contains(.pixivCollections) == false)
+    }
+
     @Test("Compact dashboard route previews keep density without hiding selection")
     func compactDashboardRoutePreviewsKeepDensityWithoutHidingSelection() throws {
         let ranking = try #require(DiscoveryDashboardSection.all.first { $0.id == "ranking" })

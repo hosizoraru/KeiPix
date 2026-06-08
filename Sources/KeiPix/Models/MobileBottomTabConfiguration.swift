@@ -50,7 +50,7 @@ enum MobileBottomTabKind: String, CaseIterable, Codable, Hashable, Identifiable,
 
     static func kind(containing route: PixivRoute) -> MobileBottomTabKind? {
         if route == .pixivCollectionWorks {
-            return .bookmarks
+            return .illustrations
         }
         return allCases.first { $0.contains(route) }
     }
@@ -298,6 +298,7 @@ enum MobileRouteMenuConfiguration {
                         .illustrations,
                         .newIllustrations,
                         .spotlight,
+                        .pixivCollections,
                         .recommendedUsers
                     ]
                 ),
@@ -351,8 +352,7 @@ enum MobileRouteMenuConfiguration {
                     routes: [
                         .publicBookmarks,
                         .privateBookmarks,
-                        .bookmarkTags,
-                        .pixivCollections
+                        .bookmarkTags
                     ]
                 ),
                 MobileRouteMenuSection(

@@ -131,6 +131,7 @@ struct MobileBottomTabConfigurationTests {
         #expect(illustrationRoutes.contains(.searchUsers) == false)
         #expect(illustrationRoutes.contains(.savedSearches) == false)
         #expect(illustrationRoutes.contains(.trendingTags) == false)
+        #expect(illustrationRoutes.contains(.pixivCollections))
         #expect(illustrationRoutes.contains(.rankingDaily))
         #expect(illustrationRoutes.contains(.mangaRecommended) == false)
 
@@ -144,7 +145,7 @@ struct MobileBottomTabConfigurationTests {
         #expect(novelRoutes.contains(.publicBookmarks) == false)
 
         #expect(bookmarkRoutes.contains(.publicBookmarks))
-        #expect(bookmarkRoutes.contains(.pixivCollections))
+        #expect(bookmarkRoutes.contains(.pixivCollections) == false)
         #expect(bookmarkRoutes.contains(.pixivCollectionWorks) == false)
         #expect(bookmarkRoutes.contains(.allFollowing) == false)
         #expect(bookmarkRoutes.contains(.followingCreators))
@@ -184,7 +185,8 @@ struct MobileBottomTabConfigurationTests {
         #expect(MobileBottomTabKind.kind(containing: .mangaRankingMonthly) == .manga)
         #expect(MobileBottomTabKind.kind(containing: .novelSearch) == nil)
         #expect(MobileBottomTabKind.kind(containing: .watchLater) == .bookmarks)
-        #expect(MobileBottomTabKind.kind(containing: .pixivCollectionWorks) == .bookmarks)
+        #expect(MobileBottomTabKind.kind(containing: .pixivCollections) == .illustrations)
+        #expect(MobileBottomTabKind.kind(containing: .pixivCollectionWorks) == .illustrations)
     }
 
     @Test("Mobile cold launch restores the last concrete bottom-tab page")
