@@ -119,7 +119,11 @@ struct ArtworkSeriesView: View {
     @ViewBuilder
     private var seriesContent: some View {
         if detail == nil, seriesArtworks.isEmpty {
-            ContentUnavailableView(L10n.noSeriesArtworks, systemImage: "rectangle.stack")
+            OS26InlineUnavailableView(
+                title: L10n.noSeriesArtworks,
+                systemImage: "rectangle.stack",
+                minHeight: 140
+            )
                 .frame(maxWidth: .infinity)
         } else {
             if let detail {
@@ -131,7 +135,11 @@ struct ArtworkSeriesView: View {
             }
 
             if seriesArtworks.isEmpty {
-                ContentUnavailableView(L10n.noSeriesArtworks, systemImage: "rectangle.stack")
+                OS26InlineUnavailableView(
+                    title: L10n.noSeriesArtworks,
+                    systemImage: "rectangle.stack",
+                    minHeight: 140
+                )
                     .frame(maxWidth: .infinity)
             } else {
                 SeriesControlsView(
@@ -142,12 +150,12 @@ struct ArtworkSeriesView: View {
                 )
 
                 if displayedSeriesArtworks.isEmpty {
-                    ContentUnavailableView(
-                        L10n.noMatchingSeriesArtworks,
-                        systemImage: "line.3.horizontal.decrease.circle"
+                    OS26InlineUnavailableView(
+                        title: L10n.noMatchingSeriesArtworks,
+                        systemImage: "line.3.horizontal.decrease.circle",
+                        minHeight: 160
                     )
                     .frame(maxWidth: .infinity)
-                    .frame(minHeight: 160)
                 } else {
                     LazyVGrid(columns: columns, spacing: 12) {
                         ForEach(displayedSeriesArtworks) { seriesArtwork in
@@ -523,8 +531,8 @@ private struct SeriesHeaderView: View {
                 .labelStyle(.iconOnly)
                 .help(detail.watchlistAdded ? L10n.watchlistAdded : L10n.addToWatchlist)
                 .accessibilityLabel(detail.watchlistAdded ? L10n.watchlistAdded : L10n.addToWatchlist)
-                .buttonStyle(.bordered)
                 .controlSize(.small)
+                .os26GlassIconButton(prominent: detail.watchlistAdded)
                 .disabled(isUpdatingWatchlist)
 
                 if let url = detail.pixivURL {
@@ -534,8 +542,8 @@ private struct SeriesHeaderView: View {
                     .labelStyle(.iconOnly)
                     .help(L10n.openSeriesInPixiv)
                     .accessibilityLabel(L10n.openSeriesInPixiv)
-                    .buttonStyle(.bordered)
                     .controlSize(.small)
+                    .os26GlassIconButton()
                 }
                 Spacer()
             }

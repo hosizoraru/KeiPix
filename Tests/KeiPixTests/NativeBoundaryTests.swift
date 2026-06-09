@@ -3006,6 +3006,10 @@ struct NativeBoundaryTests {
             #expect(source.contains("OS26LoadMoreButton(") == false)
             #expect(source.contains("Label(L10n.loadMore") == false)
         }
+        #expect(artworkSeries.contains("OS26InlineUnavailableView("))
+        #expect(artworkSeries.contains(".os26GlassIconButton("))
+        #expect(artworkSeries.contains("ContentUnavailableView(") == false)
+        #expect(artworkSeries.contains(".buttonStyle(.bordered)") == false)
 
         let tokenLogin = try String(
             contentsOf: root.appending(path: "Sources/KeiPix/Views/TokenLoginSheetView.swift"),
