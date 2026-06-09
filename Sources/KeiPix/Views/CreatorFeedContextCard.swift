@@ -124,15 +124,90 @@ struct CreatorFeedContextCard: View {
     }
 }
 
-struct PixivCollectionFeedContextCard: View {
-    let collection: PixivCollectionDetail
+struct PixivCollectionFeedContext: Equatable, Sendable {
+    let id: String
+    let title: String
+    let owner: PixivCollectionFeedContextOwner
+    let tags: [PixivCollectionFeedContextTag]
+    let caption: String
+    let bookmarkCount: Int
+    let viewCount: Int
+    let publishedDate: Date?
+    let relatedCollectionCount: Int
     let loadedCount: Int
     let visibleCount: Int
+    let pixivURLString: String?
+
+    init(collection: PixivCollectionDetail, loadedCount: Int, visibleCount: Int) {
+        id = collection.id
+        title = collection.title
+        owner = PixivCollectionFeedContextOwner(user: collection.owner)
+        tags = collection.tags.map(PixivCollectionFeedContextTag.init)
+        caption = collection.caption.htmlStripped
+        bookmarkCount = collection.bookmarkCount
+        viewCount = collection.viewCount
+        publishedDate = collection.publishedDate
+        relatedCollectionCount = collection.relatedCollections.count
+        self.loadedCount = loadedCount
+        self.visibleCount = visibleCount
+        pixivURLString = collection.pixivURL?.absoluteString
+    }
+
+    var displayTitle: String {
+        title.isEmpty ? L10n.pixivCollection : title
+    }
+
+    var pixivURL: URL? {
+        pixivURLString.flatMap { URL(string: $0) }
+    }
+}
+
+struct PixivCollectionFeedContextOwner: Equatable, Sendable {
+    let id: Int
+    let name: String
+    let account: String
+    let avatarURLString: String?
+
+    init(user: PixivUser) {
+        id = user.id
+        name = user.name
+        account = user.account
+        avatarURLString = user.avatarURL?.absoluteString
+    }
+
+    var avatarURL: URL? {
+        avatarURLString.flatMap { URL(string: $0) }
+    }
+
+    var pixivUser: PixivUser {
+        PixivUser(
+            id: id,
+            name: name,
+            account: account,
+            avatarURL: avatarURL
+        )
+    }
+}
+
+struct PixivCollectionFeedContextTag: Identifiable, Hashable, Sendable {
+    let name: String
+    let translatedName: String?
+
+    init(tag: PixivTag) {
+        name = tag.name
+        translatedName = tag.translatedName
+    }
+
+    var id: String { name }
+}
+
+struct PixivCollectionFeedContextCard: View {
+    let context: PixivCollectionFeedContext
     let openCreator: () -> Void
     let copyLink: () -> Void
     let clearContext: () -> Void
 
-    private let visibleTagLimit = 6
+    private static let visibleTagLimit = 6
 
     var body: some View {
         ViewThatFits(in: .horizontal) {
@@ -161,7 +236,7 @@ struct PixivCollectionFeedContextCard: View {
                 metadataRail
             }
 
-            if collection.tags.isEmpty == false {
+            if context.tags.isEmpty == false {
                 tagCloud
             }
 
@@ -191,7 +266,7 @@ struct PixivCollectionFeedContextCard: View {
                 metadataRail
             }
 
-            if collection.tags.isEmpty == false {
+            if context.tags.isEmpty == false {
                 tagCloud
             }
 
@@ -214,7 +289,7 @@ struct PixivCollectionFeedContextCard: View {
     }
 
     private var titleText: some View {
-        Text(collection.title.isEmpty ? L10n.pixivCollection : collection.title)
+        Text(context.displayTitle)
             .textSelection(.enabled)
     }
 
@@ -229,11 +304,11 @@ struct PixivCollectionFeedContextCard: View {
     private var ownerButton: some View {
         Button(action: openCreator) {
             Label {
-                Text("\(collection.owner.name) @\(collection.owner.account)")
+                Text("\(context.owner.name) @\(context.owner.account)")
                     .lineLimit(1)
                     .truncationMode(.middle)
             } icon: {
-                RemoteImageView(url: collection.owner.avatarURL)
+                RemoteImageView(url: context.owner.avatarURL)
                     .frame(width: 22, height: 22)
                     .clipShape(Circle())
                     .overlay {
@@ -245,7 +320,7 @@ struct PixivCollectionFeedContextCard: View {
         .font(.caption.weight(.medium))
         .foregroundStyle(.secondary)
         .help(L10n.openCreatorProfile)
-        .accessibilityLabel("\(L10n.openCreatorProfile), \(collection.owner.name)")
+        .accessibilityLabel("\(L10n.openCreatorProfile), \(context.owner.name)")
     }
 
     private var actionRail: some View {
@@ -255,7 +330,7 @@ struct PixivCollectionFeedContextCard: View {
             }
             .collectionHeaderIconButton(L10n.openCreatorProfile)
 
-            if let url = collection.pixivURL {
+            if let url = context.pixivURL {
                 Link(destination: url) {
                     Label(L10n.openInPixiv, systemImage: "safari")
                 }
@@ -281,7 +356,7 @@ struct PixivCollectionFeedContextCard: View {
                     Label(L10n.openCreatorProfile, systemImage: "person.crop.circle")
                 }
 
-                if let url = collection.pixivURL {
+                if let url = context.pixivURL {
                     Link(destination: url) {
                         Label(L10n.openInPixiv, systemImage: "safari")
                     }
@@ -312,18 +387,18 @@ struct PixivCollectionFeedContextCard: View {
 
     private var tagCloud: some View {
         FlowLayout(spacing: 6) {
-            ForEach(collection.tags.prefix(visibleTagLimit), id: \.name) { tag in
+            ForEach(context.tags.prefix(Self.visibleTagLimit), id: \.name) { tag in
                 PixivCollectionHeaderTagChip(tag: tag)
             }
 
-            if collection.tags.count > visibleTagLimit {
+            if context.tags.count > Self.visibleTagLimit {
                 Menu {
-                    ForEach(collection.tags.dropFirst(visibleTagLimit), id: \.name) { tag in
+                    ForEach(context.tags.dropFirst(Self.visibleTagLimit), id: \.name) { tag in
                         Button("#\(tag.name)") {}
                             .disabled(true)
                     }
                 } label: {
-                    Label("+\(collection.tags.count - visibleTagLimit)", systemImage: "ellipsis")
+                    Label("+\(context.tags.count - Self.visibleTagLimit)", systemImage: "ellipsis")
                 }
                 .font(.caption.weight(.semibold))
                 .labelStyle(.titleAndIcon)
@@ -336,9 +411,8 @@ struct PixivCollectionFeedContextCard: View {
 
     @ViewBuilder
     private var captionBlock: some View {
-        let caption = collection.caption.htmlStripped
-        if caption.isEmpty == false {
-            Text(caption)
+        if context.caption.isEmpty == false {
+            Text(context.caption)
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .lineLimit(3)
@@ -359,18 +433,18 @@ struct PixivCollectionFeedContextCard: View {
             CollectionHeaderMetadataItem(
                 id: "bookmarks",
                 title: L10n.bookmarks,
-                value: collection.bookmarkCount.formatted(),
+                value: context.bookmarkCount.formatted(),
                 systemImage: "heart.fill"
             ),
             CollectionHeaderMetadataItem(
                 id: "views",
                 title: L10n.views,
-                value: collection.viewCount.formatted(),
+                value: context.viewCount.formatted(),
                 systemImage: "eye.fill"
             )
         ]
 
-        if let publishedDate = collection.publishedDate {
+        if let publishedDate = context.publishedDate {
             items.append(
                 CollectionHeaderMetadataItem(
                     id: "published",
@@ -381,12 +455,12 @@ struct PixivCollectionFeedContextCard: View {
             )
         }
 
-        if collection.relatedCollections.isEmpty == false {
+        if context.relatedCollectionCount > 0 {
             items.append(
                 CollectionHeaderMetadataItem(
                     id: "related",
                     title: L10n.relatedPixivCollections,
-                    value: collection.relatedCollections.count.formatted(),
+                    value: context.relatedCollectionCount.formatted(),
                     systemImage: "rectangle.stack.badge.plus"
                 )
             )
@@ -396,10 +470,10 @@ struct PixivCollectionFeedContextCard: View {
     }
 
     private var worksCountText: String {
-        guard visibleCount != loadedCount else {
-            return loadedCount.formatted()
+        guard context.visibleCount != context.loadedCount else {
+            return context.loadedCount.formatted()
         }
-        return "\(visibleCount.formatted())/\(loadedCount.formatted())"
+        return "\(context.visibleCount.formatted())/\(context.loadedCount.formatted())"
     }
 }
 
@@ -438,7 +512,7 @@ private struct CollectionHeaderMetadataPill: View {
 }
 
 private struct PixivCollectionHeaderTagChip: View {
-    let tag: PixivTag
+    let tag: PixivCollectionFeedContextTag
 
     var body: some View {
         VStack(alignment: .leading, spacing: 1) {

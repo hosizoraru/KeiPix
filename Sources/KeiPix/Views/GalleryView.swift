@@ -309,15 +309,16 @@ private struct GalleryFeedView: View {
     private var macOSNativeFeedHeader: some View {
         VStack(alignment: .leading, spacing: 8) {
             if let collection = store.selectedPixivCollection {
+                let context = pixivCollectionFeedHeaderContext(for: collection)
+                let owner = context.owner
+                let pixivURLString = context.pixivURLString
                 PixivCollectionFeedContextCard(
-                    collection: collection,
-                    loadedCount: store.artworks.count,
-                    visibleCount: store.clientFilteredArtworks.count,
+                    context: context,
                     openCreator: {
-                        store.presentedUserProfile = collection.owner
+                        presentPixivCollectionOwner(owner)
                     },
                     copyLink: {
-                        copyPixivCollectionLink(collection)
+                        copyPixivCollectionLink(urlString: pixivURLString)
                     },
                     clearContext: {
                         clearPixivCollectionContext()
@@ -344,16 +345,17 @@ private struct GalleryFeedView: View {
     private var iPadNativeFeedHeader: some View {
         Group {
             if let collection = store.selectedPixivCollection {
+                let context = pixivCollectionFeedHeaderContext(for: collection)
+                let owner = context.owner
+                let pixivURLString = context.pixivURLString
                 VStack(alignment: .leading, spacing: 8) {
                     PixivCollectionFeedContextCard(
-                        collection: collection,
-                        loadedCount: store.artworks.count,
-                        visibleCount: store.clientFilteredArtworks.count,
+                        context: context,
                         openCreator: {
-                            store.presentedUserProfile = collection.owner
+                            presentPixivCollectionOwner(owner)
                         },
                         copyLink: {
-                            copyPixivCollectionLink(collection)
+                            copyPixivCollectionLink(urlString: pixivURLString)
                         },
                         clearContext: {
                             clearPixivCollectionContext()
@@ -675,9 +677,21 @@ private struct GalleryFeedView: View {
         Task { await store.clearPixivCollectionContext() }
     }
 
-    private func copyPixivCollectionLink(_ collection: PixivCollectionDetail) {
-        guard let url = collection.pixivURL else { return }
-        PasteboardWriter.copy(url.absoluteString)
+    private func pixivCollectionFeedHeaderContext(for collection: PixivCollectionDetail) -> PixivCollectionFeedContext {
+        PixivCollectionFeedContext(
+            collection: collection,
+            loadedCount: store.artworks.count,
+            visibleCount: store.clientFilteredArtworks.count
+        )
+    }
+
+    private func presentPixivCollectionOwner(_ owner: PixivCollectionFeedContextOwner) {
+        store.presentedUserProfile = owner.pixivUser
+    }
+
+    private func copyPixivCollectionLink(urlString: String?) {
+        guard let urlString else { return }
+        PasteboardWriter.copy(urlString)
         actionMessage = L10n.copied
     }
 
