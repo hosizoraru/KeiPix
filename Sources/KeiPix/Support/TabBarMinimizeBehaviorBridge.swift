@@ -271,12 +271,40 @@ private final class CurrentTabReselectionGestureRecognizer: UITapGestureRecogniz
             return false
         }
 
+        let selectedItemFrame = selectedItemFrame(
+            in: tabBar,
+            selectedIndex: selectedIndex
+        )
         return TabBarReselectionHitPolicy(
             itemCount: items.count,
             selectedIndex: selectedIndex,
-            tabBarWidth: tabBar.bounds.width
+            tabBarWidth: tabBar.bounds.width,
+            selectedItemFrame: selectedItemFrame
         )
         .isSelectedItemTap(at: point)
+    }
+
+    private func selectedItemFrame(in tabBar: UITabBar, selectedIndex: Int) -> CGRect? {
+        let itemControls = tabBar.subviews.compactMap { subview -> UIControl? in
+            guard let control = subview as? UIControl,
+                  control.isHidden == false,
+                  control.alpha > 0.01,
+                  control.frame.isEmpty == false else {
+                return nil
+            }
+            return control
+        }
+        .sorted { first, second in
+            switch tabBar.effectiveUserInterfaceLayoutDirection {
+            case .rightToLeft:
+                first.frame.minX > second.frame.minX
+            default:
+                first.frame.minX < second.frame.minX
+            }
+        }
+
+        guard itemControls.indices.contains(selectedIndex) else { return nil }
+        return itemControls[selectedIndex].frame.intersection(tabBar.bounds)
     }
 }
 

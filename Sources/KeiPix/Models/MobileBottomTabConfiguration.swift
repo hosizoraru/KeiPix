@@ -388,6 +388,7 @@ struct TabBarReselectionHitPolicy: Equatable {
     let itemCount: Int
     let selectedIndex: Int
     let tabBarWidth: CGFloat
+    var selectedItemFrame: CGRect? = nil
 
     func isSelectedItemTap(at point: CGPoint) -> Bool {
         guard itemCount > 0,
@@ -397,6 +398,11 @@ struct TabBarReselectionHitPolicy: Equatable {
               point.x >= 0,
               point.x < tabBarWidth else {
             return false
+        }
+
+        if let selectedItemFrame,
+           selectedItemFrame.isEmpty == false {
+            return selectedItemFrame.insetBy(dx: -8, dy: -8).contains(point)
         }
 
         let slotWidth = tabBarWidth / CGFloat(itemCount)

@@ -28,4 +28,18 @@ struct TabBarReselectionHitPolicyTests {
         #expect(TabBarReselectionHitPolicy(itemCount: 0, selectedIndex: 0, tabBarWidth: 500)
             .isSelectedItemTap(at: CGPoint(x: 10, y: 12)) == false)
     }
+
+    @Test("Real tab item frame wins over full-width fallback slots")
+    func selectedItemFrameWinsOverFullWidthFallbackSlots() {
+        let policy = TabBarReselectionHitPolicy(
+            itemCount: 5,
+            selectedIndex: 4,
+            tabBarWidth: 500,
+            selectedItemFrame: CGRect(x: 430, y: 6, width: 44, height: 44)
+        )
+
+        #expect(policy.isSelectedItemTap(at: CGPoint(x: 452, y: 28)))
+        #expect(policy.isSelectedItemTap(at: CGPoint(x: 406, y: 28)) == false)
+        #expect(policy.isSelectedItemTap(at: CGPoint(x: 452, y: 72)) == false)
+    }
 }
