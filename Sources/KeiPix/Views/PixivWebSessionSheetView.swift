@@ -47,6 +47,8 @@ struct PixivWebSessionSheetView: View {
 
             HStack(spacing: 10) {
                 Button(L10n.cancel, role: .cancel, action: closeSheet)
+                    .buttonStyle(.glass)
+                    .buttonBorderShape(.capsule)
 
                 Spacer()
 
@@ -60,13 +62,12 @@ struct PixivWebSessionSheetView: View {
                         Label(L10n.savePixivWebSession, systemImage: "checkmark.circle")
                     }
                 }
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(.glassProminent)
+                .buttonBorderShape(.capsule)
                 .disabled(isSaving)
             }
         }
-        .padding(.horizontal, 18)
-        .padding(.vertical, 14)
-        .background(.regularMaterial)
+        .platformGlassControlBar(verticalPadding: 10, topPadding: 8, bottomPadding: 14)
     }
 
     private func saveWebSession() async {
