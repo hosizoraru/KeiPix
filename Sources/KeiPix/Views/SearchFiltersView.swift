@@ -2,7 +2,13 @@ import SwiftUI
 
 struct SearchFilterButton: View {
     @Bindable var store: KeiPixStore
+    let isIconOnly: Bool
     @State private var isPresented = false
+
+    init(store: KeiPixStore, isIconOnly: Bool = true) {
+        self.store = store
+        self.isIconOnly = isIconOnly
+    }
 
     var body: some View {
         Button {
@@ -10,7 +16,7 @@ struct SearchFilterButton: View {
         } label: {
             Label(filterButtonTitle, systemImage: filterButtonImage)
         }
-        .labelStyle(.iconOnly)
+        .modifier(SearchFilterButtonLabelStyle(isIconOnly: isIconOnly))
         .buttonStyle(.glass)
         .buttonBorderShape(.capsule)
         .help(store.searchOptions.summary)
@@ -28,6 +34,19 @@ struct SearchFilterButton: View {
 
     private var filterButtonImage: String {
         store.searchOptions.isDefault ? "slider.horizontal.3" : "line.3.horizontal.decrease.circle.fill"
+    }
+}
+
+private struct SearchFilterButtonLabelStyle: ViewModifier {
+    let isIconOnly: Bool
+
+    @ViewBuilder
+    func body(content: Content) -> some View {
+        if isIconOnly {
+            content.labelStyle(.iconOnly)
+        } else {
+            content
+        }
     }
 }
 

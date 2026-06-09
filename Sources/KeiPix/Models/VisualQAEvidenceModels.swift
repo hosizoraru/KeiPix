@@ -7,6 +7,7 @@ enum VisualQASurface: String, CaseIterable, Identifiable, Sendable {
     case galleryTwoColumn = "gallery-two-column"
     case galleryThreeColumn = "gallery-three-column"
     case galleryCompact = "gallery-compact"
+    case searchWorkspace = "search-workspace"
     case ranking
     case trendingTags = "trending-tags"
     case pixivision

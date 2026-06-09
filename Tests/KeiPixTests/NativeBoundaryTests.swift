@@ -254,6 +254,10 @@ struct NativeBoundaryTests {
             contentsOf: root.appending(path: "Sources/KeiPix/Models/MobileBottomTabConfiguration.swift"),
             encoding: .utf8
         )
+        let searchWorkspace = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/SearchWorkspaceView.swift"),
+            encoding: .utf8
+        )
         let dashboardView = try String(
             contentsOf: root.appending(path: "Sources/KeiPix/Views/DiscoveryDashboardView.swift"),
             encoding: .utf8
@@ -444,7 +448,7 @@ struct NativeBoundaryTests {
         #expect(contentView.contains("guard selectedTab == .mobile(kind) else { return }"))
         #expect(contentView.contains("Tab(L10n.search, systemImage: \"magnifyingglass\", value: .search, role: .search)"))
         #expect(contentView.contains("compactSearchTab"))
-        #expect(contentView.contains(".navigationBarTitleDisplayMode(.inline)"))
+        #expect(searchWorkspace.contains(".platformPageNavigationChrome(title: L10n.search"))
         #expect(contentView.contains("Tab(L10n.shortcuts") == false)
         #expect(contentView.contains("case .shortcuts") == false)
         #expect(contentView.contains("selectedTab = .feed"))
@@ -659,6 +663,10 @@ struct NativeBoundaryTests {
             contentsOf: root.appending(path: "Sources/KeiPix/Views/ContentView_iPadOS.swift"),
             encoding: .utf8
         )
+        let searchWorkspace = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/SearchWorkspaceView.swift"),
+            encoding: .utf8
+        )
         let tabBarBridge = try String(
             contentsOf: root.appending(path: "Sources/KeiPix/Support/TabBarMinimizeBehaviorBridge.swift"),
             encoding: .utf8
@@ -742,14 +750,8 @@ struct NativeBoundaryTests {
         #expect(iPadContentView.contains("MobileBottomTabConfiguration.storageID(for: routeMap)"))
         #expect(iPadContentView.contains("IPadToolbarMenuAction.customizeBottomTabs"))
         #expect(iPadContentView.contains("isMobileTabCustomizationPresented = true"))
-        #expect(iPadContentView.contains("private var compactSearchContent: some View"))
-        #expect(iPadContentView.contains("compactSearchModeSection"))
-        #expect(iPadContentView.contains("private var compactSearchModeSection: some View"))
-        #expect(iPadContentView.contains("private func compactSearchModeButton("))
-        #expect(iPadContentView.contains("} else if store.selectedRoute == .search,"))
-        #expect(iPadContentView.contains("isCompactCustomTabRootActive,"))
-        #expect(iPadContentView.contains("hasActiveGlobalSearchText == false"))
-        #expect(iPadContentView.contains("compactSearchContent"))
+        #expect(iPadContentView.contains("SearchWorkspaceView("))
+        #expect(iPadContentView.contains("galleryLayoutAdaptation: galleryLayoutAdaptation(showsSidebarToggle: showsSidebarToggle)"))
         #expect(iPadContentView.contains(".task(id: store.searchText)"))
         #expect(iPadContentView.contains("await store.refreshSearchSuggestions()"))
         #expect(iPadContentView.contains("MobileGlobalSearchModifier("))
@@ -780,12 +782,13 @@ struct NativeBoundaryTests {
         #expect(iPadContentView.contains("setCompactSelectedTab(.mobile(.illustrations), skipsHandler: true)"))
         #expect(iPadContentView.contains("setCompactSelectedTab(.search, skipsHandler: true)"))
         #expect(iPadContentView.contains("case .custom") == false)
-        #expect(iPadContentView.contains("await store.runArtworkSearch()"))
-        #expect(iPadContentView.contains("await store.runCreatorSearch()"))
-        #expect(iPadContentView.contains("await store.runNovelSearch()"))
-        #expect(iPadContentView.contains("store.presentLocalImageSourceSearch()"))
-        #expect(iPadContentView.contains("selectCompactSearchRoute(.trendingTags)"))
-        #expect(iPadContentView.contains("selectCompactSearchRoute(.savedSearches)"))
+        #expect(searchWorkspace.contains("await store.runArtworkSearch()"))
+        #expect(searchWorkspace.contains("await store.runCreatorSearch()"))
+        #expect(searchWorkspace.contains("await store.runNovelSearch()"))
+        #expect(searchWorkspace.contains("store.presentLocalImageSourceSearch()"))
+        #expect(searchWorkspace.contains("selectSearchRoute(.trendingTags)"))
+        #expect(searchWorkspace.contains("selectSearchRoute(.savedSearches)"))
+        #expect(searchWorkspace.contains("compactSearchContent") == false)
         #expect(sharedComponents.contains("private var usesCollapsedPhoneSearch: Bool"))
         #expect(sharedComponents.contains("UIDevice.current.userInterfaceIdiom == .phone"))
         #expect(feedHeader.contains("private var usesPhoneFilterDisclosure: Bool"))
@@ -3261,9 +3264,14 @@ struct NativeBoundaryTests {
         #expect(storeSearch.contains("allSearchPopularPreviewArtworks = []"))
         #expect(storeSearch.contains("clearNavigationHistory()"))
 
-        #expect(macContentView.contains(".searchable(text: globalSearchTextBinding"))
+        #expect(macContentView.contains("MacGlobalSearchModifier("))
+        #expect(macContentView.contains("isEnabled: store.selectedRoute != .search"))
+        #expect(macContentView.contains("private struct MacGlobalSearchModifier: ViewModifier"))
+        #expect(macContentView.contains(".searchable(text: searchText"))
         #expect(macContentView.contains("private var globalSearchTextBinding"))
         #expect(macContentView.contains("private var hasActiveGlobalSearchText"))
+        #expect(macContentView.contains("private var showsGlobalClearSearchButton"))
+        #expect(macContentView.contains("hasActiveGlobalSearchText && store.selectedRoute != .search"))
         #expect(macContentView.contains("store.clearSearchText()"))
         #expect(macContentView.contains("|| store.selectedRoute.usesNovelFeed"))
         #expect(macContentView.contains("|| store.canNavigateBack"))
@@ -3272,6 +3280,8 @@ struct NativeBoundaryTests {
         #expect(iPadContentView.contains(".searchable(text: searchText"))
         #expect(iPadContentView.contains("private var globalSearchTextBinding"))
         #expect(iPadContentView.contains("private var hasActiveGlobalSearchText"))
+        #expect(iPadContentView.contains("private var showsGlobalClearSearchButton"))
+        #expect(iPadContentView.contains("hasActiveGlobalSearchText && store.selectedRoute != .search"))
         #expect(iPadContentView.contains("store.clearSearchText()"))
         #expect(iPadContentView.contains("|| store.selectedRoute.usesNovelFeed"))
         #expect(iPadContentView.contains("|| store.canNavigateBack"))
@@ -3323,6 +3333,22 @@ struct NativeBoundaryTests {
             contentsOf: root.appending(path: "Sources/KeiPix/Views/SearchFiltersView.swift"),
             encoding: .utf8
         )
+        let searchWorkspace = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/SearchWorkspaceView.swift"),
+            encoding: .utf8
+        )
+        let macContentView = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/ContentView.swift"),
+            encoding: .utf8
+        )
+        let iPadContentView = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/ContentView_iPadOS.swift"),
+            encoding: .utf8
+        )
+        let macOSRunner = try String(
+            contentsOf: root.appending(path: "script/build_and_run.sh"),
+            encoding: .utf8
+        )
         let quickOpenSheet = try String(
             contentsOf: root.appending(path: "Sources/KeiPix/Views/PixivIDOpenSheet.swift"),
             encoding: .utf8
@@ -3354,7 +3380,60 @@ struct NativeBoundaryTests {
         #expect(searchFilters.contains(".buttonStyle(.glassProminent)"))
         #expect(searchFilters.contains("PixivPremiumMenuLabel("))
         #expect(searchFilters.contains("showsPixivPremiumMarker(isPremium: isPremium)"))
+        #expect(searchFilters.contains("init(store: KeiPixStore, isIconOnly: Bool = true)"))
+        #expect(searchFilters.contains("SearchFilterButtonLabelStyle"))
         #expect(searchFilters.contains(".textFieldStyle(.roundedBorder)") == false)
+
+        #expect(macContentView.contains("} else if store.selectedRoute == .search {\n            SearchWorkspaceView(store: store)"))
+        #expect(iPadContentView.contains("} else if store.selectedRoute == .search {\n                SearchWorkspaceView("))
+        #expect(macContentView.contains("VisualQALaunchArgument.contains(.searchWorkspace)"))
+        #expect(macContentView.contains("store.presentSearchWorkspaceVisualQA()"))
+        #expect(iPadContentView.contains("VisualQALaunchArgument.contains(.searchWorkspace)"))
+        #expect(iPadContentView.contains("hasAppliedMobileBottomTabLaunchTarget = true"))
+        #expect(iPadContentView.contains("selectedSidebarItem = .route(.search)"))
+        #expect(iPadContentView.contains("selectedTab = .search"))
+        #expect(macOSRunner.contains("--visual-qa-search-workspace|visual-qa-search-workspace"))
+        #expect(macOSRunner.contains("open_app --visual-qa-search-workspace"))
+        #expect(macContentView.contains("SearchFilterButton(store: store)") == false)
+        #expect(iPadContentView.contains("SearchFilterButton(store: store)") == false)
+        #expect(searchWorkspace.contains("struct SearchWorkspaceView: View"))
+        #expect(searchWorkspace.contains("OS26LibrarySearchField("))
+        #expect(searchWorkspace.contains("OS26LibraryActionRail"))
+        #expect(searchWorkspace.contains("SearchFilterButton(store: store)"))
+        #expect(searchWorkspace.contains("GalleryView("))
+        #expect(searchWorkspace.contains("galleryLayoutAdaptation: galleryLayoutAdaptation"))
+        #expect(searchWorkspace.contains("showsFeedHeader: false"))
+        #expect(searchWorkspace.contains(".platformGlassControlBar(verticalPadding: 8, topPadding: 2)"))
+        #expect(searchWorkspace.contains(".platformPageHeader("))
+        #expect(searchWorkspace.contains(".platformPageNavigationChrome(title: L10n.search"))
+        #expect(searchWorkspace.contains(".scrollEdgeEffectStyle(.soft, for: .top)"))
+        #expect(searchWorkspace.contains("ViewThatFits(in: .horizontal)"))
+        #expect(searchWorkspace.contains("searchPrimaryActionGroup"))
+        #expect(searchWorkspace.contains("searchTargetMenu"))
+        #expect(searchWorkspace.contains("searchUtilityActionRail"))
+        #expect(searchWorkspace.contains("searchUtilityMenu"))
+        #expect(searchWorkspace.contains("searchQuickActionsSection"))
+        #expect(searchWorkspace.contains("searchFilterSummarySection"))
+        #expect(searchWorkspace.contains("searchSuggestionsSection"))
+        #expect(searchWorkspace.contains("localSearchLibrarySection"))
+        #expect(searchWorkspace.contains("SearchWorkspaceStatusStrip"))
+        #expect(searchWorkspace.contains("SearchFilterButton(store: store, isIconOnly: false)"))
+        #expect(searchWorkspace.contains(".os26GlassButton(prominent: isProminent && hasSearchKeyword)"))
+        #expect(searchWorkspace.contains(".buttonStyle(.bordered)") == false)
+        #expect(searchWorkspace.contains(".buttonStyle(.borderless)") == false)
+        #expect(searchWorkspace.contains(".buttonStyle(.borderedProminent)") == false)
+        #expect(searchWorkspace.contains(".background(.thinMaterial") == false)
+        #expect(searchWorkspace.contains(".background(.regularMaterial") == false)
+        #expect(searchWorkspace.contains("compactSearchContent") == false)
+
+        let galleryView = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/GalleryView.swift"),
+            encoding: .utf8
+        )
+        #expect(galleryView.contains("let showsFeedHeader: Bool"))
+        #expect(galleryView.contains("showsFeedHeader: Bool = true"))
+        #expect(galleryView.contains("showsFeedHeader: showsFeedHeader"))
+        #expect(galleryView.contains("if showsFeedHeader"))
 
         #expect(quickOpenSheet.contains("NativeSearchField("))
         #expect(quickOpenSheet.contains("GeometryReader { proxy in"))

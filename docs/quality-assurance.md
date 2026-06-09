@@ -61,12 +61,13 @@ swift test --filter <TestSuiteName>
 
 ### 已落地的 launch mode
 
-当前 `VisualQALaunchArgument` 定义 19 个隔离 launch flags：
+当前 `VisualQALaunchArgument` 定义 20 个隔离 launch flags：
 
 | Surface | 旗标 |
 | --- | --- |
 | Cached feed restoration / minimal verify | `--visual-qa-cached-feed`（`--verify` 也会进入该 surface） |
 | Gallery — auto / 2 列 / 3 列 / 紧凑 | `--visual-qa-gallery-auto` / `--visual-qa-gallery-two-column` / `--visual-qa-gallery-three-column` / `--visual-qa-gallery-compact` |
+| Search workspace | `--visual-qa-search-workspace` |
 | Ranking | `--visual-qa-ranking` |
 | Manga watchlist | `--visual-qa-manga-watchlist` |
 | Series sheet | `--visual-qa-series-sheet` |

@@ -28,23 +28,15 @@ struct ContentView: View {
             macBrowserWorkspace
         }
         .frame(minWidth: minimumWindowWidth, minHeight: MainWindowSizing.minimumHeight)
-        .searchable(text: globalSearchTextBinding, prompt: L10n.searchPlaceholder)
-        .searchSuggestions {
-            ForEach(store.matchingLocalSearchTerms(), id: \.self) { keyword in
-                SearchKeywordSuggestionRow(keyword: keyword, isSaved: store.savedSearches.containsCaseInsensitive(keyword))
-                    .searchCompletion(keyword)
-            }
-
-            ForEach(store.searchSuggestions, id: \.name) { suggestion in
-                SearchSuggestionRow(tag: suggestion)
-                    .searchCompletion(suggestion.name)
-            }
-        }
-        .onSubmit(of: .search) {
-            Task { await store.runSearch() }
-        }
+        .modifier(MacGlobalSearchModifier(
+            store: store,
+            searchText: globalSearchTextBinding,
+            isEnabled: store.selectedRoute != .search
+        ))
         .task(id: store.searchText) {
-            await store.refreshSearchSuggestions()
+            if store.selectedRoute != .search {
+                await store.refreshSearchSuggestions()
+            }
         }
         .toolbar {
             ToolbarItemGroup(placement: .navigation) {
@@ -106,7 +98,7 @@ struct ContentView: View {
             ToolbarSpacer(.fixed, placement: .primaryAction)
 
             ToolbarItemGroup(placement: .primaryAction) {
-                if hasActiveGlobalSearchText {
+                if showsGlobalClearSearchButton {
                     Button {
                         withAnimation(.snappy(duration: 0.16)) {
                             store.clearSearchText()
@@ -117,10 +109,6 @@ struct ContentView: View {
                     .labelStyle(.iconOnly)
                     .help(L10n.clearSearch)
                     .accessibilityLabel(L10n.clearSearch)
-                }
-
-                if showsSearchFilters {
-                    SearchFilterButton(store: store)
                 }
 
                 if showsGalleryLayoutPicker {
@@ -313,6 +301,9 @@ struct ContentView: View {
                 store.selectedRoute = .recommendedUsers
                 creatorProfileVisualQAUser = VisualQASampleData.creatorProfileDetail.user
             }
+            if VisualQALaunchArgument.contains(.searchWorkspace) {
+                store.presentSearchWorkspaceVisualQA()
+            }
             if let visualQAGalleryLayoutMode = VisualQALaunchArgument.activeGalleryLayoutMode {
                 store.presentGalleryLayoutVisualQA(mode: visualQAGalleryLayoutMode)
             }
@@ -429,6 +420,10 @@ struct ContentView: View {
 
     private var hasActiveGlobalSearchText: Bool {
         store.searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false
+    }
+
+    private var showsGlobalClearSearchButton: Bool {
+        hasActiveGlobalSearchText && store.selectedRoute != .search
     }
 
     private var appControlsMenu: some View {
@@ -727,10 +722,6 @@ struct ContentView: View {
         }
     }
 
-    private var showsSearchFilters: Bool {
-        store.selectedRoute == .search
-    }
-
     private var showsGalleryLayoutPicker: Bool {
         store.selectedRoute.usesArtworkFeed
     }
@@ -862,6 +853,8 @@ private struct ContentColumnView: View {
             DownloadQueueView(store: store)
         } else if store.selectedRoute == .savedSearches {
             SavedSearchesView(store: store)
+        } else if store.selectedRoute == .search {
+            SearchWorkspaceView(store: store)
         } else if store.selectedRoute == .trendingTags {
             TrendingTagsView(store: store)
         } else if store.selectedRoute == .spotlight {
@@ -931,6 +924,39 @@ private struct SearchSuggestionRow: View {
                         .lineLimit(1)
                 }
             }
+        }
+    }
+}
+
+private struct MacGlobalSearchModifier: ViewModifier {
+    @Bindable var store: KeiPixStore
+    let searchText: Binding<String>
+    let isEnabled: Bool
+
+    @ViewBuilder
+    func body(content: Content) -> some View {
+        if isEnabled {
+            content
+                .searchable(text: searchText, prompt: L10n.searchPlaceholder)
+                .searchSuggestions {
+                    ForEach(store.matchingLocalSearchTerms(), id: \.self) { keyword in
+                        SearchKeywordSuggestionRow(
+                            keyword: keyword,
+                            isSaved: store.savedSearches.containsCaseInsensitive(keyword)
+                        )
+                        .searchCompletion(keyword)
+                    }
+
+                    ForEach(store.searchSuggestions, id: \.name) { suggestion in
+                        SearchSuggestionRow(tag: suggestion)
+                            .searchCompletion(suggestion.name)
+                    }
+                }
+                .onSubmit(of: .search) {
+                    Task { await store.runSearch() }
+                }
+        } else {
+            content
         }
     }
 }

@@ -107,6 +107,12 @@ struct ContentView: View {
                     selectedTab = .feed
                     creatorProfileVisualQAUser = VisualQASampleData.creatorProfileDetail.user
                 }
+                if VisualQALaunchArgument.contains(.searchWorkspace) {
+                    store.presentSearchWorkspaceVisualQA()
+                    hasAppliedMobileBottomTabLaunchTarget = true
+                    selectedSidebarItem = .route(.search)
+                    selectedTab = .search
+                }
             }
             #endif
             .sheet(isPresented: $store.isLoginPresented) {
@@ -443,7 +449,7 @@ struct ContentView: View {
                     }
 
                     ToolbarItem(placement: .primaryAction) {
-                        if hasActiveGlobalSearchText {
+                        if showsGlobalClearSearchButton {
                             Button {
                                 withAnimation(.snappy(duration: 0.16)) {
                                     store.clearSearchText()
@@ -454,12 +460,6 @@ struct ContentView: View {
                             .labelStyle(.iconOnly)
                             .help(L10n.clearSearch)
                             .accessibilityLabel(L10n.clearSearch)
-                        }
-                    }
-
-                    ToolbarItem(placement: .primaryAction) {
-                        if store.selectedRoute == .search {
-                            SearchFilterButton(store: store)
                         }
                     }
 
@@ -537,7 +537,9 @@ struct ContentView: View {
                     isEnabled: showsSidebarToggle
                 ))
                 .task(id: store.searchText) {
-                    await store.refreshSearchSuggestions()
+                    if store.selectedRoute != .search {
+                        await store.refreshSearchSuggestions()
+                    }
                 }
                 .onChange(of: store.artworkNavigationIntentSerial) { _, _ in
                     guard let artwork = store.selectedArtwork else { return }
@@ -1409,10 +1411,11 @@ struct ContentView: View {
                 ) { article in
                     presentSpotlightArticle(article, usesPanel: showsSidebarToggle)
                 }
-            } else if store.selectedRoute == .search,
-                      isCompactCustomTabRootActive,
-                      hasActiveGlobalSearchText == false {
-                compactSearchContent
+            } else if store.selectedRoute == .search {
+                SearchWorkspaceView(
+                    store: store,
+                    galleryLayoutAdaptation: galleryLayoutAdaptation(showsSidebarToggle: showsSidebarToggle)
+                )
             } else if store.selectedRoute == .bookmarkTags {
                 BookmarkTagsView(store: store)
             } else if store.selectedRoute == .pixivCollections {
@@ -1476,6 +1479,10 @@ struct ContentView: View {
 
     private var hasActiveGlobalSearchText: Bool {
         store.searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false
+    }
+
+    private var showsGlobalClearSearchButton: Bool {
+        hasActiveGlobalSearchText && store.selectedRoute != .search
     }
 
     private var userPreviewMode: UserPreviewListMode {
@@ -1801,278 +1808,6 @@ struct ContentView: View {
                 guard selectedTab == .search else { return }
                 selectCompactSearchTab()
             }
-    }
-
-    // MARK: - Compact Search
-
-    private var compactSearchContent: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
-                compactSearchHero
-                compactSearchFieldCard
-                compactSearchModeSection
-
-                if store.searchSuggestions.isEmpty == false {
-                    compactPixivSuggestionSection
-                }
-
-                if store.savedSearches.isEmpty == false {
-                    compactKeywordSection(
-                        title: L10n.savedSearches,
-                        systemImage: "star",
-                        keywords: Array(store.savedSearches.prefix(8)),
-                        saved: true
-                    )
-                }
-
-                if store.searchHistory.isEmpty == false {
-                    compactKeywordSection(
-                        title: L10n.recentSearches,
-                        systemImage: "clock.arrow.circlepath",
-                        keywords: Array(store.searchHistory.prefix(8)),
-                        saved: false
-                    )
-                }
-            }
-            .padding(.horizontal, 16)
-            .padding(.top, 10)
-            .padding(.bottom, 24)
-            .frame(maxWidth: 560, alignment: .leading)
-            .frame(maxWidth: .infinity, alignment: .top)
-        }
-        .navigationTitle(L10n.search)
-        .navigationBarTitleDisplayMode(.inline)
-        .task(id: store.searchText) {
-            await store.refreshSearchSuggestions()
-        }
-    }
-
-    private var compactSearchHero: some View {
-        HStack(spacing: 14) {
-            Image(systemName: "magnifyingglass")
-                .font(.title2.weight(.semibold))
-                .symbolRenderingMode(.hierarchical)
-                .foregroundStyle(.secondary)
-                .frame(width: 52, height: 52)
-                .keiGlass(18)
-                .accessibilityHidden(true)
-
-            VStack(alignment: .leading, spacing: 5) {
-                Text(L10n.search)
-                    .font(.title3.weight(.bold))
-                    .lineLimit(1)
-
-                Text(L10n.searchPlaceholder)
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(2)
-                    .minimumScaleFactor(0.86)
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-        }
-        .padding(16)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .keiGlass(24)
-    }
-
-    private var compactSearchFieldCard: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            NativeSearchField(
-                text: globalSearchTextBinding,
-                placeholder: L10n.searchPlaceholder,
-                suggestions: store.matchingLocalSearchTerms(),
-                onSubmit: { submitCompactArtworkSearch() },
-                onTextChange: { store.searchText = $0 }
-            )
-            .frame(minHeight: 38)
-            .accessibilityLabel(L10n.search)
-
-            HStack(spacing: 10) {
-                Button {
-                    submitCompactArtworkSearch()
-                } label: {
-                    Label(L10n.search, systemImage: "magnifyingglass")
-                }
-                .os26GlassButton(prominent: true)
-                .disabled(hasActiveGlobalSearchText == false)
-
-                if hasActiveGlobalSearchText {
-                    Button {
-                        withAnimation(.snappy(duration: 0.16)) {
-                            store.clearSearchText()
-                        }
-                    } label: {
-                        Label(L10n.clearSearch, systemImage: "xmark.circle")
-                    }
-                    .os26GlassButton()
-                }
-            }
-        }
-        .padding(14)
-        .keiGlass(22)
-    }
-
-    private var compactSearchModeSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Label(L10n.searchActions, systemImage: "square.grid.2x2")
-                .font(.headline)
-
-            LazyVGrid(columns: [GridItem(.adaptive(minimum: 148), spacing: 10)], spacing: 10) {
-                compactSearchModeButton(
-                    title: L10n.works,
-                    systemImage: "photo.on.rectangle",
-                    isEnabled: hasActiveGlobalSearchText,
-                    action: { submitCompactArtworkSearch() }
-                )
-
-                compactSearchModeButton(
-                    title: L10n.searchCreators,
-                    systemImage: "person.crop.circle.badge.questionmark",
-                    isEnabled: hasActiveGlobalSearchText,
-                    action: { submitCompactCreatorSearch() }
-                )
-
-                compactSearchModeButton(
-                    title: L10n.searchNovels,
-                    systemImage: "text.magnifyingglass",
-                    isEnabled: hasActiveGlobalSearchText,
-                    action: { submitCompactNovelSearch() }
-                )
-
-                compactSearchModeButton(
-                    title: L10n.searchLocalImageSource,
-                    systemImage: "photo.badge.magnifyingglass",
-                    action: { store.presentLocalImageSourceSearch() }
-                )
-
-                compactSearchModeButton(
-                    title: L10n.trendingTags,
-                    systemImage: "number",
-                    action: { selectCompactSearchRoute(.trendingTags) }
-                )
-
-                compactSearchModeButton(
-                    title: L10n.savedSearches,
-                    systemImage: "tag.circle",
-                    action: { selectCompactSearchRoute(.savedSearches) }
-                )
-            }
-        }
-        .padding(14)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .keiGlass(20)
-    }
-
-    private func compactSearchModeButton(
-        title: String,
-        systemImage: String,
-        isEnabled: Bool = true,
-        action: @escaping () -> Void
-    ) -> some View {
-        Button(action: action) {
-            Label(title, systemImage: systemImage)
-                .font(.callout.weight(.semibold))
-                .lineLimit(1)
-                .frame(maxWidth: .infinity, alignment: .leading)
-        }
-        .os26GlassButton()
-        .disabled(isEnabled == false)
-    }
-
-    private var compactPixivSuggestionSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Label(L10n.searchSuggestions, systemImage: "tag")
-                .font(.headline)
-
-            FlowLayout(spacing: 8) {
-                ForEach(store.searchSuggestions, id: \.name) { tag in
-                    Button {
-                        submitCompactArtworkSearch(keyword: tag.name)
-                    } label: {
-                        Label(tag.name, systemImage: "tag")
-                            .lineLimit(1)
-                    }
-                    .os26GlassButton()
-                }
-            }
-        }
-        .padding(14)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .keiGlass(20)
-    }
-
-    private func compactKeywordSection(
-        title: String,
-        systemImage: String,
-        keywords: [String],
-        saved: Bool
-    ) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Label(title, systemImage: systemImage)
-                .font(.headline)
-
-            FlowLayout(spacing: 8) {
-                ForEach(keywords, id: \.self) { keyword in
-                    Button {
-                        submitCompactArtworkSearch(keyword: keyword)
-                    } label: {
-                        Label(keyword, systemImage: saved ? "star.fill" : "clock.arrow.circlepath")
-                            .lineLimit(1)
-                    }
-                    .os26GlassButton()
-                }
-            }
-        }
-        .padding(14)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .keiGlass(20)
-    }
-
-    private func submitCompactArtworkSearch(keyword: String? = nil) {
-        if let keyword {
-            store.searchText = keyword
-        }
-        guard hasActiveGlobalSearchText else { return }
-        Task {
-            await store.runArtworkSearch()
-            withCompactContentTransition(to: .search) {
-                selectedSidebarItem = .route(.search)
-                setCompactSelectedTab(.search, skipsHandler: true)
-            }
-        }
-    }
-
-    private func submitCompactCreatorSearch() {
-        guard hasActiveGlobalSearchText else { return }
-        Task {
-            await store.runCreatorSearch()
-            withCompactContentTransition(to: .searchUsers) {
-                selectedSidebarItem = .route(.searchUsers)
-                setCompactSelectedTab(.search, skipsHandler: true)
-            }
-        }
-    }
-
-    private func submitCompactNovelSearch() {
-        guard hasActiveGlobalSearchText else { return }
-        Task {
-            await store.runNovelSearch()
-            withCompactContentTransition(to: .novelSearch) {
-                selectedSidebarItem = .route(.novelSearch)
-                setCompactSelectedTab(.search, skipsHandler: true)
-            }
-        }
-    }
-
-    private func selectCompactSearchRoute(_ route: PixivRoute) {
-        withCompactContentTransition(to: route) {
-            setCompactSelectedTab(.search, skipsHandler: true)
-            selectedSidebarItem = .route(route)
-            dismissArtworkDetail(clearSelection: true)
-            if store.selectedRoute != route {
-                store.select(route)
-            }
-        }
     }
 
     // MARK: - Route Detail

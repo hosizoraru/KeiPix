@@ -12,6 +12,7 @@ enum VisualQALaunchArgument: String, CaseIterable {
     case galleryTwoColumn = "--visual-qa-gallery-two-column"
     case galleryThreeColumn = "--visual-qa-gallery-three-column"
     case galleryCompact = "--visual-qa-gallery-compact"
+    case searchWorkspace = "--visual-qa-search-workspace"
     case ranking = "--visual-qa-ranking"
     case mutedContent = "--visual-qa-muted-content"
     case settingsWindow = "--visual-qa-settings-window"
@@ -47,6 +48,8 @@ enum VisualQALaunchArgument: String, CaseIterable {
             .galleryThreeColumn
         case .galleryCompact:
             .galleryCompact
+        case .searchWorkspace:
+            .searchWorkspace
         case .ranking:
             .ranking
         case .mutedContent:

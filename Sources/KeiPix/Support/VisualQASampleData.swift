@@ -760,6 +760,29 @@ extension KeiPixStore {
         galleryLayoutMode = mode
     }
 
+    func presentSearchWorkspaceVisualQA() {
+        activateVisualQASampleSession()
+        selectedRoute = .search
+        focusedUser = nil
+        bookmarkTagFilter = nil
+        selectedSpotlightArticle = nil
+        selectedArtwork = nil
+        errorMessage = nil
+        isLoading = false
+        isLoadingMore = false
+        activeFeedSnapshotRestoration = nil
+        searchText = "wide"
+        savedSearches = ["landscape", "blue archive", "original"]
+        searchHistory = ["wide", "watercolor", "夜景"]
+        resetSearchOptions()
+
+        let response = VisualQASampleData.localFeed(for: .search, searchText: searchText)
+        allArtworks = response.illusts
+        nextURL = response.nextURL
+        searchPopularPreviewArtworks = Array(response.illusts.prefix(4))
+        applyContentFilters()
+    }
+
     func presentRankingVisualQA() {
         activateVisualQASampleSession()
         selectedRoute = .rankingDaily

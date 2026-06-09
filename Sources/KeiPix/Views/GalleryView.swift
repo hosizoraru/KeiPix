@@ -7,16 +7,19 @@ struct GalleryView: View {
     @Bindable var store: KeiPixStore
     let galleryLayoutAdaptation: GalleryLayoutAdaptation
     let onGalleryScrollDirectionChange: ((NativeGalleryScrollDirection) -> Void)?
+    let showsFeedHeader: Bool
     @State private var actionMessage: String?
 
     init(
         store: KeiPixStore,
         galleryLayoutAdaptation: GalleryLayoutAdaptation = .fullMasonry,
-        onGalleryScrollDirectionChange: ((NativeGalleryScrollDirection) -> Void)? = nil
+        onGalleryScrollDirectionChange: ((NativeGalleryScrollDirection) -> Void)? = nil,
+        showsFeedHeader: Bool = true
     ) {
         self.store = store
         self.galleryLayoutAdaptation = galleryLayoutAdaptation
         self.onGalleryScrollDirectionChange = onGalleryScrollDirectionChange
+        self.showsFeedHeader = showsFeedHeader
     }
 
     var body: some View {
@@ -30,7 +33,8 @@ struct GalleryView: View {
                     navigationTitle: navigationTitle,
                     gallerySubtitle: gallerySubtitle,
                     galleryLayoutAdaptation: galleryLayoutAdaptation,
-                    onGalleryScrollDirectionChange: onGalleryScrollDirectionChange
+                    onGalleryScrollDirectionChange: onGalleryScrollDirectionChange,
+                    showsFeedHeader: showsFeedHeader
                 )
             }
         }
@@ -134,6 +138,7 @@ private struct GalleryFeedView: View {
     let gallerySubtitle: String
     let galleryLayoutAdaptation: GalleryLayoutAdaptation
     let onGalleryScrollDirectionChange: ((NativeGalleryScrollDirection) -> Void)?
+    let showsFeedHeader: Bool
     @State private var artworkSelection = GalleryArtworkSelection()
     @State private var batchBookmarkCommandRequest: BatchBookmarkCommandRequest?
     @State private var savedScrollPositions: [String: String] = [:]
@@ -245,13 +250,15 @@ private struct GalleryFeedView: View {
                         .padding(.top, 14)
                         .padding(.bottom, 20)
                     } header: {
-                        FeedHeaderView(
-                            store: store,
-                            actionMessage: $actionMessage,
-                            artworkSelection: $artworkSelection,
-                            batchBookmarkCommandRequest: $batchBookmarkCommandRequest
-                        )
-                        .platformGlassControlBar(verticalPadding: 5, topPadding: 0, bottomPadding: 6)
+                        if showsFeedHeader {
+                            FeedHeaderView(
+                                store: store,
+                                actionMessage: $actionMessage,
+                                artworkSelection: $artworkSelection,
+                                batchBookmarkCommandRequest: $batchBookmarkCommandRequest
+                            )
+                            .platformGlassControlBar(verticalPadding: 5, topPadding: 0, bottomPadding: 6)
+                        }
                     }
                 }
             }
@@ -275,11 +282,13 @@ private struct GalleryFeedView: View {
         let highlightedArtworkIDs = nativeHighlightedArtworkIDs
 
         return VStack(spacing: 0) {
-            #if os(iOS)
-            iPadNativeFeedHeader
-            #else
-            macOSNativeFeedHeader
-            #endif
+            if showsFeedHeader {
+                #if os(iOS)
+                iPadNativeFeedHeader
+                #else
+                macOSNativeFeedHeader
+                #endif
+            }
 
             NativeGalleryCollectionView(
                 items: galleryItems,
