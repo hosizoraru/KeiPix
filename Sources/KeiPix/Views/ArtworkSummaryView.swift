@@ -13,26 +13,28 @@ struct ArtworkSummaryView: View {
     @State private var creatorActionMessage: String?
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            summaryHeader
-            creatorIdentityRow
-            if let creatorActionMessage {
-                Text(creatorActionMessage)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .textSelection(.enabled)
+        GlassEffectContainer(spacing: 10) {
+            VStack(alignment: .leading, spacing: 10) {
+                summaryHeader
+                creatorIdentityRow
+                if let creatorActionMessage {
+                    Text(creatorActionMessage)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .textSelection(.enabled)
+                }
+                ArtworkActionStrip(
+                    artwork: artwork,
+                    store: store,
+                    pageIndex: pageIndex,
+                    pageCount: pageCount,
+                    showStatusMessage: showStatusMessage
+                )
             }
-            ArtworkActionStrip(
-                artwork: artwork,
-                store: store,
-                pageIndex: pageIndex,
-                pageCount: pageCount,
-                showStatusMessage: showStatusMessage
-            )
+            .padding(.horizontal, 14)
+            .padding(.vertical, 12)
+            .keiGlass(22)
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 12)
-        .keiGlass(22)
     }
 
     private var summaryHeader: some View {
@@ -91,7 +93,7 @@ struct ArtworkSummaryView: View {
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 8)
-        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 15, style: .continuous))
+        .keiInteractiveGlass(15)
         .sheet(isPresented: $isUserProfilePresented) {
             UserProfileSheet(user: artwork.user, store: store)
                 .os26SheetChrome(.detail)
@@ -192,7 +194,7 @@ private struct CreatorQuickActionsMenu: View {
                 .frame(width: 28, height: 28)
         }
         .menuStyle(.button)
-        .buttonStyle(.bordered)
+        .os26GlassIconButton()
         .controlSize(.small)
         .help(artwork.user.isFollowed ? L10n.unfollow : L10n.follow)
         .accessibilityLabel(artwork.user.isFollowed ? L10n.unfollow : L10n.follow)
@@ -455,7 +457,7 @@ private struct AdaptiveActionRow: View {
         .help(artwork.isBookmarked ? L10n.editBookmark : L10n.bookmark)
         .accessibilityLabel(artwork.isBookmarked ? L10n.editBookmark : L10n.bookmark)
         .touchTarget()
-        .buttonStyle(.glassProminent)
+        .os26GlassButton(prominent: true)
         .controlSize(.small)
         .sheet(isPresented: $isBookmarkEditorPresented) {
             BookmarkEditorView(artwork: artwork, store: store) {
@@ -477,7 +479,7 @@ private struct AdaptiveActionRow: View {
         } label: {
             actionLabel(title: downloadPrimaryTitle, systemImage: downloadPrimarySystemImage, showsTitle: showsTitle)
         }
-        .buttonStyle(.bordered)
+        .os26GlassButton()
         .controlSize(.small)
         .help(downloadPrimaryTitle)
         .accessibilityLabel(downloadPrimaryTitle)
@@ -490,7 +492,7 @@ private struct AdaptiveActionRow: View {
                 ShareLink(item: url) {
                     actionLabel(title: L10n.share, systemImage: "square.and.arrow.up", showsTitle: showsTitle)
                 }
-                .buttonStyle(.bordered)
+                .os26GlassButton()
                 .controlSize(.small)
                 .help(L10n.share)
                 .accessibilityLabel(L10n.share)
@@ -507,7 +509,7 @@ private struct AdaptiveActionRow: View {
                 } label: {
                     actionLabel(title: L10n.copyLink, systemImage: "link", showsTitle: showsTitle)
                 }
-                .buttonStyle(.bordered)
+                .os26GlassButton()
                 .controlSize(.small)
                 .help(L10n.copyLink)
                 .accessibilityLabel(L10n.copyLink)
@@ -522,7 +524,7 @@ private struct AdaptiveActionRow: View {
         } label: {
             actionLabel(title: L10n.searchImageSource, systemImage: "magnifyingglass", showsTitle: showsTitle)
         }
-        .buttonStyle(.bordered)
+        .os26GlassButton()
         .controlSize(.small)
         .help(L10n.searchImageSource)
         .accessibilityLabel(L10n.searchImageSource)
@@ -545,7 +547,7 @@ private struct AdaptiveActionRow: View {
                 showsTitle: showsTitle
             )
         }
-        .buttonStyle(.bordered)
+        .os26GlassButton()
         .controlSize(.small)
         .help(watchLaterActionTitle)
         .accessibilityLabel(watchLaterActionTitle)
@@ -709,8 +711,7 @@ private struct AdaptiveActionRow: View {
         } label: {
             Label(L10n.moreActions, systemImage: "ellipsis.circle")
         }
-        .labelStyle(.iconOnly)
-        .buttonStyle(.bordered)
+        .os26GlassIconButton()
         .controlSize(.small)
         .help(L10n.moreActions)
         .accessibilityLabel(L10n.moreActions)
