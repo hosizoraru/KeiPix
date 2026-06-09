@@ -1364,6 +1364,10 @@ struct NativeBoundaryTests {
 
         #expect(glassSupport.contains("func platformGlassControlBar("))
         #expect(glassSupport.contains("GlassEffectContainer(spacing: 12)"))
+        #expect(glassSupport.contains("private struct KeiGlassSurfaceShape: InsettableShape"))
+        #expect(glassSupport.contains(".containerShape(shape)"))
+        #expect(glassSupport.contains(".glassEffect(.regular, in: shape)"))
+        #expect(glassSupport.contains(".glassEffect(.regular.interactive(), in: shape)"))
         #expect(glassSupport.contains(".keiGlass(20)"))
         #expect(glassSupport.contains("func keiPanel(_ radius: CGFloat = 16)"))
         #expect(glassSupport.contains("func macOSWindowCompanionBackground()"))

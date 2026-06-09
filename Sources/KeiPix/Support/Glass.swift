@@ -1,14 +1,37 @@
 import SwiftUI
 
+private struct KeiGlassSurfaceShape: InsettableShape {
+    let radius: CGFloat
+    var insetAmount: CGFloat = 0
+
+    func path(in rect: CGRect) -> Path {
+        RoundedRectangle(
+            cornerRadius: max(0, radius - insetAmount),
+            style: .continuous
+        )
+        .path(in: rect.insetBy(dx: insetAmount, dy: insetAmount))
+    }
+
+    func inset(by amount: CGFloat) -> KeiGlassSurfaceShape {
+        var shape = self
+        shape.insetAmount += amount
+        return shape
+    }
+}
+
 extension View {
     func keiGlass(_ radius: CGFloat = 18) -> some View {
-        self
-            .glassEffect(.regular, in: RoundedRectangle(cornerRadius: radius, style: .continuous))
+        let shape = KeiGlassSurfaceShape(radius: radius)
+        return self
+            .containerShape(shape)
+            .glassEffect(.regular, in: shape)
     }
 
     func keiInteractiveGlass(_ radius: CGFloat = 18) -> some View {
-        self
-            .glassEffect(.regular.interactive(), in: RoundedRectangle(cornerRadius: radius, style: .continuous))
+        let shape = KeiGlassSurfaceShape(radius: radius)
+        return self
+            .containerShape(shape)
+            .glassEffect(.regular.interactive(), in: shape)
     }
 
     @ViewBuilder
@@ -43,11 +66,12 @@ extension View {
     }
 
     func keiPanel(_ radius: CGFloat = 16) -> some View {
-        self
-            .glassEffect(.regular, in: RoundedRectangle(cornerRadius: radius, style: .continuous))
+        let shape = KeiGlassSurfaceShape(radius: radius)
+        return self
+            .containerShape(shape)
+            .glassEffect(.regular, in: shape)
             .overlay {
-                RoundedRectangle(cornerRadius: radius, style: .continuous)
-                    .stroke(.quaternary, lineWidth: 1)
+                shape.stroke(.quaternary, lineWidth: 1)
             }
     }
 
