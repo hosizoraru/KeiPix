@@ -1,8 +1,14 @@
 import SwiftUI
 
+enum SearchWorkspaceHeaderLayout: Sendable {
+    case adaptive
+    case compact
+}
+
 struct SearchWorkspaceView: View {
     @Bindable var store: KeiPixStore
     let galleryLayoutAdaptation: GalleryLayoutAdaptation
+    let headerLayout: SearchWorkspaceHeaderLayout
     let onGalleryScrollDirectionChange: ((NativeGalleryScrollDirection) -> Void)?
 
     @State private var actionMessage: String?
@@ -11,10 +17,12 @@ struct SearchWorkspaceView: View {
     init(
         store: KeiPixStore,
         galleryLayoutAdaptation: GalleryLayoutAdaptation = .fullMasonry,
+        headerLayout: SearchWorkspaceHeaderLayout = .adaptive,
         onGalleryScrollDirectionChange: ((NativeGalleryScrollDirection) -> Void)? = nil
     ) {
         self.store = store
         self.galleryLayoutAdaptation = galleryLayoutAdaptation
+        self.headerLayout = headerLayout
         self.onGalleryScrollDirectionChange = onGalleryScrollDirectionChange
     }
 
@@ -80,37 +88,59 @@ struct SearchWorkspaceView: View {
 
     private var header: some View {
         GlassEffectContainer(spacing: 8) {
-            ViewThatFits(in: .horizontal) {
-                HStack(spacing: 10) {
-                    searchField
-                        .frame(minWidth: 280, idealWidth: 440, maxWidth: 620)
-                        .layoutPriority(1)
+            switch headerLayout {
+            case .adaptive:
+                adaptiveHeader
+            case .compact:
+                compactHeader
+            }
+        }
+        .controlSize(.small)
+    }
 
-                    searchPrimaryActionGroup
+    private var adaptiveHeader: some View {
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: 10) {
+                searchField
+                    .frame(minWidth: 280, idealWidth: 440, maxWidth: 620)
+                    .layoutPriority(1)
 
-                    searchUtilityActionRail
+                searchPrimaryActionGroup
 
-                    Spacer(minLength: 0)
-                }
+                searchUtilityActionRail
 
-                VStack(alignment: .leading, spacing: 10) {
-                    searchField
+                Spacer(minLength: 0)
+            }
 
-                    ViewThatFits(in: .horizontal) {
-                        HStack(spacing: 8) {
-                            searchPrimaryActionGroup
-                            searchUtilityActionRail
-                        }
+            VStack(alignment: .leading, spacing: 10) {
+                searchField
 
-                        VStack(alignment: .leading, spacing: 8) {
-                            searchPrimaryActionGroup
-                            searchUtilityActionRail
-                        }
+                ViewThatFits(in: .horizontal) {
+                    HStack(spacing: 8) {
+                        searchPrimaryActionGroup
+                        searchUtilityActionRail
+                    }
+
+                    VStack(alignment: .leading, spacing: 8) {
+                        searchPrimaryActionGroup
+                        searchUtilityActionRail
                     }
                 }
             }
         }
-        .controlSize(.small)
+    }
+
+    private var compactHeader: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            searchField
+
+            HStack(spacing: 8) {
+                searchTargetMenu
+                compactSearchUtilityActionRail
+                Spacer(minLength: 0)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private var searchField: some View {
@@ -208,6 +238,19 @@ struct SearchWorkspaceView: View {
                 SearchFilterButton(store: store, isIconOnly: false)
                 SearchFilterButton(store: store)
             }
+
+            searchUtilityMenu
+
+            if hasSearchKeyword {
+                saveSearchMenu
+                clearSearchButton
+            }
+        }
+    }
+
+    private var compactSearchUtilityActionRail: some View {
+        OS26LibraryActionRail {
+            SearchFilterButton(store: store)
 
             searchUtilityMenu
 

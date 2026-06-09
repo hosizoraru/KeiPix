@@ -275,7 +275,7 @@ struct ContentView: View {
                 }
 
                 if layout.usesDedicatedSearchTab {
-                    Tab(L10n.search, systemImage: "magnifyingglass", value: .search, role: .search) {
+                    Tab(L10n.search, systemImage: "magnifyingglass", value: .search) {
                         compactSearchTab
                     }
                 }
@@ -1414,7 +1414,8 @@ struct ContentView: View {
             } else if store.selectedRoute == .search {
                 SearchWorkspaceView(
                     store: store,
-                    galleryLayoutAdaptation: galleryLayoutAdaptation(showsSidebarToggle: showsSidebarToggle)
+                    galleryLayoutAdaptation: galleryLayoutAdaptation(showsSidebarToggle: showsSidebarToggle),
+                    headerLayout: showsSidebarToggle ? .adaptive : .compact
                 )
             } else if store.selectedRoute == .bookmarkTags {
                 BookmarkTagsView(store: store)
