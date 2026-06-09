@@ -65,14 +65,25 @@ extension View {
         #endif
     }
 
-    func keiPanel(_ radius: CGFloat = 16) -> some View {
+    @ViewBuilder
+    func keiPanel(_ radius: CGFloat = 16, clipsContent: Bool = false) -> some View {
         let shape = KeiGlassSurfaceShape(radius: radius)
-        return self
-            .containerShape(shape)
-            .glassEffect(.regular, in: shape)
-            .overlay {
-                shape.stroke(.quaternary, lineWidth: 1)
-            }
+        if clipsContent {
+            self
+                .containerShape(shape)
+                .glassEffect(.regular, in: shape)
+                .overlay {
+                    shape.stroke(.quaternary, lineWidth: 1)
+                }
+                .clipShape(shape)
+        } else {
+            self
+                .containerShape(shape)
+                .glassEffect(.regular, in: shape)
+                .overlay {
+                    shape.stroke(.quaternary, lineWidth: 1)
+                }
+        }
     }
 
     @ViewBuilder

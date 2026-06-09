@@ -697,16 +697,11 @@ private struct PageNavigationButton: View {
 private extension View {
     func readerCanvasChrome(cornerRadius: CGFloat = 26) -> some View {
         self
-            .background(.thinMaterial, in: RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
-            .overlay {
-                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .stroke(.quaternary, lineWidth: 1)
-            }
-            .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
+            .keiPanel(cornerRadius, clipsContent: true)
     }
 
     func readerControlChrome() -> some View {
         self
-            .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+            .keiGlass(20)
     }
 }
