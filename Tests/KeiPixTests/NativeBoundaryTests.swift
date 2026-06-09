@@ -2372,6 +2372,10 @@ struct NativeBoundaryTests {
             contentsOf: root.appending(path: "Sources/KeiPix/Views/ArtworkTagChipsView.swift"),
             encoding: .utf8
         )
+        let galleryArtworkGrid = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/GalleryArtworkGrid.swift"),
+            encoding: .utf8
+        )
         let artworkDetail = try String(
             contentsOf: root.appending(path: "Sources/KeiPix/Views/ArtworkDetailView.swift"),
             encoding: .utf8
@@ -2444,8 +2448,14 @@ struct NativeBoundaryTests {
         #expect(artworkInformation.contains("id: \"artwork-id\""))
         #expect(artworkInformation.contains("title: L10n.artworkID"))
         #expect(artworkInformation.contains("CollapsibleInspectorSection") == false)
+        #expect(artworkInformation.contains(".keiGlass(13)"))
+        #expect(artworkInformation.contains(".background(.thinMaterial") == false)
         #expect(artworkTags.contains("ViewThatFits(in: .horizontal)"))
-        #expect(artworkTags.contains("RoundedRectangle(cornerRadius: 13"))
+        #expect(artworkTags.contains(".keiInteractiveGlass(13)"))
+        #expect(artworkTags.contains(".background(.thinMaterial") == false)
+        #expect(galleryArtworkGrid.contains("struct GallerySelectionBadge: View"))
+        #expect(galleryArtworkGrid.contains(".glassEffect(.regular, in: Circle())"))
+        #expect(galleryArtworkGrid.contains(".background(.regularMaterial") == false)
         #expect(artworkDetail.contains("private static let topAnchorID = \"artwork-detail-top\""))
         #expect(artworkDetail.contains("scrollToRestoredPosition(proxy: proxy)"))
         #expect(artworkDetail.contains("proxy.scrollTo(Self.topAnchorID, anchor: .top)"))
@@ -3372,6 +3382,8 @@ struct NativeBoundaryTests {
         #expect(mutedContent.contains("PixivPremiumMenuLabel("))
         #expect(safetySettings.contains("pixivPremiumSettingsActionButton"))
         #expect(runtimeReadiness.contains("PixivPremiumInlineLabel("))
+        #expect(runtimeReadiness.contains(".keiGlass(8)"))
+        #expect(runtimeReadiness.contains(".background(.thinMaterial") == false)
     }
 
     @Test("Creator cards use adaptive OS 26 glass actions")

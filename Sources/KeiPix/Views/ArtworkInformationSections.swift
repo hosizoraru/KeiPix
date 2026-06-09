@@ -258,7 +258,7 @@ private struct ArtworkMetadataPill: View {
         .labelStyle(.titleAndIcon)
         .padding(.horizontal, 9)
         .padding(.vertical, 7)
-        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 13, style: .continuous))
+        .keiGlass(13)
         .fixedSize(horizontal: true, vertical: false)
     }
 }

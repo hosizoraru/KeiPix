@@ -408,7 +408,7 @@ struct GallerySelectionBadge: View {
             .symbolRenderingMode(.palette)
             .foregroundStyle(.white, Color.accentColor)
             .padding(5)
-            .background(.regularMaterial, in: Circle())
+            .glassEffect(.regular, in: Circle())
             .overlay {
                 Circle()
                     .stroke(.white.opacity(0.65), lineWidth: 1)

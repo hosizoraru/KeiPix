@@ -48,12 +48,8 @@ struct ArtworkTagChipsView: View {
             }
             .padding(.horizontal, 10)
             .padding(.vertical, 7)
-            .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 13, style: .continuous))
-            .overlay {
-                RoundedRectangle(cornerRadius: 13, style: .continuous)
-                    .stroke(.quaternary, lineWidth: 1)
-            }
-            .contentShape(RoundedRectangle(cornerRadius: 13, style: .continuous))
+            .contentShape(ButtonBorderShape.roundedRectangle(radius: 13))
+            .keiInteractiveGlass(13)
         }
         .buttonStyle(.plain)
         .help(tagHelp(tag))

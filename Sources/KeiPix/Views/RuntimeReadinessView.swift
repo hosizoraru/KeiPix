@@ -849,7 +849,7 @@ private struct NonNovelQAPrioritySection: View {
                 }
             }
             .padding(.vertical, 2)
-            .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+            .keiGlass(8)
         }
     }
 
