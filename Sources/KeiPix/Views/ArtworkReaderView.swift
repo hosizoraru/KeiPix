@@ -247,8 +247,7 @@ struct ArtworkReaderControls: View {
                 .lineLimit(1)
         }
         .menuStyle(.button)
-        .buttonStyle(.bordered)
-        .buttonBorderShape(.capsule)
+        .os26GlassButton()
         .accessibilityLabel(L10n.readingMode)
         .accessibilityValue(effectiveReadingMode.title)
     }

@@ -335,6 +335,7 @@ struct StandaloneArtworkReader: View {
                 } label: {
                     Image(systemName: "chevron.left")
                 }
+                .os26GlassIconButton()
                 .disabled(pageIndex <= 0)
                 .accessibilityLabel(L10n.previousPage)
 
@@ -343,6 +344,7 @@ struct StandaloneArtworkReader: View {
                 } label: {
                     Image(systemName: "number")
                 }
+                .os26GlassIconButton()
                 .disabled(pageCount <= 1)
                 .accessibilityLabel(L10n.pageJump)
 
@@ -351,6 +353,7 @@ struct StandaloneArtworkReader: View {
                 } label: {
                     Image(systemName: "chevron.right")
                 }
+                .os26GlassIconButton()
                 .disabled(pageIndex >= pageCount - 1)
                 .accessibilityLabel(L10n.nextPage)
 
@@ -359,10 +362,9 @@ struct StandaloneArtworkReader: View {
                 } label: {
                     Label(L10n.exitFocusReading, systemImage: "xmark")
                 }
-                .labelStyle(.iconOnly)
+                .os26GlassIconButton()
                 .help(L10n.exitFocusReading)
             }
-            .buttonStyle(.bordered)
             .controlSize(.small)
             .padding(12)
             .keiPanel(18)
@@ -468,24 +470,27 @@ private struct ReaderPageJumpOverlay: View {
                         scrollToPage(pageIndex - 1)
                         syncPageText()
                     }
+                    .os26GlassButton()
                     .disabled(pageIndex <= 0)
 
                     Button(L10n.nextPage) {
                         scrollToPage(pageIndex + 1)
                         syncPageText()
                     }
+                    .os26GlassButton()
                     .disabled(pageIndex >= pageCount - 1)
 
                     Spacer()
 
                     Button(L10n.cancel, action: dismiss)
+                        .os26GlassButton()
                         .keyboardShortcut(.cancelAction)
 
                     Button(L10n.goToPage) {
                         commit()
                         dismiss()
                     }
-                    .buttonStyle(.borderedProminent)
+                    .os26GlassButton(prominent: true)
                     .keyboardShortcut(.defaultAction)
                 }
             }
