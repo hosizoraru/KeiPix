@@ -125,11 +125,11 @@ struct DownloadPageSelectionSheet: View {
                 Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
                     .font(.title3)
                     .foregroundStyle(isSelected ? Color.accentColor : Color.white.opacity(0.85))
-                    .background(
+                    .background {
                         Circle()
-                            .fill(.thinMaterial)
                             .frame(width: 22, height: 22)
-                    )
+                            .glassEffect(.regular, in: Circle())
+                    }
                     .padding(6)
             }
             .overlay(alignment: .bottomLeading) {

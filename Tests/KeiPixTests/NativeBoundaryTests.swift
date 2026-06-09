@@ -1278,6 +1278,8 @@ struct NativeBoundaryTests {
             encoding: .utf8
         )
         #expect(pageSelection.contains("#if os(iOS)\n        [GridItem(.adaptive(minimum: 96), spacing: 10)]"))
+        #expect(pageSelection.contains(".glassEffect(.regular, in: Circle())"))
+        #expect(pageSelection.contains(".fill(.thinMaterial)") == false)
     }
 
     @Test("Pixiv signed-out surfaces share one native login state")
