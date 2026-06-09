@@ -476,8 +476,10 @@ struct PixivCollectionsView: View {
     private func nativeContent(for item: NativeGalleryCollectionItem) -> some View {
         switch item {
         case .pixivCollection(let collection):
-            PixivCollectionCard(collection: collection) {
-                Task { await openCollection(collection) }
+            let context = PixivCollectionCardContext(collection: collection)
+            let collectionID = context.id
+            PixivCollectionCard(context: context) {
+                Task { await openCollection(id: collectionID) }
             }
         case .loadMore:
             OS26PaginationFooter(
@@ -516,9 +518,9 @@ struct PixivCollectionsView: View {
         }
     }
 
-    private func openCollection(_ collection: PixivCollectionDetail) async {
+    private func openCollection(id collectionID: String) async {
         do {
-            try await store.openPixivCollection(id: collection.id, sourceRoute: mode.route)
+            try await store.openPixivCollection(id: collectionID, sourceRoute: mode.route)
         } catch {
             actionMessage = error.localizedDescription
         }
@@ -568,15 +570,51 @@ private struct PixivCollectionDropdownMenuLabel: View {
     }
 }
 
+struct PixivCollectionCardContext: Equatable, Sendable {
+    let id: String
+    let title: String
+    let subtitle: String
+    let tagNames: [String]
+    let coverImageURLString: String?
+    let pixivURLString: String?
+
+    init(collection: PixivCollectionDetail) {
+        id = collection.id
+        title = collection.title
+        subtitle = collection.subtitle
+        tagNames = collection.tags.map(\.name)
+        coverImageURLString = collection.coverImageURL?.absoluteString
+        pixivURLString = collection.pixivURL?.absoluteString
+    }
+
+    var displayTitle: String {
+        title.isEmpty ? L10n.pixivCollection : title
+    }
+
+    var tagLine: String? {
+        let tags = tagNames.prefix(3)
+        guard tags.isEmpty == false else { return nil }
+        return tags.map { "#\($0)" }.joined(separator: " ")
+    }
+
+    var coverImageURL: URL? {
+        coverImageURLString.flatMap { URL(string: $0) }
+    }
+
+    var pixivURL: URL? {
+        pixivURLString.flatMap { URL(string: $0) }
+    }
+}
+
 struct PixivCollectionCard: View {
-    let collection: PixivCollectionDetail
+    let context: PixivCollectionCardContext
     let open: () -> Void
 
     var body: some View {
         Button(action: open) {
             GeometryReader { proxy in
                 let isCompact = proxy.size.width < 190
-                let textReserve: CGFloat = collection.tags.isEmpty
+                let textReserve: CGFloat = context.tagNames.isEmpty
                     ? (isCompact ? 50 : 58)
                     : (isCompact ? 66 : 76)
                 let thumbnailHeight = max(96, min(proxy.size.width, proxy.size.height - textReserve))
@@ -584,17 +622,17 @@ struct PixivCollectionCard: View {
                     collectionThumbnail(height: thumbnailHeight)
 
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(collection.title.isEmpty ? L10n.pixivCollection : collection.title)
+                        Text(context.displayTitle)
                             .font((isCompact ? Font.caption : Font.subheadline).weight(.semibold))
                             .lineLimit(2)
 
-                        Text(collection.subtitle)
+                        Text(context.subtitle)
                             .font(.caption)
                             .foregroundStyle(.secondary)
                             .lineLimit(1)
 
-                        if collection.tags.isEmpty == false {
-                            Text(collection.tags.prefix(3).map { "#\($0.name)" }.joined(separator: " "))
+                        if let tagLine = context.tagLine {
+                            Text(tagLine)
                                 .font(.caption2.weight(.medium))
                                 .foregroundStyle(.tertiary)
                                 .lineLimit(1)
@@ -611,19 +649,19 @@ struct PixivCollectionCard: View {
         .buttonStyle(.plain)
         .keiInteractiveGlass(14)
         .contextMenu {
-            if let url = collection.pixivURL {
+            if let url = context.pixivURL {
                 Link(L10n.openInPixiv, destination: url)
                 Button(L10n.copyLink) {
                     PasteboardWriter.copy(url.absoluteString)
                 }
             }
         }
-        .accessibilityLabel(collection.title.isEmpty ? L10n.pixivCollection : collection.title)
+        .accessibilityLabel(context.displayTitle)
     }
 
     @ViewBuilder
     private func collectionThumbnail(height: CGFloat) -> some View {
-        if let url = collection.coverImageURL {
+        if let url = context.coverImageURL {
             RemoteImageView(url: url, contentMode: .fill)
                 .frame(height: height)
                 .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))

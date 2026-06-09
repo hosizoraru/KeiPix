@@ -651,8 +651,10 @@ private struct GalleryFeedView: View {
                 nativeMasonryArtworkTile(artwork)
             }
         case .pixivCollection(let collection):
-            PixivCollectionCard(collection: collection) {
-                openRelatedPixivCollection(collection)
+            let context = PixivCollectionCardContext(collection: collection)
+            let collectionID = context.id
+            PixivCollectionCard(context: context) {
+                openRelatedPixivCollection(id: collectionID)
             }
         case .pixivRelatedCollectionsHeader(let count):
             RelatedPixivCollectionsHeader(count: count)
@@ -661,11 +663,11 @@ private struct GalleryFeedView: View {
         }
     }
 
-    private func openRelatedPixivCollection(_ collection: PixivCollectionDetail) {
+    private func openRelatedPixivCollection(id collectionID: String) {
         let sourceRoute = store.selectedPixivCollectionSourceRoute ?? .pixivCollections
         Task {
             do {
-                try await store.openPixivCollection(id: collection.id, sourceRoute: sourceRoute)
+                try await store.openPixivCollection(id: collectionID, sourceRoute: sourceRoute)
             } catch {
                 actionMessage = error.localizedDescription
             }
