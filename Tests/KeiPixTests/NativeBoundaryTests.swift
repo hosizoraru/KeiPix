@@ -1173,6 +1173,26 @@ struct NativeBoundaryTests {
         #expect(profileSheet.contains("UserPreviewListView(store: store, mode: mode, showsCloseButton: true)\n                    #if os(macOS)\n                    .frame(width: 920, height: 680)"))
     }
 
+    @Test("Pixivision reader embeds articles and works with glass chrome")
+    func pixivisionReaderEmbedsArticlesAndWorksWithGlassChrome() throws {
+        let root = try packageRoot()
+        let pixivisionReader = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/PixivisionReaderView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(pixivisionReader.contains("private struct PixivisionInlineArticleCard"))
+        #expect(pixivisionReader.contains("private struct PixivisionWorkCard"))
+        #expect(pixivisionReader.contains(".keiInteractiveGlass(16)"))
+        #expect(pixivisionReader.contains(".keiGlass(14)"))
+        #expect(pixivisionReader.contains(".os26GlassButton(prominent: true)"))
+        #expect(pixivisionReader.contains(".os26GlassIconButton()"))
+        #expect(pixivisionReader.contains(".buttonStyle(.bordered)") == false)
+        #expect(pixivisionReader.contains(".buttonStyle(.borderedProminent)") == false)
+        #expect(pixivisionReader.contains(".background(.regularMaterial") == false)
+        #expect(pixivisionReader.contains(".background(.quinary, in: RoundedRectangle") == false)
+    }
+
     @Test("Mobile utility sheets avoid fixed desktop widths")
     func mobileUtilitySheetsAvoidFixedDesktopWidths() throws {
         let root = try packageRoot()

@@ -235,8 +235,7 @@ struct PixivisionReaderView: View {
                             .font(.caption.weight(.medium))
                             .padding(.horizontal, 10)
                             .padding(.vertical, 5)
-                            .background(.quinary, in: Capsule())
-                            .overlay { Capsule().stroke(.quaternary, lineWidth: 1) }
+                            .glassEffect(.regular, in: Capsule(style: .continuous))
                             .help(tag.label)
                     }
                 }
@@ -297,31 +296,34 @@ struct PixivisionReaderView: View {
     // MARK: - Error banner
 
     private func errorBanner(_ message: String) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack(alignment: .firstTextBaseline, spacing: 8) {
-                Image(systemName: "exclamationmark.triangle")
-                    .foregroundStyle(.orange)
-                Text(message)
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
-                    .textSelection(.enabled)
-            }
-            HStack(spacing: 10) {
-                Button {
-                    Task { await load() }
-                } label: {
-                    Label(L10n.retry, systemImage: "arrow.clockwise")
+        GlassEffectContainer(spacing: 10) {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                    Image(systemName: "exclamationmark.triangle")
+                        .foregroundStyle(.orange)
+                    Text(message)
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                        .textSelection(.enabled)
                 }
-                .buttonStyle(.borderedProminent)
-                Link(destination: article.articleURL) {
-                    Label(L10n.openInPixiv, systemImage: "safari")
+                HStack(spacing: 10) {
+                    Button {
+                        Task { await load() }
+                    } label: {
+                        Label(L10n.retry, systemImage: "arrow.clockwise")
+                    }
+                    .os26GlassButton(prominent: true)
+
+                    Link(destination: article.articleURL) {
+                        Label(L10n.openInPixiv, systemImage: "safari")
+                    }
+                    .os26GlassButton()
                 }
-                .buttonStyle(.bordered)
             }
+            .padding(16)
+            .frame(maxWidth: 720, alignment: .leading)
+            .keiGlass(16)
         }
-        .padding(16)
-        .frame(maxWidth: 720, alignment: .leading)
-        .background(.quinary, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
     }
 
     // MARK: - Loading
@@ -358,10 +360,10 @@ private struct PixivisionInlineArticleCard: View {
                 verticalLayout
             }
             .padding(12)
-            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .keiInteractiveGlass(16)
             .overlay {
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .stroke(isHovering ? Color.accentColor.opacity(0.55) : Color.primary.opacity(0.12), lineWidth: 1)
+                    .stroke(isHovering ? Color.accentColor.opacity(0.42) : Color.clear, lineWidth: 1)
             }
             .scaleEffect(isHovering ? 1.006 : 1)
             .animation(.snappy(duration: 0.16), value: isHovering)
@@ -476,7 +478,7 @@ private struct PixivisionInlineArticleCard: View {
                         .foregroundStyle(.secondary)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 3)
-                        .background(.quaternary, in: Capsule())
+                        .glassEffect(.regular, in: Capsule(style: .continuous))
                 }
             }
         }
@@ -520,12 +522,8 @@ private struct PixivisionWorkCard: View {
             }
         }
         .padding(12)
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .stroke(.quaternary, lineWidth: 1)
-        }
         .frame(maxWidth: 720, alignment: .leading)
+        .keiGlass(14)
         .contextMenu {
             Button(L10n.selectArtwork) { openArtwork(work.artworkID) }
             if work.creatorID != 0 {
@@ -600,8 +598,7 @@ private struct PixivisionWorkCard: View {
                 Link(destination: url) {
                     Label(L10n.openInPixiv, systemImage: "safari")
                 }
-                .labelStyle(.iconOnly)
-                .buttonStyle(.bordered)
+                .os26GlassIconButton()
                 .controlSize(.small)
                 .help(L10n.openInPixiv)
             }
@@ -660,7 +657,7 @@ private struct RelatedArticlesShelf: View {
                 .foregroundStyle(.secondary)
                 .padding(.horizontal, 6)
                 .padding(.vertical, 1)
-                .background(.quaternary, in: Capsule())
+                .glassEffect(.regular, in: Capsule(style: .continuous))
 
             Spacer(minLength: 0)
 
@@ -669,7 +666,7 @@ private struct RelatedArticlesShelf: View {
                     Label(L10n.viewMore, systemImage: "chevron.right")
                         .labelStyle(.titleAndIcon)
                 }
-                .buttonStyle(.borderless)
+                .os26GlassButton()
                 .controlSize(.small)
                 .help(url.absoluteString)
             }
