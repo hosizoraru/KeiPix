@@ -1,34 +1,15 @@
 import SwiftUI
 
-private struct KeiGlassSurfaceShape: InsettableShape {
-    let radius: CGFloat
-    var insetAmount: CGFloat = 0
-
-    func path(in rect: CGRect) -> Path {
-        RoundedRectangle(
-            cornerRadius: max(0, radius - insetAmount),
-            style: .continuous
-        )
-        .path(in: rect.insetBy(dx: insetAmount, dy: insetAmount))
-    }
-
-    func inset(by amount: CGFloat) -> KeiGlassSurfaceShape {
-        var shape = self
-        shape.insetAmount += amount
-        return shape
-    }
-}
-
 extension View {
     func keiGlass(_ radius: CGFloat = 18) -> some View {
-        let shape = KeiGlassSurfaceShape(radius: radius)
+        let shape = ButtonBorderShape.roundedRectangle(radius: radius)
         return self
             .containerShape(shape)
             .glassEffect(.regular, in: shape)
     }
 
     func keiInteractiveGlass(_ radius: CGFloat = 18) -> some View {
-        let shape = KeiGlassSurfaceShape(radius: radius)
+        let shape = ButtonBorderShape.roundedRectangle(radius: radius)
         return self
             .containerShape(shape)
             .glassEffect(.regular.interactive(), in: shape)
@@ -67,7 +48,7 @@ extension View {
 
     @ViewBuilder
     func keiPanel(_ radius: CGFloat = 16, clipsContent: Bool = false) -> some View {
-        let shape = KeiGlassSurfaceShape(radius: radius)
+        let shape = ButtonBorderShape.roundedRectangle(radius: radius)
         if clipsContent {
             self
                 .containerShape(shape)
