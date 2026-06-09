@@ -23,7 +23,9 @@ struct DownloadedArtworkViewer: View {
                 if imageURLs.count > 1 {
                     thumbnailRail
                         .frame(width: 112)
-                        .background(.regularMaterial)
+                        .keiPanel(18, clipsContent: true)
+                        .padding(.leading, 12)
+                        .padding(.vertical, 12)
                 }
 
                 Divider()
@@ -120,8 +122,7 @@ struct DownloadedArtworkViewer: View {
                 Label(effectiveReadingMode.title, systemImage: effectiveReadingMode.systemImage)
             }
             .menuStyle(.button)
-            .buttonStyle(.bordered)
-            .buttonBorderShape(.capsule)
+            .os26GlassButton()
             .help(L10n.readingMode)
 
             Button {
@@ -129,8 +130,7 @@ struct DownloadedArtworkViewer: View {
             } label: {
                 Label(L10n.revealCurrentPage, systemImage: "folder")
             }
-            .labelStyle(.iconOnly)
-            .buttonStyle(.bordered)
+            .os26GlassIconButton()
             .help(L10n.revealCurrentPage)
 
             Menu {
@@ -173,15 +173,13 @@ struct DownloadedArtworkViewer: View {
             } label: {
                 Label(L10n.moreActions, systemImage: "ellipsis.circle")
             }
-            .labelStyle(.iconOnly)
-            .buttonStyle(.bordered)
+            .os26GlassIconButton()
             .help(L10n.moreActions)
 
             ShareLink(item: currentImageURL) {
                 Label(L10n.shareCurrentPage, systemImage: "square.and.arrow.up")
             }
-            .labelStyle(.iconOnly)
-            .buttonStyle(.bordered)
+            .os26GlassIconButton()
             .help(L10n.shareCurrentPage)
 
             Button {
@@ -189,8 +187,7 @@ struct DownloadedArtworkViewer: View {
             } label: {
                 Label(L10n.close, systemImage: "xmark")
             }
-            .labelStyle(.iconOnly)
-            .buttonStyle(.bordered)
+            .os26GlassIconButton()
             .keyboardShortcut(.cancelAction)
         }
     }
@@ -361,29 +358,34 @@ struct DownloadedArtworkViewer: View {
     }
 
     private var pageControls: some View {
-        HStack(spacing: 12) {
-            Button {
-                previousPage()
-            } label: {
-                Label(L10n.previousPage, systemImage: "chevron.left")
-            }
-            .labelStyle(.iconOnly)
-            .help(L10n.previousPage)
-            .disabled(pageIndex == 0)
+        GlassEffectContainer(spacing: 12) {
+            HStack(spacing: 12) {
+                Button {
+                    previousPage()
+                } label: {
+                    Label(L10n.previousPage, systemImage: "chevron.left")
+                }
+                .help(L10n.previousPage)
+                .disabled(pageIndex == 0)
+                .os26GlassIconButton()
 
-            Text(L10n.pageStatus(pageIndex + 1, imageURLs.count))
-                .font(.callout)
-                .foregroundStyle(.secondary)
-                .frame(minWidth: 120)
+                Text(L10n.pageStatus(pageIndex + 1, imageURLs.count))
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                    .frame(minWidth: 120)
 
-            Button {
-                nextPage()
-            } label: {
-                Label(L10n.nextPage, systemImage: "chevron.right")
+                Button {
+                    nextPage()
+                } label: {
+                    Label(L10n.nextPage, systemImage: "chevron.right")
+                }
+                .help(L10n.nextPage)
+                .disabled(pageIndex + navigationPageStep >= imageURLs.count)
+                .os26GlassIconButton()
             }
-            .labelStyle(.iconOnly)
-            .help(L10n.nextPage)
-            .disabled(pageIndex + navigationPageStep >= imageURLs.count)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .keiGlass(18)
         }
     }
 
@@ -445,7 +447,10 @@ private struct LocalImageView: View {
                 .resizable()
                 .aspectRatio(contentMode: contentMode)
         } else {
-            ContentUnavailableView(L10n.failed, systemImage: "photo.badge.exclamationmark")
+            OS26InlineUnavailableView(
+                title: L10n.failed,
+                systemImage: "photo.badge.exclamationmark"
+            )
                 .frame(maxWidth: .infinity, minHeight: 180)
         }
     }
