@@ -259,14 +259,20 @@ struct NovelReaderView: View {
     // MARK: - Chrome
 
     private var header: some View {
-        ViewThatFits(in: .horizontal) {
-            horizontalHeader
-                .frame(minWidth: 560)
-            compactHeader
+        GlassEffectContainer(spacing: 12) {
+            ViewThatFits(in: .horizontal) {
+                horizontalHeader
+                    .frame(minWidth: 560)
+                compactHeader
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 18)
+            .padding(.vertical, 12)
+            .readerControlChrome()
         }
         .padding(.horizontal, 18)
-        .padding(.vertical, 12)
-        .background(.thinMaterial)
+        .padding(.top, 10)
+        .padding(.bottom, 8)
     }
 
     private var horizontalHeader: some View {
@@ -342,6 +348,7 @@ struct NovelReaderView: View {
         }
         .help(novel.isBookmarked ? L10n.novelRemoveBookmark : L10n.novelBookmark)
         .keyboardShortcut("b", modifiers: [])
+        .os26GlassIconButton(prominent: novel.isBookmarked)
     }
 
     private var settingsButton: some View {
@@ -353,6 +360,7 @@ struct NovelReaderView: View {
         }
         .help(L10n.novelReaderSettings)
         .keyboardShortcut(",", modifiers: .command)
+        .os26GlassIconButton()
     }
 
     private var closeButton: some View {
@@ -363,6 +371,7 @@ struct NovelReaderView: View {
                 .labelStyle(.iconOnly)
         }
         .keyboardShortcut(.cancelAction)
+        .os26GlassIconButton()
     }
 
     private var readingModeButton: some View {
@@ -376,6 +385,7 @@ struct NovelReaderView: View {
         }
         .help(L10n.readingMode)
         .keyboardShortcut("d", modifiers: .command)
+        .os26GlassIconButton()
     }
 
     private var translationModeMenu: some View {
@@ -418,6 +428,7 @@ struct NovelReaderView: View {
                   : L10n.translate)
             .accessibilityLabel(L10n.translate)
             .tint(translationEngine.isInlineTranslationActive ? .accentColor : nil)
+            .os26GlassIconButton(prominent: translationEngine.isInlineTranslationActive)
 
             // Progress indicator during translation
             if isReaderTranslationInProgress {
@@ -835,58 +846,70 @@ struct NovelReaderView: View {
     }
 
     private var continuousReaderFooter: some View {
-        HStack(spacing: 12) {
-            seriesPreviousButton
+        GlassEffectContainer(spacing: 12) {
+            HStack(spacing: 12) {
+                seriesPreviousButton
 
-            Spacer(minLength: 0)
+                Spacer(minLength: 0)
 
-            seriesNextButton
+                seriesNextButton
+            }
+            .padding(.horizontal, 18)
+            .padding(.vertical, 10)
+            .readerControlChrome()
         }
         .padding(.horizontal, 18)
-        .padding(.vertical, 10)
-        .background(.thinMaterial)
+        .padding(.top, 8)
+        .padding(.bottom, 10)
     }
 
     private var pagedReaderFooter: some View {
-        HStack(spacing: 12) {
-            seriesPreviousButton
+        GlassEffectContainer(spacing: 12) {
+            HStack(spacing: 12) {
+                seriesPreviousButton
 
-            Spacer(minLength: 0)
+                Spacer(minLength: 0)
 
-            HStack(spacing: 8) {
-                Button {
-                    goToPage(pageIndex - 1)
-                } label: {
-                    Label(L10n.previousPage, systemImage: "arrow.left")
-                        .labelStyle(.iconOnly)
+                HStack(spacing: 8) {
+                    Button {
+                        goToPage(pageIndex - 1)
+                    } label: {
+                        Label(L10n.previousPage, systemImage: "arrow.left")
+                            .labelStyle(.iconOnly)
+                    }
+                    .disabled(pageIndex == 0 || pages.isEmpty)
+                    .keyboardShortcut(.leftArrow, modifiers: [])
+                    .os26GlassIconButton()
+
+                    if pages.isEmpty == false {
+                        Text(String(format: L10n.novelPageProgressFormat, pageIndex + 1, pages.count))
+                            .font(.caption.weight(.medium))
+                            .monospacedDigit()
+                            .foregroundStyle(.secondary)
+                    }
+
+                    Button {
+                        goToPage(pageIndex + 1)
+                    } label: {
+                        Label(L10n.nextPage, systemImage: "arrow.right")
+                            .labelStyle(.iconOnly)
+                    }
+                    .disabled(pageIndex >= pages.count - 1 || pages.isEmpty)
+                    .keyboardShortcut(.rightArrow, modifiers: [])
+                    .os26GlassIconButton()
                 }
-                .disabled(pageIndex == 0 || pages.isEmpty)
-                .keyboardShortcut(.leftArrow, modifiers: [])
 
-                if pages.isEmpty == false {
-                    Text(String(format: L10n.novelPageProgressFormat, pageIndex + 1, pages.count))
-                        .font(.caption.weight(.medium))
-                        .monospacedDigit()
-                        .foregroundStyle(.secondary)
-                }
+                Spacer(minLength: 0)
 
-                Button {
-                    goToPage(pageIndex + 1)
-                } label: {
-                    Label(L10n.nextPage, systemImage: "arrow.right")
-                        .labelStyle(.iconOnly)
-                }
-                .disabled(pageIndex >= pages.count - 1 || pages.isEmpty)
-                .keyboardShortcut(.rightArrow, modifiers: [])
+                seriesNextButton
             }
-
-            Spacer(minLength: 0)
-
-            seriesNextButton
+            .padding(.horizontal, 18)
+            .padding(.vertical, 10)
+            .readerControlChrome()
         }
         .padding(.horizontal, 18)
-        .padding(.vertical, 10)
-        .background(.thinMaterial)
+        .padding(.top, 8)
+        .padding(.bottom, 10)
     }
 
     private var seriesPreviousButton: some View {
@@ -900,6 +923,7 @@ struct NovelReaderView: View {
         }
         .disabled(novelStore.loadedNovelText?.seriesPrev == nil)
         .help(L10n.novelPreviousInSeries)
+        .os26GlassIconButton()
     }
 
     private var seriesNextButton: some View {
@@ -913,6 +937,7 @@ struct NovelReaderView: View {
         }
         .disabled(novelStore.loadedNovelText?.seriesNext == nil)
         .help(L10n.novelNextInSeries)
+        .os26GlassIconButton()
     }
 
     // MARK: - Page navigation
@@ -987,33 +1012,27 @@ struct NovelReaderView: View {
     // MARK: - Loading / error states
 
     private var loadingState: some View {
-        VStack(spacing: 12) {
-            ProgressView()
-            Text(L10n.novelLoadingText)
-                .font(.callout)
-                .foregroundStyle(.secondary)
-        }
+        OS26InlineLoadingView(
+            title: L10n.novelLoadingText,
+            systemImage: "doc.text",
+            minHeight: 240
+        )
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     private func errorState(_ message: String) -> some View {
-        VStack(spacing: 10) {
-            Image(systemName: "exclamationmark.triangle")
-                .font(.system(size: 36))
-                .foregroundStyle(.secondary)
-            Text(L10n.novelTextUnavailable)
-                .font(.title3.weight(.semibold))
-            Text(message)
-                .font(.callout)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 32)
+        OS26InlineUnavailableView(
+            title: L10n.novelTextUnavailable,
+            subtitle: message,
+            systemImage: "exclamationmark.triangle",
+            minHeight: 260
+        ) {
             Button {
                 Task { await novelStore.loadNovelText(for: novel.id) }
             } label: {
                 Label(L10n.retry, systemImage: "arrow.clockwise")
             }
-            .buttonStyle(.borderedProminent)
+            .os26GlassButton(prominent: true)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
@@ -1068,7 +1087,7 @@ struct NovelReaderView: View {
                             Label(L10n.openInPixiv, systemImage: "arrow.up.right.square")
                                 .labelStyle(.iconOnly)
                         }
-                        .buttonStyle(.borderless)
+                        .os26GlassIconButton()
                     }
                 }
                 .padding(10)
@@ -1186,6 +1205,13 @@ struct NovelReaderView: View {
             pages.append(current)
         }
         return pages.isEmpty ? [tokens] : pages
+    }
+}
+
+private extension View {
+    func readerControlChrome() -> some View {
+        self
+            .keiGlass(20)
     }
 }
 
