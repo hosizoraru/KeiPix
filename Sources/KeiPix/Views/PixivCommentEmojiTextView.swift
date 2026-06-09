@@ -51,7 +51,7 @@ struct PixivCommentEmojiPicker: View {
                     Button(L10n.done) {
                         dismiss()
                     }
-                    .buttonStyle(.borderless)
+                    .os26GlassButton()
                     .controlSize(.small)
                 }
             }
@@ -65,7 +65,7 @@ struct PixivCommentEmojiPicker: View {
                             .frame(width: 24, height: 24)
                             .accessibilityLabel(emoji.token)
                     }
-                    .buttonStyle(.borderless)
+                    .buttonStyle(.plain)
                     .help(emoji.token)
                 }
             }

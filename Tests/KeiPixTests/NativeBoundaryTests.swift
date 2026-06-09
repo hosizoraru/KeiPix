@@ -1521,6 +1521,47 @@ struct NativeBoundaryTests {
         }
     }
 
+    @Test("OS 27 cleanup removes remaining legacy button styles")
+    func os27CleanupRemovesRemainingLegacyButtonStyles() throws {
+        let root = try packageRoot()
+        let guardedPaths = [
+            "Sources/KeiPix/Views/ContentView_iPadOS.swift",
+            "Sources/KeiPix/Views/ArtworkTranslateButton.swift",
+            "Sources/KeiPix/Views/MutedContentView.swift",
+            "Sources/KeiPix/Views/PixivCommentEmojiTextView.swift"
+        ]
+
+        for relativePath in guardedPaths {
+            let source = try String(contentsOf: root.appending(path: relativePath), encoding: .utf8)
+            #expect(source.contains(".buttonStyle(.bordered)") == false, "\(relativePath) should use glass or plain actions")
+            #expect(source.contains(".buttonStyle(.borderedProminent)") == false, "\(relativePath) should use prominent glass actions")
+            #expect(source.contains(".buttonStyle(.borderless)") == false, "\(relativePath) should avoid legacy borderless actions")
+        }
+
+        let iPadContent = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/ContentView_iPadOS.swift"),
+            encoding: .utf8
+        )
+        let translateButtons = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/ArtworkTranslateButton.swift"),
+            encoding: .utf8
+        )
+        let mutedContent = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/MutedContentView.swift"),
+            encoding: .utf8
+        )
+        let commentEmoji = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/PixivCommentEmojiTextView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(iPadContent.contains(".os26GlassIconButton()"))
+        #expect(translateButtons.contains(".os26GlassIconButton(prominent: isActive)"))
+        #expect(mutedContent.contains(".os26GlassIconButton()"))
+        #expect(commentEmoji.contains(".os26GlassButton()"))
+        #expect(commentEmoji.contains(".buttonStyle(.plain)"))
+    }
+
     @Test("macOS feed keeps sidebar manual and lifts artwork navigation")
     func macOSFeedKeepsSidebarManualAndLiftsArtworkNavigation() throws {
         let root = try packageRoot()

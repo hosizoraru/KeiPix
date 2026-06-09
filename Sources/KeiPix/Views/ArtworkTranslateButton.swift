@@ -34,11 +34,10 @@ struct InlineTranslateButton: View {
         } label: {
             Label(L10n.translate, systemImage: "character.bubble")
         }
-        .labelStyle(.iconOnly)
         .help(L10n.translate)
         .accessibilityLabel(L10n.translate)
-        .buttonStyle(.borderless)
-        .tint(isActive ? .accentColor : nil)
+        .os26GlassIconButton(prominent: isActive)
+        .controlSize(.small)
     }
 }
 
@@ -139,8 +138,8 @@ struct ArtworkTranslateButton: View {
             } label: {
                 Label(L10n.translate, systemImage: "character.bubble")
             }
-            .labelStyle(.iconOnly)
-            .buttonStyle(.borderless)
+            .os26GlassIconButton()
+            .controlSize(.small)
             .help(L10n.translate)
             .accessibilityLabel(L10n.translate)
             #if canImport(Translation)

@@ -793,9 +793,7 @@ struct ContentView: View {
         } label: {
             Label(L10n.close, systemImage: "xmark")
         }
-        .labelStyle(.iconOnly)
-        .buttonStyle(.bordered)
-        .buttonBorderShape(.capsule)
+        .os26GlassIconButton()
         .controlSize(.regular)
         .help(L10n.close)
         .accessibilityLabel(L10n.close)

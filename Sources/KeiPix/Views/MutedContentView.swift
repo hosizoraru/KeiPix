@@ -482,7 +482,8 @@ struct MutedContentView: View {
             Button(role: .destructive, action: remove) {
                 Image(systemName: "xmark.circle.fill")
             }
-            .buttonStyle(.borderless)
+            .os26GlassIconButton()
+            .controlSize(.small)
             .help(L10n.deleteFromMutedContent)
             .accessibilityLabel(L10n.deleteFromMutedContent)
         }
@@ -517,8 +518,8 @@ struct MutedContentView: View {
             Button(role: .destructive, action: remove) {
                 Label(L10n.deleteFromMutedContent, systemImage: "xmark.circle")
             }
-            .labelStyle(.iconOnly)
-            .buttonStyle(.borderless)
+            .os26GlassIconButton()
+            .controlSize(.small)
             .help(L10n.deleteFromMutedContent)
         }
         .padding(10)
