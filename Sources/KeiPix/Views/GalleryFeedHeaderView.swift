@@ -1500,7 +1500,7 @@ private struct RankingDatePopover: View {
                     Label(L10n.previousDay, systemImage: "chevron.left")
                         .frame(maxWidth: .infinity)
                 }
-                .buttonStyle(.bordered)
+                .os26GlassButton()
                 .disabled(canShiftDate(by: -1) == false)
 
                 Button {
@@ -1509,7 +1509,7 @@ private struct RankingDatePopover: View {
                     Label(L10n.nextDay, systemImage: "chevron.right")
                         .frame(maxWidth: .infinity)
                 }
-                .buttonStyle(.bordered)
+                .os26GlassButton()
                 .disabled(canShiftDate(by: 1) == false)
             }
 
@@ -1522,7 +1522,7 @@ private struct RankingDatePopover: View {
                     Label(L10n.latestRanking, systemImage: "clock")
                         .frame(maxWidth: .infinity)
                 }
-                .buttonStyle(.bordered)
+                .os26GlassButton()
 
                 Button {
                     apply()
@@ -1530,7 +1530,7 @@ private struct RankingDatePopover: View {
                     Label(L10n.apply, systemImage: "checkmark")
                         .frame(maxWidth: .infinity)
                 }
-                .buttonStyle(.borderedProminent)
+                .os26GlassButton(prominent: true)
             }
         }
     }
@@ -1629,8 +1629,11 @@ private struct BulkMutePreviewPopover: View {
             }
 
             if preview.entries.isEmpty {
-                ContentUnavailableView(L10n.noBulkMuteCandidates, systemImage: "eye.slash")
-                    .frame(minHeight: 160)
+                OS26InlineUnavailableView(
+                    title: L10n.noBulkMuteCandidates,
+                    systemImage: "eye.slash",
+                    minHeight: 160
+                )
             } else {
                 ScrollView {
                     LazyVStack(alignment: .leading, spacing: 8) {
@@ -1650,7 +1653,7 @@ private struct BulkMutePreviewPopover: View {
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(.horizontal, 10)
                             .padding(.vertical, 8)
-                            .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                            .keiGlass(12)
                         }
 
                         if preview.omittedEntryCount > 0 {
@@ -1668,6 +1671,7 @@ private struct BulkMutePreviewPopover: View {
 
             HStack(spacing: 8) {
                 Button(L10n.cancel, action: cancel)
+                    .os26GlassButton()
 
                 Spacer()
 
@@ -1676,7 +1680,7 @@ private struct BulkMutePreviewPopover: View {
                 } label: {
                     Label(L10n.applyBulkMute, systemImage: "eye.slash")
                 }
-                .buttonStyle(.glassProminent)
+                .os26GlassButton(prominent: true)
                 .disabled(preview.canApply == false)
             }
         }
