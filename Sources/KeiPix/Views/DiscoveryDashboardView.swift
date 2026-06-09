@@ -297,7 +297,7 @@ private struct DiscoveryDashboardHeroCard: View {
                     .lineLimit(1)
             }
             .labelStyle(.titleAndIcon)
-            .buttonStyle(.bordered)
+            .buttonStyle(.glass)
             .buttonBorderShape(.capsule)
             .controlSize(style == .full ? .regular : .small)
             .help(L10n.customizeDashboard)
@@ -307,7 +307,7 @@ private struct DiscoveryDashboardHeroCard: View {
                 Label(L10n.customizeDashboard, systemImage: "slider.horizontal.3")
             }
             .labelStyle(.iconOnly)
-            .buttonStyle(.bordered)
+            .buttonStyle(.glass)
             .buttonBorderShape(.capsule)
             .controlSize(style == .full ? .regular : .small)
             .help(L10n.customizeDashboard)

@@ -518,6 +518,7 @@ struct NativeBoundaryTests {
         #expect(dashboardView.contains(".background(.thinMaterial, in: RoundedRectangle(cornerRadius: 10") == false)
         #expect(dashboardView.contains(".background(Color.secondary.opacity(0.07)") == false)
         #expect(dashboardView.contains("backgroundStyle") == false)
+        #expect(dashboardView.contains(".buttonStyle(.bordered)") == false)
         #expect(trendingStrip.contains("@State private var hasAttemptedLoad = false"))
         #expect(trendingStrip.contains("hasAttemptedLoad && isLoading == false && tags.isEmpty"))
         #expect(trendingStrip.contains("GlassEffectContainer(spacing: 12)"))
