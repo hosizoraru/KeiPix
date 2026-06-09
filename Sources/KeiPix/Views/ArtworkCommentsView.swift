@@ -21,78 +21,84 @@ struct ArtworkCommentsView: View {
 
     var body: some View {
         DisclosureGroup(isExpanded: $isExpanded) {
-            VStack(alignment: .leading, spacing: 14) {
-                composer
+            GlassEffectContainer(spacing: 14) {
+                VStack(alignment: .leading, spacing: 14) {
+                    composer
 
-                if isLoading {
-                    ProgressView()
-                        .frame(maxWidth: .infinity, alignment: .center)
-                        .padding(.vertical, 20)
-                } else if comments.isEmpty {
-                    ContentUnavailableView(
-                        L10n.noComments,
-                        systemImage: "text.bubble",
-                        description: Text(L10n.writeComment)
-                    )
-                    .frame(maxWidth: .infinity)
-                } else {
-                    LazyVStack(alignment: .leading, spacing: 12) {
-                        ForEach(comments) { comment in
-                            CommentThreadRow(
-                                comment: comment,
-                                artwork: artwork,
-                                store: store,
-                                reply: { target in replyTarget = target },
-                                copied: { showStatus(L10n.copiedComment) },
-                                status: showStatus
-                            )
+                    if isLoading {
+                        OS26InlineLoadingView(
+                            title: L10n.loading,
+                            systemImage: "text.bubble",
+                            minHeight: 112
+                        )
+                    } else if comments.isEmpty {
+                        OS26InlineUnavailableView(
+                            title: L10n.noComments,
+                            subtitle: L10n.writeComment,
+                            systemImage: "text.bubble",
+                            minHeight: 118
+                        )
+                    } else {
+                        LazyVStack(alignment: .leading, spacing: 12) {
+                            ForEach(comments) { comment in
+                                CommentThreadRow(
+                                    comment: comment,
+                                    artwork: artwork,
+                                    store: store,
+                                    reply: { target in replyTarget = target },
+                                    copied: { showStatus(L10n.copiedComment) },
+                                    status: showStatus
+                                )
+                            }
                         }
                     }
-                }
 
-                if let statusMessage {
-                    Label(statusMessage, systemImage: "checkmark.circle")
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(.secondary)
-                        .lineLimit(2)
-                        .textSelection(.enabled)
-                        .padding(.horizontal, 9)
-                        .padding(.vertical, 5)
-                        .glassEffect(.regular, in: Capsule(style: .continuous))
-                }
-
-                if let errorMessage {
-                    HStack(alignment: .firstTextBaseline, spacing: 10) {
-                        Label(errorMessage, systemImage: "exclamationmark.triangle")
-                            .font(.callout)
-                            .foregroundStyle(.red)
-                            .lineLimit(3)
+                    if let statusMessage {
+                        Label(statusMessage, systemImage: "checkmark.circle")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(.secondary)
+                            .lineLimit(2)
                             .textSelection(.enabled)
+                            .padding(.horizontal, 9)
+                            .padding(.vertical, 5)
+                            .glassEffect(.regular, in: Capsule(style: .continuous))
+                    }
 
-                        Spacer(minLength: 0)
+                    if let errorMessage {
+                        HStack(alignment: .firstTextBaseline, spacing: 10) {
+                            Label(errorMessage, systemImage: "exclamationmark.triangle")
+                                .font(.callout)
+                                .foregroundStyle(.red)
+                                .lineLimit(3)
+                                .textSelection(.enabled)
 
-                        Button {
-                            Task { await loadInitial() }
-                        } label: {
-                            Label(L10n.retry, systemImage: "arrow.clockwise")
+                            Spacer(minLength: 0)
+
+                            Button {
+                                Task { await loadInitial() }
+                            } label: {
+                                Label(L10n.retry, systemImage: "arrow.clockwise")
+                            }
+                            .os26GlassButton()
+                            .controlSize(.small)
                         }
-                        .buttonStyle(.bordered)
-                        .controlSize(.small)
+                        .padding(12)
+                        .keiGlass(15)
                     }
-                }
 
-                if nextURL != nil {
-                    OS26PaginationFooter(
-                        loadingTitle: L10n.loading,
-                        systemImage: "ellipsis.circle",
-                        isLoading: isLoadingMore,
-                        minHeight: 56
-                    ) {
-                        Task { await loadMore() }
+                    if nextURL != nil {
+                        OS26PaginationFooter(
+                            loadingTitle: L10n.loading,
+                            systemImage: "ellipsis.circle",
+                            isLoading: isLoadingMore,
+                            minHeight: 56
+                        ) {
+                            Task { await loadMore() }
+                        }
                     }
                 }
+                .padding(.top, 10)
             }
-            .padding(.top, 10)
         } label: {
             ArtworkInspectorSectionHeader(
                 title: L10n.comments,
@@ -132,8 +138,7 @@ struct ArtworkCommentsView: View {
                     } label: {
                         Label(L10n.cancelReply, systemImage: "xmark.circle")
                     }
-                    .labelStyle(.iconOnly)
-                    .buttonStyle(.borderless)
+                    .os26GlassIconButton()
                 }
             }
 
@@ -142,11 +147,7 @@ struct ArtworkCommentsView: View {
                 .lineLimit(2...5)
                 .padding(.horizontal, 12)
                 .padding(.vertical, 10)
-                .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                .overlay {
-                    RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .stroke(.quaternary, lineWidth: 1)
-                }
+                .keiGlass(14)
                 .disabled(isPosting)
 
             HStack {
@@ -155,8 +156,7 @@ struct ArtworkCommentsView: View {
                 } label: {
                     Label(L10n.commentEmoji, systemImage: "face.smiling")
                 }
-                .labelStyle(.iconOnly)
-                .buttonStyle(.borderless)
+                .os26GlassIconButton()
                 .help(L10n.commentEmoji)
                 .popover(isPresented: $isEmojiPickerPresented, arrowEdge: .bottom) {
                     PixivCommentEmojiPicker(
@@ -190,7 +190,7 @@ struct ArtworkCommentsView: View {
                         Label(L10n.postComment, systemImage: "paperplane")
                     }
                 }
-                .buttonStyle(.glassProminent)
+                .os26GlassButton(prominent: true)
                 .controlSize(.small)
                 .disabled(trimmedDraft.isEmpty || draft.count > 140 || isPosting)
             }
@@ -363,7 +363,7 @@ private struct CommentThreadRow: View {
                         Label(isExpanded ? L10n.hideReplies : L10n.viewReplies, systemImage: "arrowshape.turn.up.left")
                     }
                 }
-                .buttonStyle(.bordered)
+                .os26GlassButton()
                 .controlSize(.small)
                 .disabled(isLoadingReplies)
                 .padding(.leading, 40)
@@ -466,15 +466,11 @@ private struct MutedCommentPlaceholder: View {
             } label: {
                 Label(L10n.showComment, systemImage: "eye")
             }
-            .buttonStyle(.bordered)
+            .os26GlassButton()
             .controlSize(.small)
         }
         .padding(10)
-        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .stroke(.quaternary, lineWidth: 1)
-        }
+        .keiGlass(14)
         .help(reasonText)
     }
 
@@ -544,7 +540,7 @@ private struct CommentRow: View {
                                 .padding(.horizontal, 7)
                                 .padding(.vertical, 3)
                                 .foregroundStyle(.secondary)
-                                .background(.regularMaterial, in: Capsule())
+                                .glassEffect(.regular, in: Capsule(style: .continuous))
                         }
                     }
                 }
@@ -555,7 +551,7 @@ private struct CommentRow: View {
                     } label: {
                         Label(L10n.reply, systemImage: "arrowshape.turn.up.left")
                     }
-                    .buttonStyle(.borderless)
+                    .os26GlassButton()
 
                     if let text = comment.comment, text.isEmpty == false {
                         Button {
@@ -564,7 +560,7 @@ private struct CommentRow: View {
                         } label: {
                             Label(L10n.copyComment, systemImage: "doc.on.doc")
                         }
-                        .buttonStyle(.borderless)
+                        .os26GlassButton()
 
                         // Per-comment translate. Gated by
                         // `CaptionTranslationAvailability` so emoji-only
@@ -605,18 +601,14 @@ private struct CommentRow: View {
                         Label(L10n.mute, systemImage: "eye.slash")
                     }
                     .menuStyle(.button)
-                    .buttonStyle(.borderless)
+                    .os26GlassButton()
                     .disabled(comment.user == nil && mutedPhraseCandidate == nil)
                 }
                 .font(.caption)
             }
         }
         .padding(12)
-        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 15, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 15, style: .continuous)
-                .stroke(.quaternary, lineWidth: 1)
-        }
+        .keiGlass(15)
         .sheet(item: $feedbackRequest) { request in
             FeedbackReportSheet(request: request, localMuteAction: localMuteAction) { message in
                 status(message)
