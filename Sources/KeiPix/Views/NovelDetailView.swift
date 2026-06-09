@@ -188,9 +188,8 @@ private struct NovelDetailContent: View {
         .labelStyle(.titleAndIcon)
         .help(L10n.openNovelReader)
         .accessibilityLabel(L10n.openNovelReader)
-        .buttonStyle(.glassProminent)
-        .buttonBorderShape(.capsule)
         .controlSize(.regular)
+        .os26GlassButton(prominent: true)
     }
 
     private var bookmarkButton: some View {
@@ -210,8 +209,8 @@ private struct NovelDetailContent: View {
         .labelStyle(.iconOnly)
         .help(novel.isBookmarked ? L10n.novelRemoveBookmark : L10n.novelBookmark)
         .accessibilityLabel(novel.isBookmarked ? L10n.novelRemoveBookmark : L10n.novelBookmark)
-        .buttonStyle(.bordered)
         .controlSize(.small)
+        .os26GlassIconButton(prominent: novel.isBookmarked)
     }
 
     private var openInPixivButton: some View {
@@ -225,8 +224,8 @@ private struct NovelDetailContent: View {
         .labelStyle(.iconOnly)
         .help(L10n.openInPixivNovel)
         .accessibilityLabel(L10n.openInPixivNovel)
-        .buttonStyle(.bordered)
         .controlSize(.small)
+        .os26GlassIconButton()
     }
 
     @ViewBuilder
@@ -274,8 +273,8 @@ private struct NovelDetailContent: View {
         .help(L10n.moreActions)
         .accessibilityLabel(L10n.moreActions)
         .menuStyle(.button)
-        .buttonStyle(.bordered)
         .controlSize(.small)
+        .os26GlassIconButton()
     }
 
     private var metaSection: some View {
@@ -346,7 +345,7 @@ private struct NovelDetailContent: View {
                         Label(L10n.openInPixiv, systemImage: "arrow.up.right.square")
                             .labelStyle(.iconOnly)
                     }
-                    .buttonStyle(.borderless)
+                    .os26GlassIconButton()
                 }
             }
             .padding(10)

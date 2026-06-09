@@ -1170,6 +1170,10 @@ struct NativeBoundaryTests {
         #expect(novelReader.contains("horizontalHeader\n                    .frame(minWidth: 560)"))
         #expect(novelDetail.contains("private var compactActionStack: some View"))
         #expect(novelDetail.contains("openReaderButton(expands: true)"))
+        #expect(novelDetail.contains(".os26GlassButton(prominent: true)"))
+        #expect(novelDetail.contains(".os26GlassIconButton()"))
+        #expect(novelDetail.contains(".buttonStyle(.bordered)") == false)
+        #expect(novelDetail.contains(".buttonStyle(.borderless)") == false)
         #expect(settings.contains("LoginSheetView(store: store)\n                    #if os(macOS)\n                    .frame(width: 900, height: 680)"))
         #expect(profileSheet.contains("UserPreviewListView(store: store, mode: mode, showsCloseButton: true)\n                    #if os(macOS)\n                    .frame(width: 920, height: 680)"))
     }
