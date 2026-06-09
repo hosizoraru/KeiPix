@@ -86,6 +86,7 @@ struct NativeBoundaryTests {
         #expect(app.contains("MainWindowSizing.minimumHeight"))
         #expect(app.contains(".defaultSize(width: MainWindowSizing.defaultSize.width, height: MainWindowSizing.defaultSize.height)"))
         #expect(app.contains("ContentView(store: store)\n                .frame(minWidth: MainWindowSizing") == false)
+        #expect(app.contains(".automaticKeyViewLoop()"))
     }
 
     @Test("XcodeGen declares a first-class iPadOS app target")
@@ -1548,6 +1549,11 @@ struct NativeBoundaryTests {
         #expect(windowStyler.contains("window.contentLayoutRect"))
         #expect(windowStyler.contains("window.setFrame(nextFrame, display: true, animate: false)"))
         #expect(windowStyler.contains("func mainWindowSizing("))
+        #expect(windowStyler.contains("struct AutomaticKeyViewLoopModifier: ViewModifier"))
+        #expect(windowStyler.contains("private final class AutomaticKeyViewLoopHostView: NSView"))
+        #expect(windowStyler.contains("window.autorecalculatesKeyViewLoop = true"))
+        #expect(windowStyler.contains("window.recalculateKeyViewLoop()"))
+        #expect(windowStyler.contains("func automaticKeyViewLoop()"))
     }
 
     @Test("macOS feed header uses glass action chrome")

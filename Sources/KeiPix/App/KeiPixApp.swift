@@ -22,6 +22,7 @@ struct KeiPixApp: App {
                     minHeight: MainWindowSizing.minimumHeight
                 )
                 .background(WindowCaptureProtectionBridge(isProtected: store.isMainWindowCaptureProtected))
+                .automaticKeyViewLoop()
                 #endif
                 .environment(\.locale, store.appLanguage.locale ?? .current)
                 .preferredColorScheme(store.appColorScheme.preferredColorScheme)
@@ -90,6 +91,7 @@ struct KeiPixApp: App {
         #if os(macOS)
         Window(L10n.aboutKeiPix, id: "about") {
             AboutView(presentation: .window)
+                .automaticKeyViewLoop()
                 .environment(\.locale, store.appLanguage.locale ?? .current)
                 .preferredColorScheme(store.appColorScheme.preferredColorScheme)
         }
@@ -98,6 +100,7 @@ struct KeiPixApp: App {
 
         Window(L10n.logs, id: "logs") {
             LogViewerView()
+                .automaticKeyViewLoop()
                 .environment(\.locale, store.appLanguage.locale ?? .current)
                 .preferredColorScheme(store.appColorScheme.preferredColorScheme)
         }
@@ -105,33 +108,36 @@ struct KeiPixApp: App {
         .restorationBehavior(.disabled)
 
         WindowGroup(L10n.readerWindow, id: "artwork-reader", for: Int.self) { $artworkID in
-            if let artworkID {
-                ArtworkReaderWindowView(store: store, artworkID: artworkID)
+            Group {
+                if let artworkID {
+                    ArtworkReaderWindowView(store: store, artworkID: artworkID)
+                        .frame(minWidth: 900, minHeight: 680)
+                        .background(WindowCaptureProtectionBridge(isProtected: store.isReaderWindowCaptureProtected))
+                } else {
+                    EmptyStateView(
+                        title: L10n.noArtworkTitle,
+                        subtitle: L10n.noArtworkSubtitle,
+                        systemImage: "rectangle.inset.filled"
+                    )
                     .frame(minWidth: 900, minHeight: 680)
-                    .background(WindowCaptureProtectionBridge(isProtected: store.isReaderWindowCaptureProtected))
-                    .environment(\.locale, store.appLanguage.locale ?? .current)
-                    .preferredColorScheme(store.appColorScheme.preferredColorScheme)
-            } else {
-                EmptyStateView(
-                    title: L10n.noArtworkTitle,
-                    subtitle: L10n.noArtworkSubtitle,
-                    systemImage: "rectangle.inset.filled"
-                )
-                .frame(minWidth: 900, minHeight: 680)
-                .environment(\.locale, store.appLanguage.locale ?? .current)
-                .preferredColorScheme(store.appColorScheme.preferredColorScheme)
+                }
             }
+            .automaticKeyViewLoop()
+            .environment(\.locale, store.appLanguage.locale ?? .current)
+            .preferredColorScheme(store.appColorScheme.preferredColorScheme)
         }
         .defaultSize(width: 1400, height: 900)
 
         Settings {
             SettingsView(store: store)
+                .automaticKeyViewLoop()
                 .environment(\.locale, store.appLanguage.locale ?? .current)
                 .preferredColorScheme(store.appColorScheme.preferredColorScheme)
         }
 
         MenuBarExtra {
             MenuBarExtraView(store: store)
+                .automaticKeyViewLoop()
                 .environment(\.locale, store.appLanguage.locale ?? .current)
         } label: {
             Image(systemName: "photo.on.rectangle.angled")

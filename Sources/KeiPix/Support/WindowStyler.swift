@@ -150,6 +150,39 @@ struct MainWindowSizingModifier: ViewModifier {
     }
 }
 
+struct AutomaticKeyViewLoopModifier: ViewModifier {
+    func body(content: Content) -> some View {
+        content
+            .background {
+                AutomaticKeyViewLoopBridge()
+            }
+    }
+}
+
+private struct AutomaticKeyViewLoopBridge: NSViewRepresentable {
+    func makeNSView(context: Context) -> AutomaticKeyViewLoopHostView {
+        AutomaticKeyViewLoopHostView()
+    }
+
+    func updateNSView(_ nsView: AutomaticKeyViewLoopHostView, context: Context) {
+        nsView.enableAutomaticKeyViewLoop()
+    }
+}
+
+@MainActor
+private final class AutomaticKeyViewLoopHostView: NSView {
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        enableAutomaticKeyViewLoop()
+    }
+
+    func enableAutomaticKeyViewLoop() {
+        guard let window else { return }
+        window.autorecalculatesKeyViewLoop = true
+        window.recalculateKeyViewLoop()
+    }
+}
+
 private struct MainWindowSizingBridge: NSViewRepresentable {
     let minimumSize: CGSize
     let preferredDefaultSize: CGSize
@@ -274,6 +307,10 @@ extension View {
             minimumHeight: minimumHeight,
             preferredDefaultSize: preferredDefaultSize
         ))
+    }
+
+    func automaticKeyViewLoop() -> some View {
+        modifier(AutomaticKeyViewLoopModifier())
     }
 }
 
