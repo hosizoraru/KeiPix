@@ -58,7 +58,7 @@ struct UgoiraPlayerView: View {
                 ProgressView(L10n.loadingUgoira)
                     .controlSize(.small)
                     .padding(14)
-                    .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    .keiGlass(14)
             }
 
             if let message = player.failureMessage {
@@ -132,12 +132,12 @@ struct UgoiraPlayerView: View {
             Button(L10n.retry) {
                 Task { await load(force: true) }
             }
-            .buttonStyle(.borderedProminent)
+            .os26GlassButton(prominent: true)
             .controlSize(.small)
         }
         .padding(20)
         .frame(maxWidth: 360)
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .keiGlass(18)
     }
 
     // MARK: - Status row
@@ -208,10 +208,9 @@ struct UgoiraPlayerView: View {
                 Label(L10n.ugoiraExportActions, systemImage: "square.and.arrow.up")
             }
         }
-        .menuStyle(.borderlessButton)
         .menuIndicator(.hidden)
-        .labelStyle(.iconOnly)
         .fixedSize()
+        .os26GlassIconButton()
         .help(L10n.ugoiraExportActions)
         .accessibilityLabel(L10n.ugoiraExportActions)
 
@@ -220,8 +219,7 @@ struct UgoiraPlayerView: View {
         } label: {
             Label(L10n.reloadUgoira, systemImage: "arrow.clockwise")
         }
-        .buttonStyle(.bordered)
-        .labelStyle(.iconOnly)
+        .os26GlassIconButton()
         .help(L10n.reloadUgoira)
         .accessibilityLabel(L10n.reloadUgoira)
     }

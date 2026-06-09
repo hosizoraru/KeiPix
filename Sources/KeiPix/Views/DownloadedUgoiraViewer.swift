@@ -91,8 +91,7 @@ struct DownloadedUgoiraViewer: View {
             ShareLink(item: zipURL) {
                 Label(L10n.share, systemImage: "square.and.arrow.up")
             }
-            .labelStyle(.iconOnly)
-            .buttonStyle(.bordered)
+            .os26GlassIconButton()
             .help(L10n.share)
 
             Button {
@@ -100,8 +99,7 @@ struct DownloadedUgoiraViewer: View {
             } label: {
                 Label(L10n.close, systemImage: "xmark")
             }
-            .labelStyle(.iconOnly)
-            .buttonStyle(.bordered)
+            .os26GlassIconButton()
             .keyboardShortcut(.cancelAction)
             .help(L10n.close)
         }
@@ -119,23 +117,32 @@ struct DownloadedUgoiraViewer: View {
                     .padding(18)
                     .id(player.currentFrameIndex)
             } else if player.isLoading {
-                ProgressView(L10n.loadingUgoira)
-                    .controlSize(.small)
-                    .padding(14)
-                    .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                OS26InlineLoadingView(
+                    title: L10n.loadingUgoira,
+                    systemImage: "play.rectangle",
+                    minHeight: 180
+                )
+                .frame(maxWidth: 420)
             } else if let message = player.failureMessage {
-                ContentUnavailableView {
-                    Label(L10n.ugoiraFailedToLoad, systemImage: "exclamationmark.triangle")
-                } description: {
-                    Text(message)
-                } actions: {
+                OS26InlineUnavailableView(
+                    title: L10n.ugoiraFailedToLoad,
+                    subtitle: message,
+                    systemImage: "exclamationmark.triangle",
+                    minHeight: 190
+                ) {
                     Button(L10n.retry) {
                         Task { await load(force: true) }
                     }
-                    .buttonStyle(.borderedProminent)
+                    .os26GlassButton(prominent: true)
                 }
+                .frame(maxWidth: 420)
             } else {
-                ContentUnavailableView(L10n.previewUgoira, systemImage: "play.rectangle")
+                OS26InlineUnavailableView(
+                    title: L10n.previewUgoira,
+                    systemImage: "play.rectangle",
+                    minHeight: 180
+                )
+                .frame(maxWidth: 420)
             }
         }
         .contentShape(Rectangle())
@@ -229,10 +236,9 @@ struct DownloadedUgoiraViewer: View {
                 Label(L10n.moreActions, systemImage: "ellipsis.circle")
             }
         }
-        .menuStyle(.borderlessButton)
         .menuIndicator(.hidden)
-        .labelStyle(.iconOnly)
         .fixedSize()
+        .os26GlassIconButton()
         .help(L10n.moreActions)
         .accessibilityLabel(L10n.moreActions)
     }

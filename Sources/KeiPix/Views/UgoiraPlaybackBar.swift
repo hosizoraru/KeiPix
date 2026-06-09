@@ -7,9 +7,9 @@ import SwiftUI
 /// **below** the artwork — overlaying chrome on top of an animated
 /// frame is what made the original viewer look noisy and crowded.
 ///
-/// All controls share `.bordered` styling so the user reads them as a
-/// single transport group instead of a stack of glass / plain / glass-
-/// prominent buttons fighting for hierarchy.
+/// All controls share glass styling so the user reads them as one
+/// transport group instead of a stack of plain and prominent controls
+/// fighting for hierarchy.
 struct UgoiraPlaybackBar<TrailingActions: View>: View {
     @Bindable var player: UgoiraPlayer
     var trailingActions: () -> TrailingActions
@@ -49,10 +49,9 @@ struct UgoiraPlaybackBar<TrailingActions: View>: View {
                 systemImage: player.isPlaying ? "pause.fill" : "play.fill"
             )
         }
-        .buttonStyle(.borderedProminent)
+        .os26GlassIconButton(prominent: true)
         .controlSize(.regular)
         .keyboardShortcut(.space, modifiers: [])
-        .labelStyle(.iconOnly)
         .help(player.isPlaying ? L10n.pauseUgoira : L10n.playUgoira)
         .accessibilityLabel(player.isPlaying ? L10n.pauseUgoira : L10n.playUgoira)
         .disabled(player.hasContent == false)

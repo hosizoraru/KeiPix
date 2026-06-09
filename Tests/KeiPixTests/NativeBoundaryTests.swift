@@ -1194,6 +1194,42 @@ struct NativeBoundaryTests {
         #expect(pixivisionReader.contains(".background(.quinary, in: RoundedRectangle") == false)
     }
 
+    @Test("Ugoira player surfaces use glass transport chrome")
+    func ugoiraPlayerSurfacesUseGlassTransportChrome() throws {
+        let root = try packageRoot()
+        let playerView = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/UgoiraPlayerView.swift"),
+            encoding: .utf8
+        )
+        let playbackBar = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/UgoiraPlaybackBar.swift"),
+            encoding: .utf8
+        )
+        let downloadedViewer = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/DownloadedUgoiraViewer.swift"),
+            encoding: .utf8
+        )
+
+        for (name, source) in [
+            ("UgoiraPlayerView", playerView),
+            ("UgoiraPlaybackBar", playbackBar),
+            ("DownloadedUgoiraViewer", downloadedViewer)
+        ] {
+            #expect(source.contains(".buttonStyle(.bordered)") == false, "\(name) should use glass actions")
+            #expect(source.contains(".buttonStyle(.borderedProminent)") == false, "\(name) should use prominent glass actions")
+            #expect(source.contains(".background(.regularMaterial") == false, "\(name) should avoid old material cards")
+        }
+
+        #expect(playerView.contains(".keiGlass(14)"))
+        #expect(playerView.contains(".os26GlassButton(prominent: true)"))
+        #expect(playerView.contains(".os26GlassIconButton()"))
+        #expect(playbackBar.contains(".os26GlassIconButton(prominent: true)"))
+        #expect(downloadedViewer.contains("OS26InlineLoadingView("))
+        #expect(downloadedViewer.contains("OS26InlineUnavailableView("))
+        #expect(downloadedViewer.contains("ContentUnavailableView") == false)
+        #expect(downloadedViewer.contains(".os26GlassIconButton()"))
+    }
+
     @Test("Mobile utility sheets avoid fixed desktop widths")
     func mobileUtilitySheetsAvoidFixedDesktopWidths() throws {
         let root = try packageRoot()
