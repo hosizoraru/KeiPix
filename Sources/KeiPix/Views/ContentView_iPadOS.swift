@@ -30,7 +30,6 @@ struct ContentView: View {
     @State private var compactContentTransitionEdge: Edge = .trailing
     @State private var feedbackRequest: FeedbackReportRequest?
     @State private var statusMessage: String?
-    @State private var isPhoneCollapsedFeedFilterVisible = false
     @State private var isPhoneFeedAtContentStart = true
     @State private var bookmarkEditorLayoutProfileOverride: BookmarkEditorLayoutProfile = .compact
     @AppStorage("mobileBottomTabItemIDs") private var mobileBottomTabDefaultRouteIDs = MobileBottomTabConfiguration.defaultStorageID
@@ -97,7 +96,6 @@ struct ContentView: View {
             }
             .onChange(of: store.selectedRoute) { _, route in
                 recordMobileBottomTabRouteIfNeeded(route)
-                isPhoneCollapsedFeedFilterVisible = false
                 isPhoneFeedAtContentStart = true
             }
             #if DEBUG
@@ -332,21 +330,14 @@ struct ContentView: View {
                 syncID: compactTabBarSyncID(layout: layout)
             )
                 .allowsHitTesting(false)
+            PhoneFeedFilterBarOverlayBridge(
+                text: $store.clientFilterQuery,
+                resultText: phoneCollapsedFeedFilterResultText,
+                isEnabled: isPhoneFeedFilterEnabled(layout: layout),
+                isAtContentStart: isPhoneFeedAtContentStart,
+                syncID: compactTabBarSyncID(layout: layout)
+            )
         }
-        .overlay(alignment: .bottom) {
-            if showsPhoneCollapsedFeedFilter(layout: layout) {
-                PhoneCollapsedFeedFilterBar(
-                    text: $store.clientFilterQuery,
-                    resultText: phoneCollapsedFeedFilterResultText
-                )
-                .padding(.leading, phoneCollapsedFeedFilterLeadingPadding)
-                .padding(.trailing, phoneCollapsedFeedFilterTrailingPadding)
-                .padding(.bottom, phoneCollapsedFeedFilterBottomPadding)
-                .offset(y: phoneCollapsedFeedFilterVerticalOffset)
-                .transition(.move(edge: .bottom).combined(with: .opacity))
-            }
-        }
-        .animation(.snappy(duration: 0.18), value: showsPhoneCollapsedFeedFilter(layout: layout))
         .animation(.snappy(duration: 0.2), value: isPhoneFeedAtContentStart)
         .onAppear {
             isCompactCustomTabRootActive = layout.usesCustomNavigationTabs
@@ -1611,40 +1602,20 @@ struct ContentView: View {
     private func handlePhoneGalleryScrollEvent(_ event: NativeGalleryScrollEvent) {
         guard currentMobilePlatform == .phone,
               store.selectedRoute.usesArtworkFeed else {
-            isPhoneCollapsedFeedFilterVisible = false
             isPhoneFeedAtContentStart = true
             return
         }
 
         withAnimation(.snappy(duration: 0.18)) {
             isPhoneFeedAtContentStart = event.isAtContentStart
-            isPhoneCollapsedFeedFilterVisible = event.isAtContentStart == false
-                && event.direction == .towardContentEnd
         }
     }
 
-    private func showsPhoneCollapsedFeedFilter(layout: MobileWorkspaceLayout) -> Bool {
+    private func isPhoneFeedFilterEnabled(layout: MobileWorkspaceLayout) -> Bool {
         layout.platform == .phone
             && isCompactCustomTabRootActive
-            && (phoneHasActiveFeedFilter || (isPhoneFeedAtContentStart == false && isPhoneCollapsedFeedFilterVisible))
             && store.selectedRoute.usesArtworkFeed
             && (store.artworks.isEmpty == false || phoneHasActiveFeedFilter)
-    }
-
-    private var phoneCollapsedFeedFilterLeadingPadding: CGFloat {
-        isPhoneFeedAtContentStart ? 28 : 80
-    }
-
-    private var phoneCollapsedFeedFilterTrailingPadding: CGFloat {
-        isPhoneFeedAtContentStart ? 28 : 18
-    }
-
-    private var phoneCollapsedFeedFilterBottomPadding: CGFloat {
-        isPhoneFeedAtContentStart ? 22 : 0
-    }
-
-    private var phoneCollapsedFeedFilterVerticalOffset: CGFloat {
-        isPhoneFeedAtContentStart ? 0 : 10
     }
 
     private var phoneHasActiveFeedFilter: Bool {
@@ -1663,7 +1634,8 @@ struct ContentView: View {
             selectedTab.transitionID,
             store.selectedRoute.rawValue,
             layout.usesCustomNavigationTabs ? "custom" : "regular",
-            layout.usesCompactTabs ? "compact" : "wide"
+            layout.usesCompactTabs ? "compact" : "wide",
+            isPhoneFeedAtContentStart ? "content-start" : "content-scrolled"
         ]
         .joined(separator: "|")
     }
@@ -1750,7 +1722,6 @@ struct ContentView: View {
             if store.selectedRoute != route {
                 store.select(route)
             }
-            isPhoneCollapsedFeedFilterVisible = false
         }
     }
 
@@ -1781,7 +1752,6 @@ struct ContentView: View {
             if store.selectedRoute != route {
                 store.select(route)
             }
-            isPhoneCollapsedFeedFilterVisible = false
         }
     }
 
@@ -1796,7 +1766,6 @@ struct ContentView: View {
             if store.selectedRoute != route {
                 store.select(route)
             }
-            isPhoneCollapsedFeedFilterVisible = false
         }
     }
 
@@ -2027,50 +1996,6 @@ private struct MobileGlobalSearchModifier: ViewModifier {
         } else {
             content
         }
-    }
-}
-
-private struct PhoneCollapsedFeedFilterBar: View {
-    @Binding var text: String
-    let resultText: String
-
-    var body: some View {
-        GlassEffectContainer(spacing: 0) {
-            HStack(spacing: 6) {
-                NativeInlineFilterField(
-                    text: $text,
-                    placeholder: L10n.filterArtworks,
-                    accessibilityLabel: L10n.filterArtworks,
-                    usesTransparentBackground: true
-                )
-                .frame(height: 32)
-                .layoutPriority(1)
-
-                if text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false {
-                    Button {
-                        withAnimation(.snappy(duration: 0.16)) {
-                            text = ""
-                        }
-                    } label: {
-                        Label(L10n.clearSearch, systemImage: "xmark.circle.fill")
-                    }
-                    .labelStyle(.iconOnly)
-                    .buttonStyle(.plain)
-                    .foregroundStyle(.secondary)
-                    .help(L10n.clearSearch)
-                    .accessibilityLabel(L10n.clearSearch)
-                }
-            }
-            .padding(.leading, 10)
-            .padding(.trailing, 9)
-            .padding(.vertical, 3)
-            .frame(height: 44)
-            .frame(maxWidth: 360)
-            .glassEffect(.regular.interactive(), in: Capsule(style: .continuous))
-        }
-        .frame(maxWidth: .infinity, alignment: .trailing)
-        .accessibilityValue(resultText)
-        .accessibilityElement(children: .contain)
     }
 }
 
