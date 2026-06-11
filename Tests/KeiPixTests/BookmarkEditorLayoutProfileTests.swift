@@ -151,4 +151,24 @@ struct BookmarkEditorLayoutProfileTests {
 
         #expect(profile == .compact)
     }
+
+    @Test("Live expanded profile recovers from stale compact override")
+    func liveExpandedProfileRecoversFromStaleCompactOverride() {
+        let profile = BookmarkEditorLayoutProfile.effective(
+            override: .compact,
+            liveProfile: .expanded
+        )
+
+        #expect(profile == .expanded)
+    }
+
+    @Test("Expanded override keeps complete sheet while live traits settle")
+    func expandedOverrideKeepsCompleteSheetWhileLiveTraitsSettle() {
+        let profile = BookmarkEditorLayoutProfile.effective(
+            override: .expanded,
+            liveProfile: .compact
+        )
+
+        #expect(profile == .expanded)
+    }
 }

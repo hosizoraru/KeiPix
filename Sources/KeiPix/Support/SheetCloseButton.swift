@@ -239,7 +239,7 @@ private struct OS26SheetChromeModifier: ViewModifier {
                 .presentationSizing(.page)
         case .bookmarkEditor:
             content
-                .presentationSizing(.page.fitted(horizontal: false, vertical: true))
+                .presentationSizing(.fitted)
         case .immersive, .reader:
             content
                 .presentationSizing(.page)

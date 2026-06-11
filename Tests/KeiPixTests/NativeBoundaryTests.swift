@@ -1584,7 +1584,7 @@ struct NativeBoundaryTests {
         #expect(sheetChrome.contains("case bookmarkEditor"))
         #expect(sheetChrome.contains("case reader"))
         #expect(sheetChrome.contains(".presentationSizing(.page)"))
-        #expect(sheetChrome.contains(".presentationSizing(.page.fitted(horizontal: false, vertical: true))"))
+        #expect(sheetChrome.contains(".presentationSizing(.fitted)"))
         #expect(sheetChrome.contains("[.height(700)]"))
         #expect(sheetChrome.contains("[.height(760)]"))
         #expect(sheetChrome.contains("[.fraction(0.88), .large]"))
@@ -2028,6 +2028,14 @@ struct NativeBoundaryTests {
             contentsOf: root.appending(path: "Sources/KeiPix/Views/LibrarySurfaceComponents.swift"),
             encoding: .utf8
         )
+        let discoverySettings = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/Settings/DiscoverySettingsPage.swift"),
+            encoding: .utf8
+        )
+        let settingsBindings = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/Settings/SettingsBindings.swift"),
+            encoding: .utf8
+        )
         let migratedPages = [
             "Sources/KeiPix/Views/Settings/AccountSettingsPage.swift",
             "Sources/KeiPix/Views/Settings/DiscoverySettingsPage.swift",
@@ -2063,6 +2071,14 @@ struct NativeBoundaryTests {
         #expect(settingsSurface.contains("private struct OS26SettingsPageMetrics"))
         #expect(settingsSurface.contains("let metrics = OS26SettingsPageMetrics("))
         #expect(settingsSurface.contains("count: columnCount"))
+        #expect(discoverySettings.contains("L10n.defaultBookmarkVisibility"))
+        #expect(discoverySettings.contains("bookmarkDefaultVisibilityRow("))
+        #expect(discoverySettings.contains("store.settings_defaultIllustrationBookmarkRestrictBinding"))
+        #expect(discoverySettings.contains("store.settings_defaultMangaBookmarkRestrictBinding"))
+        #expect(discoverySettings.contains("store.settings_defaultNovelBookmarkRestrictBinding"))
+        #expect(settingsBindings.contains("settings_defaultIllustrationBookmarkRestrictBinding"))
+        #expect(settingsBindings.contains("settings_defaultMangaBookmarkRestrictBinding"))
+        #expect(settingsBindings.contains("settings_defaultNovelBookmarkRestrictBinding"))
         #expect(settingsSurface.contains("if width >= 590 { return 2 }"))
         #expect(settingsSurface.contains(".frame(maxWidth: .infinity, alignment: metrics.pageAlignment)"))
         #expect(settingsSurface.contains("var pageAlignment: Alignment"))
@@ -3196,11 +3212,24 @@ struct NativeBoundaryTests {
         )
         #expect(bookmarkEditor.contains("trailing: { restrictMenu(usesCompactLayout: usesCompactLayout) }"))
         #expect(bookmarkEditor.contains("private func restrictMenu(usesCompactLayout: Bool) -> some View"))
+        #expect(bookmarkEditor.contains("restrictMenuLabel(usesCompactLayout: usesCompactLayout)"))
+        #expect(bookmarkEditor.contains("private enum BookmarkEditorRestrictChoice"))
+        #expect(bookmarkEditor.contains("case defaultValue"))
+        #expect(bookmarkEditor.contains("func resolved(defaultRestrict: BookmarkRestrict) -> BookmarkRestrict"))
+        #expect(bookmarkEditor.contains("func menuTitle(defaultRestrict: BookmarkRestrict) -> String"))
+        #expect(bookmarkEditor.contains("var buttonTitle: String"))
+        #expect(bookmarkEditor.contains("String(format: L10n.defaultRestrictFormat"))
+        #expect(bookmarkEditor.contains("store.defaultBookmarkRestrict(for: artwork)"))
+        #expect(bookmarkEditor.contains(".lineLimit(1)"))
         #expect(bookmarkEditor.contains("visibilityRow(usesCompactLayout:") == false)
         #expect(bookmarkEditor.contains(".pickerStyle(.segmented)") == false)
+        #expect(bookmarkEditor.contains("customTagControlRow(usesCompactLayout: usesCompactLayout)"))
+        #expect(bookmarkEditor.contains("private func customTagTextField(usesCompactLayout: Bool) -> some View"))
+        #expect(bookmarkEditor.contains("private func tagFilterField(usesCompactLayout: Bool) -> some View"))
         #expect(bookmarkEditor.contains("OS26LibraryTextEntryField("))
         #expect(bookmarkEditor.contains("text: $customTagInput"))
         #expect(bookmarkEditor.contains("OS26LibrarySearchField("))
+        #expect(bookmarkEditor.contains(".layoutPriority(usesCompactLayout ? 1 : 0)"))
         #expect(bookmarkEditor.contains("OS26InlineUnavailableView("))
         #expect(bookmarkEditor.contains("BookmarkEditorArtworkSummary("))
         #expect(bookmarkEditor.contains("BookmarkEditorArtworkSummary<Trailing: View>"))
@@ -3208,7 +3237,12 @@ struct NativeBoundaryTests {
         #expect(bookmarkEditor.contains("BookmarkEditorActionRow("))
         #expect(bookmarkEditor.contains("BookmarkEditorFooterBar("))
         #expect(bookmarkEditor.contains("struct BookmarkEditorSheetView"))
-        #expect(bookmarkEditor.contains("BookmarkEditorLayoutProfile.current(horizontalSizeClass: horizontalSizeClass)"))
+        #expect(bookmarkEditor.contains("BookmarkEditorLayoutProfile.currentEffective("))
+        #expect(bookmarkEditor.contains("static func currentEffective("))
+        #expect(bookmarkEditor.contains("return effective(override: override, liveProfile: liveProfile)"))
+        #expect(bookmarkEditor.contains("static func effective("))
+        #expect(bookmarkEditor.contains("mobileSheetWidth(usesCompactLayout: usesCompactLayout)"))
+        #expect(bookmarkEditor.contains("return (680, 720, 760)"))
         #expect(bookmarkEditor.contains("? .compactBookmarkEditor"))
         #expect(bookmarkEditor.contains(": .bookmarkEditor"))
         #expect(bookmarkEditor.contains("addCustomTagButton(usesCompactLayout: usesCompactLayout)"))

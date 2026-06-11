@@ -52,7 +52,10 @@ struct BookmarkEditorSheetView: View {
 
     private var currentLayoutProfile: BookmarkEditorLayoutProfile {
         #if os(iOS)
-        return layoutProfileOverride ?? BookmarkEditorLayoutProfile.current(horizontalSizeClass: horizontalSizeClass)
+        return BookmarkEditorLayoutProfile.currentEffective(
+            override: layoutProfileOverride,
+            horizontalSizeClass: horizontalSizeClass
+        )
         #else
         return .expanded
         #endif
@@ -72,7 +75,7 @@ struct BookmarkEditorView: View {
     #endif
 
     // Form state
-    @State private var restrict = BookmarkRestrict.public
+    @State private var restrictChoice = BookmarkEditorRestrictChoice.defaultValue
     @State private var libraryTags: [PixivBookmarkTag] = []
     @State private var selectedTags: Set<String> = []
     @State private var customTagInput = ""
@@ -88,7 +91,8 @@ struct BookmarkEditorView: View {
     @State private var isConfirmingReset = false
 
     // Snapshot to support Reset
-    @State private var initialRestrict = BookmarkRestrict.public
+    @State private var initialRestrictChoice = BookmarkEditorRestrictChoice.defaultValue
+    @State private var initialResolvedRestrict = BookmarkRestrict.public
     @State private var initialSelectedTags: Set<String> = []
 
     var body: some View {
@@ -177,6 +181,9 @@ struct BookmarkEditorView: View {
         }
         #if os(iOS)
         .frame(
+            minWidth: mobileSheetWidth(usesCompactLayout: usesCompactLayout).min,
+            idealWidth: mobileSheetWidth(usesCompactLayout: usesCompactLayout).ideal,
+            maxWidth: mobileSheetWidth(usesCompactLayout: usesCompactLayout).max,
             minHeight: mobileSheetHeight(usesCompactLayout: usesCompactLayout),
             idealHeight: mobileSheetHeight(usesCompactLayout: usesCompactLayout),
             maxHeight: usesCompactLayout ? mobileSheetHeight(usesCompactLayout: usesCompactLayout) : .infinity,
@@ -235,13 +242,23 @@ struct BookmarkEditorView: View {
 
     private func bookmarkLayoutProfile() -> BookmarkEditorLayoutProfile {
         #if os(iOS)
-        return layoutProfileOverride ?? BookmarkEditorLayoutProfile.current(horizontalSizeClass: horizontalSizeClass)
+        return BookmarkEditorLayoutProfile.currentEffective(
+            override: layoutProfileOverride,
+            horizontalSizeClass: horizontalSizeClass
+        )
         #else
         return .expanded
         #endif
     }
 
     #if os(iOS)
+    private func mobileSheetWidth(usesCompactLayout: Bool) -> (min: CGFloat?, ideal: CGFloat?, max: CGFloat?) {
+        guard usesCompactLayout == false else {
+            return (nil, nil, .infinity)
+        }
+        return (680, 720, 760)
+    }
+
     private func mobileSheetHeight(usesCompactLayout: Bool) -> CGFloat {
         let fallback: CGFloat = usesCompactLayout ? 700 : 760
         guard ReaderPlatformKind.current == .phone else {
@@ -259,13 +276,18 @@ struct BookmarkEditorView: View {
 
     private func restrictMenu(usesCompactLayout: Bool) -> some View {
         Menu {
-            ForEach(BookmarkRestrict.allCases) { option in
+            ForEach(BookmarkEditorRestrictChoice.allCases) { option in
                 Button {
-                    guard restrict != option else { return }
-                    restrict = option
-                    Task { await loadLibraryTags(for: option) }
+                    guard restrictChoice != option else { return }
+                    restrictChoice = option
+                    Task { await loadLibraryTags(for: resolvedRestrict) }
                 } label: {
-                    Label(option.shortTitle, systemImage: restrict == option ? "checkmark" : option.systemImage)
+                    Label(
+                        option.menuTitle(defaultRestrict: defaultRestrict),
+                        systemImage: restrictChoice == option
+                            ? "checkmark"
+                            : option.systemImage(defaultRestrict: defaultRestrict)
+                    )
                 }
             }
         } label: {
@@ -274,54 +296,34 @@ struct BookmarkEditorView: View {
         .buttonStyle(.glass)
         .buttonBorderShape(.capsule)
         .controlSize(.small)
-        .help(restrict.title)
+        .help(restrictChoice.accessibilityTitle(defaultRestrict: defaultRestrict))
         .accessibilityLabel(L10n.bookmarks)
-        .accessibilityValue(restrict.title)
+        .accessibilityValue(restrictChoice.accessibilityTitle(defaultRestrict: defaultRestrict))
         .disabled(isSaving)
     }
 
     @ViewBuilder
     private func restrictMenuLabel(usesCompactLayout: Bool) -> some View {
         if usesCompactLayout {
-            Label(restrict.shortTitle, systemImage: restrict.systemImage)
-                .labelStyle(.iconOnly)
-        } else {
-            Label(restrict.shortTitle, systemImage: restrict.systemImage)
+            Label(
+                restrictChoice.buttonTitle,
+                systemImage: restrictChoice.systemImage(defaultRestrict: defaultRestrict)
+            )
                 .labelStyle(.titleAndIcon)
+                .lineLimit(1)
+        } else {
+            Label(
+                restrictChoice.buttonTitle,
+                systemImage: restrictChoice.systemImage(defaultRestrict: defaultRestrict)
+            )
+                .labelStyle(.titleAndIcon)
+                .lineLimit(1)
         }
     }
 
     private func customTagRow(usesCompactLayout: Bool) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            HStack(spacing: 8) {
-                OS26LibraryTextEntryField(
-                    text: $customTagInput,
-                    placeholder: L10n.tagName,
-                    minWidth: usesCompactLayout ? 0 : 220
-                )
-                .onSubmit(addCustomTag)
-                .layoutPriority(1)
-
-                addCustomTagButton(usesCompactLayout: usesCompactLayout)
-            }
-
-            HStack(spacing: 8) {
-                if usesCompactLayout == false {
-                    Spacer(minLength: 0)
-                }
-
-                if libraryTags.isEmpty == false || artwork.tags.isEmpty == false {
-                    OS26LibrarySearchField(
-                        text: $filterText,
-                        placeholder: L10n.bookmarkTagFilterPlaceholder,
-                        minWidth: usesCompactLayout ? 128 : 160,
-                        idealWidth: usesCompactLayout ? 170 : 220,
-                        maxWidth: usesCompactLayout ? 210 : 280
-                    )
-                    .layoutPriority(1)
-                }
-            }
-            .frame(maxWidth: .infinity, alignment: usesCompactLayout ? .leading : .trailing)
+            customTagControlRow(usesCompactLayout: usesCompactLayout)
 
             if isLoading {
                 HStack(spacing: 8) {
@@ -335,6 +337,49 @@ struct BookmarkEditorView: View {
         .padding(.horizontal, 14)
         .padding(.vertical, usesCompactLayout ? 10 : 12)
         .keiGlass(usesCompactLayout ? 12 : 14)
+    }
+
+    @ViewBuilder
+    private func customTagControlRow(usesCompactLayout: Bool) -> some View {
+        if usesCompactLayout {
+            HStack(spacing: 8) {
+                customTagTextField(usesCompactLayout: usesCompactLayout)
+                addCustomTagButton(usesCompactLayout: usesCompactLayout)
+            }
+
+            tagFilterField(usesCompactLayout: usesCompactLayout)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        } else {
+            HStack(spacing: 8) {
+                customTagTextField(usesCompactLayout: usesCompactLayout)
+                addCustomTagButton(usesCompactLayout: usesCompactLayout)
+                tagFilterField(usesCompactLayout: usesCompactLayout)
+            }
+        }
+    }
+
+    private func customTagTextField(usesCompactLayout: Bool) -> some View {
+        OS26LibraryTextEntryField(
+            text: $customTagInput,
+            placeholder: L10n.tagName,
+            minWidth: usesCompactLayout ? 0 : 220
+        )
+        .onSubmit(addCustomTag)
+        .layoutPriority(1)
+    }
+
+    @ViewBuilder
+    private func tagFilterField(usesCompactLayout: Bool) -> some View {
+        if libraryTags.isEmpty == false || artwork.tags.isEmpty == false {
+            OS26LibrarySearchField(
+                text: $filterText,
+                placeholder: L10n.bookmarkTagFilterPlaceholder,
+                minWidth: usesCompactLayout ? 128 : 160,
+                idealWidth: usesCompactLayout ? 170 : 220,
+                maxWidth: usesCompactLayout ? 210 : 280
+            )
+            .layoutPriority(usesCompactLayout ? 1 : 0)
+        }
     }
 
     private func addCustomTagButton(usesCompactLayout: Bool) -> some View {
@@ -557,8 +602,16 @@ struct BookmarkEditorView: View {
         customTagInput.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
+    private var resolvedRestrict: BookmarkRestrict {
+        restrictChoice.resolved(defaultRestrict: defaultRestrict)
+    }
+
+    private var defaultRestrict: BookmarkRestrict {
+        store.defaultBookmarkRestrict(for: artwork)
+    }
+
     private var hasUnsavedChanges: Bool {
-        restrict != initialRestrict || selectedTags != initialSelectedTags
+        resolvedRestrict != initialResolvedRestrict || selectedTags != initialSelectedTags
     }
 
     private var canSave: Bool {
@@ -589,7 +642,7 @@ struct BookmarkEditorView: View {
     }
 
     private func resetLocalEdits() {
-        restrict = initialRestrict
+        restrictChoice = initialRestrictChoice
         selectedTags = initialSelectedTags
         customTagInput = ""
         filterText = ""
@@ -628,7 +681,9 @@ struct BookmarkEditorView: View {
         do {
             let detail = try await store.bookmarkDetail(for: artwork)
             isBookmarked = detail.isBookmarked
-            restrict = detail.restrict
+            restrictChoice = detail.isBookmarked
+                ? BookmarkEditorRestrictChoice(restrict: detail.restrict)
+                : .defaultValue
             selectedTags = detail.isBookmarked
                 ? Set(detail.tags.filter(\.isRegistered).map(\.name))
                 : Set(store.automaticBookmarkTags(for: artwork))
@@ -637,9 +692,10 @@ struct BookmarkEditorView: View {
             // the user sees their existing tag picks even before the
             // suggestions endpoint returns.
             libraryTags = detail.tags.map { PixivBookmarkTag(name: $0.name, count: 0) }
-            await loadLibraryTags(for: detail.restrict)
+            await loadLibraryTags(for: resolvedRestrict)
 
-            initialRestrict = restrict
+            initialRestrictChoice = restrictChoice
+            initialResolvedRestrict = resolvedRestrict
             initialSelectedTags = selectedTags
         } catch {
             errorMessage = error.localizedDescription
@@ -661,10 +717,13 @@ struct BookmarkEditorView: View {
 
     private func applyPreviewState(_ state: BookmarkEditorPreviewState) {
         isBookmarked = state.isBookmarked
-        restrict = state.restrict
+        restrictChoice = state.isBookmarked
+            ? BookmarkEditorRestrictChoice(restrict: state.restrict)
+            : .defaultValue
         selectedTags = state.selectedTags
         libraryTags = state.libraryTags
-        initialRestrict = state.restrict
+        initialRestrictChoice = restrictChoice
+        initialResolvedRestrict = resolvedRestrict
         initialSelectedTags = state.selectedTags
     }
 
@@ -691,7 +750,7 @@ struct BookmarkEditorView: View {
         do {
             try await store.saveBookmark(
                 artwork,
-                restrict: restrict,
+                restrict: resolvedRestrict,
                 tags: Array(selectedTags).sorted { $0.localizedStandardCompare($1) == .orderedAscending }
             )
             didSave()
@@ -746,6 +805,78 @@ struct BookmarkEditorViewportTraits: Equatable, Sendable {
     }
 }
 
+private enum BookmarkEditorRestrictChoice: String, CaseIterable, Identifiable, Sendable {
+    case defaultValue
+    case `public`
+    case `private`
+
+    var id: String { rawValue }
+
+    init(restrict: BookmarkRestrict) {
+        switch restrict {
+        case .public:
+            self = .public
+        case .private:
+            self = .private
+        }
+    }
+
+    func resolved(defaultRestrict: BookmarkRestrict) -> BookmarkRestrict {
+        switch self {
+        case .defaultValue:
+            defaultRestrict
+        case .public:
+            .public
+        case .private:
+            .private
+        }
+    }
+
+    func menuTitle(defaultRestrict: BookmarkRestrict) -> String {
+        switch self {
+        case .defaultValue:
+            String(format: L10n.defaultRestrictFormat, defaultRestrict.shortTitle)
+        case .public:
+            BookmarkRestrict.public.shortTitle
+        case .private:
+            BookmarkRestrict.private.shortTitle
+        }
+    }
+
+    var buttonTitle: String {
+        switch self {
+        case .defaultValue:
+            L10n.defaultLabel
+        case .public:
+            BookmarkRestrict.public.shortTitle
+        case .private:
+            BookmarkRestrict.private.shortTitle
+        }
+    }
+
+    func accessibilityTitle(defaultRestrict: BookmarkRestrict) -> String {
+        switch self {
+        case .defaultValue:
+            String(format: L10n.defaultRestrictFormat, defaultRestrict.title)
+        case .public:
+            BookmarkRestrict.public.title
+        case .private:
+            BookmarkRestrict.private.title
+        }
+    }
+
+    func systemImage(defaultRestrict: BookmarkRestrict) -> String {
+        switch self {
+        case .defaultValue:
+            defaultRestrict.systemImage
+        case .public:
+            BookmarkRestrict.public.systemImage
+        case .private:
+            BookmarkRestrict.private.systemImage
+        }
+    }
+}
+
 private extension BookmarkRestrict {
     var shortTitle: String {
         switch self {
@@ -772,6 +903,15 @@ enum BookmarkEditorLayoutProfile: Equatable, Sendable {
 
     #if os(iOS)
     @MainActor
+    static func currentEffective(
+        override: BookmarkEditorLayoutProfile?,
+        horizontalSizeClass: UserInterfaceSizeClass?
+    ) -> BookmarkEditorLayoutProfile {
+        let liveProfile = current(horizontalSizeClass: horizontalSizeClass)
+        return effective(override: override, liveProfile: liveProfile)
+    }
+
+    @MainActor
     static func current(horizontalSizeClass: UserInterfaceSizeClass?) -> BookmarkEditorLayoutProfile {
         let scene = Self.activeWindowScene
         let activeWindowSize = Self.activeWindowSize(in: scene)
@@ -792,6 +932,16 @@ enum BookmarkEditorLayoutProfile: Equatable, Sendable {
         )
     }
     #endif
+
+    static func effective(
+        override: BookmarkEditorLayoutProfile?,
+        liveProfile: BookmarkEditorLayoutProfile
+    ) -> BookmarkEditorLayoutProfile {
+        if override == .expanded || liveProfile == .expanded {
+            return .expanded
+        }
+        return .compact
+    }
 
     static func resolve(
         containerSize: CGSize,
