@@ -117,6 +117,13 @@ enum OS26SheetPresentationStyle {
     /// Full-height editorial/detail sheet, e.g. creator profiles and
     /// reverse image search.
     case detail
+    /// Compact bookmark editor for iPhone and portrait iPad. It keeps the
+    /// same dense editor content, but presents as a form-sized sheet instead
+    /// of a page sheet.
+    case compactBookmarkEditor
+    /// Bookmark editing has dense, bounded content. Keep page-like width on
+    /// landscape iPad/Mac for complete controls.
+    case bookmarkEditor
     /// System web or reader surfaces that should start at the large
     /// detent and avoid presenting as a half sheet.
     case immersive
@@ -130,7 +137,7 @@ enum OS26SheetPresentationStyle {
             24
         case .standard:
             28
-        case .detail, .immersive, .reader:
+        case .detail, .compactBookmarkEditor, .bookmarkEditor, .immersive, .reader:
             32
         }
     }
@@ -145,6 +152,10 @@ enum OS26SheetPresentationStyle {
             return [.medium, .large]
         case .detail:
             return [.large]
+        case .compactBookmarkEditor:
+            return [.height(700)]
+        case .bookmarkEditor:
+            return [.height(760)]
         case .immersive:
             return [.large]
         case .reader:
@@ -154,27 +165,62 @@ enum OS26SheetPresentationStyle {
             return [.fraction(0.88), .large]
         }
     }
+
+    @MainActor
+    var initialDetent: PresentationDetent {
+        switch self {
+        case .form, .standard:
+            return .medium
+        case .detail, .immersive:
+            return .large
+        case .compactBookmarkEditor:
+            return .height(700)
+        case .bookmarkEditor:
+            return .height(760)
+        case .reader:
+            if ReaderPlatformKind.current == .phone {
+                return .large
+            }
+            return .fraction(0.88)
+        }
+    }
     #endif
 }
 
 private struct OS26SheetChromeModifier: ViewModifier {
     let style: OS26SheetPresentationStyle
+    #if os(iOS)
+    @State private var selectedDetent: PresentationDetent = .large
+    #endif
+
+    init(style: OS26SheetPresentationStyle) {
+        self.style = style
+        #if os(iOS)
+        _selectedDetent = State(initialValue: style.initialDetent)
+        #endif
+    }
 
     func body(content: Content) -> some View {
         #if os(iOS)
         if #available(iOS 27.0, *) {
             sizedContent(content)
                 .presentationDragIndicator(.visible)
-                .presentationDetents(style.detents)
+                .presentationDetents(style.detents, selection: $selectedDetent)
                 .presentationCornerRadius(style.cornerRadius)
                 .presentationContentInteraction(.scrolls)
+                .onAppear {
+                    selectedDetent = style.initialDetent
+                }
         } else {
             sizedContent(content)
                 .presentationDragIndicator(.visible)
-                .presentationDetents(style.detents)
+                .presentationDetents(style.detents, selection: $selectedDetent)
                 .presentationBackground(.regularMaterial)
                 .presentationCornerRadius(style.cornerRadius)
                 .presentationContentInteraction(.scrolls)
+                .onAppear {
+                    selectedDetent = style.initialDetent
+                }
         }
         #else
         sizedContent(content)
@@ -185,12 +231,15 @@ private struct OS26SheetChromeModifier: ViewModifier {
     @ViewBuilder
     private func sizedContent(_ content: Content) -> some View {
         switch style {
-        case .form, .standard:
+        case .form, .standard, .compactBookmarkEditor:
             content
                 .presentationSizing(.form)
         case .detail:
             content
                 .presentationSizing(.page)
+        case .bookmarkEditor:
+            content
+                .presentationSizing(.page.fitted(horizontal: false, vertical: true))
         case .immersive, .reader:
             content
                 .presentationSizing(.page)

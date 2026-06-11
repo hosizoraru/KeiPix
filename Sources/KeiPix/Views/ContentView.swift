@@ -14,6 +14,7 @@ struct ContentView: View {
     @State private var isSeriesSheetVisualQAPresented = false
     @State private var feedbackVisualQARequest: FeedbackReportRequest?
     @State private var creatorProfileVisualQAUser: PixivUser?
+    @State private var bookmarkEditorVisualQAArtwork: PixivArtwork?
     @Environment(\.undoManager) private var undoManager
 
     var body: some View {
@@ -202,6 +203,15 @@ struct ContentView: View {
             }
             .os26SheetChrome(.form)
         }
+        #if DEBUG
+        .sheet(item: $bookmarkEditorVisualQAArtwork) { artwork in
+            BookmarkEditorSheetView(
+                artwork: artwork,
+                store: store,
+                previewState: VisualQASampleData.bookmarkEditorPreviewState
+            )
+        }
+        #endif
         .confirmationDialog(
             store.pendingDangerAction?.title ?? L10n.moreActions,
             isPresented: dangerActionBinding,
@@ -287,6 +297,10 @@ struct ContentView: View {
             }
             if VisualQALaunchArgument.contains(.artworkDetailSocial) {
                 store.presentArtworkDetailSocialVisualQA()
+            }
+            if VisualQALaunchArgument.contains(.bookmarkEditor) {
+                store.activateVisualQASampleSession()
+                bookmarkEditorVisualQAArtwork = VisualQASampleData.bookmarkEditorArtwork
             }
             if VisualQALaunchArgument.contains(.pixivIDOpen) {
                 store.activateVisualQASampleSession()

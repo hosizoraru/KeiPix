@@ -30,6 +30,7 @@ struct ContentView: View {
     @State private var compactContentTransitionEdge: Edge = .trailing
     @State private var feedbackRequest: FeedbackReportRequest?
     @State private var statusMessage: String?
+    @State private var bookmarkEditorLayoutProfileOverride: BookmarkEditorLayoutProfile = .compact
     @AppStorage("mobileBottomTabItemIDs") private var mobileBottomTabDefaultRouteIDs = MobileBottomTabConfiguration.defaultStorageID
     @AppStorage("mobileBottomTabLaunchTarget") private var mobileBottomTabLaunchTargetID = MobileBottomTabConfiguration.defaultLaunchTarget.rawValue
     @AppStorage("mobileBottomTabRemembersLastRoute") private var mobileBottomTabRemembersLastRoute = MobileBottomTabConfiguration.defaultRemembersLastRoute
@@ -37,6 +38,7 @@ struct ContentView: View {
     @AppStorage("mobileBottomTabRememberedRouteIDs") private var mobileBottomTabRememberedRouteIDs = MobileBottomTabConfiguration.defaultStorageID
     #if DEBUG
     @State private var creatorProfileVisualQAUser: PixivUser?
+    @State private var bookmarkEditorVisualQAArtwork: PixivArtwork?
     #endif
 
     enum iPadTab: Hashable {
@@ -79,8 +81,12 @@ struct ContentView: View {
 
     var body: some View {
         adaptiveRoot
+            .environment(\.bookmarkEditorLayoutProfileOverride, bookmarkEditorLayoutProfileOverride)
             .environment(\.locale, store.appLanguage.locale ?? .current)
             .preferredColorScheme(store.appColorScheme.preferredColorScheme)
+            .onPreferenceChange(BookmarkEditorLayoutProfilePreferenceKey.self) { profile in
+                bookmarkEditorLayoutProfileOverride = profile
+            }
             .onOpenURL { url in
                 Task { await store.openPixivLink(url) }
             }
@@ -112,6 +118,13 @@ struct ContentView: View {
                     hasAppliedMobileBottomTabLaunchTarget = true
                     selectedSidebarItem = .route(.search)
                     selectedTab = .search
+                }
+                if VisualQALaunchArgument.contains(.bookmarkEditor) {
+                    store.activateVisualQASampleSession()
+                    selectedSidebarItem = .route(.illustrations)
+                    selectedTab = .feed
+                    try? await Task.sleep(for: .milliseconds(250))
+                    bookmarkEditorVisualQAArtwork = VisualQASampleData.bookmarkEditorArtwork
                 }
             }
             #endif
@@ -175,6 +188,15 @@ struct ContentView: View {
                 FeedbackReportSheet(request: request, localMuteAction: {}) { _ in }
                     .os26SheetChrome(.form)
             }
+            #if DEBUG
+            .sheet(item: $bookmarkEditorVisualQAArtwork) { artwork in
+                BookmarkEditorSheetView(
+                    artwork: artwork,
+                    store: store,
+                    previewState: VisualQASampleData.bookmarkEditorPreviewState
+                )
+            }
+            #endif
             .sheet(isPresented: readerBinding) {
                 if let artwork = store.readerWindowArtwork {
                     NavigationStack {
@@ -257,10 +279,13 @@ struct ContentView: View {
     private var adaptiveRoot: some View {
         GeometryReader { geometry in
             let layout = MobileWorkspaceLayout(size: geometry.size, platform: currentMobilePlatform)
+            let bookmarkEditorProfile: BookmarkEditorLayoutProfile = layout.usesLandscapeSidebar ? .expanded : .compact
             if layout.usesLandscapeSidebar {
                 landscapeSplitRoot
+                    .preference(key: BookmarkEditorLayoutProfilePreferenceKey.self, value: bookmarkEditorProfile)
             } else {
                 compactTabRoot(layout: layout)
+                    .preference(key: BookmarkEditorLayoutProfilePreferenceKey.self, value: bookmarkEditorProfile)
             }
         }
     }
@@ -1961,6 +1986,14 @@ private struct SearchKeywordSuggestionRow: View {
 private extension Array where Element == String {
     func containsCaseInsensitive(_ value: String) -> Bool {
         contains { $0.localizedCaseInsensitiveCompare(value) == .orderedSame }
+    }
+}
+
+private struct BookmarkEditorLayoutProfilePreferenceKey: PreferenceKey {
+    static let defaultValue: BookmarkEditorLayoutProfile = .compact
+
+    static func reduce(value: inout BookmarkEditorLayoutProfile, nextValue: () -> BookmarkEditorLayoutProfile) {
+        value = nextValue()
     }
 }
 #endif

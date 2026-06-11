@@ -52,6 +52,34 @@ enum VisualQASampleData {
         caption: "A local visual QA fixture that keeps the native detail inspector, series section, comments, related works, tags, and metadata visible without touching a real Pixiv account."
     )
 
+    static let bookmarkEditorArtwork = decodeArtwork(
+        id: 93710,
+        title: "Bookmark sheet QA sample",
+        createdAt: 1_779_638_400,
+        pageCount: 1,
+        width: 2200,
+        height: 1500,
+        tags: ["BlueArchive", "ブルアカ", "小鳥遊ホシノ", "可愛い", "女の子", "illustration"],
+        isAI: false,
+        isBookmarked: true,
+        caption: "A local visual QA fixture for the bookmark editor sheet on compact iOS, portrait iPad, landscape iPad, and macOS."
+    )
+
+    static let bookmarkEditorPreviewState = BookmarkEditorPreviewState(
+        isBookmarked: true,
+        restrict: .public,
+        selectedTags: ["BlueArchive", "小鳥遊ホシノ", "お気に入り"],
+        libraryTags: [
+            PixivBookmarkTag(name: "BlueArchive", count: 32),
+            PixivBookmarkTag(name: "小鳥遊ホシノ", count: 18),
+            PixivBookmarkTag(name: "お気に入り", count: 52),
+            PixivBookmarkTag(name: "可愛い", count: 26),
+            PixivBookmarkTag(name: "女の子", count: 40),
+            PixivBookmarkTag(name: "reference", count: 11),
+            PixivBookmarkTag(name: "wallpaper", count: 9)
+        ]
+    )
+
     static let seriesParentArtwork = decodeArtwork(
         id: 92000,
         title: "Sample long manga series",

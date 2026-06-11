@@ -460,10 +460,9 @@ private struct AdaptiveActionRow: View {
         .os26GlassButton(prominent: true)
         .controlSize(.small)
         .sheet(isPresented: $isBookmarkEditorPresented) {
-            BookmarkEditorView(artwork: artwork, store: store) {
+            BookmarkEditorSheetView(artwork: artwork, store: store) {
                 showActionMessage(String(format: L10n.savedBookmarkFormat, artwork.title))
             }
-            .os26SheetChrome(.standard)
         }
     }
 
