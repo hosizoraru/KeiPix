@@ -1467,8 +1467,12 @@ struct NativeBoundaryTests {
         #expect(sheetHeader.contains(".buttonStyle(.glass)"))
         #expect(sheetHeader.contains(".buttonBorderShape(.capsule)"))
         #expect(sheetChrome.contains("func os26SheetChrome(_ style: OS26SheetPresentationStyle = .standard)"))
+        #expect(sheetChrome.contains("case bookmarkEditor"))
         #expect(sheetChrome.contains("case reader"))
         #expect(sheetChrome.contains(".presentationSizing(.page)"))
+        #expect(sheetChrome.contains(".presentationSizing(.page.fitted(horizontal: false, vertical: true))"))
+        #expect(sheetChrome.contains("[.height(700)]"))
+        #expect(sheetChrome.contains("[.height(760)]"))
         #expect(sheetChrome.contains("[.fraction(0.88), .large]"))
         #expect(sheetChrome.contains("if #available(iOS 27.0, *)"))
         #expect(sheetChrome.contains(".presentationBackground(.regularMaterial)"))
@@ -3033,9 +3037,43 @@ struct NativeBoundaryTests {
             contentsOf: root.appending(path: "Sources/KeiPix/Views/BookmarkEditorView.swift"),
             encoding: .utf8
         )
+        let sheetChrome = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Support/SheetCloseButton.swift"),
+            encoding: .utf8
+        )
+        let artworkSummary = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/ArtworkSummaryView.swift"),
+            encoding: .utf8
+        )
+        let macContentView = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/ContentView.swift"),
+            encoding: .utf8
+        )
+        let mobileContentView = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/ContentView_iPadOS.swift"),
+            encoding: .utf8
+        )
         #expect(bookmarkEditor.contains("OS26LibraryTextEntryField(text: $customTagInput"))
         #expect(bookmarkEditor.contains("OS26LibrarySearchField("))
         #expect(bookmarkEditor.contains("OS26InlineUnavailableView("))
+        #expect(bookmarkEditor.contains("BookmarkEditorArtworkSummary("))
+        #expect(bookmarkEditor.contains("BookmarkEditorActionRow("))
+        #expect(bookmarkEditor.contains("BookmarkEditorFooterBar("))
+        #expect(bookmarkEditor.contains("struct BookmarkEditorSheetView"))
+        #expect(bookmarkEditor.contains("BookmarkEditorLayoutProfile.current(horizontalSizeClass: horizontalSizeClass)"))
+        #expect(bookmarkEditor.contains("? .compactBookmarkEditor"))
+        #expect(bookmarkEditor.contains(": .bookmarkEditor"))
+        #expect(bookmarkEditor.contains("addCustomTagButton(usesCompactLayout: usesCompactLayout)"))
+        #expect(bookmarkEditor.contains("adaptiveActionLabel("))
+        #expect(bookmarkEditor.contains(".labelStyle(.iconOnly)"))
+        #expect(bookmarkEditor.contains(".labelStyle(.titleAndIcon)"))
+        #expect(bookmarkEditor.contains("SheetHeaderActionButton(") == false)
+        #expect(bookmarkEditor.contains("ViewThatFits(in: .horizontal)") == false)
+        #expect(sheetChrome.contains("case compactBookmarkEditor"))
+        #expect(artworkSummary.contains("BookmarkEditorSheetView(artwork: artwork, store: store)"))
+        #expect(macContentView.contains("BookmarkEditorSheetView("))
+        #expect(mobileContentView.contains("BookmarkEditorSheetView("))
+        #expect(mobileContentView.contains(".os26SheetChrome(.bookmarkEditor)") == false)
 
         let relatedArtworks = try String(
             contentsOf: root.appending(path: "Sources/KeiPix/Views/ArtworkRelatedView.swift"),
