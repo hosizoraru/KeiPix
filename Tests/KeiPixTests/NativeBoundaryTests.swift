@@ -1359,7 +1359,7 @@ struct NativeBoundaryTests {
         let expectedMacOnlyFrames = [
             (
                 "Sources/KeiPix/Views/BookmarkEditorView.swift",
-                "#if os(macOS)\n        .padding(.horizontal, macOSSheetHorizontalInset)\n        .frame(width: macOSSheetOuterWidth)"
+                "#if os(macOS)\n        .frame(width: sheetMetrics.contentWidth, alignment: .topLeading)\n        .padding(.horizontal, sheetMetrics.outerHorizontalInset)\n        .frame(width: sheetMetrics.outerWidth)"
             ),
             (
                 "Sources/KeiPix/Views/FeedbackReportSheet.swift",
@@ -3223,14 +3223,25 @@ struct NativeBoundaryTests {
         #expect(bookmarkEditor.contains(".lineLimit(1)"))
         #expect(bookmarkEditor.contains("visibilityRow(usesCompactLayout:") == false)
         #expect(bookmarkEditor.contains(".pickerStyle(.segmented)") == false)
-        #expect(bookmarkEditor.contains("customTagControlRow(usesCompactLayout: usesCompactLayout)"))
-        #expect(bookmarkEditor.contains("private func customTagTextField(usesCompactLayout: Bool) -> some View"))
-        #expect(bookmarkEditor.contains("private func tagFilterField(usesCompactLayout: Bool) -> some View"))
+        #expect(bookmarkEditor.contains("customTagControlRow(usesCompactLayout: usesCompactLayout, metrics: metrics)"))
+        #expect(bookmarkEditor.contains("private func customTagTextField(\n        usesCompactLayout: Bool,\n        metrics: BookmarkEditorSheetMetrics"))
+        #expect(bookmarkEditor.contains("private func tagFilterField(\n        usesCompactLayout: Bool,\n        metrics: BookmarkEditorSheetMetrics"))
         #expect(bookmarkEditor.contains("OS26LibraryTextEntryField("))
         #expect(bookmarkEditor.contains("text: $customTagInput"))
         #expect(bookmarkEditor.contains("OS26LibrarySearchField("))
         #expect(bookmarkEditor.contains(".layoutPriority(usesCompactLayout ? 1 : 0)"))
         #expect(bookmarkEditor.contains("OS26InlineUnavailableView("))
+        #expect(bookmarkEditor.contains("let sheetMetrics = BookmarkEditorSheetMetrics(usesCompactLayout: usesCompactLayout)"))
+        #expect(bookmarkEditor.contains("BookmarkEditorHeaderRail("))
+        #expect(bookmarkEditor.contains("metrics: sheetMetrics"))
+        #expect(bookmarkEditor.contains("private struct BookmarkEditorSheetMetrics"))
+        #expect(bookmarkEditor.contains("var outerWidth: CGFloat { contentWidth + outerHorizontalInset * 2 }"))
+        #expect(bookmarkEditor.contains(".frame(width: sheetMetrics.contentWidth, alignment: .topLeading)"))
+        #expect(bookmarkEditor.contains(".padding(.horizontal, sheetMetrics.outerHorizontalInset)"))
+        #expect(bookmarkEditor.contains(".frame(width: sheetMetrics.outerWidth)"))
+        #expect(bookmarkEditor.contains("private var macOSSheetHorizontalInset: CGFloat") == false)
+        #expect(bookmarkEditor.contains("private var macOSSheetContentWidth: CGFloat") == false)
+        #expect(bookmarkEditor.contains("private var macOSSheetOuterWidth: CGFloat") == false)
         #expect(bookmarkEditor.contains("BookmarkEditorArtworkSummary("))
         #expect(bookmarkEditor.contains("BookmarkEditorArtworkSummary<Trailing: View>"))
         #expect(bookmarkEditor.contains("@ViewBuilder let trailing: () -> Trailing"))
@@ -3243,11 +3254,6 @@ struct NativeBoundaryTests {
         #expect(bookmarkEditor.contains("static func effective("))
         #expect(bookmarkEditor.contains("mobileSheetWidth(usesCompactLayout: usesCompactLayout)"))
         #expect(bookmarkEditor.contains("return (680, 720, 760)"))
-        #expect(bookmarkEditor.contains("private var macOSSheetHorizontalInset: CGFloat"))
-        #expect(bookmarkEditor.contains("private var macOSSheetContentWidth: CGFloat"))
-        #expect(bookmarkEditor.contains("private var macOSSheetOuterWidth: CGFloat"))
-        #expect(bookmarkEditor.contains(".padding(.horizontal, macOSSheetHorizontalInset)"))
-        #expect(bookmarkEditor.contains(".frame(width: macOSSheetOuterWidth)"))
         #expect(bookmarkEditor.contains("? .compactBookmarkEditor"))
         #expect(bookmarkEditor.contains(": .bookmarkEditor"))
         #expect(bookmarkEditor.contains("addCustomTagButton(usesCompactLayout: usesCompactLayout)"))

@@ -97,25 +97,27 @@ struct BookmarkEditorView: View {
 
     var body: some View {
         let usesCompactLayout = bookmarkLayoutProfile() == .compact
+        let sheetMetrics = BookmarkEditorSheetMetrics(usesCompactLayout: usesCompactLayout)
 
         VStack(alignment: .leading, spacing: 0) {
-            SheetHeaderRail(
+            BookmarkEditorHeaderRail(
                 overline: usesCompactLayout ? nil : (artwork.isBookmarked ? L10n.editBookmark : L10n.bookmark),
                 title: usesCompactLayout ? (artwork.isBookmarked ? L10n.editBookmark : L10n.bookmark) : L10n.bookmarks,
                 subtitle: String(format: L10n.bookmarkTagSelectionSummaryFormat, selectedTags.count),
-                leading: { EmptyView() },
+                metrics: sheetMetrics,
                 trailing: { restrictMenu(usesCompactLayout: usesCompactLayout) }
             )
 
             Divider()
 
             ScrollView {
-                VStack(alignment: .leading, spacing: usesCompactLayout ? 10 : 14) {
+                VStack(alignment: .leading, spacing: sheetMetrics.contentSpacing) {
                     BookmarkEditorArtworkSummary(
                         artwork: artwork,
                         isBookmarked: isBookmarked,
                         selectedTagCount: selectedTags.count,
-                        usesCompactLayout: usesCompactLayout
+                        usesCompactLayout: usesCompactLayout,
+                        metrics: sheetMetrics
                     ) {
                         BookmarkEditorActionRow(
                             pixivURL: artwork.pixivURL,
@@ -130,31 +132,34 @@ struct BookmarkEditorView: View {
                         )
                     }
 
-                    customTagRow(usesCompactLayout: usesCompactLayout)
+                    customTagRow(usesCompactLayout: usesCompactLayout, metrics: sheetMetrics)
                     if customChips.isEmpty == false {
-                        customChipsRow(usesCompactLayout: usesCompactLayout)
+                        customChipsRow(usesCompactLayout: usesCompactLayout, metrics: sheetMetrics)
                     }
                     if filteredGrouping.totalSectionCount == 0 && isLoading == false {
                         emptyStatePanel
+                            .frame(maxWidth: .infinity, alignment: .leading)
                     } else {
                         ForEach(filteredGrouping.orderedSections, id: \.source) { section in
                             tagSectionPanel(
                                 for: section.source,
                                 candidates: section.candidates,
-                                usesCompactLayout: usesCompactLayout
+                                usesCompactLayout: usesCompactLayout,
+                                metrics: sheetMetrics
                             )
                         }
                     }
                 }
-                .padding(.horizontal, usesCompactLayout ? 12 : 18)
-                .padding(.vertical, usesCompactLayout ? 10 : 14)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, sheetMetrics.contentHorizontalInset)
+                .padding(.vertical, sheetMetrics.contentVerticalInset)
             }
 
             if let errorMessage {
                 Text(errorMessage)
                     .font(.callout)
                     .foregroundStyle(.red)
-                    .padding(.horizontal, usesCompactLayout ? 16 : 20)
+                    .padding(.horizontal, sheetMetrics.contentHorizontalInset)
                     .padding(.bottom, 10)
                     .textSelection(.enabled)
             }
@@ -176,7 +181,8 @@ struct BookmarkEditorView: View {
                 },
                 save: {
                     Task { await saveBookmark() }
-                }
+                },
+                metrics: sheetMetrics
             )
         }
         #if os(iOS)
@@ -191,8 +197,9 @@ struct BookmarkEditorView: View {
         )
         #endif
         #if os(macOS)
-        .padding(.horizontal, macOSSheetHorizontalInset)
-        .frame(width: macOSSheetOuterWidth)
+        .frame(width: sheetMetrics.contentWidth, alignment: .topLeading)
+        .padding(.horizontal, sheetMetrics.outerHorizontalInset)
+        .frame(width: sheetMetrics.outerWidth)
         .frame(minHeight: 520, idealHeight: 640, maxHeight: 760)
         #endif
         .overlay(alignment: .bottom) {
@@ -272,14 +279,6 @@ struct BookmarkEditorView: View {
     }
     #endif
 
-    #if os(macOS)
-    private var macOSSheetHorizontalInset: CGFloat { 24 }
-    private var macOSSheetContentWidth: CGFloat { 720 }
-    private var macOSSheetOuterWidth: CGFloat {
-        macOSSheetContentWidth + macOSSheetHorizontalInset * 2
-    }
-    #endif
-
     // MARK: - Form rows (panel-styled, replaces Form/Section grouping so the
     // sheet renders all three tag buckets without nested scroll views).
 
@@ -330,9 +329,12 @@ struct BookmarkEditorView: View {
         }
     }
 
-    private func customTagRow(usesCompactLayout: Bool) -> some View {
+    private func customTagRow(
+        usesCompactLayout: Bool,
+        metrics: BookmarkEditorSheetMetrics
+    ) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            customTagControlRow(usesCompactLayout: usesCompactLayout)
+            customTagControlRow(usesCompactLayout: usesCompactLayout, metrics: metrics)
 
             if isLoading {
                 HStack(spacing: 8) {
@@ -343,49 +345,66 @@ struct BookmarkEditorView: View {
                 }
             }
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, usesCompactLayout ? 10 : 12)
-        .keiGlass(usesCompactLayout ? 12 : 14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, metrics.panelHorizontalInset)
+        .padding(.vertical, metrics.panelVerticalInset)
+        .keiGlass(metrics.panelCornerRadius)
     }
 
     @ViewBuilder
-    private func customTagControlRow(usesCompactLayout: Bool) -> some View {
+    private func customTagControlRow(
+        usesCompactLayout: Bool,
+        metrics: BookmarkEditorSheetMetrics
+    ) -> some View {
         if usesCompactLayout {
-            HStack(spacing: 8) {
-                customTagTextField(usesCompactLayout: usesCompactLayout)
+            HStack(spacing: metrics.controlRowSpacing) {
+                customTagTextField(usesCompactLayout: usesCompactLayout, metrics: metrics)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 addCustomTagButton(usesCompactLayout: usesCompactLayout)
+                    .fixedSize(horizontal: true, vertical: false)
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
 
-            tagFilterField(usesCompactLayout: usesCompactLayout)
+            tagFilterField(usesCompactLayout: usesCompactLayout, metrics: metrics)
                 .frame(maxWidth: .infinity, alignment: .leading)
         } else {
-            HStack(spacing: 8) {
-                customTagTextField(usesCompactLayout: usesCompactLayout)
+            HStack(spacing: metrics.controlRowSpacing) {
+                customTagTextField(usesCompactLayout: usesCompactLayout, metrics: metrics)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 addCustomTagButton(usesCompactLayout: usesCompactLayout)
-                tagFilterField(usesCompactLayout: usesCompactLayout)
+                    .fixedSize(horizontal: true, vertical: false)
+                tagFilterField(usesCompactLayout: usesCompactLayout, metrics: metrics)
+                    .fixedSize(horizontal: true, vertical: false)
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 
-    private func customTagTextField(usesCompactLayout: Bool) -> some View {
+    private func customTagTextField(
+        usesCompactLayout: Bool,
+        metrics: BookmarkEditorSheetMetrics
+    ) -> some View {
         OS26LibraryTextEntryField(
             text: $customTagInput,
             placeholder: L10n.tagName,
-            minWidth: usesCompactLayout ? 0 : 220
+            minWidth: metrics.tagTextFieldMinWidth
         )
         .onSubmit(addCustomTag)
         .layoutPriority(1)
     }
 
     @ViewBuilder
-    private func tagFilterField(usesCompactLayout: Bool) -> some View {
+    private func tagFilterField(
+        usesCompactLayout: Bool,
+        metrics: BookmarkEditorSheetMetrics
+    ) -> some View {
         if libraryTags.isEmpty == false || artwork.tags.isEmpty == false {
             OS26LibrarySearchField(
                 text: $filterText,
                 placeholder: L10n.bookmarkTagFilterPlaceholder,
-                minWidth: usesCompactLayout ? 128 : 160,
-                idealWidth: usesCompactLayout ? 170 : 220,
-                maxWidth: usesCompactLayout ? 210 : 280
+                minWidth: metrics.filterFieldMinWidth,
+                idealWidth: metrics.filterFieldIdealWidth,
+                maxWidth: metrics.filterFieldMaxWidth
             )
             .layoutPriority(usesCompactLayout ? 1 : 0)
         }
@@ -430,7 +449,10 @@ struct BookmarkEditorView: View {
 
     /// Custom chips live above the three primary buckets so the user can
     /// see what they've typed without it counting as a section header.
-    private func customChipsRow(usesCompactLayout: Bool) -> some View {
+    private func customChipsRow(
+        usesCompactLayout: Bool,
+        metrics: BookmarkEditorSheetMetrics
+    ) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(alignment: .firstTextBaseline, spacing: 8) {
                 Label(L10n.bookmarkTagSectionCustom, systemImage: "plus.circle")
@@ -456,9 +478,10 @@ struct BookmarkEditorView: View {
                 }
             }
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, usesCompactLayout ? 10 : 12)
-        .keiGlass(usesCompactLayout ? 12 : 14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, metrics.panelHorizontalInset)
+        .padding(.vertical, metrics.panelVerticalInset)
+        .keiGlass(metrics.panelCornerRadius)
     }
 
     private var emptyStatePanel: some View {
@@ -473,7 +496,8 @@ struct BookmarkEditorView: View {
     private func tagSectionPanel(
         for source: BookmarkTagSource,
         candidates: [BookmarkTagCandidate],
-        usesCompactLayout: Bool
+        usesCompactLayout: Bool,
+        metrics: BookmarkEditorSheetMetrics
     ) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(alignment: .firstTextBaseline, spacing: 8) {
@@ -514,9 +538,10 @@ struct BookmarkEditorView: View {
                     .foregroundStyle(.secondary)
             }
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, usesCompactLayout ? 10 : 12)
-        .keiGlass(usesCompactLayout ? 12 : 14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, metrics.panelHorizontalInset)
+        .padding(.vertical, metrics.panelVerticalInset)
+        .keiGlass(metrics.panelCornerRadius)
     }
 
     @ViewBuilder
@@ -1089,11 +1114,98 @@ extension EnvironmentValues {
     }
 }
 
+private struct BookmarkEditorSheetMetrics {
+    let usesCompactLayout: Bool
+
+    var contentWidth: CGFloat { 720 }
+    var outerHorizontalInset: CGFloat {
+        #if os(macOS)
+        24
+        #else
+        0
+        #endif
+    }
+    var outerWidth: CGFloat { contentWidth + outerHorizontalInset * 2 }
+
+    var contentHorizontalInset: CGFloat { usesCompactLayout ? 12 : 18 }
+    var contentVerticalInset: CGFloat { 10 }
+    var contentSpacing: CGFloat { 10 }
+
+    var panelHorizontalInset: CGFloat { usesCompactLayout ? 12 : 14 }
+    var panelVerticalInset: CGFloat { usesCompactLayout ? 10 : 12 }
+    var panelCornerRadius: CGFloat { usesCompactLayout ? 12 : 14 }
+    var summaryCornerRadius: CGFloat { usesCompactLayout ? 12 : 16 }
+
+    var headerVerticalInset: CGFloat { usesCompactLayout ? 10 : 12 }
+    var headerTopInset: CGFloat { 6 }
+    var headerBottomInset: CGFloat { 6 }
+
+    var footerHorizontalInset: CGFloat { contentHorizontalInset }
+    var footerVerticalInset: CGFloat { usesCompactLayout ? 12 : 10 }
+    var footerSpacing: CGFloat { usesCompactLayout ? 8 : 10 }
+
+    var controlRowSpacing: CGFloat { 8 }
+    var tagTextFieldMinWidth: CGFloat { usesCompactLayout ? 0 : 180 }
+    var filterFieldMinWidth: CGFloat { usesCompactLayout ? 128 : 150 }
+    var filterFieldIdealWidth: CGFloat { usesCompactLayout ? 170 : 190 }
+    var filterFieldMaxWidth: CGFloat { usesCompactLayout ? 210 : 220 }
+}
+
+private struct BookmarkEditorHeaderRail<Trailing: View>: View {
+    let overline: String?
+    let title: String
+    let subtitle: String
+    let metrics: BookmarkEditorSheetMetrics
+    @ViewBuilder let trailing: () -> Trailing
+
+    var body: some View {
+        HStack(alignment: .center, spacing: 14) {
+            VStack(alignment: .leading, spacing: 3) {
+                if let overline {
+                    Text(overline)
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                        .textCase(.uppercase)
+                        .tracking(0.4)
+                }
+
+                Text(title)
+                    .font(.title3.weight(.semibold))
+                    .lineLimit(2)
+                    .multilineTextAlignment(.leading)
+
+                if subtitle.isEmpty == false {
+                    Text(subtitle)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(2)
+                }
+            }
+
+            Spacer(minLength: 12)
+
+            HStack(spacing: 8) {
+                trailing()
+                SheetCloseButton(style: .plain)
+            }
+            .fixedSize(horizontal: true, vertical: false)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, metrics.panelHorizontalInset)
+        .padding(.vertical, metrics.headerVerticalInset)
+        .keiGlass(metrics.summaryCornerRadius)
+        .padding(.horizontal, metrics.contentHorizontalInset)
+        .padding(.top, metrics.headerTopInset)
+        .padding(.bottom, metrics.headerBottomInset)
+    }
+}
+
 private struct BookmarkEditorArtworkSummary<Trailing: View>: View {
     let artwork: PixivArtwork
     let isBookmarked: Bool
     let selectedTagCount: Int
     let usesCompactLayout: Bool
+    let metrics: BookmarkEditorSheetMetrics
     @ViewBuilder let trailing: () -> Trailing
 
     var body: some View {
@@ -1127,10 +1239,12 @@ private struct BookmarkEditorArtworkSummary<Trailing: View>: View {
             Spacer(minLength: 8)
 
             trailing()
+                .fixedSize(horizontal: true, vertical: false)
         }
-        .padding(.horizontal, usesCompactLayout ? 12 : 14)
-        .padding(.vertical, usesCompactLayout ? 10 : 14)
-        .keiGlass(usesCompactLayout ? 12 : 16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, metrics.panelHorizontalInset)
+        .padding(.vertical, metrics.panelVerticalInset)
+        .keiGlass(metrics.summaryCornerRadius)
     }
 }
 
@@ -1199,10 +1313,11 @@ private struct BookmarkEditorFooterBar: View {
     let remove: () -> Void
     let reset: () -> Void
     let save: () -> Void
+    let metrics: BookmarkEditorSheetMetrics
 
     var body: some View {
         if usesCompactLayout {
-            HStack(spacing: 8) {
+            HStack(spacing: metrics.footerSpacing) {
                 if isBookmarked {
                     removeButton
                 }
@@ -1211,10 +1326,10 @@ private struct BookmarkEditorFooterBar: View {
                 resetButton
                 saveButton
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
+            .padding(.horizontal, metrics.footerHorizontalInset)
+            .padding(.vertical, metrics.footerVerticalInset)
         } else {
-            HStack(spacing: 10) {
+            HStack(spacing: metrics.footerSpacing) {
                 if isBookmarked {
                     removeButton
                 }
@@ -1223,7 +1338,8 @@ private struct BookmarkEditorFooterBar: View {
                 resetButton
                 saveButton
             }
-            .padding(20)
+            .padding(.horizontal, metrics.footerHorizontalInset)
+            .padding(.vertical, metrics.footerVerticalInset)
         }
     }
 
