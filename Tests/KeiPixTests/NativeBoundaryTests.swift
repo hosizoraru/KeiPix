@@ -1359,7 +1359,7 @@ struct NativeBoundaryTests {
         let expectedMacOnlyFrames = [
             (
                 "Sources/KeiPix/Views/BookmarkEditorView.swift",
-                "#if os(macOS)\n        .frame(width: 720)"
+                "#if os(macOS)\n        .padding(.horizontal, macOSSheetHorizontalInset)\n        .frame(width: macOSSheetOuterWidth)"
             ),
             (
                 "Sources/KeiPix/Views/FeedbackReportSheet.swift",
@@ -3243,6 +3243,11 @@ struct NativeBoundaryTests {
         #expect(bookmarkEditor.contains("static func effective("))
         #expect(bookmarkEditor.contains("mobileSheetWidth(usesCompactLayout: usesCompactLayout)"))
         #expect(bookmarkEditor.contains("return (680, 720, 760)"))
+        #expect(bookmarkEditor.contains("private var macOSSheetHorizontalInset: CGFloat"))
+        #expect(bookmarkEditor.contains("private var macOSSheetContentWidth: CGFloat"))
+        #expect(bookmarkEditor.contains("private var macOSSheetOuterWidth: CGFloat"))
+        #expect(bookmarkEditor.contains(".padding(.horizontal, macOSSheetHorizontalInset)"))
+        #expect(bookmarkEditor.contains(".frame(width: macOSSheetOuterWidth)"))
         #expect(bookmarkEditor.contains("? .compactBookmarkEditor"))
         #expect(bookmarkEditor.contains(": .bookmarkEditor"))
         #expect(bookmarkEditor.contains("addCustomTagButton(usesCompactLayout: usesCompactLayout)"))

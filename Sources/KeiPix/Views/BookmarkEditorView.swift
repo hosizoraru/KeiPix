@@ -191,7 +191,8 @@ struct BookmarkEditorView: View {
         )
         #endif
         #if os(macOS)
-        .frame(width: 720)
+        .padding(.horizontal, macOSSheetHorizontalInset)
+        .frame(width: macOSSheetOuterWidth)
         .frame(minHeight: 520, idealHeight: 640, maxHeight: 760)
         #endif
         .overlay(alignment: .bottom) {
@@ -268,6 +269,14 @@ struct BookmarkEditorView: View {
             return fallback
         }
         return min(fallback, activeWindowSize.height * 0.84)
+    }
+    #endif
+
+    #if os(macOS)
+    private var macOSSheetHorizontalInset: CGFloat { 24 }
+    private var macOSSheetContentWidth: CGFloat { 720 }
+    private var macOSSheetOuterWidth: CGFloat {
+        macOSSheetContentWidth + macOSSheetHorizontalInset * 2
     }
     #endif
 
