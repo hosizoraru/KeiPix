@@ -413,7 +413,7 @@ private struct GalleryFeedView: View {
                 }
             }
         }
-        .platformGlassControlBar(verticalPadding: 6, topPadding: 2, bottomPadding: 8)
+        .platformGlassControlBar(verticalPadding: 6, topPadding: 0, bottomPadding: 4)
     }
 
     private var iPadFeedTitleLine: some View {

@@ -29,7 +29,6 @@ struct FeedHeaderView: View {
     @State private var isApplyingBatchBookmark = false
     @State private var draftUseRankingDate = false
     @State private var draftRankingDate = KeiPixStore.latestSelectableRankingDate()
-    @State private var isInlineFilterExpanded = false
 
     init(
         store: KeiPixStore,
@@ -83,76 +82,20 @@ struct FeedHeaderView: View {
 
     @ViewBuilder
     private var iPadCompactHeaderActions: some View {
-        ViewThatFits(in: .horizontal) {
-            iPadCompactHeaderInlineActions
-            iPadCompactHeaderStackedActions
-        }
-        .frame(maxWidth: .infinity, alignment: .trailing)
-    }
-
-    @ViewBuilder
-    private var iPadCompactHeaderInlineActions: some View {
-        HStack(spacing: 7) {
-            if showsFeedCountBadge {
-                feedCountBadge
-            }
-            if showsActiveFeedClearChip {
-                activeFeedClearChip
-            }
-
-            if store.artworks.isEmpty == false {
-                iPadCompactFilterControl(expandedWidth: 300)
-
-                iPadCompactRandomButton
-            }
-
-            if store.selectedRoute.isOwnBookmarkRoute {
-                bookmarkFiltersMenu
-            }
-
-            if store.artworks.isEmpty == false {
-                compactSelectionMenu
-            }
-
-            compactMoreActionsMenu
-        }
-        .frame(maxWidth: .infinity, alignment: .trailing)
-    }
-
-    @ViewBuilder
-    private var iPadCompactHeaderStackedActions: some View {
         VStack(alignment: .trailing, spacing: 7) {
-            if store.artworks.isEmpty == false, showsExpandedInlineFilter {
+            if store.artworks.isEmpty == false, showsInlineHeaderFilter {
                 iPadCompactFilterControl(expandedWidth: nil)
             }
 
             HStack(spacing: 7) {
-                if showsFeedCountBadge {
-                    feedCountBadge
-                }
                 if showsActiveFeedClearChip {
                     activeFeedClearChip
                 }
 
-                if store.artworks.isEmpty == false, showsExpandedInlineFilter == false {
-                    iPadCompactFilterControl(expandedWidth: nil)
-                }
-
-                if store.artworks.isEmpty == false {
-                    iPadCompactRandomButton
-                }
-
-                if store.selectedRoute.isOwnBookmarkRoute {
-                    bookmarkFiltersMenu
-                }
-
-                if store.artworks.isEmpty == false {
-                    compactSelectionMenu
-                }
-
-                compactMoreActionsMenu
+                compactFeedActionsMenu
             }
         }
+        .frame(maxWidth: .infinity, alignment: .trailing)
     }
 
     #if os(iOS)
@@ -166,57 +109,37 @@ struct FeedHeaderView: View {
 
     @ViewBuilder
     private func iPadCompactFilterControl(expandedWidth: CGFloat?) -> some View {
-        if usesPhoneFilterDisclosure, isInlineFilterExpanded == false, store.clientFilterQuery.isEmpty {
-            Button {
-                withAnimation(.snappy(duration: 0.18)) {
-                    isInlineFilterExpanded = true
-                }
-            } label: {
-                Label(L10n.filterArtworks, systemImage: "line.3.horizontal.decrease.circle")
-            }
-            .help(L10n.filterArtworks)
-            .accessibilityLabel(L10n.filterArtworks)
-            .iPadFeedHeaderActionChrome()
-        } else {
-            HStack(spacing: 7) {
-                iPadCompactFilterField
-                    .frame(
-                        minWidth: usesPhoneFilterDisclosure ? 170 : 180,
-                        idealWidth: usesPhoneFilterDisclosure ? 220 : 240,
-                        maxWidth: expandedWidth ?? .infinity,
-                        minHeight: 34,
-                        maxHeight: 34
-                    )
-                    .layoutPriority(1)
+        HStack(spacing: 7) {
+            iPadCompactFilterField
+                .frame(
+                    minWidth: 180,
+                    idealWidth: 240,
+                    maxWidth: expandedWidth ?? .infinity,
+                    minHeight: 34,
+                    maxHeight: 34
+                )
+                .layoutPriority(1)
 
-                if usesPhoneFilterDisclosure {
-                    Button {
-                        withAnimation(.snappy(duration: 0.16)) {
-                            if store.clientFilterQuery.isEmpty {
-                                isInlineFilterExpanded = false
-                            } else {
-                                store.clientFilterQuery = ""
-                            }
-                        }
-                    } label: {
-                        Label(
-                            store.clientFilterQuery.isEmpty ? L10n.close : L10n.clearSearch,
-                            systemImage: "xmark.circle.fill"
-                        )
+            if store.clientFilterQuery.isEmpty == false {
+                Button {
+                    withAnimation(.snappy(duration: 0.16)) {
+                        store.clientFilterQuery = ""
                     }
-                    .help(store.clientFilterQuery.isEmpty ? L10n.close : L10n.clearSearch)
-                    .accessibilityLabel(store.clientFilterQuery.isEmpty ? L10n.close : L10n.clearSearch)
-                    .iPadFeedHeaderActionChrome()
+                } label: {
+                    Label(L10n.clearSearch, systemImage: "xmark.circle.fill")
                 }
+                .help(L10n.clearSearch)
+                .accessibilityLabel(L10n.clearSearch)
+                .iPadFeedHeaderActionChrome()
             }
         }
     }
 
-    private var showsExpandedInlineFilter: Bool {
-        usesPhoneFilterDisclosure && (isInlineFilterExpanded || store.clientFilterQuery.isEmpty == false)
+    private var showsInlineHeaderFilter: Bool {
+        UIDevice.current.userInterfaceIdiom != .phone
     }
 
-    private var usesPhoneFilterDisclosure: Bool {
+    private var usesPhoneCurrentFeedFilterOverlay: Bool {
         UIDevice.current.userInterfaceIdiom == .phone
     }
     #else
@@ -228,7 +151,7 @@ struct FeedHeaderView: View {
         iPadCompactFilterField
     }
 
-    private var showsExpandedInlineFilter: Bool {
+    private var showsInlineHeaderFilter: Bool {
         false
     }
     #endif
@@ -244,6 +167,175 @@ struct FeedHeaderView: View {
         .iPadFeedHeaderActionChrome()
     }
 
+    private var compactFeedActionsMenu: some View {
+        Menu {
+            if store.artworks.isEmpty == false {
+                Section(L10n.viewOptions) {
+                    Button {
+                        _ = store.randomFromCurrentFeed(opensDetail: false)
+                    } label: {
+                        Label(L10n.randomFromFeed, systemImage: "shuffle")
+                    }
+                }
+            }
+
+            if store.selectedRoute.isOwnBookmarkRoute {
+                Section(L10n.bookmarkFilters) {
+                    bookmarkFiltersSubmenu
+                }
+            }
+
+            if store.artworks.isEmpty == false {
+                Section(selectionTitle) {
+                    Toggle(isOn: selectionModeBinding) {
+                        Label(L10n.selectionMode, systemImage: "checkmark.circle")
+                    }
+
+                    Button {
+                        artworkSelection.selectAll(store.artworks.map(\.id))
+                    } label: {
+                        Label(L10n.selectAll, systemImage: "checkmark.circle.fill")
+                    }
+
+                    Button {
+                        artworkSelection.clear()
+                    } label: {
+                        Label(L10n.clearSelection, systemImage: "xmark.circle")
+                    }
+                    .disabled(artworkSelection.hasSelection == false)
+
+                    Button {
+                        copySelectedArtworkLinks()
+                    } label: {
+                        Label(L10n.copySelectedArtworkLinks, systemImage: "link")
+                    }
+                    .disabled(selectedArtworkLinks.isEmpty)
+
+                    Button {
+                        presentBatchDownload(artworks: selectedArtworks)
+                    } label: {
+                        Label(L10n.batchDownload, systemImage: "square.and.arrow.down.on.square")
+                    }
+                    .disabled(selectedArtworks.isEmpty)
+
+                    Button {
+                        presentBatchBookmarkPreview(artworks: selectedArtworks, scope: .selectedWorks)
+                    } label: {
+                        Label(L10n.batchBookmarkSelected, systemImage: "bookmark")
+                    }
+                    .disabled(selectedArtworks.isEmpty)
+
+                    Menu {
+                        ForEach(BulkMuteTarget.allCases) { target in
+                            Button {
+                                presentBulkMutePreview(target, artworks: selectedArtworks)
+                            } label: {
+                                Label(target.title, systemImage: target.systemImage)
+                            }
+                            .disabled(selectedArtworks.isEmpty)
+                        }
+                    } label: {
+                        Label(L10n.bulkMutePreview, systemImage: "eye.slash")
+                    }
+                    .disabled(selectedArtworks.isEmpty)
+                }
+            }
+
+            Section(L10n.moreActions) {
+                Button {
+                    copyLoadedArtworkLinks()
+                } label: {
+                    Label(L10n.copyLoadedArtworkLinks, systemImage: "link")
+                }
+                .disabled(loadedArtworkLinks.isEmpty)
+
+                Button {
+                    presentBatchDownload(artworks: store.artworks)
+                } label: {
+                    Label(L10n.batchDownload, systemImage: "square.and.arrow.down.on.square")
+                }
+                .disabled(store.artworks.isEmpty)
+
+                Button {
+                    presentBatchBookmarkPreview(artworks: store.artworks, scope: .loadedFeed)
+                } label: {
+                    Label(L10n.batchBookmark, systemImage: "bookmark")
+                }
+                .disabled(store.artworks.isEmpty)
+
+                Menu {
+                    ForEach(BulkMuteTarget.allCases) { target in
+                        Button {
+                            presentBulkMutePreview(target, artworks: store.artworks)
+                        } label: {
+                            Label(target.title, systemImage: target.systemImage)
+                        }
+                        .disabled(store.artworks.isEmpty)
+                    }
+                } label: {
+                    Label(L10n.bulkMutePreview, systemImage: "eye.slash")
+                }
+                .disabled(store.artworks.isEmpty)
+            }
+        } label: {
+            Label(L10n.moreActions, systemImage: compactFeedActionsSystemImage)
+        }
+        .help(compactFeedActionsAccessibilityLabel)
+        .accessibilityLabel(compactFeedActionsAccessibilityLabel)
+        .tint(compactFeedActionsAreActive ? .accentColor : nil)
+        .iPadFeedHeaderActionChrome()
+        .popover(isPresented: $isBatchDownloadPresented, arrowEdge: .bottom) {
+            BatchDownloadPopover(
+                limit: $batchDownloadLimit,
+                maxLimit: maxBatchDownloadLimit,
+                queuedCount: lastQueuedDownloadCount,
+                downloadDirectoryPath: store.downloads.downloadDirectoryPath,
+                action: queueBatchDownload
+            )
+        }
+        .popover(item: $bulkMutePreview, arrowEdge: .bottom) { preview in
+            BulkMutePreviewPopover(
+                preview: preview,
+                cancel: {
+                    bulkMutePreview = nil
+                },
+                apply: {
+                    applyBulkMutePreview(preview)
+                }
+            )
+        }
+        .popover(item: $batchBookmarkPreview, arrowEdge: .bottom) { preview in
+            BatchBookmarkPreviewPopover(
+                preview: preview,
+                isApplying: isApplyingBatchBookmark,
+                cancel: {
+                    batchBookmarkPreview = nil
+                },
+                apply: {
+                    applyBatchBookmarkPreview(preview)
+                }
+            )
+        }
+    }
+
+    private var compactFeedActionsSystemImage: String {
+        compactFeedActionsAreActive ? "slider.horizontal.3" : "ellipsis.circle"
+    }
+
+    private var compactFeedActionsAreActive: Bool {
+        store.clientFilterQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false
+            || bookmarkFiltersActiveCount > 0
+            || artworkSelection.hasSelection
+            || artworkSelection.isSelectionMode
+    }
+
+    private var compactFeedActionsAccessibilityLabel: String {
+        if showsFeedCountBadge, shouldShowFeedCountBadge {
+            return "\(L10n.moreActions), \(compactFeedCountAccessibilityText)"
+        }
+        return L10n.moreActions
+    }
+
     @ViewBuilder
     private var headerActions: some View {
         feedCountBadge
@@ -253,22 +345,24 @@ struct FeedHeaderView: View {
             #if os(macOS)
             macOSFilterField
             #else
-            HStack(spacing: 6) {
-                Image(systemName: "line.3.horizontal.decrease.circle")
-                    .foregroundStyle(.secondary)
-                TextField(L10n.filterArtworks, text: $store.clientFilterQuery)
-                    .textFieldStyle(.roundedBorder)
-                    .frame(minWidth: 140, idealWidth: 200, maxWidth: 280)
-                if store.clientFilterQuery.isEmpty == false {
-                    Button {
-                        store.clientFilterQuery = ""
-                    } label: {
-                        Image(systemName: "xmark.circle.fill")
-                            .foregroundStyle(.secondary)
+            if usesPhoneCurrentFeedFilterOverlay == false {
+                HStack(spacing: 6) {
+                    Image(systemName: "line.3.horizontal.decrease.circle")
+                        .foregroundStyle(.secondary)
+                    TextField(L10n.filterArtworks, text: $store.clientFilterQuery)
+                        .textFieldStyle(.roundedBorder)
+                        .frame(minWidth: 140, idealWidth: 200, maxWidth: 280)
+                    if store.clientFilterQuery.isEmpty == false {
+                        Button {
+                            store.clientFilterQuery = ""
+                        } label: {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundStyle(.secondary)
+                        }
+                        .buttonStyle(.plain)
+                        .help(L10n.clearSearch)
+                        .accessibilityLabel(L10n.clearSearch)
                     }
-                    .buttonStyle(.plain)
-                    .help(L10n.clearSearch)
-                    .accessibilityLabel(L10n.clearSearch)
                 }
             }
             #endif
@@ -553,6 +647,13 @@ struct FeedHeaderView: View {
     #endif
 
     private var bookmarkFiltersMenu: some View {
+        bookmarkFiltersSubmenu
+            .help(bookmarkFilterTitle)
+            .accessibilityLabel(bookmarkFilterTitle)
+            .feedHeaderActionChrome()
+    }
+
+    private var bookmarkFiltersSubmenu: some View {
         Menu {
             bookmarkSortMenu
             bookmarkAgeLimitMenu
@@ -566,9 +667,6 @@ struct FeedHeaderView: View {
         } label: {
             Label(bookmarkFilterTitle, systemImage: bookmarkFilterSystemImage)
         }
-        .help(bookmarkFilterTitle)
-        .accessibilityLabel(bookmarkFilterTitle)
-        .feedHeaderActionChrome()
     }
 
     private var bookmarkSupportMenu: some View {

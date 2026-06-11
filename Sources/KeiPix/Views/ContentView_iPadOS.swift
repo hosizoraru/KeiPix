@@ -30,6 +30,7 @@ struct ContentView: View {
     @State private var compactContentTransitionEdge: Edge = .trailing
     @State private var feedbackRequest: FeedbackReportRequest?
     @State private var statusMessage: String?
+    @State private var isPhoneCollapsedFeedFilterVisible = false
     @State private var bookmarkEditorLayoutProfileOverride: BookmarkEditorLayoutProfile = .compact
     @AppStorage("mobileBottomTabItemIDs") private var mobileBottomTabDefaultRouteIDs = MobileBottomTabConfiguration.defaultStorageID
     @AppStorage("mobileBottomTabLaunchTarget") private var mobileBottomTabLaunchTargetID = MobileBottomTabConfiguration.defaultLaunchTarget.rawValue
@@ -95,6 +96,7 @@ struct ContentView: View {
             }
             .onChange(of: store.selectedRoute) { _, route in
                 recordMobileBottomTabRouteIfNeeded(route)
+                isPhoneCollapsedFeedFilterVisible = false
             }
             #if DEBUG
             .task {
@@ -329,6 +331,18 @@ struct ContentView: View {
             )
                 .allowsHitTesting(false)
         }
+        .overlay(alignment: .bottom) {
+            if showsPhoneCollapsedFeedFilter(layout: layout) {
+                PhoneCollapsedFeedFilterBar(
+                    text: $store.clientFilterQuery,
+                    resultText: phoneCollapsedFeedFilterResultText
+                )
+                .padding(.horizontal, 14)
+                .padding(.bottom, 8)
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+        }
+        .animation(.snappy(duration: 0.18), value: showsPhoneCollapsedFeedFilter(layout: layout))
         .onAppear {
             isCompactCustomTabRootActive = layout.usesCustomNavigationTabs
             if layout.usesCustomNavigationTabs {
@@ -841,10 +855,13 @@ struct ContentView: View {
                 }
             }
         } label: {
-            Label(store.selectedRoute.title, systemImage: store.selectedRoute.systemImage)
-                .lineLimit(1)
+            CompactRouteMenuLabel(
+                title: store.selectedRoute.title,
+                systemImage: store.selectedRoute.systemImage,
+                badgeText: routeMenuArtworkCountBadgeText
+            )
         }
-        .accessibilityLabel("\(L10n.currentRoute): \(store.selectedRoute.title)")
+        .accessibilityLabel(routeMenuAccessibilityLabel)
     }
 
     private var routeMenuSections: [MobileRouteMenuSection] {
@@ -885,6 +902,21 @@ struct ContentView: View {
 
     private func showsArtworkActionsMenu(showsSidebarToggle: Bool) -> Bool {
         showsSidebarToggle && store.selectedRoute.usesArtworkFeed
+    }
+
+    private var routeMenuArtworkCountBadgeText: String? {
+        guard store.selectedRoute.usesArtworkFeed else { return nil }
+        let hasLocalFilter = store.clientFilterQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false
+        let count = hasLocalFilter ? store.clientFilteredArtworks.count : store.artworks.count
+        guard count > 0 else { return nil }
+        return count > 999 ? "999+" : "\(count)"
+    }
+
+    private var routeMenuAccessibilityLabel: String {
+        guard let routeMenuArtworkCountBadgeText else {
+            return "\(L10n.currentRoute): \(store.selectedRoute.title)"
+        }
+        return "\(L10n.currentRoute): \(store.selectedRoute.title), \(routeMenuArtworkCountBadgeText) \(L10n.results)"
     }
 
     private var selectedArtworkMenuSystemImage: String {
@@ -1441,7 +1473,8 @@ struct ContentView: View {
                 SearchWorkspaceView(
                     store: store,
                     galleryLayoutAdaptation: galleryLayoutAdaptation(showsSidebarToggle: showsSidebarToggle),
-                    headerLayout: showsSidebarToggle ? .adaptive : .compact
+                    headerLayout: showsSidebarToggle ? .adaptive : .compact,
+                    onGalleryScrollDirectionChange: galleryScrollDirectionHandler(showsSidebarToggle: showsSidebarToggle)
                 )
             } else if store.selectedRoute == .bookmarkTags {
                 BookmarkTagsView(store: store)
@@ -1466,7 +1499,8 @@ struct ContentView: View {
             } else {
                 GalleryView(
                     store: store,
-                    galleryLayoutAdaptation: galleryLayoutAdaptation(showsSidebarToggle: showsSidebarToggle)
+                    galleryLayoutAdaptation: galleryLayoutAdaptation(showsSidebarToggle: showsSidebarToggle),
+                    onGalleryScrollDirectionChange: galleryScrollDirectionHandler(showsSidebarToggle: showsSidebarToggle)
                 )
             }
         }
@@ -1544,6 +1578,48 @@ struct ContentView: View {
 
     private var compactUITabBarMinimizeBehavior: UITabBarController.MinimizeBehavior {
         isCompactCustomTabRootActive ? .onScrollDown : .automatic
+    }
+
+    private func galleryScrollDirectionHandler(
+        showsSidebarToggle: Bool
+    ) -> ((NativeGalleryScrollDirection) -> Void)? {
+        guard currentMobilePlatform == .phone, showsSidebarToggle == false else {
+            return nil
+        }
+        return { direction in
+            handlePhoneGalleryScrollDirection(direction)
+        }
+    }
+
+    private func handlePhoneGalleryScrollDirection(_ direction: NativeGalleryScrollDirection) {
+        guard currentMobilePlatform == .phone,
+              store.selectedRoute.usesArtworkFeed else {
+            isPhoneCollapsedFeedFilterVisible = false
+            return
+        }
+
+        withAnimation(.snappy(duration: 0.18)) {
+            isPhoneCollapsedFeedFilterVisible = direction == .towardContentEnd
+        }
+    }
+
+    private func showsPhoneCollapsedFeedFilter(layout: MobileWorkspaceLayout) -> Bool {
+        layout.platform == .phone
+            && isCompactCustomTabRootActive
+            && isPhoneCollapsedFeedFilterVisible
+            && store.selectedRoute.usesArtworkFeed
+            && (store.artworks.isEmpty == false || phoneHasActiveFeedFilter)
+    }
+
+    private var phoneHasActiveFeedFilter: Bool {
+        store.clientFilterQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false
+    }
+
+    private var phoneCollapsedFeedFilterResultText: String {
+        guard phoneHasActiveFeedFilter else {
+            return "\(store.artworks.count.formatted()) \(L10n.results)"
+        }
+        return "\(store.clientFilteredArtworks.count.formatted())/\(store.artworks.count.formatted()) \(L10n.results)"
     }
 
     private func compactTabBarSyncID(layout: MobileWorkspaceLayout) -> String {
@@ -1638,6 +1714,7 @@ struct ContentView: View {
             if store.selectedRoute != route {
                 store.select(route)
             }
+            isPhoneCollapsedFeedFilterVisible = false
         }
     }
 
@@ -1668,6 +1745,7 @@ struct ContentView: View {
             if store.selectedRoute != route {
                 store.select(route)
             }
+            isPhoneCollapsedFeedFilterVisible = false
         }
     }
 
@@ -1682,6 +1760,7 @@ struct ContentView: View {
             if store.selectedRoute != route {
                 store.select(route)
             }
+            isPhoneCollapsedFeedFilterVisible = false
         }
     }
 
@@ -1911,6 +1990,87 @@ private struct MobileGlobalSearchModifier: ViewModifier {
                 }
         } else {
             content
+        }
+    }
+}
+
+private struct PhoneCollapsedFeedFilterBar: View {
+    @Binding var text: String
+    let resultText: String
+
+    var body: some View {
+        GlassEffectContainer(spacing: 10) {
+            HStack(spacing: 9) {
+                Image(systemName: "line.3.horizontal.decrease.circle")
+                    .font(.callout.weight(.semibold))
+                    .symbolRenderingMode(.hierarchical)
+                    .foregroundStyle(.secondary)
+                    .accessibilityHidden(true)
+
+                NativeInlineFilterField(
+                    text: $text,
+                    placeholder: L10n.filterArtworks,
+                    accessibilityLabel: L10n.filterArtworks
+                )
+                .frame(height: 36)
+                .layoutPriority(1)
+
+                Text(resultText)
+                    .font(.caption2.weight(.semibold).monospacedDigit())
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.72)
+                    .accessibilityHidden(true)
+
+                if text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false {
+                    Button {
+                        withAnimation(.snappy(duration: 0.16)) {
+                            text = ""
+                        }
+                    } label: {
+                        Label(L10n.clearSearch, systemImage: "xmark.circle.fill")
+                    }
+                    .os26GlassIconButton()
+                    .controlSize(.small)
+                    .help(L10n.clearSearch)
+                    .accessibilityLabel(L10n.clearSearch)
+                }
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 7)
+            .frame(maxWidth: 560)
+            .keiGlass(20)
+        }
+        .accessibilityElement(children: .contain)
+    }
+}
+
+private struct CompactRouteMenuLabel: View {
+    let title: String
+    let systemImage: String
+    let badgeText: String?
+
+    var body: some View {
+        Label {
+            Text(title)
+                .lineLimit(1)
+        } icon: {
+            Image(systemName: systemImage)
+                .symbolRenderingMode(.hierarchical)
+                .overlay(alignment: .topTrailing) {
+                    if let badgeText {
+                        Text(badgeText)
+                            .font(.system(size: 8, weight: .bold, design: .rounded).monospacedDigit())
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 3)
+                            .frame(minWidth: 13, minHeight: 13)
+                            .background(Color.accentColor, in: Capsule(style: .continuous))
+                            .offset(x: 8, y: -7)
+                            .accessibilityHidden(true)
+                    }
+                }
+                .padding(.top, badgeText == nil ? 0 : 4)
+                .padding(.trailing, badgeText == nil ? 0 : 7)
         }
     }
 }
