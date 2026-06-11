@@ -324,7 +324,8 @@ struct ContentView: View {
                 behavior: compactUITabBarMinimizeBehavior,
                 isTabBarHidden: false,
                 usesTransparentBackground: layout.usesCompactTabs,
-                scrollsToTopOnCurrentTabReselection: true
+                scrollsToTopOnCurrentTabReselection: true,
+                syncID: compactTabBarSyncID(layout: layout)
             )
                 .allowsHitTesting(false)
         }
@@ -1538,11 +1539,21 @@ struct ContentView: View {
     }
 
     private var compactTabBarMinimizeBehavior: TabBarMinimizeBehavior {
-        currentMobilePlatform == .phone && isCompactCustomTabRootActive ? .onScrollDown : .automatic
+        isCompactCustomTabRootActive ? .onScrollDown : .automatic
     }
 
     private var compactUITabBarMinimizeBehavior: UITabBarController.MinimizeBehavior {
-        currentMobilePlatform == .phone && isCompactCustomTabRootActive ? .onScrollDown : .automatic
+        isCompactCustomTabRootActive ? .onScrollDown : .automatic
+    }
+
+    private func compactTabBarSyncID(layout: MobileWorkspaceLayout) -> String {
+        [
+            selectedTab.transitionID,
+            store.selectedRoute.rawValue,
+            layout.usesCustomNavigationTabs ? "custom" : "regular",
+            layout.usesCompactTabs ? "compact" : "wide"
+        ]
+        .joined(separator: "|")
     }
 
     private var mobileBottomTabDefaultRoutesBinding: Binding<[MobileBottomTabKind: PixivRoute]> {

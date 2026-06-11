@@ -7,13 +7,15 @@ struct TabBarMinimizeBehaviorBridge: UIViewControllerRepresentable {
     let isTabBarHidden: Bool
     let usesTransparentBackground: Bool
     let scrollsToTopOnCurrentTabReselection: Bool
+    let syncID: String
 
     func makeUIViewController(context: Context) -> Controller {
         Controller(
             behavior: behavior,
             isTabBarHidden: isTabBarHidden,
             usesTransparentBackground: usesTransparentBackground,
-            scrollsToTopOnCurrentTabReselection: scrollsToTopOnCurrentTabReselection
+            scrollsToTopOnCurrentTabReselection: scrollsToTopOnCurrentTabReselection,
+            syncID: syncID
         )
     }
 
@@ -30,6 +32,11 @@ struct TabBarMinimizeBehaviorBridge: UIViewControllerRepresentable {
         if controller.scrollsToTopOnCurrentTabReselection != scrollsToTopOnCurrentTabReselection {
             controller.scrollsToTopOnCurrentTabReselection = scrollsToTopOnCurrentTabReselection
         }
+        if controller.syncID != syncID {
+            controller.syncID = syncID
+        } else {
+            controller.applyBehavior()
+        }
     }
 
     final class Controller: UIViewController, UIGestureRecognizerDelegate {
@@ -38,6 +45,7 @@ struct TabBarMinimizeBehaviorBridge: UIViewControllerRepresentable {
         private weak var appliedTabBarController: UITabBarController?
         private weak var appliedReselectionTabBar: UITabBar?
         private var reselectionGestureRecognizer: CurrentTabReselectionGestureRecognizer?
+        private var pendingReapplyTask: Task<Void, Never>?
         private var lastAppliedBehavior: UITabBarController.MinimizeBehavior?
         private var lastAppliedTabBarHidden: Bool?
         private var lastAppliedTransparentBackground: Bool?
@@ -66,16 +74,25 @@ struct TabBarMinimizeBehaviorBridge: UIViewControllerRepresentable {
             }
         }
 
+        var syncID: String {
+            didSet {
+                applyBehavior()
+                scheduleDeferredReapply()
+            }
+        }
+
         init(
             behavior: UITabBarController.MinimizeBehavior,
             isTabBarHidden: Bool,
             usesTransparentBackground: Bool,
-            scrollsToTopOnCurrentTabReselection: Bool
+            scrollsToTopOnCurrentTabReselection: Bool,
+            syncID: String
         ) {
             self.behavior = behavior
             self.isTabBarHidden = isTabBarHidden
             self.usesTransparentBackground = usesTransparentBackground
             self.scrollsToTopOnCurrentTabReselection = scrollsToTopOnCurrentTabReselection
+            self.syncID = syncID
             super.init(nibName: nil, bundle: nil)
         }
 
@@ -101,6 +118,11 @@ struct TabBarMinimizeBehaviorBridge: UIViewControllerRepresentable {
             applyBehavior()
         }
 
+        override func viewDidLayoutSubviews() {
+            super.viewDidLayoutSubviews()
+            applyBehavior()
+        }
+
         func applyBehavior() {
             guard let tabBarController = resolvedTabBarController() else {
                 guard hasDeferredApply == false else { return }
@@ -119,6 +141,7 @@ struct TabBarMinimizeBehaviorBridge: UIViewControllerRepresentable {
                 lastAppliedTransparentBackground = nil
             }
             applyAppearance(to: tabBarController.tabBar)
+            syncSelectedTabContentScrollView()
             if lastAppliedBehavior != behavior || tabBarController.tabBarMinimizeBehavior != behavior {
                 tabBarController.tabBarMinimizeBehavior = behavior
                 lastAppliedBehavior = behavior
@@ -129,6 +152,18 @@ struct TabBarMinimizeBehaviorBridge: UIViewControllerRepresentable {
             }
             updateCurrentTabReselectionGesture(on: tabBarController.tabBar)
             hasAppliedTabBarState = true
+        }
+
+        private func scheduleDeferredReapply() {
+            pendingReapplyTask?.cancel()
+            pendingReapplyTask = Task { @MainActor [weak self] in
+                await Task.yield()
+                guard Task.isCancelled == false else { return }
+                self?.applyBehavior()
+                try? await Task.sleep(for: .milliseconds(120))
+                guard Task.isCancelled == false else { return }
+                self?.applyBehavior()
+            }
         }
 
         private func updateCurrentTabReselectionGesture(on tabBar: UITabBar) {
@@ -201,6 +236,24 @@ struct TabBarMinimizeBehaviorBridge: UIViewControllerRepresentable {
             return selectedViewController.view.firstVisibleVerticalScrollView()
         }
 
+        private func syncSelectedTabContentScrollView() {
+            guard let selectedViewController = appliedTabBarController?.selectedViewController else {
+                return
+            }
+
+            guard let scrollView = selectedTabContentScrollView() else {
+                if selectedViewController.contentScrollView(for: .bottom) != nil {
+                    selectedViewController.setContentScrollView(nil, for: .bottom)
+                }
+                return
+            }
+
+            configureScrollViewForBottomTabContent(scrollView)
+            if selectedViewController.contentScrollView(for: .bottom) !== scrollView {
+                selectedViewController.setContentScrollView(scrollView, for: .bottom)
+            }
+        }
+
         private func applyAppearance(to tabBar: UITabBar) {
             guard lastAppliedTransparentBackground != usesTransparentBackground else { return }
 
@@ -238,6 +291,7 @@ struct TabBarMinimizeBehaviorBridge: UIViewControllerRepresentable {
 
         deinit {
             MainActor.assumeIsolated {
+                pendingReapplyTask?.cancel()
                 let tabBar = appliedReselectionTabBar
                 let recognizer = reselectionGestureRecognizer
                 if let recognizer {
