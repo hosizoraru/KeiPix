@@ -31,6 +31,7 @@ struct ContentView: View {
     @State private var feedbackRequest: FeedbackReportRequest?
     @State private var statusMessage: String?
     @State private var isPhoneCollapsedFeedFilterVisible = false
+    @State private var isPhoneFeedAtContentStart = true
     @State private var bookmarkEditorLayoutProfileOverride: BookmarkEditorLayoutProfile = .compact
     @AppStorage("mobileBottomTabItemIDs") private var mobileBottomTabDefaultRouteIDs = MobileBottomTabConfiguration.defaultStorageID
     @AppStorage("mobileBottomTabLaunchTarget") private var mobileBottomTabLaunchTargetID = MobileBottomTabConfiguration.defaultLaunchTarget.rawValue
@@ -97,6 +98,7 @@ struct ContentView: View {
             .onChange(of: store.selectedRoute) { _, route in
                 recordMobileBottomTabRouteIfNeeded(route)
                 isPhoneCollapsedFeedFilterVisible = false
+                isPhoneFeedAtContentStart = true
             }
             #if DEBUG
             .task {
@@ -337,12 +339,14 @@ struct ContentView: View {
                     text: $store.clientFilterQuery,
                     resultText: phoneCollapsedFeedFilterResultText
                 )
-                .padding(.horizontal, 14)
-                .padding(.bottom, 8)
+                .padding(.leading, phoneCollapsedFeedFilterLeadingPadding)
+                .padding(.trailing, phoneCollapsedFeedFilterTrailingPadding)
+                .padding(.bottom, phoneCollapsedFeedFilterBottomPadding)
                 .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
         .animation(.snappy(duration: 0.18), value: showsPhoneCollapsedFeedFilter(layout: layout))
+        .animation(.snappy(duration: 0.2), value: isPhoneFeedAtContentStart)
         .onAppear {
             isCompactCustomTabRootActive = layout.usesCustomNavigationTabs
             if layout.usesCustomNavigationTabs {
@@ -1594,33 +1598,48 @@ struct ContentView: View {
 
     private func galleryScrollDirectionHandler(
         showsSidebarToggle: Bool
-    ) -> ((NativeGalleryScrollDirection) -> Void)? {
+    ) -> ((NativeGalleryScrollEvent) -> Void)? {
         guard currentMobilePlatform == .phone, showsSidebarToggle == false else {
             return nil
         }
-        return { direction in
-            handlePhoneGalleryScrollDirection(direction)
+        return { event in
+            handlePhoneGalleryScrollEvent(event)
         }
     }
 
-    private func handlePhoneGalleryScrollDirection(_ direction: NativeGalleryScrollDirection) {
+    private func handlePhoneGalleryScrollEvent(_ event: NativeGalleryScrollEvent) {
         guard currentMobilePlatform == .phone,
               store.selectedRoute.usesArtworkFeed else {
             isPhoneCollapsedFeedFilterVisible = false
+            isPhoneFeedAtContentStart = true
             return
         }
 
         withAnimation(.snappy(duration: 0.18)) {
-            isPhoneCollapsedFeedFilterVisible = direction == .towardContentEnd
+            isPhoneFeedAtContentStart = event.isAtContentStart
+            isPhoneCollapsedFeedFilterVisible = event.isAtContentStart == false
+                && event.direction == .towardContentEnd
         }
     }
 
     private func showsPhoneCollapsedFeedFilter(layout: MobileWorkspaceLayout) -> Bool {
         layout.platform == .phone
             && isCompactCustomTabRootActive
-            && isPhoneCollapsedFeedFilterVisible
+            && (phoneHasActiveFeedFilter || (isPhoneFeedAtContentStart == false && isPhoneCollapsedFeedFilterVisible))
             && store.selectedRoute.usesArtworkFeed
             && (store.artworks.isEmpty == false || phoneHasActiveFeedFilter)
+    }
+
+    private var phoneCollapsedFeedFilterLeadingPadding: CGFloat {
+        isPhoneFeedAtContentStart ? 14 : 94
+    }
+
+    private var phoneCollapsedFeedFilterTrailingPadding: CGFloat {
+        isPhoneFeedAtContentStart ? 14 : 12
+    }
+
+    private var phoneCollapsedFeedFilterBottomPadding: CGFloat {
+        isPhoneFeedAtContentStart ? feedbackOverlayBottomPadding : 0
     }
 
     private var phoneHasActiveFeedFilter: Bool {
@@ -2011,49 +2030,40 @@ private struct PhoneCollapsedFeedFilterBar: View {
     let resultText: String
 
     var body: some View {
-        GlassEffectContainer(spacing: 6) {
+        GlassEffectContainer(spacing: 0) {
             HStack(spacing: 6) {
-                Image(systemName: "line.3.horizontal.decrease.circle")
-                    .font(.footnote.weight(.semibold))
-                    .symbolRenderingMode(.hierarchical)
-                    .foregroundStyle(.secondary)
-                    .frame(width: 34, height: 34)
-                    .glassEffect(.regular, in: Circle())
-                    .accessibilityHidden(true)
+                NativeInlineFilterField(
+                    text: $text,
+                    placeholder: L10n.filterArtworks,
+                    accessibilityLabel: L10n.filterArtworks,
+                    usesTransparentBackground: true
+                )
+                .frame(height: 34)
+                .layoutPriority(1)
 
-                HStack(spacing: 6) {
-                    NativeInlineFilterField(
-                        text: $text,
-                        placeholder: L10n.filterArtworks,
-                        accessibilityLabel: L10n.filterArtworks
-                    )
-                    .frame(height: 32)
-                    .layoutPriority(1)
-
-                    if text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false {
-                        Button {
-                            withAnimation(.snappy(duration: 0.16)) {
-                                text = ""
-                            }
-                        } label: {
-                            Label(L10n.clearSearch, systemImage: "xmark.circle.fill")
+                if text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false {
+                    Button {
+                        withAnimation(.snappy(duration: 0.16)) {
+                            text = ""
                         }
-                        .labelStyle(.iconOnly)
-                        .buttonStyle(.plain)
-                        .foregroundStyle(.secondary)
-                        .help(L10n.clearSearch)
-                        .accessibilityLabel(L10n.clearSearch)
+                    } label: {
+                        Label(L10n.clearSearch, systemImage: "xmark.circle.fill")
                     }
+                    .labelStyle(.iconOnly)
+                    .buttonStyle(.plain)
+                    .foregroundStyle(.secondary)
+                    .help(L10n.clearSearch)
+                    .accessibilityLabel(L10n.clearSearch)
                 }
-                .padding(.leading, 4)
-                .padding(.trailing, 8)
-                .padding(.vertical, 4)
-                .frame(minHeight: 42)
-                .frame(maxWidth: 360)
-                .glassEffect(.regular, in: Capsule(style: .continuous))
             }
-            .frame(maxWidth: 560)
+            .padding(.leading, 9)
+            .padding(.trailing, 10)
+            .padding(.vertical, 4)
+            .frame(height: 46)
+            .frame(maxWidth: 360)
+            .glassEffect(.regular.interactive(), in: Capsule(style: .continuous))
         }
+        .frame(maxWidth: .infinity, alignment: .trailing)
         .accessibilityValue(resultText)
         .accessibilityElement(children: .contain)
     }

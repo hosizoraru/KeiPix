@@ -9,7 +9,7 @@ struct SearchWorkspaceView: View {
     @Bindable var store: KeiPixStore
     let galleryLayoutAdaptation: GalleryLayoutAdaptation
     let headerLayout: SearchWorkspaceHeaderLayout
-    let onGalleryScrollDirectionChange: ((NativeGalleryScrollDirection) -> Void)?
+    let onGalleryScrollDirectionChange: ((NativeGalleryScrollEvent) -> Void)?
 
     @State private var actionMessage: String?
     @State private var submittedSearchKeyword = ""
@@ -18,7 +18,7 @@ struct SearchWorkspaceView: View {
         store: KeiPixStore,
         galleryLayoutAdaptation: GalleryLayoutAdaptation = .fullMasonry,
         headerLayout: SearchWorkspaceHeaderLayout = .adaptive,
-        onGalleryScrollDirectionChange: ((NativeGalleryScrollDirection) -> Void)? = nil
+        onGalleryScrollDirectionChange: ((NativeGalleryScrollEvent) -> Void)? = nil
     ) {
         self.store = store
         self.galleryLayoutAdaptation = galleryLayoutAdaptation

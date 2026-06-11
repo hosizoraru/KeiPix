@@ -6,14 +6,14 @@ import SwiftUI
 struct GalleryView: View {
     @Bindable var store: KeiPixStore
     let galleryLayoutAdaptation: GalleryLayoutAdaptation
-    let onGalleryScrollDirectionChange: ((NativeGalleryScrollDirection) -> Void)?
+    let onGalleryScrollDirectionChange: ((NativeGalleryScrollEvent) -> Void)?
     let showsFeedHeader: Bool
     @State private var actionMessage: String?
 
     init(
         store: KeiPixStore,
         galleryLayoutAdaptation: GalleryLayoutAdaptation = .fullMasonry,
-        onGalleryScrollDirectionChange: ((NativeGalleryScrollDirection) -> Void)? = nil,
+        onGalleryScrollDirectionChange: ((NativeGalleryScrollEvent) -> Void)? = nil,
         showsFeedHeader: Bool = true
     ) {
         self.store = store
@@ -137,7 +137,7 @@ private struct GalleryFeedView: View {
     let navigationTitle: String
     let gallerySubtitle: String
     let galleryLayoutAdaptation: GalleryLayoutAdaptation
-    let onGalleryScrollDirectionChange: ((NativeGalleryScrollDirection) -> Void)?
+    let onGalleryScrollDirectionChange: ((NativeGalleryScrollEvent) -> Void)?
     let showsFeedHeader: Bool
     @State private var artworkSelection = GalleryArtworkSelection()
     @State private var batchBookmarkCommandRequest: BatchBookmarkCommandRequest?

@@ -89,6 +89,11 @@ enum NativeGalleryScrollDirection: Sendable {
     case towardContentStart
 }
 
+struct NativeGalleryScrollEvent: Equatable, Sendable {
+    let direction: NativeGalleryScrollDirection
+    let isAtContentStart: Bool
+}
+
 enum NativeGalleryBoundsInvalidation {
     static func shouldInvalidate(oldSize: CGSize, newSize: CGSize, tolerance: CGFloat = 0.5) -> Bool {
         abs(oldSize.width - newSize.width) > tolerance
@@ -216,7 +221,7 @@ struct NativeGalleryCollectionView: NSViewRepresentable {
     let scrollToArtworkID: Int?
     let contentReloadToken: Int
     let onRefresh: (() async -> Void)?
-    let onScrollDirectionChange: ((NativeGalleryScrollDirection) -> Void)?
+    let onScrollDirectionChange: ((NativeGalleryScrollEvent) -> Void)?
     let onNearContentEnd: (() -> Void)?
     let onPrefetchItems: (([NativeGalleryCollectionItem]) -> Void)?
     let content: (NativeGalleryCollectionItem) -> AnyView
@@ -644,7 +649,7 @@ struct NativeGalleryCollectionView: UIViewRepresentable {
     let scrollToArtworkID: Int?
     let contentReloadToken: Int
     let onRefresh: (() async -> Void)?
-    let onScrollDirectionChange: ((NativeGalleryScrollDirection) -> Void)?
+    let onScrollDirectionChange: ((NativeGalleryScrollEvent) -> Void)?
     let onNearContentEnd: (() -> Void)?
     let onPrefetchItems: (([NativeGalleryCollectionItem]) -> Void)?
     let content: (NativeGalleryCollectionItem) -> AnyView
@@ -697,6 +702,7 @@ struct NativeGalleryCollectionView: UIViewRepresentable {
         private var lastScrollOffsetY: CGFloat = 0
         private var scrollDirectionAccumulator: CGFloat = 0
         private var lastReportedScrollDirection: NativeGalleryScrollDirection?
+        private var lastReportedIsAtContentStart: Bool?
         private var isNearContentEndArmed = true
         private weak var registeredContentScrollViewController: UIViewController?
         private let widthChangeTolerance: CGFloat = 0.5
@@ -944,6 +950,12 @@ struct NativeGalleryCollectionView: UIViewRepresentable {
             guard scrollView.isDragging || scrollView.isDecelerating else { return }
 
             let minimumOffsetY = -scrollView.adjustedContentInset.top
+            let isAtContentStart = offsetY <= minimumOffsetY + 6
+            if isAtContentStart, lastReportedIsAtContentStart != true {
+                reportScrollEvent(direction: .towardContentStart, isAtContentStart: true)
+                return
+            }
+
             let maximumOffsetY = max(
                 minimumOffsetY,
                 scrollView.contentSize.height
@@ -966,9 +978,22 @@ struct NativeGalleryCollectionView: UIViewRepresentable {
             }
 
             guard scrollDirectionAccumulator >= scrollDirectionThreshold else { return }
-            lastReportedScrollDirection = direction
             scrollDirectionAccumulator = 0
-            parent.onScrollDirectionChange?(direction)
+            reportScrollEvent(direction: direction, isAtContentStart: isAtContentStart)
+        }
+
+        private func reportScrollEvent(
+            direction: NativeGalleryScrollDirection,
+            isAtContentStart: Bool
+        ) {
+            lastReportedScrollDirection = direction
+            lastReportedIsAtContentStart = isAtContentStart
+            parent.onScrollDirectionChange?(
+                NativeGalleryScrollEvent(
+                    direction: direction,
+                    isAtContentStart: isAtContentStart
+                )
+            )
         }
 
         private func triggerNearContentEndIfNeeded(in scrollView: UIScrollView) {

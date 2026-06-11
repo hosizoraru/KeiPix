@@ -6,15 +6,18 @@ struct NativeInlineFilterField: UIViewRepresentable {
     @Binding var text: String
     let placeholder: String
     let accessibilityLabel: String
+    let usesTransparentBackground: Bool
 
     init(
         text: Binding<String>,
         placeholder: String,
-        accessibilityLabel: String
+        accessibilityLabel: String,
+        usesTransparentBackground: Bool = false
     ) {
         self._text = text
         self.placeholder = placeholder
         self.accessibilityLabel = accessibilityLabel
+        self.usesTransparentBackground = usesTransparentBackground
     }
 
     func makeUIView(context: Context) -> UISearchTextField {
@@ -22,13 +25,11 @@ struct NativeInlineFilterField: UIViewRepresentable {
         field.delegate = context.coordinator
         field.placeholder = placeholder
         field.text = text
-        field.clearButtonMode = .whileEditing
         field.autocorrectionType = .no
         field.autocapitalizationType = .none
         field.returnKeyType = .done
         field.accessibilityLabel = accessibilityLabel
-        field.backgroundColor = UIColor.secondarySystemFill
-        field.layer.cornerRadius = 12
+        applyBackground(to: field)
         field.clipsToBounds = true
         field.addTarget(
             context.coordinator,
@@ -42,8 +43,28 @@ struct NativeInlineFilterField: UIViewRepresentable {
         context.coordinator.text = $text
         field.placeholder = placeholder
         field.accessibilityLabel = accessibilityLabel
+        applyBackground(to: field)
         if field.text != text {
             field.text = text
+        }
+    }
+
+    private func applyBackground(to field: UISearchTextField) {
+        if usesTransparentBackground {
+            field.borderStyle = .none
+            field.background = UIImage()
+            field.disabledBackground = UIImage()
+            field.backgroundColor = .clear
+            field.clearButtonMode = .never
+            field.layer.backgroundColor = UIColor.clear.cgColor
+            field.layer.cornerRadius = 0
+        } else {
+            field.borderStyle = .none
+            field.background = nil
+            field.disabledBackground = nil
+            field.backgroundColor = UIColor.secondarySystemFill
+            field.clearButtonMode = .whileEditing
+            field.layer.cornerRadius = 12
         }
     }
 
