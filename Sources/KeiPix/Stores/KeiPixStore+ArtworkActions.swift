@@ -6,6 +6,17 @@ import UIKit
 import Foundation
 
 extension KeiPixStore {
+    func defaultBookmarkRestrict(for artwork: PixivArtwork) -> BookmarkRestrict {
+        artwork.type == "manga" ? defaultMangaBookmarkRestrict : defaultIllustrationBookmarkRestrict
+    }
+
+    func defaultBookmarkRestrict(for artworks: [PixivArtwork]) -> BookmarkRestrict {
+        guard artworks.isEmpty == false else { return defaultIllustrationBookmarkRestrict }
+        return artworks.allSatisfy { $0.type == "manga" }
+            ? defaultMangaBookmarkRestrict
+            : defaultIllustrationBookmarkRestrict
+    }
+
     func toggleBookmark(_ artwork: PixivArtwork) async {
         let nextValue = !artwork.isBookmarked
         guard nextValue else {
@@ -16,7 +27,7 @@ extension KeiPixStore {
         do {
             try await api.addBookmark(
                 illustID: artwork.id,
-                restrict: defaultBookmarkRestrict,
+                restrict: defaultBookmarkRestrict(for: artwork),
                 tags: automaticBookmarkTags(for: artwork)
             )
             updateArtwork(artwork.id) { $0.isBookmarked = true }
@@ -304,7 +315,7 @@ extension KeiPixStore {
             do {
                 try await api.addBookmark(
                     illustID: artwork.id,
-                    restrict: defaultBookmarkRestrict,
+                    restrict: defaultBookmarkRestrict(for: artwork),
                     tags: automaticBookmarkTags(for: artwork)
                 )
                 updateArtwork(artwork.id) { $0.isBookmarked = true }

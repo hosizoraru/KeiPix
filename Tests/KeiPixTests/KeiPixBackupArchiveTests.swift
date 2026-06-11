@@ -41,6 +41,9 @@ struct KeiPixBackupArchiveTests {
             ),
             preferences: KeiPixBackupArchive.PreferenceSnapshot(
                 defaultBookmarkRestrict: "public",
+                defaultIllustrationBookmarkRestrict: "public",
+                defaultMangaBookmarkRestrict: "private",
+                defaultNovelBookmarkRestrict: "private",
                 hideAIArtworks: true
             )
         )

@@ -10,16 +10,25 @@ struct DiscoverySettingsPage: View {
             systemImage: SettingsCategory.discovery.systemImage
         ) {
             OS26SettingsSection(
-                L10n.bookmarks,
+                L10n.defaultBookmarkVisibility,
                 systemImage: "bookmark",
                 footer: "\(L10n.autoTagBookmarksWithArtworkTagsHint)\n\(L10n.followCreatorAfterBookmarkHint)\n\(L10n.autoDownloadBookmarkedArtworksHint)"
             ) {
-                Picker(L10n.defaultBookmarkVisibility, selection: store.settings_defaultBookmarkRestrictBinding) {
-                    ForEach(BookmarkRestrict.allCases) { restrict in
-                        Text(restrict.title).tag(restrict)
-                    }
-                }
-                .pickerStyle(.segmented)
+                bookmarkDefaultVisibilityRow(
+                    L10n.illustrations,
+                    systemImage: "photo",
+                    selection: store.settings_defaultIllustrationBookmarkRestrictBinding
+                )
+                bookmarkDefaultVisibilityRow(
+                    L10n.manga,
+                    systemImage: "rectangle.stack",
+                    selection: store.settings_defaultMangaBookmarkRestrictBinding
+                )
+                bookmarkDefaultVisibilityRow(
+                    L10n.novels,
+                    systemImage: "book",
+                    selection: store.settings_defaultNovelBookmarkRestrictBinding
+                )
 
                 Toggle(L10n.autoTagBookmarksWithArtworkTags, isOn: store.settings_autoTagBookmarksBinding)
                 Toggle(L10n.followCreatorAfterBookmark, isOn: store.settings_followCreatorAfterBookmarkBinding)
@@ -34,6 +43,26 @@ struct DiscoverySettingsPage: View {
                 }
                 .pickerStyle(.segmented)
             }
+        }
+    }
+
+    private func bookmarkDefaultVisibilityRow(
+        _ title: String,
+        systemImage: String,
+        selection: Binding<BookmarkRestrict>
+    ) -> some View {
+        LabeledContent {
+            Picker(title, selection: selection) {
+                ForEach(BookmarkRestrict.allCases) { restrict in
+                    Text(restrict.title).tag(restrict)
+                }
+            }
+            .labelsHidden()
+            .pickerStyle(.segmented)
+            .frame(maxWidth: 220, alignment: .trailing)
+        } label: {
+            Label(title, systemImage: systemImage)
+                .lineLimit(1)
         }
     }
 }

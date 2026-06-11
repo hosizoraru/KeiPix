@@ -1403,7 +1403,7 @@ struct FeedHeaderView: View {
         let preview = BatchBookmarkPreview.make(
             artworks: artworks,
             scope: scope,
-            restrict: store.defaultBookmarkRestrict,
+            restrict: store.defaultBookmarkRestrict(for: artworks),
             tags: commonAutomaticBookmarkTags(artworks: artworks),
             limit: 30
         )

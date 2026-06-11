@@ -238,7 +238,7 @@ struct ArtworkSeriesView: View {
         do {
             try await store.saveBookmark(
                 seriesArtwork,
-                restrict: store.defaultBookmarkRestrict,
+                restrict: store.defaultBookmarkRestrict(for: seriesArtwork),
                 tags: store.automaticBookmarkTags(for: seriesArtwork)
             )
             updateSeriesArtwork(seriesArtwork.id) { $0.isBookmarked = true }

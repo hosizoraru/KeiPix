@@ -90,7 +90,7 @@ extension KeiPixStore {
     private func removeBookmarkWithUndo(_ artwork: PixivArtwork) async -> Bool {
         do {
             let detail = try? await bookmarkDetail(for: artwork)
-            let restoreRestrict = detail?.restrict ?? defaultBookmarkRestrict
+            let restoreRestrict = detail?.restrict ?? defaultBookmarkRestrict(for: artwork)
             let restoreTags = detail?.tags
                 .filter(\.isRegistered)
                 .map(\.name) ?? []

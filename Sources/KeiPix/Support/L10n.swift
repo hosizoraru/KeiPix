@@ -29,6 +29,7 @@ enum L10n {
     static var explore: String { text("Explore") }
     static var works: String { text("Works") }
     static var illustrations: String { text("Illustrations") }
+    static var defaultLabel: String { text("Default") }
     static var manga: String { text("Manga") }
     static var newIllustrations: String { text("New Illustrations") }
     static var newManga: String { text("New Manga") }
@@ -434,6 +435,7 @@ enum L10n {
     static var bookmarkTags: String { text("Bookmark Tags") }
     static var bookmarkFilters: String { text("Bookmark Filters") }
     static var bookmarkVisibility: String { text("Bookmark Visibility") }
+    static var defaultRestrictFormat: String { text("Default (%@)") }
     static var bookmarkSort: String { text("Bookmark Sort") }
     static var newestBookmarked: String { text("Newest Bookmarked") }
     static var oldestBookmarked: String { text("Oldest Bookmarked") }

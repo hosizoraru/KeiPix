@@ -75,6 +75,9 @@ struct KeiPixBackupArchive: Codable, Equatable, Sendable {
     /// session state.
     struct PreferenceSnapshot: Codable, Equatable, Sendable {
         var defaultBookmarkRestrict: String?
+        var defaultIllustrationBookmarkRestrict: String?
+        var defaultMangaBookmarkRestrict: String?
+        var defaultNovelBookmarkRestrict: String?
         var defaultFollowRestrict: String?
         var followCreatorAfterBookmark: Bool?
         var autoDownloadBookmarkedArtworks: Bool?

@@ -209,7 +209,7 @@ struct NovelGalleryView: View {
             Task {
                 await novelStore.toggleBookmark(
                     novel: novel,
-                    restrict: store.defaultBookmarkRestrict
+                    restrict: store.defaultNovelBookmarkRestrict
                 )
             }
         }

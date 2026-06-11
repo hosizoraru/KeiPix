@@ -195,7 +195,7 @@ struct ArtworkRelatedView: View {
         do {
             try await store.saveBookmark(
                 related,
-                restrict: store.defaultBookmarkRestrict,
+                restrict: store.defaultBookmarkRestrict(for: related),
                 tags: store.automaticBookmarkTags(for: related)
             )
             updateRelatedArtwork(related.id) { $0.isBookmarked = true }

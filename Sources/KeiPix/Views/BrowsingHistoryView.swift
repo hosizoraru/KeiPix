@@ -514,7 +514,7 @@ struct BrowsingHistoryView: View {
         do {
             try await store.saveBookmark(
                 artwork,
-                restrict: store.defaultBookmarkRestrict,
+                restrict: store.defaultBookmarkRestrict(for: artwork),
                 tags: store.automaticBookmarkTags(for: artwork)
             )
             actionMessage = String(format: L10n.savedBookmarkFormat, artwork.title)

@@ -182,7 +182,23 @@ final class KeiPixStore {
     /// store has either no session, a guest/test session, or a successful
     /// fetch — same lifecycle as `restrictedModeEnabled`.
     var aiShowEnabled: Bool?
-    var defaultBookmarkRestrict = KeiPixStore.loadEnum("defaultBookmarkRestrict", defaultValue: BookmarkRestrict.public)
+    private static var legacyDefaultBookmarkRestrict: BookmarkRestrict {
+        loadEnum("defaultBookmarkRestrict", defaultValue: BookmarkRestrict.public)
+    }
+
+    var defaultBookmarkRestrict = KeiPixStore.legacyDefaultBookmarkRestrict
+    var defaultIllustrationBookmarkRestrict = KeiPixStore.loadEnum(
+        "defaultIllustrationBookmarkRestrict",
+        defaultValue: KeiPixStore.legacyDefaultBookmarkRestrict
+    )
+    var defaultMangaBookmarkRestrict = KeiPixStore.loadEnum(
+        "defaultMangaBookmarkRestrict",
+        defaultValue: KeiPixStore.legacyDefaultBookmarkRestrict
+    )
+    var defaultNovelBookmarkRestrict = KeiPixStore.loadEnum(
+        "defaultNovelBookmarkRestrict",
+        defaultValue: KeiPixStore.legacyDefaultBookmarkRestrict
+    )
     var defaultFollowRestrict = KeiPixStore.loadEnum("defaultFollowRestrict", defaultValue: BookmarkRestrict.public)
     /// Tags the user has pinned in `BookmarkTagsView` so the tags they jump
     /// to most often surface at the top of the list. Stored as a single set

@@ -21,6 +21,22 @@ extension KeiPixStore {
 
     func setDefaultBookmarkRestrict(_ restrict: BookmarkRestrict) {
         persistRaw("defaultBookmarkRestrict", value: restrict, to: \.defaultBookmarkRestrict)
+        persistRaw("defaultIllustrationBookmarkRestrict", value: restrict, to: \.defaultIllustrationBookmarkRestrict)
+        persistRaw("defaultMangaBookmarkRestrict", value: restrict, to: \.defaultMangaBookmarkRestrict)
+        persistRaw("defaultNovelBookmarkRestrict", value: restrict, to: \.defaultNovelBookmarkRestrict)
+    }
+
+    func setDefaultIllustrationBookmarkRestrict(_ restrict: BookmarkRestrict) {
+        persistRaw("defaultIllustrationBookmarkRestrict", value: restrict, to: \.defaultIllustrationBookmarkRestrict)
+        persistRaw("defaultBookmarkRestrict", value: restrict, to: \.defaultBookmarkRestrict)
+    }
+
+    func setDefaultMangaBookmarkRestrict(_ restrict: BookmarkRestrict) {
+        persistRaw("defaultMangaBookmarkRestrict", value: restrict, to: \.defaultMangaBookmarkRestrict)
+    }
+
+    func setDefaultNovelBookmarkRestrict(_ restrict: BookmarkRestrict) {
+        persistRaw("defaultNovelBookmarkRestrict", value: restrict, to: \.defaultNovelBookmarkRestrict)
     }
 
     func setDefaultFollowRestrict(_ restrict: BookmarkRestrict) {

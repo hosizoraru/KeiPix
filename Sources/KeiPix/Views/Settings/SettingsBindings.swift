@@ -144,11 +144,27 @@ extension KeiPixStore {
         }
     }
 
-    var settings_defaultBookmarkRestrictBinding: Binding<BookmarkRestrict> {
+    var settings_defaultIllustrationBookmarkRestrictBinding: Binding<BookmarkRestrict> {
         Binding {
-            self.defaultBookmarkRestrict
+            self.defaultIllustrationBookmarkRestrict
         } set: { value in
-            self.setDefaultBookmarkRestrict(value)
+            self.setDefaultIllustrationBookmarkRestrict(value)
+        }
+    }
+
+    var settings_defaultMangaBookmarkRestrictBinding: Binding<BookmarkRestrict> {
+        Binding {
+            self.defaultMangaBookmarkRestrict
+        } set: { value in
+            self.setDefaultMangaBookmarkRestrict(value)
+        }
+    }
+
+    var settings_defaultNovelBookmarkRestrictBinding: Binding<BookmarkRestrict> {
+        Binding {
+            self.defaultNovelBookmarkRestrict
+        } set: { value in
+            self.setDefaultNovelBookmarkRestrict(value)
         }
     }
 

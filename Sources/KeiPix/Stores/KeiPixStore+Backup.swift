@@ -14,6 +14,9 @@ extension KeiPixStore {
     func exportBackupArchive(now: Date = Date()) -> KeiPixBackupArchive {
         let preferences = KeiPixBackupArchive.PreferenceSnapshot(
             defaultBookmarkRestrict: defaultBookmarkRestrict.rawValue,
+            defaultIllustrationBookmarkRestrict: defaultIllustrationBookmarkRestrict.rawValue,
+            defaultMangaBookmarkRestrict: defaultMangaBookmarkRestrict.rawValue,
+            defaultNovelBookmarkRestrict: defaultNovelBookmarkRestrict.rawValue,
             defaultFollowRestrict: defaultFollowRestrict.rawValue,
             followCreatorAfterBookmark: followCreatorAfterBookmark,
             autoDownloadBookmarkedArtworks: autoDownloadBookmarkedArtworks,
@@ -258,6 +261,21 @@ extension KeiPixStore {
         if let raw = snapshot.defaultBookmarkRestrict,
            let value = BookmarkRestrict(rawValue: raw) {
             setDefaultBookmarkRestrict(value)
+            applied += 1
+        }
+        if let raw = snapshot.defaultIllustrationBookmarkRestrict,
+           let value = BookmarkRestrict(rawValue: raw) {
+            setDefaultIllustrationBookmarkRestrict(value)
+            applied += 1
+        }
+        if let raw = snapshot.defaultMangaBookmarkRestrict,
+           let value = BookmarkRestrict(rawValue: raw) {
+            setDefaultMangaBookmarkRestrict(value)
+            applied += 1
+        }
+        if let raw = snapshot.defaultNovelBookmarkRestrict,
+           let value = BookmarkRestrict(rawValue: raw) {
+            setDefaultNovelBookmarkRestrict(value)
             applied += 1
         }
         if let raw = snapshot.defaultFollowRestrict,
