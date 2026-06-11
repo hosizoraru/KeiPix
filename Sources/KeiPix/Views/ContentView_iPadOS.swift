@@ -840,27 +840,34 @@ struct ContentView: View {
     }
 
     private var routeMenu: some View {
-        Menu {
-            ForEach(routeMenuSections) { section in
-                Section(section.title) {
-                    ForEach(section.routes) { route in
-                        Button {
-                            selectRoute(route)
-                        } label: {
-                            Label(route.title, systemImage: route == store.selectedRoute ? "checkmark" : route.systemImage)
-                        }
+        NativeToolbarMenuButton(
+            systemImage: store.selectedRoute.systemImage,
+            title: currentMobilePlatform == .phone ? nil : store.selectedRoute.title,
+            accessibilityLabel: routeMenuAccessibilityLabel,
+            menu: routeNativeMenu,
+            badgeText: routeMenuArtworkCountBadgeText,
+            select: { handleNativeToolbarMenuAction($0, showsSidebarToggle: false) }
+        )
+        .fixedSize(horizontal: true, vertical: false)
+    }
+
+    private var routeNativeMenu: NativeToolbarMenu {
+        NativeToolbarMenu(
+            title: L10n.currentRoute,
+            sections: routeMenuSections.map { section in
+                NativeToolbarMenuSection(
+                    title: section.title,
+                    items: section.routes.map { route in
+                        .action(
+                            id: IPadToolbarMenuAction.route(route),
+                            title: route.title,
+                            systemImage: route.systemImage,
+                            isSelected: route == store.selectedRoute
+                        )
                     }
-                }
+                )
             }
-        } label: {
-            CompactRouteMenuLabel(
-                title: store.selectedRoute.title,
-                systemImage: store.selectedRoute.systemImage,
-                badgeText: routeMenuArtworkCountBadgeText,
-                showsTitle: currentMobilePlatform != .phone
-            )
-        }
-        .accessibilityLabel(routeMenuAccessibilityLabel)
+        )
     }
 
     private var routeMenuSections: [MobileRouteMenuSection] {
@@ -1163,6 +1170,10 @@ struct ContentView: View {
     private func handleNativeToolbarMenuAction(_ id: String, showsSidebarToggle: Bool) {
         if let mode = IPadToolbarMenuAction.galleryLayoutMode(from: id) {
             store.setGalleryLayoutMode(mode)
+            return
+        }
+        if let route = IPadToolbarMenuAction.route(from: id) {
+            selectRoute(route)
             return
         }
 
@@ -1999,44 +2010,6 @@ private struct MobileGlobalSearchModifier: ViewModifier {
     }
 }
 
-private struct CompactRouteMenuLabel: View {
-    let title: String
-    let systemImage: String
-    let badgeText: String?
-    let showsTitle: Bool
-
-    var body: some View {
-        HStack(spacing: showsTitle ? 7 : 0) {
-            routeIcon
-
-            if showsTitle {
-                Text(title)
-                    .lineLimit(1)
-                    .truncationMode(.tail)
-            }
-        }
-    }
-
-    private var routeIcon: some View {
-        Image(systemName: systemImage)
-            .symbolRenderingMode(.hierarchical)
-            .overlay(alignment: .bottomTrailing) {
-                if let badgeText {
-                    Text(badgeText)
-                        .font(.system(size: 8, weight: .bold, design: .rounded).monospacedDigit())
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, 3)
-                        .frame(minWidth: 13, minHeight: 13)
-                        .background(Color.accentColor, in: Capsule(style: .continuous))
-                        .offset(x: 7, y: 6)
-                        .accessibilityHidden(true)
-                }
-            }
-            .padding(.trailing, badgeText == nil ? 0 : 8)
-            .padding(.bottom, badgeText == nil ? 0 : 6)
-    }
-}
-
 private enum IPadToolbarMenuAction {
     static let openPixivLinkFromClipboard = "open-pixiv-link-from-clipboard"
     static let openPixivID = "open-pixiv-id"
@@ -2064,6 +2037,7 @@ private enum IPadToolbarMenuAction {
     static let settings = "settings"
 
     private static let galleryLayoutPrefix = "gallery-layout:"
+    private static let routePrefix = "route:"
 
     static func galleryLayout(_ mode: GalleryLayoutMode) -> String {
         galleryLayoutPrefix + mode.rawValue
@@ -2073,6 +2047,16 @@ private enum IPadToolbarMenuAction {
         guard id.hasPrefix(galleryLayoutPrefix) else { return nil }
         let rawValue = String(id.dropFirst(galleryLayoutPrefix.count))
         return GalleryLayoutMode(rawValue: rawValue)
+    }
+
+    static func route(_ route: PixivRoute) -> String {
+        routePrefix + route.rawValue
+    }
+
+    static func route(from id: String) -> PixivRoute? {
+        guard id.hasPrefix(routePrefix) else { return nil }
+        let rawValue = String(id.dropFirst(routePrefix.count))
+        return PixivRoute(rawValue: rawValue)
     }
 }
 

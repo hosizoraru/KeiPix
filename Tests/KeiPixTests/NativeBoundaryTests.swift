@@ -440,6 +440,10 @@ struct NativeBoundaryTests {
         #expect(mobileBottomTabCustomization.contains("@Binding var launchTarget: MobileBottomTabLaunchTarget"))
         #expect(mobileBottomTabCustomization.contains("@Binding var remembersLastRoute: Bool"))
         #expect(mobileBottomTabCustomization.contains("MobileBottomTabConfiguration.replacingDefaultRoute("))
+        #expect(mobileBottomTabCustomization.contains("struct MobileBottomTabLaunchTargetSelectionView: View"))
+        #expect(mobileBottomTabCustomization.contains("struct MobileBottomTabRouteSelectionView: View"))
+        #expect(mobileBottomTabCustomization.contains("NavigationLink"))
+        #expect(mobileBottomTabCustomization.contains("Menu {") == false)
         #expect(mobileBottomTabCustomization.contains(".keiGlass(24)"))
         #expect(mobileBottomTabCustomization.contains("L10n.mobileBottomTabLaunchTarget"))
         #expect(mobileBottomTabCustomization.contains("L10n.rememberMobileBottomTabPages"))
@@ -463,8 +467,12 @@ struct NativeBoundaryTests {
         #expect(contentView.contains("case settings"))
         #expect(contentView.contains("ToolbarItem(placement: .topBarLeading)"))
         #expect(contentView.contains("private var routeMenu: some View"))
-        #expect(contentView.contains("ForEach(routeMenuSections)"))
         #expect(contentView.contains("private var routeMenuSections: [MobileRouteMenuSection]"))
+        #expect(contentView.contains("private var routeNativeMenu: NativeToolbarMenu"))
+        #expect(contentView.contains("sections: routeMenuSections.map"))
+        #expect(contentView.contains("NativeToolbarMenuButton("))
+        #expect(contentView.contains("IPadToolbarMenuAction.route("))
+        #expect(contentView.contains("IPadToolbarMenuAction.route(from: id)"))
         #expect(contentView.contains("return activeMobileTabKind.menuSections"))
         #expect(contentView.contains("pinnedItems: isCompactCustomTabRootActive ? mobileBottomTabItems : []") == false)
         #expect(contentView.contains("includesDedicatedSearch: isCompactCustomTabRootActive") == false)
@@ -682,6 +690,10 @@ struct NativeBoundaryTests {
             contentsOf: root.appending(path: "Sources/KeiPix/Support/TabBarMinimizeBehaviorBridge.swift"),
             encoding: .utf8
         )
+        let nativeToolbarMenuButton = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Support/NativeToolbarMenuButton.swift"),
+            encoding: .utf8
+        )
         let sharedComponents = try String(
             contentsOf: root.appending(path: "Sources/KeiPix/Views/LibrarySurfaceComponents.swift"),
             encoding: .utf8
@@ -756,8 +768,11 @@ struct NativeBoundaryTests {
         #expect(nativeInlineFilterField.contains("field.clearButtonMode = .never"))
         #expect(nativeInlineFilterField.contains("field.clearButtonMode = .whileEditing"))
         #expect(tabBarBridge.contains("filterField?.accessibilityValue = resultText"))
-        #expect(iPadContentView.contains("showsTitle: currentMobilePlatform != .phone"))
-        #expect(iPadContentView.contains(".overlay(alignment: .bottomTrailing)"))
+        #expect(iPadContentView.contains("title: currentMobilePlatform == .phone ? nil : store.selectedRoute.title"))
+        #expect(iPadContentView.contains("badgeText: routeMenuArtworkCountBadgeText"))
+        #expect(nativeToolbarMenuButton.contains("let badgeText: String?"))
+        #expect(nativeToolbarMenuButton.contains("badge.backgroundColor = button.tintColor"))
+        #expect(nativeToolbarMenuButton.contains("badge.topAnchor.constraint(equalTo: button.topAnchor"))
         #expect(iPadContentView.contains("private var compactTabBarMinimizeBehavior: TabBarMinimizeBehavior"))
         #expect(iPadContentView.contains("private var compactUITabBarMinimizeBehavior: UITabBarController.MinimizeBehavior"))
         #expect(iPadContentView.contains("isCompactCustomTabRootActive ? .onScrollDown : .automatic"))

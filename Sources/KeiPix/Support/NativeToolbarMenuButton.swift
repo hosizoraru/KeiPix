@@ -7,6 +7,7 @@ struct NativeToolbarMenuButton: UIViewRepresentable {
     let title: String?
     let accessibilityLabel: String
     let menu: NativeToolbarMenu
+    let badgeText: String?
     let select: (String) -> Void
 
     init(
@@ -14,12 +15,14 @@ struct NativeToolbarMenuButton: UIViewRepresentable {
         title: String? = nil,
         accessibilityLabel: String,
         menu: NativeToolbarMenu,
+        badgeText: String? = nil,
         select: @escaping (String) -> Void
     ) {
         self.systemImage = systemImage
         self.title = title
         self.accessibilityLabel = accessibilityLabel
         self.menu = menu
+        self.badgeText = badgeText
         self.select = select
     }
 
@@ -50,10 +53,43 @@ struct NativeToolbarMenuButton: UIViewRepresentable {
         configuration.imagePadding = title == nil ? 0 : 6
         configuration.buttonSize = .medium
         configuration.cornerStyle = .capsule
+        if badgeText != nil {
+            configuration.contentInsets.trailing += 5
+        }
         button.configuration = configuration
+        button.clipsToBounds = false
         button.showsMenuAsPrimaryAction = true
         button.menu = menu.uiMenu(coordinator: coordinator)
+        configureBadge(in: button)
     }
+
+    private func configureBadge(in button: UIButton) {
+        button.viewWithTag(Self.badgeTag)?.removeFromSuperview()
+        guard let badgeText else { return }
+
+        let badge = UILabel()
+        badge.tag = Self.badgeTag
+        badge.text = badgeText
+        badge.font = .monospacedDigitSystemFont(ofSize: 8, weight: .bold)
+        badge.textColor = .white
+        badge.backgroundColor = button.tintColor
+        badge.textAlignment = .center
+        badge.layer.cornerCurve = .continuous
+        badge.layer.cornerRadius = 6.5
+        badge.clipsToBounds = true
+        badge.isAccessibilityElement = false
+        badge.translatesAutoresizingMaskIntoConstraints = false
+
+        button.addSubview(badge)
+        NSLayoutConstraint.activate([
+            badge.topAnchor.constraint(equalTo: button.topAnchor, constant: 2),
+            badge.trailingAnchor.constraint(equalTo: button.trailingAnchor, constant: -2),
+            badge.heightAnchor.constraint(equalToConstant: 13),
+            badge.widthAnchor.constraint(greaterThanOrEqualToConstant: 13)
+        ])
+    }
+
+    private static let badgeTag = 78_431
 
     @MainActor
     final class Coordinator: NSObject {
