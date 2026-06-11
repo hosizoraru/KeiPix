@@ -342,6 +342,7 @@ struct ContentView: View {
                 .padding(.leading, phoneCollapsedFeedFilterLeadingPadding)
                 .padding(.trailing, phoneCollapsedFeedFilterTrailingPadding)
                 .padding(.bottom, phoneCollapsedFeedFilterBottomPadding)
+                .offset(y: phoneCollapsedFeedFilterVerticalOffset)
                 .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
@@ -1631,15 +1632,19 @@ struct ContentView: View {
     }
 
     private var phoneCollapsedFeedFilterLeadingPadding: CGFloat {
-        isPhoneFeedAtContentStart ? 14 : 94
+        isPhoneFeedAtContentStart ? 28 : 80
     }
 
     private var phoneCollapsedFeedFilterTrailingPadding: CGFloat {
-        isPhoneFeedAtContentStart ? 14 : 12
+        isPhoneFeedAtContentStart ? 28 : 18
     }
 
     private var phoneCollapsedFeedFilterBottomPadding: CGFloat {
-        isPhoneFeedAtContentStart ? feedbackOverlayBottomPadding : 0
+        isPhoneFeedAtContentStart ? 22 : 0
+    }
+
+    private var phoneCollapsedFeedFilterVerticalOffset: CGFloat {
+        isPhoneFeedAtContentStart ? 0 : 10
     }
 
     private var phoneHasActiveFeedFilter: Bool {
@@ -2038,7 +2043,7 @@ private struct PhoneCollapsedFeedFilterBar: View {
                     accessibilityLabel: L10n.filterArtworks,
                     usesTransparentBackground: true
                 )
-                .frame(height: 34)
+                .frame(height: 32)
                 .layoutPriority(1)
 
                 if text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false {
@@ -2056,10 +2061,10 @@ private struct PhoneCollapsedFeedFilterBar: View {
                     .accessibilityLabel(L10n.clearSearch)
                 }
             }
-            .padding(.leading, 9)
-            .padding(.trailing, 10)
-            .padding(.vertical, 4)
-            .frame(height: 46)
+            .padding(.leading, 10)
+            .padding(.trailing, 9)
+            .padding(.vertical, 3)
+            .frame(height: 44)
             .frame(maxWidth: 360)
             .glassEffect(.regular.interactive(), in: Capsule(style: .continuous))
         }
