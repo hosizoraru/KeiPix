@@ -536,7 +536,7 @@ struct ContentView: View {
                     }
 
                     ToolbarItem(placement: .primaryAction) {
-                        if showsArtworkActionsMenu {
+                        if showsArtworkActionsMenu(showsSidebarToggle: showsSidebarToggle) {
                             NativeToolbarMenuButton(
                                 systemImage: selectedArtworkMenuSystemImage,
                                 accessibilityLabel: L10n.currentArtwork,
@@ -883,8 +883,8 @@ struct ContentView: View {
             || store.canNavigateForward
     }
 
-    private var showsArtworkActionsMenu: Bool {
-        store.selectedRoute.usesArtworkFeed
+    private func showsArtworkActionsMenu(showsSidebarToggle: Bool) -> Bool {
+        showsSidebarToggle && store.selectedRoute.usesArtworkFeed
     }
 
     private var selectedArtworkMenuSystemImage: String {

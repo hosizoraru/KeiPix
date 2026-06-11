@@ -365,11 +365,13 @@ struct NativeBoundaryTests {
         #expect(contentView.contains("title: L10n.galleryLayout"))
         #expect(contentView.contains("title: L10n.appControls"))
         #expect(contentView.contains("private var galleryLayoutMenu: NativeToolbarMenu"))
+        #expect(contentView.contains("if showsArtworkActionsMenu(showsSidebarToggle: showsSidebarToggle)"))
         #expect(contentView.contains("private func artworkActionsMenu(showsSidebarToggle: Bool) -> NativeToolbarMenu"))
         #expect(contentView.contains("menu: artworkActionsMenu(showsSidebarToggle: showsSidebarToggle)"))
         #expect(contentView.contains("if showsSidebarToggle {\n            primaryItems.insert("))
         #expect(contentView.contains("presentation: .palette"))
-        #expect(contentView.contains("private var showsArtworkActionsMenu: Bool"))
+        #expect(contentView.contains("private func showsArtworkActionsMenu(showsSidebarToggle: Bool) -> Bool"))
+        #expect(contentView.contains("showsSidebarToggle && store.selectedRoute.usesArtworkFeed"))
         #expect(contentView.contains("accessibilityLabel: L10n.currentArtwork"))
         #expect(contentView.contains("selectedArtworkMenuSystemImage"))
         #expect(contentView.contains("IPadToolbarMenuAction.toggleBookmark"))
@@ -2218,6 +2220,11 @@ struct NativeBoundaryTests {
         #expect(summary.contains("L10n.unpinCreator"))
         #expect(summary.contains("L10n.pinnedCreatorFormat"))
         #expect(summary.contains("L10n.unpinnedCreatorFormat"))
+        #expect(summary.contains("private func openCreatorFeed(_ route: PixivRoute) async"))
+        #expect(summary.contains("await store.openUserFeed(user: artwork.user, route: route)"))
+        #expect(summary.contains("dismiss()"))
+        #expect(summary.contains("Label(L10n.creatorIllustrations, systemImage: \"photo.on.rectangle.angled\")"))
+        #expect(summary.contains("Label(L10n.creatorManga, systemImage: \"book.pages\")"))
     }
 
     @Test("Artwork cards surface bookmarked state alongside followed authors")
@@ -2439,6 +2446,10 @@ struct NativeBoundaryTests {
             contentsOf: root.appending(path: "Sources/KeiPix/Views/GalleryArtworkGrid.swift"),
             encoding: .utf8
         )
+        let galleryView = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/GalleryView.swift"),
+            encoding: .utf8
+        )
         let artworkDetail = try String(
             contentsOf: root.appending(path: "Sources/KeiPix/Views/ArtworkDetailView.swift"),
             encoding: .utf8
@@ -2518,6 +2529,11 @@ struct NativeBoundaryTests {
         #expect(artworkTags.contains(".background(.thinMaterial") == false)
         #expect(galleryArtworkGrid.contains("struct GallerySelectionBadge: View"))
         #expect(galleryArtworkGrid.contains(".glassEffect(.regular, in: Circle())"))
+        #expect(galleryArtworkGrid.contains("struct ArtworkCreatorContextMenuItems: View"))
+        #expect(galleryArtworkGrid.contains("store.presentedUserProfile = artwork.user"))
+        #expect(galleryArtworkGrid.contains("await store.openUserFeed(user: artwork.user, route: .userIllustrations)"))
+        #expect(galleryArtworkGrid.contains("await store.openUserFeed(user: artwork.user, route: .userManga)"))
+        #expect(galleryView.contains("ArtworkCreatorContextMenuItems(artwork: artwork, store: store)"))
         #expect(galleryArtworkGrid.contains(".background(.regularMaterial") == false)
         #expect(artworkDetail.contains("private static let topAnchorID = \"artwork-detail-top\""))
         #expect(artworkDetail.contains("scrollToRestoredPosition(proxy: proxy)"))

@@ -855,6 +855,8 @@ private struct GalleryFeedView: View {
             showSeries: { seriesArtwork = $0 }
         )
         Divider()
+        ArtworkCreatorContextMenuItems(artwork: artwork, store: store)
+        Divider()
         Button {
             presentFeedback(artwork)
         } label: {

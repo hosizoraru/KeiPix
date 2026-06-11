@@ -116,6 +116,7 @@ private struct CreatorQuickActionsMenu: View {
     @Bindable var store: KeiPixStore
     let showActionMessage: (String) -> Void
     let openProfile: () -> Void
+    @Environment(\.dismiss) private var dismiss
     @State private var isUpdatingFollow = false
     @State private var feedbackRequest: FeedbackReportRequest?
 
@@ -127,7 +128,21 @@ private struct CreatorQuickActionsMenu: View {
                 Label(L10n.openCreatorProfile, systemImage: "person.crop.rectangle")
             }
 
+            Button {
+                Task { await openCreatorFeed(.userIllustrations) }
+            } label: {
+                Label(L10n.creatorIllustrations, systemImage: "photo.on.rectangle.angled")
+            }
+
+            Button {
+                Task { await openCreatorFeed(.userManga) }
+            } label: {
+                Label(L10n.creatorManga, systemImage: "book.pages")
+            }
+
             if let url = artwork.user.pixivURL {
+                Divider()
+
                 Link(destination: url) {
                     Label(L10n.openInPixiv, systemImage: "safari")
                 }
@@ -220,6 +235,11 @@ private struct CreatorQuickActionsMenu: View {
         } catch {
             store.errorMessage = error.localizedDescription
         }
+    }
+
+    private func openCreatorFeed(_ route: PixivRoute) async {
+        await store.openUserFeed(user: artwork.user, route: route)
+        dismiss()
     }
 
     private func togglePinnedCreator(_ user: PixivUser) {

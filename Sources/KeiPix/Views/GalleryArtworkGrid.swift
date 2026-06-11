@@ -112,6 +112,8 @@ struct GalleryContentGrid: View {
             showSeries: { seriesArtwork = $0 }
         )
         Divider()
+        ArtworkCreatorContextMenuItems(artwork: artwork, store: store)
+        Divider()
         Button {
             presentFeedback(artwork)
         } label: {
@@ -185,6 +187,8 @@ struct GalleryContentGrid: View {
                 actionMessage: $actionMessage,
                 showSeries: { seriesArtwork = $0 }
             )
+            Divider()
+            ArtworkCreatorContextMenuItems(artwork: artwork, store: store)
             Divider()
             Button {
                 presentFeedback(artwork)
@@ -331,6 +335,8 @@ private struct MasonryArtworkGrid: View {
                         showSeries: presentSeries
                     )
                     Divider()
+                    ArtworkCreatorContextMenuItems(artwork: artwork, store: store)
+                    Divider()
                     Button {
                         presentFeedback(artwork)
                     } label: {
@@ -415,6 +421,31 @@ struct GallerySelectionBadge: View {
             }
             .shadow(color: .black.opacity(0.22), radius: 4, y: 2)
             .accessibilityLabel(L10n.selectedWorks)
+    }
+}
+
+struct ArtworkCreatorContextMenuItems: View {
+    let artwork: PixivArtwork
+    @Bindable var store: KeiPixStore
+
+    var body: some View {
+        Button {
+            store.presentedUserProfile = artwork.user
+        } label: {
+            Label(L10n.openCreatorProfile, systemImage: "person.crop.circle")
+        }
+
+        Button {
+            Task { await store.openUserFeed(user: artwork.user, route: .userIllustrations) }
+        } label: {
+            Label(L10n.creatorIllustrations, systemImage: "photo.on.rectangle.angled")
+        }
+
+        Button {
+            Task { await store.openUserFeed(user: artwork.user, route: .userManga) }
+        } label: {
+            Label(L10n.creatorManga, systemImage: "book.pages")
+        }
     }
 }
 
