@@ -6,6 +6,7 @@ import UIKit
 enum FeedHeaderPresentation {
     case regular
     case iPadCompact
+    case phoneToolbarMenu
 }
 
 struct FeedHeaderView: View {
@@ -66,6 +67,8 @@ struct FeedHeaderView: View {
                 #endif
             case .iPadCompact:
                 iPadCompactHeaderActions
+            case .phoneToolbarMenu:
+                compactFeedActionsMenu
             }
         }
         .controlSize(.small)
@@ -319,7 +322,10 @@ struct FeedHeaderView: View {
     }
 
     private var compactFeedActionsSystemImage: String {
-        compactFeedActionsAreActive ? "slider.horizontal.3" : "ellipsis.circle"
+        if presentation == .phoneToolbarMenu {
+            return "slider.horizontal.3"
+        }
+        return compactFeedActionsAreActive ? "slider.horizontal.3" : "ellipsis.circle"
     }
 
     private var compactFeedActionsAreActive: Bool {

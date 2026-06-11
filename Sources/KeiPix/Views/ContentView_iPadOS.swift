@@ -481,10 +481,12 @@ struct ContentView: View {
                     }
 
                     ToolbarItem(placement: .primaryAction) {
-                        Button {
-                            store.requestRouteRefresh()
-                        } label: {
-                            Label(L10n.refresh, systemImage: "arrow.clockwise")
+                        if showsRefreshToolbarButton(showsSidebarToggle: showsSidebarToggle) {
+                            Button {
+                                store.requestRouteRefresh()
+                            } label: {
+                                Label(L10n.refresh, systemImage: "arrow.clockwise")
+                            }
                         }
                     }
 
@@ -858,7 +860,8 @@ struct ContentView: View {
             CompactRouteMenuLabel(
                 title: store.selectedRoute.title,
                 systemImage: store.selectedRoute.systemImage,
-                badgeText: routeMenuArtworkCountBadgeText
+                badgeText: routeMenuArtworkCountBadgeText,
+                showsTitle: currentMobilePlatform != .phone
             )
         }
         .accessibilityLabel(routeMenuAccessibilityLabel)
@@ -891,6 +894,15 @@ struct ContentView: View {
 
     private func showsGalleryLayoutPicker(showsSidebarToggle: Bool) -> Bool {
         showsSidebarToggle && store.selectedRoute.usesArtworkFeed
+    }
+
+    private func showsRefreshToolbarButton(showsSidebarToggle: Bool) -> Bool {
+        if currentMobilePlatform == .phone,
+           showsSidebarToggle == false,
+           store.selectedRoute.usesArtworkFeed {
+            return false
+        }
+        return true
     }
 
     private var showsArtworkNavigationControls: Bool {
@@ -1999,48 +2011,50 @@ private struct PhoneCollapsedFeedFilterBar: View {
     let resultText: String
 
     var body: some View {
-        GlassEffectContainer(spacing: 10) {
-            HStack(spacing: 9) {
+        GlassEffectContainer(spacing: 6) {
+            HStack(spacing: 6) {
                 Image(systemName: "line.3.horizontal.decrease.circle")
-                    .font(.callout.weight(.semibold))
+                    .font(.footnote.weight(.semibold))
                     .symbolRenderingMode(.hierarchical)
                     .foregroundStyle(.secondary)
+                    .frame(width: 34, height: 34)
+                    .glassEffect(.regular, in: Circle())
                     .accessibilityHidden(true)
 
-                NativeInlineFilterField(
-                    text: $text,
-                    placeholder: L10n.filterArtworks,
-                    accessibilityLabel: L10n.filterArtworks
-                )
-                .frame(height: 36)
-                .layoutPriority(1)
+                HStack(spacing: 6) {
+                    NativeInlineFilterField(
+                        text: $text,
+                        placeholder: L10n.filterArtworks,
+                        accessibilityLabel: L10n.filterArtworks
+                    )
+                    .frame(height: 32)
+                    .layoutPriority(1)
 
-                Text(resultText)
-                    .font(.caption2.weight(.semibold).monospacedDigit())
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.72)
-                    .accessibilityHidden(true)
-
-                if text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false {
-                    Button {
-                        withAnimation(.snappy(duration: 0.16)) {
-                            text = ""
+                    if text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false {
+                        Button {
+                            withAnimation(.snappy(duration: 0.16)) {
+                                text = ""
+                            }
+                        } label: {
+                            Label(L10n.clearSearch, systemImage: "xmark.circle.fill")
                         }
-                    } label: {
-                        Label(L10n.clearSearch, systemImage: "xmark.circle.fill")
+                        .labelStyle(.iconOnly)
+                        .buttonStyle(.plain)
+                        .foregroundStyle(.secondary)
+                        .help(L10n.clearSearch)
+                        .accessibilityLabel(L10n.clearSearch)
                     }
-                    .os26GlassIconButton()
-                    .controlSize(.small)
-                    .help(L10n.clearSearch)
-                    .accessibilityLabel(L10n.clearSearch)
                 }
+                .padding(.leading, 4)
+                .padding(.trailing, 8)
+                .padding(.vertical, 4)
+                .frame(minHeight: 42)
+                .frame(maxWidth: 360)
+                .glassEffect(.regular, in: Capsule(style: .continuous))
             }
-            .padding(.horizontal, 10)
-            .padding(.vertical, 7)
             .frame(maxWidth: 560)
-            .keiGlass(20)
         }
+        .accessibilityValue(resultText)
         .accessibilityElement(children: .contain)
     }
 }
@@ -2049,29 +2063,37 @@ private struct CompactRouteMenuLabel: View {
     let title: String
     let systemImage: String
     let badgeText: String?
+    let showsTitle: Bool
 
     var body: some View {
-        Label {
-            Text(title)
-                .lineLimit(1)
-        } icon: {
-            Image(systemName: systemImage)
-                .symbolRenderingMode(.hierarchical)
-                .overlay(alignment: .topTrailing) {
-                    if let badgeText {
-                        Text(badgeText)
-                            .font(.system(size: 8, weight: .bold, design: .rounded).monospacedDigit())
-                            .foregroundStyle(.white)
-                            .padding(.horizontal, 3)
-                            .frame(minWidth: 13, minHeight: 13)
-                            .background(Color.accentColor, in: Capsule(style: .continuous))
-                            .offset(x: 8, y: -7)
-                            .accessibilityHidden(true)
-                    }
-                }
-                .padding(.top, badgeText == nil ? 0 : 4)
-                .padding(.trailing, badgeText == nil ? 0 : 7)
+        HStack(spacing: showsTitle ? 7 : 0) {
+            routeIcon
+
+            if showsTitle {
+                Text(title)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+            }
         }
+    }
+
+    private var routeIcon: some View {
+        Image(systemName: systemImage)
+            .symbolRenderingMode(.hierarchical)
+            .overlay(alignment: .bottomTrailing) {
+                if let badgeText {
+                    Text(badgeText)
+                        .font(.system(size: 8, weight: .bold, design: .rounded).monospacedDigit())
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 3)
+                        .frame(minWidth: 13, minHeight: 13)
+                        .background(Color.accentColor, in: Capsule(style: .continuous))
+                        .offset(x: 7, y: 6)
+                        .accessibilityHidden(true)
+                }
+            }
+            .padding(.trailing, badgeText == nil ? 0 : 8)
+            .padding(.bottom, badgeText == nil ? 0 : 6)
     }
 }
 

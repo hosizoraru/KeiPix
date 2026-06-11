@@ -208,6 +208,33 @@ private struct GalleryFeedView: View {
             artworkSelection.clear()
             return .handled
         }
+        #if os(iOS)
+        .toolbar {
+            if showsPhoneFeedToolbarActions {
+                ToolbarItemGroup(placement: .topBarTrailing) {
+                    Button {
+                        store.requestRouteRefresh()
+                    } label: {
+                        Label(L10n.refresh, systemImage: "arrow.clockwise")
+                    }
+                    .labelStyle(.iconOnly)
+                    .help(L10n.refresh)
+                    .accessibilityLabel(L10n.refresh)
+
+                    FeedHeaderView(
+                        store: store,
+                        actionMessage: $actionMessage,
+                        artworkSelection: $artworkSelection,
+                        batchBookmarkCommandRequest: $batchBookmarkCommandRequest,
+                        presentation: .phoneToolbarMenu,
+                        showsFeedCountBadge: false,
+                        showsActiveFeedClearChip: false
+                    )
+                    .fixedSize(horizontal: true, vertical: false)
+                }
+            }
+        }
+        #endif
     }
 
     private var swiftUIFeed: some View {
@@ -250,7 +277,7 @@ private struct GalleryFeedView: View {
                         .padding(.top, 14)
                         .padding(.bottom, 20)
                     } header: {
-                        if showsFeedHeader {
+                        if showsNativeFeedHeader {
                             FeedHeaderView(
                                 store: store,
                                 actionMessage: $actionMessage,
@@ -282,7 +309,7 @@ private struct GalleryFeedView: View {
         let highlightedArtworkIDs = nativeHighlightedArtworkIDs
 
         return VStack(spacing: 0) {
-            if showsFeedHeader {
+            if showsNativeFeedHeader {
                 #if os(iOS)
                 iPadNativeFeedHeader
                 #else
@@ -351,6 +378,21 @@ private struct GalleryFeedView: View {
     #endif
 
     #if os(iOS)
+    private var showsPhoneFeedToolbarActions: Bool {
+        UIDevice.current.userInterfaceIdiom == .phone
+            && store.selectedRoute.usesArtworkFeed
+    }
+
+    private var usesPhoneCompactFeedChrome: Bool {
+        UIDevice.current.userInterfaceIdiom == .phone
+    }
+
+    private var showsNativeFeedHeader: Bool {
+        guard showsFeedHeader else { return false }
+        guard usesPhoneCompactFeedChrome else { return true }
+        return store.selectedPixivCollection != nil || store.focusedUser != nil
+    }
+
     private var iPadNativeFeedHeader: some View {
         Group {
             if let collection = store.selectedPixivCollection {
@@ -371,8 +413,10 @@ private struct GalleryFeedView: View {
                         }
                     )
 
-                    iPadCompactFeedActions(showsFeedCountBadge: false, showsActiveFeedClearChip: false)
-                        .frame(maxWidth: .infinity, alignment: .trailing)
+                    if usesPhoneCompactFeedChrome == false {
+                        iPadCompactFeedActions(showsFeedCountBadge: false, showsActiveFeedClearChip: false)
+                            .frame(maxWidth: .infinity, alignment: .trailing)
+                    }
                 }
             } else if let focusedUser = store.focusedUser {
                 VStack(alignment: .leading, spacing: 8) {
@@ -391,8 +435,10 @@ private struct GalleryFeedView: View {
                         }
                     )
 
-                    iPadCompactFeedActions(showsFeedCountBadge: false, showsActiveFeedClearChip: false)
-                        .frame(maxWidth: .infinity, alignment: .trailing)
+                    if usesPhoneCompactFeedChrome == false {
+                        iPadCompactFeedActions(showsFeedCountBadge: false, showsActiveFeedClearChip: false)
+                            .frame(maxWidth: .infinity, alignment: .trailing)
+                    }
                 }
             } else {
                 ViewThatFits(in: .horizontal) {
@@ -450,6 +496,12 @@ private struct GalleryFeedView: View {
             showsFeedCountBadge: showsFeedCountBadge,
             showsActiveFeedClearChip: showsActiveFeedClearChip
         )
+    }
+    #endif
+
+    #if os(macOS)
+    private var showsNativeFeedHeader: Bool {
+        showsFeedHeader
     }
     #endif
 
