@@ -98,42 +98,21 @@ struct BookmarkEditorView: View {
             SheetHeaderRail(
                 overline: usesCompactLayout ? nil : (artwork.isBookmarked ? L10n.editBookmark : L10n.bookmark),
                 title: usesCompactLayout ? (artwork.isBookmarked ? L10n.editBookmark : L10n.bookmark) : L10n.bookmarks,
-                subtitle: String(format: L10n.bookmarkTagSelectionSummaryFormat, selectedTags.count)
+                subtitle: String(format: L10n.bookmarkTagSelectionSummaryFormat, selectedTags.count),
+                leading: { EmptyView() },
+                trailing: { restrictMenu(usesCompactLayout: usesCompactLayout) }
             )
 
             Divider()
 
             ScrollView {
                 VStack(alignment: .leading, spacing: usesCompactLayout ? 10 : 14) {
-                    if usesCompactLayout {
-                        ZStack(alignment: .bottomTrailing) {
-                            BookmarkEditorArtworkSummary(
-                                artwork: artwork,
-                                isBookmarked: isBookmarked,
-                                selectedTagCount: selectedTags.count,
-                                usesCompactLayout: usesCompactLayout
-                            )
-                            BookmarkEditorActionRow(
-                                pixivURL: artwork.pixivURL,
-                                usesCompactLayout: usesCompactLayout,
-                                openPixiv: { url in
-                                    PlatformWorkspace.open(url)
-                                },
-                                copyLink: { url in
-                                    PasteboardWriter.copy(url.absoluteString)
-                                    showActionMessage(L10n.copied)
-                                }
-                            )
-                            .padding(.trailing, 12)
-                            .padding(.bottom, 10)
-                        }
-                    } else {
-                        BookmarkEditorArtworkSummary(
-                            artwork: artwork,
-                            isBookmarked: isBookmarked,
-                            selectedTagCount: selectedTags.count,
-                            usesCompactLayout: usesCompactLayout
-                        )
+                    BookmarkEditorArtworkSummary(
+                        artwork: artwork,
+                        isBookmarked: isBookmarked,
+                        selectedTagCount: selectedTags.count,
+                        usesCompactLayout: usesCompactLayout
+                    ) {
                         BookmarkEditorActionRow(
                             pixivURL: artwork.pixivURL,
                             usesCompactLayout: usesCompactLayout,
@@ -146,7 +125,7 @@ struct BookmarkEditorView: View {
                             }
                         )
                     }
-                    visibilityRow(usesCompactLayout: usesCompactLayout)
+
                     customTagRow(usesCompactLayout: usesCompactLayout)
                     if customChips.isEmpty == false {
                         customChipsRow(usesCompactLayout: usesCompactLayout)
@@ -278,37 +257,58 @@ struct BookmarkEditorView: View {
     // MARK: - Form rows (panel-styled, replaces Form/Section grouping so the
     // sheet renders all three tag buckets without nested scroll views).
 
-    private func visibilityRow(usesCompactLayout: Bool) -> some View {
-        VStack(alignment: .leading, spacing: 9) {
-            Label(L10n.bookmarks, systemImage: "lock")
-                .font(.subheadline.weight(.semibold))
-                .foregroundStyle(.secondary)
-
-            Picker(L10n.bookmarks, selection: $restrict) {
-                ForEach(BookmarkRestrict.allCases) { option in
-                    Text(option.title).tag(option)
+    private func restrictMenu(usesCompactLayout: Bool) -> some View {
+        Menu {
+            ForEach(BookmarkRestrict.allCases) { option in
+                Button {
+                    guard restrict != option else { return }
+                    restrict = option
+                    Task { await loadLibraryTags(for: option) }
+                } label: {
+                    Label(option.shortTitle, systemImage: restrict == option ? "checkmark" : option.systemImage)
                 }
             }
-            .pickerStyle(.segmented)
-            .labelsHidden()
-            .disabled(isSaving)
-            .onChange(of: restrict) { _, value in
-                Task { await loadLibraryTags(for: value) }
-            }
+        } label: {
+            restrictMenuLabel(usesCompactLayout: usesCompactLayout)
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, usesCompactLayout ? 10 : 12)
-        .keiGlass(usesCompactLayout ? 12 : 14)
+        .buttonStyle(.glass)
+        .buttonBorderShape(.capsule)
+        .controlSize(.small)
+        .help(restrict.title)
+        .accessibilityLabel(L10n.bookmarks)
+        .accessibilityValue(restrict.title)
+        .disabled(isSaving)
+    }
+
+    @ViewBuilder
+    private func restrictMenuLabel(usesCompactLayout: Bool) -> some View {
+        if usesCompactLayout {
+            Label(restrict.shortTitle, systemImage: restrict.systemImage)
+                .labelStyle(.iconOnly)
+        } else {
+            Label(restrict.shortTitle, systemImage: restrict.systemImage)
+                .labelStyle(.titleAndIcon)
+        }
     }
 
     private func customTagRow(usesCompactLayout: Bool) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            OS26LibraryTextEntryField(text: $customTagInput, placeholder: L10n.tagName, minWidth: 0)
+            HStack(spacing: 8) {
+                OS26LibraryTextEntryField(
+                    text: $customTagInput,
+                    placeholder: L10n.tagName,
+                    minWidth: usesCompactLayout ? 0 : 220
+                )
                 .onSubmit(addCustomTag)
-                .frame(maxWidth: .infinity)
+                .layoutPriority(1)
+
+                addCustomTagButton(usesCompactLayout: usesCompactLayout)
+            }
 
             HStack(spacing: 8) {
-                addCustomTagButton(usesCompactLayout: usesCompactLayout)
+                if usesCompactLayout == false {
+                    Spacer(minLength: 0)
+                }
 
                 if libraryTags.isEmpty == false || artwork.tags.isEmpty == false {
                     OS26LibrarySearchField(
@@ -321,7 +321,7 @@ struct BookmarkEditorView: View {
                     .layoutPriority(1)
                 }
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
+            .frame(maxWidth: .infinity, alignment: usesCompactLayout ? .leading : .trailing)
 
             if isLoading {
                 HStack(spacing: 8) {
@@ -746,6 +746,26 @@ struct BookmarkEditorViewportTraits: Equatable, Sendable {
     }
 }
 
+private extension BookmarkRestrict {
+    var shortTitle: String {
+        switch self {
+        case .public:
+            L10n.publicRestrict
+        case .private:
+            L10n.privateRestrict
+        }
+    }
+
+    var systemImage: String {
+        switch self {
+        case .public:
+            "globe"
+        case .private:
+            "lock"
+        }
+    }
+}
+
 enum BookmarkEditorLayoutProfile: Equatable, Sendable {
     case compact
     case expanded
@@ -910,11 +930,12 @@ extension EnvironmentValues {
     }
 }
 
-private struct BookmarkEditorArtworkSummary: View {
+private struct BookmarkEditorArtworkSummary<Trailing: View>: View {
     let artwork: PixivArtwork
     let isBookmarked: Bool
     let selectedTagCount: Int
     let usesCompactLayout: Bool
+    @ViewBuilder let trailing: () -> Trailing
 
     var body: some View {
         HStack(spacing: usesCompactLayout ? 10 : 14) {
@@ -945,6 +966,8 @@ private struct BookmarkEditorArtworkSummary: View {
             }
 
             Spacer(minLength: 8)
+
+            trailing()
         }
         .padding(.horizontal, usesCompactLayout ? 12 : 14)
         .padding(.vertical, usesCompactLayout ? 10 : 14)
@@ -981,7 +1004,6 @@ private struct BookmarkEditorActionRow: View {
                 .buttonBorderShape(.capsule)
                 .controlSize(.small)
                 .help(L10n.moreActions)
-                .frame(maxWidth: .infinity, alignment: .trailing)
             } else {
                 GlassEffectContainer(spacing: 8) {
                     HStack(spacing: 8) {
@@ -1002,8 +1024,6 @@ private struct BookmarkEditorActionRow: View {
                         .buttonStyle(.glass)
                         .buttonBorderShape(.capsule)
                         .controlSize(.small)
-
-                        Spacer(minLength: 0)
                     }
                 }
             }
@@ -1023,18 +1043,14 @@ private struct BookmarkEditorFooterBar: View {
 
     var body: some View {
         if usesCompactLayout {
-            VStack(spacing: 9) {
-                saveButton
-                    .frame(maxWidth: .infinity)
-
-                HStack(spacing: 8) {
-                    if isBookmarked {
-                        removeButton
-                    }
-
-                    Spacer(minLength: 8)
-                    resetButton
+            HStack(spacing: 8) {
+                if isBookmarked {
+                    removeButton
                 }
+
+                Spacer(minLength: 8)
+                resetButton
+                saveButton
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
@@ -1072,7 +1088,6 @@ private struct BookmarkEditorFooterBar: View {
                 ProgressView().controlSize(.small)
             } else {
                 Label(L10n.saveBookmark, systemImage: "checkmark")
-                    .frame(maxWidth: usesCompactLayout ? .infinity : nil)
             }
         }
         .os26GlassButton(prominent: true)
