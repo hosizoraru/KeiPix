@@ -15,6 +15,16 @@ struct NovelGalleryView: View {
     private var novelStore: NovelFeatureStore { store.novels }
 
     var body: some View {
+        GeometryReader { proxy in
+            let surface = NovelGallerySurfaceLayout(
+                size: proxy.size,
+                platform: ReaderPlatformKind.current
+            )
+            content(surface: surface)
+        }
+    }
+
+    private func content(surface: NovelGallerySurfaceLayout) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             if store.session != nil {
                 creatorFeedContextCard
@@ -28,7 +38,7 @@ struct NovelGalleryView: View {
                 } else if novelStore.novels.isEmpty {
                     emptyState
                 } else {
-                    listContent
+                    listContent(surface: surface)
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -36,9 +46,10 @@ struct NovelGalleryView: View {
         .navigationTitle(store.selectedRoute.title)
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
-                #if os(iOS)
-                novelLayoutMenu
-                #else
+                if surface.showsLayoutMenu {
+                    novelLayoutMenu
+                }
+                #if os(macOS)
                 Picker(L10n.galleryLayout, selection: Binding(
                     get: { store.novelGalleryLayoutMode },
                     set: { store.setNovelGalleryLayoutMode($0) }
@@ -96,9 +107,9 @@ struct NovelGalleryView: View {
         }
     }
 
-    private var listContent: some View {
+    private func listContent(surface: NovelGallerySurfaceLayout) -> some View {
         ScrollView {
-            if store.novelGalleryLayoutMode == .grid {
+            if surface.layoutMode(current: store.novelGalleryLayoutMode) == .grid {
                 let columns = [GridItem(.adaptive(minimum: 180, maximum: 260), spacing: 14)]
                 LazyVGrid(columns: columns, spacing: 14) {
                     ForEach(novelStore.novels) { novel in
@@ -120,14 +131,16 @@ struct NovelGalleryView: View {
                         paginationFooter
                     }
                 }
-                .padding(16)
+                .padding(.horizontal, surface.horizontalPadding)
+                .padding(.vertical, surface.verticalPadding)
             } else {
                 LazyVStack(spacing: 12) {
                     ForEach(novelStore.novels) { novel in
                         NovelCardView(
                             novel: novel,
                             isSelected: novelStore.selectedNovel?.id == novel.id,
-                            openReader: directReaderAction(for: novel)
+                            openReader: directReaderAction(for: novel),
+                            presentation: surface.cardPresentation
                         )
                         .contentShape(Rectangle())
                         .onTapGesture {
@@ -142,7 +155,8 @@ struct NovelGalleryView: View {
                         paginationFooter
                     }
                 }
-                .padding(16)
+                .padding(.horizontal, surface.horizontalPadding)
+                .padding(.vertical, surface.verticalPadding)
             }
         }
     }
@@ -246,5 +260,40 @@ struct NovelGalleryView: View {
     private func presentNovelReader(_ novel: PixivNovel) {
         readerNovel = novel
         Task { await novelStore.openNovel(novel) }
+    }
+}
+
+private struct NovelGallerySurfaceLayout: Equatable {
+    let workspace: MobileWorkspaceLayout
+
+    init(size: CGSize, platform: ReaderPlatformKind) {
+        workspace = MobileWorkspaceLayout(size: size, platform: platform)
+    }
+
+    var showsLayoutMenu: Bool {
+        #if os(iOS)
+        return workspace.usesCustomNavigationTabs == false
+        #else
+        return false
+        #endif
+    }
+
+    var cardPresentation: NovelCardPresentation {
+        workspace.usesCondensedChrome ? .compact : .regular
+    }
+
+    var horizontalPadding: CGFloat {
+        if workspace.usesCondensedChrome {
+            return 12
+        }
+        return workspace.articleHorizontalPadding
+    }
+
+    var verticalPadding: CGFloat {
+        workspace.usesCondensedChrome ? 12 : 16
+    }
+
+    func layoutMode(current: NovelGalleryLayoutMode) -> NovelGalleryLayoutMode {
+        workspace.usesCustomNavigationTabs ? .list : current
     }
 }

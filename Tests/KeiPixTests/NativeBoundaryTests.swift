@@ -1542,6 +1542,10 @@ struct NativeBoundaryTests {
             contentsOf: root.appending(path: "Sources/KeiPix/Views/NovelGalleryView.swift"),
             encoding: .utf8
         )
+        let novelCard = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/NovelCardView.swift"),
+            encoding: .utf8
+        )
         let novelWatchlist = try String(
             contentsOf: root.appending(path: "Sources/KeiPix/Views/NovelWatchlistView.swift"),
             encoding: .utf8
@@ -1560,6 +1564,18 @@ struct NativeBoundaryTests {
         #expect(novelGallery.contains(".os26SheetChrome(.reader)"))
         #expect(novelGallery.contains("usesDirectReaderOpening"))
         #expect(novelGallery.contains("private func presentNovelReader(_ novel: PixivNovel)"))
+        #expect(novelGallery.contains("NovelGallerySurfaceLayout"))
+        #expect(novelGallery.contains("MobileWorkspaceLayout(size: size, platform: platform)"))
+        #expect(novelGallery.contains("workspace.usesCustomNavigationTabs ? .list : current"))
+        #expect(novelGallery.contains("presentation: surface.cardPresentation"))
+        #expect(novelCard.contains("enum NovelCardPresentation"))
+        #expect(novelCard.contains("private struct CompactNovelCardLayout"))
+        #expect(novelCard.contains("@Environment(\\.horizontalSizeClass)"))
+        #expect(novelCard.contains("NovelCardMetricPill("))
+        #expect(novelCard.contains("NovelCardTagStrip("))
+        #expect(novelCard.contains("ScrollView(.horizontal)"))
+        #expect(novelCard.contains("String(format: L10n.novelPageCountFormat, novel.pageCount)"))
+        #expect(novelCard.contains("Label(String(format: L10n.novelTextLengthFormat, novel.textLength), systemImage: \"textformat\")") == false)
         #expect(novelWatchlist.contains("if store.session != nil {\n                await novelStore.refreshWatchlist()"))
         #expect(workSubscriptions.contains("guard store.session != nil else { return \"\" }"))
     }
