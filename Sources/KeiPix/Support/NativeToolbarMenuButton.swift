@@ -181,12 +181,6 @@ enum NativeToolbarMenuItem {
         isEnabled: Bool = true,
         isDestructive: Bool = false
     )
-    case submenu(
-        title: String,
-        subtitle: String? = nil,
-        systemImage: String,
-        items: [NativeToolbarMenuItem]
-    )
 
     @MainActor
     func uiElement(
@@ -205,15 +199,6 @@ enum NativeToolbarMenuItem {
                 coordinator.select(id)
             }
             return action
-
-        case .submenu(let title, let subtitle, let systemImage, let items):
-            let menu = UIMenu(
-                title: title,
-                image: UIImage(systemName: systemImage),
-                children: items.map { $0.uiElement(coordinator: coordinator) }
-            )
-            menu.subtitle = subtitle
-            return menu
         }
     }
 }

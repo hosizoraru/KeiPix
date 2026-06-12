@@ -569,8 +569,9 @@ struct NativeBoundaryTests {
         #expect(nativeToolbarMenu.contains("NativeToolbarMenuPopoverController") == false)
         #expect(nativeToolbarMenu.contains("NativeToolbarMenuQuickActionControl") == false)
         #expect(nativeToolbarMenu.contains("NativeToolbarMenuRowControl") == false)
-        #expect(nativeToolbarMenu.contains("subtitle: String? = nil"))
-        #expect(nativeToolbarMenu.contains("menu.subtitle = subtitle"))
+        #expect(nativeToolbarMenu.contains("case submenu") == false)
+        #expect(nativeToolbarMenu.contains("subtitle: String? = nil") == false)
+        #expect(nativeToolbarMenu.contains("menu.subtitle = subtitle") == false)
         #expect(nativeToolbarMenu.contains("UIMenu("))
         #expect(nativeToolbarMenu.contains("UIAction("))
 
@@ -617,12 +618,15 @@ struct NativeBoundaryTests {
 
         let settingsRange = try #require(contentView.range(of: "id: IPadToolbarMenuAction.settings"))
         let customizeRange = try #require(contentView.range(of: "id: IPadToolbarMenuAction.customizeBottomTabs"))
-        let firstFilterRange = try #require(contentView.range(of: "id: IPadToolbarMenuAction.hideMutedContent"))
+        let filterPanelRange = try #require(contentView.range(of: "id: IPadToolbarMenuAction.contentFiltersPanel"))
 
-        #expect(settingsRange.lowerBound < firstFilterRange.lowerBound)
-        #expect(customizeRange.lowerBound < firstFilterRange.lowerBound)
-        #expect(contentView.contains(".submenu(\n                            title: L10n.viewOptions"))
-        #expect(contentView.contains(".submenu(\n                            title: L10n.contentFilters"))
+        #expect(settingsRange.lowerBound < filterPanelRange.lowerBound)
+        #expect(customizeRange.lowerBound < filterPanelRange.lowerBound)
+        #expect(contentView.contains("appControlsPanel = .viewOptions"))
+        #expect(contentView.contains("appControlsPanel = .contentFilters"))
+        #expect(contentView.contains("MobileAppControlsPanelView("))
+        #expect(contentView.contains(".sheet(item: $appControlsPanel)"))
+        #expect(contentView.contains(".submenu(") == false)
         #expect(customization.contains("List {"))
         #expect(customization.contains(".listStyle(.plain)"))
     }
