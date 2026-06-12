@@ -110,17 +110,17 @@ struct NovelGalleryView: View {
     private func listContent(surface: NovelGallerySurfaceLayout) -> some View {
         ScrollView {
             if surface.layoutMode(current: store.novelGalleryLayoutMode) == .grid {
-                let columns = [GridItem(.adaptive(minimum: 180, maximum: 260), spacing: 14)]
+                let columns = surface.gridColumns
                 LazyVGrid(columns: columns, spacing: 14) {
                     ForEach(novelStore.novels) { novel in
                         NovelGridCardView(
                             novel: novel,
                             isSelected: novelStore.selectedNovel?.id == novel.id,
-                            openReader: directReaderAction(for: novel)
+                            openReader: readerButtonAction(for: novel, surface: surface)
                         )
                         .contentShape(Rectangle())
                         .onTapGesture {
-                            openNovelCard(novel)
+                            openNovelCard(novel, surface: surface)
                         }
                         .contextMenu {
                             novelContextMenu(novel)
@@ -139,12 +139,12 @@ struct NovelGalleryView: View {
                         NovelCardView(
                             novel: novel,
                             isSelected: novelStore.selectedNovel?.id == novel.id,
-                            openReader: directReaderAction(for: novel),
+                            openReader: readerButtonAction(for: novel, surface: surface),
                             presentation: surface.cardPresentation
                         )
                         .contentShape(Rectangle())
                         .onTapGesture {
-                            openNovelCard(novel)
+                            openNovelCard(novel, surface: surface)
                         }
                         .contextMenu {
                             novelContextMenu(novel)
@@ -237,20 +237,12 @@ struct NovelGalleryView: View {
         store.selectedRoute.rawValue
     }
 
-    private var usesDirectReaderOpening: Bool {
-        #if os(iOS)
-        true
-        #else
-        false
-        #endif
+    private func readerButtonAction(for novel: PixivNovel, surface: NovelGallerySurfaceLayout) -> (() -> Void)? {
+        surface.opensCardsInReader ? nil : { presentNovelReader(novel) }
     }
 
-    private func directReaderAction(for novel: PixivNovel) -> (() -> Void)? {
-        usesDirectReaderOpening ? { presentNovelReader(novel) } : nil
-    }
-
-    private func openNovelCard(_ novel: PixivNovel) {
-        if usesDirectReaderOpening {
+    private func openNovelCard(_ novel: PixivNovel, surface: NovelGallerySurfaceLayout) {
+        if surface.opensCardsInReader {
             presentNovelReader(novel)
         } else {
             Task { await novelStore.openNovel(novel) }
@@ -272,14 +264,18 @@ private struct NovelGallerySurfaceLayout: Equatable {
 
     var showsLayoutMenu: Bool {
         #if os(iOS)
-        return workspace.usesCustomNavigationTabs == false
+        return workspace.platform == .pad && workspace.usesCondensedChrome == false
         #else
         return false
         #endif
     }
 
+    var opensCardsInReader: Bool {
+        workspace.platform == .phone || workspace.usesIPadPortraitTopTabs
+    }
+
     var cardPresentation: NovelCardPresentation {
-        workspace.usesCondensedChrome ? .compact : .regular
+        workspace.platform == .phone || workspace.usesCondensedChrome ? .compact : .regular
     }
 
     var horizontalPadding: CGFloat {
@@ -293,7 +289,23 @@ private struct NovelGallerySurfaceLayout: Equatable {
         workspace.usesCondensedChrome ? 12 : 16
     }
 
+    var gridColumns: [GridItem] {
+        Array(
+            repeating: GridItem(.flexible(minimum: 280, maximum: 520), spacing: 14),
+            count: gridColumnCount
+        )
+    }
+
     func layoutMode(current: NovelGalleryLayoutMode) -> NovelGalleryLayoutMode {
-        workspace.usesCustomNavigationTabs ? .list : current
+        if workspace.platform == .phone || workspace.usesCondensedChrome {
+            return .list
+        }
+        return current
+    }
+
+    private var gridColumnCount: Int {
+        guard workspace.platform != .phone else { return 1 }
+        let availableWidth = max(0, workspace.size.width - horizontalPadding * 2)
+        return availableWidth >= 620 ? 2 : 1
     }
 }

@@ -94,7 +94,8 @@ enum VisualQASampleData {
             isOriginal: true,
             isBookmarked: true,
             xRestrict: 1,
-            novelAIType: 2
+            novelAIType: 2,
+            isFollowed: true
         ),
         decodeNovel(
             id: 94_101,
@@ -700,7 +701,8 @@ enum VisualQASampleData {
         isOriginal: Bool = false,
         isBookmarked: Bool = false,
         xRestrict: Int = 0,
-        novelAIType: Int = 0
+        novelAIType: Int = 0,
+        isFollowed: Bool = false
     ) -> PixivNovel {
         let tagPayload = tags.map { #"{"name":"\#($0)","translated_name":null}"# }.joined(separator: ",")
         let payload = """
@@ -723,7 +725,8 @@ enum VisualQASampleData {
           "user": {
             "id": 5001,
             "name": "Novel QA Creator",
-            "account": "novel_qa"
+            "account": "novel_qa",
+            "is_followed": \(isFollowed)
           },
           "series": {},
           "is_bookmarked": \(isBookmarked),
@@ -929,7 +932,7 @@ extension KeiPixStore {
         isLoadingMore = false
         activeFeedSnapshotRestoration = nil
         searchPopularPreviewArtworks = []
-        novelGalleryLayoutMode = .list
+        novelGalleryLayoutMode = .grid
         novels.presentVisualQAFeed(
             novels: VisualQASampleData.novelFeedNovels,
             nextURL: URL(string: "https://app-api.pixiv.net/v1/novel/recommended/next")

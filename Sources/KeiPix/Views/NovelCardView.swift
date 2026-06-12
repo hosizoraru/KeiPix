@@ -60,10 +60,11 @@ struct NovelCardView: View {
                     }
                 }
 
-                Text(novel.user.name)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
+                NovelAuthorLine(novel: novel, font: .subheadline)
+
+                if let seriesTitle = novel.displaySeriesTitle {
+                    NovelCardSeriesPill(title: seriesTitle)
+                }
 
                 if novel.caption.isEmpty == false {
                     Text(captionPlainText)
@@ -74,8 +75,9 @@ struct NovelCardView: View {
 
                 NovelCardMetricsRow(novel: novel)
 
-                if novel.tags.isEmpty == false {
-                    NovelCardTagStrip(tags: Array(novel.tags.prefix(6)))
+                let cardTags = novel.cardTags(limit: 6)
+                if cardTags.isEmpty == false {
+                    NovelCardTagStrip(tags: cardTags)
                 }
 
                 if let openReader {
@@ -165,10 +167,11 @@ private struct CompactNovelCardLayout: View {
                         }
                     }
 
-                    Text(novel.user.name)
-                        .font(.caption.weight(.medium))
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
+                    NovelAuthorLine(novel: novel, font: .caption.weight(.medium))
+
+                    if let seriesTitle = novel.displaySeriesTitle {
+                        NovelCardSeriesPill(title: seriesTitle)
+                    }
 
                     if captionPlainText.isEmpty == false {
                         Text(captionPlainText)
@@ -182,8 +185,9 @@ private struct CompactNovelCardLayout: View {
 
             NovelCardMetricsRow(novel: novel)
 
-            if novel.tags.isEmpty == false {
-                NovelCardTagStrip(tags: Array(novel.tags.prefix(6)))
+            let cardTags = novel.cardTags(limit: 6)
+            if cardTags.isEmpty == false {
+                NovelCardTagStrip(tags: cardTags)
             }
 
             if let openReader {
@@ -250,8 +254,8 @@ private struct NovelCardMetricsRow: View {
                 }
 
                 NovelCardMetricPill(
-                    title: String(format: L10n.novelTextLengthFormat, novel.textLength),
-                    systemImage: "textformat"
+                    title: novel.localizedTextLength,
+                    systemImage: nil
                 )
 
                 NovelCardMetricPill(
@@ -292,19 +296,68 @@ private struct NovelCardMetricsRow: View {
 
 private struct NovelCardMetricPill: View {
     let title: String
-    let systemImage: String
+    let systemImage: String?
     var tint: Color = .secondary
 
     var body: some View {
-        Label(title, systemImage: systemImage)
+        Group {
+            if let systemImage {
+                Label(title, systemImage: systemImage)
+                    .labelStyle(.titleAndIcon)
+            } else {
+                Text(title)
+            }
+        }
+        .font(.caption2.weight(.semibold))
+        .foregroundStyle(tint)
+        .lineLimit(1)
+        .fixedSize(horizontal: true, vertical: false)
+        .padding(.horizontal, 7)
+        .padding(.vertical, 4)
+        .background(tint.opacity(0.12), in: Capsule(style: .continuous))
+    }
+}
+
+private struct NovelAuthorLine: View {
+    let novel: PixivNovel
+    let font: Font
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Text(novel.user.name)
+                .font(font)
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+
+            if novel.user.isFollowed {
+                Label(L10n.followingArtistBadge, systemImage: "person.crop.circle.badge.checkmark")
+                    .font(.caption2.weight(.semibold))
+                    .labelStyle(.titleAndIcon)
+                    .foregroundStyle(Color.accentColor)
+                    .lineLimit(1)
+                    .fixedSize(horizontal: true, vertical: false)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 3)
+                    .background(Color.accentColor.opacity(0.13), in: Capsule(style: .continuous))
+                    .help(L10n.followingArtistEmphasizedHelp)
+                    .accessibilityLabel(L10n.followingArtistEmphasizedHelp)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+private struct NovelCardSeriesPill: View {
+    let title: String
+
+    var body: some View {
+        Label(title, systemImage: "books.vertical")
             .font(.caption2.weight(.semibold))
-            .labelStyle(.titleAndIcon)
-            .foregroundStyle(tint)
+            .foregroundStyle(.secondary)
             .lineLimit(1)
-            .fixedSize(horizontal: true, vertical: false)
             .padding(.horizontal, 7)
             .padding(.vertical, 4)
-            .background(tint.opacity(0.12), in: Capsule(style: .continuous))
+            .background(Color.platformWindowBackground.opacity(0.72), in: Capsule(style: .continuous))
     }
 }
 
@@ -380,10 +433,11 @@ struct NovelGridCardView: View {
                     }
                 }
 
-                Text(novel.user.name)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
+                NovelAuthorLine(novel: novel, font: .caption)
+
+                if let seriesTitle = novel.displaySeriesTitle {
+                    NovelCardSeriesPill(title: seriesTitle)
+                }
 
                 HStack(spacing: 8) {
                     if novel.isOriginal {
@@ -394,7 +448,7 @@ struct NovelGridCardView: View {
                             .background(.tint.opacity(0.18), in: Capsule())
                             .foregroundStyle(.tint)
                     }
-                    Label(novel.textLength.formatted(), systemImage: "textformat")
+                    Text(novel.localizedTextLength)
                     Label(novel.totalBookmarks.formatted(), systemImage: "bookmark")
                 }
                 .font(.caption2)
@@ -435,5 +489,40 @@ struct NovelGridCardView: View {
         .padding(.top, 2)
         .help(L10n.openNovelReader)
         .accessibilityLabel(L10n.openNovelReader)
+    }
+}
+
+private extension PixivNovel {
+    var displaySeriesTitle: String? {
+        guard let series, series.hasSeries else { return nil }
+        let title = series.title?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        return title.isEmpty ? nil : title
+    }
+
+    var localizedTextLength: String {
+        String(format: L10n.novelTextLengthFormat, textLength)
+    }
+
+    func cardTags(limit: Int) -> [PixivTag] {
+        Array(tags.filter { shouldShowCardTag($0) }.prefix(limit))
+    }
+
+    private func shouldShowCardTag(_ tag: PixivTag) -> Bool {
+        let normalized = tag.name
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased()
+            .replacingOccurrences(of: "_", with: "-")
+            .replacingOccurrences(of: " ", with: "")
+
+        if isR18G, (normalized == "r-18g" || normalized == "r18g") {
+            return false
+        }
+        if isR18, (normalized == "r-18" || normalized == "r18") {
+            return false
+        }
+        if isAI, (normalized == "ai" || normalized == "ai生成" || normalized == "ai-generated" || normalized == "aigenerated") {
+            return false
+        }
+        return true
     }
 }

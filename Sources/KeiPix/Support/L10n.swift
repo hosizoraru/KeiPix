@@ -768,6 +768,7 @@ enum L10n {
     static var emphasizeFollowingArtistsHint: String {
         text("Adds an accent border and a Following badge so artists you follow stand out in mixed feeds.")
     }
+    static var followingArtistBadge: String { text("Following Artist Badge") }
     static var followingArtistEmphasizedHelp: String { text("You follow this artist") }
     static var auto: String { text("Auto") }
     static var twoColumns: String { text("Two Columns") }

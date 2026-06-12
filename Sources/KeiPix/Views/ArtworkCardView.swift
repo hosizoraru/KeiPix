@@ -112,7 +112,7 @@ struct ArtworkCardView: View {
 
     private var accessibilityDescription: String {
         var parts = [artwork.title, artwork.user.name]
-        if artwork.user.isFollowed { parts.append(L10n.following) }
+        if artwork.user.isFollowed { parts.append(L10n.followingArtistBadge) }
         if artwork.isBookmarked { parts.append(L10n.bookmarked) }
         if artwork.isAI { parts.append(L10n.aiGenerated) }
         return parts.joined(separator: ", ")
@@ -239,7 +239,7 @@ struct ArtworkCardView: View {
         FlowLayout(spacing: statusBadgeStyle.spacing) {
             if artwork.user.isFollowed {
                 artworkStatusBadge(
-                    title: L10n.following,
+                    title: L10n.followingArtistBadge,
                     systemImage: "person.crop.circle.badge.checkmark",
                     tint: .accentColor,
                     help: L10n.followingArtistEmphasizedHelp
