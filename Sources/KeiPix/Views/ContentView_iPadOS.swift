@@ -1082,6 +1082,20 @@ struct ContentView: View {
             title: L10n.appControls,
             sections: [
                 NativeToolbarMenuSection(
+                    items: [
+                        .action(
+                            id: IPadToolbarMenuAction.settings,
+                            title: L10n.settings,
+                            systemImage: "gearshape"
+                        ),
+                        .action(
+                            id: IPadToolbarMenuAction.customizeBottomTabs,
+                            title: L10n.customizeBottomTabs,
+                            systemImage: "rectangle.bottomthird.inset.filled"
+                        )
+                    ]
+                ),
+                NativeToolbarMenuSection(
                     presentation: .palette,
                     items: [
                         .action(
@@ -1099,67 +1113,54 @@ struct ContentView: View {
                     ]
                 ),
                 NativeToolbarMenuSection(
-                    title: L10n.viewOptions,
                     items: [
-                        .action(
-                            id: IPadToolbarMenuAction.showContentBadges,
-                            title: L10n.showContentBadges,
-                            systemImage: "tag",
-                            isSelected: store.showContentBadges
+                        .submenu(
+                            title: L10n.viewOptions,
+                            systemImage: "slider.horizontal.3",
+                            items: [
+                                .action(
+                                    id: IPadToolbarMenuAction.showContentBadges,
+                                    title: L10n.showContentBadges,
+                                    systemImage: "tag",
+                                    isSelected: store.showContentBadges
+                                ),
+                                .action(
+                                    id: IPadToolbarMenuAction.maskSensitivePreviews,
+                                    title: L10n.maskSensitivePreviews,
+                                    systemImage: "eye.trianglebadge.exclamationmark",
+                                    isSelected: store.maskSensitivePreviews
+                                )
+                            ]
                         ),
-                        .action(
-                            id: IPadToolbarMenuAction.maskSensitivePreviews,
-                            title: L10n.maskSensitivePreviews,
-                            systemImage: "eye.trianglebadge.exclamationmark",
-                            isSelected: store.maskSensitivePreviews
-                        )
-                    ]
-                ),
-                NativeToolbarMenuSection(
-                    title: L10n.contentFilters,
-                    items: [
-                        .action(
-                            id: IPadToolbarMenuAction.hideMutedContent,
-                            title: L10n.hideMutedContent,
-                            systemImage: "speaker.slash",
-                            isSelected: store.hideMutedContent
-                        ),
-                        .action(
-                            id: IPadToolbarMenuAction.hideAIArtworks,
-                            title: L10n.hideAIArtworks,
-                            systemImage: "sparkles",
-                            isSelected: store.hideAIArtworks
-                        ),
-                        .action(
-                            id: IPadToolbarMenuAction.hideR18Artworks,
-                            title: L10n.hideR18Artworks,
-                            systemImage: "18.circle",
-                            isSelected: store.hideR18Artworks
-                        ),
-                        .action(
-                            id: IPadToolbarMenuAction.hideR18GArtworks,
-                            title: L10n.hideR18GArtworks,
-                            systemImage: "exclamationmark.triangle",
-                            isSelected: store.hideR18GArtworks
-                        )
-                    ]
-                ),
-                NativeToolbarMenuSection(
-                    title: L10n.bottomTabs,
-                    items: [
-                        .action(
-                            id: IPadToolbarMenuAction.customizeBottomTabs,
-                            title: L10n.customizeBottomTabs,
-                            systemImage: "rectangle.bottomthird.inset.filled"
-                        )
-                    ]
-                ),
-                NativeToolbarMenuSection(
-                    items: [
-                        .action(
-                            id: IPadToolbarMenuAction.settings,
-                            title: L10n.settings,
-                            systemImage: "gearshape"
+                        .submenu(
+                            title: L10n.contentFilters,
+                            systemImage: "line.3.horizontal.decrease.circle",
+                            items: [
+                                .action(
+                                    id: IPadToolbarMenuAction.hideMutedContent,
+                                    title: L10n.hideMutedContent,
+                                    systemImage: "speaker.slash",
+                                    isSelected: store.hideMutedContent
+                                ),
+                                .action(
+                                    id: IPadToolbarMenuAction.hideAIArtworks,
+                                    title: L10n.hideAIArtworks,
+                                    systemImage: "sparkles",
+                                    isSelected: store.hideAIArtworks
+                                ),
+                                .action(
+                                    id: IPadToolbarMenuAction.hideR18Artworks,
+                                    title: L10n.hideR18Artworks,
+                                    systemImage: "18.circle",
+                                    isSelected: store.hideR18Artworks
+                                ),
+                                .action(
+                                    id: IPadToolbarMenuAction.hideR18GArtworks,
+                                    title: L10n.hideR18GArtworks,
+                                    systemImage: "exclamationmark.triangle",
+                                    isSelected: store.hideR18GArtworks
+                                )
+                            ]
                         )
                     ]
                 )

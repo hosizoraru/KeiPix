@@ -14,19 +14,15 @@ struct MobileBottomTabCustomizationView: View {
     }
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
-                hero
-                launchSection
-                behaviorSection
-                tabDefaultsSection
-            }
-            .padding(.horizontal, 16)
-            .padding(.top, 12)
-            .padding(.bottom, 24)
-            .frame(maxWidth: 560, alignment: .leading)
-            .frame(maxWidth: .infinity, alignment: .top)
+        List {
+            hero
+                .mobileBottomTabListRow(top: 12, bottom: 8)
+            launchSection
+            behaviorSection
+            tabDefaultsSection
         }
+        .listStyle(.plain)
+        .scrollContentBackground(.hidden)
         .navigationTitle(L10n.bottomTabs)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -83,88 +79,53 @@ struct MobileBottomTabCustomizationView: View {
     }
 
     private var launchSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Label(L10n.mobileBottomTabLaunchTarget, systemImage: "arrow.up.forward.app")
-                .font(.headline)
-                .lineLimit(1)
-
-            Text(L10n.mobileBottomTabLaunchHint)
-                .font(.footnote)
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
-
+        Section {
             NavigationLink {
                 MobileBottomTabLaunchTargetSelectionView(selection: $launchTarget)
             } label: {
-                HStack(spacing: 12) {
-                    Image(systemName: launchTarget.systemImage)
-                        .font(.headline.weight(.semibold))
-                        .symbolRenderingMode(.hierarchical)
-                        .foregroundStyle(.secondary)
-                        .frame(width: 34, height: 34)
-                        .glassEffect(.regular, in: Circle())
-
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(L10n.mobileBottomTabLaunchTarget)
-                            .font(.caption.weight(.semibold))
-                            .foregroundStyle(.secondary)
-
-                        Text(launchTarget.title)
-                            .font(.callout.weight(.semibold))
-                            .lineLimit(1)
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-
-                    Image(systemName: "chevron.right")
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(.tertiary)
-                }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 10)
-                .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                MobileBottomTabSummaryRow(
+                    eyebrow: L10n.mobileBottomTabLaunchTarget,
+                    title: launchTarget.title,
+                    systemImage: launchTarget.systemImage
+                )
             }
-            .buttonStyle(.plain)
             .accessibilityLabel("\(L10n.mobileBottomTabLaunchTarget): \(launchTarget.title)")
+            .mobileBottomTabListRow()
+        } header: {
+            MobileBottomTabSectionHeader(
+                title: L10n.mobileBottomTabLaunchTarget,
+                systemImage: "arrow.up.forward.app"
+            )
+        } footer: {
+            MobileBottomTabSectionFooter(text: L10n.mobileBottomTabLaunchHint)
         }
-        .padding(14)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .keiGlass(20)
     }
 
     private var behaviorSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        Section {
             Toggle(isOn: $remembersLastRoute) {
                 Label(L10n.rememberMobileBottomTabPages, systemImage: "arrow.trianglehead.2.clockwise")
-                    .font(.headline)
+                    .font(.callout.weight(.semibold))
                     .lineLimit(2)
             }
             .toggleStyle(.switch)
-
-            Text(L10n.rememberMobileBottomTabPagesHint)
-                .font(.footnote)
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
+            .mobileBottomTabListRow()
+        } footer: {
+            MobileBottomTabSectionFooter(text: L10n.rememberMobileBottomTabPagesHint)
         }
-        .padding(14)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .keiGlass(20)
     }
 
     private var tabDefaultsSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Label(L10n.defaultTabPages, systemImage: "rectangle.3.group")
-                .font(.headline)
-                .lineLimit(1)
-
-            VStack(spacing: 10) {
-                ForEach(MobileBottomTabKind.allCases) { kind in
-                    defaultRouteSlot(for: kind)
-                }
+        Section {
+            ForEach(MobileBottomTabKind.allCases) { kind in
+                defaultRouteSlot(for: kind)
             }
+        } header: {
+            MobileBottomTabSectionHeader(
+                title: L10n.defaultTabPages,
+                systemImage: "rectangle.3.group"
+            )
         }
-        .padding(14)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .keiGlass(20)
     }
 
     private func defaultRouteSlot(for kind: MobileBottomTabKind) -> some View {
@@ -175,35 +136,14 @@ struct MobileBottomTabCustomizationView: View {
                 route: defaultRouteBinding(for: kind)
             )
         } label: {
-            HStack(spacing: 12) {
-                Image(systemName: kind.systemImage)
-                    .font(.headline.weight(.semibold))
-                    .symbolRenderingMode(.hierarchical)
-                    .foregroundStyle(.secondary)
-                    .frame(width: 34, height: 34)
-                    .glassEffect(.regular, in: Circle())
-
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(kind.title)
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(.secondary)
-
-                    Label(currentRoute.title, systemImage: currentRoute.systemImage)
-                        .font(.callout.weight(.semibold))
-                        .lineLimit(1)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-
-                Image(systemName: "chevron.right")
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(.tertiary)
-            }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 10)
-            .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+            MobileBottomTabSummaryRow(
+                eyebrow: kind.title,
+                title: currentRoute.title,
+                systemImage: currentRoute.systemImage
+            )
         }
-        .buttonStyle(.plain)
         .accessibilityLabel("\(kind.title): \(currentRoute.title)")
+        .mobileBottomTabListRow()
     }
 
     private func defaultRouteBinding(for kind: MobileBottomTabKind) -> Binding<PixivRoute> {
@@ -229,31 +169,27 @@ private struct MobileBottomTabLaunchTargetSelectionView: View {
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 10) {
-                ForEach(MobileBottomTabLaunchTarget.allCases) { target in
-                    Button {
-                        withAnimation(.snappy(duration: 0.18)) {
-                            selection = target
-                        }
-                        dismiss()
-                    } label: {
-                        MobileBottomTabSelectionOptionRow(
-                            title: target.title,
-                            systemImage: target.systemImage,
-                            isSelected: selection == target
-                        )
+        List {
+            ForEach(MobileBottomTabLaunchTarget.allCases) { target in
+                Button {
+                    withAnimation(.snappy(duration: 0.18)) {
+                        selection = target
                     }
-                    .buttonStyle(.plain)
-                    .accessibilityAddTraits(selection == target ? .isSelected : [])
+                    dismiss()
+                } label: {
+                    MobileBottomTabSelectionOptionRow(
+                        title: target.title,
+                        systemImage: target.systemImage,
+                        isSelected: selection == target
+                    )
                 }
+                .buttonStyle(.plain)
+                .accessibilityAddTraits(selection == target ? .isSelected : [])
+                .mobileBottomTabListRow()
             }
-            .padding(.horizontal, 16)
-            .padding(.top, 12)
-            .padding(.bottom, 24)
-            .frame(maxWidth: 560, alignment: .leading)
-            .frame(maxWidth: .infinity, alignment: .top)
         }
+        .listStyle(.plain)
+        .scrollContentBackground(.hidden)
         .navigationTitle(L10n.mobileBottomTabLaunchTarget)
         .navigationBarTitleDisplayMode(.inline)
         .scrollEdgeEffectStyle(.soft, for: .top)
@@ -266,48 +202,94 @@ private struct MobileBottomTabRouteSelectionView: View {
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 14) {
-                ForEach(kind.menuSections) { section in
-                    VStack(alignment: .leading, spacing: 10) {
-                        Text(section.title)
-                            .font(.caption.weight(.semibold))
-                            .foregroundStyle(.secondary)
-                            .padding(.horizontal, 4)
-
-                        VStack(spacing: 8) {
-                            ForEach(section.routes) { option in
-                                Button {
-                                    withAnimation(.snappy(duration: 0.18)) {
-                                        route = option
-                                    }
-                                    dismiss()
-                                } label: {
-                                    MobileBottomTabSelectionOptionRow(
-                                        title: option.title,
-                                        systemImage: option.systemImage,
-                                        isSelected: route == option
-                                    )
-                                }
-                                .buttonStyle(.plain)
-                                .accessibilityAddTraits(route == option ? .isSelected : [])
+        List {
+            ForEach(kind.menuSections) { section in
+                Section {
+                    ForEach(section.routes) { option in
+                        Button {
+                            withAnimation(.snappy(duration: 0.18)) {
+                                route = option
                             }
+                            dismiss()
+                        } label: {
+                            MobileBottomTabSelectionOptionRow(
+                                title: option.title,
+                                systemImage: option.systemImage,
+                                isSelected: route == option
+                            )
                         }
+                        .buttonStyle(.plain)
+                        .accessibilityAddTraits(route == option ? .isSelected : [])
+                        .mobileBottomTabListRow()
                     }
-                    .padding(14)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .keiGlass(20)
+                } header: {
+                    Text(section.title)
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                        .textCase(nil)
                 }
             }
-            .padding(.horizontal, 16)
-            .padding(.top, 12)
-            .padding(.bottom, 24)
-            .frame(maxWidth: 560, alignment: .leading)
-            .frame(maxWidth: .infinity, alignment: .top)
         }
+        .listStyle(.plain)
+        .scrollContentBackground(.hidden)
         .navigationTitle(kind.title)
         .navigationBarTitleDisplayMode(.inline)
         .scrollEdgeEffectStyle(.soft, for: .top)
+    }
+}
+
+private struct MobileBottomTabSectionHeader: View {
+    let title: String
+    let systemImage: String
+
+    var body: some View {
+        Label(title, systemImage: systemImage)
+            .font(.headline)
+            .foregroundStyle(.primary)
+            .lineLimit(1)
+            .textCase(nil)
+    }
+}
+
+private struct MobileBottomTabSectionFooter: View {
+    let text: String
+
+    var body: some View {
+        Text(text)
+            .font(.footnote)
+            .foregroundStyle(.secondary)
+            .fixedSize(horizontal: false, vertical: true)
+            .textCase(nil)
+    }
+}
+
+private struct MobileBottomTabSummaryRow: View {
+    let eyebrow: String
+    let title: String
+    let systemImage: String
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: systemImage)
+                .font(.headline.weight(.semibold))
+                .symbolRenderingMode(.hierarchical)
+                .foregroundStyle(.secondary)
+                .frame(width: 34, height: 34)
+                .glassEffect(.regular, in: Circle())
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(eyebrow)
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.secondary)
+
+                Text(title)
+                    .font(.callout.weight(.semibold))
+                    .foregroundStyle(.primary)
+                    .lineLimit(1)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .padding(.vertical, 4)
     }
 }
 
@@ -339,7 +321,14 @@ private struct MobileBottomTabSelectionOptionRow: View {
         .padding(.horizontal, 12)
         .padding(.vertical, 10)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+    }
+}
+
+private extension View {
+    func mobileBottomTabListRow(top: CGFloat = 5, bottom: CGFloat = 5) -> some View {
+        listRowBackground(Color.clear)
+            .listRowSeparator(.hidden)
+            .listRowInsets(EdgeInsets(top: top, leading: 16, bottom: bottom, trailing: 16))
     }
 }
 #endif

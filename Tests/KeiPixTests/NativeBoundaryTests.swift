@@ -603,6 +603,30 @@ struct NativeBoundaryTests {
         #expect(spotlightDetailView.contains("showsNavigationChrome ? (article.pureTitle.isEmpty ? L10n.spotlight : article.pureTitle) : \"\""))
     }
 
+    @Test("iOS app controls and bottom tab customization keep critical entries reachable")
+    func iOSAppControlsAndBottomTabCustomizationKeepCriticalEntriesReachable() throws {
+        let root = try packageRoot()
+        let contentView = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/ContentView_iPadOS.swift"),
+            encoding: .utf8
+        )
+        let customization = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/MobileBottomTabCustomizationView.swift"),
+            encoding: .utf8
+        )
+
+        let settingsRange = try #require(contentView.range(of: "id: IPadToolbarMenuAction.settings"))
+        let customizeRange = try #require(contentView.range(of: "id: IPadToolbarMenuAction.customizeBottomTabs"))
+        let firstFilterRange = try #require(contentView.range(of: "id: IPadToolbarMenuAction.hideMutedContent"))
+
+        #expect(settingsRange.lowerBound < firstFilterRange.lowerBound)
+        #expect(customizeRange.lowerBound < firstFilterRange.lowerBound)
+        #expect(contentView.contains(".submenu(\n                            title: L10n.viewOptions"))
+        #expect(contentView.contains(".submenu(\n                            title: L10n.contentFilters"))
+        #expect(customization.contains("List {"))
+        #expect(customization.contains(".listStyle(.plain)"))
+    }
+
     @Test("Mobile customizable tabs ship localized labels")
     func mobileCustomizableTabsShipLocalizedLabels() throws {
         let root = try packageRoot()
