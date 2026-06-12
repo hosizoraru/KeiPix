@@ -100,8 +100,15 @@ struct ContentView: View {
             }
             #if DEBUG
             .task {
-                if VisualQALaunchArgument.contains(.about) {
+                if VisualQALaunchArgument.contains(.about)
+                    || VisualQALaunchArgument.contains(.settingsWindow) {
                     isSettingsSheetPresented = true
+                }
+                if VisualQALaunchArgument.contains(.bottomTabs) {
+                    hasAppliedMobileBottomTabLaunchTarget = true
+                    selectedSidebarItem = .route(.illustrations)
+                    selectedTab = .mobile(.illustrations)
+                    isMobileTabCustomizationPresented = true
                 }
                 if VisualQALaunchArgument.contains(.discoverDashboard) {
                     store.presentDiscoverDashboardVisualQA()
@@ -174,7 +181,7 @@ struct ContentView: View {
                 NavigationStack {
                     SettingsView(store: store)
                 }
-                .os26SheetChrome(.form)
+                .os26SheetChrome(.settings)
             }
             .sheet(isPresented: $isMobileTabCustomizationPresented) {
                 NavigationStack {

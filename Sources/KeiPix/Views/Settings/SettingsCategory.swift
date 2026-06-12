@@ -230,6 +230,9 @@ enum SettingsCategory: String, CaseIterable, Identifiable, Hashable {
         if VisualQALaunchArgument.contains(.about) {
             return .about
         }
+        if VisualQALaunchArgument.contains(.settingsWindow) {
+            return .general
+        }
         if VisualQALaunchArgument.contains(.runtimeReadiness) {
             return .advancedQA
         }

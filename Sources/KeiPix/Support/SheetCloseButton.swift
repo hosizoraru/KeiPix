@@ -1,4 +1,7 @@
 import SwiftUI
+#if os(iOS)
+import UIKit
+#endif
 
 /// Standardised close affordance for sheets.
 ///
@@ -127,6 +130,10 @@ enum OS26SheetPresentationStyle {
     /// System web or reader surfaces that should start at the large
     /// detent and avoid presenting as a half sheet.
     case immersive
+    /// Settings uses a compact form on iPhone and portrait iPad, but
+    /// expands to page sizing on landscape iPad so category pages can use
+    /// their adaptive grid without feeling pinched.
+    case settings
     /// Reader surfaces need wider, page-like sizing on iPad/macOS while
     /// staying full-height and touch-first on iPhone.
     case reader
@@ -137,7 +144,7 @@ enum OS26SheetPresentationStyle {
             24
         case .standard:
             28
-        case .detail, .compactBookmarkEditor, .bookmarkEditor, .immersive, .reader:
+        case .detail, .compactBookmarkEditor, .bookmarkEditor, .immersive, .settings, .reader:
             32
         }
     }
@@ -158,6 +165,8 @@ enum OS26SheetPresentationStyle {
             return [.height(760)]
         case .immersive:
             return [.large]
+        case .settings:
+            return isLandscapePad ? [.large] : [.medium, .large]
         case .reader:
             if ReaderPlatformKind.current == .phone {
                 return [.large]
@@ -177,12 +186,25 @@ enum OS26SheetPresentationStyle {
             return .height(700)
         case .bookmarkEditor:
             return .height(760)
+        case .settings:
+            return isLandscapePad ? .large : .medium
         case .reader:
             if ReaderPlatformKind.current == .phone {
                 return .large
             }
             return .fraction(0.88)
         }
+    }
+
+    @MainActor
+    fileprivate var isLandscapePad: Bool {
+        guard ReaderPlatformKind.current == .pad else { return false }
+        let scene = UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .first { $0.activationState == .foregroundActive }
+            ?? UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first
+        let bounds = scene?.effectiveGeometry.coordinateSpace.bounds ?? .zero
+        return bounds.width > bounds.height
     }
     #endif
 }
@@ -234,6 +256,19 @@ private struct OS26SheetChromeModifier: ViewModifier {
         case .form, .standard, .compactBookmarkEditor:
             content
                 .presentationSizing(.form)
+        case .settings:
+            #if os(iOS)
+            if style.isLandscapePad {
+                content
+                    .presentationSizing(.page)
+            } else {
+                content
+                    .presentationSizing(.form)
+            }
+            #else
+            content
+                .presentationSizing(.page)
+            #endif
         case .detail:
             content
                 .presentationSizing(.page)

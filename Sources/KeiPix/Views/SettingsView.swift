@@ -187,131 +187,66 @@ struct SettingsView: View {
 
     private var compactHeader: some View {
         GlassEffectContainer(spacing: 10) {
-            VStack(alignment: .leading, spacing: 10) {
-                ViewThatFits(in: .horizontal) {
-                    HStack(spacing: 12) {
-                        compactTitleBlock
-                        Spacer(minLength: 16)
-                        compactSearchField(maxWidth: 340)
-                    }
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 10) {
+                    compactCategoryMenu
+                        .frame(minWidth: 170, idealWidth: 210, maxWidth: 260, alignment: .leading)
 
-                    VStack(alignment: .leading, spacing: 10) {
-                        compactTitleBlock
-                        compactSearchField(maxWidth: .infinity)
-                    }
+                    compactSearchField(maxWidth: 330)
                 }
 
-                categoryRail
+                VStack(alignment: .leading, spacing: 8) {
+                    compactCategoryMenu
+                    compactSearchField(maxWidth: .infinity)
+                }
             }
         }
         .frame(maxWidth: compactContentMaxWidth, alignment: .leading)
         .frame(maxWidth: .infinity, alignment: .center)
         .padding(.horizontal, 16)
-        .padding(.top, 6)
+        .padding(.top, 8)
         .padding(.bottom, 6)
-    }
-
-    private var compactTitleBlock: some View {
-        HStack(spacing: 10) {
-            Image(systemName: coordinator.selection.systemImage)
-                .font(.title3.weight(.semibold))
-                .symbolRenderingMode(.hierarchical)
-                .frame(width: 38, height: 38)
-                .keiGlass(14)
-
-            Text(L10n.settings)
-                .font(.title2.weight(.bold))
-                .lineLimit(1)
-                .minimumScaleFactor(0.82)
-        }
     }
 
     private func compactSearchField(maxWidth: CGFloat) -> some View {
         OS26LibrarySearchField(
             text: $coordinator.searchText,
             placeholder: L10n.searchSettings,
-            minWidth: 190,
+            minWidth: 174,
             idealWidth: 260,
             maxWidth: maxWidth
         )
     }
 
-    private var categoryRail: some View {
-        ViewThatFits(in: .horizontal) {
-            HStack(spacing: 8) {
-                ForEach(compactCategoryShortcuts) { category in
-                    categoryChip(category)
-                }
-
-                categoryMenu
-            }
-
-            ScrollView(.horizontal) {
-                HStack(spacing: 8) {
-                    ForEach(compactCategoryShortcuts) { category in
-                        categoryChip(category)
-                    }
-
-                    categoryMenu
-                }
-                .padding(.horizontal, 2)
-                .padding(.vertical, 2)
-            }
-            .scrollIndicators(.hidden)
-        }
-    }
-
-    private func categoryChip(_ category: SettingsCategory) -> some View {
-        Button {
-            selectCompactCategory(category)
-        } label: {
-            Label(category.title, systemImage: category.systemImage)
-                .lineLimit(1)
-        }
-        .os26GlassButton(prominent: category == coordinator.selection)
-        .controlSize(.small)
-        .help(category.title)
-        .accessibilityLabel(category.title)
-    }
-
-    private var categoryMenu: some View {
-        Menu {
+    private var compactCategoryMenu: some View {
+        Picker(selection: compactCategorySelection) {
             ForEach(coordinator.visibleCategories) { category in
-                Button {
-                    selectCompactCategory(category)
-                } label: {
-                    Label(
-                        category.title,
-                        systemImage: category == coordinator.selection ? "checkmark" : category.systemImage
-                    )
-                }
+                Label(category.title, systemImage: category.systemImage)
+                    .tag(category)
             }
         } label: {
-            Label(L10n.allCategories, systemImage: "line.3.horizontal.decrease.circle")
+            Label(coordinator.selection.title, systemImage: coordinator.selection.systemImage)
+                .font(.callout.weight(.semibold))
+                .symbolRenderingMode(.hierarchical)
                 .lineLimit(1)
+                .minimumScaleFactor(0.82)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .keiInteractiveGlass(16)
         }
-        .os26GlassButton()
-        .controlSize(.small)
+        .pickerStyle(.menu)
+        .controlSize(.regular)
         .help(L10n.allCategories)
-        .accessibilityLabel(L10n.allCategories)
+        .accessibilityLabel("\(L10n.settings): \(coordinator.selection.title)")
     }
 
-    private var compactCategoryShortcuts: [SettingsCategory] {
-        let visible = coordinator.visibleCategories
-        let searchIsEmpty = coordinator.searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-        var preferred = searchIsEmpty
-            ? [.account, .general, .reading, .privacy, .downloads]
-            : Array(visible.prefix(4))
-
-        if visible.contains(coordinator.selection), preferred.contains(coordinator.selection) == false {
-            preferred.insert(coordinator.selection, at: min(2, preferred.count))
+    private var compactCategorySelection: Binding<SettingsCategory> {
+        Binding {
+            coordinator.selection
+        } set: { category in
+            selectCompactCategory(category)
         }
-
-        var result: [SettingsCategory] = []
-        for category in preferred where visible.contains(category) && result.contains(category) == false {
-            result.append(category)
-        }
-        return Array(result.prefix(5))
     }
 
     private func selectCompactCategory(_ category: SettingsCategory) {

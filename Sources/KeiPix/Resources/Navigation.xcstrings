@@ -30,6 +30,35 @@
         }
       }
     },
+    "Bottom Tab Behavior": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Behavior"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "動作"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "底栏行为"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "底欄行為"
+          }
+        }
+      }
+    },
     "Bookmark Tab": {
       "extractionState": "manual",
       "localizations": {

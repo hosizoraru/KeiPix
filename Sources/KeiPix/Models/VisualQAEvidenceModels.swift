@@ -26,6 +26,7 @@ enum VisualQASurface: String, CaseIterable, Identifiable, Sendable {
     case batchBookmarkPreview = "batch-bookmark-preview"
     case about
     case settingsWindow = "settings-window"
+    case bottomTabs = "bottom-tabs"
     case runtimeReadiness = "runtime-readiness"
     case sharingTemplates = "sharing-templates"
     case mutedContent = "muted-content"

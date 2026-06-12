@@ -41539,25 +41539,25 @@
         }
       }
     },
-    "Apply a fixed light or dark mode inside KeiPix while leaving macOS appearance unchanged.": {
+    "Apply a fixed light or dark mode inside KeiPix while leaving the system appearance unchanged.": {
       "extractionState": "manual",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "在 KeiPix 内固定浅色或深色模式，不影响 macOS 外观设置。"
+            "value": "在 KeiPix 内固定浅色或深色模式，不影响系统外观设置。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "在 KeiPix 內固定淺色或深色模式，不影響 macOS 外觀設定。"
+            "value": "在 KeiPix 內固定淺色或深色模式，不影響系統外觀設定。"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "macOSの外観を変更せずに、KeiPix内でライト/ダークモードを固定します。"
+            "value": "システムの外観を変更せずに、KeiPix内でライト/ダークモードを固定します。"
           }
         }
       }

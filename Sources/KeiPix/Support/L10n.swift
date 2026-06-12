@@ -10,6 +10,7 @@ enum L10n {
     static var discoveryForYou: String { text("For You") }
     static var customizeDashboard: String { text("Customize Dashboard") }
     static var bottomTabs: String { text("Bottom Tabs", table: L10nTable.navigation) }
+    static var bottomTabBehavior: String { text("Bottom Tab Behavior", table: L10nTable.navigation) }
     static var mobileBookmarkTab: String { text("Bookmark Tab", table: L10nTable.navigation) }
     static var customizeBottomTabs: String { text("Customize Bottom Tabs", table: L10nTable.navigation) }
     static var bottomTabsHint: String { text("Choose the default page for each iPhone and iPad portrait tab.", table: L10nTable.navigation) }
@@ -624,7 +625,7 @@ enum L10n {
     static var themeSystem: String { text("System") }
     static var themeLight: String { text("Light") }
     static var themeDark: String { text("Dark") }
-    static var themeHint: String { text("Apply a fixed light or dark mode inside KeiPix while leaving macOS appearance unchanged.") }
+    static var themeHint: String { text("Apply a fixed light or dark mode inside KeiPix while leaving the system appearance unchanged.") }
     static var useOriginalImages: String { text("Use original images in detail") }
     static var useOriginalImagesForManga: String { text("Use original images for manga") }
     static var imageQualityHint: String { text("Pick a default per content type — illust details and multi-page manga can use different quality presets.") }
