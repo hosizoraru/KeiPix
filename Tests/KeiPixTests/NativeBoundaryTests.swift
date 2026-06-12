@@ -441,17 +441,21 @@ struct NativeBoundaryTests {
         #expect(mobileBottomTabCustomization.contains("@Binding var launchTarget: MobileBottomTabLaunchTarget"))
         #expect(mobileBottomTabCustomization.contains("@Binding var remembersLastRoute: Bool"))
         #expect(mobileBottomTabCustomization.contains("MobileBottomTabConfiguration.replacingDefaultRoute("))
-        #expect(mobileBottomTabCustomization.contains("struct MobileBottomTabLaunchTargetSelectionView: View"))
-        #expect(mobileBottomTabCustomization.contains("struct MobileBottomTabRouteSelectionView: View"))
-        #expect(mobileBottomTabCustomization.contains("NavigationLink"))
-        #expect(mobileBottomTabCustomization.contains("Menu {") == false)
-        #expect(mobileBottomTabCustomization.contains(".keiGlass(24)"))
+        #expect(mobileBottomTabCustomization.contains("struct MobileBottomTabLaunchTargetSelectionView: View") == false)
+        #expect(mobileBottomTabCustomization.contains("struct MobileBottomTabRouteSelectionView: View") == false)
+        #expect(mobileBottomTabCustomization.contains("NavigationLink") == false)
+        #expect(mobileBottomTabCustomization.contains("Menu {"))
+        #expect(mobileBottomTabCustomization.contains("private struct MobileBottomTabSettingsPanel"))
+        #expect(mobileBottomTabCustomization.contains("private struct MobileBottomTabMenuRow"))
+        #expect(mobileBottomTabCustomization.contains("private func defaultRoutePicker(for kind: MobileBottomTabKind)"))
+        #expect(mobileBottomTabCustomization.contains(".keiPanel(22)"))
+        #expect(mobileBottomTabCustomization.contains("L10n.bottomTabBehavior"))
         #expect(mobileBottomTabCustomization.contains("L10n.mobileBottomTabLaunchTarget"))
         #expect(mobileBottomTabCustomization.contains("L10n.rememberMobileBottomTabPages"))
         #expect(mobileBottomTabCustomization.contains("L10n.defaultTabPages"))
-        #expect(mobileBottomTabCustomization.contains("L10n.bottomTabsHint"))
+        #expect(mobileBottomTabCustomization.contains("L10n.bottomTabsHint") == false)
         #expect(mobileBottomTabCustomization.contains("ForEach(MobileBottomTabLaunchTarget.allCases)"))
-        #expect(mobileBottomTabCustomization.contains("ForEach(MobileBottomTabKind.allCases)"))
+        #expect(mobileBottomTabCustomization.contains("MobileBottomTabKind.allCases"))
         #expect(contentView.contains("private static let portraitShortcutContentMaxWidth: CGFloat = 860") == false)
         #expect(contentView.contains("if layout.usesCustomNavigationTabs {\n                ForEach(MobileBottomTabKind.allCases)"))
         #expect(contentView.contains("value: iPadTab.mobile(kind)"))
@@ -652,8 +656,10 @@ struct NativeBoundaryTests {
         #expect(contentView.contains(".sheet(item: $appControlsPanel)") == false)
         #expect(contentView.contains("viewOptionsPanel") == false)
         #expect(contentView.contains("contentFiltersPanel") == false)
-        #expect(customization.contains("List {"))
-        #expect(customization.contains(".listStyle(.plain)"))
+        #expect(customization.contains("ScrollView {"))
+        #expect(customization.contains("MobileBottomTabSettingsPanel("))
+        #expect(customization.contains("private struct MobileBottomTabMenuRow"))
+        #expect(customization.contains("private struct MobileBottomTabMenuLabel") == false)
     }
 
     @Test("Mobile customizable tabs ship localized labels")
@@ -670,6 +676,7 @@ struct NativeBoundaryTests {
 
         for key in [
             "Bottom Tabs",
+            "Bottom Tab Behavior",
             "Bookmark Tab",
             "Customize Bottom Tabs",
             "Reset Bottom Tabs",
@@ -945,6 +952,9 @@ struct NativeBoundaryTests {
         #expect(iPadContentView.contains("MobileBottomTabConfiguration.storageID(for: routeMap)"))
         #expect(iPadContentView.contains("IPadToolbarMenuAction.customizeBottomTabs"))
         #expect(iPadContentView.contains("isMobileTabCustomizationPresented = true"))
+        #expect(iPadContentView.contains("VisualQALaunchArgument.contains(.bottomTabs)"))
+        #expect(iPadContentView.contains("VisualQALaunchArgument.contains(.settingsWindow)"))
+        #expect(iPadContentView.contains(".os26SheetChrome(.settings)"))
         #expect(iPadContentView.contains("SearchWorkspaceView("))
         #expect(iPadContentView.contains("galleryLayoutAdaptation: galleryLayoutAdaptation(showsSidebarToggle: showsSidebarToggle)"))
         #expect(iPadContentView.contains(".task(id: store.searchText)"))
@@ -1662,7 +1672,12 @@ struct NativeBoundaryTests {
         #expect(sheetHeader.contains(".buttonBorderShape(.capsule)"))
         #expect(sheetChrome.contains("func os26SheetChrome(_ style: OS26SheetPresentationStyle = .standard)"))
         #expect(sheetChrome.contains("case bookmarkEditor"))
+        #expect(sheetChrome.contains("case settings"))
         #expect(sheetChrome.contains("case reader"))
+        #expect(sheetChrome.contains("fileprivate var isLandscapePad"))
+        #expect(sheetChrome.contains("UIWindowScene"))
+        #expect(sheetChrome.contains("UIScreen.main") == false)
+        #expect(sheetChrome.contains("case .settings:\n            return isLandscapePad ? [.large] : [.medium, .large]"))
         #expect(sheetChrome.contains(".presentationSizing(.page)"))
         #expect(sheetChrome.contains(".presentationSizing(.fitted)"))
         #expect(sheetChrome.contains("[.height(700)]"))
@@ -2112,6 +2127,14 @@ struct NativeBoundaryTests {
             contentsOf: root.appending(path: "Sources/KeiPix/Views/Settings/DiscoverySettingsPage.swift"),
             encoding: .utf8
         )
+        let generalSettings = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/Settings/GeneralSettingsPage.swift"),
+            encoding: .utf8
+        )
+        let settingsCategory = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/Settings/SettingsCategory.swift"),
+            encoding: .utf8
+        )
         let settingsBindings = try String(
             contentsOf: root.appending(path: "Sources/KeiPix/Views/Settings/SettingsBindings.swift"),
             encoding: .utf8
@@ -2133,16 +2156,26 @@ struct NativeBoundaryTests {
         #expect(settingsView.contains("#if os(macOS)\n        NavigationSplitView"))
         #expect(settingsView.contains("#else\n        compactSettingsWorkspace"))
         #expect(settingsView.contains("private var compactSettingsWorkspace: some View"))
-        #expect(settingsView.contains("private var categoryRail: some View"))
-        #expect(settingsView.contains("private var categoryMenu: some View"))
-        #expect(settingsView.contains("private var compactCategoryShortcuts: [SettingsCategory]"))
+        #expect(settingsView.contains("private var compactCategoryMenu: some View"))
+        #expect(settingsView.contains("private var categoryRail: some View") == false)
+        #expect(settingsView.contains("private func categoryChip") == false)
+        #expect(settingsView.contains("private var compactCategoryShortcuts: [SettingsCategory]") == false)
+        #expect(settingsView.contains("ScrollView(.horizontal)") == false)
         #expect(settingsView.contains("private let compactContentMaxWidth: CGFloat = 860"))
         #expect(settingsView.contains(".frame(maxWidth: compactContentMaxWidth, alignment: .leading)"))
         #expect(settingsView.contains("OS26LibrarySearchField("))
+        #expect(settingsView.contains("Label(coordinator.selection.title, systemImage: coordinator.selection.systemImage)"))
+        #expect(settingsView.contains(".keiInteractiveGlass(16)"))
         #expect(settingsView.contains(".environment(\\.os26SettingsPageShowsHeader, false)"))
         #expect(settingsView.contains(".environment(\\.os26SettingsPageUsesAdaptiveGrid, true)"))
         #expect(settingsView.contains(".frame(\n            minWidth: 820"))
         #expect(settingsView.contains("Text(coordinator.selection.title)") == false)
+        #expect(generalSettings.contains("#if os(macOS)\n            OS26SettingsSection(L10n.openAtLaunch"))
+        #expect(generalSettings.contains("private struct GeneralSettingsMenuPicker"))
+        #expect(generalSettings.contains("value: store.appLanguage.title"))
+        #expect(generalSettings.contains("value: store.galleryLayoutMode.title"))
+        #expect(generalSettings.contains(".pickerStyle(.segmented)") == false)
+        #expect(settingsCategory.contains("if VisualQALaunchArgument.contains(.settingsWindow) {\n            return .general"))
 
         #expect(settingsSurface.contains("struct OS26SettingsPage<Content: View>: View"))
         #expect(settingsSurface.contains("struct OS26SettingsSection<Content: View>: View"))
