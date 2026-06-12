@@ -142,7 +142,7 @@ struct NativeToolbarMenuButton: UIViewRepresentable {
                 blur: 2,
                 color: UIColor.black.withAlphaComponent(0.24).cgColor
             )
-            UIColor.systemRed.resolvedColor(with: traitCollection).setFill()
+            UIColor.systemBlue.resolvedColor(with: traitCollection).setFill()
             badgePath.fill()
             context.cgContext.restoreGState()
 

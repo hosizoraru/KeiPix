@@ -454,25 +454,11 @@ struct ContentView: View {
 
                     ToolbarItemGroup(placement: .topBarLeading) {
                         if showsArtworkNavigationControls {
-                            Button {
-                                store.navigateBack()
-                            } label: {
-                                Label(L10n.goBack, systemImage: "chevron.left")
+                            Group {
+                                artworkNavigationToolbarButtons
                             }
-                            .labelStyle(.iconOnly)
-                            .help(L10n.goBack)
-                            .accessibilityLabel(L10n.goBack)
-                            .disabled(store.canNavigateBack == false)
-
-                            Button {
-                                store.navigateForward()
-                            } label: {
-                                Label(L10n.goForward, systemImage: "chevron.right")
-                            }
-                            .labelStyle(.iconOnly)
-                            .help(L10n.goForward)
-                            .accessibilityLabel(L10n.goForward)
-                            .disabled(store.canNavigateForward == false)
+                            .transition(.opacity.combined(with: .scale(scale: 0.94)))
+                            .animation(.snappy(duration: 0.18), value: showsArtworkNavigationControls)
                         }
                     }
 
@@ -851,6 +837,35 @@ struct ContentView: View {
         .fixedSize(horizontal: true, vertical: false)
     }
 
+    @ViewBuilder
+    private var artworkNavigationToolbarButtons: some View {
+        Button {
+            store.navigateBack()
+        } label: {
+            Label(L10n.goBack, systemImage: "chevron.left")
+                .opacity(store.canNavigateBack ? 1 : 0.42)
+        }
+        .labelStyle(.iconOnly)
+        .controlSize(currentMobilePlatform == .phone ? .small : .regular)
+        .help(L10n.goBack)
+        .accessibilityLabel(L10n.goBack)
+        .disabled(store.canNavigateBack == false)
+        .animation(.snappy(duration: 0.18), value: store.canNavigateBack)
+
+        Button {
+            store.navigateForward()
+        } label: {
+            Label(L10n.goForward, systemImage: "chevron.right")
+                .opacity(store.canNavigateForward ? 1 : 0.42)
+        }
+        .labelStyle(.iconOnly)
+        .controlSize(currentMobilePlatform == .phone ? .small : .regular)
+        .help(L10n.goForward)
+        .accessibilityLabel(L10n.goForward)
+        .disabled(store.canNavigateForward == false)
+        .animation(.snappy(duration: 0.18), value: store.canNavigateForward)
+    }
+
     private var routeNativeMenu: NativeToolbarMenu {
         NativeToolbarMenu(
             title: L10n.currentRoute,
@@ -909,10 +924,14 @@ struct ContentView: View {
     }
 
     private var showsArtworkNavigationControls: Bool {
-        store.selectedRoute.usesArtworkFeed
+        let routeSupportsArtworkNavigation = store.selectedRoute.usesArtworkFeed
             || store.selectedRoute.usesNovelFeed
             || store.canNavigateBack
             || store.canNavigateForward
+        guard currentMobilePlatform == .phone else {
+            return routeSupportsArtworkNavigation
+        }
+        return routeSupportsArtworkNavigation
     }
 
     private func showsArtworkActionsMenu(showsSidebarToggle: Bool) -> Bool {
