@@ -1554,6 +1554,10 @@ struct NativeBoundaryTests {
             contentsOf: root.appending(path: "Sources/KeiPix/Views/WorkSubscriptionsView.swift"),
             encoding: .utf8
         )
+        let preferences = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Stores/KeiPixStore+Preferences.swift"),
+            encoding: .utf8
+        )
 
         #expect(gallery.contains("private struct SignedOutView") == false)
         #expect(discovery.contains("private var signedOutContent") == false)
@@ -1562,20 +1566,33 @@ struct NativeBoundaryTests {
         #expect(novelGallery.contains(".sheet(item: $readerNovel)"))
         #expect(novelGallery.contains("NovelReaderView(store: store, novel: novel)"))
         #expect(novelGallery.contains(".os26SheetChrome(.reader)"))
-        #expect(novelGallery.contains("usesDirectReaderOpening"))
+        #expect(novelGallery.contains("opensCardsInReader"))
         #expect(novelGallery.contains("private func presentNovelReader(_ novel: PixivNovel)"))
+        #expect(novelGallery.contains("readerButtonAction(for: novel, surface: surface)"))
         #expect(novelGallery.contains("NovelGallerySurfaceLayout"))
         #expect(novelGallery.contains("MobileWorkspaceLayout(size: size, platform: platform)"))
-        #expect(novelGallery.contains("workspace.usesCustomNavigationTabs ? .list : current"))
+        #expect(novelGallery.contains("workspace.platform == .phone || workspace.usesCondensedChrome"))
+        #expect(novelGallery.contains("workspace.usesCustomNavigationTabs ? .list : current") == false)
+        #expect(novelGallery.contains("return availableWidth >= 620 ? 2 : 1"))
         #expect(novelGallery.contains("presentation: surface.cardPresentation"))
         #expect(novelCard.contains("enum NovelCardPresentation"))
         #expect(novelCard.contains("private struct CompactNovelCardLayout"))
         #expect(novelCard.contains("@Environment(\\.horizontalSizeClass)"))
         #expect(novelCard.contains("NovelCardMetricPill("))
         #expect(novelCard.contains("NovelCardTagStrip("))
+        #expect(novelCard.contains("private struct NovelAuthorLine"))
+        #expect(novelCard.contains("if novel.user.isFollowed"))
+        #expect(novelCard.contains("Label(L10n.followingArtistBadge, systemImage: \"person.crop.circle.badge.checkmark\")"))
+        #expect(novelCard.contains("NovelCardSeriesPill("))
+        #expect(novelCard.contains("title: novel.localizedTextLength"))
+        #expect(novelCard.contains("func cardTags(limit: Int) -> [PixivTag]"))
+        #expect(novelCard.contains("private func shouldShowCardTag(_ tag: PixivTag) -> Bool"))
+        #expect(novelCard.contains("normalized == \"r-18\""))
+        #expect(novelCard.contains("normalized == \"ai\""))
         #expect(novelCard.contains("ScrollView(.horizontal)"))
         #expect(novelCard.contains("String(format: L10n.novelPageCountFormat, novel.pageCount)"))
         #expect(novelCard.contains("Label(String(format: L10n.novelTextLengthFormat, novel.textLength), systemImage: \"textformat\")") == false)
+        #expect(preferences.components(separatedBy: "novels.applyContentFilter()").count - 1 >= 4)
         #expect(novelWatchlist.contains("if store.session != nil {\n                await novelStore.refreshWatchlist()"))
         #expect(workSubscriptions.contains("guard store.session != nil else { return \"\" }"))
     }
