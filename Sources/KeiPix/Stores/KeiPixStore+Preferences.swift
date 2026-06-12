@@ -207,12 +207,14 @@ extension KeiPixStore {
         hideMutedContent = value
         UserDefaults.standard.set(value, forKey: "hideMutedContent")
         applyContentFilters()
+        novels.applyContentFilter()
     }
 
     func setHideAIArtworks(_ value: Bool) {
         hideAIArtworks = value
         UserDefaults.standard.set(value, forKey: "hideAIArtworks")
         applyContentFilters()
+        novels.applyContentFilter()
         refreshSpotlightIndexAfterFilterChange()
     }
 
@@ -220,6 +222,7 @@ extension KeiPixStore {
         hideR18Artworks = value
         UserDefaults.standard.set(value, forKey: "hideR18Artworks")
         applyContentFilters()
+        novels.applyContentFilter()
         refreshSpotlightIndexAfterFilterChange()
     }
 
@@ -227,6 +230,7 @@ extension KeiPixStore {
         hideR18GArtworks = value
         UserDefaults.standard.set(value, forKey: "hideR18GArtworks")
         applyContentFilters()
+        novels.applyContentFilter()
         refreshSpotlightIndexAfterFilterChange()
     }
 

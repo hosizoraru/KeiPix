@@ -78,6 +78,49 @@ extension KeiPixStore {
             navigateToArtwork(artwork)
             nextURL = nil
             await recordBrowsingHistory(for: artwork)
+        case .novel(let id):
+            let novel = try await api.novelDetail(novelID: id)
+            focusedUser = nil
+            bookmarkTagFilter = nil
+            bookmarkFeedOptions = .defaultValue
+            creatorArtworkTagFilter = nil
+            feedNarrowingContext = nil
+            selectedPixivCollection = nil
+            selectedSpotlightArticle = nil
+            selectedArtwork = nil
+            allArtworks = []
+            artworks = []
+            activeFeedSnapshotRestoration = nil
+            allSearchPopularPreviewArtworks = []
+            searchPopularPreviewArtworks = []
+            nextURL = nil
+            selectedRoute = .novelRecommended
+            novels.presentDirectNovels([novel], selectedID: id)
+        case .novelSeries(let id):
+            let response = try await api.novelSeries(seriesID: id)
+            var seriesNovels = response.novels
+            for novel in [response.firstNovel, response.latestNovel].compactMap({ $0 }) {
+                if seriesNovels.contains(where: { $0.id == novel.id }) == false {
+                    seriesNovels.append(novel)
+                }
+            }
+            focusedUser = nil
+            bookmarkTagFilter = nil
+            bookmarkFeedOptions = .defaultValue
+            creatorArtworkTagFilter = nil
+            feedNarrowingContext = nil
+            selectedPixivCollection = nil
+            selectedSpotlightArticle = nil
+            selectedArtwork = nil
+            allArtworks = []
+            artworks = []
+            activeFeedSnapshotRestoration = nil
+            allSearchPopularPreviewArtworks = []
+            searchPopularPreviewArtworks = []
+            nextURL = nil
+            selectedRoute = .novelRecommended
+            let selectedID = response.latestNovel?.id ?? response.firstNovel?.id ?? seriesNovels.first?.id
+            novels.presentDirectNovels(seriesNovels, nextURL: response.nextURL, selectedID: selectedID)
         case .user(let id):
             let detail = try await api.userDetail(userID: id)
             await openUserFeed(user: detail.user, route: .userIllustrations)

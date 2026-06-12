@@ -28,6 +28,16 @@ enum PixivURLRoutingCoverage {
             expectedDestination: .collection(id: "49895345339794251171")
         ),
         PixivURLRoutingSample(
+            id: "novel-web",
+            input: "https://www.pixiv.net/novel/show.php?id=12345",
+            expectedDestination: .novel(12345)
+        ),
+        PixivURLRoutingSample(
+            id: "novel-series-web",
+            input: "https://www.pixiv.net/novel/series/67890",
+            expectedDestination: .novelSeries(67890)
+        ),
+        PixivURLRoutingSample(
             id: "tag-web",
             input: "https://www.pixiv.net/tags/OC/artworks",
             expectedDestination: .tag("OC")

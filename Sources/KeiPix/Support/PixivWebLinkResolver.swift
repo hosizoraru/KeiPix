@@ -2,6 +2,8 @@ import Foundation
 
 enum PixivWebDestination: Hashable, Sendable {
     case artwork(Int)
+    case novel(Int)
+    case novelSeries(Int)
     case user(Int)
     case collection(id: String)
     case tag(String)
@@ -87,6 +89,9 @@ enum PixivWebLinkResolver {
         if let id = queryInt(named: ["illust_id", "illustId"], in: components) {
             return .artwork(id)
         }
+        if let id = queryInt(named: ["novel_id", "novelId"], in: components) {
+            return .novel(id)
+        }
         if let id = queryInt(named: ["user_id", "userId"], in: components) {
             return .user(id)
         }
@@ -103,6 +108,9 @@ enum PixivWebLinkResolver {
         if let id = queryInt(named: ["illust_id", "illustId"], in: components) {
             return .artwork(id)
         }
+        if let id = queryInt(named: ["novel_id", "novelId"], in: components) {
+            return .novel(id)
+        }
         if let id = queryInt(named: ["user_id", "userId"], in: components) {
             return .user(id)
         }
@@ -112,6 +120,11 @@ enum PixivWebLinkResolver {
         if route.last?.lowercased() == "member.php",
            let id = queryInt(named: ["id"], in: components) {
             return .user(id)
+        }
+        if route.map({ $0.lowercased() }).contains("novel"),
+           route.last?.lowercased() == "show.php",
+           let id = queryInt(named: ["id"], in: components) {
+            return .novel(id)
         }
 
         return nil
@@ -145,6 +158,18 @@ enum PixivWebLinkResolver {
            components.indices.contains(index + 1),
            let id = Int(components[index + 1]) {
             return .artwork(id)
+        }
+
+        if let novelIndex = normalized.firstIndex(where: { $0 == "novels" || $0 == "novel" }) {
+            if components.indices.contains(novelIndex + 2),
+               normalized[novelIndex + 1] == "series",
+               let id = Int(components[novelIndex + 2]) {
+                return .novelSeries(id)
+            }
+            if components.indices.contains(novelIndex + 1),
+               let id = Int(components[novelIndex + 1]) {
+                return .novel(id)
+            }
         }
 
         if let index = normalized.firstIndex(where: { $0 == "users" || $0 == "user" }),
@@ -295,6 +320,10 @@ extension PixivWebDestination {
         switch self {
         case .artwork(let id):
             return "#\(id)"
+        case .novel(let id):
+            return "\(L10n.novel) #\(id)"
+        case .novelSeries(let id):
+            return "\(L10n.novelSeries) #\(id)"
         case .user(let id):
             return String(format: L10n.linkUserPrefixFormat, id)
         case .collection(let id):

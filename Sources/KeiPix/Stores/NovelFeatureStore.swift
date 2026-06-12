@@ -125,6 +125,25 @@ final class NovelFeatureStore {
     }
     #endif
 
+    func presentDirectNovels(_ novels: [PixivNovel], nextURL: URL? = nil, selectedID: Int? = nil) {
+        activeFeedRequestID = nil
+        isLoading = false
+        isLoadingMore = false
+        errorMessage = nil
+        allNovels = novels
+        self.nextURL = nextURL
+        if let selectedID, let selected = novels.first(where: { $0.id == selectedID }) {
+            selectedNovel = selected
+            novelDetailCache[selected.id] = selected
+        } else if let first = novels.first {
+            selectedNovel = first
+            novelDetailCache[first.id] = first
+        } else {
+            selectedNovel = nil
+        }
+        applyContentFilter()
+    }
+
     // MARK: - Feed loading
 
     /// Reload the novel feed for the active route. Cancels any in-flight
