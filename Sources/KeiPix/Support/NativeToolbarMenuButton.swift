@@ -46,21 +46,33 @@ struct NativeToolbarMenuButton: UIViewRepresentable {
     }
 
     private func configure(_ button: UIButton, coordinator: Coordinator) {
-        var configuration = UIButton.Configuration.borderless()
-        configuration.image = UIImage(systemName: systemImage)
-        configuration.title = title
-        configuration.imagePlacement = .leading
-        configuration.imagePadding = title == nil ? 0 : 6
-        configuration.buttonSize = .medium
-        configuration.cornerStyle = .capsule
-        if badgeText != nil {
-            configuration.contentInsets.trailing += 5
+        let chrome = ButtonChrome(systemImage: systemImage, title: title, badgeText: badgeText)
+        if coordinator.chrome != chrome {
+            var configuration = UIButton.Configuration.borderless()
+            configuration.image = UIImage(systemName: systemImage)
+            configuration.title = title
+            configuration.imagePlacement = .leading
+            configuration.imagePadding = title == nil ? 0 : 6
+            configuration.buttonSize = .medium
+            configuration.cornerStyle = .capsule
+            if badgeText != nil {
+                configuration.contentInsets.trailing += 5
+            }
+            button.configuration = configuration
+            coordinator.chrome = chrome
         }
-        button.configuration = configuration
-        button.clipsToBounds = false
-        button.showsMenuAsPrimaryAction = true
-        button.menu = menu.uiMenu(coordinator: coordinator)
-        configureBadge(in: button)
+
+        if button.clipsToBounds {
+            button.clipsToBounds = false
+        }
+        if !button.showsMenuAsPrimaryAction {
+            button.showsMenuAsPrimaryAction = true
+        }
+        coordinator.assignMenuIfNeeded(to: button, menu: menu)
+        if coordinator.renderedBadgeText != badgeText {
+            configureBadge(in: button)
+            coordinator.renderedBadgeText = badgeText
+        }
     }
 
     private func configureBadge(in button: UIButton) {
@@ -91,20 +103,52 @@ struct NativeToolbarMenuButton: UIViewRepresentable {
 
     private static let badgeTag = 78_431
 
+    struct ButtonChrome: Equatable {
+        var systemImage: String
+        var title: String?
+        var badgeText: String?
+    }
+
     @MainActor
     final class Coordinator: NSObject {
         var menu: NativeToolbarMenu
         var select: (String) -> Void
+        var cachedMenuModel: NativeToolbarMenu?
+        var cachedMenu: UIMenu?
+        var assignedMenuModel: NativeToolbarMenu?
+        var chrome: ButtonChrome?
+        var renderedBadgeText: String?
 
         init(menu: NativeToolbarMenu, select: @escaping (String) -> Void) {
             self.menu = menu
             self.select = select
             super.init()
         }
+
+        func renderedMenu(for menu: NativeToolbarMenu) -> UIMenu {
+            if cachedMenuModel == menu, let cachedMenu {
+                return cachedMenu
+            }
+
+            let renderedMenu = menu.uiMenu(coordinator: self)
+            cachedMenuModel = menu
+            cachedMenu = renderedMenu
+            return renderedMenu
+        }
+
+        func assignMenuIfNeeded(to button: UIButton, menu: NativeToolbarMenu) {
+            guard assignedMenuModel != menu else { return }
+
+            // UIButton.menu is NSCopying; comparing the getter's object identity can
+            // force redundant assignments during SwiftUI toolbar updates and dismiss
+            // an open submenu.
+            button.menu = renderedMenu(for: menu)
+            assignedMenuModel = menu
+        }
     }
 }
 
-struct NativeToolbarMenu {
+struct NativeToolbarMenu: Equatable {
     let title: String
     let sections: [NativeToolbarMenuSection]
 
@@ -120,15 +164,16 @@ struct NativeToolbarMenu {
     func uiMenu(coordinator: NativeToolbarMenuButton.Coordinator) -> UIMenu {
         UIMenu(
             title: title,
-            children: sections.map { $0.uiMenu(coordinator: coordinator) }
+            children: sections.flatMap { $0.uiElements(coordinator: coordinator) }
         )
     }
 }
 
-struct NativeToolbarMenuSection {
+struct NativeToolbarMenuSection: Equatable {
     enum Presentation {
         case inline
         case palette
+        case root
     }
 
     let title: String
@@ -142,7 +187,17 @@ struct NativeToolbarMenuSection {
     }
 
     @MainActor
-    func uiMenu(coordinator: NativeToolbarMenuButton.Coordinator) -> UIMenu {
+    func uiElements(coordinator: NativeToolbarMenuButton.Coordinator) -> [UIMenuElement] {
+        if presentation == .root {
+            return items.map {
+                $0.uiElement(coordinator: coordinator)
+            }
+        }
+        return [uiMenu(coordinator: coordinator)]
+    }
+
+    @MainActor
+    private func uiMenu(coordinator: NativeToolbarMenuButton.Coordinator) -> UIMenu {
         var options: UIMenu.Options = [.displayInline]
         if presentation == .palette {
             options.insert(.displayAsPalette)
@@ -171,7 +226,21 @@ struct NativeToolbarMenuSection {
     }
 }
 
-enum NativeToolbarMenuItem {
+enum NativeToolbarSubmenuPresentation: Equatable {
+    case automatic
+    case singleSelection
+
+    var options: UIMenu.Options {
+        switch self {
+        case .automatic:
+            return []
+        case .singleSelection:
+            return [.singleSelection]
+        }
+    }
+}
+
+indirect enum NativeToolbarMenuItem: Equatable {
     case action(
         id: String,
         title: String,
@@ -179,7 +248,15 @@ enum NativeToolbarMenuItem {
         paletteTitle: String? = nil,
         isSelected: Bool = false,
         isEnabled: Bool = true,
-        isDestructive: Bool = false
+        isDestructive: Bool = false,
+        keepsMenuPresented: Bool = false
+    )
+    case submenu(
+        title: String,
+        subtitle: String? = nil,
+        systemImage: String,
+        presentation: NativeToolbarSubmenuPresentation = .automatic,
+        items: [NativeToolbarMenuItem]
     )
 
     @MainActor
@@ -188,17 +265,45 @@ enum NativeToolbarMenuItem {
         prefersPaletteTitle: Bool = false
     ) -> UIMenuElement {
         switch self {
-        case .action(let id, let title, let systemImage, let paletteTitle, let isSelected, let isEnabled, let isDestructive):
+        case .action(
+            let id,
+            let title,
+            let systemImage,
+            let paletteTitle,
+            let isSelected,
+            let isEnabled,
+            let isDestructive,
+            let keepsMenuPresented
+        ):
+            var attributes: UIMenuElement.Attributes = isEnabled ? [] : .disabled
+            if isDestructive {
+                attributes.insert(.destructive)
+            }
+            if keepsMenuPresented {
+                attributes.insert(.keepsMenuPresented)
+            }
             let action = UIAction(
                 title: prefersPaletteTitle ? (paletteTitle ?? title) : title,
                 image: UIImage(systemName: systemImage),
                 identifier: UIAction.Identifier(id),
-                attributes: isEnabled ? (isDestructive ? .destructive : []) : .disabled,
+                attributes: attributes,
                 state: isSelected ? .on : .off
             ) { _ in
                 coordinator.select(id)
             }
             return action
+
+        case .submenu(let title, let subtitle, let systemImage, let presentation, let items):
+            return UIMenu(
+                title: title,
+                subtitle: subtitle,
+                image: UIImage(systemName: systemImage),
+                identifier: nil,
+                options: presentation.options,
+                children: items.map {
+                    $0.uiElement(coordinator: coordinator)
+                }
+            )
         }
     }
 }

@@ -29,7 +29,6 @@ struct ContentView: View {
     @State private var skipsNextCompactTabSelectionHandler = false
     @State private var compactContentTransitionEdge: Edge = .trailing
     @State private var feedbackRequest: FeedbackReportRequest?
-    @State private var appControlsPanel: MobileAppControlsPanel?
     @State private var statusMessage: String?
     @State private var isPhoneFeedAtContentStart = true
     @State private var bookmarkEditorLayoutProfileOverride: BookmarkEditorLayoutProfile = .compact
@@ -184,12 +183,6 @@ struct ContentView: View {
                         launchTarget: mobileBottomTabLaunchTargetBinding,
                         remembersLastRoute: $mobileBottomTabRemembersLastRoute
                     )
-                }
-                .os26SheetChrome(.form)
-            }
-            .sheet(item: $appControlsPanel) { panel in
-                NavigationStack {
-                    MobileAppControlsPanelView(panel: panel, store: store)
                 }
                 .os26SheetChrome(.form)
             }
@@ -1120,16 +1113,55 @@ struct ContentView: View {
                     ]
                 ),
                 NativeToolbarMenuSection(
+                    presentation: .root,
                     items: [
-                        .action(
-                            id: IPadToolbarMenuAction.viewOptionsPanel,
+                        .submenu(
                             title: L10n.viewOptions,
-                            systemImage: "slider.horizontal.3"
+                            systemImage: "slider.horizontal.3",
+                            items: [
+                                .action(
+                                    id: IPadToolbarMenuAction.showContentBadges,
+                                    title: L10n.showContentBadges,
+                                    systemImage: "tag",
+                                    isSelected: store.showContentBadges
+                                ),
+                                .action(
+                                    id: IPadToolbarMenuAction.maskSensitivePreviews,
+                                    title: L10n.maskSensitivePreviews,
+                                    systemImage: "eye.trianglebadge.exclamationmark",
+                                    isSelected: store.maskSensitivePreviews
+                                )
+                            ]
                         ),
-                        .action(
-                            id: IPadToolbarMenuAction.contentFiltersPanel,
+                        .submenu(
                             title: L10n.contentFilters,
-                            systemImage: "line.3.horizontal.decrease.circle"
+                            systemImage: "line.3.horizontal.decrease.circle",
+                            items: [
+                                .action(
+                                    id: IPadToolbarMenuAction.hideMutedContent,
+                                    title: L10n.hideMutedContent,
+                                    systemImage: "speaker.slash",
+                                    isSelected: store.hideMutedContent
+                                ),
+                                .action(
+                                    id: IPadToolbarMenuAction.hideAIArtworks,
+                                    title: L10n.hideAIArtworks,
+                                    systemImage: "sparkles",
+                                    isSelected: store.hideAIArtworks
+                                ),
+                                .action(
+                                    id: IPadToolbarMenuAction.hideR18Artworks,
+                                    title: L10n.hideR18Artworks,
+                                    systemImage: "18.circle",
+                                    isSelected: store.hideR18Artworks
+                                ),
+                                .action(
+                                    id: IPadToolbarMenuAction.hideR18GArtworks,
+                                    title: L10n.hideR18GArtworks,
+                                    systemImage: "exclamationmark.triangle",
+                                    isSelected: store.hideR18GArtworks
+                                )
+                            ]
                         )
                     ]
                 )
@@ -1153,10 +1185,6 @@ struct ContentView: View {
         case IPadToolbarMenuAction.openPixivID:
             dismissTransientArtworkPresentationBeforeGlobalOpen()
             isPixivIDOpenPresented = true
-        case IPadToolbarMenuAction.viewOptionsPanel:
-            appControlsPanel = .viewOptions
-        case IPadToolbarMenuAction.contentFiltersPanel:
-            appControlsPanel = .contentFilters
         case IPadToolbarMenuAction.goBack:
             store.navigateBack()
         case IPadToolbarMenuAction.goForward:
@@ -1984,157 +2012,9 @@ private struct MobileGlobalSearchModifier: ViewModifier {
     }
 }
 
-private enum MobileAppControlsPanel: String, Identifiable {
-    case viewOptions
-    case contentFilters
-
-    var id: String { rawValue }
-
-    var title: String {
-        switch self {
-        case .viewOptions: L10n.viewOptions
-        case .contentFilters: L10n.contentFilters
-        }
-    }
-
-    var systemImage: String {
-        switch self {
-        case .viewOptions: "slider.horizontal.3"
-        case .contentFilters: "line.3.horizontal.decrease.circle"
-        }
-    }
-}
-
-private struct MobileAppControlsPanelView: View {
-    let panel: MobileAppControlsPanel
-    @Bindable var store: KeiPixStore
-    @Environment(\.dismiss) private var dismiss
-
-    var body: some View {
-        List {
-            Section {
-                controls
-            } header: {
-                Label(panel.title, systemImage: panel.systemImage)
-                    .font(.headline)
-                    .foregroundStyle(.primary)
-                    .textCase(nil)
-            }
-        }
-        .listStyle(.plain)
-        .scrollContentBackground(.hidden)
-        .navigationTitle(panel.title)
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .cancellationAction) {
-                Button {
-                    dismiss()
-                } label: {
-                    Label(L10n.done, systemImage: "checkmark")
-                }
-            }
-        }
-    }
-
-    @ViewBuilder
-    private var controls: some View {
-        switch panel {
-        case .viewOptions:
-            Toggle(isOn: showContentBadgesBinding) {
-                Label(L10n.showContentBadges, systemImage: "tag")
-            }
-            .mobileAppControlsPanelRow()
-
-            Toggle(isOn: maskSensitivePreviewsBinding) {
-                Label(L10n.maskSensitivePreviews, systemImage: "eye.trianglebadge.exclamationmark")
-            }
-            .mobileAppControlsPanelRow()
-
-        case .contentFilters:
-            Toggle(isOn: hideMutedContentBinding) {
-                Label(L10n.hideMutedContent, systemImage: "speaker.slash")
-            }
-            .mobileAppControlsPanelRow()
-
-            Toggle(isOn: hideAIBinding) {
-                Label(L10n.hideAIArtworks, systemImage: "sparkles")
-            }
-            .mobileAppControlsPanelRow()
-
-            Toggle(isOn: hideR18Binding) {
-                Label(L10n.hideR18Artworks, systemImage: "18.circle")
-            }
-            .mobileAppControlsPanelRow()
-
-            Toggle(isOn: hideR18GBinding) {
-                Label(L10n.hideR18GArtworks, systemImage: "exclamationmark.triangle")
-            }
-            .mobileAppControlsPanelRow()
-        }
-    }
-
-    private var showContentBadgesBinding: Binding<Bool> {
-        Binding {
-            store.showContentBadges
-        } set: { value in
-            store.setShowContentBadges(value)
-        }
-    }
-
-    private var maskSensitivePreviewsBinding: Binding<Bool> {
-        Binding {
-            store.maskSensitivePreviews
-        } set: { value in
-            store.setMaskSensitivePreviews(value)
-        }
-    }
-
-    private var hideMutedContentBinding: Binding<Bool> {
-        Binding {
-            store.hideMutedContent
-        } set: { value in
-            store.setHideMutedContent(value)
-        }
-    }
-
-    private var hideAIBinding: Binding<Bool> {
-        Binding {
-            store.hideAIArtworks
-        } set: { value in
-            store.setHideAIArtworks(value)
-        }
-    }
-
-    private var hideR18Binding: Binding<Bool> {
-        Binding {
-            store.hideR18Artworks
-        } set: { value in
-            store.setHideR18Artworks(value)
-        }
-    }
-
-    private var hideR18GBinding: Binding<Bool> {
-        Binding {
-            store.hideR18GArtworks
-        } set: { value in
-            store.setHideR18GArtworks(value)
-        }
-    }
-}
-
-private extension View {
-    func mobileAppControlsPanelRow() -> some View {
-        listRowBackground(Color.clear)
-            .listRowSeparator(.hidden)
-            .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
-    }
-}
-
 private enum IPadToolbarMenuAction {
     static let openPixivLinkFromClipboard = "open-pixiv-link-from-clipboard"
     static let openPixivID = "open-pixiv-id"
-    static let viewOptionsPanel = "view-options-panel"
-    static let contentFiltersPanel = "content-filters-panel"
     static let goBack = "go-back"
     static let goForward = "go-forward"
     static let previousArtwork = "previous-artwork"
