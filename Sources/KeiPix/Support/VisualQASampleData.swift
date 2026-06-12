@@ -80,6 +80,59 @@ enum VisualQASampleData {
         ]
     )
 
+    static let novelFeedNovels: [PixivNovel] = [
+        decodeNovel(
+            id: 94_100,
+            title: "亚原子集群意识体的嗜好性使用 - 对艾尔芙蕾妲・塞安娜的长期观察报告",
+            caption: "本文献给 Alcientia(user/15371509)，以称颂她对全身贞操带及全身胶衣的热爱与慷慨。<br />这是一条故意很长的小说简介，用来确认窄屏卡片不会再把数字和标签挤成竖排。",
+            createdAt: 1_779_724_800,
+            tags: ["R-18", "中文", "ラバースーツ", "拘束", "調教", "AI"],
+            pageCount: 71,
+            textLength: 18_189,
+            totalBookmarks: 33_999,
+            totalView: 285_999,
+            isOriginal: true,
+            isBookmarked: true,
+            xRestrict: 1,
+            novelAIType: 2
+        ),
+        decodeNovel(
+            id: 94_101,
+            title: "第一章",
+            caption: "教练好。短标题和中等长度简介应当保持轻巧，不需要为了和长标题卡片对齐而浪费额外高度。",
+            createdAt: 1_779_638_400,
+            tags: ["R-18G", "贞操带", "边缘控制", "恋爱", "BDSM"],
+            pageCount: 50,
+            textLength: 14_869,
+            totalBookmarks: 358,
+            totalView: 5_900,
+            xRestrict: 2
+        ),
+        decodeNovel(
+            id: 94_102,
+            title: "静海",
+            caption: "彼岸归航。一个更接近日常推荐流的样本，覆盖普通标签和未收藏状态。",
+            createdAt: 1_779_552_000,
+            tags: ["原创", "短篇", "海", "日常", "読書"],
+            pageCount: 12,
+            textLength: 7_776,
+            totalBookmarks: 75,
+            totalView: 1_639
+        ),
+        decodeNovel(
+            id: 94_103,
+            title: "Night train archive / 夜行列车手记",
+            caption: "Mixed language captions and tags should remain legible in the compact strip without forcing the row taller.",
+            createdAt: 1_779_465_600,
+            tags: ["original", "travel", "夜景", "列車", "longtagvalidation"],
+            pageCount: 24,
+            textLength: 42_018,
+            totalBookmarks: 1_204,
+            totalView: 68_441,
+            isOriginal: true
+        )
+    ]
+
     static let seriesParentArtwork = decodeArtwork(
         id: 92000,
         title: "Sample long manga series",
@@ -634,6 +687,59 @@ enum VisualQASampleData {
         return try! JSONDecoder().decode(PixivArtwork.self, from: Data(payload.utf8))
     }
 
+    private static func decodeNovel(
+        id: Int,
+        title: String,
+        caption: String,
+        createdAt: Int,
+        tags: [String],
+        pageCount: Int,
+        textLength: Int,
+        totalBookmarks: Int,
+        totalView: Int,
+        isOriginal: Bool = false,
+        isBookmarked: Bool = false,
+        xRestrict: Int = 0,
+        novelAIType: Int = 0
+    ) -> PixivNovel {
+        let tagPayload = tags.map { #"{"name":"\#($0)","translated_name":null}"# }.joined(separator: ",")
+        let payload = """
+        {
+          "id": \(id),
+          "title": "\(title)",
+          "caption": "\(caption)",
+          "restrict": 0,
+          "x_restrict": \(xRestrict),
+          "is_original": \(isOriginal),
+          "image_urls": {
+            "square_medium": "https://example.com/novel-\(id)-square.jpg",
+            "medium": "https://example.com/novel-\(id)-medium.jpg",
+            "large": "https://example.com/novel-\(id)-large.jpg"
+          },
+          "create_date": \(createdAt),
+          "tags": [\(tagPayload)],
+          "page_count": \(pageCount),
+          "text_length": \(textLength),
+          "user": {
+            "id": 5001,
+            "name": "Novel QA Creator",
+            "account": "novel_qa"
+          },
+          "series": {},
+          "is_bookmarked": \(isBookmarked),
+          "total_bookmarks": \(totalBookmarks),
+          "total_view": \(totalView),
+          "total_comments": \(id % 23),
+          "visible": true,
+          "is_muted": false,
+          "is_mypixiv_only": false,
+          "is_x_restricted": \(xRestrict > 0),
+          "novel_ai_type": \(novelAIType)
+        }
+        """
+        return try! JSONDecoder().decode(PixivNovel.self, from: Data(payload.utf8))
+    }
+
     private static func decodeComments(_ payload: String) -> [PixivComment] {
         try! JSONDecoder().decode(PixivCommentResponse.self, from: Data(payload.utf8)).comments
     }
@@ -809,6 +915,25 @@ extension KeiPixStore {
         nextURL = response.nextURL
         searchPopularPreviewArtworks = Array(response.illusts.prefix(4))
         applyContentFilters()
+    }
+
+    func presentNovelFeedVisualQA() {
+        activateVisualQASampleSession()
+        selectedRoute = .novelRecommended
+        focusedUser = nil
+        bookmarkTagFilter = nil
+        selectedSpotlightArticle = nil
+        selectedArtwork = nil
+        errorMessage = nil
+        isLoading = false
+        isLoadingMore = false
+        activeFeedSnapshotRestoration = nil
+        searchPopularPreviewArtworks = []
+        novelGalleryLayoutMode = .list
+        novels.presentVisualQAFeed(
+            novels: VisualQASampleData.novelFeedNovels,
+            nextURL: URL(string: "https://app-api.pixiv.net/v1/novel/recommended/next")
+        )
     }
 
     func presentRankingVisualQA() {

@@ -318,6 +318,9 @@ struct ContentView: View {
             if VisualQALaunchArgument.contains(.searchWorkspace) {
                 store.presentSearchWorkspaceVisualQA()
             }
+            if VisualQALaunchArgument.contains(.novelFeed) {
+                store.presentNovelFeedVisualQA()
+            }
             if let visualQAGalleryLayoutMode = VisualQALaunchArgument.activeGalleryLayoutMode {
                 store.presentGalleryLayoutVisualQA(mode: visualQAGalleryLayoutMode)
             }

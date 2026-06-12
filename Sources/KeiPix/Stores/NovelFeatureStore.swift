@@ -113,6 +113,18 @@ final class NovelFeatureStore {
         self.api = api
     }
 
+    #if DEBUG
+    func presentVisualQAFeed(novels: [PixivNovel], nextURL: URL? = nil) {
+        activeFeedRequestID = nil
+        isLoading = false
+        isLoadingMore = false
+        errorMessage = nil
+        allNovels = novels
+        self.nextURL = nextURL
+        applyContentFilter()
+    }
+    #endif
+
     // MARK: - Feed loading
 
     /// Reload the novel feed for the active route. Cancels any in-flight

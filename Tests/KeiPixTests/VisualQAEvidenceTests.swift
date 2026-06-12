@@ -89,6 +89,7 @@ struct VisualQAEvidenceTests {
         #expect(VisualQASurface(rawValue: "gallery-two-column") == .galleryTwoColumn)
         #expect(VisualQASurface(rawValue: "gallery-three-column") == .galleryThreeColumn)
         #expect(VisualQASurface(rawValue: "gallery-compact") == .galleryCompact)
+        #expect(VisualQASurface(rawValue: "novel-feed") == .novelFeed)
         #expect(VisualQASurface(rawValue: "search-workspace") == .searchWorkspace)
         #expect(VisualQASurface(rawValue: "ranking") == .ranking)
         #expect(VisualQASurface(rawValue: "muted-content") == .mutedContent)
@@ -121,6 +122,7 @@ struct VisualQAEvidenceTests {
         #expect(VisualQALaunchArgument.artworkDetailSocial.surface == .artworkDetailSocial)
         #expect(VisualQALaunchArgument.bookmarkEditor.surface == .bookmarkEditor)
         #expect(VisualQALaunchArgument.searchWorkspace.surface == .searchWorkspace)
+        #expect(VisualQALaunchArgument.novelFeed.surface == .novelFeed)
         #expect(VisualQALaunchArgument.galleryAuto.galleryLayoutMode == .autoMasonry)
         #expect(VisualQALaunchArgument.galleryTwoColumn.galleryLayoutMode == .twoColumnMasonry)
         #expect(VisualQALaunchArgument.galleryThreeColumn.galleryLayoutMode == .threeColumnMasonry)
@@ -137,6 +139,7 @@ struct VisualQAEvidenceTests {
         #expect(VisualQALaunchArgument.isActive(in: ["KeiPix", "--visual-qa-bottom-tabs"]))
         #expect(VisualQALaunchArgument.isActive(in: ["KeiPix", "--visual-qa-sharing-templates"]))
         #expect(VisualQALaunchArgument.isActive(in: ["KeiPix", "--visual-qa-search-workspace"]))
+        #expect(VisualQALaunchArgument.isActive(in: ["KeiPix", "--visual-qa-novel-feed"]))
         #expect(VisualQALaunchArgument.isActive(in: ["KeiPix"]) == false)
         #expect(VisualQALaunchArgument.activeGalleryLayoutMode(in: ["KeiPix", "--visual-qa-gallery-three-column"]) == .threeColumnMasonry)
     }

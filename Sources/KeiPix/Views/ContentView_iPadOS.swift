@@ -128,6 +128,12 @@ struct ContentView: View {
                     selectedSidebarItem = .route(.search)
                     selectedTab = .search
                 }
+                if VisualQALaunchArgument.contains(.novelFeed) {
+                    store.presentNovelFeedVisualQA()
+                    hasAppliedMobileBottomTabLaunchTarget = true
+                    selectedSidebarItem = .route(.novelRecommended)
+                    selectedTab = .mobile(.novels)
+                }
                 if VisualQALaunchArgument.contains(.bookmarkEditor) {
                     store.activateVisualQASampleSession()
                     selectedSidebarItem = .route(.illustrations)
