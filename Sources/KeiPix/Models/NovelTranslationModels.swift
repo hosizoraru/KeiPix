@@ -1,6 +1,9 @@
 import Foundation
+#if canImport(Translation)
+@preconcurrency import Translation
+#endif
 
-struct NovelTranslationSegment: Identifiable, Hashable, Sendable {
+struct NovelTranslationSegment: Identifiable, Hashable, Codable, Sendable {
     let novelID: Int
     let targetLanguageID: String
     let pageIndex: Int
@@ -13,15 +16,69 @@ struct NovelTranslationSegment: Identifiable, Hashable, Sendable {
     var id: String { clientIdentifier }
 }
 
+struct NovelTranslationBatchResult: Equatable, Hashable, Sendable {
+    let segment: NovelTranslationSegment
+    let translatedText: String
+}
+
+struct NovelTranslationBatchClient {
+    typealias ResultHandler = @MainActor (NovelTranslationBatchResult) -> Void
+
+    private let operation: @MainActor ([NovelTranslationSegment], ResultHandler) async throws -> Void
+
+    init(_ operation: @escaping @MainActor ([NovelTranslationSegment], ResultHandler) async throws -> Void) {
+        self.operation = operation
+    }
+
+    @MainActor
+    func translate(
+        _ segments: [NovelTranslationSegment],
+        onResult: ResultHandler
+    ) async throws {
+        try await operation(segments, onResult)
+    }
+}
+
+enum NovelTranslationBatchMapper {
+    static func segmentIndex(_ segments: [NovelTranslationSegment]) -> [String: NovelTranslationSegment] {
+        Dictionary(uniqueKeysWithValues: segments.map { ($0.clientIdentifier, $0) })
+    }
+
+    static func result(
+        clientIdentifier: String?,
+        translatedText: String,
+        segmentsByClientIdentifier: [String: NovelTranslationSegment]
+    ) -> NovelTranslationBatchResult? {
+        guard let clientIdentifier,
+              let segment = segmentsByClientIdentifier[clientIdentifier] else {
+            return nil
+        }
+        return NovelTranslationBatchResult(segment: segment, translatedText: translatedText)
+    }
+
+    #if canImport(Translation)
+    static func requests(from segments: [NovelTranslationSegment]) -> [TranslationSession.Request] {
+        segments.map { segment in
+            TranslationSession.Request(
+                sourceText: segment.sourceText,
+                clientIdentifier: segment.clientIdentifier
+            )
+        }
+    }
+    #endif
+}
+
 enum NovelTranslationPlanner {
     static func segments(
         novelID: Int,
         targetLanguageID: String,
-        pages: [[NovelToken]]
+        pages: [[NovelToken]],
+        pageStartIndex: Int = 0
     ) -> [NovelTranslationSegment] {
         var segments: [NovelTranslationSegment] = []
 
         for (pageIndex, page) in pages.enumerated() {
+            let resolvedPageIndex = pageStartIndex + pageIndex
             for (tokenIndex, token) in page.enumerated() {
                 guard case .text(let rawText) = token else { continue }
 
@@ -44,7 +101,7 @@ enum NovelTranslationPlanner {
                         NovelTranslationSegment(
                             novelID: novelID,
                             targetLanguageID: targetLanguageID,
-                            pageIndex: pageIndex,
+                            pageIndex: resolvedPageIndex,
                             tokenIndex: tokenIndex,
                             paragraphIndex: paragraph.index,
                             sourceText: sourceText,

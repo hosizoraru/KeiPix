@@ -1,4 +1,7 @@
 import Testing
+#if canImport(Translation)
+@preconcurrency import Translation
+#endif
 @testable import KeiPix
 
 @Suite("Novel translation planner")
@@ -77,5 +80,79 @@ struct NovelTranslationPlannerTests {
         #expect(first.map(\.sourceHash) == second.map(\.sourceHash))
         #expect(first[0].sourceHash == first[1].sourceHash)
         #expect(first[0].clientIdentifier != first[1].clientIdentifier)
+    }
+
+    #if canImport(Translation)
+    @Test("Batch requests carry source text and stable client identifiers")
+    func batchRequestsCarrySegmentIdentity() {
+        let segments = NovelTranslationPlanner.segments(
+            novelID: 5,
+            targetLanguageID: "en",
+            pages: [[.text("一段落目。\n\n二段落目。")]]
+        )
+
+        let requests = NovelTranslationBatchMapper.requests(from: segments)
+
+        #expect(requests.map(\.sourceText) == ["一段落目。", "二段落目。"])
+        #expect(requests.map(\.clientIdentifier) == segments.map(\.clientIdentifier))
+    }
+    #endif
+
+    @Test("Batch response mapping ignores missing and unknown client identifiers")
+    func batchResponseMappingIgnoresUnknownIdentifiers() {
+        let segments = NovelTranslationPlanner.segments(
+            novelID: 5,
+            targetLanguageID: "en",
+            pages: [[.text("本文。")]]
+        )
+        let index = NovelTranslationBatchMapper.segmentIndex(segments)
+
+        let missing = NovelTranslationBatchMapper.result(
+            clientIdentifier: nil,
+            translatedText: "ignored",
+            segmentsByClientIdentifier: index
+        )
+        let unknown = NovelTranslationBatchMapper.result(
+            clientIdentifier: "not-from-this-batch",
+            translatedText: "ignored",
+            segmentsByClientIdentifier: index
+        )
+        let mapped = NovelTranslationBatchMapper.result(
+            clientIdentifier: segments[0].clientIdentifier,
+            translatedText: "Translated.",
+            segmentsByClientIdentifier: index
+        )
+
+        #expect(missing == nil)
+        #expect(unknown == nil)
+        #expect(mapped?.segment == segments[0])
+        #expect(mapped?.translatedText == "Translated.")
+    }
+
+    @Test("Batch client closure streams mapped results without prescribing response order")
+    func batchClientClosureStreamsMappedResults() async throws {
+        let segments = NovelTranslationPlanner.segments(
+            novelID: 5,
+            targetLanguageID: "en",
+            pages: [[.text("一段落目。\n\n二段落目。")]]
+        )
+        let client = NovelTranslationBatchClient { segments, yield in
+            for segment in segments.reversed() {
+                yield(
+                    NovelTranslationBatchResult(
+                        segment: segment,
+                        translatedText: "translated-\(segment.paragraphIndex)"
+                    )
+                )
+            }
+        }
+
+        var results: [NovelTranslationBatchResult] = []
+        try await client.translate(segments) { result in
+            results.append(result)
+        }
+
+        #expect(results.map(\.segment.paragraphIndex) == [1, 0])
+        #expect(Set(results.map(\.segment.clientIdentifier)) == Set(segments.map(\.clientIdentifier)))
     }
 }

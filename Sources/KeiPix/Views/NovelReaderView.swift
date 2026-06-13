@@ -242,44 +242,51 @@ struct NovelReaderView: View {
 
     private func translatePage(_ page: Int, session: TranslationSession) async {
         guard translationEngine.isInlineTranslationActive else { return }
-        if translationEngine.hasTranslation(for: page) { return }
 
         guard pages.indices.contains(page) else { return }
         let tokens = pages[page]
+        let segments = NovelTranslationPlanner.segments(
+            novelID: activeNovel.id,
+            targetLanguageID: store.translationTargetLanguage.rawValue,
+            pages: [tokens],
+            pageStartIndex: page
+        )
+        translationEngine.registerSegments(segments)
 
-        let paragraphs = tokens.enumerated().compactMap { index, token -> (Int, String)? in
-            if case .text(let value) = token,
-               let translatable = CaptionTranslationAvailability.translatableText(from: value) {
-                return (index, translatable)
-            }
-            return nil
-        }
-        guard paragraphs.isEmpty == false else { return }
+        let pendingSegments = translationEngine.pendingSegments(from: segments)
+        guard pendingSegments.isEmpty == false else { return }
 
-        translationEngine.setTranslating(pageIndex: page, total: paragraphs.count)
+        translationEngine.setTranslating(segments: pendingSegments)
 
-        var results: [Int: String] = [:]
-        let total = paragraphs.count
-
-        await withTaskGroup(of: (Int, String)?.self) { group in
-            for (tokenIndex, paragraphText) in paragraphs {
-                guard translationEngine.isInlineTranslationActive else { break }
-                group.addTask {
-                    if let response = try? await session.translate(paragraphText) {
-                        return (tokenIndex, response.targetText)
-                    }
-                    return nil
+        let batchClient = NovelTranslationBatchClient { segments, yield in
+            let requests = NovelTranslationBatchMapper.requests(from: segments)
+            let segmentIndex = NovelTranslationBatchMapper.segmentIndex(segments)
+            for try await response in session.translate(batch: requests) {
+                if let result = NovelTranslationBatchMapper.result(
+                    clientIdentifier: response.clientIdentifier,
+                    translatedText: response.targetText,
+                    segmentsByClientIdentifier: segmentIndex
+                ) {
+                    yield(result)
                 }
             }
-
-            for await result in group {
-                if let (tokenIndex, translated) = result {
-                    results[tokenIndex] = translated
-                }
-                translationEngine.updateProgress(completed: results.count, total: total)
-            }
         }
-        translationEngine.applyResults(results, for: page)
+
+        do {
+            try await batchClient.translate(pendingSegments) { result in
+                if translationEngine.isInlineTranslationActive {
+                    translationEngine.applySegmentResult(result)
+                }
+            }
+            guard translationEngine.isInlineTranslationActive else { return }
+            translationEngine.finishTranslating(segments: pendingSegments)
+        } catch is CancellationError {
+            guard translationEngine.isInlineTranslationActive else { return }
+            translationEngine.finishTranslating(segments: pendingSegments)
+        } catch {
+            guard translationEngine.isInlineTranslationActive else { return }
+            translationEngine.failTranslating(L10n.translationFailed, segments: pendingSegments)
+        }
     }
 
     // MARK: - Chrome

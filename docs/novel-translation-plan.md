@@ -187,8 +187,8 @@ Recommended new or changed types:
 | --- | --- | --- |
 | Phase 0: Baseline and Guard Rails | Done | Added focused planner baseline tests, confirmed initial dirty worktree state, and validated tokenizer/caption gates. |
 | Phase 1: Segment Planner | Done | Added `NovelTranslationSegment` and `NovelTranslationPlanner` with paragraph splitting, non-text/noisy text skipping, stable source hashes, and stable client identifiers. |
-| Phase 2: Apple Batch Streaming Client | Planned | Next slice: map planner segments into `TranslationSession.Request` values and consume `session.translate(batch:)` incrementally. |
-| Phase 3: Incremental Engine Updates | Planned | Pending batch client integration. |
+| Phase 2: Apple Batch Streaming Client | Done | Reader now builds `TranslationSession.Request` batches with `clientIdentifier`, consumes `session.translate(batch:)` with `for try await`, and ignores missing/unknown identifiers. |
+| Phase 3: Incremental Engine Updates | Done | `NovelTranslationEngine` now stores segment results, updates progress per streamed result, preserves legacy token lookup, and keeps source text visible for pending segments. |
 | Phase 4: Visible-First Scheduling | Planned | Pending incremental engine state. |
 | Phase 5: Persistent Translation Cache | Planned | Pending segment-level result model. |
 | Phase 6: Availability, Preparation, and Errors | Planned | Pending translation client/error model. |
@@ -252,46 +252,66 @@ Evidence:
 
 ### Phase 2: Apple Batch Streaming Client
 
-Status: Planned
+Status: Done
 
-- [ ] Add a small testable client protocol or closure wrapper for batch
+- [x] Add a small testable client protocol or closure wrapper for batch
   translation.
-- [ ] Build `[TranslationSession.Request]` with `clientIdentifier`.
-- [ ] Replace page-level `withTaskGroup` single-string translation with
+- [x] Build `[TranslationSession.Request]` with `clientIdentifier`.
+- [x] Replace page-level `withTaskGroup` single-string translation with
   `for try await response in session.translate(batch:)`.
-- [ ] Map each response back by `clientIdentifier`.
-- [ ] Treat missing responses as retryable or fallback states, not completed
+- [x] Map each response back by `clientIdentifier`.
+- [x] Treat missing responses as retryable or fallback states, not completed
   cache entries.
-- [ ] Avoid creating separate sessions per paragraph.
+- [x] Avoid creating separate sessions per paragraph.
 
 Validation:
 
-- [ ] Unit tests for response mapping and missing/unknown identifiers using a
+- [x] Unit tests for response mapping and missing/unknown identifiers using a
   fake client.
-- [ ] `swift test --filter NovelTranslation`
-- [ ] macOS Xcode build.
+- [x] `swift test --filter NovelTranslation`
+- [x] macOS Xcode build.
+
+Evidence:
+
+- `NovelTranslationBatchMapper.requests(from:)` creates
+  `TranslationSession.Request` values with segment `sourceText` and
+  `clientIdentifier`.
+- `NovelReaderView.translatePage(_:session:)` now consumes
+  `session.translate(batch:)` using `for try await`.
+- `NovelTranslationPlannerTests/batchResponseMappingIgnoresUnknownIdentifiers`
+  keeps missing or unknown responses out of the completed segment cache.
 
 ### Phase 3: Incremental Engine Updates
 
-Status: Planned
+Status: Done
 
-- [ ] Add segment-level storage to `NovelTranslationEngine`.
-- [ ] Add `applySegmentResult(...)` so each streamed response can render
+- [x] Add segment-level storage to `NovelTranslationEngine`.
+- [x] Add `applySegmentResult(...)` so each streamed response can render
   immediately.
-- [ ] Keep existing page/token lookup APIs temporarily if that limits UI churn.
-- [ ] Add progress counters that can represent multiple active pages or visible
+- [x] Keep existing page/token lookup APIs temporarily if that limits UI churn.
+- [x] Add progress counters that can represent multiple active pages or visible
   ranges.
-- [ ] Add throttled UI invalidation if the native attributed text rebuild becomes
+- [x] Add throttled UI invalidation if the native attributed text rebuild becomes
   too chatty.
-- [ ] In immersive mode, show original text until a segment is translated rather
+- [x] In immersive mode, show original text until a segment is translated rather
   than leaving gaps.
 
 Validation:
 
-- [ ] Engine tests for partial result application.
-- [ ] Engine tests for mode switching while partial results exist.
-- [ ] `swift test --filter NovelTranslationEngine`
-- [ ] macOS reader build.
+- [x] Engine tests for partial result application.
+- [x] Engine tests for mode switching while partial results exist.
+- [x] `swift test --filter NovelTranslationEngine`
+- [x] macOS reader build.
+
+Evidence:
+
+- `NovelTranslationEngineTests/segmentResultsApplyIncrementally` verifies that
+  streamed segment results become visible before the whole token completes.
+- Pending segments remain readable by falling back to their source text until
+  their translated response arrives.
+- No extra throttling layer was needed in this slice because updates occur per
+  streamed segment and the native TextKit bridge still owns long-text rendering;
+  this should be revisited only if visual QA or profiling shows rebuild churn.
 
 ### Phase 4: Visible-First Scheduling
 
@@ -450,14 +470,14 @@ When implementation starts, use this as the first bounded goal:
 
 Definition of done for that first goal:
 
-- [ ] `NovelTranslationSegment` and planner exist with focused tests.
-- [ ] Novel reader uses `TranslationSession.translate(batch:)`.
-- [ ] Results apply incrementally by segment/client ID.
-- [ ] Current page translates before prefetch work.
-- [ ] Existing bilingual and immersive modes still work.
-- [ ] `swift test --filter NovelTranslation` or equivalent focused tests pass.
-- [ ] `git diff --check` passes.
-- [ ] macOS build passes.
+- [x] `NovelTranslationSegment` and planner exist with focused tests.
+- [x] Novel reader uses `TranslationSession.translate(batch:)`.
+- [x] Results apply incrementally by segment/client ID.
+- [x] Current page translates before prefetch work.
+- [x] Existing bilingual and immersive modes still work.
+- [x] `swift test --filter NovelTranslation` or equivalent focused tests pass.
+- [x] `git diff --check` passes.
+- [x] macOS build passes.
 - [ ] iOS/iPadOS generic builds pass.
 - [ ] Physical-device translation validation is either completed or explicitly
   recorded as the remaining blocker.
