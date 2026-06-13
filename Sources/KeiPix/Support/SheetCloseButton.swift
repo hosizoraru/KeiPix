@@ -137,6 +137,9 @@ enum OS26SheetPresentationStyle {
     /// Reader surfaces need wider, page-like sizing on iPad/macOS while
     /// staying full-height and touch-first on iPhone.
     case reader
+    /// Chapter lists should feel like a quick chooser on iPhone while
+    /// expanding into a wider catalog panel on iPad and macOS.
+    case chapterList
 
     var cornerRadius: CGFloat {
         switch self {
@@ -144,7 +147,7 @@ enum OS26SheetPresentationStyle {
             24
         case .standard:
             28
-        case .detail, .compactBookmarkEditor, .bookmarkEditor, .immersive, .settings, .reader:
+        case .detail, .compactBookmarkEditor, .bookmarkEditor, .immersive, .settings, .reader, .chapterList:
             32
         }
     }
@@ -172,6 +175,11 @@ enum OS26SheetPresentationStyle {
                 return [.large]
             }
             return [.fraction(0.88), .large]
+        case .chapterList:
+            if ReaderPlatformKind.current == .phone {
+                return [.medium, .large]
+            }
+            return [.fraction(0.72), .large]
         }
     }
 
@@ -193,6 +201,11 @@ enum OS26SheetPresentationStyle {
                 return .large
             }
             return .fraction(0.88)
+        case .chapterList:
+            if ReaderPlatformKind.current == .phone {
+                return .medium
+            }
+            return .fraction(0.72)
         }
     }
 
@@ -278,6 +291,19 @@ private struct OS26SheetChromeModifier: ViewModifier {
         case .immersive, .reader:
             content
                 .presentationSizing(.page)
+        case .chapterList:
+            #if os(iOS)
+            if ReaderPlatformKind.current == .phone {
+                content
+                    .presentationSizing(.form)
+            } else {
+                content
+                    .presentationSizing(.page)
+            }
+            #else
+            content
+                .presentationSizing(.page)
+            #endif
         }
     }
 }

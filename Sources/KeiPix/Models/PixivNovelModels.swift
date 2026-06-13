@@ -252,6 +252,20 @@ struct PixivNovelSeriesResponse: Decodable, Sendable {
         case nextURL = "next_url"
     }
 
+    init(
+        detail: PixivNovelSeriesDetail,
+        firstNovel: PixivNovel? = nil,
+        latestNovel: PixivNovel? = nil,
+        novels: [PixivNovel],
+        nextURL: URL?
+    ) {
+        self.detail = detail
+        self.firstNovel = firstNovel
+        self.latestNovel = latestNovel
+        self.novels = novels
+        self.nextURL = nextURL
+    }
+
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         detail = try container.decode(PixivNovelSeriesDetail.self, forKey: .detail)
@@ -290,6 +304,32 @@ struct PixivNovelSeriesDetail: Codable, Hashable, Sendable, Identifiable {
         case displayText = "display_text"
         case novelAIType = "novel_ai_type"
         case watchlistAdded = "watchlist_added"
+    }
+
+    init(
+        id: Int,
+        title: String,
+        caption: String = "",
+        isOriginal: Bool = false,
+        isConcluded: Bool = false,
+        contentCount: Int,
+        totalCharacterCount: Int,
+        user: PixivUser,
+        displayText: String = "",
+        novelAIType: Int = 0,
+        watchlistAdded: Bool? = nil
+    ) {
+        self.id = id
+        self.title = title
+        self.caption = caption
+        self.isOriginal = isOriginal
+        self.isConcluded = isConcluded
+        self.contentCount = contentCount
+        self.totalCharacterCount = totalCharacterCount
+        self.user = user
+        self.displayText = displayText
+        self.novelAIType = novelAIType
+        self.watchlistAdded = watchlistAdded
     }
 
     init(from decoder: Decoder) throws {

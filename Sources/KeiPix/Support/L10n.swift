@@ -1390,6 +1390,14 @@ enum L10n {
     static var novelChapterFormat: String { text("Chapter: %@") }
     static var novelSeries: String { text("Series") }
     static var novelSeriesFormat: String { text("Series: %@") }
+    static var novelSeriesChapters: String { text("Series Chapters") }
+    static var novelSeriesChapterCountFormat: String { text("%d chapters") }
+    static var novelSeriesCharacterCountFormat: String { text("%d characters total") }
+    static var novelSeriesCompleted: String { text("Completed Series") }
+    static var currentChapter: String { text("Current Chapter") }
+    static var openLatestNovelChapter: String { text("Open Latest Chapter") }
+    static var noSeriesChapters: String { text("No series chapters") }
+    static var noSeriesChaptersHint: String { text("This series has no readable chapters yet.") }
     static var novelPreviousInSeries: String { text("Previous in Series") }
     static var novelNextInSeries: String { text("Next in Series") }
     static var novelEnd: String { text("End") }

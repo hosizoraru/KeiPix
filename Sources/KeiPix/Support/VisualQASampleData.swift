@@ -7,6 +7,9 @@ import UIKit
 #endif
 
 enum VisualQASampleData {
+    static let novelSeriesVisualQAID = 77_001
+    static let novelSeriesVisualQATitle = "雨夜，然后捡到花嫁性偶"
+
     static let guestSession: PixivSession = {
         let payload = """
         {
@@ -95,11 +98,13 @@ enum VisualQASampleData {
             isBookmarked: true,
             xRestrict: 1,
             novelAIType: 2,
-            isFollowed: true
+            isFollowed: true,
+            seriesID: novelSeriesVisualQAID,
+            seriesTitle: novelSeriesVisualQATitle
         ),
         decodeNovel(
             id: 94_101,
-            title: "第一章",
+            title: "第一章 - 东京部的雨夜",
             caption: "教练好。短标题和中等长度简介应当保持轻巧，不需要为了和长标题卡片对齐而浪费额外高度。",
             createdAt: 1_779_638_400,
             tags: ["R-18G", "贞操带", "边缘控制", "恋爱", "BDSM"],
@@ -107,7 +112,9 @@ enum VisualQASampleData {
             textLength: 14_869,
             totalBookmarks: 358,
             totalView: 5_900,
-            xRestrict: 2
+            xRestrict: 2,
+            seriesID: novelSeriesVisualQAID,
+            seriesTitle: novelSeriesVisualQATitle
         ),
         decodeNovel(
             id: 94_102,
@@ -130,9 +137,42 @@ enum VisualQASampleData {
             textLength: 42_018,
             totalBookmarks: 1_204,
             totalView: 68_441,
-            isOriginal: true
+            isOriginal: true,
+            seriesID: novelSeriesVisualQAID,
+            seriesTitle: novelSeriesVisualQATitle
         )
     ]
+
+    static func novelSeriesResponse(seriesID: Int, currentNovel: PixivNovel?) -> PixivNovelSeriesResponse? {
+        var chapters = novelFeedNovels.filter { $0.series?.id == seriesID }
+        if let currentNovel,
+           currentNovel.series?.id == seriesID,
+           chapters.contains(where: { $0.id == currentNovel.id }) == false {
+            chapters.append(currentNovel)
+        }
+        guard chapters.isEmpty == false else { return nil }
+        let title = chapters.first?.series?.title ?? novelSeriesVisualQATitle
+        guard let owner = chapters.first?.user ?? currentNovel?.user else { return nil }
+        let detail = PixivNovelSeriesDetail(
+            id: seriesID,
+            title: title,
+            caption: "Visual QA sample series for the native novel chapter chooser.",
+            isOriginal: true,
+            isConcluded: false,
+            contentCount: chapters.count,
+            totalCharacterCount: chapters.reduce(0) { $0 + $1.textLength },
+            user: owner,
+            displayText: title,
+            watchlistAdded: true
+        )
+        return PixivNovelSeriesResponse(
+            detail: detail,
+            firstNovel: chapters.first,
+            latestNovel: chapters.last,
+            novels: chapters,
+            nextURL: nil
+        )
+    }
 
     static let seriesParentArtwork = decodeArtwork(
         id: 92000,
@@ -702,9 +742,20 @@ enum VisualQASampleData {
         isBookmarked: Bool = false,
         xRestrict: Int = 0,
         novelAIType: Int = 0,
-        isFollowed: Bool = false
+        isFollowed: Bool = false,
+        seriesID: Int? = nil,
+        seriesTitle: String? = nil
     ) -> PixivNovel {
         let tagPayload = tags.map { #"{"name":"\#($0)","translated_name":null}"# }.joined(separator: ",")
+        let seriesPayload: String
+        if let seriesID, let seriesTitle {
+            let escapedSeriesTitle = seriesTitle
+                .replacingOccurrences(of: "\\", with: "\\\\")
+                .replacingOccurrences(of: "\"", with: "\\\"")
+            seriesPayload = #"{"id":\#(seriesID),"title":"\#(escapedSeriesTitle)"}"#
+        } else {
+            seriesPayload = "{}"
+        }
         let payload = """
         {
           "id": \(id),
@@ -728,7 +779,7 @@ enum VisualQASampleData {
             "account": "novel_qa",
             "is_followed": \(isFollowed)
           },
-          "series": {},
+          "series": \(seriesPayload),
           "is_bookmarked": \(isBookmarked),
           "total_bookmarks": \(totalBookmarks),
           "total_view": \(totalView),
