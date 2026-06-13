@@ -318,6 +318,12 @@ extension KeiPixStore {
         applyContentFilters()
     }
 
+    func setSearchNovelTextLength(_ value: SearchNovelTextLength) {
+        searchNovelTextLength = value
+        UserDefaults.standard.set(value.rawValue, forKey: "searchNovelTextLength")
+        applyContentFilters()
+    }
+
     func setImageSourceSearchEngine(_ value: ImageSourceSearchEngineKind) {
         persistRaw("imageSourceSearchEngine", value: value, to: \.imageSourceSearchEngine)
     }

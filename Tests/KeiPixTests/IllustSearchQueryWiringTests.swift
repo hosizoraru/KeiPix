@@ -111,6 +111,7 @@ struct NovelSearchQueryWiringTests {
         options.aiFilter = .onlyAI
         options.novelLanguageCode = "ja"
         options.novelGenreID = 7
+        options.novelTextLength = .medium
 
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = try #require(TimeZone(secondsFromGMT: 0))
@@ -132,6 +133,8 @@ struct NovelSearchQueryWiringTests {
         #expect(query["end_date"] == "2026-06-13")
         #expect(query["lang"] == "ja")
         #expect(query["genre"] == "7")
+        #expect(query["text_length_min"] == "20000")
+        #expect(query["text_length_max"] == "79999")
         #expect(query["bookmark_num_max"] == nil)
     }
 }
@@ -168,10 +171,18 @@ struct NovelSearchFilterWiringTests {
         store.searchAgeLimit = .r18
         #expect(store.passesNovelContentFilter(r18gLowBookmarkNovel))
         #expect(store.passesNovelContentFilter(allAgesLowBookmarkNovel) == false)
+
+        store.searchAgeLimit = .unlimited
+        store.searchMaximumBookmarks = .unlimited
+        store.searchAIFilter = .all
+        store.searchNovelTextLength = .short
+        let mediumLengthNovel = try #require(VisualQASampleData.novelFeedNovels.first { $0.textLength >= 20_000 })
+        #expect(store.passesNovelContentFilter(allAgesLowBookmarkNovel))
+        #expect(store.passesNovelContentFilter(mediumLengthNovel) == false)
     }
 
-    @Test("Non-search novel feeds ignore search-only bookmark thresholds")
-    func nonSearchNovelFeedsIgnoreSearchOnlyBookmarkThresholds() throws {
+    @Test("Non-search novel feeds ignore search-only filters")
+    func nonSearchNovelFeedsIgnoreSearchOnlyFilters() throws {
         let store = KeiPixStore(
             downloads: ArtworkDownloadStore(completionNotifier: DownloadCompletionNotifier(
                 center: FakeUserNotificationCenter(isAuthorized: false),
@@ -182,6 +193,7 @@ struct NovelSearchFilterWiringTests {
         )
         store.selectedRoute = .novelRecommended
         store.searchMaximumBookmarks = SearchBookmarkThreshold(value: 1)
+        store.searchNovelTextLength = .short
         let popularNovel = try #require(VisualQASampleData.novelFeedNovels.first { $0.totalBookmarks > 1 })
 
         #expect(store.passesNovelContentFilter(popularNovel))

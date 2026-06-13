@@ -109,6 +109,7 @@ struct SearchOptionsTests {
         #expect(options.ugoiraFilter == .all)
         #expect(options.novelLanguageCode == nil)
         #expect(options.novelGenreID == nil)
+        #expect(options.novelTextLength == .all)
         #expect(options.isDefault)
     }
 
@@ -144,6 +145,7 @@ struct SearchOptionsTests {
         #expect(options.ugoiraFilter == .onlyUgoira)
         #expect(options.novelLanguageCode == nil)
         #expect(options.novelGenreID == nil)
+        #expect(options.novelTextLength == .all)
     }
 
     @Test("Saved search library export round trips with custom thresholds")

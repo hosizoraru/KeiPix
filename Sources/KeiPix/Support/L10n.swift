@@ -1389,6 +1389,12 @@ enum L10n {
     static var anyNovelGenre: String { text("Any Novel Genre") }
     static var novelLanguageFormat: String { text("Novel language: %@") }
     static var novelGenreFormat: String { text("Novel genre: %@") }
+    static var novelTextLength: String { text("Novel Text Length") }
+    static var anyNovelTextLength: String { text("Any Novel Length") }
+    static var novelTextLengthMicro: String { text("Under 5,000 Characters") }
+    static var novelTextLengthShort: String { text("5,000-19,999 Characters") }
+    static var novelTextLengthMedium: String { text("20,000-79,999 Characters") }
+    static var novelTextLengthLong: String { text("80,000+ Characters") }
     static var novelPublicBookmarks: String { text("Public Novel Bookmarks") }
     static var novelPrivateBookmarks: String { text("Private Novel Bookmarks") }
     static var novelWatchlist: String { text("Novel Watchlist") }

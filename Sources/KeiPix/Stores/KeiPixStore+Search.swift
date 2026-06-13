@@ -134,7 +134,8 @@ extension KeiPixStore {
             aiFilter: searchAIFilter,
             ugoiraFilter: searchUgoiraFilter,
             novelLanguageCode: searchNovelLanguageCode,
-            novelGenreID: searchNovelGenreID
+            novelGenreID: searchNovelGenreID,
+            novelTextLength: searchNovelTextLength
         )
     }
 
@@ -157,5 +158,6 @@ extension KeiPixStore {
         setSearchUgoiraFilter(.all)
         setSearchNovelLanguageCode(nil)
         setSearchNovelGenreID(nil)
+        setSearchNovelTextLength(.all)
     }
 }

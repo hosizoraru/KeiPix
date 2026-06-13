@@ -1289,6 +1289,12 @@ actor PixivAPI {
         if let novelGenreID = options.novelGenreID {
             query["genre"] = "\(novelGenreID)"
         }
+        if let minimum = options.novelTextLength.minimum {
+            query["text_length_min"] = "\(minimum)"
+        }
+        if let maximum = options.novelTextLength.maximum {
+            query["text_length_max"] = "\(maximum)"
+        }
         return query
     }
 

@@ -377,6 +377,57 @@ struct SearchBookmarkThreshold: Codable, Hashable, Sendable, SearchFilterOptionT
     private enum CodingKeys: String, CodingKey { case value }
 }
 
+enum SearchNovelTextLength: String, CaseIterable, Identifiable, Codable, SearchFilterOptionTitle, Sendable {
+    case all
+    case micro
+    case short
+    case medium
+    case long
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .all:
+            L10n.anyNovelTextLength
+        case .micro:
+            L10n.novelTextLengthMicro
+        case .short:
+            L10n.novelTextLengthShort
+        case .medium:
+            L10n.novelTextLengthMedium
+        case .long:
+            L10n.novelTextLengthLong
+        }
+    }
+
+    var minimum: Int? {
+        switch self {
+        case .all, .micro:
+            nil
+        case .short:
+            5_000
+        case .medium:
+            20_000
+        case .long:
+            80_000
+        }
+    }
+
+    var maximum: Int? {
+        switch self {
+        case .all, .long:
+            nil
+        case .micro:
+            4_999
+        case .short:
+            19_999
+        case .medium:
+            79_999
+        }
+    }
+}
+
 struct SearchOptions: Codable, Hashable, Sendable {
     var matchType: SearchMatchType
     var sort: SearchSort
@@ -389,6 +440,7 @@ struct SearchOptions: Codable, Hashable, Sendable {
     var ugoiraFilter: SearchUgoiraFilter
     var novelLanguageCode: String?
     var novelGenreID: Int?
+    var novelTextLength: SearchNovelTextLength
 
     static let defaultValue = SearchOptions(
         matchType: .partialTags,
@@ -401,7 +453,8 @@ struct SearchOptions: Codable, Hashable, Sendable {
         aiFilter: .all,
         ugoiraFilter: .all,
         novelLanguageCode: nil,
-        novelGenreID: nil
+        novelGenreID: nil,
+        novelTextLength: .all
     )
 
     init(
@@ -415,7 +468,8 @@ struct SearchOptions: Codable, Hashable, Sendable {
         aiFilter: SearchAIFilter,
         ugoiraFilter: SearchUgoiraFilter,
         novelLanguageCode: String? = nil,
-        novelGenreID: Int? = nil
+        novelGenreID: Int? = nil,
+        novelTextLength: SearchNovelTextLength = .all
     ) {
         self.matchType = matchType
         self.sort = sort
@@ -428,6 +482,7 @@ struct SearchOptions: Codable, Hashable, Sendable {
         self.ugoiraFilter = ugoiraFilter
         self.novelLanguageCode = Self.normalizedNovelLanguageCode(novelLanguageCode)
         self.novelGenreID = novelGenreID
+        self.novelTextLength = novelTextLength
     }
 
     enum CodingKeys: String, CodingKey {
@@ -442,6 +497,7 @@ struct SearchOptions: Codable, Hashable, Sendable {
         case ugoiraFilter
         case novelLanguageCode
         case novelGenreID
+        case novelTextLength
     }
 
     init(from decoder: Decoder) throws {
@@ -457,6 +513,7 @@ struct SearchOptions: Codable, Hashable, Sendable {
         ugoiraFilter = try container.decodeIfPresent(SearchUgoiraFilter.self, forKey: .ugoiraFilter) ?? .all
         novelLanguageCode = Self.normalizedNovelLanguageCode(try container.decodeIfPresent(String.self, forKey: .novelLanguageCode))
         novelGenreID = try container.decodeIfPresent(Int.self, forKey: .novelGenreID)
+        novelTextLength = try container.decodeIfPresent(SearchNovelTextLength.self, forKey: .novelTextLength) ?? .all
     }
 
     private static func normalizedNovelLanguageCode(_ code: String?) -> String? {
@@ -499,6 +556,9 @@ struct SearchOptions: Codable, Hashable, Sendable {
         }
         if let novelGenreID {
             parts.append(String(format: L10n.novelGenreFormat, novelGenreID.formatted()))
+        }
+        if novelTextLength != .all {
+            parts.append(novelTextLength.title)
         }
         return parts.joined(separator: " · ")
     }

@@ -78,6 +78,7 @@ private struct SearchFiltersView: View {
                 filterPicker(L10n.dateRange, selection: dateRangeBinding, options: SearchDateRange.allCases)
                 novelLanguageMenu
                 novelGenreMenu
+                filterPicker(L10n.novelTextLength, selection: novelTextLengthBinding, options: SearchNovelTextLength.allCases)
 
                 BookmarkThresholdField(
                     label: L10n.minimumBookmarks,
@@ -284,6 +285,14 @@ private struct SearchFiltersView: View {
             store.searchMaximumBookmarks
         } set: { value in
             store.setSearchMaximumBookmarks(value)
+        }
+    }
+
+    private var novelTextLengthBinding: Binding<SearchNovelTextLength> {
+        Binding {
+            store.searchNovelTextLength
+        } set: { value in
+            store.setSearchNovelTextLength(value)
         }
     }
 

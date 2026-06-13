@@ -296,6 +296,7 @@ final class KeiPixStore {
         .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
         .flatMap { $0.isEmpty ? nil : $0 }
     var searchNovelGenreID = UserDefaults.standard.object(forKey: "searchNovelGenreID") as? Int
+    var searchNovelTextLength = KeiPixStore.loadEnum("searchNovelTextLength", defaultValue: SearchNovelTextLength.all)
     var imageSourceSearchEngine = KeiPixStore.loadEnum("imageSourceSearchEngine", defaultValue: ImageSourceSearchEngineKind.sauceNAO)
     var useRankingDate = UserDefaults.standard.object(forKey: "useRankingDate") as? Bool ?? false
     var rankingDate = KeiPixStore.loadRankingDate()
@@ -1163,6 +1164,12 @@ final class KeiPixStore {
                 return false
             }
             if searchMaximumBookmarks.value > 0, novel.totalBookmarks > searchMaximumBookmarks.value {
+                return false
+            }
+            if let minimum = searchNovelTextLength.minimum, novel.textLength < minimum {
+                return false
+            }
+            if let maximum = searchNovelTextLength.maximum, novel.textLength > maximum {
                 return false
             }
             switch searchAIFilter {
