@@ -487,7 +487,7 @@ struct NativeBoundaryTests {
         #expect(contentView.contains("private func mobileDefaultRoute(for kind: MobileBottomTabKind) -> PixivRoute"))
         #expect(contentView.contains("private func mobileRoute(for kind: MobileBottomTabKind) -> PixivRoute"))
         #expect(contentView.contains("private func applyMobileBottomTabLaunchTargetIfNeeded()"))
-        #expect(contentView.contains("Task { await store.refreshSelectedRouteContent() }"))
+        #expect(contentView.contains("Task { await store.refreshSelectedRouteContentForRouteActivation() }"))
         #expect(contentView.contains("private func recordMobileBottomTabRouteIfNeeded(_ route: PixivRoute)"))
         #expect(contentView.contains("skipsNextCompactTabSelectionHandler"))
         #expect(contentView.contains("private func selectCompactSearchTab()"))
@@ -1705,6 +1705,43 @@ struct NativeBoundaryTests {
         #expect(novelGallery.contains(".animation(.snappy(duration: 0.22), value: novelStore.isLoading)"))
     }
 
+    @Test("Route activation refresh respects the route switch expiration setting")
+    func routeActivationRefreshRespectsExpirationSetting() throws {
+        let root = try packageRoot()
+        let store = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Stores/KeiPixStore.swift"),
+            encoding: .utf8
+        )
+        let feedSnapshots = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Stores/KeiPixStore+FeedSnapshots.swift"),
+            encoding: .utf8
+        )
+        let contentView = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/ContentView_iPadOS.swift"),
+            encoding: .utf8
+        )
+        let accounts = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Stores/KeiPixStore+Accounts.swift"),
+            encoding: .utf8
+        )
+        let novelStore = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Stores/NovelFeatureStore.swift"),
+            encoding: .utf8
+        )
+
+        #expect(store.contains("var routeSwitchRefreshExpiration"))
+        #expect(store.contains("func refreshSelectedRouteContentForRouteActivation() async"))
+        #expect(store.contains("routeSwitchRefreshExpiration.shouldRefresh("))
+        #expect(store.contains("restoreFeedSnapshotForRouteActivation(snapshot)"))
+        #expect(store.contains("Task { await refreshSelectedRouteContentForRouteActivation() }"))
+        #expect(feedSnapshots.contains("func restoreFeedSnapshotForRouteActivation(_ snapshot: FeedSnapshot)"))
+        #expect(contentView.contains("Task { await store.refreshSelectedRouteContentForRouteActivation() }"))
+        #expect(accounts.contains("await refreshSelectedRouteContentForRouteActivation()"))
+        #expect(novelStore.contains("private(set) var loadedFeedRoute: PixivRoute?"))
+        #expect(novelStore.contains("private(set) var feedLoadedAt: Date?"))
+        #expect(novelStore.contains("func hasReusableFeed(for route: PixivRoute) -> Bool"))
+    }
+
     @Test("iPad page status uses inline title chrome")
     func iPadPageStatusUsesInlineTitleChrome() throws {
         let root = try packageRoot()
@@ -2315,6 +2352,10 @@ struct NativeBoundaryTests {
         #expect(generalSettings.contains("private struct GeneralSettingsMenuPicker"))
         #expect(generalSettings.contains("value: store.appLanguage.title"))
         #expect(generalSettings.contains("value: store.galleryLayoutMode.title"))
+        #expect(generalSettings.contains("L10n.routeSwitchRefreshExpiration"))
+        #expect(generalSettings.contains("value: store.routeSwitchRefreshExpiration.title"))
+        #expect(generalSettings.contains("selection: store.settings_routeSwitchRefreshExpirationBinding"))
+        #expect(generalSettings.contains("options: RouteSwitchRefreshExpiration.allCases"))
         #expect(generalSettings.contains(".pickerStyle(.segmented)") == false)
         #expect(settingsCategory.contains("if VisualQALaunchArgument.contains(.settingsWindow) {\n            return .general"))
 
@@ -2333,6 +2374,7 @@ struct NativeBoundaryTests {
         #expect(settingsBindings.contains("settings_defaultIllustrationBookmarkRestrictBinding"))
         #expect(settingsBindings.contains("settings_defaultMangaBookmarkRestrictBinding"))
         #expect(settingsBindings.contains("settings_defaultNovelBookmarkRestrictBinding"))
+        #expect(settingsBindings.contains("settings_routeSwitchRefreshExpirationBinding"))
         #expect(settingsSurface.contains("if width >= 590 { return 2 }"))
         #expect(settingsSurface.contains(".frame(maxWidth: .infinity, alignment: metrics.pageAlignment)"))
         #expect(settingsSurface.contains("var pageAlignment: Alignment"))

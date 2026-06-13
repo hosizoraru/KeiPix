@@ -81,6 +81,13 @@ enum L10n {
     static var openPixivWebSearch: String { text("Open Pixiv Web Search") }
     static var copyPixivWebSearchLink: String { text("Copy Pixiv Web Search Link") }
     static var copiedPixivWebSearchLink: String { text("Copied Pixiv Web Search Link") }
+    static var routeSwitchRefreshExpiration: String { text("Refresh After Switching Sections") }
+    static var routeSwitchRefreshExpirationHint: String { text("When returning to a section, reuse recently loaded content until this interval expires. Manual refresh always reloads immediately.") }
+    static var routeSwitchRefreshTenMinutes: String { text("10 Minutes") }
+    static var routeSwitchRefreshTwentyMinutes: String { text("20 Minutes") }
+    static var routeSwitchRefreshThirtyMinutes: String { text("30 Minutes") }
+    static var routeSwitchRefreshAppSession: String { text("This App Session") }
+    static var routeSwitchRefreshManualOnly: String { text("Manual Refresh Only") }
     static var openPixivLinkFromClipboard: String { text("Open Pixiv Link from Clipboard") }
     static var quickOpenLink: String { text("Open Link") }
     static var quickPixivID: String { text("Pixiv ID") }

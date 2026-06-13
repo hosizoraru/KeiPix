@@ -89,6 +89,7 @@ final class KeiPixStore {
     var pinnedCreatorLibrary = KeiPixStore.loadPinnedCreatorLibrary()
     var feedSnapshotLibrary = KeiPixStore.loadFeedSnapshotLibrary()
     var activeFeedSnapshotRestoration: FeedSnapshotRestoration?
+    var routeActivationFreshSnapshotKeys: Set<String> = []
     var artworkDetailStateLibrary = KeiPixStore.loadArtworkDetailStateLibrary()
     var artworkDetailDefaultExpansion = KeiPixStore.loadArtworkDetailDefaultExpansion()
     #if DEBUG
@@ -113,6 +114,8 @@ final class KeiPixStore {
     /// under its initial-page setting.
     var launchDestination = UserDefaults.standard.string(forKey: "launchDestination")
         .flatMap(LaunchDestination.init(rawValue:)) ?? .home
+    var routeSwitchRefreshExpiration = UserDefaults.standard.string(forKey: RouteSwitchRefreshExpiration.defaultsKey)
+        .flatMap(RouteSwitchRefreshExpiration.init(rawValue:)) ?? .defaultValue
     var useOriginalImagesInDetail = UserDefaults.standard.bool(forKey: "useOriginalImagesInDetail")
     /// Per-content quality default for manga / multi-page reads.
     ///
@@ -464,7 +467,7 @@ final class KeiPixStore {
                 presentLocalSampleFeed(for: route)
                 return
             }
-            Task { await reloadCurrentFeed() }
+            Task { await refreshSelectedRouteContentForRouteActivation() }
         } else if route.usesNovelFeed {
             // Novels live on `NovelFeatureStore`. The artwork pipeline
             // is intentionally cleared so the gallery column doesn't
@@ -477,7 +480,7 @@ final class KeiPixStore {
             searchPopularPreviewArtworks = []
             nextURL = nil
             isLoading = false
-            Task { await novels.refresh(route: route) }
+            Task { await refreshSelectedRouteContentForRouteActivation() }
         } else {
             activeFeedRequestID = nil
             allArtworks = []
@@ -697,6 +700,44 @@ final class KeiPixStore {
             clearArtworkPipelineForNonArtworkRoute()
             routeRefreshGeneration += 1
         }
+    }
+
+    func refreshSelectedRouteContentForRouteActivation() async {
+        if selectedRoute.usesArtworkFeed {
+            await refreshArtworkFeedForRouteActivation()
+        } else if selectedRoute.usesNovelFeed {
+            clearArtworkPipelineForNonArtworkRoute()
+            guard session != nil else { return }
+            let hasReusableContent = novels.hasReusableFeed(for: selectedRoute)
+            let shouldRefresh = routeSwitchRefreshExpiration.shouldRefresh(
+                hasReusableContent: hasReusableContent,
+                cachedAt: novels.feedLoadedAt,
+                loadedInCurrentSession: hasReusableContent,
+                now: Date()
+            )
+            if shouldRefresh {
+                await novels.refresh(route: selectedRoute)
+            }
+        } else {
+            clearArtworkPipelineForNonArtworkRoute()
+            routeRefreshGeneration += 1
+        }
+    }
+
+    private func refreshArtworkFeedForRouteActivation() async {
+        let context = currentFeedRequestContext()
+        if let snapshot = feedSnapshotLibrary.snapshot(for: context.snapshotKey),
+           snapshot.artworks.isEmpty == false {
+            restoreFeedSnapshotForRouteActivation(snapshot)
+            let shouldRefresh = routeSwitchRefreshExpiration.shouldRefresh(
+                hasReusableContent: true,
+                cachedAt: snapshot.savedAt,
+                loadedInCurrentSession: routeActivationFreshSnapshotKeys.contains(context.snapshotKey),
+                now: Date()
+            )
+            if shouldRefresh == false { return }
+        }
+        await reloadCurrentFeed()
     }
 
     private func clearArtworkPipelineForNonArtworkRoute() {

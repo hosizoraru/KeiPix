@@ -38,6 +38,14 @@ extension KeiPixStore {
         }
     }
 
+    var settings_routeSwitchRefreshExpirationBinding: Binding<RouteSwitchRefreshExpiration> {
+        Binding {
+            self.routeSwitchRefreshExpiration
+        } set: { value in
+            self.setRouteSwitchRefreshExpiration(value)
+        }
+    }
+
     var settings_useOriginalImagesBinding: Binding<Bool> {
         Binding {
             self.useOriginalImagesInDetail

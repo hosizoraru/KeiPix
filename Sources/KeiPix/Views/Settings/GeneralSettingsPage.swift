@@ -81,6 +81,21 @@ struct GeneralSettingsPage: View {
                 Toggle(L10n.emphasizeFollowingArtists, isOn: store.settings_emphasizeFollowingArtistsBinding)
             }
 
+            OS26SettingsSection(
+                L10n.routeSwitchRefreshExpiration,
+                systemImage: "clock.arrow.circlepath",
+                footer: L10n.routeSwitchRefreshExpirationHint
+            ) {
+                GeneralSettingsMenuPicker(
+                    title: L10n.routeSwitchRefreshExpiration,
+                    value: store.routeSwitchRefreshExpiration.title,
+                    selection: store.settings_routeSwitchRefreshExpirationBinding,
+                    options: RouteSwitchRefreshExpiration.allCases
+                ) { expiration, isSelected in
+                    Label(expiration.title, systemImage: isSelected ? "checkmark" : expiration.systemImage)
+                }
+            }
+
             #if os(macOS)
             OS26SettingsSection(L10n.openAtLaunch, systemImage: "arrow.up.forward.app", footer: L10n.openAtLaunchHint) {
                 GeneralSettingsMenuPicker(

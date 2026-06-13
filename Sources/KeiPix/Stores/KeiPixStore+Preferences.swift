@@ -326,6 +326,10 @@ extension KeiPixStore {
         persistRaw("launchDestination", value: destination, to: \.launchDestination)
     }
 
+    func setRouteSwitchRefreshExpiration(_ expiration: RouteSwitchRefreshExpiration) {
+        persistRaw(RouteSwitchRefreshExpiration.defaultsKey, value: expiration, to: \.routeSwitchRefreshExpiration)
+    }
+
     /// Persists the proxy mode picker. Mode flips take effect on the
     /// next URLSession init — KeiPix surfaces a footer note that the
     /// app must restart for the change to apply, mirroring how Pixez

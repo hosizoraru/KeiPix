@@ -11,7 +11,7 @@ extension KeiPixStore {
             if session != nil {
                 await refreshRestrictedModeSetting()
                 await refreshAIShowSetting()
-                await refreshSelectedRouteContent()
+                await refreshSelectedRouteContentForRouteActivation()
                 await syncBrowsingHistoryFromPixiv()
             }
         } catch {

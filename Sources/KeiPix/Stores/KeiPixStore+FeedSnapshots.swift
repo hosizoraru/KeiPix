@@ -14,7 +14,16 @@ extension KeiPixStore {
                 nextURL: response.nextURL
             )
         )
+        routeActivationFreshSnapshotKeys.insert(context.snapshotKey)
         saveFeedSnapshotLibrary()
+    }
+
+    func restoreFeedSnapshotForRouteActivation(_ snapshot: FeedSnapshot) {
+        allArtworks = snapshot.artworks
+        nextURL = snapshot.nextURL
+        applyContentFilters()
+        activeFeedSnapshotRestoration = nil
+        errorMessage = nil
     }
 
     @discardableResult

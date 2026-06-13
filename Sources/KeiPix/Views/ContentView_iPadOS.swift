@@ -1872,7 +1872,7 @@ struct ContentView: View {
         hasAppliedMobileBottomTabLaunchTarget = true
         selectMobileBottomTabKind(mobileBottomTabLaunchKind)
         if shouldRefreshInitialRoute {
-            Task { await store.refreshSelectedRouteContent() }
+            Task { await store.refreshSelectedRouteContentForRouteActivation() }
         }
     }
 

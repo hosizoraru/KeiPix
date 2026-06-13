@@ -45,6 +45,8 @@ final class NovelFeatureStore {
     private(set) var isLoading = false
     private(set) var isLoadingMore = false
     private(set) var errorMessage: String?
+    private(set) var loadedFeedRoute: PixivRoute?
+    private(set) var feedLoadedAt: Date?
 
     /// Identity for the most recently issued feed request — drops out-of
     /// -order responses if the user changes route quickly.
@@ -164,7 +166,7 @@ final class NovelFeatureStore {
         do {
             let response = try await loadFeed(for: route)
             guard activeFeedRequestID == requestID else { return }
-            applyFeed(response, append: false)
+            applyFeed(response, append: false, route: route)
         } catch is CancellationError {
             return
         } catch {
@@ -192,7 +194,7 @@ final class NovelFeatureStore {
                 return
             }
             response = try await api.nextNovelList(url)
-            applyFeed(response, append: true)
+            applyFeed(response, append: true, route: route)
         } catch is CancellationError {
             return
         } catch {
@@ -213,7 +215,11 @@ final class NovelFeatureStore {
         }
     }
 
-    private func applyFeed(_ response: PixivNovelListResponse, append: Bool) {
+    func hasReusableFeed(for route: PixivRoute) -> Bool {
+        loadedFeedRoute == route && novels.isEmpty == false
+    }
+
+    private func applyFeed(_ response: PixivNovelListResponse, append: Bool, route: PixivRoute) {
         if append {
             // Drop duplicates that pixiv occasionally returns on page boundaries.
             let existingIDs = Set(allNovels.map(\.id))
@@ -222,6 +228,8 @@ final class NovelFeatureStore {
             allNovels = response.novels
         }
         nextURL = response.nextURL
+        loadedFeedRoute = route
+        feedLoadedAt = Date()
         applyContentFilter()
     }
 
