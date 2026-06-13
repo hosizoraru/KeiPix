@@ -40,6 +40,7 @@ struct ContentView: View {
     #if DEBUG
     @State private var creatorProfileVisualQAUser: PixivUser?
     @State private var bookmarkEditorVisualQAArtwork: PixivArtwork?
+    @State private var novelBookmarkEditorVisualQANovel: PixivNovel?
     #endif
 
     enum iPadTab: Hashable {
@@ -152,6 +153,13 @@ struct ContentView: View {
                     try? await Task.sleep(for: .milliseconds(250))
                     bookmarkEditorVisualQAArtwork = VisualQASampleData.bookmarkEditorArtwork
                 }
+                if VisualQALaunchArgument.contains(.novelBookmarkEditor) {
+                    store.activateVisualQASampleSession()
+                    selectedSidebarItem = .route(.novelRecommended)
+                    selectedTab = .mobile(.novels)
+                    try? await Task.sleep(for: .milliseconds(250))
+                    novelBookmarkEditorVisualQANovel = VisualQASampleData.novelBookmarkEditorNovel
+                }
             }
             #endif
             .sheet(isPresented: $store.isLoginPresented) {
@@ -221,6 +229,14 @@ struct ContentView: View {
                     store: store,
                     previewState: VisualQASampleData.bookmarkEditorPreviewState
                 )
+            }
+            .sheet(item: $novelBookmarkEditorVisualQANovel) { novel in
+                NovelBookmarkEditorView(
+                    store: store,
+                    novel: novel,
+                    previewSuggestions: VisualQASampleData.novelBookmarkEditorSuggestions
+                )
+                .os26SheetChrome(.compactBookmarkEditor)
             }
             #endif
             .sheet(isPresented: readerBinding) {

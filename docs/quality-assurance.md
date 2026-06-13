@@ -61,7 +61,7 @@ swift test --filter <TestSuiteName>
 
 ### 已落地的 launch mode
 
-当前 `VisualQALaunchArgument` 定义 20 个隔离 launch flags：
+当前 `VisualQALaunchArgument` 定义一组隔离 launch flags：
 
 | Surface | 旗标 |
 | --- | --- |
@@ -72,6 +72,8 @@ swift test --filter <TestSuiteName>
 | Manga watchlist | `--visual-qa-manga-watchlist` |
 | Series sheet | `--visual-qa-series-sheet` |
 | Artwork detail social | `--visual-qa-artwork-detail-social` |
+| Artwork bookmark editor | `--visual-qa-bookmark-editor` |
+| Novel bookmark editor | `--visual-qa-novel-bookmark-editor` |
 | Creator profile | `--visual-qa-creator-profile` |
 | Feedback sheet | `--visual-qa-feedback-sheet` |
 | Muted content library | `--visual-qa-muted-content` |

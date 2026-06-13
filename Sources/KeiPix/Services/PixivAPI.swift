@@ -1162,13 +1162,37 @@ actor PixivAPI {
     }
 
     func bookmarkTagPage(userID: String, restrict: BookmarkRestrict) async throws -> PixivBookmarkTagsResponse {
-        var components = URLComponents(url: URL(string: "/v1/user/bookmark-tags/illust", relativeTo: Endpoint.apiBase)!, resolvingAgainstBaseURL: true)!
+        try await requestJSON(Self.bookmarkTagPageURL(userID: userID, restrict: restrict), method: "GET", form: nil)
+    }
+
+    static func bookmarkTagPageURL(userID: String, restrict: BookmarkRestrict) throws -> URL {
+        try bookmarkTagPageURL(path: "/v1/user/bookmark-tags/illust", userID: userID, restrict: restrict)
+    }
+
+    func novelBookmarkTags(userID: String, restrict: BookmarkRestrict) async throws -> [PixivBookmarkTag] {
+        try await novelBookmarkTagPage(userID: userID, restrict: restrict).bookmarkTags
+    }
+
+    func novelBookmarkTagPage(userID: String, restrict: BookmarkRestrict) async throws -> PixivBookmarkTagsResponse {
+        try await requestJSON(Self.novelBookmarkTagPageURL(userID: userID, restrict: restrict), method: "GET", form: nil)
+    }
+
+    static func novelBookmarkTagPageURL(userID: String, restrict: BookmarkRestrict) throws -> URL {
+        try bookmarkTagPageURL(path: "/v1/user/bookmark-tags/novel", userID: userID, restrict: restrict)
+    }
+
+    private static func bookmarkTagPageURL(
+        path: String,
+        userID: String,
+        restrict: BookmarkRestrict
+    ) throws -> URL {
+        var components = URLComponents(url: URL(string: path, relativeTo: Endpoint.apiBase)!, resolvingAgainstBaseURL: true)!
         components.queryItems = [
             URLQueryItem(name: "user_id", value: userID),
             URLQueryItem(name: "restrict", value: restrict.rawValue)
         ]
         guard let url = components.url else { throw PixivAPIError.invalidResponse }
-        return try await requestJSON(url, method: "GET", form: nil)
+        return url
     }
 
     func nextBookmarkTagPage(_ url: URL) async throws -> PixivBookmarkTagsResponse {

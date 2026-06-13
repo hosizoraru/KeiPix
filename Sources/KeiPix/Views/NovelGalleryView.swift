@@ -12,6 +12,7 @@ struct NovelGalleryView: View {
     @Bindable var store: KeiPixStore
     @State private var readerNovel: PixivNovel?
     @State private var selectedSeries: NovelSeriesChapterPresentation?
+    @State private var bookmarkEditorNovel: PixivNovel?
     @State private var hasAttemptedInitialLoad = false
 
     private var novelStore: NovelFeatureStore { store.novels }
@@ -103,6 +104,14 @@ struct NovelGalleryView: View {
             .frame(minWidth: 680, idealWidth: 760, minHeight: 520, idealHeight: 680)
             #endif
             .os26SheetChrome(.chapterList)
+        }
+        .sheet(item: $bookmarkEditorNovel) { novel in
+            NovelBookmarkEditorView(store: store, novel: novel)
+                #if os(macOS)
+                .os26SheetChrome(.bookmarkEditor)
+                #else
+                .os26SheetChrome(.compactBookmarkEditor)
+                #endif
         }
     }
 
@@ -256,11 +265,15 @@ struct NovelGalleryView: View {
             }
         }
         Button(novel.isBookmarked ? L10n.novelRemoveBookmark : L10n.novelBookmark) {
-            Task {
-                await novelStore.toggleBookmark(
-                    novel: novel,
-                    restrict: store.defaultNovelBookmarkRestrict
-                )
+            if novel.isBookmarked {
+                Task {
+                    await novelStore.toggleBookmark(
+                        novel: novel,
+                        restrict: store.defaultNovelBookmarkRestrict
+                    )
+                }
+            } else {
+                bookmarkEditorNovel = novel
             }
         }
     }

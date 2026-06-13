@@ -1680,6 +1680,48 @@ struct NativeBoundaryTests {
         #expect(macOSRunner.contains("open_app --visual-qa-novel-feed"))
     }
 
+    @Test("Novel bookmark editor uses novel-specific tag suggestions")
+    func novelBookmarkEditorUsesNovelSpecificTagSuggestions() throws {
+        let root = try packageRoot()
+        let editor = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/NovelBookmarkEditorView.swift"),
+            encoding: .utf8
+        )
+        let gallery = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/NovelGalleryView.swift"),
+            encoding: .utf8
+        )
+        let detail = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/NovelDetailView.swift"),
+            encoding: .utf8
+        )
+        let reader = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/NovelReaderView.swift"),
+            encoding: .utf8
+        )
+        let store = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Stores/KeiPixStore+ArtworkActions.swift"),
+            encoding: .utf8
+        )
+        let api = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Services/PixivAPI.swift"),
+            encoding: .utf8
+        )
+
+        #expect(editor.contains("store.novelBookmarkTagSuggestions(restrict: restrict)"))
+        #expect(editor.contains("novelStore.toggleBookmark("))
+        #expect(editor.contains("store.defaultNovelBookmarkRestrict"))
+        #expect(store.contains("func novelBookmarkTagSuggestions(restrict: BookmarkRestrict) async throws -> [PixivBookmarkTag]"))
+        #expect(api.contains("novelBookmarkTagPageURL(userID: String, restrict: BookmarkRestrict)"))
+        #expect(api.contains("\"/v1/user/bookmark-tags/novel\""))
+        #expect(gallery.contains("@State private var bookmarkEditorNovel: PixivNovel?"))
+        #expect(gallery.contains("NovelBookmarkEditorView("))
+        #expect(detail.contains("@State private var bookmarkEditorNovel: PixivNovel?"))
+        #expect(detail.contains("NovelBookmarkEditorView("))
+        #expect(reader.contains("@State private var bookmarkEditorNovel: PixivNovel?"))
+        #expect(reader.contains("NovelBookmarkEditorView("))
+    }
+
     @Test("Novel detail exposes comments through the shared comment surface")
     func novelDetailExposesSharedCommentSurface() throws {
         let root = try packageRoot()

@@ -42,6 +42,7 @@ struct NovelReaderView: View {
     @State private var pageIndex: Int = 0
     @State private var readerLoadStarted = false
     @State private var isSettingsPresented = false
+    @State private var bookmarkEditorNovel: PixivNovel?
     @State private var translationEngine = NovelTranslationEngine()
     @State private var translationConfig: TranslationSession.Configuration?
     @State private var swipeOffset: CGFloat = 0
@@ -214,6 +215,16 @@ struct NovelReaderView: View {
             #endif
             .os26SheetChrome(.chapterList)
         }
+        .sheet(item: $bookmarkEditorNovel) { novel in
+            NovelBookmarkEditorView(store: store, novel: novel) {
+                activeNovel.isBookmarked = true
+            }
+            #if os(macOS)
+            .os26SheetChrome(.bookmarkEditor)
+            #else
+            .os26SheetChrome(.compactBookmarkEditor)
+            #endif
+        }
     }
 
     // MARK: - Translation
@@ -352,14 +363,18 @@ struct NovelReaderView: View {
 
     private var bookmarkButton: some View {
         Button {
-            Task {
-                let originalState = activeNovel.isBookmarked
-                if await novelStore.toggleBookmark(
-                    novel: activeNovel,
-                    restrict: store.defaultNovelBookmarkRestrict
-                ) {
-                    activeNovel.isBookmarked = !originalState
+            if activeNovel.isBookmarked {
+                Task {
+                    let originalState = activeNovel.isBookmarked
+                    if await novelStore.toggleBookmark(
+                        novel: activeNovel,
+                        restrict: store.defaultNovelBookmarkRestrict
+                    ) {
+                        activeNovel.isBookmarked = !originalState
+                    }
                 }
+            } else {
+                bookmarkEditorNovel = activeNovel
             }
         } label: {
             Label(

@@ -31,6 +31,7 @@ private struct NovelDetailContent: View {
 
     @State private var readerNovel: PixivNovel?
     @State private var selectedSeries: NovelSeriesChapterPresentation?
+    @State private var bookmarkEditorNovel: PixivNovel?
     @State private var areCommentsExpanded = VisualQALaunchArgument.contains(.novelFeed)
     @State private var isRelatedExpanded = false
 
@@ -95,6 +96,14 @@ private struct NovelDetailContent: View {
             .frame(minWidth: 680, idealWidth: 760, minHeight: 520, idealHeight: 680)
             #endif
             .os26SheetChrome(.chapterList)
+        }
+        .sheet(item: $bookmarkEditorNovel) { novel in
+            NovelBookmarkEditorView(store: store, novel: novel)
+                #if os(macOS)
+                .os26SheetChrome(.bookmarkEditor)
+                #else
+                .os26SheetChrome(.compactBookmarkEditor)
+                #endif
         }
     }
 
@@ -231,11 +240,15 @@ private struct NovelDetailContent: View {
 
     private var bookmarkButton: some View {
         Button {
-            Task {
-                await novelStore.toggleBookmark(
-                    novel: novel,
-                    restrict: store.defaultNovelBookmarkRestrict
-                )
+            if novel.isBookmarked {
+                Task {
+                    await novelStore.toggleBookmark(
+                        novel: novel,
+                        restrict: store.defaultNovelBookmarkRestrict
+                    )
+                }
+            } else {
+                bookmarkEditorNovel = novel
             }
         } label: {
             Label(

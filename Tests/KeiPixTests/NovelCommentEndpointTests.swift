@@ -13,6 +13,16 @@ struct NovelCommentEndpointTests {
         #expect(components.queryItems?.contains(URLQueryItem(name: "filter", value: "for_android")) == true)
     }
 
+    @Test("Novel bookmark tag suggestions use Pixiv's novel bookmark-tags endpoint")
+    func novelBookmarkTagSuggestionsUseNovelEndpoint() throws {
+        let url = try PixivAPI.novelBookmarkTagPageURL(userID: "2468", restrict: .private)
+        let components = try #require(URLComponents(url: url, resolvingAgainstBaseURL: false))
+
+        #expect(components.path == "/v1/user/bookmark-tags/novel")
+        #expect(components.queryItems?.contains(URLQueryItem(name: "user_id", value: "2468")) == true)
+        #expect(components.queryItems?.contains(URLQueryItem(name: "restrict", value: "private")) == true)
+    }
+
     @Test("Novel comments request uses Pixiv's v3 novel comments endpoint")
     func novelCommentsURLUsesV3Endpoint() throws {
         let url = try PixivAPI.novelCommentsURL(novelID: 49_895_345)

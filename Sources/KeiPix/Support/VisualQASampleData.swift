@@ -83,6 +83,19 @@ enum VisualQASampleData {
         ]
     )
 
+    static var novelBookmarkEditorNovel: PixivNovel {
+        novelFeedNovels.first { $0.isBookmarked == false } ?? novelFeedNovels[0]
+    }
+
+    static let novelBookmarkEditorSuggestions = [
+        PixivBookmarkTag(name: "原创", count: 28),
+        PixivBookmarkTag(name: "短篇", count: 22),
+        PixivBookmarkTag(name: "読書", count: 18),
+        PixivBookmarkTag(name: "海", count: 12),
+        PixivBookmarkTag(name: "日常", count: 9),
+        PixivBookmarkTag(name: "later", count: 5)
+    ]
+
     static let workSubscriptions: [WorkSubscription] = {
         var mixed = WorkSubscription(
             creatorID: 71_001,

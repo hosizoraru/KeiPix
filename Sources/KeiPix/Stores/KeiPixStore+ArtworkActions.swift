@@ -51,6 +51,11 @@ extension KeiPixStore {
         return try await api.bookmarkTags(userID: userID, restrict: restrict)
     }
 
+    func novelBookmarkTagSuggestions(restrict: BookmarkRestrict) async throws -> [PixivBookmarkTag] {
+        guard let userID = session?.user.id else { throw PixivAPIError.missingSession }
+        return try await api.novelBookmarkTags(userID: userID, restrict: restrict)
+    }
+
     func bookmarkTagPage(restrict: BookmarkRestrict) async throws -> PixivBookmarkTagsResponse {
         guard let userID = session?.user.id else { throw PixivAPIError.missingSession }
         return try await api.bookmarkTagPage(userID: userID, restrict: restrict)

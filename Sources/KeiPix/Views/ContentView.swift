@@ -15,6 +15,7 @@ struct ContentView: View {
     @State private var feedbackVisualQARequest: FeedbackReportRequest?
     @State private var creatorProfileVisualQAUser: PixivUser?
     @State private var bookmarkEditorVisualQAArtwork: PixivArtwork?
+    @State private var novelBookmarkEditorVisualQANovel: PixivNovel?
     @Environment(\.undoManager) private var undoManager
     @Environment(\.openWindow) private var openWindow
 
@@ -212,6 +213,14 @@ struct ContentView: View {
                 previewState: VisualQASampleData.bookmarkEditorPreviewState
             )
         }
+        .sheet(item: $novelBookmarkEditorVisualQANovel) { novel in
+            NovelBookmarkEditorView(
+                store: store,
+                novel: novel,
+                previewSuggestions: VisualQASampleData.novelBookmarkEditorSuggestions
+            )
+            .os26SheetChrome(.bookmarkEditor)
+        }
         #endif
         .confirmationDialog(
             store.pendingDangerAction?.title ?? L10n.moreActions,
@@ -311,6 +320,10 @@ struct ContentView: View {
             if VisualQALaunchArgument.contains(.bookmarkEditor) {
                 store.activateVisualQASampleSession()
                 bookmarkEditorVisualQAArtwork = VisualQASampleData.bookmarkEditorArtwork
+            }
+            if VisualQALaunchArgument.contains(.novelBookmarkEditor) {
+                store.activateVisualQASampleSession()
+                novelBookmarkEditorVisualQANovel = VisualQASampleData.novelBookmarkEditorNovel
             }
             if VisualQALaunchArgument.contains(.pixivIDOpen) {
                 store.activateVisualQASampleSession()
