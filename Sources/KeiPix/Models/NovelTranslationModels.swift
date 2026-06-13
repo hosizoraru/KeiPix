@@ -21,6 +21,91 @@ struct NovelTranslationBatchResult: Equatable, Hashable, Sendable {
     let translatedText: String
 }
 
+enum NovelTranslationReadiness: Equatable, Hashable, Sendable {
+    case ready
+    case requiresPreparation
+    case unavailable(NovelTranslationIssue)
+}
+
+enum NovelTranslationIssue: Equatable, Hashable, Sendable {
+    case unsupportedSourceLanguage
+    case unsupportedTargetLanguage
+    case unsupportedLanguagePair
+    case unableToIdentifyLanguage
+    case nothingToTranslate
+    case modelNotInstalled
+    case cancelled
+    case unavailable
+
+    var localizedMessage: String {
+        switch self {
+        case .unsupportedSourceLanguage:
+            L10n.novelTranslationUnsupportedSourceLanguage
+        case .unsupportedTargetLanguage:
+            L10n.novelTranslationUnsupportedTargetLanguage
+        case .unsupportedLanguagePair:
+            L10n.novelTranslationUnsupportedLanguagePair
+        case .unableToIdentifyLanguage:
+            L10n.novelTranslationCannotIdentifyLanguage
+        case .nothingToTranslate:
+            L10n.novelTranslationNothingToTranslate
+        case .modelNotInstalled:
+            L10n.novelTranslationModelNotInstalled
+        case .cancelled:
+            L10n.novelTranslationCancelled
+        case .unavailable:
+            L10n.translationFailed
+        }
+    }
+}
+
+enum NovelTranslationReadinessMapper {
+    #if canImport(Translation)
+    static func readiness(for status: LanguageAvailability.Status) -> NovelTranslationReadiness {
+        switch status {
+        case .installed:
+            .ready
+        case .supported:
+            .requiresPreparation
+        case .unsupported:
+            .unavailable(.unsupportedLanguagePair)
+        @unknown default:
+            .unavailable(.unavailable)
+        }
+    }
+
+    static func issue(for error: any Error) -> NovelTranslationIssue {
+        if error is CancellationError {
+            return .cancelled
+        }
+        if TranslationError.unsupportedSourceLanguage ~= error {
+            return .unsupportedSourceLanguage
+        }
+        if TranslationError.unsupportedTargetLanguage ~= error {
+            return .unsupportedTargetLanguage
+        }
+        if TranslationError.unsupportedLanguagePairing ~= error {
+            return .unsupportedLanguagePair
+        }
+        if TranslationError.unableToIdentifyLanguage ~= error {
+            return .unableToIdentifyLanguage
+        }
+        if TranslationError.nothingToTranslate ~= error {
+            return .nothingToTranslate
+        }
+        if #available(iOS 26.0, macOS 26.0, *) {
+            if TranslationError.notInstalled ~= error {
+                return .modelNotInstalled
+            }
+            if TranslationError.alreadyCancelled ~= error {
+                return .cancelled
+            }
+        }
+        return .unavailable
+    }
+    #endif
+}
+
 struct NovelTranslationBatchClient {
     typealias ResultHandler = @MainActor (NovelTranslationBatchResult) -> Void
 

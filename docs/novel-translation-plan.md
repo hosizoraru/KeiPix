@@ -191,7 +191,7 @@ Recommended new or changed types:
 | Phase 3: Incremental Engine Updates | Done | `NovelTranslationEngine` now stores segment results, updates progress per streamed result, preserves legacy token lookup, and keeps source text visible for pending segments. |
 | Phase 4: Visible-First Scheduling | In progress | Scheduler implementation, focused tests, and iOS/iPadOS generic builds are complete; physical-device smoke validation remains open. |
 | Phase 5: Persistent Translation Cache | Done | Segment translations now persist under the app caches directory, cache hits apply before network translation, misses continue streaming, and Reading settings exposes a localized clear-cache action. |
-| Phase 6: Availability, Preparation, and Errors | Planned | Pending translation client/error model. |
+| Phase 6: Availability, Preparation, and Errors | In progress | `LanguageAvailability`, `prepareTranslation()`, recoverable error mapping, and localized reader feedback are implemented and tested; physical Mac/iPhone/iPad model-preparation validation remains open. |
 | Phase 7: OS 26.4+ Translation Strategy and Skip Ranges | Planned | Pending stable batch client. |
 | Phase 8: Shared Apple Translation Client for Captions | Planned | Pending novel pipeline stabilization. |
 
@@ -379,24 +379,39 @@ Evidence:
 
 ### Phase 6: Availability, Preparation, and Errors
 
-Status: Planned
+Status: In progress
 
-- [ ] Use `LanguageAvailability` to validate target language and supported
+- [x] Use `LanguageAvailability` to validate target language and supported
   language pairs where practical.
-- [ ] Before translating a large novel/range, call `prepareTranslation()` so the
+- [x] Before translating a large novel/range, call `prepareTranslation()` so the
   system can prepare or request language model downloads.
-- [ ] Add user-visible states for model not installed, unsupported language
+- [x] Add user-visible states for model not installed, unsupported language
   pair, unable to identify language, and cancelled translation.
-- [ ] Keep errors non-destructive: original text remains readable.
-- [ ] Add copy that explains Apple system translation requirements without
+- [x] Keep errors non-destructive: original text remains readable.
+- [x] Add copy that explains Apple system translation requirements without
   suggesting third-party setup.
 
 Validation:
 
-- [ ] Focused tests for error-state mapping.
-- [ ] Localized string catalog validation if strings are added.
+- [x] Focused tests for error-state mapping.
+- [x] Localized string catalog validation if strings are added.
 - [ ] Physical Mac validation for model-preparation behavior.
 - [ ] Physical iPhone/iPad validation for iOS/iPadOS behavior.
+
+Evidence:
+
+- `NovelTranslationReadinessTests` maps `LanguageAvailability.Status` and known
+  `TranslationError` cases into reader issues with localized messages.
+- `NovelReaderView` checks the first pending segment with
+  `LanguageAvailability.status(for:to:)`, calls
+  `session.prepareTranslation()` before starting the scheduled batch loop, and
+  keeps original text visible when preparation or translation fails.
+- The reader chrome now surfaces concise localized preparation/error feedback
+  next to the translation control while leaving the native TextKit page
+  rendering path unchanged.
+- `NativeBoundaryTests/novelReaderTextPagesUseNativeTextKitBridges` and
+  `NativeBoundaryTests/translationUIStringsStayCatalogBacked` cover the Reader
+  integration and catalog-backed copy.
 
 ### Phase 7: OS 26.4+ Translation Strategy and Skip Ranges
 

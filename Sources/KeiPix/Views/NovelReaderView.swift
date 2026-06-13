@@ -199,6 +199,9 @@ struct NovelReaderView: View {
                 activePageIndex: pageIndex,
                 mode: translationScheduleMode
             )
+            guard await prepareTranslationIfNeeded(for: pageOrder, session: session) else {
+                return
+            }
             for page in pageOrder {
                 guard translationEngine.isInlineTranslationActive else { return }
                 await translatePage(page, session: session)
@@ -245,14 +248,8 @@ struct NovelReaderView: View {
     private func translatePage(_ page: Int, session: TranslationSession) async {
         guard translationEngine.isInlineTranslationActive else { return }
 
-        guard pages.indices.contains(page) else { return }
-        let tokens = pages[page]
-        let segments = NovelTranslationPlanner.segments(
-            novelID: activeNovel.id,
-            targetLanguageID: store.translationTargetLanguage.rawValue,
-            pages: [tokens],
-            pageStartIndex: page
-        )
+        let segments = translationSegments(for: page)
+        guard segments.isEmpty == false else { return }
         translationEngine.registerSegments(segments)
         for cachedResult in translationDiskCache.results(for: segments) {
             translationEngine.applySegmentResult(cachedResult)
@@ -291,8 +288,70 @@ struct NovelReaderView: View {
             translationEngine.finishTranslating(segments: pendingSegments)
         } catch {
             guard translationEngine.isInlineTranslationActive else { return }
-            translationEngine.failTranslating(L10n.translationFailed, segments: pendingSegments)
+            translationEngine.failTranslating(
+                NovelTranslationReadinessMapper.issue(for: error).localizedMessage,
+                segments: pendingSegments
+            )
         }
+    }
+
+    private func translationSegments(for page: Int) -> [NovelTranslationSegment] {
+        guard pages.indices.contains(page) else { return [] }
+        return NovelTranslationPlanner.segments(
+            novelID: activeNovel.id,
+            targetLanguageID: store.translationTargetLanguage.rawValue,
+            pages: [pages[page]],
+            pageStartIndex: page
+        )
+    }
+
+    private func prepareTranslationIfNeeded(for pageOrder: [Int], session: TranslationSession) async -> Bool {
+        guard translationEngine.isInlineTranslationActive,
+              let sampleSegment = firstPendingTranslationSegment(in: pageOrder) else {
+            return true
+        }
+
+        do {
+            let status = try await LanguageAvailability()
+                .status(
+                    for: sampleSegment.sourceText,
+                    to: TranslationLanguageResolver.targetLanguage(for: store.translationTargetLanguage)
+                )
+            switch NovelTranslationReadinessMapper.readiness(for: status) {
+            case .ready, .requiresPreparation:
+                try await session.prepareTranslation()
+                return true
+            case .unavailable(let issue):
+                failTranslationPreparation(issue, segment: sampleSegment)
+                return false
+            }
+        } catch {
+            failTranslationPreparation(
+                NovelTranslationReadinessMapper.issue(for: error),
+                segment: sampleSegment
+            )
+            return false
+        }
+    }
+
+    private func firstPendingTranslationSegment(in pageOrder: [Int]) -> NovelTranslationSegment? {
+        for page in pageOrder {
+            let segments = translationSegments(for: page)
+            guard segments.isEmpty == false else { continue }
+            translationEngine.registerSegments(segments)
+            for cachedResult in translationDiskCache.results(for: segments) {
+                translationEngine.applySegmentResult(cachedResult)
+            }
+            if let pending = translationEngine.pendingSegments(from: segments).first {
+                return pending
+            }
+        }
+        return nil
+    }
+
+    private func failTranslationPreparation(_ issue: NovelTranslationIssue, segment: NovelTranslationSegment) {
+        translationEngine.registerSegments([segment])
+        translationEngine.failTranslating(issue.localizedMessage, segments: [segment])
     }
 
     // MARK: - Chrome
@@ -505,7 +564,25 @@ struct NovelReaderView: View {
                                  translationEngine.translationCompleted,
                                  translationEngine.translationTotal))
             }
+
+            if let translationStatusMessage {
+                ViewThatFits(in: .horizontal) {
+                    Label(translationStatusMessage, systemImage: "exclamationmark.triangle.fill")
+                        .font(.caption2.weight(.medium))
+                        .lineLimit(1)
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .font(.caption2.weight(.semibold))
+                }
+                .foregroundStyle(.secondary)
+                .help(translationStatusMessage)
+                .accessibilityLabel(translationStatusMessage)
+            }
         }
+    }
+
+    private var translationStatusMessage: String? {
+        guard case .error(let message) = translationEngine.state else { return nil }
+        return message
     }
 
     private func toggleTranslation() {

@@ -11,10 +11,14 @@ import SwiftUI
 /// When set to `.system`, falls back to `nil` so Apple's Translation
 /// framework picks the device locale automatically.
 enum TranslationLanguageResolver {
+    static func targetLanguage(for targetLanguage: TranslationTargetLanguage) -> Locale.Language? {
+        targetLanguage.localeLanguage
+    }
+
     /// Builds a `TranslationSession.Configuration` with the correct
     /// target language. Source is always `nil` for auto-detection.
     static func configuration(for targetLanguage: TranslationTargetLanguage) -> TranslationSession.Configuration {
-        let target = targetLanguage.localeLanguage
+        let target = Self.targetLanguage(for: targetLanguage)
         return TranslationSession.Configuration(source: nil, target: target)
     }
 }

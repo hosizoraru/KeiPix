@@ -725,6 +725,13 @@ enum L10n {
     static var translate: String { text("Translate") }
     static var translating: String { text("Translating…") }
     static var translationFailed: String { text("Translation unavailable") }
+    static var novelTranslationUnsupportedSourceLanguage: String { text("Apple Translation does not support this source language.") }
+    static var novelTranslationUnsupportedTargetLanguage: String { text("Apple Translation does not support this target language.") }
+    static var novelTranslationUnsupportedLanguagePair: String { text("Apple Translation does not support this language pair.") }
+    static var novelTranslationCannotIdentifyLanguage: String { text("Apple Translation could not identify this text language.") }
+    static var novelTranslationNothingToTranslate: String { text("No translatable novel text was found.") }
+    static var novelTranslationModelNotInstalled: String { text("Apple Translation needs a language model. Approve the system download, then try again.") }
+    static var novelTranslationCancelled: String { text("Translation was cancelled.") }
     static var translationTargetLanguage: String { text("Translation Language") }
     static var translationTargetLanguageHint: String { text("Translation Language Hint") }
     static var translationTargetSystem: String { text("System") }
