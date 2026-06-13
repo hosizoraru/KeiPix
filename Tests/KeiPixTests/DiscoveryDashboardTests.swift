@@ -42,6 +42,21 @@ struct DiscoveryDashboardTests {
         #expect(dashboardLibrary.routes.contains(.pixivCollections) == false)
     }
 
+    @Test("Pixiv activity feed is reachable from discovery navigation")
+    func pixivActivityFeedIsReachableFromDiscoveryNavigation() throws {
+        let sidebarWorks = try #require(PixivRoute.sidebarSections.first { $0 == .works })
+        let dashboardWorks = try #require(DiscoveryDashboardSection.all.first { $0.id == "works" })
+        let mobileIllustrationRoutes = MobileRouteMenuConfiguration.sections(for: .illustrations).flatMap(\.routes)
+
+        #expect(PixivRoute.pixivActivity.title.isEmpty == false)
+        #expect(PixivRoute.pixivActivity.systemImage == "bolt.horizontal.circle")
+        #expect(PixivRoute.pixivActivity.usesArtworkFeed == false)
+        #expect(PixivRoute.pixivActivity.usesNovelFeed == false)
+        #expect(sidebarWorks.routes.contains(.pixivActivity))
+        #expect(dashboardWorks.routes.contains(.pixivActivity))
+        #expect(mobileIllustrationRoutes.contains(.pixivActivity))
+    }
+
     @Test("Saved Pixivision and Pixiv collection library routes stay out of work discovery")
     func savedEditorialCollectionsAreClassifiedWithLibrary() throws {
         let sidebarWorks = try #require(PixivRoute.sidebarSections.first { $0 == .works })

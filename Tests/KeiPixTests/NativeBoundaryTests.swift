@@ -1250,6 +1250,54 @@ struct NativeBoundaryTests {
         #expect(iPadContentView.contains("PixivCollectionsView(store: store, mode: .saved)"))
     }
 
+    @Test("Pixiv activity feed uses a native list and visible route")
+    func pixivActivityFeedUsesNativeListAndVisibleRoute() throws {
+        let root = try packageRoot()
+        let activityView = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/PixivActivityFeedView.swift"),
+            encoding: .utf8
+        )
+        let nativeList = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Support/NativePixivActivityListView.swift"),
+            encoding: .utf8
+        )
+        let store = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Stores/KeiPixStore+PixivActivity.swift"),
+            encoding: .utf8
+        )
+        let contentView = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/ContentView.swift"),
+            encoding: .utf8
+        )
+        let iPadContentView = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/ContentView_iPadOS.swift"),
+            encoding: .utf8
+        )
+        let localizable = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Resources/Localizable.xcstrings"),
+            encoding: .utf8
+        )
+
+        #expect(activityView.contains("PixivSignedOutStateView(store: store)"))
+        #expect(activityView.contains("NativePixivActivityListView("))
+        #expect(activityView.contains(".task(id: store.routeRefreshGeneration)"))
+        #expect(activityView.contains("store.refreshPixivActivityFeed()"))
+        #expect(activityView.contains("store.loadMorePixivActivityFeed()"))
+        #expect(activityView.contains("L10n.connectPixivWebSession"))
+        #expect(activityView.contains(".nativeBottomTabContentSurface()"))
+        #expect(nativeList.contains("struct NativePixivActivityListView"))
+        #expect(nativeList.contains("NSTableView"))
+        #expect(nativeList.contains("UICollectionView"))
+        #expect(nativeList.contains("NativeContentScrollRegistration"))
+        #expect(store.contains("func refreshPixivActivityFeed() async"))
+        #expect(store.contains("func loadMorePixivActivityFeed() async"))
+        #expect(store.contains("api.pixivActivityFeedPage(page:"))
+        #expect(contentView.contains("PixivActivityFeedView(store: store)"))
+        #expect(iPadContentView.contains("PixivActivityFeedView(store: store)"))
+        #expect(localizable.contains("\"Pixiv Activity\""))
+        #expect(localizable.contains("\"value\": \"动态\""))
+    }
+
     @Test("Pixiv Web session connection is explicit and available on all app shells")
     func pixivWebSessionConnectionIsExplicitAndAvailableOnAllAppShells() throws {
         let root = try packageRoot()

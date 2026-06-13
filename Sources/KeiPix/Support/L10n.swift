@@ -498,6 +498,18 @@ enum L10n {
     static var openPixivWebMyCollections: String { text("Open My Pixiv Collections") }
     static var openPixivWebSavedCollections: String { text("Open Saved Pixiv Collections") }
     static var pixivCollections: String { text("Pixiv Collections") }
+    static var pixivActivity: String { text("Pixiv Activity") }
+    static var pixivActivityEmptyTitle: String { text("No Pixiv activity") }
+    static var pixivActivityEmptyHint: String { text("Follow creators or refresh after connecting Pixiv Web to see social activity.") }
+    static var pixivActivityWebSessionRequiredHint: String { text("Pixiv activity is a Web-only feed. Connect a Pixiv Web session to load it in KeiPix.") }
+    static var pixivActivityLoadingMore: String { text("Loading more activity") }
+    static var pixivActivityLoadedCountFormat: String { text("Loaded %d activity items") }
+    static var pixivActivityRefreshedFormat: String { text("Refreshed %d activity items") }
+    static var pixivActivityPostedArtwork: String { text("Posted artwork") }
+    static var pixivActivityBookmarkedArtwork: String { text("Bookmarked artwork") }
+    static var pixivActivityFollowedUser: String { text("Followed user") }
+    static var pixivActivityUnknown: String { text("Pixiv activity") }
+    static var pixivActivityOpenHint: String { text("Open this activity in KeiPix") }
     static var savedPixivisionArticles: String { text("Saved Pixivision") }
     static var myPixivCollections: String { text("My Pixiv Collections") }
     static var myPixivUsers: String { text("MyPixiv") }

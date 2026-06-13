@@ -4,6 +4,7 @@ enum VisualQALaunchArgument: String, CaseIterable {
     case discoverDashboard = "--visual-qa-discover-dashboard"
     case pixivLinkDrop = "--visual-qa-pixiv-link-drop"
     case pixivIDOpen = "--visual-qa-pixiv-id-open"
+    case pixivActivity = "--visual-qa-pixiv-activity"
     case creatorProfile = "--visual-qa-creator-profile"
     case mangaWatchlist = "--visual-qa-manga-watchlist"
     case workSubscriptions = "--visual-qa-work-subscriptions"
@@ -39,6 +40,8 @@ enum VisualQALaunchArgument: String, CaseIterable {
             .pixivLinkDrop
         case .pixivIDOpen:
             .pixivIDOpen
+        case .pixivActivity:
+            .pixivActivity
         case .creatorProfile:
             .creatorProfile
         case .mangaWatchlist:

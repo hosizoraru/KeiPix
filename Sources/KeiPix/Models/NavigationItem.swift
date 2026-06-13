@@ -46,6 +46,7 @@ enum PixivRouteSection: Identifiable {
                 .trendingTags,
                 .spotlight,
                 .pixivCollections,
+                .pixivActivity,
                 .recommendedUsers,
                 .search,
                 .searchUsers,
@@ -129,6 +130,7 @@ enum PixivRoute: String, CaseIterable, Identifiable, Codable {
     case newManga
     case trendingTags
     case spotlight
+    case pixivActivity
     case search
     case searchUsers
     case savedSearches
@@ -214,6 +216,7 @@ enum PixivRoute: String, CaseIterable, Identifiable, Codable {
         case .newManga: L10n.newManga
         case .trendingTags: L10n.trendingTags
         case .spotlight: L10n.spotlight
+        case .pixivActivity: L10n.pixivActivity
         case .search: L10n.search
         case .searchUsers: L10n.searchCreators
         case .savedSearches: L10n.savedSearches
@@ -293,6 +296,7 @@ enum PixivRoute: String, CaseIterable, Identifiable, Codable {
              .savedSearches,
              .trendingTags,
              .spotlight,
+             .pixivActivity,
              .bookmarkTags,
              .pixivCollections,
              .savedPixivisionArticles,
@@ -477,6 +481,7 @@ enum PixivRoute: String, CaseIterable, Identifiable, Codable {
         case .newManga: "book.pages"
         case .trendingTags: "number"
         case .spotlight: "newspaper"
+        case .pixivActivity: "bolt.horizontal.circle"
         case .recommendedUsers: "person.crop.circle.badge.plus"
         case .search: "magnifyingglass"
         case .searchUsers: "person.crop.circle.badge.questionmark"

@@ -42,6 +42,59 @@ enum VisualQASampleData {
         return try! JSONDecoder().decode(PixivSession.self, from: Data(payload.utf8))
     }()
 
+    static let pixivActivityItems: [PixivActivityItem] = [
+        PixivActivityItem(
+            id: "visual-activity-posted-1",
+            kind: .postedArtwork,
+            actor: PixivActivityActor(userID: 5002, name: "夜更かし", avatarURL: nil),
+            target: PixivActivityTarget(
+                kind: .artwork,
+                id: "93700",
+                title: "星の降る通学路",
+                url: URL(string: "https://www.pixiv.net/artworks/93700"),
+                thumbnailURL: nil
+            ),
+            occurredAt: Date(timeIntervalSinceNow: -420),
+            summary: "フォロー中のクリエイターが新しいイラストを投稿しました。"
+        ),
+        PixivActivityItem(
+            id: "visual-activity-bookmark-1",
+            kind: .bookmarkedArtwork,
+            actor: PixivActivityActor(userID: 5003, name: "Mika Archive", avatarURL: nil),
+            target: PixivActivityTarget(
+                kind: .artwork,
+                id: "93710",
+                title: "Bookmark sheet QA sample",
+                url: URL(string: "https://www.pixiv.net/artworks/93710"),
+                thumbnailURL: nil
+            ),
+            occurredAt: Date(timeIntervalSinceNow: -2_400),
+            summary: "公開ブックマークに追加された作品です。"
+        ),
+        PixivActivityItem(
+            id: "visual-activity-follow-1",
+            kind: .followedUser,
+            actor: PixivActivityActor(userID: 5004, name: "Blue Route", avatarURL: nil),
+            target: PixivActivityTarget(
+                kind: .user,
+                id: "5005",
+                title: "朝焼け工房",
+                url: URL(string: "https://www.pixiv.net/users/5005"),
+                thumbnailURL: nil
+            ),
+            occurredAt: Date(timeIntervalSinceNow: -8_800),
+            summary: "フォロー中のユーザーが別のクリエイターをフォローしました。"
+        ),
+        PixivActivityItem(
+            id: "visual-activity-unknown-1",
+            kind: .unknown,
+            actor: PixivActivityActor(userID: 5006, name: "Signal", avatarURL: nil),
+            target: nil,
+            occurredAt: Date(timeIntervalSinceNow: -18_000),
+            summary: "Pixiv Web 側から届いた補助的な動向です。"
+        )
+    ]
+
     static let artworkDetailSocialArtwork = decodeArtwork(
         id: 93700,
         title: "Detail reader rail QA manga",
@@ -1056,6 +1109,45 @@ extension KeiPixStore {
         isLoading = false
         isLoadingMore = false
         activeFeedSnapshotRestoration = nil
+    }
+
+    func presentPixivActivityVisualQA() {
+        activateVisualQASampleSession()
+        selectedRoute = .pixivActivity
+        focusedUser = nil
+        bookmarkTagFilter = nil
+        selectedSpotlightArticle = nil
+        selectedArtwork = nil
+        selectedPixivCollection = nil
+        errorMessage = nil
+        isLoading = false
+        isLoadingMore = false
+        activeFeedSnapshotRestoration = nil
+        allArtworks = []
+        artworks = []
+        searchPopularPreviewArtworks = []
+        nextURL = nil
+        pixivWebSession = PixivWebSession(
+            userID: String(VisualQASampleData.sampleSession.user.id),
+            connectedAt: Date(),
+            cookies: [
+                PixivWebSessionCookie(
+                    name: "PHPSESSID",
+                    value: "visual-qa-session",
+                    domain: ".pixiv.net",
+                    path: "/",
+                    expiresAt: Date(timeIntervalSinceNow: 86_400),
+                    isSecure: true
+                )
+            ]
+        )
+        pixivActivityItems = VisualQASampleData.pixivActivityItems
+        pixivActivityNextPage = 2
+        pixivActivityLoadedAt = Date()
+        pixivActivityLoadedInCurrentSession = true
+        pixivActivityErrorMessage = nil
+        isLoadingPixivActivityFeed = false
+        isLoadingMorePixivActivityFeed = false
     }
 
     func presentGalleryLayoutVisualQA(mode: GalleryLayoutMode) {

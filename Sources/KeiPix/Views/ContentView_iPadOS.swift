@@ -117,6 +117,12 @@ struct ContentView: View {
                     selectedSidebarItem = .route(.home)
                     selectedTab = .feed
                 }
+                if VisualQALaunchArgument.contains(.pixivActivity) {
+                    store.presentPixivActivityVisualQA()
+                    hasAppliedMobileBottomTabLaunchTarget = true
+                    selectedSidebarItem = .route(.pixivActivity)
+                    selectedTab = .mobile(.illustrations)
+                }
                 if VisualQALaunchArgument.contains(.creatorProfile) {
                     store.activateVisualQASampleSession()
                     store.selectedRoute = .recommendedUsers
@@ -1560,6 +1566,8 @@ struct ContentView: View {
                 BookmarkTagsView(store: store)
             } else if store.selectedRoute == .pixivCollections {
                 PixivCollectionsView(store: store)
+            } else if store.selectedRoute == .pixivActivity {
+                PixivActivityFeedView(store: store)
             } else if store.selectedRoute == .myPixivCollections {
                 PixivCollectionsView(store: store, mode: .created)
             } else if store.selectedRoute == .savedPixivCollections {

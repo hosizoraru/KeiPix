@@ -14,6 +14,7 @@ enum VisualQASurface: String, CaseIterable, Identifiable, Sendable {
     case pixivision
     case pixivLinkDrop = "pixiv-link-drop"
     case pixivIDOpen = "pixiv-id-open"
+    case pixivActivity = "pixiv-activity"
     case creatorProfile = "creator-profile"
     case mangaWatchlist = "manga-watchlist"
     case workSubscriptions = "work-subscriptions"

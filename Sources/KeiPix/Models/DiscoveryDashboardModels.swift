@@ -19,7 +19,8 @@ struct DiscoveryDashboardSection: Identifiable {
                     .newManga,
                     .trendingTags,
                     .spotlight,
-                    .pixivCollections
+                    .pixivCollections,
+                    .pixivActivity
                 ]
             ),
             DiscoveryDashboardSection(

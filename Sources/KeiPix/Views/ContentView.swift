@@ -281,6 +281,9 @@ struct ContentView: View {
             if VisualQALaunchArgument.contains(.discoverDashboard) {
                 store.presentDiscoverDashboardVisualQA()
             }
+            if VisualQALaunchArgument.contains(.pixivActivity) {
+                store.presentPixivActivityVisualQA()
+            }
             if VisualQALaunchArgument.contains(.mangaWatchlist) {
                 store.activateVisualQASampleSession()
                 store.selectedRoute = .mangaWatchlist
@@ -909,6 +912,8 @@ private struct ContentColumnView: View {
             BookmarkTagsView(store: store)
         } else if store.selectedRoute == .pixivCollections {
             PixivCollectionsView(store: store)
+        } else if store.selectedRoute == .pixivActivity {
+            PixivActivityFeedView(store: store)
         } else if store.selectedRoute == .myPixivCollections {
             PixivCollectionsView(store: store, mode: .created)
         } else if store.selectedRoute == .savedPixivCollections {

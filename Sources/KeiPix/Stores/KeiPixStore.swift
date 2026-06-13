@@ -55,6 +55,13 @@ final class KeiPixStore {
     var pixivCollectionRecommendedTags: [PixivCollectionDiscoveryTag] = []
     var pixivCollectionPersonalizedTags: [PixivCollectionDiscoveryTag] = []
     var pixivCollectionErrorMessage: String?
+    var pixivActivityItems: [PixivActivityItem] = []
+    var isLoadingPixivActivityFeed = false
+    var isLoadingMorePixivActivityFeed = false
+    var pixivActivityNextPage: Int?
+    var pixivActivityLoadedAt: Date?
+    var pixivActivityLoadedInCurrentSession = false
+    var pixivActivityErrorMessage: String?
     var isPixivWebSessionPresented = false
     var readerWindowArtwork: PixivArtwork?
     /// Bounded registry mapping artwork ID → `PixivArtwork` for
@@ -448,6 +455,13 @@ final class KeiPixStore {
         selectedPixivCollection = nil
         selectedPixivCollectionSourceRoute = nil
         pixivCollectionErrorMessage = nil
+        pixivActivityItems = []
+        pixivActivityNextPage = nil
+        pixivActivityLoadedAt = nil
+        pixivActivityLoadedInCurrentSession = false
+        pixivActivityErrorMessage = nil
+        isLoadingPixivActivityFeed = false
+        isLoadingMorePixivActivityFeed = false
         readerWindowArtwork = nil
         imageSourceSearchRequest = nil
         searchSuggestions = []
@@ -704,6 +718,8 @@ final class KeiPixStore {
             Task { await reloadCurrentFeed() }
         } else if selectedRoute.usesNovelFeed {
             Task { await novels.refresh(route: selectedRoute) }
+        } else if selectedRoute == .pixivActivity {
+            Task { await refreshPixivActivityFeed(force: true) }
         } else {
             routeRefreshGeneration += 1
         }

@@ -299,6 +299,7 @@ enum MobileRouteMenuConfiguration {
                         .newIllustrations,
                         .spotlight,
                         .pixivCollections,
+                        .pixivActivity,
                         .recommendedUsers
                     ]
                 ),
