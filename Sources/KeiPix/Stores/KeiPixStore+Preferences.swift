@@ -454,6 +454,35 @@ extension KeiPixStore {
         persistRaw("novelGalleryLayoutMode", value: mode, to: \.novelGalleryLayoutMode)
     }
 
+    var dashboardCardOrder: [DiscoveryDashboardCardKind] {
+        DiscoveryDashboardCardKind.ordered(from: dashboardCardOrderID)
+    }
+
+    var visibleDashboardCards: [DiscoveryDashboardCardKind] {
+        DiscoveryDashboardCardKind.visibleCards(order: dashboardCardOrder, hiddenIDs: hiddenDashboardCardIDs)
+    }
+
+    func isDashboardCardVisible(_ card: DiscoveryDashboardCardKind) -> Bool {
+        hiddenDashboardCardIDs.contains(card.id) == false
+    }
+
+    func setDashboardCardVisible(_ visible: Bool, for card: DiscoveryDashboardCardKind) {
+        hiddenDashboardCardIDs = DiscoveryDashboardCardKind.hiddenIDs(
+            afterSetting: visible,
+            for: card,
+            currentHiddenIDs: hiddenDashboardCardIDs,
+            order: dashboardCardOrder
+        )
+        UserDefaults.standard.set(Array(hiddenDashboardCardIDs), forKey: "hiddenDashboardCardIDs")
+    }
+
+    func moveDashboardCard(_ card: DiscoveryDashboardCardKind, offset: Int) {
+        let cards = DiscoveryDashboardCardKind.moved(card, offset: offset, in: dashboardCardOrder)
+        guard cards != dashboardCardOrder else { return }
+        dashboardCardOrderID = DiscoveryDashboardCardKind.storageID(for: cards)
+        UserDefaults.standard.set(dashboardCardOrderID, forKey: "dashboardCardOrderID")
+    }
+
     func isDashboardSectionVisible(_ section: DiscoveryDashboardSection) -> Bool {
         hiddenDashboardSectionIDs.contains(section.id) == false
     }
@@ -485,8 +514,12 @@ extension KeiPixStore {
     }
 
     func resetDashboardSections() {
+        dashboardCardOrderID = DiscoveryDashboardCardKind.storageID(for: DiscoveryDashboardCardKind.defaultOrder)
+        hiddenDashboardCardIDs.removeAll()
         hiddenDashboardSectionIDs.removeAll()
         expandedDashboardRouteSectionIDs.removeAll()
+        UserDefaults.standard.removeObject(forKey: "dashboardCardOrderID")
+        UserDefaults.standard.removeObject(forKey: "hiddenDashboardCardIDs")
         UserDefaults.standard.removeObject(forKey: "hiddenDashboardSectionIDs")
         UserDefaults.standard.removeObject(forKey: "expandedDashboardRouteSectionIDs")
     }

@@ -278,7 +278,8 @@ struct ContentView: View {
         }
         #if DEBUG
         .task {
-            if VisualQALaunchArgument.contains(.discoverDashboard) {
+            if VisualQALaunchArgument.contains(.discoverDashboard)
+                || VisualQALaunchArgument.contains(.discoverDashboardCustomization) {
                 store.presentDiscoverDashboardVisualQA()
             }
             if VisualQALaunchArgument.contains(.pixivActivity) {

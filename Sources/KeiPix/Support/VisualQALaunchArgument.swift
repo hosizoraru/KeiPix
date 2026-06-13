@@ -2,6 +2,7 @@ import Foundation
 
 enum VisualQALaunchArgument: String, CaseIterable {
     case discoverDashboard = "--visual-qa-discover-dashboard"
+    case discoverDashboardCustomization = "--visual-qa-discover-dashboard-customization"
     case pixivLinkDrop = "--visual-qa-pixiv-link-drop"
     case pixivIDOpen = "--visual-qa-pixiv-id-open"
     case pixivActivity = "--visual-qa-pixiv-activity"
@@ -35,7 +36,7 @@ enum VisualQALaunchArgument: String, CaseIterable {
 
     var surface: VisualQASurface {
         switch self {
-        case .discoverDashboard:
+        case .discoverDashboard, .discoverDashboardCustomization:
             .discoverDashboard
         case .pixivLinkDrop:
             .pixivLinkDrop

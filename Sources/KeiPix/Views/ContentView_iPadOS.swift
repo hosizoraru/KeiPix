@@ -112,8 +112,10 @@ struct ContentView: View {
                     selectedTab = .mobile(.illustrations)
                     isMobileTabCustomizationPresented = true
                 }
-                if VisualQALaunchArgument.contains(.discoverDashboard) {
+                if VisualQALaunchArgument.contains(.discoverDashboard)
+                    || VisualQALaunchArgument.contains(.discoverDashboardCustomization) {
                     store.presentDiscoverDashboardVisualQA()
+                    hasAppliedMobileBottomTabLaunchTarget = true
                     selectedSidebarItem = .route(.home)
                     selectedTab = .feed
                 }

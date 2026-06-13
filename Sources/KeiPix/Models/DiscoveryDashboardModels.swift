@@ -1,5 +1,103 @@
 import Foundation
 
+enum DiscoveryDashboardCardKind: String, CaseIterable, Codable, Hashable, Identifiable, Sendable {
+    case highlights
+    case forYou
+    case metrics
+    case routeGroups
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .highlights:
+            L10n.discoveryHighlights
+        case .forYou:
+            L10n.discoveryForYou
+        case .metrics:
+            L10n.discoveryMetrics
+        case .routeGroups:
+            L10n.dashboardSections
+        }
+    }
+
+    var systemImage: String {
+        switch self {
+        case .highlights:
+            "sparkles.rectangle.stack"
+        case .forYou:
+            "person.crop.circle.badge.sparkles"
+        case .metrics:
+            "chart.bar.xaxis"
+        case .routeGroups:
+            "rectangle.grid.2x2"
+        }
+    }
+
+    static let defaultOrder: [DiscoveryDashboardCardKind] = [
+        .highlights,
+        .forYou,
+        .metrics,
+        .routeGroups
+    ]
+
+    static func ordered(from storageID: String?) -> [DiscoveryDashboardCardKind] {
+        let stored = (storageID ?? "")
+            .split(separator: ",")
+            .compactMap { DiscoveryDashboardCardKind(rawValue: String($0)) }
+
+        var seen = Set<DiscoveryDashboardCardKind>()
+        var ordered = stored.filter { seen.insert($0).inserted }
+        for card in defaultOrder where seen.insert(card).inserted {
+            ordered.append(card)
+        }
+        return ordered.isEmpty ? defaultOrder : ordered
+    }
+
+    static func storageID(for cards: [DiscoveryDashboardCardKind]) -> String {
+        cards.map(\.rawValue).joined(separator: ",")
+    }
+
+    static func visibleCards(order: [DiscoveryDashboardCardKind], hiddenIDs: Set<String>) -> [DiscoveryDashboardCardKind] {
+        let visible = order.filter { hiddenIDs.contains($0.id) == false }
+        return visible.isEmpty ? defaultOrder : visible
+    }
+
+    static func hiddenIDs(
+        afterSetting visible: Bool,
+        for card: DiscoveryDashboardCardKind,
+        currentHiddenIDs: Set<String>,
+        order: [DiscoveryDashboardCardKind]
+    ) -> Set<String> {
+        var hiddenIDs = currentHiddenIDs
+        if visible {
+            hiddenIDs.remove(card.id)
+            return hiddenIDs
+        }
+
+        let visibleCount = order.filter { hiddenIDs.contains($0.id) == false }.count
+        guard visibleCount > 1 else { return hiddenIDs }
+        hiddenIDs.insert(card.id)
+        return hiddenIDs
+    }
+
+    static func moved(
+        _ card: DiscoveryDashboardCardKind,
+        offset: Int,
+        in order: [DiscoveryDashboardCardKind]
+    ) -> [DiscoveryDashboardCardKind] {
+        guard let sourceIndex = order.firstIndex(of: card), order.isEmpty == false else { return order }
+
+        let destinationIndex = max(0, min(order.count - 1, sourceIndex + offset))
+        guard destinationIndex != sourceIndex else { return order }
+
+        var cards = order
+        cards.remove(at: sourceIndex)
+        cards.insert(card, at: destinationIndex)
+        return cards
+    }
+}
+
 struct DiscoveryDashboardSection: Identifiable {
     let id: String
     let title: String

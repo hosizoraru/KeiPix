@@ -20,6 +20,50 @@ struct DiscoveryDashboardTests {
         #expect(dashboardRoutes.count == Set(dashboardRoutes).count)
     }
 
+    @Test("Dashboard card storage repairs missing and duplicated entries")
+    func dashboardCardStorageRepairsMissingAndDuplicatedEntries() {
+        let repaired = DiscoveryDashboardCardKind.ordered(from: "forYou,highlights,forYou,unknown")
+
+        #expect(repaired == [.forYou, .highlights, .metrics, .routeGroups])
+        #expect(DiscoveryDashboardCardKind.storageID(for: repaired) == "forYou,highlights,metrics,routeGroups")
+        #expect(DiscoveryDashboardCardKind.ordered(from: nil) == DiscoveryDashboardCardKind.defaultOrder)
+    }
+
+    @Test("Dashboard card visibility keeps a useful dashboard")
+    func dashboardCardVisibilityKeepsUsefulDashboard() {
+        let order = DiscoveryDashboardCardKind.defaultOrder
+        let hidden = Set(order.dropFirst().map(\.id))
+        let rejected = DiscoveryDashboardCardKind.hiddenIDs(
+            afterSetting: false,
+            for: order[0],
+            currentHiddenIDs: hidden,
+            order: order
+        )
+
+        #expect(rejected == hidden)
+
+        let shown = DiscoveryDashboardCardKind.hiddenIDs(
+            afterSetting: true,
+            for: .routeGroups,
+            currentHiddenIDs: hidden,
+            order: order
+        )
+
+        #expect(shown.contains(DiscoveryDashboardCardKind.routeGroups.id) == false)
+        #expect(DiscoveryDashboardCardKind.visibleCards(order: order, hiddenIDs: shown) == [.highlights, .routeGroups])
+        #expect(DiscoveryDashboardCardKind.visibleCards(order: order, hiddenIDs: Set(order.map(\.id))) == order)
+    }
+
+    @Test("Dashboard card movement clamps to valid order bounds")
+    func dashboardCardMovementClampsToValidOrderBounds() {
+        let order = DiscoveryDashboardCardKind.defaultOrder
+
+        #expect(DiscoveryDashboardCardKind.moved(.highlights, offset: -1, in: order) == order)
+        #expect(DiscoveryDashboardCardKind.moved(.highlights, offset: 1, in: order) == [.forYou, .highlights, .metrics, .routeGroups])
+        #expect(DiscoveryDashboardCardKind.moved(.routeGroups, offset: 10, in: order) == order)
+        #expect(DiscoveryDashboardCardKind.moved(.routeGroups, offset: -2, in: order) == [.highlights, .routeGroups, .forYou, .metrics])
+    }
+
     @Test("Novel dashboard exposes latest novel feed")
     func novelDashboardExposesLatestNovelFeed() throws {
         let novels = try #require(DiscoveryDashboardSection.all.first { $0.id == "novels" })
@@ -156,12 +200,20 @@ struct DiscoveryDashboardTests {
             encoding: .utf8
         )
 
-        let highlights = try #require(dashboard.range(of: "DiscoveryDashboardHighlightsSection(store: store, style: featureStyle)"))
-        let forYou = try #require(dashboard.range(of: "DiscoveryDashboardForYouSection(store: store, style: featureStyle)"))
-        let routeSections = try #require(dashboard.range(of: "ForEach(store.visibleDashboardSections)"))
+        let cards = try #require(dashboard.range(of: "ForEach(store.visibleDashboardCards)"))
+        let highlights = try #require(dashboard.range(of: "case .highlights:"))
+        let forYou = try #require(dashboard.range(of: "case .forYou:"))
+        let metrics = try #require(dashboard.range(of: "case .metrics:"))
+        let routeGroups = try #require(dashboard.range(of: "case .routeGroups:"))
 
+        #expect(cards.lowerBound < highlights.lowerBound)
         #expect(highlights.lowerBound < forYou.lowerBound)
-        #expect(forYou.lowerBound < routeSections.lowerBound)
+        #expect(forYou.lowerBound < metrics.lowerBound)
+        #expect(metrics.lowerBound < routeGroups.lowerBound)
+        #expect(dashboard.contains("DashboardCustomizationCardRow("))
+        #expect(dashboard.contains("Menu {"))
+        #expect(dashboard.contains("store.moveDashboardCard(card, offset: -1)"))
+        #expect(dashboard.contains("store.moveDashboardCard(card, offset: 1)"))
         #expect(dashboard.contains("MobileWorkspaceLayout(size: proxy.size, platform: ReaderPlatformKind.current)"))
         #expect(dashboard.contains("layout.usesCondensedChrome ? .compact : .full"))
         #expect(dashboard.contains("AccountIdentityMenuButton("))
@@ -179,7 +231,11 @@ struct DiscoveryDashboardTests {
         #expect(recommendationSections.contains("RadialGradient"))
         #expect(recommendationSections.contains("GlassEffectContainer(spacing: 12)"))
         #expect(iPadContent.contains("VisualQALaunchArgument.contains(.discoverDashboard)"))
+        #expect(iPadContent.contains("VisualQALaunchArgument.contains(.discoverDashboardCustomization)"))
         #expect(iPadContent.contains("store.presentDiscoverDashboardVisualQA()"))
+        #expect(iPadContent.contains("store.presentDiscoverDashboardVisualQA()\n                    hasAppliedMobileBottomTabLaunchTarget = true"))
+        #expect(dashboard.contains("VisualQALaunchArgument.contains(.discoverDashboardCustomization)"))
+        #expect(dashboard.contains("isCustomizationPresented = true"))
         #expect(visualQASampleData.contains("func presentDiscoverDashboardVisualQA()"))
         #expect(visualQASampleData.contains("selectedRoute = .home"))
         #expect(trendingStrip.contains("init(store: KeiPixStore, showsHeader: Bool = true)"))
@@ -187,6 +243,10 @@ struct DiscoveryDashboardTests {
         #expect(localizable.contains("\"value\": \"亮点\""))
         #expect(localizable.contains("\"For You\""))
         #expect(localizable.contains("\"value\": \"为你推荐\""))
+        #expect(localizable.contains("\"Dashboard Cards\""))
+        #expect(localizable.contains("\"Move Up\""))
+        #expect(localizable.contains("\"Move Down\""))
+        #expect(localizable.contains("\"Reorder\""))
     }
 
     private func packageRoot() throws -> URL {

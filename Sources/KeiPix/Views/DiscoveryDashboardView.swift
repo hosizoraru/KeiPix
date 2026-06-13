@@ -28,6 +28,14 @@ struct DiscoveryDashboardView: View {
             DashboardCustomizationSheet(store: store)
                 .os26SheetChrome(.form)
         }
+        #if DEBUG
+        .task {
+            if VisualQALaunchArgument.contains(.discoverDashboardCustomization) {
+                await Task.yield()
+                isCustomizationPresented = true
+            }
+        }
+        #endif
     }
 
     private var navigationSubtitle: String {
@@ -62,11 +70,8 @@ struct DiscoveryDashboardView: View {
                             header
                         }
 
-                        DiscoveryDashboardHighlightsSection(store: store, style: featureStyle)
-                        DiscoveryDashboardForYouSection(store: store, style: featureStyle)
-
-                        ForEach(store.visibleDashboardSections) { section in
-                            DiscoveryDashboardRouteSection(section: section, store: store, layout: routeLayout)
+                        ForEach(store.visibleDashboardCards) { card in
+                            dashboardCard(card, featureStyle: featureStyle, routeLayout: routeLayout)
                         }
                     }
                 }
@@ -140,6 +145,26 @@ struct DiscoveryDashboardView: View {
         VStack(alignment: .leading, spacing: 14) {
             DashboardMetricGroupCard(title: L10n.library, systemImage: "books.vertical", metrics: libraryMetrics)
             DashboardMetricGroupCard(title: L10n.creatorNetwork, systemImage: "person.2.crop.square.stack", metrics: creatorMetrics)
+        }
+    }
+
+    @ViewBuilder
+    private func dashboardCard(
+        _ card: DiscoveryDashboardCardKind,
+        featureStyle: DiscoveryDashboardFeatureSectionStyle,
+        routeLayout: DiscoveryDashboardRouteSectionLayout
+    ) -> some View {
+        switch card {
+        case .highlights:
+            DiscoveryDashboardHighlightsSection(store: store, style: featureStyle)
+        case .forYou:
+            DiscoveryDashboardForYouSection(store: store, style: featureStyle)
+        case .metrics:
+            companionOverview
+        case .routeGroups:
+            ForEach(store.visibleDashboardSections) { section in
+                DiscoveryDashboardRouteSection(section: section, store: store, layout: routeLayout)
+            }
         }
     }
 
@@ -675,6 +700,30 @@ private struct DashboardCustomizationSheet: View {
     var body: some View {
         NavigationStack {
             List {
+                Section(L10n.dashboardCards) {
+                    ForEach(store.dashboardCardOrder) { card in
+                        DashboardCustomizationCardRow(
+                            card: card,
+                            isVisible: Binding(
+                                get: { store.isDashboardCardVisible(card) },
+                                set: { store.setDashboardCardVisible($0, for: card) }
+                            ),
+                            canMoveUp: store.dashboardCardOrder.first != card,
+                            canMoveDown: store.dashboardCardOrder.last != card,
+                            moveUp: {
+                                withAnimation(.snappy(duration: 0.18)) {
+                                    store.moveDashboardCard(card, offset: -1)
+                                }
+                            },
+                            moveDown: {
+                                withAnimation(.snappy(duration: 0.18)) {
+                                    store.moveDashboardCard(card, offset: 1)
+                                }
+                            }
+                        )
+                    }
+                }
+
                 Section(L10n.dashboardSections) {
                     ForEach(DiscoveryDashboardSection.all) { section in
                         HStack {
@@ -710,11 +759,53 @@ private struct DashboardCustomizationSheet: View {
             .frame(minWidth: 360, minHeight: 400)
             #endif
             .navigationTitle(L10n.customizeDashboard)
+            .animation(.snappy(duration: 0.18), value: store.dashboardCardOrderID)
+            .animation(.snappy(duration: 0.18), value: store.hiddenDashboardCardIDs)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button(L10n.done) { dismiss() }
                 }
             }
+        }
+    }
+}
+
+private struct DashboardCustomizationCardRow: View {
+    let card: DiscoveryDashboardCardKind
+    @Binding var isVisible: Bool
+    let canMoveUp: Bool
+    let canMoveDown: Bool
+    let moveUp: () -> Void
+    let moveDown: () -> Void
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Label(card.title, systemImage: card.systemImage)
+                .lineLimit(1)
+
+            Spacer(minLength: 8)
+
+            Menu {
+                Button(action: moveUp) {
+                    Label(L10n.moveUp, systemImage: "chevron.up")
+                }
+                .disabled(canMoveUp == false)
+
+                Button(action: moveDown) {
+                    Label(L10n.moveDown, systemImage: "chevron.down")
+                }
+                .disabled(canMoveDown == false)
+            } label: {
+                Label(L10n.reorder, systemImage: "arrow.up.arrow.down")
+                    .labelStyle(.iconOnly)
+            }
+            .menuStyle(.button)
+            .help(L10n.reorder)
+            .accessibilityLabel(L10n.reorder)
+
+            Toggle("", isOn: $isVisible)
+                .labelsHidden()
+                .accessibilityLabel(card.title)
         }
     }
 }

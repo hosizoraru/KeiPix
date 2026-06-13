@@ -8,6 +8,7 @@ enum L10n {
     static var discover: String { text("Discovery") }
     static var discoveryHighlights: String { text("Discovery Highlights") }
     static var discoveryForYou: String { text("For You") }
+    static var discoveryMetrics: String { text("Discovery Metrics") }
     static var customizeDashboard: String { text("Customize Dashboard") }
     static var bottomTabs: String { text("Bottom Tabs", table: L10nTable.navigation) }
     static var bottomTabBehavior: String { text("Bottom Tab Behavior", table: L10nTable.navigation) }
@@ -24,8 +25,12 @@ enum L10n {
     static var selectedDestinations: String { text("Selected Destinations", table: L10nTable.navigation) }
     static var bottomTabSlotFormat: String { text("Slot %d", table: L10nTable.navigation) }
     static var resetBottomTabs: String { text("Reset Bottom Tabs", table: L10nTable.navigation) }
+    static var dashboardCards: String { text("Dashboard Cards") }
     static var dashboardSections: String { text("Dashboard Sections") }
     static var resetDashboardSections: String { text("Reset to Default") }
+    static var moveUp: String { text("Move Up") }
+    static var moveDown: String { text("Move Down") }
+    static var reorder: String { text("Reorder") }
     static var discoverDetailHint: String { text("Pick a Discover card to open a feed, creator list, ranking, or library view.") }
     static var explore: String { text("Explore") }
     static var works: String { text("Works") }
