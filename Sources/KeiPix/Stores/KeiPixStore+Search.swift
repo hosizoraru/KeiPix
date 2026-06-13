@@ -16,6 +16,10 @@ extension KeiPixStore {
             _ = await openPixivID(request.id, target: request.target)
             return
         }
+        if selectedRoute == .novelSearch {
+            await runNovelSearch()
+            return
+        }
         feedNarrowingContext = nil
         if selectedRoute == .searchUsers {
             searchSubmissionID += 1
@@ -24,6 +28,7 @@ extension KeiPixStore {
             isLoadingSearchPopularPreview = false
             return
         }
+        activateSearchOptionsProfile(.artworkProfile(for: searchArtworkType))
         focusedUser = nil
         bookmarkTagFilter = nil
         bookmarkFeedOptions = .defaultValue
@@ -33,6 +38,7 @@ extension KeiPixStore {
     }
 
     func runArtworkSearch() async {
+        activateSearchOptionsProfile(.artworkProfile(for: searchArtworkType))
         selectedRoute = .search
         await runSearch()
     }
@@ -46,6 +52,7 @@ extension KeiPixStore {
         Task { await refreshRemoteSearchOptionsIfNeeded() }
         searchSuggestions = []
         errorMessage = nil
+        activateSearchOptionsProfile(.novel)
         let keyword = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard keyword.isEmpty == false else { return }
         recordSearch(keyword)
@@ -147,17 +154,111 @@ extension KeiPixStore {
     }
 
     func resetSearchOptions() {
-        setSearchMatchType(.partialTags)
-        setSearchSort(.dateDescending)
-        setSearchAgeLimit(.unlimited)
-        setSearchDateRange(.anytime)
-        setSearchMinimumBookmarks(.unlimited)
-        setSearchMaximumBookmarks(.unlimited)
-        setSearchArtworkType(.all)
-        setSearchAIFilter(.all)
-        setSearchUgoiraFilter(.all)
-        setSearchNovelLanguageCode(nil)
-        setSearchNovelGenreID(nil)
-        setSearchNovelTextLength(.all)
+        applySearchOptions(.defaultValue.normalized(for: activeSearchOptionsProfile), remember: true)
+        applyContentFilters()
+    }
+
+    func applySearchOptionsPreset(_ options: SearchOptions) {
+        let profile = options.preferredProfileKind
+        if profile != activeSearchOptionsProfile {
+            activateSearchOptionsProfile(profile)
+        }
+        applySearchOptions(options.normalized(for: profile), remember: true)
+        applyContentFilters()
+    }
+
+    func activateSearchOptionsProfile(_ profile: SearchOptionsProfileKind) {
+        guard profile != activeSearchOptionsProfile else {
+            applySearchOptions(searchOptions.normalized(for: profile), remember: true)
+            applyContentFilters()
+            return
+        }
+
+        rememberCurrentSearchOptionsProfile()
+        activeSearchOptionsProfile = profile
+        UserDefaults.standard.set(profile.rawValue, forKey: SearchOptionsProfileKind.activeDefaultsKey)
+        let restoredOptions = (searchOptionsProfiles[profile] ?? SearchOptions.defaultValue).normalized(for: profile)
+        applySearchOptions(restoredOptions, remember: false)
+        searchOptionsProfiles[profile] = restoredOptions
+        persistSearchOptionsProfiles()
+        applyContentFilters()
+    }
+
+    func restoreInitialSearchOptionsProfile() {
+        if let storedOptions = searchOptionsProfiles[activeSearchOptionsProfile] {
+            applySearchOptions(storedOptions.normalized(for: activeSearchOptionsProfile), remember: false)
+        } else {
+            rememberCurrentSearchOptionsProfile()
+        }
+    }
+
+    func rememberCurrentSearchOptionsProfile() {
+        guard isApplyingSearchOptionsProfile == false else { return }
+        searchOptionsProfiles[activeSearchOptionsProfile] = searchOptions.normalized(for: activeSearchOptionsProfile)
+        persistSearchOptionsProfiles()
+    }
+
+    private func applySearchOptions(_ options: SearchOptions, remember: Bool) {
+        isApplyingSearchOptionsProfile = true
+        defer {
+            isApplyingSearchOptionsProfile = false
+            if remember {
+                rememberCurrentSearchOptionsProfile()
+            }
+        }
+
+        let normalized = options.normalized(for: activeSearchOptionsProfile)
+        searchMatchType = normalized.matchType
+        searchSort = normalized.sort
+        searchAgeLimit = normalized.ageLimit
+        searchDateRange = normalized.dateRange
+        searchMinimumBookmarks = normalized.minimumBookmarks
+        searchMaximumBookmarks = normalized.maximumBookmarks
+        searchArtworkType = normalized.artworkType
+        searchAIFilter = normalized.aiFilter
+        searchUgoiraFilter = normalized.ugoiraFilter
+        searchNovelLanguageCode = normalized.novelLanguageCode
+        searchNovelGenreID = normalized.novelGenreID
+        searchNovelTextLength = normalized.novelTextLength
+        persistCurrentSearchOptions()
+    }
+
+    private func persistCurrentSearchOptions() {
+        let defaults = UserDefaults.standard
+        defaults.set(searchMatchType.rawValue, forKey: "searchMatchType")
+        defaults.set(searchSort.rawValue, forKey: "searchSort")
+        defaults.set(searchAgeLimit.rawValue, forKey: "searchAgeLimit")
+        defaults.set(searchDateRange.rawValue, forKey: "searchDateRange")
+        defaults.set(searchMinimumBookmarks.value, forKey: "searchMinimumBookmarks")
+        defaults.set(searchMaximumBookmarks.value, forKey: "searchMaximumBookmarks")
+        defaults.set(searchArtworkType.rawValue, forKey: "searchArtworkType")
+        defaults.set(searchAIFilter.rawValue, forKey: "searchAIFilter")
+        defaults.set(searchUgoiraFilter.rawValue, forKey: "searchUgoiraFilter")
+        if let searchNovelLanguageCode {
+            defaults.set(searchNovelLanguageCode, forKey: "searchNovelLanguageCode")
+        } else {
+            defaults.removeObject(forKey: "searchNovelLanguageCode")
+        }
+        if let searchNovelGenreID {
+            defaults.set(searchNovelGenreID, forKey: "searchNovelGenreID")
+        } else {
+            defaults.removeObject(forKey: "searchNovelGenreID")
+        }
+        defaults.set(searchNovelTextLength.rawValue, forKey: "searchNovelTextLength")
+    }
+
+    private func persistSearchOptionsProfiles() {
+        guard let data = try? JSONEncoder().encode(searchOptionsProfiles) else { return }
+        UserDefaults.standard.set(data, forKey: SearchOptionsProfileKind.defaultsKey)
+    }
+
+    static func loadSearchOptionsProfiles(_ defaults: UserDefaults = .standard) -> [SearchOptionsProfileKind: SearchOptions] {
+        guard let data = defaults.data(forKey: SearchOptionsProfileKind.defaultsKey),
+              let profiles = try? JSONDecoder().decode([SearchOptionsProfileKind: SearchOptions].self, from: data) else {
+            return [:]
+        }
+        return profiles.reduce(into: [:]) { partialResult, item in
+            partialResult[item.key] = item.value.normalized(for: item.key)
+        }
     }
 }

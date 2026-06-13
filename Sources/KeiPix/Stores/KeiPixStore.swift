@@ -297,6 +297,11 @@ final class KeiPixStore {
         .flatMap { $0.isEmpty ? nil : $0 }
     var searchNovelGenreID = UserDefaults.standard.object(forKey: "searchNovelGenreID") as? Int
     var searchNovelTextLength = KeiPixStore.loadEnum("searchNovelTextLength", defaultValue: SearchNovelTextLength.all)
+    var activeSearchOptionsProfile = KeiPixStore.loadEnum(
+        SearchOptionsProfileKind.activeDefaultsKey,
+        defaultValue: SearchOptionsProfileKind.allArtworks
+    )
+    var searchOptionsProfiles = KeiPixStore.loadSearchOptionsProfiles()
     var imageSourceSearchEngine = KeiPixStore.loadEnum("imageSourceSearchEngine", defaultValue: ImageSourceSearchEngineKind.sauceNAO)
     var useRankingDate = UserDefaults.standard.object(forKey: "useRankingDate") as? Bool ?? false
     var rankingDate = KeiPixStore.loadRankingDate()
@@ -340,6 +345,7 @@ final class KeiPixStore {
     @ObservationIgnored private var hydratingCreatorTagArtworkIDs: Set<Int> = []
     @ObservationIgnored private var hydratedCreatorTagArtworkIDs: Set<Int> = []
     @ObservationIgnored private var failedCreatorTagArtworkIDs: Set<Int> = []
+    @ObservationIgnored var isApplyingSearchOptionsProfile = false
     @ObservationIgnored var creatorPreviewArtworkCache: [Int: [PixivArtwork]] = [:]
     @ObservationIgnored var creatorPreviewArtworkRequests: [Int: Task<[PixivArtwork], Error>] = [:]
     var mutedTags = Set(UserDefaults.standard.stringArray(forKey: "mutedTags") ?? [])
@@ -372,6 +378,8 @@ final class KeiPixStore {
                 self?.unregisterDownloadsFromSpotlight(artworkIDs: ids)
             }
         )
+
+        restoreInitialSearchOptionsProfile()
 
         // Hand the novel store the slices of state it needs to drive
         // its feed dispatcher. Closures keep the dependency one-way —

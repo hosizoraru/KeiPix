@@ -2,7 +2,7 @@ import Foundation
 import Testing
 @testable import KeiPix
 
-@Suite("Search options")
+@Suite("Search options", .serialized)
 struct SearchOptionsTests {
     @Test("Remote Pixiv search options decode artwork and novel metadata")
     func remotePixivSearchOptionsDecode() throws {
@@ -111,6 +111,99 @@ struct SearchOptionsTests {
         #expect(options.novelGenreID == nil)
         #expect(options.novelTextLength == .all)
         #expect(options.isDefault)
+    }
+
+    @Test("Search option profiles remember artwork, manga, and novel filters independently")
+    @MainActor
+    func searchOptionProfilesRememberKindsIndependently() {
+        SearchPreferenceTestScope.withIsolatedSearchDefaults {
+            let store = KeiPixStore(
+                downloads: SearchPreferenceTestScope.downloadStore(),
+                bootstrapsAutomatically: false
+            )
+
+            store.setSearchAgeLimit(.allAges)
+            store.setSearchAIFilter(.excludeAI)
+            store.setSearchUgoiraFilter(.noUgoira)
+
+            store.setSearchArtworkType(.manga)
+            #expect(store.searchArtworkType == .manga)
+            #expect(store.searchAgeLimit == .unlimited)
+            store.setSearchAgeLimit(.r18)
+            store.setSearchMinimumBookmarks(SearchBookmarkThreshold(value: 500))
+
+            store.activateSearchOptionsProfile(.novel)
+            #expect(store.searchArtworkType == .all)
+            #expect(store.searchAgeLimit == .unlimited)
+            #expect(store.searchMinimumBookmarks.isUnlimited)
+            store.setSearchNovelLanguageCode("ja")
+            store.setSearchNovelTextLength(.long)
+
+            store.activateSearchOptionsProfile(.manga)
+            #expect(store.searchArtworkType == .manga)
+            #expect(store.searchAgeLimit == .r18)
+            #expect(store.searchMinimumBookmarks.value == 500)
+            #expect(store.searchNovelLanguageCode == nil)
+
+            store.activateSearchOptionsProfile(.allArtworks)
+            #expect(store.searchArtworkType == .all)
+            #expect(store.searchAgeLimit == .allAges)
+            #expect(store.searchAIFilter == .excludeAI)
+            #expect(store.searchUgoiraFilter == .noUgoira)
+
+            store.activateSearchOptionsProfile(.novel)
+            #expect(store.searchArtworkType == .all)
+            #expect(store.searchNovelLanguageCode == "ja")
+            #expect(store.searchNovelTextLength == .long)
+        }
+    }
+
+    @Test("Search option profiles survive store reconstruction")
+    @MainActor
+    func searchOptionProfilesPersistAcrossStoreReconstruction() {
+        SearchPreferenceTestScope.withIsolatedSearchDefaults {
+            let firstStore = KeiPixStore(
+                downloads: SearchPreferenceTestScope.downloadStore(),
+                bootstrapsAutomatically: false
+            )
+            firstStore.setSearchArtworkType(.manga)
+            firstStore.setSearchSort(.dateAscending)
+            firstStore.setSearchMaximumBookmarks(SearchBookmarkThreshold(value: 1_000))
+            firstStore.activateSearchOptionsProfile(.novel)
+            firstStore.setSearchNovelGenreID(2)
+            firstStore.setSearchNovelTextLength(.long)
+
+            let secondStore = KeiPixStore(
+                downloads: SearchPreferenceTestScope.downloadStore(),
+                bootstrapsAutomatically: false
+            )
+
+            #expect(secondStore.activeSearchOptionsProfile == .novel)
+            #expect(secondStore.searchNovelGenreID == 2)
+            #expect(secondStore.searchNovelTextLength == .long)
+
+            secondStore.activateSearchOptionsProfile(.manga)
+            #expect(secondStore.searchArtworkType == .manga)
+            #expect(secondStore.searchSort == .dateAscending)
+            #expect(secondStore.searchMaximumBookmarks.value == 1_000)
+            #expect(secondStore.searchNovelGenreID == nil)
+            #expect(secondStore.searchNovelTextLength == .all)
+        }
+    }
+
+    @Test("Search option presets infer a profile from work type and novel-only filters")
+    func searchOptionPresetsInferProfileKind() {
+        var options = SearchOptions.defaultValue
+        #expect(options.preferredProfileKind == .allArtworks)
+
+        options.artworkType = .illustrations
+        #expect(options.preferredProfileKind == .illustrations)
+
+        options.artworkType = .manga
+        #expect(options.preferredProfileKind == .manga)
+
+        options.novelLanguageCode = "ja"
+        #expect(options.preferredProfileKind == .novel)
     }
 
     @Test("Saved search presets decode legacy raw-int bookmark thresholds")
@@ -329,5 +422,50 @@ struct SearchOptionsTests {
         #expect(bookmarkedCollectionsURL.absoluteString == "https://www.pixiv.net/users/41657557/bookmarks/collections")
         #expect(allCollectionsURL.absoluteString == "https://www.pixiv.net/collections")
         #expect(collectionURL.absoluteString == "https://www.pixiv.net/collections/49895345339794251171")
+    }
+}
+
+private enum SearchPreferenceTestScope {
+    private static let keys = [
+        SearchOptionsProfileKind.defaultsKey,
+        SearchOptionsProfileKind.activeDefaultsKey,
+        "searchMatchType",
+        "searchSort",
+        "searchAgeLimit",
+        "searchDateRange",
+        "searchMinimumBookmarks",
+        "searchMaximumBookmarks",
+        "searchArtworkType",
+        "searchAIFilter",
+        "searchUgoiraFilter",
+        "searchNovelLanguageCode",
+        "searchNovelGenreID",
+        "searchNovelTextLength"
+    ]
+
+    @MainActor
+    static func withIsolatedSearchDefaults(_ body: () -> Void) {
+        let defaults = UserDefaults.standard
+        let previousValues = Dictionary(uniqueKeysWithValues: keys.map { ($0, defaults.object(forKey: $0)) })
+        keys.forEach { defaults.removeObject(forKey: $0) }
+        defer {
+            keys.forEach { key in
+                if let value = previousValues[key] ?? nil {
+                    defaults.set(value, forKey: key)
+                } else {
+                    defaults.removeObject(forKey: key)
+                }
+            }
+        }
+        body()
+    }
+
+    @MainActor
+    static func downloadStore() -> ArtworkDownloadStore {
+        ArtworkDownloadStore(completionNotifier: DownloadCompletionNotifier(
+            center: FakeUserNotificationCenter(isAuthorized: false),
+            authorizationStore: InMemoryAuthorizationCacheStore(hasRequested: true),
+            coalesceWindowSeconds: 0.05
+        ))
     }
 }

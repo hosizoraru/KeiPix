@@ -252,47 +252,61 @@ extension KeiPixStore {
 
     func setSearchMatchType(_ value: SearchMatchType) {
         persistRaw("searchMatchType", value: value, to: \.searchMatchType)
+        rememberCurrentSearchOptionsProfile()
     }
 
     func setSearchSort(_ value: SearchSort) {
         persistRaw("searchSort", value: value, to: \.searchSort)
+        rememberCurrentSearchOptionsProfile()
     }
 
     func setSearchAgeLimit(_ value: SearchAgeLimit) {
         persistRaw("searchAgeLimit", value: value, to: \.searchAgeLimit)
+        rememberCurrentSearchOptionsProfile()
     }
 
     func setSearchDateRange(_ value: SearchDateRange) {
         persistRaw("searchDateRange", value: value, to: \.searchDateRange)
+        rememberCurrentSearchOptionsProfile()
     }
 
     func setSearchMinimumBookmarks(_ value: SearchBookmarkThreshold) {
         searchMinimumBookmarks = value
         UserDefaults.standard.set(value.value, forKey: "searchMinimumBookmarks")
+        rememberCurrentSearchOptionsProfile()
         applyContentFilters()
     }
 
     func setSearchMaximumBookmarks(_ value: SearchBookmarkThreshold) {
         searchMaximumBookmarks = value
         UserDefaults.standard.set(value.value, forKey: "searchMaximumBookmarks")
+        rememberCurrentSearchOptionsProfile()
         applyContentFilters()
     }
 
     func setSearchArtworkType(_ value: SearchArtworkType) {
+        let profile = SearchOptionsProfileKind.artworkProfile(for: value)
+        guard profile == activeSearchOptionsProfile else {
+            activateSearchOptionsProfile(profile)
+            return
+        }
         searchArtworkType = value
         UserDefaults.standard.set(value.rawValue, forKey: "searchArtworkType")
+        rememberCurrentSearchOptionsProfile()
         applyContentFilters()
     }
 
     func setSearchAIFilter(_ value: SearchAIFilter) {
         searchAIFilter = value
         UserDefaults.standard.set(value.rawValue, forKey: "searchAIFilter")
+        rememberCurrentSearchOptionsProfile()
         applyContentFilters()
     }
 
     func setSearchUgoiraFilter(_ value: SearchUgoiraFilter) {
         searchUgoiraFilter = value
         UserDefaults.standard.set(value.rawValue, forKey: "searchUgoiraFilter")
+        rememberCurrentSearchOptionsProfile()
         applyContentFilters()
     }
 
@@ -305,6 +319,7 @@ extension KeiPixStore {
             searchNovelLanguageCode = nil
             UserDefaults.standard.removeObject(forKey: "searchNovelLanguageCode")
         }
+        rememberCurrentSearchOptionsProfile()
         applyContentFilters()
     }
 
@@ -315,12 +330,14 @@ extension KeiPixStore {
         } else {
             UserDefaults.standard.removeObject(forKey: "searchNovelGenreID")
         }
+        rememberCurrentSearchOptionsProfile()
         applyContentFilters()
     }
 
     func setSearchNovelTextLength(_ value: SearchNovelTextLength) {
         searchNovelTextLength = value
         UserDefaults.standard.set(value.rawValue, forKey: "searchNovelTextLength")
+        rememberCurrentSearchOptionsProfile()
         applyContentFilters()
     }
 

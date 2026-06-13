@@ -525,6 +525,13 @@ struct SearchOptions: Codable, Hashable, Sendable {
         self == Self.defaultValue
     }
 
+    var preferredProfileKind: SearchOptionsProfileKind {
+        if novelLanguageCode != nil || novelGenreID != nil || novelTextLength != .all {
+            return .novel
+        }
+        return .artworkProfile(for: artworkType)
+    }
+
     var summary: String {
         let bookmarkSummary: String
         switch (minimumBookmarks.isUnlimited, maximumBookmarks.isUnlimited) {
@@ -561,6 +568,56 @@ struct SearchOptions: Codable, Hashable, Sendable {
             parts.append(novelTextLength.title)
         }
         return parts.joined(separator: " · ")
+    }
+}
+
+enum SearchOptionsProfileKind: String, CaseIterable, Identifiable, Codable, Sendable {
+    case allArtworks
+    case illustrations
+    case manga
+    case novel
+
+    var id: String { rawValue }
+
+    static let defaultsKey = "searchOptionsProfiles"
+    static let activeDefaultsKey = "activeSearchOptionsProfile"
+
+    static func artworkProfile(for artworkType: SearchArtworkType) -> SearchOptionsProfileKind {
+        switch artworkType {
+        case .all:
+            .allArtworks
+        case .illustrations:
+            .illustrations
+        case .manga:
+            .manga
+        }
+    }
+}
+
+extension SearchOptions {
+    func normalized(for profile: SearchOptionsProfileKind) -> SearchOptions {
+        var options = self
+        switch profile {
+        case .allArtworks:
+            options.artworkType = .all
+            options.clearNovelOnlyFilters()
+        case .illustrations:
+            options.artworkType = .illustrations
+            options.clearNovelOnlyFilters()
+        case .manga:
+            options.artworkType = .manga
+            options.clearNovelOnlyFilters()
+        case .novel:
+            options.artworkType = .all
+            options.ugoiraFilter = .all
+        }
+        return options
+    }
+
+    private mutating func clearNovelOnlyFilters() {
+        novelLanguageCode = nil
+        novelGenreID = nil
+        novelTextLength = .all
     }
 }
 

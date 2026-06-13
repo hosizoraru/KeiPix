@@ -129,7 +129,7 @@ extension KeiPixStore {
     func runSavedSearchPreset(_ preset: SavedSearchPreset) async {
         searchText = preset.keyword
         applySearchOptions(preset.options)
-        selectedRoute = .search
+        selectedRoute = activeSearchOptionsProfile == .novel ? .novelSearch : .search
         await runSearch()
     }
 
@@ -143,14 +143,6 @@ extension KeiPixStore {
     }
 
     private func applySearchOptions(_ options: SearchOptions) {
-        setSearchMatchType(options.matchType)
-        setSearchSort(options.sort)
-        setSearchAgeLimit(options.ageLimit)
-        setSearchDateRange(options.dateRange)
-        setSearchMinimumBookmarks(options.minimumBookmarks)
-        setSearchMaximumBookmarks(options.maximumBookmarks)
-        setSearchArtworkType(options.artworkType)
-        setSearchAIFilter(options.aiFilter)
-        setSearchUgoiraFilter(options.ugoiraFilter)
+        applySearchOptionsPreset(options)
     }
 }
