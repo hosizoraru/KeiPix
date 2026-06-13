@@ -408,7 +408,7 @@ enum L10n {
     static var downloadThroughputPerSecondFormat: String { text("%@/s") }
     static var downloadThroughputTotalFormat: String { text("Total %@") }
     static var downloadFinishedNotificationTitle: String { text("Download finished") }
-    static var downloadFinishedNotificationBodyFormat: String { text("%@") }
+    static var downloadFinishedNotificationBodyFormat: String { text("downloadFinishedNotificationBodyFormat") }
     static var downloadsFinishedNotificationTitle: String { text("Downloads finished") }
     static var downloadsFinishedNotificationBodyFormat: String { text("%d artworks finished downloading.") }
     static var notifyOnDownloadFinish: String { text("Notify when downloads finish") }
@@ -670,9 +670,9 @@ enum L10n {
     static var translating: String { text("Translating…") }
     static var translationFailed: String { text("Translation unavailable") }
     static var translationTargetLanguage: String { text("Translation Language") }
-    static var translationTargetLanguageHint: String { text("Choose the target language for inline translation. \"System\" follows your device language setting.") }
+    static var translationTargetLanguageHint: String { text("Translation Language Hint") }
     static var translationTargetSystem: String { text("System") }
-    static var translationProgressFormat: String { text("%d / %d paragraphs") }
+    static var translationProgressFormat: String { text("translationProgressFormat") }
     static var downloadSelectedPages: String { text("Save Selected Pages…") }
     static var selectPagesToSave: String { text("Select Pages to Save") }
     static var selectAllPages: String { text("Select All") }
@@ -1688,52 +1688,52 @@ enum L10n {
     static var intentArtworkParamDescription: String { text("A Pixiv artwork ID or URL.") }
     static var intentRefreshFeed: String { text("Refresh Current Feed") }
     static var intentRefreshFeedDescription: String { text("Reload the feed currently shown in KeiPix's main window.") }
-    static var intentNotPixivLink: String { text("That doesn't look like a Pixiv link.") }
-    static var intentNotReady: String { text("KeiPix isn't ready yet — open the app and try again.") }
-    static var intentNoArtworkIDFormat: String { text("Couldn't find an artwork id in that input.") }
-    static var intentOpenedArtworkFormat: String { text("Opened artwork %lld.") }
-    static var intentNotRunning: String { text("KeiPix isn't running.") }
-    static var intentRefreshed: String { text("Refreshed.") }
+    static var intentNotPixivLink: String { text("intentNotPixivLink") }
+    static var intentNotReady: String { text("intentNotReady") }
+    static var intentNoArtworkIDFormat: String { text("intentNoArtworkIDFormat") }
+    static var intentOpenedArtworkFormat: String { text("intentOpenedArtworkFormat") }
+    static var intentNotRunning: String { text("intentNotRunning") }
+    static var intentRefreshed: String { text("intentRefreshed") }
 
     // MARK: - Error descriptions
 
-    static var errorGitHubNonHTTP: String { text("GitHub returned a non-HTTP response while checking for updates.") }
-    static var errorGitHubHTTPFormat: String { text("GitHub returned HTTP %d while checking for updates.") }
-    static var errorGitHubJSONShape: String { text("GitHub's release JSON did not match the expected shape.") }
-    static var errorGitHubMalformedTagFormat: String { text("GitHub release tag %@ is not a recognised semantic version.") }
-    static var errorLoginRequired: String { text("Login is required.") }
-    static var errorLoginVerifierMissing: String { text("Login verifier is missing.") }
-    static var errorInvalidPixivResponse: String { text("Invalid Pixiv response.") }
-    static var errorHTTPFormat: String { text("HTTP %d: %@") }
-    static var errorEncodeSession: String { text("Unable to encode session.") }
-    static var errorDecodeSession: String { text("Unable to decode saved session.") }
+    static var errorGitHubNonHTTP: String { text("errorGitHubNonHTTP") }
+    static var errorGitHubHTTPFormat: String { text("errorGitHubHTTPFormat") }
+    static var errorGitHubJSONShape: String { text("errorGitHubJSONShape") }
+    static var errorGitHubMalformedTagFormat: String { text("errorGitHubMalformedTagFormat") }
+    static var errorLoginRequired: String { text("errorLoginRequired") }
+    static var errorLoginVerifierMissing: String { text("errorLoginVerifierMissing") }
+    static var errorInvalidPixivResponse: String { text("errorInvalidPixivResponse") }
+    static var errorHTTPFormat: String { text("errorHTTPFormat") }
+    static var errorEncodeSession: String { text("errorEncodeSession") }
+    static var errorDecodeSession: String { text("errorDecodeSession") }
 
     // MARK: - Keyboard key names
 
-    static var keyLeftArrow: String { text("Left Arrow") }
-    static var keyRightArrow: String { text("Right Arrow") }
-    static var keyUpArrow: String { text("Up Arrow") }
-    static var keyDownArrow: String { text("Down Arrow") }
-    static var keyEscape: String { text("Escape") }
-    static var keySpace: String { text("Space") }
-    static var keyReturn: String { text("Return") }
+    static var keyLeftArrow: String { text("keyLeftArrow") }
+    static var keyRightArrow: String { text("keyRightArrow") }
+    static var keyUpArrow: String { text("keyUpArrow") }
+    static var keyDownArrow: String { text("keyDownArrow") }
+    static var keyEscape: String { text("keyEscape") }
+    static var keySpace: String { text("keySpace") }
+    static var keyReturn: String { text("keyReturn") }
 
     // MARK: - Web link labels
 
-    static var linkUserPrefixFormat: String { text("User #%lld") }
+    static var linkUserPrefixFormat: String { text("linkUserPrefixFormat") }
     static var linkCollectionPrefixFormat: String { text("Collection %@") }
-    static var linkPixivisionPrefixFormat: String { text("Pixivision #%lld") }
+    static var linkPixivisionPrefixFormat: String { text("linkPixivisionPrefixFormat") }
 
     // MARK: - Format / unit strings
 
     static func downloadProgressFormat(_ completed: Int, _ total: Int) -> String {
-        String(format: text("%d / %d"), locale: Locale.current, completed, total)
+        String(format: text("downloadProgressFormat"), locale: Locale.current, completed, total)
     }
-    static var ugoiraNoFrames: String { text("\u{2014}") }
+    static var ugoiraNoFrames: String { text("ugoiraNoFrames") }
     static func ugoiraPositionFormat(_ current: Int, _ total: Int, _ duration: String) -> String {
-        String(format: text("%d / %d \u{00B7} %@"), locale: Locale.current, current, total, duration)
+        String(format: text("ugoiraPositionFormat"), locale: Locale.current, current, total, duration)
     }
-    static var millisecondsUnit: String { text("ms") }
+    static var millisecondsUnit: String { text("millisecondsUnit") }
 
     static func pageStatus(_ page: Int, _ count: Int) -> String {
         String(format: text("Page %d of %d"), locale: Locale.current, page, count)

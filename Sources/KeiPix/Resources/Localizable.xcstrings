@@ -30,35 +30,6 @@
         }
       }
     },
-    "%d active filters": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%d active filters"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%d 件のフィルター"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%d 个筛选"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%d 個篩選"
-          }
-        }
-      }
-    },
     "%d works": {
       "extractionState": "manual",
       "localizations": {
@@ -3041,7 +3012,7 @@
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "在作品簡介與留言中保留 Apple 系統翻譯面板入口，並跳過空文本與纯表情。"
+            "value": "在作品簡介與留言中保留 Apple 系統翻譯面板入口，並跳過空白文本與純表情。"
           }
         }
       }
@@ -4665,7 +4636,7 @@
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "CaptionTranslationAvailability 接受 Pixiv 簡介格式並拒绝纯表情短文本。"
+            "value": "CaptionTranslationAvailability 接受 Pixiv 簡介格式並拒絕純表情短文本。"
           }
         }
       }
@@ -14989,7 +14960,7 @@
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "在回歸覆盖中保留可翻譯文本的門控，避免出現無意義的翻譯按钮。"
+            "value": "在回歸覆蓋中保留可翻譯文本的門控，避免出現無意義的翻譯按鈕。"
           }
         }
       }
@@ -22326,7 +22297,7 @@
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "為该文本開啟系統翻譯面板，可選擇目標語言、複製譯文，或切換回原文。"
+            "value": "為該文本開啟系統翻譯面板，可選擇目標語言、複製譯文，或切換回原文。"
           }
         }
       }
@@ -28160,6 +28131,35 @@
         }
       }
     },
+    "Replace original text with translation": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Replace original text with translation"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "原文を翻訳文に置き換える"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "用译文替换原文"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "用譯文取代原文"
+          }
+        }
+      }
+    },
     "Reset": {
       "extractionState": "manual",
       "localizations": {
@@ -32100,6 +32100,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "顯示標籤翻譯名"
+          }
+        }
+      }
+    },
+    "Show original and translated text together": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show original and translated text together"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "原文と翻訳文を一緒に表示"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "同时显示原文和译文"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "同時顯示原文和譯文"
           }
         }
       }
@@ -41888,29 +41917,6 @@
         }
       }
     },
-    "Translating…": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "翻译中…"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "翻譯中…"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "翻訳中…"
-          }
-        }
-      }
-    },
     "Two Cards": {
       "extractionState": "manual",
       "localizations": {
@@ -42532,9 +42538,537 @@
         }
       }
     },
+    "A Pixiv URL or artwork ID.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A Pixiv URL or artwork ID."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pixiv URLまたは作品ID。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pixiv URL 或作品 ID。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pixiv URL 或作品 ID。"
+          }
+        }
+      }
+    },
+    "A Pixiv artwork ID or URL.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A Pixiv artwork ID or URL."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pixiv作品IDまたはURL。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pixiv 作品 ID 或 URL。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pixiv 作品 ID 或 URL。"
+          }
+        }
+      }
+    },
+    "Disable": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disable"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "無効にする"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "停用"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "停用"
+          }
+        }
+      }
+    },
+    "Enable": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enable"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "有効にする"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "启用"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "啟用"
+          }
+        }
+      }
+    },
+    "Link": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Link"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "リンク"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "链接"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "連結"
+          }
+        }
+      }
+    },
+    "Open Artwork": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Artwork"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "作品を開く"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "打开作品"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "開啟作品"
+          }
+        }
+      }
+    },
+    "Open Artwork in Reader": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Artwork in Reader"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "リーダーで作品を開く"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在阅读器中打开作品"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在閱讀器中開啟作品"
+          }
+        }
+      }
+    },
+    "Open Pixiv Link": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Pixiv Link"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pixivリンクを開く"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "打开 Pixiv 链接"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "開啟 Pixiv 連結"
+          }
+        }
+      }
+    },
+    "Open a Pixiv URL or artwork ID in KeiPix.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open a Pixiv URL or artwork ID in KeiPix."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "KeiPixでPixiv URLまたは作品IDを開きます。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在 KeiPix 中打开 Pixiv URL 或作品 ID。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在 KeiPix 中開啟 Pixiv URL 或作品 ID。"
+          }
+        }
+      }
+    },
+    "Open a Pixiv artwork in its own reader window.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open a Pixiv artwork in its own reader window."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pixiv作品を専用のリーダーウィンドウで開きます。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在独立阅读器窗口中打开 Pixiv 作品。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在獨立閱讀器視窗中開啟 Pixiv 作品。"
+          }
+        }
+      }
+    },
+    "Refresh Feed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refresh Feed"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "フィードを更新"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "刷新信息流"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重新整理資訊流"
+          }
+        }
+      }
+    },
+    "Refresh Current Feed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refresh Current Feed"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "現在のフィードを更新"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "刷新当前信息流"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重新整理目前資訊流"
+          }
+        }
+      }
+    },
+    "Reload the feed currently shown in KeiPix's main window.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reload the feed currently shown in KeiPix's main window."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "KeiPixのメインウィンドウに表示中のフィードを再読み込みします。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重新加载 KeiPix 主窗口中当前显示的信息流。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重新載入 KeiPix 主視窗中目前顯示的資訊流。"
+          }
+        }
+      }
+    },
+    "Save to Photos": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save to Photos"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "写真に保存"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保存到照片"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "儲存到照片"
+          }
+        }
+      }
+    },
+    "Save to Photos failed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save to Photos failed"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "写真への保存に失敗しました"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保存到照片失败"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "儲存到照片失敗"
+          }
+        }
+      }
+    },
+    "Saved to Photos": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved to Photos"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "写真に保存しました"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已保存到照片"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已儲存到照片"
+          }
+        }
+      }
+    },
+    "downloadFinishedNotificationBodyFormat": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@"
+          }
+        }
+      }
+    },
+    "translationProgressFormat": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d / %d paragraphs"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d / %d 段落"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d / %d 段落"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d / %d 段落"
+          }
+        }
+      }
+    },
     "intentNotPixivLink": {
       "extractionState": "manual",
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "That doesn't look like a Pixiv link."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -42558,6 +43092,12 @@
     "intentNotReady": {
       "extractionState": "manual",
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "KeiPix isn't ready yet — open the app and try again."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -42581,6 +43121,12 @@
     "intentNoArtworkIDFormat": {
       "extractionState": "manual",
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't find an artwork id in that input."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -42604,6 +43150,12 @@
     "intentOpenedArtworkFormat": {
       "extractionState": "manual",
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opened artwork %lld."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -42627,6 +43179,12 @@
     "intentNotRunning": {
       "extractionState": "manual",
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "KeiPix isn't running."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -42650,6 +43208,12 @@
     "intentRefreshed": {
       "extractionState": "manual",
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refreshed."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -42673,6 +43237,12 @@
     "errorGitHubNonHTTP": {
       "extractionState": "manual",
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GitHub returned a non-HTTP response while checking for updates."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -42696,6 +43266,12 @@
     "errorGitHubHTTPFormat": {
       "extractionState": "manual",
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GitHub returned HTTP %d while checking for updates."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -42719,6 +43295,12 @@
     "errorGitHubJSONShape": {
       "extractionState": "manual",
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GitHub's release JSON did not match the expected shape."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -42742,6 +43324,12 @@
     "errorGitHubMalformedTagFormat": {
       "extractionState": "manual",
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GitHub release tag %@ is not a recognised semantic version."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -42765,6 +43353,12 @@
     "errorLoginRequired": {
       "extractionState": "manual",
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Login is required."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -42788,6 +43382,12 @@
     "errorLoginVerifierMissing": {
       "extractionState": "manual",
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Login verifier is missing."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -42811,6 +43411,12 @@
     "errorInvalidPixivResponse": {
       "extractionState": "manual",
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invalid Pixiv response."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -42834,6 +43440,12 @@
     "errorHTTPFormat": {
       "extractionState": "manual",
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "HTTP %d: %@"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -42857,6 +43469,12 @@
     "errorEncodeSession": {
       "extractionState": "manual",
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unable to encode session."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -42880,6 +43498,12 @@
     "errorDecodeSession": {
       "extractionState": "manual",
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unable to decode saved session."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -42903,6 +43527,12 @@
     "keyLeftArrow": {
       "extractionState": "manual",
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Left Arrow"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -42926,6 +43556,12 @@
     "keyRightArrow": {
       "extractionState": "manual",
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Right Arrow"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -42949,6 +43585,12 @@
     "keyUpArrow": {
       "extractionState": "manual",
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Up Arrow"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -42972,6 +43614,12 @@
     "keyDownArrow": {
       "extractionState": "manual",
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Down Arrow"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -42995,6 +43643,12 @@
     "keyEscape": {
       "extractionState": "manual",
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Escape"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -43018,6 +43672,12 @@
     "keySpace": {
       "extractionState": "manual",
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Space"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -43041,6 +43701,12 @@
     "keyReturn": {
       "extractionState": "manual",
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Return"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -43064,6 +43730,12 @@
     "linkUserPrefixFormat": {
       "extractionState": "manual",
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "User #%lld"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -43087,6 +43759,12 @@
     "linkPixivisionPrefixFormat": {
       "extractionState": "manual",
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pixivision #%lld"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -43110,6 +43788,12 @@
     "downloadProgressFormat": {
       "extractionState": "manual",
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d / %d"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -43133,6 +43817,12 @@
     "ugoiraNoFrames": {
       "extractionState": "manual",
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "—"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -43156,6 +43846,12 @@
     "ugoiraPositionFormat": {
       "extractionState": "manual",
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d / %d · %@"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -43179,6 +43875,12 @@
     "millisecondsUnit": {
       "extractionState": "manual",
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ms"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",

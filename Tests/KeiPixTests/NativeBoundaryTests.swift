@@ -1960,6 +1960,106 @@ struct NativeBoundaryTests {
         #expect(commentEmoji.contains(".buttonStyle(.plain)"))
     }
 
+    @Test("Translation UI strings stay catalog-backed")
+    func translationUIStringsStayCatalogBacked() throws {
+        let root = try packageRoot()
+        let l10n = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Support/L10n.swift"),
+            encoding: .utf8
+        )
+        let localizable = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Resources/Localizable.xcstrings"),
+            encoding: .utf8
+        )
+
+        #expect(l10n.contains(#"translationTargetLanguageHint: String { text("Translation Language Hint") }"#))
+        #expect(localizable.contains(#""Show original and translated text together""#))
+        #expect(localizable.contains(#""Replace original text with translation""#))
+        #expect(localizable.components(separatedBy: #"    "Translating…": {"#).count == 2)
+        #expect(localizable.contains("純表情"))
+        #expect(localizable.contains("純表情短文本"))
+        #expect(localizable.contains("翻譯按鈕"))
+        #expect(localizable.contains("為該文本"))
+    }
+
+    @Test("L10n text keys stay backed by string catalogs")
+    func l10nTextKeysStayBackedByStringCatalogs() throws {
+        let root = try packageRoot()
+        let l10n = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Support/L10n.swift"),
+            encoding: .utf8
+        )
+        let catalogKeys = try [
+            "localizable": stringCatalogKeys(
+                at: root.appending(path: "Sources/KeiPix/Resources/Localizable.xcstrings")
+            ),
+            "navigation": stringCatalogKeys(
+                at: root.appending(path: "Sources/KeiPix/Resources/Navigation.xcstrings")
+            )
+        ]
+        let regex = try NSRegularExpression(
+            pattern: #"text\("((?:[^"\\]|\\.)*)"(?:,\s*table:\s*L10nTable\.([A-Za-z0-9_]+))?\)"#
+        )
+        let matches = regex.matches(in: l10n, range: NSRange(l10n.startIndex..., in: l10n))
+        var missing: [String] = []
+
+        for match in matches {
+            guard let keyRange = Range(match.range(at: 1), in: l10n) else { continue }
+            let key = try decodeSwiftStringLiteralBody(String(l10n[keyRange]))
+            let table: String
+            if let tableRange = Range(match.range(at: 2), in: l10n) {
+                table = String(l10n[tableRange])
+            } else {
+                table = "localizable"
+            }
+
+            if catalogKeys[table]?.contains(key) != true {
+                missing.append("\(table): \(key)")
+            }
+        }
+
+        let missingDescription = missing.joined(separator: "\n")
+        #expect(missingDescription.isEmpty)
+    }
+
+    @Test("App Intent metadata strings stay catalog-backed")
+    func appIntentMetadataStringsStayCatalogBacked() throws {
+        let root = try packageRoot()
+        let localizableKeys = try stringCatalogKeys(
+            at: root.appending(path: "Sources/KeiPix/Resources/Localizable.xcstrings")
+        )
+        let sourceFiles = [
+            root.appending(path: "Sources/KeiPix/Intents/KeiPixIntents.swift"),
+            root.appending(path: "Sources/KeiPix/Intents/KeiPixShortcuts.swift")
+        ]
+        let patterns = [
+            #"LocalizedStringResource\s*=\s*"((?:[^"\\]|\\.)*)""#,
+            #"IntentDescription\(\s*"((?:[^"\\]|\\.)*)""#,
+            #"\btitle:\s*"((?:[^"\\]|\\.)*)""#,
+            #"\bdescription:\s*"((?:[^"\\]|\\.)*)""#,
+            #"shortTitle:\s*"((?:[^"\\]|\\.)*)""#
+        ]
+        let regexes = try patterns.map { try NSRegularExpression(pattern: $0) }
+        var missing: [String] = []
+
+        for file in sourceFiles {
+            let source = try String(contentsOf: file, encoding: .utf8)
+            for regex in regexes {
+                let matches = regex.matches(in: source, range: NSRange(source.startIndex..., in: source))
+                for match in matches {
+                    guard let keyRange = Range(match.range(at: 1), in: source) else { continue }
+                    let key = try decodeSwiftStringLiteralBody(String(source[keyRange]))
+                    if localizableKeys.contains(key) == false {
+                        missing.append("\(file.lastPathComponent): \(key)")
+                    }
+                }
+            }
+        }
+
+        let missingDescription = missing.joined(separator: "\n")
+        #expect(missingDescription.isEmpty)
+    }
+
     @Test("macOS feed keeps sidebar manual and lifts artwork navigation")
     func macOSFeedKeepsSidebarManualAndLiftsArtworkNavigation() throws {
         let root = try packageRoot()
@@ -4155,6 +4255,37 @@ struct NativeBoundaryTests {
             let values = try url.resourceValues(forKeys: [.isRegularFileKey])
             return values.isRegularFile == true ? url : nil
         }
+    }
+
+    private func stringCatalogKeys(at url: URL) throws -> Set<String> {
+        let data = try Data(contentsOf: url)
+        guard
+            let root = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+            let strings = root["strings"] as? [String: Any]
+        else {
+            return []
+        }
+        return Set(strings.keys)
+    }
+
+    private func decodeSwiftStringLiteralBody(_ body: String) throws -> String {
+        let unicodeRegex = try NSRegularExpression(pattern: #"\\u\{([0-9A-Fa-f]+)\}"#)
+        let expanded = NSMutableString(string: body)
+        let range = NSRange(location: 0, length: expanded.length)
+
+        for match in unicodeRegex.matches(in: body, range: range).reversed() {
+            guard
+                let scalarRange = Range(match.range(at: 1), in: body),
+                let scalarValue = UInt32(body[scalarRange], radix: 16),
+                let scalar = UnicodeScalar(scalarValue)
+            else {
+                continue
+            }
+            expanded.replaceCharacters(in: match.range, with: String(scalar))
+        }
+
+        let jsonLiteral = "\"\(expanded)\""
+        return try JSONDecoder().decode(String.self, from: Data(jsonLiteral.utf8))
     }
 }
 
