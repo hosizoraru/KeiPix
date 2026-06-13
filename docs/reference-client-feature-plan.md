@@ -61,6 +61,7 @@ navigation, and lightweight surfaces.
 | 8 | Network diagnostics | Completed host-by-host Pixiv reachability diagnostics with selected proxy summaries. | Deterministic diagnostics tests, platform builds, and Runtime Readiness screenshot. |
 | 9 | Search filter memory | Completed first slice of per-kind option memory for all artwork, illustrations, manga, and novel search profiles. | SearchOptions profile tests, search regression tests, and platform builds. |
 | 10 | Download templates | Completed first editor slice: documented token catalog plus compact insertion menu in Downloads settings. | Download naming template tests, settings native-boundary test, string catalog validation, platform builds, and settings Visual QA when the settings surface is reviewed. |
+| 11 | Work subscriptions | Extend creator work subscriptions from illustration-only checks to illustration, manga, and novel update buckets while preserving existing saved state. | WorkSubscription migration/bucket tests, native boundary checks, and platform builds. |
 
 ## Current Slice
 
@@ -78,6 +79,7 @@ navigation, and lightweight surfaces.
 | Network diagnostics | Done | Runtime diagnostics now include safe `HEAD` probes for Pixiv App API, OAuth, Web, and image CDN hosts, with current app proxy mode in each result. |
 | Search filter memory | Done for first Store/model slice | Search filters now persist per profile and switch cleanly among all artwork, illustrations, manga, and novels. Saved search presets reuse the same profile restoration path. |
 | Download templates | Done for token insertion slice | Download templates now expose the renderer-backed token catalog through a compact insertion menu in Downloads settings, while preserving the freeform native text field, unknown-token warning, and live previews. |
+| Work subscriptions | Done for bucketed update checks | Subscription state now tracks illustration, manga, and novel buckets independently, migrates legacy artwork-only JSON into the illustration bucket, and uses total new-work counts in the existing native grid. |
 | Apple docs checkpoints | In progress | Keep UIKit/AppKit diffable data-source and native sheet/menu guidance in mind for the upcoming UI phase. |
 
 ## Apple Documentation Checkpoints

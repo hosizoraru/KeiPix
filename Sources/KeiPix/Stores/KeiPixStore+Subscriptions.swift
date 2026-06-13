@@ -48,25 +48,24 @@ extension KeiPixStore {
         var hasChanges = false
 
         for index in workSubscriptions.indices {
-            let sub = workSubscriptions[index]
-            do {
-                let response = try await api.userIllusts(userID: sub.creatorID, type: "illust")
-                let artworkIDs = response.illusts.map(\.id)
-                let newIDs = artworkIDs.filter { sub.lastSeenArtworkIDs.contains($0) == false }
+            var subscription = workSubscriptions[index]
+            var didCheckAnyBucket = false
 
-                if sub.lastSeenArtworkIDs.isEmpty {
-                    // First check — just record the IDs, don't count as new
-                    workSubscriptions[index].lastSeenArtworkIDs = artworkIDs
-                } else if newIDs.isEmpty == false {
-                    workSubscriptions[index].lastSeenArtworkIDs = artworkIDs
-                    workSubscriptions[index].newArtworkCount += newIDs.count
-                    hasChanges = true
+            for kind in WorkSubscriptionContentKind.allCases {
+                do {
+                    let workIDs = try await subscriptionWorkIDs(for: kind, userID: subscription.creatorID)
+                    _ = subscription.recordSeenWorkIDs(workIDs, for: kind)
+                    didCheckAnyBucket = true
+                } catch {
+                    // Keep other buckets updating when one endpoint is temporarily unavailable.
+                    continue
                 }
+            }
 
-                workSubscriptions[index].lastCheckedAt = Date()
-            } catch {
-                // Skip failed checks silently
-                continue
+            if didCheckAnyBucket {
+                subscription.lastCheckedAt = Date()
+                workSubscriptions[index] = subscription
+                hasChanges = true
             }
         }
 
@@ -77,7 +76,7 @@ extension KeiPixStore {
 
     func clearSubscriptionNewCount(for subscription: WorkSubscription) {
         guard let index = workSubscriptions.firstIndex(where: { $0.id == subscription.id }) else { return }
-        workSubscriptions[index].newArtworkCount = 0
+        workSubscriptions[index].clearNewWorkCounts()
         saveSubscriptions()
     }
 
@@ -88,6 +87,23 @@ extension KeiPixStore {
         return workSubscriptions.filter {
             $0.creatorName.lowercased().contains(lower)
             || $0.creatorAccount.lowercased().contains(lower)
+        }
+    }
+
+    private func subscriptionWorkIDs(
+        for kind: WorkSubscriptionContentKind,
+        userID: Int
+    ) async throws -> [Int] {
+        switch kind {
+        case .illustrations:
+            let response = try await api.userIllusts(userID: userID, type: "illust")
+            return response.illusts.map(\.id)
+        case .manga:
+            let response = try await api.userIllusts(userID: userID, type: "manga")
+            return response.illusts.map(\.id)
+        case .novels:
+            let response = try await api.userNovels(userID: userID)
+            return response.novels.map(\.id)
         }
     }
 }

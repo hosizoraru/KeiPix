@@ -157,7 +157,7 @@ struct WorkSubscriptionsView: View {
     private var subtitle: String {
         guard store.session != nil else { return "" }
         let count = filteredSubscriptions.count
-        let newCount = filteredSubscriptions.reduce(0) { $0 + $1.newArtworkCount }
+        let newCount = filteredSubscriptions.reduce(0) { $0 + $1.totalNewWorkCount }
         var parts = [count.formatted()]
         if newCount > 0 {
             parts.append("\(newCount) \(L10n.workSubscriptionsNewWorks)")
@@ -173,7 +173,7 @@ struct WorkSubscriptionsView: View {
         defer { isChecking = false }
 
         await store.checkSubscriptionsForUpdates()
-        let newCount = store.workSubscriptions.reduce(0) { $0 + $1.newArtworkCount }
+        let newCount = store.workSubscriptions.reduce(0) { $0 + $1.totalNewWorkCount }
         if showFeedback, newCount > 0 {
             actionMessage = "\(newCount) \(L10n.workSubscriptionsNewWorks)"
         }
@@ -211,8 +211,8 @@ private struct SubscriptionCard: View {
                             .font(.callout.weight(.semibold))
                             .lineLimit(1)
 
-                        if subscription.newArtworkCount > 0 {
-                            Text("\(subscription.newArtworkCount)")
+                        if subscription.totalNewWorkCount > 0 {
+                            Text("\(subscription.totalNewWorkCount)")
                                 .font(.caption2.weight(.bold))
                                 .padding(.horizontal, 6)
                                 .padding(.vertical, 2)

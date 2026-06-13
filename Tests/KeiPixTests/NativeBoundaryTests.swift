@@ -3429,10 +3429,28 @@ struct NativeBoundaryTests {
         #expect(subscriptions.contains(".platformPageHeader(\n            title: L10n.workSubscriptions") && subscriptions.contains("subscriptionTitleActions"))
         #expect(subscriptions.contains(".task(id: store.routeRefreshGeneration)"))
         #expect(subscriptions.contains("await checkForUpdates(showFeedback: false)"))
+        #expect(subscriptions.contains("totalNewWorkCount"))
+        #expect(subscriptions.contains("newArtworkCount") == false)
         #expect(subscriptions.contains("L10n.workSubscriptionsCheckNow") == false)
         #expect(subscriptions.contains("systemImage: isChecking ? \"arrow.triangle.2.circlepath\" : \"arrow.clockwise\"") == false)
         #expect(subscriptions.contains("LazyVGrid") == false)
         #expect(subscriptions.contains("ScrollView {") == false)
+    }
+
+    @Test("Work subscription checks cover illustration manga and novel buckets")
+    func workSubscriptionChecksCoverAllContentKinds() throws {
+        let root = try packageRoot()
+        let subscriptionsStore = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Stores/KeiPixStore+Subscriptions.swift"),
+            encoding: .utf8
+        )
+
+        #expect(subscriptionsStore.contains("WorkSubscriptionContentKind.allCases"))
+        #expect(subscriptionsStore.contains("recordSeenWorkIDs(workIDs, for: kind)"))
+        #expect(subscriptionsStore.contains("api.userIllusts(userID: userID, type: \"illust\")"))
+        #expect(subscriptionsStore.contains("api.userIllusts(userID: userID, type: \"manga\")"))
+        #expect(subscriptionsStore.contains("api.userNovels(userID: userID)"))
+        #expect(subscriptionsStore.contains("clearNewWorkCounts()"))
     }
 
     @Test("Route refresh owns compact page refresh chrome")
