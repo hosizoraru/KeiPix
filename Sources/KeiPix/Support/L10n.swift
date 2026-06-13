@@ -465,6 +465,8 @@ enum L10n {
     static var savedPixivisionArticles: String { text("Saved Pixivision") }
     static var myPixivCollections: String { text("My Pixiv Collections") }
     static var myPixivUsers: String { text("MyPixiv") }
+    static var myPixivIllustrations: String { text("MyPixiv Illustrations") }
+    static var myPixivNovels: String { text("MyPixiv Novels") }
     static var savedPixivCollections: String { text("Saved Pixiv Collections") }
     static var pixivCollection: String { text("Pixiv Collection") }
     static var noPixivCollections: String { text("No Pixiv collections") }

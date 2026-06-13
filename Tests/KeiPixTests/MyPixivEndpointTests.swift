@@ -66,4 +66,14 @@ struct MyPixivEndpointTests {
         #expect(mode.title.contains(L10n.myPixivUsers))
         #expect(mode.usesRestrictPicker == false)
     }
+
+    @Test("MyPixiv feed routes keep artwork and novel ownership separate")
+    func myPixivFeedRoutesUseCorrectFeedOwners() {
+        #expect(PixivRoute.userMyPixivIllusts.title == L10n.myPixivIllustrations)
+        #expect(PixivRoute.userMyPixivIllusts.usesArtworkFeed)
+        #expect(PixivRoute.userMyPixivIllusts.usesNovelFeed == false)
+        #expect(PixivRoute.userMyPixivNovels.title == L10n.myPixivNovels)
+        #expect(PixivRoute.userMyPixivNovels.usesNovelFeed)
+        #expect(PixivRoute.userMyPixivNovels.usesArtworkFeed == false)
+    }
 }

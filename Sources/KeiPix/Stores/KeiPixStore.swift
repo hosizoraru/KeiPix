@@ -758,7 +758,7 @@ final class KeiPixStore {
             .mangaRecommended
         case .userPublicBookmarks:
             .publicBookmarks
-        case .userNovels, .userNovelBookmarks:
+        case .userNovels, .userMyPixivNovels, .userNovelBookmarks:
             .novelRecommended
         default:
             .illustrations
@@ -954,6 +954,9 @@ final class KeiPixStore {
         case .userManga:
             guard let focusedUser else { throw PixivAPIError.invalidResponse }
             return try await api.userIllusts(userID: focusedUser.id, type: "manga")
+        case .userMyPixivIllusts:
+            guard let focusedUser else { throw PixivAPIError.invalidResponse }
+            return try await api.myPixivIllusts(userID: focusedUser.id)
         case .userPublicBookmarks:
             guard let focusedUser else { throw PixivAPIError.invalidResponse }
             return try await api.bookmarks(restrict: "public", userID: "\(focusedUser.id)")

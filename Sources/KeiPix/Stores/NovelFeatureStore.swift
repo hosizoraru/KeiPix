@@ -296,6 +296,9 @@ final class NovelFeatureStore {
         case .userNovels:
             guard let userID = focusedUserID() else { return .empty }
             return try await api.userNovels(userID: userID)
+        case .userMyPixivNovels:
+            guard let userID = focusedUserID() else { return .empty }
+            return try await api.myPixivNovels(userID: userID)
         case .userNovelBookmarks:
             guard let userID = focusedUserID() else { return .empty }
             return try await api.userNovelBookmarks(userID: "\(userID)", restrict: "public")

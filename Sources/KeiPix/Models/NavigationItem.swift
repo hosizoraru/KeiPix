@@ -133,6 +133,7 @@ enum PixivRoute: String, CaseIterable, Identifiable, Codable {
     case savedSearches
     case userIllustrations
     case userManga
+    case userMyPixivIllusts
     case userPublicBookmarks
     case rankingDaily
     case rankingWeekly
@@ -189,6 +190,7 @@ enum PixivRoute: String, CaseIterable, Identifiable, Codable {
     case novelRankingWeeklyR18AI
     case novelRankingWeeklyR18G
     case userNovels
+    case userMyPixivNovels
     case userNovelBookmarks
 
     static var sidebarSections: [PixivRouteSection] {
@@ -215,6 +217,7 @@ enum PixivRoute: String, CaseIterable, Identifiable, Codable {
         case .savedSearches: L10n.savedSearches
         case .userIllustrations: L10n.creatorIllustrations
         case .userManga: L10n.creatorManga
+        case .userMyPixivIllusts: L10n.myPixivIllustrations
         case .userPublicBookmarks: L10n.creatorPublicBookmarks
         case .rankingDaily: L10n.daily
         case .rankingWeekly: L10n.weekly
@@ -270,6 +273,7 @@ enum PixivRoute: String, CaseIterable, Identifiable, Codable {
         case .novelRankingWeeklyR18AI: L10n.weeklyR18AI
         case .novelRankingWeeklyR18G: L10n.weeklyR18G
         case .userNovels: L10n.creatorNovels
+        case .userMyPixivNovels: L10n.myPixivNovels
         case .userNovelBookmarks: L10n.creatorNovelBookmarks
         }
     }
@@ -311,6 +315,7 @@ enum PixivRoute: String, CaseIterable, Identifiable, Codable {
              .novelRankingWeeklyR18AI,
              .novelRankingWeeklyR18G,
              .userNovels,
+             .userMyPixivNovels,
              .userNovelBookmarks:
             false
         default:
@@ -350,6 +355,7 @@ enum PixivRoute: String, CaseIterable, Identifiable, Codable {
              .novelRankingWeeklyR18AI,
              .novelRankingWeeklyR18G,
              .userNovels,
+             .userMyPixivNovels,
              .userNovelBookmarks:
             true
         default:
@@ -472,6 +478,7 @@ enum PixivRoute: String, CaseIterable, Identifiable, Codable {
         case .savedSearches: "tag.circle"
         case .userIllustrations: "person.crop.rectangle.stack"
         case .userManga: "person.crop.square"
+        case .userMyPixivIllusts: "person.2.crop.square.stack"
         case .userPublicBookmarks: "person.crop.circle.badge.checkmark"
         case .rankingDaily, .rankingWeekly, .rankingMonthly: "chart.bar"
         case .rankingDailyMale, .rankingDailyFemale: "person.2"
@@ -513,6 +520,7 @@ enum PixivRoute: String, CaseIterable, Identifiable, Codable {
         case .novelRankingDailyR18, .novelRankingWeeklyR18: "exclamationmark.triangle"
         case .novelRankingWeeklyR18G: "exclamationmark.octagon"
         case .userNovels: "person.crop.rectangle"
+        case .userMyPixivNovels: "person.2.crop.square.stack"
         case .userNovelBookmarks: "person.crop.circle.badge.checkmark"
         }
     }

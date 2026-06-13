@@ -17,6 +17,8 @@ struct UserProfileOverviewSection: View {
     let openFollowing: () -> Void
     let openFollowers: () -> Void
     let openMyPixiv: () -> Void
+    let openMyPixivIllustrations: () -> Void
+    let openMyPixivNovels: () -> Void
     let openRelated: () -> Void
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
@@ -81,7 +83,27 @@ struct UserProfileOverviewSection: View {
                 title: L10n.myPixivUsers,
                 valueLabel: (profile?.totalMyPixivUsers ?? 0).formatted(),
                 systemImage: "person.2.crop.square.stack",
-                action: openMyPixiv
+                action: openMyPixiv,
+                menuItems: [
+                    UserProfileStatMenuItem(
+                        id: "mypixiv-users",
+                        title: L10n.myPixivUsers,
+                        systemImage: "person.2.crop.square.stack",
+                        action: openMyPixiv
+                    ),
+                    UserProfileStatMenuItem(
+                        id: "mypixiv-illustrations",
+                        title: L10n.myPixivIllustrations,
+                        systemImage: "photo.on.rectangle",
+                        action: openMyPixivIllustrations
+                    ),
+                    UserProfileStatMenuItem(
+                        id: "mypixiv-novels",
+                        title: L10n.myPixivNovels,
+                        systemImage: "text.book.closed",
+                        action: openMyPixivNovels
+                    )
+                ]
             ),
             UserProfileStatEntry(
                 title: L10n.relatedCreators,
@@ -125,8 +147,16 @@ private struct UserProfileStatEntry: Identifiable {
     let systemImage: String
     var isEnabled = true
     let action: () -> Void
+    var menuItems: [UserProfileStatMenuItem] = []
 
     var id: String { title }
+}
+
+private struct UserProfileStatMenuItem: Identifiable {
+    let id: String
+    let title: String
+    let systemImage: String
+    let action: () -> Void
 }
 
 private struct ProfileStatCell: View {
@@ -135,29 +165,25 @@ private struct ProfileStatCell: View {
     @State private var isHovering = false
 
     var body: some View {
-        Button(action: entry.action) {
-            VStack(spacing: isCompact ? 2 : 3) {
-                HStack(alignment: .firstTextBaseline, spacing: 6) {
-                    Image(systemName: entry.systemImage)
-                        .font(isCompact ? .caption2 : .caption)
-                        .foregroundStyle(.secondary)
-                    Text(entry.valueLabel)
-                        .font((isCompact ? Font.subheadline : Font.title3).weight(.semibold).monospacedDigit())
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.72)
+        Group {
+            if entry.menuItems.isEmpty {
+                Button(action: entry.action) {
+                    cellLabel
                 }
-                Text(entry.title)
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.72)
+                .buttonStyle(.plain)
+            } else {
+                Menu {
+                    ForEach(entry.menuItems) { item in
+                        Button(action: item.action) {
+                            Label(item.title, systemImage: item.systemImage)
+                        }
+                    }
+                } label: {
+                    cellLabel
+                }
+                .buttonStyle(.plain)
             }
-            .frame(minWidth: isCompact ? 0 : 92, maxWidth: .infinity)
-            .padding(.vertical, isCompact ? 6 : 7)
-            .padding(.horizontal, isCompact ? 5 : 9)
-            .contentShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
         }
-        .buttonStyle(.plain)
         .glassEffect(.regular.interactive(), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
         .disabled(entry.isEnabled == false)
         .scaleEffect(isHovering ? 1.012 : 1)
@@ -167,6 +193,36 @@ private struct ProfileStatCell: View {
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(entry.title): \(entry.valueLabel)")
         .accessibilityAddTraits(.isButton)
+    }
+
+    private var cellLabel: some View {
+        VStack(spacing: isCompact ? 2 : 3) {
+            HStack(alignment: .firstTextBaseline, spacing: 6) {
+                Image(systemName: entry.systemImage)
+                    .font(isCompact ? .caption2 : .caption)
+                    .foregroundStyle(.secondary)
+                Text(entry.valueLabel)
+                    .font((isCompact ? Font.subheadline : Font.title3).weight(.semibold).monospacedDigit())
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.72)
+            }
+            HStack(spacing: 3) {
+                Text(entry.title)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.72)
+                if entry.menuItems.isEmpty == false {
+                    Image(systemName: "chevron.down")
+                        .font(.system(size: 7, weight: .semibold))
+                        .accessibilityHidden(true)
+                }
+            }
+            .font(.caption2)
+            .foregroundStyle(.secondary)
+        }
+        .frame(minWidth: isCompact ? 0 : 92, maxWidth: .infinity)
+        .padding(.vertical, isCompact ? 6 : 7)
+        .padding(.horizontal, isCompact ? 5 : 9)
+        .contentShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
     }
 }
 
