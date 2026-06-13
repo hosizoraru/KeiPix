@@ -28,6 +28,7 @@ struct WorkSubscriptionTests {
         #expect(subscription.lastSeenWorkIDs(for: .manga).isEmpty)
         #expect(subscription.lastSeenWorkIDs(for: .novels).isEmpty)
         #expect(subscription.totalNewWorkCount == 2)
+        #expect(subscription.trackedKinds == WorkSubscriptionContentKind.allCases)
     }
 
     @Test("Subscription update buckets track illustrations manga and novels independently")
@@ -84,5 +85,51 @@ struct WorkSubscriptionTests {
         #expect(decoded.newWorkCount(for: .manga) == 0)
         #expect(decoded.newWorkCount(for: .novels) == 1)
         #expect(decoded.totalNewWorkCount == 2)
+    }
+
+    @Test("Subscription kind tracking defaults to all kinds and cannot disable the last kind")
+    func trackingKindsDefaultToAllKindsAndRequireOneActiveKind() {
+        var subscription = WorkSubscription(
+            creatorID: 42,
+            creatorName: "Series QA Creator",
+            creatorAccount: "series_qa"
+        )
+
+        #expect(subscription.trackedKinds == WorkSubscriptionContentKind.allCases)
+        #expect(subscription.isTracking(.illustrations))
+        #expect(subscription.isTracking(.manga))
+        #expect(subscription.isTracking(.novels))
+
+        let disabledManga = subscription.setTracking(false, for: .manga)
+        let disabledNovels = subscription.setTracking(false, for: .novels)
+        #expect(disabledManga)
+        #expect(disabledNovels)
+        #expect(subscription.trackedKinds == [.illustrations])
+        let disabledLastKind = subscription.setTracking(false, for: .illustrations)
+        #expect(disabledLastKind == false)
+        #expect(subscription.trackedKinds == [.illustrations])
+    }
+
+    @Test("Disabling a subscription kind clears its pending count and baseline")
+    func disablingKindClearsItsPendingCountAndBaseline() {
+        var subscription = WorkSubscription(
+            creatorID: 42,
+            creatorName: "Series QA Creator",
+            creatorAccount: "series_qa"
+        )
+
+        _ = subscription.recordSeenWorkIDs([100], for: .illustrations)
+        _ = subscription.recordSeenWorkIDs([300], for: .manga)
+        _ = subscription.recordSeenWorkIDs([900], for: .novels)
+        _ = subscription.recordSeenWorkIDs([301, 300], for: .manga)
+        _ = subscription.recordSeenWorkIDs([901, 900], for: .novels)
+
+        #expect(subscription.totalNewWorkCount == 2)
+        let disabledManga = subscription.setTracking(false, for: .manga)
+        #expect(disabledManga)
+        #expect(subscription.isTracking(.manga) == false)
+        #expect(subscription.lastSeenWorkIDs(for: .manga).isEmpty)
+        #expect(subscription.newWorkCount(for: .manga) == 0)
+        #expect(subscription.totalNewWorkCount == 1)
     }
 }

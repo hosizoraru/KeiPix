@@ -164,6 +164,10 @@ enum L10n {
     static var workSubscriptionsCheckNow: String { text("Check for Updates") }
     static var workSubscriptionsNewWorks: String { text("new works") }
     static var workSubscriptionsLastChecked: String { text("Last checked") }
+    static var workSubscriptionsTracking: String { text("Tracked Work Types") }
+    static var workSubscriptionsRequiresOneKind: String { text("Keep at least one work type tracked.") }
+    static var workSubscriptionsTrackingEnabledFormat: String { text("Tracking %@") }
+    static var workSubscriptionsTrackingDisabledFormat: String { text("Stopped tracking %@") }
     static var watchLaterEmpty: String { text("No items in watch later queue") }
     static var watchLaterEmptyHint: String { text("Add artworks from the detail view to watch later.") }
     static var watchLaterAdded: String { text("Added to Watch Later") }

@@ -6,6 +6,7 @@ enum VisualQALaunchArgument: String, CaseIterable {
     case pixivIDOpen = "--visual-qa-pixiv-id-open"
     case creatorProfile = "--visual-qa-creator-profile"
     case mangaWatchlist = "--visual-qa-manga-watchlist"
+    case workSubscriptions = "--visual-qa-work-subscriptions"
     case seriesSheet = "--visual-qa-series-sheet"
     case cachedFeed = "--visual-qa-cached-feed"
     case galleryAuto = "--visual-qa-gallery-auto"
@@ -40,6 +41,8 @@ enum VisualQALaunchArgument: String, CaseIterable {
             .creatorProfile
         case .mangaWatchlist:
             .mangaWatchlist
+        case .workSubscriptions:
+            .workSubscriptions
         case .seriesSheet:
             .seriesSheet
         case .cachedFeed:

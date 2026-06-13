@@ -83,6 +83,44 @@ enum VisualQASampleData {
         ]
     )
 
+    static let workSubscriptions: [WorkSubscription] = {
+        var mixed = WorkSubscription(
+            creatorID: 71_001,
+            creatorName: "Longform Visual QA Creator",
+            creatorAccount: "visual_longform"
+        )
+        mixed.lastCheckedAt = Date(timeIntervalSince1970: 1_780_156_800)
+        _ = mixed.recordSeenWorkIDs([101, 100], for: .illustrations)
+        _ = mixed.recordSeenWorkIDs([102, 101, 100], for: .illustrations)
+        _ = mixed.recordSeenWorkIDs([301], for: .manga)
+        _ = mixed.recordSeenWorkIDs([302, 301], for: .manga)
+        _ = mixed.recordSeenWorkIDs([901], for: .novels)
+        _ = mixed.recordSeenWorkIDs([903, 902, 901], for: .novels)
+
+        var illustrationOnly = WorkSubscription(
+            creatorID: 71_002,
+            creatorName: "Illustration Only Artist",
+            creatorAccount: "illust_only"
+        )
+        illustrationOnly.lastCheckedAt = Date(timeIntervalSince1970: 1_779_984_000)
+        _ = illustrationOnly.setTracking(false, for: .manga)
+        _ = illustrationOnly.setTracking(false, for: .novels)
+        _ = illustrationOnly.recordSeenWorkIDs([201, 200], for: .illustrations)
+
+        var storyAndManga = WorkSubscription(
+            creatorID: 71_003,
+            creatorName: "Serial Manga and Novel Circle",
+            creatorAccount: "serial_circle"
+        )
+        storyAndManga.lastCheckedAt = Date(timeIntervalSince1970: 1_779_897_600)
+        _ = storyAndManga.setTracking(false, for: .illustrations)
+        _ = storyAndManga.recordSeenWorkIDs([401], for: .manga)
+        _ = storyAndManga.recordSeenWorkIDs([402, 401], for: .manga)
+        _ = storyAndManga.recordSeenWorkIDs([801], for: .novels)
+
+        return [mixed, illustrationOnly, storyAndManga]
+    }()
+
     static let novelFeedNovels: [PixivNovel] = [
         decodeNovel(
             id: 94_100,
@@ -1065,6 +1103,24 @@ extension KeiPixStore {
             novels: VisualQASampleData.novelFeedNovels,
             nextURL: URL(string: "https://app-api.pixiv.net/v1/novel/recommended/next")
         )
+    }
+
+    func presentWorkSubscriptionsVisualQA() {
+        activateVisualQASampleSession()
+        selectedRoute = .workSubscriptions
+        focusedUser = nil
+        bookmarkTagFilter = nil
+        selectedSpotlightArticle = nil
+        selectedArtwork = nil
+        errorMessage = nil
+        isLoading = false
+        isLoadingMore = false
+        activeFeedSnapshotRestoration = nil
+        searchPopularPreviewArtworks = []
+        allArtworks = []
+        artworks = []
+        nextURL = nil
+        workSubscriptions = VisualQASampleData.workSubscriptions
     }
 
     func presentRankingVisualQA() {

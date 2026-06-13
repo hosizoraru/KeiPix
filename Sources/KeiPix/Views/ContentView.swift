@@ -275,6 +275,9 @@ struct ContentView: View {
                 store.activateVisualQASampleSession()
                 store.selectedRoute = .mangaWatchlist
             }
+            if VisualQALaunchArgument.contains(.workSubscriptions) {
+                store.presentWorkSubscriptionsVisualQA()
+            }
             if VisualQALaunchArgument.contains(.seriesSheet) {
                 store.activateVisualQASampleSession()
                 store.selectedRoute = .mangaRecommended

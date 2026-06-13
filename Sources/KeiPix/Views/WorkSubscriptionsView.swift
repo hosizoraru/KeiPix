@@ -142,6 +142,21 @@ struct WorkSubscriptionsView: View {
                         select: {
                             selectSubscription(subscription)
                         },
+                        setTracking: { kind, isTracking in
+                            let didChange = store.setSubscription(subscription, tracks: kind, isTracking)
+                            if didChange {
+                                let title = workSubscriptionKindTitle(kind)
+                                actionMessage = String(
+                                    format: isTracking
+                                        ? L10n.workSubscriptionsTrackingEnabledFormat
+                                        : L10n.workSubscriptionsTrackingDisabledFormat,
+                                    title
+                                )
+                            } else {
+                                actionMessage = L10n.workSubscriptionsRequiresOneKind
+                            }
+                            return didChange
+                        },
                         unsubscribe: {
                             store.workSubscriptions.removeAll { $0.id == subscription.id }
                             store.saveSubscriptions()
@@ -196,6 +211,7 @@ private struct SubscriptionCard: View {
     let subscription: WorkSubscription
     let showContentBadges: Bool
     let select: () -> Void
+    let setTracking: (WorkSubscriptionContentKind, Bool) -> Bool
     let unsubscribe: () -> Void
 
     var body: some View {
@@ -226,6 +242,11 @@ private struct SubscriptionCard: View {
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
 
+                    Text(subscription.trackedKinds.map(workSubscriptionKindTitle).joined(separator: " · "))
+                        .font(.caption2)
+                        .foregroundStyle(.tertiary)
+                        .lineLimit(1)
+
                     if let lastChecked = subscription.lastCheckedAt {
                         Text("\(L10n.workSubscriptionsLastChecked): \(lastChecked.formatted(.relative(presentation: .named)))")
                             .font(.caption2)
@@ -241,7 +262,31 @@ private struct SubscriptionCard: View {
         .buttonStyle(.plain)
         .keiInteractiveGlass(16)
         .contextMenu {
+            Section(L10n.workSubscriptionsTracking) {
+                ForEach(WorkSubscriptionContentKind.allCases) { kind in
+                    Button {
+                        _ = setTracking(kind, subscription.isTracking(kind) == false)
+                    } label: {
+                        Label(
+                            workSubscriptionKindTitle(kind),
+                            systemImage: subscription.isTracking(kind) ? "checkmark.circle.fill" : "circle"
+                        )
+                    }
+                }
+            }
+
             Button(L10n.workSubscriptionsUnsubscribe, role: .destructive, action: unsubscribe)
         }
+    }
+}
+
+private func workSubscriptionKindTitle(_ kind: WorkSubscriptionContentKind) -> String {
+    switch kind {
+    case .illustrations:
+        L10n.illustrations
+    case .manga:
+        L10n.manga
+    case .novels:
+        L10n.novels
     }
 }

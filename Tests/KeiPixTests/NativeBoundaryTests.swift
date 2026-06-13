@@ -3421,6 +3421,18 @@ struct NativeBoundaryTests {
             contentsOf: root.appending(path: "Sources/KeiPix/Views/WorkSubscriptionsView.swift"),
             encoding: .utf8
         )
+        let macContentView = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/ContentView.swift"),
+            encoding: .utf8
+        )
+        let iPadContentView = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/ContentView_iPadOS.swift"),
+            encoding: .utf8
+        )
+        let visualQASampleData = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Support/VisualQASampleData.swift"),
+            encoding: .utf8
+        )
 
         #expect(subscriptions.contains("NativeAdaptiveGridCollectionView("))
         #expect(subscriptions.contains("gridLayout"))
@@ -3430,11 +3442,18 @@ struct NativeBoundaryTests {
         #expect(subscriptions.contains(".task(id: store.routeRefreshGeneration)"))
         #expect(subscriptions.contains("await checkForUpdates(showFeedback: false)"))
         #expect(subscriptions.contains("totalNewWorkCount"))
+        #expect(subscriptions.contains("subscription.trackedKinds.map(workSubscriptionKindTitle)"))
+        #expect(subscriptions.contains("Section(L10n.workSubscriptionsTracking)"))
+        #expect(subscriptions.contains("store.setSubscription(subscription, tracks: kind, isTracking)"))
         #expect(subscriptions.contains("newArtworkCount") == false)
         #expect(subscriptions.contains("L10n.workSubscriptionsCheckNow") == false)
         #expect(subscriptions.contains("systemImage: isChecking ? \"arrow.triangle.2.circlepath\" : \"arrow.clockwise\"") == false)
         #expect(subscriptions.contains("LazyVGrid") == false)
         #expect(subscriptions.contains("ScrollView {") == false)
+        #expect(macContentView.contains("VisualQALaunchArgument.contains(.workSubscriptions)"))
+        #expect(iPadContentView.contains("VisualQALaunchArgument.contains(.workSubscriptions)"))
+        #expect(visualQASampleData.contains("presentWorkSubscriptionsVisualQA()"))
+        #expect(visualQASampleData.contains("VisualQASampleData.workSubscriptions"))
     }
 
     @Test("Work subscription checks cover illustration manga and novel buckets")
@@ -3445,12 +3464,14 @@ struct NativeBoundaryTests {
             encoding: .utf8
         )
 
-        #expect(subscriptionsStore.contains("WorkSubscriptionContentKind.allCases"))
+        #expect(subscriptionsStore.contains("for kind in subscription.trackedKinds"))
         #expect(subscriptionsStore.contains("recordSeenWorkIDs(workIDs, for: kind)"))
         #expect(subscriptionsStore.contains("api.userIllusts(userID: userID, type: \"illust\")"))
         #expect(subscriptionsStore.contains("api.userIllusts(userID: userID, type: \"manga\")"))
         #expect(subscriptionsStore.contains("api.userNovels(userID: userID)"))
         #expect(subscriptionsStore.contains("clearNewWorkCounts()"))
+        #expect(subscriptionsStore.contains("setSubscription("))
+        #expect(subscriptionsStore.contains("tracks kind: WorkSubscriptionContentKind"))
     }
 
     @Test("Route refresh owns compact page refresh chrome")

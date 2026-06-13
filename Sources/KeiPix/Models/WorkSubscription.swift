@@ -18,6 +18,7 @@ struct WorkSubscription: Codable, Identifiable, Hashable, Sendable {
     var lastCheckedAt: Date?
     private var lastSeenWorkIDsByKind: [WorkSubscriptionContentKind: [Int]]
     private var newWorkCountsByKind: [WorkSubscriptionContentKind: Int]
+    private var trackedWorkKinds: Set<WorkSubscriptionContentKind>
 
     var lastSeenArtworkIDs: [Int] {
         get { lastSeenWorkIDs(for: .illustrations) }
@@ -30,9 +31,13 @@ struct WorkSubscription: Codable, Identifiable, Hashable, Sendable {
     }
 
     var totalNewWorkCount: Int {
-        WorkSubscriptionContentKind.allCases.reduce(0) { total, kind in
+        trackedKinds.reduce(0) { total, kind in
             total + newWorkCount(for: kind)
         }
+    }
+
+    var trackedKinds: [WorkSubscriptionContentKind] {
+        WorkSubscriptionContentKind.allCases.filter { trackedWorkKinds.contains($0) }
     }
 
     init(
@@ -49,6 +54,7 @@ struct WorkSubscription: Codable, Identifiable, Hashable, Sendable {
         self.lastCheckedAt = nil
         self.lastSeenWorkIDsByKind = [:]
         self.newWorkCountsByKind = [:]
+        self.trackedWorkKinds = Set(WorkSubscriptionContentKind.allCases)
     }
 
     func lastSeenWorkIDs(for kind: WorkSubscriptionContentKind) -> [Int] {
@@ -57,6 +63,25 @@ struct WorkSubscription: Codable, Identifiable, Hashable, Sendable {
 
     func newWorkCount(for kind: WorkSubscriptionContentKind) -> Int {
         newWorkCountsByKind[kind] ?? 0
+    }
+
+    func isTracking(_ kind: WorkSubscriptionContentKind) -> Bool {
+        trackedWorkKinds.contains(kind)
+    }
+
+    @discardableResult
+    mutating func setTracking(_ isTracking: Bool, for kind: WorkSubscriptionContentKind) -> Bool {
+        if isTracking {
+            trackedWorkKinds.insert(kind)
+            return true
+        }
+
+        guard trackedWorkKinds.contains(kind) else { return true }
+        guard trackedWorkKinds.count > 1 else { return false }
+        trackedWorkKinds.remove(kind)
+        lastSeenWorkIDsByKind[kind] = nil
+        newWorkCountsByKind[kind] = nil
+        return true
     }
 
     mutating func recordSeenWorkIDs(_ workIDs: [Int], for kind: WorkSubscriptionContentKind) -> Int {
@@ -90,6 +115,7 @@ struct WorkSubscription: Codable, Identifiable, Hashable, Sendable {
         case newArtworkCount
         case lastSeenWorkIDsByKind
         case newWorkCountsByKind
+        case trackedKinds
     }
 
     init(from decoder: Decoder) throws {
@@ -118,6 +144,9 @@ struct WorkSubscription: Codable, Identifiable, Hashable, Sendable {
             decodedCountBuckets,
             legacyIllustrations: try container.decodeIfPresent(Int.self, forKey: .newArtworkCount)
         )
+        trackedWorkKinds = Self.decodedTrackedKinds(
+            try container.decodeIfPresent([String].self, forKey: .trackedKinds)
+        )
     }
 
     func encode(to encoder: Encoder) throws {
@@ -130,8 +159,17 @@ struct WorkSubscription: Codable, Identifiable, Hashable, Sendable {
         try container.encodeIfPresent(lastCheckedAt, forKey: .lastCheckedAt)
         try container.encode(Self.rawWorkIDBuckets(lastSeenWorkIDsByKind), forKey: .lastSeenWorkIDsByKind)
         try container.encode(Self.rawCountBuckets(newWorkCountsByKind), forKey: .newWorkCountsByKind)
+        try container.encode(trackedKinds.map(\.rawValue), forKey: .trackedKinds)
         try container.encode(lastSeenArtworkIDs, forKey: .lastSeenArtworkIDs)
         try container.encode(newArtworkCount, forKey: .newArtworkCount)
+    }
+
+    private static func decodedTrackedKinds(_ rawValues: [String]?) -> Set<WorkSubscriptionContentKind> {
+        guard let rawValues else {
+            return Set(WorkSubscriptionContentKind.allCases)
+        }
+        let kinds = Set(rawValues.compactMap(WorkSubscriptionContentKind.init(rawValue:)))
+        return kinds.isEmpty ? Set(WorkSubscriptionContentKind.allCases) : kinds
     }
 
     private static func bucketedWorkIDs(

@@ -135,6 +135,12 @@ struct ContentView: View {
                     selectedSidebarItem = .route(.novelRecommended)
                     selectedTab = .mobile(.novels)
                 }
+                if VisualQALaunchArgument.contains(.workSubscriptions) {
+                    store.presentWorkSubscriptionsVisualQA()
+                    hasAppliedMobileBottomTabLaunchTarget = true
+                    selectedSidebarItem = .route(.workSubscriptions)
+                    selectedTab = .library
+                }
                 if VisualQALaunchArgument.contains(.bookmarkEditor) {
                     store.activateVisualQASampleSession()
                     selectedSidebarItem = .route(.illustrations)

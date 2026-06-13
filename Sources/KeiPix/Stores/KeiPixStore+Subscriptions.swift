@@ -51,7 +51,7 @@ extension KeiPixStore {
             var subscription = workSubscriptions[index]
             var didCheckAnyBucket = false
 
-            for kind in WorkSubscriptionContentKind.allCases {
+            for kind in subscription.trackedKinds {
                 do {
                     let workIDs = try await subscriptionWorkIDs(for: kind, userID: subscription.creatorID)
                     _ = subscription.recordSeenWorkIDs(workIDs, for: kind)
@@ -78,6 +78,20 @@ extension KeiPixStore {
         guard let index = workSubscriptions.firstIndex(where: { $0.id == subscription.id }) else { return }
         workSubscriptions[index].clearNewWorkCounts()
         saveSubscriptions()
+    }
+
+    @discardableResult
+    func setSubscription(
+        _ subscription: WorkSubscription,
+        tracks kind: WorkSubscriptionContentKind,
+        _ isTracking: Bool
+    ) -> Bool {
+        guard let index = workSubscriptions.firstIndex(where: { $0.id == subscription.id }) else { return false }
+        let didChange = workSubscriptions[index].setTracking(isTracking, for: kind)
+        if didChange {
+            saveSubscriptions()
+        }
+        return didChange
     }
 
     func subscriptionItems(matching searchText: String) -> [WorkSubscription] {
