@@ -40049,6 +40049,35 @@
         }
       }
     },
+    "Export as HTML": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Export as HTML"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "导出为 HTML"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "匯出為 HTML"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "HTML としてエクスポート"
+          }
+        }
+      }
+    },
     "Watch Later": {
       "extractionState": "manual",
       "localizations": {

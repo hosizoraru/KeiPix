@@ -290,6 +290,12 @@ private struct NovelDetailContent: View {
                 Label(L10n.novelExportMarkdown, systemImage: "doc.richtext")
             }
 
+            Button {
+                exportNovel(format: .html)
+            } label: {
+                Label(L10n.novelExportHTML, systemImage: "doc.text.magnifyingglass")
+            }
+
             if let url = novel.pixivURL {
                 Divider()
 
@@ -431,72 +437,16 @@ private struct NovelDetailContent: View {
             guard let text = novelStore.loadedNovelText else { return }
 
             let content: String
-            let ext: String
-            switch format {
-            case .txt:
-                content = Self.buildTXT(from: text, novel: novel)
-                ext = "txt"
-            case .markdown:
-                content = Self.buildMarkdown(from: text, novel: novel)
-                ext = "md"
-            }
+            content = NovelExportFormatter.build(format: format, text: text, novel: novel)
 
             #if os(macOS)
             let panel = NSSavePanel()
-            panel.allowedContentTypes = [ext == "md" ? .init(filenameExtension: "md")! : .plainText]
-            panel.nameFieldStringValue = "\(novel.id)_\(novel.title).\(ext)"
+            panel.allowedContentTypes = [.init(filenameExtension: format.fileExtension)!]
+            panel.nameFieldStringValue = "\(novel.id)_\(novel.title).\(format.fileExtension)"
             panel.canCreateDirectories = true
             guard panel.runModal() == .OK, let url = panel.url else { return }
             try? content.write(to: url, atomically: true, encoding: .utf8)
             #endif
         }
     }
-
-    private static func buildTXT(from text: PixivNovelText, novel: PixivNovel) -> String {
-        var lines: [String] = []
-        lines.append(novel.title)
-        lines.append(novel.user.name)
-        lines.append(String(repeating: "-", count: 40))
-        lines.append("")
-        for token in NovelTextTokenizer.tokenize(text.novelText) {
-            switch token {
-            case .text(let v): lines.append(v)
-            case .newPage: lines.append("\n---\n")
-            case .chapter(let t): lines.append("\n## \(t)\n")
-            case .pixivImage(let id, _): lines.append("[illust:\(id)]")
-            case .uploadedImage(let k): lines.append("[image:\(k)]")
-            case .jumpURL(let l, let u): lines.append("[\(l)](\(u))")
-            case .ruby(let b, let r): lines.append("\(b)(\(r))")
-            case .jumpPage(let p): lines.append("[→ p.\(p)]")
-            }
-        }
-        return lines.joined(separator: "\n")
-    }
-
-    private static func buildMarkdown(from text: PixivNovelText, novel: PixivNovel) -> String {
-        var lines: [String] = []
-        lines.append("# \(novel.title)")
-        lines.append("**\(novel.user.name)**")
-        lines.append("")
-        lines.append("---")
-        lines.append("")
-        for token in NovelTextTokenizer.tokenize(text.novelText) {
-            switch token {
-            case .text(let v): lines.append(v)
-            case .newPage: lines.append("\n---\n")
-            case .chapter(let t): lines.append("\n## \(t)\n")
-            case .pixivImage(let id, _): lines.append("![illust:\(id)](https://www.pixiv.net/artworks/\(id))")
-            case .uploadedImage(let k): lines.append("![image:\(k)](\(k))")
-            case .jumpURL(let l, let u): lines.append("[\(l)](\(u))")
-            case .ruby(let b, let r): lines.append("\(b)(\(r))")
-            case .jumpPage(let p): lines.append("[→ page \(p)](#page-\(p))")
-            }
-        }
-        return lines.joined(separator: "\n")
-    }
-}
-
-private enum NovelExportFormat {
-    case txt
-    case markdown
 }
