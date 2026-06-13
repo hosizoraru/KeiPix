@@ -3,6 +3,16 @@ import Testing
 
 @Suite("Novel route coverage")
 struct NovelRouteCoverageTests {
+    @Test("Latest novel route is reachable from novel navigation")
+    func latestNovelRouteIsReachable() {
+        #expect(PixivRoute.novelLatest.usesNovelFeed)
+        #expect(PixivRoute.novelLatest.usesArtworkFeed == false)
+        #expect(PixivRouteSection.novels.routes.contains(.novelLatest))
+
+        let mobileNovelRoutes = MobileRouteMenuConfiguration.sections(for: .novels).flatMap(\.routes)
+        #expect(mobileNovelRoutes.contains(.novelLatest))
+    }
+
     @Test("Every novel ranking route maps to a non-empty pixiv mode string")
     func everyRankingRouteHasMode() {
         for route in PixivRoute.novelRankingRoutes {

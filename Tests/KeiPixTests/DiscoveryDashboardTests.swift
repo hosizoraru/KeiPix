@@ -20,6 +20,14 @@ struct DiscoveryDashboardTests {
         #expect(dashboardRoutes.count == Set(dashboardRoutes).count)
     }
 
+    @Test("Novel dashboard exposes latest novel feed")
+    func novelDashboardExposesLatestNovelFeed() throws {
+        let novels = try #require(DiscoveryDashboardSection.all.first { $0.id == "novels" })
+
+        #expect(novels.routes.contains(.novelRecommended))
+        #expect(novels.routes.contains(.novelLatest))
+    }
+
     @Test("Pixiv collections are classified with work discovery")
     func pixivCollectionsAreClassifiedWithWorkDiscovery() throws {
         let sidebarWorks = try #require(PixivRoute.sidebarSections.first { $0 == .works })

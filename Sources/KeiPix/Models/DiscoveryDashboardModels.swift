@@ -71,6 +71,7 @@ struct DiscoveryDashboardSection: Identifiable {
                 systemImage: "book",
                 routes: [
                     .novelRecommended,
+                    .novelLatest,
                     .novelFollowing,
                     .novelSearch,
                     .novelPublicBookmarks,

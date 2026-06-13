@@ -140,6 +140,7 @@ struct MobileBottomTabConfigurationTests {
         #expect(mangaRoutes.contains(.novelRecommended) == false)
 
         #expect(novelRoutes.contains(.novelRecommended))
+        #expect(novelRoutes.contains(.novelLatest))
         #expect(novelRoutes.contains(.novelSearch) == false)
         #expect(novelRoutes.contains(.novelRankingWeekly))
         #expect(novelRoutes.contains(.publicBookmarks) == false)

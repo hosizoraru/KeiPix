@@ -22,6 +22,7 @@ protocol PixivAPIProtocol: Sendable {
     func recommendedIllusts() async throws -> PixivFeedResponse
     func recommendedMangas() async throws -> PixivFeedResponse
     func latestIllusts(contentType: String) async throws -> PixivFeedResponse
+    func latestNovels() async throws -> PixivNovelListResponse
     func relatedIllusts(illustID: Int) async throws -> PixivFeedResponse
     func illustDetail(illustID: Int) async throws -> PixivArtwork
     func illustSeries(seriesID: Int) async throws -> PixivArtworkSeriesResponse

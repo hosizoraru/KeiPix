@@ -71,6 +71,7 @@ enum PixivRouteSection: Identifiable {
         case .novels:
             [
                 .novelRecommended,
+                .novelLatest,
                 .novelFollowing,
                 .novelSearch,
                 .novelPublicBookmarks,
@@ -173,6 +174,7 @@ enum PixivRoute: String, CaseIterable, Identifiable, Codable {
     case recommendedUsers
     // MARK: Novels
     case novelRecommended
+    case novelLatest
     case novelFollowing
     case novelSearch
     case novelPublicBookmarks
@@ -256,6 +258,7 @@ enum PixivRoute: String, CaseIterable, Identifiable, Codable {
         case .downloads: L10n.downloads
         case .recommendedUsers: L10n.recommendedCreators
         case .novelRecommended: L10n.recommendedNovels
+        case .novelLatest: L10n.latestNovels
         case .novelFollowing: L10n.followingNovels
         case .novelSearch: L10n.searchNovels
         case .novelPublicBookmarks: L10n.novelPublicBookmarks
@@ -298,6 +301,7 @@ enum PixivRoute: String, CaseIterable, Identifiable, Codable {
              .mutedContent,
              .watchLater,
              .novelRecommended,
+             .novelLatest,
              .novelFollowing,
              .novelSearch,
              .novelPublicBookmarks,
@@ -338,6 +342,7 @@ enum PixivRoute: String, CaseIterable, Identifiable, Codable {
     var usesNovelFeed: Bool {
         switch self {
         case .novelRecommended,
+             .novelLatest,
              .novelFollowing,
              .novelSearch,
              .novelPublicBookmarks,
@@ -509,6 +514,7 @@ enum PixivRoute: String, CaseIterable, Identifiable, Codable {
         case .mangaWatchlist: "rectangle.stack.badge.person.crop"
         case .downloads: "arrow.down.circle"
         case .novelRecommended: "book"
+        case .novelLatest: "sparkle.magnifyingglass"
         case .novelFollowing: "book.and.wrench"
         case .novelSearch: "text.magnifyingglass"
         case .novelPublicBookmarks, .novelPrivateBookmarks: "bookmark.square"

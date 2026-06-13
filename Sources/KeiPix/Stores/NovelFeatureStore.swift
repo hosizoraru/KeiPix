@@ -267,6 +267,8 @@ final class NovelFeatureStore {
                 )
             }
             return recResponse
+        case .novelLatest:
+            return try await api.latestNovels()
         case .novelFollowing:
             return try await api.followingNovels(restrict: followingRestrictProvider())
         case .novelSearch:

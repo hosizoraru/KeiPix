@@ -332,6 +332,7 @@ enum MobileRouteMenuConfiguration {
                     title: L10n.novels,
                     routes: [
                         .novelRecommended,
+                        .novelLatest,
                         .novelFollowing,
                         .novelPublicBookmarks,
                         .novelPrivateBookmarks,

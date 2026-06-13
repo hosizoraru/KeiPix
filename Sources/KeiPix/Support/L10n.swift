@@ -1403,6 +1403,7 @@ enum L10n {
     static var novel: String { text("Novel") }
     static var novelRanking: String { text("Novel Ranking") }
     static var recommendedNovels: String { text("Recommended Novels") }
+    static var latestNovels: String { text("Latest Novels") }
     static var followingNovels: String { text("Following Novels") }
     static var searchNovels: String { text("Search Novels") }
     static var novelLanguage: String { text("Novel Language") }

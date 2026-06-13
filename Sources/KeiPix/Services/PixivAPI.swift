@@ -1228,6 +1228,18 @@ actor PixivAPI {
         ])
     }
 
+    /// `/v1/novel/new` — latest public novels. This mirrors Pixiv's
+    /// app-api feed and stays separate from following/recommended.
+    func latestNovels() async throws -> PixivNovelListResponse {
+        try await requestJSON(Self.latestNovelsURL(), method: "GET", form: nil)
+    }
+
+    static func latestNovelsURL() throws -> URL {
+        try apiURL(path: "/v1/novel/new", query: [
+            "filter": "for_android"
+        ])
+    }
+
     /// `/v1/novel/follow` — novels from creators the user follows.
     /// `restrict` accepts `public` or `private`.
     func followingNovels(restrict: String = "public") async throws -> PixivNovelListResponse {

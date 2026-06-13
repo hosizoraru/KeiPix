@@ -4,6 +4,15 @@ import Testing
 
 @Suite("Novel comment endpoint wiring")
 struct NovelCommentEndpointTests {
+    @Test("Latest novels request uses Pixiv's app-api new-novel endpoint")
+    func latestNovelsURLUsesNewEndpoint() throws {
+        let url = try PixivAPI.latestNovelsURL()
+        let components = try #require(URLComponents(url: url, resolvingAgainstBaseURL: false))
+
+        #expect(components.path == "/v1/novel/new")
+        #expect(components.queryItems?.contains(URLQueryItem(name: "filter", value: "for_android")) == true)
+    }
+
     @Test("Novel comments request uses Pixiv's v3 novel comments endpoint")
     func novelCommentsURLUsesV3Endpoint() throws {
         let url = try PixivAPI.novelCommentsURL(novelID: 49_895_345)
