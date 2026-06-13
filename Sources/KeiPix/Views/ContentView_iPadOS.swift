@@ -101,7 +101,8 @@ struct ContentView: View {
             #if DEBUG
             .task {
                 if VisualQALaunchArgument.contains(.about)
-                    || VisualQALaunchArgument.contains(.settingsWindow) {
+                    || VisualQALaunchArgument.contains(.settingsWindow)
+                    || VisualQALaunchArgument.contains(.downloadSettings) {
                     isSettingsSheetPresented = true
                 }
                 if VisualQALaunchArgument.contains(.bottomTabs) {

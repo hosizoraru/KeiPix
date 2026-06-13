@@ -12,18 +12,41 @@ MANIFEST_PATH="$OUTPUT_DIR/${SURFACE}.md"
 mkdir -p "$OUTPUT_DIR"
 
 WINDOW_ID="$(
-  /usr/bin/swift - "$APP_NAME" <<'SWIFT'
+  /usr/bin/swift - "$APP_NAME" "$SURFACE" <<'SWIFT'
 import CoreGraphics
 import Foundation
 
 let appName = CommandLine.arguments.dropFirst().first ?? "KeiPix"
+let surface = CommandLine.arguments.dropFirst(2).first ?? "manual"
 let windows = CGWindowListCopyWindowInfo([.optionOnScreenOnly], kCGNullWindowID) as? [[String: Any]] ?? []
 let ownerKey = kCGWindowOwnerName as String
 let numberKey = kCGWindowNumber as String
 let layerKey = kCGWindowLayer as String
 let boundsKey = kCGWindowBounds as String
+let nameKey = kCGWindowName as String
 
-let candidates = windows.compactMap { window -> Int? in
+struct Candidate {
+    let id: Int
+    let name: String
+}
+
+let preferredWindowNames: [String]
+switch surface {
+case "download-settings":
+    preferredWindowNames = ["下载", "下載", "Downloads", "Download"]
+case "settings-window":
+    preferredWindowNames = ["通用", "General"]
+case "sharing-templates":
+    preferredWindowNames = ["分享", "Sharing", "Share"]
+case "runtime-readiness":
+    preferredWindowNames = ["高级 QA", "進階 QA", "Advanced QA"]
+case "about":
+    preferredWindowNames = ["关于 KeiPix", "關於 KeiPix", "About KeiPix"]
+default:
+    preferredWindowNames = []
+}
+
+let candidates = windows.compactMap { window -> Candidate? in
     guard window[ownerKey] as? String == appName,
           (window[layerKey] as? Int) == 0,
           let id = window[numberKey] as? Int,
@@ -35,11 +58,17 @@ let candidates = windows.compactMap { window -> Int? in
     else {
         return nil
     }
-    return id
+    return Candidate(id: id, name: window[nameKey] as? String ?? "")
 }
 
-if let window = candidates.first {
-    print(window)
+if let preferred = candidates.first(where: { candidate in
+    preferredWindowNames.contains { name in
+        candidate.name.localizedCaseInsensitiveContains(name)
+    }
+}) {
+    print(preferred.id)
+} else if let window = candidates.first {
+    print(window.id)
 }
 SWIFT
 )"

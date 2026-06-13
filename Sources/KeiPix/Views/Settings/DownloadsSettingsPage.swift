@@ -80,11 +80,7 @@ struct DownloadsSettingsPage: View {
             systemImage: "textformat.abc",
             footer: L10n.downloadNamingTemplateHint
         ) {
-            OS26LibraryTextEntryField(
-                text: store.settings_downloadNamingTemplateBinding,
-                placeholder: L10n.downloadNamingTemplate
-            )
-                .font(.system(.body, design: .monospaced))
+            templateEditor
 
             // Live preview rows. Each scenario renders the user's current
             // template against a documented sample (standalone / multi-
@@ -135,6 +131,55 @@ struct DownloadsSettingsPage: View {
         }
     }
 
+    private var templateEditor: some View {
+        ViewThatFits(in: .horizontal) {
+            HStack(alignment: .center, spacing: 10) {
+                templateTextField
+                    .layoutPriority(1)
+                tokenMenu
+            }
+
+            VStack(alignment: .leading, spacing: 10) {
+                templateTextField
+                tokenMenu
+            }
+        }
+    }
+
+    private var templateTextField: some View {
+        OS26LibraryTextEntryField(
+            text: store.settings_downloadNamingTemplateBinding,
+            placeholder: L10n.downloadNamingTemplate
+        )
+        .font(.system(.body, design: .monospaced))
+    }
+
+    private var tokenMenu: some View {
+        Menu {
+            ForEach(DownloadNamingTemplate.TokenGroup.allCases) { group in
+                Section(tokenGroupTitle(group)) {
+                    ForEach(tokens(in: group)) { token in
+                        Button {
+                            insertTemplateToken(token)
+                        } label: {
+                            Label(
+                                "\(token.placeholder) · \(tokenTitle(token))",
+                                systemImage: tokenIcon(token)
+                            )
+                        }
+                    }
+                }
+            }
+        } label: {
+            Label(L10n.insertTemplateToken, systemImage: "curlybraces.square")
+                .lineLimit(1)
+        }
+        .os26GlassButton()
+        .fixedSize(horizontal: true, vertical: false)
+        .help(L10n.insertTemplateToken)
+        .accessibilityLabel(L10n.insertTemplateToken)
+    }
+
     private func previewRow(scenario: DownloadNamingTemplate.PreviewScenario) -> some View {
         // Compose the absolute path manually rather than via NSString
         // pathComponents so the trailing slash from the download folder
@@ -165,6 +210,66 @@ struct DownloadsSettingsPage: View {
         case .standalone: return L10n.templatePreviewStandalone
         case .multiPage: return L10n.templatePreviewMultiPage
         case .series: return L10n.templatePreviewSeries
+        }
+    }
+
+    private func tokens(in group: DownloadNamingTemplate.TokenGroup) -> [DownloadNamingTemplate.Token] {
+        DownloadNamingTemplate.documentedTokens.filter { $0.group == group }
+    }
+
+    private func insertTemplateToken(_ token: DownloadNamingTemplate.Token) {
+        let current = store.downloads.downloadNamingTemplate
+        let separator: String
+        if current.isEmpty || current.hasSuffix("/") || current.hasSuffix("_") || current.hasSuffix("-") || current.hasSuffix(" ") {
+            separator = ""
+        } else {
+            separator = "_"
+        }
+        store.downloads.setDownloadNamingTemplate("\(current)\(separator)\(token.placeholder)")
+        coordinator.setActionMessage(L10n.insertedTemplateToken(token.placeholder))
+    }
+
+    private func tokenGroupTitle(_ group: DownloadNamingTemplate.TokenGroup) -> String {
+        switch group {
+        case .identity: return L10n.works
+        case .creator: return L10n.creator
+        case .series: return L10n.series
+        case .page: return L10n.pages
+        case .flags: return L10n.templateTokenFlags
+        case .tags: return L10n.tags
+        }
+    }
+
+    private func tokenTitle(_ token: DownloadNamingTemplate.Token) -> String {
+        switch token.key {
+        case "id": return "ID"
+        case "title": return L10n.title
+        case "user": return L10n.creator
+        case "userId": return L10n.creatorID
+        case "series": return L10n.series
+        case "seriesId": return L10n.seriesID
+        case "page": return L10n.pageIndex
+        case "page1": return L10n.page
+        case "pages": return L10n.pages
+        case "ext": return L10n.fileExtension
+        case "AI": return L10n.aiGenerated
+        case "R18": return L10n.r18
+        case "R18G": return L10n.r18g
+        case "tag1": return L10n.firstTag
+        case "tag2": return L10n.secondTag
+        case "tag(name)": return L10n.namedTag
+        default: return token.displayName
+        }
+    }
+
+    private func tokenIcon(_ token: DownloadNamingTemplate.Token) -> String {
+        switch token.group {
+        case .identity: return "photo"
+        case .creator: return "person.crop.circle"
+        case .series: return "books.vertical"
+        case .page: return "doc.on.doc"
+        case .flags: return "flag"
+        case .tags: return "tag"
         }
     }
 }

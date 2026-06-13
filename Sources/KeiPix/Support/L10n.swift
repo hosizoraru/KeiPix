@@ -320,6 +320,16 @@ enum L10n {
     static var templatePreviewStandalone: String { text("Standalone Illust") }
     static var templatePreviewMultiPage: String { text("Multi-Page Artwork") }
     static var templatePreviewSeries: String { text("Series Chapter") }
+    static var insertTemplateToken: String { text("Insert Token") }
+    static func insertedTemplateToken(_ value: String) -> String {
+        String(format: text("Inserted %@"), locale: Locale.current, value)
+    }
+    static var templateTokenFlags: String { text("Flags") }
+    static var seriesID: String { text("Series ID") }
+    static var fileExtension: String { text("File Extension") }
+    static var firstTag: String { text("First Tag") }
+    static var secondTag: String { text("Second Tag") }
+    static var namedTag: String { text("Named Tag") }
     static func unknownPlaceholdersFormat(_ value: String) -> String {
         String(format: text("Unknown placeholders: %@"), locale: Locale.current, value)
     }
@@ -1513,6 +1523,7 @@ enum L10n {
     static var relatedArtworks: String { text("Related Artworks") }
     static var noRelatedArtworks: String { text("No related artworks") }
     static var loadMoreRelatedArtworks: String { text("Load More Related Artworks") }
+    static var series: String { text("Series") }
     static var artworkSeries: String { text("Artwork Series") }
     static var noSeriesArtworks: String { text("No series artworks") }
     static var noMatchingSeriesArtworks: String { text("No matching series artworks") }

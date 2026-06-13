@@ -3,6 +3,25 @@ import Foundation
 struct DownloadNamingTemplate: Sendable {
     static let defaultTemplate = "${id} - ${title}/${id}_p${page}.${ext}"
 
+    static let documentedTokens: [Token] = [
+        Token(key: "id", displayName: "ID", sampleValue: "100000000", group: .identity),
+        Token(key: "title", displayName: "Title", sampleValue: "Sample Artwork", group: .identity),
+        Token(key: "user", displayName: "Creator", sampleValue: "Sample Artist", group: .creator),
+        Token(key: "userId", displayName: "Creator ID", sampleValue: "12345", group: .creator),
+        Token(key: "series", displayName: "Series", sampleValue: "Morning Series", group: .series),
+        Token(key: "seriesId", displayName: "Series ID", sampleValue: "9001", group: .series),
+        Token(key: "page", displayName: "Page Index", sampleValue: "0", group: .page),
+        Token(key: "page1", displayName: "Page Number", sampleValue: "1", group: .page),
+        Token(key: "pages", displayName: "Total Pages", sampleValue: "8", group: .page),
+        Token(key: "ext", displayName: "Extension", sampleValue: "jpg", group: .page),
+        Token(key: "AI", displayName: "AI Flag", sampleValue: "AI", group: .flags),
+        Token(key: "R18", displayName: "R-18 Flag", sampleValue: "R18", group: .flags),
+        Token(key: "R18G", displayName: "R-18G Flag", sampleValue: "R18G", group: .flags),
+        Token(key: "tag1", displayName: "First Tag", sampleValue: "original", group: .tags),
+        Token(key: "tag2", displayName: "Second Tag", sampleValue: "landscape", group: .tags),
+        Token(key: "tag(name)", displayName: "Named Tag", sampleValue: "landscape", group: .tags)
+    ]
+
     var rawValue: String
 
     var effectiveTemplate: String {
@@ -82,11 +101,7 @@ struct DownloadNamingTemplate: Sendable {
         return seen
     }
 
-    private static let knownPlaceholders: Set<String> = [
-        "id", "title", "user", "userId", "series", "seriesId",
-        "page", "page1", "pages", "ext", "AI", "R18", "R18G",
-        "tag1", "tag2"
-    ]
+    private static let knownPlaceholders = Set(documentedTokens.map(\.key))
 
     private static func isKnownPlaceholder(_ key: String) -> Bool {
         if knownPlaceholders.contains(key) { return true }
@@ -200,6 +215,30 @@ struct DownloadNamingTemplate: Sendable {
         var parentComponents: [String] {
             Array(components.dropLast())
         }
+    }
+
+    struct Token: Identifiable, Hashable, Sendable {
+        let key: String
+        let displayName: String
+        let sampleValue: String
+        let group: TokenGroup
+
+        var id: String { key }
+
+        var placeholder: String {
+            "${\(key)}"
+        }
+    }
+
+    enum TokenGroup: String, CaseIterable, Identifiable, Sendable {
+        case identity
+        case creator
+        case series
+        case page
+        case flags
+        case tags
+
+        var id: String { rawValue }
     }
 
     struct Context: Sendable {

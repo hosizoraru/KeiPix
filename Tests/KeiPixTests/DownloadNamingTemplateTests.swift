@@ -88,6 +88,29 @@ struct DownloadNamingTemplateTests {
         #expect(dynamic.unknownPlaceholders.isEmpty)
     }
 
+    @Test("Documented token catalog stays in sync with template validation")
+    func documentedTokenCatalogMatchesValidator() {
+        let tokens = DownloadNamingTemplate.documentedTokens
+
+        #expect(tokens.isEmpty == false)
+        #expect(tokens.map(\.placeholder).contains("${id}"))
+        #expect(tokens.map(\.placeholder).contains("${series}"))
+        #expect(tokens.map(\.placeholder).contains("${tag(name)}"))
+        #expect(Set(tokens.map(\.group)).isSuperset(of: [.identity, .creator, .series, .page, .flags, .tags]))
+
+        let template = DownloadNamingTemplate(rawValue: tokens.map(\.placeholder).joined(separator: "/"))
+        #expect(template.unknownPlaceholders.isEmpty)
+    }
+
+    @Test("Token catalog exposes insertable placeholder text")
+    func tokenCatalogExposesInsertablePlaceholderText() {
+        let token = DownloadNamingTemplate.documentedTokens.first { $0.key == "page1" }
+
+        #expect(token?.placeholder == "${page1}")
+        #expect(token?.displayName.isEmpty == false)
+        #expect(token?.sampleValue.isEmpty == false)
+    }
+
     private func makeContext(
         seriesTitle: String?,
         seriesID: Int?

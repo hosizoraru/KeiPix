@@ -56,6 +56,7 @@ struct KeiPixApp: App {
                 .task {
                     if VisualQALaunchArgument.contains(.about)
                         || VisualQALaunchArgument.contains(.settingsWindow)
+                        || VisualQALaunchArgument.contains(.downloadSettings)
                         || VisualQALaunchArgument.contains(.runtimeReadiness)
                         || VisualQALaunchArgument.contains(.sharingTemplates) {
                         openSettings()

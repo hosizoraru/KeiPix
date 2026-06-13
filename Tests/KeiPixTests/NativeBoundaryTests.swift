@@ -955,6 +955,7 @@ struct NativeBoundaryTests {
         #expect(iPadContentView.contains("isMobileTabCustomizationPresented = true"))
         #expect(iPadContentView.contains("VisualQALaunchArgument.contains(.bottomTabs)"))
         #expect(iPadContentView.contains("VisualQALaunchArgument.contains(.settingsWindow)"))
+        #expect(iPadContentView.contains("VisualQALaunchArgument.contains(.downloadSettings)"))
         #expect(iPadContentView.contains(".os26SheetChrome(.settings)"))
         #expect(iPadContentView.contains("SearchWorkspaceView("))
         #expect(iPadContentView.contains("galleryLayoutAdaptation: galleryLayoutAdaptation(showsSidebarToggle: showsSidebarToggle)"))
@@ -2507,6 +2508,10 @@ struct NativeBoundaryTests {
             contentsOf: root.appending(path: "Sources/KeiPix/Views/Settings/SettingsBindings.swift"),
             encoding: .utf8
         )
+        let downloadsSettings = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/Settings/DownloadsSettingsPage.swift"),
+            encoding: .utf8
+        )
         let migratedPages = [
             "Sources/KeiPix/Views/Settings/AccountSettingsPage.swift",
             "Sources/KeiPix/Views/Settings/DiscoverySettingsPage.swift",
@@ -2548,6 +2553,7 @@ struct NativeBoundaryTests {
         #expect(generalSettings.contains("options: RouteSwitchRefreshExpiration.allCases"))
         #expect(generalSettings.contains(".pickerStyle(.segmented)") == false)
         #expect(settingsCategory.contains("if VisualQALaunchArgument.contains(.settingsWindow) {\n            return .general"))
+        #expect(settingsCategory.contains("if VisualQALaunchArgument.contains(.downloadSettings) {\n            return .downloads"))
 
         #expect(settingsSurface.contains("struct OS26SettingsPage<Content: View>: View"))
         #expect(settingsSurface.contains("struct OS26SettingsSection<Content: View>: View"))
@@ -2565,6 +2571,11 @@ struct NativeBoundaryTests {
         #expect(settingsBindings.contains("settings_defaultMangaBookmarkRestrictBinding"))
         #expect(settingsBindings.contains("settings_defaultNovelBookmarkRestrictBinding"))
         #expect(settingsBindings.contains("settings_routeSwitchRefreshExpirationBinding"))
+        #expect(downloadsSettings.contains("private var templateEditor: some View"))
+        #expect(downloadsSettings.contains("ViewThatFits(in: .horizontal)"))
+        #expect(downloadsSettings.contains("private var tokenMenu: some View"))
+        #expect(downloadsSettings.contains("DownloadNamingTemplate.documentedTokens"))
+        #expect(downloadsSettings.contains("L10n.insertTemplateToken"))
         #expect(settingsSurface.contains("if width >= 590 { return 2 }"))
         #expect(settingsSurface.contains(".frame(maxWidth: .infinity, alignment: metrics.pageAlignment)"))
         #expect(settingsSurface.contains("var pageAlignment: Alignment"))
