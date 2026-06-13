@@ -3154,6 +3154,47 @@ struct NativeBoundaryTests {
         #expect(nativeFilmstrip.contains("selectPage(item.pageIndex)"))
     }
 
+    @Test("Artwork reader transforms share a command model across detail and window readers")
+    func artworkReaderTransformsShareCommandModel() throws {
+        let root = try packageRoot()
+        let readerView = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/ArtworkReaderView.swift"),
+            encoding: .utf8
+        )
+        let detailView = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/ArtworkDetailView.swift"),
+            encoding: .utf8
+        )
+        let standaloneReader = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/StandaloneArtworkReader.swift"),
+            encoding: .utf8
+        )
+        let transformModel = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Models/ReaderImageTransform.swift"),
+            encoding: .utf8
+        )
+        let transformMenu = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/ReaderImageTransformMenu.swift"),
+            encoding: .utf8
+        )
+
+        #expect(transformModel.contains("struct ReaderImageTransform"))
+        #expect(transformModel.contains("mutating func rotateLeft()"))
+        #expect(transformModel.contains("mutating func flipHorizontal()"))
+        #expect(transformMenu.contains("struct ReaderImageTransformMenu"))
+        #expect(transformMenu.contains("@Binding var transform: ReaderImageTransform"))
+        #expect(readerView.contains("var imageTransform: ReaderImageTransform = .identity"))
+        #expect(readerView.contains("func readerImageTransform(_ transform: ReaderImageTransform)"))
+        #expect(readerView.contains(".readerImageTransform(imageTransform)"))
+        #expect(readerView.contains("ReaderImageTransformMenu(transform: imageTransform)"))
+        #expect(detailView.contains("@State private var imageTransform = ReaderImageTransform()"))
+        #expect(detailView.contains("imageTransform: $imageTransform"))
+        #expect(detailView.contains("imageTransform: imageTransform"))
+        #expect(standaloneReader.contains("@State private var imageTransform = ReaderImageTransform()"))
+        #expect(standaloneReader.contains("ReaderImageTransformMenu(transform: $imageTransform)"))
+        #expect(standaloneReader.contains("imageTransform = .identity"))
+    }
+
     @Test("Artwork detail inspector uses adaptive actions and merged information cards")
     func artworkDetailInspectorUsesAdaptiveActionsAndMergedInformationCards() throws {
         let root = try packageRoot()

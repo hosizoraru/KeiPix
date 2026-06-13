@@ -17,9 +17,7 @@ struct StandaloneArtworkReader: View {
     @State private var scrollTarget: Int?
     @State private var isFocusPresetEnabled = false
     @State private var isPageJumpPresented = false
-    @State private var imageRotation: Double = 0
-    @State private var isImageFlippedHorizontally = false
-    @State private var isImageFlippedVertically = false
+    @State private var imageTransform = ReaderImageTransform()
     @AppStorage("reader.snapToPageBoundaries") private var snapToPageBoundaries = false
 
     init(artwork: PixivArtwork, store: KeiPixStore) {
@@ -43,6 +41,7 @@ struct StandaloneArtworkReader: View {
                                 ArtworkReaderControls(
                                     pageIndex: $pageIndex,
                                     readingMode: $readingMode,
+                                    imageTransform: $imageTransform,
                                     pageCount: pageCount,
                                     scrollToPage: { index in
                                         scrollToPage(index, proxy: proxy)
@@ -60,15 +59,11 @@ struct StandaloneArtworkReader: View {
                                     store: store,
                                     pageIndex: $pageIndex,
                                     readingMode: $readingMode,
+                                    imageTransform: imageTransform,
                                     scrollTarget: $scrollTarget,
                                     scrollToPage: { index in
                                         scrollToPage(index, proxy: proxy)
                                     }
-                                )
-                                .rotationEffect(.degrees(imageRotation))
-                                .scaleEffect(
-                                    x: isImageFlippedHorizontally ? -1 : 1,
-                                    y: isImageFlippedVertically ? -1 : 1
                                 )
                             }
                         }
@@ -185,7 +180,8 @@ struct StandaloneArtworkReader: View {
                 snapToPagesButton
             }
 
-            imageTransformMenu
+            ReaderImageTransformMenu(transform: $imageTransform)
+                .labelStyle(.iconOnly)
             pageJumpButton
             focusButton
             previousPageButton(proxy: proxy)
@@ -225,44 +221,6 @@ struct StandaloneArtworkReader: View {
         }
         .labelStyle(.iconOnly)
         .help(L10n.snapToPages)
-    }
-
-    private var imageTransformMenu: some View {
-        Menu {
-            Button {
-                imageRotation -= 90
-            } label: {
-                Label(L10n.rotateLeft, systemImage: "rotate.left")
-            }
-            Button {
-                imageRotation += 90
-            } label: {
-                Label(L10n.rotateRight, systemImage: "rotate.right")
-            }
-            Divider()
-            Button {
-                isImageFlippedHorizontally.toggle()
-            } label: {
-                Label(L10n.flipHorizontal, systemImage: "arrow.left.and.right.righttriangle.left.righttriangle.right")
-            }
-            Button {
-                isImageFlippedVertically.toggle()
-            } label: {
-                Label(L10n.flipVertical, systemImage: "arrow.up.and.down.righttriangle.up.righttriangle.down")
-            }
-            Divider()
-            Button {
-                imageRotation = 0
-                isImageFlippedHorizontally = false
-                isImageFlippedVertically = false
-            } label: {
-                Label(L10n.resetTransform, systemImage: "arrow.counterclockwise")
-            }
-        } label: {
-            Label(L10n.imageTransform, systemImage: "crop.rotate")
-        }
-        .labelStyle(.iconOnly)
-        .help(L10n.imageTransform)
     }
 
     private var pageJumpButton: some View {
@@ -378,6 +336,7 @@ struct StandaloneArtworkReader: View {
 
     private func resetForArtwork() {
         readingMode = store.defaultReadingMode(for: artwork, pageCount: pageCount)
+        imageTransform = .identity
         let restoredPageIndex = store.restoredReaderPageIndex(for: artwork, pageCount: pageCount)
         pageIndex = restoredPageIndex
         scrollTarget = effectiveReadingMode == .singlePage ? nil : restoredPageIndex

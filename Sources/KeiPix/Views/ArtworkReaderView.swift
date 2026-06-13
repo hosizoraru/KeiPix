@@ -8,6 +8,7 @@ struct ArtworkReaderView: View {
     @Bindable var store: KeiPixStore
     @Binding var pageIndex: Int
     @Binding var readingMode: ArtworkReadingMode
+    var imageTransform: ReaderImageTransform = .identity
     @Binding var scrollTarget: Int?
     let scrollToPage: (Int) -> Void
 
@@ -84,6 +85,7 @@ struct ArtworkReaderView: View {
                 store: store,
                 pageIndex: $pageIndex,
                 presentation: presentation(for: pageIndex),
+                imageTransform: imageTransform,
                 interaction: interaction,
                 movePage: movePage,
                 handlePageSwipe: handlePageSwipe,
@@ -96,6 +98,7 @@ struct ArtworkReaderView: View {
                 pageIndex: $pageIndex,
                 presentationLeft: presentation(for: pageIndex),
                 presentationRight: presentation(for: pageIndex + 1),
+                imageTransform: imageTransform,
                 interaction: interaction,
                 movePage: movePage,
                 handlePageSwipe: handlePageSwipe,
@@ -107,6 +110,7 @@ struct ArtworkReaderView: View {
                 store: store,
                 pageIndex: $pageIndex,
                 presentation: presentation(for:),
+                imageTransform: imageTransform,
                 handlePageSwipe: handlePageSwipe,
                 onImageLoaded: updatePageAspectRatio
             )
@@ -239,6 +243,7 @@ struct ArtworkReaderView: View {
 struct ArtworkReaderControls: View {
     @Binding var pageIndex: Int
     @Binding var readingMode: ArtworkReadingMode
+    var imageTransform: Binding<ReaderImageTransform>? = nil
     let pageCount: Int
     let scrollToPage: (Int) -> Void
 
@@ -248,7 +253,10 @@ struct ArtworkReaderControls: View {
         GlassEffectContainer(spacing: 10) {
             ViewThatFits(in: .horizontal) {
                 HStack(spacing: 10) {
-                    readingModeMenu
+                    if pageCount > 1 {
+                        readingModeMenu
+                    }
+                    imageTransformMenu
 
                     if pageCount > 1 {
                         pageNavigationControls
@@ -258,7 +266,10 @@ struct ArtworkReaderControls: View {
 
                 VStack(spacing: 9) {
                     HStack(spacing: 10) {
-                        readingModeMenu
+                        if pageCount > 1 {
+                            readingModeMenu
+                        }
+                        imageTransformMenu
 
                         if pageCount > 1 {
                             compactPageNavigationControls
@@ -309,6 +320,15 @@ struct ArtworkReaderControls: View {
         .os26GlassButton()
         .accessibilityLabel(L10n.readingMode)
         .accessibilityValue(effectiveReadingMode.title)
+    }
+
+    @ViewBuilder
+    private var imageTransformMenu: some View {
+        if let imageTransform {
+            ReaderImageTransformMenu(transform: imageTransform)
+                .menuStyle(.button)
+                .os26GlassButton()
+        }
     }
 
     @ViewBuilder
@@ -421,6 +441,7 @@ private struct ArtworkSinglePageReader: View {
     @Bindable var store: KeiPixStore
     @Binding var pageIndex: Int
     let presentation: ReaderPagePresentation
+    let imageTransform: ReaderImageTransform
     let interaction: ArtworkReaderInteractionState
     let movePage: (Int) -> Void
     let handlePageSwipe: (ReaderScrollEvent) -> Bool
@@ -446,6 +467,7 @@ private struct ArtworkSinglePageReader: View {
                         handlePageSwipe(event)
                     }
                 )
+                .readerImageTransform(imageTransform)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
 
                 if pageCount > 1 {
@@ -510,6 +532,7 @@ private struct ArtworkContinuousReader: View {
     @Bindable var store: KeiPixStore
     @Binding var pageIndex: Int
     let presentation: (Int) -> ReaderPagePresentation
+    let imageTransform: ReaderImageTransform
     let handlePageSwipe: (ReaderScrollEvent) -> Bool
     let onImageLoaded: (PlatformImage, Int) -> Void
 
@@ -527,6 +550,7 @@ private struct ArtworkContinuousReader: View {
                             onImageLoaded(image, index)
                         }
                     )
+                        .readerImageTransform(imageTransform)
                         .aspectRatio(pagePresentation.aspectRatio, contentMode: .fit)
                         .containerRelativeFrame(.horizontal) { length, _ in
                             pagePresentation.continuousWidth(in: length)
@@ -577,6 +601,7 @@ private struct ArtworkDoublePageReader: View {
     @Binding var pageIndex: Int
     let presentationLeft: ReaderPagePresentation
     let presentationRight: ReaderPagePresentation
+    let imageTransform: ReaderImageTransform
     let interaction: ArtworkReaderInteractionState
     let movePage: (Int) -> Void
     let handlePageSwipe: (ReaderScrollEvent) -> Bool
@@ -645,6 +670,7 @@ private struct ArtworkDoublePageReader: View {
                 handlePageSwipe(event)
             }
         )
+        .readerImageTransform(imageTransform)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
@@ -753,6 +779,15 @@ private struct PageNavigationButton: View {
 }
 
 private extension View {
+    func readerImageTransform(_ transform: ReaderImageTransform) -> some View {
+        self
+            .rotationEffect(.degrees(transform.rotationDegrees))
+            .scaleEffect(
+                x: transform.isFlippedHorizontally ? -1 : 1,
+                y: transform.isFlippedVertically ? -1 : 1
+            )
+    }
+
     func readerCanvasChrome(cornerRadius: CGFloat = 26) -> some View {
         self
             .keiPanel(cornerRadius, clipsContent: true)

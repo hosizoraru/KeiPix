@@ -51,6 +51,7 @@ private struct ArtworkInspectorView: View {
     @State private var expansionState: ArtworkDetailExpansionState
     @State private var pageIndex = 0
     @State private var readingMode: ArtworkReadingMode
+    @State private var imageTransform = ReaderImageTransform()
     @State private var scrollTarget: Int?
     @State private var detailFeedClearMessage: String?
     @State private var detailActionMessage: String?
@@ -74,10 +75,11 @@ private struct ArtworkInspectorView: View {
                         .padding(.horizontal, 18)
                         .padding(.top, 14)
 
-                    if pageCount > 1 {
+                    if showsReaderControls {
                         ArtworkReaderControls(
                             pageIndex: $pageIndex,
                             readingMode: $readingMode,
+                            imageTransform: $imageTransform,
                             pageCount: pageCount,
                             scrollToPage: { index in
                                 scrollToPage(index, proxy: proxy)
@@ -95,6 +97,7 @@ private struct ArtworkInspectorView: View {
                             store: store,
                             pageIndex: $pageIndex,
                             readingMode: $readingMode,
+                            imageTransform: imageTransform,
                             scrollTarget: $scrollTarget,
                             scrollToPage: { index in
                                 scrollToPage(index, proxy: proxy)
@@ -208,6 +211,10 @@ private struct ArtworkInspectorView: View {
 
     private var effectiveReadingMode: ArtworkReadingMode {
         readingMode.effectiveMode(forPageCount: pageCount, platform: .current)
+    }
+
+    private var showsReaderControls: Bool {
+        pageCount > 1 || artwork.isUgoira == false
     }
 
     @ViewBuilder
@@ -326,6 +333,7 @@ private struct ArtworkInspectorView: View {
     private func resetForArtwork() {
         expansionState = store.artworkDetailExpansionState(for: artwork)
         readingMode = store.defaultReadingMode(for: artwork, pageCount: pageCount)
+        imageTransform = .identity
         let restoredPageIndex = store.restoredReaderPageIndex(for: artwork, pageCount: pageCount)
         pageIndex = restoredPageIndex
         scrollTarget = effectiveReadingMode == .singlePage ? nil : restoredPageIndex

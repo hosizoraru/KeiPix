@@ -25,6 +25,29 @@ struct ArtworkReadingModeTests {
         #expect(ArtworkReadingMode.index.effectiveMode(forPageCount: 2) == .index)
     }
 
+    @Test("Reader image transform normalizes rotations and flips independently")
+    func readerImageTransformNormalizesRotationsAndFlips() {
+        var transform = ReaderImageTransform(quarterTurns: -1)
+
+        #expect(transform.quarterTurns == 3)
+        #expect(transform.rotationDegrees == 270)
+        #expect(transform.isIdentity == false)
+
+        transform.rotateRight()
+        #expect(transform.quarterTurns == 0)
+        #expect(transform.isIdentity)
+
+        transform.flipHorizontal()
+        #expect(transform.isFlippedHorizontally)
+        #expect(transform.isIdentity == false)
+
+        transform.flipVertical()
+        #expect(transform.isFlippedVertically)
+
+        transform.reset()
+        #expect(transform == .identity)
+    }
+
     @Test("Adaptive reader layout keeps phones continuous while iPad and macOS can use double pages")
     func adaptiveReaderLayoutSupportsPlatformDoublePages() {
         #expect(ReaderAdaptiveLayout.usesContinuousNovelReader(platform: .phone))
