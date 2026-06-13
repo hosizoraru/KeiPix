@@ -132,4 +132,28 @@ struct WorkSubscriptionTests {
         #expect(subscription.newWorkCount(for: .manga) == 0)
         #expect(subscription.totalNewWorkCount == 1)
     }
+
+    @Test("Subscription opening prefers tracked kinds with pending updates")
+    func openingPrefersTrackedKindsWithPendingUpdates() {
+        var subscription = WorkSubscription(
+            creatorID: 42,
+            creatorName: "Series QA Creator",
+            creatorAccount: "series_qa"
+        )
+
+        #expect(subscription.preferredOpenKind == .illustrations)
+        #expect(subscription.preferredCreatorRoute == .userIllustrations)
+
+        _ = subscription.recordSeenWorkIDs([100], for: .illustrations)
+        _ = subscription.recordSeenWorkIDs([300], for: .manga)
+        _ = subscription.recordSeenWorkIDs([900], for: .novels)
+        _ = subscription.recordSeenWorkIDs([901, 900], for: .novels)
+        #expect(subscription.preferredOpenKind == .novels)
+        #expect(subscription.preferredCreatorRoute == .userNovels)
+
+        let disabledNovels = subscription.setTracking(false, for: .novels)
+        #expect(disabledNovels)
+        #expect(subscription.preferredOpenKind == .illustrations)
+        #expect(subscription.preferredCreatorRoute == .userIllustrations)
+    }
 }

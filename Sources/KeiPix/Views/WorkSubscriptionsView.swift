@@ -201,9 +201,9 @@ struct WorkSubscriptionsView: View {
             name: subscription.creatorName,
             account: subscription.creatorAccount
         )
-        store.focusedUser = user
-        store.selectedRoute = .search
-        store.searchText = "user:\(subscription.creatorAccount)"
+        Task {
+            await store.openUserFeed(user: user, route: subscription.preferredCreatorRoute)
+        }
     }
 }
 

@@ -6,6 +6,17 @@ enum WorkSubscriptionContentKind: String, CaseIterable, Codable, Identifiable, H
     case novels
 
     var id: String { rawValue }
+
+    var creatorFeedRoute: PixivRoute {
+        switch self {
+        case .illustrations:
+            .userIllustrations
+        case .manga:
+            .userManga
+        case .novels:
+            .userNovels
+        }
+    }
 }
 
 struct WorkSubscription: Codable, Identifiable, Hashable, Sendable {
@@ -38,6 +49,14 @@ struct WorkSubscription: Codable, Identifiable, Hashable, Sendable {
 
     var trackedKinds: [WorkSubscriptionContentKind] {
         WorkSubscriptionContentKind.allCases.filter { trackedWorkKinds.contains($0) }
+    }
+
+    var preferredOpenKind: WorkSubscriptionContentKind {
+        trackedKinds.first { newWorkCount(for: $0) > 0 } ?? trackedKinds.first ?? .illustrations
+    }
+
+    var preferredCreatorRoute: PixivRoute {
+        preferredOpenKind.creatorFeedRoute
     }
 
     init(
