@@ -1867,8 +1867,13 @@ struct ContentView: View {
             return
         }
 
+        let route = mobileRoute(for: mobileBottomTabLaunchKind)
+        let shouldRefreshInitialRoute = store.selectedRoute == route
         hasAppliedMobileBottomTabLaunchTarget = true
         selectMobileBottomTabKind(mobileBottomTabLaunchKind)
+        if shouldRefreshInitialRoute {
+            Task { await store.refreshSelectedRouteContent() }
+        }
     }
 
     private func setCompactSelectedTab(_ tab: iPadTab, skipsHandler: Bool) {

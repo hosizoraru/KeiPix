@@ -36,7 +36,7 @@ extension KeiPixStore {
         #if DEBUG
         presentLocalSampleFeed(for: selectedRoute.usesArtworkFeed ? selectedRoute : .illustrations)
         #else
-        Task { await reloadCurrentFeed() }
+        Task { await refreshSelectedRouteContent() }
         #endif
     }
 

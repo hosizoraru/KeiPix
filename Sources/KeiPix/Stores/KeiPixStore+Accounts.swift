@@ -11,7 +11,7 @@ extension KeiPixStore {
             if session != nil {
                 await refreshRestrictedModeSetting()
                 await refreshAIShowSetting()
-                await reloadCurrentFeed()
+                await refreshSelectedRouteContent()
                 await syncBrowsingHistoryFromPixiv()
             }
         } catch {
@@ -37,7 +37,7 @@ extension KeiPixStore {
             selectedRoute = .home
             await refreshRestrictedModeSetting()
             await refreshAIShowSetting()
-            await reloadCurrentFeed()
+            await refreshSelectedRouteContent()
             await syncBrowsingHistoryFromPixiv()
         } catch {
             errorMessage = error.localizedDescription
@@ -58,7 +58,7 @@ extension KeiPixStore {
             selectedRoute = .home
             await refreshRestrictedModeSetting()
             await refreshAIShowSetting()
-            await reloadCurrentFeed()
+            await refreshSelectedRouteContent()
             await syncBrowsingHistoryFromPixiv()
             return true
         } catch {
@@ -77,7 +77,7 @@ extension KeiPixStore {
             if session != nil {
                 await refreshRestrictedModeSetting()
                 await refreshAIShowSetting()
-                await reloadCurrentFeed()
+                await refreshSelectedRouteContent()
             }
         } catch {
             errorMessage = error.localizedDescription
@@ -100,7 +100,7 @@ extension KeiPixStore {
             if session != nil {
                 await refreshRestrictedModeSetting()
                 await refreshAIShowSetting()
-                await reloadCurrentFeed()
+                await refreshSelectedRouteContent()
                 await syncBrowsingHistoryFromPixiv()
             }
         } catch {
@@ -117,7 +117,7 @@ extension KeiPixStore {
             if session != nil {
                 await refreshRestrictedModeSetting()
                 await refreshAIShowSetting()
-                await reloadCurrentFeed()
+                await refreshSelectedRouteContent()
             }
         } catch {
             errorMessage = error.localizedDescription

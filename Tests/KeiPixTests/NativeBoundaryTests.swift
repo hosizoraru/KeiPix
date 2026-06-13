@@ -487,6 +487,7 @@ struct NativeBoundaryTests {
         #expect(contentView.contains("private func mobileDefaultRoute(for kind: MobileBottomTabKind) -> PixivRoute"))
         #expect(contentView.contains("private func mobileRoute(for kind: MobileBottomTabKind) -> PixivRoute"))
         #expect(contentView.contains("private func applyMobileBottomTabLaunchTargetIfNeeded()"))
+        #expect(contentView.contains("Task { await store.refreshSelectedRouteContent() }"))
         #expect(contentView.contains("private func recordMobileBottomTabRouteIfNeeded(_ route: PixivRoute)"))
         #expect(contentView.contains("skipsNextCompactTabSelectionHandler"))
         #expect(contentView.contains("private func selectCompactSearchTab()"))
@@ -1561,7 +1562,8 @@ struct NativeBoundaryTests {
 
         #expect(gallery.contains("private struct SignedOutView") == false)
         #expect(discovery.contains("private var signedOutContent") == false)
-        #expect(novelGallery.contains("if store.session != nil, novelStore.novels.isEmpty && novelStore.isLoading == false"))
+        #expect(novelGallery.contains("private var isShowingInitialLoad: Bool"))
+        #expect(novelGallery.contains("(novelStore.isLoading || hasAttemptedInitialLoad == false) && novelStore.novels.isEmpty"))
         #expect(novelGallery.contains("@State private var readerNovel: PixivNovel?"))
         #expect(novelGallery.contains(".sheet(item: $readerNovel)"))
         #expect(novelGallery.contains("NovelReaderView(store: store, novel: novel)"))
@@ -1675,6 +1677,32 @@ struct NativeBoundaryTests {
         #expect(visualQA.contains("seriesID: novelSeriesVisualQAID"))
         #expect(macOSRunner.contains("--visual-qa-novel-feed|visual-qa-novel-feed"))
         #expect(macOSRunner.contains("open_app --visual-qa-novel-feed"))
+    }
+
+    @Test("Cold launch route content refresh is not artwork-only")
+    func coldLaunchRouteContentRefreshIsNotArtworkOnly() throws {
+        let root = try packageRoot()
+        let accounts = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Stores/KeiPixStore+Accounts.swift"),
+            encoding: .utf8
+        )
+        let guestSession = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Support/GuestSession.swift"),
+            encoding: .utf8
+        )
+        let novelGallery = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/NovelGalleryView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(accounts.components(separatedBy: "await refreshSelectedRouteContent()").count - 1 >= 5)
+        #expect(accounts.contains("await reloadCurrentFeed()") == false)
+        #expect(guestSession.contains("Task { await refreshSelectedRouteContent() }"))
+        #expect(guestSession.contains("Task { await reloadCurrentFeed() }") == false)
+        #expect(novelGallery.contains("store.session != nil ? \"session\" : \"signed-out\""))
+        #expect(novelGallery.contains("hasAttemptedInitialLoad == false"))
+        #expect(novelGallery.contains(".transition(.opacity.combined(with: .scale(scale: 0.98)))"))
+        #expect(novelGallery.contains(".animation(.snappy(duration: 0.22), value: novelStore.isLoading)"))
     }
 
     @Test("iPad page status uses inline title chrome")

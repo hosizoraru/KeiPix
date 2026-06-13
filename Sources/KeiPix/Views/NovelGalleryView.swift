@@ -12,6 +12,7 @@ struct NovelGalleryView: View {
     @Bindable var store: KeiPixStore
     @State private var readerNovel: PixivNovel?
     @State private var selectedSeries: NovelSeriesChapterPresentation?
+    @State private var hasAttemptedInitialLoad = false
 
     private var novelStore: NovelFeatureStore { store.novels }
 
@@ -34,7 +35,7 @@ struct NovelGalleryView: View {
             Group {
                 if store.session == nil {
                     PixivSignedOutStateView(store: store)
-                } else if novelStore.isLoading && novelStore.novels.isEmpty {
+                } else if isShowingInitialLoad {
                     loadingState
                 } else if novelStore.novels.isEmpty {
                     emptyState
@@ -43,6 +44,10 @@ struct NovelGalleryView: View {
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .transition(.opacity.combined(with: .scale(scale: 0.98)))
+            .animation(.snappy(duration: 0.22), value: novelStore.isLoading)
+            .animation(.snappy(duration: 0.22), value: novelStore.novels.isEmpty)
+            .animation(.snappy(duration: 0.22), value: hasAttemptedInitialLoad)
         }
         .navigationTitle(store.selectedRoute.title)
         .toolbar {
@@ -67,10 +72,17 @@ struct NovelGalleryView: View {
             }
         }
         .task(id: novelTaskID) {
-            // Only kick the first load; route changes already trigger
-            // `KeiPixStore.select(_:)` -> `NovelFeatureStore.refresh`.
-            if store.session != nil, novelStore.novels.isEmpty && novelStore.isLoading == false {
+            guard store.session != nil else {
+                hasAttemptedInitialLoad = false
+                return
+            }
+
+            if novelStore.novels.isEmpty && novelStore.isLoading == false {
+                hasAttemptedInitialLoad = false
                 await novelStore.refresh(route: store.selectedRoute)
+            }
+            if Task.isCancelled == false {
+                hasAttemptedInitialLoad = true
             }
         }
         .refreshable {
@@ -191,6 +203,10 @@ struct NovelGalleryView: View {
         )
     }
 
+    private var isShowingInitialLoad: Bool {
+        (novelStore.isLoading || hasAttemptedInitialLoad == false) && novelStore.novels.isEmpty
+    }
+
     private var paginationFooter: some View {
         OS26PaginationFooter(
             loadingTitle: L10n.loading,
@@ -254,7 +270,10 @@ struct NovelGalleryView: View {
     /// applies on novel surfaces yet, but keeping the same shape as
     /// the artwork gallery makes the intent obvious.
     private var novelTaskID: String {
-        store.selectedRoute.rawValue
+        [
+            store.selectedRoute.rawValue,
+            store.session != nil ? "session" : "signed-out"
+        ].joined(separator: "|")
     }
 
     private func readerButtonAction(for novel: PixivNovel, surface: NovelGallerySurfaceLayout) -> (() -> Void)? {
