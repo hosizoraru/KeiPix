@@ -1722,6 +1722,35 @@ struct NativeBoundaryTests {
         #expect(reader.contains("NovelBookmarkEditorView("))
     }
 
+    @Test("Gallery batch download can explicitly gather following feed pages")
+    func galleryBatchDownloadCanGatherFollowingPages() throws {
+        let root = try packageRoot()
+        let feedHeader = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/GalleryFeedHeaderView.swift"),
+            encoding: .utf8
+        )
+        let store = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Stores/KeiPixStore+ArtworkActions.swift"),
+            encoding: .utf8
+        )
+        let model = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Models/BatchDownloadModels.swift"),
+            encoding: .utf8
+        )
+
+        #expect(model.contains("struct BatchDownloadPlan"))
+        #expect(feedHeader.contains("private struct BatchDownloadContext"))
+        #expect(feedHeader.contains("@State private var includeNextBatchDownloadPages"))
+        #expect(feedHeader.contains("@State private var batchDownloadRemotePageLimit"))
+        #expect(feedHeader.contains("loadedArtworkCount: artworks.count"))
+        #expect(feedHeader.contains(".popover(item: $batchDownloadContext"))
+        #expect(feedHeader.contains("BatchDownloadPlan.make("))
+        #expect(feedHeader.contains("Task { await action() }"))
+        #expect(feedHeader.contains("includeNextPages: $includeNextBatchDownloadPages"))
+        #expect(store.contains("func enqueueDownloadsFromCurrentFeed("))
+        #expect(store.contains("try await api.nextFeed(url)"))
+    }
+
     @Test("Novel detail exposes comments through the shared comment surface")
     func novelDetailExposesSharedCommentSurface() throws {
         let root = try packageRoot()

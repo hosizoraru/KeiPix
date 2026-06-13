@@ -1094,7 +1094,7 @@ final class KeiPixStore {
         return Self.rankingDateFormatter.string(from: rankingDate)
     }
 
-    private func currentFeedRequestContext() -> FeedRequestContext {
+    func currentFeedRequestContext() -> FeedRequestContext {
         FeedRequestContext(
             route: selectedRoute,
             focusedUserID: focusedUser?.id,

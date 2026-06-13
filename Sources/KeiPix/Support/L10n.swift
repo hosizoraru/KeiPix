@@ -396,6 +396,9 @@ enum L10n {
     static var downloadInterrupted: String { text("Download interrupted") }
     static var batchDownload: String { text("Batch Download") }
     static var batchDownloadLoadedArtworks: String { text("Batch Download Loaded Artworks") }
+    static var includeFollowingPages: String { text("Include Following Pages") }
+    static var followingPageRequests: String { text("Following page requests") }
+    static var batchDownloadFollowingPagesHintFormat: String { text("May request up to %d more Pixiv feed pages before queueing.") }
     static var selectedWorks: String { text("Selected Works") }
     static var selectedWorksFormat: String { text("%d selected works") }
     static var noSelectedWorks: String { text("No selected works") }

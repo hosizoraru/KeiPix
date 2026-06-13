@@ -223,6 +223,72 @@ extension KeiPixStore {
         return imageCount + ugoiraArtworks.count
     }
 
+    @discardableResult
+    func enqueueDownloadsFromCurrentFeed(
+        limit: Int,
+        remotePageLimit: Int,
+        preferOriginal: Bool = true
+    ) async -> BatchDownloadResult {
+        let safeLimit = min(max(limit, 1), BatchDownloadPlan.maximumLoadedFeedLimit)
+        let safeRemotePageLimit = min(max(remotePageLimit, 0), BatchDownloadPlan.maximumRemotePageLimit)
+        let context = currentFeedRequestContext()
+        guard context.route.usesArtworkFeed else {
+            return BatchDownloadResult(queuedCount: 0, candidateCount: 0, fetchedPageCount: 0, reachedEnd: true)
+        }
+
+        var fetchedPageCount = 0
+        var candidates = uniqueBatchDownloadCandidates(from: artworks, limit: safeLimit)
+        let showsLoadingMore = safeRemotePageLimit > 0 && nextURL != nil && candidates.count < safeLimit
+        if showsLoadingMore {
+            isLoadingMore = true
+        }
+        defer {
+            if showsLoadingMore {
+                isLoadingMore = false
+            }
+        }
+
+        while candidates.count < safeLimit,
+              fetchedPageCount < safeRemotePageLimit,
+              let url = nextURL {
+            if Task.isCancelled { break }
+
+            do {
+                let response = try await api.nextFeed(url)
+                guard currentFeedRequestContext() == context else {
+                    return BatchDownloadResult(
+                        queuedCount: 0,
+                        candidateCount: candidates.count,
+                        fetchedPageCount: fetchedPageCount,
+                        reachedEnd: nextURL == nil
+                    )
+                }
+                fetchedPageCount += 1
+                allArtworks.append(contentsOf: response.illusts)
+                nextURL = response.nextURL
+                applyContentFilters()
+                activeFeedSnapshotRestoration = nil
+                storeFeedSnapshot(PixivFeedResponse(illusts: allArtworks, nextURL: response.nextURL), for: context)
+                hydrateCreatorTagSummariesIfNeeded(for: artworks, limit: 8)
+                candidates = uniqueBatchDownloadCandidates(from: artworks, limit: safeLimit)
+            } catch {
+                if isCancellationLikeForBatchDownload(error) {
+                    break
+                }
+                errorMessage = error.localizedDescription
+                break
+            }
+        }
+
+        let queuedCount = enqueueDownloads(candidates, limit: safeLimit, preferOriginal: preferOriginal)
+        return BatchDownloadResult(
+            queuedCount: queuedCount,
+            candidateCount: candidates.count,
+            fetchedPageCount: fetchedPageCount,
+            reachedEnd: nextURL == nil
+        )
+    }
+
     func openSelectedArtworkInPixiv() {
         guard let url = selectedArtwork?.pixivURL else { return }
         PlatformWorkspace.open(url)
@@ -311,6 +377,24 @@ extension KeiPixStore {
         for artwork in artworks {
             bookmarkDownloadedArtworkIfNeeded(artwork)
         }
+    }
+
+    private func uniqueBatchDownloadCandidates(from artworks: [PixivArtwork], limit: Int) -> [PixivArtwork] {
+        var seenIDs = Set<Int>()
+        return artworks.compactMap { artwork in
+            guard seenIDs.insert(artwork.id).inserted else { return nil }
+            return artwork
+        }
+        .prefix(max(limit, 0))
+        .map { $0 }
+    }
+
+    private func isCancellationLikeForBatchDownload(_ error: Error) -> Bool {
+        if error is CancellationError {
+            return true
+        }
+        let nsError = error as NSError
+        return nsError.domain == NSURLErrorDomain && nsError.code == NSURLErrorCancelled
     }
 
     private func bookmarkDownloadedArtworkIfNeeded(_ artwork: PixivArtwork) {

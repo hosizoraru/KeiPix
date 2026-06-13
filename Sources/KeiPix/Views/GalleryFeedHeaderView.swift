@@ -9,6 +9,13 @@ enum FeedHeaderPresentation {
     case phoneToolbarMenu
 }
 
+private struct BatchDownloadContext: Identifiable {
+    let id = UUID()
+    let scope: BatchDownloadScope
+    let loadedArtworkCount: Int
+    let hasNextPage: Bool
+}
+
 struct FeedHeaderView: View {
     @Bindable var store: KeiPixStore
     @Binding var actionMessage: String?
@@ -17,9 +24,13 @@ struct FeedHeaderView: View {
     let presentation: FeedHeaderPresentation
     let showsFeedCountBadge: Bool
     let showsActiveFeedClearChip: Bool
-    @State private var isBatchDownloadPresented = false
+    @State private var batchDownloadContext: BatchDownloadContext?
     @State private var batchDownloadLimit = 30
+    @State private var batchDownloadRemotePageLimit = 2
+    @State private var includeNextBatchDownloadPages = false
+    @State private var isGatheringBatchDownloadPages = false
     @State private var batchActionArtworks: [PixivArtwork] = []
+    @State private var batchDownloadScope = BatchDownloadScope.loadedFeed
     @State private var lastQueuedDownloadCount: Int?
     @State private var bookmarkTags: [PixivBookmarkTag] = []
     @State private var isLoadingBookmarkTags = false
@@ -215,7 +226,7 @@ struct FeedHeaderView: View {
                     .disabled(selectedArtworkLinks.isEmpty)
 
                     Button {
-                        presentBatchDownload(artworks: selectedArtworks)
+                        presentBatchDownload(artworks: selectedArtworks, scope: .selectedWorks)
                     } label: {
                         Label(L10n.batchDownload, systemImage: "square.and.arrow.down.on.square")
                     }
@@ -253,7 +264,7 @@ struct FeedHeaderView: View {
                 .disabled(loadedArtworkLinks.isEmpty)
 
                 Button {
-                    presentBatchDownload(artworks: store.artworks)
+                    presentBatchDownload(artworks: store.artworks, scope: .loadedFeed)
                 } label: {
                     Label(L10n.batchDownload, systemImage: "square.and.arrow.down.on.square")
                 }
@@ -287,11 +298,14 @@ struct FeedHeaderView: View {
         .accessibilityLabel(compactFeedActionsAccessibilityLabel)
         .tint(compactFeedActionsAreActive ? .accentColor : nil)
         .iPadFeedHeaderActionChrome()
-        .popover(isPresented: $isBatchDownloadPresented, arrowEdge: .bottom) {
+        .popover(item: $batchDownloadContext, arrowEdge: .bottom) { context in
             BatchDownloadPopover(
                 limit: $batchDownloadLimit,
-                maxLimit: maxBatchDownloadLimit,
+                includeNextPages: $includeNextBatchDownloadPages,
+                remotePageLimit: $batchDownloadRemotePageLimit,
+                plan: batchDownloadPlan(for: context),
                 queuedCount: lastQueuedDownloadCount,
+                isGatheringPages: isGatheringBatchDownloadPages,
                 downloadDirectoryPath: store.downloads.downloadDirectoryPath,
                 action: queueBatchDownload
             )
@@ -494,7 +508,7 @@ struct FeedHeaderView: View {
                 .disabled(selectedArtworkLinks.isEmpty)
 
                 Button {
-                    presentBatchDownload(artworks: selectedArtworks)
+                    presentBatchDownload(artworks: selectedArtworks, scope: .selectedWorks)
                 } label: {
                     Label(L10n.batchDownload, systemImage: "square.and.arrow.down.on.square")
                 }
@@ -538,7 +552,7 @@ struct FeedHeaderView: View {
             .disabled(loadedArtworkLinks.isEmpty)
 
             Button {
-                presentBatchDownload(artworks: store.artworks)
+                presentBatchDownload(artworks: store.artworks, scope: .loadedFeed)
             } label: {
                 Label(L10n.batchDownload, systemImage: "square.and.arrow.down.on.square")
             }
@@ -572,11 +586,14 @@ struct FeedHeaderView: View {
         .help(L10n.moreActions)
         .accessibilityLabel(L10n.moreActions)
         .feedHeaderActionChrome()
-        .popover(isPresented: $isBatchDownloadPresented, arrowEdge: .bottom) {
+        .popover(item: $batchDownloadContext, arrowEdge: .bottom) { context in
             BatchDownloadPopover(
                 limit: $batchDownloadLimit,
-                maxLimit: maxBatchDownloadLimit,
+                includeNextPages: $includeNextBatchDownloadPages,
+                remotePageLimit: $batchDownloadRemotePageLimit,
+                plan: batchDownloadPlan(for: context),
                 queuedCount: lastQueuedDownloadCount,
+                isGatheringPages: isGatheringBatchDownloadPages,
                 downloadDirectoryPath: store.downloads.downloadDirectoryPath,
                 action: queueBatchDownload
             )
@@ -875,7 +892,7 @@ struct FeedHeaderView: View {
             .disabled(selectedArtworkLinks.isEmpty)
 
             Button {
-                presentBatchDownload(artworks: selectedArtworks)
+                presentBatchDownload(artworks: selectedArtworks, scope: .selectedWorks)
             } label: {
                 Label(L10n.batchDownload, systemImage: "square.and.arrow.down.on.square")
             }
@@ -920,7 +937,7 @@ struct FeedHeaderView: View {
             .disabled(loadedArtworkLinks.isEmpty)
 
             Button {
-                presentBatchDownload(artworks: store.artworks)
+                presentBatchDownload(artworks: store.artworks, scope: .loadedFeed)
             } label: {
                 Label(L10n.batchDownload, systemImage: "square.and.arrow.down.on.square")
             }
@@ -954,11 +971,14 @@ struct FeedHeaderView: View {
         .help(L10n.moreActions)
         .accessibilityLabel(L10n.moreActions)
         .iPadFeedHeaderActionChrome()
-        .popover(isPresented: $isBatchDownloadPresented, arrowEdge: .bottom) {
+        .popover(item: $batchDownloadContext, arrowEdge: .bottom) { context in
             BatchDownloadPopover(
                 limit: $batchDownloadLimit,
-                maxLimit: maxBatchDownloadLimit,
+                includeNextPages: $includeNextBatchDownloadPages,
+                remotePageLimit: $batchDownloadRemotePageLimit,
+                plan: batchDownloadPlan(for: context),
                 queuedCount: lastQueuedDownloadCount,
+                isGatheringPages: isGatheringBatchDownloadPages,
                 downloadDirectoryPath: store.downloads.downloadDirectoryPath,
                 action: queueBatchDownload
             )
@@ -1031,18 +1051,50 @@ struct FeedHeaderView: View {
         selectedArtworks.compactMap { $0.pixivURL?.absoluteString }
     }
 
-    private func presentBatchDownload(artworks: [PixivArtwork]) {
+    private func presentBatchDownload(artworks: [PixivArtwork], scope: BatchDownloadScope) {
         guard artworks.isEmpty == false else {
             actionMessage = L10n.noArtworkTitle
             return
         }
+        let plan = BatchDownloadPlan.make(
+            scope: scope,
+            loadedArtworkCount: artworks.count,
+            hasNextPage: store.nextURL != nil,
+            requestedLimit: batchDownloadLimit,
+            requestedRemotePageLimit: 0
+        )
         batchActionArtworks = artworks
-        batchDownloadLimit = min(max(1, batchDownloadLimit), maxBatchDownloadLimit)
-        isBatchDownloadPresented = true
+        batchDownloadScope = scope
+        includeNextBatchDownloadPages = false
+        batchDownloadLimit = min(max(1, batchDownloadLimit), plan.maxLimit)
+        batchDownloadRemotePageLimit = min(
+            max(1, batchDownloadRemotePageLimit),
+            BatchDownloadPlan.maximumRemotePageLimit
+        )
+        lastQueuedDownloadCount = nil
+        batchDownloadContext = BatchDownloadContext(
+            scope: scope,
+            loadedArtworkCount: artworks.count,
+            hasNextPage: store.nextURL != nil
+        )
     }
 
     private var maxBatchDownloadLimit: Int {
-        min(max(batchActionArtworks.count, 1), 100)
+        batchDownloadPlan.maxLimit
+    }
+
+    private var batchDownloadPlan: BatchDownloadPlan {
+        batchDownloadPlan(for: batchDownloadContext)
+    }
+
+    private func batchDownloadPlan(for context: BatchDownloadContext?) -> BatchDownloadPlan {
+        BatchDownloadPlan.make(
+            scope: context?.scope ?? batchDownloadScope,
+            loadedArtworkCount: context?.loadedArtworkCount ?? batchActionArtworks.count,
+            hasNextPage: context?.hasNextPage ?? (store.nextURL != nil),
+            requestedLimit: batchDownloadLimit,
+            requestedRemotePageLimit: includeNextBatchDownloadPages ? batchDownloadRemotePageLimit : 0
+        )
     }
 
     private var loadedArtworkLinks: [String] {
@@ -1333,21 +1385,42 @@ struct FeedHeaderView: View {
         }
     }
 
-    private func queueBatchDownload() {
+    private func queueBatchDownload() async {
         guard batchActionArtworks.isEmpty == false else {
             lastQueuedDownloadCount = 0
             actionMessage = L10n.noArtworkTitle
             return
         }
-        let count = store.enqueueDownloads(
-            batchActionArtworks,
-            limit: min(batchDownloadLimit, maxBatchDownloadLimit),
-            preferOriginal: true
-        )
-        lastQueuedDownloadCount = count
-        if count > 0 {
-            actionMessage = String(format: L10n.queuedDownloadsFormat, count)
-            isBatchDownloadPresented = false
+
+        let plan = batchDownloadPlan
+        isGatheringBatchDownloadPages = true
+        defer { isGatheringBatchDownloadPages = false }
+
+        let result: BatchDownloadResult
+        if plan.allowsRemotePages, includeNextBatchDownloadPages, plan.remotePageLimit > 0 {
+            result = await store.enqueueDownloadsFromCurrentFeed(
+                limit: plan.limit,
+                remotePageLimit: plan.remotePageLimit,
+                preferOriginal: true
+            )
+        } else {
+            let count = store.enqueueDownloads(
+                batchActionArtworks,
+                limit: plan.limit,
+                preferOriginal: true
+            )
+            result = BatchDownloadResult(
+                queuedCount: count,
+                candidateCount: min(batchActionArtworks.count, plan.limit),
+                fetchedPageCount: 0,
+                reachedEnd: store.nextURL == nil
+            )
+        }
+
+        lastQueuedDownloadCount = result.queuedCount
+        if result.queuedCount > 0 {
+            actionMessage = String(format: L10n.queuedDownloadsFormat, result.queuedCount)
+            batchDownloadContext = nil
         }
     }
 
@@ -1671,10 +1744,13 @@ private struct RankingDatePopover: View {
 
 private struct BatchDownloadPopover: View {
     @Binding var limit: Int
-    let maxLimit: Int
+    @Binding var includeNextPages: Bool
+    @Binding var remotePageLimit: Int
+    let plan: BatchDownloadPlan
     let queuedCount: Int?
+    let isGatheringPages: Bool
     let downloadDirectoryPath: String
-    let action: () -> Void
+    let action: () async -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
@@ -1688,8 +1764,26 @@ private struct BatchDownloadPopover: View {
                     .truncationMode(.middle)
             }
 
-            Stepper(value: $limit, in: 1...maxLimit) {
+            Stepper(value: $limit, in: 1...plan.maxLimit) {
                 LabeledContent(L10n.maximumDownloads, value: "\(limit)")
+            }
+
+            if plan.allowsRemotePages {
+                Divider()
+
+                Toggle(isOn: $includeNextPages) {
+                    Label(L10n.includeFollowingPages, systemImage: "arrow.down.forward.and.arrow.up.backward")
+                }
+
+                if includeNextPages {
+                    Stepper(value: $remotePageLimit, in: 1...BatchDownloadPlan.maximumRemotePageLimit) {
+                        LabeledContent(L10n.followingPageRequests, value: "\(remotePageLimit)")
+                    }
+
+                    Text(String(format: L10n.batchDownloadFollowingPagesHintFormat, plan.estimatedRemotePageRequests))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
             }
 
             if let queuedCount {
@@ -1701,17 +1795,27 @@ private struct BatchDownloadPopover: View {
             HStack {
                 Spacer()
                 Button {
-                    action()
+                    Task { await action() }
                 } label: {
-                    Label(L10n.addToDownloadQueue, systemImage: "arrow.down.circle")
+                    if isGatheringPages {
+                        ProgressView()
+                            .controlSize(.small)
+                    } else {
+                        Label(L10n.addToDownloadQueue, systemImage: "arrow.down.circle")
+                    }
                 }
                 .buttonStyle(.glassProminent)
+                .disabled(isGatheringPages)
             }
         }
         .padding(16)
-        .frame(width: 320)
+        .frame(width: 340)
         .onAppear {
-            limit = min(max(1, limit), maxLimit)
+            limit = min(max(1, limit), plan.maxLimit)
+            remotePageLimit = min(
+                max(1, remotePageLimit),
+                BatchDownloadPlan.maximumRemotePageLimit
+            )
         }
     }
 }

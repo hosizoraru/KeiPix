@@ -3858,6 +3858,93 @@
         }
       }
     },
+    "Following page requests": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Following page requests"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "後続ページのリクエスト数"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "后续页面请求数"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "後續頁面請求數"
+          }
+        }
+      }
+    },
+    "Include Following Pages": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Include Following Pages"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "後続ページを含める"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "包含后续页面"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "包含後續頁面"
+          }
+        }
+      }
+    },
+    "May request up to %d more Pixiv feed pages before queueing.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "May request up to %d more Pixiv feed pages before queueing."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "キュー追加前に Pixiv フィードを最大 %d ページ追加取得します。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "加入队列前最多请求 %d 页后续 Pixiv Feed。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "加入佇列前最多請求 %d 頁後續 Pixiv Feed。"
+          }
+        }
+      }
+    },
     "Blur R-18 and R-18G thumbnails while keeping metadata and actions visible.": {
       "extractionState": "manual",
       "localizations": {
