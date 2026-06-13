@@ -52,7 +52,7 @@ navigation, and lightweight surfaces.
 | --- | --- | --- |
 | Novel comments API tests | Done | Covered `/v3/novel/comments`, `/v2/novel/comment/replies`, and novel comment post form fields. |
 | Novel comments Store wiring | Done | Store now exposes novel comment list, replies, and post helpers alongside artwork comments. |
-| Novel comments UI | In progress | Detail view now exposes the shared comment surface for novels; native AppKit/UIKit list bridge remains a follow-up if comment threads become hot. |
+| Novel comments UI | In progress | Detail view exposes the shared comment surface for novels and has local Visual QA comments; native AppKit/UIKit list bridge remains a follow-up if comment threads become hot. |
 | Apple docs checkpoints | In progress | Keep UIKit/AppKit diffable data-source and native sheet/menu guidance in mind for the upcoming UI phase. |
 
 ## Apple Documentation Checkpoints

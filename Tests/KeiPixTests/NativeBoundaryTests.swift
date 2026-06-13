@@ -1693,6 +1693,8 @@ struct NativeBoundaryTests {
 
         #expect(detail.contains("@State private var areCommentsExpanded"))
         #expect(detail.contains("ArtworkCommentsView(\n                    novel: novel"))
+        #expect(detail.contains("visualQAResponse: visualQACommentsResponse"))
+        #expect(detail.contains("VisualQASampleData.novelDetailComments"))
         #expect(comments.contains("enum CommentContentTarget"))
         #expect(comments.contains("case novel(PixivNovel)"))
         #expect(comments.contains("@State private var loadedTargetIdentity"))

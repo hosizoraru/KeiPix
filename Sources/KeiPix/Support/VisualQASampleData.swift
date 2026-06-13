@@ -143,6 +143,82 @@ enum VisualQASampleData {
         )
     ]
 
+    static let novelDetailComments = PixivCommentResponse(
+        totalComments: 4,
+        comments: decodeComments("""
+        {
+          "comments": [
+            {
+              "id": 74101,
+              "comment": "This series chapter finally makes the quiet harbor scene click (happy)",
+              "date": null,
+              "user": {
+                "id": 6201,
+                "name": "Novel Comment QA",
+                "account": "novel_comment_qa",
+                "profile_image_urls": {
+                  "medium": "https://example.com/novel-comment-qa-avatar.jpg"
+                }
+              },
+              "has_replies": true,
+              "stamp": null
+            },
+            {
+              "id": 74102,
+              "comment": "The compact detail panel keeps the thread readable before related novels.",
+              "date": null,
+              "user": {
+                "id": 6202,
+                "name": "Reader Flow QA",
+                "account": "reader_flow_qa"
+              },
+              "parent_comment": {
+                "id": 74101,
+                "comment": "This series chapter finally makes the quiet harbor scene click (happy)",
+                "user": {
+                  "id": 6201,
+                  "name": "Novel Comment QA",
+                  "account": "novel_comment_qa"
+                }
+              },
+              "has_replies": false,
+              "stamp": null
+            },
+            {
+              "id": 74103,
+              "comment": "Emoji tokens still render through the shared Pixiv comment text view (heart)",
+              "date": null,
+              "user": {
+                "id": 6203,
+                "name": "Emoji QA",
+                "account": "emoji_qa"
+              },
+              "has_replies": false,
+              "stamp": null
+            },
+            {
+              "id": 74104,
+              "comment": null,
+              "date": null,
+              "user": {
+                "id": 6204,
+                "name": "Stamp Novel QA",
+                "account": "stamp_novel_qa"
+              },
+              "has_replies": false,
+              "stamp": {
+                "stamp_id": 102,
+                "stamp_url": "https://example.com/novel-comment-stamp.png"
+              }
+            }
+          ],
+          "next_url": null,
+          "total_comments": 4
+        }
+        """),
+        nextURL: nil
+    )
+
     static func novelSeriesResponse(seriesID: Int, currentNovel: PixivNovel?) -> PixivNovelSeriesResponse? {
         var chapters = novelFeedNovels.filter { $0.series?.id == seriesID }
         if let currentNovel,

@@ -31,7 +31,7 @@ private struct NovelDetailContent: View {
 
     @State private var readerNovel: PixivNovel?
     @State private var selectedSeries: NovelSeriesChapterPresentation?
-    @State private var areCommentsExpanded = false
+    @State private var areCommentsExpanded = VisualQALaunchArgument.contains(.novelFeed)
     @State private var isRelatedExpanded = false
 
     private var novelStore: NovelFeatureStore { store.novels }
@@ -64,7 +64,8 @@ private struct NovelDetailContent: View {
                 ArtworkCommentsView(
                     novel: novel,
                     store: store,
-                    isExpanded: $areCommentsExpanded
+                    isExpanded: $areCommentsExpanded,
+                    visualQAResponse: visualQACommentsResponse
                 )
 
                 NovelRelatedView(
@@ -407,6 +408,14 @@ private struct NovelDetailContent: View {
     private func presentReader(_ novel: PixivNovel) {
         readerNovel = novel
         Task { await novelStore.openNovel(novel) }
+    }
+
+    private var visualQACommentsResponse: PixivCommentResponse? {
+        #if DEBUG
+        return VisualQALaunchArgument.contains(.novelFeed) ? VisualQASampleData.novelDetailComments : nil
+        #else
+        return nil
+        #endif
     }
 
     private var captionPlainText: String {
