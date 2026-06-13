@@ -4,17 +4,21 @@ import Foundation
 ///
 /// Supports expressions like:
 /// - `tag:原神` / `#原神` — match tag name
-/// - `user:username` — match creator name
+/// - `title:水着` — match artwork title
+/// - `user:username` / `artist:username` / `author:username` — match creator name
 /// - `bookmark:>1000` / `bookmark:<500` — bookmark count comparison
 /// - `view:>5000` — view count comparison
 /// - `page:>3` — page count comparison
 /// - `r18` / `!r18` — include/exclude R18
 /// - `ai` / `!ai` — include/exclude AI works
+/// - `gif` / `!gif` / `+gif` / `-gif` — include/exclude ugoira works
+/// - `ratio:landscape` / `ratio:portrait` / `ratio:square` — aspect ratio checks
 /// - `bookmarked` / `!bookmarked` — filter by bookmark status
 /// - Free text — match title or creator name
 enum ClientFilterDSL {
     enum FilterExpression: Equatable {
         case tag(String)
+        case title(String)
         case user(String)
         case bookmarkCount(ComparisonOp, Int)
         case viewCount(ComparisonOp, Int)
@@ -22,8 +26,16 @@ enum ClientFilterDSL {
         case r18(Bool)
         case r18g(Bool)
         case ai(Bool)
+        case ugoira(Bool)
+        case ratio(ArtworkRatio)
         case bookmarked(Bool)
         case textMatch(String)
+    }
+
+    enum ArtworkRatio: String, Equatable {
+        case landscape
+        case portrait
+        case square
     }
 
     enum ComparisonOp: String {
@@ -112,14 +124,24 @@ enum ClientFilterDSL {
     private static func parseToken(_ token: String) -> FilterExpression? {
         let lower = token.lowercased()
 
-        // Negated boolean flags: !r18, !ai, !original, !bookmarked
+        // Negated boolean flags: !r18, !ai, !gif, !bookmarked
         if token.hasPrefix("!") {
             let flag = String(token.dropFirst()).lowercased()
             switch flag {
             case "r18": return .r18(false)
             case "r18g": return .r18g(false)
             case "ai": return .ai(false)
+            case "gif", "ugoira": return .ugoira(false)
             case "bookmarked": return .bookmarked(false)
+            default: break
+            }
+        }
+
+        if token.hasPrefix("+") || token.hasPrefix("-") {
+            let isIncluded = token.hasPrefix("+")
+            let flag = String(token.dropFirst()).lowercased()
+            switch flag {
+            case "gif", "ugoira": return .ugoira(isIncluded)
             default: break
             }
         }
@@ -129,6 +151,7 @@ enum ClientFilterDSL {
         case "r18": return .r18(true)
         case "r18g": return .r18g(true)
         case "ai": return .ai(true)
+        case "gif", "ugoira": return .ugoira(true)
         case "bookmarked": return .bookmarked(true)
         default: break
         }
@@ -148,8 +171,12 @@ enum ClientFilterDSL {
             switch key {
             case "tag":
                 return .tag(value)
-            case "user":
+            case "title":
+                return .title(value)
+            case "user", "author", "artist", "a":
                 return .user(value)
+            case "ratio":
+                return ArtworkRatio(rawValue: value.lowercased()).map(FilterExpression.ratio)
             case "bookmark":
                 return parseComparison(value, expression: FilterExpression.bookmarkCount)
             case "view":
@@ -205,6 +232,10 @@ enum ClientFilterDSL {
             let lower = name.lowercased()
             return artwork.tags.contains { $0.name.lowercased().contains(lower) }
 
+        case .title(let title):
+            let lower = title.lowercased()
+            return artwork.title.lowercased().contains(lower)
+
         case .user(let name):
             let lower = name.lowercased()
             return artwork.user.name.lowercased().contains(lower)
@@ -229,6 +260,19 @@ enum ClientFilterDSL {
 
         case .ai(let wanted):
             return artwork.isAI == wanted
+
+        case .ugoira(let wanted):
+            return artwork.isUgoira == wanted
+
+        case .ratio(let ratio):
+            switch ratio {
+            case .landscape:
+                return artwork.width > artwork.height
+            case .portrait:
+                return artwork.height > artwork.width
+            case .square:
+                return artwork.width == artwork.height
+            }
 
         case .bookmarked(let wanted):
             return artwork.isBookmarked == wanted
