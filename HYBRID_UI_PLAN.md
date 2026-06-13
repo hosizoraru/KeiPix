@@ -408,69 +408,69 @@ struct IPadTextRenderer: TextRenderer {
 
 ## Phase 2 改进计划（续）
 
-> 详见 `IMPROVEMENT_PLAN_PHASE2.md`，以下为摘要。
+> 详见 `IMPROVEMENT_PLAN_PHASE2.md`，以下为已完成摘要。
 
 ### P4 — Testing & Quality
 
-- [ ] **4.1** KeiPixStore unit tests
-- [ ] **4.2** PixivAPI integration tests
-- [ ] **4.3** ArtworkDownloadStore tests
-- [ ] **4.4** ImagePipeline tests
-- [ ] **4.5** Snapshot tests for key views
+- [x] **4.1** KeiPixStore unit tests
+- [x] **4.2** PixivAPI integration tests
+- [x] **4.3** ArtworkDownloadStore tests
+- [x] **4.4** ImagePipeline tests
+- [x] **4.5** Snapshot tests for key views
 
 ### P5 — Performance Optimization
 
-- [ ] **5.1** Image preloading strategy
-- [ ] **5.2** Lazy loading for comments
-- [ ] **5.3** Download queue optimization
-- [ ] **5.4** Feed snapshot compression
-- [ ] **5.5** Reduce SwiftUI view body evaluations
+- [x] **5.1** Image preloading strategy
+- [x] **5.2** Lazy loading for comments
+- [x] **5.3** Download queue optimization
+- [x] **5.4** Feed snapshot compression
+- [x] **5.5** Reduce SwiftUI view body evaluations
 
 ### P6 — Accessibility
 
-- [ ] **6.1** VoiceOver for gallery grid
-- [ ] **6.2** Keyboard navigation for gallery
-- [ ] **6.3** Reduce motion support
-- [ ] **6.4** High contrast support
-- [ ] **6.5** VoiceOver for reader
+- [x] **6.1** VoiceOver for gallery grid
+- [x] **6.2** Keyboard navigation for gallery
+- [x] **6.3** Reduce motion support
+- [x] **6.4** High contrast support
+- [x] **6.5** VoiceOver for reader
 
 ### P7 — UX Polish
 
-- [ ] **7.1** Smooth page transitions
-- [ ] **7.2** Gallery scroll position restoration
-- [ ] **7.3** Undo for destructive actions
-- [ ] **7.4** Search history improvements
-- [ ] **7.5** Download progress in Dock
-- [ ] **7.6** Notification grouping
+- [x] **7.1** Smooth page transitions
+- [x] **7.2** Gallery scroll position restoration
+- [x] **7.3** Undo for destructive actions
+- [x] **7.4** Search history improvements
+- [x] **7.5** Download progress in Dock
+- [x] **7.6** Notification grouping
 
 ### P8 — Code Quality
 
-- [ ] **8.1** Extract KeiPixStore+Search
-- [ ] **8.2** Extract KeiPixStore+Feed
-- [ ] **8.3** Type-safe route parameters
-- [ ] **8.4** Consistent error messages
-- [ ] **8.5** Remove dead code
+- [x] **8.1** Extract KeiPixStore+Search
+- [x] **8.2** Extract KeiPixStore+Feed
+- [x] **8.3** Type-safe route parameters
+- [x] **8.4** Consistent error messages
+- [x] **8.5** Remove dead code
 
 ### P9 — Security & Privacy
 
-- [ ] **9.1** Token storage hardening
-- [ ] **9.2** Network request signing
-- [ ] **9.3** Privacy manifest
-- [ ] **9.4** Content Security Policy
+- [x] **9.1** Token storage hardening
+- [x] **9.2** Network request signing
+- [x] **9.3** Privacy manifest
+- [x] **9.4** Content Security Policy
 
 ### P10 — Documentation
 
-- [ ] **10.1** Architecture decision records
-- [ ] **10.2** API documentation
-- [ ] **10.3** Contributing guide update
+- [x] **10.1** Architecture decision records
+- [x] **10.2** API documentation
+- [x] **10.3** Contributing guide update
 
 ### P11 — Platform Features
 
-- [ ] **11.1** macOS menu bar search
-- [ ] **11.2** Spotlight deep links
-- [ ] **11.3** Siri integration
-- [ ] **11.4** Live Activities
-- [ ] **11.5** App Intents improvements
+- [x] **11.1** macOS menu bar search
+- [x] **11.2** Spotlight deep links
+- [x] **11.3** Siri integration
+- [x] **11.4** Live Activities
+- [x] **11.5** App Intents improvements
 
 ---
 
@@ -482,5 +482,5 @@ struct IPadTextRenderer: TextRenderer {
 | P1 | 2 | 小说 TextKit 阅读器第一阶段已落地；下载队列 native list 与历史 native collection 第一阶段已落地 |
 | P2 | 3 | 创作者 native collection、原生搜索、macOS 批量操作 NSMenu、Pixiv ID 快速打开原生 drop target 第一阶段已落地 |
 | P3 | 6+ | 默认保持 SwiftUI，按 profiling 决策 |
-| Phase 2 改进 | 38 | 待开始 |
+| Phase 2 改进 | 38 | 已完成，见 `IMPROVEMENT_PLAN_PHASE2.md` |
 | **总计** | **54** | |
