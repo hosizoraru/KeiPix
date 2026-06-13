@@ -1679,6 +1679,29 @@ struct NativeBoundaryTests {
         #expect(macOSRunner.contains("open_app --visual-qa-novel-feed"))
     }
 
+    @Test("Novel detail exposes comments through the shared comment surface")
+    func novelDetailExposesSharedCommentSurface() throws {
+        let root = try packageRoot()
+        let detail = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/NovelDetailView.swift"),
+            encoding: .utf8
+        )
+        let comments = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/ArtworkCommentsView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(detail.contains("@State private var areCommentsExpanded"))
+        #expect(detail.contains("ArtworkCommentsView(\n                    novel: novel"))
+        #expect(comments.contains("enum CommentContentTarget"))
+        #expect(comments.contains("case novel(PixivNovel)"))
+        #expect(comments.contains("@State private var loadedTargetIdentity"))
+        #expect(comments.contains("target.loadIdentity"))
+        #expect(comments.contains("store.comments(for: novel)"))
+        #expect(comments.contains("store.novelCommentReplies(for: comment)"))
+        #expect(comments.contains("store.postComment(comment, for: novel"))
+    }
+
     @Test("Cold launch route content refresh is not artwork-only")
     func coldLaunchRouteContentRefreshIsNotArtworkOnly() throws {
         let root = try packageRoot()

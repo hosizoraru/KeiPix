@@ -5,9 +5,8 @@ import SwiftUI
 
 /// Detail column for novel routes — shows the selected novel's header,
 /// caption, tags, and a button to open the reader. Mirrors
-/// `ArtworkDetailView`'s skeleton but doesn't lean on the artwork
-/// inspector sections (no comments tab yet, no related novels section
-/// yet — both are scoped for the next pass).
+/// `ArtworkDetailView`'s skeleton while keeping novel-specific reader,
+/// series, comments, and related sections platform-adaptive.
 struct NovelDetailView: View {
     @Bindable var store: KeiPixStore
 
@@ -32,6 +31,7 @@ private struct NovelDetailContent: View {
 
     @State private var readerNovel: PixivNovel?
     @State private var selectedSeries: NovelSeriesChapterPresentation?
+    @State private var areCommentsExpanded = false
     @State private var isRelatedExpanded = false
 
     private var novelStore: NovelFeatureStore { store.novels }
@@ -60,6 +60,12 @@ private struct NovelDetailContent: View {
                 if let series = novel.series, series.hasSeries {
                     seriesSection(series: series)
                 }
+
+                ArtworkCommentsView(
+                    novel: novel,
+                    store: store,
+                    isExpanded: $areCommentsExpanded
+                )
 
                 NovelRelatedView(
                     novelID: novel.id,

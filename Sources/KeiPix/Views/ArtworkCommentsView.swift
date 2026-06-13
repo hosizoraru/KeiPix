@@ -1,12 +1,12 @@
 import SwiftUI
 
 struct ArtworkCommentsView: View {
-    let artwork: PixivArtwork
+    let target: CommentContentTarget
     @Bindable var store: KeiPixStore
     @Binding var isExpanded: Bool
     var visualQAResponse: PixivCommentResponse?
 
-    @State private var hasLoaded = false
+    @State private var loadedTargetIdentity: String?
     @State private var comments: [PixivComment] = []
     @State private var nextURL: URL?
     @State private var totalComments: Int?
@@ -18,6 +18,30 @@ struct ArtworkCommentsView: View {
     @State private var isPosting = false
     @State private var errorMessage: String?
     @State private var statusMessage: String?
+
+    init(
+        artwork: PixivArtwork,
+        store: KeiPixStore,
+        isExpanded: Binding<Bool>,
+        visualQAResponse: PixivCommentResponse? = nil
+    ) {
+        self.target = .artwork(artwork)
+        self.store = store
+        self._isExpanded = isExpanded
+        self.visualQAResponse = visualQAResponse
+    }
+
+    init(
+        novel: PixivNovel,
+        store: KeiPixStore,
+        isExpanded: Binding<Bool>,
+        visualQAResponse: PixivCommentResponse? = nil
+    ) {
+        self.target = .novel(novel)
+        self.store = store
+        self._isExpanded = isExpanded
+        self.visualQAResponse = visualQAResponse
+    }
 
     var body: some View {
         DisclosureGroup(isExpanded: $isExpanded) {
@@ -43,7 +67,7 @@ struct ArtworkCommentsView: View {
                             ForEach(comments) { comment in
                                 CommentThreadRow(
                                     comment: comment,
-                                    artwork: artwork,
+                                    target: target,
                                     store: store,
                                     reply: { target in replyTarget = target },
                                     copied: { showStatus(L10n.copiedComment) },
@@ -111,14 +135,18 @@ struct ArtworkCommentsView: View {
         .padding(.horizontal, 14)
         .padding(.vertical, 12)
         .keiGlass(18)
-        .task(id: isExpanded) {
-            guard isExpanded, hasLoaded == false else { return }
+        .task(id: commentLoadTaskID) {
+            guard isExpanded, loadedTargetIdentity != target.loadIdentity else { return }
             await loadInitial()
         }
     }
 
+    private var commentLoadTaskID: String {
+        "\(target.loadIdentity)-\(isExpanded)"
+    }
+
     private var headerSubtitle: String? {
-        let count = totalComments ?? artwork.totalComments
+        let count = totalComments ?? target.totalComments
         return count.formatted()
     }
 
@@ -214,7 +242,7 @@ struct ArtworkCommentsView: View {
         errorMessage = nil
         defer {
             isLoading = false
-            hasLoaded = true
+            loadedTargetIdentity = target.loadIdentity
         }
 
         do {
@@ -222,7 +250,7 @@ struct ArtworkCommentsView: View {
             if let visualQAResponse {
                 response = visualQAResponse
             } else {
-                response = try await store.comments(for: artwork)
+                response = try await target.comments(store: store)
             }
             comments = response.comments
             nextURL = response.nextURL
@@ -256,10 +284,10 @@ struct ArtworkCommentsView: View {
         defer { isPosting = false }
 
         do {
-            try await store.postComment(comment, for: artwork, parentCommentID: replyTarget?.id)
+            try await target.postComment(comment, store: store, parentCommentID: replyTarget?.id)
             draft = ""
             replyTarget = nil
-            hasLoaded = false
+            loadedTargetIdentity = nil
             await loadInitial()
             showStatus(L10n.postedComment)
         } catch {
@@ -278,9 +306,66 @@ struct ArtworkCommentsView: View {
     }
 }
 
+enum CommentContentTarget {
+    case artwork(PixivArtwork)
+    case novel(PixivNovel)
+
+    var totalComments: Int {
+        switch self {
+        case .artwork(let artwork):
+            artwork.totalComments
+        case .novel(let novel):
+            novel.totalComments
+        }
+    }
+
+    var loadIdentity: String {
+        switch self {
+        case .artwork(let artwork):
+            "artwork-\(artwork.id)"
+        case .novel(let novel):
+            "novel-\(novel.id)"
+        }
+    }
+
+    var feedbackArtwork: PixivArtwork? {
+        if case .artwork(let artwork) = self {
+            return artwork
+        }
+        return nil
+    }
+
+    func comments(store: KeiPixStore) async throws -> PixivCommentResponse {
+        switch self {
+        case .artwork(let artwork):
+            try await store.comments(for: artwork)
+        case .novel(let novel):
+            try await store.comments(for: novel)
+        }
+    }
+
+    func commentReplies(for comment: PixivComment, store: KeiPixStore) async throws -> PixivCommentResponse {
+        switch self {
+        case .artwork:
+            try await store.commentReplies(for: comment)
+        case .novel:
+            try await store.novelCommentReplies(for: comment)
+        }
+    }
+
+    func postComment(_ comment: String, store: KeiPixStore, parentCommentID: Int?) async throws {
+        switch self {
+        case .artwork(let artwork):
+            try await store.postComment(comment, for: artwork, parentCommentID: parentCommentID)
+        case .novel(let novel):
+            try await store.postComment(comment, for: novel, parentCommentID: parentCommentID)
+        }
+    }
+}
+
 private struct CommentThreadRow: View {
     let comment: PixivComment
-    let artwork: PixivArtwork
+    let target: CommentContentTarget
     @Bindable var store: KeiPixStore
     let reply: (PixivComment) -> Void
     let copied: () -> Void
@@ -309,7 +394,7 @@ private struct CommentThreadRow: View {
                 } status: { message in
                     status(message)
                 }
-                .environment(\.feedbackReportArtwork, artwork)
+                .environment(\.feedbackReportArtwork, target.feedbackArtwork)
             }
 
             if isExpanded {
@@ -324,7 +409,7 @@ private struct CommentThreadRow: View {
                     ForEach(replies) { replyComment in
                         FilteredReplyCommentRow(
                             comment: replyComment,
-                            artwork: artwork,
+                            target: target,
                             store: store,
                             reply: {
                                 reply(replyComment)
@@ -393,7 +478,7 @@ private struct CommentThreadRow: View {
         defer { isLoadingReplies = false }
 
         do {
-            let response = try await store.commentReplies(for: comment)
+            let response = try await target.commentReplies(for: comment, store: store)
             replies = response.comments
             nextURL = response.nextURL
             isExpanded = true
@@ -420,7 +505,7 @@ private struct CommentThreadRow: View {
 
 private struct FilteredReplyCommentRow: View {
     let comment: PixivComment
-    let artwork: PixivArtwork
+    let target: CommentContentTarget
     @Bindable var store: KeiPixStore
     let reply: () -> Void
     let copied: () -> Void
@@ -443,7 +528,7 @@ private struct FilteredReplyCommentRow: View {
             } status: { message in
                 status(message)
             }
-            .environment(\.feedbackReportArtwork, artwork)
+            .environment(\.feedbackReportArtwork, target.feedbackArtwork)
         }
     }
 }
