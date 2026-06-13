@@ -195,11 +195,88 @@ enum NovelTranslationBatchMapper {
     #if canImport(Translation)
     static func requests(from segments: [NovelTranslationSegment]) -> [TranslationSession.Request] {
         segments.map { segment in
-            TranslationSession.Request(
+            if #available(iOS 26.4, macOS 26.4, macCatalyst 26.4, *) {
+                return TranslationSession.Request(
+                    sourceText: attributedSourceText(from: segment.sourceText),
+                    clientIdentifier: segment.clientIdentifier
+                )
+            }
+            return TranslationSession.Request(
                 sourceText: segment.sourceText,
                 clientIdentifier: segment.clientIdentifier
             )
         }
+    }
+
+    @available(iOS 26.4, macOS 26.4, macCatalyst 26.4, *)
+    private static func attributedSourceText(from raw: String) -> AttributedString {
+        let ranges = skipTranslationRanges(in: raw)
+        guard ranges.isEmpty == false else {
+            return AttributedString(raw)
+        }
+
+        var result = AttributedString()
+        var cursor = raw.startIndex
+        for range in ranges {
+            if cursor < range.lowerBound {
+                result += AttributedString(String(raw[cursor..<range.lowerBound]))
+            }
+
+            var skipped = AttributedString(String(raw[range]))
+            skipped.translation.skipsTranslation = true
+            result += skipped
+            cursor = range.upperBound
+        }
+
+        if cursor < raw.endIndex {
+            result += AttributedString(String(raw[cursor..<raw.endIndex]))
+        }
+        return result
+    }
+
+    private static func skipTranslationRanges(in raw: String) -> [Range<String.Index>] {
+        let patterns = [
+            #"https?://[^\s\]\)）]+"#,
+            #"\[(?:newpage|chapter:[^\]]+|pixivimage:[^\]]+|uploadedimage:[^\]]+|jump:[^\]]+)\]"#,
+            #"\[\[(?:rb|jumpuri):[^\]]+\]\]"#
+        ]
+
+        var ranges: [Range<String.Index>] = []
+        for pattern in patterns {
+            guard let expression = try? NSRegularExpression(pattern: pattern, options: [.caseInsensitive]) else {
+                continue
+            }
+            let nsRange = NSRange(raw.startIndex..<raw.endIndex, in: raw)
+            let matches = expression.matches(in: raw, range: nsRange)
+            for match in matches {
+                guard let range = Range(match.range, in: raw) else { continue }
+                ranges.append(range)
+            }
+        }
+
+        return mergeOverlappingRanges(ranges)
+    }
+
+    private static func mergeOverlappingRanges(_ ranges: [Range<String.Index>]) -> [Range<String.Index>] {
+        let sorted = ranges.sorted { lhs, rhs in
+            if lhs.lowerBound == rhs.lowerBound {
+                return lhs.upperBound < rhs.upperBound
+            }
+            return lhs.lowerBound < rhs.lowerBound
+        }
+        guard var current = sorted.first else { return [] }
+
+        var merged: [Range<String.Index>] = []
+        for range in sorted.dropFirst() {
+            if range.lowerBound <= current.upperBound {
+                current = current.lowerBound..<max(current.upperBound, range.upperBound)
+            } else {
+                merged.append(current)
+                current = range
+            }
+        }
+        merged.append(current)
+        return merged
     }
     #endif
 }

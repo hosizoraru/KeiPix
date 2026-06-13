@@ -3096,6 +3096,14 @@ struct NativeBoundaryTests {
             contentsOf: root.appending(path: "Sources/KeiPix/Support/NativeNovelTextPageView.swift"),
             encoding: .utf8
         )
+        let translationModels = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Models/NovelTranslationModels.swift"),
+            encoding: .utf8
+        )
+        let translateButton = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/ArtworkTranslateButton.swift"),
+            encoding: .utf8
+        )
 
         #expect(readerView.contains("usesNativeNovelTextPage"))
         #expect(readerView.contains("NativeNovelTextPageView("))
@@ -3109,9 +3117,14 @@ struct NativeBoundaryTests {
         #expect(readerView.contains("NativeNovelContinuousTextView("))
         #expect(readerView.contains("prepareTranslationIfNeeded(for: pageOrder, session: session)"))
         #expect(readerView.contains("LanguageAvailability()"))
+        #expect(readerView.contains("LanguageAvailability(preferredStrategy: .lowLatency)"))
         #expect(readerView.contains("try await session.prepareTranslation()"))
         #expect(readerView.contains("NovelTranslationReadinessMapper.readiness(for: status)"))
         #expect(readerView.contains("NovelTranslationReadinessMapper.issue(for: error).localizedMessage"))
+        #expect(translateButton.contains("preferredStrategy: .lowLatency"))
+        #expect(translationModels.contains("sourceText: attributedSourceText(from: segment.sourceText)"))
+        #expect(translationModels.contains("skipped.translation.skipsTranslation = true"))
+        #expect(translationModels.contains("return TranslationSession.Request(\n                sourceText: segment.sourceText"))
         #expect(readerView.contains("if usesContinuousNovelReader == false {\n                readingModeButton"))
         #expect(readerView.contains("continuousReaderFooter"))
         #expect(readerView.contains("GlassEffectContainer(spacing: 12)"))

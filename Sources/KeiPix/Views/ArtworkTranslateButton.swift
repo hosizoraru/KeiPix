@@ -19,6 +19,13 @@ enum TranslationLanguageResolver {
     /// target language. Source is always `nil` for auto-detection.
     static func configuration(for targetLanguage: TranslationTargetLanguage) -> TranslationSession.Configuration {
         let target = Self.targetLanguage(for: targetLanguage)
+        if #available(iOS 26.4, macOS 26.4, *) {
+            return TranslationSession.Configuration(
+                source: nil,
+                target: target,
+                preferredStrategy: .lowLatency
+            )
+        }
         return TranslationSession.Configuration(source: nil, target: target)
     }
 }

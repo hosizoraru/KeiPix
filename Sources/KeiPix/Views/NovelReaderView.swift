@@ -312,7 +312,14 @@ struct NovelReaderView: View {
         }
 
         do {
-            let status = try await LanguageAvailability()
+            let availability: LanguageAvailability
+            if #available(iOS 26.4, macOS 26.4, *) {
+                availability = LanguageAvailability(preferredStrategy: .lowLatency)
+            } else {
+                availability = LanguageAvailability()
+            }
+
+            let status = try await availability
                 .status(
                     for: sampleSegment.sourceText,
                     to: TranslationLanguageResolver.targetLanguage(for: store.translationTargetLanguage)

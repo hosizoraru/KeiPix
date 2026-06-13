@@ -96,6 +96,45 @@ struct NovelTranslationPlannerTests {
         #expect(requests.map(\.sourceText) == ["一段落目。", "二段落目。"])
         #expect(requests.map(\.clientIdentifier) == segments.map(\.clientIdentifier))
     }
+
+    @Test("Translation configuration prefers low latency when the OS supports strategies")
+    func translationConfigurationPrefersLowLatency() {
+        if #available(macOS 26.4, iOS 26.4, *) {
+            let configuration = TranslationLanguageResolver.configuration(for: .english)
+
+            #expect(configuration.target == TranslationTargetLanguage.english.localeLanguage)
+            #expect(configuration.preferredStrategy == .lowLatency)
+        }
+    }
+
+    @Test("Batch requests mark Pixiv inline markers and URLs to skip translation")
+    func batchRequestsMarkPixivMarkersAndURLsToSkipTranslation() throws {
+        guard #available(macOS 26.4, iOS 26.4, *) else { return }
+        let source = "本文 https://www.pixiv.net/novel/show.php?id=42 [pixivimage:123-1] [[rb:漢字 > かんじ]]"
+        let segment = NovelTranslationSegment(
+            novelID: 5,
+            targetLanguageID: "en",
+            pageIndex: 0,
+            tokenIndex: 0,
+            paragraphIndex: 0,
+            sourceText: source,
+            sourceHash: "hash",
+            clientIdentifier: "segment-1"
+        )
+
+        let request = try #require(NovelTranslationBatchMapper.requests(from: [segment]).first)
+        let attributed = try #require(request.attributedSourceText)
+        let skippedTexts = attributed.runs.compactMap { run -> String? in
+            guard run.translation.skipsTranslation == true else { return nil }
+            return String(attributed.characters[run.range])
+        }
+
+        #expect(request.clientIdentifier == segment.clientIdentifier)
+        #expect(request.sourceText == source)
+        #expect(skippedTexts.contains("https://www.pixiv.net/novel/show.php?id=42"))
+        #expect(skippedTexts.contains("[pixivimage:123-1]"))
+        #expect(skippedTexts.contains("[[rb:漢字 > かんじ]]"))
+    }
     #endif
 
     @Test("Batch response mapping ignores missing and unknown client identifiers")

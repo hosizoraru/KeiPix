@@ -192,7 +192,7 @@ Recommended new or changed types:
 | Phase 4: Visible-First Scheduling | In progress | Scheduler implementation, focused tests, and iOS/iPadOS generic builds are complete; physical-device smoke validation remains open. |
 | Phase 5: Persistent Translation Cache | Done | Segment translations now persist under the app caches directory, cache hits apply before network translation, misses continue streaming, and Reading settings exposes a localized clear-cache action. |
 | Phase 6: Availability, Preparation, and Errors | In progress | `LanguageAvailability`, `prepareTranslation()`, recoverable error mapping, and localized reader feedback are implemented and tested; physical Mac/iPhone/iPad model-preparation validation remains open. |
-| Phase 7: OS 26.4+ Translation Strategy and Skip Ranges | Planned | Pending stable batch client. |
+| Phase 7: OS 26.4+ Translation Strategy and Skip Ranges | In progress | OS 26.4+ translation sessions now prefer low latency, batch requests use attributed skip ranges for Pixiv markers/URLs when available, and older OS paths keep string requests; physical smoke validation remains open. |
 | Phase 8: Shared Apple Translation Client for Captions | Planned | Pending novel pipeline stabilization. |
 
 ### Phase 0: Baseline and Guard Rails
@@ -415,21 +415,35 @@ Evidence:
 
 ### Phase 7: OS 26.4+ Translation Strategy and Skip Ranges
 
-Status: Planned
+Status: In progress
 
-- [ ] Default reader translation to low latency when the OS supports
+- [x] Default reader translation to low latency when the OS supports
   `TranslationSession.Strategy`.
-- [ ] Consider an advanced setting for high fidelity later, not in the first
+- [x] Consider an advanced setting for high fidelity later, not in the first
   pass.
-- [ ] Investigate AttributedString `skipsTranslation` for placeholders, links,
+- [x] Investigate AttributedString `skipsTranslation` for placeholders, links,
   ruby readings, and Pixiv-specific markers.
-- [ ] Keep fallback string-based requests for older supported OS versions.
+- [x] Keep fallback string-based requests for older supported OS versions.
 
 Validation:
 
-- [ ] Availability-gated compile checks.
-- [ ] Tests for attributed request construction where available.
+- [x] Availability-gated compile checks.
+- [x] Tests for attributed request construction where available.
 - [ ] macOS and iOS physical-device smoke tests on supported OS versions.
+
+Evidence:
+
+- `TranslationLanguageResolver.configuration(for:)` uses
+  `preferredStrategy: .lowLatency` behind an OS 26.4 availability gate and
+  falls back to the string-only initializer on older supported systems.
+- `NovelTranslationBatchMapper.requests(from:)` builds attributed requests on
+  OS 26.4+ and marks URLs plus Pixiv inline markers (`[pixivimage:...]`,
+  `[[rb:...]]`, `[[jumpuri:...]]`, etc.) with `skipsTranslation`.
+- `NovelTranslationPlannerTests/batchRequestsMarkPixivMarkersAndURLsToSkipTranslation`
+  verifies attributed request construction and skipped ranges.
+- `NativeBoundaryTests/novelReaderTextPagesUseNativeTextKitBridges` verifies the
+  reader keeps low-latency availability checks, attributed requests, and the
+  older string fallback in place.
 
 ### Phase 8: Shared Apple Translation Client for Captions
 
