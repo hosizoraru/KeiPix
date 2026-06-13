@@ -30,7 +30,8 @@ private struct NovelDetailContent: View {
     @Bindable var store: KeiPixStore
     let novel: PixivNovel
 
-    @State private var isReaderPresented = false
+    @State private var readerNovel: PixivNovel?
+    @State private var selectedSeries: NovelSeriesChapterPresentation?
     @State private var isRelatedExpanded = false
 
     private var novelStore: NovelFeatureStore { store.novels }
@@ -72,12 +73,21 @@ private struct NovelDetailContent: View {
         .task(id: novel.id) {
             await novelStore.refreshNovelDetail(novelID: novel.id)
         }
-        .sheet(isPresented: $isReaderPresented) {
+        .sheet(item: $readerNovel) { novel in
             NovelReaderView(store: store, novel: novel)
                 #if os(macOS)
                 .frame(minWidth: 720, minHeight: 540, idealHeight: 720)
                 #endif
                 .os26SheetChrome(.reader)
+        }
+        .sheet(item: $selectedSeries) { presentation in
+            NovelSeriesChapterSheet(store: store, presentation: presentation) { chapter in
+                presentReader(chapter)
+            }
+            #if os(macOS)
+            .frame(minWidth: 680, idealWidth: 760, minHeight: 520, idealHeight: 680)
+            #endif
+            .os26SheetChrome(.chapterList)
         }
     }
 
@@ -140,6 +150,9 @@ private struct NovelDetailContent: View {
             Spacer()
 
             openReaderButton(expands: false)
+            if NovelSeriesChapterPresentation(novel: novel) != nil {
+                seriesChaptersButton
+            }
             bookmarkButton
 
             if novel.pixivURL != nil {
@@ -157,6 +170,10 @@ private struct NovelDetailContent: View {
             openReaderButton(expands: true)
 
             HStack(spacing: 10) {
+                if NovelSeriesChapterPresentation(novel: novel) != nil {
+                    seriesChaptersButton
+                }
+
                 bookmarkButton
 
                 if novel.pixivURL != nil {
@@ -172,7 +189,7 @@ private struct NovelDetailContent: View {
 
     private func openReaderButton(expands: Bool) -> some View {
         Button {
-            isReaderPresented = true
+            presentReader(novel)
         } label: {
             if expands {
                 Label(L10n.openNovelReader, systemImage: "book.pages")
@@ -190,6 +207,19 @@ private struct NovelDetailContent: View {
         .accessibilityLabel(L10n.openNovelReader)
         .controlSize(.regular)
         .os26GlassButton(prominent: true)
+    }
+
+    private var seriesChaptersButton: some View {
+        Button {
+            selectedSeries = NovelSeriesChapterPresentation(novel: novel)
+        } label: {
+            Label(L10n.novelSeriesChapters, systemImage: "books.vertical")
+        }
+        .labelStyle(.iconOnly)
+        .help(L10n.novelSeriesChapters)
+        .accessibilityLabel(L10n.novelSeriesChapters)
+        .controlSize(.small)
+        .os26GlassIconButton()
     }
 
     private var bookmarkButton: some View {
@@ -333,11 +363,26 @@ private struct NovelDetailContent: View {
             Text(L10n.novelSeries)
                 .font(.headline)
             HStack(spacing: 8) {
-                Image(systemName: "books.vertical")
-                    .foregroundStyle(.secondary)
-                Text(series.title ?? "")
-                    .font(.subheadline.weight(.semibold))
-                Spacer(minLength: 0)
+                Button {
+                    selectedSeries = NovelSeriesChapterPresentation(novel: novel)
+                } label: {
+                    HStack(spacing: 8) {
+                        Image(systemName: "books.vertical")
+                            .foregroundStyle(.tint)
+                        Text(series.title ?? "")
+                            .font(.subheadline.weight(.semibold))
+                            .lineLimit(2)
+                            .multilineTextAlignment(.leading)
+                        Spacer(minLength: 0)
+                        Image(systemName: "chevron.forward")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(.tertiary)
+                    }
+                }
+                .buttonStyle(.plain)
+                .help(L10n.novelSeriesChapters)
+                .accessibilityLabel(L10n.novelSeriesChapters)
+
                 if let url = novel.seriesPixivURL {
                     Button {
                         PlatformWorkspace.open(url)
@@ -351,6 +396,11 @@ private struct NovelDetailContent: View {
             .padding(10)
             .background(Color.platformControlBackground, in: RoundedRectangle(cornerRadius: 8))
         }
+    }
+
+    private func presentReader(_ novel: PixivNovel) {
+        readerNovel = novel
+        Task { await novelStore.openNovel(novel) }
     }
 
     private var captionPlainText: String {

@@ -11,6 +11,7 @@ import SwiftUI
 struct NovelGalleryView: View {
     @Bindable var store: KeiPixStore
     @State private var readerNovel: PixivNovel?
+    @State private var selectedSeries: NovelSeriesChapterPresentation?
 
     private var novelStore: NovelFeatureStore { store.novels }
 
@@ -82,6 +83,15 @@ struct NovelGalleryView: View {
                 #endif
                 .os26SheetChrome(.reader)
         }
+        .sheet(item: $selectedSeries) { presentation in
+            NovelSeriesChapterSheet(store: store, presentation: presentation) { chapter in
+                presentNovelReader(chapter)
+            }
+            #if os(macOS)
+            .frame(minWidth: 680, idealWidth: 760, minHeight: 520, idealHeight: 680)
+            #endif
+            .os26SheetChrome(.chapterList)
+        }
     }
 
     @ViewBuilder
@@ -116,7 +126,8 @@ struct NovelGalleryView: View {
                         NovelGridCardView(
                             novel: novel,
                             isSelected: novelStore.selectedNovel?.id == novel.id,
-                            openReader: readerButtonAction(for: novel, surface: surface)
+                            openReader: readerButtonAction(for: novel, surface: surface),
+                            openSeries: seriesButtonAction(for: novel)
                         )
                         .contentShape(Rectangle())
                         .onTapGesture {
@@ -140,6 +151,7 @@ struct NovelGalleryView: View {
                             novel: novel,
                             isSelected: novelStore.selectedNovel?.id == novel.id,
                             openReader: readerButtonAction(for: novel, surface: surface),
+                            openSeries: seriesButtonAction(for: novel),
                             presentation: surface.cardPresentation
                         )
                         .contentShape(Rectangle())
@@ -211,6 +223,14 @@ struct NovelGalleryView: View {
 
     @ViewBuilder
     private func novelContextMenu(_ novel: PixivNovel) -> some View {
+        if let presentation = NovelSeriesChapterPresentation(novel: novel) {
+            Button {
+                selectedSeries = presentation
+            } label: {
+                Label(L10n.novelSeriesChapters, systemImage: "books.vertical")
+            }
+        }
+
         if let url = novel.pixivURL {
             Button(L10n.openInPixivNovel) {
                 PlatformWorkspace.open(url)
@@ -239,6 +259,11 @@ struct NovelGalleryView: View {
 
     private func readerButtonAction(for novel: PixivNovel, surface: NovelGallerySurfaceLayout) -> (() -> Void)? {
         surface.opensCardsInReader ? nil : { presentNovelReader(novel) }
+    }
+
+    private func seriesButtonAction(for novel: PixivNovel) -> (() -> Void)? {
+        guard let presentation = NovelSeriesChapterPresentation(novel: novel) else { return nil }
+        return { selectedSeries = presentation }
     }
 
     private func openNovelCard(_ novel: PixivNovel, surface: NovelGallerySurfaceLayout) {

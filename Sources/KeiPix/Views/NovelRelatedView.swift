@@ -4,6 +4,7 @@ struct NovelRelatedView: View {
     let novelID: Int
     @Bindable var store: KeiPixStore
     @Binding var isExpanded: Bool
+    @State private var selectedSeries: NovelSeriesChapterPresentation?
 
     private var novelStore: NovelFeatureStore { store.novels }
 
@@ -25,7 +26,10 @@ struct NovelRelatedView: View {
                 } else {
                     LazyVStack(alignment: .leading, spacing: 8) {
                         ForEach(novelStore.relatedNovels) { related in
-                            NovelCardView(novel: related)
+                            NovelCardView(
+                                novel: related,
+                                openSeries: seriesButtonAction(for: related)
+                            )
                                 .onTapGesture {
                                     Task { await novelStore.openNovel(related) }
                                 }
@@ -65,6 +69,15 @@ struct NovelRelatedView: View {
             guard isExpanded else { return }
             await novelStore.loadRelatedNovels(for: novelID)
         }
+        .sheet(item: $selectedSeries) { presentation in
+            NovelSeriesChapterSheet(store: store, presentation: presentation) { chapter in
+                Task { await novelStore.openNovel(chapter) }
+            }
+            #if os(macOS)
+            .frame(minWidth: 680, idealWidth: 760, minHeight: 520, idealHeight: 680)
+            #endif
+            .os26SheetChrome(.chapterList)
+        }
     }
 
     private var title: String {
@@ -72,5 +85,10 @@ struct NovelRelatedView: View {
         return count > 0
             ? "\(L10n.relatedNovels) (\(count.formatted()))"
             : L10n.relatedNovels
+    }
+
+    private func seriesButtonAction(for novel: PixivNovel) -> (() -> Void)? {
+        guard let presentation = NovelSeriesChapterPresentation(novel: novel) else { return nil }
+        return { selectedSeries = presentation }
     }
 }

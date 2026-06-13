@@ -412,7 +412,8 @@ final class NovelFeatureStore {
     /// Refresh the cached novel object (caption, bookmark/series state)
     /// from `/v2/novel/detail`. We surface stale values in the meantime
     /// so the UI doesn't blank out.
-    func refreshNovelDetail(novelID: Int) async {
+    @discardableResult
+    func refreshNovelDetail(novelID: Int) async -> PixivNovel? {
         do {
             let novel = try await api.novelDetail(novelID: novelID)
             novelDetailCache[novelID] = novel
@@ -420,10 +421,12 @@ final class NovelFeatureStore {
                 selectedNovel = novel
             }
             replaceInLists(novel)
+            return novel
         } catch is CancellationError {
-            return
+            return nil
         } catch {
             errorMessage = String(describing: error)
+            return nil
         }
     }
 

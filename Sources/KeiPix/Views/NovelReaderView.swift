@@ -15,7 +15,11 @@ import SwiftUI
 /// - Keyboard navigation (←/→)
 struct NovelReaderView: View {
     @Bindable var store: KeiPixStore
-    let novel: PixivNovel
+
+    init(store: KeiPixStore, novel: PixivNovel) {
+        self.store = store
+        _activeNovel = State(initialValue: novel)
+    }
 
     @Environment(\.dismiss) private var dismiss
 
@@ -44,6 +48,8 @@ struct NovelReaderView: View {
     @State private var swipeEdgeLeading = false
     @State private var swipeEdgeTrailing = false
     @State private var effectivePagedReadingMode: NovelReadingMode = .singlePage
+    @State private var activeNovel: PixivNovel
+    @State private var selectedSeries: NovelSeriesChapterPresentation?
 
     private var novelStore: NovelFeatureStore { store.novels }
 
@@ -128,7 +134,7 @@ struct NovelReaderView: View {
         }
         .background(theme.backgroundColor)
         .foregroundStyle(theme.foregroundColor)
-        .task(id: novel.id) {
+        .task(id: activeNovel.id) {
             readerLoadStarted = true
             pageIndex = 0
             translationEngine.reset()
@@ -138,11 +144,11 @@ struct NovelReaderView: View {
                 translationEngine.isInlineTranslationActive = true
                 translationConfig = TranslationLanguageResolver.configuration(for: store.translationTargetLanguage)
             }
-            await novelStore.loadNovelText(for: novel.id)
+            await novelStore.openNovel(activeNovel)
             await loadEmbeddedImages()
         }
         .onChange(of: novelStore.loadedNovelTextID) { _, newValue in
-            if newValue == novel.id {
+            if newValue == activeNovel.id {
                 pageIndex = 0
             }
         }
@@ -198,6 +204,15 @@ struct NovelReaderView: View {
                 translationModeRaw: $translationModeRaw
             )
             .os26SheetChrome(.form)
+        }
+        .sheet(item: $selectedSeries) { presentation in
+            NovelSeriesChapterSheet(store: store, presentation: presentation) { chapter in
+                navigateToSeriesChapter(chapter)
+            }
+            #if os(macOS)
+            .frame(minWidth: 680, idealWidth: 760, minHeight: 520, idealHeight: 680)
+            #endif
+            .os26SheetChrome(.chapterList)
         }
     }
 
@@ -300,11 +315,11 @@ struct NovelReaderView: View {
 
     private var novelTitleBlock: some View {
         VStack(alignment: .leading, spacing: 2) {
-            Text(novel.title)
+            Text(activeNovel.title)
                 .font(.headline)
                 .lineLimit(1)
                 .truncationMode(.tail)
-            Text(novel.user.name)
+            Text(activeNovel.user.name)
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
@@ -315,6 +330,10 @@ struct NovelReaderView: View {
     @ViewBuilder
     private func readerActionCluster(includesCloseButton: Bool) -> some View {
         HStack(spacing: 12) {
+            if activeSeriesPresentation != nil {
+                seriesChaptersButton
+            }
+
             bookmarkButton
 
             if usesContinuousNovelReader == false {
@@ -334,21 +353,40 @@ struct NovelReaderView: View {
     private var bookmarkButton: some View {
         Button {
             Task {
-                await novelStore.toggleBookmark(
-                    novel: novel,
+                let originalState = activeNovel.isBookmarked
+                if await novelStore.toggleBookmark(
+                    novel: activeNovel,
                     restrict: store.defaultNovelBookmarkRestrict
-                )
+                ) {
+                    activeNovel.isBookmarked = !originalState
+                }
             }
         } label: {
             Label(
-                novel.isBookmarked ? L10n.novelRemoveBookmark : L10n.novelBookmark,
-                systemImage: novel.isBookmarked ? "bookmark.fill" : "bookmark"
+                activeNovel.isBookmarked ? L10n.novelRemoveBookmark : L10n.novelBookmark,
+                systemImage: activeNovel.isBookmarked ? "bookmark.fill" : "bookmark"
             )
             .labelStyle(.iconOnly)
         }
-        .help(novel.isBookmarked ? L10n.novelRemoveBookmark : L10n.novelBookmark)
+        .help(activeNovel.isBookmarked ? L10n.novelRemoveBookmark : L10n.novelBookmark)
         .keyboardShortcut("b", modifiers: [])
-        .os26GlassIconButton(prominent: novel.isBookmarked)
+        .os26GlassIconButton(prominent: activeNovel.isBookmarked)
+    }
+
+    private var seriesChaptersButton: some View {
+        Button {
+            selectedSeries = activeSeriesPresentation
+        } label: {
+            Label(L10n.novelSeriesChapters, systemImage: "books.vertical")
+                .labelStyle(.iconOnly)
+        }
+        .help(L10n.novelSeriesChapters)
+        .keyboardShortcut("l", modifiers: .command)
+        .os26GlassIconButton()
+    }
+
+    private var activeSeriesPresentation: NovelSeriesChapterPresentation? {
+        NovelSeriesChapterPresentation(novel: activeNovel)
     }
 
     private var settingsButton: some View {
@@ -1028,7 +1066,7 @@ struct NovelReaderView: View {
             minHeight: 260
         ) {
             Button {
-                Task { await novelStore.loadNovelText(for: novel.id) }
+                Task { await novelStore.loadNovelText(for: activeNovel.id) }
             } label: {
                 Label(L10n.retry, systemImage: "arrow.clockwise")
             }
@@ -1140,7 +1178,7 @@ struct NovelReaderView: View {
 
         async let uploadedTask: Void = {
             if hasUploadedImages {
-                await novelStore.loadUploadedImages(for: novel.id)
+                await novelStore.loadUploadedImages(for: activeNovel.id)
             }
         }()
 
@@ -1155,14 +1193,19 @@ struct NovelReaderView: View {
     }
 
     private func navigateToSeriesEntry(id: Int) {
-        Task {
-            await novelStore.refreshNovelDetail(novelID: id)
-            if let resolved = novelStore.selectedNovel, resolved.id == id {
-                await novelStore.openNovel(resolved)
+        Task { @MainActor in
+            if let resolved = await novelStore.refreshNovelDetail(novelID: id) {
+                navigateToSeriesChapter(resolved)
             } else {
                 await novelStore.loadNovelText(for: id)
             }
         }
+    }
+
+    private func navigateToSeriesChapter(_ chapter: PixivNovel) {
+        guard activeNovel.id != chapter.id else { return }
+        readerLoadStarted = false
+        activeNovel = chapter
     }
 
     private var bodyFont: Font {

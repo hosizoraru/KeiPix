@@ -16,6 +16,7 @@ struct NovelCardView: View {
     let novel: PixivNovel
     var isSelected: Bool = false
     var openReader: (() -> Void)?
+    var openSeries: (() -> Void)?
     var presentation: NovelCardPresentation = .automatic
 
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
@@ -26,7 +27,8 @@ struct NovelCardView: View {
             CompactNovelCardLayout(
                 novel: novel,
                 isSelected: isSelected,
-                openReader: openReader
+                openReader: openReader,
+                openSeries: openSeries
             )
         case .regular:
             regularLayout
@@ -63,7 +65,7 @@ struct NovelCardView: View {
                 NovelAuthorLine(novel: novel, font: .subheadline)
 
                 if let seriesTitle = novel.displaySeriesTitle {
-                    NovelCardSeriesPill(title: seriesTitle)
+                    NovelCardSeriesPill(title: seriesTitle, action: openSeries)
                 }
 
                 if novel.caption.isEmpty == false {
@@ -143,6 +145,7 @@ private struct CompactNovelCardLayout: View {
     let novel: PixivNovel
     let isSelected: Bool
     var openReader: (() -> Void)?
+    var openSeries: (() -> Void)?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -170,7 +173,7 @@ private struct CompactNovelCardLayout: View {
                     NovelAuthorLine(novel: novel, font: .caption.weight(.medium))
 
                     if let seriesTitle = novel.displaySeriesTitle {
-                        NovelCardSeriesPill(title: seriesTitle)
+                        NovelCardSeriesPill(title: seriesTitle, action: openSeries)
                     }
 
                     if captionPlainText.isEmpty == false {
@@ -349,15 +352,43 @@ private struct NovelAuthorLine: View {
 
 private struct NovelCardSeriesPill: View {
     let title: String
+    var action: (() -> Void)?
 
     var body: some View {
-        Label(title, systemImage: "books.vertical")
+        Group {
+            if let action {
+                pillLabel
+                    .highPriorityGesture(
+                        TapGesture().onEnded {
+                            action()
+                        }
+                    )
+                    .help(L10n.novelSeriesChapters)
+                    .accessibilityLabel(L10n.novelSeriesChapters)
+                    .accessibilityAddTraits(.isButton)
+            } else {
+                pillLabel
+            }
+        }
+    }
+
+    private var pillLabel: some View {
+        HStack(spacing: 5) {
+            Image(systemName: "books.vertical")
+            Text(title)
+                .lineLimit(1)
+            if action != nil {
+                Image(systemName: "chevron.forward")
+                    .font(.caption2.weight(.bold))
+                    .imageScale(.small)
+            }
+        }
             .font(.caption2.weight(.semibold))
-            .foregroundStyle(.secondary)
-            .lineLimit(1)
+            .foregroundStyle(action == nil ? Color.secondary : Color.accentColor)
             .padding(.horizontal, 7)
-            .padding(.vertical, 4)
-            .background(Color.platformWindowBackground.opacity(0.72), in: Capsule(style: .continuous))
+            .frame(minHeight: 28)
+            .background((action == nil ? Color.platformWindowBackground.opacity(0.72) : Color.accentColor.opacity(0.14)), in: Capsule(style: .continuous))
+            .contentShape(Capsule(style: .continuous))
     }
 }
 
@@ -408,6 +439,7 @@ struct NovelGridCardView: View {
     let novel: PixivNovel
     var isSelected: Bool = false
     var openReader: (() -> Void)?
+    var openSeries: (() -> Void)?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -436,7 +468,7 @@ struct NovelGridCardView: View {
                 NovelAuthorLine(novel: novel, font: .caption)
 
                 if let seriesTitle = novel.displaySeriesTitle {
-                    NovelCardSeriesPill(title: seriesTitle)
+                    NovelCardSeriesPill(title: seriesTitle, action: openSeries)
                 }
 
                 HStack(spacing: 8) {
