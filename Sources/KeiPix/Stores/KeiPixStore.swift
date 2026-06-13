@@ -292,6 +292,10 @@ final class KeiPixStore {
     var searchArtworkType = KeiPixStore.loadEnum("searchArtworkType", defaultValue: SearchArtworkType.all)
     var searchAIFilter = KeiPixStore.loadEnum("searchAIFilter", defaultValue: SearchAIFilter.all)
     var searchUgoiraFilter = KeiPixStore.loadEnum("searchUgoiraFilter", defaultValue: SearchUgoiraFilter.all)
+    var searchNovelLanguageCode = UserDefaults.standard.string(forKey: "searchNovelLanguageCode")
+        .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+        .flatMap { $0.isEmpty ? nil : $0 }
+    var searchNovelGenreID = UserDefaults.standard.object(forKey: "searchNovelGenreID") as? Int
     var imageSourceSearchEngine = KeiPixStore.loadEnum("imageSourceSearchEngine", defaultValue: ImageSourceSearchEngineKind.sauceNAO)
     var useRankingDate = UserDefaults.standard.object(forKey: "useRankingDate") as? Bool ?? false
     var rankingDate = KeiPixStore.loadRankingDate()

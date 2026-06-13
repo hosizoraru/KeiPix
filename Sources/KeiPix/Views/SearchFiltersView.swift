@@ -76,6 +76,8 @@ private struct SearchFiltersView: View {
                 sortMenu
                 filterPicker(L10n.ageLimit, selection: ageLimitBinding, options: SearchAgeLimit.allCases)
                 filterPicker(L10n.dateRange, selection: dateRangeBinding, options: SearchDateRange.allCases)
+                novelLanguageMenu
+                novelGenreMenu
 
                 BookmarkThresholdField(
                     label: L10n.minimumBookmarks,
@@ -141,6 +143,9 @@ private struct SearchFiltersView: View {
         }
         .padding(18)
         .frame(width: 390)
+        .task {
+            await store.refreshRemoteSearchOptionsIfNeeded()
+        }
     }
 
     private func filterPicker<Option: Identifiable, Options: RandomAccessCollection>(
@@ -280,6 +285,96 @@ private struct SearchFiltersView: View {
         } set: { value in
             store.setSearchMaximumBookmarks(value)
         }
+    }
+
+    @ViewBuilder
+    private var novelLanguageMenu: some View {
+        let languages = store.remoteSearchOptions?.novel.languages.options ?? []
+        if languages.isEmpty == false {
+            LabeledContent(L10n.novelLanguage) {
+                Menu {
+                    Button {
+                        store.setSearchNovelLanguageCode(nil)
+                    } label: {
+                        Label(
+                            L10n.anyNovelLanguage,
+                            systemImage: store.searchNovelLanguageCode == nil ? "checkmark" : ""
+                        )
+                    }
+
+                    ForEach(languages) { language in
+                        Button {
+                            store.setSearchNovelLanguageCode(language.code)
+                        } label: {
+                            Label(
+                                language.name,
+                                systemImage: language.code == store.searchNovelLanguageCode ? "checkmark" : ""
+                            )
+                        }
+                    }
+                } label: {
+                    Text(selectedNovelLanguageTitle(in: languages))
+                        .lineLimit(1)
+                        .frame(width: 190, alignment: .trailing)
+                        .contentShape(Rectangle())
+                }
+                .menuStyle(.button)
+                .frame(maxWidth: 190, alignment: .trailing)
+                .buttonStyle(.glass)
+                .buttonBorderShape(.capsule)
+            }
+            .font(.callout)
+        }
+    }
+
+    @ViewBuilder
+    private var novelGenreMenu: some View {
+        let genres = store.remoteSearchOptions?.novel.genres.options ?? []
+        if genres.isEmpty == false {
+            LabeledContent(L10n.novelGenre) {
+                Menu {
+                    Button {
+                        store.setSearchNovelGenreID(nil)
+                    } label: {
+                        Label(
+                            L10n.anyNovelGenre,
+                            systemImage: store.searchNovelGenreID == nil ? "checkmark" : ""
+                        )
+                    }
+
+                    ForEach(genres) { genre in
+                        Button {
+                            store.setSearchNovelGenreID(genre.id)
+                        } label: {
+                            Label(
+                                genre.label,
+                                systemImage: genre.id == store.searchNovelGenreID ? "checkmark" : ""
+                            )
+                        }
+                    }
+                } label: {
+                    Text(selectedNovelGenreTitle(in: genres))
+                        .lineLimit(1)
+                        .frame(width: 190, alignment: .trailing)
+                        .contentShape(Rectangle())
+                }
+                .menuStyle(.button)
+                .frame(maxWidth: 190, alignment: .trailing)
+                .buttonStyle(.glass)
+                .buttonBorderShape(.capsule)
+            }
+            .font(.callout)
+        }
+    }
+
+    private func selectedNovelLanguageTitle(in languages: [PixivRemoteSearchLanguage]) -> String {
+        guard let code = store.searchNovelLanguageCode else { return L10n.anyNovelLanguage }
+        return languages.first { $0.code == code }?.name ?? code
+    }
+
+    private func selectedNovelGenreTitle(in genres: [PixivRemoteSearchGenre]) -> String {
+        guard let id = store.searchNovelGenreID else { return L10n.anyNovelGenre }
+        return genres.first { $0.id == id }?.label ?? id.formatted()
     }
 
     private var minimumBookmarkPresetRungs: [Int] {

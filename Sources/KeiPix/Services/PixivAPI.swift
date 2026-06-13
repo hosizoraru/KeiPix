@@ -1283,6 +1283,12 @@ actor PixivAPI {
             query["start_date"] = Self.searchDateFormatter.string(from: startDate)
             query["end_date"] = Self.searchDateFormatter.string(from: now)
         }
+        if let novelLanguageCode = options.novelLanguageCode {
+            query["lang"] = novelLanguageCode
+        }
+        if let novelGenreID = options.novelGenreID {
+            query["genre"] = "\(novelGenreID)"
+        }
         return query
     }
 

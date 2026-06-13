@@ -107,12 +107,14 @@ extension PixivRemoteNovelSearchOptions {
     }
 }
 
-struct PixivRemoteSearchLanguage: Decodable, Hashable, Sendable {
+struct PixivRemoteSearchLanguage: Decodable, Hashable, Identifiable, Sendable {
     let code: String
     let name: String
+
+    var id: String { code }
 }
 
-struct PixivRemoteSearchGenre: Decodable, Hashable, Sendable {
+struct PixivRemoteSearchGenre: Decodable, Hashable, Identifiable, Sendable {
     let id: Int
     let label: String
 }
@@ -385,6 +387,8 @@ struct SearchOptions: Codable, Hashable, Sendable {
     var artworkType: SearchArtworkType
     var aiFilter: SearchAIFilter
     var ugoiraFilter: SearchUgoiraFilter
+    var novelLanguageCode: String?
+    var novelGenreID: Int?
 
     static let defaultValue = SearchOptions(
         matchType: .partialTags,
@@ -395,7 +399,9 @@ struct SearchOptions: Codable, Hashable, Sendable {
         maximumBookmarks: .unlimited,
         artworkType: .all,
         aiFilter: .all,
-        ugoiraFilter: .all
+        ugoiraFilter: .all,
+        novelLanguageCode: nil,
+        novelGenreID: nil
     )
 
     init(
@@ -407,7 +413,9 @@ struct SearchOptions: Codable, Hashable, Sendable {
         maximumBookmarks: SearchBookmarkThreshold,
         artworkType: SearchArtworkType,
         aiFilter: SearchAIFilter,
-        ugoiraFilter: SearchUgoiraFilter
+        ugoiraFilter: SearchUgoiraFilter,
+        novelLanguageCode: String? = nil,
+        novelGenreID: Int? = nil
     ) {
         self.matchType = matchType
         self.sort = sort
@@ -418,6 +426,8 @@ struct SearchOptions: Codable, Hashable, Sendable {
         self.artworkType = artworkType
         self.aiFilter = aiFilter
         self.ugoiraFilter = ugoiraFilter
+        self.novelLanguageCode = Self.normalizedNovelLanguageCode(novelLanguageCode)
+        self.novelGenreID = novelGenreID
     }
 
     enum CodingKeys: String, CodingKey {
@@ -430,6 +440,8 @@ struct SearchOptions: Codable, Hashable, Sendable {
         case artworkType
         case aiFilter
         case ugoiraFilter
+        case novelLanguageCode
+        case novelGenreID
     }
 
     init(from decoder: Decoder) throws {
@@ -443,6 +455,13 @@ struct SearchOptions: Codable, Hashable, Sendable {
         artworkType = try container.decodeIfPresent(SearchArtworkType.self, forKey: .artworkType) ?? .all
         aiFilter = try container.decodeIfPresent(SearchAIFilter.self, forKey: .aiFilter) ?? .all
         ugoiraFilter = try container.decodeIfPresent(SearchUgoiraFilter.self, forKey: .ugoiraFilter) ?? .all
+        novelLanguageCode = Self.normalizedNovelLanguageCode(try container.decodeIfPresent(String.self, forKey: .novelLanguageCode))
+        novelGenreID = try container.decodeIfPresent(Int.self, forKey: .novelGenreID)
+    }
+
+    private static func normalizedNovelLanguageCode(_ code: String?) -> String? {
+        let trimmed = code?.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed?.isEmpty == false ? trimmed : nil
     }
 
     var isDefault: Bool {
@@ -465,7 +484,7 @@ struct SearchOptions: Codable, Hashable, Sendable {
                 maximumBookmarks.value.formatted()
             )
         }
-        return [
+        var parts = [
             matchType.title,
             sort.title,
             ageLimit.title,
@@ -474,7 +493,14 @@ struct SearchOptions: Codable, Hashable, Sendable {
             artworkType.title,
             aiFilter.title,
             ugoiraFilter.title
-        ].joined(separator: " · ")
+        ]
+        if let novelLanguageCode {
+            parts.append(String(format: L10n.novelLanguageFormat, novelLanguageCode))
+        }
+        if let novelGenreID {
+            parts.append(String(format: L10n.novelGenreFormat, novelGenreID.formatted()))
+        }
+        return parts.joined(separator: " · ")
     }
 }
 

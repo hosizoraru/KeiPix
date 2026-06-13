@@ -132,7 +132,9 @@ extension KeiPixStore {
             maximumBookmarks: searchMaximumBookmarks,
             artworkType: searchArtworkType,
             aiFilter: searchAIFilter,
-            ugoiraFilter: searchUgoiraFilter
+            ugoiraFilter: searchUgoiraFilter,
+            novelLanguageCode: searchNovelLanguageCode,
+            novelGenreID: searchNovelGenreID
         )
     }
 
@@ -153,5 +155,7 @@ extension KeiPixStore {
         setSearchArtworkType(.all)
         setSearchAIFilter(.all)
         setSearchUgoiraFilter(.all)
+        setSearchNovelLanguageCode(nil)
+        setSearchNovelGenreID(nil)
     }
 }

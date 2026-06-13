@@ -109,6 +109,8 @@ struct NovelSearchQueryWiringTests {
         options.minimumBookmarks = SearchBookmarkThreshold(value: 500)
         options.maximumBookmarks = SearchBookmarkThreshold(value: 2_000)
         options.aiFilter = .onlyAI
+        options.novelLanguageCode = "ja"
+        options.novelGenreID = 7
 
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = try #require(TimeZone(secondsFromGMT: 0))
@@ -128,6 +130,8 @@ struct NovelSearchQueryWiringTests {
         #expect(query["bookmark_num"] == "500")
         #expect(query["start_date"] == "2026-06-06")
         #expect(query["end_date"] == "2026-06-13")
+        #expect(query["lang"] == "ja")
+        #expect(query["genre"] == "7")
         #expect(query["bookmark_num_max"] == nil)
     }
 }

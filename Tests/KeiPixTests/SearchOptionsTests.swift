@@ -107,6 +107,8 @@ struct SearchOptionsTests {
         #expect(options.artworkType == .all)
         #expect(options.aiFilter == .all)
         #expect(options.ugoiraFilter == .all)
+        #expect(options.novelLanguageCode == nil)
+        #expect(options.novelGenreID == nil)
         #expect(options.isDefault)
     }
 
@@ -140,6 +142,8 @@ struct SearchOptionsTests {
         #expect(options.artworkType == .manga)
         #expect(options.aiFilter == .all)
         #expect(options.ugoiraFilter == .onlyUgoira)
+        #expect(options.novelLanguageCode == nil)
+        #expect(options.novelGenreID == nil)
     }
 
     @Test("Saved search library export round trips with custom thresholds")

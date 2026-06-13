@@ -296,6 +296,28 @@ extension KeiPixStore {
         applyContentFilters()
     }
 
+    func setSearchNovelLanguageCode(_ value: String?) {
+        let normalized = value?.trimmingCharacters(in: .whitespacesAndNewlines)
+        if let normalized, normalized.isEmpty == false {
+            searchNovelLanguageCode = normalized
+            UserDefaults.standard.set(normalized, forKey: "searchNovelLanguageCode")
+        } else {
+            searchNovelLanguageCode = nil
+            UserDefaults.standard.removeObject(forKey: "searchNovelLanguageCode")
+        }
+        applyContentFilters()
+    }
+
+    func setSearchNovelGenreID(_ value: Int?) {
+        searchNovelGenreID = value
+        if let value {
+            UserDefaults.standard.set(value, forKey: "searchNovelGenreID")
+        } else {
+            UserDefaults.standard.removeObject(forKey: "searchNovelGenreID")
+        }
+        applyContentFilters()
+    }
+
     func setImageSourceSearchEngine(_ value: ImageSourceSearchEngineKind) {
         persistRaw("imageSourceSearchEngine", value: value, to: \.imageSourceSearchEngine)
     }

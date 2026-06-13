@@ -1383,6 +1383,12 @@ enum L10n {
     static var recommendedNovels: String { text("Recommended Novels") }
     static var followingNovels: String { text("Following Novels") }
     static var searchNovels: String { text("Search Novels") }
+    static var novelLanguage: String { text("Novel Language") }
+    static var anyNovelLanguage: String { text("Any Novel Language") }
+    static var novelGenre: String { text("Novel Genre") }
+    static var anyNovelGenre: String { text("Any Novel Genre") }
+    static var novelLanguageFormat: String { text("Novel language: %@") }
+    static var novelGenreFormat: String { text("Novel genre: %@") }
     static var novelPublicBookmarks: String { text("Public Novel Bookmarks") }
     static var novelPrivateBookmarks: String { text("Private Novel Bookmarks") }
     static var novelWatchlist: String { text("Novel Watchlist") }

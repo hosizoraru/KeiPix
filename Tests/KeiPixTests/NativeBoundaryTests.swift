@@ -4103,6 +4103,10 @@ struct NativeBoundaryTests {
         #expect(searchFilters.contains("showsPixivPremiumMarker(isPremium: isPremium)"))
         #expect(searchFilters.contains("init(store: KeiPixStore, isIconOnly: Bool = true)"))
         #expect(searchFilters.contains("SearchFilterButtonLabelStyle"))
+        #expect(searchFilters.contains("novelLanguageMenu"))
+        #expect(searchFilters.contains("novelGenreMenu"))
+        #expect(searchFilters.contains("store.setSearchNovelLanguageCode"))
+        #expect(searchFilters.contains("store.setSearchNovelGenreID"))
         #expect(searchFilters.contains(".textFieldStyle(.roundedBorder)") == false)
 
         #expect(macContentView.contains("} else if store.selectedRoute == .search {\n            SearchWorkspaceView(store: store)"))
