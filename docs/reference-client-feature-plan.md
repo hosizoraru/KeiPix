@@ -21,8 +21,8 @@ navigation, and lightweight surfaces.
 
 | Area | Reference signal | KeiPix state | Decision |
 | --- | --- | --- | --- |
-| Novel comments | Pixeval/Mako and pixez-flutter expose novel comments, replies, posting, deletion, and stamp comments. | Novel detail explicitly lacks comments; KeiPix currently wires illustration comments only. | High priority. Start here. |
-| Comment actions | Pixeval exposes delete and stamp variants for illustration and novel comments. | KeiPix decodes stamp display but does not expose stamp sending or delete actions. | High priority after novel comments list/post path. |
+| Novel comments | Pixeval/Mako and pixez-flutter expose novel comments, replies, posting, deletion, and stamp comments. | KeiPix now loads, displays, replies to, and posts normal novel comments through the shared comment surface. | Keep as a shared artwork/novel surface; the next work is action completeness and native list ownership. |
+| Comment actions | Pixeval exposes delete and stamp variants for illustration and novel comments. | KeiPix decodes stamp display but does not expose stamp sending or delete actions. | High priority after normal comment read/post path. Deletion should be shown only for the signed-in user's own comments; stamp send should use a native popover/grid. |
 | MyPixiv | Pixeval exposes user, illustration, and novel MyPixiv surfaces. pixez-flutter displays total MyPixiv users. | KeiPix has following/followers/related users but no dedicated MyPixiv route. | Medium-high priority; add under creator network/library after comment work. |
 | Activity feed | Pixeval parses Pixiv Web stacc activity feed. | KeiPix has content feeds, not a social activity stream. | Medium priority; Web-backed, parser-first, failure-tolerant. |
 | Remote search options | Pixeval exposes `/v1/search/options`. | KeiPix uses strong local search options. | Medium priority; use remote metadata to refine novel/search filters. |
@@ -32,15 +32,29 @@ navigation, and lightweight surfaces.
 | Dashboard cards | Pixeval supports configurable home cards, including single work/novel/user cards. | KeiPix has section visibility customization. | Evolve discovery dashboard later with native card presets. |
 | Network/direct connect | Pixeval/Pixiv-Nginx provide domain fronting, IP sets, mirror/proxy patterns. | KeiPix has app-level system/direct/manual proxy. | Add diagnostics and clearer host-level checks; do not bundle MITM/self-signed proxy. |
 | Widget-style surfaces | pixez-flutter has Android widgets. | KeiPix has `WidgetDataProvider` but no WidgetKit target. | Low priority; track for future WidgetKit/live surface work. |
+| Search filter memory | pixez-flutter remembers search sort, target, AI, and ugoira options per search result context. | KeiPix has saved searches, search history, and strong search options, but can better remember per-surface filter choices. | Add per-kind search option memory for illust, manga, and novel without confusing it with in-feed client filtering. |
+| Novel follow and bookmarks | pixez-flutter exposes novel follow, public/private novel bookmarks, novel ranking, novel watchlist, and series pages as one novel workflow. | KeiPix has novel recommended, ranking, search, series, watchlist, and bookmark actions, but navigation density still needs platform-specific polish. | Continue unifying novel surfaces with compact iPhone menus and fuller iPad landscape/macOS panes. |
+| Reader page preview | Pixeval has a page preview slider/filmstrip for image readers. | KeiPix has native readers, page restore, and paging modes. | Add thumbnail scrubber/filmstrip first on iPad landscape and macOS; keep iPhone transient and unobtrusive. |
+| Work subscriptions | Pixeval can subscribe to creator work updates and queue sync. | KeiPix already has work subscription models and a view. | Strengthen the existing subscription surface instead of adding a parallel feature: auto-check, per-kind subscription, and clear update feedback. |
+| Local filtering DSL | Pixeval has a rich work filter language for title, author, tag, ratio, date, R-18, AI, GIF, bookmark, and index checks. | KeiPix has `ClientFilterDSL` plus bottom-bar in-feed filtering. | Keep iPhone lightweight; consider an advanced native editor for iPad landscape/macOS later. |
+
+## Do Not Copy Directly
+
+| Reference pattern | Reason | Native KeiPix translation |
+| --- | --- | --- |
+| Pixiv-Nginx self-signed certificate and MITM proxy setup | This is too risky for a native client and conflicts with privacy expectations. | Host-by-host diagnostics, proxy status, and clear troubleshooting text. |
+| pixez-flutter certificate bypass / SNI bypass implementation | It is a network workaround, not a safe default client behavior. | Advanced diagnostics only; keep normal requests on platform networking. |
+| Flutter/Avalonia layout and implementation structure | Reference projects are behavior references only. | Rebuild workflows with Swift models, AppKit/UIKit hot paths, and SwiftUI shells. |
+| Desktop-style filter DSL as the iPhone default | It would overload small-screen input and conflict with compact feed filtering. | Use chips/dropdowns on iPhone; reserve advanced editors for wider layouts. |
 
 ## Phase Roadmap
 
 | Phase | Scope | Implementation shape | Evidence |
 | --- | --- | --- | --- |
-| 1 | Novel comment read path | Add Pixiv API methods for `/v3/novel/comments`, `/v2/novel/comment/replies`, `nextNovelComments`; expose Store helpers. | Focused API query tests and store wiring tests. |
-| 2 | Novel comment UI | Adapt existing comment presentation into a content-kind-aware component; compact iOS sheet, fuller iPad/macOS panel. | Swift tests, iOS/iPadOS screenshots, macOS visual QA if added. |
-| 3 | Comment writes | Add normal comment post for novels, then comment deletion for own comments; keep remote writes explicit. | Unit tests for form shape, signed-out/permission failure states, Simulator smoke. |
-| 4 | Stamp comments | Add stamp send support for illustration and novel comments after normal comment chain is stable. | Model/API tests plus visual proof that stamp comments display and send affordance is clear. |
+| 1 | Novel comment read/post path | Completed API, Store, and detail UI wiring for `/v3/novel/comments`, `/v2/novel/comment/replies`, and `/v1/novel/comment/add`. | Existing endpoint, boundary, Visual QA fixture, and full Swift tests. |
+| 2 | Comment delete actions | Completed delete endpoints for illustration and novel comments, plus a destructive row action scoped to comments authored by the signed-in user. | Endpoint/form tests, authored-by-current-user tests, comment UI boundary tests, no live remote delete unless explicitly authorized. |
+| 3 | Stamp comments | Add stamp send support for illustration and novel comments after delete flow is stable. | Model/API tests plus visual proof that stamp comments display and send affordance is clear. |
+| 4 | Native comment list | Move the top-level comment list container toward AppKit/UIKit ownership while SwiftUI remains row-hosting glue. | Native boundary tests, macOS Visual QA, and iOS/iPadOS Device Hub screenshots when visible. |
 | 5 | MyPixiv | Add models/endpoints/routes for MyPixiv users, illustration feed, and novel feed; surface counts in user profile. | Route coverage tests, API query tests, iPad/macOS navigation check. |
 | 6 | Search options | Fetch and cache `/v1/search/options`, then map safe server-provided metadata into search filters. | Parser/model tests and search UI screenshots. |
 | 7 | Reader/export polish | Add novel HTML export and reader thumbnail scrubber on wider layouts. | Export fixture tests, macOS/iPad visual QA, reader interaction smoke. |
@@ -52,7 +66,10 @@ navigation, and lightweight surfaces.
 | --- | --- | --- |
 | Novel comments API tests | Done | Covered `/v3/novel/comments`, `/v2/novel/comment/replies`, and novel comment post form fields. |
 | Novel comments Store wiring | Done | Store now exposes novel comment list, replies, and post helpers alongside artwork comments. |
-| Novel comments UI | In progress | Detail view exposes the shared comment surface for novels and has local Visual QA comments; native AppKit/UIKit list bridge remains a follow-up if comment threads become hot. |
+| Novel comments UI | Done | Detail view exposes the shared comment surface for novels and has local Visual QA comments. |
+| Comment delete actions | Done | Delete requests use Pixiv's comment delete endpoints, the UI only exposes the destructive action for the signed-in author's own comments, and successful deletes remove the row locally. |
+| Stamp comments | Next | Next action-completeness slice. Add stamp send support for illustration and novel comments with a compact native picker. |
+| Native comment list | Planned | Move the top-level list container toward AppKit/UIKit ownership after action completeness so the row API is stable. |
 | Apple docs checkpoints | In progress | Keep UIKit/AppKit diffable data-source and native sheet/menu guidance in mind for the upcoming UI phase. |
 
 ## Apple Documentation Checkpoints
