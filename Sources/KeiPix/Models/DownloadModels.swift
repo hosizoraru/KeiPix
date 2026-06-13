@@ -212,6 +212,18 @@ enum DownloadQueueSort: String, CaseIterable, Identifiable, Sendable {
     }
 }
 
+struct DownloadQueueHistorySnapshot: Equatable, Sendable {
+    let activeCount: Int
+    let completedCount: Int
+    let failedCount: Int
+    let latestCompletedTitle: String?
+    let latestCompletedAt: Date?
+
+    var hasHistory: Bool {
+        completedCount > 0 || failedCount > 0
+    }
+}
+
 struct ArtworkDownloadItem: Identifiable, Codable, Sendable {
     let id: UUID
     let artworkID: Int

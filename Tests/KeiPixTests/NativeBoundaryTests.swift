@@ -3448,6 +3448,10 @@ struct NativeBoundaryTests {
         )
 
         #expect(queueView.contains("NativeDownloadQueueListView("))
+        #expect(queueView.contains("DownloadQueueHistoryStrip("))
+        #expect(queueView.contains("store.downloads.historySnapshot"))
+        #expect(queueView.contains("setDownloadQueueFilter(.completed)"))
+        #expect(queueView.contains("setDownloadQueueSort(.recentlyUpdated)"))
         #expect(queueView.contains(".os26SheetChrome(.reader)"))
         #expect(downloadedViewer.contains("@State private var readingMode: ArtworkReadingMode = .continuous"))
         #expect(downloadedViewer.contains("ReaderAdaptiveLayout.effectiveArtworkMode("))
@@ -3871,6 +3875,7 @@ struct NativeBoundaryTests {
         #expect(downloads.contains("private var downloadTitleActions: some View"))
         #expect(downloads.contains("DownloadQueueSearchBar("))
         #expect(downloads.contains("DownloadQueueActionRail("))
+        #expect(downloads.contains("DownloadQueueHistoryStrip("))
     }
 
     @Test("Loading placeholders and sheets avoid overlapping legacy chrome")

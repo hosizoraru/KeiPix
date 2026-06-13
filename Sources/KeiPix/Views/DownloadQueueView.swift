@@ -86,6 +86,15 @@ struct DownloadQueueView: View {
                     .transition(.move(edge: .top).combined(with: .opacity))
             }
 
+            if store.downloads.historySnapshot.hasHistory {
+                DownloadQueueHistoryStrip(
+                    snapshot: store.downloads.historySnapshot,
+                    showCompletedHistory: showCompletedDownloadHistory,
+                    showFailedHistory: showFailedDownloadHistory
+                )
+                .platformGlassControlBar(verticalPadding: 8, topPadding: showsDownloadSearchBar ? 0 : 2)
+            }
+
             if store.downloads.items.isEmpty {
                 EmptyStateView(
                     title: L10n.noDownloadsTitle,
@@ -310,6 +319,22 @@ struct DownloadQueueView: View {
         actionMessage = message
     }
 
+    private func showCompletedDownloadHistory() {
+        withAnimation(.snappy(duration: 0.16)) {
+            store.downloads.setDownloadQueueFilter(.completed)
+            store.downloads.setDownloadQueueSort(.recentlyUpdated)
+            isDownloadSearchPresented = false
+        }
+    }
+
+    private func showFailedDownloadHistory() {
+        withAnimation(.snappy(duration: 0.16)) {
+            store.downloads.setDownloadQueueFilter(.failed)
+            store.downloads.setDownloadQueueSort(.recentlyUpdated)
+            isDownloadSearchPresented = false
+        }
+    }
+
     private func dismissActionMessageIfNeeded(_ message: String?) async {
         guard let message else { return }
         try? await Task.sleep(for: .seconds(2.5))
@@ -377,6 +402,143 @@ struct DownloadQueueView: View {
             } else {
                 showActionMessage(L10n.noDownloadRecordsChanged)
             }
+        }
+    }
+}
+
+private struct DownloadQueueHistoryStrip: View {
+    let snapshot: DownloadQueueHistorySnapshot
+    let showCompletedHistory: () -> Void
+    let showFailedHistory: () -> Void
+
+    var body: some View {
+        GlassEffectContainer(spacing: 8) {
+            ViewThatFits(in: .horizontal) {
+                horizontalLayout
+                wrappedLayout
+            }
+        }
+        .controlSize(.small)
+    }
+
+    private var horizontalLayout: some View {
+        HStack(spacing: 8) {
+            latestCompletedLabel
+            Spacer(minLength: 8)
+            historyMetric(
+                title: L10n.activeDownloads,
+                count: snapshot.activeCount,
+                systemImage: "arrow.down.circle",
+                action: nil
+            )
+            historyMetric(
+                title: L10n.completedDownloads,
+                count: snapshot.completedCount,
+                systemImage: "checkmark.circle",
+                action: showCompletedHistory
+            )
+            historyMetric(
+                title: L10n.failedDownloads,
+                count: snapshot.failedCount,
+                systemImage: "exclamationmark.triangle",
+                action: showFailedHistory
+            )
+        }
+    }
+
+    private var wrappedLayout: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            latestCompletedLabel
+            HStack(spacing: 8) {
+                historyMetric(
+                    title: L10n.activeDownloads,
+                    count: snapshot.activeCount,
+                    systemImage: "arrow.down.circle",
+                    action: nil
+                )
+                historyMetric(
+                    title: L10n.completedDownloads,
+                    count: snapshot.completedCount,
+                    systemImage: "checkmark.circle",
+                    action: showCompletedHistory
+                )
+                historyMetric(
+                    title: L10n.failedDownloads,
+                    count: snapshot.failedCount,
+                    systemImage: "exclamationmark.triangle",
+                    action: showFailedHistory
+                )
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var latestCompletedLabel: some View {
+        if let title = snapshot.latestCompletedTitle {
+            Label {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(L10n.recentlyUpdated)
+                        .font(.caption2.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                    Text(title)
+                        .font(.caption.weight(.semibold))
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                    if let completedAt = snapshot.latestCompletedAt {
+                        Text(completedAt, style: .relative)
+                            .font(.caption2)
+                            .foregroundStyle(.tertiary)
+                    }
+                }
+            } icon: {
+                Image(systemName: "clock.arrow.circlepath")
+                    .symbolRenderingMode(.hierarchical)
+            }
+            .labelStyle(.titleAndIcon)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 7)
+            .keiGlass(14)
+            .accessibilityLabel("\(L10n.recentlyUpdated): \(title)")
+        } else {
+            Label(L10n.history, systemImage: "clock.arrow.circlepath")
+                .font(.caption.weight(.semibold))
+                .padding(.horizontal, 10)
+                .padding(.vertical, 7)
+                .keiGlass(14)
+        }
+    }
+
+    @ViewBuilder
+    private func historyMetric(
+        title: String,
+        count: Int,
+        systemImage: String,
+        action: (() -> Void)?
+    ) -> some View {
+        let label = HStack(spacing: 6) {
+            Image(systemName: systemImage)
+                .symbolRenderingMode(.hierarchical)
+            Text(count.formatted())
+                .font(.caption.monospacedDigit().weight(.semibold))
+            Text(title)
+                .font(.caption.weight(.semibold))
+                .lineLimit(1)
+        }
+
+        if let action {
+            Button(action: action) {
+                label
+            }
+            .os26GlassButton(prominent: count > 0)
+            .disabled(count == 0)
+            .accessibilityLabel("\(count.formatted()) \(title)")
+        } else {
+            label
+                .padding(.horizontal, 10)
+                .padding(.vertical, 7)
+                .keiGlass(14)
+                .foregroundStyle(count > 0 ? .primary : .secondary)
+                .accessibilityLabel("\(count.formatted()) \(title)")
         }
     }
 }

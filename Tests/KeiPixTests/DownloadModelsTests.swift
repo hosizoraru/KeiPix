@@ -22,6 +22,46 @@ struct DownloadModelsTests {
     }
 
     @MainActor
+    @Test("Download history snapshot exposes completed and failed queue history")
+    func downloadHistorySnapshot() {
+        let store = ArtworkDownloadStore(completionNotifier: DownloadCompletionNotifier(
+            center: FakeUserNotificationCenter(isAuthorized: false),
+            authorizationStore: InMemoryAuthorizationCacheStore(hasRequested: true),
+            coalesceWindowSeconds: 0.05
+        ))
+        let oldCompleted = downloadItem(
+            title: "Old complete",
+            status: .completed,
+            updatedAt: Date(timeIntervalSince1970: 100)
+        )
+        let newCompleted = downloadItem(
+            title: "Fresh complete",
+            status: .completed,
+            updatedAt: Date(timeIntervalSince1970: 300)
+        )
+        let failed = downloadItem(
+            title: "Needs retry",
+            status: .failed,
+            updatedAt: Date(timeIntervalSince1970: 200)
+        )
+        let queued = downloadItem(
+            title: "Queued",
+            status: .queued,
+            updatedAt: Date(timeIntervalSince1970: 400)
+        )
+        store.items = [oldCompleted, failed, newCompleted, queued]
+
+        let snapshot = store.historySnapshot
+
+        #expect(snapshot.hasHistory)
+        #expect(snapshot.activeCount == 1)
+        #expect(snapshot.completedCount == 2)
+        #expect(snapshot.failedCount == 1)
+        #expect(snapshot.latestCompletedTitle == "Fresh complete")
+        #expect(snapshot.latestCompletedAt == Date(timeIntervalSince1970: 300))
+    }
+
+    @MainActor
     @Test("Downloaded reader visual QA fixture writes readable local pages")
     func downloadedReaderVisualQAFixture() {
         let item = VisualQASampleData.downloadedReaderItem()
@@ -34,16 +74,40 @@ struct DownloadModelsTests {
         #expect(item.downloadedFilePaths?.allSatisfy { FileManager.default.fileExists(atPath: $0) } == true)
     }
 
-    private func downloadItem(sourcePageIndexes: [Int]) -> ArtworkDownloadItem {
+    @MainActor
+    @Test("Downloaded queue visual QA fixture covers history states")
+    func downloadedQueueVisualQAFixtureCoversHistoryStates() {
+        let store = ArtworkDownloadStore(completionNotifier: DownloadCompletionNotifier(
+            center: FakeUserNotificationCenter(isAuthorized: false),
+            authorizationStore: InMemoryAuthorizationCacheStore(hasRequested: true),
+            coalesceWindowSeconds: 0.05
+        ))
+        store.items = VisualQASampleData.downloadedQueueItems()
+
+        let snapshot = store.historySnapshot
+
+        #expect(snapshot.hasHistory)
+        #expect(snapshot.activeCount == 1)
+        #expect(snapshot.completedCount == 1)
+        #expect(snapshot.failedCount == 1)
+        #expect(snapshot.latestCompletedTitle == "Downloaded reader QA manga")
+    }
+
+    private func downloadItem(
+        title: String = "Range test",
+        status: ArtworkDownloadStatus = .queued,
+        sourcePageIndexes: [Int] = [0],
+        updatedAt: Date = Date(timeIntervalSince1970: 0)
+    ) -> ArtworkDownloadItem {
         ArtworkDownloadItem(
             id: UUID(),
             artworkID: 42,
-            title: "Range test",
+            title: title,
             creatorName: "Creator",
             artifactKind: .imagePages,
             pageCount: sourcePageIndexes.count,
-            completedPages: 0,
-            status: .queued,
+            completedPages: status == .completed ? sourcePageIndexes.count : 0,
+            status: status,
             folderPath: nil,
             sourceImageURLs: [],
             sourcePageIndexes: sourcePageIndexes,
@@ -51,7 +115,7 @@ struct DownloadModelsTests {
             downloadedFilePaths: nil,
             errorMessage: nil,
             createdAt: Date(timeIntervalSince1970: 0),
-            updatedAt: Date(timeIntervalSince1970: 0)
+            updatedAt: updatedAt
         )
     }
 }

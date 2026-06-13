@@ -857,6 +857,64 @@ enum VisualQASampleData {
         )
     }
 
+    @MainActor
+    static func downloadedQueueItems() -> [ArtworkDownloadItem] {
+        let completed = downloadedReaderItem()
+        let activeCreatedAt = Date(timeIntervalSince1970: 1_779_638_520)
+        let failedCreatedAt = Date(timeIntervalSince1970: 1_779_638_460)
+        let active = ArtworkDownloadItem(
+            id: UUID(uuidString: "CA03894B-9347-402E-9F76-5C7372B43BE1") ?? UUID(),
+            artworkID: 96_010,
+            title: "Queued multi-page sample",
+            creatorName: "Local QA Creator",
+            creatorID: 5_001,
+            tags: ["queue", "sample"],
+            isAI: false,
+            isR18: false,
+            isR18G: false,
+            artifactKind: .imagePages,
+            pageCount: 3,
+            completedPages: 1,
+            status: .downloading,
+            folderPath: nil,
+            sourceImageURLs: (1...3).compactMap { index in
+                URL(string: "https://example.com/download-queue-active-\(index).png")
+            },
+            sourcePageIndexes: [0, 1, 2],
+            sourceTotalPageCount: 3,
+            downloadedFilePaths: nil,
+            errorMessage: nil,
+            createdAt: activeCreatedAt,
+            updatedAt: activeCreatedAt
+        )
+        let failed = ArtworkDownloadItem(
+            id: UUID(uuidString: "10839D35-F0B9-40FB-93FA-1B92DCE8397D") ?? UUID(),
+            artworkID: 96_020,
+            title: "Failed retry sample",
+            creatorName: "Network QA",
+            creatorID: 5_002,
+            tags: ["failed", "retry"],
+            isAI: false,
+            isR18: false,
+            isR18G: false,
+            artifactKind: .imagePages,
+            pageCount: 2,
+            completedPages: 0,
+            status: .failed,
+            folderPath: nil,
+            sourceImageURLs: (1...2).compactMap { index in
+                URL(string: "https://example.com/download-queue-failed-\(index).png")
+            },
+            sourcePageIndexes: [0, 1],
+            sourceTotalPageCount: 2,
+            downloadedFilePaths: nil,
+            errorMessage: "Visual QA retry sample",
+            createdAt: failedCreatedAt,
+            updatedAt: failedCreatedAt
+        )
+        return [active, failed, completed]
+    }
+
     private static func decodeArtwork(
         id: Int,
         title: String,
@@ -1300,7 +1358,7 @@ extension KeiPixStore {
         galleryLayoutMode = .threeColumnMasonry
     }
 
-    func presentDownloadedReaderVisualQA() {
+    func presentDownloadQueueVisualQA() {
         activateVisualQASampleSession()
         selectedRoute = .downloads
         focusedUser = nil
@@ -1315,12 +1373,17 @@ extension KeiPixStore {
         artworks = []
         searchPopularPreviewArtworks = []
         nextURL = nil
-        let item = VisualQASampleData.downloadedReaderItem()
-        downloads.downloadDirectoryPath = item.folderPath ?? downloads.downloadDirectoryPath
+        let items = VisualQASampleData.downloadedQueueItems()
+        downloads.downloadDirectoryPath = items.first(where: { $0.status == .completed })?.folderPath
+            ?? downloads.downloadDirectoryPath
         downloads.downloadSearchText = ""
         downloads.downloadQueueFilter = .all
         downloads.downloadQueueSort = .newest
-        downloads.items = [item]
+        downloads.items = items
+    }
+
+    func presentDownloadedReaderVisualQA() {
+        presentDownloadQueueVisualQA()
     }
 
     func presentArtworkDetailSocialVisualQA() {

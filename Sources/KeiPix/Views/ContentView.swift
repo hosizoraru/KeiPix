@@ -308,6 +308,9 @@ struct ContentView: View {
             if VisualQALaunchArgument.contains(.ugoiraPlayer) {
                 store.presentUgoiraPlayerVisualQA()
             }
+            if VisualQALaunchArgument.contains(.downloadQueue) {
+                store.presentDownloadQueueVisualQA()
+            }
             if VisualQALaunchArgument.contains(.downloadedReader) {
                 store.presentDownloadedReaderVisualQA()
             }

@@ -167,6 +167,19 @@ final class ArtworkDownloadStore {
         items.filter { $0.status == .completed }
     }
 
+    var historySnapshot: DownloadQueueHistorySnapshot {
+        let latestCompleted = completedItems.max { first, second in
+            first.updatedAt < second.updatedAt
+        }
+        return DownloadQueueHistorySnapshot(
+            activeCount: activeCount,
+            completedCount: completedCount,
+            failedCount: items.filter { $0.status == .failed }.count,
+            latestCompletedTitle: latestCompleted?.title,
+            latestCompletedAt: latestCompleted?.updatedAt
+        )
+    }
+
     var invalidCompletedItems: [ArtworkDownloadItem] {
         items.filter { $0.status == .completed && hasReadableDownload(for: $0) == false }
     }

@@ -148,6 +148,12 @@ struct ContentView: View {
                     selectedSidebarItem = .route(.workSubscriptions)
                     selectedTab = .library
                 }
+                if VisualQALaunchArgument.contains(.downloadQueue) {
+                    store.presentDownloadQueueVisualQA()
+                    hasAppliedMobileBottomTabLaunchTarget = true
+                    selectedSidebarItem = .route(.downloads)
+                    selectedTab = .library
+                }
                 if VisualQALaunchArgument.contains(.readerWindow) {
                     store.activateVisualQASampleSession()
                     store.registerReaderWindowArtwork(VisualQASampleData.artworkDetailSocialArtwork)
