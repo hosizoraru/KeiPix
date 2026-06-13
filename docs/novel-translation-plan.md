@@ -187,9 +187,9 @@ Recommended new or changed types:
 | --- | --- | --- |
 | Phase 0: Baseline and Guard Rails | Done | Added focused planner baseline tests, confirmed initial dirty worktree state, and validated tokenizer/caption gates. |
 | Phase 1: Segment Planner | Done | Added `NovelTranslationSegment` and `NovelTranslationPlanner` with paragraph splitting, non-text/noisy text skipping, stable source hashes, and stable client identifiers. |
-| Phase 2: Apple Batch Streaming Client | Done | Reader now builds `TranslationSession.Request` batches with `clientIdentifier`, consumes `session.translate(batch:)` with `for try await`, and ignores missing/unknown identifiers. |
+| Phase 2: Apple Batch Streaming Client | Done | Reader now uses a testable `NovelTranslationBatchClient` closure wrapper, builds `TranslationSession.Request` batches with `clientIdentifier`, consumes `session.translate(batch:)`, and ignores missing/unknown identifiers. |
 | Phase 3: Incremental Engine Updates | Done | `NovelTranslationEngine` now stores segment results, updates progress per streamed result, preserves legacy token lookup, and keeps source text visible for pending segments. |
-| Phase 4: Visible-First Scheduling | Planned | Pending incremental engine state. |
+| Phase 4: Visible-First Scheduling | In progress | Scheduler implementation, focused tests, and iOS/iPadOS generic builds are complete; physical-device smoke validation remains open. |
 | Phase 5: Persistent Translation Cache | Planned | Pending segment-level result model. |
 | Phase 6: Availability, Preparation, and Errors | Planned | Pending translation client/error model. |
 | Phase 7: OS 26.4+ Translation Strategy and Skip Ranges | Planned | Pending stable batch client. |
@@ -276,6 +276,8 @@ Evidence:
 - `NovelTranslationBatchMapper.requests(from:)` creates
   `TranslationSession.Request` values with segment `sourceText` and
   `clientIdentifier`.
+- `NovelTranslationBatchClient` provides a testable closure wrapper around
+  streamed batch translation results.
 - `NovelReaderView.translatePage(_:session:)` now consumes
   `session.translate(batch:)` using `for try await`.
 - `NovelTranslationPlannerTests/batchResponseMappingIgnoresUnknownIdentifiers`
@@ -315,23 +317,33 @@ Evidence:
 
 ### Phase 4: Visible-First Scheduling
 
-Status: Planned
+Status: In progress
 
-- [ ] For paged mode, translate current page first.
-- [ ] For double-page mode, translate the visible paired page next.
-- [ ] Prefetch nearby pages after visible pages are complete or underway.
-- [ ] For continuous mode, start with a simple page-order approximation.
+- [x] For paged mode, translate current page first.
+- [x] For double-page mode, translate the visible paired page next.
+- [x] Prefetch nearby pages after visible pages are complete or underway.
+- [x] For continuous mode, start with a simple page-order approximation.
 - [ ] Later, extend `NativeNovelContinuousTextRepresentable` to report visible
   token/page ranges and make continuous scheduling exact.
-- [ ] Cancel stale translation work when novel ID, target language, reader mode,
+- [x] Cancel stale translation work when novel ID, target language, reader mode,
   or active page changes.
 
 Validation:
 
-- [ ] Scheduler ordering tests.
-- [ ] Cancellation tests with a fake client.
-- [ ] iOS/iPadOS generic builds.
+- [x] Scheduler ordering tests.
+- [x] Cancellation tests with a fake client.
+- [x] iOS/iPadOS generic builds.
 - [ ] Real-device smoke test before marking complete.
+
+Evidence:
+
+- `NovelTranslationSchedulerTests` covers single-page, double-page, continuous,
+  and stale-work identity inputs.
+- `NovelReaderView` now uses `NovelTranslationScheduler.pageOrder(...)` for the
+  `.translationTask` page loop and clears active translation results when the
+  target language changes.
+- iOS and iPadOS generic Simulator builds pass. Physical-device smoke remains
+  open because Apple Translation behavior cannot be proven by Simulator alone.
 
 ### Phase 5: Persistent Translation Cache
 

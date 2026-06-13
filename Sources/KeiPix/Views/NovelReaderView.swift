@@ -116,6 +116,14 @@ struct NovelReaderView: View {
             : translationEngine.isTranslating(pageIndex: pageIndex)
     }
 
+    private var translationScheduleMode: NovelTranslationScheduleMode {
+        if usesContinuousNovelReader {
+            return .continuous
+        }
+        let mode = NovelReadingMode(rawValue: readingModeRaw) ?? .singlePage
+        return mode == .doublePage ? .doublePage : .singlePage
+    }
+
     private var showsReaderFooter: Bool {
         guard usesContinuousNovelReader else { return true }
         return novelStore.loadedNovelText?.seriesPrev != nil || novelStore.loadedNovelText?.seriesNext != nil
@@ -178,17 +186,21 @@ struct NovelReaderView: View {
                 translationConfig?.invalidate()
             }
         }
+        .onChange(of: store.translationTargetLanguage) { _, newValue in
+            guard translationEngine.isInlineTranslationActive else { return }
+            translationEngine.clearAll()
+            translationConfig = TranslationLanguageResolver.configuration(for: newValue)
+        }
         .translationTask(translationConfig) { session in
             guard translationEngine.isInlineTranslationActive else { return }
-            if usesContinuousNovelReader {
-                await translateContinuousReaderPages(session: session)
-            } else {
-                await translateCurrentPage(session: session)
-                // In double-page mode, also translate the next page
-                let mode = NovelReadingMode(rawValue: readingModeRaw) ?? .singlePage
-                if mode == .doublePage, pageIndex + 1 < pages.count {
-                    await translatePage(pageIndex + 1, session: session)
-                }
+            let pageOrder = NovelTranslationScheduler.pageOrder(
+                pageCount: pages.count,
+                activePageIndex: pageIndex,
+                mode: translationScheduleMode
+            )
+            for page in pageOrder {
+                guard translationEngine.isInlineTranslationActive else { return }
+                await translatePage(page, session: session)
             }
         }
         .sheet(isPresented: $isSettingsPresented) {
@@ -228,17 +240,6 @@ struct NovelReaderView: View {
     }
 
     // MARK: - Translation
-
-    private func translateCurrentPage(session: TranslationSession) async {
-        await translatePage(pageIndex, session: session)
-    }
-
-    private func translateContinuousReaderPages(session: TranslationSession) async {
-        for page in pages.indices {
-            guard translationEngine.isInlineTranslationActive else { return }
-            await translatePage(page, session: session)
-        }
-    }
 
     private func translatePage(_ page: Int, session: TranslationSession) async {
         guard translationEngine.isInlineTranslationActive else { return }

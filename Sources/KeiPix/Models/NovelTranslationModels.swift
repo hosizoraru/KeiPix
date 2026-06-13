@@ -39,6 +39,57 @@ struct NovelTranslationBatchClient {
     }
 }
 
+enum NovelTranslationScheduleMode: String, Codable, Hashable, Sendable {
+    case singlePage
+    case doublePage
+    case continuous
+}
+
+struct NovelTranslationScheduleIdentity: Hashable, Sendable {
+    let novelID: Int
+    let targetLanguageID: String
+    let mode: NovelTranslationScheduleMode
+    let activePageIndex: Int
+    let pageCount: Int
+}
+
+enum NovelTranslationScheduler {
+    static func pageOrder(
+        pageCount: Int,
+        activePageIndex: Int,
+        mode: NovelTranslationScheduleMode
+    ) -> [Int] {
+        guard pageCount > 0 else { return [] }
+        if mode == .continuous {
+            return Array(0..<pageCount)
+        }
+
+        let activePage = min(max(activePageIndex, 0), pageCount - 1)
+        var ordered: [Int] = []
+        var seen: Set<Int> = []
+
+        func append(_ page: Int) {
+            guard page >= 0, page < pageCount, seen.insert(page).inserted else { return }
+            ordered.append(page)
+        }
+
+        append(activePage)
+        if mode == .doublePage {
+            append(activePage + 1)
+        }
+
+        var distance = 1
+        while ordered.count < pageCount {
+            append(activePage - distance)
+            let trailingDistance = mode == .doublePage ? distance + 1 : distance
+            append(activePage + trailingDistance)
+            distance += 1
+        }
+
+        return ordered
+    }
+}
+
 enum NovelTranslationBatchMapper {
     static func segmentIndex(_ segments: [NovelTranslationSegment]) -> [String: NovelTranslationSegment] {
         Dictionary(uniqueKeysWithValues: segments.map { ($0.clientIdentifier, $0) })
