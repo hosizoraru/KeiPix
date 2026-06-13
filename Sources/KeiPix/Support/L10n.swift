@@ -1286,6 +1286,12 @@ enum L10n {
     static var directConnection: String { text("Direct connection") }
     static var pixivAPI: String { text("Pixiv API") }
     static var imageHost: String { text("Image Host") }
+    static var pixivAppAPIHost: String { text("Pixiv App API Host") }
+    static var pixivOAuthHost: String { text("Pixiv OAuth Host") }
+    static var pixivWebHost: String { text("Pixiv Web Host") }
+    static var pixivImageCDNHost: String { text("Pixiv Image CDN Host") }
+    static var pixivHostDiagnosticHTTPStatusFormat: String { text("%@ · HTTP %d · Proxy: %@") }
+    static var pixivHostDiagnosticTransportErrorFormat: String { text("%@ · %@ · Proxy: %@") }
     static var reachable: String { text("Reachable") }
     static var skipped: String { text("Skipped") }
     static var passed: String { text("Passed") }

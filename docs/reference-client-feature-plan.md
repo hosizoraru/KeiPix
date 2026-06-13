@@ -30,7 +30,7 @@ navigation, and lightweight surfaces.
 | Novel export | Pixeval supports HTML, Markdown, and original text. | KeiPix now supports TXT, Markdown, and static HTML export. | Consider EPUB/PDF later only if the native reader/export workflow needs them. |
 | Reader tools | Pixeval has image viewer modes, page preview slider, rotate/mirror tools. | KeiPix has native readers, paging, continuous/double page, zoom, and basic slider. | Add thumbnail scrubber/filmstrip first for iPad landscape and macOS. |
 | Dashboard cards | Pixeval supports configurable home cards, including single work/novel/user cards. | KeiPix has section visibility customization. | Evolve discovery dashboard later with native card presets. |
-| Network/direct connect | Pixeval/Pixiv-Nginx provide domain fronting, IP sets, mirror/proxy patterns. | KeiPix has app-level system/direct/manual proxy. | Add diagnostics and clearer host-level checks; do not bundle MITM/self-signed proxy. |
+| Network/direct connect | Pixeval/Pixiv-Nginx provide domain fronting, IP sets, mirror/proxy patterns. | KeiPix has app-level system/direct/manual proxy and now reports host-by-host Pixiv reachability for App API, OAuth, Web, and image CDN. | Keep diagnostics read-only and platform-networking based; do not bundle MITM/self-signed proxy. |
 | Widget-style surfaces | pixez-flutter has Android widgets. | KeiPix has `WidgetDataProvider` but no WidgetKit target. | Low priority; track for future WidgetKit/live surface work. |
 | Search filter memory | pixez-flutter remembers search sort, target, AI, and ugoira options per search result context. | KeiPix has saved searches, search history, and strong search options, but can better remember per-surface filter choices. | Add per-kind search option memory for illust, manga, and novel without confusing it with in-feed client filtering. |
 | Novel follow and bookmarks | pixez-flutter exposes novel follow, public/private novel bookmarks, novel ranking, novel watchlist, and series pages as one novel workflow. | KeiPix has novel recommended, ranking, search, series, watchlist, and bookmark actions, but navigation density still needs platform-specific polish. | Continue unifying novel surfaces with compact iPhone menus and fuller iPad landscape/macOS panes. |
@@ -58,7 +58,7 @@ navigation, and lightweight surfaces.
 | 5 | MyPixiv | Completed models/endpoints/routes for MyPixiv users, illustration feed, and novel feed; surfaced counts and route entry points in user profile. | Route coverage tests, API query tests, profile native-boundary checks, platform builds, and macOS creator-profile Visual QA. |
 | 6 | Search options | Fetch and cache `/v1/search/options`; first UI slice maps server-provided bookmark ranges into the minimum/maximum bookmark preset menus, second slice makes novel search honor the shared search filters, third slice exposes remote novel language/genre menus, fourth slice adds Pixiv's non-premium novel text-length ranges, and fifth slice maps existing artwork/ugoira filters to supported `content_type` query values. | Parser/model tests, search option tests, novel query/filter tests, search UI boundary tests, and search UI screenshots when the visible pane changes further. |
 | 7 | Reader/export polish | Completed novel HTML export; next add reader thumbnail scrubber on wider layouts. | Export formatter tests, platform builds, and novel-feed Visual QA for the first export slice. |
-| 8 | Network diagnostics | Add host-by-host Pixiv reachability diagnostics and clearer proxy guidance. | Deterministic diagnostics tests and Settings screenshot. |
+| 8 | Network diagnostics | Added host-by-host Pixiv reachability diagnostics with selected proxy summaries; next polish is visual QA evidence and any follow-up settings copy that real screenshots show is needed. | Deterministic diagnostics tests and Settings screenshot. |
 
 ## Current Slice
 
@@ -73,6 +73,7 @@ navigation, and lightweight surfaces.
 | MyPixiv | Done | API/store entry points, profile count, profile menu actions, and dedicated artwork/novel feed routes are wired. |
 | Remote search options | Done for safe app-api parameters | Parser, endpoint URL, API fetch, store cache hook, bookmark range preset mapping, novel search filter/query wiring, remote novel language/genre menu mapping, novel text-length presets, and illustration `content_type` query mapping are done. Tool metadata remains documented but intentionally unwired until Pixiv app-api behavior is confirmed. |
 | Novel HTML export | Done | TXT/Markdown export formatting moved into a reusable Swift formatter and HTML export is available from the novel detail menu. |
+| Network diagnostics | In progress | Runtime diagnostics now include safe `HEAD` probes for Pixiv App API, OAuth, Web, and image CDN hosts, with current app proxy mode in each result. |
 | Apple docs checkpoints | In progress | Keep UIKit/AppKit diffable data-source and native sheet/menu guidance in mind for the upcoming UI phase. |
 
 ## Apple Documentation Checkpoints

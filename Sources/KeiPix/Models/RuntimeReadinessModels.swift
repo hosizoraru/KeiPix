@@ -115,9 +115,12 @@ extension KeiPixStore {
             detail: systemProxySummary,
             duration: nil
         )
+        let hostDiagnostics = await PixivNetworkHostDiagnostics
+            .live(proxySummary: appProxySummary, proxyConfiguration: appProxyConfiguration)
+            .run()
         let apiResult = await pixivAPIDiagnostic()
         let imageResult = await imageHostDiagnostic()
-        return [proxyResult, apiResult, imageResult]
+        return [proxyResult] + hostDiagnostics + [apiResult, imageResult]
     }
 
     func runAccountHealthDiagnostics() async -> [NetworkDiagnosticResult] {
@@ -502,7 +505,7 @@ extension KeiPixStore {
         RuntimeReadinessRow(
             id: "proxy",
             title: L10n.systemProxy,
-            value: systemProxySummary,
+            value: appProxySummary,
             systemImage: "network",
             isReady: true
         )
@@ -608,6 +611,34 @@ extension KeiPixStore {
     private func storeAccountHealthDetail(for session: PixivSession) -> String {
         let identity = showAccountIdentity ? "@\(session.user.account)" : L10n.hidden
         return "\(L10n.savedSession) · \(identity)"
+    }
+
+    private var appProxyConfiguration: ProxyConfiguration {
+        switch proxyConfigurationMode {
+        case .system:
+            return .system
+        case .direct:
+            return .direct
+        case .manual:
+            let host = proxyConfigurationHost.trimmingCharacters(in: .whitespaces)
+            guard host.isEmpty == false, proxyConfigurationPort > 0 else { return .system }
+            return .manual(host: host, port: proxyConfigurationPort, scheme: proxyConfigurationScheme)
+        }
+    }
+
+    private var appProxySummary: String {
+        switch proxyConfigurationMode {
+        case .system:
+            return "\(L10n.proxyConfigurationModeSystem) · \(systemProxySummary)"
+        case .direct:
+            return L10n.proxyConfigurationModeDirect
+        case .manual:
+            let host = proxyConfigurationHost.trimmingCharacters(in: .whitespaces)
+            guard host.isEmpty == false, proxyConfigurationPort > 0 else {
+                return "\(L10n.proxyConfigurationModeManual) · \(L10n.unknown)"
+            }
+            return "\(L10n.proxyConfigurationModeManual) · \(proxyConfigurationScheme.rawValue.uppercased()) \(host):\(proxyConfigurationPort)"
+        }
     }
 
     private func pixivAPIDiagnostic() async -> NetworkDiagnosticResult {

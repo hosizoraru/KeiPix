@@ -112,4 +112,51 @@ struct RuntimeReadinessTests {
         #expect(decoded.items == snapshot.items)
         #expect(decoded.progressRows().first { $0.priority == .p2 }?.passed == 1)
     }
+
+    @Test("Pixiv host probes cover the public API, auth, web, and image hosts")
+    func pixivHostProbesCoverPrimaryPixivHosts() throws {
+        let probes = PixivNetworkHostProbe.defaultProbes
+
+        #expect(probes.map(\.id) == ["app-api", "oauth", "web", "image-cdn"])
+        #expect(probes.map(\.host) == ["app-api.pixiv.net", "oauth.secure.pixiv.net", "www.pixiv.net", "i.pximg.net"])
+        #expect(probes.allSatisfy { $0.url.scheme == "https" })
+
+        let joined = probes.map { "\($0.url.absoluteString) \($0.title)" }.joined(separator: " ")
+        #expect(joined.localizedCaseInsensitiveContains("mitm") == false)
+        #expect(joined.localizedCaseInsensitiveContains("certificate bypass") == false)
+        #expect(joined.localizedCaseInsensitiveContains("sni bypass") == false)
+    }
+
+    @Test("Pixiv host diagnostics treat non-5xx HTTP responses as reachable")
+    func pixivHostDiagnosticsTreatHTTPResponsesAsReachable() throws {
+        let probe = try #require(PixivNetworkHostProbe.defaultProbes.first)
+        let result = PixivNetworkHostDiagnostics.result(
+            for: probe,
+            response: .http(statusCode: 403),
+            proxySummary: "Manual SOCKS5 127.0.0.1:7890",
+            duration: 0.125
+        )
+
+        #expect(result.id == "pixiv-host-app-api")
+        #expect(result.status == .passed)
+        #expect(result.detail.contains("app-api.pixiv.net"))
+        #expect(result.detail.contains("HTTP 403"))
+        #expect(result.detail.contains("Manual SOCKS5"))
+    }
+
+    @Test("Pixiv host diagnostics surface transport failures with the host name")
+    func pixivHostDiagnosticsSurfaceTransportFailures() throws {
+        let probe = try #require(PixivNetworkHostProbe.defaultProbes.last)
+        let result = PixivNetworkHostDiagnostics.result(
+            for: probe,
+            response: .transportError("The request timed out."),
+            proxySummary: L10n.directConnection,
+            duration: 1.5
+        )
+
+        #expect(result.status == .failed)
+        #expect(result.detail.contains("i.pximg.net"))
+        #expect(result.detail.contains("timed out"))
+        #expect(result.detail.localizedCaseInsensitiveContains("self-signed") == false)
+    }
 }
