@@ -1,4 +1,7 @@
 import SwiftUI
+#if os(macOS)
+import AppKit
+#endif
 #if os(iOS)
 import UIKit
 #endif
@@ -36,6 +39,8 @@ struct FeedHeaderView: View {
     @State private var isLoadingBookmarkTags = false
     @State private var bookmarkTagErrorMessage: String?
     @State private var isRankingDatePopoverPresented = false
+    @State private var isAdvancedLocalFilterEditorPresented = false
+    @State private var advancedLocalFilterEditorDraft = AdvancedLocalFilterEditorDraft()
     @State private var bulkMutePreview: BulkMutePreview?
     @State private var batchBookmarkPreview: BatchBookmarkPreview?
     @State private var isApplyingBatchBookmark = false
@@ -679,6 +684,14 @@ struct FeedHeaderView: View {
 
     private var advancedLocalFilterMenu: some View {
         Menu {
+            Button {
+                presentAdvancedLocalFilterEditor()
+            } label: {
+                Label(L10n.editAdvancedFilter, systemImage: "slider.horizontal.below.rectangle")
+            }
+
+            Divider()
+
             Section(L10n.contentFlags) {
                 ForEach(AdvancedLocalFilterQuickPreset.contentFlags, id: \.self) { preset in
                     advancedLocalFilterPresetButton(preset)
@@ -712,6 +725,17 @@ struct FeedHeaderView: View {
         .help(L10n.advancedFilter)
         .accessibilityLabel(L10n.advancedFilter)
         .tint(advancedLocalFilterIsActive ? .accentColor : nil)
+        .popover(isPresented: $isAdvancedLocalFilterEditorPresented, arrowEdge: .bottom) {
+            AdvancedLocalFilterEditorPopover(
+                draft: $advancedLocalFilterEditorDraft,
+                cancel: {
+                    isAdvancedLocalFilterEditorPresented = false
+                },
+                apply: {
+                    applyAdvancedLocalFilterEditor()
+                }
+            )
+        }
     }
 
     private func advancedLocalFilterPresetButton(_ preset: AdvancedLocalFilterQuickPreset) -> some View {
@@ -758,6 +782,23 @@ struct FeedHeaderView: View {
         case .portrait: "rectangle.portrait"
         case .square: "square"
         }
+    }
+
+    private func presentAdvancedLocalFilterEditor() {
+        advancedLocalFilterEditorDraft = AdvancedLocalFilterEditorDraft(query: store.clientFilterQuery)
+        isAdvancedLocalFilterEditorPresented = false
+        DispatchQueue.main.async {
+            isAdvancedLocalFilterEditorPresented = true
+        }
+    }
+
+    private func applyAdvancedLocalFilterEditor() {
+        let query = advancedLocalFilterEditorDraft.query.trimmingCharacters(in: .whitespacesAndNewlines)
+        store.clientFilterQuery = query
+        actionMessage = query.isEmpty
+            ? L10n.feedFilterCleared
+            : String(format: L10n.activeArtworkFilterFormat, query)
+        isAdvancedLocalFilterEditorPresented = false
     }
 
     private var bookmarkFiltersMenu: some View {
@@ -1730,6 +1771,418 @@ private extension View {
         #else
         self
         #endif
+    }
+}
+
+private struct AdvancedLocalFilterEditorPopover: View {
+    @Binding var draft: AdvancedLocalFilterEditorDraft
+    let cancel: () -> Void
+    let apply: () -> Void
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 14) {
+                HStack(spacing: 8) {
+                    Label(L10n.advancedFilter, systemImage: "slider.horizontal.3")
+                        .font(.headline)
+
+                    Spacer(minLength: 12)
+
+                    Button {
+                        draft.clear()
+                    } label: {
+                        Label(L10n.reset, systemImage: "arrow.counterclockwise")
+                    }
+                    .labelStyle(.iconOnly)
+                    .help(L10n.reset)
+                    .accessibilityLabel(L10n.reset)
+                }
+
+                editorSection(L10n.textFilters) {
+                    textFieldRow(L10n.tags, text: $draft.tagText)
+                    textFieldRow(L10n.title, text: $draft.titleText)
+                    textFieldRow(L10n.creator, text: $draft.authorText)
+                }
+
+                editorSection(L10n.numberRanges) {
+                    numberRangeRow(L10n.bookmarks, field: .bookmarkCount)
+                    numberRangeRow(L10n.views, field: .viewCount)
+                    numberRangeRow(L10n.pages, field: .pageCount)
+                }
+
+                editorSection(L10n.contentFlags) {
+                    flagRuleRow("R-18", keyPath: \.r18Rule)
+                    flagRuleRow("R-18G", keyPath: \.r18gRule)
+                    flagRuleRow(L10n.aiFilter, keyPath: \.aiRule)
+                    flagRuleRow(L10n.ugoiraFilter, keyPath: \.ugoiraRule)
+                    flagRuleRow(L10n.bookmarked, keyPath: \.bookmarkedRule)
+                }
+
+                editorSection(L10n.aspectRatio) {
+                    ratioRow
+                }
+
+                editorSection(L10n.otherTerms) {
+                    AdvancedLocalFilterNativeEntryField(
+                        text: $draft.passthroughQuery,
+                        placeholder: L10n.otherTerms
+                    )
+                }
+
+                Divider()
+
+                HStack(spacing: 8) {
+                    Button {
+                        cancel()
+                    } label: {
+                        Label(L10n.cancel, systemImage: "xmark")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .os26GlassButton()
+
+                    Button {
+                        apply()
+                    } label: {
+                        Label(L10n.apply, systemImage: "checkmark")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .os26GlassButton(prominent: true)
+                }
+            }
+            .padding(16)
+        }
+        .frame(minWidth: 360, idealWidth: 420, maxWidth: 460, maxHeight: 540)
+    }
+
+    private func editorSection<Content: View>(
+        _ title: String,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(title)
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(.secondary)
+            content()
+        }
+    }
+
+    private func textFieldRow(_ title: String, text: Binding<String>) -> some View {
+        HStack(spacing: 10) {
+            Text(title)
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+                .frame(width: 78, alignment: .leading)
+
+            AdvancedLocalFilterNativeEntryField(text: text, placeholder: title)
+        }
+    }
+
+    private func numberRangeRow(
+        _ title: String,
+        field: AdvancedLocalFilterNumberField
+    ) -> some View {
+        HStack(spacing: 10) {
+            Text(title)
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+                .frame(width: 78, alignment: .leading)
+
+            AdvancedLocalFilterNativeEntryField(
+                text: minimumBinding(for: field),
+                placeholder: L10n.minimum
+            )
+            .frame(maxWidth: 132)
+
+            AdvancedLocalFilterNativeEntryField(
+                text: maximumBinding(for: field),
+                placeholder: L10n.maximum
+            )
+            .frame(maxWidth: 132)
+        }
+    }
+
+    private func flagRuleRow(
+        _ title: String,
+        keyPath: WritableKeyPath<AdvancedLocalFilterEditorDraft, AdvancedLocalFilterFlagRule>
+    ) -> some View {
+        HStack(spacing: 10) {
+            Text(title)
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+                .frame(width: 118, alignment: .leading)
+
+            Menu {
+                ForEach(AdvancedLocalFilterFlagRule.allCases, id: \.self) { rule in
+                    Button {
+                        draft[keyPath: keyPath] = rule
+                    } label: {
+                        Label(rule.title, systemImage: rule.systemImage)
+                    }
+                }
+            } label: {
+                Label(draft[keyPath: keyPath].title, systemImage: draft[keyPath: keyPath].systemImage)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .os26GlassButton()
+        }
+    }
+
+    private var ratioRow: some View {
+        HStack(spacing: 10) {
+            Text(L10n.aspectRatio)
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+                .frame(width: 118, alignment: .leading)
+
+            Menu {
+                Button {
+                    draft.ratio = nil
+                } label: {
+                    Label(L10n.any, systemImage: "circle.dashed")
+                }
+
+                ForEach(AdvancedLocalFilterRatio.allCases, id: \.self) { ratio in
+                    Button {
+                        draft.ratio = ratio
+                    } label: {
+                        Label(ratio.title, systemImage: ratio.systemImage)
+                    }
+                }
+            } label: {
+                Label(draft.ratio?.title ?? L10n.any, systemImage: draft.ratio?.systemImage ?? "circle.dashed")
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .os26GlassButton()
+        }
+    }
+
+    private func minimumBinding(for field: AdvancedLocalFilterNumberField) -> Binding<String> {
+        Binding {
+            range(for: field).minimum.map(String.init) ?? ""
+        } set: { newValue in
+            updateRange(field) { range in
+                range.minimum = Self.integer(from: newValue)
+            }
+        }
+    }
+
+    private func maximumBinding(for field: AdvancedLocalFilterNumberField) -> Binding<String> {
+        Binding {
+            range(for: field).maximum.map(String.init) ?? ""
+        } set: { newValue in
+            updateRange(field) { range in
+                range.maximum = Self.integer(from: newValue)
+            }
+        }
+    }
+
+    private func range(for field: AdvancedLocalFilterNumberField) -> AdvancedLocalFilterNumberRange {
+        switch field {
+        case .bookmarkCount:
+            draft.bookmarkRange
+        case .viewCount:
+            draft.viewRange
+        case .pageCount:
+            draft.pageRange
+        }
+    }
+
+    private func updateRange(
+        _ field: AdvancedLocalFilterNumberField,
+        _ update: (inout AdvancedLocalFilterNumberRange) -> Void
+    ) {
+        switch field {
+        case .bookmarkCount:
+            update(&draft.bookmarkRange)
+        case .viewCount:
+            update(&draft.viewRange)
+        case .pageCount:
+            update(&draft.pageRange)
+        }
+    }
+
+    private static func integer(from value: String) -> Int? {
+        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard trimmed.isEmpty == false else { return nil }
+        return Int(trimmed)
+    }
+}
+
+private struct AdvancedLocalFilterNativeEntryField: View {
+    @Binding var text: String
+    let placeholder: String
+
+    var body: some View {
+        AdvancedLocalFilterPlatformTextField(
+            text: $text,
+            placeholder: placeholder
+        )
+        .padding(.horizontal, 10)
+        .frame(minHeight: 32, maxHeight: 32)
+        .keiInteractiveGlass(14)
+        .accessibilityLabel(placeholder)
+    }
+}
+
+#if os(macOS)
+private struct AdvancedLocalFilterPlatformTextField: NSViewRepresentable {
+    @Binding var text: String
+    let placeholder: String
+
+    func makeNSView(context: Context) -> NSTextField {
+        let field = NSTextField()
+        field.delegate = context.coordinator
+        field.placeholderString = placeholder
+        field.isBezeled = false
+        field.drawsBackground = false
+        field.focusRingType = .none
+        field.font = NSFont.systemFont(ofSize: NSFont.systemFontSize)
+        field.lineBreakMode = .byTruncatingTail
+        return field
+    }
+
+    func updateNSView(_ field: NSTextField, context: Context) {
+        context.coordinator.text = $text
+        field.placeholderString = placeholder
+        if field.stringValue != text {
+            field.stringValue = text
+        }
+    }
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(text: $text)
+    }
+
+    @MainActor
+    final class Coordinator: NSObject, NSTextFieldDelegate {
+        var text: Binding<String>
+
+        init(text: Binding<String>) {
+            self.text = text
+        }
+
+        func controlTextDidChange(_ obj: Notification) {
+            guard let field = obj.object as? NSTextField else { return }
+            text.wrappedValue = field.stringValue
+        }
+    }
+}
+#elseif os(iOS)
+private struct AdvancedLocalFilterPlatformTextField: UIViewRepresentable {
+    @Binding var text: String
+    let placeholder: String
+
+    func makeUIView(context: Context) -> UITextField {
+        let field = UITextField(frame: .zero)
+        field.delegate = context.coordinator
+        field.placeholder = placeholder
+        field.text = text
+        field.borderStyle = .none
+        field.backgroundColor = .clear
+        field.clearButtonMode = .whileEditing
+        field.autocorrectionType = .no
+        field.autocapitalizationType = .none
+        field.returnKeyType = .done
+        field.addTarget(
+            context.coordinator,
+            action: #selector(Coordinator.editingChanged(_:)),
+            for: .editingChanged
+        )
+        return field
+    }
+
+    func updateUIView(_ field: UITextField, context: Context) {
+        context.coordinator.text = $text
+        field.placeholder = placeholder
+        if field.text != text {
+            field.text = text
+        }
+    }
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(text: $text)
+    }
+
+    @MainActor
+    final class Coordinator: NSObject, UITextFieldDelegate {
+        var text: Binding<String>
+
+        init(text: Binding<String>) {
+            self.text = text
+        }
+
+        @objc func editingChanged(_ sender: UITextField) {
+            text.wrappedValue = sender.text ?? ""
+        }
+
+        func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+            textField.resignFirstResponder()
+            return true
+        }
+
+        func textFieldShouldClear(_ textField: UITextField) -> Bool {
+            text.wrappedValue = ""
+            return true
+        }
+    }
+}
+#else
+private struct AdvancedLocalFilterPlatformTextField: View {
+    @Binding var text: String
+    let placeholder: String
+
+    var body: some View {
+        TextField(placeholder, text: $text)
+            .textFieldStyle(.plain)
+    }
+}
+#endif
+
+private extension AdvancedLocalFilterFlagRule {
+    var title: String {
+        switch self {
+        case .any:
+            L10n.any
+        case .include:
+            L10n.include
+        case .exclude:
+            L10n.exclude
+        }
+    }
+
+    var systemImage: String {
+        switch self {
+        case .any:
+            "circle.dashed"
+        case .include:
+            "checkmark.circle"
+        case .exclude:
+            "minus.circle"
+        }
+    }
+}
+
+private extension AdvancedLocalFilterRatio {
+    var title: String {
+        switch self {
+        case .landscape:
+            L10n.landscape
+        case .portrait:
+            L10n.portrait
+        case .square:
+            L10n.square
+        }
+    }
+
+    var systemImage: String {
+        switch self {
+        case .landscape:
+            "rectangle"
+        case .portrait:
+            "rectangle.portrait"
+        case .square:
+            "square"
+        }
     }
 }
 

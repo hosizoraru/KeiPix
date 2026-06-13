@@ -116,6 +116,27 @@ struct AdvancedLocalFilterModelsTests {
         #expect(AdvancedLocalFilterQuickPreset.portrait.isActive(in: query))
     }
 
+    @Test("Advanced local filter editor draft round trips typed fields while preserving free text")
+    func editorDraftRoundTripsTypedFieldsAndPreservesFreeText() {
+        let editor = AdvancedLocalFilterEditorDraft(
+            query: #"tag:"Blue Archive" title:summer artist:Alice bookmark:>=100 bookmark:<=500 view:>=2000 page:<=8 !r18 !r18g !ai gif ratio:landscape bookmarked quiet"#)
+
+        #expect(editor.tagText == "Blue Archive")
+        #expect(editor.titleText == "summer")
+        #expect(editor.authorText == "Alice")
+        #expect(editor.bookmarkRange == .init(minimum: 100, maximum: 500))
+        #expect(editor.viewRange == .init(minimum: 2000, maximum: nil))
+        #expect(editor.pageRange == .init(minimum: nil, maximum: 8))
+        #expect(editor.r18Rule == .exclude)
+        #expect(editor.r18gRule == .exclude)
+        #expect(editor.aiRule == .exclude)
+        #expect(editor.ugoiraRule == .include)
+        #expect(editor.bookmarkedRule == .include)
+        #expect(editor.ratio == .landscape)
+        #expect(editor.passthroughQuery == "quiet")
+        #expect(editor.query == #"tag:"Blue Archive" title:summer user:Alice bookmark:>=100 bookmark:<=500 view:>=2000 page:<=8 !r18 !r18g !ai gif bookmarked ratio:landscape quiet"#)
+    }
+
     private func artwork(
         id: Int,
         title: String,

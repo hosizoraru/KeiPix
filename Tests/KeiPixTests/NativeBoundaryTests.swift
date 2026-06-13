@@ -2462,10 +2462,19 @@ struct NativeBoundaryTests {
 
         #expect(feedHeader.contains("private var advancedLocalFilterMenu: some View"))
         #expect(feedHeader.contains("AdvancedLocalFilterQuickPreset"))
+        #expect(feedHeader.contains("AdvancedLocalFilterEditorPopover"))
+        #expect(feedHeader.contains("AdvancedLocalFilterPlatformTextField"))
+        #expect(feedHeader.contains("NSTextField"))
+        #expect(feedHeader.contains("UITextField"))
+        #expect(feedHeader.contains("isAdvancedLocalFilterEditorPresented"))
+        #expect(feedHeader.contains("advancedLocalFilterEditorDraft = AdvancedLocalFilterEditorDraft(query: store.clientFilterQuery)"))
+        #expect(feedHeader.contains("Label(L10n.editAdvancedFilter, systemImage: \"slider.horizontal.below.rectangle\")"))
         #expect(compactHeader.contains("advancedLocalFilterMenu"))
         #expect(regularHeader.contains("advancedLocalFilterMenu"))
         #expect(phoneMenu.contains("advancedLocalFilterMenu") == false)
+        #expect(phoneMenu.contains("editAdvancedFilter") == false)
         #expect(localizable.contains("\"Advanced Filter\""))
+        #expect(localizable.contains("\"Edit Advanced Filter\""))
         #expect(localizable.contains("\"value\": \"高级筛选\""))
     }
 

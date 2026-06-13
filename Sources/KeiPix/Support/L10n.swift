@@ -182,6 +182,15 @@ enum L10n {
     static var activeArtworkFilterFormat: String { text("Filter: %@") }
     static var activeFeedFiltersFormat: String { text("%d active filters") }
     static var advancedFilter: String { text("Advanced Filter") }
+    static var editAdvancedFilter: String { text("Edit Advanced Filter") }
+    static var textFilters: String { text("Text Filters") }
+    static var numberRanges: String { text("Number Ranges") }
+    static var otherTerms: String { text("Other Terms") }
+    static var minimum: String { text("Minimum") }
+    static var maximum: String { text("Maximum") }
+    static var any: String { text("Any") }
+    static var include: String { text("Include") }
+    static var exclude: String { text("Exclude") }
     static var contentFlags: String { text("Content Flags") }
     static var aspectRatio: String { text("Aspect Ratio") }
     static var excludeR18: String { text("Exclude R-18") }
