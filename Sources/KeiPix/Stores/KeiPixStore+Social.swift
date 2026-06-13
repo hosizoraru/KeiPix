@@ -172,6 +172,10 @@ extension KeiPixStore {
         try await api.illustComments(illustID: artwork.id)
     }
 
+    func comments(for novel: PixivNovel) async throws -> PixivCommentResponse {
+        try await api.novelComments(novelID: novel.id)
+    }
+
     func nextComments(_ url: URL) async throws -> PixivCommentResponse {
         try await api.nextComments(url)
     }
@@ -180,8 +184,16 @@ extension KeiPixStore {
         try await api.illustCommentReplies(commentID: comment.id)
     }
 
+    func novelCommentReplies(for comment: PixivComment) async throws -> PixivCommentResponse {
+        try await api.novelCommentReplies(commentID: comment.id)
+    }
+
     func postComment(_ comment: String, for artwork: PixivArtwork, parentCommentID: Int? = nil) async throws {
         try await api.addIllustComment(illustID: artwork.id, comment: comment, parentCommentID: parentCommentID)
+    }
+
+    func postComment(_ comment: String, for novel: PixivNovel, parentCommentID: Int? = nil) async throws {
+        try await api.addNovelComment(novelID: novel.id, comment: comment, parentCommentID: parentCommentID)
     }
 
     func relatedArtworks(for artwork: PixivArtwork) async throws -> PixivFeedResponse {

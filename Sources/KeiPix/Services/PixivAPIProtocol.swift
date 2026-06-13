@@ -62,7 +62,12 @@ protocol PixivAPIProtocol: Sendable {
 
     // MARK: - Comments
     func illustComments(illustID: Int) async throws -> PixivCommentResponse
+    func novelComments(novelID: Int) async throws -> PixivCommentResponse
     func nextComments(_ url: URL) async throws -> PixivCommentResponse
+    func illustCommentReplies(commentID: Int) async throws -> PixivCommentResponse
+    func novelCommentReplies(commentID: Int) async throws -> PixivCommentResponse
+    func addIllustComment(illustID: Int, comment: String, parentCommentID: Int?) async throws
+    func addNovelComment(novelID: Int, comment: String, parentCommentID: Int?) async throws
 }
 
 // MARK: - PixivAPI conformance

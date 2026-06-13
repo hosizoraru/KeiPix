@@ -974,6 +974,17 @@ actor PixivAPI {
         return try await requestJSON(url, method: "GET", form: nil)
     }
 
+    func novelComments(novelID: Int) async throws -> PixivCommentResponse {
+        try await requestJSON(Self.novelCommentsURL(novelID: novelID), method: "GET", form: nil)
+    }
+
+    static func novelCommentsURL(novelID: Int) throws -> URL {
+        var components = URLComponents(url: URL(string: "/v3/novel/comments", relativeTo: Endpoint.apiBase)!, resolvingAgainstBaseURL: true)!
+        components.queryItems = [URLQueryItem(name: "novel_id", value: "\(novelID)")]
+        guard let url = components.url else { throw PixivAPIError.invalidResponse }
+        return url
+    }
+
     func nextComments(_ url: URL) async throws -> PixivCommentResponse {
         try await requestJSON(url, method: "GET", form: nil)
     }
@@ -983,6 +994,17 @@ actor PixivAPI {
         components.queryItems = [URLQueryItem(name: "comment_id", value: "\(commentID)")]
         guard let url = components.url else { throw PixivAPIError.invalidResponse }
         return try await requestJSON(url, method: "GET", form: nil)
+    }
+
+    func novelCommentReplies(commentID: Int) async throws -> PixivCommentResponse {
+        try await requestJSON(Self.novelCommentRepliesURL(commentID: commentID), method: "GET", form: nil)
+    }
+
+    static func novelCommentRepliesURL(commentID: Int) throws -> URL {
+        var components = URLComponents(url: URL(string: "/v2/novel/comment/replies", relativeTo: Endpoint.apiBase)!, resolvingAgainstBaseURL: true)!
+        components.queryItems = [URLQueryItem(name: "comment_id", value: "\(commentID)")]
+        guard let url = components.url else { throw PixivAPIError.invalidResponse }
+        return url
     }
 
     func addIllustComment(illustID: Int, comment: String, parentCommentID: Int? = nil) async throws {
@@ -999,6 +1021,29 @@ actor PixivAPI {
             method: "POST",
             form: form
         ) as EmptyResponse
+    }
+
+    func addNovelComment(novelID: Int, comment: String, parentCommentID: Int? = nil) async throws {
+        _ = try await requestJSON(
+            URL(string: "/v1/novel/comment/add", relativeTo: Endpoint.apiBase)!,
+            method: "POST",
+            form: Self.addNovelCommentForm(
+                novelID: novelID,
+                comment: comment,
+                parentCommentID: parentCommentID
+            )
+        ) as EmptyResponse
+    }
+
+    static func addNovelCommentForm(novelID: Int, comment: String, parentCommentID: Int? = nil) -> [String: String] {
+        var form = [
+            "novel_id": "\(novelID)",
+            "comment": comment
+        ]
+        if let parentCommentID {
+            form["parent_comment_id"] = "\(parentCommentID)"
+        }
+        return form
     }
 
     func bookmarkDetail(illustID: Int) async throws -> PixivBookmarkDetail {
