@@ -4,6 +4,73 @@ import Testing
 
 @Suite("Search options")
 struct SearchOptionsTests {
+    @Test("Remote Pixiv search options decode artwork and novel metadata")
+    func remotePixivSearchOptionsDecode() throws {
+        let payload = """
+        {
+          "illust": {
+            "bookmark_ranges": [
+              { "bookmark_num_min": "100", "bookmark_num_max": "999" },
+              { "bookmark_num_min": "1000", "bookmark_num_max": "*" }
+            ],
+            "show_ai_condition": true,
+            "lang": {
+              "options": [
+                { "code": "ja", "name": "日本語" },
+                { "code": "en", "name": "English" }
+              ]
+            },
+            "tool": {
+              "options": ["CLIP STUDIO PAINT", "Photoshop"]
+            }
+          },
+          "novel": {
+            "bookmark_ranges": [
+              { "bookmark_num_min": "*", "bookmark_num_max": "99" }
+            ],
+            "show_ai_condition": false,
+            "lang": {
+              "options": [
+                { "code": "zh", "name": "中文" }
+              ]
+            },
+            "genre": {
+              "options": [
+                { "id": 1, "label": "Fantasy" }
+              ]
+            },
+            "word_count_supported_languages": "ja,en"
+          }
+        }
+        """
+
+        let options = try JSONDecoder().decode(PixivRemoteSearchOptions.self, from: Data(payload.utf8))
+
+        #expect(options.illust.bookmarkRanges.count == 2)
+        #expect(options.illust.bookmarkRanges[0].minimum == 100)
+        #expect(options.illust.bookmarkRanges[0].maximum == 999)
+        #expect(options.illust.bookmarkRanges[1].minimum == 1_000)
+        #expect(options.illust.bookmarkRanges[1].maximum == nil)
+        #expect(options.illust.showAICondition)
+        #expect(options.illust.languages.options.map(\.code) == ["ja", "en"])
+        #expect(options.illust.tools.options == ["CLIP STUDIO PAINT", "Photoshop"])
+        #expect(options.novel.bookmarkRanges[0].minimum == nil)
+        #expect(options.novel.bookmarkRanges[0].maximum == 99)
+        #expect(options.novel.showAICondition == false)
+        #expect(options.novel.languages.options.first?.name == "中文")
+        #expect(options.novel.genres.options.first?.label == "Fantasy")
+        #expect(options.novel.wordCountSupportedLanguageCodes == ["ja", "en"])
+    }
+
+    @Test("Remote Pixiv search options endpoint uses app-api search options path")
+    func remotePixivSearchOptionsEndpoint() throws {
+        let url = try PixivAPI.remoteSearchOptionsURL()
+        let components = try #require(URLComponents(url: url, resolvingAgainstBaseURL: false))
+
+        #expect(components.path == "/v1/search/options")
+        #expect(components.queryItems?.isEmpty ?? true)
+    }
+
     @Test("Default options keep the native search baseline")
     func defaultOptions() {
         let options = SearchOptions.defaultValue

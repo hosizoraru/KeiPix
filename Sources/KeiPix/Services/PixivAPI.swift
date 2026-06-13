@@ -868,6 +868,14 @@ actor PixivAPI {
         try await requestFeed(path: "/v1/search/popular-preview/illust", query: searchQuery(keyword: keyword, options: options))
     }
 
+    func remoteSearchOptions() async throws -> PixivRemoteSearchOptions {
+        try await requestJSON(Self.remoteSearchOptionsURL(), method: "GET", form: nil)
+    }
+
+    static func remoteSearchOptionsURL() throws -> URL {
+        try apiURL(path: "/v1/search/options", query: [:])
+    }
+
     func searchAutocomplete(keyword: String) async throws -> [PixivTag] {
         let trimmed = keyword.trimmingCharacters(in: .whitespacesAndNewlines)
         guard trimmed.isEmpty == false else { return [] }

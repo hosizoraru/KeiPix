@@ -72,6 +72,10 @@ final class KeiPixStore {
     var searchSubmissionID = 0
     var routeRefreshGeneration = 0
     var searchSuggestions: [PixivTag] = []
+    var remoteSearchOptions: PixivRemoteSearchOptions?
+    var remoteSearchOptionsLoadedAt: Date?
+    var remoteSearchOptionsErrorMessage: String?
+    var isLoadingRemoteSearchOptions = false
     var searchHistory = UserDefaults.standard.stringArray(forKey: "searchHistory") ?? []
     var savedSearches = UserDefaults.standard.stringArray(forKey: "savedSearches") ?? []
     var savedSearchPresets = KeiPixStore.loadSavedSearchPresets()

@@ -5,6 +5,7 @@ extension KeiPixStore {
     // MARK: - Search execution
 
     func runSearch() async {
+        Task { await refreshRemoteSearchOptionsIfNeeded() }
         searchSuggestions = []
         errorMessage = nil
         let keyword = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -42,6 +43,7 @@ extension KeiPixStore {
     }
 
     func runNovelSearch() async {
+        Task { await refreshRemoteSearchOptionsIfNeeded() }
         searchSuggestions = []
         errorMessage = nil
         let keyword = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -92,6 +94,29 @@ extension KeiPixStore {
         } catch is CancellationError {
         } catch {
             searchSuggestions = []
+        }
+    }
+
+    func refreshRemoteSearchOptionsIfNeeded(force: Bool = false) async {
+        guard session != nil, usesLocalSampleAccount == false else {
+            remoteSearchOptions = nil
+            remoteSearchOptionsLoadedAt = nil
+            remoteSearchOptionsErrorMessage = nil
+            isLoadingRemoteSearchOptions = false
+            return
+        }
+        guard isLoadingRemoteSearchOptions == false else { return }
+        if force == false, remoteSearchOptions != nil { return }
+
+        isLoadingRemoteSearchOptions = true
+        remoteSearchOptionsErrorMessage = nil
+        defer { isLoadingRemoteSearchOptions = false }
+
+        do {
+            remoteSearchOptions = try await api.remoteSearchOptions()
+            remoteSearchOptionsLoadedAt = Date()
+        } catch {
+            remoteSearchOptionsErrorMessage = error.localizedDescription
         }
     }
 

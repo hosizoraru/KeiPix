@@ -1,5 +1,105 @@
 import Foundation
 
+struct PixivRemoteSearchOptions: Decodable, Hashable, Sendable {
+    let illust: PixivRemoteIllustrationSearchOptions
+    let novel: PixivRemoteNovelSearchOptions
+}
+
+struct PixivRemoteIllustrationSearchOptions: Decodable, Hashable, Sendable {
+    let bookmarkRanges: [PixivRemoteSearchBookmarkRange]
+    let showAICondition: Bool
+    let languages: PixivRemoteSearchOptionList<PixivRemoteSearchLanguage>
+    let tools: PixivRemoteSearchOptionList<String>
+
+    enum CodingKeys: String, CodingKey {
+        case bookmarkRanges = "bookmark_ranges"
+        case showAICondition = "show_ai_condition"
+        case languages = "lang"
+        case tools = "tool"
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        bookmarkRanges = try container.decodeIfPresent([PixivRemoteSearchBookmarkRange].self, forKey: .bookmarkRanges) ?? []
+        showAICondition = try container.decodeIfPresent(Bool.self, forKey: .showAICondition) ?? false
+        languages = try container.decodeIfPresent(PixivRemoteSearchOptionList.self, forKey: .languages) ?? .empty
+        tools = try container.decodeIfPresent(PixivRemoteSearchOptionList.self, forKey: .tools) ?? .empty
+    }
+}
+
+struct PixivRemoteNovelSearchOptions: Decodable, Hashable, Sendable {
+    let bookmarkRanges: [PixivRemoteSearchBookmarkRange]
+    let showAICondition: Bool
+    let languages: PixivRemoteSearchOptionList<PixivRemoteSearchLanguage>
+    let genres: PixivRemoteSearchOptionList<PixivRemoteSearchGenre>
+    let wordCountSupportedLanguages: String
+
+    enum CodingKeys: String, CodingKey {
+        case bookmarkRanges = "bookmark_ranges"
+        case showAICondition = "show_ai_condition"
+        case languages = "lang"
+        case genres = "genre"
+        case wordCountSupportedLanguages = "word_count_supported_languages"
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        bookmarkRanges = try container.decodeIfPresent([PixivRemoteSearchBookmarkRange].self, forKey: .bookmarkRanges) ?? []
+        showAICondition = try container.decodeIfPresent(Bool.self, forKey: .showAICondition) ?? false
+        languages = try container.decodeIfPresent(PixivRemoteSearchOptionList.self, forKey: .languages) ?? .empty
+        genres = try container.decodeIfPresent(PixivRemoteSearchOptionList.self, forKey: .genres) ?? .empty
+        wordCountSupportedLanguages = try container.decodeIfPresent(String.self, forKey: .wordCountSupportedLanguages) ?? ""
+    }
+
+    var wordCountSupportedLanguageCodes: [String] {
+        wordCountSupportedLanguages
+            .split(separator: ",")
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { $0.isEmpty == false }
+    }
+}
+
+struct PixivRemoteSearchOptionList<Option: Decodable & Hashable & Sendable>: Decodable, Hashable, Sendable {
+    let options: [Option]
+
+    static var empty: Self { Self(options: []) }
+}
+
+struct PixivRemoteSearchBookmarkRange: Decodable, Hashable, Sendable {
+    let minimum: Int?
+    let maximum: Int?
+
+    enum CodingKeys: String, CodingKey {
+        case minimum = "bookmark_num_min"
+        case maximum = "bookmark_num_max"
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        minimum = Self.boundValue(try container.decodeIfPresent(String.self, forKey: .minimum))
+        maximum = Self.boundValue(try container.decodeIfPresent(String.self, forKey: .maximum))
+    }
+
+    private static func boundValue(_ value: String?) -> Int? {
+        guard let value = value?.trimmingCharacters(in: .whitespacesAndNewlines),
+              value != "*",
+              value.isEmpty == false else {
+            return nil
+        }
+        return Int(value)
+    }
+}
+
+struct PixivRemoteSearchLanguage: Decodable, Hashable, Sendable {
+    let code: String
+    let name: String
+}
+
+struct PixivRemoteSearchGenre: Decodable, Hashable, Sendable {
+    let id: Int
+    let label: String
+}
+
 protocol SearchFilterOptionTitle {
     var title: String { get }
 }

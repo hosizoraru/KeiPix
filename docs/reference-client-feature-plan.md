@@ -25,7 +25,7 @@ navigation, and lightweight surfaces.
 | Comment actions | Pixeval exposes delete and stamp variants for illustration and novel comments. | KeiPix now exposes authored-comment deletion and stamp sending for illustration and novel comments. | Keep remote writes explicit; do not live-test destructive actions without authorization. |
 | MyPixiv | Pixeval exposes user, illustration, and novel MyPixiv surfaces. pixez-flutter displays total MyPixiv users. | KeiPix now has MyPixiv API/store entry points, profile MyPixiv counts, profile menu entry points, and dedicated artwork/novel feed routes. | Treat the first MyPixiv slice as complete; later polish can focus on richer navigation affordances if real-account QA exposes gaps. |
 | Activity feed | Pixeval parses Pixiv Web stacc activity feed. | KeiPix has content feeds, not a social activity stream. | Medium priority; Web-backed, parser-first, failure-tolerant. |
-| Remote search options | Pixeval exposes `/v1/search/options`. | KeiPix uses strong local search options. | Medium priority; use remote metadata to refine novel/search filters. |
+| Remote search options | Pixeval exposes `/v1/search/options`. | KeiPix now decodes and caches Pixiv remote search metadata while keeping the existing native search options as the user-facing baseline. | Continue by mapping safe metadata into compact iPhone menus and fuller iPad/macOS filter panes. |
 | Download templates | Pixeval has conditional macro paths. | KeiPix has placeholder templates, previews, and unknown-token warnings. | Enhancement; add native token/condition editor rather than copying macro syntax. |
 | Novel export | Pixeval supports HTML, Markdown, and original text. | KeiPix supports TXT and Markdown. | Add HTML next; consider EPUB/PDF later. |
 | Reader tools | Pixeval has image viewer modes, page preview slider, rotate/mirror tools. | KeiPix has native readers, paging, continuous/double page, zoom, and basic slider. | Add thumbnail scrubber/filmstrip first for iPad landscape and macOS. |
@@ -71,6 +71,7 @@ navigation, and lightweight surfaces.
 | Stamp comments | Done | Stamp send support now shares the artwork/novel comment post chain and uses a compact native picker. |
 | Native comment list | Done | The shared artwork/novel comment surface now uses a native hosted list bridge with AppKit/UIKit intrinsic-height containers. |
 | MyPixiv | Done | API/store entry points, profile count, profile menu actions, and dedicated artwork/novel feed routes are wired. |
+| Remote search options | In progress | Parser, endpoint URL, API fetch, and store cache hook are wired; UI mapping is intentionally deferred to a dedicated search-polish slice. |
 | Apple docs checkpoints | In progress | Keep UIKit/AppKit diffable data-source and native sheet/menu guidance in mind for the upcoming UI phase. |
 
 ## Apple Documentation Checkpoints

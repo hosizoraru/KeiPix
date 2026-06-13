@@ -35,6 +35,7 @@ protocol PixivAPIProtocol: Sendable {
 
     // MARK: - Search
     func search(keyword: String, options: SearchOptions) async throws -> PixivFeedResponse
+    func remoteSearchOptions() async throws -> PixivRemoteSearchOptions
     func searchUsers(keyword: String) async throws -> PixivUserPreviewResponse
 
     // MARK: - User
