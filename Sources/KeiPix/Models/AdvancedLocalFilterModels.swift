@@ -71,6 +71,146 @@ struct AdvancedLocalFilterDraft: Equatable, Sendable {
     }
 }
 
+enum AdvancedLocalFilterQuickPreset: Hashable, Sendable {
+    case bookmarkedOnly
+    case excludeAI
+    case onlyAI
+    case excludeR18
+    case excludeR18G
+    case onlyUgoira
+    case excludeUgoira
+    case landscape
+    case portrait
+    case square
+
+    static let contentFlags: [AdvancedLocalFilterQuickPreset] = [
+        .bookmarkedOnly,
+        .excludeAI,
+        .onlyAI,
+        .excludeR18,
+        .excludeR18G
+    ]
+
+    static let workTypes: [AdvancedLocalFilterQuickPreset] = [
+        .onlyUgoira,
+        .excludeUgoira
+    ]
+
+    static let ratios: [AdvancedLocalFilterQuickPreset] = [
+        .landscape,
+        .portrait,
+        .square
+    ]
+
+    func applying(to query: String) -> String {
+        var tokens = LocalFilterQueryTokens(query)
+        if isActive(in: query) {
+            tokens.remove(token)
+        } else {
+            tokens.remove(contentsOf: tokenGroup)
+            tokens.append(token)
+        }
+        return tokens.query
+    }
+
+    func isActive(in query: String) -> Bool {
+        LocalFilterQueryTokens(query).contains(token)
+    }
+
+    private var token: String {
+        switch self {
+        case .bookmarkedOnly: "bookmarked"
+        case .excludeAI: "!ai"
+        case .onlyAI: "ai"
+        case .excludeR18: "!r18"
+        case .excludeR18G: "!r18g"
+        case .onlyUgoira: "gif"
+        case .excludeUgoira: "!gif"
+        case .landscape: "ratio:landscape"
+        case .portrait: "ratio:portrait"
+        case .square: "ratio:square"
+        }
+    }
+
+    private var tokenGroup: Set<String> {
+        switch self {
+        case .bookmarkedOnly:
+            ["bookmarked", "!bookmarked"]
+        case .excludeAI, .onlyAI:
+            ["ai", "!ai"]
+        case .excludeR18:
+            ["r18", "!r18"]
+        case .excludeR18G:
+            ["r18g", "!r18g"]
+        case .onlyUgoira, .excludeUgoira:
+            ["gif", "+gif", "!gif", "-gif", "ugoira", "+ugoira", "!ugoira", "-ugoira"]
+        case .landscape, .portrait, .square:
+            ["ratio:landscape", "ratio:portrait", "ratio:square"]
+        }
+    }
+}
+
+private struct LocalFilterQueryTokens {
+    private var tokens: [String]
+
+    init(_ query: String) {
+        tokens = Self.tokenize(query)
+    }
+
+    var query: String {
+        tokens.joined(separator: " ")
+    }
+
+    mutating func append(_ token: String) {
+        tokens.append(token)
+    }
+
+    mutating func remove(_ token: String) {
+        remove(contentsOf: [token])
+    }
+
+    mutating func remove(contentsOf tokenGroup: Set<String>) {
+        tokens.removeAll { tokenGroup.contains($0.normalizedLocalFilterToken) }
+    }
+
+    func contains(_ token: String) -> Bool {
+        tokens.contains { $0.normalizedLocalFilterToken == token.lowercased() }
+    }
+
+    private static func tokenize(_ query: String) -> [String] {
+        var tokens: [String] = []
+        var current = ""
+        var inQuotes = false
+        var quoteChar: Character = "\""
+
+        for char in query {
+            if inQuotes {
+                current.append(char)
+                if char == quoteChar {
+                    inQuotes = false
+                }
+            } else if char == "\"" || char == "'" {
+                inQuotes = true
+                quoteChar = char
+                current.append(char)
+            } else if char.isWhitespace {
+                if current.isEmpty == false {
+                    tokens.append(current)
+                    current = ""
+                }
+            } else {
+                current.append(char)
+            }
+        }
+
+        if current.isEmpty == false {
+            tokens.append(current)
+        }
+
+        return tokens
+    }
+}
+
 private extension AdvancedLocalFilterCriterion {
     var queryTokens: [String] {
         switch self {
@@ -146,6 +286,10 @@ private extension AdvancedLocalFilterFlag {
 }
 
 private extension String {
+    var normalizedLocalFilterToken: String {
+        trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+    }
+
     var quotedIfNeededForLocalFilter: String {
         if contains(where: \.isWhitespace) {
             "\"\(replacingOccurrences(of: "\"", with: "\\\""))\""

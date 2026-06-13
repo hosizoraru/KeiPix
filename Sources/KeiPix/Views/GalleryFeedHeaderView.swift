@@ -98,7 +98,11 @@ struct FeedHeaderView: View {
     private var iPadCompactHeaderActions: some View {
         VStack(alignment: .trailing, spacing: 7) {
             if store.artworks.isEmpty == false, showsInlineHeaderFilter {
-                iPadCompactFilterControl(expandedWidth: nil)
+                HStack(spacing: 7) {
+                    iPadCompactFilterControl(expandedWidth: nil)
+                    advancedLocalFilterMenu
+                        .iPadFeedHeaderActionChrome()
+                }
             }
 
             HStack(spacing: 7) {
@@ -364,6 +368,8 @@ struct FeedHeaderView: View {
         if store.artworks.isEmpty == false {
             #if os(macOS)
             macOSFilterField
+            advancedLocalFilterMenu
+                .feedHeaderActionChrome()
             #else
             if usesPhoneCurrentFeedFilterOverlay == false {
                 HStack(spacing: 6) {
@@ -383,6 +389,8 @@ struct FeedHeaderView: View {
                         .help(L10n.clearSearch)
                         .accessibilityLabel(L10n.clearSearch)
                     }
+                    advancedLocalFilterMenu
+                        .feedHeaderActionChrome()
                 }
             }
             #endif
@@ -668,6 +676,89 @@ struct FeedHeaderView: View {
         .keiInteractiveGlass(16)
     }
     #endif
+
+    private var advancedLocalFilterMenu: some View {
+        Menu {
+            Section(L10n.contentFlags) {
+                ForEach(AdvancedLocalFilterQuickPreset.contentFlags, id: \.self) { preset in
+                    advancedLocalFilterPresetButton(preset)
+                }
+            }
+
+            Section(L10n.ugoiraFilter) {
+                ForEach(AdvancedLocalFilterQuickPreset.workTypes, id: \.self) { preset in
+                    advancedLocalFilterPresetButton(preset)
+                }
+            }
+
+            Section(L10n.aspectRatio) {
+                ForEach(AdvancedLocalFilterQuickPreset.ratios, id: \.self) { preset in
+                    advancedLocalFilterPresetButton(preset)
+                }
+            }
+
+            Divider()
+
+            Button {
+                store.clientFilterQuery = ""
+                actionMessage = L10n.feedFilterCleared
+            } label: {
+                Label(L10n.clearFeedFilter, systemImage: "xmark.circle")
+            }
+            .disabled(store.clientFilterQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+        } label: {
+            Label(L10n.advancedFilter, systemImage: "slider.horizontal.3")
+        }
+        .help(L10n.advancedFilter)
+        .accessibilityLabel(L10n.advancedFilter)
+        .tint(advancedLocalFilterIsActive ? .accentColor : nil)
+    }
+
+    private func advancedLocalFilterPresetButton(_ preset: AdvancedLocalFilterQuickPreset) -> some View {
+        Button {
+            store.clientFilterQuery = preset.applying(to: store.clientFilterQuery)
+            let trimmed = store.clientFilterQuery.trimmingCharacters(in: .whitespacesAndNewlines)
+            actionMessage = trimmed.isEmpty
+                ? L10n.feedFilterCleared
+                : String(format: L10n.activeArtworkFilterFormat, trimmed)
+        } label: {
+            Label(
+                advancedLocalFilterPresetTitle(preset),
+                systemImage: preset.isActive(in: store.clientFilterQuery) ? "checkmark" : advancedLocalFilterPresetSystemImage(preset)
+            )
+        }
+    }
+
+    private var advancedLocalFilterIsActive: Bool {
+        store.clientFilterQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false
+    }
+
+    private func advancedLocalFilterPresetTitle(_ preset: AdvancedLocalFilterQuickPreset) -> String {
+        switch preset {
+        case .bookmarkedOnly: L10n.bookmarked
+        case .excludeAI: L10n.excludeAI
+        case .onlyAI: L10n.onlyAI
+        case .excludeR18: L10n.excludeR18
+        case .excludeR18G: L10n.excludeR18G
+        case .onlyUgoira: L10n.onlyUgoira
+        case .excludeUgoira: L10n.noUgoira
+        case .landscape: L10n.landscape
+        case .portrait: L10n.portrait
+        case .square: L10n.square
+        }
+    }
+
+    private func advancedLocalFilterPresetSystemImage(_ preset: AdvancedLocalFilterQuickPreset) -> String {
+        switch preset {
+        case .bookmarkedOnly: "bookmark.fill"
+        case .excludeAI, .onlyAI: "sparkles"
+        case .excludeR18, .excludeR18G: "eye.slash"
+        case .onlyUgoira, .excludeUgoira: "play.rectangle"
+        case .landscape: "rectangle"
+        case .portrait: "rectangle.portrait"
+        case .square: "square"
+        }
+    }
 
     private var bookmarkFiltersMenu: some View {
         bookmarkFiltersSubmenu

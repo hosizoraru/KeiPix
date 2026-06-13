@@ -83,6 +83,39 @@ struct AdvancedLocalFilterModelsTests {
         #expect(ClientFilterDSL.filter([landscapeUgoira, portraitAI], query: "ratio:portrait").map(\.id) == [2])
     }
 
+    @Test("Advanced local filter quick presets preserve quoted text while switching grouped tokens")
+    func quickPresetsPreserveQuotedTextAndSwitchGroupedTokens() {
+        var query = #"tag:"Blue Archive" title:summer"#
+
+        query = AdvancedLocalFilterQuickPreset.excludeAI.applying(to: query)
+        #expect(query == #"tag:"Blue Archive" title:summer !ai"#)
+        #expect(AdvancedLocalFilterQuickPreset.excludeAI.isActive(in: query))
+
+        query = AdvancedLocalFilterQuickPreset.onlyUgoira.applying(to: query)
+        #expect(query == #"tag:"Blue Archive" title:summer !ai gif"#)
+
+        query = AdvancedLocalFilterQuickPreset.excludeUgoira.applying(to: query)
+        #expect(query == #"tag:"Blue Archive" title:summer !ai !gif"#)
+        #expect(AdvancedLocalFilterQuickPreset.onlyUgoira.isActive(in: query) == false)
+        #expect(AdvancedLocalFilterQuickPreset.excludeUgoira.isActive(in: query))
+
+        query = AdvancedLocalFilterQuickPreset.excludeUgoira.applying(to: query)
+        #expect(query == #"tag:"Blue Archive" title:summer !ai"#)
+    }
+
+    @Test("Advanced local filter quick presets keep one active aspect ratio")
+    func quickPresetsKeepOneActiveAspectRatio() {
+        var query = AdvancedLocalFilterQuickPreset.landscape.applying(to: "bookmarked")
+
+        #expect(query == "bookmarked ratio:landscape")
+        #expect(AdvancedLocalFilterQuickPreset.landscape.isActive(in: query))
+
+        query = AdvancedLocalFilterQuickPreset.portrait.applying(to: query)
+        #expect(query == "bookmarked ratio:portrait")
+        #expect(AdvancedLocalFilterQuickPreset.landscape.isActive(in: query) == false)
+        #expect(AdvancedLocalFilterQuickPreset.portrait.isActive(in: query))
+    }
+
     private func artwork(
         id: Int,
         title: String,

@@ -181,6 +181,14 @@ enum L10n {
     static var feedFilterCleared: String { text("Feed filter cleared") }
     static var activeArtworkFilterFormat: String { text("Filter: %@") }
     static var activeFeedFiltersFormat: String { text("%d active filters") }
+    static var advancedFilter: String { text("Advanced Filter") }
+    static var contentFlags: String { text("Content Flags") }
+    static var aspectRatio: String { text("Aspect Ratio") }
+    static var excludeR18: String { text("Exclude R-18") }
+    static var excludeR18G: String { text("Exclude R-18G") }
+    static var landscape: String { text("Landscape") }
+    static var portrait: String { text("Portrait") }
+    static var square: String { text("Square") }
     static var creatorTagFilterFormat: String { text("Creator tag #%@") }
     static var clearHistory: String { text("Clear History") }
     static var clearHistoryConfirmation: String { text("Clear all local browsing history?") }

@@ -2430,6 +2430,45 @@ struct NativeBoundaryTests {
         #expect(localizable.contains("\"value\": \"Pixiv Web 专属\""))
     }
 
+    @Test("Advanced local filters stay on wide feed headers instead of the phone toolbar")
+    func advancedLocalFiltersStayOnWideFeedHeaders() throws {
+        let root = try packageRoot()
+        let feedHeader = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/GalleryFeedHeaderView.swift"),
+            encoding: .utf8
+        )
+        let compactHeader = feedHeader
+            .components(separatedBy: "private var iPadCompactHeaderActions: some View")
+            .dropFirst()
+            .first?
+            .components(separatedBy: "#if os(iOS)")
+            .first ?? ""
+        let regularHeader = feedHeader
+            .components(separatedBy: "private var headerActions: some View")
+            .dropFirst()
+            .first?
+            .components(separatedBy: "if store.selectedRoute == .search")
+            .first ?? ""
+        let phoneMenu = feedHeader
+            .components(separatedBy: "private var compactFeedActionsMenu: some View")
+            .dropFirst()
+            .first?
+            .components(separatedBy: "private var compactFeedActionsSystemImage")
+            .first ?? ""
+        let localizable = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Resources/Localizable.xcstrings"),
+            encoding: .utf8
+        )
+
+        #expect(feedHeader.contains("private var advancedLocalFilterMenu: some View"))
+        #expect(feedHeader.contains("AdvancedLocalFilterQuickPreset"))
+        #expect(compactHeader.contains("advancedLocalFilterMenu"))
+        #expect(regularHeader.contains("advancedLocalFilterMenu"))
+        #expect(phoneMenu.contains("advancedLocalFilterMenu") == false)
+        #expect(localizable.contains("\"Advanced Filter\""))
+        #expect(localizable.contains("\"value\": \"高级筛选\""))
+    }
+
     @Test("Feed narrowing and filters expose a visible clear chip")
     func feedNarrowingAndFiltersExposeVisibleClearChip() throws {
         let root = try packageRoot()
