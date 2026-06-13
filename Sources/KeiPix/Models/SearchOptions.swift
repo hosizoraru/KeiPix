@@ -59,6 +59,11 @@ struct PixivRemoteNovelSearchOptions: Decodable, Hashable, Sendable {
     }
 }
 
+enum SearchBookmarkThresholdBoundary: Sendable {
+    case minimum
+    case maximum
+}
+
 struct PixivRemoteSearchOptionList<Option: Decodable & Hashable & Sendable>: Decodable, Hashable, Sendable {
     let options: [Option]
 
@@ -87,6 +92,18 @@ struct PixivRemoteSearchBookmarkRange: Decodable, Hashable, Sendable {
             return nil
         }
         return Int(value)
+    }
+}
+
+extension PixivRemoteIllustrationSearchOptions {
+    func bookmarkThresholdPresetRungs(for boundary: SearchBookmarkThresholdBoundary) -> [Int] {
+        SearchBookmarkThreshold.presetRungs(from: bookmarkRanges, for: boundary)
+    }
+}
+
+extension PixivRemoteNovelSearchOptions {
+    func bookmarkThresholdPresetRungs(for boundary: SearchBookmarkThresholdBoundary) -> [Int] {
+        SearchBookmarkThreshold.presetRungs(from: bookmarkRanges, for: boundary)
     }
 }
 
@@ -305,6 +322,27 @@ struct SearchBookmarkThreshold: Codable, Hashable, Sendable, SearchFilterOptionT
     static let presetRungs: [Int] = [
         0, 100, 500, 1_000, 5_000, 10_000, 20_000, 50_000, 100_000
     ]
+
+    static func presetRungs(
+        from remoteRanges: [PixivRemoteSearchBookmarkRange],
+        for boundary: SearchBookmarkThresholdBoundary
+    ) -> [Int] {
+        let remoteValues = remoteRanges.compactMap { range -> Int? in
+            let value: Int?
+            switch boundary {
+            case .minimum:
+                value = range.minimum
+            case .maximum:
+                value = range.maximum
+            }
+            guard let value, value > 0 else { return nil }
+            return value
+        }
+
+        let sortedValues = Array(Set(remoteValues)).sorted()
+        guard sortedValues.isEmpty == false else { return presetRungs }
+        return [0] + sortedValues
+    }
 
     var isUnlimited: Bool { value <= 0 }
 

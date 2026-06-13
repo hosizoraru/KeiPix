@@ -71,6 +71,29 @@ struct SearchOptionsTests {
         #expect(components.queryItems?.isEmpty ?? true)
     }
 
+    @Test("Remote bookmark ranges produce boundary-specific threshold presets")
+    func remoteBookmarkRangesProduceBoundaryPresets() throws {
+        let payload = """
+        {
+          "illust": {
+            "bookmark_ranges": [
+              { "bookmark_num_min": "1000", "bookmark_num_max": "*" },
+              { "bookmark_num_min": "100", "bookmark_num_max": "999" },
+              { "bookmark_num_min": "100", "bookmark_num_max": "999" },
+              { "bookmark_num_min": "*", "bookmark_num_max": "99" }
+            ]
+          },
+          "novel": {}
+        }
+        """
+
+        let options = try JSONDecoder().decode(PixivRemoteSearchOptions.self, from: Data(payload.utf8))
+
+        #expect(options.illust.bookmarkThresholdPresetRungs(for: .minimum) == [0, 100, 1_000])
+        #expect(options.illust.bookmarkThresholdPresetRungs(for: .maximum) == [0, 99, 999])
+        #expect(options.novel.bookmarkThresholdPresetRungs(for: .minimum) == SearchBookmarkThreshold.presetRungs)
+    }
+
     @Test("Default options keep the native search baseline")
     func defaultOptions() {
         let options = SearchOptions.defaultValue

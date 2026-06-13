@@ -80,12 +80,14 @@ private struct SearchFiltersView: View {
                 BookmarkThresholdField(
                     label: L10n.minimumBookmarks,
                     value: minimumBookmarksBinding,
+                    presetRungs: minimumBookmarkPresetRungs,
                     showStatus: showStatus
                 )
 
                 BookmarkThresholdField(
                     label: L10n.maximumBookmarks,
                     value: maximumBookmarksBinding,
+                    presetRungs: maximumBookmarkPresetRungs,
                     showStatus: showStatus
                 )
 
@@ -280,6 +282,16 @@ private struct SearchFiltersView: View {
         }
     }
 
+    private var minimumBookmarkPresetRungs: [Int] {
+        store.remoteSearchOptions?.illust.bookmarkThresholdPresetRungs(for: .minimum)
+            ?? SearchBookmarkThreshold.presetRungs
+    }
+
+    private var maximumBookmarkPresetRungs: [Int] {
+        store.remoteSearchOptions?.illust.bookmarkThresholdPresetRungs(for: .maximum)
+            ?? SearchBookmarkThreshold.presetRungs
+    }
+
     private var isThresholdRangeInvalid: Bool {
         let minValue = store.searchMinimumBookmarks.value
         let maxValue = store.searchMaximumBookmarks.value
@@ -326,6 +338,7 @@ private struct SearchFiltersView: View {
 private struct BookmarkThresholdField: View {
     let label: String
     @Binding var value: SearchBookmarkThreshold
+    let presetRungs: [Int]
     let showStatus: (String) -> Void
 
     @State private var draftText: String = ""
@@ -350,7 +363,7 @@ private struct BookmarkThresholdField: View {
                     .accessibilityLabel(label)
 
                 Menu {
-                    ForEach(SearchBookmarkThreshold.presetRungs, id: \.self) { rung in
+                    ForEach(presetRungs, id: \.self) { rung in
                         Button {
                             apply(rung)
                         } label: {
