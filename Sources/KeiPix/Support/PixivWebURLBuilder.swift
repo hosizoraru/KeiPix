@@ -46,6 +46,18 @@ enum PixivWebURLBuilder {
         return components.url
     }
 
+    static func activityFeedURL(page: Int = 1) -> URL? {
+        var components = URLComponents()
+        components.scheme = "https"
+        components.host = "www.pixiv.net"
+        components.path = "/stacc"
+        let normalizedPage = max(page, 1)
+        if normalizedPage > 1 {
+            components.queryItems = [URLQueryItem(name: "p", value: "\(normalizedPage)")]
+        }
+        return components.url
+    }
+
     static func collectionURL(id: String) -> URL? {
         let trimmed = id.trimmingCharacters(in: .whitespacesAndNewlines)
         guard trimmed.isEmpty == false else { return nil }

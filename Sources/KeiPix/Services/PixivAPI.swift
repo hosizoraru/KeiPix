@@ -530,6 +530,18 @@ actor PixivAPI {
         }
     }
 
+    func pixivActivityFeedPage(page: Int = 1) async throws -> PixivActivityPage {
+        guard webSession?.isUsable == true else {
+            throw PixivAPIError.missingSession
+        }
+        guard let url = PixivWebURLBuilder.activityFeedURL(page: page) else {
+            throw PixivAPIError.invalidResponse
+        }
+
+        let html = try await fetchPixivWebPage(url: url)
+        return PixivActivityFeedParser.parsePage(html, sourceURL: url)
+    }
+
     func pixivCollectionDetail(id: String) async throws -> PixivCollectionDetail {
         let trimmedID = id.trimmingCharacters(in: .whitespacesAndNewlines)
         guard trimmedID.isEmpty == false, trimmedID.allSatisfy(\.isNumber) else {
