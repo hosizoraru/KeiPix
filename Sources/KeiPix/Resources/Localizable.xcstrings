@@ -5975,6 +5975,35 @@
         }
       }
     },
+    "Comment Stamp": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comment Stamp"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "コメントスタンプ"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "评论贴图"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "留言貼圖"
+          }
+        }
+      }
+    },
     "Comment feedback": {
       "extractionState": "manual",
       "localizations": {
@@ -24212,6 +24241,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "已傳送留言"
+          }
+        }
+      }
+    },
+    "Posted stamp comment": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Posted stamp comment"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "スタンプコメントを投稿しました"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已发送贴图评论"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已傳送貼圖留言"
           }
         }
       }

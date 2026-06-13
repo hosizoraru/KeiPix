@@ -1046,6 +1046,52 @@ actor PixivAPI {
         return form
     }
 
+    func addIllustStampComment(illustID: Int, stampID: Int, parentCommentID: Int? = nil) async throws {
+        _ = try await requestJSON(
+            URL(string: "/v1/illust/comment/add", relativeTo: Endpoint.apiBase)!,
+            method: "POST",
+            form: Self.addIllustStampCommentForm(
+                illustID: illustID,
+                stampID: stampID,
+                parentCommentID: parentCommentID
+            )
+        ) as EmptyResponse
+    }
+
+    static func addIllustStampCommentForm(illustID: Int, stampID: Int, parentCommentID: Int? = nil) -> [String: String] {
+        var form = [
+            "illust_id": "\(illustID)",
+            "stamp_id": "\(stampID)"
+        ]
+        if let parentCommentID {
+            form["parent_comment_id"] = "\(parentCommentID)"
+        }
+        return form
+    }
+
+    func addNovelStampComment(novelID: Int, stampID: Int, parentCommentID: Int? = nil) async throws {
+        _ = try await requestJSON(
+            URL(string: "/v1/novel/comment/add", relativeTo: Endpoint.apiBase)!,
+            method: "POST",
+            form: Self.addNovelStampCommentForm(
+                novelID: novelID,
+                stampID: stampID,
+                parentCommentID: parentCommentID
+            )
+        ) as EmptyResponse
+    }
+
+    static func addNovelStampCommentForm(novelID: Int, stampID: Int, parentCommentID: Int? = nil) -> [String: String] {
+        var form = [
+            "novel_id": "\(novelID)",
+            "stamp_id": "\(stampID)"
+        ]
+        if let parentCommentID {
+            form["parent_comment_id"] = "\(parentCommentID)"
+        }
+        return form
+    }
+
     func deleteIllustComment(commentID: Int) async throws {
         _ = try await requestJSON(
             URL(string: "/v1/illust/comment/delete", relativeTo: Endpoint.apiBase)!,

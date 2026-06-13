@@ -13,6 +13,7 @@ struct ArtworkCommentsView: View {
     @State private var draft = ""
     @State private var replyTarget: PixivComment?
     @State private var isEmojiPickerPresented = false
+    @State private var isStampPickerPresented = false
     @State private var isLoading = false
     @State private var isLoadingMore = false
     @State private var isPosting = false
@@ -203,6 +204,25 @@ struct ArtworkCommentsView: View {
                 }
                 .disabled(isPosting)
 
+                Button {
+                    isStampPickerPresented.toggle()
+                } label: {
+                    Label(L10n.commentStamp, systemImage: "seal")
+                }
+                .os26GlassIconButton()
+                .help(L10n.commentStamp)
+                .popover(isPresented: $isStampPickerPresented, arrowEdge: .bottom) {
+                    PixivCommentStampPicker(
+                        send: { emoji in
+                            Task { await postStampComment(emoji) }
+                        },
+                        dismiss: {
+                            isStampPickerPresented = false
+                        }
+                    )
+                }
+                .disabled(isPosting)
+
                 Text(L10n.commentDraftCount(draft.count))
                     .font(.caption)
                     .foregroundStyle(draft.count > 140 ? .red : .secondary)
@@ -296,6 +316,24 @@ struct ArtworkCommentsView: View {
         }
     }
 
+    private func postStampComment(_ emoji: PixivCommentEmoji) async {
+        guard let stampID = emoji.stampID else { return }
+        isPosting = true
+        errorMessage = nil
+        defer { isPosting = false }
+
+        do {
+            try await target.postStampComment(stampID, store: store, parentCommentID: replyTarget?.id)
+            isStampPickerPresented = false
+            replyTarget = nil
+            loadedTargetIdentity = nil
+            await loadInitial()
+            showStatus(L10n.postedStampComment)
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
     private func deleteComment(_ comment: PixivComment) async {
         errorMessage = nil
 
@@ -375,6 +413,15 @@ enum CommentContentTarget {
             try await store.postComment(comment, for: artwork, parentCommentID: parentCommentID)
         case .novel(let novel):
             try await store.postComment(comment, for: novel, parentCommentID: parentCommentID)
+        }
+    }
+
+    func postStampComment(_ stampID: Int, store: KeiPixStore, parentCommentID: Int?) async throws {
+        switch self {
+        case .artwork(let artwork):
+            try await store.postStampComment(stampID, for: artwork, parentCommentID: parentCommentID)
+        case .novel(let novel):
+            try await store.postStampComment(stampID, for: novel, parentCommentID: parentCommentID)
         }
     }
 

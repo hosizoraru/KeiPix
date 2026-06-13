@@ -17,6 +17,7 @@ struct CommentEmojiTests {
         let heart = try #require(PixivCommentEmoji.byToken["(heart)"])
 
         #expect(heart.imageName == "501.png")
+        #expect(heart.stampID == 501)
         #expect(heart.imageURL?.absoluteString == "https://s.pximg.net/common/images/emoji/501.png")
         #expect(PixivCommentEmoji.all.count == 38)
     }

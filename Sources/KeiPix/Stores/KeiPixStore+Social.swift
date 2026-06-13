@@ -196,6 +196,14 @@ extension KeiPixStore {
         try await api.addNovelComment(novelID: novel.id, comment: comment, parentCommentID: parentCommentID)
     }
 
+    func postStampComment(_ stampID: Int, for artwork: PixivArtwork, parentCommentID: Int? = nil) async throws {
+        try await api.addIllustStampComment(illustID: artwork.id, stampID: stampID, parentCommentID: parentCommentID)
+    }
+
+    func postStampComment(_ stampID: Int, for novel: PixivNovel, parentCommentID: Int? = nil) async throws {
+        try await api.addNovelStampComment(novelID: novel.id, stampID: stampID, parentCommentID: parentCommentID)
+    }
+
     func deleteComment(_ comment: PixivComment, for artwork: PixivArtwork) async throws {
         try await api.deleteIllustComment(commentID: comment.id)
     }

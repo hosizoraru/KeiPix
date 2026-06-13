@@ -36,6 +36,36 @@ struct NovelCommentEndpointTests {
         #expect(form["illust_id"] == nil)
     }
 
+    @Test("Illustration stamp comment form uses stamp fields")
+    func addIllustStampCommentFormUsesStampFields() {
+        let form = PixivAPI.addIllustStampCommentForm(
+            illustID: 12_345,
+            stampID: 101,
+            parentCommentID: 86_420
+        )
+
+        #expect(form["illust_id"] == "12345")
+        #expect(form["stamp_id"] == "101")
+        #expect(form["parent_comment_id"] == "86420")
+        #expect(form["comment"] == nil)
+        #expect(form["novel_id"] == nil)
+    }
+
+    @Test("Novel stamp comment form uses stamp fields")
+    func addNovelStampCommentFormUsesStampFields() {
+        let form = PixivAPI.addNovelStampCommentForm(
+            novelID: 49_895_345,
+            stampID: 101,
+            parentCommentID: 86_420
+        )
+
+        #expect(form["novel_id"] == "49895345")
+        #expect(form["stamp_id"] == "101")
+        #expect(form["parent_comment_id"] == "86420")
+        #expect(form["comment"] == nil)
+        #expect(form["illust_id"] == nil)
+    }
+
     @Test("Illustration comment delete form only submits the comment id")
     func deleteIllustCommentFormUsesCommentIDOnly() {
         let form = PixivAPI.deleteIllustCommentForm(commentID: 86_420)

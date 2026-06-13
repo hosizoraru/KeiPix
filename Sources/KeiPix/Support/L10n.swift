@@ -1473,6 +1473,7 @@ enum L10n {
     static var replyToFormat: String { text("Reply to %@") }
     static var cancelReply: String { text("Cancel Reply") }
     static var commentEmoji: String { text("Comment Emoji") }
+    static var commentStamp: String { text("Comment Stamp") }
     static var viewReplies: String { text("View Replies") }
     static var hideReplies: String { text("Hide Replies") }
     static var noReplies: String { text("No replies") }
@@ -1480,6 +1481,7 @@ enum L10n {
     static var copiedComment: String { text("Copied comment") }
     static var deleteComment: String { text("Delete Comment") }
     static var deletedComment: String { text("Deleted comment") }
+    static var postedStampComment: String { text("Posted stamp comment") }
     static var replies: String { text("Replies") }
     static var showComment: String { text("Show Comment") }
     static var muteCommentPhrase: String { text("Mute Comment Phrase") }

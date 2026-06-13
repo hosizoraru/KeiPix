@@ -68,6 +68,8 @@ protocol PixivAPIProtocol: Sendable {
     func novelCommentReplies(commentID: Int) async throws -> PixivCommentResponse
     func addIllustComment(illustID: Int, comment: String, parentCommentID: Int?) async throws
     func addNovelComment(novelID: Int, comment: String, parentCommentID: Int?) async throws
+    func addIllustStampComment(illustID: Int, stampID: Int, parentCommentID: Int?) async throws
+    func addNovelStampComment(novelID: Int, stampID: Int, parentCommentID: Int?) async throws
     func deleteIllustComment(commentID: Int) async throws
     func deleteNovelComment(commentID: Int) async throws
 }

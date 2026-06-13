@@ -74,3 +74,52 @@ struct PixivCommentEmojiPicker: View {
         .frame(width: 252)
     }
 }
+
+/// Sticker grid that sends Pixiv comment stamps directly.
+///
+/// Stamps use the same image catalog as Pixiv's emoji tokens, but the
+/// App API expects a `stamp_id` field instead of a text token. Keeping
+/// this as a separate picker makes that distinction visible to the
+/// composer without duplicating the grid layout.
+struct PixivCommentStampPicker: View {
+    let send: (PixivCommentEmoji) -> Void
+    var dismiss: (() -> Void)? = nil
+
+    private let columns = Array(repeating: GridItem(.fixed(32), spacing: 8), count: 6)
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .firstTextBaseline) {
+                Label(L10n.commentStamp, systemImage: "seal")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.secondary)
+
+                Spacer(minLength: 8)
+
+                if let dismiss {
+                    Button(L10n.done) {
+                        dismiss()
+                    }
+                    .os26GlassButton()
+                    .controlSize(.small)
+                }
+            }
+
+            LazyVGrid(columns: columns, spacing: 8) {
+                ForEach(PixivCommentEmoji.all) { emoji in
+                    Button {
+                        send(emoji)
+                    } label: {
+                        RemoteImageView(url: emoji.imageURL, contentMode: .fit)
+                            .frame(width: 24, height: 24)
+                            .accessibilityLabel(emoji.token)
+                    }
+                    .buttonStyle(.plain)
+                    .help(emoji.token)
+                }
+            }
+        }
+        .padding(12)
+        .frame(width: 252)
+    }
+}

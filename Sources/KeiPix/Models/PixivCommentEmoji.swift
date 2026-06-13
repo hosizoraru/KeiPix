@@ -10,6 +10,10 @@ struct PixivCommentEmoji: Identifiable, Hashable, Sendable {
         URL(string: "https://s.pximg.net/common/images/emoji/\(imageName)")
     }
 
+    var stampID: Int? {
+        Int((imageName as NSString).deletingPathExtension)
+    }
+
     static let all: [PixivCommentEmoji] = [
         PixivCommentEmoji(token: "(normal)", imageName: "101.png"),
         PixivCommentEmoji(token: "(surprise)", imageName: "102.png"),

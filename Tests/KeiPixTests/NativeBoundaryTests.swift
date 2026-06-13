@@ -2001,6 +2001,26 @@ struct NativeBoundaryTests {
         #expect(commentsView.contains("replies.removeAll { $0.id == comment.id }"))
     }
 
+    @Test("Comment stamp composer uses native picker and shared post chain")
+    func commentStampComposerUsesNativePickerAndSharedPostChain() throws {
+        let root = try packageRoot()
+        let commentsView = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/ArtworkCommentsView.swift"),
+            encoding: .utf8
+        )
+        let emojiView = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/PixivCommentEmojiTextView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(commentsView.contains("PixivCommentStampPicker("))
+        #expect(commentsView.contains("postStampComment(emoji)"))
+        #expect(commentsView.contains("target.postStampComment(stampID, store: store, parentCommentID: replyTarget?.id)"))
+        #expect(commentsView.contains("showStatus(L10n.postedStampComment)"))
+        #expect(emojiView.contains("struct PixivCommentStampPicker"))
+        #expect(emojiView.contains("ForEach(PixivCommentEmoji.all)"))
+    }
+
     @Test("Translation UI strings stay catalog-backed")
     func translationUIStringsStayCatalogBacked() throws {
         let root = try packageRoot()

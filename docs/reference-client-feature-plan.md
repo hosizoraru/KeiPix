@@ -53,7 +53,7 @@ navigation, and lightweight surfaces.
 | --- | --- | --- | --- |
 | 1 | Novel comment read/post path | Completed API, Store, and detail UI wiring for `/v3/novel/comments`, `/v2/novel/comment/replies`, and `/v1/novel/comment/add`. | Existing endpoint, boundary, Visual QA fixture, and full Swift tests. |
 | 2 | Comment delete actions | Completed delete endpoints for illustration and novel comments, plus a destructive row action scoped to comments authored by the signed-in user. | Endpoint/form tests, authored-by-current-user tests, comment UI boundary tests, no live remote delete unless explicitly authorized. |
-| 3 | Stamp comments | Add stamp send support for illustration and novel comments after delete flow is stable. | Model/API tests plus visual proof that stamp comments display and send affordance is clear. |
+| 3 | Stamp comments | Completed stamp send support for illustration and novel comments after delete flow is stable. | Model/API tests plus visual proof that stamp comments display and send affordance is clear. |
 | 4 | Native comment list | Move the top-level comment list container toward AppKit/UIKit ownership while SwiftUI remains row-hosting glue. | Native boundary tests, macOS Visual QA, and iOS/iPadOS Device Hub screenshots when visible. |
 | 5 | MyPixiv | Add models/endpoints/routes for MyPixiv users, illustration feed, and novel feed; surface counts in user profile. | Route coverage tests, API query tests, iPad/macOS navigation check. |
 | 6 | Search options | Fetch and cache `/v1/search/options`, then map safe server-provided metadata into search filters. | Parser/model tests and search UI screenshots. |
@@ -68,8 +68,8 @@ navigation, and lightweight surfaces.
 | Novel comments Store wiring | Done | Store now exposes novel comment list, replies, and post helpers alongside artwork comments. |
 | Novel comments UI | Done | Detail view exposes the shared comment surface for novels and has local Visual QA comments. |
 | Comment delete actions | Done | Delete requests use Pixiv's comment delete endpoints, the UI only exposes the destructive action for the signed-in author's own comments, and successful deletes remove the row locally. |
-| Stamp comments | Next | Next action-completeness slice. Add stamp send support for illustration and novel comments with a compact native picker. |
-| Native comment list | Planned | Move the top-level list container toward AppKit/UIKit ownership after action completeness so the row API is stable. |
+| Stamp comments | Done | Stamp send support now shares the artwork/novel comment post chain and uses a compact native picker. |
+| Native comment list | Next | Move the top-level list container toward AppKit/UIKit ownership now that the row action API is stable. |
 | Apple docs checkpoints | In progress | Keep UIKit/AppKit diffable data-source and native sheet/menu guidance in mind for the upcoming UI phase. |
 
 ## Apple Documentation Checkpoints
