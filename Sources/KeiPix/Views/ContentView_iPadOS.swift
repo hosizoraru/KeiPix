@@ -141,6 +141,10 @@ struct ContentView: View {
                     selectedSidebarItem = .route(.workSubscriptions)
                     selectedTab = .library
                 }
+                if VisualQALaunchArgument.contains(.readerWindow) {
+                    store.activateVisualQASampleSession()
+                    store.registerReaderWindowArtwork(VisualQASampleData.artworkDetailSocialArtwork)
+                }
                 if VisualQALaunchArgument.contains(.bookmarkEditor) {
                     store.activateVisualQASampleSession()
                     selectedSidebarItem = .route(.illustrations)

@@ -16,55 +16,7 @@ struct ArtworkReaderView: View {
     @State private var readerAvailableSize: CGSize = .zero
 
     var body: some View {
-        Group {
-            switch effectiveReadingMode {
-            case .singlePage:
-                ArtworkSinglePageReader(
-                    artwork: artwork,
-                    store: store,
-                    pageIndex: $pageIndex,
-                    presentation: presentation(for: pageIndex),
-                    interaction: interaction,
-                    movePage: movePage,
-                    handlePageSwipe: handlePageSwipe,
-                    onImageLoaded: updatePageAspectRatio
-                )
-            case .doublePage:
-                ArtworkDoublePageReader(
-                    artwork: artwork,
-                    store: store,
-                    pageIndex: $pageIndex,
-                    presentationLeft: presentation(for: pageIndex),
-                    presentationRight: presentation(for: pageIndex + 1),
-                    interaction: interaction,
-                    movePage: movePage,
-                    handlePageSwipe: handlePageSwipe,
-                    onImageLoaded: updatePageAspectRatio
-                )
-            case .continuous:
-                ArtworkContinuousReader(
-                    artwork: artwork,
-                    store: store,
-                    pageIndex: $pageIndex,
-                    presentation: presentation(for:),
-                    handlePageSwipe: handlePageSwipe,
-                    onImageLoaded: updatePageAspectRatio
-                )
-                .padding(.horizontal, 18)
-            case .index:
-                ArtworkPageIndexGrid(
-                    artwork: artwork,
-                    store: store,
-                    selectedPage: pageIndex,
-                    selectPage: { index in
-                        readingMode = .singlePage
-                        scrollToPage(index)
-                    },
-                    handlePageSwipe: handlePageSwipe
-                )
-                .padding(.horizontal, 18)
-            }
-        }
+        readerLayout
         .background {
             GeometryReader { proxy in
                 Color.clear
@@ -108,8 +60,115 @@ struct ArtworkReaderView: View {
         }
     }
 
+    @ViewBuilder
+    private var readerLayout: some View {
+        if filmstripPresentation.isVisible, effectiveReadingMode != .index {
+            HStack(spacing: 12) {
+                readerFilmstripRail
+                    .frame(width: filmstripPresentation.railWidth)
+
+                readerContent
+            }
+            .padding(.leading, 8)
+        } else {
+            readerContent
+        }
+    }
+
+    @ViewBuilder
+    private var readerContent: some View {
+        switch effectiveReadingMode {
+        case .singlePage:
+            ArtworkSinglePageReader(
+                artwork: artwork,
+                store: store,
+                pageIndex: $pageIndex,
+                presentation: presentation(for: pageIndex),
+                interaction: interaction,
+                movePage: movePage,
+                handlePageSwipe: handlePageSwipe,
+                onImageLoaded: updatePageAspectRatio
+            )
+        case .doublePage:
+            ArtworkDoublePageReader(
+                artwork: artwork,
+                store: store,
+                pageIndex: $pageIndex,
+                presentationLeft: presentation(for: pageIndex),
+                presentationRight: presentation(for: pageIndex + 1),
+                interaction: interaction,
+                movePage: movePage,
+                handlePageSwipe: handlePageSwipe,
+                onImageLoaded: updatePageAspectRatio
+            )
+        case .continuous:
+            ArtworkContinuousReader(
+                artwork: artwork,
+                store: store,
+                pageIndex: $pageIndex,
+                presentation: presentation(for:),
+                handlePageSwipe: handlePageSwipe,
+                onImageLoaded: updatePageAspectRatio
+            )
+            .padding(.horizontal, 18)
+        case .index:
+            ArtworkPageIndexGrid(
+                artwork: artwork,
+                store: store,
+                selectedPage: pageIndex,
+                selectPage: { index in
+                    readingMode = .singlePage
+                    scrollToPage(index)
+                },
+                handlePageSwipe: handlePageSwipe
+            )
+            .padding(.horizontal, 18)
+        }
+    }
+
+    private var readerFilmstripRail: some View {
+        NativeReaderFilmstripCollectionView(
+            items: ReaderFilmstripPresentation.pageItems(
+                artworkID: artwork.id,
+                pageCount: pageCount,
+                remoteURL: { artwork.thumbnailURL(at: $0) },
+                localURL: { store.downloads.downloadedImageURL(artworkID: artwork.id, pageIndex: $0) }
+            ),
+            selectedPageIndex: pageIndex,
+            presentation: filmstripPresentation,
+            selectPage: { index in
+                scrollToPage(index)
+            },
+            content: { item, isSelected in
+                AnyView(
+                    PageThumbnail(
+                        url: item.remoteURL,
+                        localURL: item.localURL,
+                        index: item.pageIndex,
+                        isSelected: isSelected
+                    )
+                    .frame(
+                        width: filmstripPresentation.itemSize.width,
+                        height: filmstripPresentation.itemSize.height
+                    )
+                    .accessibilityLabel(L10n.pageStatus(item.pageIndex + 1, pageCount))
+                )
+            }
+        )
+        .readerControlChrome()
+        .accessibilityLabel(L10n.jumpToPage)
+    }
+
     private var pageCount: Int {
         artwork.displayPageCount
+    }
+
+    private var filmstripPresentation: ReaderFilmstripPresentation {
+        ReaderFilmstripPresentation.resolve(
+            pageCount: pageCount,
+            availableSize: readerAvailableSize,
+            platform: .current
+        )
     }
 
     private var effectiveReadingMode: ArtworkReadingMode {

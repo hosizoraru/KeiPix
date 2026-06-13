@@ -16,6 +16,7 @@ struct ContentView: View {
     @State private var creatorProfileVisualQAUser: PixivUser?
     @State private var bookmarkEditorVisualQAArtwork: PixivArtwork?
     @Environment(\.undoManager) private var undoManager
+    @Environment(\.openWindow) private var openWindow
 
     var body: some View {
         NavigationSplitView(columnVisibility: $columnVisibility) {
@@ -297,6 +298,12 @@ struct ContentView: View {
             }
             if VisualQALaunchArgument.contains(.downloadedReader) {
                 store.presentDownloadedReaderVisualQA()
+            }
+            if VisualQALaunchArgument.contains(.readerWindow) {
+                store.activateVisualQASampleSession()
+                let artwork = VisualQASampleData.artworkDetailSocialArtwork
+                let artworkID = store.registerReaderWindowArtwork(artwork)
+                openWindow(id: "artwork-reader", value: artworkID)
             }
             if VisualQALaunchArgument.contains(.artworkDetailSocial) {
                 store.presentArtworkDetailSocialVisualQA()

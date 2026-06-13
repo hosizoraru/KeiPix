@@ -38,6 +38,8 @@ case "settings-window":
     preferredWindowNames = ["通用", "General"]
 case "sharing-templates":
     preferredWindowNames = ["分享", "Sharing", "Share"]
+case "reader-window":
+    preferredWindowNames = ["阅读器", "閱讀器", "Reader", "Detail reader rail QA manga"]
 case "runtime-readiness":
     preferredWindowNames = ["高级 QA", "進階 QA", "Advanced QA"]
 case "about":

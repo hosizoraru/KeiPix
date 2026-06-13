@@ -3057,6 +3057,32 @@ struct NativeBoundaryTests {
         #expect(artworkSummary.contains(".frame(maxWidth: .infinity, alignment: .leading)"))
     }
 
+    @Test("Artwork reader filmstrip uses a native collection rail on wide layouts")
+    func artworkReaderFilmstripUsesNativeCollectionRail() throws {
+        let root = try packageRoot()
+        let readerView = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/ArtworkReaderView.swift"),
+            encoding: .utf8
+        )
+        let nativeFilmstrip = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Support/NativeReaderFilmstripCollectionView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(readerView.contains("ReaderFilmstripPresentation.resolve("))
+        #expect(readerView.contains("ReaderFilmstripPresentation.pageItems("))
+        #expect(readerView.contains("NativeReaderFilmstripCollectionView("))
+        #expect(readerView.contains("filmstripPresentation.isVisible"))
+        #expect(readerView.contains("effectiveReadingMode != .index"))
+
+        #expect(nativeFilmstrip.contains("struct NativeReaderFilmstripCollectionView"))
+        #expect(nativeFilmstrip.contains("UICollectionViewCompositionalLayout"))
+        #expect(nativeFilmstrip.contains("UICollectionViewDiffableDataSource"))
+        #expect(nativeFilmstrip.contains("NSCollectionViewDiffableDataSource"))
+        #expect(nativeFilmstrip.contains("scrollToItems(at:"))
+        #expect(nativeFilmstrip.contains("selectPage(item.pageIndex)"))
+    }
+
     @Test("Artwork detail inspector uses adaptive actions and merged information cards")
     func artworkDetailInspectorUsesAdaptiveActionsAndMergedInformationCards() throws {
         let root = try packageRoot()

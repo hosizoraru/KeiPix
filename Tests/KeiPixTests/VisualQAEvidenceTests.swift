@@ -90,6 +90,7 @@ struct VisualQAEvidenceTests {
         #expect(VisualQASurface(rawValue: "gallery-two-column") == .galleryTwoColumn)
         #expect(VisualQASurface(rawValue: "gallery-three-column") == .galleryThreeColumn)
         #expect(VisualQASurface(rawValue: "gallery-compact") == .galleryCompact)
+        #expect(VisualQASurface(rawValue: "reader-window") == .readerWindow)
         #expect(VisualQASurface(rawValue: "novel-feed") == .novelFeed)
         #expect(VisualQASurface(rawValue: "search-workspace") == .searchWorkspace)
         #expect(VisualQASurface(rawValue: "ranking") == .ranking)
@@ -136,6 +137,7 @@ struct VisualQAEvidenceTests {
         #expect(VisualQALaunchArgument.isActive(in: ["KeiPix", "--visual-qa-ranking"]))
         #expect(VisualQALaunchArgument.isActive(in: ["KeiPix", "--visual-qa-feedback-sheet"]))
         #expect(VisualQALaunchArgument.isActive(in: ["KeiPix", "--visual-qa-artwork-detail-social"]))
+        #expect(VisualQALaunchArgument.isActive(in: ["KeiPix", "--visual-qa-reader-window"]))
         #expect(VisualQALaunchArgument.isActive(in: ["KeiPix", "--visual-qa-bookmark-editor"]))
         #expect(VisualQALaunchArgument.isActive(in: ["KeiPix", "--visual-qa-work-subscriptions"]))
         #expect(VisualQALaunchArgument.isActive(in: ["KeiPix", "--visual-qa-discover-dashboard"]))
@@ -148,6 +150,20 @@ struct VisualQAEvidenceTests {
         #expect(VisualQALaunchArgument.isActive(in: ["KeiPix", "--visual-qa-novel-feed"]))
         #expect(VisualQALaunchArgument.isActive(in: ["KeiPix"]) == false)
         #expect(VisualQALaunchArgument.activeGalleryLayoutMode(in: ["KeiPix", "--visual-qa-gallery-three-column"]) == .threeColumnMasonry)
+        #expect(VisualQALaunchArgument.readerWindow.surface == .readerWindow)
+    }
+
+    @Test("Artwork detail visual QA sample covers the multi-page reader rail")
+    func artworkDetailVisualQACoversReaderRail() {
+        let artwork = VisualQASampleData.artworkDetailSocialArtwork
+        let presentation = ReaderFilmstripPresentation.resolve(
+            pageCount: artwork.displayPageCount,
+            availableSize: CGSize(width: 980, height: 700),
+            platform: .mac
+        )
+
+        #expect(artwork.displayPageCount > 1)
+        #expect(presentation.placement == .leadingRail)
     }
 
     @Test("Evidence index scans multiple candidate roots")

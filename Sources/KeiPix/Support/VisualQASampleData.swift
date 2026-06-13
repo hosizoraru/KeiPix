@@ -44,15 +44,15 @@ enum VisualQASampleData {
 
     static let artworkDetailSocialArtwork = decodeArtwork(
         id: 93700,
-        title: "Detail social QA wide illustration",
+        title: "Detail reader rail QA manga",
         createdAt: 1_779_638_400,
-        pageCount: 1,
-        width: 2600,
-        height: 1200,
-        tags: ["wide", "AI", "series", "comments"],
+        pageCount: 12,
+        width: 1400,
+        height: 1900,
+        tags: ["manga", "AI", "series", "comments", "reader"],
         isAI: true,
         isBookmarked: true,
-        caption: "A local visual QA fixture that keeps the native detail inspector, series section, comments, related works, tags, and metadata visible without touching a real Pixiv account."
+        caption: "A local visual QA fixture that keeps the native reader, detail inspector, series section, comments, related works, tags, and metadata visible without touching a real Pixiv account."
     )
 
     static let bookmarkEditorArtwork = decodeArtwork(
