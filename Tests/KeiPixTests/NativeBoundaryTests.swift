@@ -1597,6 +1597,86 @@ struct NativeBoundaryTests {
         #expect(workSubscriptions.contains("guard store.session != nil else { return \"\" }"))
     }
 
+    @Test("Novel series chapter sheets stay reachable from cards, detail, and reader")
+    func novelSeriesChapterSheetsStayReachable() throws {
+        let root = try packageRoot()
+        let sheet = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/NovelSeriesChapterSheet.swift"),
+            encoding: .utf8
+        )
+        let gallery = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/NovelGalleryView.swift"),
+            encoding: .utf8
+        )
+        let detail = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/NovelDetailView.swift"),
+            encoding: .utf8
+        )
+        let reader = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/NovelReaderView.swift"),
+            encoding: .utf8
+        )
+        let related = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/NovelRelatedView.swift"),
+            encoding: .utf8
+        )
+        let card = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/NovelCardView.swift"),
+            encoding: .utf8
+        )
+        let api = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Services/PixivAPI.swift"),
+            encoding: .utf8
+        )
+        let model = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Models/PixivNovelModels.swift"),
+            encoding: .utf8
+        )
+        let visualQA = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Support/VisualQASampleData.swift"),
+            encoding: .utf8
+        )
+        let macOSRunner = try String(
+            contentsOf: root.appending(path: "script/build_and_run.sh"),
+            encoding: .utf8
+        )
+
+        #expect(sheet.contains("struct NovelSeriesChapterPresentation"))
+        #expect(sheet.contains("currentNovelID"))
+        #expect(sheet.contains("store.api.novelSeries(seriesID: presentation.id)"))
+        #expect(sheet.contains("store.api.nextNovelSeries(url)"))
+        #expect(sheet.contains("L10n.currentChapter"))
+        #expect(sheet.contains("VisualQASampleData.novelSeriesResponse"))
+        #expect(sheet.contains("novelStore.setWatchlist(seriesID: presentation.id"))
+        #expect(gallery.contains("@State private var selectedSeries: NovelSeriesChapterPresentation?"))
+        #expect(gallery.contains("openSeries: seriesButtonAction(for: novel)"))
+        #expect(gallery.contains(".sheet(item: $selectedSeries)"))
+        #expect(gallery.contains("NovelSeriesChapterSheet(store: store, presentation: presentation)"))
+        #expect(gallery.contains("Label(L10n.novelSeriesChapters, systemImage: \"books.vertical\")"))
+        #expect(detail.contains("@State private var selectedSeries: NovelSeriesChapterPresentation?"))
+        #expect(detail.contains("private var seriesChaptersButton"))
+        #expect(detail.contains("selectedSeries = NovelSeriesChapterPresentation(novel: novel)"))
+        #expect(detail.contains(".sheet(item: $selectedSeries)"))
+        #expect(reader.contains("@State private var activeNovel: PixivNovel"))
+        #expect(reader.contains("@State private var selectedSeries: NovelSeriesChapterPresentation?"))
+        #expect(reader.contains(".task(id: activeNovel.id)"))
+        #expect(reader.contains("await novelStore.openNovel(activeNovel)"))
+        #expect(reader.contains("navigateToSeriesChapter(chapter)"))
+        #expect(related.contains("openSeries: seriesButtonAction(for: related)"))
+        #expect(card.contains("var openSeries: (() -> Void)?"))
+        #expect(card.contains("NovelCardSeriesPill(title: seriesTitle, action: openSeries)"))
+        #expect(card.contains(".highPriorityGesture("))
+        #expect(api.contains("func novelSeries(seriesID: Int) async throws -> PixivNovelSeriesResponse"))
+        #expect(api.contains("func nextNovelSeries(_ url: URL) async throws -> PixivNovelSeriesResponse"))
+        #expect(model.contains("init(\n        detail: PixivNovelSeriesDetail"))
+        #expect(model.contains("init(\n        id: Int,\n        title: String"))
+        #expect(visualQA.contains("static let novelSeriesVisualQAID"))
+        #expect(visualQA.contains("static func novelSeriesResponse(seriesID: Int, currentNovel: PixivNovel?)"))
+        #expect(visualQA.contains("seriesID: novelSeriesVisualQAID"))
+        #expect(macOSRunner.contains("--visual-qa-novel-feed|visual-qa-novel-feed"))
+        #expect(macOSRunner.contains("open_app --visual-qa-novel-feed"))
+    }
+
     @Test("iPad page status uses inline title chrome")
     func iPadPageStatusUsesInlineTitleChrome() throws {
         let root = try packageRoot()
