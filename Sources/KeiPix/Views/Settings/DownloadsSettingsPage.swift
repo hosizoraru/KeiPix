@@ -136,12 +136,16 @@ struct DownloadsSettingsPage: View {
             HStack(alignment: .center, spacing: 10) {
                 templateTextField
                     .layoutPriority(1)
+                presetMenu
                 tokenMenu
             }
 
             VStack(alignment: .leading, spacing: 10) {
                 templateTextField
-                tokenMenu
+                HStack(spacing: 8) {
+                    presetMenu
+                    tokenMenu
+                }
             }
         }
     }
@@ -178,6 +182,25 @@ struct DownloadsSettingsPage: View {
         .fixedSize(horizontal: true, vertical: false)
         .help(L10n.insertTemplateToken)
         .accessibilityLabel(L10n.insertTemplateToken)
+    }
+
+    private var presetMenu: some View {
+        Menu {
+            ForEach(DownloadNamingTemplate.documentedPresets) { preset in
+                Button {
+                    applyTemplatePreset(preset)
+                } label: {
+                    Label(presetTitle(preset), systemImage: presetIcon(preset))
+                }
+            }
+        } label: {
+            Label(L10n.applyTemplatePreset, systemImage: "wand.and.stars")
+                .lineLimit(1)
+        }
+        .os26GlassButton()
+        .fixedSize(horizontal: true, vertical: false)
+        .help(L10n.applyTemplatePreset)
+        .accessibilityLabel(L10n.applyTemplatePreset)
     }
 
     private func previewRow(scenario: DownloadNamingTemplate.PreviewScenario) -> some View {
@@ -229,6 +252,14 @@ struct DownloadsSettingsPage: View {
         coordinator.setActionMessage(L10n.insertedTemplateToken(token.placeholder))
     }
 
+    private func applyTemplatePreset(_ preset: DownloadNamingTemplate.Preset) {
+        let title = presetTitle(preset)
+        store.downloads.setDownloadNamingTemplate(preset.template)
+        coordinator.setActionMessage(
+            String(format: L10n.templatePresetAppliedFormat, locale: Locale.current, title)
+        )
+    }
+
     private func tokenGroupTitle(_ group: DownloadNamingTemplate.TokenGroup) -> String {
         switch group {
         case .identity: return L10n.works
@@ -237,6 +268,24 @@ struct DownloadsSettingsPage: View {
         case .page: return L10n.pages
         case .flags: return L10n.templateTokenFlags
         case .tags: return L10n.tags
+        }
+    }
+
+    private func presetTitle(_ preset: DownloadNamingTemplate.Preset) -> String {
+        switch preset.id {
+        case .default: return L10n.defaultLabel
+        case .creator: return L10n.creator
+        case .series: return L10n.series
+        case .tagged: return L10n.tags
+        }
+    }
+
+    private func presetIcon(_ preset: DownloadNamingTemplate.Preset) -> String {
+        switch preset.id {
+        case .default: return "doc.badge.gearshape"
+        case .creator: return "person.crop.circle"
+        case .series: return "books.vertical"
+        case .tagged: return "tag"
         }
     }
 

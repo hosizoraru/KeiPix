@@ -111,6 +111,19 @@ struct DownloadNamingTemplateTests {
         #expect(token?.sampleValue.isEmpty == false)
     }
 
+    @Test("Documented presets are valid templates with stable identities")
+    func documentedPresetsAreValidTemplates() {
+        let presets = DownloadNamingTemplate.documentedPresets
+
+        #expect(presets.map(\.id) == [.default, .creator, .series, .tagged])
+        #expect(presets.first?.template == DownloadNamingTemplate.defaultTemplate)
+        for preset in presets {
+            let template = DownloadNamingTemplate(rawValue: preset.template)
+            #expect(template.unknownPlaceholders.isEmpty)
+            #expect(template.previewPath().isEmpty == false)
+        }
+    }
+
     private func makeContext(
         seriesTitle: String?,
         seriesID: Int?

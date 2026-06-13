@@ -324,6 +324,8 @@ enum L10n {
     static var templatePreviewStandalone: String { text("Standalone Illust") }
     static var templatePreviewMultiPage: String { text("Multi-Page Artwork") }
     static var templatePreviewSeries: String { text("Series Chapter") }
+    static var applyTemplatePreset: String { text("Apply Preset") }
+    static var templatePresetAppliedFormat: String { text("Applied template preset %@") }
     static var insertTemplateToken: String { text("Insert Token") }
     static func insertedTemplateToken(_ value: String) -> String {
         String(format: text("Inserted %@"), locale: Locale.current, value)

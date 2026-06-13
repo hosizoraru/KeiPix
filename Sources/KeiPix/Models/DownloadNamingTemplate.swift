@@ -22,6 +22,13 @@ struct DownloadNamingTemplate: Sendable {
         Token(key: "tag(name)", displayName: "Named Tag", sampleValue: "landscape", group: .tags)
     ]
 
+    static let documentedPresets: [Preset] = [
+        Preset(id: .default, template: defaultTemplate),
+        Preset(id: .creator, template: "${user}/${id} - ${title}/${id}_p${page}.${ext}"),
+        Preset(id: .series, template: "${user}/${series}/${id}_p${page1}.${ext}"),
+        Preset(id: .tagged, template: "${R18}${R18G}${AI}/${tag1}/${id}_p${page1}.${ext}")
+    ]
+
     var rawValue: String
 
     var effectiveTemplate: String {
@@ -237,6 +244,20 @@ struct DownloadNamingTemplate: Sendable {
         case page
         case flags
         case tags
+
+        var id: String { rawValue }
+    }
+
+    struct Preset: Identifiable, Hashable, Sendable {
+        let id: PresetID
+        let template: String
+    }
+
+    enum PresetID: String, CaseIterable, Identifiable, Sendable {
+        case `default`
+        case creator
+        case series
+        case tagged
 
         var id: String { rawValue }
     }
