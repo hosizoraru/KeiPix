@@ -33,6 +33,9 @@ final class NovelFeatureStore {
     var followingRestrictProvider: @MainActor () -> String = { "public" }
     /// Returns the trimmed search keyword from the shared search field.
     var searchKeywordProvider: @MainActor () -> String = { "" }
+    /// Returns the shared search filters when the user launches a novel
+    /// search from the search workspace.
+    var searchOptionsProvider: @MainActor () -> SearchOptions = { .defaultValue }
 
     // MARK: - Feed state
 
@@ -268,7 +271,7 @@ final class NovelFeatureStore {
             return try await api.followingNovels(restrict: followingRestrictProvider())
         case .novelSearch:
             let keyword = searchKeywordProvider()
-            return try await api.searchNovels(keyword: keyword)
+            return try await api.searchNovels(keyword: keyword, options: searchOptionsProvider())
         case .novelPublicBookmarks:
             guard let userID = currentUserID() else { return .empty }
             return try await api.userNovelBookmarks(userID: "\(userID)", restrict: "public")

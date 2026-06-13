@@ -1252,34 +1252,38 @@ actor PixivAPI {
     /// because pixez does and it gives nicer hits on Japanese keywords.
     func searchNovels(
         keyword: String,
-        searchTarget: String = "partial_match_for_tags",
-        sort: String = "date_desc",
-        bookmarkNum: Int? = nil,
-        startDate: String? = nil,
-        endDate: String? = nil
+        options: SearchOptions = .defaultValue
     ) async throws -> PixivNovelListResponse {
         let trimmed = keyword.trimmingCharacters(in: .whitespacesAndNewlines)
         guard trimmed.isEmpty == false else {
             return PixivNovelListResponse(novels: [], nextURL: nil)
         }
 
-        var query = [
-            "word": trimmed,
-            "search_target": searchTarget,
-            "sort": sort,
-            "merge_plain_keyword_results": "true",
-            "filter": "for_android"
-        ]
-        if let bookmarkNum {
-            query["bookmark_num"] = "\(bookmarkNum)"
-        }
-        if let startDate {
-            query["start_date"] = startDate
-        }
-        if let endDate {
-            query["end_date"] = endDate
-        }
+        let query = Self.novelSearchQuery(keyword: trimmed, options: options)
         return try await requestNovelList(path: "/v1/search/novel", query: query)
+    }
+
+    /// Full query for `/v1/search/novel`. Pixiv's novel endpoint uses
+    /// the same match/sort/AI/date vocabulary as illustration search,
+    /// but exposes a single `bookmark_num` threshold rather than the
+    /// illustration endpoint's min/max pair. KeiPix sends the lower
+    /// bound to the API and applies the upper bound locally.
+    static func novelSearchQuery(
+        keyword: String,
+        options: SearchOptions,
+        now: Date = Date(),
+        calendar: Calendar = .current
+    ) -> [String: String] {
+        var query = searchQuery(keyword: keyword, options: options)
+        query["sort"] = options.sort.apiValue
+        if options.minimumBookmarks.value > 0 {
+            query["bookmark_num"] = "\(options.minimumBookmarks.value)"
+        }
+        if let startDate = options.dateRange.startDate(now: now, calendar: calendar) {
+            query["start_date"] = Self.searchDateFormatter.string(from: startDate)
+            query["end_date"] = Self.searchDateFormatter.string(from: now)
+        }
+        return query
     }
 
     /// `/v1/user/novels` — novels written by a particular user.

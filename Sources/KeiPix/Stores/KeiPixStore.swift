@@ -384,6 +384,9 @@ final class KeiPixStore {
         novels.searchKeywordProvider = { [weak self] in
             self?.searchText.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         }
+        novels.searchOptionsProvider = { [weak self] in
+            self?.searchOptions ?? .defaultValue
+        }
         novels.currentUserID = { [weak self] in
             guard let raw = self?.session?.user.id else { return nil }
             return Int(raw)
@@ -1122,10 +1125,10 @@ final class KeiPixStore {
         )
     }
 
-    /// Mirrors `passesContentFilters(_:)` but for novels. Novels don't
-    /// participate in the search-page knobs (work type, bookmark count,
-    /// ugoira filter), so the novel surface only honors the global
-    /// AI / R-18 / mute toggles.
+    /// Mirrors `passesContentFilters(_:)` but for novels. Work type and
+    /// ugoira filters remain artwork-only, while novel search honors the
+    /// shared age, AI, and bookmark thresholds that Pixiv's novel
+    /// endpoint can express or KeiPix can safely apply locally.
     func passesNovelContentFilter(_ novel: PixivNovel) -> Bool {
         if hideMutedContent, isMutedLocally(novel: novel) {
             return false
@@ -1138,6 +1141,38 @@ final class KeiPixStore {
         }
         if hideR18Artworks, novel.isR18 {
             return false
+        }
+        if selectedRoute == .novelSearch {
+            switch searchAgeLimit {
+            case .unlimited:
+                break
+            case .allAges:
+                if novel.isR18 {
+                    return false
+                }
+            case .r18:
+                if novel.isR18 == false {
+                    return false
+                }
+            }
+            if searchMinimumBookmarks.value > 0, novel.totalBookmarks < searchMinimumBookmarks.value {
+                return false
+            }
+            if searchMaximumBookmarks.value > 0, novel.totalBookmarks > searchMaximumBookmarks.value {
+                return false
+            }
+            switch searchAIFilter {
+            case .all:
+                break
+            case .excludeAI:
+                if novel.isAI {
+                    return false
+                }
+            case .onlyAI:
+                if novel.isAI == false {
+                    return false
+                }
+            }
         }
         return true
     }
