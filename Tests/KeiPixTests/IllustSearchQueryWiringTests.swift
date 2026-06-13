@@ -81,6 +81,26 @@ struct IllustSearchQueryWiringTests {
 
         #expect(query["search_target"] == "title_and_caption")
     }
+
+    @Test("Artwork and ugoira filters map to Pixiv content_type when available")
+    func artworkAndUgoiraFiltersMapToContentType() {
+        var illustrationsOnly = SearchOptions.defaultValue
+        illustrationsOnly.artworkType = .illustrations
+        illustrationsOnly.ugoiraFilter = .noUgoira
+        #expect(PixivAPI.illustSearchQuery(keyword: "kei", options: illustrationsOnly)["content_type"] == "illust")
+
+        var ugoiraOnly = SearchOptions.defaultValue
+        ugoiraOnly.ugoiraFilter = .onlyUgoira
+        #expect(PixivAPI.illustSearchQuery(keyword: "kei", options: ugoiraOnly)["content_type"] == "ugoira")
+
+        var mangaOnly = SearchOptions.defaultValue
+        mangaOnly.artworkType = .manga
+        #expect(PixivAPI.illustSearchQuery(keyword: "kei", options: mangaOnly)["content_type"] == "manga")
+
+        var allNonUgoira = SearchOptions.defaultValue
+        allNonUgoira.ugoiraFilter = .noUgoira
+        #expect(PixivAPI.illustSearchQuery(keyword: "kei", options: allNonUgoira)["content_type"] == nil)
+    }
 }
 
 @Suite("Novel search query wiring")

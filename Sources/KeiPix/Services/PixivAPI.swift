@@ -928,6 +928,9 @@ actor PixivAPI {
         if options.maximumBookmarks.value > 0 {
             query["bookmark_num_max"] = "\(options.maximumBookmarks.value)"
         }
+        if let contentType = options.illustSearchContentType {
+            query["content_type"] = contentType
+        }
         return query
     }
 

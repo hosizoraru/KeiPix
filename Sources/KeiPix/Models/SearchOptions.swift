@@ -602,6 +602,31 @@ enum SearchUgoiraFilter: String, CaseIterable, Identifiable, Codable, SearchFilt
     }
 }
 
+extension SearchOptions {
+    var illustSearchContentType: String? {
+        switch artworkType {
+        case .manga:
+            return "manga"
+        case .illustrations:
+            switch ugoiraFilter {
+            case .all:
+                return "illust_and_ugoira"
+            case .onlyUgoira:
+                return "ugoira"
+            case .noUgoira:
+                return "illust"
+            }
+        case .all:
+            switch ugoiraFilter {
+            case .all, .noUgoira:
+                return nil
+            case .onlyUgoira:
+                return "ugoira"
+            }
+        }
+    }
+}
+
 enum SearchAIFilter: String, CaseIterable, Identifiable, Codable, SearchFilterOptionTitle {
     case all
     case excludeAI
