@@ -1478,6 +1478,8 @@ enum L10n {
     static var noReplies: String { text("No replies") }
     static var copyComment: String { text("Copy Comment") }
     static var copiedComment: String { text("Copied comment") }
+    static var deleteComment: String { text("Delete Comment") }
+    static var deletedComment: String { text("Deleted comment") }
     static var replies: String { text("Replies") }
     static var showComment: String { text("Show Comment") }
     static var muteCommentPhrase: String { text("Mute Comment Phrase") }

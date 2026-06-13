@@ -196,6 +196,14 @@ extension KeiPixStore {
         try await api.addNovelComment(novelID: novel.id, comment: comment, parentCommentID: parentCommentID)
     }
 
+    func deleteComment(_ comment: PixivComment, for artwork: PixivArtwork) async throws {
+        try await api.deleteIllustComment(commentID: comment.id)
+    }
+
+    func deleteComment(_ comment: PixivComment, for novel: PixivNovel) async throws {
+        try await api.deleteNovelComment(commentID: comment.id)
+    }
+
     func relatedArtworks(for artwork: PixivArtwork) async throws -> PixivFeedResponse {
         let response = try await api.relatedIllusts(illustID: artwork.id)
         return filteredFeedResponse(response)

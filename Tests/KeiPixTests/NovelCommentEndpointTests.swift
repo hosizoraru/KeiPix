@@ -35,4 +35,22 @@ struct NovelCommentEndpointTests {
         #expect(form["parent_comment_id"] == "86420")
         #expect(form["illust_id"] == nil)
     }
+
+    @Test("Illustration comment delete form only submits the comment id")
+    func deleteIllustCommentFormUsesCommentIDOnly() {
+        let form = PixivAPI.deleteIllustCommentForm(commentID: 86_420)
+
+        #expect(form["comment_id"] == "86420")
+        #expect(form["illust_id"] == nil)
+        #expect(form["novel_id"] == nil)
+    }
+
+    @Test("Novel comment delete form only submits the comment id")
+    func deleteNovelCommentFormUsesCommentIDOnly() {
+        let form = PixivAPI.deleteNovelCommentForm(commentID: 86_420)
+
+        #expect(form["comment_id"] == "86420")
+        #expect(form["illust_id"] == nil)
+        #expect(form["novel_id"] == nil)
+    }
 }

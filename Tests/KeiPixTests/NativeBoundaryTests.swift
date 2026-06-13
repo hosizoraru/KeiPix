@@ -1985,6 +1985,22 @@ struct NativeBoundaryTests {
         #expect(commentEmoji.contains(".buttonStyle(.plain)"))
     }
 
+    @Test("Comment delete action stays scoped to the signed in author")
+    func commentDeleteActionStaysScopedToSignedInAuthor() throws {
+        let root = try packageRoot()
+        let commentsView = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/ArtworkCommentsView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(commentsView.contains("comment.isAuthored(byUserID: store.session?.user.id)"))
+        #expect(commentsView.contains("Button(role: .destructive)"))
+        #expect(commentsView.contains("Label(L10n.deleteComment"))
+        #expect(commentsView.contains("deleteComment(comment)"))
+        #expect(commentsView.contains("comments.removeAll { $0.id == comment.id }"))
+        #expect(commentsView.contains("replies.removeAll { $0.id == comment.id }"))
+    }
+
     @Test("Translation UI strings stay catalog-backed")
     func translationUIStringsStayCatalogBacked() throws {
         let root = try packageRoot()

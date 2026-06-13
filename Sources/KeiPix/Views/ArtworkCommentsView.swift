@@ -71,6 +71,7 @@ struct ArtworkCommentsView: View {
                                     store: store,
                                     reply: { target in replyTarget = target },
                                     copied: { showStatus(L10n.copiedComment) },
+                                    delete: { comment in Task { await deleteComment(comment) } },
                                     status: showStatus
                                 )
                             }
@@ -295,6 +296,21 @@ struct ArtworkCommentsView: View {
         }
     }
 
+    private func deleteComment(_ comment: PixivComment) async {
+        errorMessage = nil
+
+        do {
+            try await target.deleteComment(comment, store: store)
+            comments.removeAll { $0.id == comment.id }
+            if let totalComments {
+                self.totalComments = max(0, totalComments - 1)
+            }
+            showStatus(L10n.deletedComment)
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
     private func showStatus(_ message: String) {
         statusMessage = message
         Task {
@@ -361,6 +377,15 @@ enum CommentContentTarget {
             try await store.postComment(comment, for: novel, parentCommentID: parentCommentID)
         }
     }
+
+    func deleteComment(_ comment: PixivComment, store: KeiPixStore) async throws {
+        switch self {
+        case .artwork(let artwork):
+            try await store.deleteComment(comment, for: artwork)
+        case .novel(let novel):
+            try await store.deleteComment(comment, for: novel)
+        }
+    }
 }
 
 private struct CommentThreadRow: View {
@@ -369,6 +394,7 @@ private struct CommentThreadRow: View {
     @Bindable var store: KeiPixStore
     let reply: (PixivComment) -> Void
     let copied: () -> Void
+    let delete: (PixivComment) -> Void
     let status: (String) -> Void
 
     @State private var replies: [PixivComment] = []
@@ -391,6 +417,8 @@ private struct CommentThreadRow: View {
                     reply(comment)
                 } copied: {
                     copied()
+                } delete: {
+                    delete(comment)
                 } status: { message in
                     status(message)
                 }
@@ -417,6 +445,7 @@ private struct CommentThreadRow: View {
                             copied: {
                                 copied()
                             },
+                            delete: { replyComment in Task { await deleteReply(replyComment) } },
                             status: status
                         )
                         .padding(.leading, 28)
@@ -501,6 +530,18 @@ private struct CommentThreadRow: View {
             errorMessage = error.localizedDescription
         }
     }
+
+    private func deleteReply(_ comment: PixivComment) async {
+        errorMessage = nil
+
+        do {
+            try await target.deleteComment(comment, store: store)
+            replies.removeAll { $0.id == comment.id }
+            status(L10n.deletedComment)
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
 }
 
 private struct FilteredReplyCommentRow: View {
@@ -509,6 +550,7 @@ private struct FilteredReplyCommentRow: View {
     @Bindable var store: KeiPixStore
     let reply: () -> Void
     let copied: () -> Void
+    let delete: (PixivComment) -> Void
     let status: (String) -> Void
 
     @State private var isMutedCommentRevealed = false
@@ -525,6 +567,8 @@ private struct FilteredReplyCommentRow: View {
                 reply()
             } copied: {
                 copied()
+            } delete: {
+                delete(comment)
             } status: { message in
                 status(message)
             }
@@ -570,6 +614,7 @@ private struct CommentRow: View {
     let muteReasons: [CommentMuteReason]
     let reply: () -> Void
     let copied: () -> Void
+    let delete: (() -> Void)?
     let status: (String) -> Void
     @Environment(\.feedbackReportArtwork) private var artwork
     @State private var feedbackRequest: FeedbackReportRequest?
@@ -682,12 +727,22 @@ private struct CommentRow: View {
                             }
                             .disabled(store.mutedCommentPhrases.contains(phrase))
                         }
+
+                        if canDeleteComment {
+                            Divider()
+
+                            Button(role: .destructive) {
+                                delete?()
+                            } label: {
+                                Label(L10n.deleteComment, systemImage: "trash")
+                            }
+                        }
                     } label: {
                         Label(L10n.mute, systemImage: "eye.slash")
                     }
                     .menuStyle(.button)
                     .os26GlassButton()
-                    .disabled(comment.user == nil && mutedPhraseCandidate == nil)
+                    .disabled(comment.user == nil && mutedPhraseCandidate == nil && canDeleteComment == false)
                 }
                 .font(.caption)
             }
@@ -706,6 +761,10 @@ private struct CommentRow: View {
         guard let text = comment.comment else { return nil }
         let normalized = store.normalizedCommentPhrase(text)
         return normalized.isEmpty ? nil : normalized
+    }
+
+    private var canDeleteComment: Bool {
+        comment.isAuthored(byUserID: store.session?.user.id) && delete != nil
     }
 
     private func muteCommenter(_ user: PixivUser) {

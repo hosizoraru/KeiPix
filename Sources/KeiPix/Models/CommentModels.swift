@@ -54,6 +54,15 @@ struct PixivComment: Decodable, Identifiable, Hashable, Sendable {
         hasReplies = try container.decodeIfPresent(Bool.self, forKey: .hasReplies) ?? false
         stamp = try container.decodeIfPresent(PixivCommentStamp.self, forKey: .stamp)
     }
+
+    func isAuthored(byUserID userID: String?) -> Bool {
+        guard let userID,
+              let currentUserID = Int(userID),
+              let commentUserID = user?.id else {
+            return false
+        }
+        return commentUserID == currentUserID
+    }
 }
 
 struct PixivParentComment: Decodable, Hashable, Sendable {

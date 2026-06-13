@@ -1046,6 +1046,30 @@ actor PixivAPI {
         return form
     }
 
+    func deleteIllustComment(commentID: Int) async throws {
+        _ = try await requestJSON(
+            URL(string: "/v1/illust/comment/delete", relativeTo: Endpoint.apiBase)!,
+            method: "POST",
+            form: Self.deleteIllustCommentForm(commentID: commentID)
+        ) as EmptyResponse
+    }
+
+    static func deleteIllustCommentForm(commentID: Int) -> [String: String] {
+        ["comment_id": "\(commentID)"]
+    }
+
+    func deleteNovelComment(commentID: Int) async throws {
+        _ = try await requestJSON(
+            URL(string: "/v1/novel/comment/delete", relativeTo: Endpoint.apiBase)!,
+            method: "POST",
+            form: Self.deleteNovelCommentForm(commentID: commentID)
+        ) as EmptyResponse
+    }
+
+    static func deleteNovelCommentForm(commentID: Int) -> [String: String] {
+        ["comment_id": "\(commentID)"]
+    }
+
     func bookmarkDetail(illustID: Int) async throws -> PixivBookmarkDetail {
         var components = URLComponents(url: URL(string: "/v2/illust/bookmark/detail", relativeTo: Endpoint.apiBase)!, resolvingAgainstBaseURL: true)!
         components.queryItems = [URLQueryItem(name: "illust_id", value: "\(illustID)")]
