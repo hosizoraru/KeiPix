@@ -16,6 +16,7 @@ struct UserProfileOverviewSection: View {
     let openPublicBookmarks: () -> Void
     let openFollowing: () -> Void
     let openFollowers: () -> Void
+    let openMyPixiv: () -> Void
     let openRelated: () -> Void
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
@@ -75,6 +76,12 @@ struct UserProfileOverviewSection: View {
                 valueLabel: L10n.open,
                 systemImage: "person.2.wave.2",
                 action: openFollowers
+            ),
+            UserProfileStatEntry(
+                title: L10n.myPixivUsers,
+                valueLabel: (profile?.totalMyPixivUsers ?? 0).formatted(),
+                systemImage: "person.2.crop.square.stack",
+                action: openMyPixiv
             ),
             UserProfileStatEntry(
                 title: L10n.relatedCreators,

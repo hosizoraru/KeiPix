@@ -23,7 +23,7 @@ navigation, and lightweight surfaces.
 | --- | --- | --- | --- |
 | Novel comments | Pixeval/Mako and pixez-flutter expose novel comments, replies, posting, deletion, and stamp comments. | KeiPix now loads, displays, replies to, posts normal comments, deletes authored comments, and posts stamp comments through the shared comment surface. | Keep as a shared artwork/novel surface; continue improving the native list container without splitting artwork and novel comments. |
 | Comment actions | Pixeval exposes delete and stamp variants for illustration and novel comments. | KeiPix now exposes authored-comment deletion and stamp sending for illustration and novel comments. | Keep remote writes explicit; do not live-test destructive actions without authorization. |
-| MyPixiv | Pixeval exposes user, illustration, and novel MyPixiv surfaces. pixez-flutter displays total MyPixiv users. | KeiPix has following/followers/related users but no dedicated MyPixiv route. | Medium-high priority; add under creator network/library after comment work. |
+| MyPixiv | Pixeval exposes user, illustration, and novel MyPixiv surfaces. pixez-flutter displays total MyPixiv users. | KeiPix now has MyPixiv API/store entry points and profile MyPixiv counts; dedicated artwork/novel route chrome is still pending. | Continue under creator network/library, then add artwork and novel feed routes. |
 | Activity feed | Pixeval parses Pixiv Web stacc activity feed. | KeiPix has content feeds, not a social activity stream. | Medium priority; Web-backed, parser-first, failure-tolerant. |
 | Remote search options | Pixeval exposes `/v1/search/options`. | KeiPix uses strong local search options. | Medium priority; use remote metadata to refine novel/search filters. |
 | Download templates | Pixeval has conditional macro paths. | KeiPix has placeholder templates, previews, and unknown-token warnings. | Enhancement; add native token/condition editor rather than copying macro syntax. |
@@ -70,7 +70,7 @@ navigation, and lightweight surfaces.
 | Comment delete actions | Done | Delete requests use Pixiv's comment delete endpoints, the UI only exposes the destructive action for the signed-in author's own comments, and successful deletes remove the row locally. |
 | Stamp comments | Done | Stamp send support now shares the artwork/novel comment post chain and uses a compact native picker. |
 | Native comment list | Done | The shared artwork/novel comment surface now uses a native hosted list bridge with AppKit/UIKit intrinsic-height containers. |
-| MyPixiv | Next | Add models/endpoints/routes for MyPixiv users, illustration feed, and novel feed; surface counts in creator/profile context. |
+| MyPixiv | In progress | API/store entry points and profile count are wired; next add dedicated artwork/novel feed routes and broader navigation chrome. |
 | Apple docs checkpoints | In progress | Keep UIKit/AppKit diffable data-source and native sheet/menu guidance in mind for the upcoming UI phase. |
 
 ## Apple Documentation Checkpoints

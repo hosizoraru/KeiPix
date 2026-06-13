@@ -23,6 +23,24 @@ extension KeiPixStore {
         return filteredUserPreviewResponse(response)
     }
 
+    func myPixivUsers(for user: PixivUser) async throws -> PixivUserPreviewResponse {
+        let response = try await api.myPixivUsers(userID: user.id)
+        return filteredUserPreviewResponse(response)
+    }
+
+    func myPixivIllusts(for user: PixivUser) async throws -> PixivFeedResponse {
+        let response = try await api.myPixivIllusts(userID: user.id)
+        return filteredFeedResponse(response)
+    }
+
+    func myPixivNovels(for user: PixivUser) async throws -> PixivNovelListResponse {
+        let response = try await api.myPixivNovels(userID: user.id)
+        return PixivNovelListResponse(
+            novels: response.novels.filter(passesNovelContentFilter),
+            nextURL: response.nextURL
+        )
+    }
+
     func cachedCreatorPreviewArtworks(for user: PixivUser) -> [PixivArtwork] {
         creatorPreviewArtworkCache[user.id] ?? []
     }

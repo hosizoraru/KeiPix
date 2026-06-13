@@ -29,6 +29,7 @@ protocol PixivAPIProtocol: Sendable {
     func ranking(mode: String, date: String?) async throws -> PixivFeedResponse
     func bookmarks(restrict: String, userID: String, tag: String?) async throws -> PixivFeedResponse
     func following(restrict: String) async throws -> PixivFeedResponse
+    func myPixivIllusts(userID: Int) async throws -> PixivFeedResponse
     func browsingHistoryIllusts(offset: Int) async throws -> PixivFeedResponse
     func addBrowsingHistory(illustIDs: [Int]) async throws
 
@@ -39,6 +40,7 @@ protocol PixivAPIProtocol: Sendable {
     // MARK: - User
     func userDetail(userID: Int) async throws -> PixivUserDetail
     func userIllusts(userID: Int, type: String) async throws -> PixivFeedResponse
+    func myPixivUsers(userID: Int) async throws -> PixivUserPreviewResponse
 
     // MARK: - Social
     func addBookmark(illustID: Int, restrict: BookmarkRestrict, tags: [String]) async throws

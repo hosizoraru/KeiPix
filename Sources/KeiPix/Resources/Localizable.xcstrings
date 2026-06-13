@@ -21606,6 +21606,35 @@
         }
       }
     },
+    "MyPixiv": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "MyPixiv"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "マイピク"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "好P友"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "好P友"
+          }
+        }
+      }
+    },
     "Saved Pixiv Collections": {
       "extractionState": "manual",
       "localizations": {

@@ -7,6 +7,7 @@ enum UserPreviewListMode: Identifiable {
     case search
     case userFollowing(PixivUser)
     case userFollowers(PixivUser)
+    case userMyPixiv(PixivUser)
     case related(PixivUser)
 
     var title: String {
@@ -17,6 +18,7 @@ enum UserPreviewListMode: Identifiable {
         case .search: L10n.searchCreators
         case .userFollowing(let user): "\(L10n.followingCreators) · \(user.name)"
         case .userFollowers(let user): "\(L10n.followers) · \(user.name)"
+        case .userMyPixiv(let user): "\(L10n.myPixivUsers) · \(user.name)"
         case .related(let user): "\(L10n.relatedCreators) · \(user.name)"
         }
     }
@@ -71,6 +73,8 @@ enum UserPreviewListMode: Identifiable {
             "user-following-\(user.id)"
         case .userFollowers(let user):
             "user-followers-\(user.id)"
+        case .userMyPixiv(let user):
+            "user-mypixiv-\(user.id)"
         case .related(let user):
             "related-\(user.id)"
         }

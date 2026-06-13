@@ -11,6 +11,7 @@ struct PixivUserProfile: Decodable, Hashable, Sendable {
     let region: String?
     let job: String?
     let totalFollowUsers: Int
+    let totalMyPixivUsers: Int
     let totalIllusts: Int
     let totalManga: Int
     let totalIllustBookmarksPublic: Int
@@ -24,6 +25,7 @@ struct PixivUserProfile: Decodable, Hashable, Sendable {
         case region
         case job
         case totalFollowUsers = "total_follow_users"
+        case totalMyPixivUsers = "total_mypixiv_users"
         case totalIllusts = "total_illusts"
         case totalManga = "total_manga"
         case totalIllustBookmarksPublic = "total_illust_bookmarks_public"
@@ -39,6 +41,7 @@ struct PixivUserProfile: Decodable, Hashable, Sendable {
         region = try container.decodeIfPresent(String.self, forKey: .region)
         job = try container.decodeIfPresent(String.self, forKey: .job)
         totalFollowUsers = try container.decodeIfPresent(Int.self, forKey: .totalFollowUsers) ?? 0
+        totalMyPixivUsers = try container.decodeIfPresent(Int.self, forKey: .totalMyPixivUsers) ?? 0
         totalIllusts = try container.decodeIfPresent(Int.self, forKey: .totalIllusts) ?? 0
         totalManga = try container.decodeIfPresent(Int.self, forKey: .totalManga) ?? 0
         totalIllustBookmarksPublic = try container.decodeIfPresent(Int.self, forKey: .totalIllustBookmarksPublic) ?? 0

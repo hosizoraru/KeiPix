@@ -212,6 +212,9 @@ struct UserProfileSheet: View {
                     openFollowers: {
                         relationshipListMode = .userFollowers(currentUser)
                     },
+                    openMyPixiv: {
+                        relationshipListMode = .userMyPixiv(currentUser)
+                    },
                     openRelated: {
                         relationshipListMode = .related(currentUser)
                     }

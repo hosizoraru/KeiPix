@@ -333,6 +333,17 @@ actor PixivAPI {
         ])
     }
 
+    func myPixivIllusts(userID: Int) async throws -> PixivFeedResponse {
+        try await requestFeed(url: Self.myPixivIllustsURL(userID: userID))
+    }
+
+    static func myPixivIllustsURL(userID: Int) throws -> URL {
+        try apiURL(path: "/v2/illust/mypixiv", query: [
+            "filter": "for_android",
+            "user_id": "\(userID)"
+        ])
+    }
+
     func browsingHistoryIllusts(offset: Int = 0) async throws -> PixivFeedResponse {
         try await requestBrowsingHistory(offset: offset)
     }
@@ -469,6 +480,17 @@ actor PixivAPI {
         ]
         guard let url = components.url else { throw PixivAPIError.invalidResponse }
         return try await requestJSON(url, method: "GET", form: nil)
+    }
+
+    func myPixivUsers(userID: Int) async throws -> PixivUserPreviewResponse {
+        try await requestJSON(Self.myPixivUsersURL(userID: userID), method: "GET", form: nil)
+    }
+
+    static func myPixivUsersURL(userID: Int) throws -> URL {
+        try apiURL(path: "/v1/user/mypixiv", query: [
+            "filter": "for_android",
+            "user_id": "\(userID)"
+        ])
     }
 
     func followerUsers(userID: String, restrict: String) async throws -> PixivUserPreviewResponse {
@@ -1260,6 +1282,19 @@ actor PixivAPI {
         ])
     }
 
+    /// `/v2/novel/mypixiv` — novels from a user's MyPixiv network.
+    /// Pixeval's Mako client uses the v2 path with an explicit `user_id`.
+    func myPixivNovels(userID: Int) async throws -> PixivNovelListResponse {
+        try await requestJSON(Self.myPixivNovelsURL(userID: userID), method: "GET", form: nil)
+    }
+
+    static func myPixivNovelsURL(userID: Int) throws -> URL {
+        try apiURL(path: "/v2/novel/mypixiv", query: [
+            "filter": "for_android",
+            "user_id": "\(userID)"
+        ])
+    }
+
     /// `/v1/user/bookmarks/novel` — bookmarks (own or another user's).
     /// `restrict` accepts `public` or `private`.
     func userNovelBookmarks(
@@ -1512,19 +1547,22 @@ actor PixivAPI {
     }
 
     private func requestNovelList(path: String, query: [String: String]) async throws -> PixivNovelListResponse {
-        var components = URLComponents(url: URL(string: path, relativeTo: Endpoint.apiBase)!, resolvingAgainstBaseURL: true)!
-        components.queryItems = query.map { URLQueryItem(name: $0.key, value: $0.value) }
-        guard let url = components.url else { throw PixivAPIError.invalidResponse }
+        let url = try Self.apiURL(path: path, query: query)
         return try await requestJSON(url, method: "GET", form: nil)
     }
 
     // MARK: - Feed helpers (illusts)
 
     private func requestFeed(path: String, query: [String: String]) async throws -> PixivFeedResponse {
+        let url = try Self.apiURL(path: path, query: query)
+        return try await requestFeed(url: url)
+    }
+
+    private static func apiURL(path: String, query: [String: String]) throws -> URL {
         var components = URLComponents(url: URL(string: path, relativeTo: Endpoint.apiBase)!, resolvingAgainstBaseURL: true)!
         components.queryItems = query.map { URLQueryItem(name: $0.key, value: $0.value) }
         guard let url = components.url else { throw PixivAPIError.invalidResponse }
-        return try await requestFeed(url: url)
+        return url
     }
 
     private func requestFeed(url: URL) async throws -> PixivFeedResponse {

@@ -474,6 +474,7 @@ enum VisualQASampleData {
             "region": "Tokyo",
             "job": "Illustrator",
             "total_follow_users": 128,
+            "total_mypixiv_users": 24,
             "total_illusts": 42,
             "total_manga": 18,
             "total_illust_bookmarks_public": 320,

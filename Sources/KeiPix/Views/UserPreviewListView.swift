@@ -638,6 +638,8 @@ struct UserPreviewListView: View {
                 try await store.followingUsers(for: user, restrict: restrict)
             case .userFollowers(let user):
                 try await store.followerUsers(for: user, restrict: restrict)
+            case .userMyPixiv(let user):
+                try await store.myPixivUsers(for: user)
             case .related(let user):
                 try await store.relatedUsers(for: user)
             }
