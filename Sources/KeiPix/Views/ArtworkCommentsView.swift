@@ -64,18 +64,8 @@ struct ArtworkCommentsView: View {
                             minHeight: 118
                         )
                     } else {
-                        LazyVStack(alignment: .leading, spacing: 12) {
-                            ForEach(comments) { comment in
-                                CommentThreadRow(
-                                    comment: comment,
-                                    target: target,
-                                    store: store,
-                                    reply: { target in replyTarget = target },
-                                    copied: { showStatus(L10n.copiedComment) },
-                                    delete: { comment in Task { await deleteComment(comment) } },
-                                    status: showStatus
-                                )
-                            }
+                        NativeCommentThreadListView(comments: comments) { comment in
+                            nativeCommentThreadRow(for: comment)
                         }
                     }
 
@@ -256,6 +246,20 @@ struct ArtworkCommentsView: View {
 
     private func insertEmoji(_ emoji: PixivCommentEmoji) {
         draft += emoji.token
+    }
+
+    private func nativeCommentThreadRow(for comment: PixivComment) -> AnyView {
+        AnyView(
+            CommentThreadRow(
+                comment: comment,
+                target: target,
+                store: store,
+                reply: { target in replyTarget = target },
+                copied: { showStatus(L10n.copiedComment) },
+                delete: { comment in Task { await deleteComment(comment) } },
+                status: showStatus
+            )
+        )
     }
 
     private func loadInitial() async {

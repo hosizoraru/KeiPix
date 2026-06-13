@@ -2021,6 +2021,29 @@ struct NativeBoundaryTests {
         #expect(emojiView.contains("ForEach(PixivCommentEmoji.all)"))
     }
 
+    @Test("Comment threads use a native hosted list container")
+    func commentThreadsUseNativeHostedListContainer() throws {
+        let root = try packageRoot()
+        let commentsView = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/ArtworkCommentsView.swift"),
+            encoding: .utf8
+        )
+        let nativeList = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Support/NativeCommentThreadListView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(commentsView.contains("NativeCommentThreadListView("))
+        #expect(commentsView.contains("nativeCommentThreadRow(for: comment)"))
+        #expect(commentsView.contains("LazyVStack(alignment: .leading, spacing: 12)") == false)
+        #expect(nativeList.contains("struct NativeCommentThreadListView"))
+        #expect(nativeList.contains("NSTableView"))
+        #expect(nativeList.contains("UITableView"))
+        #expect(nativeList.contains("NSHostingView<AnyView>"))
+        #expect(nativeList.contains("UIHostingConfiguration"))
+        #expect(nativeList.contains("IntrinsicHeight"))
+    }
+
     @Test("Translation UI strings stay catalog-backed")
     func translationUIStringsStayCatalogBacked() throws {
         let root = try packageRoot()
