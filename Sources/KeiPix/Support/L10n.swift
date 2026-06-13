@@ -728,6 +728,8 @@ enum L10n {
     static var translationTargetLanguage: String { text("Translation Language") }
     static var translationTargetLanguageHint: String { text("Translation Language Hint") }
     static var translationTargetSystem: String { text("System") }
+    static var clearNovelTranslationCache: String { text("Clear Novel Translation Cache") }
+    static var novelTranslationCacheCleared: String { text("Novel translation cache cleared") }
     static var translationProgressFormat: String { text("translationProgressFormat") }
     static var downloadSelectedPages: String { text("Save Selected Pages…") }
     static var selectPagesToSave: String { text("Select Pages to Save") }

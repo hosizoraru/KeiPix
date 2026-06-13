@@ -298,7 +298,7 @@ struct SettingsView: View {
         case .general:
             GeneralSettingsPage(store: store)
         case .reading:
-            ReadingSettingsPage(store: store)
+            ReadingSettingsPage(store: store, coordinator: coordinator)
         case .discovery:
             DiscoverySettingsPage(store: store)
         case .sharing:

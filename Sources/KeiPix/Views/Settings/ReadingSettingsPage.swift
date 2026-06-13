@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ReadingSettingsPage: View {
     @Bindable var store: KeiPixStore
+    var coordinator: SettingsCoordinator
 
     var body: some View {
         OS26SettingsPage(
@@ -38,6 +39,17 @@ struct ReadingSettingsPage: View {
                     }
                 }
                 .pickerStyle(.menu)
+
+                HStack {
+                    Spacer()
+                    OS26SettingsActionButton(
+                        title: L10n.clearNovelTranslationCache,
+                        systemImage: "trash",
+                        role: .destructive
+                    ) {
+                        clearNovelTranslationCache()
+                    }
+                }
             }
 
             OS26SettingsSection(L10n.trackpad, systemImage: "trackpad") {
@@ -50,6 +62,15 @@ struct ReadingSettingsPage: View {
                 }
                 .pickerStyle(.menu)
             }
+        }
+    }
+
+    private func clearNovelTranslationCache() {
+        do {
+            try NovelTranslationDiskCache().clear()
+            coordinator.setActionMessage(L10n.novelTranslationCacheCleared)
+        } catch {
+            coordinator.setActionMessage(L10n.translationFailed)
         }
     }
 }

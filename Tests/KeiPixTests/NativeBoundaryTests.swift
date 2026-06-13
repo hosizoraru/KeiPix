@@ -2181,10 +2181,20 @@ struct NativeBoundaryTests {
             contentsOf: root.appending(path: "Sources/KeiPix/Resources/Localizable.xcstrings"),
             encoding: .utf8
         )
+        let readingSettings = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/Settings/ReadingSettingsPage.swift"),
+            encoding: .utf8
+        )
 
         #expect(l10n.contains(#"translationTargetLanguageHint: String { text("Translation Language Hint") }"#))
+        #expect(l10n.contains(#"clearNovelTranslationCache: String { text("Clear Novel Translation Cache") }"#))
+        #expect(l10n.contains(#"novelTranslationCacheCleared: String { text("Novel translation cache cleared") }"#))
+        #expect(readingSettings.contains("OS26SettingsActionButton("))
+        #expect(readingSettings.contains("NovelTranslationDiskCache().clear()"))
         #expect(localizable.contains(#""Show original and translated text together""#))
         #expect(localizable.contains(#""Replace original text with translation""#))
+        #expect(localizable.contains(#""Clear Novel Translation Cache""#))
+        #expect(localizable.contains(#""Novel translation cache cleared""#))
         #expect(localizable.components(separatedBy: #"    "Translating…": {"#).count == 2)
         #expect(localizable.contains("純表情"))
         #expect(localizable.contains("純表情短文本"))

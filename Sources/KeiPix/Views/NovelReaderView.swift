@@ -53,6 +53,7 @@ struct NovelReaderView: View {
     @State private var selectedSeries: NovelSeriesChapterPresentation?
 
     private var novelStore: NovelFeatureStore { store.novels }
+    private let translationDiskCache = NovelTranslationDiskCache()
 
     private var theme: NovelReaderTheme {
         NovelReaderTheme(rawValue: themeRawValue) ?? .light
@@ -253,6 +254,9 @@ struct NovelReaderView: View {
             pageStartIndex: page
         )
         translationEngine.registerSegments(segments)
+        for cachedResult in translationDiskCache.results(for: segments) {
+            translationEngine.applySegmentResult(cachedResult)
+        }
 
         let pendingSegments = translationEngine.pendingSegments(from: segments)
         guard pendingSegments.isEmpty == false else { return }
@@ -277,6 +281,7 @@ struct NovelReaderView: View {
             try await batchClient.translate(pendingSegments) { result in
                 if translationEngine.isInlineTranslationActive {
                     translationEngine.applySegmentResult(result)
+                    try? translationDiskCache.store(result)
                 }
             }
             guard translationEngine.isInlineTranslationActive else { return }

@@ -190,7 +190,7 @@ Recommended new or changed types:
 | Phase 2: Apple Batch Streaming Client | Done | Reader now uses a testable `NovelTranslationBatchClient` closure wrapper, builds `TranslationSession.Request` batches with `clientIdentifier`, consumes `session.translate(batch:)`, and ignores missing/unknown identifiers. |
 | Phase 3: Incremental Engine Updates | Done | `NovelTranslationEngine` now stores segment results, updates progress per streamed result, preserves legacy token lookup, and keeps source text visible for pending segments. |
 | Phase 4: Visible-First Scheduling | In progress | Scheduler implementation, focused tests, and iOS/iPadOS generic builds are complete; physical-device smoke validation remains open. |
-| Phase 5: Persistent Translation Cache | Planned | Pending segment-level result model. |
+| Phase 5: Persistent Translation Cache | Done | Segment translations now persist under the app caches directory, cache hits apply before network translation, misses continue streaming, and Reading settings exposes a localized clear-cache action. |
 | Phase 6: Availability, Preparation, and Errors | Planned | Pending translation client/error model. |
 | Phase 7: OS 26.4+ Translation Strategy and Skip Ranges | Planned | Pending stable batch client. |
 | Phase 8: Shared Apple Translation Client for Captions | Planned | Pending novel pipeline stabilization. |
@@ -347,23 +347,35 @@ Evidence:
 
 ### Phase 5: Persistent Translation Cache
 
-Status: Planned
+Status: Done
 
-- [ ] Add `NovelTranslationDiskCache`.
-- [ ] Store only completed segment translations.
-- [ ] Key cache records by novel ID, target language, source hash, segment ID,
+- [x] Add `NovelTranslationDiskCache`.
+- [x] Store only completed segment translations.
+- [x] Key cache records by novel ID, target language, source hash, segment ID,
   and cache schema version.
-- [ ] Load cache immediately when opening a novel.
-- [ ] Translate only cache misses.
-- [ ] Add a Settings action to clear novel translation cache.
-- [ ] Keep this cache local under the app caches directory. Do not sync it.
+- [x] Load cache immediately when opening a novel.
+- [x] Translate only cache misses.
+- [x] Add a Settings action to clear novel translation cache.
+- [x] Keep this cache local under the app caches directory. Do not sync it.
 
 Validation:
 
-- [ ] Disk cache encode/decode tests.
-- [ ] Cache invalidation tests when source text changes.
-- [ ] Settings boundary/localization tests if a clear-cache UI is added.
-- [ ] `swift test`
+- [x] Disk cache encode/decode tests.
+- [x] Cache invalidation tests when source text changes.
+- [x] Settings boundary/localization tests if a clear-cache UI is added.
+- [x] `swift test --filter NovelTranslation`
+
+Evidence:
+
+- `NovelTranslationDiskCacheTests/storesAndRestoresCompletedSegments` verifies
+  segment results survive a disk round trip.
+- `NovelTranslationDiskCacheTests/invalidatesWhenSourceTextChanges` verifies
+  source-hash based invalidation.
+- `NovelReaderView.translatePage(_:session:)` applies cache hits before
+  building pending translation requests and stores only streamed successful
+  `NovelTranslationBatchResult` values.
+- Reading settings exposes `Clear Novel Translation Cache`, backed by localized
+  `L10n` keys and `NativeBoundaryTests/translationUIStringsStayCatalogBacked`.
 
 ### Phase 6: Availability, Preparation, and Errors
 
