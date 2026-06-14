@@ -2155,6 +2155,10 @@ struct NativeBoundaryTests {
             contentsOf: root.appending(path: "Sources/KeiPix/Views/DiscoveryDashboardView.swift"),
             encoding: .utf8
         )
+        let downloads = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/DownloadQueueView.swift"),
+            encoding: .utf8
+        )
         let inlineStatusPages = [
             "Sources/KeiPix/Views/TrendingTagsView.swift",
             "Sources/KeiPix/Views/BookmarkTagsView.swift",
@@ -2165,8 +2169,7 @@ struct NativeBoundaryTests {
             "Sources/KeiPix/Views/WatchLaterView.swift",
             "Sources/KeiPix/Views/BrowsingHistoryView.swift",
             "Sources/KeiPix/Views/SavedSearchesView.swift",
-            "Sources/KeiPix/Views/MutedContentView.swift",
-            "Sources/KeiPix/Views/DownloadQueueView.swift"
+            "Sources/KeiPix/Views/MutedContentView.swift"
         ]
 
         #expect(emptyState.contains("struct PlatformPageTitleHeader<Trailing: View>: View"))
@@ -2208,6 +2211,10 @@ struct NativeBoundaryTests {
 
         #expect(discovery.contains(".platformPageNavigationChrome(title: L10n.discover, status: navigationSubtitle)"))
         #expect(discovery.contains(".navigationSubtitle(") == false)
+        #expect(downloads.contains(".platformPageNavigationChrome(title: L10n.downloads, status: downloadStatusText)"))
+        #expect(downloads.contains(".platformPageHeader(") == false)
+        #expect(downloads.contains("DownloadQueueOverviewCard("))
+        #expect(downloads.contains(".platformGlassControlBar("))
     }
 
     @Test("OS 26 chrome avoids legacy bar and capsule materials")
@@ -3847,6 +3854,10 @@ struct NativeBoundaryTests {
             contentsOf: root.appending(path: "Sources/KeiPix/Views/DownloadQueueView.swift"),
             encoding: .utf8
         )
+        let iPadContentView = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/ContentView_iPadOS.swift"),
+            encoding: .utf8
+        )
         let nativeList = try String(
             contentsOf: root.appending(path: "Sources/KeiPix/Support/NativeDownloadQueueListView.swift"),
             encoding: .utf8
@@ -3855,10 +3866,13 @@ struct NativeBoundaryTests {
             contentsOf: root.appending(path: "Sources/KeiPix/Views/DownloadedArtworkViewer.swift"),
             encoding: .utf8
         )
+        let rowView = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/DownloadQueueRow.swift"),
+            encoding: .utf8
+        )
 
         #expect(queueView.contains("NativeDownloadQueueListView("))
-        #expect(queueView.contains("DownloadQueueHistoryStrip("))
-        #expect(queueView.contains("store.downloads.historySnapshot"))
+        #expect(queueView.contains("downloads.historySnapshot"))
         #expect(queueView.contains("setDownloadQueueFilter(.completed)"))
         #expect(queueView.contains("setDownloadQueueSort(.recentlyUpdated)"))
         #expect(queueView.contains(".os26SheetChrome(.reader)"))
@@ -3884,6 +3898,28 @@ struct NativeBoundaryTests {
         #expect(nativeList.contains("refreshVisibleRows(in: tableView)"))
         #expect(nativeList.contains("refreshVisibleItems(in: collectionView)"))
         #expect(nativeList.contains("reloadItems(at: [indexPath])") == false)
+        #expect(nativeList.contains("private let compactPhoneRowHeight: CGFloat = 144"))
+        #expect(nativeList.contains("private let compactPhoneSupplementalMetadataHeight: CGFloat = 24"))
+        #expect(nativeList.contains("layout.minimumLineSpacing = 6"))
+        #expect(nativeList.contains("needsCompactSupplementalMetadataHeight"))
+        #expect(nativeList.contains("collectionView.traitCollection.horizontalSizeClass == .compact"))
+        #expect(queueView.contains("DownloadQueueOverviewCard("))
+        #expect(queueView.contains("private struct DownloadQueueOverviewCard: View"))
+        #expect(queueView.contains("NativeSearchField("))
+        #expect(queueView.contains("FeedFilterClearChip("))
+        #expect(queueView.contains("private struct DownloadQueueMetricChip: View"))
+        #expect(queueView.contains("showsActionRail"))
+        #expect(queueView.contains("UIDevice.current.userInterfaceIdiom == .phone"))
+        #expect(iPadContentView.contains("if showsDownloadQueueToolbarMenu"))
+        #expect(iPadContentView.contains("menu: downloadQueueToolbarMenu"))
+        #expect(iPadContentView.contains("store.selectedRoute == .downloads"))
+        #expect(iPadContentView.contains("store.downloads.filteredItems.count"))
+        #expect(iPadContentView.contains("NativeToolbarMenuButton(\n                                systemImage: \"arrow.down.circle\""))
+        #expect(rowView.contains("private struct PhoneDownloadQueueRowLayout: View"))
+        #expect(rowView.contains("private struct DownloadQueueMetadataFlow: View"))
+        #expect(rowView.contains("private struct DownloadQueuePhoneActionBar: View"))
+        #expect(rowView.contains("FlowLayout(spacing: 6)"))
+        #expect(rowView.contains("phoneLayout") && rowView.contains("regularLayout"))
     }
 
     @Test("Downloads use Photos on iOS and custom folders on macOS")
@@ -4283,11 +4319,25 @@ struct NativeBoundaryTests {
             #expect(source.contains("OS26LoadMoreButton(") == false, "\(path) should use scroll-triggered pagination, not a manual load-more button")
         }
 
-        for path in pagePaths.dropLast() {
+        let standardSearchPagePaths = pagePaths.filter {
+            $0 != "Sources/KeiPix/Views/DownloadQueueView.swift"
+                && $0 != "Sources/KeiPix/Views/DownloadQueueRow.swift"
+        }
+
+        for path in standardSearchPagePaths {
             let source = try String(contentsOf: root.appending(path: path), encoding: .utf8)
             #expect(source.contains("OS26LibrarySearchField("), "\(path) should use native search field chrome")
             #expect(source.contains(".platformGlassControlBar("), "\(path) should keep shared page toolbar chrome")
         }
+
+        let downloads = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/DownloadQueueView.swift"),
+            encoding: .utf8
+        )
+        #expect(downloads.contains("NativeSearchField("), "DownloadQueueView.swift should embed its native search field in the overview card")
+        #expect(downloads.contains("FeedFilterClearChip("), "DownloadQueueView.swift should expose active download filter pills")
+        #expect(downloads.contains("DownloadQueueOverviewCard("), "DownloadQueueView.swift should replace title-row search with its compact overview card")
+        #expect(downloads.contains(".platformGlassControlBar("), "DownloadQueueView.swift should keep a shared glass top surface")
 
         let row = try String(
             contentsOf: root.appending(path: "Sources/KeiPix/Views/DownloadQueueRow.swift"),
@@ -4336,12 +4386,14 @@ struct NativeBoundaryTests {
         #expect(mutedContent.contains("private var mutedContentTitleActions: some View"))
         #expect(mutedContent.contains("mutedCategoryMenu"))
 
-        #expect(downloads.contains(".platformPageHeader(\n                title: L10n.downloads") && downloads.contains("downloadTitleActions"))
-        #expect(downloads.contains("if showsDownloadSearchBar"))
-        #expect(downloads.contains("private var downloadTitleActions: some View"))
-        #expect(downloads.contains("DownloadQueueSearchBar("))
+        #expect(downloads.contains(".platformPageHeader(\n                title: L10n.downloads") == false)
+        #expect(downloads.contains("private var downloadTitleActions: some View") == false)
+        #expect(downloads.contains("DownloadQueueSearchBar(") == false)
+        #expect(downloads.contains("DownloadQueueOverviewCard("))
+        #expect(downloads.contains("FeedFilterClearChip("))
+        #expect(downloads.contains("NativeSearchField("))
         #expect(downloads.contains("DownloadQueueActionRail("))
-        #expect(downloads.contains("DownloadQueueHistoryStrip("))
+        #expect(downloads.contains("showsActionRail"))
     }
 
     @Test("Loading placeholders and sheets avoid overlapping legacy chrome")
