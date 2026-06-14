@@ -51,6 +51,7 @@ struct NovelReaderView: View {
     @State private var effectivePagedReadingMode: NovelReadingMode = .singlePage
     @State private var activeNovel: PixivNovel
     @State private var selectedSeries: NovelSeriesChapterPresentation?
+    @State private var continuousVisiblePageRange: NovelContinuousVisiblePageRange?
 
     private var novelStore: NovelFeatureStore { store.novels }
     private let translationDiskCache = NovelTranslationDiskCache()
@@ -88,6 +89,20 @@ struct NovelReaderView: View {
 
     private var continuousReaderTokens: [NovelToken] {
         pages.flatMap { $0 }
+    }
+
+    private var continuousReaderPageIndicesByTokenIndex: [Int: Int] {
+        var result: [Int: Int] = [:]
+        var continuousIndex = 0
+
+        for pageIndex in pages.indices {
+            for _ in pages[pageIndex].indices {
+                result[continuousIndex] = pageIndex
+                continuousIndex += 1
+            }
+        }
+
+        return result
     }
 
     private var continuousTranslatedTexts: [Int: String] {
@@ -147,6 +162,7 @@ struct NovelReaderView: View {
         .task(id: activeNovel.id) {
             readerLoadStarted = true
             pageIndex = 0
+            continuousVisiblePageRange = nil
             translationEngine.reset()
             // Restore persisted translation preferences
             translationEngine.translationMode = NovelTranslationMode(rawValue: translationModeRaw) ?? .bilingual
@@ -160,6 +176,7 @@ struct NovelReaderView: View {
         .onChange(of: novelStore.loadedNovelTextID) { _, newValue in
             if newValue == activeNovel.id {
                 pageIndex = 0
+                continuousVisiblePageRange = nil
             }
         }
         .onChange(of: pageIndex) { _, _ in
@@ -192,12 +209,21 @@ struct NovelReaderView: View {
             translationEngine.clearAll()
             translationConfig = TranslationLanguageResolver.configuration(for: newValue)
         }
+        .onChange(of: continuousVisiblePageRange) { _, _ in
+            guard usesContinuousNovelReader,
+                  translationEngine.isInlineTranslationActive,
+                  translationConfig != nil else {
+                return
+            }
+            translationConfig?.invalidate()
+        }
         .translationTask(translationConfig) { session in
             guard translationEngine.isInlineTranslationActive else { return }
             let pageOrder = NovelTranslationScheduler.pageOrder(
                 pageCount: pages.count,
                 activePageIndex: pageIndex,
-                mode: translationScheduleMode
+                mode: translationScheduleMode,
+                continuousVisiblePageRange: continuousVisiblePageRange
             )
             guard await prepareTranslationIfNeeded(for: pageOrder, session: session) else {
                 return
@@ -661,7 +687,12 @@ struct NovelReaderView: View {
                 isTranslationActive: translationEngine.isInlineTranslationActive,
                 isTranslating: isContinuousTranslationInProgress,
                 showChapterMarkers: showChapterMarkers,
-                maxContentWidth: CGFloat(maxContentWidth)
+                maxContentWidth: CGFloat(maxContentWidth),
+                pageIndicesByTokenIndex: continuousReaderPageIndicesByTokenIndex,
+                onVisiblePageRangeChange: { range in
+                    guard continuousVisiblePageRange != range else { return }
+                    continuousVisiblePageRange = range
+                }
             )
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(theme.backgroundColor)

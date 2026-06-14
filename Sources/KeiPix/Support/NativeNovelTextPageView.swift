@@ -64,6 +64,8 @@ struct NativeNovelContinuousTextView: View {
     let isTranslating: Bool
     let showChapterMarkers: Bool
     let maxContentWidth: CGFloat
+    let pageIndicesByTokenIndex: [Int: Int]
+    let onVisiblePageRangeChange: (NovelContinuousVisiblePageRange?) -> Void
 
     var body: some View {
         let attributedString = NativeNovelTextAttributedStringBuilder.build(
@@ -77,7 +79,8 @@ struct NativeNovelContinuousTextView: View {
             translationMode: translationMode,
             isTranslationActive: isTranslationActive,
             isTranslating: isTranslating,
-            showChapterMarkers: showChapterMarkers
+            showChapterMarkers: showChapterMarkers,
+            pageIndicesByTokenIndex: pageIndicesByTokenIndex
         )
 
         #if os(iOS)
@@ -85,7 +88,8 @@ struct NativeNovelContinuousTextView: View {
             attributedString: attributedString,
             backgroundColor: PlatformColor(theme.backgroundColor),
             textColor: PlatformColor(theme.foregroundColor),
-            maxContentWidth: maxContentWidth
+            maxContentWidth: maxContentWidth,
+            onVisiblePageRangeChange: onVisiblePageRangeChange
         )
         #else
         NativeNovelTextRepresentable(
@@ -109,7 +113,8 @@ private enum NativeNovelTextAttributedStringBuilder {
         translationMode: NovelTranslationMode,
         isTranslationActive: Bool,
         isTranslating: Bool,
-        showChapterMarkers: Bool
+        showChapterMarkers: Bool,
+        pageIndicesByTokenIndex: [Int: Int] = [:]
     ) -> NSAttributedString {
         let result = NSMutableAttributedString()
         let bodyFont = platformFont(for: fontFamily, size: textSize, weight: .regular)
@@ -132,42 +137,58 @@ private enum NativeNovelTextAttributedStringBuilder {
                         appendBlock(
                             value,
                             to: result,
-                            attributes: [
-                                .font: bodyFont,
-                                .foregroundColor: foregroundColor,
-                                .paragraphStyle: compactParagraph
-                            ]
+                            attributes: attributes(
+                                [
+                                    .font: bodyFont,
+                                    .foregroundColor: foregroundColor,
+                                    .paragraphStyle: compactParagraph
+                                ],
+                                tokenIndex: index,
+                                pageIndicesByTokenIndex: pageIndicesByTokenIndex
+                            )
                         )
                         appendBlock(
                             translated,
                             to: result,
-                            attributes: [
-                                .font: platformFont(for: fontFamily, size: textSize * 0.92, weight: .regular),
-                                .foregroundColor: secondaryColor,
-                                .backgroundColor: PlatformColor(theme.embedBackgroundColor).withAlphaComponent(0.32),
-                                .paragraphStyle: compactParagraph
-                            ]
+                            attributes: attributes(
+                                [
+                                    .font: platformFont(for: fontFamily, size: textSize * 0.92, weight: .regular),
+                                    .foregroundColor: secondaryColor,
+                                    .backgroundColor: PlatformColor(theme.embedBackgroundColor).withAlphaComponent(0.32),
+                                    .paragraphStyle: compactParagraph
+                                ],
+                                tokenIndex: index,
+                                pageIndicesByTokenIndex: pageIndicesByTokenIndex
+                            )
                         )
                     case .immersive:
                         appendBlock(
                             translated,
                             to: result,
-                            attributes: [
-                                .font: bodyFont,
-                                .foregroundColor: foregroundColor,
-                                .paragraphStyle: paragraph
-                            ]
+                            attributes: attributes(
+                                [
+                                    .font: bodyFont,
+                                    .foregroundColor: foregroundColor,
+                                    .paragraphStyle: paragraph
+                                ],
+                                tokenIndex: index,
+                                pageIndicesByTokenIndex: pageIndicesByTokenIndex
+                            )
                         )
                     }
                 } else {
                     appendBlock(
                         value,
                         to: result,
-                        attributes: [
-                            .font: bodyFont,
-                            .foregroundColor: isTranslating ? translatingColor : foregroundColor,
-                            .paragraphStyle: paragraph
-                        ]
+                        attributes: attributes(
+                            [
+                                .font: bodyFont,
+                                .foregroundColor: isTranslating ? translatingColor : foregroundColor,
+                                .paragraphStyle: paragraph
+                            ],
+                            tokenIndex: index,
+                            pageIndicesByTokenIndex: pageIndicesByTokenIndex
+                        )
                     )
                 }
 
@@ -176,55 +197,82 @@ private enum NativeNovelTextAttributedStringBuilder {
                 appendBlock(
                     String(format: L10n.novelChapterFormat, title),
                     to: result,
-                    attributes: [
-                        .font: boldFont,
-                        .foregroundColor: foregroundColor,
-                        .paragraphStyle: paragraph
-                    ],
+                    attributes: attributes(
+                        [
+                            .font: boldFont,
+                            .foregroundColor: foregroundColor,
+                            .paragraphStyle: paragraph
+                        ],
+                        tokenIndex: index,
+                        pageIndicesByTokenIndex: pageIndicesByTokenIndex
+                    ),
                     prefix: result.length == 0 ? "" : "\n"
                 )
 
             case .ruby(let base, let reading):
                 let line = NSMutableAttributedString(
                     string: base,
-                    attributes: [
-                        .font: bodyFont,
-                        .foregroundColor: foregroundColor,
-                        .paragraphStyle: paragraph
-                    ]
+                    attributes: attributes(
+                        [
+                            .font: bodyFont,
+                            .foregroundColor: foregroundColor,
+                            .paragraphStyle: paragraph
+                        ],
+                        tokenIndex: index,
+                        pageIndicesByTokenIndex: pageIndicesByTokenIndex
+                    )
                 )
                 line.append(NSAttributedString(
                     string: " (\(reading))",
-                    attributes: [
-                        .font: rubyFont,
-                        .foregroundColor: secondaryColor,
-                        .paragraphStyle: paragraph
-                    ]
+                    attributes: attributes(
+                        [
+                            .font: rubyFont,
+                            .foregroundColor: secondaryColor,
+                            .paragraphStyle: paragraph
+                        ],
+                        tokenIndex: index,
+                        pageIndicesByTokenIndex: pageIndicesByTokenIndex
+                    )
                 ))
                 result.append(line)
-                result.append(NSAttributedString(string: "\n"))
+                result.append(NSAttributedString(
+                    string: "\n",
+                    attributes: attributes(
+                        [:],
+                        tokenIndex: index,
+                        pageIndicesByTokenIndex: pageIndicesByTokenIndex
+                    )
+                ))
 
             case .jumpURL(let label, let url):
                 appendBlock(
                     label.isEmpty ? url.absoluteString : label,
                     to: result,
-                    attributes: [
-                        .font: linkFont,
-                        .foregroundColor: platformLinkColor,
-                        .link: url,
-                        .paragraphStyle: paragraph
-                    ]
+                    attributes: attributes(
+                        [
+                            .font: linkFont,
+                            .foregroundColor: platformLinkColor,
+                            .link: url,
+                            .paragraphStyle: paragraph
+                        ],
+                        tokenIndex: index,
+                        pageIndicesByTokenIndex: pageIndicesByTokenIndex
+                    )
                 )
 
             case .jumpPage(let target):
                 appendBlock(
                     String(format: L10n.novelJumpPageFormat, target),
                     to: result,
-                    attributes: [
-                        .font: linkFont,
-                        .foregroundColor: secondaryColor,
-                        .paragraphStyle: paragraph
-                    ]
+                    attributes: attributes(
+                        [
+                            .font: linkFont,
+                            .foregroundColor: secondaryColor,
+                            .paragraphStyle: paragraph
+                        ],
+                        tokenIndex: index,
+                        pageIndicesByTokenIndex: pageIndicesByTokenIndex
+                    )
                 )
 
             case .newPage, .pixivImage, .uploadedImage:
@@ -232,6 +280,19 @@ private enum NativeNovelTextAttributedStringBuilder {
             }
         }
 
+        return result
+    }
+
+    private static func attributes(
+        _ base: [NSAttributedString.Key: Any],
+        tokenIndex: Int,
+        pageIndicesByTokenIndex: [Int: Int]
+    ) -> [NSAttributedString.Key: Any] {
+        guard let pageIndex = pageIndicesByTokenIndex[tokenIndex] else {
+            return base
+        }
+        var result = base
+        result[.keiPixNovelPageIndex] = pageIndex
         return result
     }
 
@@ -265,6 +326,10 @@ private enum NativeNovelTextAttributedStringBuilder {
         PlatformColor.link
         #endif
     }
+}
+
+private extension NSAttributedString.Key {
+    static let keiPixNovelPageIndex = NSAttributedString.Key("KeiPixNovelPageIndex")
 }
 
 #if os(macOS)
@@ -380,12 +445,15 @@ private struct NativeNovelContinuousTextRepresentable: UIViewRepresentable {
     let backgroundColor: UIColor
     let textColor: UIColor
     let maxContentWidth: CGFloat
+    let onVisiblePageRangeChange: (NovelContinuousVisiblePageRange?) -> Void
 
     func makeUIView(context: Context) -> NativeNovelContinuousTextContainerView {
         let container = NativeNovelContinuousTextContainerView()
         container.configure(maxContentWidth: maxContentWidth)
+        context.coordinator.onVisiblePageRangeChange = onVisiblePageRangeChange
 
         let textView = container.textView
+        textView.delegate = context.coordinator
         textView.isEditable = false
         textView.isSelectable = true
         textView.isScrollEnabled = true
@@ -407,17 +475,22 @@ private struct NativeNovelContinuousTextRepresentable: UIViewRepresentable {
 
         context.coordinator.lastSignature = renderSignature
         context.coordinator.lastPlainText = attributedString.string
+        context.coordinator.reportVisiblePageRange(in: textView)
         return container
     }
 
     func updateUIView(_ container: NativeNovelContinuousTextContainerView, context: Context) {
         container.configure(maxContentWidth: maxContentWidth)
+        context.coordinator.onVisiblePageRangeChange = onVisiblePageRangeChange
 
         let textView = container.textView
         textView.backgroundColor = backgroundColor
         textView.textColor = textColor
 
-        guard context.coordinator.lastSignature != renderSignature else { return }
+        guard context.coordinator.lastSignature != renderSignature else {
+            context.coordinator.reportVisiblePageRange(in: textView)
+            return
+        }
 
         let shouldResetScroll = context.coordinator.lastPlainText != attributedString.string
         let previousOffset = textView.contentOffset
@@ -430,19 +503,83 @@ private struct NativeNovelContinuousTextRepresentable: UIViewRepresentable {
         } else {
             textView.setContentOffset(previousOffset, animated: false)
         }
+        context.coordinator.reportVisiblePageRange(in: textView)
     }
 
     func makeCoordinator() -> Coordinator {
-        Coordinator()
+        Coordinator(onVisiblePageRangeChange: onVisiblePageRangeChange)
     }
 
     private var renderSignature: String {
         "\(attributedString.string.hashValue)-\(attributedString.length)-\(backgroundColor)-\(textColor)-\(maxContentWidth)"
     }
 
-    final class Coordinator {
+    final class Coordinator: NSObject, UITextViewDelegate {
+        var onVisiblePageRangeChange: (NovelContinuousVisiblePageRange?) -> Void
         var lastSignature = ""
         var lastPlainText = ""
+        private var lastVisiblePageRange: NovelContinuousVisiblePageRange?
+
+        init(onVisiblePageRangeChange: @escaping (NovelContinuousVisiblePageRange?) -> Void) {
+            self.onVisiblePageRangeChange = onVisiblePageRangeChange
+        }
+
+        func scrollViewDidScroll(_ scrollView: UIScrollView) {
+            guard let textView = scrollView as? UITextView else { return }
+            reportVisiblePageRange(in: textView)
+        }
+
+        func reportVisiblePageRange(in textView: UITextView) {
+            guard textView.bounds.width > 0, textView.bounds.height > 0 else { return }
+            guard textView.attributedText.length > 0 else {
+                updateVisiblePageRange(nil)
+                return
+            }
+
+            let layoutManager = textView.layoutManager
+            let textContainer = textView.textContainer
+            layoutManager.ensureLayout(for: textContainer)
+
+            let insets = textView.textContainerInset
+            let visibleTextRect = CGRect(
+                x: textView.bounds.origin.x + insets.left,
+                y: textView.bounds.origin.y + insets.top,
+                width: max(0, textView.bounds.width - insets.left - insets.right),
+                height: max(0, textView.bounds.height - insets.top - insets.bottom)
+            )
+            let glyphRange = layoutManager.glyphRange(forBoundingRect: visibleTextRect, in: textContainer)
+            guard glyphRange.length > 0 else {
+                updateVisiblePageRange(nil)
+                return
+            }
+
+            let rawCharacterRange = layoutManager.characterRange(forGlyphRange: glyphRange, actualGlyphRange: nil)
+            let fullRange = NSRange(location: 0, length: textView.attributedText.length)
+            let characterRange = NSIntersectionRange(rawCharacterRange, fullRange)
+            guard characterRange.length > 0 else {
+                updateVisiblePageRange(nil)
+                return
+            }
+
+            var pages = Set<Int>()
+            textView.attributedText.enumerateAttribute(.keiPixNovelPageIndex, in: characterRange, options: []) { value, _, _ in
+                if let pageIndex = value as? Int {
+                    pages.insert(pageIndex)
+                }
+            }
+
+            guard let firstPage = pages.min(), let lastPage = pages.max() else {
+                updateVisiblePageRange(nil)
+                return
+            }
+            updateVisiblePageRange(NovelContinuousVisiblePageRange(firstPageIndex: firstPage, lastPageIndex: lastPage))
+        }
+
+        private func updateVisiblePageRange(_ range: NovelContinuousVisiblePageRange?) {
+            guard range != lastVisiblePageRange else { return }
+            lastVisiblePageRange = range
+            onVisiblePageRangeChange(range)
+        }
     }
 }
 

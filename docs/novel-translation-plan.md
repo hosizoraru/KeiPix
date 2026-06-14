@@ -189,7 +189,7 @@ Recommended new or changed types:
 | Phase 1: Segment Planner | Done | Added `NovelTranslationSegment` and `NovelTranslationPlanner` with paragraph splitting, non-text/noisy text skipping, stable source hashes, and stable client identifiers. |
 | Phase 2: Apple Batch Streaming Client | Done | Reader now uses a testable `NovelTranslationBatchClient` closure wrapper, builds `TranslationSession.Request` batches with `clientIdentifier`, consumes `session.translate(batch:)`, and ignores missing/unknown identifiers. |
 | Phase 3: Incremental Engine Updates | Done | `NovelTranslationEngine` now stores segment results, updates progress per streamed result, preserves legacy token lookup, and keeps source text visible for pending segments. |
-| Phase 4: Visible-First Scheduling | In progress | Scheduler implementation, focused tests, and iOS/iPadOS generic builds are complete; physical-device smoke validation remains open. |
+| Phase 4: Visible-First Scheduling | In progress | Scheduler implementation, continuous TextKit visible-range reporting, focused tests, and iOS/iPadOS generic builds are complete; physical-device smoke validation remains open. |
 | Phase 5: Persistent Translation Cache | Done | Segment translations now persist under the app caches directory, cache hits apply before network translation, misses continue streaming, and Reading settings exposes a localized clear-cache action. |
 | Phase 6: Availability, Preparation, and Errors | In progress | `LanguageAvailability`, `prepareTranslation()`, recoverable error mapping, and localized reader feedback are implemented and tested; physical Mac/iPhone/iPad model-preparation validation remains open. |
 | Phase 7: OS 26.4+ Translation Strategy and Skip Ranges | In progress | OS 26.4+ translation sessions now prefer low latency, batch requests use attributed skip ranges for Pixiv markers/URLs when available, and older OS paths keep string requests; physical smoke validation remains open. |
@@ -323,7 +323,7 @@ Status: In progress
 - [x] For double-page mode, translate the visible paired page next.
 - [x] Prefetch nearby pages after visible pages are complete or underway.
 - [x] For continuous mode, start with a simple page-order approximation.
-- [ ] Later, extend `NativeNovelContinuousTextRepresentable` to report visible
+- [x] Later, extend `NativeNovelContinuousTextRepresentable` to report visible
   token/page ranges and make continuous scheduling exact.
 - [x] Cancel stale translation work when novel ID, target language, reader mode,
   or active page changes.
@@ -337,9 +337,13 @@ Validation:
 
 Evidence:
 
-- `NovelTranslationSchedulerTests` covers single-page, double-page, continuous,
-  and stale-work identity inputs.
-- `NovelReaderView` now uses `NovelTranslationScheduler.pageOrder(...)` for the
+- `NovelTranslationSchedulerTests` covers single-page, double-page, visible
+  continuous range, continuous fallback, and stale-work identity inputs.
+- `NativeNovelContinuousTextRepresentable` now tags rendered TextKit ranges with
+  page metadata, uses the native `UITextView` scroll delegate and layout manager
+  to report the visible page range, and feeds that range back into
+  `NovelTranslationScheduler.pageOrder(...)`.
+- `NovelReaderView` now uses the reported continuous visible range for the
   `.translationTask` page loop and clears active translation results when the
   target language changes.
 - iOS and iPadOS generic Simulator builds pass. Physical-device smoke remains
@@ -546,6 +550,6 @@ Definition of done for that first goal:
 - [x] `swift test --filter NovelTranslation` or equivalent focused tests pass.
 - [x] `git diff --check` passes.
 - [x] macOS build passes.
-- [ ] iOS/iPadOS generic builds pass.
+- [x] iOS/iPadOS generic builds pass.
 - [ ] Physical-device translation validation is either completed or explicitly
   recorded as the remaining blocker.

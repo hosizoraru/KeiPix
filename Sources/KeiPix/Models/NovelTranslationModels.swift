@@ -53,14 +53,36 @@ struct NovelTranslationScheduleIdentity: Hashable, Sendable {
     let pageCount: Int
 }
 
+struct NovelContinuousVisiblePageRange: Equatable, Hashable, Sendable {
+    let firstPageIndex: Int
+    let lastPageIndex: Int
+
+    init(firstPageIndex: Int, lastPageIndex: Int) {
+        self.firstPageIndex = min(firstPageIndex, lastPageIndex)
+        self.lastPageIndex = max(firstPageIndex, lastPageIndex)
+    }
+
+    func clamped(to pageCount: Int) -> NovelContinuousVisiblePageRange? {
+        guard pageCount > 0 else { return nil }
+        let upperBound = pageCount - 1
+        let first = min(max(firstPageIndex, 0), upperBound)
+        let last = min(max(lastPageIndex, 0), upperBound)
+        return NovelContinuousVisiblePageRange(firstPageIndex: first, lastPageIndex: last)
+    }
+}
+
 enum NovelTranslationScheduler {
     static func pageOrder(
         pageCount: Int,
         activePageIndex: Int,
-        mode: NovelTranslationScheduleMode
+        mode: NovelTranslationScheduleMode,
+        continuousVisiblePageRange: NovelContinuousVisiblePageRange? = nil
     ) -> [Int] {
         guard pageCount > 0 else { return [] }
         if mode == .continuous {
+            if let visibleRange = continuousVisiblePageRange?.clamped(to: pageCount) {
+                return continuousPageOrder(pageCount: pageCount, visibleRange: visibleRange)
+            }
             return Array(0..<pageCount)
         }
 
@@ -83,6 +105,32 @@ enum NovelTranslationScheduler {
             append(activePage - distance)
             let trailingDistance = mode == .doublePage ? distance + 1 : distance
             append(activePage + trailingDistance)
+            distance += 1
+        }
+
+        return ordered
+    }
+
+    private static func continuousPageOrder(
+        pageCount: Int,
+        visibleRange: NovelContinuousVisiblePageRange
+    ) -> [Int] {
+        var ordered: [Int] = []
+        var seen: Set<Int> = []
+
+        func append(_ page: Int) {
+            guard page >= 0, page < pageCount, seen.insert(page).inserted else { return }
+            ordered.append(page)
+        }
+
+        for page in visibleRange.firstPageIndex...visibleRange.lastPageIndex {
+            append(page)
+        }
+
+        var distance = 1
+        while ordered.count < pageCount {
+            append(visibleRange.firstPageIndex - distance)
+            append(visibleRange.lastPageIndex + distance)
             distance += 1
         }
 

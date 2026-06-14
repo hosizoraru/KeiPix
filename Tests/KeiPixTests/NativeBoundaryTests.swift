@@ -3109,8 +3109,8 @@ struct NativeBoundaryTests {
             contentsOf: root.appending(path: "Sources/KeiPix/Models/NovelTranslationModels.swift"),
             encoding: .utf8
         )
-        let translateButton = try String(
-            contentsOf: root.appending(path: "Sources/KeiPix/Views/ArtworkTranslateButton.swift"),
+        let appleTranslationSupport = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Support/AppleTranslationSupport.swift"),
             encoding: .utf8
         )
 
@@ -3118,19 +3118,24 @@ struct NativeBoundaryTests {
         #expect(readerView.contains("NativeNovelTextPageView("))
         #expect(readerView.contains("usesContinuousNovelReader"))
         #expect(readerView.contains("ReaderAdaptiveLayout.usesContinuousNovelReader(platform: readerPlatform)"))
+        #expect(readerView.contains("@State private var continuousVisiblePageRange: NovelContinuousVisiblePageRange?"))
         #expect(readerView.contains("private var translationScheduleMode: NovelTranslationScheduleMode"))
         #expect(readerView.contains("return .continuous"))
         #expect(readerView.contains("private func resolvedPagedReadingMode(for availableSize: CGSize) -> NovelReadingMode"))
         #expect(readerView.contains("ReaderAdaptiveLayout.effectiveNovelMode("))
         #expect(readerView.contains("continuousReaderLayout"))
         #expect(readerView.contains("NativeNovelContinuousTextView("))
+        #expect(readerView.contains("continuousVisiblePageRange: continuousVisiblePageRange"))
+        #expect(readerView.contains("onVisiblePageRangeChange: { range in"))
+        #expect(readerView.contains(".onChange(of: continuousVisiblePageRange)"))
+        #expect(readerView.contains("translationConfig?.invalidate()"))
         #expect(readerView.contains("prepareTranslationIfNeeded(for: pageOrder, session: session)"))
         #expect(readerView.contains("LanguageAvailability()"))
         #expect(readerView.contains("LanguageAvailability(preferredStrategy: .lowLatency)"))
         #expect(readerView.contains("try await session.prepareTranslation()"))
         #expect(readerView.contains("NovelTranslationReadinessMapper.readiness(for: status)"))
         #expect(readerView.contains("NovelTranslationReadinessMapper.issue(for: error).localizedMessage"))
-        #expect(translateButton.contains("preferredStrategy: .lowLatency"))
+        #expect(appleTranslationSupport.contains("preferredStrategy: .lowLatency"))
         #expect(translationModels.contains("sourceText: attributedSourceText(from: segment.sourceText)"))
         #expect(translationModels.contains("skipped.translation.skipsTranslation = true"))
         #expect(translationModels.contains("return TranslationSession.Request(\n                sourceText: segment.sourceText"))
@@ -3149,6 +3154,11 @@ struct NativeBoundaryTests {
         #expect(nativeText.contains("NativeNovelTextAttributedStringBuilder"))
         #expect(nativeText.contains("struct NativeNovelContinuousTextView"))
         #expect(nativeText.contains("NativeNovelContinuousTextRepresentable"))
+        #expect(nativeText.contains("onVisiblePageRangeChange: @escaping (NovelContinuousVisiblePageRange?) -> Void"))
+        #expect(nativeText.contains("textView.delegate = context.coordinator"))
+        #expect(nativeText.contains("scrollViewDidScroll(_ scrollView: UIScrollView)"))
+        #expect(nativeText.contains("layoutManager.glyphRange(forBoundingRect: visibleTextRect, in: textContainer)"))
+        #expect(nativeText.contains("NovelContinuousVisiblePageRange(firstPageIndex: firstPage, lastPageIndex: lastPage)"))
         #expect(nativeText.contains("alwaysBounceVertical = true"))
         #expect(nativeText.contains("showsVerticalScrollIndicator = true"))
         #expect(nativeText.contains("keyboardDismissMode = .interactive"))

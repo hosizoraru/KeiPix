@@ -36,6 +36,18 @@ struct NovelTranslationSchedulerTests {
         #expect(order == [0, 1, 2, 3, 4])
     }
 
+    @Test("Continuous scheduling prioritizes reported visible pages before distant prefetch")
+    func continuousSchedulingPrioritizesVisiblePageRange() {
+        let order = NovelTranslationScheduler.pageOrder(
+            pageCount: 7,
+            activePageIndex: 0,
+            mode: .continuous,
+            continuousVisiblePageRange: NovelContinuousVisiblePageRange(firstPageIndex: 3, lastPageIndex: 4)
+        )
+
+        #expect(order == [3, 4, 2, 5, 1, 6, 0])
+    }
+
     @Test("Schedule identity changes when stale translation work should cancel")
     func scheduleIdentityCapturesCancellationInputs() {
         let base = NovelTranslationScheduleIdentity(
