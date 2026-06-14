@@ -347,6 +347,14 @@ older automation.
   `.../PrivateFrameworks/SimulatorKit.framework`, skip that path for now. Use
   Device Hub plus `devicectl`/CoreDevice for visible review and evidence
   artifacts.
+- Device Hub is reliable for human-visible review and CoreDevice screenshots,
+  but macOS `System Events` clicks in the Device Hub window are not a reliable
+  simulator touch-injection mechanism on this setup. Do not infer an app tap
+  regression from a failed System Events click unless a real device,
+  XCUITest, or a working accessibility snapshot path confirms it.
+- For phone bottom-bar/filter chrome visual QA, allow a few seconds of settle
+  time before judging final geometry. The tab bar and content may still be
+  animating during the first captured frame after launch.
 - `xcrun simctl io <udid> enumerate` can reveal multiple displays such as
   `LCD` and `TVOut`; this is now mostly a fallback because `devicectl device
   info displays` exposes primary display unique IDs directly.
