@@ -8,16 +8,24 @@ struct ArtworkReaderView: View {
     @Bindable var store: KeiPixStore
     @Binding var pageIndex: Int
     @Binding var readingMode: ArtworkReadingMode
-    var imageTransform: ReaderImageTransform = .identity
+    var showsImageTransformMenu = true
     @Binding var scrollTarget: Int?
     let scrollToPage: (Int) -> Void
 
     @State private var interaction = ArtworkReaderInteractionState()
+    @State private var imageTransform = ReaderImageTransform()
     @State private var pageAspectRatios: [Int: CGFloat] = [:]
     @State private var readerAvailableSize: CGSize = .zero
 
     var body: some View {
         readerLayout
+        .overlay(alignment: .topTrailing) {
+            if showsReaderImageTransformMenu {
+                readerImageTransformMenu
+                    .padding(.top, 12)
+                    .padding(.trailing, 12)
+            }
+        }
         .background {
             GeometryReader { proxy in
                 Color.clear
@@ -58,6 +66,7 @@ struct ArtworkReaderView: View {
         .onChange(of: artwork.id) { _, _ in
             pageAspectRatios.removeAll()
             interaction.resetZoom()
+            imageTransform = .identity
         }
     }
 
@@ -163,8 +172,20 @@ struct ArtworkReaderView: View {
         .accessibilityLabel(L10n.jumpToPage)
     }
 
+    private var readerImageTransformMenu: some View {
+        ReaderImageTransformMenu(transform: $imageTransform)
+            .labelStyle(.iconOnly)
+            .menuStyle(.button)
+            .os26GlassButton(prominent: imageTransform.isIdentity == false)
+            .controlSize(.small)
+    }
+
     private var pageCount: Int {
         artwork.displayPageCount
+    }
+
+    private var showsReaderImageTransformMenu: Bool {
+        showsImageTransformMenu && effectiveReadingMode != .index
     }
 
     private var filmstripPresentation: ReaderFilmstripPresentation {
@@ -243,7 +264,6 @@ struct ArtworkReaderView: View {
 struct ArtworkReaderControls: View {
     @Binding var pageIndex: Int
     @Binding var readingMode: ArtworkReadingMode
-    var imageTransform: Binding<ReaderImageTransform>? = nil
     let pageCount: Int
     let scrollToPage: (Int) -> Void
 
@@ -256,7 +276,6 @@ struct ArtworkReaderControls: View {
                     if pageCount > 1 {
                         readingModeMenu
                     }
-                    imageTransformMenu
 
                     if pageCount > 1 {
                         pageNavigationControls
@@ -269,7 +288,6 @@ struct ArtworkReaderControls: View {
                         if pageCount > 1 {
                             readingModeMenu
                         }
-                        imageTransformMenu
 
                         if pageCount > 1 {
                             compactPageNavigationControls
@@ -320,15 +338,6 @@ struct ArtworkReaderControls: View {
         .os26GlassButton()
         .accessibilityLabel(L10n.readingMode)
         .accessibilityValue(effectiveReadingMode.title)
-    }
-
-    @ViewBuilder
-    private var imageTransformMenu: some View {
-        if let imageTransform {
-            ReaderImageTransformMenu(transform: imageTransform)
-                .menuStyle(.button)
-                .os26GlassButton()
-        }
     }
 
     @ViewBuilder

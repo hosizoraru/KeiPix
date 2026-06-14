@@ -17,7 +17,6 @@ struct StandaloneArtworkReader: View {
     @State private var scrollTarget: Int?
     @State private var isFocusPresetEnabled = false
     @State private var isPageJumpPresented = false
-    @State private var imageTransform = ReaderImageTransform()
     @AppStorage("reader.snapToPageBoundaries") private var snapToPageBoundaries = false
 
     init(artwork: PixivArtwork, store: KeiPixStore) {
@@ -41,7 +40,6 @@ struct StandaloneArtworkReader: View {
                                 ArtworkReaderControls(
                                     pageIndex: $pageIndex,
                                     readingMode: $readingMode,
-                                    imageTransform: $imageTransform,
                                     pageCount: pageCount,
                                     scrollToPage: { index in
                                         scrollToPage(index, proxy: proxy)
@@ -59,7 +57,6 @@ struct StandaloneArtworkReader: View {
                                     store: store,
                                     pageIndex: $pageIndex,
                                     readingMode: $readingMode,
-                                    imageTransform: imageTransform,
                                     scrollTarget: $scrollTarget,
                                     scrollToPage: { index in
                                         scrollToPage(index, proxy: proxy)
@@ -180,8 +177,6 @@ struct StandaloneArtworkReader: View {
                 snapToPagesButton
             }
 
-            ReaderImageTransformMenu(transform: $imageTransform)
-                .labelStyle(.iconOnly)
             pageJumpButton
             focusButton
             previousPageButton(proxy: proxy)
@@ -336,7 +331,6 @@ struct StandaloneArtworkReader: View {
 
     private func resetForArtwork() {
         readingMode = store.defaultReadingMode(for: artwork, pageCount: pageCount)
-        imageTransform = .identity
         let restoredPageIndex = store.restoredReaderPageIndex(for: artwork, pageCount: pageCount)
         pageIndex = restoredPageIndex
         scrollTarget = effectiveReadingMode == .singlePage ? nil : restoredPageIndex

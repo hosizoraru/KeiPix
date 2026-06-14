@@ -3656,8 +3656,8 @@ struct NativeBoundaryTests {
         #expect(nativeFilmstrip.contains("selectPage(item.pageIndex)"))
     }
 
-    @Test("Artwork reader transforms share a command model across detail and window readers")
-    func artworkReaderTransformsShareCommandModel() throws {
+    @Test("Artwork reader transforms live in the reader instead of the detail inspector")
+    func artworkReaderTransformsLiveInReader() throws {
         let root = try packageRoot()
         let readerView = try String(
             contentsOf: root.appending(path: "Sources/KeiPix/Views/ArtworkReaderView.swift"),
@@ -3685,16 +3685,19 @@ struct NativeBoundaryTests {
         #expect(transformModel.contains("mutating func flipHorizontal()"))
         #expect(transformMenu.contains("struct ReaderImageTransformMenu"))
         #expect(transformMenu.contains("@Binding var transform: ReaderImageTransform"))
-        #expect(readerView.contains("var imageTransform: ReaderImageTransform = .identity"))
+        #expect(readerView.contains("@State private var imageTransform = ReaderImageTransform()"))
+        #expect(readerView.contains("private var readerImageTransformMenu"))
         #expect(readerView.contains("func readerImageTransform(_ transform: ReaderImageTransform)"))
         #expect(readerView.contains(".readerImageTransform(imageTransform)"))
-        #expect(readerView.contains("ReaderImageTransformMenu(transform: imageTransform)"))
-        #expect(detailView.contains("@State private var imageTransform = ReaderImageTransform()"))
-        #expect(detailView.contains("imageTransform: $imageTransform"))
-        #expect(detailView.contains("imageTransform: imageTransform"))
-        #expect(standaloneReader.contains("@State private var imageTransform = ReaderImageTransform()"))
-        #expect(standaloneReader.contains("ReaderImageTransformMenu(transform: $imageTransform)"))
-        #expect(standaloneReader.contains("imageTransform = .identity"))
+        #expect(readerView.contains("ReaderImageTransformMenu(transform: $imageTransform)"))
+        #expect(detailView.contains("@State private var imageTransform") == false)
+        #expect(detailView.contains("imageTransform: $imageTransform") == false)
+        #expect(detailView.contains("imageTransform: imageTransform") == false)
+        #expect(detailView.contains("showsImageTransformMenu: false"))
+        #expect(detailView.contains("private var showsReaderControls: Bool {\n        pageCount > 1\n    }"))
+        #expect(standaloneReader.contains("@State private var imageTransform") == false)
+        #expect(standaloneReader.contains("ReaderImageTransformMenu(transform: $imageTransform)") == false)
+        #expect(standaloneReader.contains("imageTransform = .identity") == false)
     }
 
     @Test("Artwork detail inspector uses adaptive actions and merged information cards")
