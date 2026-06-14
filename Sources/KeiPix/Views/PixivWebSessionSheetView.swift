@@ -9,6 +9,9 @@ struct PixivWebSessionSheetView: View {
     @State private var message: String?
 
     private var url: URL {
+        if let activityURL = PixivWebURLBuilder.activityFeedURL() {
+            return activityURL
+        }
         if let userID = store.session?.user.id,
            let savedCollectionsURL = PixivWebURLBuilder.userBookmarkCollectionsURL(userID: String(userID)) {
             return savedCollectionsURL

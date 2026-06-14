@@ -22824,6 +22824,35 @@
         }
       }
     },
+    "Connect Web session": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connect Web session"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Web セッションを接続"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "连接 Web 会话"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "連接 Web 會話"
+          }
+        }
+      }
+    },
     "Pixiv activity is a Web-only feed. Connect a Pixiv Web session to load it in KeiPix.": {
       "extractionState": "manual",
       "localizations": {
@@ -24709,31 +24738,31 @@
         }
       }
     },
-    "Pixiv Web did not report a signed-in session. Sign in on the page first, then save again.": {
+    "Pixiv Web did not open the signed-in activity page. Sign in on the page first, then save again.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pixiv Web did not report a signed-in session. Sign in on the page first, then save again."
+            "value": "Pixiv Web did not open the signed-in activity page. Sign in on the page first, then save again."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pixiv Web がログイン済みセッションを返しませんでした。ページでログインしてから、もう一度保存してください。"
+            "value": "Pixiv Web でログイン済みの動向ページを開けませんでした。ページでログインしてから、もう一度保存してください。"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pixiv Web 没有确认这是已登录会话。请先在页面里登录，然后再保存。"
+            "value": "Pixiv Web 没有打开已登录的动态页。请先在页面里登录，然后再保存。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pixiv Web 沒有確認這是已登入會話。請先在頁面裡登入，然後再儲存。"
+            "value": "Pixiv Web 沒有打開已登入的動態頁。請先在頁面裡登入，然後再儲存。"
           }
         }
       }
@@ -24796,31 +24825,31 @@
         }
       }
     },
-    "Sign in on Pixiv Web, then save this session so KeiPix can sync Web-only collection lists.": {
+    "Sign in on Pixiv Web, then save this session so KeiPix can sync Web-only activity and collection lists.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sign in on Pixiv Web, then save this session so KeiPix can sync Web-only collection lists."
+            "value": "Sign in on Pixiv Web, then save this session so KeiPix can sync Web-only activity and collection lists."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pixiv Web でログインしてからこのセッションを保存すると、KeiPix が Web 専用のコレクション一覧を同期できます。"
+            "value": "Pixiv Web でログインしてからこのセッションを保存すると、KeiPix が Web 専用の動向とコレクション一覧を同期できます。"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "在 Pixiv Web 登录后保存这个会话，KeiPix 才能同步 Web 专属的珍藏册列表。"
+            "value": "在 Pixiv Web 登录后保存这个会话，KeiPix 才能同步 Web 专属的动态和珍藏册列表。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "在 Pixiv Web 登入後保存這個會話，KeiPix 才能同步 Web 專屬的珍藏冊列表。"
+            "value": "在 Pixiv Web 登入後保存這個會話，KeiPix 才能同步 Web 專屬的動態和珍藏冊列表。"
           }
         }
       }

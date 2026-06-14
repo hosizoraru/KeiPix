@@ -64,7 +64,7 @@ struct PixivActivityFeedView: View {
 
     private var webSessionState: some View {
         OS26LibraryUnavailableView(
-            title: L10n.pixivActivity,
+            title: L10n.pixivActivityWebSessionRequiredTitle,
             subtitle: L10n.pixivActivityWebSessionRequiredHint,
             systemImage: "globe.badge.chevron.backward"
         ) {
@@ -173,10 +173,7 @@ struct PixivActivityFeedView: View {
     }
 
     private var statusText: String {
-        if store.pixivActivityItems.isEmpty {
-            return L10n.pixivActivity
-        }
-        return String(format: L10n.pixivActivityLoadedCountFormat, store.pixivActivityItems.count)
+        PixivActivityFeedPresentation.statusText(itemCount: store.pixivActivityItems.count)
     }
 
     private func refresh() async {

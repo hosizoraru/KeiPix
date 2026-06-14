@@ -150,9 +150,7 @@ extension KeiPixStore {
         do {
             pixivWebSession = try await api.savePixivWebSession(cookies: cookies, userID: userID)
             isPixivWebSessionPresented = false
-            if selectedRoute == .savedPixivCollections {
-                await refreshPixivCollections(mode: .saved)
-            }
+            await refreshAfterPixivWebSessionChange()
             return true
         } catch {
             errorMessage = error.localizedDescription
@@ -165,11 +163,17 @@ extension KeiPixStore {
         do {
             try await api.clearPixivWebSession(userID: userID)
             pixivWebSession = nil
-            if selectedRoute == .savedPixivCollections {
-                await refreshPixivCollections(mode: .saved)
-            }
+            await refreshAfterPixivWebSessionChange()
         } catch {
             errorMessage = error.localizedDescription
+        }
+    }
+
+    private func refreshAfterPixivWebSessionChange() async {
+        if selectedRoute == .savedPixivCollections {
+            await refreshPixivCollections(mode: .saved)
+        } else if selectedRoute == .pixivActivity {
+            await refreshPixivActivityFeed(force: true)
         }
     }
 }

@@ -114,7 +114,7 @@ final class KeiPixStore {
     var pixivActivityItems: [PixivActivityItem] = []
     var isLoadingPixivActivityFeed = false
     var isLoadingMorePixivActivityFeed = false
-    var pixivActivityNextPage: Int?
+    var pixivActivityNextPage: URL?
     var pixivActivityLoadedAt: Date?
     var pixivActivityLoadedInCurrentSession = false
     var pixivActivityErrorMessage: String?

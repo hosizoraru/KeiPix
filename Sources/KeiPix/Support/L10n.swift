@@ -508,6 +508,7 @@ enum L10n {
     static var pixivActivity: String { text("Pixiv Activity") }
     static var pixivActivityEmptyTitle: String { text("No Pixiv activity") }
     static var pixivActivityEmptyHint: String { text("Follow creators or refresh after connecting Pixiv Web to see social activity.") }
+    static var pixivActivityWebSessionRequiredTitle: String { text("Connect Web session") }
     static var pixivActivityWebSessionRequiredHint: String { text("Pixiv activity is a Web-only feed. Connect a Pixiv Web session to load it in KeiPix.") }
     static var pixivActivityLoadingMore: String { text("Loading more activity") }
     static var pixivActivityLoadedCountFormat: String { text("Loaded %d activity items") }
@@ -894,14 +895,14 @@ enum L10n {
     static var connectPixivWebSession: String { text("Connect Pixiv Web Session") }
     static var disconnectPixivWebSession: String { text("Disconnect Pixiv Web Session") }
     static var savePixivWebSession: String { text("Save Pixiv Web Session") }
-    static var connectPixivWebSessionHint: String { text("Sign in on Pixiv Web, then save this session so KeiPix can sync Web-only collection lists.") }
+    static var connectPixivWebSessionHint: String { text("Sign in on Pixiv Web, then save this session so KeiPix can sync Web-only activity and collection lists.") }
     static var pixivWebSessionSettingsHint: String { text("Required only for Pixiv Web-only features such as saved collections. KeiPix stores this separately from the app API token and never imports browser cookies automatically.") }
     static var pixivWebSessionConnected: String { text("Connected") }
     static var pixivWebSessionNotConnected: String { text("Not connected") }
     static var pixivWebSessionNoCookies: String { text("No Pixiv Web cookies were found yet. Sign in on the page first, then save again.") }
     static var pixivWebSessionConnectionFailed: String { text("Pixiv Web session connection failed.") }
     static var pixivWebSessionMissingLoginCookie: String { text("Pixiv Web login cookie was not found. Sign in on Pixiv Web first.") }
-    static var pixivWebSessionNotSignedIn: String { text("Pixiv Web did not report a signed-in session. Sign in on the page first, then save again.") }
+    static var pixivWebSessionNotSignedIn: String { text("Pixiv Web did not open the signed-in activity page. Sign in on the page first, then save again.") }
     static var editProfileOnPixiv: String { text("Edit Profile on Pixiv") }
     static var enable: String { text("Enable") }
     static var disable: String { text("Disable") }

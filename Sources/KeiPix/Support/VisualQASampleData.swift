@@ -1246,7 +1246,7 @@ extension KeiPixStore {
             ]
         )
         pixivActivityItems = VisualQASampleData.pixivActivityItems
-        pixivActivityNextPage = 2
+        pixivActivityNextPage = URL(string: "https://www.pixiv.net/stacc/my/home/all/all/21830200000/.json?mode=stream&tt=visual-qa")
         pixivActivityLoadedAt = Date()
         pixivActivityLoadedInCurrentSession = true
         pixivActivityErrorMessage = nil

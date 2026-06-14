@@ -17,16 +17,7 @@ extension KeiPixStore {
         }
         guard usesLocalSampleAccount == false else { return }
 
-        guard pixivWebSession?.isUsable == true else {
-            pixivActivityItems = []
-            pixivActivityNextPage = nil
-            pixivActivityLoadedAt = nil
-            pixivActivityLoadedInCurrentSession = false
-            pixivActivityErrorMessage = L10n.pixivActivityWebSessionRequiredHint
-            isLoadingPixivActivityFeed = false
-            isLoadingMorePixivActivityFeed = false
-            return
-        }
+        guard await syncUsablePixivActivityWebSessionIfNeeded(replacing: true) else { return }
 
         let shouldRefresh = force || routeSwitchRefreshExpiration.shouldRefresh(
             hasReusableContent: pixivActivityItems.isEmpty == false,
@@ -49,9 +40,9 @@ extension KeiPixStore {
         } catch let error as URLError where error.code == .cancelled {
             pixivActivityErrorMessage = nil
         } catch PixivAPIError.missingSession {
-            pixivActivityItems = []
-            pixivActivityNextPage = nil
-            pixivActivityErrorMessage = L10n.pixivActivityWebSessionRequiredHint
+            await clearPixivActivityWebSessionAfterFailure()
+        } catch let PixivAPIError.status(code, _) where [400, 401, 403].contains(code) {
+            await clearPixivActivityWebSessionAfterFailure()
         } catch {
             pixivActivityItems = []
             pixivActivityNextPage = nil
@@ -62,10 +53,13 @@ extension KeiPixStore {
     func loadMorePixivActivityFeed() async {
         guard session != nil,
               usesLocalSampleAccount == false,
-              pixivWebSession?.isUsable == true,
               let nextPage = pixivActivityNextPage,
               isLoadingPixivActivityFeed == false,
               isLoadingMorePixivActivityFeed == false else {
+            return
+        }
+        guard await syncUsablePixivActivityWebSessionIfNeeded(replacing: false) else {
+            pixivActivityNextPage = nil
             return
         }
 
@@ -74,15 +68,16 @@ extension KeiPixStore {
         defer { isLoadingMorePixivActivityFeed = false }
 
         do {
-            let page = try await api.pixivActivityFeedPage(page: nextPage)
+            let page = try await api.nextPixivActivityFeedPage(nextPage)
             applyPixivActivityPage(page, replacing: false)
         } catch is CancellationError {
             pixivActivityErrorMessage = nil
         } catch let error as URLError where error.code == .cancelled {
             pixivActivityErrorMessage = nil
         } catch PixivAPIError.missingSession {
-            pixivActivityNextPage = nil
-            pixivActivityErrorMessage = L10n.pixivActivityWebSessionRequiredHint
+            await clearPixivActivityWebSessionAfterFailure()
+        } catch let PixivAPIError.status(code, _) where [400, 401, 403].contains(code) {
+            await clearPixivActivityWebSessionAfterFailure()
         } catch {
             pixivActivityErrorMessage = error.localizedDescription
         }
@@ -98,8 +93,39 @@ extension KeiPixStore {
         isLoadingMorePixivActivityFeed = false
     }
 
+    private func syncUsablePixivActivityWebSessionIfNeeded(replacing: Bool) async -> Bool {
+        if pixivWebSession?.isUsable != true {
+            pixivWebSession = await api.currentWebSession()
+        }
+        guard pixivWebSession?.isUsable == true else {
+            markPixivActivityWebSessionRequired(replacing: replacing)
+            return false
+        }
+        return true
+    }
+
+    private func markPixivActivityWebSessionRequired(replacing: Bool) {
+        if replacing {
+            pixivActivityItems = []
+            pixivActivityLoadedAt = nil
+            pixivActivityLoadedInCurrentSession = false
+        }
+        pixivActivityNextPage = nil
+        pixivActivityErrorMessage = L10n.pixivActivityWebSessionRequiredHint
+        isLoadingPixivActivityFeed = false
+        isLoadingMorePixivActivityFeed = false
+    }
+
+    private func clearPixivActivityWebSessionAfterFailure() async {
+        if let userID = session?.user.id {
+            try? await api.clearPixivWebSession(userID: userID)
+        }
+        pixivWebSession = nil
+        markPixivActivityWebSessionRequired(replacing: true)
+    }
+
     private func applyPixivActivityPage(_ page: PixivActivityPage, replacing: Bool) {
-        pixivActivityNextPage = Self.pixivActivityPageNumber(from: page.nextURL)
+        pixivActivityNextPage = page.nextURL
         pixivActivityLoadedAt = Date()
         pixivActivityLoadedInCurrentSession = true
 
@@ -111,16 +137,5 @@ extension KeiPixStore {
         var seenIDs = Set(pixivActivityItems.map(\.id))
         let appendedItems = page.items.filter { seenIDs.insert($0.id).inserted }
         pixivActivityItems.append(contentsOf: appendedItems)
-    }
-
-    private static func pixivActivityPageNumber(from url: URL?) -> Int? {
-        guard let url,
-              let components = URLComponents(url: url, resolvingAgainstBaseURL: true),
-              let page = components.queryItems?.first(where: { $0.name == "p" })?.value,
-              let pageNumber = Int(page),
-              pageNumber > 1 else {
-            return nil
-        }
-        return pageNumber
     }
 }

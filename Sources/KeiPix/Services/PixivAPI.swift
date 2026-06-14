@@ -20,6 +20,11 @@ enum PixivAPIError: LocalizedError {
 }
 
 actor PixivAPI {
+    private struct PixivWebPageResponse: Sendable {
+        let html: String
+        let finalURL: URL?
+    }
+
     private struct Endpoint {
         static let apiBase = URL(string: "https://app-api.pixiv.net")!
         static let oauthBase = URL(string: "https://oauth.secure.pixiv.net")!
@@ -108,49 +113,23 @@ actor PixivAPI {
             throw PixivAPIError.serverMessage(L10n.pixivWebSessionMissingLoginCookie)
         }
 
-        let url = URL(string: "/users/\(candidate.userID)/bookmarks/collections", relativeTo: Endpoint.webBase)!
-        var request = URLRequest(url: url)
-        request.httpMethod = "GET"
-        applyPixivWebPageHeaders(to: &request)
-        request.setValue(cookieHeader, forHTTPHeaderField: "Cookie")
-
-        let (data, response) = try await urlSession.data(for: request)
-        guard let httpResponse = response as? HTTPURLResponse,
-              (200..<300).contains(httpResponse.statusCode),
-              let html = String(data: data, encoding: .utf8) else {
+        guard let url = PixivWebURLBuilder.activityFeedURL() else {
             throw PixivAPIError.invalidResponse
         }
+        let response = try await fetchPixivWebPageResponse(
+            url: url,
+            cookieHeader: cookieHeader,
+            includeAuthorization: false
+        )
 
-        guard pixivWebPageLooksSignedIn(html, userID: candidate.userID) else {
+        guard PixivWebPageInspector.activityPageLooksAccessible(
+            html: response.html,
+            requestedURL: url,
+            finalURL: response.finalURL,
+            userID: candidate.userID
+        ) else {
             throw PixivAPIError.serverMessage(L10n.pixivWebSessionNotSignedIn)
         }
-    }
-
-    private func pixivWebPageLooksSignedIn(_ html: String, userID: String) -> Bool {
-        let signedInMarkers = [
-            #"href="/settings/profile""#,
-            #"href="/logout""#,
-            #""/settings/profile""#,
-            #""/logout""#
-        ]
-        if signedInMarkers.contains(where: html.contains) {
-            return true
-        }
-
-        let trimmedID = userID.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard trimmedID.isEmpty == false else { return false }
-        let accountContextMarkers = [
-            "pixiv.context",
-            "currentUser",
-            "userData"
-        ]
-        let accountIDMarkers = [
-            #""id":"\#(trimmedID)""#,
-            #""userId":"\#(trimmedID)""#,
-            #""user_id":"\#(trimmedID)""#
-        ]
-        return accountContextMarkers.contains(where: html.contains)
-            && accountIDMarkers.contains(where: html.contains)
     }
 
     func refreshCurrentSession() async throws -> PixivSession {
@@ -538,8 +517,65 @@ actor PixivAPI {
             throw PixivAPIError.invalidResponse
         }
 
-        let html = try await fetchPixivWebPage(url: url)
-        return PixivActivityFeedParser.parsePage(html, sourceURL: url)
+        let response = try await fetchPixivWebPageResponse(url: url)
+        let userID = session?.user.id ?? ""
+        let isAccessible = PixivWebPageInspector.activityPageLooksAccessible(
+            html: response.html,
+            requestedURL: url,
+            finalURL: response.finalURL,
+            userID: userID
+        )
+        guard isAccessible else {
+            KeiPixLog.network.notice(
+                "Pixiv activity Web session rejected: page=\(page, privacy: .public) finalHost=\(response.finalURL?.host(percentEncoded: false) ?? "nil", privacy: .public) finalPath=\(response.finalURL?.path ?? "nil", privacy: .public) bytes=\(response.html.utf8.count, privacy: .public)"
+            )
+            throw PixivAPIError.missingSession
+        }
+        let parsedPage = pixivActivityPage(from: response.html, sourceURL: url)
+        KeiPixLog.network.info(
+            "Pixiv activity Web page parsed: page=\(page, privacy: .public) source=\(self.pixivActivitySourceKind(response.html), privacy: .public) finalHost=\(response.finalURL?.host(percentEncoded: false) ?? "nil", privacy: .public) finalPath=\(response.finalURL?.path ?? "nil", privacy: .public) items=\(parsedPage.items.count, privacy: .public) bytes=\(response.html.utf8.count, privacy: .public)"
+        )
+        return parsedPage
+    }
+
+    func nextPixivActivityFeedPage(_ url: URL) async throws -> PixivActivityPage {
+        guard webSession?.isUsable == true else {
+            throw PixivAPIError.missingSession
+        }
+
+        let response = try await fetchPixivWebPageResponse(
+            url: url,
+            acceptHeader: "application/json"
+        )
+        if pixivActivitySourceKind(response.html) != "json",
+           let activityURL = PixivWebURLBuilder.activityFeedURL(),
+           PixivWebPageInspector.activityPageLooksAccessible(
+            html: response.html,
+            requestedURL: activityURL,
+            finalURL: response.finalURL,
+            userID: session?.user.id ?? ""
+           ) == false {
+            KeiPixLog.network.notice(
+                "Pixiv activity Web session rejected: source=html finalHost=\(response.finalURL?.host(percentEncoded: false) ?? "nil", privacy: .public) finalPath=\(response.finalURL?.path ?? "nil", privacy: .public) bytes=\(response.html.utf8.count, privacy: .public)"
+            )
+            throw PixivAPIError.missingSession
+        }
+        let parsedPage = pixivActivityPage(from: response.html, sourceURL: url)
+        KeiPixLog.network.info(
+            "Pixiv activity Web page parsed: source=\(self.pixivActivitySourceKind(response.html), privacy: .public) finalHost=\(response.finalURL?.host(percentEncoded: false) ?? "nil", privacy: .public) finalPath=\(response.finalURL?.path ?? "nil", privacy: .public) items=\(parsedPage.items.count, privacy: .public) bytes=\(response.html.utf8.count, privacy: .public)"
+        )
+        return parsedPage
+    }
+
+    private func pixivActivityPage(from text: String, sourceURL: URL) -> PixivActivityPage {
+        if text.trimmingCharacters(in: .whitespacesAndNewlines).hasPrefix("{") {
+            return PixivActivityFeedParser.parseJSONPage(text, sourceURL: sourceURL)
+        }
+        return PixivActivityFeedParser.parsePage(text, sourceURL: sourceURL)
+    }
+
+    private func pixivActivitySourceKind(_ text: String) -> String {
+        text.trimmingCharacters(in: .whitespacesAndNewlines).hasPrefix("{") ? "json" : "html"
     }
 
     func pixivCollectionDetail(id: String) async throws -> PixivCollectionDetail {
@@ -1789,13 +1825,25 @@ actor PixivAPI {
     /// Used by `NovelWebImageScraper` instead of `URLSession.shared`
     /// so that manual / system proxies are respected.
     func fetchPixivWebPage(url: URL) async throws -> String {
+        try await fetchPixivWebPageResponse(url: url).html
+    }
+
+    private func fetchPixivWebPageResponse(
+        url: URL,
+        cookieHeader overrideCookieHeader: String? = nil,
+        includeAuthorization: Bool = true,
+        acceptHeader: String? = nil
+    ) async throws -> PixivWebPageResponse {
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
         applyPixivWebPageHeaders(to: &request)
-        if let cookieHeader = webSession?.cookieHeader {
+        if let acceptHeader {
+            request.setValue(acceptHeader, forHTTPHeaderField: "Accept")
+        }
+        if let cookieHeader = overrideCookieHeader ?? webSession?.cookieHeader {
             request.setValue(cookieHeader, forHTTPHeaderField: "Cookie")
         }
-        if let token = session?.accessToken {
+        if includeAuthorization, let token = session?.accessToken {
             request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         }
 
@@ -1807,7 +1855,7 @@ actor PixivAPI {
         guard let html = String(data: data, encoding: .utf8) else {
             throw PixivAPIError.invalidResponse
         }
-        return html
+        return PixivWebPageResponse(html: html, finalURL: httpResponse.url)
     }
 
     private func applyHeaders(to request: inout URLRequest, includeAuth: Bool) {
