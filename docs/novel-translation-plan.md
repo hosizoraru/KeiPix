@@ -415,6 +415,11 @@ Evidence:
   `TranslationSession(installedSource:target:preferredStrategy: .lowLatency)`
   reported `canRequestDownloads=false`, `isReady=true`, and translated a
   Japanese test sentence after `prepareTranslation()`.
+- Current physical iPhone/iPad validation remains open because
+  `xcrun devicectl list devices` and `xcrun xctrace list devices` show the
+  paired iPhone 15 Pro and iPad Pro as unavailable/offline on this machine;
+  available iOS/iPadOS Simulator devices are not sufficient proof for Apple's
+  Translation runtime behavior.
 - The reader chrome now surfaces concise localized preparation/error feedback
   next to the translation control while leaving the native TextKit page
   rendering path unchanged.
