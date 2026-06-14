@@ -73,6 +73,7 @@ struct PixivActivityFeedView: View {
                 if effectiveActivityLayoutMode.usesMasonry {
                     AnyView(PixivActivityMasonryCard(
                         item: item,
+                        isNew: store.pixivActivityNewItemIDs.contains(item.id),
                         openActivityActor: { openActivityActor(item.actor) },
                         openWorkAuthor: { openActivityActor(item.target?.author) },
                         openWork: { openWork(for: item) },
@@ -81,6 +82,7 @@ struct PixivActivityFeedView: View {
                 } else {
                     AnyView(PixivActivityRow(
                         item: item,
+                        isNew: store.pixivActivityNewItemIDs.contains(item.id),
                         openActivityActor: { openActivityActor(item.actor) },
                         openWorkAuthor: { openActivityActor(item.target?.author) },
                         openWork: { openWork(for: item) },
@@ -172,12 +174,16 @@ struct PixivActivityFeedView: View {
     }
 
     private func refresh() async {
-        await store.refreshPixivActivityFeed(force: true)
+        let activityRefreshResult = await store.refreshPixivActivityFeed(force: true)
         if store.pixivActivityErrorMessage == nil, store.pixivActivityItems.isEmpty == false {
-            showActionMessage(String(
-                format: L10n.pixivActivityRefreshedFormat,
-                store.pixivActivityItems.count
-            ))
+            if activityRefreshResult.newItemCount > 0 {
+                showActionMessage(String(
+                    format: L10n.pixivActivityNewItemsFormat,
+                    activityRefreshResult.newItemCount
+                ))
+            } else {
+                showActionMessage(L10n.pixivActivityNoNewItems)
+            }
         }
     }
 
@@ -295,6 +301,7 @@ private enum PixivActivityDetailSheet: Identifiable {
 
 private struct PixivActivityRow: View {
     let item: PixivActivityItem
+    let isNew: Bool
     let openActivityActor: () -> Void
     let openWorkAuthor: () -> Void
     let openWork: () -> Void
@@ -306,7 +313,7 @@ private struct PixivActivityRow: View {
                 thumbnail
             }
             .buttonStyle(.plain)
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .frame(width: 74, height: 74)
 
             VStack(alignment: .leading, spacing: 7) {
                 HStack(alignment: .firstTextBaseline, spacing: 7) {
@@ -322,13 +329,6 @@ private struct PixivActivityRow: View {
                         .font(.caption.weight(.semibold))
                         .foregroundStyle(item.kind.tint)
                         .lineLimit(1)
-
-                    if let occurredAt = item.occurredAt {
-                        Text(PixivActivityFeedPresentation.compactTimeText(for: occurredAt))
-                            .font(.caption)
-                            .foregroundStyle(.tertiary)
-                            .lineLimit(1)
-                    }
                 }
 
                 Button(action: openWork) {
@@ -371,19 +371,50 @@ private struct PixivActivityRow: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
 
-            Spacer(minLength: 0)
-
-            Image(systemName: "chevron.right")
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(.tertiary)
-                .padding(.top, 8)
+            activityStatusColumn
         }
         .padding(12)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .contentShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         .keiGlass(18)
         .accessibilityLabel(accessibilityTitle)
+    }
+
+    private var activityStatusColumn: some View {
+        VStack(alignment: .trailing, spacing: 6) {
+            if isNew {
+                newActivityBadge
+            }
+
+            if let occurredAt = item.occurredAt {
+                Text(PixivActivityFeedPresentation.compactTimeText(for: occurredAt))
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
+                    .lineLimit(1)
+                    .fixedSize(horizontal: true, vertical: false)
+            }
+
+            Image(systemName: "chevron.right")
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.tertiary)
+                .padding(.top, 2)
+        }
+        .frame(minWidth: 54, alignment: .topTrailing)
+    }
+
+    private var newActivityBadge: some View {
+        Text(L10n.pixivActivityNewBadge)
+            .font(.caption2.weight(.bold))
+            .foregroundStyle(.white)
+            .textCase(.uppercase)
+            .lineLimit(1)
+            .fixedSize(horizontal: true, vertical: false)
+            .padding(.horizontal, 6)
+            .padding(.vertical, 3)
+            .background(.blue, in: Capsule())
+            .accessibilityLabel(L10n.pixivActivityNewBadge)
     }
 
     private var activityActorTitle: String {
@@ -423,12 +454,16 @@ private struct PixivActivityRow: View {
     }
 
     private var accessibilityTitle: String {
-        "\(item.kind.title), \(primaryTitle)"
+        if isNew {
+            return "\(L10n.pixivActivityNewBadge), \(item.kind.title), \(primaryTitle)"
+        }
+        return "\(item.kind.title), \(primaryTitle)"
     }
 }
 
 private struct PixivActivityMasonryCard: View {
     let item: PixivActivityItem
+    let isNew: Bool
     let openActivityActor: () -> Void
     let openWorkAuthor: () -> Void
     let openWork: () -> Void
@@ -459,7 +494,10 @@ private struct PixivActivityMasonryCard: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
                 .padding(9)
 
-            metadataOverlay
+            topTrailingNewBadge
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
+
+            bottomMetadataOverlay
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
                 .padding(11)
         }
@@ -468,6 +506,14 @@ private struct PixivActivityMasonryCard: View {
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         .keiGlass(18)
         .accessibilityLabel(accessibilityTitle)
+    }
+
+    @ViewBuilder
+    private var topTrailingNewBadge: some View {
+        if isNew {
+            newActivityBadge
+                .padding(9)
+        }
     }
 
     @ViewBuilder
@@ -525,6 +571,14 @@ private struct PixivActivityMasonryCard: View {
             .frame(maxWidth: .infinity, alignment: .leading)
 
             eventBadge
+        }
+        .padding(.trailing, isNew ? 54 : 0)
+    }
+
+    private var bottomMetadataOverlay: some View {
+        HStack(alignment: .bottom, spacing: 8) {
+            metadataOverlay
+                .frame(maxWidth: .infinity, alignment: .leading)
 
             if let occurredAt = item.occurredAt {
                 Text(PixivActivityFeedPresentation.compactTimeText(for: occurredAt))
@@ -537,6 +591,19 @@ private struct PixivActivityMasonryCard: View {
                     .background(.black.opacity(0.30), in: Capsule())
             }
         }
+    }
+
+    private var newActivityBadge: some View {
+        Text(L10n.pixivActivityNewBadge)
+            .font(.caption2.weight(.bold))
+            .foregroundStyle(.white)
+            .textCase(.uppercase)
+            .lineLimit(1)
+            .fixedSize(horizontal: true, vertical: false)
+            .padding(.horizontal, 7)
+            .padding(.vertical, 4)
+            .background(.blue.opacity(0.88), in: Capsule())
+            .accessibilityLabel(L10n.pixivActivityNewBadge)
     }
 
     private var metadataOverlay: some View {
@@ -587,7 +654,10 @@ private struct PixivActivityMasonryCard: View {
     }
 
     private var accessibilityTitle: String {
-        "\(item.kind.title), \(primaryTitle)"
+        if isNew {
+            return "\(L10n.pixivActivityNewBadge), \(item.kind.title), \(primaryTitle)"
+        }
+        return "\(item.kind.title), \(primaryTitle)"
     }
 
     private var workTitle: String {

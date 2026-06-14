@@ -1236,6 +1236,7 @@ extension KeiPixStore {
         artworks = []
         searchPopularPreviewArtworks = []
         nextURL = nil
+        pixivActivityFeedScope = .all
         pixivWebSession = PixivWebSession(
             userID: String(VisualQASampleData.sampleSession.user.id),
             connectedAt: Date(),
@@ -1251,9 +1252,17 @@ extension KeiPixStore {
             ]
         )
         pixivActivityItems = VisualQASampleData.pixivActivityItems
+        pixivActivityNewItemIDs = ["visual-activity-posted-1"]
+        pixivActivityLastRefreshNewCount = 1
+        pixivActivityLastRefreshNewItemIDs = ["visual-activity-posted-1"]
+        pixivActivityItemsByScope = [.all: pixivActivityItems]
+        pixivActivityNewMarkerDatesByScope = [.all: ["visual-activity-posted-1": Date()]]
         pixivActivityNextPage = URL(string: "https://www.pixiv.net/stacc/my/home/all/all/21830200000/.json?mode=stream&tt=visual-qa")
+        pixivActivityNextPageByScope = [.all: pixivActivityNextPage].compactMapValues { $0 }
         pixivActivityLoadedAt = Date()
+        pixivActivityLoadedAtByScope = [.all: pixivActivityLoadedAt].compactMapValues { $0 }
         pixivActivityLoadedInCurrentSession = true
+        pixivActivityLoadedInCurrentSessionScopes = [.all]
         pixivActivityErrorMessage = nil
         isLoadingPixivActivityFeed = false
         isLoadingMorePixivActivityFeed = false

@@ -130,6 +130,10 @@ struct ContentView: View {
                     .labelStyle(.iconOnly)
                     .help(L10n.galleryLayout)
                 }
+
+                if store.selectedRoute == .pixivActivity {
+                    pixivActivityDisplayMenu
+                }
             }
 
             ToolbarSpacer(.fixed, placement: .primaryAction)
@@ -827,6 +831,37 @@ struct ContentView: View {
         } set: { value in
             store.setGalleryLayoutMode(value)
         }
+    }
+
+    private var activityFeedScopeBinding: Binding<PixivActivityFeedScope> {
+        Binding {
+            store.pixivActivityFeedScope
+        } set: { scope in
+            guard store.pixivActivityFeedScope != scope else { return }
+            store.setPixivActivityFeedScope(scope)
+            Task { await store.refreshPixivActivityFeed() }
+        }
+    }
+
+    private var pixivActivityDisplayMenu: some View {
+        Menu {
+            Menu {
+                Picker(L10n.pixivActivityFeedScope, selection: activityFeedScopeBinding) {
+                    ForEach(PixivActivityFeedScope.allCases) { scope in
+                        Label(scope.title, systemImage: scope.systemImage)
+                            .tag(scope)
+                    }
+                }
+                .pickerStyle(.inline)
+            } label: {
+                Label(L10n.pixivActivityFeedScope, systemImage: store.pixivActivityFeedScope.systemImage)
+            }
+        } label: {
+            Label(store.pixivActivityFeedScope.title, systemImage: store.pixivActivityFeedScope.systemImage)
+        }
+        .labelStyle(.iconOnly)
+        .help(L10n.pixivActivityDisplay)
+        .accessibilityLabel(L10n.pixivActivityDisplay)
     }
 
     private var showContentBadgesBinding: Binding<Bool> {

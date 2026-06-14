@@ -571,11 +571,11 @@ struct ContentView: View {
                     }
 
                     ToolbarItem(placement: .primaryAction) {
-                        if showsPixivActivityLayoutPicker(showsSidebarToggle: showsSidebarToggle) {
+                        if showsPixivActivityDisplayPicker(showsSidebarToggle: showsSidebarToggle) {
                             NativeToolbarMenuButton(
-                                systemImage: store.pixivActivityLayoutMode.systemImage,
-                                accessibilityLabel: L10n.pixivActivityLayout,
-                                menu: pixivActivityLayoutMenu,
+                                systemImage: store.pixivActivityFeedScope.systemImage,
+                                accessibilityLabel: L10n.pixivActivityDisplay,
+                                menu: pixivActivityDisplayMenu,
                                 select: { handleNativeToolbarMenuAction($0, showsSidebarToggle: showsSidebarToggle) }
                             )
                             .fixedSize(horizontal: true, vertical: false)
@@ -997,10 +997,8 @@ struct ContentView: View {
         showsSidebarToggle && store.selectedRoute.usesArtworkFeed
     }
 
-    private func showsPixivActivityLayoutPicker(showsSidebarToggle: Bool) -> Bool {
-        currentMobilePlatform == .phone
-            && showsSidebarToggle == false
-            && store.selectedRoute == .pixivActivity
+    private func showsPixivActivityDisplayPicker(showsSidebarToggle: Bool) -> Bool {
+        store.selectedRoute == .pixivActivity
     }
 
     private func showsRefreshToolbarButton(showsSidebarToggle: Bool) -> Bool {
@@ -1079,12 +1077,30 @@ struct ContentView: View {
         )
     }
 
-    private var pixivActivityLayoutMenu: NativeToolbarMenu {
-        NativeToolbarMenu(
-            title: L10n.pixivActivityLayout,
-            sections: [
-                NativeToolbarMenuSection(
-                    presentation: .palette,
+    private var pixivActivityDisplayMenu: NativeToolbarMenu {
+        var displayItems: [NativeToolbarMenuItem] = [
+            .submenu(
+                title: L10n.pixivActivityFeedScope,
+                subtitle: store.pixivActivityFeedScope.title,
+                systemImage: store.pixivActivityFeedScope.systemImage,
+                presentation: .singleSelection,
+                items: PixivActivityFeedScope.allCases.map { scope in
+                    .action(
+                        id: IPadToolbarMenuAction.pixivActivityScope(scope),
+                        title: scope.title,
+                        systemImage: scope.systemImage,
+                        isSelected: store.pixivActivityFeedScope == scope
+                    )
+                }
+            )
+        ]
+        if currentMobilePlatform == .phone {
+            displayItems.append(
+                .submenu(
+                    title: L10n.pixivActivityLayout,
+                    subtitle: store.pixivActivityLayoutMode.title,
+                    systemImage: store.pixivActivityLayoutMode.systemImage,
+                    presentation: .singleSelection,
                     items: PixivActivityLayoutMode.allCases.map { mode in
                         .action(
                             id: IPadToolbarMenuAction.pixivActivityLayout(mode),
@@ -1093,6 +1109,15 @@ struct ContentView: View {
                             isSelected: store.pixivActivityLayoutMode == mode
                         )
                     }
+                )
+            )
+        }
+        return NativeToolbarMenu(
+            title: L10n.pixivActivityDisplay,
+            sections: [
+                NativeToolbarMenuSection(
+                    presentation: .root,
+                    items: displayItems
                 )
             ]
         )
@@ -1309,6 +1334,11 @@ struct ContentView: View {
         }
         if let mode = IPadToolbarMenuAction.pixivActivityLayoutMode(from: id) {
             store.setPixivActivityLayoutMode(mode)
+            return
+        }
+        if let scope = IPadToolbarMenuAction.pixivActivityFeedScope(from: id) {
+            store.setPixivActivityFeedScope(scope)
+            Task { await store.refreshPixivActivityFeed() }
             return
         }
         if let route = IPadToolbarMenuAction.route(from: id) {
@@ -2190,6 +2220,7 @@ private enum IPadToolbarMenuAction {
 
     private static let galleryLayoutPrefix = "gallery-layout:"
     private static let pixivActivityLayoutPrefix = "pixiv-activity-layout:"
+    private static let pixivActivityScopePrefix = "pixiv-activity-scope:"
     private static let routePrefix = "route:"
 
     static func galleryLayout(_ mode: GalleryLayoutMode) -> String {
@@ -2210,6 +2241,16 @@ private enum IPadToolbarMenuAction {
         guard id.hasPrefix(pixivActivityLayoutPrefix) else { return nil }
         let rawValue = String(id.dropFirst(pixivActivityLayoutPrefix.count))
         return PixivActivityLayoutMode(rawValue: rawValue)
+    }
+
+    static func pixivActivityScope(_ scope: PixivActivityFeedScope) -> String {
+        pixivActivityScopePrefix + scope.rawValue
+    }
+
+    static func pixivActivityFeedScope(from id: String) -> PixivActivityFeedScope? {
+        guard id.hasPrefix(pixivActivityScopePrefix) else { return nil }
+        let rawValue = String(id.dropFirst(pixivActivityScopePrefix.count))
+        return PixivActivityFeedScope(rawValue: rawValue)
     }
 
     static func route(_ route: PixivRoute) -> String {

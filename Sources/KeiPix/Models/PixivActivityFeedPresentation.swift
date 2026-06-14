@@ -50,7 +50,7 @@ enum PixivActivityFeedScope: String, CaseIterable, Identifiable, Codable, Sendab
         case .all: "bolt.horizontal.circle"
         case .everyone: "globe.asia.australia"
         case .followingUsers: "person.2"
-        case .myPixiv: "person.2.badge.key"
+        case .myPixiv: "person.2.crop.square.stack"
         case .mine: "person.crop.circle"
         }
     }
