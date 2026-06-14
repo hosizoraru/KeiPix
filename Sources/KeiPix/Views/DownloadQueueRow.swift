@@ -17,82 +17,13 @@ struct DownloadQueueRow: View {
     let cancel: () -> Void
     let delete: () -> Void
 
+    #if os(iOS)
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    #endif
+
     var body: some View {
-        HStack(spacing: 12) {
-            statusIcon
-                .frame(width: 28, height: 28)
-
-            VStack(alignment: .leading, spacing: 6) {
-                HStack(alignment: .firstTextBaseline, spacing: 8) {
-                    Text(item.title)
-                        .font(.headline)
-                        .lineLimit(1)
-
-                    Text(item.status.title)
-                        .font(.caption.weight(.semibold))
-                        .padding(.horizontal, 7)
-                        .padding(.vertical, 3)
-                        .keiGlass(10)
-
-                    Text(item.resolvedArtifactKind.title)
-                        .font(.caption.weight(.medium))
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
-                }
-
-                Text(item.creatorName)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-
-                ProgressView(value: item.progress)
-                    .opacity(item.status == .completed ? 0.55 : 1)
-
-                HStack(spacing: 8) {
-                    Text(item.progressLabel)
-                    if let sourcePageLabel = item.sourcePageLabel {
-                        Text(sourcePageLabel)
-                    }
-                    if let queuedAfter = item.queuedAfter, queuedAfter > Date() {
-                        Text(String(
-                            format: L10n.retryScheduledFormat,
-                            queuedAfter.formatted(date: .omitted, time: .standard)
-                        ))
-                    }
-                    if let downloadedSize = downloads.downloadedSizeText(for: item) {
-                        Text(downloadedSize)
-                    }
-                    // Live byte/sec badge, monospaced so the digits
-                    // don't reflow as the rate changes. Renders only
-                    // when the row is .downloading and the sampler
-                    // has fresh samples.
-                    if let throughput = downloads.throughputText(for: item) {
-                        Text(throughput)
-                            .font(.caption2.monospacedDigit())
-                            .foregroundStyle(.tint)
-                    }
-                    if let errorMessage = item.errorMessage {
-                        Text(errorMessage)
-                            .foregroundStyle(.red)
-                    } else if let folderPath = item.folderPath {
-                        #if os(macOS)
-                        Text(folderPath)
-                            .truncationMode(.middle)
-                        #else
-                        Text(item.resolvedArtifactKind == .imagePages ? L10n.savedToPhotos : L10n.privateAppCache)
-                        #endif
-                    }
-                }
-                .font(.caption2)
-                .foregroundStyle(.secondary)
-                .lineLimit(1)
-            }
-
-            Spacer(minLength: 10)
-
-            actionRail
-        }
-        .padding(12)
+        rowLayout
+        .padding(usesPhoneLayout ? 10 : 12)
         .keiInteractiveGlass(18)
         // Subtle accent ring on the focused row so users can see which
         // entry the space bar will preview. Mirrors how Finder's list
@@ -105,207 +36,91 @@ struct DownloadQueueRow: View {
         }
         .modifier(DownloadRowDraggableModifier(fileURL: draggableFileURL))
         .contextMenu {
-            if item.status == .failed {
-                Button(L10n.retry) {
-                    retry()
-                }
-                .disabled(item.sourceImageURLs?.isEmpty != false)
-            }
-            Button(L10n.quickLook) {
-                quickLook()
-            }
-            .disabled(canOpen == false)
-            #if os(macOS)
-            Button(L10n.revealInFinder) {
-                reveal()
-            }
-            #endif
-            if let pixivURL = item.pixivURL {
-                Button(L10n.openInPixiv) {
-                    PlatformWorkspace.open(pixivURL)
-                }
-                Button(L10n.copyLink) {
-                    PasteboardWriter.copy(pixivURL.absoluteString)
-                    copied()
-                }
-            }
-            if item.status == .queued || item.status == .downloading {
-                Button(role: .destructive, action: cancel) {
-                    Text(L10n.cancelDownload)
-                }
-            }
-            Button(role: .destructive, action: delete) {
-                Text(L10n.deleteDownload)
-            }
-            .disabled(item.status == .downloading)
+            contextMenuContent
         }
-    }
-
-    private var actionRail: some View {
-        GlassEffectContainer(spacing: 8) {
-            ViewThatFits(in: .horizontal) {
-                expandedActionRail
-                compactActionRail
-            }
-        }
-    }
-
-    private var expandedActionRail: some View {
-        HStack(spacing: 8) {
-            if item.status == .failed {
-                retryButton
-            }
-
-            if item.status == .queued || item.status == .downloading {
-                cancelButton
-            }
-
-            openButton
-            quickLookButton
-            #if os(macOS)
-            revealButton
-            #endif
-            moreMenu
-        }
-    }
-
-    private var compactActionRail: some View {
-        HStack(spacing: 8) {
-            if item.status == .failed {
-                retryButton
-            } else if item.status == .queued || item.status == .downloading {
-                cancelButton
-            }
-
-            openButton
-            moreMenu
-        }
-    }
-
-    private var retryButton: some View {
-        Button {
-            retry()
-        } label: {
-            Label(L10n.retry, systemImage: "arrow.clockwise")
-        }
-        .os26GlassIconButton()
-        .disabled(item.sourceImageURLs?.isEmpty != false)
-        .help(L10n.retry)
-    }
-
-    private var cancelButton: some View {
-        Button {
-            cancel()
-        } label: {
-            Label(L10n.cancelDownload, systemImage: "xmark.circle")
-        }
-        .os26GlassIconButton()
-        .help(L10n.cancelDownload)
-    }
-
-    private var openButton: some View {
-        Button {
-            open()
-        } label: {
-            Label(L10n.openDownloadedArtwork, systemImage: "book")
-        }
-        .os26GlassIconButton(prominent: true)
-        .disabled(canOpen == false)
-        .help(L10n.openDownloadedArtwork)
-    }
-
-    private var quickLookButton: some View {
-        // Quick Look — same affordance Finder hands to a selected file
-        // via the space bar. The shortcut is wired at the row level so
-        // multiple rendered buttons do not fight over one accelerator.
-        Button {
-            quickLook()
-        } label: {
-            Label(L10n.quickLook, systemImage: "eye")
-        }
-        .os26GlassIconButton()
-        .disabled(canOpen == false)
-        .help(L10n.quickLookHint)
-    }
-
-    private var revealButton: some View {
-        Button {
-            reveal()
-        } label: {
-            Label(L10n.revealInFinder, systemImage: "folder")
-        }
-        .os26GlassIconButton()
-        .help(L10n.revealInFinder)
-    }
-
-    private var moreMenu: some View {
-        Menu {
-            if let pixivURL = item.pixivURL {
-                Button {
-                    PlatformWorkspace.open(pixivURL)
-                } label: {
-                    Label(L10n.openInPixiv, systemImage: "safari")
-                }
-
-                Button {
-                    PasteboardWriter.copy(pixivURL.absoluteString)
-                    copied()
-                } label: {
-                    Label(L10n.copyLink, systemImage: "link")
-                }
-            }
-
-            Button {
-                quickLook()
-            } label: {
-                Label(L10n.quickLook, systemImage: "eye")
-            }
-            .disabled(canOpen == false)
-
-            #if os(macOS)
-            Button {
-                reveal()
-            } label: {
-                Label(L10n.revealInFinder, systemImage: "folder")
-            }
-            #endif
-
-            Divider()
-
-            if item.status == .queued || item.status == .downloading {
-                Button(role: .destructive, action: cancel) {
-                    Label(L10n.cancelDownload, systemImage: "xmark.circle")
-                }
-            }
-
-            Button(role: .destructive, action: delete) {
-                Label(L10n.deleteDownload, systemImage: "trash")
-            }
-            .disabled(item.status == .downloading)
-        } label: {
-            Label(L10n.moreActions, systemImage: "ellipsis.circle")
-        }
-        .os26GlassIconButton()
-        .help(L10n.moreActions)
     }
 
     @ViewBuilder
-    private var statusIcon: some View {
-        switch item.status {
-        case .queued:
-            Image(systemName: "clock")
-                .foregroundStyle(.secondary)
-        case .downloading:
-            Image(systemName: "arrow.down.circle.fill")
-                .symbolRenderingMode(.hierarchical)
-                .foregroundStyle(.tint)
-        case .completed:
-            Image(systemName: "checkmark.circle.fill")
-                .foregroundStyle(.green)
-        case .failed:
-            Image(systemName: "exclamationmark.triangle.fill")
-                .foregroundStyle(.orange)
+    private var rowLayout: some View {
+        if usesPhoneLayout {
+            phoneLayout
+        } else {
+            regularLayout
         }
+    }
+
+    private var phoneLayout: some View {
+        PhoneDownloadQueueRowLayout(
+            item: item,
+            downloads: downloads,
+            canOpen: canOpen,
+            open: open,
+            retry: retry,
+            quickLook: quickLook,
+            copied: copied,
+            cancel: cancel,
+            delete: delete
+        )
+    }
+
+    private var regularLayout: some View {
+        RegularDownloadQueueRowLayout(
+            item: item,
+            downloads: downloads,
+            canOpen: canOpen,
+            open: open,
+            retry: retry,
+            reveal: reveal,
+            quickLook: quickLook,
+            copied: copied,
+            cancel: cancel,
+            delete: delete
+        )
+    }
+
+    private var usesPhoneLayout: Bool {
+        #if os(iOS)
+        horizontalSizeClass == .compact
+        #else
+        false
+        #endif
+    }
+
+    @ViewBuilder
+    private var contextMenuContent: some View {
+        if item.status == .failed {
+            Button(L10n.retry) {
+                retry()
+            }
+            .disabled(item.sourceImageURLs?.isEmpty != false)
+        }
+        Button(L10n.quickLook) {
+            quickLook()
+        }
+        .disabled(canOpen == false)
+        #if os(macOS)
+        Button(L10n.revealInFinder) {
+            reveal()
+        }
+        #endif
+        if let pixivURL = item.pixivURL {
+            Button(L10n.openInPixiv) {
+                PlatformWorkspace.open(pixivURL)
+            }
+            Button(L10n.copyLink) {
+                PasteboardWriter.copy(pixivURL.absoluteString)
+                copied()
+            }
+        }
+        if item.status == .queued || item.status == .downloading {
+            Button(role: .destructive, action: cancel) {
+                Text(L10n.cancelDownload)
+            }
+        }
+        Button(role: .destructive, action: delete) {
+            Text(L10n.deleteDownload)
+        }
+        .disabled(item.status == .downloading)
     }
 
     /// File URL that should be promised to Finder when the user starts
@@ -335,6 +150,526 @@ struct DownloadQueueRow: View {
             let url = URL(fileURLWithPath: filePath, isDirectory: false)
             return downloads.fileManager.fileExists(atPath: url.path(percentEncoded: false)) ? url : nil
         }
+    }
+}
+
+private struct RegularDownloadQueueRowLayout: View {
+    let item: ArtworkDownloadItem
+    let downloads: ArtworkDownloadStore
+    let canOpen: Bool
+    let open: () -> Void
+    let retry: () -> Void
+    let reveal: () -> Void
+    let quickLook: () -> Void
+    let copied: () -> Void
+    let cancel: () -> Void
+    let delete: () -> Void
+
+    var body: some View {
+        HStack(spacing: 12) {
+            DownloadQueueStatusIcon(status: item.status)
+                .frame(width: 28, height: 28)
+
+            VStack(alignment: .leading, spacing: 6) {
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                    Text(item.title)
+                        .font(.headline)
+                        .lineLimit(1)
+
+                    DownloadQueueStatusBadge(status: item.status)
+
+                    Text(item.resolvedArtifactKind.title)
+                        .font(.caption.weight(.medium))
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                }
+
+                Text(item.creatorName)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+
+                ProgressView(value: item.progress)
+                    .opacity(item.status == .completed ? 0.55 : 1)
+
+                DownloadQueueMetadataFlow(
+                    item: item,
+                    downloads: downloads,
+                    includesStateBadges: false
+                )
+            }
+
+            Spacer(minLength: 10)
+
+            DownloadQueueRegularActionRail(
+                item: item,
+                canOpen: canOpen,
+                open: open,
+                retry: retry,
+                reveal: reveal,
+                quickLook: quickLook,
+                copied: copied,
+                cancel: cancel,
+                delete: delete
+            )
+        }
+    }
+}
+
+private struct PhoneDownloadQueueRowLayout: View {
+    let item: ArtworkDownloadItem
+    let downloads: ArtworkDownloadStore
+    let canOpen: Bool
+    let open: () -> Void
+    let retry: () -> Void
+    let quickLook: () -> Void
+    let copied: () -> Void
+    let cancel: () -> Void
+    let delete: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(alignment: .top, spacing: 10) {
+                DownloadQueueStatusIcon(status: item.status)
+                    .font(.title3)
+                    .frame(width: 24, height: 24)
+                    .padding(.top, 1)
+
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(item.title)
+                        .font(.callout.weight(.semibold))
+                        .lineLimit(2)
+                        .minimumScaleFactor(0.88)
+                        .fixedSize(horizontal: false, vertical: true)
+
+                    Text(item.creatorName)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                }
+
+                Spacer(minLength: 0)
+            }
+
+            ProgressView(value: item.progress)
+                .opacity(item.status == .completed ? 0.55 : 1)
+
+            DownloadQueueMetadataFlow(
+                item: item,
+                downloads: downloads,
+                includesStateBadges: true
+            )
+
+            DownloadQueuePhoneActionBar(
+                item: item,
+                canOpen: canOpen,
+                open: open,
+                retry: retry,
+                quickLook: quickLook,
+                copied: copied,
+                cancel: cancel,
+                delete: delete
+            )
+        }
+    }
+}
+
+private struct DownloadQueueMetadataFlow: View {
+    let item: ArtworkDownloadItem
+    let downloads: ArtworkDownloadStore
+    let includesStateBadges: Bool
+
+    var body: some View {
+        FlowLayout(spacing: 6) {
+            if includesStateBadges {
+                DownloadQueueStatusBadge(status: item.status)
+                DownloadQueueMetadataChip(
+                    item.resolvedArtifactKind.title,
+                    systemImage: item.resolvedArtifactKind == .ugoiraZip ? "film.stack" : "photo.stack"
+                )
+            }
+
+            DownloadQueueMetadataChip(item.progressLabel, systemImage: "chart.line.uptrend.xyaxis")
+
+            if let sourcePageLabel = item.sourcePageLabel {
+                DownloadQueueMetadataChip(sourcePageLabel, systemImage: "square.stack.3d.up")
+            }
+
+            if let queuedAfter = item.queuedAfter, queuedAfter > Date() {
+                DownloadQueueMetadataChip(
+                    String(
+                        format: L10n.retryScheduledFormat,
+                        queuedAfter.formatted(date: .omitted, time: .standard)
+                    ),
+                    systemImage: "timer"
+                )
+            }
+
+            if let downloadedSize = downloads.downloadedSizeText(for: item) {
+                DownloadQueueMetadataChip(downloadedSize, systemImage: "externaldrive")
+            }
+
+            if let throughput = downloads.throughputText(for: item) {
+                DownloadQueueMetadataChip(
+                    throughput,
+                    systemImage: "speedometer",
+                    tone: .accent,
+                    usesMonospacedDigits: true
+                )
+            }
+
+            if let errorMessage = item.errorMessage {
+                DownloadQueueMetadataChip(errorMessage, systemImage: "exclamationmark.triangle.fill", tone: .error)
+            } else if let folderPath = item.folderPath {
+                #if os(macOS)
+                DownloadQueueMetadataChip(folderPath, systemImage: "folder", tone: .path)
+                #else
+                DownloadQueueMetadataChip(
+                    item.resolvedArtifactKind == .imagePages ? L10n.savedToPhotos : L10n.privateAppCache,
+                    systemImage: item.resolvedArtifactKind == .imagePages ? "photo.on.rectangle" : "tray.full"
+                )
+                #endif
+            }
+        }
+    }
+}
+
+private struct DownloadQueuePhoneActionBar: View {
+    let item: ArtworkDownloadItem
+    let canOpen: Bool
+    let open: () -> Void
+    let retry: () -> Void
+    let quickLook: () -> Void
+    let copied: () -> Void
+    let cancel: () -> Void
+    let delete: () -> Void
+
+    var body: some View {
+        GlassEffectContainer(spacing: 7) {
+            HStack(spacing: 7) {
+                if item.status == .failed {
+                    DownloadQueueRetryButton(item: item, action: retry)
+                } else if item.status == .queued || item.status == .downloading {
+                    DownloadQueueCancelButton(action: cancel)
+                }
+
+                Spacer(minLength: 6)
+
+                DownloadQueueOpenButton(canOpen: canOpen, action: open)
+                DownloadQueueQuickLookButton(canOpen: canOpen, action: quickLook)
+                DownloadQueueMoreMenu(
+                    item: item,
+                    canOpen: canOpen,
+                    quickLook: quickLook,
+                    reveal: nil,
+                    copied: copied,
+                    cancel: cancel,
+                    delete: delete
+                )
+            }
+        }
+        .controlSize(.small)
+        .frame(maxWidth: .infinity)
+    }
+}
+
+private struct DownloadQueueRegularActionRail: View {
+    let item: ArtworkDownloadItem
+    let canOpen: Bool
+    let open: () -> Void
+    let retry: () -> Void
+    let reveal: () -> Void
+    let quickLook: () -> Void
+    let copied: () -> Void
+    let cancel: () -> Void
+    let delete: () -> Void
+
+    var body: some View {
+        GlassEffectContainer(spacing: 8) {
+            ViewThatFits(in: .horizontal) {
+                expandedActionRail
+                compactActionRail
+            }
+        }
+    }
+
+    private var expandedActionRail: some View {
+        HStack(spacing: 8) {
+            if item.status == .failed {
+                DownloadQueueRetryButton(item: item, action: retry)
+            }
+
+            if item.status == .queued || item.status == .downloading {
+                DownloadQueueCancelButton(action: cancel)
+            }
+
+            DownloadQueueOpenButton(canOpen: canOpen, action: open)
+            DownloadQueueQuickLookButton(canOpen: canOpen, action: quickLook)
+            #if os(macOS)
+            DownloadQueueRevealButton(action: reveal)
+            #endif
+            DownloadQueueMoreMenu(
+                item: item,
+                canOpen: canOpen,
+                quickLook: quickLook,
+                reveal: reveal,
+                copied: copied,
+                cancel: cancel,
+                delete: delete
+            )
+        }
+    }
+
+    private var compactActionRail: some View {
+        HStack(spacing: 8) {
+            if item.status == .failed {
+                DownloadQueueRetryButton(item: item, action: retry)
+            } else if item.status == .queued || item.status == .downloading {
+                DownloadQueueCancelButton(action: cancel)
+            }
+
+            DownloadQueueOpenButton(canOpen: canOpen, action: open)
+            DownloadQueueMoreMenu(
+                item: item,
+                canOpen: canOpen,
+                quickLook: quickLook,
+                reveal: reveal,
+                copied: copied,
+                cancel: cancel,
+                delete: delete
+            )
+        }
+    }
+}
+
+private struct DownloadQueueStatusIcon: View {
+    let status: ArtworkDownloadStatus
+
+    var body: some View {
+        switch status {
+        case .queued:
+            Image(systemName: "clock")
+                .foregroundStyle(.secondary)
+        case .downloading:
+            Image(systemName: "arrow.down.circle.fill")
+                .symbolRenderingMode(.hierarchical)
+                .foregroundStyle(.tint)
+        case .completed:
+            Image(systemName: "checkmark.circle.fill")
+                .foregroundStyle(.green)
+        case .failed:
+            Image(systemName: "exclamationmark.triangle.fill")
+                .foregroundStyle(.orange)
+        }
+    }
+}
+
+private struct DownloadQueueStatusBadge: View {
+    let status: ArtworkDownloadStatus
+
+    var body: some View {
+        Text(status.title)
+            .font(.caption.weight(.semibold))
+            .lineLimit(1)
+            .padding(.horizontal, 7)
+            .padding(.vertical, 3)
+            .keiGlass(10)
+    }
+}
+
+private struct DownloadQueueMetadataChip: View {
+    enum Tone: Equatable {
+        case secondary
+        case accent
+        case error
+        case path
+    }
+
+    let text: String
+    let systemImage: String?
+    let tone: Tone
+    let usesMonospacedDigits: Bool
+
+    init(
+        _ text: String,
+        systemImage: String? = nil,
+        tone: Tone = .secondary,
+        usesMonospacedDigits: Bool = false
+    ) {
+        self.text = text
+        self.systemImage = systemImage
+        self.tone = tone
+        self.usesMonospacedDigits = usesMonospacedDigits
+    }
+
+    var body: some View {
+        styledContent
+            .font(usesMonospacedDigits ? .caption2.monospacedDigit() : .caption2)
+            .lineLimit(tone == .error ? 2 : 1)
+            .truncationMode(tone == .path ? .middle : .tail)
+            .padding(.horizontal, 6)
+            .padding(.vertical, 2)
+            .background {
+                Capsule(style: .continuous)
+                    .fill(Color.secondary.opacity(tone == .error ? 0.12 : 0.08))
+            }
+    }
+
+    @ViewBuilder
+    private var styledContent: some View {
+        switch tone {
+        case .secondary, .path:
+            content
+                .foregroundStyle(.secondary)
+        case .accent:
+            content
+                .foregroundStyle(.tint)
+        case .error:
+            content
+                .foregroundStyle(.red)
+        }
+    }
+
+    private var content: some View {
+        HStack(spacing: 3) {
+            if let systemImage {
+                Image(systemName: systemImage)
+                    .imageScale(.small)
+            }
+            Text(text)
+        }
+    }
+}
+
+private struct DownloadQueueRetryButton: View {
+    let item: ArtworkDownloadItem
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Label(L10n.retry, systemImage: "arrow.clockwise")
+        }
+        .os26GlassIconButton()
+        .disabled(item.sourceImageURLs?.isEmpty != false)
+        .help(L10n.retry)
+    }
+}
+
+private struct DownloadQueueCancelButton: View {
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Label(L10n.cancelDownload, systemImage: "xmark.circle")
+        }
+        .os26GlassIconButton()
+        .help(L10n.cancelDownload)
+    }
+}
+
+private struct DownloadQueueOpenButton: View {
+    let canOpen: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Label(L10n.openDownloadedArtwork, systemImage: "book")
+        }
+        .os26GlassIconButton(prominent: true)
+        .disabled(canOpen == false)
+        .help(L10n.openDownloadedArtwork)
+    }
+}
+
+private struct DownloadQueueQuickLookButton: View {
+    let canOpen: Bool
+    let action: () -> Void
+
+    var body: some View {
+        // Quick Look mirrors Finder's space-bar preview. The keyboard
+        // shortcut stays on the native list, so rendered buttons never
+        // compete for one accelerator.
+        Button(action: action) {
+            Label(L10n.quickLook, systemImage: "eye")
+        }
+        .os26GlassIconButton()
+        .disabled(canOpen == false)
+        .help(L10n.quickLookHint)
+    }
+}
+
+private struct DownloadQueueRevealButton: View {
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Label(L10n.revealInFinder, systemImage: "folder")
+        }
+        .os26GlassIconButton()
+        .help(L10n.revealInFinder)
+    }
+}
+
+private struct DownloadQueueMoreMenu: View {
+    let item: ArtworkDownloadItem
+    let canOpen: Bool
+    let quickLook: () -> Void
+    let reveal: (() -> Void)?
+    let copied: () -> Void
+    let cancel: () -> Void
+    let delete: () -> Void
+
+    var body: some View {
+        Menu {
+            if let pixivURL = item.pixivURL {
+                Button {
+                    PlatformWorkspace.open(pixivURL)
+                } label: {
+                    Label(L10n.openInPixiv, systemImage: "safari")
+                }
+
+                Button {
+                    PasteboardWriter.copy(pixivURL.absoluteString)
+                    copied()
+                } label: {
+                    Label(L10n.copyLink, systemImage: "link")
+                }
+            }
+
+            Button {
+                quickLook()
+            } label: {
+                Label(L10n.quickLook, systemImage: "eye")
+            }
+            .disabled(canOpen == false)
+
+            #if os(macOS)
+            if let reveal {
+                Button {
+                    reveal()
+                } label: {
+                    Label(L10n.revealInFinder, systemImage: "folder")
+                }
+            }
+            #endif
+
+            Divider()
+
+            if item.status == .queued || item.status == .downloading {
+                Button(role: .destructive, action: cancel) {
+                    Label(L10n.cancelDownload, systemImage: "xmark.circle")
+                }
+            }
+
+            Button(role: .destructive, action: delete) {
+                Label(L10n.deleteDownload, systemImage: "trash")
+            }
+            .disabled(item.status == .downloading)
+        } label: {
+            Label(L10n.moreActions, systemImage: "ellipsis.circle")
+        }
+        .os26GlassIconButton()
+        .help(L10n.moreActions)
     }
 }
 

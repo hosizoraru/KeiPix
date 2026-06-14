@@ -218,7 +218,7 @@ extension NativeDownloadQueueListView: UIViewRepresentable {
 
     func makeUIView(context: Context) -> UICollectionView {
         let layout = UICollectionViewFlowLayout()
-        layout.minimumLineSpacing = 10
+        layout.minimumLineSpacing = 6
         layout.sectionInset = UIEdgeInsets(top: 18, left: 18, bottom: 18, right: 18)
 
         let collectionView = NativeDownloadQueueCollectionView(frame: .zero, collectionViewLayout: layout)
@@ -232,6 +232,7 @@ extension NativeDownloadQueueListView: UIViewRepresentable {
         collectionView.onHierarchyAvailable = { [weak coordinator = context.coordinator] collectionView in
             coordinator?.registerContentScrollViewIfNeeded(collectionView)
         }
+        context.coordinator.updateLayoutInsets(for: collectionView)
         context.coordinator.registerContentScrollViewIfNeeded(collectionView)
         return collectionView
     }
@@ -239,6 +240,7 @@ extension NativeDownloadQueueListView: UIViewRepresentable {
     func updateUIView(_ collectionView: UICollectionView, context: Context) {
         context.coordinator.parent = self
         context.coordinator.registerContentScrollViewIfNeeded(collectionView)
+        context.coordinator.updateLayoutInsets(for: collectionView)
         context.coordinator.applyItems(to: collectionView)
         context.coordinator.restoreSelection(in: collectionView)
     }
@@ -249,6 +251,9 @@ extension NativeDownloadQueueListView: UIViewRepresentable {
 
         var parent: NativeDownloadQueueListView
         private var lastItemIDs: [UUID] = []
+        private let compactPhoneRowHeight: CGFloat = 144
+        private let compactPhoneSupplementalMetadataHeight: CGFloat = 24
+        private let regularRowHeight: CGFloat = 124
         private let contentScrollRegistration = NativeContentScrollRegistration()
 
         init(parent: NativeDownloadQueueListView) {
@@ -264,6 +269,23 @@ extension NativeDownloadQueueListView: UIViewRepresentable {
 
         func registerContentScrollViewIfNeeded(_ collectionView: UICollectionView) {
             contentScrollRegistration.register(collectionView)
+        }
+
+        func updateLayoutInsets(for collectionView: UICollectionView) {
+            guard let layout = collectionView.collectionViewLayout as? UICollectionViewFlowLayout else {
+                return
+            }
+            let isCompactPhone = collectionView.traitCollection.horizontalSizeClass == .compact
+            let horizontalInset: CGFloat = isCompactPhone ? 12 : 18
+            let desiredInsets = UIEdgeInsets(
+                top: isCompactPhone ? 10 : 18,
+                left: horizontalInset,
+                bottom: isCompactPhone ? 12 : 18,
+                right: horizontalInset
+            )
+            guard layout.sectionInset != desiredInsets else { return }
+            layout.sectionInset = desiredInsets
+            layout.invalidateLayout()
         }
 
         func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
@@ -323,8 +345,23 @@ extension NativeDownloadQueueListView: UIViewRepresentable {
             layout collectionViewLayout: UICollectionViewLayout,
             sizeForItemAt indexPath: IndexPath
         ) -> CGSize {
-            let horizontalInset: CGFloat = 36
-            return CGSize(width: max(collectionView.bounds.width - horizontalInset, 240), height: 124)
+            let isCompactPhone = collectionView.traitCollection.horizontalSizeClass == .compact
+            let horizontalInset: CGFloat = isCompactPhone ? 24 : 36
+            let baseHeight = isCompactPhone ? compactPhoneRowHeight : regularRowHeight
+            let supplementalHeight: CGFloat
+            if isCompactPhone,
+               parent.items.indices.contains(indexPath.item) {
+                let item = parent.items[indexPath.item]
+                supplementalHeight = item.needsCompactSupplementalMetadataHeight
+                    ? compactPhoneSupplementalMetadataHeight
+                    : 0
+            } else {
+                supplementalHeight = 0
+            }
+            return CGSize(
+                width: max(collectionView.bounds.width - horizontalInset, isCompactPhone ? 280 : 240),
+                height: baseHeight + supplementalHeight
+            )
         }
 
         func restoreSelection(in collectionView: UICollectionView) {
@@ -379,6 +416,12 @@ private final class NativeDownloadQueueCollectionView: UICollectionView {
     private func notifyHierarchyAvailableIfNeeded() {
         guard window != nil else { return }
         onHierarchyAvailable?(self)
+    }
+}
+
+private extension ArtworkDownloadItem {
+    var needsCompactSupplementalMetadataHeight: Bool {
+        errorMessage?.isEmpty == false || folderPath != nil
     }
 }
 #endif
