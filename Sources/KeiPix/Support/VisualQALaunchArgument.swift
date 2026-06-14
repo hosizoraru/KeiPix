@@ -13,6 +13,7 @@ enum VisualQALaunchArgument: String, CaseIterable {
     case cachedFeed = "--visual-qa-cached-feed"
     case galleryAuto = "--visual-qa-gallery-auto"
     case galleryTwoColumn = "--visual-qa-gallery-two-column"
+    case gallerySelectionMode = "--visual-qa-gallery-selection-mode"
     case galleryThreeColumn = "--visual-qa-gallery-three-column"
     case galleryCompact = "--visual-qa-gallery-compact"
     case novelFeed = "--visual-qa-novel-feed"
@@ -59,6 +60,8 @@ enum VisualQALaunchArgument: String, CaseIterable {
             .galleryAuto
         case .galleryTwoColumn:
             .galleryTwoColumn
+        case .gallerySelectionMode:
+            .gallerySelectionMode
         case .galleryThreeColumn:
             .galleryThreeColumn
         case .galleryCompact:
@@ -108,7 +111,7 @@ enum VisualQALaunchArgument: String, CaseIterable {
         switch self {
         case .galleryAuto:
             .autoMasonry
-        case .galleryTwoColumn:
+        case .galleryTwoColumn, .gallerySelectionMode:
             .twoColumnMasonry
         case .galleryThreeColumn:
             .threeColumnMasonry

@@ -179,88 +179,19 @@ struct FeedHeaderView: View {
     }
     #endif
 
-    private var iPadCompactRandomButton: some View {
-        Button {
-            _ = store.randomFromCurrentFeed(opensDetail: false)
-        } label: {
-            Label(L10n.randomFromFeed, systemImage: "shuffle")
-        }
-        .help(L10n.randomFromFeed)
-        .accessibilityLabel(L10n.randomFromFeed)
-        .iPadFeedHeaderActionChrome()
-    }
-
     private var compactFeedActionsMenu: some View {
         Menu {
-            if store.artworks.isEmpty == false {
-                Section(L10n.viewOptions) {
-                    Button {
-                        _ = store.randomFromCurrentFeed(opensDetail: false)
-                    } label: {
-                        Label(L10n.randomFromFeed, systemImage: "shuffle")
-                    }
-                }
-            }
-
             if store.selectedRoute.isOwnBookmarkRoute {
                 Section(L10n.bookmarkFilters) {
                     bookmarkFiltersSubmenu
                 }
             }
 
-            if store.artworks.isEmpty == false {
-                Section(selectionTitle) {
-                    Toggle(isOn: selectionModeBinding) {
-                        Label(L10n.selectionMode, systemImage: "checkmark.circle")
-                    }
-
-                    Button {
-                        artworkSelection.selectAll(store.artworks.map(\.id))
-                    } label: {
-                        Label(L10n.selectAll, systemImage: "checkmark.circle.fill")
-                    }
-
-                    Button {
-                        artworkSelection.clear()
-                    } label: {
-                        Label(L10n.clearSelection, systemImage: "xmark.circle")
-                    }
-                    .disabled(artworkSelection.hasSelection == false)
-
-                    Button {
-                        copySelectedArtworkLinks()
-                    } label: {
-                        Label(L10n.copySelectedArtworkLinks, systemImage: "link")
-                    }
-                    .disabled(selectedArtworkLinks.isEmpty)
-
-                    Button {
-                        presentBatchDownload(artworks: selectedArtworks, scope: .selectedWorks)
-                    } label: {
-                        Label(L10n.batchDownload, systemImage: "square.and.arrow.down.on.square")
-                    }
-                    .disabled(selectedArtworks.isEmpty)
-
-                    Button {
-                        presentBatchBookmarkPreview(artworks: selectedArtworks, scope: .selectedWorks)
-                    } label: {
-                        Label(L10n.batchBookmarkSelected, systemImage: "bookmark")
-                    }
-                    .disabled(selectedArtworks.isEmpty)
-
-                    Menu {
-                        ForEach(BulkMuteTarget.allCases) { target in
-                            Button {
-                                presentBulkMutePreview(target, artworks: selectedArtworks)
-                            } label: {
-                                Label(target.title, systemImage: target.systemImage)
-                            }
-                            .disabled(selectedArtworks.isEmpty)
-                        }
-                    } label: {
-                        Label(L10n.bulkMutePreview, systemImage: "eye.slash")
-                    }
-                    .disabled(selectedArtworks.isEmpty)
+            if showsSelectionModeEntry {
+                Button {
+                    artworkSelection.isSelectionMode = true
+                } label: {
+                    Label(L10n.selectionMode, systemImage: "checkmark.circle")
                 }
             }
 
@@ -354,8 +285,13 @@ struct FeedHeaderView: View {
     private var compactFeedActionsAreActive: Bool {
         store.clientFilterQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false
             || bookmarkFiltersActiveCount > 0
-            || artworkSelection.hasSelection
-            || artworkSelection.isSelectionMode
+    }
+
+    private var showsSelectionModeEntry: Bool {
+        store.selectedRoute.usesArtworkFeed
+            && store.artworks.isEmpty == false
+            && artworkSelection.hasSelection == false
+            && artworkSelection.isSelectionMode == false
     }
 
     private var compactFeedActionsAccessibilityLabel: String {
@@ -400,14 +336,6 @@ struct FeedHeaderView: View {
             }
             #endif
 
-            Button {
-                _ = store.randomFromCurrentFeed()
-            } label: {
-                Label(L10n.randomFromFeed, systemImage: "shuffle")
-            }
-            .help(L10n.randomFromFeed)
-            .accessibilityLabel(L10n.randomFromFeed)
-            .feedHeaderActionChrome()
         }
 
         if store.selectedRoute == .search,
@@ -492,68 +420,15 @@ struct FeedHeaderView: View {
             }
         }
 
-        if store.artworks.isEmpty == false {
-            Menu {
-                Toggle(isOn: selectionModeBinding) {
-                    Label(L10n.selectionMode, systemImage: "checkmark.circle")
-                }
-
-                Button {
-                    artworkSelection.selectAll(store.artworks.map(\.id))
-                } label: {
-                    Label(L10n.selectAll, systemImage: "checkmark.circle.fill")
-                }
-
-                Button {
-                    artworkSelection.clear()
-                } label: {
-                    Label(L10n.clearSelection, systemImage: "xmark.circle")
-                }
-                .disabled(artworkSelection.hasSelection == false)
-
-                Divider()
-
-                Button {
-                    copySelectedArtworkLinks()
-                } label: {
-                    Label(L10n.copySelectedArtworkLinks, systemImage: "link")
-                }
-                .disabled(selectedArtworkLinks.isEmpty)
-
-                Button {
-                    presentBatchDownload(artworks: selectedArtworks, scope: .selectedWorks)
-                } label: {
-                    Label(L10n.batchDownload, systemImage: "square.and.arrow.down.on.square")
-                }
-                .disabled(selectedArtworks.isEmpty)
-
-                Button {
-                    presentBatchBookmarkPreview(artworks: selectedArtworks, scope: .selectedWorks)
-                } label: {
-                    Label(L10n.batchBookmarkSelected, systemImage: "bookmark")
-                }
-                .disabled(selectedArtworks.isEmpty)
-
-                Menu {
-                    ForEach(BulkMuteTarget.allCases) { target in
-                        Button {
-                            presentBulkMutePreview(target, artworks: selectedArtworks)
-                        } label: {
-                            Label(target.title, systemImage: target.systemImage)
-                        }
-                        .disabled(selectedArtworks.isEmpty)
-                    }
-                } label: {
-                    Label(L10n.bulkMutePreview, systemImage: "eye.slash")
-                }
-                .disabled(selectedArtworks.isEmpty)
+        if showsSelectionModeEntry {
+            Button {
+                artworkSelection.isSelectionMode = true
             } label: {
-                Label(selectionTitle, systemImage: artworkSelection.hasSelection ? "checkmark.circle.fill" : "checkmark.circle")
+                Label(L10n.selectionMode, systemImage: "checkmark.circle")
             }
-            .help(selectionTitle)
-            .accessibilityLabel(selectionTitle)
+            .help(L10n.selectionMode)
+            .accessibilityLabel(L10n.selectionMode)
             .feedHeaderActionChrome()
-            .tint(artworkSelection.hasSelection || artworkSelection.isSelectionMode ? .accentColor : nil)
         }
 
         Menu {
@@ -995,70 +870,6 @@ struct FeedHeaderView: View {
         }
     }
 
-    private var compactSelectionMenu: some View {
-        Menu {
-            Toggle(isOn: selectionModeBinding) {
-                Label(L10n.selectionMode, systemImage: "checkmark.circle")
-            }
-
-            Button {
-                artworkSelection.selectAll(store.artworks.map(\.id))
-            } label: {
-                Label(L10n.selectAll, systemImage: "checkmark.circle.fill")
-            }
-
-            Button {
-                artworkSelection.clear()
-            } label: {
-                Label(L10n.clearSelection, systemImage: "xmark.circle")
-            }
-            .disabled(artworkSelection.hasSelection == false)
-
-            Divider()
-
-            Button {
-                copySelectedArtworkLinks()
-            } label: {
-                Label(L10n.copySelectedArtworkLinks, systemImage: "link")
-            }
-            .disabled(selectedArtworkLinks.isEmpty)
-
-            Button {
-                presentBatchDownload(artworks: selectedArtworks, scope: .selectedWorks)
-            } label: {
-                Label(L10n.batchDownload, systemImage: "square.and.arrow.down.on.square")
-            }
-            .disabled(selectedArtworks.isEmpty)
-
-            Button {
-                presentBatchBookmarkPreview(artworks: selectedArtworks, scope: .selectedWorks)
-            } label: {
-                Label(L10n.batchBookmarkSelected, systemImage: "bookmark")
-            }
-            .disabled(selectedArtworks.isEmpty)
-
-            Menu {
-                ForEach(BulkMuteTarget.allCases) { target in
-                    Button {
-                        presentBulkMutePreview(target, artworks: selectedArtworks)
-                    } label: {
-                        Label(target.title, systemImage: target.systemImage)
-                    }
-                    .disabled(selectedArtworks.isEmpty)
-                }
-            } label: {
-                Label(L10n.bulkMutePreview, systemImage: "eye.slash")
-            }
-            .disabled(selectedArtworks.isEmpty)
-        } label: {
-            Label(selectionTitle, systemImage: artworkSelection.hasSelection ? "checkmark.circle.fill" : "checkmark.circle")
-        }
-        .help(selectionTitle)
-        .accessibilityLabel(selectionTitle)
-        .tint(artworkSelection.hasSelection || artworkSelection.isSelectionMode ? .accentColor : nil)
-        .iPadFeedHeaderActionChrome()
-    }
-
     private var compactMoreActionsMenu: some View {
         Menu {
             Button {
@@ -1159,28 +970,6 @@ struct FeedHeaderView: View {
             .accessibilityLabel(L10n.rankingMode)
             .feedHeaderActionChrome()
         }
-    }
-
-    private var selectionModeBinding: Binding<Bool> {
-        Binding {
-            artworkSelection.isSelectionMode
-        } set: { value in
-            artworkSelection.isSelectionMode = value
-        }
-    }
-
-    private var selectionTitle: String {
-        artworkSelection.hasSelection
-            ? String(format: L10n.selectedWorksFormat, artworkSelection.count)
-            : L10n.selectedWorks
-    }
-
-    private var selectedArtworks: [PixivArtwork] {
-        store.artworks.filter { artworkSelection.contains($0.id) }
-    }
-
-    private var selectedArtworkLinks: [String] {
-        selectedArtworks.compactMap { $0.pixivURL?.absoluteString }
     }
 
     private func presentBatchDownload(artworks: [PixivArtwork], scope: BatchDownloadScope) {
@@ -1554,16 +1343,6 @@ struct FeedHeaderView: View {
             actionMessage = String(format: L10n.queuedDownloadsFormat, result.queuedCount)
             batchDownloadContext = nil
         }
-    }
-
-    private func copySelectedArtworkLinks() {
-        let links = selectedArtworkLinks
-        guard links.isEmpty == false else {
-            actionMessage = L10n.noSelectedWorks
-            return
-        }
-        PasteboardWriter.copy(links.joined(separator: "\n"))
-        actionMessage = String(format: L10n.copiedArtworkLinksFormat, links.count)
     }
 
     private func copyLoadedArtworkLinks() {

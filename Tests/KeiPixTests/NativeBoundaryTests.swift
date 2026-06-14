@@ -654,10 +654,13 @@ struct NativeBoundaryTests {
 
         let settingsRange = try #require(contentView.range(of: "id: IPadToolbarMenuAction.settings"))
         let customizeRange = try #require(contentView.range(of: "id: IPadToolbarMenuAction.customizeBottomTabs"))
+        let randomRange = try #require(contentView.range(of: "id: IPadToolbarMenuAction.randomFromCurrentFeed"))
         let firstFilterRange = try #require(contentView.range(of: "id: IPadToolbarMenuAction.hideMutedContent"))
 
         #expect(settingsRange.lowerBound < firstFilterRange.lowerBound)
         #expect(customizeRange.lowerBound < firstFilterRange.lowerBound)
+        #expect(randomRange.lowerBound < firstFilterRange.lowerBound)
+        #expect(contentView.contains("case IPadToolbarMenuAction.randomFromCurrentFeed:\n            _ = store.randomFromCurrentFeed(opensDetail: false)"))
         #expect(contentView.contains("NativeToolbarMenuSection(\n                    presentation: .root,\n                    items: [\n                        .submenu("))
         #expect(contentView.contains(".submenu(\n                            title: L10n.viewOptions"))
         #expect(contentView.contains(".submenu(\n                            title: L10n.contentFilters"))
@@ -773,6 +776,10 @@ struct NativeBoundaryTests {
         )
         let feedHeader = try String(
             contentsOf: root.appending(path: "Sources/KeiPix/Views/GalleryFeedHeaderView.swift"),
+            encoding: .utf8
+        )
+        let galleryView = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/GalleryView.swift"),
             encoding: .utf8
         )
         let l10n = try String(
@@ -1080,7 +1087,16 @@ struct NativeBoundaryTests {
         #expect(feedHeader.contains("UIDevice.current.userInterfaceIdiom == .phone"))
         #expect(feedHeader.contains("@State private var isInlineFilterExpanded = false") == false)
         #expect(feedHeader.contains("iPadCompactFilterControl(expandedWidth: 300)") == false)
-        #expect(feedHeader.contains("randomFromCurrentFeed(opensDetail: false)"))
+        #expect(feedHeader.contains("Section(L10n.viewOptions)") == false)
+        #expect(feedHeader.contains("randomFromCurrentFeed") == false)
+        #expect(feedHeader.contains("compactSelectionMenu") == false)
+        #expect(feedHeader.contains("Label(L10n.copySelectedArtworkLinks, systemImage: \"link\")") == false)
+        #expect(feedHeader.contains("Label(L10n.batchBookmarkSelected, systemImage: \"bookmark\")") == false)
+        #expect(galleryView.contains("gallerySelectionFloatingActions"))
+        #expect(galleryView.contains("selectionModeAccessoryBottomPadding"))
+        #expect(galleryView.contains("Label(selectionAccessoryTitle, systemImage: selectionAccessorySystemImage)"))
+        #expect(galleryView.contains("artworkSelection.isSelectionMode = true"))
+        #expect(galleryView.contains("batchBookmarkCommandRequest = BatchBookmarkCommandRequest("))
         #expect(l10n.contains("static var searchSuggestions: String"))
         #expect(localizable.contains("\"Search Suggestions\""))
     }

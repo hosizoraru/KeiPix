@@ -1272,6 +1272,12 @@ struct ContentView: View {
                             id: IPadToolbarMenuAction.customizeBottomTabs,
                             title: L10n.customizeBottomTabs,
                             systemImage: "rectangle.bottomthird.inset.filled"
+                        ),
+                        .action(
+                            id: IPadToolbarMenuAction.randomFromCurrentFeed,
+                            title: L10n.randomFromFeed,
+                            systemImage: "shuffle",
+                            isEnabled: store.selectedRoute.usesArtworkFeed && store.artworks.isEmpty == false
                         )
                     ]
                 ),
@@ -1378,6 +1384,8 @@ struct ContentView: View {
         case IPadToolbarMenuAction.openPixivID:
             dismissTransientArtworkPresentationBeforeGlobalOpen()
             isPixivIDOpenPresented = true
+        case IPadToolbarMenuAction.randomFromCurrentFeed:
+            _ = store.randomFromCurrentFeed(opensDetail: false)
         case IPadToolbarMenuAction.goBack:
             store.navigateBack()
         case IPadToolbarMenuAction.goForward:
@@ -2252,6 +2260,7 @@ private enum IPadToolbarMenuAction {
     static let hideR18Artworks = "hide-r18-artworks"
     static let hideR18GArtworks = "hide-r18g-artworks"
     static let customizeBottomTabs = "customize-bottom-tabs"
+    static let randomFromCurrentFeed = "random-from-current-feed"
     static let settings = "settings"
 
     private static let galleryLayoutPrefix = "gallery-layout:"

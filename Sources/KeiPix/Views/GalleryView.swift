@@ -169,6 +169,11 @@ private struct GalleryFeedView: View {
             ArtworkSeriesSheet(artwork: artwork, store: store)
                 .os26SheetChrome(.detail)
         }
+        .overlay(alignment: .bottom) {
+            gallerySelectionFloatingActions
+                .padding(.horizontal, 18)
+                .padding(.bottom, selectionModeAccessoryBottomPadding)
+        }
         .onChange(of: artworkSelectionPruneFingerprint) { _, _ in
             artworkSelection.prune(visibleArtworkIDs: store.artworks.map(\.id))
         }
@@ -184,6 +189,11 @@ private struct GalleryFeedView: View {
         .onDisappear {
             cancelNativePrefetch()
         }
+        #if DEBUG
+        .task(id: artworkSelectionPruneFingerprint) {
+            applyGallerySelectionModeVisualQAIfNeeded()
+        }
+        #endif
         .task(id: store.selectedRoute.rawValue) {
             // Restore scroll position for new route after content loads
             guard let savedID = savedScrollPositions[store.selectedRoute.rawValue],
@@ -232,6 +242,111 @@ private struct GalleryFeedView: View {
                 }
             }
         }
+        #endif
+        .animation(.snappy(duration: 0.18), value: artworkSelection.isSelectionMode)
+        .animation(.snappy(duration: 0.18), value: artworkSelection.count)
+    }
+
+    @ViewBuilder
+    private var gallerySelectionFloatingActions: some View {
+        if showsGallerySelectionFloatingActions {
+            GlassEffectContainer(spacing: 8) {
+                HStack(spacing: 8) {
+                    Menu {
+                        Button {
+                            selectAllVisibleArtworks()
+                        } label: {
+                            Label(L10n.selectAll, systemImage: "checkmark.circle.fill")
+                        }
+                        .disabled(selectionEligibleArtworks.isEmpty)
+
+                        if artworkSelection.hasSelection {
+                            Button {
+                                clearGallerySelection()
+                            } label: {
+                                Label(L10n.clearSelection, systemImage: "xmark.circle")
+                            }
+
+                            Divider()
+
+                            Button {
+                                copySelectedArtworkLinks()
+                            } label: {
+                                Label(L10n.copySelectedArtworkLinks, systemImage: "link")
+                            }
+
+                            Button {
+                                downloadSelectedArtworks()
+                            } label: {
+                                Label(L10n.batchDownload, systemImage: "square.and.arrow.down.on.square")
+                            }
+
+                            Button {
+                                batchBookmarkSelectedArtworks()
+                            } label: {
+                                Label(L10n.batchBookmarkSelected, systemImage: "bookmark")
+                            }
+                        }
+                    } label: {
+                        Label(selectionAccessoryTitle, systemImage: selectionAccessorySystemImage)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.82)
+                    }
+                    .help(selectionAccessoryTitle)
+                    .accessibilityLabel(selectionAccessoryTitle)
+                    .buttonStyle(.glassProminent)
+                    .frame(minWidth: 164, maxWidth: .infinity)
+
+                    Button {
+                        clearGallerySelection()
+                    } label: {
+                        Label(L10n.close, systemImage: "xmark")
+                            .labelStyle(.iconOnly)
+                    }
+                    .help(L10n.close)
+                    .accessibilityLabel(L10n.close)
+                    .buttonStyle(.glass)
+                    .frame(width: 44, height: 44)
+                }
+                .frame(maxWidth: selectionModeAccessoryMaxWidth)
+            }
+            .controlSize(.regular)
+            .frame(maxWidth: selectionModeAccessoryMaxWidth)
+            .transition(.move(edge: .bottom).combined(with: .opacity))
+            .accessibilityElement(children: .contain)
+        }
+    }
+
+    private var showsGallerySelectionFloatingActions: Bool {
+        store.selectedRoute.usesArtworkFeed
+            && store.artworks.isEmpty == false
+            && (artworkSelection.isSelectionMode || artworkSelection.hasSelection)
+    }
+
+    private var selectionAccessoryTitle: String {
+        if artworkSelection.hasSelection {
+            return String(format: L10n.selectedWorksFormat, artworkSelection.count)
+        }
+        return L10n.selectionMode
+    }
+
+    private var selectionAccessorySystemImage: String {
+        artworkSelection.hasSelection ? "checkmark.circle.fill" : "checkmark.circle"
+    }
+
+    private var selectionModeAccessoryBottomPadding: CGFloat {
+        #if os(iOS)
+        UIDevice.current.userInterfaceIdiom == .phone ? 124 : 24
+        #else
+        24
+        #endif
+    }
+
+    private var selectionModeAccessoryMaxWidth: CGFloat {
+        #if os(iOS)
+        UIDevice.current.userInterfaceIdiom == .phone ? 340 : 420
+        #else
+        420
         #endif
     }
 
@@ -981,44 +1096,92 @@ private struct GalleryFeedView: View {
 
     private var gallerySelectionCommandActions: GallerySelectionCommandActions? {
         guard store.selectedRoute.usesArtworkFeed, store.artworks.isEmpty == false else { return nil }
-        let selectedWorks = selectedArtworks
-        let selectedArtworkLinks = selectedWorks.compactMap { $0.pixivURL?.absoluteString }
         return GallerySelectionCommandActions(
-            canSelectAll: store.artworks.isEmpty == false,
+            canSelectAll: selectionEligibleArtworks.isEmpty == false,
             canClear: artworkSelection.hasSelection,
             canCopyLinks: selectedArtworkLinks.isEmpty == false,
-            canDownload: selectedWorks.isEmpty == false,
-            canBatchBookmark: selectedWorks.isEmpty == false,
+            canDownload: selectedArtworks.isEmpty == false,
+            canBatchBookmark: selectedArtworks.isEmpty == false,
             selectAllVisible: {
-                artworkSelection.selectAll(store.artworks.map(\.id))
-                artworkSelection.isSelectionMode = true
+                selectAllVisibleArtworks()
             },
             clearSelection: {
-                artworkSelection.clear()
+                clearGallerySelection()
             },
             copySelectedLinks: {
-                copySelectedArtworkLinks(selectedArtworkLinks)
+                copySelectedArtworkLinks()
             },
             downloadSelected: {
-                downloadSelectedArtworks(selectedWorks)
+                downloadSelectedArtworks()
             },
             batchBookmarkSelected: {
-                batchBookmarkCommandRequest = BatchBookmarkCommandRequest(
-                    scope: .selectedWorks,
-                    artworkIDs: selectedWorks.map(\.id)
-                )
+                batchBookmarkSelectedArtworks()
             }
         )
+    }
+
+    private var selectionEligibleArtworks: [PixivArtwork] {
+        store.clientFilteredArtworks
     }
 
     private var selectedArtworks: [PixivArtwork] {
         store.artworks.filter { artworkSelection.contains($0.id) }
     }
 
+    private var selectedArtworkLinks: [String] {
+        selectedArtworks.compactMap { $0.pixivURL?.absoluteString }
+    }
+
+    #if DEBUG
+    private func applyGallerySelectionModeVisualQAIfNeeded() {
+        guard VisualQALaunchArgument.contains(.gallerySelectionMode),
+              store.selectedRoute.usesArtworkFeed,
+              store.artworks.isEmpty == false,
+              artworkSelection.isSelectionMode == false,
+              artworkSelection.hasSelection == false else {
+            return
+        }
+        artworkSelection.selectAll(store.artworks.prefix(2).map(\.id))
+        artworkSelection.isSelectionMode = true
+    }
+    #endif
+
+    private func selectAllVisibleArtworks() {
+        let artworkIDs = selectionEligibleArtworks.map(\.id)
+        guard artworkIDs.isEmpty == false else {
+            actionMessage = L10n.noArtworkTitle
+            return
+        }
+        artworkSelection.selectAll(artworkIDs)
+        artworkSelection.isSelectionMode = true
+    }
+
+    private func clearGallerySelection() {
+        artworkSelection.clear()
+    }
+
+    private func copySelectedArtworkLinks() {
+        let links = selectedArtworkLinks
+        guard links.isEmpty == false else {
+            actionMessage = L10n.noSelectedWorks
+            return
+        }
+        copySelectedArtworkLinks(links)
+    }
+
     private func copySelectedArtworkLinks(_ links: [String]) {
         guard links.isEmpty == false else { return }
         PasteboardWriter.copy(links.joined(separator: "\n"))
         actionMessage = String(format: L10n.copiedArtworkLinksFormat, links.count)
+    }
+
+    private func downloadSelectedArtworks() {
+        let artworks = selectedArtworks
+        guard artworks.isEmpty == false else {
+            actionMessage = L10n.noSelectedWorks
+            return
+        }
+        downloadSelectedArtworks(artworks)
     }
 
     private func downloadSelectedArtworks(_ artworks: [PixivArtwork]) {
@@ -1032,6 +1195,18 @@ private struct GalleryFeedView: View {
         actionMessage = String(format: L10n.queuedDownloadsFormat, queuedCount)
         openWindow(id: "main")
         store.select(.downloads)
+    }
+
+    private func batchBookmarkSelectedArtworks() {
+        let artworkIDs = selectedArtworks.map(\.id)
+        guard artworkIDs.isEmpty == false else {
+            actionMessage = L10n.noSelectedWorks
+            return
+        }
+        batchBookmarkCommandRequest = BatchBookmarkCommandRequest(
+            scope: .selectedWorks,
+            artworkIDs: artworkIDs
+        )
     }
 }
 

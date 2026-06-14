@@ -5,6 +5,7 @@ enum VisualQASurface: String, CaseIterable, Identifiable, Sendable {
     case galleryFeed = "gallery-feed"
     case galleryAuto = "gallery-auto"
     case galleryTwoColumn = "gallery-two-column"
+    case gallerySelectionMode = "gallery-selection-mode"
     case galleryThreeColumn = "gallery-three-column"
     case galleryCompact = "gallery-compact"
     case novelFeed = "novel-feed"
