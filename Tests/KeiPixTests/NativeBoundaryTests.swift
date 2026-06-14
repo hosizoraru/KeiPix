@@ -1337,6 +1337,10 @@ struct NativeBoundaryTests {
             contentsOf: root.appending(path: "Sources/KeiPix/Stores/KeiPixStore+PixivActivity.swift"),
             encoding: .utf8
         )
+        let pixivLinks = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Stores/KeiPixStore+PixivLinks.swift"),
+            encoding: .utf8
+        )
         let contentView = try String(
             contentsOf: root.appending(path: "Sources/KeiPix/Views/ContentView.swift"),
             encoding: .utf8
@@ -1359,6 +1363,7 @@ struct NativeBoundaryTests {
         #expect(activityView.contains("L10n.pixivActivityWebSessionRequiredTitle"))
         #expect(activityView.contains("PixivActivityFeedPresentation.statusText(itemCount:"))
         #expect(activityView.contains(".nativeBottomTabContentSurface()"))
+        #expect(activityView.contains("store.openPixivActivityTarget(url)"))
         #expect(nativeList.contains("struct NativePixivActivityListView"))
         #expect(nativeList.contains("NSTableView"))
         #expect(nativeList.contains("UICollectionView"))
@@ -1368,6 +1373,11 @@ struct NativeBoundaryTests {
         #expect(store.contains("syncUsablePixivActivityWebSessionIfNeeded(replacing:"))
         #expect(store.contains("clearPixivActivityWebSessionAfterFailure()"))
         #expect(store.contains("api.pixivActivityFeedPage(page:"))
+        #expect(pixivLinks.contains("func openPixivActivityTarget(_ url: URL) async -> String"))
+        #expect(pixivLinks.contains("sourceHistoryTarget: .route(.pixivActivity)"))
+        #expect(pixivLinks.contains("navigationHistory.push(.novel(id))"))
+        #expect(pixivLinks.contains("navigationHistory.push(.pixivCollection(id: id, sourceRoute: sourceRoute))"))
+        #expect(pixivLinks.contains("navigationHistory.push(.pixivisionArticle(id: id, url: url))"))
         #expect(contentView.contains("PixivActivityFeedView(store: store)"))
         #expect(iPadContentView.contains("PixivActivityFeedView(store: store)"))
         #expect(iPadContentView.contains("selectedSidebarItem = .route(.pixivActivity)"))
@@ -2675,6 +2685,10 @@ struct NativeBoundaryTests {
             contentsOf: root.appending(path: "Sources/KeiPix/Stores/KeiPixStore+PixivLinks.swift"),
             encoding: .utf8
         )
+        let navigationHistory = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Stores/KeiPixStore+NavigationHistory.swift"),
+            encoding: .utf8
+        )
         let feedHeader = try String(
             contentsOf: root.appending(path: "Sources/KeiPix/Views/GalleryFeedHeaderView.swift"),
             encoding: .utf8
@@ -2701,7 +2715,8 @@ struct NativeBoundaryTests {
         #expect(store.contains("let preservedArtwork = selectedArtwork"))
         #expect(store.contains("selectedArtwork = artworks.first(where: { $0.id == preservedArtwork.id }) ?? preservedArtwork"))
         #expect(store.contains("feedNarrowingContext = nil"))
-        #expect(pixivLinks.contains("feedNarrowingContext = .directArtwork(id: id)"))
+        #expect(pixivLinks.contains("await presentDirectArtworkNavigation("))
+        #expect(navigationHistory.contains("feedNarrowingContext = .directArtwork(id: id)"))
         #expect(feedHeader.contains("private var activeFeedClearChip: some View"))
         #expect(feedHeader.contains("FeedFilterClearChip("))
         #expect(feedHeader.contains("clearActiveFeedNarrowing("))

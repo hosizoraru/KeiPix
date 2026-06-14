@@ -143,6 +143,38 @@ struct NavigationHistoryTests {
         #expect(history.canGoForward == false)
     }
 
+    @Test("Activity link targets preserve the timeline as the previous page")
+    func activityLinkTargetsPreserveTimelineSource() {
+        var history = NavigationHistory(maxEntries: 10)
+
+        history.push(.route(.pixivActivity))
+        history.push(.artwork(12345))
+
+        #expect(history.canGoBack)
+        #expect(history.goBack() == .route(.pixivActivity))
+        #expect(history.canGoForward)
+        #expect(history.goForward() == .artwork(12345))
+    }
+
+    @Test("Direct novel, collection, and Pixivision targets stay restorable")
+    func directWebTargetsStayRestorable() throws {
+        let articleURL = try #require(URL(string: "https://www.pixivision.net/a/42"))
+        var history = NavigationHistory(maxEntries: 10)
+
+        history.push(.route(.pixivActivity))
+        history.push(.novel(24680))
+        #expect(history.goBack() == .route(.pixivActivity))
+        #expect(history.goForward() == .novel(24680))
+
+        history.push(.pixivCollection(id: "49895345339794251171", sourceRoute: .pixivActivity))
+        #expect(history.goBack() == .novel(24680))
+        #expect(history.goForward() == .pixivCollection(id: "49895345339794251171", sourceRoute: .pixivActivity))
+
+        history.push(.pixivisionArticle(id: 42, url: articleURL))
+        #expect(history.goBack() == .pixivCollection(id: "49895345339794251171", sourceRoute: .pixivActivity))
+        #expect(history.goForward() == .pixivisionArticle(id: 42, url: articleURL))
+    }
+
     @Test("History is capped at max entries")
     func historyCap() {
         var history = NavigationHistory(maxEntries: 100)
