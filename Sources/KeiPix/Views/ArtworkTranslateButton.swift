@@ -3,33 +3,6 @@ import SwiftUI
 @preconcurrency import Translation
 #endif
 
-// MARK: - Translation language resolver
-
-/// Resolves the target language for translation.
-///
-/// Priority: user's explicit `translationTargetLanguage` setting wins.
-/// When set to `.system`, falls back to `nil` so Apple's Translation
-/// framework picks the device locale automatically.
-enum TranslationLanguageResolver {
-    static func targetLanguage(for targetLanguage: TranslationTargetLanguage) -> Locale.Language? {
-        targetLanguage.localeLanguage
-    }
-
-    /// Builds a `TranslationSession.Configuration` with the correct
-    /// target language. Source is always `nil` for auto-detection.
-    static func configuration(for targetLanguage: TranslationTargetLanguage) -> TranslationSession.Configuration {
-        let target = Self.targetLanguage(for: targetLanguage)
-        if #available(iOS 26.4, macOS 26.4, *) {
-            return TranslationSession.Configuration(
-                source: nil,
-                target: target,
-                preferredStrategy: .lowLatency
-            )
-        }
-        return TranslationSession.Configuration(source: nil, target: target)
-    }
-}
-
 // MARK: - Inline translate button
 
 /// A compact icon-only toggle that activates inline bilingual
@@ -107,10 +80,15 @@ struct InlineTranslateSection<Content: View>: View {
             isTranslating = true
             translatedText = nil
 
-            if let response = try? await session.translate(cleaned), isTranslateActive {
-                translatedText = response.targetText
-            } else if isTranslateActive {
-                translatedText = L10n.translationFailed
+            do {
+                let response = try await session.translate(cleaned)
+                if isTranslateActive {
+                    translatedText = response.targetText
+                }
+            } catch {
+                if isTranslateActive {
+                    translatedText = AppleTranslationReadinessMapper.issue(for: error).localizedMessage
+                }
             }
             isTranslating = false
         }

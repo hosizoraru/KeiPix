@@ -193,7 +193,7 @@ Recommended new or changed types:
 | Phase 5: Persistent Translation Cache | Done | Segment translations now persist under the app caches directory, cache hits apply before network translation, misses continue streaming, and Reading settings exposes a localized clear-cache action. |
 | Phase 6: Availability, Preparation, and Errors | In progress | `LanguageAvailability`, `prepareTranslation()`, recoverable error mapping, and localized reader feedback are implemented and tested; physical Mac/iPhone/iPad model-preparation validation remains open. |
 | Phase 7: OS 26.4+ Translation Strategy and Skip Ranges | In progress | OS 26.4+ translation sessions now prefer low latency, batch requests use attributed skip ranges for Pixiv markers/URLs when available, and older OS paths keep string requests; physical smoke validation remains open. |
-| Phase 8: Shared Apple Translation Client for Captions | Planned | Pending novel pipeline stabilization. |
+| Phase 8: Shared Apple Translation Client for Captions | Done | Language resolution, low-latency configuration, availability/error mapping, and caption inline error handling now share `AppleTranslationSupport` without coupling captions to novel cache state. |
 
 ### Phase 0: Baseline and Guard Rails
 
@@ -447,20 +447,35 @@ Evidence:
 
 ### Phase 8: Shared Apple Translation Client for Captions
 
-Status: Planned
+Status: Done
 
-- [ ] After novel translation stabilizes, extract common language resolution,
+- [x] After novel translation stabilizes, extract common language resolution,
   availability, and error mapping into a small shared helper.
-- [ ] Keep caption translation lightweight and avoid forcing novel cache
+- [x] Keep caption translation lightweight and avoid forcing novel cache
   concepts into single caption rows.
-- [ ] Continue using the system translation presentation for comment rows where
+- [x] Continue using the system translation presentation for comment rows where
   inline translation would be too heavy.
 
 Validation:
 
-- [ ] Caption translation availability tests.
-- [ ] Artwork/novel caption UI tests or boundary checks if the view structure
+- [x] Caption translation availability tests.
+- [x] Artwork/novel caption UI tests or boundary checks if the view structure
   changes.
+
+Evidence:
+
+- `AppleTranslationSupport` now owns `TranslationLanguageResolver`,
+  low-latency configuration, Apple availability mapping, and reusable
+  `AppleTranslationIssue` messages.
+- `NovelTranslationReadiness`, `NovelTranslationIssue`, and
+  `NovelTranslationReadinessMapper` remain as typealiases so the novel pipeline
+  keeps its domain vocabulary while sharing the implementation.
+- `InlineTranslateSection` uses the shared error mapper for caption inline
+  failures, while `ArtworkTranslateButton` continues to use Apple's lightweight
+  system translation presentation for comment rows.
+- `CaptionTranslationAvailabilityTests`, `NovelTranslation` focused tests, and
+  `NativeBoundaryTests/os27CleanupRemovesRemainingLegacyButtonStyles` cover the
+  shared helper and caption path.
 
 ## User Experience Details
 

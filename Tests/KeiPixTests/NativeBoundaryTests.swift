@@ -2095,6 +2095,10 @@ struct NativeBoundaryTests {
             contentsOf: root.appending(path: "Sources/KeiPix/Views/ArtworkTranslateButton.swift"),
             encoding: .utf8
         )
+        let appleTranslationSupport = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Support/AppleTranslationSupport.swift"),
+            encoding: .utf8
+        )
         let mutedContent = try String(
             contentsOf: root.appending(path: "Sources/KeiPix/Views/MutedContentView.swift"),
             encoding: .utf8
@@ -2106,6 +2110,11 @@ struct NativeBoundaryTests {
 
         #expect(iPadContent.contains(".os26GlassIconButton()"))
         #expect(translateButtons.contains(".os26GlassIconButton(prominent: isActive)"))
+        #expect(translateButtons.contains("enum TranslationLanguageResolver") == false)
+        #expect(translateButtons.contains("AppleTranslationReadinessMapper.issue(for: error).localizedMessage"))
+        #expect(appleTranslationSupport.contains("enum TranslationLanguageResolver"))
+        #expect(appleTranslationSupport.contains("enum AppleTranslationReadinessMapper"))
+        #expect(appleTranslationSupport.contains("typealias NovelTranslationReadinessMapper = AppleTranslationReadinessMapper"))
         #expect(mutedContent.contains(".os26GlassIconButton()"))
         #expect(commentEmoji.contains(".os26GlassButton()"))
         #expect(commentEmoji.contains(".buttonStyle(.plain)"))
