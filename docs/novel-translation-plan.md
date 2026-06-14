@@ -191,8 +191,8 @@ Recommended new or changed types:
 | Phase 3: Incremental Engine Updates | Done | `NovelTranslationEngine` now stores segment results, updates progress per streamed result, preserves legacy token lookup, and keeps source text visible for pending segments. |
 | Phase 4: Visible-First Scheduling | In progress | Scheduler implementation, continuous TextKit visible-range reporting, focused tests, and iOS/iPadOS generic builds are complete; physical-device smoke validation remains open. |
 | Phase 5: Persistent Translation Cache | Done | Segment translations now persist under the app caches directory, cache hits apply before network translation, misses continue streaming, and Reading settings exposes a localized clear-cache action. |
-| Phase 6: Availability, Preparation, and Errors | In progress | `LanguageAvailability`, `prepareTranslation()`, recoverable error mapping, and localized reader feedback are implemented and tested; physical Mac/iPhone/iPad model-preparation validation remains open. |
-| Phase 7: OS 26.4+ Translation Strategy and Skip Ranges | In progress | OS 26.4+ translation sessions now prefer low latency, batch requests use attributed skip ranges for Pixiv markers/URLs when available, and older OS paths keep string requests; physical smoke validation remains open. |
+| Phase 6: Availability, Preparation, and Errors | In progress | `LanguageAvailability`, `prepareTranslation()`, recoverable error mapping, and localized reader feedback are implemented and tested; real-Mac preparation smoke passed, while physical iPhone/iPad validation remains open. |
+| Phase 7: OS 26.4+ Translation Strategy and Skip Ranges | In progress | OS 26.4+ translation sessions now prefer low latency, batch requests use attributed skip ranges for Pixiv markers/URLs when available, and older OS paths keep string requests; real-Mac low-latency smoke passed, while iOS physical smoke remains open. |
 | Phase 8: Shared Apple Translation Client for Captions | Done | Language resolution, low-latency configuration, availability/error mapping, and caption inline error handling now share `AppleTranslationSupport` without coupling captions to novel cache state. |
 
 ### Phase 0: Baseline and Guard Rails
@@ -399,7 +399,7 @@ Validation:
 
 - [x] Focused tests for error-state mapping.
 - [x] Localized string catalog validation if strings are added.
-- [ ] Physical Mac validation for model-preparation behavior.
+- [x] Physical Mac validation for model-preparation behavior.
 - [ ] Physical iPhone/iPad validation for iOS/iPadOS behavior.
 
 Evidence:
@@ -410,6 +410,11 @@ Evidence:
   `LanguageAvailability.status(for:to:)`, calls
   `session.prepareTranslation()` before starting the scheduled batch loop, and
   keeps original text visible when preparation or translation fails.
+- Real-Mac smoke on Xcode 27 beta/macOS 27 returned
+  `LanguageAvailability.Status.supported`, then
+  `TranslationSession(installedSource:target:preferredStrategy: .lowLatency)`
+  reported `canRequestDownloads=false`, `isReady=true`, and translated a
+  Japanese test sentence after `prepareTranslation()`.
 - The reader chrome now surfaces concise localized preparation/error feedback
   next to the translation control while leaving the native TextKit page
   rendering path unchanged.
@@ -433,7 +438,8 @@ Validation:
 
 - [x] Availability-gated compile checks.
 - [x] Tests for attributed request construction where available.
-- [ ] macOS and iOS physical-device smoke tests on supported OS versions.
+- [x] macOS physical smoke test on a supported OS version.
+- [ ] iOS physical-device smoke test on a supported OS version.
 
 Evidence:
 
@@ -448,6 +454,9 @@ Evidence:
 - `NativeBoundaryTests/novelReaderTextPagesUseNativeTextKitBridges` verifies the
   reader keeps low-latency availability checks, attributed requests, and the
   older string fallback in place.
+- Real-Mac smoke used a low-latency `TranslationSession` and confirmed
+  `prepareTranslation()`, `isReady`, and a Japanese-to-English translation all
+  complete on the current macOS 27/Xcode 27 beta setup.
 
 ### Phase 8: Shared Apple Translation Client for Captions
 
