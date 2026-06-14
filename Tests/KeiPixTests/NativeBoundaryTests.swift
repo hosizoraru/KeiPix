@@ -1322,11 +1322,19 @@ struct NativeBoundaryTests {
         #expect(iPadContentView.contains("PixivCollectionsView(store: store, mode: .saved)"))
     }
 
-    @Test("Pixiv activity feed uses a native list and visible route")
-    func pixivActivityFeedUsesNativeListAndVisibleRoute() throws {
+    @Test("Pixiv activity feed uses native list or masonry and visible route")
+    func pixivActivityFeedUsesNativeListOrMasonryAndVisibleRoute() throws {
         let root = try packageRoot()
         let activityView = try String(
             contentsOf: root.appending(path: "Sources/KeiPix/Views/PixivActivityFeedView.swift"),
+            encoding: .utf8
+        )
+        let activityModels = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Models/PixivActivityModels.swift"),
+            encoding: .utf8
+        )
+        let activityPresentation = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Models/PixivActivityFeedPresentation.swift"),
             encoding: .utf8
         )
         let nativeList = try String(
@@ -1335,6 +1343,14 @@ struct NativeBoundaryTests {
         )
         let store = try String(
             contentsOf: root.appending(path: "Sources/KeiPix/Stores/KeiPixStore+PixivActivity.swift"),
+            encoding: .utf8
+        )
+        let storeCore = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Stores/KeiPixStore.swift"),
+            encoding: .utf8
+        )
+        let preferencesStore = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Stores/KeiPixStore+Preferences.swift"),
             encoding: .utf8
         )
         let pixivLinks = try String(
@@ -1356,6 +1372,17 @@ struct NativeBoundaryTests {
 
         #expect(activityView.contains("PixivSignedOutStateView(store: store)"))
         #expect(activityView.contains("NativePixivActivityListView("))
+        #expect(activityView.contains("layoutMode: effectiveActivityLayoutMode"))
+        #expect(activityView.contains("PixivActivityMasonryCard("))
+        #expect(activityView.contains("metadataOverlay"))
+        #expect(activityView.contains("actorBadge"))
+        #expect(activityView.contains("eventBadge"))
+        #expect(activityView.contains("openWorkAuthor"))
+        #expect(activityView.contains("openBookmarkTag"))
+        #expect(activityView.contains("ArtworkDetailView(store: store, showsNavigationChrome: false)"))
+        #expect(activityView.contains("NovelDetailView(store: store)"))
+        #expect(activityView.contains("LinearGradient("))
+        #expect(activityView.contains("PixivActivityFeedPresentation.compactTimeText(for: occurredAt)"))
         #expect(activityView.contains(".task(id: store.routeRefreshGeneration)"))
         #expect(activityView.contains("store.refreshPixivActivityFeed()"))
         #expect(activityView.contains("store.loadMorePixivActivityFeed()"))
@@ -1367,9 +1394,29 @@ struct NativeBoundaryTests {
         #expect(nativeList.contains("struct NativePixivActivityListView"))
         #expect(nativeList.contains("NSTableView"))
         #expect(nativeList.contains("UICollectionView"))
+        #expect(nativeList.contains("NativePixivActivityMasonryUICollectionViewLayout"))
+        #expect(nativeList.contains("PixivActivityFeedPresentation.masonryCardHeight(for: item"))
         #expect(nativeList.contains("NativeContentScrollRegistration"))
+        #expect(activityModels.contains("let thumbnailAspectRatio: Double?"))
+        #expect(activityModels.contains("struct PixivActivityBookmarkTag"))
+        #expect(activityModels.contains("let author: PixivActivityActor?"))
+        #expect(activityModels.contains("let bookmarkTag: PixivActivityBookmarkTag?"))
+        #expect(activityModels.contains("imageAspectRatio(in: illust ?? [:])"))
+        #expect(activityModels.contains("staccArtworkArtist("))
+        #expect(activityModels.contains("bookmarkTag(inSummary: summary, kind: kind)"))
+        #expect(activityPresentation.contains("static func masonryImageAspectRatio(for item: PixivActivityItem)"))
+        #expect(activityPresentation.contains("static func activityActorTitle(for item: PixivActivityItem)"))
+        #expect(activityPresentation.contains("static func masonryWorkTitle(for item: PixivActivityItem)"))
+        #expect(activityPresentation.contains("static func masonryAuthorTitle(for item: PixivActivityItem)"))
+        #expect(activityPresentation.contains("static func compactTimeText("))
         #expect(store.contains("func refreshPixivActivityFeed() async"))
         #expect(store.contains("func loadMorePixivActivityFeed() async"))
+        #expect(store.contains("func presentPixivActivityUserProfile(_ actor: PixivActivityActor) async -> String?"))
+        #expect(store.contains("func pixivActivityArtworkDetail(id: Int) async throws -> PixivArtwork"))
+        #expect(store.contains("func pixivActivityNovelDetail(id: Int) async throws -> PixivNovel"))
+        #expect(store.contains("func openPixivActivityBookmarkTag(_ tag: PixivActivityBookmarkTag) async -> String"))
+        #expect(storeCore.contains("var pixivActivityLayoutMode"))
+        #expect(preferencesStore.contains("func setPixivActivityLayoutMode(_ mode: PixivActivityLayoutMode)"))
         #expect(store.contains("syncUsablePixivActivityWebSessionIfNeeded(replacing:"))
         #expect(store.contains("clearPixivActivityWebSessionAfterFailure()"))
         #expect(store.contains("api.pixivActivityFeedPage(page:"))
@@ -1380,9 +1427,17 @@ struct NativeBoundaryTests {
         #expect(pixivLinks.contains("navigationHistory.push(.pixivisionArticle(id: id, url: url))"))
         #expect(contentView.contains("PixivActivityFeedView(store: store)"))
         #expect(iPadContentView.contains("PixivActivityFeedView(store: store)"))
+        #expect(iPadContentView.contains("showsPixivActivityLayoutPicker(showsSidebarToggle: showsSidebarToggle)"))
+        #expect(iPadContentView.contains("currentMobilePlatform == .phone"))
+        #expect(iPadContentView.contains("pixivActivityLayoutMenu"))
+        #expect(iPadContentView.contains("store.setPixivActivityLayoutMode(mode)"))
         #expect(iPadContentView.contains("selectedSidebarItem = .route(.pixivActivity)"))
         #expect(iPadContentView.contains("selectedTab = .feed"))
         #expect(localizable.contains("\"Pixiv Activity\""))
+        #expect(localizable.contains("\"Activity Layout\""))
+        #expect(localizable.contains("\"Just now\""))
+        #expect(localizable.contains("\"%d min ago\""))
+        #expect(localizable.contains("\"Waterfall\""))
         #expect(localizable.contains("\"value\": \"动态\""))
     }
 

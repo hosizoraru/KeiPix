@@ -6,6 +6,7 @@ import UIKit
 struct PixivActivityFeedView: View {
     @Bindable var store: KeiPixStore
     @State private var actionMessage: String?
+    @State private var presentedActivityDetail: PixivActivityDetailSheet?
 
     var body: some View {
         Group {
@@ -27,6 +28,25 @@ struct PixivActivityFeedView: View {
             #endif
         }
         .platformPageNavigationChrome(title: L10n.pixivActivity, status: statusText)
+        .sheet(item: $presentedActivityDetail) { detail in
+            NavigationStack {
+                switch detail {
+                case .artwork:
+                    if store.selectedArtwork != nil {
+                        ArtworkDetailView(store: store, showsNavigationChrome: false)
+                    } else {
+                        EmptyStateView(
+                            title: L10n.selectArtwork,
+                            subtitle: L10n.pixivActivityOpenHint,
+                            systemImage: "photo"
+                        )
+                    }
+                case .novel:
+                    NovelDetailView(store: store)
+                }
+            }
+            .os26SheetChrome(.detail)
+        }
         .overlay(alignment: .bottom) {
             activityFeedbackOverlay
         }
@@ -60,9 +80,21 @@ struct PixivActivityFeedView: View {
                 onNearContentEnd: loadMoreIfNeeded
             ) { item in
                 if effectiveActivityLayoutMode.usesMasonry {
-                    AnyView(PixivActivityMasonryCard(item: item, openTarget: { openTarget(for: item) }))
+                    AnyView(PixivActivityMasonryCard(
+                        item: item,
+                        openActivityActor: { openActivityActor(item.actor) },
+                        openWorkAuthor: { openActivityActor(item.target?.author) },
+                        openWork: { openWork(for: item) },
+                        openBookmarkTag: openBookmarkTag
+                    ))
                 } else {
-                    AnyView(PixivActivityRow(item: item, openTarget: { openTarget(for: item) }))
+                    AnyView(PixivActivityRow(
+                        item: item,
+                        openActivityActor: { openActivityActor(item.actor) },
+                        openWorkAuthor: { openActivityActor(item.target?.author) },
+                        openWork: { openWork(for: item) },
+                        openBookmarkTag: openBookmarkTag
+                    ))
                 }
             }
             .nativeBottomTabContentSurface()
@@ -219,6 +251,66 @@ struct PixivActivityFeedView: View {
         }
     }
 
+    private func openActivityActor(_ actor: PixivActivityActor?) {
+        guard let actor else { return }
+        Task {
+            if let message = await store.presentPixivActivityUserProfile(actor) {
+                showActionMessage(message)
+            }
+        }
+    }
+
+    private func openWork(for item: PixivActivityItem) {
+        guard let target = item.target else {
+            openActivityActor(item.actor)
+            return
+        }
+        guard let id = Int(target.id) else {
+            openTarget(for: item)
+            return
+        }
+
+        switch target.kind {
+        case .artwork:
+            Task {
+                do {
+                    _ = try await store.pixivActivityArtworkDetail(id: id)
+                    withAnimation(.snappy(duration: 0.2)) {
+                        presentedActivityDetail = .artwork(id)
+                    }
+                } catch {
+                    showActionMessage(error.localizedDescription)
+                }
+            }
+        case .novel:
+            Task {
+                do {
+                    _ = try await store.pixivActivityNovelDetail(id: id)
+                    withAnimation(.snappy(duration: 0.2)) {
+                        presentedActivityDetail = .novel(id)
+                    }
+                } catch {
+                    showActionMessage(error.localizedDescription)
+                }
+            }
+        case .user:
+            openActivityActor(PixivActivityActor(
+                userID: id,
+                name: target.title,
+                avatarURL: target.thumbnailURL
+            ))
+        case .unknown:
+            openTarget(for: item)
+        }
+    }
+
+    private func openBookmarkTag(_ tag: PixivActivityBookmarkTag) {
+        Task {
+            let message = await store.openPixivActivityBookmarkTag(tag)
+            showActionMessage(message)
+        }
+    }
+
     private func openPixivActivityWebPage() {
         guard let url = PixivWebURLBuilder.activityFeedURL() else { return }
         _ = PlatformWorkspace.open(url)
@@ -253,58 +345,121 @@ struct PixivActivityFeedView: View {
     }
 }
 
+private enum PixivActivityDetailSheet: Identifiable {
+    case artwork(Int)
+    case novel(Int)
+
+    var id: String {
+        switch self {
+        case .artwork(let id): "artwork-\(id)"
+        case .novel(let id): "novel-\(id)"
+        }
+    }
+}
+
 private struct PixivActivityRow: View {
     let item: PixivActivityItem
-    let openTarget: () -> Void
+    let openActivityActor: () -> Void
+    let openWorkAuthor: () -> Void
+    let openWork: () -> Void
+    let openBookmarkTag: (PixivActivityBookmarkTag) -> Void
 
     var body: some View {
-        Button(action: openTarget) {
-            HStack(alignment: .top, spacing: 12) {
+        HStack(alignment: .top, spacing: 12) {
+            Button(action: openWork) {
                 thumbnail
+            }
+            .buttonStyle(.plain)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-                VStack(alignment: .leading, spacing: 7) {
-                    HStack(alignment: .firstTextBaseline, spacing: 8) {
-                        Text(item.kind.title)
-                            .font(.caption.weight(.semibold))
-                            .foregroundStyle(item.kind.tint)
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 4)
-                            .background(item.kind.tint.opacity(0.14), in: Capsule())
-
-                        if let occurredAt = item.occurredAt {
-                            Text(occurredAt.formatted(date: .abbreviated, time: .shortened))
-                                .font(.caption)
-                                .foregroundStyle(.tertiary)
-                                .lineLimit(1)
-                        }
+            VStack(alignment: .leading, spacing: 7) {
+                HStack(alignment: .firstTextBaseline, spacing: 7) {
+                    Button(action: openActivityActor) {
+                        Text(activityActorTitle)
+                            .font(.caption.weight(.bold))
+                            .foregroundStyle(.primary)
+                            .lineLimit(1)
                     }
+                    .buttonStyle(.plain)
 
-                    Text(primaryTitle)
+                    Text(item.kind.title)
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(item.kind.tint)
+                        .lineLimit(1)
+
+                    if let occurredAt = item.occurredAt {
+                        Text(PixivActivityFeedPresentation.compactTimeText(for: occurredAt))
+                            .font(.caption)
+                            .foregroundStyle(.tertiary)
+                            .lineLimit(1)
+                    }
+                }
+
+                Button(action: openWork) {
+                    Text(workTitle)
                         .font(.callout.weight(.semibold))
                         .foregroundStyle(.primary)
                         .lineLimit(1)
-
-                    Text(secondaryTitle)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(2)
-                        .fixedSize(horizontal: false, vertical: true)
                 }
+                .buttonStyle(.plain)
 
-                Spacer(minLength: 0)
+                HStack(spacing: 6) {
+                    if authorTitle.isEmpty == false {
+                        Button(action: openWorkAuthor) {
+                            Text(authorTitle)
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(.secondary)
+                                .lineLimit(1)
+                        }
+                        .buttonStyle(.plain)
+                    }
 
-                Image(systemName: "chevron.right")
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(.tertiary)
-                    .padding(.top, 8)
+                    if let bookmarkTag = item.bookmarkTag {
+                        Button {
+                            openBookmarkTag(bookmarkTag)
+                        } label: {
+                            Text("#\(bookmarkTag.name)")
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(item.kind.tint)
+                                .lineLimit(1)
+                        }
+                        .buttonStyle(.plain)
+                    }
+
+                    if authorTitle.isEmpty, item.bookmarkTag == nil {
+                        Text(secondaryTitle)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .padding(12)
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-            .contentShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+
+            Spacer(minLength: 0)
+
+            Image(systemName: "chevron.right")
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.tertiary)
+                .padding(.top, 8)
         }
-        .buttonStyle(.plain)
+        .padding(12)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .contentShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         .keiGlass(18)
         .accessibilityLabel(accessibilityTitle)
+    }
+
+    private var activityActorTitle: String {
+        PixivActivityFeedPresentation.activityActorTitle(for: item)
+    }
+
+    private var workTitle: String {
+        PixivActivityFeedPresentation.masonryWorkTitle(for: item)
+    }
+
+    private var authorTitle: String {
+        PixivActivityFeedPresentation.masonryAuthorTitle(for: item)
     }
 
     @ViewBuilder
@@ -338,60 +493,45 @@ private struct PixivActivityRow: View {
 
 private struct PixivActivityMasonryCard: View {
     let item: PixivActivityItem
-    let openTarget: () -> Void
+    let openActivityActor: () -> Void
+    let openWorkAuthor: () -> Void
+    let openWork: () -> Void
+    let openBookmarkTag: (PixivActivityBookmarkTag) -> Void
 
     var body: some View {
-        Button(action: openTarget) {
-            VStack(alignment: .leading, spacing: 10) {
-                thumbnail
+        ZStack(alignment: .topLeading) {
+            Button(action: openWork) {
+                ZStack {
+                    thumbnailContent
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .clipped()
 
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(primaryTitle)
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(.primary)
-                        .lineLimit(2)
-                        .fixedSize(horizontal: false, vertical: true)
-
-                    Text(secondaryTitle)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(2)
-                        .fixedSize(horizontal: false, vertical: true)
+                    LinearGradient(
+                        colors: [
+                            .clear,
+                            .black.opacity(0.18),
+                            .black.opacity(0.70)
+                        ],
+                        startPoint: .center,
+                        endPoint: .bottom
+                    )
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .padding(12)
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-            .contentShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .buttonStyle(.plain)
+
+            topOverlay
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                .padding(9)
+
+            metadataOverlay
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
+                .padding(11)
         }
-        .buttonStyle(.plain)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .contentShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         .keiGlass(18)
         .accessibilityLabel(accessibilityTitle)
-    }
-
-    private var thumbnail: some View {
-        ZStack(alignment: .topLeading) {
-            thumbnailContent
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .clipped()
-
-            kindBadge
-                .padding(8)
-
-            if let occurredAt = item.occurredAt {
-                Text(occurredAt.formatted(date: .abbreviated, time: .omitted))
-                    .font(.caption2.weight(.medium))
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-                    .padding(.horizontal, 7)
-                    .padding(.vertical, 4)
-                    .background(.ultraThinMaterial, in: Capsule())
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
-                    .padding(8)
-            }
-        }
-        .aspectRatio(thumbnailAspectRatio, contentMode: .fit)
-        .clipShape(RoundedRectangle(cornerRadius: 15, style: .continuous))
     }
 
     @ViewBuilder
@@ -408,36 +548,122 @@ private struct PixivActivityMasonryCard: View {
         }
     }
 
-    private var kindBadge: some View {
-        Text(item.kind.title)
+    private var actorBadge: some View {
+        HStack(spacing: 5) {
+            if let url = item.actor?.avatarURL {
+                RemoteImageView(url: url, contentMode: .fill)
+                    .frame(width: 18, height: 18)
+                    .clipShape(Circle())
+            }
+
+            Text(activityActorTitle)
+                .font(.caption2.weight(.bold))
+                .foregroundStyle(.white)
+                .lineLimit(1)
+                .truncationMode(.tail)
+                .layoutPriority(1)
+        }
+        .padding(.horizontal, 7)
+        .padding(.vertical, 4)
+        .background(.black.opacity(0.32), in: Capsule())
+    }
+
+    private var eventBadge: some View {
+        Image(systemName: item.kind.systemImage)
             .font(.caption2.weight(.bold))
-            .foregroundStyle(item.kind.tint)
-            .lineLimit(1)
-            .padding(.horizontal, 7)
-            .padding(.vertical, 4)
-            .background(.ultraThinMaterial, in: Capsule())
+            .symbolRenderingMode(.hierarchical)
+            .foregroundStyle(item.kind.tint.opacity(0.98))
+            .frame(width: 24, height: 24)
+            .background(.black.opacity(0.30), in: Circle())
+            .accessibilityLabel(item.kind.title)
+    }
+
+    private var topOverlay: some View {
+        HStack(alignment: .top, spacing: 6) {
+            Button(action: openActivityActor) {
+                actorBadge
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .clipped()
+            }
+            .buttonStyle(.plain)
+            .frame(maxWidth: .infinity, alignment: .leading)
+
+            eventBadge
+
+            if let occurredAt = item.occurredAt {
+                Text(PixivActivityFeedPresentation.compactTimeText(for: occurredAt))
+                    .font(.caption)
+                    .foregroundStyle(.white.opacity(0.9))
+                    .lineLimit(1)
+                    .fixedSize(horizontal: true, vertical: false)
+                    .padding(.horizontal, 7)
+                    .padding(.vertical, 4)
+                    .background(.black.opacity(0.30), in: Capsule())
+            }
+        }
+    }
+
+    private var metadataOverlay: some View {
+        VStack(alignment: .leading, spacing: 3) {
+            Button(action: openWork) {
+                Text(workTitle)
+                    .font(.subheadline.weight(.bold))
+                    .foregroundStyle(.white)
+                    .lineLimit(2)
+                    .shadow(color: .black.opacity(0.32), radius: 4, x: 0, y: 2)
+            }
+            .buttonStyle(.plain)
+
+            if authorTitle.isEmpty == false {
+                Button(action: openWorkAuthor) {
+                    HStack(spacing: 4) {
+                        Text(L10n.creator)
+                            .foregroundStyle(.white.opacity(0.66))
+                        Text(authorTitle)
+                            .foregroundStyle(.white.opacity(0.86))
+                    }
+                    .font(.caption.weight(.semibold))
+                    .lineLimit(1)
+                    .shadow(color: .black.opacity(0.26), radius: 3, x: 0, y: 1)
+                }
+                .buttonStyle(.plain)
+            }
+
+            if let bookmarkTag = item.bookmarkTag {
+                Button {
+                    openBookmarkTag(bookmarkTag)
+                } label: {
+                    Text("#\(bookmarkTag.name)")
+                        .font(.caption2.weight(.bold))
+                        .foregroundStyle(.white.opacity(0.92))
+                        .lineLimit(1)
+                        .padding(.horizontal, 7)
+                        .padding(.vertical, 4)
+                        .background(item.kind.tint.opacity(0.74), in: Capsule())
+                }
+                .buttonStyle(.plain)
+            }
+        }
     }
 
     private var primaryTitle: String {
         PixivActivityFeedPresentation.primaryTitle(for: item)
     }
 
-    private var secondaryTitle: String {
-        PixivActivityFeedPresentation.secondaryTitle(for: item)
-    }
-
     private var accessibilityTitle: String {
         "\(item.kind.title), \(primaryTitle)"
     }
 
-    private var thumbnailAspectRatio: CGFloat {
-        if item.target?.thumbnailURL != nil {
-            return 1.43
-        }
-        if item.actor?.avatarURL != nil || item.kind == .followedUser {
-            return 1.61
-        }
-        return 1.72
+    private var workTitle: String {
+        PixivActivityFeedPresentation.masonryWorkTitle(for: item)
+    }
+
+    private var activityActorTitle: String {
+        PixivActivityFeedPresentation.activityActorTitle(for: item)
+    }
+
+    private var authorTitle: String {
+        PixivActivityFeedPresentation.masonryAuthorTitle(for: item)
     }
 }
 
