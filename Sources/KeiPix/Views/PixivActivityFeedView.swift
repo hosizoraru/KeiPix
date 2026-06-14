@@ -43,6 +43,8 @@ struct PixivActivityFeedView: View {
         }
         .animation(.snappy(duration: 0.18), value: actionMessage)
         .animation(.snappy(duration: 0.18), value: store.pixivActivityErrorMessage)
+        .animation(.snappy(duration: 0.18), value: showsInlineActivityFilterBar)
+        .animation(.snappy(duration: 0.18), value: activityFilterSignature)
         .task(id: store.routeRefreshGeneration) {
             await store.refreshPixivActivityFeed()
         }
@@ -64,38 +66,116 @@ struct PixivActivityFeedView: View {
             ) {
                 retryButton
             }
-        } else if visibleItems.isEmpty {
-            filteredActivityEmptyState
         } else {
-            NativePixivActivityListView(
-                items: visibleItems,
-                layoutMode: effectiveActivityLayoutMode,
-                rowHeight: 118,
-                onNearContentEnd: loadMoreIfNeeded
-            ) { item in
-                if effectiveActivityLayoutMode.usesMasonry {
-                    AnyView(PixivActivityMasonryCard(
-                        item: item,
-                        isNew: store.pixivActivityNewItemIDs.contains(item.id),
-                        openActivityActor: { openActivityActor(item.actor) },
-                        openWorkAuthor: { openActivityActor(item.target?.author) },
-                        openWork: { openWork(for: item) },
-                        openBookmarkTag: openBookmarkTag
-                    ))
+            VStack(spacing: 0) {
+                if showsInlineActivityFilterBar {
+                    activityFilterBar
+                        .platformGlassControlBar(verticalPadding: 7, topPadding: 2)
+                        .transition(.move(edge: .top).combined(with: .opacity))
+                }
+
+                if visibleItems.isEmpty {
+                    filteredActivityEmptyState
                 } else {
-                    AnyView(PixivActivityRow(
-                        item: item,
-                        isNew: store.pixivActivityNewItemIDs.contains(item.id),
-                        openActivityActor: { openActivityActor(item.actor) },
-                        openWorkAuthor: { openActivityActor(item.target?.author) },
-                        openWork: { openWork(for: item) },
-                        openBookmarkTag: openBookmarkTag
-                    ))
+                    NativePixivActivityListView(
+                        items: visibleItems,
+                        layoutMode: effectiveActivityLayoutMode,
+                        rowHeight: 118,
+                        onNearContentEnd: loadMoreIfNeeded
+                    ) { item in
+                        if effectiveActivityLayoutMode.usesMasonry {
+                            AnyView(PixivActivityMasonryCard(
+                                item: item,
+                                isNew: store.pixivActivityNewItemIDs.contains(item.id),
+                                openActivityActor: { openActivityActor(item.actor) },
+                                openWorkAuthor: { openActivityActor(item.target?.author) },
+                                openWork: { openWork(for: item) },
+                                openBookmarkTag: openBookmarkTag
+                            ))
+                        } else {
+                            AnyView(PixivActivityRow(
+                                item: item,
+                                isNew: store.pixivActivityNewItemIDs.contains(item.id),
+                                openActivityActor: { openActivityActor(item.actor) },
+                                openWorkAuthor: { openActivityActor(item.target?.author) },
+                                openWork: { openWork(for: item) },
+                                openBookmarkTag: openBookmarkTag
+                            ))
+                        }
+                    }
+                    .nativeBottomTabContentSurface()
+                    .scrollEdgeEffectStyle(.soft, for: .top)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
             }
-            .nativeBottomTabContentSurface()
-            .scrollEdgeEffectStyle(.soft, for: .top)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+    }
+
+    private var activityFilterBar: some View {
+        GlassEffectContainer(spacing: 8) {
+            VStack(alignment: .leading, spacing: 8) {
+                OS26LibrarySearchField(
+                    text: $store.clientFilterQuery,
+                    placeholder: L10n.filterActivity,
+                    minWidth: 180,
+                    idealWidth: 260,
+                    maxWidth: 420,
+                    collapsesOnPhone: false
+                )
+                .frame(minWidth: 220, idealWidth: 320, maxWidth: 520)
+                .layoutPriority(1)
+
+                if hasActivityFilterPills {
+                    activityFilterPills
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .transition(.opacity.combined(with: .scale(scale: 0.97)))
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .controlSize(.small)
+    }
+
+    private var activityFilterPills: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
+                if store.pixivActivityFeedScope != .all {
+                    FeedFilterClearChip(
+                        title: store.pixivActivityFeedScope.title,
+                        clearLabel: L10n.clearFeedFilter,
+                        systemImage: store.pixivActivityFeedScope.systemImage,
+                        maximumWidth: 170
+                    ) {
+                        resetActivityFeedScope()
+                    }
+                }
+
+                if store.pixivActivityKindFilter != .all {
+                    FeedFilterClearChip(
+                        title: store.pixivActivityKindFilter.title,
+                        clearLabel: L10n.clearFeedFilter,
+                        systemImage: store.pixivActivityKindFilter.systemImage,
+                        maximumWidth: 170
+                    ) {
+                        withAnimation(.snappy(duration: 0.16)) {
+                            store.setPixivActivityKindFilter(.all)
+                        }
+                    }
+                }
+
+                if hasActivityTextFilter {
+                    FeedFilterClearChip(
+                        title: String(format: L10n.activeArtworkFilterFormat, normalizedActivityFilterQuery),
+                        clearLabel: L10n.clearFeedFilter,
+                        systemImage: "line.3.horizontal.decrease.circle.fill",
+                        maximumWidth: 220
+                    ) {
+                        clearActivityTextFilter()
+                    }
+                }
+            }
+            .padding(.vertical, 1)
         }
     }
 
@@ -103,9 +183,18 @@ struct PixivActivityFeedView: View {
         OS26LibraryUnavailableView(
             title: L10n.pixivActivityFilteredEmptyTitle,
             subtitle: store.pixivActivityErrorMessage ?? L10n.pixivActivityFilteredEmptyHint,
-            systemImage: store.pixivActivityKindFilter.systemImage
+            systemImage: filteredActivityEmptySystemImage
         ) {
             VStack(spacing: 10) {
+                if hasActivityTextFilter {
+                    Button {
+                        clearActivityTextFilter()
+                    } label: {
+                        Label(L10n.clearSearch, systemImage: "xmark.circle")
+                    }
+                    .os26GlassButton(prominent: true)
+                }
+
                 if store.pixivActivityKindFilter != .all {
                     Button {
                         withAnimation(.snappy(duration: 0.16)) {
@@ -115,6 +204,15 @@ struct PixivActivityFeedView: View {
                         Label(L10n.pixivActivityKindAll, systemImage: PixivActivityKindFilter.all.systemImage)
                     }
                     .os26GlassButton(prominent: true)
+                }
+
+                if store.pixivActivityFeedScope != .all {
+                    Button {
+                        resetActivityFeedScope()
+                    } label: {
+                        Label(L10n.pixivActivityScopeAll, systemImage: PixivActivityFeedScope.all.systemImage)
+                    }
+                    .os26GlassButton()
                 }
 
                 if store.hasMorePixivActivityFeed {
@@ -127,6 +225,64 @@ struct PixivActivityFeedView: View {
                 }
             }
         }
+    }
+
+    private var showsInlineActivityFilterBar: Bool {
+        store.pixivActivityItems.isEmpty == false && usesPhoneCurrentFeedFilterOverlay == false
+    }
+
+    private var hasActivityFilterPills: Bool {
+        store.pixivActivityFeedScope != .all
+            || store.pixivActivityKindFilter != .all
+            || hasActivityTextFilter
+    }
+
+    private var hasActivityTextFilter: Bool {
+        normalizedActivityFilterQuery.isEmpty == false
+    }
+
+    private var normalizedActivityFilterQuery: String {
+        store.clientFilterQuery.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private var filteredActivityEmptySystemImage: String {
+        if hasActivityTextFilter {
+            return "magnifyingglass"
+        }
+        if store.pixivActivityKindFilter != .all {
+            return store.pixivActivityKindFilter.systemImage
+        }
+        return store.pixivActivityFeedScope.systemImage
+    }
+
+    private var activityFilterSignature: String {
+        [
+            store.pixivActivityFeedScope.rawValue,
+            store.pixivActivityKindFilter.rawValue,
+            normalizedActivityFilterQuery
+        ]
+        .joined(separator: "|")
+    }
+
+    private var usesPhoneCurrentFeedFilterOverlay: Bool {
+        #if os(iOS)
+        UIDevice.current.userInterfaceIdiom == .phone
+        #else
+        false
+        #endif
+    }
+
+    private func clearActivityTextFilter() {
+        withAnimation(.snappy(duration: 0.16)) {
+            store.clientFilterQuery = ""
+        }
+    }
+
+    private func resetActivityFeedScope() {
+        withAnimation(.snappy(duration: 0.16)) {
+            store.setPixivActivityFeedScope(.all)
+        }
+        Task { await store.refreshPixivActivityFeed() }
     }
 
     private var webSessionState: some View {

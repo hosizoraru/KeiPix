@@ -9,7 +9,8 @@ extension KeiPixStore {
     var pixivActivityVisibleItems: [PixivActivityItem] {
         PixivActivityFeedPresentation.filteredItems(
             pixivActivityItems,
-            kindFilter: pixivActivityKindFilter
+            kindFilter: pixivActivityKindFilter,
+            query: clientFilterQuery
         )
     }
 

@@ -1667,6 +1667,7 @@ enum L10n {
     static var filterArtworks: String { text("Filter artworks...") }
     static var filterNovels: String { text("Filter novels...") }
     static var filterResults: String { text("Filter results...") }
+    static var filterActivity: String { text("Filter activity...") }
     static var surpriseMe: String { text("Surprise Me") }
     static var randomFromFeed: String { text("Random") }
     static var exitFocusReading: String { text("Exit Focus Reading") }

@@ -140,10 +140,46 @@ enum PixivActivityFeedPresentation {
 
     static func filteredItems(
         _ items: [PixivActivityItem],
-        kindFilter: PixivActivityKindFilter
+        kindFilter: PixivActivityKindFilter,
+        query: String = ""
     ) -> [PixivActivityItem] {
-        guard let kind = kindFilter.activityKind else { return items }
-        return items.filter { $0.kind == kind }
+        let kindFilteredItems: [PixivActivityItem]
+        if let kind = kindFilter.activityKind {
+            kindFilteredItems = items.filter { $0.kind == kind }
+        } else {
+            kindFilteredItems = items
+        }
+
+        let terms = query
+            .split(whereSeparator: \.isWhitespace)
+            .map(String.init)
+            .filter { $0.isEmpty == false }
+        guard terms.isEmpty == false else { return kindFilteredItems }
+        return kindFilteredItems.filter { item in
+            let searchableText = activitySearchText(for: item)
+            return terms.allSatisfy { searchableText.localizedCaseInsensitiveContains($0) }
+        }
+    }
+
+    static func activitySearchText(for item: PixivActivityItem) -> String {
+        [
+            item.id,
+            item.kind.title,
+            item.actor?.name,
+            item.actor?.userID.map(String.init),
+            item.target?.id,
+            item.target?.title,
+            item.target?.kind.rawValue,
+            item.target?.author?.name,
+            item.target?.author?.userID.map(String.init),
+            item.summary,
+            item.bookmarkTag?.name,
+            item.bookmarkTag?.url?.absoluteString,
+            item.target?.url?.absoluteString
+        ]
+        .compactMap { $0?.trimmingCharacters(in: .whitespacesAndNewlines) }
+        .filter { $0.isEmpty == false }
+        .joined(separator: " ")
     }
 
     static func primaryTitle(for item: PixivActivityItem) -> String {

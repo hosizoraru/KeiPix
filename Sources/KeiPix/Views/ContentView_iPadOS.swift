@@ -1810,9 +1810,13 @@ struct ContentView: View {
     private var phoneSupportsClientFeedFilter: Bool {
         store.selectedRoute.usesArtworkFeed
             || (store.selectedRoute.usesNovelFeed && store.selectedRoute != .novelWatchlist)
+            || store.selectedRoute == .pixivActivity
     }
 
     private var phoneClientFilterTotalCount: Int {
+        if store.selectedRoute == .pixivActivity {
+            return store.pixivActivityItems.count
+        }
         if store.selectedRoute.usesNovelFeed {
             return store.novels.novels.count
         }
@@ -1820,6 +1824,9 @@ struct ContentView: View {
     }
 
     private var phoneClientFilterVisibleCount: Int {
+        if store.selectedRoute == .pixivActivity {
+            return store.pixivActivityVisibleItems.count
+        }
         if store.selectedRoute.usesNovelFeed {
             return ClientFilterDSL.filter(store.novels.novels, query: store.clientFilterQuery).count
         }
@@ -1827,6 +1834,9 @@ struct ContentView: View {
     }
 
     private var phoneFeedFilterPlaceholder: String {
+        if store.selectedRoute == .pixivActivity {
+            return L10n.filterActivity
+        }
         if store.selectedRoute.usesNovelFeed {
             return L10n.filterNovels
         }

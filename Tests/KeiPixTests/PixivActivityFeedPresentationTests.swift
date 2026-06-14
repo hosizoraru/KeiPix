@@ -57,6 +57,54 @@ struct PixivActivityFeedPresentationTests {
         #expect(PixivActivityFeedPresentation.filteredItems(mineFeed, kindFilter: .unknown).map(\.id) == ["mine-unknown"])
     }
 
+    @Test("Activity text filter composes with source and kind filters")
+    func activityTextFilterComposesWithSourceAndKindFilters() {
+        let mineFeed = [
+            Self.activityItem(
+                id: "mine-posted",
+                kind: .postedArtwork,
+                summary: "I posted Blue Morning",
+                authorName: "Alice"
+            ),
+            Self.activityItem(
+                id: "mine-bookmarked-target",
+                kind: .bookmarkedArtwork,
+                summary: "I bookmarked Blue Morning",
+                authorName: "Archive Artist"
+            ),
+            Self.activityItem(
+                id: "mine-bookmarked-tag",
+                kind: .bookmarkedArtwork,
+                summary: "I bookmarked Sketch Sheet",
+                targetTitle: "Sketch Sheet",
+                authorName: "Mika",
+                bookmarkTagName: "生徒会"
+            ),
+            Self.activityItem(
+                id: "mine-followed",
+                kind: .followedUser,
+                summary: "I followed Bob",
+                authorName: "Bob"
+            )
+        ]
+
+        #expect(PixivActivityFeedPresentation.filteredItems(
+            mineFeed,
+            kindFilter: .bookmarkedArtwork,
+            query: "Blue"
+        ).map(\.id) == ["mine-bookmarked-target"])
+        #expect(PixivActivityFeedPresentation.filteredItems(
+            mineFeed,
+            kindFilter: .bookmarkedArtwork,
+            query: "生徒会"
+        ).map(\.id) == ["mine-bookmarked-tag"])
+        #expect(PixivActivityFeedPresentation.filteredItems(
+            mineFeed,
+            kindFilter: .all,
+            query: "bob"
+        ).map(\.id) == ["mine-followed"])
+    }
+
     @Test("Activity new markers do not mark the initial load")
     func activityNewMarkersIgnoreInitialLoad() {
         let now = Date(timeIntervalSince1970: 1_800_000_000)
@@ -198,9 +246,11 @@ struct PixivActivityFeedPresentationTests {
         id: String? = nil,
         kind: PixivActivityKind = .postedArtwork,
         summary: String,
+        targetTitle: String = "Blue Morning",
         thumbnailAspectRatio: Double? = nil,
         authorName: String? = nil,
-        authorID: Int? = nil
+        authorID: Int? = nil,
+        bookmarkTagName: String? = nil
     ) -> PixivActivityItem {
         PixivActivityItem(
             id: id ?? "activity-\(summary.count)",
@@ -213,7 +263,7 @@ struct PixivActivityFeedPresentationTests {
             target: PixivActivityTarget(
                 kind: .artwork,
                 id: "100",
-                title: "Blue Morning",
+                title: targetTitle,
                 url: URL(string: "https://www.pixiv.net/artworks/100"),
                 thumbnailURL: URL(string: "https://i.pximg.net/img-master/img/100.jpg"),
                 thumbnailAspectRatio: thumbnailAspectRatio,
@@ -226,7 +276,8 @@ struct PixivActivityFeedPresentationTests {
                 }
             ),
             occurredAt: Date(timeIntervalSince1970: 1_800_000_000),
-            summary: summary
+            summary: summary,
+            bookmarkTag: bookmarkTagName.map { PixivActivityBookmarkTag(name: $0, url: nil) }
         )
     }
 }

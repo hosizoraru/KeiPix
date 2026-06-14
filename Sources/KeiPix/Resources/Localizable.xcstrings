@@ -12616,6 +12616,35 @@
         }
       }
     },
+    "Filter activity...": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Filter activity..."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "動向を絞り込む..."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "筛选动态..."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "篩選動態..."
+          }
+        }
+      }
+    },
     "Filter novels...": {
       "extractionState": "manual",
       "localizations": {
