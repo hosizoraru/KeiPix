@@ -189,10 +189,10 @@ Recommended new or changed types:
 | Phase 1: Segment Planner | Done | Added `NovelTranslationSegment` and `NovelTranslationPlanner` with paragraph splitting, non-text/noisy text skipping, stable source hashes, and stable client identifiers. |
 | Phase 2: Apple Batch Streaming Client | Done | Reader now uses a testable `NovelTranslationBatchClient` closure wrapper, builds `TranslationSession.Request` batches with `clientIdentifier`, consumes `session.translate(batch:)`, and ignores missing/unknown identifiers. |
 | Phase 3: Incremental Engine Updates | Done | `NovelTranslationEngine` now stores segment results, updates progress per streamed result, preserves legacy token lookup, and keeps source text visible for pending segments. |
-| Phase 4: Visible-First Scheduling | In progress | Scheduler implementation, continuous TextKit visible-range reporting, focused tests, iOS/iPadOS generic builds, and a local `novel-translation-smoke` launch surface are complete; physical-device smoke validation remains open. |
+| Phase 4: Visible-First Scheduling | Done | Scheduler implementation, continuous TextKit visible-range reporting, focused tests, iOS/iPadOS generic builds, local `novel-translation-smoke`, and real iPhone translation smoke validation are complete; physical iPadOS smoke is deferred by maintainer request. |
 | Phase 5: Persistent Translation Cache | Done | Segment translations now persist under the app caches directory, cache hits apply before network translation, misses continue streaming, and Reading settings exposes a localized clear-cache action. |
-| Phase 6: Availability, Preparation, and Errors | In progress | `LanguageAvailability`, recoverable error mapping, localized reader feedback, and physical-validation routes are implemented and tested; 2026-06-14 iPhone real-account validation exposed an auto-source `prepareTranslation()` failure that is fixed in code and awaiting a newly side-loaded build for retest. |
-| Phase 7: OS 26.4+ Translation Strategy and Skip Ranges | In progress | OS 26.4+ translation sessions now prefer low latency, batch requests use attributed skip ranges for Pixiv markers/URLs when available, and auto-source sessions defer preparation to text-backed translate requests; real-Mac smoke passed, while latest iOS physical retest is pending a fresh side-load. |
+| Phase 6: Availability, Preparation, and Errors | Done | `LanguageAvailability`, recoverable error mapping, localized reader feedback, physical-validation routes, real-Mac smoke, and real iPhone smoke are complete; the auto-source `prepareTranslation()` failure is fixed and retested on the side-loaded build. |
+| Phase 7: OS 26.4+ Translation Strategy and Skip Ranges | Done | OS 26.4+ translation sessions prefer low latency, batch requests use attributed skip ranges for Pixiv markers/URLs when available, auto-source sessions defer preparation to text-backed translate requests, and the iOS physical retest passed. |
 | Phase 8: Shared Apple Translation Client for Captions | Done | Language resolution, low-latency configuration, availability/error mapping, and caption inline error handling now share `AppleTranslationSupport` without coupling captions to novel cache state. |
 
 ### Phase 0: Baseline and Guard Rails
@@ -333,7 +333,7 @@ Validation:
 - [x] Scheduler ordering tests.
 - [x] Cancellation tests with a fake client.
 - [x] iOS/iPadOS generic builds.
-- [ ] Real-device smoke test before marking complete.
+- [x] Real-device smoke test before marking complete.
 
 Evidence:
 
@@ -358,6 +358,14 @@ Evidence:
 - 2026-06-14 validation: `swift test` passed 577 tests, `git diff --check`
   passed, and both `KeiPix iOS` / `KeiPix iPadOS` generic Simulator builds
   passed after the smoke surface landed.
+- 2026-06-14 physical iPhone retest: after the fixed build was side-loaded on
+  `atri iPhone 15 Pro` running iOS 27.0, a real Japanese novel translated in
+  the native reader without the prior warning indicator. Evidence screenshot:
+  `artifacts/device-qa/20260614-iphone-translation-smoke/iphone-real-account-fixed-01.png`.
+- Physical iPadOS validation is intentionally deferred by maintainer request.
+  The reader scheduling code path is shared with iOS, and the iPadOS generic
+  build remains the validation evidence for this goal until a physical iPad is
+  available for a later manual smoke test.
 
 ### Phase 5: Persistent Translation Cache
 
@@ -410,7 +418,8 @@ Validation:
 - [x] Focused tests for error-state mapping.
 - [x] Localized string catalog validation if strings are added.
 - [x] Physical Mac validation for model-preparation behavior.
-- [ ] Physical iPhone/iPad validation for iOS/iPadOS behavior.
+- [x] Physical iPhone validation for iOS behavior.
+- [x] Physical iPadOS validation explicitly deferred by maintainer request.
 
 Evidence:
 
@@ -425,10 +434,10 @@ Evidence:
   `TranslationSession(installedSource:target:preferredStrategy: .lowLatency)`
   reported `canRequestDownloads=false`, `isReady=true`, and translated a
   Japanese test sentence after `prepareTranslation()`.
-- Current physical iPhone/iPad validation remains open because
-  `xcrun devicectl list devices` and `xcrun xctrace list devices` show the
+- Earlier physical iPhone/iPad validation was blocked because
+  `xcrun devicectl list devices` and `xcrun xctrace list devices` showed the
   paired iPhone 15 Pro and iPad Pro as unavailable/offline on this machine;
-  available iOS/iPadOS Simulator devices are not sufficient proof for Apple's
+  available iOS/iPadOS Simulator devices were not sufficient proof for Apple's
   Translation runtime behavior.
 - 2026-06-14 recheck: `xcrun devicectl list devices` still reported
   `atri iPhone 15 Pro` and `atri iPad Pro` as `unavailable`, and
@@ -461,7 +470,23 @@ Evidence:
 - Code fix `8800bc76` adds `AppleTranslationPreparationPolicy`, defers
   preparation for auto-source reader sessions, reinvalidates the translation
   task after async novel tokens load, and keeps compact translation errors
-  readable. Retest on physical iPhone is pending a freshly side-loaded build.
+  readable.
+- 2026-06-14 physical iPhone retest after side-loading the fixed build passed:
+  the user reproduced the real-account flow successfully, and local capture
+  saved
+  `artifacts/device-qa/20260614-iphone-translation-smoke/iphone-real-account-fixed-01.png`.
+- Crash/log audit after the successful retest found no new post-fix KeiPix
+  crash report and no translation error/fault lines. Fresh
+  `idevicecrashreport` output only copied the historical
+  `KeiPix.cpu_resource-2026-06-14-091540.ips` resource report from 09:14-09:15
+  before the successful retest, plus a retired 2026-06-10 watchdog crash. Live
+  syslog showed `KeiPix(Translation)` resuming language status observations and
+  no `LanguageAvailability` / `prepareTranslation` failure.
+- Non-blocking log observation: the iPhone live syslog contained four
+  `KeiPix(SwiftUICore)` faults saying `glassEffect() tried to update multiple
+  times per frame` during foreground/menu animation. This is an OS 27 Liquid
+  Glass polish signal, not a novel translation failure, and should be handled in
+  a separate UI cleanup pass if it repeats in focused glass QA.
 
 ### Phase 7: OS 26.4+ Translation Strategy and Skip Ranges
 
@@ -480,7 +505,7 @@ Validation:
 - [x] Availability-gated compile checks.
 - [x] Tests for attributed request construction where available.
 - [x] macOS physical smoke test on a supported OS version.
-- [ ] iOS physical-device smoke test on a supported OS version.
+- [x] iOS physical-device smoke test on a supported OS version.
 
 Evidence:
 
@@ -509,6 +534,10 @@ Evidence:
   covers the OS 26.4+ auto-source path that failed on physical iPhone, and
   `NativeBoundaryTests/novelReaderTextPagesUseNativeTextKitBridges` guards the
   async-token invalidation plus compact readable error badge.
+- 2026-06-14 iPhone smoke on the side-loaded build verified that the auto-source
+  path now reaches translated reader text instead of collapsing into the warning
+  badge. Physical iPadOS smoke is deferred by maintainer request and is no
+  longer a blocker for this plan's completion.
 
 ### Phase 8: Shared Apple Translation Client for Captions
 
@@ -562,9 +591,9 @@ Evidence:
 | Planner/model changes | `swift test --filter NovelTranslationPlannerTests`, `swift test --filter NovelTextTokenizerTests` |
 | Engine/cache changes | Focused engine/cache tests plus `swift test` |
 | Reader wiring | Focused novel tests, macOS Xcode build, iOS/iPadOS generic builds |
-| User-visible reader behavior | macOS reader visual QA plus physical iPhone/iPad smoke test for actual Translation API behavior |
+| User-visible reader behavior | macOS reader visual QA plus physical iPhone smoke test for actual Translation API behavior; physical iPadOS smoke can be run later when hardware is available |
 | Localization/settings | `jq empty Sources/KeiPix/Resources/Localizable.xcstrings`, focused L10n/settings tests, `swift test` |
-| Availability or model-download behavior | Real Mac and real iOS/iPadOS device checks, because Simulator is not sufficient for Translation API behavior |
+| Availability or model-download behavior | Real Mac and real iPhone checks, because Simulator is not sufficient for Translation API behavior; iPadOS follows the shared path and gets a later manual smoke pass |
 
 ## Risks and Mitigations
 
@@ -576,7 +605,7 @@ Evidence:
 | Cache shows stale text after novel update | Include source hash and cache schema version in every key. |
 | Model download interrupts reading | Call `prepareTranslation()` before large translation work and surface clear preparation state. |
 | Continuous reader cannot identify visible range yet | Start with page-order scheduling, then add native visible-range reporting as a later slice. |
-| Apple Translation unavailable in Simulator | Mark physical-device validation as required before completion. |
+| Apple Translation unavailable in Simulator | Require real Mac and real iPhone validation before completion; record physical iPadOS validation as a later manual smoke pass when hardware is available. |
 
 ## Future Provider Layer
 
@@ -612,5 +641,5 @@ Definition of done for that first goal:
 - [x] `git diff --check` passes.
 - [x] macOS build passes.
 - [x] iOS/iPadOS generic builds pass.
-- [ ] Physical-device translation validation is either completed or explicitly
-  recorded as the remaining blocker.
+- [x] Physical-device translation validation is complete for iPhone, with
+  physical iPadOS validation explicitly deferred as a later manual smoke pass.
