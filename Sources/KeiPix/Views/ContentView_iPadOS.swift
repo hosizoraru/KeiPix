@@ -30,6 +30,7 @@ struct ContentView: View {
     @State private var compactContentTransitionEdge: Edge = .trailing
     @State private var feedbackRequest: FeedbackReportRequest?
     @State private var statusMessage: String?
+    @State private var pendingDownloadDangerAction: DownloadDangerAction?
     @State private var bookmarkEditorLayoutProfileOverride: BookmarkEditorLayoutProfile = .compact
     @AppStorage("mobileBottomTabItemIDs") private var mobileBottomTabDefaultRouteIDs = MobileBottomTabConfiguration.defaultStorageID
     @AppStorage("mobileBottomTabLaunchTarget") private var mobileBottomTabLaunchTargetID = MobileBottomTabConfiguration.defaultLaunchTarget.rawValue
@@ -311,6 +312,21 @@ struct ContentView: View {
             } message: { action in
                 Text(action.confirmationMessage)
             }
+            .confirmationDialog(
+                pendingDownloadDangerAction?.title ?? L10n.downloadActions,
+                isPresented: downloadDangerActionBinding,
+                titleVisibility: .visible,
+                presenting: pendingDownloadDangerAction
+            ) { action in
+                Button(action.confirmButtonTitle, role: .destructive) {
+                    performDownloadDangerAction(action)
+                }
+                Button(L10n.cancel, role: .cancel) {
+                    pendingDownloadDangerAction = nil
+                }
+            } message: { action in
+                Text(action.message)
+            }
             .overlay(alignment: .bottom) {
                 VStack(spacing: 8) {
                     if let statusMessage {
@@ -540,6 +556,19 @@ struct ContentView: View {
                             } label: {
                                 Label(L10n.refresh, systemImage: "arrow.clockwise")
                             }
+                        }
+                    }
+
+                    ToolbarItem(placement: .primaryAction) {
+                        if showsDownloadQueueToolbarMenu {
+                            NativeToolbarMenuButton(
+                                systemImage: "arrow.down.circle",
+                                accessibilityLabel: L10n.downloadActions,
+                                menu: downloadQueueToolbarMenu,
+                                badgeText: downloadQueueToolbarBadgeText,
+                                select: { handleNativeToolbarMenuAction($0, showsSidebarToggle: showsSidebarToggle) }
+                            )
+                            .fixedSize(horizontal: true, vertical: false)
                         }
                     }
 
@@ -1001,6 +1030,10 @@ struct ContentView: View {
         store.selectedRoute == .pixivActivity
     }
 
+    private var showsDownloadQueueToolbarMenu: Bool {
+        currentMobilePlatform == .phone && store.selectedRoute == .downloads
+    }
+
     private func showsRefreshToolbarButton(showsSidebarToggle: Bool) -> Bool {
         if currentMobilePlatform == .phone,
            showsSidebarToggle == false,
@@ -1029,6 +1062,11 @@ struct ContentView: View {
         if store.selectedRoute == .pixivActivity {
             return PixivActivityFeedPresentation.routeBadgeText(itemCount: store.pixivActivityVisibleItems.count)
         }
+        if store.selectedRoute == .downloads {
+            let count = store.downloads.filteredItems.count
+            guard count > 0 else { return nil }
+            return count > 999 ? "999+" : "\(count)"
+        }
         guard store.selectedRoute.usesArtworkFeed else { return nil }
         let hasLocalFilter = store.clientFilterQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false
         let count = hasLocalFilter ? store.clientFilteredArtworks.count : store.artworks.count
@@ -1043,6 +1081,9 @@ struct ContentView: View {
         if store.selectedRoute == .pixivActivity {
             return "\(L10n.currentRoute): \(store.selectedRoute.title), \(PixivActivityFeedPresentation.statusText(itemCount: store.pixivActivityVisibleItems.count))"
         }
+        if store.selectedRoute == .downloads {
+            return "\(L10n.currentRoute): \(store.selectedRoute.title), \(routeMenuCountBadgeText) \(L10n.results)"
+        }
         return "\(L10n.currentRoute): \(store.selectedRoute.title), \(routeMenuCountBadgeText) \(L10n.results)"
     }
 
@@ -1056,12 +1097,134 @@ struct ContentView: View {
         store.selectedArtwork == nil ? "photo" : "photo.badge.checkmark"
     }
 
+    private var downloadQueueToolbarBadgeText: String? {
+        let actionableCount = store.downloads.activeCount + store.downloads.failedFilteredCount
+        guard actionableCount > 0 else { return nil }
+        return actionableCount > 99 ? "99+" : actionableCount.formatted()
+    }
+
     private var artworkDetailToggleSystemImage: String {
         isArtworkDetailPanelUserEnabled ? "info.circle.fill" : "info.circle"
     }
 
     private var spotlightDetailToggleSystemImage: String {
         isSpotlightDetailPanelUserEnabled ? "newspaper.fill" : "newspaper"
+    }
+
+    private var downloadQueueToolbarMenu: NativeToolbarMenu {
+        NativeToolbarMenu(
+            title: L10n.downloadActions,
+            sections: [
+                NativeToolbarMenuSection(
+                    presentation: .palette,
+                    items: [
+                        .action(
+                            id: IPadToolbarMenuAction.downloadDestinationInfo,
+                            title: store.downloads.downloadDestination.title,
+                            systemImage: store.downloads.downloadDestination.systemImage,
+                            paletteTitle: store.downloads.downloadDestination.title
+                        ),
+                        .action(
+                            id: IPadToolbarMenuAction.downloadPauseResume,
+                            title: store.downloads.isPaused ? L10n.resumeDownloads : L10n.pauseDownloads,
+                            systemImage: store.downloads.isPaused ? "play.circle" : "pause.circle",
+                            paletteTitle: store.downloads.isPaused ? L10n.resumeDownloads : L10n.pauseDownloads,
+                            isEnabled: store.downloads.isPaused
+                                ? store.downloads.hasQueuedItems
+                                : store.downloads.activeCount > 0
+                        )
+                    ]
+                ),
+                NativeToolbarMenuSection(
+                    presentation: .root,
+                    items: [
+                        .submenu(
+                            title: L10n.sortDownloads,
+                            systemImage: "arrow.up.arrow.down",
+                            presentation: .singleSelection,
+                            items: DownloadQueueSort.allCases.map { sort in
+                                .action(
+                                    id: IPadToolbarMenuAction.downloadSort(sort),
+                                    title: sort.title,
+                                    systemImage: sort == store.downloads.downloadQueueSort ? "checkmark" : "circle",
+                                    isSelected: sort == store.downloads.downloadQueueSort,
+                                    keepsMenuPresented: true
+                                )
+                            }
+                        ),
+                        .submenu(
+                            title: L10n.downloadFilter,
+                            systemImage: "line.3.horizontal.decrease.circle",
+                            presentation: .singleSelection,
+                            items: DownloadQueueFilter.allCases.map { filter in
+                                .action(
+                                    id: IPadToolbarMenuAction.downloadFilter(filter),
+                                    title: filter.title,
+                                    systemImage: filter == store.downloads.downloadQueueFilter ? "checkmark" : "circle",
+                                    isSelected: filter == store.downloads.downloadQueueFilter,
+                                    keepsMenuPresented: true
+                                )
+                            }
+                        )
+                    ]
+                ),
+                NativeToolbarMenuSection(
+                    items: [
+                        .action(
+                            id: IPadToolbarMenuAction.downloadCopyVisibleLinks,
+                            title: L10n.copyVisibleDownloadLinks,
+                            systemImage: "link",
+                            isEnabled: store.downloads.filteredPixivLinks.isEmpty == false
+                        ),
+                        .action(
+                            id: IPadToolbarMenuAction.downloadRetryFailed,
+                            title: L10n.retryFailedDownloads,
+                            systemImage: "arrow.clockwise",
+                            isEnabled: store.downloads.failedFilteredCount > 0
+                        )
+                    ]
+                ),
+                NativeToolbarMenuSection(
+                    items: [
+                        .action(
+                            id: IPadToolbarMenuAction.downloadDanger(.cancelVisible(count: store.downloads.filteredCancellableCount)),
+                            title: L10n.cancelVisibleDownloads,
+                            systemImage: "xmark.circle",
+                            isEnabled: store.downloads.filteredCancellableCount > 0,
+                            isDestructive: true
+                        ),
+                        .action(
+                            id: IPadToolbarMenuAction.downloadDanger(.deleteVisible(count: store.downloads.filteredDeletableCount)),
+                            title: L10n.deleteVisibleDownloads,
+                            systemImage: "trash",
+                            isEnabled: store.downloads.filteredDeletableCount > 0,
+                            isDestructive: true
+                        ),
+                        .action(
+                            id: IPadToolbarMenuAction.downloadDanger(.clearFailed(count: store.downloads.failedFilteredCount)),
+                            title: L10n.clearFailedDownloads,
+                            systemImage: "trash",
+                            isEnabled: store.downloads.failedFilteredCount > 0,
+                            isDestructive: true
+                        ),
+                        .action(
+                            id: IPadToolbarMenuAction.downloadDanger(.clearInvalid(count: store.downloads.invalidCompletedItems.count)),
+                            title: L10n.clearInvalidDownloads,
+                            systemImage: "exclamationmark.arrow.trianglehead.2.clockwise.rotate.90",
+                            isEnabled: store.downloads.invalidCompletedItems.isEmpty == false,
+                            isDestructive: true
+                        ),
+                        .action(
+                            id: IPadToolbarMenuAction.downloadDanger(.clearCompleted(count: store.downloads.completedCount)),
+                            title: L10n.clearCompleted,
+                            systemImage: "checkmark.circle",
+                            isEnabled: store.downloads.completedCount > 0,
+                            isDestructive: true
+                        )
+                    ]
+                )
+            ]
+        )
     }
 
     private var galleryLayoutMenu: NativeToolbarMenu {
@@ -1356,6 +1519,18 @@ struct ContentView: View {
     }
 
     private func handleNativeToolbarMenuAction(_ id: String, showsSidebarToggle: Bool) {
+        if let sort = IPadToolbarMenuAction.downloadSort(from: id) {
+            store.downloads.setDownloadQueueSort(sort)
+            return
+        }
+        if let filter = IPadToolbarMenuAction.downloadFilter(from: id) {
+            store.downloads.setDownloadQueueFilter(filter)
+            return
+        }
+        if let action = IPadToolbarMenuAction.downloadDangerAction(from: id) {
+            pendingDownloadDangerAction = action
+            return
+        }
         if let mode = IPadToolbarMenuAction.galleryLayoutMode(from: id) {
             store.setGalleryLayoutMode(mode)
             return
@@ -1386,6 +1561,14 @@ struct ContentView: View {
             isPixivIDOpenPresented = true
         case IPadToolbarMenuAction.randomFromCurrentFeed:
             _ = store.randomFromCurrentFeed(opensDetail: false)
+        case IPadToolbarMenuAction.downloadDestinationInfo:
+            showStatus(store.downloads.downloadDestination.detail)
+        case IPadToolbarMenuAction.downloadPauseResume:
+            toggleDownloadQueuePaused()
+        case IPadToolbarMenuAction.downloadCopyVisibleLinks:
+            copyVisibleDownloadLinks()
+        case IPadToolbarMenuAction.downloadRetryFailed:
+            retryFailedVisibleDownloads()
         case IPadToolbarMenuAction.goBack:
             store.navigateBack()
         case IPadToolbarMenuAction.goForward:
@@ -1488,6 +1671,94 @@ struct ContentView: View {
             try? await Task.sleep(for: .seconds(2.5))
             if statusMessage == message {
                 statusMessage = nil
+            }
+        }
+    }
+
+    private func toggleDownloadQueuePaused() {
+        if store.downloads.isPaused {
+            showStatus(
+                store.downloads.resumeQueue()
+                    ? L10n.downloadsResumed
+                    : L10n.noDownloadRecordsChanged
+            )
+        } else {
+            showStatus(
+                store.downloads.pauseQueue()
+                    ? L10n.downloadsPaused
+                    : L10n.noDownloadRecordsChanged
+            )
+        }
+    }
+
+    private func copyVisibleDownloadLinks() {
+        let links = store.downloads.filteredPixivLinks
+        guard links.isEmpty == false else {
+            showStatus(L10n.noDownloadLinksToCopy)
+            return
+        }
+        PasteboardWriter.copy(links.joined(separator: "\n"))
+        showStatus(String(format: L10n.copiedLinksFormat, links.count))
+    }
+
+    private func retryFailedVisibleDownloads() {
+        let count = store.downloads.retryFailedFilteredItems()
+        showStatus(
+            count > 0
+                ? String(format: L10n.retriedDownloadsWithBackoffFormat, count)
+                : L10n.noRetryableDownloads
+        )
+    }
+
+    private func performDownloadDangerAction(_ action: DownloadDangerAction) {
+        pendingDownloadDangerAction = nil
+
+        switch action {
+        case .deleteItem, .cancelItem:
+            return
+        case .cancelVisible:
+            let items = store.downloads.cancelFilteredActiveItems()
+            if items.isEmpty == false {
+                store.undoAction = AppUndoAction(kind: .restoreDownloads(items))
+                showStatus(String(format: L10n.cancelledDownloadsFormat, items.count))
+            } else {
+                showStatus(L10n.noDownloadRecordsChanged)
+            }
+        case .deleteVisible:
+            let items = store.downloads.filteredItems.filter { $0.status != .downloading }
+            let count = store.downloads.deleteFilteredItems()
+            if count > 0 {
+                store.undoAction = AppUndoAction(kind: .restoreDownloads(items))
+                showStatus(String(format: L10n.deletedDownloadsFormat, count))
+            } else {
+                showStatus(L10n.noDownloadRecordsChanged)
+            }
+        case .clearFailed:
+            let items = store.downloads.filteredItems.filter { $0.status == .failed }
+            let count = store.downloads.clearFailedFilteredItems()
+            if count > 0 {
+                store.undoAction = AppUndoAction(kind: .restoreDownloads(items))
+                showStatus(String(format: L10n.deletedDownloadsFormat, count))
+            } else {
+                showStatus(L10n.noDownloadRecordsChanged)
+            }
+        case .clearInvalid:
+            let items = store.downloads.invalidCompletedItems
+            let count = store.downloads.clearInvalidItems()
+            if count > 0 {
+                store.undoAction = AppUndoAction(kind: .restoreDownloads(items))
+                showStatus(String(format: L10n.clearedDownloadsFormat, count))
+            } else {
+                showStatus(L10n.noDownloadRecordsChanged)
+            }
+        case .clearCompleted:
+            let items = store.downloads.completedItems
+            store.downloads.clearCompleted()
+            if items.isEmpty == false {
+                store.undoAction = AppUndoAction(kind: .restoreDownloads(items))
+                showStatus(String(format: L10n.clearedDownloadsFormat, items.count))
+            } else {
+                showStatus(L10n.noDownloadRecordsChanged)
             }
         }
     }
@@ -2193,6 +2464,16 @@ struct ContentView: View {
         }
     }
 
+    private var downloadDangerActionBinding: Binding<Bool> {
+        Binding {
+            pendingDownloadDangerAction != nil
+        } set: { value in
+            if value == false {
+                pendingDownloadDangerAction = nil
+            }
+        }
+    }
+
     private var compactArtworkDetailBinding: Binding<Bool> {
         Binding {
             isCompactArtworkDetailPresented && store.selectedArtwork != nil
@@ -2261,13 +2542,81 @@ private enum IPadToolbarMenuAction {
     static let hideR18GArtworks = "hide-r18g-artworks"
     static let customizeBottomTabs = "customize-bottom-tabs"
     static let randomFromCurrentFeed = "random-from-current-feed"
+    static let downloadDestinationInfo = "download-destination-info"
+    static let downloadPauseResume = "download-pause-resume"
+    static let downloadCopyVisibleLinks = "download-copy-visible-links"
+    static let downloadRetryFailed = "download-retry-failed"
     static let settings = "settings"
 
+    private static let downloadSortPrefix = "download-sort:"
+    private static let downloadFilterPrefix = "download-filter:"
+    private static let downloadDangerPrefix = "download-danger:"
     private static let galleryLayoutPrefix = "gallery-layout:"
     private static let pixivActivityLayoutPrefix = "pixiv-activity-layout:"
     private static let pixivActivityScopePrefix = "pixiv-activity-scope:"
     private static let pixivActivityKindPrefix = "pixiv-activity-kind:"
     private static let routePrefix = "route:"
+
+    static func downloadSort(_ sort: DownloadQueueSort) -> String {
+        downloadSortPrefix + sort.rawValue
+    }
+
+    static func downloadSort(from id: String) -> DownloadQueueSort? {
+        guard id.hasPrefix(downloadSortPrefix) else { return nil }
+        let rawValue = String(id.dropFirst(downloadSortPrefix.count))
+        return DownloadQueueSort(rawValue: rawValue)
+    }
+
+    static func downloadFilter(_ filter: DownloadQueueFilter) -> String {
+        downloadFilterPrefix + filter.rawValue
+    }
+
+    static func downloadFilter(from id: String) -> DownloadQueueFilter? {
+        guard id.hasPrefix(downloadFilterPrefix) else { return nil }
+        let rawValue = String(id.dropFirst(downloadFilterPrefix.count))
+        return DownloadQueueFilter(rawValue: rawValue)
+    }
+
+    static func downloadDanger(_ action: DownloadDangerAction) -> String {
+        switch action {
+        case .cancelVisible(let count):
+            downloadDangerPrefix + "cancel-visible:\(count)"
+        case .deleteVisible(let count):
+            downloadDangerPrefix + "delete-visible:\(count)"
+        case .clearFailed(let count):
+            downloadDangerPrefix + "clear-failed:\(count)"
+        case .clearInvalid(let count):
+            downloadDangerPrefix + "clear-invalid:\(count)"
+        case .clearCompleted(let count):
+            downloadDangerPrefix + "clear-completed:\(count)"
+        case .deleteItem(let item):
+            downloadDangerPrefix + "delete-item:\(item.id.uuidString)"
+        case .cancelItem(let item):
+            downloadDangerPrefix + "cancel-item:\(item.id.uuidString)"
+        }
+    }
+
+    static func downloadDangerAction(from id: String) -> DownloadDangerAction? {
+        guard id.hasPrefix(downloadDangerPrefix) else { return nil }
+        let rawValue = String(id.dropFirst(downloadDangerPrefix.count))
+        let components = rawValue.split(separator: ":", maxSplits: 1).map(String.init)
+        let name = components.first ?? rawValue
+        let count = components.dropFirst().first.flatMap(Int.init) ?? 0
+        switch name {
+        case "cancel-visible":
+            return .cancelVisible(count: count)
+        case "delete-visible":
+            return .deleteVisible(count: count)
+        case "clear-failed":
+            return .clearFailed(count: count)
+        case "clear-invalid":
+            return .clearInvalid(count: count)
+        case "clear-completed":
+            return .clearCompleted(count: count)
+        default:
+            return nil
+        }
+    }
 
     static func galleryLayout(_ mode: GalleryLayoutMode) -> String {
         galleryLayoutPrefix + mode.rawValue
