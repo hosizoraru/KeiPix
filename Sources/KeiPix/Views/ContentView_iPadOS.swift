@@ -404,6 +404,7 @@ struct ContentView: View {
                 .allowsHitTesting(false)
             PhoneFeedFilterBarOverlayBridge(
                 text: $store.clientFilterQuery,
+                placeholder: phoneFeedFilterPlaceholder,
                 resultText: phoneCollapsedFeedFilterResultText,
                 isEnabled: isPhoneFeedFilterEnabled(layout: layout),
                 syncID: compactTabBarSyncID(layout: layout)
@@ -1695,19 +1696,49 @@ struct ContentView: View {
     private func isPhoneFeedFilterEnabled(layout: MobileWorkspaceLayout) -> Bool {
         layout.platform == .phone
             && isCompactCustomTabRootActive
-            && store.selectedRoute.usesArtworkFeed
-            && (store.artworks.isEmpty == false || phoneHasActiveFeedFilter)
+            && phoneSupportsClientFeedFilter
+            && (phoneClientFilterTotalCount > 0 || phoneHasActiveFeedFilter)
     }
 
     private var phoneHasActiveFeedFilter: Bool {
         store.clientFilterQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false
     }
 
-    private var phoneCollapsedFeedFilterResultText: String {
-        guard phoneHasActiveFeedFilter else {
-            return "\(store.artworks.count.formatted()) \(L10n.results)"
+    private var phoneSupportsClientFeedFilter: Bool {
+        store.selectedRoute.usesArtworkFeed
+            || (store.selectedRoute.usesNovelFeed && store.selectedRoute != .novelWatchlist)
+    }
+
+    private var phoneClientFilterTotalCount: Int {
+        if store.selectedRoute.usesNovelFeed {
+            return store.novels.novels.count
         }
-        return "\(store.clientFilteredArtworks.count.formatted())/\(store.artworks.count.formatted()) \(L10n.results)"
+        return store.artworks.count
+    }
+
+    private var phoneClientFilterVisibleCount: Int {
+        if store.selectedRoute.usesNovelFeed {
+            return ClientFilterDSL.filter(store.novels.novels, query: store.clientFilterQuery).count
+        }
+        return store.clientFilteredArtworks.count
+    }
+
+    private var phoneFeedFilterPlaceholder: String {
+        if store.selectedRoute.usesNovelFeed {
+            return L10n.filterNovels
+        }
+        if store.selectedRoute == .search {
+            return L10n.filterResults
+        }
+        return L10n.filterArtworks
+    }
+
+    private var phoneCollapsedFeedFilterResultText: String {
+        let totalCount = phoneClientFilterTotalCount
+        guard phoneHasActiveFeedFilter else {
+            return "\(totalCount.formatted()) \(L10n.results)"
+        }
+        return "\(phoneClientFilterVisibleCount.formatted())/\(totalCount.formatted()) \(L10n.results)"
     }
 
     private func compactTabBarSyncID(layout: MobileWorkspaceLayout) -> String {

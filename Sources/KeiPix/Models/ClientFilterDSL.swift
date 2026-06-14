@@ -9,6 +9,7 @@ import Foundation
 /// - `bookmark:>1000` / `bookmark:<500` — bookmark count comparison
 /// - `view:>5000` — view count comparison
 /// - `page:>3` — page count comparison
+/// - `length:>5000` / `word:>5000` — novel text length comparison
 /// - `r18` / `!r18` — include/exclude R18
 /// - `ai` / `!ai` — include/exclude AI works
 /// - `gif` / `!gif` / `+gif` / `-gif` — include/exclude ugoira works
@@ -23,6 +24,7 @@ enum ClientFilterDSL {
         case bookmarkCount(ComparisonOp, Int)
         case viewCount(ComparisonOp, Int)
         case pageCount(ComparisonOp, Int)
+        case textLength(ComparisonOp, Int)
         case r18(Bool)
         case r18g(Bool)
         case ai(Bool)
@@ -71,6 +73,11 @@ enum ClientFilterDSL {
         expressions.allSatisfy { evaluate($0, artwork: artwork) }
     }
 
+    /// Check if a novel matches all given filter expressions.
+    static func matches(novel: PixivNovel, expressions: [FilterExpression]) -> Bool {
+        expressions.allSatisfy { evaluate($0, novel: novel) }
+    }
+
     /// Filter a list of artworks by the given query.
     static func filter(_ artworks: [PixivArtwork], query: String) -> [PixivArtwork] {
         let trimmed = query.trimmingCharacters(in: .whitespaces)
@@ -78,6 +85,15 @@ enum ClientFilterDSL {
         let expressions = parse(trimmed)
         guard expressions.isEmpty == false else { return artworks }
         return artworks.filter { matches(artwork: $0, expressions: expressions) }
+    }
+
+    /// Filter a list of novels by the given query.
+    static func filter(_ novels: [PixivNovel], query: String) -> [PixivNovel] {
+        let trimmed = query.trimmingCharacters(in: .whitespaces)
+        guard trimmed.isEmpty == false else { return novels }
+        let expressions = parse(trimmed)
+        guard expressions.isEmpty == false else { return novels }
+        return novels.filter { matches(novel: $0, expressions: expressions) }
     }
 
     // MARK: - Tokenizer
@@ -183,6 +199,8 @@ enum ClientFilterDSL {
                 return parseComparison(value, expression: FilterExpression.viewCount)
             case "page":
                 return parseComparison(value, expression: FilterExpression.pageCount)
+            case "length", "text", "word", "words", "chars", "characters":
+                return parseComparison(value, expression: FilterExpression.textLength)
             default:
                 break
             }
@@ -250,6 +268,9 @@ enum ClientFilterDSL {
         case .pageCount(let op, let value):
             return op.evaluate(artwork.displayPageCount, value)
 
+        case .textLength:
+            return false
+
         case .r18(let wanted):
             let isR18 = artwork.xRestrict > 0
             return isR18 == wanted
@@ -282,6 +303,63 @@ enum ClientFilterDSL {
             return artwork.title.lowercased().contains(lower)
                 || artwork.user.name.lowercased().contains(lower)
                 || artwork.user.account.lowercased().contains(lower)
+        }
+    }
+
+    private static func evaluate(_ expression: FilterExpression, novel: PixivNovel) -> Bool {
+        switch expression {
+        case .tag(let name):
+            let lower = name.lowercased()
+            return novel.tags.contains { tag in
+                tag.name.lowercased().contains(lower)
+                    || (tag.translatedName?.lowercased().contains(lower) ?? false)
+            }
+
+        case .title(let title):
+            return novel.title.lowercased().contains(title.lowercased())
+
+        case .user(let name):
+            let lower = name.lowercased()
+            return novel.user.name.lowercased().contains(lower)
+                || novel.user.account.lowercased().contains(lower)
+
+        case .bookmarkCount(let op, let value):
+            return op.evaluate(novel.totalBookmarks, value)
+
+        case .viewCount(let op, let value):
+            return op.evaluate(novel.totalView, value)
+
+        case .pageCount(let op, let value):
+            return op.evaluate(novel.pageCount, value)
+
+        case .textLength(let op, let value):
+            return op.evaluate(novel.textLength, value)
+
+        case .r18(let wanted):
+            return novel.isR18 == wanted
+
+        case .r18g(let wanted):
+            return novel.isR18G == wanted
+
+        case .ai(let wanted):
+            return novel.isAI == wanted
+
+        case .ugoira(let wanted):
+            return wanted == false
+
+        case .ratio:
+            return false
+
+        case .bookmarked(let wanted):
+            return novel.isBookmarked == wanted
+
+        case .textMatch(let text):
+            let lower = text.lowercased()
+            return novel.title.lowercased().contains(lower)
+                || novel.caption.lowercased().contains(lower)
+                || novel.user.name.lowercased().contains(lower)
+                || novel.user.account.lowercased().contains(lower)
+                || (novel.series?.title?.lowercased().contains(lower) ?? false)
         }
     }
 }

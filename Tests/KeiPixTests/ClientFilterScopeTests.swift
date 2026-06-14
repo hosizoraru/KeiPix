@@ -22,6 +22,10 @@ struct ClientFilterScopeTests {
         #expect(store.clientFilterQuery == "")
         store.clientFilterQuery = "title:manga"
 
+        store.selectedRoute = .novelLatest
+        #expect(store.clientFilterQuery == "")
+        store.clientFilterQuery = "length:>5000"
+
         store.selectedRoute = .illustrations
         #expect(store.clientFilterQuery == "tag:landscape")
 
@@ -37,6 +41,22 @@ struct ClientFilterScopeTests {
         store.searchText = "wide"
         store.restoreClientFilterQueryForCurrentScope()
         #expect(store.clientFilterQuery == "ratio:landscape")
+
+        store.searchText = "novel wide"
+        store.selectedRoute = .novelSearch
+        #expect(store.clientFilterQuery == "")
+        store.clientFilterQuery = "word:>1000"
+
+        store.searchText = "novel portrait"
+        store.restoreClientFilterQueryForCurrentScope()
+        #expect(store.clientFilterQuery == "")
+
+        store.searchText = "novel wide"
+        store.restoreClientFilterQueryForCurrentScope()
+        #expect(store.clientFilterQuery == "word:>1000")
+
+        store.selectedRoute = .novelLatest
+        #expect(store.clientFilterQuery == "length:>5000")
 
         store.selectedRoute = .mangaRecommended
         #expect(store.clientFilterQuery == "title:manga")

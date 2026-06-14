@@ -7,14 +7,16 @@ struct PhoneFeedFilterChromeLayout: Equatable {
     private static let aboveTabGap: CGFloat = 10
     private static let minimumSideMargin: CGFloat = 16
     private static let maximumPanelWidth: CGFloat = 440
-    private static let pillWidth: CGFloat = 108
+    private static let minimumPillWidth: CGFloat = 72
+    private static let maximumPillWidth: CGFloat = 132
 
     let pillFrame: CGRect
     let panelFrame: CGRect
 
     static func resolve(
         containerSize: CGSize,
-        tabBarGeometry: TabBarGeometrySnapshot?
+        tabBarGeometry: TabBarGeometrySnapshot?,
+        preferredPillWidth: CGFloat = minimumPillWidth
     ) -> PhoneFeedFilterChromeLayout? {
         guard containerSize.width > 0,
               containerSize.height > 0,
@@ -36,6 +38,11 @@ struct PhoneFeedFilterChromeLayout: Equatable {
         )
         guard panelWidth > 0 else { return nil }
         let panelX = containerBounds.midX - panelWidth / 2
+        let pillWidth = clamp(
+            preferredPillWidth.rounded(.up),
+            min: minimumPillWidth,
+            max: min(maximumPillWidth, containerBounds.width - minimumSideMargin * 2)
+        )
         let proposedY = tabFrame.minY - aboveTabGap - panelHeight
         let y = clamp(
             proposedY,

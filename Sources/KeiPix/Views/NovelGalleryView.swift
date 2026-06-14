@@ -40,6 +40,8 @@ struct NovelGalleryView: View {
                     loadingState
                 } else if novelStore.novels.isEmpty {
                     emptyState
+                } else if filteredNovels.isEmpty {
+                    noMatchingNovelsState
                 } else {
                     listContent(surface: surface)
                 }
@@ -124,7 +126,7 @@ struct NovelGalleryView: View {
                 route: store.selectedRoute,
                 filter: nil,
                 loadedCount: novelStore.novels.count,
-                visibleCount: novelStore.novels.count,
+                visibleCount: filteredNovels.count,
                 contentSystemImage: "book.pages",
                 openProfile: {
                     store.presentedUserProfile = focusedUser
@@ -140,11 +142,12 @@ struct NovelGalleryView: View {
     }
 
     private func listContent(surface: NovelGallerySurfaceLayout) -> some View {
-        ScrollView {
+        let novels = filteredNovels
+        return ScrollView {
             if surface.layoutMode(current: store.novelGalleryLayoutMode) == .grid {
                 let columns = surface.gridColumns
                 LazyVGrid(columns: columns, spacing: 14) {
-                    ForEach(novelStore.novels) { novel in
+                    ForEach(novels) { novel in
                         NovelGridCardView(
                             novel: novel,
                             isSelected: novelStore.selectedNovel?.id == novel.id,
@@ -168,7 +171,7 @@ struct NovelGalleryView: View {
                 .padding(.vertical, surface.verticalPadding)
             } else {
                 LazyVStack(spacing: 12) {
-                    ForEach(novelStore.novels) { novel in
+                    ForEach(novels) { novel in
                         NovelCardView(
                             novel: novel,
                             isSelected: novelStore.selectedNovel?.id == novel.id,
@@ -213,6 +216,18 @@ struct NovelGalleryView: View {
             subtitle: novelStore.errorMessage ?? L10n.noNovelsHint,
             systemImage: "book"
         )
+    }
+
+    private var noMatchingNovelsState: some View {
+        EmptyStateView(
+            title: L10n.noMatchingNovels,
+            subtitle: L10n.noMatchingNovelsHint,
+            systemImage: "line.3.horizontal.decrease.circle"
+        )
+    }
+
+    private var filteredNovels: [PixivNovel] {
+        ClientFilterDSL.filter(novelStore.novels, query: store.clientFilterQuery)
     }
 
     private var isShowingInitialLoad: Bool {

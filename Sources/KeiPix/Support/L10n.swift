@@ -1506,6 +1506,8 @@ enum L10n {
     static var novelExportHTML: String { text("Export as HTML") }
     static var noNovels: String { text("No novels") }
     static var noNovelsHint: String { text("Pixiv hasn't returned any novels for this view yet.") }
+    static var noMatchingNovels: String { text("No matching novels") }
+    static var noMatchingNovelsHint: String { text("Change the novel filter to see other works.") }
     static var loadMoreNovels: String { text("Load More Novels") }
     static var loadedNovelsFormat: String { text("Loaded %d novels") }
     static var refreshedNovelsFormat: String { text("Refreshed %d novels") }
@@ -1635,6 +1637,8 @@ enum L10n {
     static var fullScreenReading: String { text("Full Screen Reading") }
     static var snapToPages: String { text("Snap to Pages") }
     static var filterArtworks: String { text("Filter artworks...") }
+    static var filterNovels: String { text("Filter novels...") }
+    static var filterResults: String { text("Filter results...") }
     static var surpriseMe: String { text("Surprise Me") }
     static var randomFromFeed: String { text("Random") }
     static var exitFocusReading: String { text("Exit Focus Reading") }

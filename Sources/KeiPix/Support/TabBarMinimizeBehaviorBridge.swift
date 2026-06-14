@@ -333,6 +333,7 @@ struct TabBarMinimizeBehaviorBridge: UIViewControllerRepresentable {
 
 struct PhoneFeedFilterBarOverlayBridge: UIViewControllerRepresentable {
     @Binding var text: String
+    let placeholder: String
     let resultText: String
     let isEnabled: Bool
     let syncID: String
@@ -340,6 +341,7 @@ struct PhoneFeedFilterBarOverlayBridge: UIViewControllerRepresentable {
     func makeUIViewController(context: Context) -> Controller {
         Controller(
             text: $text,
+            placeholder: placeholder,
             resultText: resultText,
             isEnabled: isEnabled,
             syncID: syncID
@@ -348,6 +350,7 @@ struct PhoneFeedFilterBarOverlayBridge: UIViewControllerRepresentable {
 
     func updateUIViewController(_ controller: Controller, context: Context) {
         controller.text = $text
+        controller.placeholder = placeholder
         controller.resultText = resultText
         controller.isEnabled = isEnabled
         controller.syncID = syncID
@@ -356,6 +359,7 @@ struct PhoneFeedFilterBarOverlayBridge: UIViewControllerRepresentable {
 
     final class Controller: UIViewController, UITextFieldDelegate {
         var text: Binding<String>
+        var placeholder: String
         var resultText: String
         var isEnabled: Bool
         var syncID: String {
@@ -372,6 +376,7 @@ struct PhoneFeedFilterBarOverlayBridge: UIViewControllerRepresentable {
         private weak var pillControl: UIControl?
         private weak var pillIconView: UIImageView?
         private weak var pillLabel: UILabel?
+        private var glassContainerView: UIView?
         private var pillView: UIVisualEffectView?
         private var panelView: UIVisualEffectView?
         private var isPanelPresented = false
@@ -380,11 +385,13 @@ struct PhoneFeedFilterBarOverlayBridge: UIViewControllerRepresentable {
 
         init(
             text: Binding<String>,
+            placeholder: String,
             resultText: String,
             isEnabled: Bool,
             syncID: String
         ) {
             self.text = text
+            self.placeholder = placeholder
             self.resultText = resultText
             self.isEnabled = isEnabled
             self.syncID = syncID
@@ -420,6 +427,7 @@ struct PhoneFeedFilterBarOverlayBridge: UIViewControllerRepresentable {
 
         func applyOverlay() {
             guard isEnabled else {
+                glassContainerView?.isHidden = true
                 pillView?.isHidden = true
                 panelView?.isHidden = true
                 filterField?.resignFirstResponder()
@@ -433,23 +441,26 @@ struct PhoneFeedFilterBarOverlayBridge: UIViewControllerRepresentable {
             }
 
             let geometry = tabBarGeometry(in: tabBarController)
+            ensureChrome(in: tabBarController)
+            updateField()
+            updatePill()
             guard let layout = PhoneFeedFilterChromeLayout.resolve(
                     containerSize: tabBarController.view.bounds.size,
-                    tabBarGeometry: geometry
+                    tabBarGeometry: geometry,
+                    preferredPillWidth: resolvedPillWidth()
                   ) else {
+                glassContainerView?.isHidden = true
                 pillView?.isHidden = true
                 panelView?.isHidden = true
                 return
             }
 
-            ensureChrome(in: tabBarController)
-            updateField()
-            updatePill()
             apply(layout, in: tabBarController)
         }
 
         private func ensureChrome(in tabBarController: UITabBarController) {
-            if pillView != nil,
+            if glassContainerView != nil,
+               pillView != nil,
                panelView != nil,
                appliedTabBarController === tabBarController {
                 return
@@ -457,7 +468,12 @@ struct PhoneFeedFilterBarOverlayBridge: UIViewControllerRepresentable {
 
             removeChrome()
 
-            let pillView = makeGlassOverlay(cornerRadius: PhoneFeedFilterChromeLayout.pillHeight / 2)
+            let glassContainerView = makeGlassContainer()
+            glassContainerView.frame = tabBarController.view.bounds
+            glassContainerView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+            glassContainerView.backgroundColor = .clear
+
+            let pillView = makeGlassOverlay(cornerRadius: PhoneFeedFilterChromeLayout.pillHeight / 2, isInteractive: true)
             let pillControl = UIControl(frame: .zero)
             pillControl.addTarget(self, action: #selector(showFilterPanel), for: .touchUpInside)
             pillControl.translatesAutoresizingMaskIntoConstraints = false
@@ -503,7 +519,7 @@ struct PhoneFeedFilterBarOverlayBridge: UIViewControllerRepresentable {
                 pillIconView.heightAnchor.constraint(equalToConstant: 16)
             ])
 
-            let panelView = makeGlassOverlay(cornerRadius: PhoneFeedFilterChromeLayout.panelHeight / 2)
+            let panelView = makeGlassOverlay(cornerRadius: PhoneFeedFilterChromeLayout.panelHeight / 2, isInteractive: true)
             let field = UITextField(frame: .zero)
             field.delegate = self
             field.autocorrectionType = .no
@@ -516,7 +532,6 @@ struct PhoneFeedFilterBarOverlayBridge: UIViewControllerRepresentable {
             field.font = .preferredFont(forTextStyle: .subheadline)
             field.adjustsFontForContentSizeCategory = true
             field.clearButtonMode = .whileEditing
-            field.accessibilityLabel = L10n.filterArtworks
             field.leftView = searchIconView()
             field.leftViewMode = .always
             field.addTarget(self, action: #selector(editingChanged(_:)), for: .editingChanged)
@@ -548,8 +563,10 @@ struct PhoneFeedFilterBarOverlayBridge: UIViewControllerRepresentable {
                 closeButton.heightAnchor.constraint(equalToConstant: 32)
             ])
 
-            tabBarController.view.addSubview(pillView)
-            tabBarController.view.addSubview(panelView)
+            tabBarController.view.addSubview(glassContainerView)
+            glassContentView(in: glassContainerView).addSubview(pillView)
+            glassContentView(in: glassContainerView).addSubview(panelView)
+            self.glassContainerView = glassContainerView
             self.pillView = pillView
             self.panelView = panelView
             self.pillControl = pillControl
@@ -561,19 +578,49 @@ struct PhoneFeedFilterBarOverlayBridge: UIViewControllerRepresentable {
             updatePill()
         }
 
-        private func makeGlassOverlay(cornerRadius: CGFloat) -> UIVisualEffectView {
-            let overlayView = UIVisualEffectView(effect: UIBlurEffect(style: .systemUltraThinMaterial))
+        private func makeGlassContainer() -> UIView {
+            if #available(iOS 26.0, *) {
+                let effect = UIGlassContainerEffect()
+                effect.spacing = 14
+                let containerView = PassThroughVisualEffectView(effect: effect)
+                containerView.isUserInteractionEnabled = true
+                return containerView
+            }
+
+            let containerView = PassThroughView(frame: .zero)
+            containerView.isUserInteractionEnabled = true
+            return containerView
+        }
+
+        private func glassContentView(in containerView: UIView) -> UIView {
+            (containerView as? UIVisualEffectView)?.contentView ?? containerView
+        }
+
+        private func makeGlassOverlay(cornerRadius: CGFloat, isInteractive: Bool) -> UIVisualEffectView {
+            let overlayView: UIVisualEffectView
+            if #available(iOS 26.0, *) {
+                let glassEffect = UIGlassEffect(style: .regular)
+                glassEffect.isInteractive = isInteractive
+                glassEffect.tintColor = UIColor.secondarySystemBackground.withAlphaComponent(0.18)
+                overlayView = UIVisualEffectView(effect: glassEffect)
+            } else {
+                overlayView = UIVisualEffectView(effect: UIBlurEffect(style: .systemChromeMaterial))
+            }
             overlayView.layer.cornerRadius = cornerRadius
             overlayView.layer.cornerCurve = .continuous
             overlayView.clipsToBounds = true
             overlayView.isUserInteractionEnabled = true
+            overlayView.layer.borderWidth = 0.5
+            overlayView.layer.borderColor = UIColor.separator.withAlphaComponent(0.18).cgColor
             overlayView.alpha = 0
             return overlayView
         }
 
         private func removeChrome() {
+            glassContainerView?.removeFromSuperview()
             pillView?.removeFromSuperview()
             panelView?.removeFromSuperview()
+            glassContainerView = nil
             pillView = nil
             panelView = nil
             pillControl = nil
@@ -585,6 +632,8 @@ struct PhoneFeedFilterBarOverlayBridge: UIViewControllerRepresentable {
 
         private func apply(_ layout: PhoneFeedFilterChromeLayout, in tabBarController: UITabBarController) {
             guard let pillView, let panelView else { return }
+            glassContainerView?.frame = tabBarController.view.bounds
+            glassContainerView?.isHidden = false
 
             let updates = {
                 pillView.frame = layout.pillFrame
@@ -606,8 +655,11 @@ struct PhoneFeedFilterBarOverlayBridge: UIViewControllerRepresentable {
                 )
             }
 
-            tabBarController.view.bringSubviewToFront(pillView)
-            tabBarController.view.bringSubviewToFront(panelView)
+            if let glassContainerView {
+                tabBarController.view.bringSubviewToFront(glassContainerView)
+            }
+            glassContentView(in: glassContainerView ?? tabBarController.view).bringSubviewToFront(pillView)
+            glassContentView(in: glassContainerView ?? tabBarController.view).bringSubviewToFront(panelView)
         }
 
         private func searchIconView() -> UIView {
@@ -633,15 +685,30 @@ struct PhoneFeedFilterBarOverlayBridge: UIViewControllerRepresentable {
             pillIconView?.tintColor = hasActiveFilter ? .systemBlue : .secondaryLabel
             pillControl?.accessibilityLabel = title
             pillControl?.accessibilityValue = resultText
+            configureGlassTint()
         }
 
         private func updateField() {
-            filterField?.placeholder = L10n.filterArtworks
-            filterField?.accessibilityLabel = L10n.filterArtworks
+            filterField?.placeholder = placeholder
+            filterField?.accessibilityLabel = placeholder
             filterField?.accessibilityValue = resultText
             if filterField?.text != text.wrappedValue {
                 filterField?.text = text.wrappedValue
             }
+            configureGlassTint()
+        }
+
+        private func configureGlassTint() {
+            guard #available(iOS 26.0, *) else { return }
+            let activeTint = UIColor.systemBlue.withAlphaComponent(0.16)
+            let restingTint = UIColor.secondarySystemBackground.withAlphaComponent(0.18)
+            (pillView?.effect as? UIGlassEffect)?.tintColor = hasActiveFilter ? activeTint : restingTint
+            (panelView?.effect as? UIGlassEffect)?.tintColor = UIColor.secondarySystemBackground.withAlphaComponent(0.22)
+        }
+
+        private func resolvedPillWidth() -> CGFloat {
+            let labelWidth = pillLabel?.intrinsicContentSize.width ?? 0
+            return 10 + 16 + 6 + labelWidth + 10
         }
 
         @objc private func editingChanged(_ sender: UITextField) {
@@ -720,6 +787,23 @@ struct PhoneFeedFilterBarOverlayBridge: UIViewControllerRepresentable {
                 removeChrome()
             }
         }
+    }
+}
+
+private final class PassThroughView: UIView {
+    override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
+        let hitView = super.hitTest(point, with: event)
+        return hitView === self ? nil : hitView
+    }
+}
+
+private final class PassThroughVisualEffectView: UIVisualEffectView {
+    override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
+        let hitView = super.hitTest(point, with: event)
+        if hitView === self || hitView === contentView {
+            return nil
+        }
+        return hitView
     }
 }
 

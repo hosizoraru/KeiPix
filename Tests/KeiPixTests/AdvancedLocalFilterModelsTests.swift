@@ -83,6 +83,46 @@ struct AdvancedLocalFilterModelsTests {
         #expect(ClientFilterDSL.filter([landscapeUgoira, portraitAI], query: "ratio:portrait").map(\.id) == [2])
     }
 
+    @Test("Client filter DSL supports novel list filtering")
+    func clientFilterSupportsNovelListFiltering() throws {
+        let matchingNovel = try novel(
+            id: 1,
+            title: "summer study",
+            caption: "Archive notes",
+            userName: "Alice",
+            userAccount: "alice",
+            tags: ["Blue Archive"],
+            textLength: 6200,
+            pageCount: 3,
+            bookmarks: 320,
+            views: 2800,
+            isBookmarked: true,
+            seriesTitle: "Daily Archive"
+        )
+        let filteredNovel = try novel(
+            id: 2,
+            title: "winter",
+            caption: "Quiet room",
+            userName: "Bob",
+            userAccount: "bob",
+            tags: ["Original"],
+            textLength: 1200,
+            pageCount: 1,
+            bookmarks: 24,
+            views: 400,
+            xRestrict: 1,
+            novelAIType: 2
+        )
+
+        let novels = [matchingNovel, filteredNovel]
+        let query = #"tag:"Blue Archive" title:summer user:Alice bookmark:>=100 view:>=1000 page:>=2 length:>=5000 !r18 !ai bookmarked archive"#
+
+        #expect(ClientFilterDSL.filter(novels, query: query).map(\.id) == [1])
+        #expect(ClientFilterDSL.filter(novels, query: "word:<2000").map(\.id) == [2])
+        #expect(ClientFilterDSL.filter(novels, query: "r18 ai").map(\.id) == [2])
+        #expect(ClientFilterDSL.filter(novels, query: "ratio:landscape").isEmpty)
+    }
+
     @Test("Advanced local filter quick presets preserve quoted text while switching grouped tokens")
     func quickPresetsPreserveQuotedTextAndSwitchGroupedTokens() {
         var query = #"tag:"Blue Archive" title:summer"#
@@ -180,5 +220,61 @@ struct AdvancedLocalFilterModelsTests {
                 )
             ]
         )
+    }
+
+    private func novel(
+        id: Int,
+        title: String,
+        caption: String,
+        userName: String,
+        userAccount: String,
+        tags: [String],
+        textLength: Int,
+        pageCount: Int,
+        bookmarks: Int,
+        views: Int,
+        isBookmarked: Bool = false,
+        xRestrict: Int = 0,
+        novelAIType: Int = 0,
+        seriesTitle: String? = nil
+    ) throws -> PixivNovel {
+        let tagJSON = tags
+            .map { #"{"name":"\#($0)","translated_name":null}"# }
+            .joined(separator: ",")
+        let seriesJSON = seriesTitle.map { #","series":{"id":9000,"title":"\#($0)"}"# } ?? ""
+        let payload = """
+        {
+          "id": \(id),
+          "title": "\(title)",
+          "caption": "\(caption)",
+          "restrict": 0,
+          "x_restrict": \(xRestrict),
+          "is_original": true,
+          "image_urls": {},
+          "create_date": "2024-08-01T12:00:00+09:00",
+          "tags": [\(tagJSON)],
+          "page_count": \(pageCount),
+          "text_length": \(textLength),
+          "user": {
+            "id": \(id + 100),
+            "name": "\(userName)",
+            "account": "\(userAccount)",
+            "profile_image_urls": {}
+          },
+          "is_bookmarked": \(isBookmarked),
+          "total_bookmarks": \(bookmarks),
+          "total_view": \(views),
+          "total_comments": 0,
+          "visible": true,
+          "is_muted": false,
+          "is_mypixiv_only": false,
+          "is_x_restricted": false,
+          "novel_ai_type": \(novelAIType)
+          \(seriesJSON)
+        }
+        """
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        return try decoder.decode(PixivNovel.self, from: Data(payload.utf8))
     }
 }
