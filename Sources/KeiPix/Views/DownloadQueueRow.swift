@@ -75,8 +75,12 @@ struct DownloadQueueRow: View {
                         Text(errorMessage)
                             .foregroundStyle(.red)
                     } else if let folderPath = item.folderPath {
+                        #if os(macOS)
                         Text(folderPath)
                             .truncationMode(.middle)
+                        #else
+                        Text(item.resolvedArtifactKind == .imagePages ? L10n.savedToPhotos : L10n.privateAppCache)
+                        #endif
                     }
                 }
                 .font(.caption2)
@@ -111,9 +115,11 @@ struct DownloadQueueRow: View {
                 quickLook()
             }
             .disabled(canOpen == false)
+            #if os(macOS)
             Button(L10n.revealInFinder) {
                 reveal()
             }
+            #endif
             if let pixivURL = item.pixivURL {
                 Button(L10n.openInPixiv) {
                     PlatformWorkspace.open(pixivURL)
@@ -156,7 +162,9 @@ struct DownloadQueueRow: View {
 
             openButton
             quickLookButton
+            #if os(macOS)
             revealButton
+            #endif
             moreMenu
         }
     }
@@ -254,11 +262,13 @@ struct DownloadQueueRow: View {
             }
             .disabled(canOpen == false)
 
+            #if os(macOS)
             Button {
                 reveal()
             } label: {
                 Label(L10n.revealInFinder, systemImage: "folder")
             }
+            #endif
 
             Divider()
 

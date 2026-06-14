@@ -268,11 +268,15 @@ struct DownloadQueueView: View {
     }
 
     private func revealDownload(_ item: ArtworkDownloadItem) {
+        #if os(macOS)
         if store.downloads.reveal(item) {
             showActionMessage(L10n.revealedDownloadInFinder)
         } else {
             showActionMessage(L10n.openedDownloadFolder)
         }
+        #else
+        openDownloadedItem(item)
+        #endif
     }
 
     /// Show Apple's Quick Look panel for the row's primary artifact.
@@ -598,24 +602,7 @@ private struct DownloadQueueActionRail: View {
 
     var body: some View {
         OS26LibraryActionRail {
-            Menu {
-                Button {
-                    openDownloadFolder()
-                } label: {
-                    Label(L10n.openFolder, systemImage: "folder")
-                }
-
-                Button {
-                    PasteboardWriter.copy(downloads.downloadDirectoryPath)
-                    showActionMessage(L10n.copiedDownloadFolderPath)
-                } label: {
-                    Label(L10n.copyDownloadFolderPath, systemImage: "doc.on.doc")
-                }
-            } label: {
-                Label(L10n.downloadFolder, systemImage: "folder")
-            }
-            .os26GlassIconButton()
-            .help(downloads.downloadDirectoryPath)
+            destinationControl
 
             Button {
                 if downloads.isPaused {
@@ -703,6 +690,7 @@ private struct DownloadQueueActionRail: View {
                 }
                 .disabled(downloads.filteredPixivLinks.isEmpty)
 
+                #if os(macOS)
                 Button {
                     if downloads.revealFirstFilteredDownload() == false {
                         showActionMessage(
@@ -717,6 +705,7 @@ private struct DownloadQueueActionRail: View {
                     Label(L10n.revealFirstVisibleDownload, systemImage: "folder")
                 }
                 .disabled(downloads.filteredItems.isEmpty)
+                #endif
 
                 Button(role: .destructive) {
                     requestDangerAction(.cancelVisible(count: downloads.filteredCancellableCount))
@@ -774,6 +763,38 @@ private struct DownloadQueueActionRail: View {
             .os26GlassIconButton()
         }
         .controlSize(.small)
+    }
+
+    @ViewBuilder
+    private var destinationControl: some View {
+        #if os(macOS)
+        Menu {
+            Button {
+                openDownloadFolder()
+            } label: {
+                Label(L10n.openFolder, systemImage: "folder")
+            }
+
+            Button {
+                PasteboardWriter.copy(downloads.downloadDirectoryPath)
+                showActionMessage(L10n.copiedDownloadFolderPath)
+            } label: {
+                Label(L10n.copyDownloadFolderPath, systemImage: "doc.on.doc")
+            }
+        } label: {
+            Label(downloads.downloadDestination.title, systemImage: downloads.downloadDestination.systemImage)
+        }
+        .os26GlassIconButton()
+        .help(downloads.downloadDestination.detail)
+        #else
+        Button {
+            showActionMessage(L10n.photosLibraryDestinationHint)
+        } label: {
+            Label(downloads.downloadDestination.title, systemImage: downloads.downloadDestination.systemImage)
+        }
+        .os26GlassIconButton()
+        .help(downloads.downloadDestination.detail)
+        #endif
     }
 
     private var downloadFilterBinding: Binding<DownloadQueueFilter> {

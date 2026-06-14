@@ -7,15 +7,15 @@ struct BatchDownloadPopover: View {
     let plan: BatchDownloadPlan
     let queuedCount: Int?
     let isGatheringPages: Bool
-    let downloadDirectoryPath: String
+    let downloadDestinationSummary: ArtworkDownloadDestinationSummary
     let action: () async -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             VStack(alignment: .leading, spacing: 4) {
-                Text(L10n.batchDownload)
+                Label(L10n.batchDownload, systemImage: downloadDestinationSummary.systemImage)
                     .font(.headline)
-                Text(downloadDirectoryPath)
+                Text(downloadDestinationSummary.detail)
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)

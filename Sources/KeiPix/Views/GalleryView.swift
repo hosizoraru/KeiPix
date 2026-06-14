@@ -191,7 +191,7 @@ private struct GalleryFeedView: View {
                 plan: batchDownloadPlan(for: context),
                 queuedCount: lastQueuedDownloadCount,
                 isGatheringPages: isGatheringBatchDownloadPages,
-                downloadDirectoryPath: store.downloads.downloadDirectoryPath,
+                downloadDestinationSummary: store.downloads.downloadDestination,
                 action: queueSelectedBatchDownload
             )
         }

@@ -125,6 +125,7 @@ struct DownloadedArtworkViewer: View {
             .os26GlassButton()
             .help(L10n.readingMode)
 
+            #if os(macOS)
             Button {
                 revealCurrentPage()
             } label: {
@@ -132,6 +133,7 @@ struct DownloadedArtworkViewer: View {
             }
             .os26GlassIconButton()
             .help(L10n.revealCurrentPage)
+            #endif
 
             Menu {
                 if let pixivURL = item.pixivURL {
@@ -149,6 +151,7 @@ struct DownloadedArtworkViewer: View {
                     }
                 }
 
+                #if os(macOS)
                 Button {
                     revealCurrentPage()
                 } label: {
@@ -156,6 +159,7 @@ struct DownloadedArtworkViewer: View {
                 }
 
                 Divider()
+                #endif
 
                 Button {
                     exportAsPDF()

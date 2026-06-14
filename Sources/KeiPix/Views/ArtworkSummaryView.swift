@@ -658,6 +658,7 @@ private struct AdaptiveActionRow: View {
                 }
             }
 
+            #if os(macOS)
             if let currentLocalPageURL {
                 Button {
                     PlatformWorkspace.revealInFiles(currentLocalPageURL)
@@ -665,20 +666,26 @@ private struct AdaptiveActionRow: View {
                     Label(L10n.revealCurrentPage, systemImage: "folder")
                 }
             }
+            #endif
 
             if let downloadedItem {
+                #if os(macOS)
                 Button {
                     _ = store.downloads.reveal(downloadedItem)
                     showActionMessage(L10n.revealedDownloadInFinder)
                 } label: {
                     Label(L10n.revealDownloadedArtwork, systemImage: "folder")
                 }
+                #endif
 
                 #if os(iOS)
                 Button {
                     Task {
                         if let localURL = store.downloads.downloadedImageURL(artworkID: artwork.id, pageIndex: pageIndex) {
-                            let saved = await PhotosSaver.saveImage(from: localURL)
+                            let saved = await PhotosSaver.saveImage(
+                                from: localURL,
+                                originalFilename: localURL.lastPathComponent
+                            )
                             showActionMessage(saved ? L10n.savedToPhotos : L10n.saveToPhotosFailed)
                         }
                     }

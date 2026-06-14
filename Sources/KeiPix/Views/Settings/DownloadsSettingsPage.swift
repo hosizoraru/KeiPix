@@ -7,12 +7,25 @@ struct DownloadsSettingsPage: View {
     var body: some View {
         OS26SettingsPage(
             title: L10n.downloads,
-            subtitle: L10n.downloadNamingTemplateHint,
+            subtitle: downloadSettingsSubtitle,
             systemImage: SettingsCategory.downloads.systemImage
         ) {
+            #if os(macOS)
             folderSection
+            #else
+            photosLibrarySection
+            #endif
             queueSection
             namingSection
+        }
+    }
+
+    private var downloadSettingsSubtitle: String {
+        switch store.downloads.downloadDestination.kind {
+        case .customFolder:
+            L10n.downloadNamingTemplateHint
+        case .photosLibrary:
+            L10n.photosLibraryDownloadSettingsSubtitle
         }
     }
 
@@ -50,6 +63,33 @@ struct DownloadsSettingsPage: View {
         }
     }
 
+    private var photosLibrarySection: some View {
+        let destination = store.downloads.downloadDestination
+        return OS26SettingsSection(
+            L10n.saveDestination,
+            systemImage: destination.systemImage,
+            footer: L10n.photosLibraryDestinationHint
+        ) {
+            LabeledContent(L10n.saveDestination) {
+                Label(L10n.systemPhotosLibrary, systemImage: destination.systemImage)
+                    .labelStyle(.titleAndIcon)
+                    .foregroundStyle(.primary)
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+            }
+
+            LabeledContent(L10n.localDownloadCache) {
+                Text(L10n.privateAppCache)
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+            }
+
+            Text(destination.detail)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
     private var queueSection: some View {
         OS26SettingsSection(
             L10n.concurrentDownloads,
@@ -78,18 +118,14 @@ struct DownloadsSettingsPage: View {
         OS26SettingsSection(
             L10n.downloadNamingTemplate,
             systemImage: "textformat.abc",
-            footer: L10n.downloadNamingTemplateHint
+            footer: namingTemplateFooter
         ) {
             templateEditor
 
             // Live preview rows. Each scenario renders the user's current
             // template against a documented sample (standalone / multi-
             // page / serialized manga) so a token swap shows up
-            // immediately instead of surfacing on the next download. We
-            // prefix each row with the absolute download folder so users
-            // see exactly where the file will land — Pixez and Pixes
-            // both stop at the relative path, which hid surprising
-            // double-folder layouts during P2 dogfooding.
+            // immediately instead of surfacing on the next download.
             VStack(alignment: .leading, spacing: 8) {
                 Text(L10n.livePreview)
                     .font(.subheadline.weight(.semibold))
@@ -203,22 +239,33 @@ struct DownloadsSettingsPage: View {
         .accessibilityLabel(L10n.applyTemplatePreset)
     }
 
+    private var namingTemplateFooter: String {
+        switch store.downloads.downloadDestination.kind {
+        case .customFolder:
+            L10n.downloadNamingTemplateHint
+        case .photosLibrary:
+            L10n.downloadNamingTemplatePhotosHint
+        }
+    }
+
     private func previewRow(scenario: DownloadNamingTemplate.PreviewScenario) -> some View {
-        // Compose the absolute path manually rather than via NSString
-        // pathComponents so the trailing slash from the download folder
-        // never produces a doubled separator on the rendered relative
-        // path's leading slash (the template renderer already returns a
-        // path without a leading slash, but a user-supplied folder might
-        // arrive either way).
-        let folder = store.downloads.downloadDirectoryPath
-        let trimmedFolder = folder.hasSuffix("/") ? String(folder.dropLast()) : folder
+        // macOS previews the absolute folder path; iOS and iPadOS preview
+        // the resource name that Photos receives for provenance.
         let relative = scenario.renderedPath
-        let absolute = relative.hasPrefix("/") ? "\(trimmedFolder)\(relative)" : "\(trimmedFolder)/\(relative)"
+        let previewPath: String
+        switch store.downloads.downloadDestination.kind {
+        case .customFolder:
+            let folder = store.downloads.downloadDirectoryPath
+            let trimmedFolder = folder.hasSuffix("/") ? String(folder.dropLast()) : folder
+            previewPath = relative.hasPrefix("/") ? "\(trimmedFolder)\(relative)" : "\(trimmedFolder)/\(relative)"
+        case .photosLibrary:
+            previewPath = String(format: L10n.photosLibraryPreviewPathFormat, locale: Locale.current, relative)
+        }
         return VStack(alignment: .leading, spacing: 2) {
             Text(label(for: scenario.id))
                 .font(.caption.weight(.medium))
                 .foregroundStyle(.secondary)
-            Text(absolute)
+            Text(previewPath)
                 .font(.system(.caption, design: .monospaced))
                 .lineLimit(2)
                 .truncationMode(.middle)

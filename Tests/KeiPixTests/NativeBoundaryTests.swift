@@ -3886,6 +3886,63 @@ struct NativeBoundaryTests {
         #expect(nativeList.contains("reloadItems(at: [indexPath])") == false)
     }
 
+    @Test("Downloads use Photos on iOS and custom folders on macOS")
+    func downloadsUsePlatformDestinationSemantics() throws {
+        let root = try packageRoot()
+        let store = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Stores/ArtworkDownloadStore.swift"),
+            encoding: .utf8
+        )
+        let models = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Models/DownloadModels.swift"),
+            encoding: .utf8
+        )
+        let photosSaver = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Support/PhotosSaver.swift"),
+            encoding: .utf8
+        )
+        let settingsPage = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/Settings/DownloadsSettingsPage.swift"),
+            encoding: .utf8
+        )
+        let queueView = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/DownloadQueueView.swift"),
+            encoding: .utf8
+        )
+        let batchPopover = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/GallerySelectionBatchPopovers.swift"),
+            encoding: .utf8
+        )
+
+        #expect(models.contains("enum ArtworkDownloadDestinationKind"))
+        #expect(models.contains("case photosLibrary"))
+        #expect(models.contains("case customFolder"))
+        #expect(models.contains("struct ArtworkDownloadDestinationSummary"))
+        #expect(store.contains("var downloadDestination: ArtworkDownloadDestinationSummary"))
+        #expect(store.contains("private func saveDownloadedImageToPhotosLibraryIfNeeded"))
+        #expect(store.contains("try await saveDownloadedImageToPhotosLibraryIfNeeded"))
+        #expect(store.contains("FileManager.default.url(\n            for: .applicationSupportDirectory"))
+        #expect(store.contains("#if os(macOS)\n        downloadDirectoryPath = UserDefaults.standard.string(forKey: \"downloadDirectoryPath\")"))
+        #expect(store.contains("#else\n        downloadDirectoryPath = ArtworkDownloadStore.defaultDownloadDirectory.path(percentEncoded: false)"))
+        #expect(store.contains("FileManager.default.urls(for: .documentDirectory") == false)
+
+        #expect(photosSaver.contains("PHPhotoLibrary.requestAuthorization(for: .addOnly)"))
+        #expect(photosSaver.contains("PHAssetCreationRequest.forAsset()"))
+        #expect(photosSaver.contains("PHAssetResourceCreationOptions()"))
+        #expect(photosSaver.contains("options.originalFilename"))
+        #expect(photosSaver.contains("creationRequestForAsset(from: image)") == false)
+
+        #expect(settingsPage.contains("#if os(macOS)\n            folderSection\n            #else\n            photosLibrarySection"))
+        #expect(settingsPage.contains("private var photosLibrarySection: some View"))
+        #expect(settingsPage.contains("L10n.systemPhotosLibrary"))
+        #expect(settingsPage.contains("store.downloads.downloadDestination"))
+        #expect(queueView.contains("private var destinationControl: some View"))
+        #expect(queueView.contains("#if os(macOS)\n        Menu"))
+        #expect(queueView.contains("#else\n        Button"))
+        #expect(batchPopover.contains("downloadDestinationSummary"))
+        #expect(batchPopover.contains("downloadDirectoryPath") == false)
+    }
+
     @Test("Browsing history uses a native collection container")
     func browsingHistoryUsesNativeCollectionContainer() throws {
         let root = try packageRoot()
