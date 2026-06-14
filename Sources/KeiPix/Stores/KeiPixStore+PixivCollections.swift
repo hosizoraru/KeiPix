@@ -246,12 +246,24 @@ extension KeiPixStore {
         pixivCollections.append(contentsOf: appended)
     }
 
-    func openPixivCollection(id: String, sourceRoute: PixivRoute = .pixivCollections) async throws {
+    func openPixivCollection(
+        id: String,
+        sourceRoute: PixivRoute = .pixivCollections,
+        recordsNavigation: Bool = true
+    ) async throws {
         let detail = try await api.pixivCollectionDetail(id: id)
-        await openPixivCollection(detail, sourceRoute: sourceRoute)
+        await openPixivCollection(
+            detail,
+            sourceRoute: sourceRoute,
+            recordsNavigation: recordsNavigation
+        )
     }
 
-    func openPixivCollection(_ detail: PixivCollectionDetail, sourceRoute: PixivRoute = .pixivCollections) async {
+    func openPixivCollection(
+        _ detail: PixivCollectionDetail,
+        sourceRoute: PixivRoute = .pixivCollections,
+        recordsNavigation: Bool = true
+    ) async {
         focusedUser = nil
         bookmarkTagFilter = nil
         bookmarkFeedOptions = .defaultValue
@@ -270,7 +282,9 @@ extension KeiPixStore {
         searchPopularPreviewArtworks = []
         nextURL = nil
         selectedArtwork = detail.artworks.first
-        navigationHistory.push(.route(sourceRoute))
+        if recordsNavigation {
+            navigationHistory.push(.route(sourceRoute))
+        }
     }
 
     func clearPixivCollectionContext() async {

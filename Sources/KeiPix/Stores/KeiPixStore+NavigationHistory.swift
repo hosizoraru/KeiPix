@@ -16,6 +16,10 @@ struct CreatorFeedNavigationTarget: Equatable, Hashable, Sendable {
 
 enum NavigationHistoryTarget: Equatable, Hashable, Sendable {
     case artwork(Int)
+    case novel(Int)
+    case novelSeries(Int)
+    case pixivCollection(id: String, sourceRoute: PixivRoute)
+    case pixivisionArticle(id: Int, url: URL)
     case route(PixivRoute)
     case creatorFeed(CreatorFeedNavigationTarget)
 
@@ -111,6 +115,41 @@ extension KeiPixStore {
         resolveCreatorTagSummaryIfNeeded(artwork)
     }
 
+    func presentDirectArtworkNavigation(
+        _ artwork: PixivArtwork,
+        id: Int,
+        recordsNavigation: Bool
+    ) async {
+        focusedUser = nil
+        bookmarkTagFilter = nil
+        bookmarkFeedOptions = .defaultValue
+        creatorArtworkTagFilter = nil
+        resetCreatorTagHydrationState()
+        selectedSpotlightArticle = nil
+        selectedPixivCollection = nil
+        selectedRoute = .illustrations
+        feedNarrowingContext = .directArtwork(id: id)
+        allArtworks = [artwork]
+        artworks = [artwork]
+        activeFeedSnapshotRestoration = nil
+        allSearchPopularPreviewArtworks = []
+        searchPopularPreviewArtworks = []
+        nextURL = nil
+        if recordsNavigation {
+            navigateToArtwork(artwork)
+        } else {
+            selectedArtwork = artwork
+            artworkNavigationIntentSerial += 1
+            HandoffManager.shared.updateActivity(
+                route: selectedRoute.rawValue,
+                artworkID: artwork.id
+            )
+            WidgetDataProvider.saveArtwork(artwork)
+            resolveCreatorTagSummaryIfNeeded(artwork)
+        }
+        await recordBrowsingHistory(for: artwork)
+    }
+
     /// Navigate backward in history.
     func navigateBack() {
         guard let target = navigationHistory.goBack() else { return }
@@ -150,12 +189,128 @@ extension KeiPixStore {
     private func restoreNavigationTarget(_ target: NavigationHistoryTarget) {
         switch target {
         case .artwork(let id):
-            resolveAndSelectArtwork(id: id)
+            restoreArtworkNavigation(id: id)
+        case .novel(let id):
+            restoreNovelNavigation(id: id)
+        case .novelSeries(let id):
+            restoreNovelSeriesNavigation(id: id)
+        case .pixivCollection(let id, let sourceRoute):
+            restorePixivCollectionNavigation(id: id, sourceRoute: sourceRoute)
+        case .pixivisionArticle(let id, let url):
+            restorePixivisionArticleNavigation(id: id, url: url)
         case .route(let route):
             restoreRouteNavigation(route)
         case .creatorFeed(let feed):
             restoreCreatorFeedNavigation(feed)
         }
+    }
+
+    private func restorePixivCollectionNavigation(id: String, sourceRoute: PixivRoute) {
+        Task {
+            do {
+                try await openPixivCollection(
+                    id: id,
+                    sourceRoute: sourceRoute,
+                    recordsNavigation: false
+                )
+            } catch {
+                errorMessage = error.localizedDescription
+            }
+        }
+    }
+
+    private func restorePixivisionArticleNavigation(id: Int, url: URL) {
+        focusedUser = nil
+        bookmarkTagFilter = nil
+        feedNarrowingContext = nil
+        selectedPixivCollection = nil
+        selectedArtwork = nil
+        allArtworks = []
+        artworks = []
+        activeFeedSnapshotRestoration = nil
+        allSearchPopularPreviewArtworks = []
+        searchPopularPreviewArtworks = []
+        nextURL = nil
+        selectedRoute = .spotlight
+        selectedSpotlightArticle = .linkPlaceholder(
+            id: id,
+            url: normalizedPixivisionURL(id: id, sourceURL: url)
+        )
+    }
+
+    private func restoreArtworkNavigation(id: Int) {
+        if selectedRoute.usesArtworkFeed {
+            resolveAndSelectArtwork(id: id)
+            return
+        }
+
+        Task {
+            do {
+                let artwork: PixivArtwork
+                if let cachedArtwork = allKnownArtwork(id: id) {
+                    artwork = cachedArtwork
+                } else {
+                    artwork = try await api.illustDetail(illustID: id)
+                }
+                await presentDirectArtworkNavigation(
+                    artwork,
+                    id: id,
+                    recordsNavigation: false
+                )
+            } catch {
+                errorMessage = error.localizedDescription
+            }
+        }
+    }
+
+    private func restoreNovelNavigation(id: Int) {
+        Task {
+            do {
+                let novel = try await api.novelDetail(novelID: id)
+                prepareDirectNovelNavigation()
+                selectedRoute = .novelRecommended
+                novels.presentDirectNovels([novel], selectedID: id)
+            } catch {
+                errorMessage = error.localizedDescription
+            }
+        }
+    }
+
+    private func restoreNovelSeriesNavigation(id: Int) {
+        Task {
+            do {
+                let response = try await api.novelSeries(seriesID: id)
+                var seriesNovels = response.novels
+                for novel in [response.firstNovel, response.latestNovel].compactMap({ $0 }) {
+                    if seriesNovels.contains(where: { $0.id == novel.id }) == false {
+                        seriesNovels.append(novel)
+                    }
+                }
+                prepareDirectNovelNavigation()
+                selectedRoute = .novelRecommended
+                let selectedID = response.latestNovel?.id ?? response.firstNovel?.id ?? seriesNovels.first?.id
+                novels.presentDirectNovels(seriesNovels, nextURL: response.nextURL, selectedID: selectedID)
+            } catch {
+                errorMessage = error.localizedDescription
+            }
+        }
+    }
+
+    private func prepareDirectNovelNavigation() {
+        focusedUser = nil
+        bookmarkTagFilter = nil
+        bookmarkFeedOptions = .defaultValue
+        creatorArtworkTagFilter = nil
+        feedNarrowingContext = nil
+        selectedPixivCollection = nil
+        selectedSpotlightArticle = nil
+        selectedArtwork = nil
+        allArtworks = []
+        artworks = []
+        activeFeedSnapshotRestoration = nil
+        allSearchPopularPreviewArtworks = []
+        searchPopularPreviewArtworks = []
+        nextURL = nil
     }
 
     private func restoreRouteNavigation(_ route: PixivRoute) {

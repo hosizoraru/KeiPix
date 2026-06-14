@@ -35,6 +35,32 @@ extension KeiPixStore {
         return await openPixivLink(url)
     }
 
+    /// Open a target from the Pixiv Activity feed while preserving the
+    /// activity timeline as the previous browser-history entry.
+    @discardableResult
+    func openPixivActivityTarget(_ url: URL) async -> String {
+        guard let destination = PixivWebLinkResolver.destination(from: url) else {
+            errorMessage = L10n.unsupportedPixivLink
+            return L10n.unsupportedPixivLink
+        }
+
+        guard session != nil, usesLocalSampleAccount == false else {
+            isLoginPresented = true
+            return L10n.loginRequiredForPixivLink
+        }
+
+        do {
+            try await openPixivDestination(
+                destination,
+                sourceHistoryTarget: .route(.pixivActivity)
+            )
+            return String(format: L10n.openedPixivLinkFormat, destination.normalizedLabel)
+        } catch {
+            errorMessage = error.localizedDescription
+            return error.localizedDescription
+        }
+    }
+
     /// Open a Pixiv artwork or creator by numeric ID.
     @discardableResult
     func openPixivID(_ id: Int, target: PixivIDOpenTarget) async -> String {
@@ -58,28 +84,22 @@ extension KeiPixStore {
     }
 
     /// Route a parsed Pixiv web destination to the appropriate store action.
-    func openPixivDestination(_ destination: PixivWebDestination) async throws {
+    func openPixivDestination(
+        _ destination: PixivWebDestination,
+        sourceHistoryTarget: NavigationHistoryTarget? = nil
+    ) async throws {
         switch destination {
         case .artwork(let id):
             let artwork = try await api.illustDetail(illustID: id)
-            focusedUser = nil
-            bookmarkTagFilter = nil
-            bookmarkFeedOptions = .defaultValue
-            creatorArtworkTagFilter = nil
-            selectedSpotlightArticle = nil
-            selectedPixivCollection = nil
-            selectedRoute = .illustrations
-            feedNarrowingContext = .directArtwork(id: id)
-            allArtworks = [artwork]
-            artworks = [artwork]
-            activeFeedSnapshotRestoration = nil
-            allSearchPopularPreviewArtworks = []
-            searchPopularPreviewArtworks = []
-            navigateToArtwork(artwork)
-            nextURL = nil
-            await recordBrowsingHistory(for: artwork)
+            pushLinkSourceIfNeeded(sourceHistoryTarget)
+            await presentDirectArtworkNavigation(
+                artwork,
+                id: id,
+                recordsNavigation: true
+            )
         case .novel(let id):
             let novel = try await api.novelDetail(novelID: id)
+            pushLinkSourceIfNeeded(sourceHistoryTarget)
             focusedUser = nil
             bookmarkTagFilter = nil
             bookmarkFeedOptions = .defaultValue
@@ -96,6 +116,7 @@ extension KeiPixStore {
             nextURL = nil
             selectedRoute = .novelRecommended
             novels.presentDirectNovels([novel], selectedID: id)
+            navigationHistory.push(.novel(id))
         case .novelSeries(let id):
             let response = try await api.novelSeries(seriesID: id)
             var seriesNovels = response.novels
@@ -104,6 +125,7 @@ extension KeiPixStore {
                     seriesNovels.append(novel)
                 }
             }
+            pushLinkSourceIfNeeded(sourceHistoryTarget)
             focusedUser = nil
             bookmarkTagFilter = nil
             bookmarkFeedOptions = .defaultValue
@@ -121,10 +143,13 @@ extension KeiPixStore {
             selectedRoute = .novelRecommended
             let selectedID = response.latestNovel?.id ?? response.firstNovel?.id ?? seriesNovels.first?.id
             novels.presentDirectNovels(seriesNovels, nextURL: response.nextURL, selectedID: selectedID)
+            navigationHistory.push(.novelSeries(id))
         case .user(let id):
             let detail = try await api.userDetail(userID: id)
+            pushLinkSourceIfNeeded(sourceHistoryTarget)
             await openUserFeed(user: detail.user, route: .userIllustrations)
         case .activity:
+            pushLinkSourceIfNeeded(sourceHistoryTarget)
             focusedUser = nil
             bookmarkTagFilter = nil
             bookmarkFeedOptions = .defaultValue
@@ -141,13 +166,33 @@ extension KeiPixStore {
             nextURL = nil
             selectedRoute = .pixivActivity
             await refreshPixivActivityFeed(force: true)
+            if sourceHistoryTarget != nil {
+                navigationHistory.push(.route(.pixivActivity))
+            }
         case .collection(let id):
-            try await openPixivCollection(id: id)
+            let sourceRoute = routeSource(for: sourceHistoryTarget) ?? .pixivCollections
+            if sourceHistoryTarget == nil {
+                try await openPixivCollection(id: id)
+            } else {
+                let detail = try await api.pixivCollectionDetail(id: id)
+                pushLinkSourceIfNeeded(sourceHistoryTarget)
+                await openPixivCollection(
+                    detail,
+                    sourceRoute: sourceRoute,
+                    recordsNavigation: false
+                )
+                navigationHistory.push(.pixivCollection(id: id, sourceRoute: sourceRoute))
+            }
         case .tag(let keyword), .search(let keyword):
+            pushLinkSourceIfNeeded(sourceHistoryTarget)
             selectedPixivCollection = nil
             searchText = keyword
             await runSearch()
+            if sourceHistoryTarget != nil {
+                navigationHistory.push(.route(.search))
+            }
         case .creatorSearch(let keyword):
+            pushLinkSourceIfNeeded(sourceHistoryTarget)
             focusedUser = nil
             bookmarkTagFilter = nil
             feedNarrowingContext = nil
@@ -156,7 +201,11 @@ extension KeiPixStore {
             searchText = keyword
             selectedRoute = .searchUsers
             searchSubmissionID += 1
+            if sourceHistoryTarget != nil {
+                navigationHistory.push(.route(.searchUsers))
+            }
         case .pixivisionArticle(let id, let url):
+            pushLinkSourceIfNeeded(sourceHistoryTarget)
             focusedUser = nil
             bookmarkTagFilter = nil
             feedNarrowingContext = nil
@@ -170,7 +219,20 @@ extension KeiPixStore {
             nextURL = nil
             selectedRoute = .spotlight
             selectedSpotlightArticle = .linkPlaceholder(id: id, url: normalizedPixivisionURL(id: id, sourceURL: url))
+            if sourceHistoryTarget != nil {
+                navigationHistory.push(.pixivisionArticle(id: id, url: url))
+            }
         }
+    }
+
+    private func pushLinkSourceIfNeeded(_ source: NavigationHistoryTarget?) {
+        guard let source else { return }
+        navigationHistory.push(source)
+    }
+
+    private func routeSource(for source: NavigationHistoryTarget?) -> PixivRoute? {
+        guard case .route(let route) = source else { return nil }
+        return route
     }
 
     func normalizedPixivisionURL(id: Int, sourceURL: URL) -> URL {

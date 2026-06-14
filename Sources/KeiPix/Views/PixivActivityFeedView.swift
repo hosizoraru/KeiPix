@@ -198,7 +198,7 @@ struct PixivActivityFeedView: View {
     private func openTarget(for item: PixivActivityItem) {
         guard let url = item.target?.url ?? actorURL(for: item.actor) else { return }
         Task {
-            let message = await store.openPixivLink(url)
+            let message = await store.openPixivActivityTarget(url)
             showActionMessage(message)
         }
     }
