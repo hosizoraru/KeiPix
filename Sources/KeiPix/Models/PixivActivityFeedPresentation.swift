@@ -34,6 +34,11 @@ enum PixivActivityFeedPresentation {
         return String(format: L10n.pixivActivityLoadedCountFormat, itemCount)
     }
 
+    static func routeBadgeText(itemCount: Int) -> String? {
+        guard itemCount > 0 else { return nil }
+        return itemCount > 999 ? "999+" : "\(itemCount)"
+    }
+
     static func primaryTitle(for item: PixivActivityItem) -> String {
         let actorName = item.actor?.name.trimmingCharacters(in: .whitespacesAndNewlines)
         let targetTitle = item.target?.title.trimmingCharacters(in: .whitespacesAndNewlines)

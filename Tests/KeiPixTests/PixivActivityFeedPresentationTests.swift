@@ -4,14 +4,21 @@ import Testing
 @testable import KeiPix
 
 struct PixivActivityFeedPresentationTests {
-    @Test("Activity header status stays empty until activity items load")
+    @Test("Activity navigation status stays empty until activity items load")
     func emptyActivityFeedDoesNotRepeatRouteTitle() {
         #expect(PixivActivityFeedPresentation.statusText(itemCount: 0).isEmpty)
     }
 
-    @Test("Activity header status reports loaded item count")
+    @Test("Activity navigation status reports loaded item count")
     func loadedActivityFeedShowsItemCount() {
         #expect(PixivActivityFeedPresentation.statusText(itemCount: 24) == "Loaded 24 activity items")
+    }
+
+    @Test("Activity route badge only appears after loading and clamps large counts")
+    func activityRouteBadgeUsesCompactLoadedCount() {
+        #expect(PixivActivityFeedPresentation.routeBadgeText(itemCount: 0) == nil)
+        #expect(PixivActivityFeedPresentation.routeBadgeText(itemCount: 24) == "24")
+        #expect(PixivActivityFeedPresentation.routeBadgeText(itemCount: 1_240) == "999+")
     }
 
     @Test("Activity layout defaults to waterfall while keeping list available")

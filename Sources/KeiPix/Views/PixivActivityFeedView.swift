@@ -18,15 +18,6 @@ struct PixivActivityFeedView: View {
                 contentBody
             }
         }
-        .platformPageHeader(
-            title: L10n.pixivActivity,
-            status: statusText,
-            statusSystemImage: PixivRoute.pixivActivity.systemImage
-        ) {
-            #if os(macOS)
-            titleActions
-            #endif
-        }
         .platformPageNavigationChrome(title: L10n.pixivActivity, status: statusText)
         .sheet(item: $presentedActivityDetail) { detail in
             NavigationStack {
@@ -98,6 +89,7 @@ struct PixivActivityFeedView: View {
                 }
             }
             .nativeBottomTabContentSurface()
+            .scrollEdgeEffectStyle(.soft, for: .top)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
     }
@@ -114,51 +106,6 @@ struct PixivActivityFeedView: View {
                 Label(L10n.connectPixivWebSession, systemImage: "globe.badge.chevron.backward")
             }
             .os26GlassButton(prominent: true)
-        }
-    }
-
-    @ViewBuilder
-    private var titleActions: some View {
-        if store.session != nil {
-            OS26LibraryActionRail {
-                Button {
-                    Task { await refresh() }
-                } label: {
-                    Label(L10n.refresh, systemImage: "arrow.clockwise")
-                }
-                .os26GlassIconButton(prominent: store.isLoadingPixivActivityFeed)
-                .disabled(store.isLoadingPixivActivityFeed || store.isLoadingMorePixivActivityFeed)
-                .help(L10n.refresh)
-
-                Menu {
-                    if store.pixivWebSession?.isUsable != true {
-                        Button {
-                            store.isPixivWebSessionPresented = true
-                        } label: {
-                            Label(L10n.connectPixivWebSession, systemImage: "globe.badge.chevron.backward")
-                        }
-
-                        Divider()
-                    }
-
-                    Button {
-                        openPixivActivityWebPage()
-                    } label: {
-                        Label(L10n.openInPixiv, systemImage: "safari")
-                    }
-
-                    Button {
-                        copyPixivActivityLink()
-                    } label: {
-                        Label(L10n.copyLink, systemImage: "link")
-                    }
-                } label: {
-                    Label(L10n.moreActions, systemImage: "ellipsis")
-                }
-                .os26GlassIconButton()
-                .help(L10n.moreActions)
-            }
-            .controlSize(.small)
         }
     }
 
@@ -309,17 +256,6 @@ struct PixivActivityFeedView: View {
             let message = await store.openPixivActivityBookmarkTag(tag)
             showActionMessage(message)
         }
-    }
-
-    private func openPixivActivityWebPage() {
-        guard let url = PixivWebURLBuilder.activityFeedURL() else { return }
-        _ = PlatformWorkspace.open(url)
-    }
-
-    private func copyPixivActivityLink() {
-        guard let url = PixivWebURLBuilder.activityFeedURL() else { return }
-        PasteboardWriter.copy(url.absoluteString)
-        showActionMessage(L10n.copied)
     }
 
     private func actorURL(for actor: PixivActivityActor?) -> URL? {

@@ -914,7 +914,7 @@ struct ContentView: View {
             title: currentMobilePlatform == .phone ? nil : store.selectedRoute.title,
             accessibilityLabel: routeMenuAccessibilityLabel,
             menu: routeNativeMenu,
-            badgeText: routeMenuArtworkCountBadgeText,
+            badgeText: routeMenuCountBadgeText,
             select: { handleNativeToolbarMenuAction($0, showsSidebarToggle: false) }
         )
         .fixedSize(horizontal: true, vertical: false)
@@ -1027,7 +1027,10 @@ struct ContentView: View {
         showsSidebarToggle && store.selectedRoute.usesArtworkFeed
     }
 
-    private var routeMenuArtworkCountBadgeText: String? {
+    private var routeMenuCountBadgeText: String? {
+        if store.selectedRoute == .pixivActivity {
+            return PixivActivityFeedPresentation.routeBadgeText(itemCount: store.pixivActivityItems.count)
+        }
         guard store.selectedRoute.usesArtworkFeed else { return nil }
         let hasLocalFilter = store.clientFilterQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false
         let count = hasLocalFilter ? store.clientFilteredArtworks.count : store.artworks.count
@@ -1036,10 +1039,13 @@ struct ContentView: View {
     }
 
     private var routeMenuAccessibilityLabel: String {
-        guard let routeMenuArtworkCountBadgeText else {
+        guard let routeMenuCountBadgeText else {
             return "\(L10n.currentRoute): \(store.selectedRoute.title)"
         }
-        return "\(L10n.currentRoute): \(store.selectedRoute.title), \(routeMenuArtworkCountBadgeText) \(L10n.results)"
+        if store.selectedRoute == .pixivActivity {
+            return "\(L10n.currentRoute): \(store.selectedRoute.title), \(PixivActivityFeedPresentation.statusText(itemCount: store.pixivActivityItems.count))"
+        }
+        return "\(L10n.currentRoute): \(store.selectedRoute.title), \(routeMenuCountBadgeText) \(L10n.results)"
     }
 
     private var selectedArtworkMenuSystemImage: String {
