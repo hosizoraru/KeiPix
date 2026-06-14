@@ -1,4 +1,7 @@
 import SwiftUI
+#if os(iOS)
+import UIKit
+#endif
 
 struct PixivActivityFeedView: View {
     @Bindable var store: KeiPixStore
@@ -52,10 +55,15 @@ struct PixivActivityFeedView: View {
         } else {
             NativePixivActivityListView(
                 items: store.pixivActivityItems,
+                layoutMode: effectiveActivityLayoutMode,
                 rowHeight: 118,
                 onNearContentEnd: loadMoreIfNeeded
             ) { item in
-                AnyView(PixivActivityRow(item: item, openTarget: { openTarget(for: item) }))
+                if effectiveActivityLayoutMode.usesMasonry {
+                    AnyView(PixivActivityMasonryCard(item: item, openTarget: { openTarget(for: item) }))
+                } else {
+                    AnyView(PixivActivityRow(item: item, openTarget: { openTarget(for: item) }))
+                }
             }
             .nativeBottomTabContentSurface()
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -174,6 +182,14 @@ struct PixivActivityFeedView: View {
 
     private var statusText: String {
         PixivActivityFeedPresentation.statusText(itemCount: store.pixivActivityItems.count)
+    }
+
+    private var effectiveActivityLayoutMode: PixivActivityLayoutMode {
+        #if os(iOS)
+        UIDevice.current.userInterfaceIdiom == .phone ? store.pixivActivityLayoutMode : .list
+        #else
+        .list
+        #endif
     }
 
     private func refresh() async {
@@ -308,32 +324,120 @@ private struct PixivActivityRow: View {
     }
 
     private var primaryTitle: String {
-        let actorName = item.actor?.name.trimmingCharacters(in: .whitespacesAndNewlines)
-        let targetTitle = item.target?.title.trimmingCharacters(in: .whitespacesAndNewlines)
-
-        if let actorName, actorName.isEmpty == false,
-           let targetTitle, targetTitle.isEmpty == false {
-            return "\(actorName) · \(targetTitle)"
-        }
-        if let targetTitle, targetTitle.isEmpty == false {
-            return targetTitle
-        }
-        if let actorName, actorName.isEmpty == false {
-            return actorName
-        }
-        return item.kind.title
+        PixivActivityFeedPresentation.primaryTitle(for: item)
     }
 
     private var secondaryTitle: String {
-        let summary = item.summary.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard summary.isEmpty == false else {
-            return item.target?.url?.absoluteString ?? L10n.pixivActivityOpenHint
-        }
-        return summary
+        PixivActivityFeedPresentation.secondaryTitle(for: item)
     }
 
     private var accessibilityTitle: String {
         "\(item.kind.title), \(primaryTitle)"
+    }
+}
+
+private struct PixivActivityMasonryCard: View {
+    let item: PixivActivityItem
+    let openTarget: () -> Void
+
+    var body: some View {
+        Button(action: openTarget) {
+            VStack(alignment: .leading, spacing: 10) {
+                thumbnail
+
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(primaryTitle)
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.primary)
+                        .lineLimit(2)
+                        .fixedSize(horizontal: false, vertical: true)
+
+                    Text(secondaryTitle)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(2)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .padding(12)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            .contentShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .keiGlass(18)
+        .accessibilityLabel(accessibilityTitle)
+    }
+
+    private var thumbnail: some View {
+        ZStack(alignment: .topLeading) {
+            thumbnailContent
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .clipped()
+
+            kindBadge
+                .padding(8)
+
+            if let occurredAt = item.occurredAt {
+                Text(occurredAt.formatted(date: .abbreviated, time: .omitted))
+                    .font(.caption2.weight(.medium))
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .padding(.horizontal, 7)
+                    .padding(.vertical, 4)
+                    .background(.ultraThinMaterial, in: Capsule())
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
+                    .padding(8)
+            }
+        }
+        .aspectRatio(thumbnailAspectRatio, contentMode: .fit)
+        .clipShape(RoundedRectangle(cornerRadius: 15, style: .continuous))
+    }
+
+    @ViewBuilder
+    private var thumbnailContent: some View {
+        if let url = item.target?.thumbnailURL ?? item.actor?.avatarURL {
+            RemoteImageView(url: url, contentMode: .fill)
+        } else {
+            Image(systemName: item.kind.systemImage)
+                .font(.title2.weight(.semibold))
+                .symbolRenderingMode(.hierarchical)
+                .foregroundStyle(item.kind.tint)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background(item.kind.tint.opacity(0.12))
+        }
+    }
+
+    private var kindBadge: some View {
+        Text(item.kind.title)
+            .font(.caption2.weight(.bold))
+            .foregroundStyle(item.kind.tint)
+            .lineLimit(1)
+            .padding(.horizontal, 7)
+            .padding(.vertical, 4)
+            .background(.ultraThinMaterial, in: Capsule())
+    }
+
+    private var primaryTitle: String {
+        PixivActivityFeedPresentation.primaryTitle(for: item)
+    }
+
+    private var secondaryTitle: String {
+        PixivActivityFeedPresentation.secondaryTitle(for: item)
+    }
+
+    private var accessibilityTitle: String {
+        "\(item.kind.title), \(primaryTitle)"
+    }
+
+    private var thumbnailAspectRatio: CGFloat {
+        if item.target?.thumbnailURL != nil {
+            return 1.43
+        }
+        if item.actor?.avatarURL != nil || item.kind == .followedUser {
+            return 1.61
+        }
+        return 1.72
     }
 }
 

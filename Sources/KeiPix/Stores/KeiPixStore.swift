@@ -251,6 +251,10 @@ final class KeiPixStore {
     var creatorListLayoutMode = KeiPixStore.loadCreatorListLayoutMode()
     var spotlightListLayoutMode = KeiPixStore.loadSpotlightListLayoutMode()
     var novelGalleryLayoutMode = KeiPixStore.loadEnum("novelGalleryLayoutMode", defaultValue: NovelGalleryLayoutMode.grid)
+    var pixivActivityLayoutMode = KeiPixStore.loadEnum(
+        "pixivActivityLayoutMode",
+        defaultValue: PixivActivityFeedPresentation.defaultLayoutMode
+    )
     var showTranslatedTags = UserDefaults.standard.object(forKey: "showTranslatedTags") as? Bool ?? true
     var showContentBadges = UserDefaults.standard.object(forKey: "showContentBadges") as? Bool ?? true
     var showAccountIdentity = UserDefaults.standard.object(forKey: "showAccountIdentity") as? Bool ?? true

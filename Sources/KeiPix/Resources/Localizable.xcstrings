@@ -22766,6 +22766,35 @@
         }
       }
     },
+    "Activity Layout": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activity Layout"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "動向の表示"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "动态显示"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "動態顯示"
+          }
+        }
+      }
+    },
     "No Pixiv activity": {
       "extractionState": "manual",
       "localizations": {
@@ -42539,6 +42568,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "HTML としてエクスポート"
+          }
+        }
+      }
+    },
+    "Waterfall": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Waterfall"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ウォーターフォール"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "瀑布流"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "瀑布流"
           }
         }
       }

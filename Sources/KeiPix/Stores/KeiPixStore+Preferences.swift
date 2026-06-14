@@ -454,6 +454,10 @@ extension KeiPixStore {
         persistRaw("novelGalleryLayoutMode", value: mode, to: \.novelGalleryLayoutMode)
     }
 
+    func setPixivActivityLayoutMode(_ mode: PixivActivityLayoutMode) {
+        persistRaw("pixivActivityLayoutMode", value: mode, to: \.pixivActivityLayoutMode)
+    }
+
     var dashboardCardOrder: [DiscoveryDashboardCardKind] {
         DiscoveryDashboardCardKind.ordered(from: dashboardCardOrderID)
     }

@@ -5,14 +5,16 @@ import AppKit
 import UIKit
 #endif
 
-/// Native hosted list for Pixiv Web activity.
+/// Native hosted feed for Pixiv Web activity.
 ///
-/// The social feed is a linear, text-heavy surface, so AppKit/UIKit owns row
-/// reuse and bottom-edge detection while SwiftUI keeps row composition and
-/// route actions close to the surrounding app chrome.
+/// The social feed is text-heavy on desktop/tablet and image-skimmable on
+/// iPhone, so AppKit/UIKit owns row reuse, masonry placement, and bottom-edge
+/// detection while SwiftUI keeps row composition and route actions close to the
+/// surrounding app chrome.
 @MainActor
 struct NativePixivActivityListView {
     let items: [PixivActivityItem]
+    var layoutMode: PixivActivityLayoutMode = .list
     var rowHeight: CGFloat = 116
     let onNearContentEnd: @MainActor () -> Void
     let content: @MainActor (PixivActivityItem) -> AnyView
@@ -157,11 +159,10 @@ extension NativePixivActivityListView: UIViewRepresentable {
     }
 
     func makeUIView(context: Context) -> UICollectionView {
-        let layout = UICollectionViewFlowLayout()
-        layout.minimumLineSpacing = 10
-        layout.sectionInset = UIEdgeInsets(top: 14, left: 16, bottom: 18, right: 16)
-
-        let collectionView = NativePixivActivityCollectionView(frame: .zero, collectionViewLayout: layout)
+        let collectionView = NativePixivActivityCollectionView(
+            frame: .zero,
+            collectionViewLayout: context.coordinator.makeCollectionLayout()
+        )
         configureCollectionViewForBottomTabContent(collectionView)
         collectionView.backgroundColor = .clear
         collectionView.alwaysBounceVertical = true
@@ -179,6 +180,7 @@ extension NativePixivActivityListView: UIViewRepresentable {
     func updateUIView(_ collectionView: UICollectionView, context: Context) {
         context.coordinator.parent = self
         context.coordinator.registerContentScrollViewIfNeeded(collectionView)
+        context.coordinator.updateCollectionLayout(for: collectionView)
         context.coordinator.applyItems(to: collectionView)
     }
 
@@ -188,7 +190,11 @@ extension NativePixivActivityListView: UIViewRepresentable {
 
         var parent: NativePixivActivityListView
         private var lastItemIDs: [String] = []
+        private var lastRenderedLayoutMode: PixivActivityLayoutMode?
+        private var lastLayoutMode: PixivActivityLayoutMode?
+        private var lastLayoutWidth: CGFloat = 0
         private let contentScrollRegistration = NativeContentScrollRegistration()
+        private let widthChangeTolerance: CGFloat = 0.5
 
         init(parent: NativePixivActivityListView) {
             self.parent = parent
@@ -203,6 +209,58 @@ extension NativePixivActivityListView: UIViewRepresentable {
 
         func registerContentScrollViewIfNeeded(_ collectionView: UICollectionView) {
             contentScrollRegistration.register(collectionView)
+        }
+
+        func makeCollectionLayout() -> UICollectionViewLayout {
+            if parent.layoutMode.usesMasonry {
+                return NativePixivActivityMasonryUICollectionViewLayout()
+            }
+            return UICollectionViewFlowLayout()
+        }
+
+        @discardableResult
+        func updateCollectionLayout(for collectionView: UICollectionView) -> Bool {
+            let layoutModeChanged = lastLayoutMode != parent.layoutMode
+            let widthChanged = abs(lastLayoutWidth - collectionView.bounds.width) > widthChangeTolerance
+            let itemsChanged = parent.items.map(\.id) != lastItemIDs
+
+            if parent.layoutMode.usesMasonry {
+                let masonryLayout: NativePixivActivityMasonryUICollectionViewLayout
+                let layoutWasReplaced: Bool
+                if let current = collectionView.collectionViewLayout as? NativePixivActivityMasonryUICollectionViewLayout {
+                    masonryLayout = current
+                    layoutWasReplaced = false
+                } else {
+                    masonryLayout = NativePixivActivityMasonryUICollectionViewLayout()
+                    collectionView.setCollectionViewLayout(masonryLayout, animated: false)
+                    layoutWasReplaced = true
+                }
+                masonryLayout.items = parent.items
+                if layoutWasReplaced || layoutModeChanged || widthChanged || itemsChanged {
+                    masonryLayout.invalidateLayout()
+                }
+                rememberLayout(for: collectionView)
+                return layoutWasReplaced || layoutModeChanged
+            }
+
+            let flowLayout: UICollectionViewFlowLayout
+            let layoutWasReplaced: Bool
+            if let current = collectionView.collectionViewLayout as? UICollectionViewFlowLayout {
+                flowLayout = current
+                layoutWasReplaced = false
+            } else {
+                flowLayout = UICollectionViewFlowLayout()
+                collectionView.setCollectionViewLayout(flowLayout, animated: false)
+                layoutWasReplaced = true
+            }
+            flowLayout.minimumLineSpacing = 10
+            flowLayout.minimumInteritemSpacing = 10
+            flowLayout.sectionInset = UIEdgeInsets(top: 14, left: 16, bottom: 18, right: 16)
+            if layoutWasReplaced || layoutModeChanged || widthChanged || itemsChanged {
+                flowLayout.invalidateLayout()
+            }
+            rememberLayout(for: collectionView)
+            return layoutWasReplaced || layoutModeChanged
         }
 
         func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
@@ -233,8 +291,9 @@ extension NativePixivActivityListView: UIViewRepresentable {
 
         func applyItems(to collectionView: UICollectionView) {
             let itemIDs = parent.items.map(\.id)
-            if itemIDs != lastItemIDs {
+            if itemIDs != lastItemIDs || parent.layoutMode != lastRenderedLayoutMode {
                 lastItemIDs = itemIDs
+                lastRenderedLayoutMode = parent.layoutMode
                 collectionView.reloadData()
                 return
             }
@@ -264,8 +323,14 @@ extension NativePixivActivityListView: UIViewRepresentable {
             layout collectionViewLayout: UICollectionViewLayout,
             sizeForItemAt indexPath: IndexPath
         ) -> CGSize {
+            guard parent.layoutMode.usesMasonry == false else { return .zero }
             let horizontalInset: CGFloat = 32
             return CGSize(width: max(collectionView.bounds.width - horizontalInset, 260), height: parent.rowHeight)
+        }
+
+        private func rememberLayout(for collectionView: UICollectionView) {
+            lastLayoutMode = parent.layoutMode
+            lastLayoutWidth = collectionView.bounds.width
         }
     }
 }
@@ -286,6 +351,114 @@ private final class NativePixivActivityCollectionView: UICollectionView {
     private func notifyHierarchyAvailableIfNeeded() {
         guard window != nil else { return }
         onHierarchyAvailable?(self)
+    }
+}
+
+private final class NativePixivActivityMasonryUICollectionViewLayout: UICollectionViewLayout {
+    var items: [PixivActivityItem] = []
+
+    private let spacing: CGFloat = 10
+    private let sectionInsets = UIEdgeInsets(top: 12, left: 14, bottom: 20, right: 14)
+    private let minimumColumnWidth: CGFloat = 136
+    private let maximumColumnWidth: CGFloat = 220
+    private var cachedAttributes: [IndexPath: UICollectionViewLayoutAttributes] = [:]
+    private var previousCachedAttributes: [IndexPath: UICollectionViewLayoutAttributes] = [:]
+    private var cachedContentSize: CGSize = .zero
+
+    override var collectionViewContentSize: CGSize {
+        cachedContentSize
+    }
+
+    override func prepare() {
+        super.prepare()
+        previousCachedAttributes = cachedAttributes
+
+        guard let collectionView else {
+            cachedAttributes = [:]
+            cachedContentSize = .zero
+            return
+        }
+
+        let containerWidth = max(collectionView.bounds.width, 1)
+        let availableWidth = max(containerWidth - sectionInsets.left - sectionInsets.right, 1)
+        let columnCount = resolvedColumnCount(for: availableWidth)
+        let columnWidth = floor((availableWidth - CGFloat(columnCount - 1) * spacing) / CGFloat(columnCount))
+        var columnHeights = Array(repeating: CGFloat.zero, count: columnCount)
+        var attributes: [IndexPath: UICollectionViewLayoutAttributes] = [:]
+        attributes.reserveCapacity(items.count)
+
+        for (index, item) in items.enumerated() {
+            let column = shortestColumnIndex(in: columnHeights)
+            let x = sectionInsets.left + CGFloat(column) * (columnWidth + spacing)
+            let y = sectionInsets.top + columnHeights[column]
+            let height = PixivActivityFeedPresentation.masonryCardHeight(for: item, width: columnWidth)
+            let indexPath = IndexPath(item: index, section: 0)
+            let itemAttributes = UICollectionViewLayoutAttributes(forCellWith: indexPath)
+            itemAttributes.frame = CGRect(x: x, y: y, width: columnWidth, height: height)
+            attributes[indexPath] = itemAttributes
+            columnHeights[column] = columnHeights[column] + height + spacing
+        }
+
+        cachedAttributes = attributes
+        cachedContentSize = CGSize(
+            width: containerWidth,
+            height: sectionInsets.top
+                + max(1, (columnHeights.max() ?? 0) - spacing)
+                + sectionInsets.bottom
+        )
+    }
+
+    override func layoutAttributesForElements(in rect: CGRect) -> [UICollectionViewLayoutAttributes]? {
+        cachedAttributes.values.filter { $0.frame.intersects(rect) }
+    }
+
+    override func layoutAttributesForItem(at indexPath: IndexPath) -> UICollectionViewLayoutAttributes? {
+        cachedAttributes[indexPath] ?? previousCachedAttributes[indexPath]
+    }
+
+    override func initialLayoutAttributesForAppearingItem(
+        at itemIndexPath: IndexPath
+    ) -> UICollectionViewLayoutAttributes? {
+        copiedAttributes(for: itemIndexPath)
+    }
+
+    override func finalLayoutAttributesForDisappearingItem(
+        at itemIndexPath: IndexPath
+    ) -> UICollectionViewLayoutAttributes? {
+        copiedAttributes(for: itemIndexPath)
+    }
+
+    override func shouldInvalidateLayout(forBoundsChange newBounds: CGRect) -> Bool {
+        guard let collectionView else { return false }
+        return NativeGalleryBoundsInvalidation.shouldInvalidate(
+            oldSize: collectionView.bounds.size,
+            newSize: newBounds.size
+        )
+    }
+
+    private func resolvedColumnCount(for width: CGFloat) -> Int {
+        guard width >= minimumColumnWidth * 2 + spacing else { return 1 }
+        let count = Int((width + spacing) / (minimumColumnWidth + spacing))
+        let fittedCount = max(1, min(count, 2))
+        let fittedWidth = (width - CGFloat(fittedCount - 1) * spacing) / CGFloat(fittedCount)
+        if fittedWidth > maximumColumnWidth, fittedCount < 2 {
+            return 2
+        }
+        return fittedCount
+    }
+
+    private func shortestColumnIndex(in heights: [CGFloat]) -> Int {
+        heights.enumerated().min { lhs, rhs in
+            if lhs.element == rhs.element {
+                return lhs.offset < rhs.offset
+            }
+            return lhs.element < rhs.element
+        }?.offset ?? 0
+    }
+
+    private func copiedAttributes(for indexPath: IndexPath) -> UICollectionViewLayoutAttributes? {
+        (cachedAttributes[indexPath] ?? previousCachedAttributes[indexPath])?.copy()
+            as? UICollectionViewLayoutAttributes
     }
 }
 #endif

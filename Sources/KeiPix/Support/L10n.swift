@@ -506,6 +506,7 @@ enum L10n {
     static var openPixivWebSavedCollections: String { text("Open Saved Pixiv Collections") }
     static var pixivCollections: String { text("Pixiv Collections") }
     static var pixivActivity: String { text("Pixiv Activity") }
+    static var pixivActivityLayout: String { text("Activity Layout") }
     static var pixivActivityEmptyTitle: String { text("No Pixiv activity") }
     static var pixivActivityEmptyHint: String { text("Follow creators or refresh after connecting Pixiv Web to see social activity.") }
     static var pixivActivityWebSessionRequiredTitle: String { text("Connect Web session") }
@@ -855,6 +856,7 @@ enum L10n {
     static var spotlightListLayout: String { text("Article Layout") }
     static var compact: String { text("Compact") }
     static var compactCards: String { text("Compact artwork cards") }
+    static var waterfall: String { text("Waterfall") }
     static var listRow: String { text("List") }
     static var windowSize: String { text("Window Size") }
     static var smallWindow: String { text("Small") }

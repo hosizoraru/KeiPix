@@ -571,6 +571,18 @@ struct ContentView: View {
                     }
 
                     ToolbarItem(placement: .primaryAction) {
+                        if showsPixivActivityLayoutPicker(showsSidebarToggle: showsSidebarToggle) {
+                            NativeToolbarMenuButton(
+                                systemImage: store.pixivActivityLayoutMode.systemImage,
+                                accessibilityLabel: L10n.pixivActivityLayout,
+                                menu: pixivActivityLayoutMenu,
+                                select: { handleNativeToolbarMenuAction($0, showsSidebarToggle: showsSidebarToggle) }
+                            )
+                            .fixedSize(horizontal: true, vertical: false)
+                        }
+                    }
+
+                    ToolbarItem(placement: .primaryAction) {
                         if showsSpotlightDetailToggle(showsSidebarToggle: showsSidebarToggle) {
                             Button {
                                 toggleSpotlightDetailPanel(hidesSidebar: showsSidebarToggle)
@@ -985,6 +997,12 @@ struct ContentView: View {
         showsSidebarToggle && store.selectedRoute.usesArtworkFeed
     }
 
+    private func showsPixivActivityLayoutPicker(showsSidebarToggle: Bool) -> Bool {
+        currentMobilePlatform == .phone
+            && showsSidebarToggle == false
+            && store.selectedRoute == .pixivActivity
+    }
+
     private func showsRefreshToolbarButton(showsSidebarToggle: Bool) -> Bool {
         if currentMobilePlatform == .phone,
            showsSidebarToggle == false,
@@ -1048,6 +1066,25 @@ struct ContentView: View {
                             title: mode.title,
                             systemImage: mode.systemImage,
                             isSelected: store.galleryLayoutMode == mode
+                        )
+                    }
+                )
+            ]
+        )
+    }
+
+    private var pixivActivityLayoutMenu: NativeToolbarMenu {
+        NativeToolbarMenu(
+            title: L10n.pixivActivityLayout,
+            sections: [
+                NativeToolbarMenuSection(
+                    presentation: .palette,
+                    items: PixivActivityLayoutMode.allCases.map { mode in
+                        .action(
+                            id: IPadToolbarMenuAction.pixivActivityLayout(mode),
+                            title: mode.title,
+                            systemImage: mode.systemImage,
+                            isSelected: store.pixivActivityLayoutMode == mode
                         )
                     }
                 )
@@ -1262,6 +1299,10 @@ struct ContentView: View {
     private func handleNativeToolbarMenuAction(_ id: String, showsSidebarToggle: Bool) {
         if let mode = IPadToolbarMenuAction.galleryLayoutMode(from: id) {
             store.setGalleryLayoutMode(mode)
+            return
+        }
+        if let mode = IPadToolbarMenuAction.pixivActivityLayoutMode(from: id) {
+            store.setPixivActivityLayoutMode(mode)
             return
         }
         if let route = IPadToolbarMenuAction.route(from: id) {
@@ -2142,6 +2183,7 @@ private enum IPadToolbarMenuAction {
     static let settings = "settings"
 
     private static let galleryLayoutPrefix = "gallery-layout:"
+    private static let pixivActivityLayoutPrefix = "pixiv-activity-layout:"
     private static let routePrefix = "route:"
 
     static func galleryLayout(_ mode: GalleryLayoutMode) -> String {
@@ -2152,6 +2194,16 @@ private enum IPadToolbarMenuAction {
         guard id.hasPrefix(galleryLayoutPrefix) else { return nil }
         let rawValue = String(id.dropFirst(galleryLayoutPrefix.count))
         return GalleryLayoutMode(rawValue: rawValue)
+    }
+
+    static func pixivActivityLayout(_ mode: PixivActivityLayoutMode) -> String {
+        pixivActivityLayoutPrefix + mode.rawValue
+    }
+
+    static func pixivActivityLayoutMode(from id: String) -> PixivActivityLayoutMode? {
+        guard id.hasPrefix(pixivActivityLayoutPrefix) else { return nil }
+        let rawValue = String(id.dropFirst(pixivActivityLayoutPrefix.count))
+        return PixivActivityLayoutMode(rawValue: rawValue)
     }
 
     static func route(_ route: PixivRoute) -> String {
