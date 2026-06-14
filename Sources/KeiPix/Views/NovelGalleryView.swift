@@ -51,6 +51,7 @@ struct NovelGalleryView: View {
             .animation(.snappy(duration: 0.22), value: hasAttemptedInitialLoad)
         }
         .navigationTitle(store.selectedRoute.title)
+        .mobileFloatingTopChrome(syncID: "novels|\(store.selectedRoute.rawValue)")
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 if surface.showsLayoutMenu {
@@ -192,6 +193,8 @@ struct NovelGalleryView: View {
                 .padding(.vertical, surface.verticalPadding)
             }
         }
+        .scrollEdgeEffectStyle(.soft, for: .top)
+        .nativeBottomTabContentSurface()
     }
 
     private var loadingState: some View {

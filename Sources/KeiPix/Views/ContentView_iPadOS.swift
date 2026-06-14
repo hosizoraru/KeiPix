@@ -136,8 +136,12 @@ struct ContentView: View {
                 if VisualQALaunchArgument.contains(.searchWorkspace) {
                     store.presentSearchWorkspaceVisualQA()
                     hasAppliedMobileBottomTabLaunchTarget = true
-                    selectedSidebarItem = .route(.search)
-                    selectedTab = .search
+                    selectRoute(.search, clearsArtworkDetail: false)
+                }
+                if let visualQAGalleryLayoutMode = VisualQALaunchArgument.activeGalleryLayoutMode {
+                    store.presentGalleryLayoutVisualQA(mode: visualQAGalleryLayoutMode)
+                    hasAppliedMobileBottomTabLaunchTarget = true
+                    selectRoute(.illustrations, clearsArtworkDetail: false)
                 }
                 if VisualQALaunchArgument.contains(.novelFeed) {
                     store.presentNovelFeedVisualQA()

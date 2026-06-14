@@ -1073,6 +1073,7 @@ struct NativeBoundaryTests {
             "Sources/KeiPix/Views/BrowsingHistoryView.swift",
             "Sources/KeiPix/Views/DownloadQueueView.swift",
             "Sources/KeiPix/Views/MangaWatchlistView.swift",
+            "Sources/KeiPix/Views/NovelGalleryView.swift",
             "Sources/KeiPix/Views/NovelWatchlistView.swift",
             "Sources/KeiPix/Views/PixivCollectionsView.swift",
             "Sources/KeiPix/Views/WatchLaterView.swift",
@@ -1894,6 +1895,22 @@ struct NativeBoundaryTests {
             contentsOf: root.appending(path: "Sources/KeiPix/Views/EmptyStateView.swift"),
             encoding: .utf8
         )
+        let mobileTopChrome = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Support/MobileTopChrome.swift"),
+            encoding: .utf8
+        )
+        let gallery = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/GalleryView.swift"),
+            encoding: .utf8
+        )
+        let novelGallery = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/NovelGalleryView.swift"),
+            encoding: .utf8
+        )
+        let searchWorkspace = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/SearchWorkspaceView.swift"),
+            encoding: .utf8
+        )
         let discovery = try String(
             contentsOf: root.appending(path: "Sources/KeiPix/Views/DiscoveryDashboardView.swift"),
             encoding: .utf8
@@ -1922,8 +1939,25 @@ struct NativeBoundaryTests {
         #expect(emptyState.contains("Spacer(minLength: 0)\n                    trailing()"))
         #expect(emptyState.contains("if let statusSystemImage, showsStatusPillIcon"))
         #expect(emptyState.contains("UIDevice.current.userInterfaceIdiom != .phone"))
-        #expect(emptyState.contains(".navigationBarTitleDisplayMode(.inline)"))
+        #expect(emptyState.contains(".mobileFloatingTopChrome(syncID: \"\\(title)|\\(status)\")"))
         #expect(emptyState.contains(".glassEffect(.regular, in: Capsule(style: .continuous))"))
+        #expect(mobileTopChrome.contains("func mobileFloatingTopChrome(syncID: String = \"default\")"))
+        #expect(mobileTopChrome.contains("UIDevice.current.userInterfaceIdiom == .phone"))
+        #expect(mobileTopChrome.contains("if UIDevice.current.userInterfaceIdiom == .phone {\n            self\n                .navigationBarTitleDisplayMode(.inline)\n                .toolbarBackground(.hidden, for: .navigationBar)"))
+        #expect(mobileTopChrome.contains("} else {\n            self\n                .navigationBarTitleDisplayMode(.inline)\n        }"))
+        #expect(mobileTopChrome.contains("struct NavigationBarChromeBridge: UIViewControllerRepresentable"))
+        #expect(mobileTopChrome.contains("UINavigationBarAppearance()"))
+        #expect(mobileTopChrome.contains("appearance.configureWithTransparentBackground()"))
+        #expect(mobileTopChrome.contains("navigationController.navigationBar.standardAppearance = appearance"))
+        #expect(mobileTopChrome.contains("navigationController.navigationBar.scrollEdgeAppearance = appearance"))
+        #expect(mobileTopChrome.contains(".toolbarBackground(.hidden, for: .navigationBar)"))
+        #expect(gallery.contains(".mobileFloatingTopChrome(syncID: \"gallery|\\(store.selectedRoute.rawValue)\")"))
+        #expect(novelGallery.contains(".mobileFloatingTopChrome(syncID: \"novels|\\(store.selectedRoute.rawValue)\")"))
+        #expect(novelGallery.contains(".nativeBottomTabContentSurface()"))
+        #expect(searchWorkspace.contains(".platformPageNavigationChrome(title: L10n.search, status: searchNavigationStatus)"))
+        #expect(searchWorkspace.contains("NativeBottomTabScrollContentHost(showsIndicators: true)"))
+        #expect(searchWorkspace.contains("GalleryView("))
+        #expect(searchWorkspace.contains("showsFeedHeader: false"))
 
         for path in inlineStatusPages {
             let source = try String(contentsOf: root.appending(path: path), encoding: .utf8)
@@ -2897,7 +2931,7 @@ struct NativeBoundaryTests {
         #expect(creatorFeedContextCard.contains("let contentSystemImage: String"))
         #expect(galleryView.contains("showsFeedCountBadge: false"))
         #expect(galleryView.contains("showsActiveFeedClearChip: false"))
-        #expect(galleryView.contains("navigationBarTitleDisplayMode(.inline)"))
+        #expect(galleryView.contains(".mobileFloatingTopChrome(syncID: \"gallery|\\(store.selectedRoute.rawValue)\")"))
         #expect(galleryView.contains("presentation: .iPadCompact"))
         #expect(feedHeader.contains("let showsFeedCountBadge: Bool"))
         #expect(feedHeader.contains("let showsActiveFeedClearChip: Bool"))
@@ -2930,7 +2964,7 @@ struct NativeBoundaryTests {
         #expect(galleryView.contains("private var usesMobileGalleryCardPerformanceMode: Bool"))
         #expect(galleryView.contains("case .phoneTwoColumnMasonry, .portraitTabletMasonry:"))
         #expect(galleryView.contains("isScrollPerformanceOptimized: usesMobileGalleryCardPerformanceMode"))
-        #expect(galleryView.contains(".backgroundExtensionEffect(isEnabled: usesMobileGalleryCardPerformanceMode)"))
+        #expect(galleryView.contains(".backgroundExtensionEffect(isEnabled: true)"))
         #expect(artworkCard.contains("var isScrollPerformanceOptimized = false"))
         #expect(artworkCard.contains("fillsAvailableHeight && isScrollPerformanceOptimized == false"))
         #expect(artworkCard.contains("ArtworkCardMotionModifier("))
@@ -4537,8 +4571,10 @@ struct NativeBoundaryTests {
         #expect(macContentView.contains("store.presentSearchWorkspaceVisualQA()"))
         #expect(iPadContentView.contains("VisualQALaunchArgument.contains(.searchWorkspace)"))
         #expect(iPadContentView.contains("hasAppliedMobileBottomTabLaunchTarget = true"))
-        #expect(iPadContentView.contains("selectedSidebarItem = .route(.search)"))
-        #expect(iPadContentView.contains("selectedTab = .search"))
+        #expect(iPadContentView.contains("selectRoute(.search, clearsArtworkDetail: false)"))
+        #expect(iPadContentView.contains("VisualQALaunchArgument.activeGalleryLayoutMode"))
+        #expect(iPadContentView.contains("store.presentGalleryLayoutVisualQA(mode: visualQAGalleryLayoutMode)"))
+        #expect(iPadContentView.contains("selectRoute(.illustrations, clearsArtworkDetail: false)"))
         #expect(macOSRunner.contains("--visual-qa-search-workspace|visual-qa-search-workspace"))
         #expect(macOSRunner.contains("open_app --visual-qa-search-workspace"))
         #expect(macContentView.contains("SearchFilterButton(store: store)") == false)

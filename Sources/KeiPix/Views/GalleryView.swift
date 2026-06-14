@@ -54,9 +54,7 @@ struct GalleryView: View {
         }
         .animation(.snappy(duration: 0.18), value: actionMessage)
         .navigationSubtitle(platformGallerySubtitle)
-        #if os(iOS)
-        .navigationBarTitleDisplayMode(.inline)
-        #endif
+        .mobileFloatingTopChrome(syncID: "gallery|\(store.selectedRoute.rawValue)")
     }
 
     /// Context string shown near the route title. Counts live in the
@@ -290,6 +288,7 @@ private struct GalleryFeedView: View {
                 }
             }
             .scrollEdgeEffectStyle(.soft, for: .top)
+            .nativeBottomTabContentSurface()
             .refreshable {
                 lastAutoLoadMoreURL = nil
                 await store.reloadCurrentFeed()
@@ -335,7 +334,7 @@ private struct GalleryFeedView: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             #if os(iOS)
-            .backgroundExtensionEffect(isEnabled: usesMobileGalleryCardPerformanceMode)
+            .backgroundExtensionEffect(isEnabled: true)
             #endif
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)

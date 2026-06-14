@@ -353,7 +353,7 @@ extension View {
     func platformPageNavigationChrome(title: String, status: String) -> some View {
         #if os(iOS)
         self.navigationTitle("")
-            .navigationBarTitleDisplayMode(.inline)
+            .mobileFloatingTopChrome(syncID: "\(title)|\(status)")
         #else
         self
             .navigationTitle(title)
