@@ -366,9 +366,65 @@ launch_app() {
   wait "$launch_pid"
 }
 
+devicectl_primary_display_id() {
+  command -v jq >/dev/null 2>&1 || return 1
+  xcrun --find devicectl >/dev/null 2>&1 || return 1
+
+  local display_json
+  display_json="$(mktemp /tmp/keipix-devicectl-displays.XXXXXX)"
+  if ! xcrun devicectl device info displays \
+    --device "$SIMULATOR_ID" \
+    --json-output "$display_json" \
+    --timeout "${KEIPIX_DEVICECTL_TIMEOUT_SECONDS:-20}" >/dev/null 2>&1; then
+    rm -f "$display_json"
+    return 1
+  fi
+
+  jq -r '.result.displays[] | select(.primary == true) | .uniqueId' "$display_json" | head -n 1
+  rm -f "$display_json"
+}
+
+capture_screenshot_with_devicectl() {
+  if [ "${KEIPIX_USE_DEVICECTL_CAPTURE:-1}" = "0" ]; then
+    return 1
+  fi
+  xcrun --find devicectl >/dev/null 2>&1 || return 1
+
+  local screenshot_path="$1"
+  local json_path="${screenshot_path%.png}.devicectl.json"
+  local timeout_seconds="${KEIPIX_SCREENSHOT_TIMEOUT_SECONDS:-30}"
+  local display_id=""
+  display_id="$(devicectl_primary_display_id || true)"
+
+  local command=(
+    xcrun devicectl device capture screenshot
+    --device "$SIMULATOR_ID"
+    --destination "$screenshot_path"
+    --json-output "$json_path"
+    --timeout "$timeout_seconds"
+  )
+  if [ -n "$display_id" ]; then
+    command+=(--display-unique-id "$display_id")
+  fi
+
+  if "${command[@]}" >/dev/null 2>&1; then
+    echo "==> Captured with devicectl/CoreDevice${display_id:+ display $display_id}"
+    echo "==> devicectl JSON: $json_path"
+    return 0
+  fi
+
+  rm -f "$json_path"
+  return 1
+}
+
 capture_screenshot() {
   local screenshot_path="$1"
   local timeout_seconds="${KEIPIX_SCREENSHOT_TIMEOUT_SECONDS:-30}"
+  if capture_screenshot_with_devicectl "$screenshot_path"; then
+    return
+  fi
+
+  echo "==> devicectl/CoreDevice capture unavailable; falling back to simctl io screenshot"
   if [ "$timeout_seconds" = "0" ]; then
     xcrun simctl io "$SIMULATOR_ID" screenshot "$screenshot_path" >/dev/null
     return

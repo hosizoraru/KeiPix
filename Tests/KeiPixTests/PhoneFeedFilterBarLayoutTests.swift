@@ -3,92 +3,67 @@ import Testing
 @testable import KeiPix
 
 struct PhoneFeedFilterBarLayoutTests {
-    @Test("Collapsed filter follows the selected dock item frame")
-    func collapsedFilterFollowsSelectedDockItemFrame() {
-        let layout = PhoneFeedFilterBarLayout.resolve(
+    @Test("Filter chrome stays anchored above the tab bar")
+    func filterChromeStaysAnchoredAboveTabBar() {
+        let layout = PhoneFeedFilterChromeLayout.resolve(
             containerSize: CGSize(width: 390, height: 844),
             tabBarGeometry: TabBarGeometrySnapshot(
                 tabBarFrame: CGRect(x: 20, y: 758, width: 350, height: 70),
                 selectedItemFrame: CGRect(x: 24, y: 776, width: 56, height: 56)
-            ),
-            contentIsAtStart: false,
-            hasActiveFilter: false
+            )
         )
 
-        #expect(layout?.placement == .besideCollapsedDock)
-        #expect(layout?.frame == CGRect(x: 88, y: 782, width: 278, height: 44))
+        #expect(layout?.pillFrame == CGRect(x: 141, y: 708, width: 108, height: 34))
+        #expect(layout?.panelFrame == CGRect(x: 16, y: 702, width: 358, height: 46))
     }
 
-    @Test("Expanded active filter follows the real tab bar frame")
-    func expandedActiveFilterFollowsRealTabBarFrame() {
-        let layout = PhoneFeedFilterBarLayout.resolve(
+    @Test("Filter chrome follows the real expanded tab bar frame")
+    func filterChromeFollowsExpandedTabBarFrame() {
+        let layout = PhoneFeedFilterChromeLayout.resolve(
             containerSize: CGSize(width: 390, height: 844),
             tabBarGeometry: TabBarGeometrySnapshot(
                 tabBarFrame: CGRect(x: 24, y: 748, width: 342, height: 76),
                 selectedItemFrame: CGRect(x: 250, y: 758, width: 72, height: 56)
-            ),
-            contentIsAtStart: true,
-            hasActiveFilter: true
+            )
         )
 
-        #expect(layout?.placement == .aboveExpandedTabBar)
-        #expect(layout?.frame == CGRect(x: 24, y: 696, width: 342, height: 44))
+        #expect(layout?.pillFrame == CGRect(x: 141, y: 698, width: 108, height: 34))
+        #expect(layout?.panelFrame == CGRect(x: 16, y: 692, width: 358, height: 46))
     }
 
-    @Test("Collapsed filter can use the left side when the dock leaves no room on the right")
-    func collapsedFilterFallsBackToLeftSideWhenNeeded() {
-        let layout = PhoneFeedFilterBarLayout.resolve(
-            containerSize: CGSize(width: 390, height: 844),
+    @Test("Filter chrome caps panel width on wider compact devices")
+    func filterChromeCapsPanelWidthOnWiderCompactDevices() {
+        let layout = PhoneFeedFilterChromeLayout.resolve(
+            containerSize: CGSize(width: 820, height: 1180),
             tabBarGeometry: TabBarGeometrySnapshot(
-                tabBarFrame: CGRect(x: 20, y: 758, width: 350, height: 70),
-                selectedItemFrame: CGRect(x: 310, y: 776, width: 56, height: 56)
-            ),
-            contentIsAtStart: false,
-            hasActiveFilter: false
+                tabBarFrame: CGRect(x: 180, y: 1070, width: 460, height: 84),
+                selectedItemFrame: CGRect(x: 560, y: 1086, width: 64, height: 56)
+            )
         )
 
-        #expect(layout?.placement == .besideCollapsedDock)
-        #expect(layout?.frame == CGRect(x: 24, y: 782, width: 278, height: 44))
+        #expect(layout?.pillFrame == CGRect(x: 356, y: 1020, width: 108, height: 34))
+        #expect(layout?.panelFrame == CGRect(x: 190, y: 1014, width: 440, height: 46))
     }
 
-    @Test("Empty filter hides when content is at the top")
-    func emptyFilterHidesAtContentStart() {
-        let layout = PhoneFeedFilterBarLayout.resolve(
-            containerSize: CGSize(width: 390, height: 844),
+    @Test("Filter chrome clamps above small tab bar frames")
+    func filterChromeClampsAboveSmallTabBarFrames() {
+        let layout = PhoneFeedFilterChromeLayout.resolve(
+            containerSize: CGSize(width: 320, height: 180),
             tabBarGeometry: TabBarGeometrySnapshot(
-                tabBarFrame: CGRect(x: 24, y: 748, width: 342, height: 76),
-                selectedItemFrame: CGRect(x: 250, y: 758, width: 72, height: 56)
-            ),
-            contentIsAtStart: true,
-            hasActiveFilter: false
+                tabBarFrame: CGRect(x: 0, y: 54, width: 320, height: 72),
+                selectedItemFrame: CGRect(x: 0, y: 60, width: 58, height: 58)
+            )
         )
 
-        #expect(layout == nil)
-    }
-
-    @Test("Active filter uses the expanded tab bar when dock geometry has no side room")
-    func activeFilterUsesExpandedPlacementWhenDockGeometryHasNoSideRoom() {
-        let layout = PhoneFeedFilterBarLayout.resolve(
-            containerSize: CGSize(width: 390, height: 844),
-            tabBarGeometry: TabBarGeometrySnapshot(
-                tabBarFrame: CGRect(x: 24, y: 748, width: 342, height: 76),
-                selectedItemFrame: CGRect(x: 155, y: 758, width: 80, height: 56)
-            ),
-            contentIsAtStart: false,
-            hasActiveFilter: true
-        )
-
-        #expect(layout?.placement == .aboveExpandedTabBar)
-        #expect(layout?.frame == CGRect(x: 24, y: 696, width: 342, height: 44))
+        #expect(layout?.pillFrame == CGRect(x: 106, y: 22, width: 108, height: 34))
+        #expect(layout?.panelFrame == CGRect(x: 16, y: 16, width: 288, height: 46))
     }
 
     @Test("Filter waits for tab bar geometry instead of guessing device-specific padding")
     func filterWaitsForTabBarGeometry() {
-        let layout = PhoneFeedFilterBarLayout.resolve(
+        let layout = PhoneFeedFilterChromeLayout.resolve(
             containerSize: CGSize(width: 390, height: 844),
-            tabBarGeometry: nil,
-            contentIsAtStart: false,
-            hasActiveFilter: false
+            tabBarGeometry: nil
         )
 
         #expect(layout == nil)

@@ -16,17 +16,68 @@ final class KeiPixStore {
     var session: PixivSession?
     var pixivWebSession: PixivWebSession?
     var storedAccounts: [PixivStoredAccount] = []
-    var selectedRoute: PixivRoute = AppLaunchRouteResolver.initialRoute()
+    var selectedRoute: PixivRoute = AppLaunchRouteResolver.initialRoute() {
+        didSet {
+            guard oldValue != selectedRoute else { return }
+            restoreClientFilterQueryForCurrentScope()
+        }
+    }
     var artworks: [PixivArtwork] = [] {
         didSet { recomputeFilteredArtworks() }
     }
     var clientFilterQuery = "" {
-        didSet { recomputeFilteredArtworks() }
+        didSet {
+            storeClientFilterQueryForCurrentScopeIfNeeded()
+            recomputeFilteredArtworks()
+        }
     }
     private(set) var clientFilteredArtworks: [PixivArtwork] = []
+    private var clientFilterQueriesByScope: [String: String] = [:]
+    private var isRestoringClientFilterQuery = false
 
     private func recomputeFilteredArtworks() {
         clientFilteredArtworks = ClientFilterDSL.filter(artworks, query: clientFilterQuery)
+    }
+
+    func restoreClientFilterQueryForCurrentScope() {
+        let restoredQuery = clientFilterQueriesByScope[currentClientFilterScopeID] ?? ""
+        guard clientFilterQuery != restoredQuery else { return }
+        isRestoringClientFilterQuery = true
+        clientFilterQuery = restoredQuery
+        isRestoringClientFilterQuery = false
+    }
+
+    private func storeClientFilterQueryForCurrentScopeIfNeeded() {
+        guard isRestoringClientFilterQuery == false else { return }
+        let scopeID = currentClientFilterScopeID
+        if clientFilterQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            clientFilterQueriesByScope.removeValue(forKey: scopeID)
+        } else {
+            clientFilterQueriesByScope[scopeID] = clientFilterQuery
+        }
+    }
+
+    private var currentClientFilterScopeID: String {
+        var components = [selectedRoute.rawValue]
+        if selectedRoute == .search || selectedRoute == .novelSearch {
+            components.append("keyword:\(searchText.trimmingCharacters(in: .whitespacesAndNewlines))")
+        }
+        if let focusedUser {
+            components.append("user:\(focusedUser.id)")
+        }
+        if let creatorArtworkTagFilter {
+            components.append("creator-tag:\(creatorArtworkTagFilter.snapshotKey)")
+        }
+        if let bookmarkTagFilter {
+            components.append("bookmark-tag:\(bookmarkTagFilter)")
+        }
+        if let feedNarrowingContext {
+            components.append(feedNarrowingContext.storageID)
+        }
+        if let selectedPixivCollection {
+            components.append("collection:\(selectedPixivCollection.id)")
+        }
+        return components.joined(separator: "|")
     }
     var selectedArtwork: PixivArtwork?
     /// Advances only when the user explicitly navigates to an artwork.
@@ -43,7 +94,12 @@ final class KeiPixStore {
     var presentedUserProfile: PixivUser?
     var selectedSpotlightArticle: PixivSpotlightArticle?
     var pixivCollections: [PixivCollectionDetail] = []
-    var selectedPixivCollection: PixivCollectionDetail?
+    var selectedPixivCollection: PixivCollectionDetail? {
+        didSet {
+            guard oldValue?.id != selectedPixivCollection?.id else { return }
+            restoreClientFilterQueryForCurrentScope()
+        }
+    }
     var selectedPixivCollectionSourceRoute: PixivRoute?
     var isLoadingPixivCollections = false
     var isLoadingMorePixivCollections = false
@@ -74,8 +130,19 @@ final class KeiPixStore {
     var imageSourceSearchRequest: ImageSourceSearchRequest?
     var pendingDangerAction: AppDangerAction?
     var undoAction: AppUndoAction?
-    var focusedUser: PixivUser?
-    var searchText = ""
+    var focusedUser: PixivUser? {
+        didSet {
+            guard oldValue?.id != focusedUser?.id else { return }
+            restoreClientFilterQueryForCurrentScope()
+        }
+    }
+    var searchText = "" {
+        didSet {
+            guard oldValue != searchText,
+                  selectedRoute == .search || selectedRoute == .novelSearch else { return }
+            restoreClientFilterQueryForCurrentScope()
+        }
+    }
     var searchSubmissionID = 0
     var routeRefreshGeneration = 0
     var searchSuggestions: [PixivTag] = []
@@ -86,10 +153,25 @@ final class KeiPixStore {
     var searchHistory = UserDefaults.standard.stringArray(forKey: "searchHistory") ?? []
     var savedSearches = UserDefaults.standard.stringArray(forKey: "savedSearches") ?? []
     var savedSearchPresets = KeiPixStore.loadSavedSearchPresets()
-    var bookmarkTagFilter: String?
+    var bookmarkTagFilter: String? {
+        didSet {
+            guard oldValue != bookmarkTagFilter else { return }
+            restoreClientFilterQueryForCurrentScope()
+        }
+    }
     var bookmarkFeedOptions = BookmarkFeedOptions.defaultValue
-    var creatorArtworkTagFilter: CreatorArtworkTagFilter?
-    var feedNarrowingContext: FeedNarrowingContext?
+    var creatorArtworkTagFilter: CreatorArtworkTagFilter? {
+        didSet {
+            guard oldValue?.snapshotKey != creatorArtworkTagFilter?.snapshotKey else { return }
+            restoreClientFilterQueryForCurrentScope()
+        }
+    }
+    var feedNarrowingContext: FeedNarrowingContext? {
+        didSet {
+            guard oldValue?.storageID != feedNarrowingContext?.storageID else { return }
+            restoreClientFilterQueryForCurrentScope()
+        }
+    }
     var localBrowsingHistory = KeiPixStore.loadLocalBrowsingHistory()
     var watchLaterQueue = KeiPixStore.loadWatchLaterQueue()
     var spotlightFavoriteArticles = KeiPixStore.loadSpotlightArticles(key: "spotlightFavoriteArticles")

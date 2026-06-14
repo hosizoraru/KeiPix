@@ -335,7 +335,6 @@ struct PhoneFeedFilterBarOverlayBridge: UIViewControllerRepresentable {
     @Binding var text: String
     let resultText: String
     let isEnabled: Bool
-    let isAtContentStart: Bool
     let syncID: String
 
     func makeUIViewController(context: Context) -> Controller {
@@ -343,7 +342,6 @@ struct PhoneFeedFilterBarOverlayBridge: UIViewControllerRepresentable {
             text: $text,
             resultText: resultText,
             isEnabled: isEnabled,
-            isAtContentStart: isAtContentStart,
             syncID: syncID
         )
     }
@@ -352,7 +350,6 @@ struct PhoneFeedFilterBarOverlayBridge: UIViewControllerRepresentable {
         controller.text = $text
         controller.resultText = resultText
         controller.isEnabled = isEnabled
-        controller.isAtContentStart = isAtContentStart
         controller.syncID = syncID
         controller.applyOverlay()
     }
@@ -361,31 +358,35 @@ struct PhoneFeedFilterBarOverlayBridge: UIViewControllerRepresentable {
         var text: Binding<String>
         var resultText: String
         var isEnabled: Bool
-        var isAtContentStart: Bool
         var syncID: String {
             didSet {
+                if oldValue != syncID {
+                    isPanelPresented = false
+                    filterField?.resignFirstResponder()
+                }
                 scheduleDeferredLayout()
             }
         }
 
         private weak var filterField: UITextField?
-        private var overlayView: UIVisualEffectView?
+        private weak var pillControl: UIControl?
+        private weak var pillIconView: UIImageView?
+        private weak var pillLabel: UILabel?
+        private var pillView: UIVisualEffectView?
+        private var panelView: UIVisualEffectView?
+        private var isPanelPresented = false
         private weak var appliedTabBarController: UITabBarController?
-        private weak var observedScrollView: UIScrollView?
-        private var scrollObservation: NSKeyValueObservation?
         private var pendingLayoutTask: Task<Void, Never>?
 
         init(
             text: Binding<String>,
             resultText: String,
             isEnabled: Bool,
-            isAtContentStart: Bool,
             syncID: String
         ) {
             self.text = text
             self.resultText = resultText
             self.isEnabled = isEnabled
-            self.isAtContentStart = isAtContentStart
             self.syncID = syncID
             super.init(nibName: nil, bundle: nil)
         }
@@ -419,52 +420,90 @@ struct PhoneFeedFilterBarOverlayBridge: UIViewControllerRepresentable {
 
         func applyOverlay() {
             guard isEnabled else {
-                overlayView?.isHidden = true
+                pillView?.isHidden = true
+                panelView?.isHidden = true
                 filterField?.resignFirstResponder()
-                stopObservingScrollView()
                 return
             }
 
             guard let tabBarController = resolvedTabBarController() else {
-                removeOverlay()
-                stopObservingScrollView()
+                removeChrome()
                 scheduleDeferredLayout()
                 return
             }
 
-            syncObservedScrollView(in: tabBarController)
-            let contentIsAtStart = selectedContentIsAtStart(in: tabBarController) ?? isAtContentStart
             let geometry = tabBarGeometry(in: tabBarController)
-            guard let layout = PhoneFeedFilterBarLayout.resolve(
+            guard let layout = PhoneFeedFilterChromeLayout.resolve(
                     containerSize: tabBarController.view.bounds.size,
-                    tabBarGeometry: geometry,
-                    contentIsAtStart: contentIsAtStart,
-                    hasActiveFilter: hasActiveFilter
+                    tabBarGeometry: geometry
                   ) else {
-                overlayView?.isHidden = true
+                pillView?.isHidden = true
+                panelView?.isHidden = true
                 return
             }
 
-            let overlayView = ensureOverlay(in: tabBarController)
+            ensureChrome(in: tabBarController)
             updateField()
-            overlayView.isHidden = false
-            overlayView.frame = layout.frame
-            tabBarController.view.bringSubviewToFront(overlayView)
+            updatePill()
+            apply(layout, in: tabBarController)
         }
 
-        private func ensureOverlay(in tabBarController: UITabBarController) -> UIVisualEffectView {
-            if let overlayView,
+        private func ensureChrome(in tabBarController: UITabBarController) {
+            if pillView != nil,
+               panelView != nil,
                appliedTabBarController === tabBarController {
-                return overlayView
+                return
             }
 
-            removeOverlay()
-            let overlayView = UIVisualEffectView(effect: UIBlurEffect(style: .systemUltraThinMaterial))
-            overlayView.layer.cornerRadius = PhoneFeedFilterBarLayout.height / 2
-            overlayView.layer.cornerCurve = .continuous
-            overlayView.clipsToBounds = true
-            overlayView.isUserInteractionEnabled = true
+            removeChrome()
 
+            let pillView = makeGlassOverlay(cornerRadius: PhoneFeedFilterChromeLayout.pillHeight / 2)
+            let pillControl = UIControl(frame: .zero)
+            pillControl.addTarget(self, action: #selector(showFilterPanel), for: .touchUpInside)
+            pillControl.translatesAutoresizingMaskIntoConstraints = false
+            pillControl.accessibilityTraits = .button
+
+            let pillIconView = UIImageView(image: UIImage(
+                systemName: "line.3.horizontal.decrease",
+                withConfiguration: UIImage.SymbolConfiguration(pointSize: 14, weight: .semibold)
+            ))
+            pillIconView.contentMode = .center
+            pillIconView.translatesAutoresizingMaskIntoConstraints = false
+
+            let pillLabel = UILabel()
+            pillLabel.font = .preferredFont(forTextStyle: .footnote)
+            pillLabel.adjustsFontForContentSizeCategory = true
+            pillLabel.adjustsFontSizeToFitWidth = true
+            pillLabel.minimumScaleFactor = 0.86
+            pillLabel.numberOfLines = 1
+            pillLabel.textAlignment = .center
+            pillLabel.setContentCompressionResistancePriority(.required, for: .horizontal)
+            pillLabel.translatesAutoresizingMaskIntoConstraints = false
+
+            let pillStack = UIStackView(arrangedSubviews: [pillIconView, pillLabel])
+            pillStack.axis = .horizontal
+            pillStack.alignment = .center
+            pillStack.distribution = .fill
+            pillStack.spacing = 6
+            pillStack.isUserInteractionEnabled = false
+            pillStack.translatesAutoresizingMaskIntoConstraints = false
+
+            pillControl.addSubview(pillStack)
+            pillView.contentView.addSubview(pillControl)
+            NSLayoutConstraint.activate([
+                pillControl.leadingAnchor.constraint(equalTo: pillView.contentView.leadingAnchor),
+                pillControl.trailingAnchor.constraint(equalTo: pillView.contentView.trailingAnchor),
+                pillControl.topAnchor.constraint(equalTo: pillView.contentView.topAnchor),
+                pillControl.bottomAnchor.constraint(equalTo: pillView.contentView.bottomAnchor),
+                pillStack.centerXAnchor.constraint(equalTo: pillControl.centerXAnchor),
+                pillStack.centerYAnchor.constraint(equalTo: pillControl.centerYAnchor),
+                pillStack.leadingAnchor.constraint(greaterThanOrEqualTo: pillControl.leadingAnchor, constant: 10),
+                pillStack.trailingAnchor.constraint(lessThanOrEqualTo: pillControl.trailingAnchor, constant: -10),
+                pillIconView.widthAnchor.constraint(equalToConstant: 16),
+                pillIconView.heightAnchor.constraint(equalToConstant: 16)
+            ])
+
+            let panelView = makeGlassOverlay(cornerRadius: PhoneFeedFilterChromeLayout.panelHeight / 2)
             let field = UITextField(frame: .zero)
             field.delegate = self
             field.autocorrectionType = .no
@@ -483,27 +522,92 @@ struct PhoneFeedFilterBarOverlayBridge: UIViewControllerRepresentable {
             field.addTarget(self, action: #selector(editingChanged(_:)), for: .editingChanged)
             field.translatesAutoresizingMaskIntoConstraints = false
 
-            overlayView.contentView.addSubview(field)
+            let closeButton = UIButton(type: .system)
+            closeButton.setImage(
+                UIImage(
+                    systemName: "xmark.circle.fill",
+                    withConfiguration: UIImage.SymbolConfiguration(pointSize: 18, weight: .semibold)
+                ),
+                for: .normal
+            )
+            closeButton.tintColor = .tertiaryLabel
+            closeButton.accessibilityLabel = L10n.close
+            closeButton.addTarget(self, action: #selector(hideFilterPanel), for: .touchUpInside)
+            closeButton.translatesAutoresizingMaskIntoConstraints = false
+
+            panelView.contentView.addSubview(field)
+            panelView.contentView.addSubview(closeButton)
             NSLayoutConstraint.activate([
-                field.leadingAnchor.constraint(equalTo: overlayView.contentView.leadingAnchor, constant: 4),
-                field.trailingAnchor.constraint(equalTo: overlayView.contentView.trailingAnchor, constant: -8),
-                field.centerYAnchor.constraint(equalTo: overlayView.contentView.centerYAnchor),
-                field.heightAnchor.constraint(equalToConstant: 36)
+                field.leadingAnchor.constraint(equalTo: panelView.contentView.leadingAnchor, constant: 4),
+                field.trailingAnchor.constraint(equalTo: closeButton.leadingAnchor, constant: -2),
+                field.centerYAnchor.constraint(equalTo: panelView.contentView.centerYAnchor),
+                field.heightAnchor.constraint(equalToConstant: 36),
+                closeButton.trailingAnchor.constraint(equalTo: panelView.contentView.trailingAnchor, constant: -8),
+                closeButton.centerYAnchor.constraint(equalTo: panelView.contentView.centerYAnchor),
+                closeButton.widthAnchor.constraint(equalToConstant: 32),
+                closeButton.heightAnchor.constraint(equalToConstant: 32)
             ])
 
-            tabBarController.view.addSubview(overlayView)
-            self.overlayView = overlayView
+            tabBarController.view.addSubview(pillView)
+            tabBarController.view.addSubview(panelView)
+            self.pillView = pillView
+            self.panelView = panelView
+            self.pillControl = pillControl
+            self.pillIconView = pillIconView
+            self.pillLabel = pillLabel
             filterField = field
             appliedTabBarController = tabBarController
             updateField()
+            updatePill()
+        }
+
+        private func makeGlassOverlay(cornerRadius: CGFloat) -> UIVisualEffectView {
+            let overlayView = UIVisualEffectView(effect: UIBlurEffect(style: .systemUltraThinMaterial))
+            overlayView.layer.cornerRadius = cornerRadius
+            overlayView.layer.cornerCurve = .continuous
+            overlayView.clipsToBounds = true
+            overlayView.isUserInteractionEnabled = true
+            overlayView.alpha = 0
             return overlayView
         }
 
-        private func removeOverlay() {
-            overlayView?.removeFromSuperview()
-            overlayView = nil
+        private func removeChrome() {
+            pillView?.removeFromSuperview()
+            panelView?.removeFromSuperview()
+            pillView = nil
+            panelView = nil
+            pillControl = nil
+            pillIconView = nil
+            pillLabel = nil
             filterField = nil
             appliedTabBarController = nil
+        }
+
+        private func apply(_ layout: PhoneFeedFilterChromeLayout, in tabBarController: UITabBarController) {
+            guard let pillView, let panelView else { return }
+
+            let updates = {
+                pillView.frame = layout.pillFrame
+                panelView.frame = layout.panelFrame
+                pillView.alpha = self.isPanelPresented ? 0 : 1
+                panelView.alpha = self.isPanelPresented ? 1 : 0
+                pillView.isHidden = self.isPanelPresented
+                panelView.isHidden = self.isPanelPresented == false
+            }
+
+            if UIAccessibility.isReduceMotionEnabled {
+                updates()
+            } else {
+                UIView.animate(
+                    withDuration: 0.18,
+                    delay: 0,
+                    options: [.allowUserInteraction, .beginFromCurrentState, .curveEaseInOut],
+                    animations: updates
+                )
+            }
+
+            tabBarController.view.bringSubviewToFront(pillView)
+            tabBarController.view.bringSubviewToFront(panelView)
         }
 
         private func searchIconView() -> UIView {
@@ -518,48 +622,17 @@ struct PhoneFeedFilterBarOverlayBridge: UIViewControllerRepresentable {
             return container
         }
 
-        private func syncObservedScrollView(in tabBarController: UITabBarController) {
-            let scrollView = selectedContentScrollView(in: tabBarController)
-            guard observedScrollView !== scrollView else { return }
-            scrollObservation = nil
-            observedScrollView = scrollView
-            scrollObservation = scrollView?.observe(\.contentOffset, options: [.new]) { [weak self] _, _ in
-                Task { @MainActor in
-                    self?.applyOverlay()
-                    self?.scheduleDeferredLayout()
-                }
-            }
-            scheduleDeferredLayout()
-        }
-
-        private func stopObservingScrollView() {
-            scrollObservation = nil
-            observedScrollView = nil
-        }
-
-        private func selectedContentIsAtStart(in tabBarController: UITabBarController) -> Bool? {
-            guard let scrollView = selectedContentScrollView(in: tabBarController) else {
-                return nil
-            }
-            let startY = -scrollView.adjustedContentInset.top
-            return scrollView.contentOffset.y <= startY + 1
-        }
-
-        private func selectedContentScrollView(in tabBarController: UITabBarController) -> UIScrollView? {
-            guard let selectedViewController = tabBarController.selectedViewController else {
-                return nil
-            }
-            if let scrollView = selectedViewController.firstRegisteredContentScrollView(for: .bottom) {
-                return scrollView
-            }
-            if let scrollView = selectedViewController.view.firstVisibleVerticalScrollView(allowShortContent: true) {
-                return scrollView
-            }
-            return tabBarController.view.firstVisibleVerticalScrollView(allowShortContent: true)
-        }
-
         private var hasActiveFilter: Bool {
             text.wrappedValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false
+        }
+
+        private func updatePill() {
+            let title = hasActiveFilter ? L10n.filtering : L10n.feedFilter
+            pillLabel?.text = title
+            pillLabel?.textColor = hasActiveFilter ? .systemBlue : .label
+            pillIconView?.tintColor = hasActiveFilter ? .systemBlue : .secondaryLabel
+            pillControl?.accessibilityLabel = title
+            pillControl?.accessibilityValue = resultText
         }
 
         private func updateField() {
@@ -573,6 +646,23 @@ struct PhoneFeedFilterBarOverlayBridge: UIViewControllerRepresentable {
 
         @objc private func editingChanged(_ sender: UITextField) {
             text.wrappedValue = sender.text ?? ""
+            updatePill()
+        }
+
+        @objc private func showFilterPanel() {
+            guard isEnabled else { return }
+            isPanelPresented = true
+            applyOverlay()
+            Task { @MainActor [weak self] in
+                await Task.yield()
+                self?.filterField?.becomeFirstResponder()
+            }
+        }
+
+        @objc private func hideFilterPanel() {
+            isPanelPresented = false
+            filterField?.resignFirstResponder()
+            applyOverlay()
         }
 
         func textFieldShouldReturn(_ textField: UITextField) -> Bool {
@@ -582,6 +672,7 @@ struct PhoneFeedFilterBarOverlayBridge: UIViewControllerRepresentable {
 
         func textFieldShouldClear(_ textField: UITextField) -> Bool {
             self.text.wrappedValue = ""
+            updatePill()
             return true
         }
 
@@ -626,8 +717,7 @@ struct PhoneFeedFilterBarOverlayBridge: UIViewControllerRepresentable {
         deinit {
             MainActor.assumeIsolated {
                 pendingLayoutTask?.cancel()
-                scrollObservation = nil
-                removeOverlay()
+                removeChrome()
             }
         }
     }

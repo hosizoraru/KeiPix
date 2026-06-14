@@ -30,7 +30,6 @@ struct ContentView: View {
     @State private var compactContentTransitionEdge: Edge = .trailing
     @State private var feedbackRequest: FeedbackReportRequest?
     @State private var statusMessage: String?
-    @State private var isPhoneFeedAtContentStart = true
     @State private var bookmarkEditorLayoutProfileOverride: BookmarkEditorLayoutProfile = .compact
     @AppStorage("mobileBottomTabItemIDs") private var mobileBottomTabDefaultRouteIDs = MobileBottomTabConfiguration.defaultStorageID
     @AppStorage("mobileBottomTabLaunchTarget") private var mobileBottomTabLaunchTargetID = MobileBottomTabConfiguration.defaultLaunchTarget.rawValue
@@ -98,7 +97,6 @@ struct ContentView: View {
             }
             .onChange(of: store.selectedRoute) { _, route in
                 recordMobileBottomTabRouteIfNeeded(route)
-                isPhoneFeedAtContentStart = true
             }
             #if DEBUG
             .task {
@@ -408,11 +406,9 @@ struct ContentView: View {
                 text: $store.clientFilterQuery,
                 resultText: phoneCollapsedFeedFilterResultText,
                 isEnabled: isPhoneFeedFilterEnabled(layout: layout),
-                isAtContentStart: isPhoneFeedAtContentStart,
                 syncID: compactTabBarSyncID(layout: layout)
             )
         }
-        .animation(.snappy(duration: 0.2), value: isPhoneFeedAtContentStart)
         .onAppear {
             isCompactCustomTabRootActive = layout.usesCustomNavigationTabs
             if layout.usesCustomNavigationTabs {
@@ -1588,7 +1584,7 @@ struct ContentView: View {
                     store: store,
                     galleryLayoutAdaptation: galleryLayoutAdaptation(showsSidebarToggle: showsSidebarToggle),
                     headerLayout: showsSidebarToggle ? .adaptive : .compact,
-                    onGalleryScrollDirectionChange: galleryScrollDirectionHandler(showsSidebarToggle: showsSidebarToggle)
+                    onGalleryScrollDirectionChange: nil
                 )
             } else if store.selectedRoute == .bookmarkTags {
                 BookmarkTagsView(store: store)
@@ -1616,7 +1612,7 @@ struct ContentView: View {
                 GalleryView(
                     store: store,
                     galleryLayoutAdaptation: galleryLayoutAdaptation(showsSidebarToggle: showsSidebarToggle),
-                    onGalleryScrollDirectionChange: galleryScrollDirectionHandler(showsSidebarToggle: showsSidebarToggle)
+                    onGalleryScrollDirectionChange: nil
                 )
             }
         }
@@ -1696,29 +1692,6 @@ struct ContentView: View {
         isCompactCustomTabRootActive ? .onScrollDown : .automatic
     }
 
-    private func galleryScrollDirectionHandler(
-        showsSidebarToggle: Bool
-    ) -> ((NativeGalleryScrollEvent) -> Void)? {
-        guard currentMobilePlatform == .phone, showsSidebarToggle == false else {
-            return nil
-        }
-        return { event in
-            handlePhoneGalleryScrollEvent(event)
-        }
-    }
-
-    private func handlePhoneGalleryScrollEvent(_ event: NativeGalleryScrollEvent) {
-        guard currentMobilePlatform == .phone,
-              store.selectedRoute.usesArtworkFeed else {
-            isPhoneFeedAtContentStart = true
-            return
-        }
-
-        withAnimation(.snappy(duration: 0.18)) {
-            isPhoneFeedAtContentStart = event.isAtContentStart
-        }
-    }
-
     private func isPhoneFeedFilterEnabled(layout: MobileWorkspaceLayout) -> Bool {
         layout.platform == .phone
             && isCompactCustomTabRootActive
@@ -1742,8 +1715,7 @@ struct ContentView: View {
             selectedTab.transitionID,
             store.selectedRoute.rawValue,
             layout.usesCustomNavigationTabs ? "custom" : "regular",
-            layout.usesCompactTabs ? "compact" : "wide",
-            isPhoneFeedAtContentStart ? "content-start" : "content-scrolled"
+            layout.usesCompactTabs ? "compact" : "wide"
         ]
         .joined(separator: "|")
     }

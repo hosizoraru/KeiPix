@@ -1,37 +1,21 @@
 import CoreGraphics
 
-struct TabBarGeometrySnapshot: Equatable {
-    let tabBarFrame: CGRect
-    let selectedItemFrame: CGRect?
+struct PhoneFeedFilterChromeLayout: Equatable {
+    static let pillHeight: CGFloat = 34
+    static let panelHeight: CGFloat = 46
 
-    init(tabBarFrame: CGRect, selectedItemFrame: CGRect? = nil) {
-        self.tabBarFrame = tabBarFrame
-        self.selectedItemFrame = selectedItemFrame
-    }
-}
-
-struct PhoneFeedFilterBarLayout: Equatable {
-    enum Placement: Equatable {
-        case aboveExpandedTabBar
-        case besideCollapsedDock
-    }
-
-    static let height: CGFloat = 44
-
-    private static let dockGap: CGFloat = 8
-    private static let aboveTabGap: CGFloat = 8
+    private static let aboveTabGap: CGFloat = 10
     private static let minimumSideMargin: CGFloat = 16
-    private static let minimumWidth: CGFloat = 150
+    private static let maximumPanelWidth: CGFloat = 440
+    private static let pillWidth: CGFloat = 108
 
-    let placement: Placement
-    let frame: CGRect
+    let pillFrame: CGRect
+    let panelFrame: CGRect
 
     static func resolve(
         containerSize: CGSize,
-        tabBarGeometry: TabBarGeometrySnapshot?,
-        contentIsAtStart: Bool,
-        hasActiveFilter: Bool
-    ) -> PhoneFeedFilterBarLayout? {
+        tabBarGeometry: TabBarGeometrySnapshot?
+    ) -> PhoneFeedFilterChromeLayout? {
         guard containerSize.width > 0,
               containerSize.height > 0,
               let tabBarGeometry else {
@@ -39,94 +23,34 @@ struct PhoneFeedFilterBarLayout: Equatable {
         }
 
         let containerBounds = CGRect(origin: .zero, size: containerSize)
-        if contentIsAtStart {
-            guard hasActiveFilter else { return nil }
-            return layoutAboveExpandedTabBar(
-                containerBounds: containerBounds,
-                tabBarFrame: tabBarGeometry.tabBarFrame
-            )
-        }
-
-        if let selectedItemFrame = tabBarGeometry.selectedItemFrame,
-           let dockLayout = layoutBesideCollapsedDock(
-                containerBounds: containerBounds,
-                selectedItemFrame: selectedItemFrame
-           ) {
-            return dockLayout
-        }
-
-        guard hasActiveFilter else { return nil }
-        return layoutAboveExpandedTabBar(
-            containerBounds: containerBounds,
-            tabBarFrame: tabBarGeometry.tabBarFrame
-        )
-    }
-
-    private static func layoutAboveExpandedTabBar(
-        containerBounds: CGRect,
-        tabBarFrame: CGRect
-    ) -> PhoneFeedFilterBarLayout? {
-        let tabFrame = tabBarFrame.intersection(containerBounds)
+        let tabFrame = tabBarGeometry.tabBarFrame.intersection(containerBounds)
         guard tabFrame.isNull == false,
-              tabFrame.width >= minimumWidth else {
+              tabFrame.width > 0,
+              tabFrame.height > 0 else {
             return nil
         }
 
-        let sideMargin = max(minimumSideMargin, tabFrame.minX)
-        let maxX = min(containerBounds.maxX - sideMargin, tabFrame.maxX)
-        let width = maxX - sideMargin
-        guard width >= minimumWidth else { return nil }
-
-        let proposedY = tabFrame.minY - aboveTabGap - height
+        let panelWidth = min(
+            maximumPanelWidth,
+            max(0, containerBounds.width - minimumSideMargin * 2)
+        )
+        guard panelWidth > 0 else { return nil }
+        let panelX = containerBounds.midX - panelWidth / 2
+        let proposedY = tabFrame.minY - aboveTabGap - panelHeight
         let y = clamp(
             proposedY,
             min: minimumSideMargin,
-            max: containerBounds.maxY - height - minimumSideMargin
+            max: containerBounds.maxY - panelHeight - minimumSideMargin
         )
-        return PhoneFeedFilterBarLayout(
-            placement: .aboveExpandedTabBar,
-            frame: CGRect(x: sideMargin, y: y, width: width, height: height)
-        )
-    }
-
-    private static func layoutBesideCollapsedDock(
-        containerBounds: CGRect,
-        selectedItemFrame: CGRect
-    ) -> PhoneFeedFilterBarLayout? {
-        let dockFrame = selectedItemFrame.intersection(containerBounds)
-        guard dockFrame.isNull == false,
-              dockFrame.width > 0,
-              dockFrame.height > 0 else {
-            return nil
-        }
-
-        let sideMargin = max(
-            minimumSideMargin,
-            min(dockFrame.minX, containerBounds.maxX - dockFrame.maxX)
-        )
-        let proposedY = dockFrame.midY - height / 2
-        let y = clamp(
-            proposedY,
-            min: minimumSideMargin,
-            max: containerBounds.maxY - height - minimumSideMargin
-        )
-
-        let rightX = dockFrame.maxX + dockGap
-        let rightMaxX = containerBounds.maxX - sideMargin
-        let rightWidth = rightMaxX - rightX
-        if rightWidth >= minimumWidth {
-            return PhoneFeedFilterBarLayout(
-                placement: .besideCollapsedDock,
-                frame: CGRect(x: rightX, y: y, width: rightWidth, height: height)
-            )
-        }
-
-        let leftX = sideMargin
-        let leftWidth = dockFrame.minX - dockGap - sideMargin
-        guard leftWidth >= minimumWidth else { return nil }
-        return PhoneFeedFilterBarLayout(
-            placement: .besideCollapsedDock,
-            frame: CGRect(x: leftX, y: y, width: leftWidth, height: height)
+        let panelFrame = CGRect(x: panelX, y: y, width: panelWidth, height: panelHeight)
+        return PhoneFeedFilterChromeLayout(
+            pillFrame: CGRect(
+                x: containerBounds.midX - pillWidth / 2,
+                y: panelFrame.midY - pillHeight / 2,
+                width: pillWidth,
+                height: pillHeight
+            ),
+            panelFrame: panelFrame
         )
     }
 

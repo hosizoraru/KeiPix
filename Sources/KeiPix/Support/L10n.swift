@@ -184,6 +184,8 @@ enum L10n {
     static var clearSearch: String { text("Clear Search") }
     static var clearFeedFilter: String { text("Clear Feed Filter") }
     static var feedFilterCleared: String { text("Feed filter cleared") }
+    static var feedFilter: String { text("Filter") }
+    static var filtering: String { text("Filtering") }
     static var activeArtworkFilterFormat: String { text("Filter: %@") }
     static var activeFeedFiltersFormat: String { text("%d active filters") }
     static var advancedFilter: String { text("Advanced Filter") }
