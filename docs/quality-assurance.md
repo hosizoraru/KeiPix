@@ -74,6 +74,7 @@ swift test --filter <TestSuiteName>
 | Artwork detail social | `--visual-qa-artwork-detail-social` |
 | Artwork bookmark editor | `--visual-qa-bookmark-editor` |
 | Novel bookmark editor | `--visual-qa-novel-bookmark-editor` |
+| Novel translation smoke reader | `--visual-qa-novel-translation-smoke` |
 | Creator profile | `--visual-qa-creator-profile` |
 | Feedback sheet | `--visual-qa-feedback-sheet` |
 | Muted content library | `--visual-qa-muted-content` |

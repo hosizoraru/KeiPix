@@ -16,6 +16,7 @@ struct ContentView: View {
     @State private var creatorProfileVisualQAUser: PixivUser?
     @State private var bookmarkEditorVisualQAArtwork: PixivArtwork?
     @State private var novelBookmarkEditorVisualQANovel: PixivNovel?
+    @State private var novelTranslationSmokeVisualQANovel: PixivNovel?
     @Environment(\.undoManager) private var undoManager
     @Environment(\.openWindow) private var openWindow
 
@@ -221,6 +222,16 @@ struct ContentView: View {
             )
             .os26SheetChrome(.bookmarkEditor)
         }
+        .sheet(item: $novelTranslationSmokeVisualQANovel) { novel in
+            NovelReaderView(
+                store: store,
+                novel: novel,
+                startsTranslationActive: true,
+                translationSourceLanguage: Locale.Language(identifier: "ja")
+            )
+                .frame(minWidth: 720, minHeight: 540, idealHeight: 720)
+                .os26SheetChrome(.reader)
+        }
         #endif
         .confirmationDialog(
             store.pendingDangerAction?.title ?? L10n.moreActions,
@@ -350,6 +361,9 @@ struct ContentView: View {
             }
             if VisualQALaunchArgument.contains(.novelFeed) {
                 store.presentNovelFeedVisualQA()
+            }
+            if VisualQALaunchArgument.contains(.novelTranslationSmoke) {
+                novelTranslationSmokeVisualQANovel = store.presentNovelTranslationSmokeVisualQA()
             }
             if let visualQAGalleryLayoutMode = VisualQALaunchArgument.activeGalleryLayoutMode {
                 store.presentGalleryLayoutVisualQA(mode: visualQAGalleryLayoutMode)

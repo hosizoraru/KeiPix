@@ -138,6 +138,49 @@ enum NovelTranslationScheduler {
     }
 }
 
+enum NovelTranslationReadinessSampler {
+    static func sampleSegment(from segments: [NovelTranslationSegment]) -> NovelTranslationSegment? {
+        segments.first(where: isReliableLanguageSample) ?? segments.first
+    }
+
+    private static func isReliableLanguageSample(_ segment: NovelTranslationSegment) -> Bool {
+        NovelTranslationTextSignal.meaningfulScalarCount(in: segment.sourceText) >= minimumReliableScalarCount
+    }
+
+    private static let minimumReliableScalarCount = 12
+}
+
+enum NovelTranslationRequestPolicy {
+    static func requestableSegments(from segments: [NovelTranslationSegment]) -> [NovelTranslationSegment] {
+        segments.filter(canRequestTranslation)
+    }
+
+    static func localFallbackResults(from segments: [NovelTranslationSegment]) -> [NovelTranslationBatchResult] {
+        segments
+            .filter { canRequestTranslation($0) == false }
+            .map { NovelTranslationBatchResult(segment: $0, translatedText: $0.sourceText) }
+    }
+
+    private static func canRequestTranslation(_ segment: NovelTranslationSegment) -> Bool {
+        NovelTranslationTextSignal.meaningfulScalarCount(in: segment.sourceText) >= minimumReliableScalarCount
+    }
+
+    private static let minimumReliableScalarCount = 12
+}
+
+private enum NovelTranslationTextSignal {
+    static func meaningfulScalarCount(in text: String) -> Int {
+        text.unicodeScalars.reduce(0) { count, scalar in
+            if CharacterSet.letters.contains(scalar)
+                || CharacterSet.decimalDigits.contains(scalar) {
+                count + 1
+            } else {
+                count
+            }
+        }
+    }
+}
+
 enum NovelTranslationBatchMapper {
     static func segmentIndex(_ segments: [NovelTranslationSegment]) -> [String: NovelTranslationSegment] {
         Dictionary(uniqueKeysWithValues: segments.map { ($0.clientIdentifier, $0) })

@@ -3119,6 +3119,7 @@ struct NativeBoundaryTests {
         #expect(readerView.contains("usesContinuousNovelReader"))
         #expect(readerView.contains("ReaderAdaptiveLayout.usesContinuousNovelReader(platform: readerPlatform)"))
         #expect(readerView.contains("@State private var continuousVisiblePageRange: NovelContinuousVisiblePageRange?"))
+        #expect(readerView.contains("private let translationSourceLanguage: Locale.Language?"))
         #expect(readerView.contains("private var translationScheduleMode: NovelTranslationScheduleMode"))
         #expect(readerView.contains("return .continuous"))
         #expect(readerView.contains("private func resolvedPagedReadingMode(for availableSize: CGSize) -> NovelReadingMode"))
@@ -3130,12 +3131,17 @@ struct NativeBoundaryTests {
         #expect(readerView.contains(".onChange(of: continuousVisiblePageRange)"))
         #expect(readerView.contains("translationConfig?.invalidate()"))
         #expect(readerView.contains("prepareTranslationIfNeeded(for: pageOrder, session: session)"))
+        #expect(readerView.contains("NovelTranslationReadinessSampler.sampleSegment("))
+        #expect(readerView.contains("NovelTranslationRequestPolicy.localFallbackResults(from: pendingSegments)"))
+        #expect(readerView.contains("NovelTranslationRequestPolicy.requestableSegments(from: pendingSegments)"))
         #expect(readerView.contains("LanguageAvailability()"))
         #expect(readerView.contains("LanguageAvailability(preferredStrategy: .lowLatency)"))
         #expect(readerView.contains("try await session.prepareTranslation()"))
         #expect(readerView.contains("NovelTranslationReadinessMapper.readiness(for: status)"))
         #expect(readerView.contains("NovelTranslationReadinessMapper.issue(for: error).localizedMessage"))
         #expect(appleTranslationSupport.contains("preferredStrategy: .lowLatency"))
+        #expect(appleTranslationSupport.contains("sourceLanguage: Locale.Language? = nil"))
+        #expect(appleTranslationSupport.contains("source: sourceLanguage"))
         #expect(translationModels.contains("sourceText: attributedSourceText(from: segment.sourceText)"))
         #expect(translationModels.contains("skipped.translation.skipsTranslation = true"))
         #expect(translationModels.contains("return TranslationSession.Request(\n                sourceText: segment.sourceText"))
@@ -3172,6 +3178,66 @@ struct NativeBoundaryTests {
         }
         let continuousLayout = String(readerView[continuousLayoutStart.lowerBound..<pagedLayoutStart.lowerBound])
         #expect(continuousLayout.contains(".readerGestures(") == false)
+    }
+
+    @Test("Novel translation smoke surface opens native reader with local text")
+    func novelTranslationSmokeSurfaceUsesLocalNativeReader() throws {
+        let root = try packageRoot()
+        let macContentView = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/ContentView.swift"),
+            encoding: .utf8
+        )
+        let iPadContentView = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/ContentView_iPadOS.swift"),
+            encoding: .utf8
+        )
+        let launchArguments = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Support/VisualQALaunchArgument.swift"),
+            encoding: .utf8
+        )
+        let visualQAModels = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Models/VisualQAEvidenceModels.swift"),
+            encoding: .utf8
+        )
+        let visualQASampleData = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Support/VisualQASampleData.swift"),
+            encoding: .utf8
+        )
+        let novelStore = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Stores/NovelFeatureStore.swift"),
+            encoding: .utf8
+        )
+        let readerView = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/NovelReaderView.swift"),
+            encoding: .utf8
+        )
+        let macOSRunner = try String(
+            contentsOf: root.appending(path: "script/build_and_run.sh"),
+            encoding: .utf8
+        )
+
+        #expect(visualQAModels.contains("case novelTranslationSmoke = \"novel-translation-smoke\""))
+        #expect(launchArguments.contains("case novelTranslationSmoke = \"--visual-qa-novel-translation-smoke\""))
+        #expect(launchArguments.contains("case .novelTranslationSmoke:\n            .novelTranslationSmoke"))
+        #expect(visualQASampleData.contains("static let novelTranslationSmokeNovel"))
+        #expect(visualQASampleData.contains("static let novelTranslationSmokeText = PixivNovelText("))
+        #expect(visualQASampleData.contains("[newpage]"))
+        #expect(visualQASampleData.contains("[pixivimage:94000]"))
+        #expect(visualQASampleData.contains("func presentNovelTranslationSmokeVisualQA() -> PixivNovel"))
+        #expect(visualQASampleData.contains("translationTargetLanguage = .english"))
+        #expect(visualQASampleData.contains("novels.presentVisualQANovelReader("))
+        #expect(novelStore.contains("func presentVisualQANovelReader(novel: PixivNovel, text: PixivNovelText)"))
+        #expect(novelStore.contains("loadedNovelTextID = novel.id"))
+        #expect(novelStore.contains("loadedNovelText = text"))
+        #expect(novelStore.contains("loadedNovelTokens = NovelTextTokenizer.tokenize(text.novelText)"))
+        #expect(readerView.contains("startsTranslationActive: Bool = false,\n        translationSourceLanguage: Locale.Language? = nil"))
+        #expect(readerView.contains("if translationActive || startsTranslationActive"))
+        #expect(macContentView.contains("VisualQALaunchArgument.contains(.novelTranslationSmoke)"))
+        #expect(macContentView.contains("translationSourceLanguage: Locale.Language(identifier: \"ja\")"))
+        #expect(iPadContentView.contains("VisualQALaunchArgument.contains(.novelTranslationSmoke)"))
+        #expect(iPadContentView.contains("translationSourceLanguage: Locale.Language(identifier: \"ja\")"))
+        #expect(macOSRunner.contains("--visual-qa-novel-translation-smoke|visual-qa-novel-translation-smoke"))
+        #expect(macOSRunner.contains("open_app --visual-qa-novel-translation-smoke"))
     }
 
     @Test("Artwork reader native scroll viewports keep SwiftUI height stable")

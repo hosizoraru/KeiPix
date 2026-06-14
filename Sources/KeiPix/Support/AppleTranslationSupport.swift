@@ -16,16 +16,19 @@ enum TranslationLanguageResolver {
     /// Builds a `TranslationSession.Configuration` with the correct target
     /// language. Source is always `nil` for auto-detection.
     #if canImport(Translation)
-    static func configuration(for targetLanguage: TranslationTargetLanguage) -> TranslationSession.Configuration {
+    static func configuration(
+        for targetLanguage: TranslationTargetLanguage,
+        sourceLanguage: Locale.Language? = nil
+    ) -> TranslationSession.Configuration {
         let target = Self.targetLanguage(for: targetLanguage)
         if #available(iOS 26.4, macOS 26.4, *) {
             return TranslationSession.Configuration(
-                source: nil,
+                source: sourceLanguage,
                 target: target,
                 preferredStrategy: .lowLatency
             )
         }
-        return TranslationSession.Configuration(source: nil, target: target)
+        return TranslationSession.Configuration(source: sourceLanguage, target: target)
     }
     #endif
 }

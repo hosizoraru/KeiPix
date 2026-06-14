@@ -16,9 +16,16 @@ import SwiftUI
 struct NovelReaderView: View {
     @Bindable var store: KeiPixStore
 
-    init(store: KeiPixStore, novel: PixivNovel) {
+    init(
+        store: KeiPixStore,
+        novel: PixivNovel,
+        startsTranslationActive: Bool = false,
+        translationSourceLanguage: Locale.Language? = nil
+    ) {
         self.store = store
+        self.translationSourceLanguage = translationSourceLanguage
         _activeNovel = State(initialValue: novel)
+        _startsTranslationActive = State(initialValue: startsTranslationActive)
     }
 
     @Environment(\.dismiss) private var dismiss
@@ -52,9 +59,11 @@ struct NovelReaderView: View {
     @State private var activeNovel: PixivNovel
     @State private var selectedSeries: NovelSeriesChapterPresentation?
     @State private var continuousVisiblePageRange: NovelContinuousVisiblePageRange?
+    @State private var startsTranslationActive: Bool
 
     private var novelStore: NovelFeatureStore { store.novels }
     private let translationDiskCache = NovelTranslationDiskCache()
+    private let translationSourceLanguage: Locale.Language?
 
     private var theme: NovelReaderTheme {
         NovelReaderTheme(rawValue: themeRawValue) ?? .light
@@ -166,9 +175,10 @@ struct NovelReaderView: View {
             translationEngine.reset()
             // Restore persisted translation preferences
             translationEngine.translationMode = NovelTranslationMode(rawValue: translationModeRaw) ?? .bilingual
-            if translationActive {
+            if translationActive || startsTranslationActive {
                 translationEngine.isInlineTranslationActive = true
-                translationConfig = TranslationLanguageResolver.configuration(for: store.translationTargetLanguage)
+                translationConfig = translationConfiguration()
+                startsTranslationActive = false
             }
             await novelStore.openNovel(activeNovel)
             await loadEmbeddedImages()
@@ -207,7 +217,7 @@ struct NovelReaderView: View {
         .onChange(of: store.translationTargetLanguage) { _, newValue in
             guard translationEngine.isInlineTranslationActive else { return }
             translationEngine.clearAll()
-            translationConfig = TranslationLanguageResolver.configuration(for: newValue)
+            translationConfig = translationConfiguration(for: newValue)
         }
         .onChange(of: continuousVisiblePageRange) { _, _ in
             guard usesContinuousNovelReader,
@@ -284,7 +294,14 @@ struct NovelReaderView: View {
         let pendingSegments = translationEngine.pendingSegments(from: segments)
         guard pendingSegments.isEmpty == false else { return }
 
-        translationEngine.setTranslating(segments: pendingSegments)
+        for fallbackResult in NovelTranslationRequestPolicy.localFallbackResults(from: pendingSegments) {
+            translationEngine.applySegmentResult(fallbackResult)
+        }
+
+        let requestableSegments = NovelTranslationRequestPolicy.requestableSegments(from: pendingSegments)
+        guard requestableSegments.isEmpty == false else { return }
+
+        translationEngine.setTranslating(segments: requestableSegments)
 
         let batchClient = NovelTranslationBatchClient { segments, yield in
             let requests = NovelTranslationBatchMapper.requests(from: segments)
@@ -301,22 +318,22 @@ struct NovelReaderView: View {
         }
 
         do {
-            try await batchClient.translate(pendingSegments) { result in
+            try await batchClient.translate(requestableSegments) { result in
                 if translationEngine.isInlineTranslationActive {
                     translationEngine.applySegmentResult(result)
                     try? translationDiskCache.store(result)
                 }
             }
             guard translationEngine.isInlineTranslationActive else { return }
-            translationEngine.finishTranslating(segments: pendingSegments)
+            translationEngine.finishTranslating(segments: requestableSegments)
         } catch is CancellationError {
             guard translationEngine.isInlineTranslationActive else { return }
-            translationEngine.finishTranslating(segments: pendingSegments)
+            translationEngine.finishTranslating(segments: requestableSegments)
         } catch {
             guard translationEngine.isInlineTranslationActive else { return }
             translationEngine.failTranslating(
                 NovelTranslationReadinessMapper.issue(for: error).localizedMessage,
-                segments: pendingSegments
+                segments: requestableSegments
             )
         }
     }
@@ -328,6 +345,15 @@ struct NovelReaderView: View {
             targetLanguageID: store.translationTargetLanguage.rawValue,
             pages: [pages[page]],
             pageStartIndex: page
+        )
+    }
+
+    private func translationConfiguration(
+        for targetLanguage: TranslationTargetLanguage? = nil
+    ) -> TranslationSession.Configuration {
+        TranslationLanguageResolver.configuration(
+            for: targetLanguage ?? store.translationTargetLanguage,
+            sourceLanguage: translationSourceLanguage
         )
     }
 
@@ -375,7 +401,9 @@ struct NovelReaderView: View {
             for cachedResult in translationDiskCache.results(for: segments) {
                 translationEngine.applySegmentResult(cachedResult)
             }
-            if let pending = translationEngine.pendingSegments(from: segments).first {
+            if let pending = NovelTranslationReadinessSampler.sampleSegment(
+                from: translationEngine.pendingSegments(from: segments)
+            ) {
                 return pending
             }
         }
@@ -622,7 +650,7 @@ struct NovelReaderView: View {
         translationEngine.isInlineTranslationActive.toggle()
         translationActive = translationEngine.isInlineTranslationActive
         if translationEngine.isInlineTranslationActive {
-            translationConfig = TranslationLanguageResolver.configuration(for: store.translationTargetLanguage)
+            translationConfig = translationConfiguration()
         } else {
             translationEngine.clearAll()
             translationConfig = nil

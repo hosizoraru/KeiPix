@@ -41,6 +41,7 @@ struct ContentView: View {
     @State private var creatorProfileVisualQAUser: PixivUser?
     @State private var bookmarkEditorVisualQAArtwork: PixivArtwork?
     @State private var novelBookmarkEditorVisualQANovel: PixivNovel?
+    @State private var novelTranslationSmokeVisualQANovel: PixivNovel?
     #endif
 
     enum iPadTab: Hashable {
@@ -140,6 +141,12 @@ struct ContentView: View {
                 }
                 if VisualQALaunchArgument.contains(.novelFeed) {
                     store.presentNovelFeedVisualQA()
+                    hasAppliedMobileBottomTabLaunchTarget = true
+                    selectedSidebarItem = .route(.novelRecommended)
+                    selectedTab = .mobile(.novels)
+                }
+                if VisualQALaunchArgument.contains(.novelTranslationSmoke) {
+                    novelTranslationSmokeVisualQANovel = store.presentNovelTranslationSmokeVisualQA()
                     hasAppliedMobileBottomTabLaunchTarget = true
                     selectedSidebarItem = .route(.novelRecommended)
                     selectedTab = .mobile(.novels)
@@ -251,6 +258,15 @@ struct ContentView: View {
                     previewSuggestions: VisualQASampleData.novelBookmarkEditorSuggestions
                 )
                 .os26SheetChrome(.compactBookmarkEditor)
+            }
+            .sheet(item: $novelTranslationSmokeVisualQANovel) { novel in
+                NovelReaderView(
+                    store: store,
+                    novel: novel,
+                    startsTranslationActive: true,
+                    translationSourceLanguage: Locale.Language(identifier: "ja")
+                )
+                    .os26SheetChrome(.reader)
             }
             #endif
             .sheet(isPresented: readerBinding) {

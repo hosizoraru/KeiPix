@@ -128,6 +128,28 @@ final class NovelFeatureStore {
         self.nextURL = nextURL
         applyContentFilter()
     }
+
+    func presentVisualQANovelReader(novel: PixivNovel, text: PixivNovelText) {
+        activeFeedRequestID = nil
+        isLoading = false
+        isLoadingMore = false
+        errorMessage = nil
+        novelTextError = nil
+        isLoadingNovelText = false
+        allNovels = [novel]
+        nextURL = nil
+        selectedNovel = novel
+        novelDetailCache[novel.id] = novel
+        loadedNovelTextID = novel.id
+        loadedNovelText = text
+        loadedNovelTokens = NovelTextTokenizer.tokenize(text.novelText)
+        embeddedArtworkURLs = [:]
+        uploadedImageURLs = [:]
+        relatedNovels = []
+        relatedNovelsNextURL = nil
+        relatedNovelsLoadedForID = nil
+        applyContentFilter()
+    }
     #endif
 
     func presentDirectNovels(_ novels: [PixivNovel], nextURL: URL? = nil, selectedID: Int? = nil) {

@@ -247,6 +247,52 @@ enum VisualQASampleData {
         )
     ]
 
+    static let novelTranslationSmokeNovel = decodeNovel(
+        id: 94_190,
+        title: "Translation Smoke - 雨の図書室",
+        caption: "Local fixture for validating Apple Translation in the native novel reader without touching Pixiv network or a real account.",
+        createdAt: 1_779_811_200,
+        tags: ["原创", "短篇", "翻訳QA", "reader", "日常"],
+        pageCount: 3,
+        textLength: 1_180,
+        totalBookmarks: 128,
+        totalView: 4_096,
+        isOriginal: true,
+        isBookmarked: true,
+        isFollowed: true,
+        seriesID: novelSeriesVisualQAID,
+        seriesTitle: novelSeriesVisualQATitle
+    )
+
+    static let novelTranslationSmokeText = PixivNovelText(
+        novelMarker: PixivNovelMarker(page: 0),
+        novelText: """
+        [chapter:雨の図書室]
+        雨の日の図書室は、ページをめくる音だけがやさしく響いていた。
+        彼女は窓際の席で、小さな青いしおりを本に挟みながら言った。
+        「今日は翻訳の煙試験をします。長い本文でも、読者が待たされないように。」
+
+        [[rb:言葉 > ことば]]は静かに並び、必要なところから先に訳されていく。
+        詳細は https://www.pixiv.net/novel/show.php?id=94190 に残しておく。
+
+        [newpage]
+        [chapter:二つ目のページ]
+        彼はうなずき、机の上に置いたノートへ短いメモを書いた。
+        まず表示中のページを訳す。次に隣のページ、そして近いページを少しずつ先読みする。
+        もし言語モデルの準備が必要なら、本文は消さずに、そのまま読める状態を保つ。
+
+        [pixivimage:94000]
+        画像の印は翻訳せず、本文だけを自然に扱う。
+
+        [newpage]
+        [chapter:最後の確認]
+        雨がやむころ、図書室の明かりは少しだけ暖かく見えた。
+        これで iPhone と iPad の実機が戻ってきたら、すぐに同じ画面から翻訳を確認できる。
+        """,
+        seriesPrev: PixivNovelStub(id: 94_189, title: "Previous smoke chapter"),
+        seriesNext: PixivNovelStub(id: 94_191, title: "Next smoke chapter")
+    )
+
     static let novelDetailComments = PixivCommentResponse(
         totalComments: 4,
         comments: decodeComments("""
@@ -1266,6 +1312,27 @@ extension KeiPixStore {
             novels: VisualQASampleData.novelFeedNovels,
             nextURL: URL(string: "https://app-api.pixiv.net/v1/novel/recommended/next")
         )
+    }
+
+    func presentNovelTranslationSmokeVisualQA() -> PixivNovel {
+        activateVisualQASampleSession()
+        selectedRoute = .novelRecommended
+        focusedUser = nil
+        bookmarkTagFilter = nil
+        selectedSpotlightArticle = nil
+        selectedArtwork = nil
+        errorMessage = nil
+        isLoading = false
+        isLoadingMore = false
+        activeFeedSnapshotRestoration = nil
+        searchPopularPreviewArtworks = []
+        novelGalleryLayoutMode = .grid
+        translationTargetLanguage = .english
+        novels.presentVisualQANovelReader(
+            novel: VisualQASampleData.novelTranslationSmokeNovel,
+            text: VisualQASampleData.novelTranslationSmokeText
+        )
+        return VisualQASampleData.novelTranslationSmokeNovel
     }
 
     func presentWorkSubscriptionsVisualQA() {

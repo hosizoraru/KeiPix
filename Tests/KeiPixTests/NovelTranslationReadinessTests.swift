@@ -38,4 +38,49 @@ struct NovelTranslationReadinessTests {
         #expect(NovelTranslationIssue.cancelled.localizedMessage == L10n.novelTranslationCancelled)
         #expect(NovelTranslationIssue.unavailable.localizedMessage == L10n.translationFailed)
     }
+
+    @Test("Readiness sampling skips terse headings when body text is available")
+    func readinessSamplingSkipsTerseHeadings() {
+        let segments = [
+            segment(page: 0, token: 0, paragraph: 0, text: "雨の図書室"),
+            segment(page: 0, token: 1, paragraph: 0, text: "雨の日の図書室は、ページをめくる音だけがやさしく響いていた。")
+        ]
+
+        #expect(NovelTranslationReadinessSampler.sampleSegment(from: segments)?.sourceText == segments[1].sourceText)
+    }
+
+    @Test("Readiness sampling falls back when every pending segment is short")
+    func readinessSamplingFallsBackForShortSegments() {
+        let segments = [
+            segment(page: 0, token: 0, paragraph: 0, text: "序"),
+            segment(page: 0, token: 1, paragraph: 0, text: "ok")
+        ]
+
+        #expect(NovelTranslationReadinessSampler.sampleSegment(from: segments)?.sourceText == "序")
+    }
+
+    @Test("Request policy falls back terse segments without blocking body translation")
+    func requestPolicyFallsBackTerseSegments() {
+        let heading = segment(page: 0, token: 0, paragraph: 0, text: "雨の図書室")
+        let body = segment(page: 0, token: 1, paragraph: 0, text: "雨の日の図書室は、ページをめくる音だけがやさしく響いていた。")
+        let segments = [heading, body]
+
+        #expect(NovelTranslationRequestPolicy.requestableSegments(from: segments) == [body])
+        #expect(NovelTranslationRequestPolicy.localFallbackResults(from: segments) == [
+            NovelTranslationBatchResult(segment: heading, translatedText: heading.sourceText)
+        ])
+    }
+
+    private func segment(page: Int, token: Int, paragraph: Int, text: String) -> NovelTranslationSegment {
+        NovelTranslationSegment(
+            novelID: 1,
+            targetLanguageID: "en",
+            pageIndex: page,
+            tokenIndex: token,
+            paragraphIndex: paragraph,
+            sourceText: text,
+            sourceHash: "\(page)-\(token)-\(paragraph)",
+            clientIdentifier: "\(page)-\(token)-\(paragraph)"
+        )
+    }
 }

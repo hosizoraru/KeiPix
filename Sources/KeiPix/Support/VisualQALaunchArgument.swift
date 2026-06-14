@@ -16,6 +16,7 @@ enum VisualQALaunchArgument: String, CaseIterable {
     case galleryThreeColumn = "--visual-qa-gallery-three-column"
     case galleryCompact = "--visual-qa-gallery-compact"
     case novelFeed = "--visual-qa-novel-feed"
+    case novelTranslationSmoke = "--visual-qa-novel-translation-smoke"
     case searchWorkspace = "--visual-qa-search-workspace"
     case ranking = "--visual-qa-ranking"
     case mutedContent = "--visual-qa-muted-content"
@@ -64,6 +65,8 @@ enum VisualQALaunchArgument: String, CaseIterable {
             .galleryCompact
         case .novelFeed:
             .novelFeed
+        case .novelTranslationSmoke:
+            .novelTranslationSmoke
         case .searchWorkspace:
             .searchWorkspace
         case .ranking:

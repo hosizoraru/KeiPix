@@ -107,6 +107,21 @@ struct NovelTranslationPlannerTests {
         }
     }
 
+    @Test("Translation configuration can carry an explicit source language")
+    func translationConfigurationCarriesExplicitSourceLanguage() {
+        if #available(macOS 26.4, iOS 26.4, *) {
+            let source = Locale.Language(identifier: "ja")
+            let configuration = TranslationLanguageResolver.configuration(
+                for: .english,
+                sourceLanguage: source
+            )
+
+            #expect(configuration.source == source)
+            #expect(configuration.target == TranslationTargetLanguage.english.localeLanguage)
+            #expect(configuration.preferredStrategy == .lowLatency)
+        }
+    }
+
     @Test("Batch requests mark Pixiv inline markers and URLs to skip translation")
     func batchRequestsMarkPixivMarkersAndURLsToSkipTranslation() throws {
         guard #available(macOS 26.4, iOS 26.4, *) else { return }
