@@ -573,7 +573,7 @@ struct ContentView: View {
                     ToolbarItem(placement: .primaryAction) {
                         if showsPixivActivityDisplayPicker(showsSidebarToggle: showsSidebarToggle) {
                             NativeToolbarMenuButton(
-                                systemImage: store.pixivActivityFeedScope.systemImage,
+                                systemImage: pixivActivityDisplaySystemImage,
                                 accessibilityLabel: L10n.pixivActivityDisplay,
                                 menu: pixivActivityDisplayMenu,
                                 select: { handleNativeToolbarMenuAction($0, showsSidebarToggle: showsSidebarToggle) }
@@ -1027,7 +1027,7 @@ struct ContentView: View {
 
     private var routeMenuCountBadgeText: String? {
         if store.selectedRoute == .pixivActivity {
-            return PixivActivityFeedPresentation.routeBadgeText(itemCount: store.pixivActivityItems.count)
+            return PixivActivityFeedPresentation.routeBadgeText(itemCount: store.pixivActivityVisibleItems.count)
         }
         guard store.selectedRoute.usesArtworkFeed else { return nil }
         let hasLocalFilter = store.clientFilterQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false
@@ -1041,9 +1041,15 @@ struct ContentView: View {
             return "\(L10n.currentRoute): \(store.selectedRoute.title)"
         }
         if store.selectedRoute == .pixivActivity {
-            return "\(L10n.currentRoute): \(store.selectedRoute.title), \(PixivActivityFeedPresentation.statusText(itemCount: store.pixivActivityItems.count))"
+            return "\(L10n.currentRoute): \(store.selectedRoute.title), \(PixivActivityFeedPresentation.statusText(itemCount: store.pixivActivityVisibleItems.count))"
         }
         return "\(L10n.currentRoute): \(store.selectedRoute.title), \(routeMenuCountBadgeText) \(L10n.results)"
+    }
+
+    private var pixivActivityDisplaySystemImage: String {
+        store.pixivActivityKindFilter == .all
+            ? store.pixivActivityFeedScope.systemImage
+            : store.pixivActivityKindFilter.systemImage
     }
 
     private var selectedArtworkMenuSystemImage: String {
@@ -1094,6 +1100,22 @@ struct ContentView: View {
                 }
             )
         ]
+        displayItems.append(
+            .submenu(
+                title: L10n.pixivActivityKindFilter,
+                subtitle: store.pixivActivityKindFilter.title,
+                systemImage: store.pixivActivityKindFilter.systemImage,
+                presentation: .singleSelection,
+                items: PixivActivityKindFilter.allCases.map { filter in
+                    .action(
+                        id: IPadToolbarMenuAction.pixivActivityKind(filter),
+                        title: filter.title,
+                        systemImage: filter.systemImage,
+                        isSelected: store.pixivActivityKindFilter == filter
+                    )
+                }
+            )
+        )
         if currentMobilePlatform == .phone {
             displayItems.append(
                 .submenu(
@@ -1339,6 +1361,10 @@ struct ContentView: View {
         if let scope = IPadToolbarMenuAction.pixivActivityFeedScope(from: id) {
             store.setPixivActivityFeedScope(scope)
             Task { await store.refreshPixivActivityFeed() }
+            return
+        }
+        if let filter = IPadToolbarMenuAction.pixivActivityKindFilter(from: id) {
+            store.setPixivActivityKindFilter(filter)
             return
         }
         if let route = IPadToolbarMenuAction.route(from: id) {
@@ -2221,6 +2247,7 @@ private enum IPadToolbarMenuAction {
     private static let galleryLayoutPrefix = "gallery-layout:"
     private static let pixivActivityLayoutPrefix = "pixiv-activity-layout:"
     private static let pixivActivityScopePrefix = "pixiv-activity-scope:"
+    private static let pixivActivityKindPrefix = "pixiv-activity-kind:"
     private static let routePrefix = "route:"
 
     static func galleryLayout(_ mode: GalleryLayoutMode) -> String {
@@ -2251,6 +2278,16 @@ private enum IPadToolbarMenuAction {
         guard id.hasPrefix(pixivActivityScopePrefix) else { return nil }
         let rawValue = String(id.dropFirst(pixivActivityScopePrefix.count))
         return PixivActivityFeedScope(rawValue: rawValue)
+    }
+
+    static func pixivActivityKind(_ filter: PixivActivityKindFilter) -> String {
+        pixivActivityKindPrefix + filter.rawValue
+    }
+
+    static func pixivActivityKindFilter(from id: String) -> PixivActivityKindFilter? {
+        guard id.hasPrefix(pixivActivityKindPrefix) else { return nil }
+        let rawValue = String(id.dropFirst(pixivActivityKindPrefix.count))
+        return PixivActivityKindFilter(rawValue: rawValue)
     }
 
     static func route(_ route: PixivRoute) -> String {

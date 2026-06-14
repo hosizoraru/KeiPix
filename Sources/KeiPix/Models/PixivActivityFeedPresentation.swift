@@ -66,6 +66,46 @@ enum PixivActivityFeedScope: String, CaseIterable, Identifiable, Codable, Sendab
     }
 }
 
+enum PixivActivityKindFilter: String, CaseIterable, Identifiable, Codable, Sendable {
+    case all
+    case postedArtwork
+    case bookmarkedArtwork
+    case followedUser
+    case unknown
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .all: L10n.pixivActivityKindAll
+        case .postedArtwork: PixivActivityKind.postedArtwork.title
+        case .bookmarkedArtwork: PixivActivityKind.bookmarkedArtwork.title
+        case .followedUser: PixivActivityKind.followedUser.title
+        case .unknown: PixivActivityKind.unknown.title
+        }
+    }
+
+    var systemImage: String {
+        switch self {
+        case .all: "line.3.horizontal.decrease.circle"
+        case .postedArtwork: PixivActivityKind.postedArtwork.systemImage
+        case .bookmarkedArtwork: PixivActivityKind.bookmarkedArtwork.systemImage
+        case .followedUser: PixivActivityKind.followedUser.systemImage
+        case .unknown: PixivActivityKind.unknown.systemImage
+        }
+    }
+
+    var activityKind: PixivActivityKind? {
+        switch self {
+        case .all: nil
+        case .postedArtwork: .postedArtwork
+        case .bookmarkedArtwork: .bookmarkedArtwork
+        case .followedUser: .followedUser
+        case .unknown: .unknown
+        }
+    }
+}
+
 struct PixivActivityNewMarkerUpdate: Equatable, Sendable {
     let markerDatesByItemID: [String: Date]
     let newItemIDs: Set<String>
@@ -96,6 +136,14 @@ enum PixivActivityFeedPresentation {
     static func routeBadgeText(itemCount: Int) -> String? {
         guard itemCount > 0 else { return nil }
         return itemCount > 999 ? "999+" : "\(itemCount)"
+    }
+
+    static func filteredItems(
+        _ items: [PixivActivityItem],
+        kindFilter: PixivActivityKindFilter
+    ) -> [PixivActivityItem] {
+        guard let kind = kindFilter.activityKind else { return items }
+        return items.filter { $0.kind == kind }
     }
 
     static func primaryTitle(for item: PixivActivityItem) -> String {
@@ -255,12 +303,25 @@ enum PixivActivityFeedPresentation {
         )
     }
 
-    private static func kindTitle(for kind: PixivActivityKind) -> String {
-        switch kind {
+    private static func kindTitle(for kind: PixivActivityKind) -> String { kind.title }
+}
+
+extension PixivActivityKind {
+    var title: String {
+        switch self {
         case .postedArtwork: L10n.pixivActivityPostedArtwork
         case .bookmarkedArtwork: L10n.pixivActivityBookmarkedArtwork
         case .followedUser: L10n.pixivActivityFollowedUser
         case .unknown: L10n.pixivActivityUnknown
+        }
+    }
+
+    var systemImage: String {
+        switch self {
+        case .postedArtwork: "photo.on.rectangle"
+        case .bookmarkedArtwork: "bookmark"
+        case .followedUser: "person.crop.circle.badge.plus"
+        case .unknown: "bolt.horizontal.circle"
         }
     }
 }

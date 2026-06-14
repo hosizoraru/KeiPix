@@ -843,6 +843,14 @@ struct ContentView: View {
         }
     }
 
+    private var activityKindFilterBinding: Binding<PixivActivityKindFilter> {
+        Binding {
+            store.pixivActivityKindFilter
+        } set: { filter in
+            store.setPixivActivityKindFilter(filter)
+        }
+    }
+
     private var pixivActivityDisplayMenu: some View {
         Menu {
             Menu {
@@ -856,12 +864,36 @@ struct ContentView: View {
             } label: {
                 Label(L10n.pixivActivityFeedScope, systemImage: store.pixivActivityFeedScope.systemImage)
             }
+
+            Menu {
+                Picker(L10n.pixivActivityKindFilter, selection: activityKindFilterBinding) {
+                    ForEach(PixivActivityKindFilter.allCases) { filter in
+                        Label(filter.title, systemImage: filter.systemImage)
+                            .tag(filter)
+                    }
+                }
+                .pickerStyle(.inline)
+            } label: {
+                Label(L10n.pixivActivityKindFilter, systemImage: store.pixivActivityKindFilter.systemImage)
+            }
         } label: {
-            Label(store.pixivActivityFeedScope.title, systemImage: store.pixivActivityFeedScope.systemImage)
+            Label(pixivActivityDisplayTitle, systemImage: pixivActivityDisplaySystemImage)
         }
         .labelStyle(.iconOnly)
         .help(L10n.pixivActivityDisplay)
         .accessibilityLabel(L10n.pixivActivityDisplay)
+    }
+
+    private var pixivActivityDisplayTitle: String {
+        store.pixivActivityKindFilter == .all
+            ? store.pixivActivityFeedScope.title
+            : store.pixivActivityKindFilter.title
+    }
+
+    private var pixivActivityDisplaySystemImage: String {
+        store.pixivActivityKindFilter == .all
+            ? store.pixivActivityFeedScope.systemImage
+            : store.pixivActivityKindFilter.systemImage
     }
 
     private var showContentBadgesBinding: Binding<Bool> {

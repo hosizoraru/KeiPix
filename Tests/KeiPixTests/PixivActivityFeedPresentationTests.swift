@@ -39,6 +39,24 @@ struct PixivActivityFeedPresentationTests {
         #expect(PixivActivityFeedScope.mine.title == "Mine")
     }
 
+    @Test("Activity kind filter composes with the loaded source feed")
+    func activityKindFilterComposesWithLoadedSourceFeed() {
+        let mineFeed = [
+            Self.activityItem(id: "mine-posted", kind: .postedArtwork, summary: "I posted Blue Morning"),
+            Self.activityItem(id: "mine-bookmarked", kind: .bookmarkedArtwork, summary: "I bookmarked Blue Morning"),
+            Self.activityItem(id: "mine-followed", kind: .followedUser, summary: "I followed Bob"),
+            Self.activityItem(id: "mine-unknown", kind: .unknown, summary: "Auxiliary account activity")
+        ]
+
+        #expect(PixivActivityKindFilter.allCases == [.all, .postedArtwork, .bookmarkedArtwork, .followedUser, .unknown])
+        #expect(PixivActivityKindFilter.all.title == "All Activity Types")
+        #expect(PixivActivityFeedPresentation.filteredItems(mineFeed, kindFilter: .all).map(\.id) == mineFeed.map(\.id))
+        #expect(PixivActivityFeedPresentation.filteredItems(mineFeed, kindFilter: .postedArtwork).map(\.id) == ["mine-posted"])
+        #expect(PixivActivityFeedPresentation.filteredItems(mineFeed, kindFilter: .bookmarkedArtwork).map(\.id) == ["mine-bookmarked"])
+        #expect(PixivActivityFeedPresentation.filteredItems(mineFeed, kindFilter: .followedUser).map(\.id) == ["mine-followed"])
+        #expect(PixivActivityFeedPresentation.filteredItems(mineFeed, kindFilter: .unknown).map(\.id) == ["mine-unknown"])
+    }
+
     @Test("Activity new markers do not mark the initial load")
     func activityNewMarkersIgnoreInitialLoad() {
         let now = Date(timeIntervalSince1970: 1_800_000_000)
@@ -177,14 +195,16 @@ struct PixivActivityFeedPresentationTests {
     }
 
     private static func activityItem(
+        id: String? = nil,
+        kind: PixivActivityKind = .postedArtwork,
         summary: String,
         thumbnailAspectRatio: Double? = nil,
         authorName: String? = nil,
         authorID: Int? = nil
     ) -> PixivActivityItem {
         PixivActivityItem(
-            id: "activity-\(summary.count)",
-            kind: .postedArtwork,
+            id: id ?? "activity-\(summary.count)",
+            kind: kind,
             actor: PixivActivityActor(
                 userID: 42,
                 name: "Alice",

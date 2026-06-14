@@ -53,6 +53,7 @@ struct PixivActivityFeedView: View {
 
     @ViewBuilder
     private var contentBody: some View {
+        let visibleItems = store.pixivActivityVisibleItems
         if store.isLoadingPixivActivityFeed, store.pixivActivityItems.isEmpty {
             OS26LibraryLoadingView(title: L10n.loading, systemImage: PixivRoute.pixivActivity.systemImage)
         } else if store.pixivActivityItems.isEmpty {
@@ -63,9 +64,11 @@ struct PixivActivityFeedView: View {
             ) {
                 retryButton
             }
+        } else if visibleItems.isEmpty {
+            filteredActivityEmptyState
         } else {
             NativePixivActivityListView(
-                items: store.pixivActivityItems,
+                items: visibleItems,
                 layoutMode: effectiveActivityLayoutMode,
                 rowHeight: 118,
                 onNearContentEnd: loadMoreIfNeeded
@@ -93,6 +96,36 @@ struct PixivActivityFeedView: View {
             .nativeBottomTabContentSurface()
             .scrollEdgeEffectStyle(.soft, for: .top)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+    }
+
+    private var filteredActivityEmptyState: some View {
+        OS26LibraryUnavailableView(
+            title: L10n.pixivActivityFilteredEmptyTitle,
+            subtitle: store.pixivActivityErrorMessage ?? L10n.pixivActivityFilteredEmptyHint,
+            systemImage: store.pixivActivityKindFilter.systemImage
+        ) {
+            VStack(spacing: 10) {
+                if store.pixivActivityKindFilter != .all {
+                    Button {
+                        withAnimation(.snappy(duration: 0.16)) {
+                            store.setPixivActivityKindFilter(.all)
+                        }
+                    } label: {
+                        Label(L10n.pixivActivityKindAll, systemImage: PixivActivityKindFilter.all.systemImage)
+                    }
+                    .os26GlassButton(prominent: true)
+                }
+
+                if store.hasMorePixivActivityFeed {
+                    Button {
+                        loadMoreIfNeeded()
+                    } label: {
+                        Label(L10n.loadMore, systemImage: "arrow.down.circle")
+                    }
+                    .os26GlassButton()
+                }
+            }
         }
     }
 
@@ -162,7 +195,7 @@ struct PixivActivityFeedView: View {
     }
 
     private var statusText: String {
-        PixivActivityFeedPresentation.statusText(itemCount: store.pixivActivityItems.count)
+        PixivActivityFeedPresentation.statusText(itemCount: store.pixivActivityVisibleItems.count)
     }
 
     private var effectiveActivityLayoutMode: PixivActivityLayoutMode {
@@ -674,24 +707,6 @@ private struct PixivActivityMasonryCard: View {
 }
 
 private extension PixivActivityKind {
-    var title: String {
-        switch self {
-        case .postedArtwork: L10n.pixivActivityPostedArtwork
-        case .bookmarkedArtwork: L10n.pixivActivityBookmarkedArtwork
-        case .followedUser: L10n.pixivActivityFollowedUser
-        case .unknown: L10n.pixivActivityUnknown
-        }
-    }
-
-    var systemImage: String {
-        switch self {
-        case .postedArtwork: "photo.on.rectangle"
-        case .bookmarkedArtwork: "bookmark"
-        case .followedUser: "person.crop.circle.badge.plus"
-        case .unknown: "bolt.horizontal.circle"
-        }
-    }
-
     var tint: Color {
         switch self {
         case .postedArtwork: .blue

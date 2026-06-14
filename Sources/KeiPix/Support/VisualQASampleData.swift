@@ -1237,6 +1237,7 @@ extension KeiPixStore {
         searchPopularPreviewArtworks = []
         nextURL = nil
         pixivActivityFeedScope = .all
+        pixivActivityKindFilter = .all
         pixivWebSession = PixivWebSession(
             userID: String(VisualQASampleData.sampleSession.user.id),
             connectedAt: Date(),

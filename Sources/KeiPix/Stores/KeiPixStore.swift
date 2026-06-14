@@ -112,6 +112,7 @@ final class KeiPixStore {
     var pixivCollectionPersonalizedTags: [PixivCollectionDiscoveryTag] = []
     var pixivCollectionErrorMessage: String?
     var pixivActivityFeedScope: PixivActivityFeedScope = .all
+    var pixivActivityKindFilter: PixivActivityKindFilter = .all
     var pixivActivityItems: [PixivActivityItem] = []
     var pixivActivityNewItemIDs: Set<String> = []
     var pixivActivityLastRefreshNewCount = 0
@@ -554,6 +555,7 @@ final class KeiPixStore {
         selectedPixivCollectionSourceRoute = nil
         pixivCollectionErrorMessage = nil
         pixivActivityFeedScope = .all
+        pixivActivityKindFilter = .all
         pixivActivityItems = []
         pixivActivityNewItemIDs = []
         pixivActivityLastRefreshNewCount = 0

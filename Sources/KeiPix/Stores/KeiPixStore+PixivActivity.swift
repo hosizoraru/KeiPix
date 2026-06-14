@@ -6,6 +6,13 @@ extension KeiPixStore {
         pixivActivityNextPage != nil
     }
 
+    var pixivActivityVisibleItems: [PixivActivityItem] {
+        PixivActivityFeedPresentation.filteredItems(
+            pixivActivityItems,
+            kindFilter: pixivActivityKindFilter
+        )
+    }
+
     @discardableResult
     func refreshPixivActivityFeed() async -> PixivActivityRefreshResult {
         await refreshPixivActivityFeed(force: false)
@@ -174,6 +181,11 @@ extension KeiPixStore {
         restorePixivActivityFeedState(for: scope)
     }
 
+    func setPixivActivityKindFilter(_ filter: PixivActivityKindFilter) {
+        guard pixivActivityKindFilter != filter else { return }
+        pixivActivityKindFilter = filter
+    }
+
     func prunePixivActivityNewMarkers(now: Date = Date()) {
         let update = PixivActivityFeedPresentation.updatedNewMarkers(
             previousItemIDs: Set(pixivActivityItems.map(\.id)),
@@ -191,6 +203,7 @@ extension KeiPixStore {
         pixivActivityNewItemIDs = []
         pixivActivityLastRefreshNewCount = 0
         pixivActivityLastRefreshNewItemIDs = []
+        pixivActivityKindFilter = .all
         pixivActivityNextPage = nil
         pixivActivityLoadedAt = nil
         pixivActivityLoadedInCurrentSession = false
