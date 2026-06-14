@@ -130,6 +130,24 @@ than one source before designing the Swift implementation.
   separate from implementation and report what was observed rather than baking
   brittle assumptions into UI code.
 
+### Local Apple Developer Documentation
+
+On this machine, Xcode 27 installs a local Developer Documentation archive that
+is intended for fast offline access and as the data source for the Xcode MCP
+documentation tool. Prefer it before broad web search when researching new Apple
+SDK behavior.
+
+- Installed component observed: `Developer Documentation (10M13306)`,
+  `com.apple.MobileAsset.AppleDeveloperDocumentation`, version `27.0`.
+- Useful Xcode 27 local references include:
+  `/Applications/Xcode-beta.app/Contents/SharedFrameworks/CoreDocumentation.framework`,
+  `/Applications/Xcode-beta.app/Contents/SharedFrameworks/DVTDocumentation.framework`,
+  and
+  `/Applications/Xcode-beta.app/Contents/PlugIns/IDEIntelligenceChat.framework/Versions/A/Resources/AdditionalDocumentation`.
+- The AdditionalDocumentation folder includes current Liquid Glass notes for
+  SwiftUI, UIKit, AppKit, and WidgetKit. Use those files as Apple-local context
+  for OS 27 UI migration before reaching for third-party summaries.
+
 ### Reference Priority By Task
 
 | Task type | Preferred order | Notes |
@@ -270,6 +288,30 @@ device and pass `KEIPIX_IOS_SIMULATOR_ID` / `KEIPIX_IPADOS_SIMULATOR_ID` or set
 XcodeBuildMCP session defaults explicitly. Do not trust screenshots from a
 shared or ambiguous simulator.
 
+### Xcode 27 Device Hub Validation
+
+On macOS 27 with Xcode 27, Device Hub replaces the old visible Simulator app
+surface. Do not spend time re-diagnosing `SimulatorKit.framework` failures from
+older automation.
+
+- Device Hub app path:
+  `/Applications/Xcode-beta.app/Contents/Applications/DeviceHub.app`
+- Bundle id observed: `com.apple.dt.Devices`; launcher executable:
+  `DevicesTrampoline`.
+- The relevant Xcode 27 framework surface is DeviceKit-oriented:
+  `DeviceKit.framework`, `DVTDeviceKit.framework`, `DTDeviceKit.framework`,
+  `DTDeviceKitBase.framework`, and `CoreDevice.framework`. Avoid assuming the
+  old private `SimulatorKit.framework` exists.
+- If `xcodebuildmcp snapshot_ui` fails by looking for
+  `.../PrivateFrameworks/SimulatorKit.framework`, skip that path for now. Use
+  Device Hub for visible review and `xcrun simctl io <udid> screenshot` for
+  evidence artifacts.
+- `xcrun simctl io <udid> enumerate` can reveal multiple displays such as
+  `LCD` and `TVOut`; capture the explicit primary display when screenshots look
+  blank or ambiguous.
+- Preserve the default KeiPix simulator set unless the user asks otherwise:
+  `KeiPix-iOS` and `KeiPix-iPadOS` on both iOS 26.5 and iOS 27.0 runtimes.
+
 ### Recommended Validation Matrix
 
 | Change type | Minimum checks |
@@ -315,9 +357,11 @@ Useful launch surfaces:
 ./script/capture_visual_qa.sh gallery-three-column
 ```
 
-For iPadOS/iOS work, use Simulator screenshots or `snapshot_ui` after
-navigation, rotation, or layout changes. Verify both the route and the actual
-device name/UDID when multiple simulators are running.
+For iPadOS/iOS work, use simulator screenshots after navigation, rotation, or
+layout changes. On Xcode 27, prefer Device Hub plus explicit `xcrun simctl io`
+screenshots over `snapshot_ui` until the automation stack has migrated away from
+`SimulatorKit.framework`. Verify both the route and the actual device name/UDID
+when multiple simulators are running.
 
 ### Codex In-Browser Simulator Review
 
