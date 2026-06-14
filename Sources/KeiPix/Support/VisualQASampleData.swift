@@ -52,7 +52,9 @@ enum VisualQASampleData {
                 id: "93700",
                 title: "星の降る通学路",
                 url: URL(string: "https://www.pixiv.net/artworks/93700"),
-                thumbnailURL: nil
+                thumbnailURL: nil,
+                thumbnailAspectRatio: 0.74,
+                author: PixivActivityActor(userID: 5002, name: "夜更かし", avatarURL: nil)
             ),
             occurredAt: Date(timeIntervalSinceNow: -420),
             summary: "フォロー中のクリエイターが新しいイラストを投稿しました。"
@@ -66,10 +68,13 @@ enum VisualQASampleData {
                 id: "93710",
                 title: "Bookmark sheet QA sample",
                 url: URL(string: "https://www.pixiv.net/artworks/93710"),
-                thumbnailURL: nil
+                thumbnailURL: nil,
+                thumbnailAspectRatio: 1.45,
+                author: PixivActivityActor(userID: 5010, name: "Archive Artist", avatarURL: nil)
             ),
             occurredAt: Date(timeIntervalSinceNow: -2_400),
-            summary: "公開ブックマークに追加された作品です。"
+            summary: "公開ブックマークに追加された作品です。",
+            bookmarkTag: PixivActivityBookmarkTag(name: "生徒会にも穴はある！", url: nil)
         ),
         PixivActivityItem(
             id: "visual-activity-follow-1",

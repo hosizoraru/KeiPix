@@ -59,12 +59,37 @@ struct PixivActivityActor: Equatable, Hashable, Sendable {
     }
 }
 
+struct PixivActivityBookmarkTag: Equatable, Hashable, Sendable {
+    let name: String
+    let url: URL?
+}
+
 struct PixivActivityTarget: Equatable, Hashable, Sendable {
     let kind: PixivActivityTargetKind
     let id: String
     let title: String
     let url: URL?
     let thumbnailURL: URL?
+    let thumbnailAspectRatio: Double?
+    let author: PixivActivityActor?
+
+    init(
+        kind: PixivActivityTargetKind,
+        id: String,
+        title: String,
+        url: URL?,
+        thumbnailURL: URL?,
+        thumbnailAspectRatio: Double? = nil,
+        author: PixivActivityActor? = nil
+    ) {
+        self.kind = kind
+        self.id = id
+        self.title = title
+        self.url = url
+        self.thumbnailURL = thumbnailURL
+        self.thumbnailAspectRatio = thumbnailAspectRatio
+        self.author = author
+    }
 }
 
 struct PixivActivityItem: Identifiable, Equatable, Hashable, Sendable {
@@ -74,6 +99,25 @@ struct PixivActivityItem: Identifiable, Equatable, Hashable, Sendable {
     let target: PixivActivityTarget?
     let occurredAt: Date?
     let summary: String
+    let bookmarkTag: PixivActivityBookmarkTag?
+
+    init(
+        id: String,
+        kind: PixivActivityKind,
+        actor: PixivActivityActor?,
+        target: PixivActivityTarget?,
+        occurredAt: Date?,
+        summary: String,
+        bookmarkTag: PixivActivityBookmarkTag? = nil
+    ) {
+        self.id = id
+        self.kind = kind
+        self.actor = actor
+        self.target = target
+        self.occurredAt = occurredAt
+        self.summary = summary
+        self.bookmarkTag = bookmarkTag
+    }
 }
 
 struct PixivActivityPage: Equatable, Sendable {
@@ -222,6 +266,8 @@ enum PixivActivityFeedParser {
         ]
         .compactMap { $0?.trimmingCharacters(in: .whitespacesAndNewlines) }
         .first { $0.isEmpty == false } ?? ""
+        let bookmarkTag = staccBookmarkTag(in: status, sourceURL: sourceURL)
+            ?? bookmarkTag(inSummary: summary, kind: kind)
 
         return PixivActivityItem(
             id: "stacc-\(statusID)",
@@ -229,7 +275,8 @@ enum PixivActivityFeedParser {
             actor: actor,
             target: target,
             occurredAt: firstString(in: status, keys: ["post_date", "created_at", "createdAt", "date"]).flatMap(parseDate),
-            summary: summary
+            summary: summary,
+            bookmarkTag: bookmarkTag
         )
     }
 
@@ -272,10 +319,10 @@ enum PixivActivityFeedParser {
            let target = staccReferencedUser(in: status, users: users, sourceURL: sourceURL) {
             return target
         }
-        if let target = staccReferencedArtwork(in: status, illusts: illusts, sourceURL: sourceURL) {
+        if let target = staccReferencedArtwork(in: status, users: users, illusts: illusts, sourceURL: sourceURL) {
             return target
         }
-        if let target = staccReferencedNovel(in: status, novels: novels, sourceURL: sourceURL) {
+        if let target = staccReferencedNovel(in: status, users: users, novels: novels, sourceURL: sourceURL) {
             return target
         }
         return staccReferencedUser(in: status, users: users, sourceURL: sourceURL)
@@ -283,6 +330,7 @@ enum PixivActivityFeedParser {
 
     private static func staccReferencedArtwork(
         in status: [String: Any],
+        users: [String: Any],
         illusts: [String: Any],
         sourceURL: URL?
     ) -> PixivActivityTarget? {
@@ -296,12 +344,15 @@ enum PixivActivityFeedParser {
             id: id,
             title: firstString(in: illust ?? [:], keys: ["title", "name"]) ?? "",
             url: fallbackTargetURL(kind: .artwork, id: id),
-            thumbnailURL: imageURL(from: illust?["url"], sourceURL: sourceURL)
+            thumbnailURL: imageURL(from: illust?["url"], sourceURL: sourceURL),
+            thumbnailAspectRatio: imageAspectRatio(in: illust ?? [:]),
+            author: staccArtworkArtist(in: status, users: users, illusts: illusts, novels: [:], sourceURL: sourceURL)
         )
     }
 
     private static func staccReferencedNovel(
         in status: [String: Any],
+        users: [String: Any],
         novels: [String: Any],
         sourceURL: URL?
     ) -> PixivActivityTarget? {
@@ -315,7 +366,9 @@ enum PixivActivityFeedParser {
             id: id,
             title: firstString(in: novel ?? [:], keys: ["title", "name"]) ?? "",
             url: fallbackTargetURL(kind: .novel, id: id),
-            thumbnailURL: imageURL(from: novel?["url"], sourceURL: sourceURL)
+            thumbnailURL: imageURL(from: novel?["url"], sourceURL: sourceURL),
+            thumbnailAspectRatio: imageAspectRatio(in: novel ?? [:]),
+            author: staccArtworkArtist(in: status, users: users, illusts: [:], novels: novels, sourceURL: sourceURL)
         )
     }
 
@@ -344,6 +397,22 @@ enum PixivActivityFeedParser {
         illusts: [String: Any],
         novels: [String: Any]
     ) -> String? {
+        staccArtworkArtist(
+            in: status,
+            users: users,
+            illusts: illusts,
+            novels: novels,
+            sourceURL: nil
+        )?.name
+    }
+
+    private static func staccArtworkArtist(
+        in status: [String: Any],
+        users: [String: Any],
+        illusts: [String: Any],
+        novels: [String: Any],
+        sourceURL: URL?
+    ) -> PixivActivityActor? {
         let illustID = (status["ref_illust"] as? [String: Any]).flatMap { stringValue($0["id"]) }
         let novelID = (status["ref_novel"] as? [String: Any]).flatMap { stringValue($0["id"]) }
         let work = illustID.flatMap { illusts[$0] as? [String: Any] }
@@ -353,7 +422,11 @@ enum PixivActivityFeedParser {
               let user = users[postUserID] as? [String: Any] else {
             return nil
         }
-        return firstString(in: user, keys: ["name", "account", "user_name"])
+        return PixivActivityActor(
+            userID: Int(postUserID),
+            name: firstString(in: user, keys: ["name", "account", "user_name"]) ?? "",
+            avatarURL: imageURL(from: user["profile_image"], sourceURL: sourceURL)
+        )
     }
 
     private static func activityItem(from dictionary: [String: Any], sourceURL: URL?) -> PixivActivityItem? {
@@ -374,6 +447,8 @@ enum PixivActivityFeedParser {
             ?? target?.title
             ?? rawKind
             ?? ""
+        let bookmarkTag = bookmarkTag(in: dictionary, sourceURL: sourceURL)
+            ?? bookmarkTag(inSummary: summary, kind: kind)
         let id = firstString(in: dictionary, keys: ["activityId", "activity_id", "staccId", "stacc_id", "id"])
             ?? [
                 kind.rawValue,
@@ -390,7 +465,8 @@ enum PixivActivityFeedParser {
             actor: actor,
             target: target,
             occurredAt: occurredAt,
-            summary: summary
+            summary: summary,
+            bookmarkTag: bookmarkTag
         )
     }
 
@@ -443,13 +519,18 @@ enum PixivActivityFeedParser {
         let thumbnailURL = firstURL(in: source, keys: [
             "thumbnailUrl", "thumbnail_url", "thumbnail", "imageUrl", "image_url", "profileImageUrl"
         ], sourceURL: sourceURL)
+        let thumbnailAspectRatio = imageAspectRatio(in: source)
+        let author = targetKind == .user ? nil : targetAuthor(in: source, sourceURL: sourceURL)
+            ?? targetAuthor(in: dictionary, sourceURL: sourceURL)
 
         return PixivActivityTarget(
             kind: targetKind,
             id: id,
             title: title,
             url: explicitURL ?? fallbackURL,
-            thumbnailURL: thumbnailURL
+            thumbnailURL: thumbnailURL,
+            thumbnailAspectRatio: thumbnailAspectRatio,
+            author: author
         )
     }
 
@@ -478,8 +559,16 @@ enum PixivActivityFeedParser {
 
         let actorLink = userLinks.first(where: { $0.title.isEmpty == false }) ?? userLinks.first
         let actor = actorLink.map { link in
-            PixivActivityActor(userID: Int(link.id), name: link.title, avatarURL: nil)
+            PixivActivityActor(userID: Int(link.id), name: link.title, avatarURL: link.thumbnailURL)
         }
+        let targetAuthorLink = userLinks.first { link in
+            link.id != actorLink?.id && link.title.isEmpty == false
+        } ?? (kind == .postedArtwork ? actorLink : nil)
+        let targetAuthor = targetAuthorLink.map { link in
+            PixivActivityActor(userID: Int(link.id), name: link.title, avatarURL: link.thumbnailURL)
+        }
+        let tag = tagAnchors(in: block, sourceURL: sourceURL).first
+            ?? bookmarkTag(inSummary: text, kind: kind)
         let target: PixivActivityTarget? = {
             if kind == .followedUser, let link = userLinks.dropFirst().first ?? userLinks.first {
                 return PixivActivityTarget(kind: .user, id: link.id, title: link.title, url: link.url, thumbnailURL: nil)
@@ -492,7 +581,9 @@ enum PixivActivityFeedParser {
                     id: link.id,
                     title: link.title,
                     url: fallbackTargetURL(kind: .artwork, id: link.id) ?? link.url,
-                    thumbnailURL: thumbnailURL
+                    thumbnailURL: thumbnailURL,
+                    thumbnailAspectRatio: link.thumbnailAspectRatio,
+                    author: targetAuthor
                 )
             }
             return nil
@@ -509,7 +600,8 @@ enum PixivActivityFeedParser {
             actor: actor,
             target: target,
             occurredAt: firstAttributeValue(named: "datetime", in: block).flatMap(parseDate),
-            summary: text
+            summary: text,
+            bookmarkTag: tag
         )
     }
 
@@ -564,6 +656,7 @@ enum PixivActivityFeedParser {
         let title: String
         let url: URL?
         let thumbnailURL: URL?
+        let thumbnailAspectRatio: Double?
     }
 
     private static func userAnchors(in html: String, sourceURL: URL?) -> [Anchor] {
@@ -575,6 +668,32 @@ enum PixivActivityFeedParser {
     private static func artworkAnchors(in html: String, sourceURL: URL?) -> [Anchor] {
         anchors(in: html, path: "artworks", sourceURL: sourceURL)
             + legacyArtworkAnchors(in: html, sourceURL: sourceURL)
+    }
+
+    private static func tagAnchors(in html: String, sourceURL: URL?) -> [PixivActivityBookmarkTag] {
+        let pattern = #"(<a\b[^>]*href=["'](/tags/([^/"'?#]+)(?:/artworks)?[^"']*)["'][^>]*>[\s\S]*?</a>)"#
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: [.dotMatchesLineSeparators]) else {
+            return []
+        }
+
+        let nsRange = NSRange(html.startIndex..<html.endIndex, in: html)
+        return regex.matches(in: html, options: [], range: nsRange).compactMap { match in
+            guard let anchorRange = Range(match.range(at: 1), in: html),
+                  let hrefRange = Range(match.range(at: 2), in: html),
+                  let fallbackNameRange = Range(match.range(at: 3), in: html)
+            else {
+                return nil
+            }
+            let anchorHTML = String(html[anchorRange])
+            let fallbackName = decodeURLPathComponent(String(html[fallbackNameRange]))
+            let name = anchorTitle(in: anchorHTML).trimmingCharacters(in: .whitespacesAndNewlines)
+            let resolvedName = name.isEmpty ? fallbackName : name
+            guard resolvedName.isEmpty == false else { return nil }
+            return PixivActivityBookmarkTag(
+                name: resolvedName,
+                url: resolvedURL(from: String(html[hrefRange]), sourceURL: sourceURL)
+            )
+        }
     }
 
     private static func anchors(in html: String, path: String, sourceURL: URL?) -> [Anchor] {
@@ -597,7 +716,8 @@ enum PixivActivityFeedParser {
                 id: id,
                 title: anchorTitle(in: anchorHTML),
                 url: href.flatMap { resolvedURL(from: $0, sourceURL: sourceURL) },
-                thumbnailURL: firstAttributeValue(named: "src", in: anchorHTML).flatMap { resolvedURL(from: $0, sourceURL: sourceURL) }
+                thumbnailURL: firstAttributeValue(named: "src", in: anchorHTML).flatMap { resolvedURL(from: $0, sourceURL: sourceURL) },
+                thumbnailAspectRatio: imageAspectRatio(inHTML: anchorHTML)
             )
         }
     }
@@ -609,19 +729,21 @@ enum PixivActivityFeedParser {
                 id: id,
                 title: anchorTitle(in: anchorHTML),
                 url: fallbackTargetURL(kind: .artwork, id: id) ?? resolvedURL(from: href, sourceURL: sourceURL),
-                thumbnailURL: firstAttributeValue(named: "src", in: anchorHTML).flatMap { resolvedURL(from: $0, sourceURL: sourceURL) }
+                thumbnailURL: firstAttributeValue(named: "src", in: anchorHTML).flatMap { resolvedURL(from: $0, sourceURL: sourceURL) },
+                thumbnailAspectRatio: imageAspectRatio(inHTML: anchorHTML)
             )
         }
     }
 
     private static func legacyMemberUserAnchors(in html: String, sourceURL: URL?) -> [Anchor] {
-        let pattern = #"(<a\b[^>]*href=["']([^"']*member\.php\?[^"']*(?:\?|&amp;|&)id=([0-9]+)[^"']*)["'][^>]*>[\s\S]*?</a>)"#
+        let pattern = #"(<a\b[^>]*href=["']([^"']*member\.php\?(?:id=|[^"']*(?:&amp;|&)id=)([0-9]+)[^"']*)["'][^>]*>[\s\S]*?</a>)"#
         return legacyAnchors(in: html, pattern: pattern, sourceURL: sourceURL) { anchorHTML, href, id in
             Anchor(
                 id: id,
                 title: anchorTitle(in: anchorHTML),
                 url: resolvedURL(from: href, sourceURL: sourceURL),
-                thumbnailURL: firstAttributeValue(named: "src", in: anchorHTML).flatMap { resolvedURL(from: $0, sourceURL: sourceURL) }
+                thumbnailURL: firstAttributeValue(named: "src", in: anchorHTML).flatMap { resolvedURL(from: $0, sourceURL: sourceURL) },
+                thumbnailAspectRatio: imageAspectRatio(inHTML: anchorHTML)
             )
         }
     }
@@ -633,7 +755,8 @@ enum PixivActivityFeedParser {
                 id: id,
                 title: anchorTitle(in: anchorHTML),
                 url: resolvedURL(from: href, sourceURL: sourceURL),
-                thumbnailURL: firstAttributeValue(named: "src", in: anchorHTML).flatMap { resolvedURL(from: $0, sourceURL: sourceURL) }
+                thumbnailURL: firstAttributeValue(named: "src", in: anchorHTML).flatMap { resolvedURL(from: $0, sourceURL: sourceURL) },
+                thumbnailAspectRatio: imageAspectRatio(inHTML: anchorHTML)
             )
         }
     }
@@ -767,6 +890,85 @@ enum PixivActivityFeedParser {
         }
     }
 
+    private static func targetAuthor(in dictionary: [String: Any], sourceURL: URL?) -> PixivActivityActor? {
+        let source = firstDictionary(in: dictionary, keys: [
+            "author", "creator", "postUser", "post_user", "artist", "workUser", "work_user", "user"
+        ]) ?? dictionary
+        let userID = firstInt(in: source, keys: ["userId", "userID", "user_id", "uid", "id"])
+        let name = firstString(in: source, keys: ["userName", "user_name", "name", "account", "screenName"])
+        let avatarURL = firstURL(in: source, keys: [
+            "profileImageUrl", "profile_image_url", "profileImage", "avatar", "image", "imageUrl"
+        ], sourceURL: sourceURL)
+
+        guard userID != nil || name != nil || avatarURL != nil else { return nil }
+        return PixivActivityActor(userID: userID, name: name ?? "", avatarURL: avatarURL)
+    }
+
+    private static func staccBookmarkTag(in status: [String: Any], sourceURL: URL?) -> PixivActivityBookmarkTag? {
+        bookmarkTag(in: status, sourceURL: sourceURL)
+    }
+
+    private static func bookmarkTag(in dictionary: [String: Any], sourceURL: URL?) -> PixivActivityBookmarkTag? {
+        if let nested = firstDictionary(in: dictionary, keys: [
+            "bookmarkTag", "bookmark_tag", "bookmarkTagInfo", "bookmark_tag_info", "ref_tag", "tag"
+        ]) {
+            let name = firstString(in: nested, keys: ["name", "tag", "title", "label"])
+            let url = firstURL(in: nested, keys: ["url", "href", "link", "permalink"], sourceURL: sourceURL)
+            if let name, name.isEmpty == false {
+                return PixivActivityBookmarkTag(name: name, url: url)
+            }
+        }
+
+        for key in ["bookmarkTags", "bookmark_tags", "tags"] {
+            if let tag = bookmarkTag(from: dictionary[key], sourceURL: sourceURL) {
+                return tag
+            }
+        }
+
+        if let name = firstString(in: dictionary, keys: [
+            "bookmarkTag", "bookmark_tag", "bookmarkTagName", "bookmark_tag_name", "tagName", "tag_name"
+        ]) {
+            return PixivActivityBookmarkTag(name: name, url: nil)
+        }
+
+        return nil
+    }
+
+    private static func bookmarkTag(from value: Any?, sourceURL: URL?) -> PixivActivityBookmarkTag? {
+        if let name = stringValue(value) {
+            return PixivActivityBookmarkTag(name: name, url: nil)
+        }
+        if let dictionary = value as? [String: Any] {
+            return bookmarkTag(in: dictionary, sourceURL: sourceURL)
+        }
+        if let array = value as? [Any] {
+            return array.lazy.compactMap { bookmarkTag(from: $0, sourceURL: sourceURL) }.first
+        }
+        return nil
+    }
+
+    private static func bookmarkTag(inSummary summary: String, kind: PixivActivityKind) -> PixivActivityBookmarkTag? {
+        guard kind == .bookmarkedArtwork else { return nil }
+        let lowercased = summary.lowercased()
+        let looksLikeBookmark = [
+            "添加收藏", "追加收藏", "收藏", "ブックマーク", "bookmark", "favorite"
+        ].contains { lowercased.contains($0.lowercased()) }
+        guard looksLikeBookmark else { return nil }
+
+        let patterns = [
+            #"(?:tag|タグ|标签|標籤|标签名|標籤名)[^\[「『]{0,18}[「『\[]([^」』\]]{1,80})[」』\]]"#,
+            #"(?:添加收藏|追加收藏|收藏|ブックマーク|bookmark|favorite)\s*\[([^\]]{1,80})\]"#
+        ]
+        for pattern in patterns {
+            if let name = firstMatchedGroup(in: summary, pattern: pattern)?
+                .trimmingCharacters(in: .whitespacesAndNewlines),
+               name.isEmpty == false {
+                return PixivActivityBookmarkTag(name: name, url: nil)
+            }
+        }
+        return nil
+    }
+
     private static func firstDictionary(in dictionary: [String: Any], keys: [String]) -> [String: Any]? {
         for key in keys {
             if let value = dictionary[key] as? [String: Any] {
@@ -806,6 +1008,15 @@ enum PixivActivityFeedParser {
         return nil
     }
 
+    private static func firstDouble(in dictionary: [String: Any], keys: [String]) -> Double? {
+        for key in keys {
+            if let value = doubleValue(dictionary[key]), value.isFinite {
+                return value
+            }
+        }
+        return nil
+    }
+
     private static func stringValue(_ value: Any?) -> String? {
         switch value {
         case let value as String:
@@ -837,6 +1048,23 @@ enum PixivActivityFeedParser {
         }
     }
 
+    private static func doubleValue(_ value: Any?) -> Double? {
+        switch value {
+        case let value as Double:
+            return value
+        case let value as Int:
+            return Double(value)
+        case let value as Int64:
+            return Double(value)
+        case let value as NSNumber:
+            return value.doubleValue
+        case let value as String:
+            return Double(value.trimmingCharacters(in: .whitespacesAndNewlines))
+        default:
+            return nil
+        }
+    }
+
     private static func stringArray(_ value: Any?) -> [String] {
         guard let array = value as? [Any] else { return [] }
         return array.compactMap(stringValue)
@@ -863,6 +1091,39 @@ enum PixivActivityFeedParser {
             .lazy
             .compactMap { imageURL(from: dictionary[$0], sourceURL: sourceURL) }
             .first
+    }
+
+    private static func imageAspectRatio(in dictionary: [String: Any]) -> Double? {
+        let widthKeys = [
+            "width", "w", "imageWidth", "image_width", "illustWidth", "illust_width",
+            "thumbnailWidth", "thumbnail_width"
+        ]
+        let heightKeys = [
+            "height", "h", "imageHeight", "image_height", "illustHeight", "illust_height",
+            "thumbnailHeight", "thumbnail_height"
+        ]
+        guard let width = firstDouble(in: dictionary, keys: widthKeys),
+              let height = firstDouble(in: dictionary, keys: heightKeys),
+              width > 0,
+              height > 0 else {
+            return nil
+        }
+        return normalizedAspectRatio(width / height)
+    }
+
+    private static func imageAspectRatio(inHTML html: String) -> Double? {
+        guard let width = firstAttributeValue(named: "width", in: html).flatMap(Double.init),
+              let height = firstAttributeValue(named: "height", in: html).flatMap(Double.init),
+              width > 0,
+              height > 0 else {
+            return nil
+        }
+        return normalizedAspectRatio(width / height)
+    }
+
+    private static func normalizedAspectRatio(_ aspectRatio: Double) -> Double? {
+        guard aspectRatio.isFinite, aspectRatio > 0 else { return nil }
+        return min(max(aspectRatio, 0.48), 2.20)
     }
 
     private static func firstURL(in dictionary: [String: Any], keys: [String], sourceURL: URL?) -> URL? {
@@ -950,5 +1211,9 @@ enum PixivActivityFeedParser {
             .replacingOccurrences(of: "&quot;", with: "\"")
             .replacingOccurrences(of: "&#039;", with: "'")
             .replacingOccurrences(of: "&#x2F;", with: "/")
+    }
+
+    private static func decodeURLPathComponent(_ value: String) -> String {
+        decodeHTMLText(value).removingPercentEncoding ?? decodeHTMLText(value)
     }
 }

@@ -83,6 +83,80 @@ extension KeiPixStore {
         }
     }
 
+    @discardableResult
+    func presentPixivActivityUserProfile(_ actor: PixivActivityActor) async -> String? {
+        guard session != nil, usesLocalSampleAccount == false else {
+            if let user = actor.pixivUser {
+                presentedUserProfile = user
+                return nil
+            }
+            isLoginPresented = true
+            return L10n.loginRequiredForPixivLink
+        }
+
+        guard let userID = actor.userID else {
+            if let user = actor.pixivUser {
+                presentedUserProfile = user
+                return nil
+            }
+            return L10n.unsupportedPixivLink
+        }
+
+        do {
+            let detail = try await api.userDetail(userID: userID)
+            presentedUserProfile = detail.user
+            return nil
+        } catch {
+            if let user = actor.pixivUser {
+                presentedUserProfile = user
+            }
+            pixivActivityErrorMessage = error.localizedDescription
+            return error.localizedDescription
+        }
+    }
+
+    func pixivActivityArtworkDetail(id: Int) async throws -> PixivArtwork {
+        guard session != nil, usesLocalSampleAccount == false else {
+            isLoginPresented = true
+            throw PixivAPIError.missingSession
+        }
+        let artwork = try await api.illustDetail(illustID: id)
+        selectedArtwork = artwork
+        await recordBrowsingHistory(for: artwork)
+        return artwork
+    }
+
+    func pixivActivityNovelDetail(id: Int) async throws -> PixivNovel {
+        guard session != nil, usesLocalSampleAccount == false else {
+            isLoginPresented = true
+            throw PixivAPIError.missingSession
+        }
+        let novel = try await api.novelDetail(novelID: id)
+        novels.presentTransientNovelDetail(novel)
+        return novel
+    }
+
+    @discardableResult
+    func openPixivActivityBookmarkTag(_ tag: PixivActivityBookmarkTag) async -> String {
+        guard session != nil, usesLocalSampleAccount == false else {
+            isLoginPresented = true
+            return L10n.loginRequiredForPixivLink
+        }
+
+        do {
+            if let url = tag.url,
+               let destination = PixivWebLinkResolver.destination(from: url) {
+                try await openPixivDestination(destination, sourceHistoryTarget: .route(.pixivActivity))
+            } else {
+                try await openPixivDestination(.tag(tag.name), sourceHistoryTarget: .route(.pixivActivity))
+            }
+            return String(format: L10n.runningSearchFormat, tag.name)
+        } catch {
+            pixivActivityErrorMessage = error.localizedDescription
+            return error.localizedDescription
+        }
+    }
+
     private func clearPixivActivityFeedState() {
         pixivActivityItems = []
         pixivActivityNextPage = nil

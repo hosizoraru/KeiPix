@@ -59,52 +59,106 @@ enum PixivActivityFeedPresentation {
         return summary
     }
 
+    static func activityActorTitle(for item: PixivActivityItem) -> String {
+        let actorName = item.actor?.name.trimmingCharacters(in: .whitespacesAndNewlines)
+        if let actorName, actorName.isEmpty == false {
+            return actorName
+        }
+        return kindTitle(for: item.kind)
+    }
+
+    static func masonryWorkTitle(for item: PixivActivityItem) -> String {
+        let targetTitle = item.target?.title.trimmingCharacters(in: .whitespacesAndNewlines)
+        if let targetTitle, targetTitle.isEmpty == false {
+            return targetTitle
+        }
+        let actorName = item.actor?.name.trimmingCharacters(in: .whitespacesAndNewlines)
+        if let actorName, actorName.isEmpty == false {
+            return actorName
+        }
+        return kindTitle(for: item.kind)
+    }
+
+    static func masonryAuthorTitle(for item: PixivActivityItem) -> String {
+        guard let author = item.target?.author else { return "" }
+        if let actorID = item.actor?.userID,
+           let authorID = author.userID,
+           actorID == authorID {
+            return ""
+        }
+        let actorName = item.actor?.name.trimmingCharacters(in: .whitespacesAndNewlines)
+        let authorName = author.name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard authorName.isEmpty == false else {
+            return ""
+        }
+        if let actorName,
+           actorName.localizedCaseInsensitiveCompare(authorName) == .orderedSame {
+            return ""
+        }
+        return authorName
+    }
+
     static func masonryCardHeight(for item: PixivActivityItem, width: CGFloat) -> CGFloat {
-        let contentWidth = max(width - 24, 120)
-        let titleLines = estimatedLineCount(
-            for: primaryTitle(for: item),
-            contentWidth: contentWidth,
-            averageCharacterWidth: 8.4,
-            maximum: 2
-        )
-        let summaryLines = estimatedLineCount(
-            for: secondaryTitle(for: item),
-            contentWidth: contentWidth,
-            averageCharacterWidth: 6.9,
-            maximum: item.target?.thumbnailURL == nil ? 3 : 2
-        )
-        return 12
-            + masonryThumbnailHeight(for: item, width: width)
-            + 10
-            + 23
-            + 7
-            + CGFloat(titleLines) * 18
-            + 5
-            + CGFloat(summaryLines) * 15
-            + 12
+        max(124, min(340, width / masonryImageAspectRatio(for: item)))
     }
 
-    static func masonryThumbnailHeight(for item: PixivActivityItem, width: CGFloat) -> CGFloat {
-        if item.target?.thumbnailURL != nil {
-            return max(100, min(142, width * 0.70))
+    static func masonryImageAspectRatio(for item: PixivActivityItem) -> CGFloat {
+        if let thumbnailAspectRatio = item.target?.thumbnailAspectRatio,
+           thumbnailAspectRatio.isFinite,
+           thumbnailAspectRatio > 0 {
+            return CGFloat(thumbnailAspectRatio)
         }
-        if item.actor?.avatarURL != nil || item.kind == .followedUser {
-            return max(92, min(126, width * 0.62))
+        switch item.target?.kind {
+        case .novel:
+            return 0.72
+        case .user:
+            return 1
+        case .artwork, .unknown:
+            return 1
+        case nil:
+            return 1
         }
-        return max(84, min(118, width * 0.58))
     }
 
-    private static func estimatedLineCount(
-        for text: String,
-        contentWidth: CGFloat,
-        averageCharacterWidth: CGFloat,
-        maximum: Int
-    ) -> Int {
-        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard trimmed.isEmpty == false else { return 1 }
-        let charactersPerLine = max(8, Int(contentWidth / averageCharacterWidth))
-        let lines = Int(ceil(Double(trimmed.count) / Double(charactersPerLine)))
-        return min(max(lines, 1), maximum)
+    static func compactTimeText(
+        for date: Date,
+        now: Date = Date(),
+        calendar: Calendar = .current
+    ) -> String {
+        let elapsed = max(0, now.timeIntervalSince(date))
+        if elapsed < 60 {
+            return L10n.justNow
+        }
+        if elapsed < 3_600 {
+            return String(format: L10n.minutesAgoFormat, max(1, Int(elapsed / 60)))
+        }
+        if elapsed < 86_400, calendar.isDate(date, inSameDayAs: now) {
+            return String(format: L10n.hoursAgoFormat, max(1, Int(elapsed / 3_600)))
+        }
+
+        let formatter = DateFormatter()
+        formatter.calendar = calendar
+        formatter.timeZone = calendar.timeZone
+        formatter.locale = .autoupdatingCurrent
+
+        if calendar.isDateInYesterday(date) {
+            formatter.dateStyle = .none
+            formatter.timeStyle = .short
+            return String(format: L10n.yesterdayTimeFormat, formatter.string(from: date))
+        }
+
+        let components = calendar.dateComponents([.day], from: calendar.startOfDay(for: date), to: calendar.startOfDay(for: now))
+        if let days = components.day, days > 0, days < 7 {
+            return String(format: L10n.daysAgoFormat, days)
+        }
+
+        if calendar.component(.year, from: date) == calendar.component(.year, from: now) {
+            formatter.setLocalizedDateFormatFromTemplate("Md")
+            return formatter.string(from: date)
+        }
+        formatter.dateStyle = .short
+        formatter.timeStyle = .none
+        return formatter.string(from: date)
     }
 
     private static func kindTitle(for kind: PixivActivityKind) -> String {

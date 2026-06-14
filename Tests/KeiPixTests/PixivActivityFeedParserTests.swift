@@ -17,7 +17,12 @@ struct PixivActivityFeedParserTests {
         #expect(page.items[0].target?.id == "555")
         #expect(page.items[0].target?.title == "Blue Sky")
         #expect(page.items[0].target?.url?.absoluteString == "https://www.pixiv.net/artworks/555")
+        #expect(page.items[0].target?.thumbnailAspectRatio == 1.5)
+        #expect(page.items[0].target?.author?.name == "Alice")
         #expect(page.items[1].target?.thumbnailURL?.absoluteString == "https://i.pximg.net/c/250x250/img-master/img/2026/06/13/00/00/00/777_p0_square1200.jpg")
+        #expect(page.items[1].target?.thumbnailAspectRatio == 0.75)
+        #expect(page.items[1].target?.author?.name == "Carol")
+        #expect(page.items[1].bookmarkTag?.name == "生徒会にも穴はある！")
         #expect(page.items[2].target?.kind == .user)
         #expect(page.items[2].target?.id == "303")
         #expect(page.items[2].target?.title == "Cathy")
@@ -40,9 +45,14 @@ struct PixivActivityFeedParserTests {
         #expect(page.items[0].target?.title == "Blue Sky")
         #expect(page.items[0].target?.url?.absoluteString == "https://www.pixiv.net/artworks/555")
         #expect(page.items[0].target?.thumbnailURL?.absoluteString == "https://i.pximg.net/img-master/img/555.jpg")
+        #expect(page.items[0].target?.thumbnailAspectRatio == 16.0 / 9.0)
+        #expect(page.items[0].target?.author?.name == "Artist")
+        #expect(page.items[0].bookmarkTag?.name == "Blue archive")
         #expect(page.items[0].summary == "Artist")
         #expect(page.items[1].target?.kind == .novel)
         #expect(page.items[1].target?.url?.absoluteString == "https://www.pixiv.net/novel/show.php?id=777")
+        #expect(page.items[1].target?.thumbnailAspectRatio == 2.0 / 3.0)
+        #expect(page.items[1].target?.author?.name == "Artist")
         #expect(page.items[2].target?.kind == .user)
         #expect(page.items[2].target?.title == "Cathy")
 
@@ -94,6 +104,8 @@ struct PixivActivityFeedParserTests {
         #expect(page.items[0].actor?.name == "Alice")
         #expect(page.items[0].target?.id == "777")
         #expect(page.items[0].target?.title == "Red Moon")
+        #expect(page.items[0].target?.author?.name == "Carol")
+        #expect(page.items[0].bookmarkTag?.name == "夜")
         #expect(page.items[1].kind == .followedUser)
         #expect(page.items[1].target?.kind == .user)
         #expect(page.items[1].target?.id == "303")
@@ -115,9 +127,24 @@ struct PixivActivityFeedParserTests {
         #expect(page.items[0].target?.title == "樱花")
         #expect(page.items[0].target?.url?.absoluteString == "https://www.pixiv.net/artworks/130000001")
         #expect(page.items[0].target?.thumbnailURL?.absoluteString == "https://i.pximg.net/c/150x150/img-master/img/2026/06/04/20/36/45/130000001_p0_master1200.jpg")
+        #expect(page.items[0].target?.author?.name == "soikov")
+        #expect(page.items[0].bookmarkTag?.name == "桜")
         #expect(page.items[1].actor?.name == "HEXAA")
         #expect(page.items[1].target?.id == "130000002")
         #expect(page.items[1].target?.title == "ミレニアム生徒A")
+        #expect(page.items[1].target?.author?.name == "タケ")
+    }
+
+    @Test("Pixiv activity parser does not treat quoted bookmark titles as tags")
+    func ignoresQuotedBookmarkTitlesWhenNoTagContextExists() throws {
+        let page = PixivActivityFeedParser.parsePage(
+            Self.legacyStaccQuotedBookmarkTitleHTML,
+            sourceURL: PixivWebURLBuilder.activityFeedURL()
+        )
+
+        #expect(page.items.count == 1)
+        #expect(page.items[0].target?.title == "生徒会にも穴はある！")
+        #expect(page.items[0].bookmarkTag == nil)
     }
 
     @Test("Pixiv activity Web page inspector rejects login redirects")
@@ -224,7 +251,14 @@ struct PixivActivityFeedParserTests {
                   "illustId": "555",
                   "title": "Blue Sky",
                   "url": "/artworks/555",
-                  "thumbnailUrl": "https://i.pximg.net/c/250x250/img-master/img/2026/06/13/00/00/00/555_p0_square1200.jpg"
+                  "thumbnailUrl": "https://i.pximg.net/c/250x250/img-master/img/2026/06/13/00/00/00/555_p0_square1200.jpg",
+                  "width": 1200,
+                  "height": 800,
+                  "author": {
+                    "userId": "101",
+                    "userName": "Alice",
+                    "profileImageUrl": "https://i.pximg.net/user-profile/img/101.jpg"
+                  }
                 },
                 "createdAt": "2026-06-13T01:02:03+09:00",
                 "summary": "Alice posted Blue Sky"
@@ -239,7 +273,18 @@ struct PixivActivityFeedParserTests {
                 "target": {
                   "illustId": "777",
                   "title": "Red Moon",
-                  "thumbnailUrl": "https://i.pximg.net/c/250x250/img-master/img/2026/06/13/00/00/00/777_p0_square1200.jpg"
+                  "thumbnailUrl": "https://i.pximg.net/c/250x250/img-master/img/2026/06/13/00/00/00/777_p0_square1200.jpg",
+                  "width": 900,
+                  "height": 1200,
+                  "author": {
+                    "userId": "404",
+                    "userName": "Carol",
+                    "profileImageUrl": "https://i.pximg.net/user-profile/img/404.jpg"
+                  }
+                },
+                "bookmarkTag": {
+                  "name": "生徒会にも穴はある！",
+                  "url": "/tags/%E7%94%9F%E5%BE%92%E4%BC%9A%E3%81%AB%E3%82%82%E7%A9%B4%E3%81%AF%E3%81%82%E3%82%8B%EF%BC%81/artworks"
                 },
                 "createdAt": "2026-06-13T02:03:04+09:00"
               },
@@ -282,7 +327,8 @@ struct PixivActivityFeedParserTests {
           "type": "add_bookmark",
           "post_date": "2026-06-14 13:00:00",
           "post_user": { "class": "user", "id": 101 },
-          "ref_illust": { "class": "illust", "id": 555 }
+          "ref_illust": { "class": "illust", "id": 555 },
+          "bookmark_tag": { "name": "Blue archive" }
         },
         "21830400002": {
           "id": "21830400002",
@@ -327,7 +373,9 @@ struct PixivActivityFeedParserTests {
           "id": 555,
           "title": "Blue Sky",
           "post_user": { "class": "user", "id": 202 },
-          "url": { "m": "https://i.pximg.net/img-master/img/555.jpg" }
+          "url": { "m": "https://i.pximg.net/img-master/img/555.jpg" },
+          "width": 1600,
+          "height": 900
         }
       },
       "novel": {
@@ -335,7 +383,9 @@ struct PixivActivityFeedParserTests {
           "id": 777,
           "title": "Novel Night",
           "post_user": { "class": "user", "id": 202 },
-          "url": { "m": "https://i.pximg.net/novel-cover-original/img/777.jpg" }
+          "url": { "m": "https://i.pximg.net/novel-cover-original/img/777.jpg" },
+          "width": 600,
+          "height": 900
         }
       }
     }
@@ -373,9 +423,11 @@ struct PixivActivityFeedParserTests {
         <li class="stacc activity bookmark" data-activity-id="html-bookmark-1">
           <a href="/users/101">Alice</a>
           bookmarked
+          <a href="/tags/%E5%A4%9C/artworks">夜</a>
           <a href="/artworks/777" title="Red Moon">
             <img src="https://i.pximg.net/c/250x250/img-master/img/2026/06/13/00/00/00/777_p0_square1200.jpg" alt="Red Moon">
           </a>
+          <a href="/users/404">Carol</a>
           <time datetime="2026-06-13T02:03:04+09:00"></time>
         </li>
         <li class="stacc activity follow" data-activity-id="html-follow-1">
@@ -396,7 +448,7 @@ struct PixivActivityFeedParserTests {
           <a href="/stacc/gulingyu1"><img src="https://i.pximg.net/user-profile/img/2025/01/05/00/24/11/111_50.jpg"></a>
           <div class="stacc_status_content">
             <div class="stacc_status_content_top">
-              <a href="/stacc/gulingyu1">咕零羽</a> 添加收藏
+              <a href="/stacc/gulingyu1">咕零羽</a> 添加收藏 [桜]
             </div>
             <a class="work _work" href="/member_illust.php?mode=medium&amp;illust_id=130000001&amp;from_sid=21830209560">
               <img src="https://i.pximg.net/c/150x150/img-master/img/2026/06/04/20/36/45/130000001_p0_master1200.jpg">
@@ -418,6 +470,27 @@ struct PixivActivityFeedParserTests {
             <a href="/member_illust.php?mode=medium&amp;illust_id=130000002&amp;from_sid=21830209506">ミレニアム生徒A</a>
             <a href="/member.php?id=5002&amp;from_sid=21830209506">タケ</a>
             <div class="stacc_status_content_bottom"><a href="/stacc/s/21830209506">7分钟前</a></div>
+          </div>
+        </div>
+      </div>
+    </html>
+    """
+
+    private static let legacyStaccQuotedBookmarkTitleHTML = """
+    <html>
+      <script>pixiv.context = {"user":{"id":"41657557"}}</script>
+      <div class="stacc_center_area">
+        <div id="stacc_elemid_21830209600" class="stacc_status">
+          <a href="/stacc/mika">Mika Archive</a>
+          <div class="stacc_status_content">
+            <div class="stacc_status_content_top">
+              <a href="/stacc/mika">Mika Archive</a> 添加收藏「生徒会にも穴はある！」
+            </div>
+            <a class="work _work" href="/member_illust.php?mode=medium&amp;illust_id=130000003">
+              <img src="https://i.pximg.net/c/150x150/img-master/img/2026/06/14/09/10/11/130000003_p0_master1200.jpg">
+            </a>
+            <a href="/member_illust.php?mode=medium&amp;illust_id=130000003">生徒会にも穴はある！</a>
+            <a href="/member.php?id=5003">Comic Artist</a>
           </div>
         </div>
       </div>

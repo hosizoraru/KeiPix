@@ -519,6 +519,11 @@ enum L10n {
     static var pixivActivityFollowedUser: String { text("Followed user") }
     static var pixivActivityUnknown: String { text("Pixiv activity") }
     static var pixivActivityOpenHint: String { text("Open this activity in KeiPix") }
+    static var justNow: String { text("Just now") }
+    static var minutesAgoFormat: String { text("%d min ago") }
+    static var hoursAgoFormat: String { text("%d hr ago") }
+    static var yesterdayTimeFormat: String { text("Yesterday %@") }
+    static var daysAgoFormat: String { text("%d days ago") }
     static var savedPixivisionArticles: String { text("Saved Pixivision") }
     static var myPixivCollections: String { text("My Pixiv Collections") }
     static var myPixivUsers: String { text("MyPixiv") }

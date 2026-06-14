@@ -171,6 +171,11 @@ final class NovelFeatureStore {
         applyContentFilter()
     }
 
+    func presentTransientNovelDetail(_ novel: PixivNovel) {
+        selectedNovel = novel
+        novelDetailCache[novel.id] = novel
+    }
+
     // MARK: - Feed loading
 
     /// Reload the novel feed for the active route. Cancels any in-flight
