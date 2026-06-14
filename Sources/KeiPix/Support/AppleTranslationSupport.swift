@@ -118,6 +118,15 @@ enum AppleTranslationReadinessMapper {
     #endif
 }
 
+enum AppleTranslationPreparationPolicy {
+    /// Apple's `prepareTranslation()` requires a known source language. When
+    /// the reader asks Translation to auto-detect the source, preparation must
+    /// be deferred to the actual translate request that carries source text.
+    static func shouldPrepareSession(sourceLanguage: Locale.Language?) -> Bool {
+        sourceLanguage != nil
+    }
+}
+
 typealias NovelTranslationReadiness = AppleTranslationReadiness
 typealias NovelTranslationIssue = AppleTranslationIssue
 typealias NovelTranslationReadinessMapper = AppleTranslationReadinessMapper

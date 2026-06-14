@@ -39,6 +39,16 @@ struct NovelTranslationReadinessTests {
         #expect(NovelTranslationIssue.unavailable.localizedMessage == L10n.translationFailed)
     }
 
+    @Test("Auto detected source language defers preparation to text requests")
+    func autoDetectedSourceLanguageDefersPreparation() {
+        #expect(AppleTranslationPreparationPolicy.shouldPrepareSession(sourceLanguage: nil) == false)
+        #expect(
+            AppleTranslationPreparationPolicy.shouldPrepareSession(
+                sourceLanguage: Locale.Language(identifier: "ja")
+            )
+        )
+    }
+
     @Test("Readiness sampling skips terse headings when body text is available")
     func readinessSamplingSkipsTerseHeadings() {
         let segments = [

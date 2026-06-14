@@ -189,6 +189,16 @@ struct NovelReaderView: View {
                 continuousVisiblePageRange = nil
             }
         }
+        .onChange(of: novelStore.loadedNovelTokens.count) { _, tokenCount in
+            guard tokenCount > 0,
+                  novelStore.loadedNovelTextID == activeNovel.id,
+                  translationEngine.isInlineTranslationActive,
+                  translationConfig != nil else {
+                return
+            }
+            translationEngine.clearAll()
+            translationConfig?.invalidate()
+        }
         .onChange(of: pageIndex) { _, _ in
             guard usesContinuousNovelReader == false else { return }
             // Don't clear cached translations — they persist across
@@ -378,7 +388,9 @@ struct NovelReaderView: View {
                 )
             switch NovelTranslationReadinessMapper.readiness(for: status) {
             case .ready, .requiresPreparation:
-                try await session.prepareTranslation()
+                if AppleTranslationPreparationPolicy.shouldPrepareSession(sourceLanguage: translationSourceLanguage) {
+                    try await session.prepareTranslation()
+                }
                 return true
             case .unavailable(let issue):
                 failTranslationPreparation(issue, segment: sampleSegment)
@@ -440,6 +452,10 @@ struct NovelReaderView: View {
 
             Spacer(minLength: 0)
 
+            if let translationStatusMessage {
+                translationStatusBadge(translationStatusMessage, allowsMultiline: false)
+            }
+
             readerActionCluster(includesCloseButton: true)
         }
     }
@@ -454,6 +470,11 @@ struct NovelReaderView: View {
 
             readerActionCluster(includesCloseButton: false)
                 .frame(maxWidth: .infinity, alignment: .trailing)
+
+            if let translationStatusMessage {
+                translationStatusBadge(translationStatusMessage, allowsMultiline: true)
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+            }
         }
     }
 
@@ -626,19 +647,20 @@ struct NovelReaderView: View {
                                  translationEngine.translationTotal))
             }
 
-            if let translationStatusMessage {
-                ViewThatFits(in: .horizontal) {
-                    Label(translationStatusMessage, systemImage: "exclamationmark.triangle.fill")
-                        .font(.caption2.weight(.medium))
-                        .lineLimit(1)
-                    Image(systemName: "exclamationmark.triangle.fill")
-                        .font(.caption2.weight(.semibold))
-                }
-                .foregroundStyle(.secondary)
-                .help(translationStatusMessage)
-                .accessibilityLabel(translationStatusMessage)
-            }
         }
+    }
+
+    private func translationStatusBadge(_ message: String, allowsMultiline: Bool) -> some View {
+        Label(message, systemImage: "exclamationmark.triangle.fill")
+            .font(.caption2.weight(.medium))
+            .lineLimit(allowsMultiline ? 2 : 1)
+            .fixedSize(horizontal: false, vertical: true)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 6)
+            .keiGlass(14)
+            .foregroundStyle(.secondary)
+            .help(message)
+            .accessibilityLabel(message)
     }
 
     private var translationStatusMessage: String? {
