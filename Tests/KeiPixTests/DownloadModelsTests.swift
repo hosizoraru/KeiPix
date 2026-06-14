@@ -22,6 +22,26 @@ struct DownloadModelsTests {
     }
 
     @MainActor
+    @Test("Download destination exposes the current platform's user-facing target")
+    func downloadDestinationSummary() {
+        let store = ArtworkDownloadStore(completionNotifier: DownloadCompletionNotifier(
+            center: FakeUserNotificationCenter(isAuthorized: false),
+            authorizationStore: InMemoryAuthorizationCacheStore(hasRequested: true),
+            coalesceWindowSeconds: 0.05
+        ))
+
+        #if os(macOS)
+        #expect(store.downloadDestination.kind == .customFolder)
+        #expect(store.downloadDestination.allowsCustomFolderSelection)
+        #expect(store.downloadDestination.detail == store.downloadDirectoryPath)
+        #else
+        #expect(store.downloadDestination.kind == .photosLibrary)
+        #expect(store.downloadDestination.allowsCustomFolderSelection == false)
+        #expect(store.downloadDestination.detail != store.downloadDirectoryPath)
+        #endif
+    }
+
+    @MainActor
     @Test("Download history snapshot exposes completed and failed queue history")
     func downloadHistorySnapshot() {
         let store = ArtworkDownloadStore(completionNotifier: DownloadCompletionNotifier(

@@ -87,6 +87,19 @@ enum ArtworkDownloadArtifactKind: String, Codable, Sendable {
     }
 }
 
+enum ArtworkDownloadDestinationKind: String, Sendable {
+    case photosLibrary
+    case customFolder
+}
+
+struct ArtworkDownloadDestinationSummary: Equatable, Sendable {
+    let kind: ArtworkDownloadDestinationKind
+    let title: String
+    let detail: String
+    let systemImage: String
+    let allowsCustomFolderSelection: Bool
+}
+
 enum DownloadQueueFilter: String, CaseIterable, Identifiable, Sendable {
     case all
     case active

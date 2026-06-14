@@ -142,7 +142,7 @@ def app_entry(
         "appPermissions": {
             "privacy": {
                 "NSPhotoLibraryAddUsageDescription": (
-                    "KeiPix saves downloaded artworks to the photo library only when the user chooses that action."
+                    "KeiPix saves artworks to the photo library when the user downloads or saves them."
                 )
             }
         },

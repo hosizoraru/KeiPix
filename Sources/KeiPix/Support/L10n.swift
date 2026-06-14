@@ -341,8 +341,17 @@ enum L10n {
     static var copiedDownloadFolderPath: String { text("Copied download folder path") }
     static var chooseFolder: String { text("Choose Folder") }
     static var openFolder: String { text("Open Folder") }
+    static var saveDestination: String { text("Save Destination") }
+    static var systemPhotosLibrary: String { text("System Photos Library") }
+    static var photosLibraryDestinationDetail: String { text("Downloads save to Photos. KeiPix keeps a private local cache for reading, retries, and queue history.") }
+    static var photosLibraryDestinationHint: String { text("On iPhone and iPad, artwork downloads are added to the system Photos library with KeiPix as the saving app. The local cache stays private to KeiPix.") }
+    static var photosLibraryDownloadSettingsSubtitle: String { text("Downloads save to the system Photos library on iPhone and iPad. KeiPix keeps a private cache for reading and retrying.") }
+    static var localDownloadCache: String { text("Local Download Cache") }
+    static var privateAppCache: String { text("Private App Cache") }
     static var downloadNamingTemplate: String { text("Download Naming Template") }
     static var downloadNamingTemplateHint: String { text("Use placeholders like ${id}, ${title}, ${user}, ${userId}, ${series}, ${seriesId}, ${page}, ${page1}, ${pages}, ${ext}, ${AI}, ${R18}, ${R18G}, ${tag1}, ${tag2}, ${tag(name)}. Paths stay inside the download folder.") }
+    static var downloadNamingTemplatePhotosHint: String { text("Use placeholders like ${id}, ${title}, ${user}, ${userId}, ${series}, ${seriesId}, ${page}, ${page1}, ${pages}, ${ext}, ${AI}, ${R18}, ${R18G}, ${tag1}, ${tag2}, ${tag(name)}. The rendered filename is used when KeiPix adds the artwork to Photos.") }
+    static var photosLibraryPreviewPathFormat: String { text("Photos / %@") }
     static var templatePreview: String { text("Template Preview") }
     static var livePreview: String { text("Live Preview") }
     static var templatePreviewStandalone: String { text("Standalone Illust") }
@@ -378,11 +387,11 @@ enum L10n {
     static var deleteVisibleDownloads: String { text("Remove Visible Download Records") }
     static var cancelDownload: String { text("Cancel Download") }
     static var cancelVisibleDownloads: String { text("Cancel Visible Active Downloads") }
-    static var deleteVisibleDownloadsConfirmationFormat: String { text("Remove %d visible download records? Local files stay in the download folder.") }
-    static var deleteDownloadConfirmationFormat: String { text("Remove %@ from the download queue? Local files stay in the download folder.") }
-    static var cancelDownloadConfirmationFormat: String { text("Cancel %@ and remove it from the queue? Local files stay in the download folder.") }
-    static var cancelVisibleDownloadsConfirmationFormat: String { text("Cancel %d visible active downloads and remove them from the queue? Local files stay in the download folder.") }
-    static var clearFailedDownloadsConfirmationFormat: String { text("Clear %d failed download records? Local files stay in the download folder.") }
+    static var deleteVisibleDownloadsConfirmationFormat: String { text("Remove %d visible download records? Saved files stay in place.") }
+    static var deleteDownloadConfirmationFormat: String { text("Remove %@ from the download queue? Saved files stay in place.") }
+    static var cancelDownloadConfirmationFormat: String { text("Cancel %@ and remove it from the queue? Saved files stay in place.") }
+    static var cancelVisibleDownloadsConfirmationFormat: String { text("Cancel %d visible active downloads and remove them from the queue? Saved files stay in place.") }
+    static var clearFailedDownloadsConfirmationFormat: String { text("Clear %d failed download records? Saved files stay in place.") }
     static var clearInvalidDownloadsConfirmationFormat: String { text("Clear %d invalid download records?") }
     static var clearCompletedDownloadsConfirmationFormat: String { text("Clear %d completed download records?") }
     static var downloadQueueDetailedSummaryFormat: String { text("%d shown, %d active, %d completed, %@ stored") }

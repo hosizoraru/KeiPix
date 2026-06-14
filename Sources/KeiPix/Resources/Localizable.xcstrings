@@ -5018,6 +5018,35 @@
         }
       }
     },
+    "Cancel %@ and remove it from the queue? Saved files stay in place.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel %@ and remove it from the queue? Saved files stay in place."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ をキャンセルしてキューから削除しますか？保存済みファイルはそのまま残ります。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "取消 %@ 并从队列移除？已保存的文件会保留在原处。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "取消 %@ 並從隊列移除？已儲存的檔案會保留在原處。"
+          }
+        }
+      }
+    },
     "Cancel %d visible active downloads and remove them from the queue? Local files stay in the download folder.": {
       "extractionState": "manual",
       "localizations": {
@@ -5043,6 +5072,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "取消 %d 個可見進行中下載並從隊列移除？本地檔案會保留在下載資料夾中。"
+          }
+        }
+      }
+    },
+    "Cancel %d visible active downloads and remove them from the queue? Saved files stay in place.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel %d visible active downloads and remove them from the queue? Saved files stay in place."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "表示中のアクティブダウンロード %d 件をキャンセルしてキューから削除しますか？保存済みファイルはそのまま残ります。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "取消 %d 条可见的活动下载并从队列移除？已保存的文件会保留在原处。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "取消 %d 筆可見的進行中下載並從隊列移除？已儲存的檔案會保留在原處。"
           }
         }
       }
@@ -5826,6 +5884,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "清理 %d 条失敗下載記錄？本地檔案會保留在下載資料夾中。"
+          }
+        }
+      }
+    },
+    "Clear %d failed download records? Saved files stay in place.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear %d failed download records? Saved files stay in place."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "失敗したダウンロード記録 %d 件をクリアしますか？保存済みファイルはそのまま残ります。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "清理 %d 条失败下载记录？已保存的文件会保留在原处。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "清理 %d 條失敗下載記錄？已儲存的檔案會保留在原處。"
           }
         }
       }
@@ -10553,6 +10640,64 @@
           "stringUnit": {
             "state": "translated",
             "value": "下載資料夾"
+          }
+        }
+      }
+    },
+    "Downloads save to Photos. KeiPix keeps a private local cache for reading, retries, and queue history.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Downloads save to Photos. KeiPix keeps a private local cache for reading, retries, and queue history."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ダウンロードは写真に保存されます。KeiPix は閲覧、再試行、キュー履歴のために非公開のローカルキャッシュを保持します。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "下载会保存到照片图库。KeiPix 会保留私有本地缓存，用于阅读、重试和队列历史。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "下載會儲存到照片圖庫。KeiPix 會保留私有本地快取，用於閱讀、重試和隊列記錄。"
+          }
+        }
+      }
+    },
+    "Downloads save to the system Photos library on iPhone and iPad. KeiPix keeps a private cache for reading and retrying.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Downloads save to the system Photos library on iPhone and iPad. KeiPix keeps a private cache for reading and retrying."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iPhone と iPad では、ダウンロードはシステムの写真ライブラリに保存されます。KeiPix は閲覧と再試行のために非公開キャッシュを保持します。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在 iPhone 和 iPad 上，下载会保存到系统照片图库。KeiPix 会保留私有缓存用于阅读和重试。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在 iPhone 和 iPad 上，下載會儲存到系統照片圖庫。KeiPix 會保留私有快取用於閱讀和重試。"
           }
         }
       }
@@ -16817,6 +16962,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "即時預覽"
+          }
+        }
+      }
+    },
+    "Local Download Cache": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Local Download Cache"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ローカルダウンロードキャッシュ"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "本地下载缓存"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "本地下載快取"
           }
         }
       }
@@ -24796,6 +24970,35 @@
         }
       }
     },
+    "On iPhone and iPad, artwork downloads are added to the system Photos library with KeiPix as the saving app. The local cache stays private to KeiPix.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On iPhone and iPad, artwork downloads are added to the system Photos library with KeiPix as the saving app. The local cache stays private to KeiPix."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iPhone と iPad では、作品のダウンロードは KeiPix から保存された項目としてシステムの写真ライブラリに追加されます。ローカルキャッシュは KeiPix 内に非公開で保持されます。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在 iPhone 和 iPad 上，作品下载会添加到系统照片图库，并标记为由 KeiPix 保存。本地缓存仅供 KeiPix 私有使用。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在 iPhone 和 iPad 上，作品下載會加入系統照片圖庫，並標記為由 KeiPix 儲存。本地快取僅供 KeiPix 私有使用。"
+          }
+        }
+      }
+    },
     "Original": {
       "extractionState": "manual",
       "localizations": {
@@ -27054,6 +27257,64 @@
           "stringUnit": {
             "state": "translated",
             "value": "優先級"
+          }
+        }
+      }
+    },
+    "Photos / %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Photos / %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "写真 / %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "照片 / %@"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "照片 / %@"
+          }
+        }
+      }
+    },
+    "Private App Cache": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Private App Cache"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "アプリ専用キャッシュ"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App 私有缓存"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App 私有快取"
           }
         }
       }
@@ -29494,6 +29755,35 @@
         }
       }
     },
+    "Remove %@ from the download queue? Saved files stay in place.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove %@ from the download queue? Saved files stay in place."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ をダウンロードキューから削除しますか？保存済みファイルはそのまま残ります。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "从下载队列移除 %@？已保存的文件会保留在原处。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "從下載隊列移除 %@？已儲存的檔案會保留在原處。"
+          }
+        }
+      }
+    },
     "Remove %@ from watchlist?": {
       "extractionState": "manual",
       "localizations": {
@@ -29548,6 +29838,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "移除 %d 条可見下載記錄？本地檔案會保留在下載資料夾中。"
+          }
+        }
+      }
+    },
+    "Remove %d visible download records? Saved files stay in place.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove %d visible download records? Saved files stay in place."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "表示中のダウンロード記録 %d 件を削除しますか？保存済みファイルはそのまま残ります。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "移除 %d 条可见下载记录？已保存的文件会保留在原处。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "移除 %d 筆可見下載記錄？已儲存的檔案會保留在原處。"
           }
         }
       }
@@ -39325,6 +39644,35 @@
         }
       }
     },
+    "Use placeholders like ${id}, ${title}, ${user}, ${userId}, ${series}, ${seriesId}, ${page}, ${page1}, ${pages}, ${ext}, ${AI}, ${R18}, ${R18G}, ${tag1}, ${tag2}, ${tag(name)}. The rendered filename is used when KeiPix adds the artwork to Photos.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use placeholders like ${id}, ${title}, ${user}, ${userId}, ${series}, ${seriesId}, ${page}, ${page1}, ${pages}, ${ext}, ${AI}, ${R18}, ${R18G}, ${tag1}, ${tag2}, ${tag(name)}. The rendered filename is used when KeiPix adds the artwork to Photos."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "プレースホルダー: ${id}、${title}、${user}、${userId}、${series}、${seriesId}、${page}、${page1}、${pages}、${ext}、${AI}、${R18}、${R18G}、${tag1}、${tag2}、${tag(name)}。レンダリングされたファイル名は、KeiPix が作品を写真に追加するときに使われます。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "可使用 ${id}、${title}、${user}、${userId}、${series}、${seriesId}、${page}、${page1}、${pages}、${ext}、${AI}、${R18}、${R18G}、${tag1}、${tag2}、${tag(name)} 等占位符。渲染后的文件名会用于 KeiPix 添加到照片图库时的资源名称。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "可使用 ${id}、${title}、${user}、${userId}、${series}、${seriesId}、${page}、${page1}、${pages}、${ext}、${AI}、${R18}、${R18G}、${tag1}、${tag2}、${tag(name)} 等佔位符。渲染後的檔名會用於 KeiPix 加入照片圖庫時的資源名稱。"
+          }
+        }
+      }
+    },
     "Verified": {
       "extractionState": "manual",
       "localizations": {
@@ -42743,6 +43091,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "システム"
+          }
+        }
+      }
+    },
+    "System Photos Library": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "System Photos Library"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "システム写真ライブラリ"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "系统照片图库"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "系統照片圖庫"
           }
         }
       }
@@ -46391,6 +46768,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "儲存到照片"
+          }
+        }
+      }
+    },
+    "Save Destination": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save Destination"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保存先"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保存目标"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "儲存目標"
           }
         }
       }

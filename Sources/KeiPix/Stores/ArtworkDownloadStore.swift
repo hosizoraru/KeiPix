@@ -59,8 +59,13 @@ final class ArtworkDownloadStore {
 
     init(completionNotifier: DownloadCompletionNotifier = DownloadCompletionNotifier()) {
         self.completionNotifier = completionNotifier
+        #if os(macOS)
         downloadDirectoryPath = UserDefaults.standard.string(forKey: "downloadDirectoryPath")
             ?? ArtworkDownloadStore.defaultDownloadDirectory.path(percentEncoded: false)
+        #else
+        downloadDirectoryPath = ArtworkDownloadStore.defaultDownloadDirectory.path(percentEncoded: false)
+        UserDefaults.standard.removeObject(forKey: "downloadDirectoryPath")
+        #endif
         downloadNamingTemplate = UserDefaults.standard.string(forKey: "downloadNamingTemplate")
             ?? DownloadNamingTemplate.defaultTemplate
         downloadQueueFilter = UserDefaults.standard.string(forKey: "downloadQueueFilter")
@@ -204,6 +209,30 @@ final class ArtworkDownloadStore {
 
     var failedFilteredCount: Int {
         filteredItems.filter { $0.status == .failed }.count
+    }
+
+    var downloadDestination: ArtworkDownloadDestinationSummary {
+        #if os(macOS)
+        ArtworkDownloadDestinationSummary(
+            kind: .customFolder,
+            title: L10n.downloadFolder,
+            detail: downloadDirectoryPath,
+            systemImage: "folder",
+            allowsCustomFolderSelection: true
+        )
+        #else
+        ArtworkDownloadDestinationSummary(
+            kind: .photosLibrary,
+            title: L10n.systemPhotosLibrary,
+            detail: L10n.photosLibraryDestinationDetail,
+            systemImage: "photo.on.rectangle",
+            allowsCustomFolderSelection: false
+        )
+        #endif
+    }
+
+    var downloadCacheDirectoryPath: String {
+        downloadDirectoryPath
     }
 
     @discardableResult
@@ -563,11 +592,23 @@ final class ArtworkDownloadStore {
             let fileURL = fileURL(root: root, components: renderedPath.components)
             try fileManager.createDirectory(at: folder, withIntermediateDirectories: true)
             try data.write(to: fileURL, options: .atomic)
+            try await saveDownloadedImageToPhotosLibraryIfNeeded(fileURL)
             lastFolder = folder
             markPageCompleted(itemID: item.id, completedPages: pageIndex + 1, folder: folder, file: fileURL)
         }
 
         return lastFolder
+    }
+
+    private func saveDownloadedImageToPhotosLibraryIfNeeded(_ fileURL: URL) async throws {
+        #if os(iOS)
+        let saved = await PhotosSaver.saveImage(from: fileURL, originalFilename: fileURL.lastPathComponent)
+        if saved == false {
+            throw ArtworkDownloadError.photosLibrarySaveFailed
+        }
+        #else
+        _ = fileURL
+        #endif
     }
 
     func sourceImageURLs(for artwork: PixivArtwork, preferOriginal: Bool) -> [URL] {
@@ -730,10 +771,13 @@ final class ArtworkDownloadStore {
             .appending(path: "KeiPix", directoryHint: .isDirectory)
         ?? URL.homeDirectory.appending(path: "Downloads/KeiPix", directoryHint: .isDirectory)
         #else
-        // iPadOS: use Documents directory which is accessible via Files app
-        FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?
-            .appending(path: "KeiPix", directoryHint: .isDirectory)
-        ?? URL.documentsDirectory.appending(path: "KeiPix", directoryHint: .isDirectory)
+        (try? FileManager.default.url(
+            for: .applicationSupportDirectory,
+            in: .userDomainMask,
+            appropriateFor: nil,
+            create: true
+        ).appending(path: "KeiPix/Downloads/Files", directoryHint: .isDirectory))
+        ?? URL.homeDirectory.appending(path: "Library/Application Support/KeiPix/Downloads/Files", directoryHint: .isDirectory)
         #endif
     }
 
@@ -760,9 +804,15 @@ final class ArtworkDownloadStore {
 
 private enum ArtworkDownloadError: LocalizedError {
     case missingSourceURLs
+    case photosLibrarySaveFailed
 
     var errorDescription: String? {
-        L10n.downloadInterrupted
+        switch self {
+        case .missingSourceURLs:
+            L10n.downloadInterrupted
+        case .photosLibrarySaveFailed:
+            L10n.saveToPhotosFailed
+        }
     }
 }
 

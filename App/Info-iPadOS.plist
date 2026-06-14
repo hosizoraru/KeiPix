@@ -83,7 +83,7 @@
     <key>NSHumanReadableCopyright</key>
     <string>Copyright © 2026 KeiPix contributors. Licensed under Apache-2.0.</string>
     <key>NSPhotoLibraryAddUsageDescription</key>
-    <string>KeiPix saves downloaded artworks to your photo library only when you choose that action.</string>
+    <string>KeiPix saves artworks to your photo library when you download or save them.</string>
     <key>NSSupportsLiveActivities</key>
     <true/>
     <key>NSUserActivityTypes</key>
