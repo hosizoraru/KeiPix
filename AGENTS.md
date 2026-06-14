@@ -147,6 +147,29 @@ SDK behavior.
 - The AdditionalDocumentation folder includes current Liquid Glass notes for
   SwiftUI, UIKit, AppKit, and WidgetKit. Use those files as Apple-local context
   for OS 27 UI migration before reaching for third-party summaries.
+- Codex is configured with Xcode's official MCP bridge as
+  `mcp_servers.xcode` (`xcrun mcpbridge`). When the `mcp__xcode` tools are
+  available, use `mcp__xcode.DocumentationSearch` before web search for Apple
+  SDK questions, especially OS 26/27 APIs, Liquid Glass, SwiftUI, UIKit,
+  AppKit, Translation, StoreKit, App Intents, and Xcode behavior.
+- Keep the KeiPix project open in Xcode before relying on Xcode MCP project
+  tools. `mcp__xcode.XcodeListWindows` should show this workspace and a stable
+  `tabIdentifier` such as `windowtab1`; use that identifier for Xcode project
+  queries like schemes, run destinations, navigator issues, and project-scoped
+  grep/glob operations.
+- Xcode may show an allow dialog after Xcode restarts or when the Codex agent
+  binary changes. Approve the signed OpenAI Codex binary and keep the "don't
+  ask again for this agent binary until Xcode restarts" checkbox enabled. If
+  prompts become frequent within one Xcode run, suspect repeated MCP bridge
+  connections and prefer a persistent proxy or XcodeBuildMCP IDE bridge instead
+  of trying to bypass Xcode's security prompt.
+- Xcode-provided skills are exported into `~/.codex/skills` on this machine:
+  `swiftui-whats-new-27`, `swiftui-specialist`, `uikit-app-modernization`,
+  `device-interaction`, `test-modernizer`, `c-bounds-safety`, and
+  `audit-xcode-security-settings`. Use `swiftui-whats-new-27` before modifying
+  SDK 27 SwiftUI code because it contains Apple-authored references for
+  toolbar overflow, `@State` macro changes, document APIs, swipe actions,
+  reorderable containers, AsyncImage caching, and related source changes.
 
 ### Reference Priority By Task
 
@@ -302,13 +325,31 @@ older automation.
   `DeviceKit.framework`, `DVTDeviceKit.framework`, `DTDeviceKit.framework`,
   `DTDeviceKitBase.framework`, and `CoreDevice.framework`. Avoid assuming the
   old private `SimulatorKit.framework` exists.
+- Prefer Xcode 27's CoreDevice command layer, `xcrun devicectl`, for scripted
+  Device Hub-era status, display discovery, app process operations, and screen
+  capture. `devicectl` states that JSON output written via `--json-output` is
+  the stable script interface; do not parse its human stdout tables in scripts.
+- Use `script/os27/devicehub_status.sh <udid>` to confirm the active Device Hub
+  app, DeviceKit/CoreDevice frameworks, CoreDevice devices, and primary display
+  unique IDs before spending time on lower-level automation. The script writes
+  CoreDevice JSON artifacts under `artifacts/os27/`.
+- For Xcode 27 screenshot evidence, prefer
+  `xcrun devicectl device info displays` followed by
+  `xcrun devicectl device capture screenshot --display-unique-id <id>`.
+  KeiPix's `script/build_and_run_simulator.sh --verify` uses this CoreDevice
+  path first and only falls back to `xcrun simctl io screenshot` when
+  `devicectl` is unavailable or fails.
+- `simctl` is still useful for simulator lifecycle tasks that CoreDevice does
+  not expose as a stable replacement, especially creating, selecting, and
+  booting CoreSimulator devices. Do not use that as a reason to route visible
+  OS27 review back through `SimulatorKit.framework`.
 - If `xcodebuildmcp snapshot_ui` fails by looking for
   `.../PrivateFrameworks/SimulatorKit.framework`, skip that path for now. Use
-  Device Hub for visible review and `xcrun simctl io <udid> screenshot` for
-  evidence artifacts.
+  Device Hub plus `devicectl`/CoreDevice for visible review and evidence
+  artifacts.
 - `xcrun simctl io <udid> enumerate` can reveal multiple displays such as
-  `LCD` and `TVOut`; capture the explicit primary display when screenshots look
-  blank or ambiguous.
+  `LCD` and `TVOut`; this is now mostly a fallback because `devicectl device
+  info displays` exposes primary display unique IDs directly.
 - Preserve the default KeiPix simulator set unless the user asks otherwise:
   `KeiPix-iOS` and `KeiPix-iPadOS` on both iOS 26.5 and iOS 27.0 runtimes.
 
@@ -358,10 +399,11 @@ Useful launch surfaces:
 ```
 
 For iPadOS/iOS work, use simulator screenshots after navigation, rotation, or
-layout changes. On Xcode 27, prefer Device Hub plus explicit `xcrun simctl io`
-screenshots over `snapshot_ui` until the automation stack has migrated away from
-`SimulatorKit.framework`. Verify both the route and the actual device name/UDID
-when multiple simulators are running.
+layout changes. On Xcode 27, prefer Device Hub plus
+`xcrun devicectl device capture screenshot` over `snapshot_ui` until the
+automation stack has migrated away from `SimulatorKit.framework`; `simctl io
+screenshot` is only the fallback capture path. Verify both the route and the
+actual device name/UDID when multiple simulators are running.
 
 ### Codex In-Browser Simulator Review
 
@@ -521,6 +563,14 @@ New native bridge:
   related surfaces instead of patching each page separately.
 - For search, saved search, search author, tag search, and popular-tag pages,
   treat them as one UX family and keep clearing/filter state discoverable.
+- On iPhone only, current-feed filtering is a bottom-bar accessory, not a
+  persistent header input. Keep the compact pill centered above the custom tab
+  bar; tapping it presents the floating filter field above the tab bar, and the
+  close control only hides the field without clearing the query. Store filter
+  text per route/search/user/tag/collection scope so switching sections does
+  not leak filters across unrelated feeds. Do not drive this UI from scroll-view
+  KVO or content-start heuristics because those paths have caused janky
+  animation and state fights; use tab-bar geometry plus explicit user intent.
 
 ## Safety And Privacy
 
