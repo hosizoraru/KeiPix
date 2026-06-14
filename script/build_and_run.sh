@@ -98,6 +98,26 @@ cat >"$INFO_PLIST" <<PLIST
   <string>$KEIPIX_MARKETING_VERSION</string>
   <key>CFBundleVersion</key>
   <string>$KEIPIX_BUILD_NUMBER</string>
+  <key>KeiPixBuildNumberSource</key>
+  <string>$KEIPIX_BUILD_NUMBER_SOURCE</string>
+  <key>KeiPixBuildAnchorTag</key>
+  <string>$KEIPIX_BUILD_ANCHOR_TAG</string>
+  <key>KeiPixBuildCommitCount</key>
+  <string>$KEIPIX_BUILD_COMMIT_COUNT</string>
+  <key>KeiPixBuildBaseNumber</key>
+  <string>$KEIPIX_BUILD_BASE_NUMBER</string>
+  <key>KeiPixBuildDisplayNumber</key>
+  <string>$KEIPIX_BUILD_DISPLAY_NUMBER</string>
+  <key>KeiPixBuildIdentity</key>
+  <string>$KEIPIX_BUILD_IDENTITY</string>
+  <key>KeiPixGitCommit</key>
+  <string>$KEIPIX_GIT_COMMIT</string>
+  <key>KeiPixGitShortCommit</key>
+  <string>$KEIPIX_GIT_SHORT_COMMIT</string>
+  <key>KeiPixGitDirty</key>
+  <string>$KEIPIX_GIT_DIRTY</string>
+  <key>KeiPixGitDescribe</key>
+  <string>$KEIPIX_GIT_DESCRIBE</string>
   <key>CFBundlePackageType</key>
   <string>APPL</string>
   <key>CFBundleLocalizations</key>

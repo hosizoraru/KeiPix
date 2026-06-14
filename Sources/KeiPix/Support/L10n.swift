@@ -1290,6 +1290,9 @@ enum L10n {
     static func buildLabel(_ value: String) -> String {
         String(format: text("Build %@"), locale: Locale.current, value)
     }
+    static func revisionLabel(_ value: String) -> String {
+        String(format: text("Revision %@"), locale: Locale.current, value)
+    }
     static var aboutSummary: String {
         text("KeiPix is a native Pixiv client for macOS, iPadOS, and iOS.")
     }
@@ -1338,6 +1341,9 @@ enum L10n {
     static var aboutDiagnosticsLocale: String { text("Locale") }
     static var aboutDiagnosticsRepository: String { text("Repository") }
     static var aboutDiagnosticsLicense: String { text("License") }
+    static var aboutDiagnosticsBuildCode: String { text("Build Code") }
+    static var aboutDiagnosticsBuildSource: String { text("Build Source") }
+    static var aboutDiagnosticsCommit: String { text("Commit") }
 
     // MARK: - Log viewer
 

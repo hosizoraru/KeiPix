@@ -89,14 +89,14 @@ Nightly LiveContainer 订阅源：
 https://github.com/hosizoraru/KeiPix/releases/download/nightly/apps_nightly.json
 ```
 
-`apps_nightly.json` 使用同一套版本元数据：`versionName` 对应 `MARKETING_VERSION`，`buildNumber` / `buildVersion` 对应解析后的构建号，`versionCode` 是给订阅源和第三方工具消费的整数构建码。本地脚本默认使用 `Config/AppVersion.xcconfig` 里的 `CURRENT_PROJECT_VERSION`，而 Actions 的非 tag 构建会设置 `KEIPIX_BUILD_NUMBER_STRATEGY=git`：优先用最近的 `v*` 版本 tag 加提交距离，没有版本 tag 时用仓库 commit 数兜底。tag `v*` 构建继续使用 config 构建号，方便正式发布时手动锁定版本。需要本地模拟 nightly 时可以运行：
+`apps_nightly.json` 使用同一套版本元数据：`versionName` 对应当前可达 `v*` tag 的版本号，`buildNumber` / `buildVersion` / `versionCode` 使用 tag code，例如 `v0.27.0 -> 2700`、`v0.27.2 -> 2702`、`v1.2.3 -> 10203`。commit 数和短 hash 只写进 About/诊断与 nightly 描述，不参与版本号或安装升级判断；因此 `v0.27.6+12` 仍然是外部版本 `0.27.6`、构建号 `2706`。需要本地模拟 nightly 时可以运行：
 
 ```bash
 KEIPIX_BUILD_NUMBER_STRATEGY=git ./script/version_settings.sh --print-json
 KEIPIX_BUILD_NUMBER_STRATEGY=git ./script/build_unsigned_ipa.sh ios
 ```
 
-紧急重跑或外部分发需要固定构建号时，可以用 `KEIPIX_BUILD_NUMBER_OVERRIDE=<number>` 覆盖解析结果。`master` 的 Actions 在 iOS 与 iPadOS IPA 都构建成功后，会把 `nightly` release 更新为最新的两个 unsigned IPA 和订阅源；本地需要刷新 seed 文件时可运行：
+`Config/AppVersion.xcconfig` 与 `project.yml` 必须和最新版本 tag 保持一致；更新版本请先运行 `./script/set_app_version.sh 0.27.x`，再给同一个提交打 annotated `v0.27.x` tag。`master` 的 Actions 在 iOS 与 iPadOS IPA 都构建成功后，会移动 `nightly` tag，并把 `nightly` release 更新为最新的两个 unsigned IPA 和订阅源；本地需要刷新 seed 文件时可运行：
 
 ```bash
 ./script/generate_livecontainer_apps_nightly.sh apps_nightly.json

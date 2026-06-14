@@ -10,7 +10,17 @@ struct AppVersionTests {
             "CFBundleDisplayName": "KeiPix Beta",
             "CFBundleName": "KeiPix",
             "CFBundleShortVersionString": "0.2.0",
-            "CFBundleVersion": "42"
+            "CFBundleVersion": "42",
+            "KeiPixBuildNumberSource": "tag",
+            "KeiPixBuildAnchorTag": "v0.2.0",
+            "KeiPixBuildCommitCount": "3",
+            "KeiPixBuildBaseNumber": "200",
+            "KeiPixBuildDisplayNumber": "200",
+            "KeiPixBuildIdentity": "v0.2.0+3",
+            "KeiPixGitCommit": "abcdef1234567890",
+            "KeiPixGitShortCommit": "abcdef123456",
+            "KeiPixGitDirty": "NO",
+            "KeiPixGitDescribe": "v0.2.0-3-gabcdef1"
         ])
 
         #expect(metadata.displayName == "KeiPix Beta")
@@ -23,17 +33,27 @@ struct AppVersionTests {
         #expect(metadata.userAgentProduct == "KeiPix/0.2.0")
         #expect(metadata.desktopSafariUserAgent().contains("KeiPix/0.2.0"))
         #expect(metadata.releaseSemanticVersion == SemanticVersion(major: 0, minor: 2, patch: 0))
+        #expect(metadata.buildNumberSource == "tag")
+        #expect(metadata.buildAnchorTag == "v0.2.0")
+        #expect(metadata.buildCommitCount == 3)
+        #expect(metadata.buildBaseNumber == "200")
+        #expect(metadata.buildDisplayNumber == "200")
+        #expect(metadata.gitCommit == "abcdef1234567890")
+        #expect(metadata.gitShortCommit == "abcdef123456")
+        #expect(metadata.gitDirty == false)
+        #expect(metadata.gitDescribe == "v0.2.0-3-gabcdef1")
+        #expect(metadata.buildIdentity == "v0.2.0+3")
     }
 
-    @Test("Dotted Apple build versions expose a stable numeric version code")
-    func dottedBuildVersionsExposeVersionCode() {
+    @Test("Integer Apple build versions expose the tag-code version code")
+    func integerBuildVersionsExposeVersionCode() {
         let metadata = AppVersion(infoDictionary: [
-            "CFBundleShortVersionString": "0.2.0",
-            "CFBundleVersion": "7.8.9"
+            "CFBundleShortVersionString": "1.2.3",
+            "CFBundleVersion": "10203"
         ])
 
-        #expect(metadata.buildNumber == "7.8.9")
-        #expect(metadata.versionCode == 7_008_009)
+        #expect(metadata.buildNumber == "10203")
+        #expect(metadata.versionCode == 10_203)
     }
 
     @Test("Version config is valid and stays aligned with XcodeGen settings")
@@ -52,7 +72,7 @@ struct AppVersionTests {
         #expect(project.contains("CURRENT_PROJECT_VERSION: \"\(buildNumber)\""))
     }
 
-    @Test("Version settings script exposes release aliases for scripts and feeds")
+    @Test("Version settings script exposes tag-code release aliases for scripts and feeds")
     func versionSettingsScriptExportsReleaseAliases() throws {
         let root = try packageRoot()
         let settings = try versionSettings(root: root)
@@ -72,13 +92,21 @@ struct AppVersionTests {
         #expect(json["marketingVersion"] as? String == marketingVersion)
         #expect(json["versionName"] as? String == marketingVersion)
         #expect(json["buildNumber"] as? String == buildNumber)
-        #expect(intValue(json["versionCode"]) == expectedVersionCode(from: buildNumber))
+        #expect(intValue(json["versionCode"]) == expectedVersionCode(from: marketingVersion))
+        #expect(intValue(json["buildBaseNumber"]) == expectedVersionCode(from: marketingVersion))
+        #expect(json["buildDisplayNumber"] as? String == buildNumber)
+        #expect(json["buildIdentity"] as? String == "v\(marketingVersion)")
+        #expect(json["gitCommit"] as? String != nil)
+        #expect(json["gitShortCommit"] as? String != nil)
+        #expect(json["gitDirty"] as? Bool != nil)
+        #expect(json["gitDescribe"] as? String != nil)
+        #expect(json["buildNumberSource"] as? String == "config")
     }
 
-    @Test("Git build strategy derives build numbers from the nearest version tag distance")
-    func gitBuildStrategyUsesVersionTagDistance() throws {
+    @Test("Git build strategy derives version names and build codes from the nearest version tag")
+    func gitBuildStrategyUsesVersionTagCode() throws {
         let root = try packageRoot()
-        let fixture = try makeTemporaryVersionRepo(marketingVersion: "0.2.0", buildNumber: "10")
+        let fixture = try makeTemporaryVersionRepo(marketingVersion: "0.2.0", buildNumber: "200")
         defer { try? FileManager.default.removeItem(at: fixture) }
 
         try git(["config", "user.email", "keipix-tests@example.invalid"], in: fixture)
@@ -92,20 +120,23 @@ struct AppVersionTests {
         source \(shellQuote(root.appending(path: "script/version_settings.sh").path(percentEncoded: false)))
         export KEIPIX_BUILD_NUMBER_STRATEGY=git
         keipix_load_version_settings \(shellQuote(fixture.path(percentEncoded: false)))
+        printf '%s\\n' "$KEIPIX_MARKETING_VERSION"
         printf '%s\\n' "$KEIPIX_BUILD_NUMBER"
+        printf '%s\\n' "$KEIPIX_VERSION_CODE"
         printf '%s\\n' "$KEIPIX_BUILD_ANCHOR_TAG"
         printf '%s\\n' "$KEIPIX_BUILD_COMMIT_COUNT"
+        printf '%s\\n' "$KEIPIX_BUILD_IDENTITY"
         """
         let output = try run(["/bin/bash", "-c", command], in: root)
         let lines = output.split(separator: "\n").map(String.init)
 
-        #expect(lines == ["12", "v0.1.0", "2"])
+        #expect(lines == ["0.1.0", "100", "100", "v0.1.0", "2", "v0.1.0+2"])
     }
 
-    @Test("Git build strategy falls back to the total commit count when no version tag exists")
-    func gitBuildStrategyUsesCommitCountWithoutVersionTags() throws {
+    @Test("Git build strategy falls back to the config version while keeping commit count diagnostic")
+    func gitBuildStrategyUsesConfigVersionWithoutVersionTags() throws {
         let root = try packageRoot()
-        let fixture = try makeTemporaryVersionRepo(marketingVersion: "0.1.0", buildNumber: "1")
+        let fixture = try makeTemporaryVersionRepo(marketingVersion: "0.1.0", buildNumber: "100")
         defer { try? FileManager.default.removeItem(at: fixture) }
 
         try git(["config", "user.email", "keipix-tests@example.invalid"], in: fixture)
@@ -117,23 +148,23 @@ struct AppVersionTests {
         source \(shellQuote(root.appending(path: "script/version_settings.sh").path(percentEncoded: false)))
         export KEIPIX_BUILD_NUMBER_STRATEGY=git
         keipix_load_version_settings \(shellQuote(fixture.path(percentEncoded: false)))
-        printf '%s,%s,%s\\n' "$KEIPIX_BUILD_NUMBER" "${KEIPIX_BUILD_ANCHOR_TAG:-}" "$KEIPIX_BUILD_COMMIT_COUNT"
+        printf '%s,%s,%s,%s\\n' "$KEIPIX_BUILD_NUMBER" "${KEIPIX_BUILD_ANCHOR_TAG:-}" "$KEIPIX_BUILD_COMMIT_COUNT" "$KEIPIX_BUILD_IDENTITY"
         """
         let output = try run(["/bin/bash", "-c", command], in: root)
 
-        #expect(output.trimmingCharacters(in: .whitespacesAndNewlines) == "2,,2")
+        #expect(output.trimmingCharacters(in: .whitespacesAndNewlines) == "100,,2,v0.1.0+2")
     }
 
-    @Test("Git build strategy packs dotted config builds before adding tag distance")
-    func gitBuildStrategyPacksDottedConfigBuilds() throws {
+    @Test("Commit distance does not change version name or build code")
+    func commitDistanceDoesNotChangeVersionNameOrBuildCode() throws {
         let root = try packageRoot()
-        let fixture = try makeTemporaryVersionRepo(marketingVersion: "0.2.0", buildNumber: "7.8.9")
+        let fixture = try makeTemporaryVersionRepo(marketingVersion: "1.2.3", buildNumber: "10203")
         defer { try? FileManager.default.removeItem(at: fixture) }
 
         try git(["config", "user.email", "keipix-tests@example.invalid"], in: fixture)
         try git(["config", "user.name", "KeiPix Tests"], in: fixture)
         try commitFixtureChange(in: fixture, name: "seed.txt", contents: "seed\n")
-        try git(["tag", "v0.2.0"], in: fixture)
+        try git(["tag", "v1.2.3"], in: fixture)
         try commitFixtureChange(in: fixture, name: "one.txt", contents: "one\n")
         try commitFixtureChange(in: fixture, name: "two.txt", contents: "two\n")
 
@@ -141,11 +172,41 @@ struct AppVersionTests {
         source \(shellQuote(root.appending(path: "script/version_settings.sh").path(percentEncoded: false)))
         export KEIPIX_BUILD_NUMBER_STRATEGY=git
         keipix_load_version_settings \(shellQuote(fixture.path(percentEncoded: false)))
+        printf '%s\\n' "$KEIPIX_MARKETING_VERSION"
         printf '%s\\n' "$KEIPIX_BUILD_NUMBER"
+        printf '%s\\n' "$KEIPIX_VERSION_CODE"
+        printf '%s\\n' "$KEIPIX_BUILD_IDENTITY"
         """
         let output = try run(["/bin/bash", "-c", command], in: root)
+        let lines = output.split(separator: "\n").map(String.init)
 
-        #expect(output.trimmingCharacters(in: .whitespacesAndNewlines) == "7008011")
+        #expect(lines == ["1.2.3", "10203", "10203", "v1.2.3+2"])
+    }
+
+    @Test("Version consistency check accepts unified tag-derived metadata")
+    func versionConsistencyCheckAcceptsUnifiedTagDerivedMetadata() throws {
+        let root = try packageRoot()
+        let settings = try versionSettings(root: root)
+        let marketingVersion = try #require(settings["MARKETING_VERSION"])
+        let output = try run(["/bin/bash", "script/check_version_consistency.sh"], in: root)
+
+        #expect(output.contains("\(marketingVersion)"))
+        #expect(output.contains("revision "))
+    }
+
+    @Test("Version codes use community tag-code layout")
+    func versionCodesUseCommunityTagCodeLayout() throws {
+        let root = try packageRoot()
+        let command = """
+        source \(shellQuote(root.appending(path: "script/version_settings.sh").path(percentEncoded: false)))
+        printf '%s\\n' "$(keipix_version_code_from_marketing_version 0.27.0)"
+        printf '%s\\n' "$(keipix_version_code_from_marketing_version 0.27.2)"
+        printf '%s\\n' "$(keipix_version_code_from_marketing_version 1.2.3)"
+        """
+        let output = try run(["/bin/bash", "-c", command], in: root)
+        let lines = output.split(separator: "\n").map(String.init)
+
+        #expect(lines == ["2700", "2702", "10203"])
     }
 
     @Test("Bundle plist templates consume Xcode build settings for version fields")
@@ -157,6 +218,26 @@ struct AppVersionTests {
             #expect(contents.contains("<string>$(MARKETING_VERSION)</string>"), "\(plist) should use MARKETING_VERSION")
             #expect(contents.contains("<key>CFBundleVersion</key>"))
             #expect(contents.contains("<string>$(CURRENT_PROJECT_VERSION)</string>"), "\(plist) should use CURRENT_PROJECT_VERSION")
+            #expect(contents.contains("<key>KeiPixBuildNumberSource</key>"))
+            #expect(contents.contains("<string>$(KEIPIX_BUILD_NUMBER_SOURCE)</string>"), "\(plist) should use KEIPIX_BUILD_NUMBER_SOURCE")
+            #expect(contents.contains("<key>KeiPixBuildAnchorTag</key>"))
+            #expect(contents.contains("<string>$(KEIPIX_BUILD_ANCHOR_TAG)</string>"), "\(plist) should use KEIPIX_BUILD_ANCHOR_TAG")
+            #expect(contents.contains("<key>KeiPixBuildCommitCount</key>"))
+            #expect(contents.contains("<string>$(KEIPIX_BUILD_COMMIT_COUNT)</string>"), "\(plist) should use KEIPIX_BUILD_COMMIT_COUNT")
+            #expect(contents.contains("<key>KeiPixBuildBaseNumber</key>"))
+            #expect(contents.contains("<string>$(KEIPIX_BUILD_BASE_NUMBER)</string>"), "\(plist) should use KEIPIX_BUILD_BASE_NUMBER")
+            #expect(contents.contains("<key>KeiPixBuildDisplayNumber</key>"))
+            #expect(contents.contains("<string>$(KEIPIX_BUILD_DISPLAY_NUMBER)</string>"), "\(plist) should use KEIPIX_BUILD_DISPLAY_NUMBER")
+            #expect(contents.contains("<key>KeiPixBuildIdentity</key>"))
+            #expect(contents.contains("<string>$(KEIPIX_BUILD_IDENTITY)</string>"), "\(plist) should use KEIPIX_BUILD_IDENTITY")
+            #expect(contents.contains("<key>KeiPixGitCommit</key>"))
+            #expect(contents.contains("<string>$(KEIPIX_GIT_COMMIT)</string>"), "\(plist) should use KEIPIX_GIT_COMMIT")
+            #expect(contents.contains("<key>KeiPixGitShortCommit</key>"))
+            #expect(contents.contains("<string>$(KEIPIX_GIT_SHORT_COMMIT)</string>"), "\(plist) should use KEIPIX_GIT_SHORT_COMMIT")
+            #expect(contents.contains("<key>KeiPixGitDirty</key>"))
+            #expect(contents.contains("<string>$(KEIPIX_GIT_DIRTY)</string>"), "\(plist) should use KEIPIX_GIT_DIRTY")
+            #expect(contents.contains("<key>KeiPixGitDescribe</key>"))
+            #expect(contents.contains("<string>$(KEIPIX_GIT_DESCRIBE)</string>"), "\(plist) should use KEIPIX_GIT_DESCRIBE")
         }
     }
 
@@ -173,11 +254,16 @@ struct AppVersionTests {
         #expect(buildAndRun.contains("version_settings.sh"))
         #expect(buildAndRun.contains("CFBundleShortVersionString"))
         #expect(buildAndRun.contains("CFBundleVersion"))
+        #expect(buildAndRun.contains("KeiPixGitShortCommit"))
+        #expect(buildAndRun.contains("KeiPixBuildDisplayNumber"))
         #expect(release.contains("version_settings.sh"))
         #expect(release.contains("KEIPIX_MARKETING_VERSION"))
         #expect(release.contains("KEIPIX_BUILD_NUMBER"))
+        #expect(release.contains("KEIPIX_GIT_SHORT_COMMIT"))
+        #expect(release.contains("KEIPIX_BUILD_DISPLAY_NUMBER"))
         #expect(release.contains("git describe") == false)
         #expect(unsignedIPA.contains("CURRENT_PROJECT_VERSION=\"$BUILD_NUMBER\""))
+        #expect(unsignedIPA.contains("KEIPIX_GIT_SHORT_COMMIT=\"$KEIPIX_GIT_SHORT_COMMIT\""))
         #expect(unsignedIPA.contains("\"${CI:-}\" = \"true\""))
         #expect(unsignedIPA.contains("xcode_project_needs_regeneration"))
         #expect(unsignedIPA.contains("\"$ROOT_DIR/Sources/KeiPix\""))
@@ -187,6 +273,11 @@ struct AppVersionTests {
         #expect(liveContainer.contains("version_settings.sh"))
         #expect(liveContainer.contains("KEIPIX_VERSION_NAME"))
         #expect(liveContainer.contains("KEIPIX_VERSION_CODE"))
+        #expect(liveContainer.contains("KEIPIX_BUILD_DISPLAY_NUMBER"))
+        #expect(liveContainer.contains("KEIPIX_BUILD_IDENTITY"))
+        #expect(workflow.contains("pattern: KeiPix-*-unsigned-ipa"))
+        #expect(workflow.contains("tag_name: nightly"))
+        #expect(workflow.contains("make_latest: false"))
         #expect(workflow.contains("script/version_settings.sh"))
         #expect(workflow.contains("KEIPIX_BUILD_NUMBER_STRATEGY"))
         #expect(workflow.contains("fetch-depth: 0"))
@@ -200,10 +291,12 @@ struct AppVersionTests {
     @Test("LiveContainer nightly source uses stable release assets and shared version metadata")
     func liveContainerNightlySourceUsesSharedVersionMetadata() throws {
         let root = try packageRoot()
-        let settings = try versionSettings(root: root)
-        let marketingVersion = try #require(settings["MARKETING_VERSION"])
-        let buildNumber = try #require(settings["CURRENT_PROJECT_VERSION"])
-        let versionCode = expectedVersionCode(from: buildNumber)
+        let metadata = try versionMetadata(root: root, strategy: "git")
+        let marketingVersion = try #require(metadata["versionName"] as? String)
+        let buildNumber = try #require(metadata["buildNumber"] as? String)
+        let buildDisplayNumber = try #require(metadata["buildDisplayNumber"] as? String)
+        let buildIdentityPrefix = try #require(metadata["buildAnchorTag"] as? String)
+        let versionCode = try #require(intValue(metadata["versionCode"]))
         let source = try jsonObject(at: root.appending(path: "apps_nightly.json"))
 
         #expect(source["name"] as? String == "KeiPix Nightly")
@@ -219,6 +312,8 @@ struct AppVersionTests {
             ipaName: "KeiPix-iOS-\(marketingVersion)-build.\(buildNumber)-unsigned.ipa",
             marketingVersion: marketingVersion,
             buildNumber: buildNumber,
+            buildDisplayNumber: buildDisplayNumber,
+            buildIdentityPrefix: buildIdentityPrefix,
             versionCode: versionCode
         )
         try assertLiveContainerApp(
@@ -228,6 +323,8 @@ struct AppVersionTests {
             ipaName: "KeiPix-iPadOS-\(marketingVersion)-build.\(buildNumber)-unsigned.ipa",
             marketingVersion: marketingVersion,
             buildNumber: buildNumber,
+            buildDisplayNumber: buildDisplayNumber,
+            buildIdentityPrefix: buildIdentityPrefix,
             versionCode: versionCode
         )
     }
@@ -266,13 +363,10 @@ struct AppVersionTests {
         return regex.firstMatch(in: value, range: range)?.range == range
     }
 
-    private func expectedVersionCode(from buildNumber: String) -> Int {
-        let components = buildNumber.split(separator: ".").compactMap { Int($0) }
-        guard let first = components.first else { return 0 }
-        guard components.count > 1 else { return first }
-        return components.prefix(3).reduce(0) { partial, component in
-            partial * 1_000 + component
-        }
+    private func expectedVersionCode(from marketingVersion: String) -> Int {
+        let components = marketingVersion.split(separator: ".").compactMap { Int($0) }
+        guard components.count == 3 else { return 0 }
+        return components[0] * 10_000 + components[1] * 100 + components[2]
     }
 
     private func intValue(_ value: Any?) -> Int? {
@@ -283,6 +377,18 @@ struct AppVersionTests {
             return number.intValue
         }
         return nil
+    }
+
+    private func versionMetadata(root: URL, strategy: String) throws -> [String: Any] {
+        let output = try run([
+            "/usr/bin/env",
+            "KEIPIX_BUILD_NUMBER_STRATEGY=\(strategy)",
+            "/bin/bash",
+            "script/version_settings.sh",
+            "--print-json"
+        ], in: root)
+        let data = try #require(output.data(using: .utf8))
+        return try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
     }
 
     private func jsonObject(at url: URL) throws -> [String: Any] {
@@ -323,6 +429,8 @@ struct AppVersionTests {
         ipaName: String,
         marketingVersion: String,
         buildNumber: String,
+        buildDisplayNumber: String,
+        buildIdentityPrefix: String,
         versionCode: Int
     ) throws {
         let app = try #require(apps.first { $0["bundleIdentifier"] as? String == bundleIdentifier })
@@ -330,6 +438,8 @@ struct AppVersionTests {
         #expect(app["version"] as? String == marketingVersion)
         #expect(app["versionName"] as? String == marketingVersion)
         #expect(app["buildNumber"] as? String == buildNumber)
+        #expect(app["buildDisplayNumber"] as? String == buildDisplayNumber)
+        #expect((app["buildIdentity"] as? String)?.hasPrefix(buildIdentityPrefix) == true)
         #expect(intValue(app["versionCode"]) == versionCode)
         #expect(app["downloadURL"] as? String == "https://github.com/hosizoraru/KeiPix/releases/download/nightly/\(ipaName)")
         #expect((app["localizedDescription"] as? String)?.isEmpty == false)
@@ -339,6 +449,8 @@ struct AppVersionTests {
         #expect(latest["version"] as? String == marketingVersion)
         #expect(latest["versionName"] as? String == marketingVersion)
         #expect(latest["buildNumber"] as? String == buildNumber)
+        #expect(latest["buildDisplayNumber"] as? String == buildDisplayNumber)
+        #expect((latest["buildIdentity"] as? String)?.hasPrefix(buildIdentityPrefix) == true)
         #expect(intValue(latest["versionCode"]) == versionCode)
         #expect(latest["downloadURL"] as? String == "https://github.com/hosizoraru/KeiPix/releases/download/nightly/\(ipaName)")
     }

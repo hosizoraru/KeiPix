@@ -35,6 +35,12 @@ struct AboutViewTests {
         #expect(label.contains("42"))
     }
 
+    @Test("Revision label format substitutes the supplied value")
+    func revisionLabelInsertsValue() {
+        let label = L10n.revisionLabel("v1.2.3+4")
+        #expect(label.contains("v1.2.3+4"))
+    }
+
     @Test("License metadata is Apache 2 across repo and app bundles")
     func licenseMetadataIsApache2() throws {
         let root = try packageRoot()
@@ -106,6 +112,9 @@ struct AboutViewTests {
         #expect(aboutView.contains("versionPill"))
         #expect(aboutView.contains("buildPill"))
         #expect(aboutView.contains("licensePill"))
+        #expect(aboutView.contains("private var revisionPill") == false)
+        #expect(aboutView.contains("L10n.revisionLabel(revision)"))
+        #expect(aboutView.contains("appVersion.gitShortCommit"))
         #expect(aboutView.contains("var viewportAlignment: Alignment"))
         #expect(aboutView.contains("var navigationTitle: String"))
         #expect(aboutView.contains(".navigationTitle(presentation.navigationTitle)"))
@@ -121,6 +130,9 @@ struct AboutViewTests {
         #expect(aboutView.contains("L10n.aboutDiagnosticsLocale"))
         #expect(aboutView.contains("L10n.aboutDiagnosticsRepository"))
         #expect(aboutView.contains("L10n.aboutDiagnosticsLicense"))
+        #expect(aboutView.contains("L10n.aboutDiagnosticsBuildCode"))
+        #expect(aboutView.contains("L10n.aboutDiagnosticsBuildSource"))
+        #expect(aboutView.contains("L10n.aboutDiagnosticsCommit"))
         #expect(aboutView.contains("KeiPixAppIconView(cornerRadius: 24)"))
         #expect(aboutView.contains(#"Image(systemName: "photo.stack.fill")"#) == false)
         #expect(appIconView.contains(#"static let iconAssetName = "keipixiv""#))
@@ -164,6 +176,10 @@ struct AboutViewTests {
         #expect(localizable.contains("\"value\": \"KeiPix 是面向 macOS、iPadOS 和 iOS 的原生 Pixiv 客户端。\""))
         #expect(localizable.contains("\"value\": \"打开许可证\""))
         #expect(localizable.contains("\"value\": \"复制版本信息\""))
+        #expect(localizable.contains("\"value\": \"构建码\""))
+        #expect(localizable.contains("\"value\": \"修订 %@\""))
+        #expect(localizable.contains("\"value\": \"构建来源\""))
+        #expect(localizable.contains("\"value\": \"提交\""))
         #expect(localizable.contains("\"value\": \"复制许可证摘要\""))
         #expect(localizable.contains("\"value\": \"复制仓库 URL\""))
         #expect(localizable.contains("\"value\": \"平台支持\""))

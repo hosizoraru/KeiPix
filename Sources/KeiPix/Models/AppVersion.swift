@@ -13,6 +13,16 @@ struct AppVersion: Equatable, Sendable {
     let displayName: String
     let marketingVersion: String
     let buildNumber: String
+    let buildNumberSource: String?
+    let buildAnchorTag: String?
+    let buildCommitCount: Int?
+    let buildBaseNumber: String?
+    let buildDisplayNumber: String?
+    let injectedBuildIdentity: String?
+    let gitCommit: String?
+    let gitShortCommit: String?
+    let gitDirty: Bool
+    let gitDescribe: String?
 
     init(infoDictionary: [String: Any]? = Bundle.main.infoDictionary) {
         displayName = Self.nonEmptyString(infoDictionary?["CFBundleDisplayName"])
@@ -22,6 +32,16 @@ struct AppVersion: Equatable, Sendable {
             ?? Self.fallbackMarketingVersion
         buildNumber = Self.nonEmptyString(infoDictionary?["CFBundleVersion"])
             ?? Self.fallbackBuildNumber
+        buildNumberSource = Self.nonEmptyString(infoDictionary?["KeiPixBuildNumberSource"])
+        buildAnchorTag = Self.nonEmptyString(infoDictionary?["KeiPixBuildAnchorTag"])
+        buildCommitCount = Self.integer(infoDictionary?["KeiPixBuildCommitCount"])
+        buildBaseNumber = Self.nonEmptyString(infoDictionary?["KeiPixBuildBaseNumber"])
+        buildDisplayNumber = Self.nonEmptyString(infoDictionary?["KeiPixBuildDisplayNumber"])
+        injectedBuildIdentity = Self.nonEmptyString(infoDictionary?["KeiPixBuildIdentity"])
+        gitCommit = Self.nonEmptyString(infoDictionary?["KeiPixGitCommit"])
+        gitShortCommit = Self.nonEmptyString(infoDictionary?["KeiPixGitShortCommit"])
+        gitDirty = Self.boolean(infoDictionary?["KeiPixGitDirty"])
+        gitDescribe = Self.nonEmptyString(infoDictionary?["KeiPixGitDescribe"])
     }
 
     static var current: AppVersion {
@@ -38,6 +58,31 @@ struct AppVersion: Equatable, Sendable {
 
     var buildVersion: String {
         buildNumber
+    }
+
+    var buildIdentity: String {
+        if let injectedBuildIdentity {
+            return injectedBuildIdentity
+        }
+
+        let identity: String
+        if let buildAnchorTag {
+            if let buildCommitCount, buildCommitCount > 0 {
+                identity = "\(buildAnchorTag)+\(buildCommitCount)"
+            } else {
+                identity = buildAnchorTag
+            }
+        } else if let gitDescribe {
+            identity = gitDescribe
+        } else {
+            identity = buildNumber
+        }
+
+        return identity
+    }
+
+    var hasBuildProvenance: Bool {
+        injectedBuildIdentity != nil || buildAnchorTag != nil || gitDescribe != nil || gitDirty
     }
 
     var versionCode: Int {
@@ -64,6 +109,28 @@ struct AppVersion: Equatable, Sendable {
         return trimmed.isEmpty ? nil : trimmed
     }
 
+    private static func integer(_ value: Any?) -> Int? {
+        if let int = value as? Int {
+            return int
+        }
+        if let number = value as? NSNumber {
+            return number.intValue
+        }
+        guard let string = nonEmptyString(value) else { return nil }
+        return Int(string)
+    }
+
+    private static func boolean(_ value: Any?) -> Bool {
+        if let bool = value as? Bool {
+            return bool
+        }
+        if let number = value as? NSNumber {
+            return number.boolValue
+        }
+        guard let string = nonEmptyString(value)?.lowercased() else { return false }
+        return ["1", "true", "yes", "y"].contains(string)
+    }
+
     private static func userAgentSafeVersion(_ value: String) -> String {
         let allowed = CharacterSet(charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789._-")
         let sanitized = String(value.unicodeScalars.map { scalar in
@@ -73,12 +140,6 @@ struct AppVersion: Equatable, Sendable {
     }
 
     private static func versionCode(fromBuildNumber value: String) -> Int {
-        let components = value.split(separator: ".").compactMap { Int($0) }
-        guard components.isEmpty == false else { return 0 }
-        guard components.count > 1 else { return components[0] }
-
-        return components.prefix(3).reduce(0) { partial, component in
-            partial * 1_000 + component
-        }
+        Int(value) ?? 0
     }
 }

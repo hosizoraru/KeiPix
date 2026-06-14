@@ -20,7 +20,7 @@ concurrency:
 env:
   HOMEBREW_NO_AUTO_UPDATE: "1"
   HOMEBREW_NO_INSTALL_CLEANUP: "1"
-  KEIPIX_BUILD_NUMBER_STRATEGY: ${{ startsWith(github.ref, 'refs/tags/v') && 'config' || 'git' }}
+  KEIPIX_BUILD_NUMBER_STRATEGY: git
 
 permissions:
   contents: write

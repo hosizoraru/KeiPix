@@ -17,6 +17,8 @@ struct AboutView: View {
     private var appName: String { appVersion.displayName }
     private var version: String { appVersion.marketingVersion }
     private var build: String { appVersion.buildNumber }
+    private var revision: String { appVersion.buildIdentity }
+    private var buildCode: String? { appVersion.buildDisplayNumber }
 
     @State private var statusMessage: String?
 
@@ -294,22 +296,36 @@ struct AboutView: View {
     }
 
     private var versionInfoPayload: String {
-        """
-        \(appName)
-        \(L10n.versionLabel(version))
-        \(L10n.buildLabel(build))
-        \(L10n.aboutApacheLicenseTitle)
-        """
+        var lines = [
+            appName,
+            L10n.versionLabel(version),
+            L10n.buildLabel(build)
+        ]
+        if let buildCode, buildCode != build {
+            lines.append("\(L10n.aboutDiagnosticsBuildCode): \(buildCode)")
+        }
+        if appVersion.hasBuildProvenance {
+            lines.append(L10n.revisionLabel(revision))
+        }
+        if let shortCommit = appVersion.gitShortCommit {
+            lines.append("\(L10n.aboutDiagnosticsCommit): \(shortCommit)")
+        }
+        lines.append(L10n.aboutApacheLicenseTitle)
+        return lines.joined(separator: "\n")
     }
 
     private var diagnosticsPayload: String {
-        """
-        \(versionInfoPayload)
-        \(L10n.aboutDiagnosticsOS): \(ProcessInfo.processInfo.operatingSystemVersionString)
-        \(L10n.aboutDiagnosticsLocale): \(Locale.current.identifier)
-        \(L10n.aboutDiagnosticsRepository): \(Self.repositoryURL.absoluteString)
-        \(L10n.aboutDiagnosticsLicense): \(Self.apacheLicenseURL.absoluteString)
-        """
+        let diagnostics = [
+            versionInfoPayload,
+            "\(L10n.aboutDiagnosticsOS): \(ProcessInfo.processInfo.operatingSystemVersionString)",
+            "\(L10n.aboutDiagnosticsLocale): \(Locale.current.identifier)",
+            appVersion.buildNumberSource.map { "\(L10n.aboutDiagnosticsBuildSource): \($0)" },
+            appVersion.gitCommit.map { "\(L10n.aboutDiagnosticsCommit): \($0)" },
+            "\(L10n.aboutDiagnosticsRepository): \(Self.repositoryURL.absoluteString)",
+            "\(L10n.aboutDiagnosticsLicense): \(Self.apacheLicenseURL.absoluteString)"
+        ].compactMap { $0 }
+
+        return diagnostics.joined(separator: "\n")
     }
 
     static let repositoryURL = URL(string: "https://github.com/hosizoraru/KeiPix")!
@@ -392,6 +408,7 @@ private struct AboutPill: View {
             .font(.caption.weight(.semibold))
             .foregroundStyle(.secondary)
             .lineLimit(1)
+            .minimumScaleFactor(0.82)
             .padding(.horizontal, 10)
             .padding(.vertical, 6)
             .glassEffect(.regular, in: Capsule(style: .continuous))

@@ -52,7 +52,7 @@ if [ -z "$RUN_URL" ] && [ -n "${GITHUB_SERVER_URL:-}" ] && [ -n "${GITHUB_REPOSI
   RUN_URL="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
 fi
 
-export KEIPIX_VERSION_NAME KEIPIX_BUILD_NUMBER KEIPIX_BUILD_VERSION KEIPIX_VERSION_CODE
+export KEIPIX_VERSION_NAME KEIPIX_BUILD_NUMBER KEIPIX_BUILD_VERSION KEIPIX_VERSION_CODE KEIPIX_BUILD_DISPLAY_NUMBER KEIPIX_BUILD_IDENTITY
 export REPOSITORY_URL SOURCE_URL DOWNLOAD_BASE_URL ICON_URL TINT_COLOR MIN_OS_VERSION
 export VERSION_DATE COMMIT HEADLINE RUN_URL IOS_IPA_NAME IPADOS_IPA_NAME IOS_IPA_SIZE IPADOS_IPA_SIZE
 
@@ -67,6 +67,8 @@ version_name = os.environ["KEIPIX_VERSION_NAME"]
 build_number = os.environ["KEIPIX_BUILD_NUMBER"]
 build_version = os.environ["KEIPIX_BUILD_VERSION"]
 version_code = int(os.environ["KEIPIX_VERSION_CODE"])
+build_display_number = os.environ["KEIPIX_BUILD_DISPLAY_NUMBER"]
+build_identity = os.environ["KEIPIX_BUILD_IDENTITY"]
 repository_url = os.environ["REPOSITORY_URL"].rstrip("/")
 source_url = os.environ["SOURCE_URL"]
 download_base_url = os.environ["DOWNLOAD_BASE_URL"].rstrip("/")
@@ -82,7 +84,7 @@ run_url = os.environ["RUN_URL"]
 def version_description(device: str) -> str:
     description = (
         f"{device} nightly {version_name} build {build_number}"
-        f" from {commit}: {headline}"
+        f" ({build_identity}) from {commit}: {headline}"
     )
     if run_url:
         description += f"\n\nBuilt by GitHub Actions: {run_url}"
@@ -103,9 +105,11 @@ def app_entry(
         "version": version_name,
         "versionName": version_name,
         "versionCode": version_code,
-        "buildNumber": build_number,
-        "buildVersion": build_version,
-        "date": version_date,
+            "buildNumber": build_number,
+            "buildVersion": build_version,
+            "buildDisplayNumber": build_display_number,
+            "buildIdentity": build_identity,
+            "date": version_date,
         "localizedDescription": version_description(name),
         "downloadURL": download_url,
         "size": size,
@@ -124,6 +128,8 @@ def app_entry(
         "versionCode": version_code,
         "buildNumber": build_number,
         "buildVersion": build_version,
+        "buildDisplayNumber": build_display_number,
+        "buildIdentity": build_identity,
         "versionDate": version_date,
         "versionDescription": version_description(name),
         "downloadURL": download_url,
