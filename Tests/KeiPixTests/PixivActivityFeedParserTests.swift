@@ -220,15 +220,28 @@ struct PixivActivityFeedParserTests {
         #expect(page.items.first?.id == "duplicate-1")
     }
 
-    @Test("Pixiv Web activity URLs point at stacc pages")
+    @Test("Pixiv Web activity URLs point at scoped stacc feeds")
     func pixivWebActivityURLBuilder() throws {
-        let firstPage = try #require(PixivWebURLBuilder.activityFeedURL())
-        let thirdPage = try #require(PixivWebURLBuilder.activityFeedURL(page: 3))
-        let clamped = try #require(PixivWebURLBuilder.activityFeedURL(page: -5))
-
-        #expect(firstPage.absoluteString == "https://www.pixiv.net/stacc")
-        #expect(thirdPage.absoluteString == "https://www.pixiv.net/stacc?p=3")
-        #expect(clamped.absoluteString == "https://www.pixiv.net/stacc")
+        #expect(
+            PixivWebURLBuilder.activityFeedURL(scope: .all)?.absoluteString
+                == "https://www.pixiv.net/stacc/my/home/all/all?mode=unify"
+        )
+        #expect(
+            PixivWebURLBuilder.activityFeedURL(scope: .everyone)?.absoluteString
+                == "https://www.pixiv.net/stacc/p/all?mode=unify"
+        )
+        #expect(
+            PixivWebURLBuilder.activityFeedURL(scope: .followingUsers)?.absoluteString
+                == "https://www.pixiv.net/stacc/my/home/favorite/all?mode=unify"
+        )
+        #expect(
+            PixivWebURLBuilder.activityFeedURL(scope: .myPixiv)?.absoluteString
+                == "https://www.pixiv.net/stacc/my/home/mypixiv/all?mode=unify"
+        )
+        #expect(
+            PixivWebURLBuilder.activityFeedURL(scope: .mine)?.absoluteString
+                == "https://www.pixiv.net/stacc/my/home/self/all?mode=unify"
+        )
     }
 
     private static let embeddedJSONHTML = """

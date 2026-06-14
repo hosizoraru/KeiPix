@@ -29,6 +29,60 @@ struct PixivActivityFeedPresentationTests {
         #expect(PixivActivityLayoutMode.list.title == "List")
     }
 
+    @Test("Activity feed scopes follow Pixiv Web ordering")
+    func activityFeedScopesFollowPixivWebOrdering() {
+        #expect(PixivActivityFeedScope.allCases == [.all, .everyone, .followingUsers, .myPixiv, .mine])
+        #expect(PixivActivityFeedScope.all.title == "All")
+        #expect(PixivActivityFeedScope.everyone.title == "Everyone")
+        #expect(PixivActivityFeedScope.followingUsers.title == "Following Users")
+        #expect(PixivActivityFeedScope.myPixiv.title == "MyPixiv")
+        #expect(PixivActivityFeedScope.mine.title == "Mine")
+    }
+
+    @Test("Activity new markers do not mark the initial load")
+    func activityNewMarkersIgnoreInitialLoad() {
+        let now = Date(timeIntervalSince1970: 1_800_000_000)
+        let update = PixivActivityFeedPresentation.updatedNewMarkers(
+            previousItemIDs: [],
+            refreshedItemIDs: ["new-1", "new-2"],
+            existingMarkerDates: [:],
+            now: now
+        )
+
+        #expect(update.newItemIDs.isEmpty)
+        #expect(update.activeItemIDs.isEmpty)
+    }
+
+    @Test("Activity new markers flag refreshed items missing from the previous feed")
+    func activityNewMarkersFlagFreshRefreshItems() {
+        let now = Date(timeIntervalSince1970: 1_800_000_000)
+        let update = PixivActivityFeedPresentation.updatedNewMarkers(
+            previousItemIDs: ["old-1", "old-2"],
+            refreshedItemIDs: ["new-1", "old-1", "old-2"],
+            existingMarkerDates: [:],
+            now: now
+        )
+
+        #expect(update.newItemIDs == ["new-1"])
+        #expect(update.activeItemIDs == ["new-1"])
+        #expect(update.markerDatesByItemID["new-1"] == now)
+    }
+
+    @Test("Activity new markers expire after the marker lifetime")
+    func activityNewMarkersExpire() {
+        let now = Date(timeIntervalSince1970: 1_800_000_000)
+        let existing = now.addingTimeInterval(-PixivActivityFeedPresentation.newMarkerLifetime - 1)
+        let update = PixivActivityFeedPresentation.updatedNewMarkers(
+            previousItemIDs: ["old-1"],
+            refreshedItemIDs: ["old-1"],
+            existingMarkerDates: ["old-1": existing],
+            now: now
+        )
+
+        #expect(update.newItemIDs.isEmpty)
+        #expect(update.activeItemIDs.isEmpty)
+    }
+
     @Test("Activity masonry cards size themselves from image aspect ratios")
     func activityMasonryCardHeightsFollowImageAspectRatio() {
         let portrait = Self.activityItem(summary: "New work", thumbnailAspectRatio: 0.60)

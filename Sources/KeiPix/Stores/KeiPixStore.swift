@@ -111,13 +111,22 @@ final class KeiPixStore {
     var pixivCollectionRecommendedTags: [PixivCollectionDiscoveryTag] = []
     var pixivCollectionPersonalizedTags: [PixivCollectionDiscoveryTag] = []
     var pixivCollectionErrorMessage: String?
+    var pixivActivityFeedScope: PixivActivityFeedScope = .all
     var pixivActivityItems: [PixivActivityItem] = []
+    var pixivActivityNewItemIDs: Set<String> = []
+    var pixivActivityLastRefreshNewCount = 0
+    var pixivActivityLastRefreshNewItemIDs: Set<String> = []
     var isLoadingPixivActivityFeed = false
     var isLoadingMorePixivActivityFeed = false
     var pixivActivityNextPage: URL?
     var pixivActivityLoadedAt: Date?
     var pixivActivityLoadedInCurrentSession = false
     var pixivActivityErrorMessage: String?
+    var pixivActivityItemsByScope: [PixivActivityFeedScope: [PixivActivityItem]] = [:]
+    var pixivActivityNextPageByScope: [PixivActivityFeedScope: URL] = [:]
+    var pixivActivityLoadedAtByScope: [PixivActivityFeedScope: Date] = [:]
+    var pixivActivityLoadedInCurrentSessionScopes: Set<PixivActivityFeedScope> = []
+    var pixivActivityNewMarkerDatesByScope: [PixivActivityFeedScope: [String: Date]] = [:]
     var isPixivWebSessionPresented = false
     var readerWindowArtwork: PixivArtwork?
     /// Bounded registry mapping artwork ID → `PixivArtwork` for
@@ -544,11 +553,20 @@ final class KeiPixStore {
         selectedPixivCollection = nil
         selectedPixivCollectionSourceRoute = nil
         pixivCollectionErrorMessage = nil
+        pixivActivityFeedScope = .all
         pixivActivityItems = []
+        pixivActivityNewItemIDs = []
+        pixivActivityLastRefreshNewCount = 0
+        pixivActivityLastRefreshNewItemIDs = []
         pixivActivityNextPage = nil
         pixivActivityLoadedAt = nil
         pixivActivityLoadedInCurrentSession = false
         pixivActivityErrorMessage = nil
+        pixivActivityItemsByScope = [:]
+        pixivActivityNextPageByScope = [:]
+        pixivActivityLoadedAtByScope = [:]
+        pixivActivityLoadedInCurrentSessionScopes = []
+        pixivActivityNewMarkerDatesByScope = [:]
         isLoadingPixivActivityFeed = false
         isLoadingMorePixivActivityFeed = false
         readerWindowArtwork = nil

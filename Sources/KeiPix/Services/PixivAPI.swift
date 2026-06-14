@@ -509,11 +509,14 @@ actor PixivAPI {
         }
     }
 
-    func pixivActivityFeedPage(page: Int = 1) async throws -> PixivActivityPage {
+    func pixivActivityFeedPage(
+        page: Int = 1,
+        scope: PixivActivityFeedScope = .all
+    ) async throws -> PixivActivityPage {
         guard webSession?.isUsable == true else {
             throw PixivAPIError.missingSession
         }
-        guard let url = PixivWebURLBuilder.activityFeedURL(page: page) else {
+        guard let url = PixivWebURLBuilder.activityFeedURL(scope: scope, page: page) else {
             throw PixivAPIError.invalidResponse
         }
 
@@ -527,13 +530,13 @@ actor PixivAPI {
         )
         guard isAccessible else {
             KeiPixLog.network.notice(
-                "Pixiv activity Web session rejected: page=\(page, privacy: .public) finalHost=\(response.finalURL?.host(percentEncoded: false) ?? "nil", privacy: .public) finalPath=\(response.finalURL?.path ?? "nil", privacy: .public) bytes=\(response.html.utf8.count, privacy: .public)"
+                "Pixiv activity Web session rejected: scope=\(scope.rawValue, privacy: .public) page=\(page, privacy: .public) finalHost=\(response.finalURL?.host(percentEncoded: false) ?? "nil", privacy: .public) finalPath=\(response.finalURL?.path ?? "nil", privacy: .public) bytes=\(response.html.utf8.count, privacy: .public)"
             )
             throw PixivAPIError.missingSession
         }
         let parsedPage = pixivActivityPage(from: response.html, sourceURL: url)
         KeiPixLog.network.info(
-            "Pixiv activity Web page parsed: page=\(page, privacy: .public) source=\(self.pixivActivitySourceKind(response.html), privacy: .public) finalHost=\(response.finalURL?.host(percentEncoded: false) ?? "nil", privacy: .public) finalPath=\(response.finalURL?.path ?? "nil", privacy: .public) items=\(parsedPage.items.count, privacy: .public) bytes=\(response.html.utf8.count, privacy: .public)"
+            "Pixiv activity Web page parsed: scope=\(scope.rawValue, privacy: .public) page=\(page, privacy: .public) source=\(self.pixivActivitySourceKind(response.html), privacy: .public) finalHost=\(response.finalURL?.host(percentEncoded: false) ?? "nil", privacy: .public) finalPath=\(response.finalURL?.path ?? "nil", privacy: .public) items=\(parsedPage.items.count, privacy: .public) bytes=\(response.html.utf8.count, privacy: .public)"
         )
         return parsedPage
     }

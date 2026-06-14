@@ -26,8 +26,67 @@ enum PixivActivityLayoutMode: String, CaseIterable, Identifiable, Codable, Senda
     }
 }
 
+enum PixivActivityFeedScope: String, CaseIterable, Identifiable, Codable, Sendable {
+    case all
+    case everyone
+    case followingUsers
+    case myPixiv
+    case mine
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .all: L10n.pixivActivityScopeAll
+        case .everyone: L10n.pixivActivityScopeEveryone
+        case .followingUsers: L10n.pixivActivityScopeFollowingUsers
+        case .myPixiv: L10n.pixivActivityScopeMyPixiv
+        case .mine: L10n.pixivActivityScopeMine
+        }
+    }
+
+    var systemImage: String {
+        switch self {
+        case .all: "bolt.horizontal.circle"
+        case .everyone: "globe.asia.australia"
+        case .followingUsers: "person.2"
+        case .myPixiv: "person.2.badge.key"
+        case .mine: "person.crop.circle"
+        }
+    }
+
+    var staccPath: String {
+        switch self {
+        case .all: "/stacc/my/home/all/all"
+        case .everyone: "/stacc/p/all"
+        case .followingUsers: "/stacc/my/home/favorite/all"
+        case .myPixiv: "/stacc/my/home/mypixiv/all"
+        case .mine: "/stacc/my/home/self/all"
+        }
+    }
+}
+
+struct PixivActivityNewMarkerUpdate: Equatable, Sendable {
+    let markerDatesByItemID: [String: Date]
+    let newItemIDs: Set<String>
+
+    var activeItemIDs: Set<String> {
+        Set(markerDatesByItemID.keys)
+    }
+}
+
+struct PixivActivityRefreshResult: Equatable, Sendable {
+    let itemCount: Int
+    let newItemIDs: Set<String>
+
+    var newItemCount: Int {
+        newItemIDs.count
+    }
+}
+
 enum PixivActivityFeedPresentation {
     static let defaultLayoutMode: PixivActivityLayoutMode = .masonry
+    static let newMarkerLifetime: TimeInterval = 15 * 60
 
     static func statusText(itemCount: Int) -> String {
         guard itemCount > 0 else { return "" }
@@ -164,6 +223,36 @@ enum PixivActivityFeedPresentation {
         formatter.dateStyle = .short
         formatter.timeStyle = .none
         return formatter.string(from: date)
+    }
+
+    static func updatedNewMarkers(
+        previousItemIDs: Set<String>,
+        refreshedItemIDs: [String],
+        existingMarkerDates: [String: Date],
+        now: Date = Date(),
+        markerLifetime: TimeInterval = newMarkerLifetime
+    ) -> PixivActivityNewMarkerUpdate {
+        let refreshedIDSet = Set(refreshedItemIDs)
+        let activeMarkerDates = existingMarkerDates.filter { itemID, markedAt in
+            refreshedIDSet.contains(itemID) && now.timeIntervalSince(markedAt) < markerLifetime
+        }
+
+        guard previousItemIDs.isEmpty == false else {
+            return PixivActivityNewMarkerUpdate(
+                markerDatesByItemID: activeMarkerDates,
+                newItemIDs: []
+            )
+        }
+
+        let newItemIDs = refreshedIDSet.subtracting(previousItemIDs)
+        var markerDates = activeMarkerDates
+        for itemID in newItemIDs {
+            markerDates[itemID] = now
+        }
+        return PixivActivityNewMarkerUpdate(
+            markerDatesByItemID: markerDates,
+            newItemIDs: newItemIDs
+        )
     }
 
     private static func kindTitle(for kind: PixivActivityKind) -> String {

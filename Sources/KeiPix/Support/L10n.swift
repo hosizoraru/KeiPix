@@ -506,7 +506,17 @@ enum L10n {
     static var openPixivWebSavedCollections: String { text("Open Saved Pixiv Collections") }
     static var pixivCollections: String { text("Pixiv Collections") }
     static var pixivActivity: String { text("Pixiv Activity") }
+    static var pixivActivityDisplay: String { text("Activity Display") }
+    static var pixivActivityFeedScope: String { text("Activity Feed") }
     static var pixivActivityLayout: String { text("Activity Layout") }
+    static var pixivActivityScopeAll: String { text("All Activity") }
+    static var pixivActivityScopeEveryone: String { text("Everyone Activity") }
+    static var pixivActivityScopeFollowingUsers: String { text("Following Users Activity") }
+    static var pixivActivityScopeMyPixiv: String { text("MyPixiv Activity") }
+    static var pixivActivityScopeMine: String { text("Mine Activity") }
+    static var pixivActivityNewBadge: String { text("New Activity Badge") }
+    static var pixivActivityNewItemsFormat: String { text("%d new activity items") }
+    static var pixivActivityNoNewItems: String { text("No new activity") }
     static var pixivActivityEmptyTitle: String { text("No Pixiv activity") }
     static var pixivActivityEmptyHint: String { text("Follow creators or refresh after connecting Pixiv Web to see social activity.") }
     static var pixivActivityWebSessionRequiredTitle: String { text("Connect Web session") }

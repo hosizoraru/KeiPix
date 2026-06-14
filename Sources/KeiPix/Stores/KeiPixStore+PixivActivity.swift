@@ -6,18 +6,22 @@ extension KeiPixStore {
         pixivActivityNextPage != nil
     }
 
-    func refreshPixivActivityFeed() async {
+    @discardableResult
+    func refreshPixivActivityFeed() async -> PixivActivityRefreshResult {
         await refreshPixivActivityFeed(force: false)
     }
 
-    func refreshPixivActivityFeed(force: Bool) async {
+    @discardableResult
+    func refreshPixivActivityFeed(force: Bool) async -> PixivActivityRefreshResult {
         guard session != nil else {
             clearPixivActivityFeedState()
-            return
+            return pixivActivityRefreshResult()
         }
-        guard usesLocalSampleAccount == false else { return }
+        guard usesLocalSampleAccount == false else { return pixivActivityRefreshResult() }
 
-        guard await syncUsablePixivActivityWebSessionIfNeeded(replacing: true) else { return }
+        guard await syncUsablePixivActivityWebSessionIfNeeded(replacing: true) else {
+            return pixivActivityRefreshResult()
+        }
 
         let shouldRefresh = force || routeSwitchRefreshExpiration.shouldRefresh(
             hasReusableContent: pixivActivityItems.isEmpty == false,
@@ -25,15 +29,20 @@ extension KeiPixStore {
             loadedInCurrentSession: pixivActivityLoadedInCurrentSession,
             now: Date()
         )
-        guard shouldRefresh else { return }
+        guard shouldRefresh else {
+            prunePixivActivityNewMarkers()
+            return pixivActivityRefreshResult()
+        }
 
         isLoadingPixivActivityFeed = true
         pixivActivityErrorMessage = nil
         pixivActivityNextPage = nil
+        pixivActivityLastRefreshNewItemIDs = []
+        pixivActivityLastRefreshNewCount = 0
         defer { isLoadingPixivActivityFeed = false }
 
         do {
-            let page = try await api.pixivActivityFeedPage(page: 1)
+            let page = try await api.pixivActivityFeedPage(page: 1, scope: pixivActivityFeedScope)
             applyPixivActivityPage(page, replacing: true)
         } catch is CancellationError {
             pixivActivityErrorMessage = nil
@@ -48,6 +57,7 @@ extension KeiPixStore {
             pixivActivityNextPage = nil
             pixivActivityErrorMessage = error.localizedDescription
         }
+        return pixivActivityRefreshResult(newItemIDs: pixivActivityLastRefreshNewItemIDs)
     }
 
     func loadMorePixivActivityFeed() async {
@@ -157,12 +167,39 @@ extension KeiPixStore {
         }
     }
 
+    func setPixivActivityFeedScope(_ scope: PixivActivityFeedScope) {
+        guard pixivActivityFeedScope != scope else { return }
+        storePixivActivityFeedStateForActiveScope()
+        pixivActivityFeedScope = scope
+        restorePixivActivityFeedState(for: scope)
+    }
+
+    func prunePixivActivityNewMarkers(now: Date = Date()) {
+        let update = PixivActivityFeedPresentation.updatedNewMarkers(
+            previousItemIDs: Set(pixivActivityItems.map(\.id)),
+            refreshedItemIDs: pixivActivityItems.map(\.id),
+            existingMarkerDates: pixivActivityNewMarkerDatesByScope[pixivActivityFeedScope] ?? [:],
+            now: now
+        )
+        pixivActivityNewMarkerDatesByScope[pixivActivityFeedScope] = update.markerDatesByItemID
+        pixivActivityNewItemIDs = update.activeItemIDs
+        storePixivActivityFeedStateForActiveScope()
+    }
+
     private func clearPixivActivityFeedState() {
         pixivActivityItems = []
+        pixivActivityNewItemIDs = []
+        pixivActivityLastRefreshNewCount = 0
+        pixivActivityLastRefreshNewItemIDs = []
         pixivActivityNextPage = nil
         pixivActivityLoadedAt = nil
         pixivActivityLoadedInCurrentSession = false
         pixivActivityErrorMessage = nil
+        pixivActivityItemsByScope = [:]
+        pixivActivityNextPageByScope = [:]
+        pixivActivityLoadedAtByScope = [:]
+        pixivActivityLoadedInCurrentSessionScopes = []
+        pixivActivityNewMarkerDatesByScope = [:]
         isLoadingPixivActivityFeed = false
         isLoadingMorePixivActivityFeed = false
     }
@@ -181,8 +218,12 @@ extension KeiPixStore {
     private func markPixivActivityWebSessionRequired(replacing: Bool) {
         if replacing {
             pixivActivityItems = []
+            pixivActivityNewItemIDs = []
+            pixivActivityLastRefreshNewCount = 0
+            pixivActivityLastRefreshNewItemIDs = []
             pixivActivityLoadedAt = nil
             pixivActivityLoadedInCurrentSession = false
+            storePixivActivityFeedStateForActiveScope()
         }
         pixivActivityNextPage = nil
         pixivActivityErrorMessage = L10n.pixivActivityWebSessionRequiredHint
@@ -199,17 +240,60 @@ extension KeiPixStore {
     }
 
     private func applyPixivActivityPage(_ page: PixivActivityPage, replacing: Bool) {
+        let now = Date()
         pixivActivityNextPage = page.nextURL
-        pixivActivityLoadedAt = Date()
+        pixivActivityLoadedAt = now
         pixivActivityLoadedInCurrentSession = true
 
         if replacing {
+            let update = PixivActivityFeedPresentation.updatedNewMarkers(
+                previousItemIDs: Set(pixivActivityItems.map(\.id)),
+                refreshedItemIDs: page.items.map(\.id),
+                existingMarkerDates: pixivActivityNewMarkerDatesByScope[pixivActivityFeedScope] ?? [:],
+                now: now
+            )
             pixivActivityItems = page.items
+            pixivActivityNewMarkerDatesByScope[pixivActivityFeedScope] = update.markerDatesByItemID
+            pixivActivityNewItemIDs = update.activeItemIDs
+            pixivActivityLastRefreshNewCount = update.newItemIDs.count
+            pixivActivityLastRefreshNewItemIDs = update.newItemIDs
+            storePixivActivityFeedStateForActiveScope()
             return
         }
 
         var seenIDs = Set(pixivActivityItems.map(\.id))
         let appendedItems = page.items.filter { seenIDs.insert($0.id).inserted }
         pixivActivityItems.append(contentsOf: appendedItems)
+        prunePixivActivityNewMarkers(now: now)
+    }
+
+    private func pixivActivityRefreshResult(newItemIDs: Set<String> = []) -> PixivActivityRefreshResult {
+        PixivActivityRefreshResult(
+            itemCount: pixivActivityItems.count,
+            newItemIDs: newItemIDs
+        )
+    }
+
+    private func storePixivActivityFeedStateForActiveScope() {
+        pixivActivityItemsByScope[pixivActivityFeedScope] = pixivActivityItems
+        pixivActivityNextPageByScope[pixivActivityFeedScope] = pixivActivityNextPage
+        pixivActivityLoadedAtByScope[pixivActivityFeedScope] = pixivActivityLoadedAt
+        if pixivActivityLoadedInCurrentSession {
+            pixivActivityLoadedInCurrentSessionScopes.insert(pixivActivityFeedScope)
+        } else {
+            pixivActivityLoadedInCurrentSessionScopes.remove(pixivActivityFeedScope)
+        }
+    }
+
+    private func restorePixivActivityFeedState(for scope: PixivActivityFeedScope) {
+        pixivActivityItems = pixivActivityItemsByScope[scope] ?? []
+        pixivActivityNextPage = pixivActivityNextPageByScope[scope]
+        pixivActivityLoadedAt = pixivActivityLoadedAtByScope[scope]
+        pixivActivityLoadedInCurrentSession = pixivActivityLoadedInCurrentSessionScopes.contains(scope)
+        pixivActivityErrorMessage = nil
+        pixivActivityLastRefreshNewCount = 0
+        pixivActivityLastRefreshNewItemIDs = []
+        pixivActivityNewItemIDs = Set(pixivActivityNewMarkerDatesByScope[scope]?.keys ?? Dictionary<String, Date>().keys)
+        prunePixivActivityNewMarkers()
     }
 }

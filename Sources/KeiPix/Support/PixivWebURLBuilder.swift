@@ -46,15 +46,17 @@ enum PixivWebURLBuilder {
         return components.url
     }
 
-    static func activityFeedURL(page: Int = 1) -> URL? {
+    static func activityFeedURL(scope: PixivActivityFeedScope = .all, page: Int = 1) -> URL? {
         var components = URLComponents()
         components.scheme = "https"
         components.host = "www.pixiv.net"
-        components.path = "/stacc"
+        components.path = scope.staccPath
         let normalizedPage = max(page, 1)
+        var queryItems = [URLQueryItem(name: "mode", value: "unify")]
         if normalizedPage > 1 {
-            components.queryItems = [URLQueryItem(name: "p", value: "\(normalizedPage)")]
+            queryItems.append(URLQueryItem(name: "p", value: "\(normalizedPage)"))
         }
+        components.queryItems = queryItems
         return components.url
     }
 
