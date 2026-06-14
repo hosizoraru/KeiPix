@@ -189,10 +189,10 @@ Recommended new or changed types:
 | Phase 1: Segment Planner | Done | Added `NovelTranslationSegment` and `NovelTranslationPlanner` with paragraph splitting, non-text/noisy text skipping, stable source hashes, and stable client identifiers. |
 | Phase 2: Apple Batch Streaming Client | Done | Reader now uses a testable `NovelTranslationBatchClient` closure wrapper, builds `TranslationSession.Request` batches with `clientIdentifier`, consumes `session.translate(batch:)`, and ignores missing/unknown identifiers. |
 | Phase 3: Incremental Engine Updates | Done | `NovelTranslationEngine` now stores segment results, updates progress per streamed result, preserves legacy token lookup, and keeps source text visible for pending segments. |
-| Phase 4: Visible-First Scheduling | In progress | Scheduler implementation, continuous TextKit visible-range reporting, focused tests, and iOS/iPadOS generic builds are complete; physical-device smoke validation remains open. |
+| Phase 4: Visible-First Scheduling | In progress | Scheduler implementation, continuous TextKit visible-range reporting, focused tests, iOS/iPadOS generic builds, and a local `novel-translation-smoke` launch surface are complete; physical-device smoke validation remains open. |
 | Phase 5: Persistent Translation Cache | Done | Segment translations now persist under the app caches directory, cache hits apply before network translation, misses continue streaming, and Reading settings exposes a localized clear-cache action. |
-| Phase 6: Availability, Preparation, and Errors | In progress | `LanguageAvailability`, `prepareTranslation()`, recoverable error mapping, and localized reader feedback are implemented and tested; real-Mac preparation smoke passed, while physical iPhone/iPad validation remains open. |
-| Phase 7: OS 26.4+ Translation Strategy and Skip Ranges | In progress | OS 26.4+ translation sessions now prefer low latency, batch requests use attributed skip ranges for Pixiv markers/URLs when available, and older OS paths keep string requests; real-Mac low-latency smoke passed, while iOS physical smoke remains open. |
+| Phase 6: Availability, Preparation, and Errors | In progress | `LanguageAvailability`, `prepareTranslation()`, recoverable error mapping, localized reader feedback, and a local physical-validation smoke route are implemented and tested; real-Mac preparation smoke passed, while physical iPhone/iPad validation remains open. |
+| Phase 7: OS 26.4+ Translation Strategy and Skip Ranges | In progress | OS 26.4+ translation sessions now prefer low latency, batch requests use attributed skip ranges for Pixiv markers/URLs when available, and older OS paths keep string requests; real-Mac low-latency smoke and smoke-route tests passed, while iOS physical smoke remains open. |
 | Phase 8: Shared Apple Translation Client for Captions | Done | Language resolution, low-latency configuration, availability/error mapping, and caption inline error handling now share `AppleTranslationSupport` without coupling captions to novel cache state. |
 
 ### Phase 0: Baseline and Guard Rails
@@ -348,6 +348,16 @@ Evidence:
   target language changes.
 - iOS and iPadOS generic Simulator builds pass. Physical-device smoke remains
   open because Apple Translation behavior cannot be proven by Simulator alone.
+- `--visual-qa-novel-translation-smoke` now opens `NovelReaderView` with local
+  Japanese fixture text, `[newpage]` content, a Pixiv image marker, and inline
+  translation enabled for the first load. This prepares a repeatable physical
+  iPhone/iPad validation route without depending on Pixiv API or a real account.
+- macOS visual QA captured
+  `artifacts/visual-qa/20260614T004940Z/novel-translation-smoke.png`, showing
+  the local reader fixture translated from Japanese into English.
+- 2026-06-14 validation: `swift test` passed 577 tests, `git diff --check`
+  passed, and both `KeiPix iOS` / `KeiPix iPadOS` generic Simulator builds
+  passed after the smoke surface landed.
 
 ### Phase 5: Persistent Translation Cache
 
@@ -420,6 +430,16 @@ Evidence:
   paired iPhone 15 Pro and iPad Pro as unavailable/offline on this machine;
   available iOS/iPadOS Simulator devices are not sufficient proof for Apple's
   Translation runtime behavior.
+- 2026-06-14 recheck: `xcrun devicectl list devices` still reported
+  `atri iPhone 15 Pro` and `atri iPad Pro` as `unavailable`, and
+  `xcrun xctrace list devices` listed both under `Devices Offline`.
+- The local `novel-translation-smoke` Visual QA surface injects cached novel
+  text before presenting the native reader, so physical-device validation can
+  exercise `LanguageAvailability`, `prepareTranslation()`, and reader fallback
+  UI without a network fetch.
+- The smoke reader passes an explicit Japanese source language while the normal
+  reader path keeps source language auto-detection, avoiding smoke-only
+  instability without hard-coding all novels as Japanese.
 - The reader chrome now surfaces concise localized preparation/error feedback
   next to the translation control while leaving the native TextKit page
   rendering path unchanged.
@@ -462,6 +482,13 @@ Evidence:
 - Real-Mac smoke used a low-latency `TranslationSession` and confirmed
   `prepareTranslation()`, `isReady`, and a Japanese-to-English translation all
   complete on the current macOS 27/Xcode 27 beta setup.
+- `NativeBoundaryTests/novelTranslationSmokeSurfaceUsesLocalNativeReader` and
+  `VisualQAEvidenceTests` cover the `--visual-qa-novel-translation-smoke`
+  launch argument, local text injection, native `NovelReaderView` presentation,
+  and first-load inline translation activation.
+- `NovelTranslationReadinessTests` now cover readiness sampling that skips terse
+  headings and request fallback for short segments so a tiny title cannot fail
+  an otherwise translatable page batch.
 
 ### Phase 8: Shared Apple Translation Client for Captions
 
