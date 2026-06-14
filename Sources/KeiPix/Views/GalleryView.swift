@@ -129,6 +129,11 @@ private struct GalleryArtworkListFingerprint: Equatable {
     }
 }
 
+private struct GallerySelectionBatchDownloadContext: Identifiable {
+    let id = UUID()
+    let selectedArtworkCount: Int
+}
+
 private struct GalleryFeedView: View {
     @Bindable var store: KeiPixStore
     @Binding var actionMessage: String?
@@ -138,7 +143,16 @@ private struct GalleryFeedView: View {
     let onGalleryScrollDirectionChange: ((NativeGalleryScrollEvent) -> Void)?
     let showsFeedHeader: Bool
     @State private var artworkSelection = GalleryArtworkSelection()
-    @State private var batchBookmarkCommandRequest: BatchBookmarkCommandRequest?
+    @State private var batchDownloadContext: GallerySelectionBatchDownloadContext?
+    @State private var batchDownloadLimit = 30
+    @State private var batchDownloadRemotePageLimit = 1
+    @State private var includeNextBatchDownloadPages = false
+    @State private var isGatheringBatchDownloadPages = false
+    @State private var batchDownloadArtworks: [PixivArtwork] = []
+    @State private var lastQueuedDownloadCount: Int?
+    @State private var bulkMutePreview: BulkMutePreview?
+    @State private var batchBookmarkPreview: BatchBookmarkPreview?
+    @State private var isApplyingBatchBookmark = false
     @State private var savedScrollPositions: [String: String] = [:]
     @State private var feedbackRequest: FeedbackReportRequest?
     @State private var feedbackArtwork: PixivArtwork?
@@ -168,6 +182,41 @@ private struct GalleryFeedView: View {
         .sheet(item: $seriesArtwork) { artwork in
             ArtworkSeriesSheet(artwork: artwork, store: store)
                 .os26SheetChrome(.detail)
+        }
+        .popover(item: $batchDownloadContext, arrowEdge: .bottom) { context in
+            BatchDownloadPopover(
+                limit: $batchDownloadLimit,
+                includeNextPages: $includeNextBatchDownloadPages,
+                remotePageLimit: $batchDownloadRemotePageLimit,
+                plan: batchDownloadPlan(for: context),
+                queuedCount: lastQueuedDownloadCount,
+                isGatheringPages: isGatheringBatchDownloadPages,
+                downloadDirectoryPath: store.downloads.downloadDirectoryPath,
+                action: queueSelectedBatchDownload
+            )
+        }
+        .popover(item: $bulkMutePreview, arrowEdge: .bottom) { preview in
+            BulkMutePreviewPopover(
+                preview: preview,
+                cancel: {
+                    bulkMutePreview = nil
+                },
+                apply: {
+                    applyBulkMutePreview(preview)
+                }
+            )
+        }
+        .popover(item: $batchBookmarkPreview, arrowEdge: .bottom) { preview in
+            BatchBookmarkPreviewPopover(
+                preview: preview,
+                isApplying: isApplyingBatchBookmark,
+                cancel: {
+                    batchBookmarkPreview = nil
+                },
+                apply: {
+                    applyBatchBookmarkPreview(preview)
+                }
+            )
         }
         .overlay(alignment: .bottom) {
             gallerySelectionFloatingActions
@@ -233,7 +282,6 @@ private struct GalleryFeedView: View {
                         store: store,
                         actionMessage: $actionMessage,
                         artworkSelection: $artworkSelection,
-                        batchBookmarkCommandRequest: $batchBookmarkCommandRequest,
                         presentation: .phoneToolbarMenu,
                         showsFeedCountBadge: false,
                         showsActiveFeedClearChip: false
@@ -251,63 +299,7 @@ private struct GalleryFeedView: View {
     private var gallerySelectionFloatingActions: some View {
         if showsGallerySelectionFloatingActions {
             GlassEffectContainer(spacing: 8) {
-                HStack(spacing: 8) {
-                    Menu {
-                        Button {
-                            selectAllVisibleArtworks()
-                        } label: {
-                            Label(L10n.selectAll, systemImage: "checkmark.circle.fill")
-                        }
-                        .disabled(selectionEligibleArtworks.isEmpty)
-
-                        if artworkSelection.hasSelection {
-                            Button {
-                                clearGallerySelection()
-                            } label: {
-                                Label(L10n.clearSelection, systemImage: "xmark.circle")
-                            }
-
-                            Divider()
-
-                            Button {
-                                copySelectedArtworkLinks()
-                            } label: {
-                                Label(L10n.copySelectedArtworkLinks, systemImage: "link")
-                            }
-
-                            Button {
-                                downloadSelectedArtworks()
-                            } label: {
-                                Label(L10n.batchDownload, systemImage: "square.and.arrow.down.on.square")
-                            }
-
-                            Button {
-                                batchBookmarkSelectedArtworks()
-                            } label: {
-                                Label(L10n.batchBookmarkSelected, systemImage: "bookmark")
-                            }
-                        }
-                    } label: {
-                        Label(selectionAccessoryTitle, systemImage: selectionAccessorySystemImage)
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.82)
-                    }
-                    .help(selectionAccessoryTitle)
-                    .accessibilityLabel(selectionAccessoryTitle)
-                    .buttonStyle(.glassProminent)
-                    .frame(minWidth: 164, maxWidth: .infinity)
-
-                    Button {
-                        clearGallerySelection()
-                    } label: {
-                        Label(L10n.close, systemImage: "xmark")
-                            .labelStyle(.iconOnly)
-                    }
-                    .help(L10n.close)
-                    .accessibilityLabel(L10n.close)
-                    .buttonStyle(.glass)
-                    .frame(width: 44, height: 44)
-                }
+                selectionAccessoryControls
                 .frame(maxWidth: selectionModeAccessoryMaxWidth)
             }
             .controlSize(.regular)
@@ -315,6 +307,152 @@ private struct GalleryFeedView: View {
             .transition(.move(edge: .bottom).combined(with: .opacity))
             .accessibilityElement(children: .contain)
         }
+    }
+
+    @ViewBuilder
+    private var selectionAccessoryControls: some View {
+        if usesCompactSelectionAccessory {
+            compactSelectionAccessoryControls
+        } else {
+            ViewThatFits(in: .horizontal) {
+                wideSelectionAccessoryControls
+                compactSelectionAccessoryControls
+            }
+        }
+    }
+
+    private var compactSelectionAccessoryControls: some View {
+        HStack(spacing: 8) {
+            selectionActionsMenu
+                .buttonStyle(.glassProminent)
+                .frame(minWidth: 164, maxWidth: .infinity)
+
+            selectionCloseButton
+        }
+    }
+
+    private var wideSelectionAccessoryControls: some View {
+        HStack(spacing: 10) {
+            Label(selectionAccessoryTitle, systemImage: selectionAccessorySystemImage)
+                .font(.callout.weight(.semibold))
+                .lineLimit(1)
+                .minimumScaleFactor(0.82)
+                .padding(.horizontal, 12)
+                .frame(minWidth: 150, alignment: .leading)
+
+            Divider()
+                .frame(height: 26)
+
+            Button {
+                selectAllVisibleArtworks()
+            } label: {
+                Label(L10n.selectAll, systemImage: "checkmark.circle.fill")
+            }
+            .disabled(selectionEligibleArtworks.isEmpty)
+
+            if artworkSelection.hasSelection {
+                Button {
+                    copySelectedArtworkLinks()
+                } label: {
+                    Label(L10n.copySelectedArtworkLinks, systemImage: "link")
+                }
+                .disabled(selectedArtworkLinks.isEmpty)
+
+                batchSelectionActionsMenu
+
+                Button {
+                    clearGallerySelection()
+                } label: {
+                    Label(L10n.clearSelection, systemImage: "xmark.circle")
+                }
+            }
+
+            selectionCloseButton
+        }
+        .buttonStyle(.glass)
+    }
+
+    private var selectionActionsMenu: some View {
+        Menu {
+            Button {
+                selectAllVisibleArtworks()
+            } label: {
+                Label(L10n.selectAll, systemImage: "checkmark.circle.fill")
+            }
+            .disabled(selectionEligibleArtworks.isEmpty)
+
+            if artworkSelection.hasSelection {
+                Button {
+                    clearGallerySelection()
+                } label: {
+                    Label(L10n.clearSelection, systemImage: "xmark.circle")
+                }
+
+                Divider()
+
+                Button {
+                    copySelectedArtworkLinks()
+                } label: {
+                    Label(L10n.copySelectedArtworkLinks, systemImage: "link")
+                }
+                .disabled(selectedArtworkLinks.isEmpty)
+
+                batchSelectionActionsMenu
+            }
+        } label: {
+            Label(selectionAccessoryTitle, systemImage: selectionAccessorySystemImage)
+                .lineLimit(1)
+                .minimumScaleFactor(0.82)
+        }
+        .help(selectionAccessoryTitle)
+        .accessibilityLabel(selectionAccessoryTitle)
+    }
+
+    private var batchSelectionActionsMenu: some View {
+        Menu {
+            Button {
+                presentSelectedBatchDownload()
+            } label: {
+                Label(L10n.batchDownload, systemImage: "square.and.arrow.down.on.square")
+            }
+
+            Button {
+                batchBookmarkSelectedArtworks()
+            } label: {
+                Label(L10n.batchBookmarkSelected, systemImage: "bookmark")
+            }
+
+            bulkMuteSelectionMenu
+        } label: {
+            Label(L10n.batchActions, systemImage: "square.stack.3d.up")
+        }
+    }
+
+    private var bulkMuteSelectionMenu: some View {
+        Menu {
+            ForEach(BulkMuteTarget.allCases) { target in
+                Button {
+                    bulkMuteSelectedArtworks(target)
+                } label: {
+                    Label(target.title, systemImage: target.systemImage)
+                }
+            }
+        } label: {
+            Label(L10n.bulkMutePreview, systemImage: "eye.slash")
+        }
+    }
+
+    private var selectionCloseButton: some View {
+        Button {
+            clearGallerySelection()
+        } label: {
+            Label(L10n.close, systemImage: "xmark")
+                .labelStyle(.iconOnly)
+        }
+        .help(L10n.close)
+        .accessibilityLabel(L10n.close)
+        .buttonStyle(.glass)
+        .frame(width: 44, height: 44)
     }
 
     private var showsGallerySelectionFloatingActions: Bool {
@@ -334,6 +472,14 @@ private struct GalleryFeedView: View {
         artworkSelection.hasSelection ? "checkmark.circle.fill" : "checkmark.circle"
     }
 
+    private var usesCompactSelectionAccessory: Bool {
+        #if os(iOS)
+        UIDevice.current.userInterfaceIdiom == .phone
+        #else
+        false
+        #endif
+    }
+
     private var selectionModeAccessoryBottomPadding: CGFloat {
         #if os(iOS)
         UIDevice.current.userInterfaceIdiom == .phone ? 124 : 24
@@ -344,9 +490,9 @@ private struct GalleryFeedView: View {
 
     private var selectionModeAccessoryMaxWidth: CGFloat {
         #if os(iOS)
-        UIDevice.current.userInterfaceIdiom == .phone ? 340 : 420
+        UIDevice.current.userInterfaceIdiom == .phone ? 340 : 960
         #else
-        420
+        1040
         #endif
     }
 
@@ -394,8 +540,7 @@ private struct GalleryFeedView: View {
                             FeedHeaderView(
                                 store: store,
                                 actionMessage: $actionMessage,
-                                artworkSelection: $artworkSelection,
-                                batchBookmarkCommandRequest: $batchBookmarkCommandRequest
+                                artworkSelection: $artworkSelection
                             )
                             .platformGlassControlBar(verticalPadding: 5, topPadding: 0, bottomPadding: 6)
                         }
@@ -480,7 +625,6 @@ private struct GalleryFeedView: View {
                 store: store,
                 actionMessage: $actionMessage,
                 artworkSelection: $artworkSelection,
-                batchBookmarkCommandRequest: $batchBookmarkCommandRequest,
                 showsFeedCountBadge: store.selectedPixivCollection == nil,
                 showsActiveFeedClearChip: store.selectedPixivCollection == nil
             )
@@ -605,7 +749,6 @@ private struct GalleryFeedView: View {
             store: store,
             actionMessage: $actionMessage,
             artworkSelection: $artworkSelection,
-            batchBookmarkCommandRequest: $batchBookmarkCommandRequest,
             presentation: .iPadCompact,
             showsFeedCountBadge: showsFeedCountBadge,
             showsActiveFeedClearChip: showsActiveFeedClearChip
@@ -1102,6 +1245,7 @@ private struct GalleryFeedView: View {
             canCopyLinks: selectedArtworkLinks.isEmpty == false,
             canDownload: selectedArtworks.isEmpty == false,
             canBatchBookmark: selectedArtworks.isEmpty == false,
+            canBulkMute: selectedArtworks.isEmpty == false,
             selectAllVisible: {
                 selectAllVisibleArtworks()
             },
@@ -1116,6 +1260,9 @@ private struct GalleryFeedView: View {
             },
             batchBookmarkSelected: {
                 batchBookmarkSelectedArtworks()
+            },
+            bulkMuteSelected: { target in
+                bulkMuteSelectedArtworks(target)
             }
         )
     }
@@ -1181,32 +1328,147 @@ private struct GalleryFeedView: View {
             actionMessage = L10n.noSelectedWorks
             return
         }
-        downloadSelectedArtworks(artworks)
+        presentSelectedBatchDownload(artworks)
     }
 
-    private func downloadSelectedArtworks(_ artworks: [PixivArtwork]) {
-        guard artworks.isEmpty == false else { return }
+    private func presentSelectedBatchDownload() {
+        presentSelectedBatchDownload(selectedArtworks)
+    }
+
+    private func presentSelectedBatchDownload(_ artworks: [PixivArtwork]) {
+        guard artworks.isEmpty == false else {
+            actionMessage = L10n.noSelectedWorks
+            return
+        }
+        batchDownloadArtworks = artworks
+        includeNextBatchDownloadPages = false
+        lastQueuedDownloadCount = nil
+        let context = GallerySelectionBatchDownloadContext(selectedArtworkCount: artworks.count)
+        let plan = batchDownloadPlan(for: context)
+        batchDownloadLimit = min(max(1, batchDownloadLimit), plan.maxLimit)
+        batchDownloadRemotePageLimit = min(
+            max(1, batchDownloadRemotePageLimit),
+            BatchDownloadPlan.maximumRemotePageLimit
+        )
+        batchDownloadContext = context
+    }
+
+    private func batchDownloadPlan(for context: GallerySelectionBatchDownloadContext?) -> BatchDownloadPlan {
+        BatchDownloadPlan.make(
+            scope: .selectedWorks,
+            loadedArtworkCount: context?.selectedArtworkCount ?? batchDownloadArtworks.count,
+            hasNextPage: false,
+            requestedLimit: batchDownloadLimit,
+            requestedRemotePageLimit: 0
+        )
+    }
+
+    private func queueSelectedBatchDownload() async {
+        guard batchDownloadArtworks.isEmpty == false else {
+            lastQueuedDownloadCount = 0
+            actionMessage = L10n.noSelectedWorks
+            return
+        }
+        let plan = batchDownloadPlan(for: batchDownloadContext)
+        isGatheringBatchDownloadPages = true
+        defer { isGatheringBatchDownloadPages = false }
         let queuedCount = store.enqueueDownloads(
-            artworks,
-            limit: min(max(artworks.count, 1), 100),
+            batchDownloadArtworks,
+            limit: plan.limit,
             preferOriginal: true
         )
+        lastQueuedDownloadCount = queuedCount
         guard queuedCount > 0 else { return }
         actionMessage = String(format: L10n.queuedDownloadsFormat, queuedCount)
+        batchDownloadContext = nil
         openWindow(id: "main")
         store.select(.downloads)
     }
 
     private func batchBookmarkSelectedArtworks() {
-        let artworkIDs = selectedArtworks.map(\.id)
-        guard artworkIDs.isEmpty == false else {
+        let artworks = selectedArtworks
+        guard artworks.isEmpty == false else {
             actionMessage = L10n.noSelectedWorks
             return
         }
-        batchBookmarkCommandRequest = BatchBookmarkCommandRequest(
-            scope: .selectedWorks,
-            artworkIDs: artworkIDs
+        presentBatchBookmarkPreview(
+            artworks: artworks,
+            scope: .selectedWorks
         )
+    }
+
+    private func presentBatchBookmarkPreview(artworks: [PixivArtwork], scope: BatchBookmarkScope) {
+        let preview = BatchBookmarkPreview.make(
+            artworks: artworks,
+            scope: scope,
+            restrict: store.defaultBookmarkRestrict(for: artworks),
+            tags: commonAutomaticBookmarkTags(artworks: artworks),
+            limit: 30
+        )
+        batchBookmarkPreview = preview
+        if preview.canApply == false {
+            actionMessage = preview.scope.emptyStateTitle
+        }
+    }
+
+    private func commonAutomaticBookmarkTags(artworks: [PixivArtwork]) -> [String] {
+        guard store.autoTagBookmarksWithArtworkTags else { return [] }
+        let tagCounts = artworks
+            .flatMap { $0.tags.map(\.name) }
+            .reduce(into: [String: Int]()) { counts, tag in
+                counts[tag, default: 0] += 1
+            }
+        return tagCounts
+            .sorted {
+                if $0.value != $1.value {
+                    return $0.value > $1.value
+                }
+                return $0.key.localizedStandardCompare($1.key) == .orderedAscending
+            }
+            .prefix(8)
+            .map(\.key)
+    }
+
+    private func applyBatchBookmarkPreview(_ preview: BatchBookmarkPreview) {
+        guard isApplyingBatchBookmark == false else { return }
+        isApplyingBatchBookmark = true
+        Task {
+            let result = await store.batchSaveBookmarks(
+                preview.applyArtworks,
+                restrict: preview.restrict,
+                tags: preview.tags
+            )
+            isApplyingBatchBookmark = false
+            batchBookmarkPreview = nil
+            actionMessage = String(
+                format: L10n.batchBookmarkedResultFormat,
+                result.savedCount,
+                result.failedCount
+            )
+        }
+    }
+
+    private func bulkMuteSelectedArtworks(_ target: BulkMuteTarget) {
+        let artworks = selectedArtworks
+        guard artworks.isEmpty == false else {
+            actionMessage = L10n.noSelectedWorks
+            return
+        }
+        let preview = store.bulkMutePreview(for: target, in: artworks)
+        bulkMutePreview = preview
+        if preview.canApply == false {
+            actionMessage = L10n.noBulkMuteCandidates
+        }
+    }
+
+    private func applyBulkMutePreview(_ preview: BulkMutePreview) {
+        let count = store.applyBulkMutePreview(preview)
+        bulkMutePreview = nil
+        if count > 0 {
+            actionMessage = String(format: L10n.bulkMutedItemsFormat, count)
+        } else {
+            actionMessage = L10n.noBulkMuteCandidates
+        }
     }
 }
 

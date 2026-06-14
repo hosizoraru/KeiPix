@@ -4119,6 +4119,35 @@
         }
       }
     },
+    "Batch Actions": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Batch Actions"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "一括操作"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "批量操作"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "批量操作"
+          }
+        }
+      }
+    },
     "Batch Download": {
       "extractionState": "manual",
       "localizations": {
@@ -4144,35 +4173,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "批量下載"
-          }
-        }
-      }
-    },
-    "Batch Download Loaded Artworks": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Batch Download Loaded Artworks"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "読み込み済み作品を一括ダウンロード"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "批量下载已加载作品"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "批量下載已載入作品"
           }
         }
       }
@@ -8001,35 +8001,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "複製連結"
-          }
-        }
-      }
-    },
-    "Copy Loaded Artwork Links": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Copy Loaded Artwork Links"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "読み込み済み作品リンクをコピー"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "复制已加载作品链接"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "複製已載入作品連結"
           }
         }
       }

@@ -176,13 +176,6 @@ enum KeyboardShortcutCatalog {
             isCustomizable: true
         ),
         ShortcutCatalogEntry(
-            action: .batchDownloadLoadedArtworks,
-            label: L10n.batchDownloadLoadedArtworks,
-            binding: ShortcutBinding(key: .character("d"), modifiers: [.command, .control]),
-            surface: .downloads,
-            isCustomizable: true
-        ),
-        ShortcutCatalogEntry(
             action: .togglePauseDownloads,
             label: L10n.shortcutTogglePauseDownloads,
             binding: ShortcutBinding(key: .character("p"), modifiers: [.command, .option]),
@@ -297,7 +290,6 @@ enum ShortcutAction: String, CaseIterable, Sendable {
     case copySelectedLinks
 
     case openDownloads
-    case batchDownloadLoadedArtworks
     case togglePauseDownloads
     case openDownloadFolder
 

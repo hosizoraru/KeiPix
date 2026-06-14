@@ -6,11 +6,13 @@ struct GallerySelectionCommandActions {
     let canCopyLinks: Bool
     let canDownload: Bool
     let canBatchBookmark: Bool
+    let canBulkMute: Bool
     let selectAllVisible: () -> Void
     let clearSelection: () -> Void
     let copySelectedLinks: () -> Void
     let downloadSelected: () -> Void
     let batchBookmarkSelected: () -> Void
+    let bulkMuteSelected: (BulkMuteTarget) -> Void
 }
 
 private struct GallerySelectionCommandActionsKey: FocusedValueKey {

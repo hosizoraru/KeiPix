@@ -374,7 +374,6 @@ enum L10n {
     static var retryFailedDownloads: String { text("Retry Failed") }
     static var downloadActions: String { text("Download Actions") }
     static var copyVisibleDownloadLinks: String { text("Copy Visible Links") }
-    static var copyLoadedArtworkLinks: String { text("Copy Loaded Artwork Links") }
     static var revealFirstVisibleDownload: String { text("Reveal First Visible") }
     static var deleteVisibleDownloads: String { text("Remove Visible Download Records") }
     static var cancelDownload: String { text("Cancel Download") }
@@ -418,8 +417,8 @@ enum L10n {
     static var noMatchingDownloadsTitle: String { text("No matching downloads") }
     static var noMatchingDownloadsSubtitle: String { text("Change the download filter to see other queue items.") }
     static var downloadInterrupted: String { text("Download interrupted") }
+    static var batchActions: String { text("Batch Actions") }
     static var batchDownload: String { text("Batch Download") }
-    static var batchDownloadLoadedArtworks: String { text("Batch Download Loaded Artworks") }
     static var includeFollowingPages: String { text("Include Following Pages") }
     static var followingPageRequests: String { text("Following page requests") }
     static var batchDownloadFollowingPagesHintFormat: String { text("May request up to %d more Pixiv feed pages before queueing.") }

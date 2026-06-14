@@ -12,38 +12,19 @@ enum FeedHeaderPresentation {
     case phoneToolbarMenu
 }
 
-private struct BatchDownloadContext: Identifiable {
-    let id = UUID()
-    let scope: BatchDownloadScope
-    let loadedArtworkCount: Int
-    let hasNextPage: Bool
-}
-
 struct FeedHeaderView: View {
     @Bindable var store: KeiPixStore
     @Binding var actionMessage: String?
     @Binding var artworkSelection: GalleryArtworkSelection
-    @Binding var batchBookmarkCommandRequest: BatchBookmarkCommandRequest?
     let presentation: FeedHeaderPresentation
     let showsFeedCountBadge: Bool
     let showsActiveFeedClearChip: Bool
-    @State private var batchDownloadContext: BatchDownloadContext?
-    @State private var batchDownloadLimit = 30
-    @State private var batchDownloadRemotePageLimit = 2
-    @State private var includeNextBatchDownloadPages = false
-    @State private var isGatheringBatchDownloadPages = false
-    @State private var batchActionArtworks: [PixivArtwork] = []
-    @State private var batchDownloadScope = BatchDownloadScope.loadedFeed
-    @State private var lastQueuedDownloadCount: Int?
     @State private var bookmarkTags: [PixivBookmarkTag] = []
     @State private var isLoadingBookmarkTags = false
     @State private var bookmarkTagErrorMessage: String?
     @State private var isRankingDatePopoverPresented = false
     @State private var isAdvancedLocalFilterEditorPresented = false
     @State private var advancedLocalFilterEditorDraft = AdvancedLocalFilterEditorDraft()
-    @State private var bulkMutePreview: BulkMutePreview?
-    @State private var batchBookmarkPreview: BatchBookmarkPreview?
-    @State private var isApplyingBatchBookmark = false
     @State private var draftUseRankingDate = false
     @State private var draftRankingDate = KeiPixStore.latestSelectableRankingDate()
 
@@ -51,7 +32,6 @@ struct FeedHeaderView: View {
         store: KeiPixStore,
         actionMessage: Binding<String?>,
         artworkSelection: Binding<GalleryArtworkSelection>,
-        batchBookmarkCommandRequest: Binding<BatchBookmarkCommandRequest?>,
         presentation: FeedHeaderPresentation = .regular,
         showsFeedCountBadge: Bool = true,
         showsActiveFeedClearChip: Bool = true
@@ -59,7 +39,6 @@ struct FeedHeaderView: View {
         self.store = store
         self._actionMessage = actionMessage
         self._artworkSelection = artworkSelection
-        self._batchBookmarkCommandRequest = batchBookmarkCommandRequest
         self.presentation = presentation
         self.showsFeedCountBadge = showsFeedCountBadge
         self.showsActiveFeedClearChip = showsActiveFeedClearChip
@@ -93,9 +72,6 @@ struct FeedHeaderView: View {
         }
         .task(id: actionMessage) {
             await dismissActionMessageIfNeeded(actionMessage)
-        }
-        .onChange(of: batchBookmarkCommandRequest) { _, request in
-            handleBatchBookmarkCommandRequest(request)
         }
     }
 
@@ -194,43 +170,6 @@ struct FeedHeaderView: View {
                     Label(L10n.selectionMode, systemImage: "checkmark.circle")
                 }
             }
-
-            Section(L10n.moreActions) {
-                Button {
-                    copyLoadedArtworkLinks()
-                } label: {
-                    Label(L10n.copyLoadedArtworkLinks, systemImage: "link")
-                }
-                .disabled(loadedArtworkLinks.isEmpty)
-
-                Button {
-                    presentBatchDownload(artworks: store.artworks, scope: .loadedFeed)
-                } label: {
-                    Label(L10n.batchDownload, systemImage: "square.and.arrow.down.on.square")
-                }
-                .disabled(store.artworks.isEmpty)
-
-                Button {
-                    presentBatchBookmarkPreview(artworks: store.artworks, scope: .loadedFeed)
-                } label: {
-                    Label(L10n.batchBookmark, systemImage: "bookmark")
-                }
-                .disabled(store.artworks.isEmpty)
-
-                Menu {
-                    ForEach(BulkMuteTarget.allCases) { target in
-                        Button {
-                            presentBulkMutePreview(target, artworks: store.artworks)
-                        } label: {
-                            Label(target.title, systemImage: target.systemImage)
-                        }
-                        .disabled(store.artworks.isEmpty)
-                    }
-                } label: {
-                    Label(L10n.bulkMutePreview, systemImage: "eye.slash")
-                }
-                .disabled(store.artworks.isEmpty)
-            }
         } label: {
             Label(L10n.moreActions, systemImage: compactFeedActionsSystemImage)
         }
@@ -238,41 +177,6 @@ struct FeedHeaderView: View {
         .accessibilityLabel(compactFeedActionsAccessibilityLabel)
         .tint(compactFeedActionsAreActive ? .accentColor : nil)
         .iPadFeedHeaderActionChrome()
-        .popover(item: $batchDownloadContext, arrowEdge: .bottom) { context in
-            BatchDownloadPopover(
-                limit: $batchDownloadLimit,
-                includeNextPages: $includeNextBatchDownloadPages,
-                remotePageLimit: $batchDownloadRemotePageLimit,
-                plan: batchDownloadPlan(for: context),
-                queuedCount: lastQueuedDownloadCount,
-                isGatheringPages: isGatheringBatchDownloadPages,
-                downloadDirectoryPath: store.downloads.downloadDirectoryPath,
-                action: queueBatchDownload
-            )
-        }
-        .popover(item: $bulkMutePreview, arrowEdge: .bottom) { preview in
-            BulkMutePreviewPopover(
-                preview: preview,
-                cancel: {
-                    bulkMutePreview = nil
-                },
-                apply: {
-                    applyBulkMutePreview(preview)
-                }
-            )
-        }
-        .popover(item: $batchBookmarkPreview, arrowEdge: .bottom) { preview in
-            BatchBookmarkPreviewPopover(
-                preview: preview,
-                isApplying: isApplyingBatchBookmark,
-                cancel: {
-                    batchBookmarkPreview = nil
-                },
-                apply: {
-                    applyBatchBookmarkPreview(preview)
-                }
-            )
-        }
     }
 
     private var compactFeedActionsSystemImage: String {
@@ -429,85 +333,6 @@ struct FeedHeaderView: View {
             .help(L10n.selectionMode)
             .accessibilityLabel(L10n.selectionMode)
             .feedHeaderActionChrome()
-        }
-
-        Menu {
-            Button {
-                copyLoadedArtworkLinks()
-            } label: {
-                Label(L10n.copyLoadedArtworkLinks, systemImage: "link")
-            }
-            .disabled(loadedArtworkLinks.isEmpty)
-
-            Button {
-                presentBatchDownload(artworks: store.artworks, scope: .loadedFeed)
-            } label: {
-                Label(L10n.batchDownload, systemImage: "square.and.arrow.down.on.square")
-            }
-            .disabled(store.artworks.isEmpty)
-
-            Button {
-                presentBatchBookmarkPreview(artworks: store.artworks, scope: .loadedFeed)
-            } label: {
-                Label(L10n.batchBookmark, systemImage: "bookmark")
-            }
-            .disabled(store.artworks.isEmpty)
-
-            Divider()
-
-            Menu {
-                ForEach(BulkMuteTarget.allCases) { target in
-                    Button {
-                        presentBulkMutePreview(target, artworks: store.artworks)
-                    } label: {
-                        Label(target.title, systemImage: target.systemImage)
-                    }
-                    .disabled(store.artworks.isEmpty)
-                }
-            } label: {
-                Label(L10n.bulkMutePreview, systemImage: "eye.slash")
-            }
-            .disabled(store.artworks.isEmpty)
-        } label: {
-            Label(L10n.moreActions, systemImage: "ellipsis.circle")
-        }
-        .help(L10n.moreActions)
-        .accessibilityLabel(L10n.moreActions)
-        .feedHeaderActionChrome()
-        .popover(item: $batchDownloadContext, arrowEdge: .bottom) { context in
-            BatchDownloadPopover(
-                limit: $batchDownloadLimit,
-                includeNextPages: $includeNextBatchDownloadPages,
-                remotePageLimit: $batchDownloadRemotePageLimit,
-                plan: batchDownloadPlan(for: context),
-                queuedCount: lastQueuedDownloadCount,
-                isGatheringPages: isGatheringBatchDownloadPages,
-                downloadDirectoryPath: store.downloads.downloadDirectoryPath,
-                action: queueBatchDownload
-            )
-        }
-        .popover(item: $bulkMutePreview, arrowEdge: .bottom) { preview in
-            BulkMutePreviewPopover(
-                preview: preview,
-                cancel: {
-                    bulkMutePreview = nil
-                },
-                apply: {
-                    applyBulkMutePreview(preview)
-                }
-            )
-        }
-        .popover(item: $batchBookmarkPreview, arrowEdge: .bottom) { preview in
-            BatchBookmarkPreviewPopover(
-                preview: preview,
-                isApplying: isApplyingBatchBookmark,
-                cancel: {
-                    batchBookmarkPreview = nil
-                },
-                apply: {
-                    applyBatchBookmarkPreview(preview)
-                }
-            )
         }
 
         if store.selectedRoute == .search {
@@ -870,87 +695,6 @@ struct FeedHeaderView: View {
         }
     }
 
-    private var compactMoreActionsMenu: some View {
-        Menu {
-            Button {
-                copyLoadedArtworkLinks()
-            } label: {
-                Label(L10n.copyLoadedArtworkLinks, systemImage: "link")
-            }
-            .disabled(loadedArtworkLinks.isEmpty)
-
-            Button {
-                presentBatchDownload(artworks: store.artworks, scope: .loadedFeed)
-            } label: {
-                Label(L10n.batchDownload, systemImage: "square.and.arrow.down.on.square")
-            }
-            .disabled(store.artworks.isEmpty)
-
-            Button {
-                presentBatchBookmarkPreview(artworks: store.artworks, scope: .loadedFeed)
-            } label: {
-                Label(L10n.batchBookmark, systemImage: "bookmark")
-            }
-            .disabled(store.artworks.isEmpty)
-
-            Divider()
-
-            Menu {
-                ForEach(BulkMuteTarget.allCases) { target in
-                    Button {
-                        presentBulkMutePreview(target, artworks: store.artworks)
-                    } label: {
-                        Label(target.title, systemImage: target.systemImage)
-                    }
-                    .disabled(store.artworks.isEmpty)
-                }
-            } label: {
-                Label(L10n.bulkMutePreview, systemImage: "eye.slash")
-            }
-            .disabled(store.artworks.isEmpty)
-        } label: {
-            Label(L10n.moreActions, systemImage: "ellipsis.circle")
-        }
-        .help(L10n.moreActions)
-        .accessibilityLabel(L10n.moreActions)
-        .iPadFeedHeaderActionChrome()
-        .popover(item: $batchDownloadContext, arrowEdge: .bottom) { context in
-            BatchDownloadPopover(
-                limit: $batchDownloadLimit,
-                includeNextPages: $includeNextBatchDownloadPages,
-                remotePageLimit: $batchDownloadRemotePageLimit,
-                plan: batchDownloadPlan(for: context),
-                queuedCount: lastQueuedDownloadCount,
-                isGatheringPages: isGatheringBatchDownloadPages,
-                downloadDirectoryPath: store.downloads.downloadDirectoryPath,
-                action: queueBatchDownload
-            )
-        }
-        .popover(item: $bulkMutePreview, arrowEdge: .bottom) { preview in
-            BulkMutePreviewPopover(
-                preview: preview,
-                cancel: {
-                    bulkMutePreview = nil
-                },
-                apply: {
-                    applyBulkMutePreview(preview)
-                }
-            )
-        }
-        .popover(item: $batchBookmarkPreview, arrowEdge: .bottom) { preview in
-            BatchBookmarkPreviewPopover(
-                preview: preview,
-                isApplying: isApplyingBatchBookmark,
-                cancel: {
-                    batchBookmarkPreview = nil
-                },
-                apply: {
-                    applyBatchBookmarkPreview(preview)
-                }
-            )
-        }
-    }
-
     @ViewBuilder
     private var rankingModeMenu: some View {
         if let family = store.selectedRoute.rankingFamily {
@@ -970,56 +714,6 @@ struct FeedHeaderView: View {
             .accessibilityLabel(L10n.rankingMode)
             .feedHeaderActionChrome()
         }
-    }
-
-    private func presentBatchDownload(artworks: [PixivArtwork], scope: BatchDownloadScope) {
-        guard artworks.isEmpty == false else {
-            actionMessage = L10n.noArtworkTitle
-            return
-        }
-        let plan = BatchDownloadPlan.make(
-            scope: scope,
-            loadedArtworkCount: artworks.count,
-            hasNextPage: store.nextURL != nil,
-            requestedLimit: batchDownloadLimit,
-            requestedRemotePageLimit: 0
-        )
-        batchActionArtworks = artworks
-        batchDownloadScope = scope
-        includeNextBatchDownloadPages = false
-        batchDownloadLimit = min(max(1, batchDownloadLimit), plan.maxLimit)
-        batchDownloadRemotePageLimit = min(
-            max(1, batchDownloadRemotePageLimit),
-            BatchDownloadPlan.maximumRemotePageLimit
-        )
-        lastQueuedDownloadCount = nil
-        batchDownloadContext = BatchDownloadContext(
-            scope: scope,
-            loadedArtworkCount: artworks.count,
-            hasNextPage: store.nextURL != nil
-        )
-    }
-
-    private var maxBatchDownloadLimit: Int {
-        batchDownloadPlan.maxLimit
-    }
-
-    private var batchDownloadPlan: BatchDownloadPlan {
-        batchDownloadPlan(for: batchDownloadContext)
-    }
-
-    private func batchDownloadPlan(for context: BatchDownloadContext?) -> BatchDownloadPlan {
-        BatchDownloadPlan.make(
-            scope: context?.scope ?? batchDownloadScope,
-            loadedArtworkCount: context?.loadedArtworkCount ?? batchActionArtworks.count,
-            hasNextPage: context?.hasNextPage ?? (store.nextURL != nil),
-            requestedLimit: batchDownloadLimit,
-            requestedRemotePageLimit: includeNextBatchDownloadPages ? batchDownloadRemotePageLimit : 0
-        )
-    }
-
-    private var loadedArtworkLinks: [String] {
-        store.artworks.compactMap { $0.pixivURL?.absoluteString }
     }
 
     private var bookmarkFilterTitle: String {
@@ -1303,134 +997,6 @@ struct FeedHeaderView: View {
             )
         } else {
             actionMessage = L10n.latestRankingApplied
-        }
-    }
-
-    private func queueBatchDownload() async {
-        guard batchActionArtworks.isEmpty == false else {
-            lastQueuedDownloadCount = 0
-            actionMessage = L10n.noArtworkTitle
-            return
-        }
-
-        let plan = batchDownloadPlan
-        isGatheringBatchDownloadPages = true
-        defer { isGatheringBatchDownloadPages = false }
-
-        let result: BatchDownloadResult
-        if plan.allowsRemotePages, includeNextBatchDownloadPages, plan.remotePageLimit > 0 {
-            result = await store.enqueueDownloadsFromCurrentFeed(
-                limit: plan.limit,
-                remotePageLimit: plan.remotePageLimit,
-                preferOriginal: true
-            )
-        } else {
-            let count = store.enqueueDownloads(
-                batchActionArtworks,
-                limit: plan.limit,
-                preferOriginal: true
-            )
-            result = BatchDownloadResult(
-                queuedCount: count,
-                candidateCount: min(batchActionArtworks.count, plan.limit),
-                fetchedPageCount: 0,
-                reachedEnd: store.nextURL == nil
-            )
-        }
-
-        lastQueuedDownloadCount = result.queuedCount
-        if result.queuedCount > 0 {
-            actionMessage = String(format: L10n.queuedDownloadsFormat, result.queuedCount)
-            batchDownloadContext = nil
-        }
-    }
-
-    private func copyLoadedArtworkLinks() {
-        let links = loadedArtworkLinks
-        guard links.isEmpty == false else {
-            actionMessage = L10n.noArtworkLinksToCopy
-            return
-        }
-        PasteboardWriter.copy(links.joined(separator: "\n"))
-        actionMessage = String(format: L10n.copiedArtworkLinksFormat, links.count)
-    }
-
-    private func presentBulkMutePreview(_ target: BulkMuteTarget, artworks: [PixivArtwork]) {
-        let preview = store.bulkMutePreview(for: target, in: artworks)
-        bulkMutePreview = preview
-        if preview.canApply == false {
-            actionMessage = L10n.noBulkMuteCandidates
-        }
-    }
-
-    private func applyBulkMutePreview(_ preview: BulkMutePreview) {
-        let count = store.applyBulkMutePreview(preview)
-        bulkMutePreview = nil
-        if count > 0 {
-            actionMessage = String(format: L10n.bulkMutedItemsFormat, count)
-        } else {
-            actionMessage = L10n.noBulkMuteCandidates
-        }
-    }
-
-    private func handleBatchBookmarkCommandRequest(_ request: BatchBookmarkCommandRequest?) {
-        guard let request else { return }
-        let requestedIDs = Set(request.artworkIDs)
-        presentBatchBookmarkPreview(
-            artworks: store.artworks.filter { requestedIDs.contains($0.id) },
-            scope: request.scope
-        )
-        batchBookmarkCommandRequest = nil
-    }
-
-    private func presentBatchBookmarkPreview(artworks: [PixivArtwork], scope: BatchBookmarkScope) {
-        let preview = BatchBookmarkPreview.make(
-            artworks: artworks,
-            scope: scope,
-            restrict: store.defaultBookmarkRestrict(for: artworks),
-            tags: commonAutomaticBookmarkTags(artworks: artworks),
-            limit: 30
-        )
-        batchBookmarkPreview = preview
-        if preview.canApply == false {
-            actionMessage = preview.scope.emptyStateTitle
-        }
-    }
-
-    private func commonAutomaticBookmarkTags(artworks: [PixivArtwork]) -> [String] {
-        guard store.autoTagBookmarksWithArtworkTags else { return [] }
-        let tagCounts = artworks
-            .flatMap { $0.tags.map(\.name) }
-            .reduce(into: [String: Int]()) { counts, tag in
-                counts[tag, default: 0] += 1
-            }
-        return tagCounts
-            .sorted {
-                if $0.value != $1.value {
-                    return $0.value > $1.value
-                }
-                return $0.key.localizedStandardCompare($1.key) == .orderedAscending
-            }
-            .prefix(8)
-            .map(\.key)
-    }
-
-    private func applyBatchBookmarkPreview(_ preview: BatchBookmarkPreview) {
-        guard isApplyingBatchBookmark == false else { return }
-        isApplyingBatchBookmark = true
-        Task {
-            let result = await store.batchSaveBookmarks(
-                preview.applyArtworks,
-                restrict: preview.restrict,
-                tags: preview.tags
-            )
-            isApplyingBatchBookmark = false
-            batchBookmarkPreview = nil
-            actionMessage = String(
-                format: L10n.batchBookmarkedResultFormat,
-                result.savedCount,
-                result.failedCount
-            )
         }
     }
 
@@ -2062,160 +1628,5 @@ private struct RankingDatePopover: View {
     private func canShiftDate(by days: Int) -> Bool {
         let shifted = Calendar.current.date(byAdding: .day, value: days, to: rankingDate) ?? rankingDate
         return KeiPixStore.clampedRankingDate(shifted) != rankingDate
-    }
-}
-
-private struct BatchDownloadPopover: View {
-    @Binding var limit: Int
-    @Binding var includeNextPages: Bool
-    @Binding var remotePageLimit: Int
-    let plan: BatchDownloadPlan
-    let queuedCount: Int?
-    let isGatheringPages: Bool
-    let downloadDirectoryPath: String
-    let action: () async -> Void
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(L10n.batchDownload)
-                    .font(.headline)
-                Text(downloadDirectoryPath)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-                    .truncationMode(.middle)
-            }
-
-            Stepper(value: $limit, in: 1...plan.maxLimit) {
-                LabeledContent(L10n.maximumDownloads, value: "\(limit)")
-            }
-
-            if plan.allowsRemotePages {
-                Divider()
-
-                Toggle(isOn: $includeNextPages) {
-                    Label(L10n.includeFollowingPages, systemImage: "arrow.down.forward.and.arrow.up.backward")
-                }
-
-                if includeNextPages {
-                    Stepper(value: $remotePageLimit, in: 1...BatchDownloadPlan.maximumRemotePageLimit) {
-                        LabeledContent(L10n.followingPageRequests, value: "\(remotePageLimit)")
-                    }
-
-                    Text(String(format: L10n.batchDownloadFollowingPagesHintFormat, plan.estimatedRemotePageRequests))
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-            }
-
-            if let queuedCount {
-                Text(String(format: L10n.queuedDownloadsFormat, queuedCount))
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-
-            HStack {
-                Spacer()
-                Button {
-                    Task { await action() }
-                } label: {
-                    if isGatheringPages {
-                        ProgressView()
-                            .controlSize(.small)
-                    } else {
-                        Label(L10n.addToDownloadQueue, systemImage: "arrow.down.circle")
-                    }
-                }
-                .buttonStyle(.glassProminent)
-                .disabled(isGatheringPages)
-            }
-        }
-        .padding(16)
-        .frame(width: 340)
-        .onAppear {
-            limit = min(max(1, limit), plan.maxLimit)
-            remotePageLimit = min(
-                max(1, remotePageLimit),
-                BatchDownloadPlan.maximumRemotePageLimit
-            )
-        }
-    }
-}
-
-private struct BulkMutePreviewPopover: View {
-    let preview: BulkMutePreview
-    let cancel: () -> Void
-    let apply: () -> Void
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            VStack(alignment: .leading, spacing: 4) {
-                Label(preview.target.title, systemImage: preview.target.systemImage)
-                    .font(.headline)
-
-                Text(String(format: L10n.bulkMuteAffectedArtworkFormat, preview.affectedArtworkCount))
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-
-            if preview.entries.isEmpty {
-                OS26InlineUnavailableView(
-                    title: L10n.noBulkMuteCandidates,
-                    systemImage: "eye.slash",
-                    minHeight: 160
-                )
-            } else {
-                ScrollView {
-                    LazyVStack(alignment: .leading, spacing: 8) {
-                        ForEach(preview.entries) { entry in
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(entry.title)
-                                    .font(.callout.weight(.medium))
-                                    .lineLimit(1)
-
-                                if let detail = entry.detail {
-                                    Text(detail)
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
-                                        .lineLimit(1)
-                                }
-                            }
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 8)
-                            .keiGlass(12)
-                        }
-
-                        if preview.omittedEntryCount > 0 {
-                            Text(String(format: L10n.moreBulkMuteItemsFormat, preview.omittedEntryCount))
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                                .padding(.horizontal, 10)
-                        }
-                    }
-                }
-                .frame(maxHeight: 280)
-            }
-
-            Divider()
-
-            HStack(spacing: 8) {
-                Button(L10n.cancel, action: cancel)
-                    .os26GlassButton()
-
-                Spacer()
-
-                Button(role: .destructive) {
-                    apply()
-                } label: {
-                    Label(L10n.applyBulkMute, systemImage: "eye.slash")
-                }
-                .os26GlassButton(prominent: true)
-                .disabled(preview.canApply == false)
-            }
-        }
-        .padding(16)
-        .frame(width: 340)
     }
 }

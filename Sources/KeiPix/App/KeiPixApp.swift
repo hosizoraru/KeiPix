@@ -301,6 +301,15 @@ struct KeiPixApp: App {
                 gallerySelectionCommandActions?.batchBookmarkSelected()
             }
             .disabled(gallerySelectionCommandActions?.canBatchBookmark != true)
+
+            Menu(L10n.bulkMutePreview) {
+                ForEach(BulkMuteTarget.allCases) { target in
+                    Button(target.title) {
+                        gallerySelectionCommandActions?.bulkMuteSelected(target)
+                    }
+                    .disabled(gallerySelectionCommandActions?.canBulkMute != true)
+                }
+            }
         }
 
         CommandMenu(L10n.downloads) {
@@ -309,20 +318,6 @@ struct KeiPixApp: App {
                 store.select(.downloads)
             }
             .shortcut(.openDownloads)
-
-            Button(L10n.batchDownloadLoadedArtworks) {
-                let queuedCount = store.enqueueDownloads(
-                    store.artworks,
-                    limit: min(max(store.artworks.count, 1), 100),
-                    preferOriginal: true
-                )
-                if queuedCount > 0 {
-                    openWindow(id: "main")
-                    store.select(.downloads)
-                }
-            }
-            .shortcut(.batchDownloadLoadedArtworks)
-            .disabled(store.selectedRoute.usesArtworkFeed == false || store.artworks.isEmpty)
 
             Divider()
 

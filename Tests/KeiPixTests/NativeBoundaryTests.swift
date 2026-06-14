@@ -1090,13 +1090,24 @@ struct NativeBoundaryTests {
         #expect(feedHeader.contains("Section(L10n.viewOptions)") == false)
         #expect(feedHeader.contains("randomFromCurrentFeed") == false)
         #expect(feedHeader.contains("compactSelectionMenu") == false)
+        #expect(feedHeader.contains("copyLoadedArtworkLinks") == false)
+        #expect(feedHeader.contains("BatchDownloadPopover") == false)
+        #expect(feedHeader.contains("presentBatchDownload(artworks: store.artworks, scope: .loadedFeed)") == false)
+        #expect(feedHeader.contains("presentBatchBookmarkPreview(artworks: store.artworks, scope: .loadedFeed)") == false)
+        #expect(feedHeader.contains("presentBulkMutePreview(target, artworks: store.artworks)") == false)
         #expect(feedHeader.contains("Label(L10n.copySelectedArtworkLinks, systemImage: \"link\")") == false)
         #expect(feedHeader.contains("Label(L10n.batchBookmarkSelected, systemImage: \"bookmark\")") == false)
         #expect(galleryView.contains("gallerySelectionFloatingActions"))
         #expect(galleryView.contains("selectionModeAccessoryBottomPadding"))
         #expect(galleryView.contains("Label(selectionAccessoryTitle, systemImage: selectionAccessorySystemImage)"))
         #expect(galleryView.contains("artworkSelection.isSelectionMode = true"))
-        #expect(galleryView.contains("batchBookmarkCommandRequest = BatchBookmarkCommandRequest("))
+        #expect(galleryView.contains("Label(L10n.copySelectedArtworkLinks, systemImage: \"link\")"))
+        #expect(galleryView.contains("Label(L10n.batchDownload, systemImage: \"square.and.arrow.down.on.square\")"))
+        #expect(galleryView.contains("Label(L10n.batchBookmarkSelected, systemImage: \"bookmark\")"))
+        #expect(galleryView.contains("Label(L10n.bulkMutePreview, systemImage: \"eye.slash\")"))
+        #expect(galleryView.contains("bulkMuteSelectedArtworks"))
+        #expect(galleryView.contains("batchBookmarkPreview = preview"))
+        #expect(galleryView.contains("applyBatchBookmarkPreview(preview)"))
         #expect(l10n.contains("static var searchSuggestions: String"))
         #expect(localizable.contains("\"Search Suggestions\""))
     }
@@ -1980,15 +1991,27 @@ struct NativeBoundaryTests {
         #expect(reader.contains("NovelBookmarkEditorView("))
     }
 
-    @Test("Gallery batch download can explicitly gather following feed pages")
-    func galleryBatchDownloadCanGatherFollowingPages() throws {
+    @Test("Gallery batch actions stay scoped to selected works")
+    func galleryBatchActionsStayScopedToSelectedWorks() throws {
         let root = try packageRoot()
         let feedHeader = try String(
             contentsOf: root.appending(path: "Sources/KeiPix/Views/GalleryFeedHeaderView.swift"),
             encoding: .utf8
         )
-        let store = try String(
-            contentsOf: root.appending(path: "Sources/KeiPix/Stores/KeiPixStore+ArtworkActions.swift"),
+        let galleryView = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/GalleryView.swift"),
+            encoding: .utf8
+        )
+        let selectionPopovers = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/GallerySelectionBatchPopovers.swift"),
+            encoding: .utf8
+        )
+        let app = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/App/KeiPixApp.swift"),
+            encoding: .utf8
+        )
+        let keyboardShortcuts = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Models/KeyboardShortcutCatalog.swift"),
             encoding: .utf8
         )
         let model = try String(
@@ -1997,16 +2020,24 @@ struct NativeBoundaryTests {
         )
 
         #expect(model.contains("struct BatchDownloadPlan"))
-        #expect(feedHeader.contains("private struct BatchDownloadContext"))
-        #expect(feedHeader.contains("@State private var includeNextBatchDownloadPages"))
-        #expect(feedHeader.contains("@State private var batchDownloadRemotePageLimit"))
-        #expect(feedHeader.contains("loadedArtworkCount: artworks.count"))
-        #expect(feedHeader.contains(".popover(item: $batchDownloadContext"))
-        #expect(feedHeader.contains("BatchDownloadPlan.make("))
-        #expect(feedHeader.contains("Task { await action() }"))
-        #expect(feedHeader.contains("includeNextPages: $includeNextBatchDownloadPages"))
-        #expect(store.contains("func enqueueDownloadsFromCurrentFeed("))
-        #expect(store.contains("try await api.nextFeed(url)"))
+        #expect(feedHeader.contains("BatchDownloadPlan.make(") == false)
+        #expect(feedHeader.contains(".popover(item: $batchDownloadContext") == false)
+        #expect(galleryView.contains("GallerySelectionBatchDownloadContext"))
+        #expect(galleryView.contains("@State private var batchDownloadContext"))
+        #expect(galleryView.contains(".popover(item: $batchDownloadContext"))
+        #expect(galleryView.contains("presentSelectedBatchDownload()"))
+        #expect(galleryView.contains("private func queueSelectedBatchDownload() async"))
+        #expect(galleryView.contains("scope: .selectedWorks"))
+        #expect(galleryView.contains("hasNextPage: false"))
+        #expect(galleryView.contains("store.enqueueDownloads(\n            batchDownloadArtworks"))
+        #expect(galleryView.contains("enqueueDownloadsFromCurrentFeed") == false)
+        #expect(selectionPopovers.contains("struct BatchDownloadPopover"))
+        #expect(selectionPopovers.contains("Task { await action() }"))
+        #expect(app.contains("batchDownloadLoadedArtworks") == false)
+        #expect(app.contains("Menu(L10n.bulkMutePreview)"))
+        #expect(app.contains("gallerySelectionCommandActions?.bulkMuteSelected(target)"))
+        #expect(app.contains("gallerySelectionCommandActions?.canBulkMute"))
+        #expect(keyboardShortcuts.contains("batchDownloadLoadedArtworks") == false)
     }
 
     @Test("Novel detail exposes comments through the shared comment surface")
