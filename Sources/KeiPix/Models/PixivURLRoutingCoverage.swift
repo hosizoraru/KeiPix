@@ -43,6 +43,11 @@ enum PixivURLRoutingCoverage {
             expectedDestination: .tag("OC")
         ),
         PixivURLRoutingSample(
+            id: "activity-web",
+            input: "https://www.pixiv.net/stacc",
+            expectedDestination: .activity
+        ),
+        PixivURLRoutingSample(
             id: "pixiv-scheme",
             input: "pixiv://illusts/345",
             expectedDestination: .artwork(345)

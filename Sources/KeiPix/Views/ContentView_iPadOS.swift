@@ -122,7 +122,7 @@ struct ContentView: View {
                     store.presentPixivActivityVisualQA()
                     hasAppliedMobileBottomTabLaunchTarget = true
                     selectedSidebarItem = .route(.pixivActivity)
-                    selectedTab = .mobile(.illustrations)
+                    selectedTab = .feed
                 }
                 if VisualQALaunchArgument.contains(.creatorProfile) {
                     store.activateVisualQASampleSession()

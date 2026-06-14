@@ -5,6 +5,7 @@ enum PixivWebDestination: Hashable, Sendable {
     case novel(Int)
     case novelSeries(Int)
     case user(Int)
+    case activity
     case collection(id: String)
     case tag(String)
     case search(String)
@@ -153,6 +154,10 @@ enum PixivWebLinkResolver {
     private static func destination(fromRouteComponents components: [String], sourceURL: URL) -> PixivWebDestination? {
         guard components.isEmpty == false else { return nil }
         let normalized = components.map { $0.lowercased() }
+
+        if normalized.first == "stacc" {
+            return .activity
+        }
 
         if let index = normalized.firstIndex(where: { $0 == "artworks" || $0 == "illusts" || $0 == "illust" }),
            components.indices.contains(index + 1),
@@ -326,6 +331,8 @@ extension PixivWebDestination {
             return "\(L10n.novelSeries) #\(id)"
         case .user(let id):
             return String(format: L10n.linkUserPrefixFormat, id)
+        case .activity:
+            return L10n.pixivActivity
         case .collection(let id):
             return String(format: L10n.linkCollectionPrefixFormat, id)
         case .tag(let tag), .search(let tag):
