@@ -64,6 +64,9 @@ expect_file_contains script/generate_livecontainer_apps_nightly.sh "KEIPIX_BUILD
 expect_file_contains .github/workflows/macos-build.yml "script/version_settings.sh"
 expect_file_contains .github/workflows/macos-build.yml "script/generate_livecontainer_apps_nightly.sh"
 expect_file_contains .github/workflows/macos-build.yml "apps_nightly.json"
+expect_file_contains .github/workflows/macos-build.yml "needs: [test, package-macos, package-ios]"
+expect_file_contains .github/workflows/macos-build.yml "pattern: KeiPix-macOS-*-app"
+expect_file_contains .github/workflows/macos-build.yml "artifacts/KeiPix-*-build.*.zip"
 
 jq empty "$ROOT_DIR/apps_nightly.json"
 jq -e \

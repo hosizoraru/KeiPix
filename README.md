@@ -62,7 +62,7 @@ swift test --arch arm64
 
 ## Local Packaging
 
-GitHub Actions 会在 PR、`master` push 和 tag 构建中分别上传：
+GitHub Actions 会在 PR、`master` push 和 tag 构建中分别上传 Actions artifacts：
 
 - macOS zipped `.app`：`KeiPix-macOS-<version>-build.<build>-app`
 - iOS unsigned IPA：`KeiPix-iOS-<version>-build.<build>-unsigned-ipa`
@@ -89,6 +89,8 @@ Nightly LiveContainer 订阅源：
 https://github.com/hosizoraru/KeiPix/releases/download/nightly/apps_nightly.json
 ```
 
+`master` 的 nightly release 还会直接附带 macOS `.app` zip、iOS unsigned IPA 和 iPadOS unsigned IPA。release assets 是公开下载入口，适合普通用户和轻量 QA；Actions artifacts 主要用于 PR/CI 调试，GitHub 可能要求登录后才能下载。
+
 `apps_nightly.json` 使用同一套版本元数据：`versionName` 对应当前可达 `v*` tag 的版本号，`buildNumber` / `buildVersion` / `versionCode` 使用 tag code，例如 `v0.27.0 -> 2700`、`v0.27.2 -> 2702`、`v1.2.3 -> 10203`。commit 数和短 hash 只写进 About/诊断与 nightly 描述，不参与版本号或安装升级判断；因此 `v0.27.6+12` 仍然是外部版本 `0.27.6`、构建号 `2706`。需要本地模拟 nightly 时可以运行：
 
 ```bash
@@ -96,7 +98,7 @@ KEIPIX_BUILD_NUMBER_STRATEGY=git ./script/version_settings.sh --print-json
 KEIPIX_BUILD_NUMBER_STRATEGY=git ./script/build_unsigned_ipa.sh ios
 ```
 
-`Config/AppVersion.xcconfig` 与 `project.yml` 必须和最新版本 tag 保持一致；更新版本请先运行 `./script/set_app_version.sh 0.27.x`，再给同一个提交打 annotated `v0.27.x` tag。`master` 的 Actions 在 iOS 与 iPadOS IPA 都构建成功后，会移动 `nightly` tag，并把 `nightly` release 更新为最新的两个 unsigned IPA 和订阅源；本地需要刷新 seed 文件时可运行：
+`Config/AppVersion.xcconfig` 与 `project.yml` 必须和最新版本 tag 保持一致；更新版本请先运行 `./script/set_app_version.sh 0.27.x`，再给同一个提交打 annotated `v0.27.x` tag。`master` 的 Actions 在 macOS zip、iOS IPA 与 iPadOS IPA 都构建成功后，会移动 `nightly` tag，并把 `nightly` release 更新为最新的 macOS `.app` zip、两个 unsigned IPA 和订阅源；本地需要刷新 seed 文件时可运行：
 
 ```bash
 ./script/generate_livecontainer_apps_nightly.sh apps_nightly.json

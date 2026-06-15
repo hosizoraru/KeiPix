@@ -203,8 +203,8 @@ GitHub Actions workflow 位于 `.github/workflows/macos-build.yml`：
 - macOS 测试、macOS `.app` 打包、iOS IPA 打包和 iPadOS IPA 打包并行执行；各 job 失败都会让 workflow 失败，但 artifact 不再等待测试 job 结束才开始构建
 - SwiftPM job 缓存 `.build` / SwiftPM cache，iOS 与 iPadOS 打包 job 缓存各自的 `.tmp/DerivedData-unsigned-ipa-*`；cache key 覆盖 Swift source、资源、XcodeGen spec、plist、entitlements 和版本配置
 - mobile packaging 在 CI 中会重新生成 `KeiPix.xcodeproj`；本地脚本也会在项目缺失、`project.yml`/source/plist/privacy 输入更新时重新生成，避免 stale Xcode project 漏掉新增 Swift 文件
-- checkout 使用完整 git history 和 tags。非 tag 构建设置 `KEIPIX_BUILD_NUMBER_STRATEGY=git`，优先按最近 `v*` 版本 tag 的提交距离派生 build number，没有版本 tag 时用 commit count 兜底；tag `v*` 构建保持 `CURRENT_PROJECT_VERSION`
-- `master` push 且测试和两个 IPA job 都成功后，`publish-livecontainer-nightly` 会生成 `apps_nightly.json`，把 `nightly` tag / release 移到当前提交，清理旧 nightly IPA/source assets，并上传订阅源、iOS unsigned IPA、iPadOS unsigned IPA 三个 release assets
+- checkout 使用完整 git history 和 tags。非 tag 构建设置 `KEIPIX_BUILD_NUMBER_STRATEGY=git`，但安装版本号仍由最近可达 `v*` tag 决定：`versionName` 使用 tag 版本，`buildNumber` / `versionCode` 使用 tag code；commit 距离和短 hash 只写入 About、诊断信息和 nightly 描述
+- `master` push 且测试、macOS package 和两个 IPA job 都成功后，`publish-livecontainer-nightly` 会生成 `apps_nightly.json`，把 `nightly` tag / release 移到当前提交，清理旧 nightly package/source assets，并上传订阅源、macOS `.app` zip、iOS unsigned IPA、iPadOS unsigned IPA 四个 release assets
 - tag `v*` 时把 macOS `.zip` / `.dmg` 产物附加到 GitHub Release
 
 本地可复现同样的打包产物：
@@ -227,10 +227,16 @@ KEIPIX_BUILD_NUMBER_STRATEGY=git ./script/build_release_app.sh zip
 KEIPIX_BUILD_NUMBER_STRATEGY=git ./script/build_unsigned_ipa.sh ios
 ```
 
-LiveContainer nightly 订阅源使用稳定 release asset URL，而不是 14 天保留的 Actions artifact URL：
+Nightly 用户下载入口使用稳定 release asset URL，而不是 14 天保留且可能要求登录的 Actions artifact URL。LiveContainer 订阅源为：
 
 ```text
 https://github.com/hosizoraru/KeiPix/releases/download/nightly/apps_nightly.json
+```
+
+macOS nightly `.app` zip 同样挂在 moving `nightly` release 上：
+
+```text
+https://github.com/hosizoraru/KeiPix/releases/download/nightly/KeiPix-<version>-build.<build>.zip
 ```
 
 ## Visual QA

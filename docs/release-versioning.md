@@ -137,7 +137,8 @@ The check verifies:
 - when a reachable `v*` tag exists, the checked-in baseline matches that tag.
 - macOS, iOS, and iPadOS plist templates use build-setting placeholders.
 - packaging scripts inject the shared version and git provenance fields.
-- `.github/workflows/macos-build.yml` fetches full tag history.
+- `.github/workflows/macos-build.yml` fetches full tag history and publishes
+  the macOS zip to the moving nightly release.
 - `apps_nightly.json` matches the current effective version metadata.
 - source code no longer hard-codes the legacy `KeiPix/1.0` User-Agent.
 
@@ -166,9 +167,9 @@ KeiPix-iOS-<version>-build.<build>-unsigned-ipa
 KeiPix-iPadOS-<version>-build.<build>-unsigned-ipa
 ```
 
-On `master` pushes, the unsigned iOS and iPadOS IPAs feed the moving `nightly`
-release. On `v*` tag pushes, the macOS zip and optional DMG are attached to the
-matching GitHub Release.
+On `master` pushes, the macOS zip plus unsigned iOS and iPadOS IPAs feed the
+moving `nightly` release. On `v*` tag pushes, the macOS zip and optional DMG are
+attached to the matching GitHub Release.
 
 ## LiveContainer Nightly Source
 
@@ -179,22 +180,26 @@ nightly IPA imports. The canonical subscription URL is:
 https://github.com/hosizoraru/KeiPix/releases/download/nightly/apps_nightly.json
 ```
 
-On `master` pushes, GitHub Actions waits for both iOS and iPadOS unsigned IPA
-artifacts, regenerates the source with real IPA sizes, commit, build date, and
-workflow URL, then uploads:
+On `master` pushes, GitHub Actions waits for the macOS zip and both iOS/iPadOS
+unsigned IPA artifacts, regenerates the source with real IPA sizes, commit,
+build date, and workflow URL, then uploads:
 
 ```text
 apps_nightly.json
+KeiPix-<version>-build.<build>.zip
 KeiPix-iOS-<version>-build.<build>-unsigned.ipa
 KeiPix-iPadOS-<version>-build.<build>-unsigned.ipa
 ```
 
-to the moving `nightly` GitHub Release. Local refreshes use the same generator:
+to the moving `nightly` GitHub Release. The macOS zip is included as a public
+release asset so users do not need GitHub login access to Actions artifacts.
+Local refreshes use the same generator:
 
 ```bash
 ./script/generate_livecontainer_apps_nightly.sh apps_nightly.json
 ```
 
 The release job force-moves the `nightly` tag to the successful `master` commit,
-prunes the previous nightly feed/IPAs, and republishes only the current feed and
-the two current unsigned IPAs. It does not mark the nightly release as latest.
+prunes the previous nightly feed, macOS zip, and IPAs, then republishes only the
+current feed and current platform packages. It does not mark the nightly release
+as latest.
