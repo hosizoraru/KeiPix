@@ -47,7 +47,7 @@ body:
       label: Validation ideas
       description: Which tests, Runtime Readiness rows, visual QA surfaces or manual checks would prove this works?
       placeholder: |
-        swift test --filter NativeBoundaryTests
+        swift test --arch arm64 --filter NativeBoundaryTests
         ./script/build_and_run.sh --visual-qa-...
   - type: textarea
     id: risks

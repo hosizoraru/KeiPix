@@ -126,7 +126,7 @@ plist templates, tags, or nightly feed generation:
 
 ```bash
 ./script/check_version_consistency.sh
-swift test --filter AppVersionTests
+swift test --arch arm64 --filter AppVersionTests
 ```
 
 The check verifies:

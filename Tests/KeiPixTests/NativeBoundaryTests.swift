@@ -145,6 +145,50 @@ struct NativeBoundaryTests {
         #expect(plist.contains("<string>UIInterfaceOrientationLandscapeRight</string>"))
     }
 
+    @Test("XcodeGen builds Apple OS targets as arm64 only")
+    func xcodeGenBuildsAppleOSTargetsAsArm64Only() throws {
+        let root = try packageRoot()
+        let project = try String(
+            contentsOf: root.appending(path: "project.yml"),
+            encoding: .utf8
+        )
+        let buildGuide = try String(
+            contentsOf: root.appending(path: "docs/build-and-run.md"),
+            encoding: .utf8
+        )
+        let agents = try String(
+            contentsOf: root.appending(path: "AGENTS.md"),
+            encoding: .utf8
+        )
+        let macRunner = try String(
+            contentsOf: root.appending(path: "script/build_and_run.sh"),
+            encoding: .utf8
+        )
+        let releaseRunner = try String(
+            contentsOf: root.appending(path: "script/build_release_app.sh"),
+            encoding: .utf8
+        )
+        let workflow = try String(
+            contentsOf: root.appending(path: ".github/workflows/macos-build.yml"),
+            encoding: .utf8
+        )
+
+        #expect(project.contains("ARCHS: arm64"))
+        #expect(project.contains("EXCLUDED_ARCHS: x86_64"))
+        #expect(project.contains("VALID_ARCHS") == false)
+        #expect(macRunner.contains("SWIFTPM_ARCH=\"${KEIPIX_SWIFTPM_ARCH:-arm64}\""))
+        #expect(macRunner.contains("swift build --arch \"$SWIFTPM_ARCH\""))
+        #expect(releaseRunner.contains("swift build -c release --arch \"$SWIFTPM_ARCH\" --product \"$APP_NAME\" --jobs \"$BUILD_JOBS\""))
+        #expect(workflow.contains("swift build --arch arm64 --jobs"))
+        #expect(workflow.contains("swift test --arch arm64 --parallel --jobs"))
+        #expect(buildGuide.contains("swift build --arch arm64"))
+        #expect(buildGuide.contains("swift test --arch arm64"))
+        #expect(buildGuide.contains("-destination 'platform=macOS,arch=arm64' build"))
+        #expect(buildGuide.contains("-destination 'platform=macOS,arch=arm64' test"))
+        #expect(agents.contains("swift test --arch arm64 --filter NativeBoundaryTests"))
+        #expect(agents.contains("-configuration Debug -destination 'platform=macOS,arch=arm64'"))
+    }
+
     @Test("App targets use the Icon Composer app icon package")
     func appTargetsUseIconComposerAppIconPackage() throws {
         let root = try packageRoot()

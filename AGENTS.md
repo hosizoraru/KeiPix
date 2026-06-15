@@ -268,8 +268,8 @@ Use the smallest focused check first, then broaden before handoff.
 Common checks:
 
 ```bash
-swift test --filter NativeBoundaryTests
-swift test
+swift test --arch arm64 --filter NativeBoundaryTests
+swift test --arch arm64
 git diff --check
 ```
 
@@ -277,8 +277,8 @@ String catalog changes:
 
 ```bash
 jq empty Sources/KeiPix/Resources/Localizable.xcstrings
-swift test --filter AboutViewTests
-swift test
+swift test --arch arm64 --filter AboutViewTests
+swift test --arch arm64
 ```
 
 macOS app:
@@ -286,7 +286,7 @@ macOS app:
 ```bash
 ./script/build_and_run.sh --verify
 xcodebuild -quiet -project KeiPix.xcodeproj -scheme KeiPix \
-  -configuration Debug -destination 'platform=macOS' \
+  -configuration Debug -destination 'platform=macOS,arch=arm64' \
   -derivedDataPath /tmp/KeiPix-macOS-DerivedData \
   CODE_SIGNING_ALLOWED=NO build
 ```

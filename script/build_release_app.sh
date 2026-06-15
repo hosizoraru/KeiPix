@@ -41,14 +41,15 @@ source "$ROOT_DIR/script/build_parallelism.sh"
 VERSION="$KEIPIX_MARKETING_VERSION"
 BUILD_NUMBER="$KEIPIX_BUILD_NUMBER"
 BUILD_JOBS="$(keipix_resolve_build_jobs "${KEIPIX_BUILD_JOBS:-}")"
+SWIFTPM_ARCH="${KEIPIX_SWIFTPM_ARCH:-arm64}"
 
 cd "$ROOT_DIR"
 mkdir -p "$ARTIFACTS_DIR"
 
-echo "==> Building $APP_NAME $VERSION ($BUILD_NUMBER) in release configuration with $BUILD_JOBS jobs"
-swift build -c release --product "$APP_NAME" --jobs "$BUILD_JOBS"
+echo "==> Building $APP_NAME $VERSION ($BUILD_NUMBER) for $SWIFTPM_ARCH in release configuration with $BUILD_JOBS jobs"
+swift build -c release --arch "$SWIFTPM_ARCH" --product "$APP_NAME" --jobs "$BUILD_JOBS"
 
-BUILD_DIR="$(swift build -c release --show-bin-path)"
+BUILD_DIR="$(swift build -c release --arch "$SWIFTPM_ARCH" --show-bin-path)"
 BUILD_BINARY="$BUILD_DIR/$APP_NAME"
 
 if [ ! -x "$BUILD_BINARY" ]; then

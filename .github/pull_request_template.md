@@ -16,8 +16,8 @@
 
 ## Validation
 
-- [ ] `swift build`
-- [ ] `swift test`
+- [ ] `swift build --arch arm64`
+- [ ] `swift test --arch arm64`
 - [ ] Targeted tests:
 - [ ] `./script/build_and_run.sh --verify`
 

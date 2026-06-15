@@ -15,6 +15,7 @@ APP_RESOURCES="$APP_CONTENTS/Resources"
 APP_BINARY="$APP_MACOS/$APP_NAME"
 APP_PROCESS_SUFFIX="/$APP_NAME.app/Contents/MacOS/$APP_NAME"
 INFO_PLIST="$APP_CONTENTS/Info.plist"
+SWIFTPM_ARCH="${KEIPIX_SWIFTPM_ARCH:-arm64}"
 
 cd "$ROOT_DIR"
 
@@ -68,8 +69,8 @@ case "$MODE" in
     ;;
 esac
 
-swift build
-BUILD_DIR="$(swift build --show-bin-path)"
+swift build --arch "$SWIFTPM_ARCH"
+BUILD_DIR="$(swift build --arch "$SWIFTPM_ARCH" --show-bin-path)"
 BUILD_BINARY="$BUILD_DIR/$APP_NAME"
 
 rm -rf "$APP_BUNDLE"

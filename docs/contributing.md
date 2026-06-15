@@ -7,7 +7,7 @@
 1. 从 `master` 切独立分支
 2. 改动控制在一个主题；多主题拆 PR
 3. 写代码前先把目标 surface 的视觉 QA 起一遍，避免改完才发现样本数据不全
-4. 写完跑 `swift build && swift test`
+4. 写完跑 `swift build --arch arm64 && swift test --arch arm64`
 5. 修到 UI 的一律重抓视觉 QA：`./script/build_and_run.sh --visual-qa-<surface>` → `./script/capture_visual_qa.sh <surface>`
 6. 同步刷新 `readme/PROGRESS.md`（带日期表格新增一行）
 7. 提 PR 时把 manifest 文件路径列出来
@@ -79,8 +79,8 @@
 
 合 PR 前自检一遍：
 
-- [ ] `swift build` 通过
-- [ ] `swift test` 通过（关键模块再 `swift test --filter` 跑一次）
+- [ ] `swift build --arch arm64` 通过
+- [ ] `swift test --arch arm64` 通过（关键模块再 `swift test --arch arm64 --filter` 跑一次）
 - [ ] 改动到 UI → 视觉 QA 重抓并把 manifest 路径写在 PR
 - [ ] 改动到字符串 → 中英文 strings 同步
 - [ ] 改动到写入路径 → 可见入口与可逆性已交代

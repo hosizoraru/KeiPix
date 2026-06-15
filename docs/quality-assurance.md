@@ -5,8 +5,8 @@ KeiPix 通过三层证据支撑发布信心：单元测试（SwiftPM）、Runtim
 ## 单元测试
 
 ```bash
-swift test
-swift test --filter <TestSuiteName>
+swift test --arch arm64
+swift test --arch arm64 --filter <TestSuiteName>
 ```
 
 当前测试目录 `Tests/KeiPixTests` 共 51 个 Swift 文件；最近一次完整本地基线为 **289 个测试 / 51 个测试套件**。主要覆盖：

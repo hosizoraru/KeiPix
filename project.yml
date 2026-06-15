@@ -15,6 +15,10 @@ settings:
   base:
     SWIFT_VERSION: "6.0"
     SWIFT_STRICT_CONCURRENCY: complete
+    # KeiPix targets Apple OS 26+ on Apple silicon-era SDKs; keep Xcode
+    # products arm64-only instead of producing stale x86_64 slices.
+    ARCHS: arm64
+    EXCLUDED_ARCHS: x86_64
     CLANG_ENABLE_MODULES: YES
     ENABLE_USER_SCRIPT_SANDBOXING: YES
     ENABLE_HARDENED_RUNTIME: YES

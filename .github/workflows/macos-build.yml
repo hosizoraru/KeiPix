@@ -80,11 +80,11 @@ jobs:
       - name: Check version settings
         run: ./script/check_version_consistency.sh
 
-      - name: Build (macOS)
-        run: swift build --jobs "${{ steps.parallelism.outputs.jobs }}"
+      - name: Build (macOS arm64)
+        run: swift build --arch arm64 --jobs "${{ steps.parallelism.outputs.jobs }}"
 
       - name: Run tests
-        run: swift test --parallel --jobs "${{ steps.parallelism.outputs.jobs }}"
+        run: swift test --arch arm64 --parallel --jobs "${{ steps.parallelism.outputs.jobs }}"
 
   package-macos:
     name: Package macOS .app zip

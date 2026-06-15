@@ -78,7 +78,7 @@ body:
       label: Evidence
       description: Add screenshots, logs, manifest paths or command output. Do not include tokens, cookies or private account data.
       placeholder: |
-        swift test --filter NativeBoundaryTests
+        swift test --arch arm64 --filter NativeBoundaryTests
         artifacts/visual-qa/<timestamp>/gallery-three-column.md
   - type: checkboxes
     id: checklist
