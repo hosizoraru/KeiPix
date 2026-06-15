@@ -1,3 +1,4 @@
+import CoreGraphics
 import Foundation
 import Testing
 @testable import KeiPix
@@ -113,11 +114,75 @@ struct DownloadModelsTests {
         #expect(snapshot.latestCompletedTitle == "Downloaded reader QA manga")
     }
 
+    @Test("Download masonry metrics keep phone dense and widen on larger canvases")
+    func downloadMasonryMetrics() {
+        let phoneMetrics = DownloadQueueMasonryPresentation.metrics(
+            for: 402,
+            layoutKind: .compactPhone
+        )
+        let regularMetrics = DownloadQueueMasonryPresentation.metrics(
+            for: 900,
+            layoutKind: .regular
+        )
+
+        #expect(phoneMetrics.resolvedColumnCount(for: 402) == 2)
+        #expect(regularMetrics.resolvedColumnCount(for: 900) >= 3)
+        #expect(phoneMetrics.itemWidth(for: 402) < regularMetrics.itemWidth(for: 900))
+    }
+
+    @Test("Download masonry cards grow for failed and path-rich items")
+    func downloadMasonryCardHeights() {
+        let completed = downloadItem(status: .completed)
+        let failed = downloadItem(
+            status: .failed,
+            errorMessage: "Network QA retry sample needs a visible reason"
+        )
+        let savedWithPath = downloadItem(status: .completed, folderPath: "/tmp/KeiPix/Downloads/Sample")
+        let width: CGFloat = 184
+
+        let completedHeight = DownloadQueueMasonryPresentation.cardHeight(
+            for: completed,
+            width: width,
+            layoutKind: .compactPhone
+        )
+        let failedHeight = DownloadQueueMasonryPresentation.cardHeight(
+            for: failed,
+            width: width,
+            layoutKind: .compactPhone
+        )
+        let pathHeight = DownloadQueueMasonryPresentation.cardHeight(
+            for: savedWithPath,
+            width: width,
+            layoutKind: .compactPhone
+        )
+
+        #expect(failedHeight > completedHeight)
+        #expect(pathHeight > completedHeight)
+    }
+
+    @Test("Download masonry placement balances items across columns")
+    func downloadMasonryPlacement() {
+        let metrics = DownloadQueueMasonryPresentation.metrics(for: 402, layoutKind: .compactPhone)
+        let resolved = DownloadQueueMasonryPlacement.resolve(
+            heights: [160, 180, 150],
+            containerWidth: 402,
+            metrics: metrics
+        )
+
+        #expect(resolved.frames.count == 3)
+        #expect(resolved.frames[0].minX == metrics.leadingInset)
+        #expect(resolved.frames[1].minX > resolved.frames[0].minX)
+        #expect(resolved.frames[2].minY > resolved.frames[0].minY)
+        #expect(resolved.size.height > resolved.frames[1].maxY)
+    }
+
     private func downloadItem(
         title: String = "Range test",
         status: ArtworkDownloadStatus = .queued,
         sourcePageIndexes: [Int] = [0],
-        updatedAt: Date = Date(timeIntervalSince1970: 0)
+        updatedAt: Date = Date(timeIntervalSince1970: 0),
+        folderPath: String? = nil,
+        errorMessage: String? = nil
     ) -> ArtworkDownloadItem {
         ArtworkDownloadItem(
             id: UUID(),
@@ -128,12 +193,12 @@ struct DownloadModelsTests {
             pageCount: sourcePageIndexes.count,
             completedPages: status == .completed ? sourcePageIndexes.count : 0,
             status: status,
-            folderPath: nil,
+            folderPath: folderPath,
             sourceImageURLs: [],
             sourcePageIndexes: sourcePageIndexes,
             sourceTotalPageCount: 10,
             downloadedFilePaths: nil,
-            errorMessage: nil,
+            errorMessage: errorMessage,
             createdAt: Date(timeIntervalSince1970: 0),
             updatedAt: updatedAt
         )

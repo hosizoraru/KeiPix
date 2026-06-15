@@ -23,21 +23,23 @@ struct DownloadQueueRow: View {
 
     var body: some View {
         rowLayout
-        .padding(usesPhoneLayout ? 8 : 12)
-        .keiInteractiveGlass(18)
-        // Subtle accent ring on the focused row so users can see which
-        // entry the space bar will preview. Mirrors how Finder's list
-        // view paints a halo around the selected file.
-        .overlay {
-            if isFocused {
-                RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .stroke(Color.accentColor.opacity(0.65), lineWidth: 2)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            .padding(usesPhoneLayout ? 8 : 10)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            .keiInteractiveGlass(18)
+            // Subtle accent ring on the focused card so users can see
+            // which entry the space bar will preview. Mirrors how
+            // Finder paints a halo around the selected file.
+            .overlay {
+                if isFocused {
+                    RoundedRectangle(cornerRadius: 18, style: .continuous)
+                        .stroke(Color.accentColor.opacity(0.65), lineWidth: 2)
+                }
             }
-        }
-        .modifier(DownloadRowDraggableModifier(fileURL: draggableFileURL))
-        .contextMenu {
-            contextMenuContent
-        }
+            .modifier(DownloadRowDraggableModifier(fileURL: draggableFileURL))
+            .contextMenu {
+                contextMenuContent
+            }
     }
 
     @ViewBuilder
@@ -166,32 +168,39 @@ private struct RegularDownloadQueueRowLayout: View {
     let delete: () -> Void
 
     var body: some View {
-        HStack(spacing: 12) {
-            DownloadQueueStatusIcon(status: item.status)
-                .frame(width: 28, height: 28)
+        VStack(alignment: .leading, spacing: 7) {
+            HStack(alignment: .top, spacing: 9) {
+                DownloadQueueStatusIcon(status: item.status)
+                    .font(.title3)
+                    .frame(width: 24, height: 24)
+                    .padding(.top, 1)
 
-            VStack(alignment: .leading, spacing: 6) {
-                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                VStack(alignment: .leading, spacing: 2) {
                     Text(item.title)
                         .font(.headline)
-                        .lineLimit(1)
+                        .lineLimit(2)
+                        .minimumScaleFactor(0.88)
+                        .fixedSize(horizontal: false, vertical: true)
 
-                    DownloadQueueStatusBadge(status: item.status)
-
-                    Text(item.resolvedArtifactKind.title)
-                        .font(.caption.weight(.medium))
+                    Text(item.creatorName)
+                        .font(.caption)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
                 }
 
-                Text(item.creatorName)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
+                Spacer(minLength: 0)
 
-                ProgressView(value: item.progress)
-                    .opacity(item.status == .completed ? 0.55 : 1)
+                DownloadQueueStatusBadge(status: item.status)
+            }
 
+            ProgressView(value: item.progress)
+                .opacity(item.status == .completed ? 0.55 : 1)
+
+            FlowLayout(spacing: 5) {
+                DownloadQueueMetadataChip(
+                    item.resolvedArtifactKind.title,
+                    systemImage: item.resolvedArtifactKind == .ugoiraZip ? "film.stack" : "photo.stack"
+                )
                 DownloadQueueMetadataFlow(
                     item: item,
                     downloads: downloads,
@@ -199,7 +208,7 @@ private struct RegularDownloadQueueRowLayout: View {
                 )
             }
 
-            Spacer(minLength: 10)
+            Spacer(minLength: 0)
 
             DownloadQueueRegularActionRail(
                 item: item,
@@ -212,6 +221,7 @@ private struct RegularDownloadQueueRowLayout: View {
                 cancel: cancel,
                 delete: delete
             )
+            .frame(maxWidth: .infinity, alignment: .trailing)
         }
     }
 }

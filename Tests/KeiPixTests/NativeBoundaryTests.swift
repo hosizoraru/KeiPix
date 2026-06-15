@@ -3855,8 +3855,8 @@ struct NativeBoundaryTests {
         #expect(artworkRelated.contains(".keiPanel(16)") == false)
     }
 
-    @Test("Download queue uses a native list container")
-    func downloadQueueUsesNativeListContainer() throws {
+    @Test("Download queue uses a native masonry collection container")
+    func downloadQueueUsesNativeMasonryCollectionContainer() throws {
         let root = try packageRoot()
         let queueView = try String(
             contentsOf: root.appending(path: "Sources/KeiPix/Views/DownloadQueueView.swift"),
@@ -3896,20 +3896,24 @@ struct NativeBoundaryTests {
         #expect(downloadedViewer.contains(".background(.regularMaterial") == false)
         #expect(downloadedViewer.contains(".buttonStyle(.bordered)") == false)
         #expect(downloadedViewer.contains("ContentUnavailableView(") == false)
-        #expect(nativeList.contains("NSTableView"))
         #expect(nativeList.contains("UICollectionView"))
+        #expect(nativeList.contains("NSCollectionView"))
         #expect(nativeList.contains("NSHostingView"))
         #expect(nativeList.contains("UIHostingConfiguration"))
+        #expect(nativeList.contains("DownloadQueueMasonryPresentation"))
+        #expect(nativeList.contains("DownloadQueueMasonryPlacement.resolve"))
+        #expect(nativeList.contains("NativeDownloadQueueMasonryNSCollectionViewLayout"))
+        #expect(nativeList.contains("NativeDownloadQueueMasonryUICollectionViewLayout"))
+        #expect(nativeList.contains("NSTableView") == false)
+        #expect(nativeList.contains("UICollectionViewFlowLayout") == false)
         #expect(nativeList.contains("keyDown(with event: NSEvent)"))
         #expect(nativeList.contains("UIKeyCommand"))
         #expect(nativeList.contains("lastItemIDs"))
-        #expect(nativeList.contains("refreshVisibleRows(in: tableView)"))
+        #expect(nativeList.contains("refreshVisibleItems(in: collectionView)"))
+        #expect(nativeList.contains("refreshVisibleItems(in collectionView: NSCollectionView)"))
         #expect(nativeList.contains("refreshVisibleItems(in: collectionView)"))
         #expect(nativeList.contains("reloadItems(at: [indexPath])") == false)
-        #expect(nativeList.contains("private let compactPhoneRowHeight: CGFloat = 132"))
-        #expect(nativeList.contains("private let compactPhoneSupplementalMetadataHeight: CGFloat = 18"))
-        #expect(nativeList.contains("layout.minimumLineSpacing = 4"))
-        #expect(nativeList.contains("needsCompactSupplementalMetadataHeight"))
+        #expect(nativeList.contains("compactPhoneRowHeight") == false)
         #expect(nativeList.contains("collectionView.traitCollection.horizontalSizeClass == .compact"))
         #expect(queueView.contains("DownloadQueueOverviewCard("))
         #expect(queueView.contains("private struct DownloadQueueOverviewCard: View"))

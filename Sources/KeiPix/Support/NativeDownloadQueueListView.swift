@@ -5,12 +5,10 @@ import AppKit
 import UIKit
 #endif
 
-/// Native list container for the download queue.
+/// Native masonry collection container for the download queue.
 ///
-/// The first P1 slice moves row virtualization, selection, and hardware-key
-/// handling to AppKit/UIKit while preserving the existing SwiftUI row as the
-/// hosted content. Follow-up work can replace the hosted row with fully native
-/// cells once the interaction contract is stable.
+/// AppKit/UIKit own virtualization, selection, keyboard handling, and masonry
+/// placement while the current SwiftUI card remains the hosted content.
 @MainActor
 struct NativeDownloadQueueListView {
     let items: [ArtworkDownloadItem]
@@ -62,120 +60,128 @@ extension NativeDownloadQueueListView: NSViewRepresentable {
         scrollView.drawsBackground = false
         scrollView.hasVerticalScroller = true
         scrollView.autohidesScrollers = true
-        scrollView.contentInsets = NSEdgeInsets(top: 18, left: 18, bottom: 18, right: 18)
 
-        let tableView = NativeDownloadQueueTableView()
-        tableView.headerView = nil
-        tableView.usesAlternatingRowBackgroundColors = false
-        tableView.selectionHighlightStyle = .none
-        tableView.intercellSpacing = NSSize(width: 0, height: 10)
-        tableView.rowHeight = 116
-        tableView.backgroundColor = .clear
-        tableView.delegate = context.coordinator
-        tableView.dataSource = context.coordinator
-        tableView.onSpace = { [weak coordinator = context.coordinator] in
+        let collectionView = NativeDownloadQueueNSCollectionView()
+        collectionView.collectionViewLayout = NativeDownloadQueueMasonryNSCollectionViewLayout()
+        collectionView.backgroundColors = [.clear]
+        collectionView.isSelectable = true
+        collectionView.allowsMultipleSelection = false
+        collectionView.autoresizingMask = [.width]
+        collectionView.delegate = context.coordinator
+        collectionView.dataSource = context.coordinator
+        collectionView.register(
+            NativeDownloadQueueCollectionItem.self,
+            forItemWithIdentifier: NativeDownloadQueueCollectionItem.identifier
+        )
+        collectionView.onSpace = { [weak coordinator = context.coordinator] in
             coordinator?.parent.quickLookSelectedItem()
         }
 
-        let column = NSTableColumn(identifier: Self.columnIdentifier)
-        column.resizingMask = .autoresizingMask
-        tableView.addTableColumn(column)
-
-        scrollView.documentView = tableView
-        context.coordinator.tableView = tableView
+        scrollView.documentView = collectionView
+        scrollView.hasHorizontalScroller = false
+        scrollView.borderType = .noBorder
+        scrollView.scrollerStyle = .overlay
+        scrollView.verticalScrollElasticity = .allowed
+        context.coordinator.collectionView = collectionView
         return scrollView
     }
 
     func updateNSView(_ scrollView: NSScrollView, context: Context) {
         context.coordinator.parent = self
-        guard let tableView = context.coordinator.tableView else { return }
-        tableView.tableColumns.first?.width = max(scrollView.contentSize.width, 240)
-        context.coordinator.applyItems(to: tableView)
+        guard let collectionView = context.coordinator.collectionView else { return }
+        context.coordinator.updateMasonryLayout(for: collectionView)
+        context.coordinator.applyItems(to: collectionView)
         context.coordinator.restoreSelection()
     }
 
-    private static let columnIdentifier = NSUserInterfaceItemIdentifier("download-row")
-
     @MainActor
-    final class Coordinator: NSObject, NSTableViewDataSource, NSTableViewDelegate {
+    final class Coordinator: NSObject, NSCollectionViewDataSource, NSCollectionViewDelegate {
         var parent: NativeDownloadQueueListView
-        weak var tableView: NSTableView?
+        weak var collectionView: NSCollectionView?
         private var lastItemIDs: [UUID] = []
 
         init(parent: NativeDownloadQueueListView) {
             self.parent = parent
         }
 
-        func numberOfRows(in tableView: NSTableView) -> Int {
+        func collectionView(_ collectionView: NSCollectionView, numberOfItemsInSection section: Int) -> Int {
             parent.items.count
         }
 
-        func tableView(_ tableView: NSTableView, heightOfRow row: Int) -> CGFloat {
-            116
+        func collectionView(
+            _ collectionView: NSCollectionView,
+            itemForRepresentedObjectAt indexPath: IndexPath
+        ) -> NSCollectionViewItem {
+            guard parent.items.indices.contains(indexPath.item),
+                  let item = collectionView.makeItem(
+                    withIdentifier: NativeDownloadQueueCollectionItem.identifier,
+                    for: indexPath
+                  ) as? NativeDownloadQueueCollectionItem else {
+                return NSCollectionViewItem()
+            }
+            item.host(AnyView(parent.row(for: parent.items[indexPath.item])))
+            return item
         }
 
-        func tableView(_ tableView: NSTableView, viewFor tableColumn: NSTableColumn?, row: Int) -> NSView? {
-            guard parent.items.indices.contains(row) else { return nil }
-            let item = parent.items[row]
-            let cell = tableView.makeView(
-                withIdentifier: NativeDownloadTableCell.identifier,
-                owner: self
-            ) as? NativeDownloadTableCell ?? NativeDownloadTableCell()
-            cell.identifier = NativeDownloadTableCell.identifier
-            cell.host(AnyView(parent.row(for: item)))
-            return cell
+        func updateMasonryLayout(for collectionView: NSCollectionView) {
+            guard let layout = collectionView.collectionViewLayout as? NativeDownloadQueueMasonryNSCollectionViewLayout else {
+                return
+            }
+            layout.items = parent.items
+            layout.layoutKind = .regular
+            layout.invalidateLayout()
         }
 
-        func applyItems(to tableView: NSTableView) {
+        func applyItems(to collectionView: NSCollectionView) {
             let itemIDs = parent.items.map(\.id)
             if itemIDs != lastItemIDs {
                 lastItemIDs = itemIDs
-                tableView.reloadData()
+                collectionView.reloadData()
                 return
             }
-            refreshVisibleRows(in: tableView)
+            refreshVisibleItems(in: collectionView)
         }
 
-        private func refreshVisibleRows(in tableView: NSTableView) {
-            let visibleRows = tableView.rows(in: tableView.visibleRect)
-            guard visibleRows.location != NSNotFound, visibleRows.length > 0 else { return }
-            let end = visibleRows.location + visibleRows.length
-            for row in visibleRows.location..<end where parent.items.indices.contains(row) {
-                guard let cell = tableView.view(
-                    atColumn: 0,
-                    row: row,
-                    makeIfNecessary: false
-                ) as? NativeDownloadTableCell else {
+        private func refreshVisibleItems(in collectionView: NSCollectionView) {
+            for indexPath in collectionView.indexPathsForVisibleItems() {
+                guard parent.items.indices.contains(indexPath.item),
+                      let item = collectionView.item(at: indexPath) as? NativeDownloadQueueCollectionItem else {
                     continue
                 }
-                cell.host(AnyView(parent.row(for: parent.items[row])))
+                item.host(AnyView(parent.row(for: parent.items[indexPath.item])))
             }
         }
 
-        func tableViewSelectionDidChange(_ notification: Notification) {
-            guard let tableView else { return }
-            let row = tableView.selectedRow
-            guard parent.items.indices.contains(row) else { return }
-            parent.selectedItemID = parent.items[row].id
+        func collectionView(_ collectionView: NSCollectionView, didSelectItemsAt indexPaths: Set<IndexPath>) {
+            guard let indexPath = indexPaths.first,
+                  parent.items.indices.contains(indexPath.item) else { return }
+            parent.selectedItemID = parent.items[indexPath.item].id
+            refreshVisibleItems(in: collectionView)
         }
 
         func restoreSelection() {
-            guard let tableView else { return }
+            guard let collectionView else { return }
             if let selectedItemID = parent.selectedItemID,
-               let row = parent.items.firstIndex(where: { $0.id == selectedItemID }) {
-                tableView.selectRowIndexes(IndexSet(integer: row), byExtendingSelection: false)
+               let index = parent.items.firstIndex(where: { $0.id == selectedItemID }) {
+                collectionView.selectItems(
+                    at: [IndexPath(item: index, section: 0)],
+                    scrollPosition: []
+                )
             } else if parent.items.isEmpty == false {
                 parent.selectedItemID = parent.items[0].id
-                tableView.selectRowIndexes(IndexSet(integer: 0), byExtendingSelection: false)
+                collectionView.selectItems(
+                    at: [IndexPath(item: 0, section: 0)],
+                    scrollPosition: []
+                )
             } else {
                 parent.selectedItemID = nil
-                tableView.deselectAll(nil)
+                collectionView.deselectAll(nil)
             }
         }
     }
 }
 
-private final class NativeDownloadQueueTableView: NSTableView {
+private final class NativeDownloadQueueNSCollectionView: NSCollectionView {
     var onSpace: (() -> Void)?
 
     override func keyDown(with event: NSEvent) {
@@ -187,10 +193,87 @@ private final class NativeDownloadQueueTableView: NSTableView {
     }
 }
 
-private final class NativeDownloadTableCell: NSTableCellView {
-    static let identifier = NSUserInterfaceItemIdentifier("native-download-row-cell")
+private final class NativeDownloadQueueMasonryNSCollectionViewLayout: NSCollectionViewLayout {
+    var items: [ArtworkDownloadItem] = []
+    var layoutKind: DownloadQueueMasonryLayoutKind = .regular
+
+    private var cachedAttributes: [IndexPath: NSCollectionViewLayoutAttributes] = [:]
+    private var cachedContentSize: CGSize = .zero
+
+    override var collectionViewContentSize: NSSize {
+        cachedContentSize
+    }
+
+    override func prepare() {
+        super.prepare()
+
+        guard let collectionView else {
+            cachedAttributes = [:]
+            cachedContentSize = .zero
+            return
+        }
+
+        let containerWidth = max(
+            collectionView.enclosingScrollView?.contentSize.width ?? collectionView.bounds.width,
+            1
+        )
+        let metrics = DownloadQueueMasonryPresentation.metrics(
+            for: containerWidth,
+            layoutKind: layoutKind
+        )
+        let itemWidth = metrics.itemWidth(for: containerWidth)
+        let resolved = DownloadQueueMasonryPlacement.resolve(
+            heights: items.map {
+                DownloadQueueMasonryPresentation.cardHeight(
+                    for: $0,
+                    width: itemWidth,
+                    layoutKind: layoutKind
+                )
+            },
+            containerWidth: containerWidth,
+            metrics: metrics
+        )
+
+        var attributes: [IndexPath: NSCollectionViewLayoutAttributes] = [:]
+        attributes.reserveCapacity(resolved.frames.count)
+        for (index, frame) in resolved.frames.enumerated() {
+            let indexPath = IndexPath(item: index, section: 0)
+            let itemAttributes = NSCollectionViewLayoutAttributes(forItemWith: indexPath)
+            itemAttributes.frame = frame
+            attributes[indexPath] = itemAttributes
+        }
+
+        cachedAttributes = attributes
+        cachedContentSize = resolved.size
+    }
+
+    override func layoutAttributesForElements(in rect: NSRect) -> [NSCollectionViewLayoutAttributes] {
+        cachedAttributes.values.filter { $0.frame.intersects(rect) }
+    }
+
+    override func layoutAttributesForItem(at indexPath: IndexPath) -> NSCollectionViewLayoutAttributes? {
+        cachedAttributes[indexPath]
+    }
+
+    override func shouldInvalidateLayout(forBoundsChange newBounds: NSRect) -> Bool {
+        guard let collectionView else { return false }
+        return NativeGalleryBoundsInvalidation.shouldInvalidate(
+            oldSize: collectionView.bounds.size,
+            newSize: newBounds.size
+        )
+    }
+}
+
+private final class NativeDownloadQueueCollectionItem: NSCollectionViewItem {
+    static let identifier = NSUserInterfaceItemIdentifier("native-download-masonry-cell")
 
     private var hostingView: NSHostingView<AnyView>?
+
+    override func loadView() {
+        view = NSView()
+        view.wantsLayer = true
+        view.layer?.backgroundColor = NSColor.clear.cgColor
+    }
 
     func host(_ rootView: AnyView) {
         if let hostingView {
@@ -200,12 +283,12 @@ private final class NativeDownloadTableCell: NSTableCellView {
 
         let hostingView = NSHostingView(rootView: rootView)
         hostingView.translatesAutoresizingMaskIntoConstraints = false
-        addSubview(hostingView)
+        view.addSubview(hostingView)
         NSLayoutConstraint.activate([
-            hostingView.leadingAnchor.constraint(equalTo: leadingAnchor),
-            hostingView.trailingAnchor.constraint(equalTo: trailingAnchor),
-            hostingView.topAnchor.constraint(equalTo: topAnchor),
-            hostingView.bottomAnchor.constraint(equalTo: bottomAnchor)
+            hostingView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            hostingView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            hostingView.topAnchor.constraint(equalTo: view.topAnchor),
+            hostingView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
         self.hostingView = hostingView
     }
@@ -217,10 +300,7 @@ extension NativeDownloadQueueListView: UIViewRepresentable {
     }
 
     func makeUIView(context: Context) -> UICollectionView {
-        let layout = UICollectionViewFlowLayout()
-        layout.minimumLineSpacing = 4
-        layout.sectionInset = UIEdgeInsets(top: 18, left: 18, bottom: 18, right: 18)
-
+        let layout = NativeDownloadQueueMasonryUICollectionViewLayout()
         let collectionView = NativeDownloadQueueCollectionView(frame: .zero, collectionViewLayout: layout)
         configureCollectionViewForBottomTabContent(collectionView)
         collectionView.dataSource = context.coordinator
@@ -232,7 +312,7 @@ extension NativeDownloadQueueListView: UIViewRepresentable {
         collectionView.onHierarchyAvailable = { [weak coordinator = context.coordinator] collectionView in
             coordinator?.registerContentScrollViewIfNeeded(collectionView)
         }
-        context.coordinator.updateLayoutInsets(for: collectionView)
+        context.coordinator.updateMasonryLayout(for: collectionView)
         context.coordinator.registerContentScrollViewIfNeeded(collectionView)
         return collectionView
     }
@@ -240,20 +320,17 @@ extension NativeDownloadQueueListView: UIViewRepresentable {
     func updateUIView(_ collectionView: UICollectionView, context: Context) {
         context.coordinator.parent = self
         context.coordinator.registerContentScrollViewIfNeeded(collectionView)
-        context.coordinator.updateLayoutInsets(for: collectionView)
+        context.coordinator.updateMasonryLayout(for: collectionView)
         context.coordinator.applyItems(to: collectionView)
         context.coordinator.restoreSelection(in: collectionView)
     }
 
     @MainActor
-    final class Coordinator: NSObject, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
+    final class Coordinator: NSObject, UICollectionViewDataSource, UICollectionViewDelegate {
         static let cellIdentifier = "native-download-row-cell"
 
         var parent: NativeDownloadQueueListView
         private var lastItemIDs: [UUID] = []
-        private let compactPhoneRowHeight: CGFloat = 132
-        private let compactPhoneSupplementalMetadataHeight: CGFloat = 18
-        private let regularRowHeight: CGFloat = 124
         private let contentScrollRegistration = NativeContentScrollRegistration()
 
         init(parent: NativeDownloadQueueListView) {
@@ -271,24 +348,14 @@ extension NativeDownloadQueueListView: UIViewRepresentable {
             contentScrollRegistration.register(collectionView)
         }
 
-        func updateLayoutInsets(for collectionView: UICollectionView) {
-            guard let layout = collectionView.collectionViewLayout as? UICollectionViewFlowLayout else {
+        func updateMasonryLayout(for collectionView: UICollectionView) {
+            guard let layout = collectionView.collectionViewLayout as? NativeDownloadQueueMasonryUICollectionViewLayout else {
                 return
             }
-            let isCompactPhone = collectionView.traitCollection.horizontalSizeClass == .compact
-            let horizontalInset: CGFloat = isCompactPhone ? 10 : 18
-            let desiredLineSpacing: CGFloat = isCompactPhone ? 4 : 6
-            let desiredInsets = UIEdgeInsets(
-                top: isCompactPhone ? 6 : 18,
-                left: horizontalInset,
-                bottom: isCompactPhone ? 8 : 18,
-                right: horizontalInset
-            )
-            guard layout.sectionInset != desiredInsets || layout.minimumLineSpacing != desiredLineSpacing else {
-                return
-            }
-            layout.sectionInset = desiredInsets
-            layout.minimumLineSpacing = desiredLineSpacing
+            layout.items = parent.items
+            layout.layoutKind = collectionView.traitCollection.horizontalSizeClass == .compact
+                ? .compactPhone
+                : .regular
             layout.invalidateLayout()
         }
 
@@ -344,30 +411,6 @@ extension NativeDownloadQueueListView: UIViewRepresentable {
             .margins(.all, 0)
         }
 
-        func collectionView(
-            _ collectionView: UICollectionView,
-            layout collectionViewLayout: UICollectionViewLayout,
-            sizeForItemAt indexPath: IndexPath
-        ) -> CGSize {
-            let isCompactPhone = collectionView.traitCollection.horizontalSizeClass == .compact
-            let horizontalInset: CGFloat = isCompactPhone ? 20 : 36
-            let baseHeight = isCompactPhone ? compactPhoneRowHeight : regularRowHeight
-            let supplementalHeight: CGFloat
-            if isCompactPhone,
-               parent.items.indices.contains(indexPath.item) {
-                let item = parent.items[indexPath.item]
-                supplementalHeight = item.needsCompactSupplementalMetadataHeight
-                    ? compactPhoneSupplementalMetadataHeight
-                    : 0
-            } else {
-                supplementalHeight = 0
-            }
-            return CGSize(
-                width: max(collectionView.bounds.width - horizontalInset, isCompactPhone ? 280 : 240),
-                height: baseHeight + supplementalHeight
-            )
-        }
-
         func restoreSelection(in collectionView: UICollectionView) {
             if let selectedItemID = parent.selectedItemID,
                let row = parent.items.firstIndex(where: { $0.id == selectedItemID }) {
@@ -387,6 +430,96 @@ extension NativeDownloadQueueListView: UIViewRepresentable {
                 parent.selectedItemID = nil
             }
         }
+    }
+}
+
+private final class NativeDownloadQueueMasonryUICollectionViewLayout: UICollectionViewLayout {
+    var items: [ArtworkDownloadItem] = []
+    var layoutKind: DownloadQueueMasonryLayoutKind = .regular
+
+    private var cachedAttributes: [IndexPath: UICollectionViewLayoutAttributes] = [:]
+    private var previousCachedAttributes: [IndexPath: UICollectionViewLayoutAttributes] = [:]
+    private var cachedContentSize: CGSize = .zero
+
+    override var collectionViewContentSize: CGSize {
+        cachedContentSize
+    }
+
+    override func prepare() {
+        super.prepare()
+        previousCachedAttributes = cachedAttributes
+
+        guard let collectionView else {
+            cachedAttributes = [:]
+            cachedContentSize = .zero
+            return
+        }
+
+        let containerWidth = max(collectionView.bounds.width, 1)
+        let metrics = DownloadQueueMasonryPresentation.metrics(
+            for: containerWidth,
+            layoutKind: layoutKind
+        )
+        let itemWidth = metrics.itemWidth(for: containerWidth)
+        let resolved = DownloadQueueMasonryPlacement.resolve(
+            heights: items.map {
+                DownloadQueueMasonryPresentation.cardHeight(
+                    for: $0,
+                    width: itemWidth,
+                    layoutKind: layoutKind
+                )
+            },
+            containerWidth: containerWidth,
+            metrics: metrics
+        )
+
+        var attributes: [IndexPath: UICollectionViewLayoutAttributes] = [:]
+        attributes.reserveCapacity(resolved.frames.count)
+        for (index, frame) in resolved.frames.enumerated() {
+            let indexPath = IndexPath(item: index, section: 0)
+            let itemAttributes = UICollectionViewLayoutAttributes(forCellWith: indexPath)
+            itemAttributes.frame = frame
+            attributes[indexPath] = itemAttributes
+        }
+
+        cachedAttributes = attributes
+        cachedContentSize = resolved.size
+    }
+
+    override func layoutAttributesForElements(in rect: CGRect) -> [UICollectionViewLayoutAttributes]? {
+        cachedAttributes.values.filter { $0.frame.intersects(rect) }
+    }
+
+    override func layoutAttributesForItem(at indexPath: IndexPath) -> UICollectionViewLayoutAttributes? {
+        cachedAttributes[indexPath] ?? previousCachedAttributes[indexPath]
+    }
+
+    override func initialLayoutAttributesForAppearingItem(
+        at itemIndexPath: IndexPath
+    ) -> UICollectionViewLayoutAttributes? {
+        copiedAttributes(for: itemIndexPath)
+    }
+
+    override func finalLayoutAttributesForDisappearingItem(
+        at itemIndexPath: IndexPath
+    ) -> UICollectionViewLayoutAttributes? {
+        copiedAttributes(for: itemIndexPath)
+    }
+
+    override func shouldInvalidateLayout(forBoundsChange newBounds: CGRect) -> Bool {
+        guard let collectionView else { return false }
+        return NativeGalleryBoundsInvalidation.shouldInvalidate(
+            oldSize: collectionView.bounds.size,
+            newSize: newBounds.size
+        )
+    }
+
+    private func copiedAttributes(for indexPath: IndexPath) -> UICollectionViewLayoutAttributes? {
+        guard let attributes = layoutAttributesForItem(at: indexPath)?.copy()
+            as? UICollectionViewLayoutAttributes else {
+            return nil
+        }
+        return attributes
     }
 }
 
@@ -420,12 +553,6 @@ private final class NativeDownloadQueueCollectionView: UICollectionView {
     private func notifyHierarchyAvailableIfNeeded() {
         guard window != nil else { return }
         onHierarchyAvailable?(self)
-    }
-}
-
-private extension ArtworkDownloadItem {
-    var needsCompactSupplementalMetadataHeight: Bool {
-        errorMessage?.isEmpty == false || folderPath != nil
     }
 }
 #endif
