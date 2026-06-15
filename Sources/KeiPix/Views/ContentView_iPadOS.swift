@@ -1382,57 +1382,46 @@ struct ContentView: View {
 
     private var pixivActivityDisplayMenu: NativeToolbarMenu {
         var displayItems: [NativeToolbarMenuItem] = [
-            .submenu(
+            NativeToolbarMenuItem.singleSelectionSubmenu(
                 title: L10n.pixivActivityFeedScope,
-                subtitle: store.pixivActivityFeedScope.title,
+                selectedTitle: store.pixivActivityFeedScope.title,
+                selectedOption: store.pixivActivityFeedScope,
                 systemImage: store.pixivActivityFeedScope.systemImage,
-                presentation: .singleSelection,
-                items: PixivActivityFeedScope.allCases.map { scope in
-                    .action(
-                        id: IPadToolbarMenuAction.pixivActivityScope(scope),
-                        title: scope.title,
-                        systemImage: scope.systemImage,
-                        isSelected: store.pixivActivityFeedScope == scope
-                    )
-                }
+                options: PixivActivityFeedScope.allCases,
+                id: IPadToolbarMenuAction.pixivActivityScope,
+                optionTitle: \.title,
+                optionSystemImage: \.systemImage
             )
         ]
         displayItems.append(
-            .submenu(
+            NativeToolbarMenuItem.singleSelectionSubmenu(
                 title: L10n.pixivActivityKindFilter,
-                subtitle: store.pixivActivityKindFilter.title,
+                selectedTitle: store.pixivActivityKindFilter.title,
+                selectedOption: store.pixivActivityKindFilter,
                 systemImage: store.pixivActivityKindFilter.systemImage,
-                presentation: .singleSelection,
-                items: PixivActivityKindFilter.allCases.map { filter in
-                    .action(
-                        id: IPadToolbarMenuAction.pixivActivityKind(filter),
-                        title: filter.title,
-                        systemImage: filter.systemImage,
-                        isSelected: store.pixivActivityKindFilter == filter
-                    )
-                }
+                options: PixivActivityKindFilter.allCases,
+                id: IPadToolbarMenuAction.pixivActivityKind,
+                optionTitle: \.title,
+                optionSystemImage: \.systemImage
             )
         )
         if currentMobilePlatform == .phone {
             displayItems.append(
-                .submenu(
+                NativeToolbarMenuItem.singleSelectionSubmenu(
                     title: L10n.pixivActivityLayout,
-                    subtitle: store.pixivActivityLayoutMode.title,
+                    selectedTitle: store.pixivActivityLayoutMode.title,
+                    selectedOption: store.pixivActivityLayoutMode,
                     systemImage: store.pixivActivityLayoutMode.systemImage,
-                    presentation: .singleSelection,
-                    items: PixivActivityLayoutMode.allCases.map { mode in
-                        .action(
-                            id: IPadToolbarMenuAction.pixivActivityLayout(mode),
-                            title: mode.title,
-                            systemImage: mode.systemImage,
-                            isSelected: store.pixivActivityLayoutMode == mode
-                        )
-                    }
+                    options: PixivActivityLayoutMode.allCases,
+                    id: IPadToolbarMenuAction.pixivActivityLayout,
+                    optionTitle: \.title,
+                    optionSystemImage: \.systemImage
                 )
             )
         }
         return NativeToolbarMenu(
             title: L10n.pixivActivityDisplay,
+            cacheKey: pixivActivityDisplayMenuCacheKey,
             sections: [
                 NativeToolbarMenuSection(
                     presentation: .root,
@@ -1440,6 +1429,16 @@ struct ContentView: View {
                 )
             ]
         )
+    }
+
+    private var pixivActivityDisplayMenuCacheKey: String {
+        [
+            "pixiv-activity-display",
+            store.pixivActivityFeedScope.rawValue,
+            store.pixivActivityKindFilter.rawValue,
+            store.pixivActivityLayoutMode.rawValue,
+            currentMobilePlatform == .phone ? "phone" : "wide"
+        ].joined(separator: ":")
     }
 
     private func artworkActionsMenu(showsSidebarToggle: Bool) -> NativeToolbarMenu {

@@ -220,20 +220,39 @@ struct NativeToolbarMenuButton: UIViewRepresentable {
 
 struct NativeToolbarMenu: Equatable {
     let title: String
+    let cacheKey: String?
     let sections: [NativeToolbarMenuSection]
 
     init(
         title: String = "",
+        cacheKey: String? = nil,
         sections: [NativeToolbarMenuSection]
     ) {
         self.title = title
+        self.cacheKey = cacheKey
         self.sections = sections
+    }
+
+    static func == (lhs: NativeToolbarMenu, rhs: NativeToolbarMenu) -> Bool {
+        if let lhsCacheKey = lhs.cacheKey, let rhsCacheKey = rhs.cacheKey {
+            return lhsCacheKey == rhsCacheKey
+        }
+
+        return lhs.title == rhs.title
+            && lhs.cacheKey == rhs.cacheKey
+            && lhs.sections == rhs.sections
     }
 
     @MainActor
     func uiMenu(coordinator: NativeToolbarMenuButton.Coordinator) -> UIMenu {
-        UIMenu(
+        let identifier = cacheKey.map { cacheKey in
+            UIMenu.Identifier(cacheKey)
+        }
+        return UIMenu(
             title: title,
+            image: nil,
+            identifier: identifier,
+            options: [],
             children: sections.flatMap { $0.uiElements(coordinator: coordinator) }
         )
     }
@@ -328,6 +347,34 @@ indirect enum NativeToolbarMenuItem: Equatable {
         presentation: NativeToolbarSubmenuPresentation = .automatic,
         items: [NativeToolbarMenuItem]
     )
+
+    static func singleSelectionSubmenu<Option>(
+        title: String,
+        selectedTitle: String,
+        selectedOption: Option,
+        systemImage: String,
+        options: [Option],
+        id: (Option) -> String,
+        optionTitle: (Option) -> String,
+        optionSystemImage: (Option) -> String,
+        keepsMenuPresented: Bool = false
+    ) -> NativeToolbarMenuItem where Option: Equatable {
+        .submenu(
+            title: title,
+            subtitle: selectedTitle,
+            systemImage: systemImage,
+            presentation: .singleSelection,
+            items: options.map { option in
+                .action(
+                    id: id(option),
+                    title: optionTitle(option),
+                    systemImage: optionSystemImage(option),
+                    isSelected: selectedOption == option,
+                    keepsMenuPresented: keepsMenuPresented
+                )
+            }
+        )
+    }
 
     @MainActor
     func uiElement(
