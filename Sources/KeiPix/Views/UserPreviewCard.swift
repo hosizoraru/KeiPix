@@ -86,20 +86,11 @@ struct UserPreviewCard: View {
             avatar
 
             VStack(alignment: .leading, spacing: 3) {
-                HStack(spacing: 6) {
-                    Text(preview.user.name)
-                        .font(.headline)
-                        .lineLimit(1)
-                        .truncationMode(.tail)
-                        .layoutPriority(1)
-                    if isPinned {
-                        Image(systemName: "pin.fill")
-                            .imageScale(.small)
-                            .foregroundStyle(Color.accentColor)
-                            .help(L10n.pinnedCreators)
-                            .accessibilityLabel(L10n.pinnedCreators)
-                    }
-                }
+                Text(preview.user.name)
+                    .font(.headline)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+                    .layoutPriority(1)
 
                 Text("@\(preview.user.account)")
                     .font(.caption)
@@ -113,8 +104,16 @@ struct UserPreviewCard: View {
 
             Spacer(minLength: 8)
 
+            headerActionControls
+        }
+    }
+
+    private var headerActionControls: some View {
+        HStack(spacing: 6) {
+            pinActionChip
             followButton
         }
+        .layoutPriority(1)
     }
 
     private var avatar: some View {
@@ -162,6 +161,7 @@ struct UserPreviewCard: View {
 
     @ViewBuilder
     private var followButton: some View {
+        let profile = followControlProfile
         if preview.user.isFollowed {
             Menu {
                 Button(L10n.followPublicly) {
@@ -184,12 +184,13 @@ struct UserPreviewCard: View {
                 if isUpdating {
                     ProgressView().controlSize(.small)
                 } else {
-                    Label(followingButtonTitle, systemImage: "person.crop.circle.badge.checkmark")
+                    compactFollowLabel
                 }
             }
             .buttonStyle(.glass)
             .buttonBorderShape(.capsule)
             .controlSize(.small)
+            .foregroundStyle(compactFollowMenuForegroundStyle)
             .disabled(isUpdating)
             .help(L10n.followVisibility)
         } else {
@@ -210,19 +211,105 @@ struct UserPreviewCard: View {
                 if isUpdating {
                     ProgressView().controlSize(.small)
                 } else {
-                    Label(L10n.follow, systemImage: "person.crop.circle.badge.plus")
+                    compactFollowLabel
                 }
             }
             .buttonStyle(.glassProminent)
             .buttonBorderShape(.capsule)
             .controlSize(.small)
+            .foregroundStyle(profile.foregroundStyle)
             .disabled(isUpdating)
             .help(L10n.follow)
         }
     }
 
-    private var followingButtonTitle: String {
-        followRestrict?.creatorVisibilityTitle ?? L10n.following
+    private var compactFollowLabel: some View {
+        creatorButtonLabel(
+            title: followControlTitle,
+            systemImage: followControlProfile.systemImage,
+            displayStyle: followControlDisplayStyle
+        )
+    }
+
+    private var followControlTitle: String {
+        if usesIconOnlyActionLabels, let compactTitle = followControlProfile.compactTitle {
+            return compactTitle
+        }
+        return followControlProfile.title
+    }
+
+    private var followControlDisplayStyle: CreatorCardButtonDisplayStyle {
+        if usesIconOnlyActionLabels, followControlProfile.compactTitle == nil {
+            return .iconOnly
+        }
+        return .titleAndIcon
+    }
+
+    private var compactFollowMenuForegroundStyle: Color {
+        followControlProfile.foregroundStyle
+    }
+
+    private var followControlProfile: CreatorCardFollowControlProfile {
+        guard preview.user.isFollowed else {
+            return CreatorCardFollowControlProfile(
+                title: L10n.follow,
+                compactTitle: nil,
+                systemImage: "person.crop.circle.badge.plus",
+                foregroundStyle: .blue
+            )
+        }
+
+        switch followRestrict {
+        case .public:
+            return CreatorCardFollowControlProfile(
+                title: L10n.publicFollow,
+                compactTitle: L10n.publicRestrict,
+                systemImage: "globe",
+                foregroundStyle: .green
+            )
+        case .private:
+            return CreatorCardFollowControlProfile(
+                title: L10n.privateFollow,
+                compactTitle: L10n.privateRestrict,
+                systemImage: "lock.fill",
+                foregroundStyle: .purple
+            )
+        case nil:
+            return CreatorCardFollowControlProfile(
+                title: L10n.following,
+                compactTitle: nil,
+                systemImage: "person.crop.circle.badge.checkmark",
+                foregroundStyle: .blue
+            )
+        }
+    }
+
+    private var pinActionChip: some View {
+        Button(action: togglePinnedCreator) {
+            creatorButtonLabel(
+                title: pinControlProfile.title,
+                systemImage: pinControlProfile.systemImage,
+                displayStyle: .iconOnly
+            )
+        }
+        .buttonStyle(.glass)
+        .buttonBorderShape(.capsule)
+        .controlSize(.small)
+        .foregroundStyle(compactPinForegroundStyle)
+        .help(pinControlProfile.title)
+        .accessibilityLabel(pinControlProfile.title)
+    }
+
+    private var compactPinForegroundStyle: Color {
+        pinControlProfile.foregroundStyle
+    }
+
+    private var pinControlProfile: CreatorCardPinControlProfile {
+        CreatorCardPinControlProfile(
+            title: isPinned ? L10n.unpinCreator : L10n.pinCreator,
+            systemImage: isPinned ? "pin.fill" : "pin",
+            foregroundStyle: isPinned ? Color.accentColor : Color.secondary
+        )
     }
 
     // MARK: - Preview strip
@@ -387,15 +474,6 @@ struct UserPreviewCard: View {
                     displayStyle: .iconOnly,
                     action: openManga
                 )
-
-                Spacer(minLength: 4)
-
-                actionChip(
-                    title: isPinned ? L10n.unpinCreator : L10n.pinCreator,
-                    systemImage: isPinned ? "pin.slash" : "pin",
-                    displayStyle: .iconOnly,
-                    action: togglePinnedCreator
-                )
                 pixivLink(displayStyle: .iconOnly)
                 actionChip(
                     title: L10n.copyLink,
@@ -479,12 +557,6 @@ struct UserPreviewCard: View {
 
             Spacer(minLength: 8)
 
-            actionChip(
-                title: isPinned ? L10n.unpinCreator : L10n.pinCreator,
-                systemImage: isPinned ? "pin.slash" : "pin",
-                displayStyle: .iconOnly,
-                action: togglePinnedCreator
-            )
             pixivLink(displayStyle: displayStyle)
             actionChip(
                 title: L10n.copyLink,
@@ -555,13 +627,6 @@ struct UserPreviewCard: View {
 
     private func actionRailContent(pixivDisplayStyle: CreatorCardButtonDisplayStyle) -> some View {
         HStack(spacing: 8) {
-            actionChip(
-                title: isPinned ? L10n.unpinCreator : L10n.pinCreator,
-                systemImage: isPinned ? "pin.slash" : "pin",
-                displayStyle: .iconOnly,
-                action: togglePinnedCreator
-            )
-
             pixivLink(displayStyle: pixivDisplayStyle)
 
             actionChip(
@@ -751,6 +816,19 @@ struct UserPreviewCard: View {
 private enum CreatorCardButtonDisplayStyle {
     case titleAndIcon
     case iconOnly
+}
+
+private struct CreatorCardFollowControlProfile {
+    let title: String
+    let compactTitle: String?
+    let systemImage: String
+    let foregroundStyle: Color
+}
+
+private struct CreatorCardPinControlProfile {
+    let title: String
+    let systemImage: String
+    let foregroundStyle: Color
 }
 
 private struct CompactCreatorPreviewStrip: View {

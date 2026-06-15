@@ -204,34 +204,55 @@ extension KeiPixStore {
     }
 
     func setHideMutedContent(_ value: Bool) {
+        let changed = hideMutedContent != value
         hideMutedContent = value
         UserDefaults.standard.set(value, forKey: "hideMutedContent")
         applyContentFilters()
         novels.applyContentFilter()
+        if changed {
+            markContentVisibilityFiltersChanged()
+        }
     }
 
     func setHideAIArtworks(_ value: Bool) {
+        let changed = hideAIArtworks != value
         hideAIArtworks = value
         UserDefaults.standard.set(value, forKey: "hideAIArtworks")
         applyContentFilters()
         novels.applyContentFilter()
         refreshSpotlightIndexAfterFilterChange()
+        if changed {
+            markContentVisibilityFiltersChanged()
+        }
     }
 
     func setHideR18Artworks(_ value: Bool) {
+        let changed = hideR18Artworks != value
         hideR18Artworks = value
         UserDefaults.standard.set(value, forKey: "hideR18Artworks")
         applyContentFilters()
         novels.applyContentFilter()
         refreshSpotlightIndexAfterFilterChange()
+        if changed {
+            markContentVisibilityFiltersChanged()
+        }
     }
 
     func setHideR18GArtworks(_ value: Bool) {
+        let changed = hideR18GArtworks != value
         hideR18GArtworks = value
         UserDefaults.standard.set(value, forKey: "hideR18GArtworks")
         applyContentFilters()
         novels.applyContentFilter()
         refreshSpotlightIndexAfterFilterChange()
+        if changed {
+            markContentVisibilityFiltersChanged()
+        }
+    }
+
+    private func markContentVisibilityFiltersChanged() {
+        contentFilterGeneration &+= 1
+        creatorPreviewArtworkCacheGeneration &+= 1
     }
 
     /// Wipe the KeiPix Spotlight domain and rebuild from the current

@@ -155,6 +155,11 @@ final class KeiPixStore {
     }
     var searchSubmissionID = 0
     var routeRefreshGeneration = 0
+    /// Advances when shared content visibility filters change. Non-feed
+    /// surfaces such as creator lists use this targeted token to re-fetch
+    /// source responses without conflating content filtering with route
+    /// refresh actions.
+    var contentFilterGeneration = 0
     var searchSuggestions: [PixivTag] = []
     var remoteSearchOptions: PixivRemoteSearchOptions?
     var remoteSearchOptionsLoadedAt: Date?
@@ -1278,7 +1283,7 @@ final class KeiPixStore {
         if hideR18GArtworks, novel.isR18G {
             return false
         }
-        if hideR18Artworks, novel.isR18 {
+        if hideR18Artworks, novel.isR18Only {
             return false
         }
         if selectedRoute == .novelSearch {
@@ -1345,7 +1350,7 @@ final class KeiPixStore {
         if hideR18GArtworks, artwork.isR18G {
             return false
         }
-        if hideR18Artworks, artwork.isR18 {
+        if hideR18Artworks, artwork.isR18Only {
             return false
         }
         if selectedRoute == .search {

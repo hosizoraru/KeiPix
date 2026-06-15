@@ -70,6 +70,19 @@ struct DownloadSpotlightAttributesTests {
         #expect(DownloadSpotlightAttributes.make(item: item, gating: gating) == nil)
     }
 
+    @Test("R-18G items are not dropped by the R-18-only hide toggle")
+    func hideR18DoesNotDropR18GItem() {
+        let item = makeItem(isR18: true, isR18G: true)
+        let gating = SpotlightIndexingGating(
+            indexingEnabled: true,
+            hideAI: false,
+            hideR18: true,
+            hideR18G: false
+        )
+
+        #expect(DownloadSpotlightAttributes.make(item: item, gating: gating) != nil)
+    }
+
     @Test("Tags are stripped entirely when any hide toggle is on, even if the item is clean")
     func tagsAreRedactedWhenAnyHideToggleIsOn() {
         let item = makeItem(tags: ["風景", "オリジナル"])

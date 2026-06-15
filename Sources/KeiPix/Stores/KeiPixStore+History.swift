@@ -157,7 +157,7 @@ extension KeiPixStore {
         if hideR18GArtworks, item.isR18G {
             return false
         }
-        if hideR18Artworks, item.isR18 {
+        if hideR18Artworks, item.isR18 && item.isR18G == false {
             return false
         }
         return true

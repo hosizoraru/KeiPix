@@ -79,7 +79,7 @@ struct DownloadSpotlightAttributes: Equatable, Sendable {
         guard gating.indexingEnabled else { return nil }
 
         if item.isAI == true, gating.hideAI { return nil }
-        if item.isR18 == true, gating.hideR18 { return nil }
+        if item.isR18 == true, item.isR18G != true, gating.hideR18 { return nil }
         if item.isR18G == true, gating.hideR18G { return nil }
 
         let displayTitle = item.title.isEmpty ? "Pixiv #\(item.artworkID)" : item.title

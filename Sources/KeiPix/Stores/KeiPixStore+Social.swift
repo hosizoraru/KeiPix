@@ -42,12 +42,12 @@ extension KeiPixStore {
     }
 
     func cachedCreatorPreviewArtworks(for user: PixivUser) -> [PixivArtwork] {
-        creatorPreviewArtworkCache[user.id] ?? []
+        (creatorPreviewArtworkCache[user.id] ?? []).filter(passesContentFilters)
     }
 
     func creatorPreviewArtworks(for user: PixivUser) async throws -> [PixivArtwork] {
         if let cached = creatorPreviewArtworkCache[user.id] {
-            return cached
+            return cached.filter(passesContentFilters)
         }
 
         if let request = creatorPreviewArtworkRequests[user.id] {
@@ -61,7 +61,6 @@ extension KeiPixStore {
             var seenArtworkIDs = Set<Int>()
             return responses
                 .flatMap(\.illusts)
-                .filter(passesContentFilters)
                 .filter { artwork in
                     seenArtworkIDs.insert(artwork.id).inserted
                 }
@@ -76,7 +75,7 @@ extension KeiPixStore {
             creatorPreviewArtworkCache[user.id] = artworks
             creatorPreviewArtworkCacheGeneration &+= 1
             creatorPreviewArtworkRequests[user.id] = nil
-            return artworks
+            return artworks.filter(passesContentFilters)
         } catch {
             creatorPreviewArtworkRequests[user.id] = nil
             throw error

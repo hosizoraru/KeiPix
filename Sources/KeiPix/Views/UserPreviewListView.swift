@@ -390,7 +390,7 @@ struct UserPreviewListView: View {
     }
 
     private var listRefreshKey: String {
-        "\(modeKey)-\(sessionRefreshKey)-\(store.routeRefreshGeneration)"
+        "\(modeKey)-\(sessionRefreshKey)-\(store.routeRefreshGeneration)-\(store.contentFilterGeneration)"
     }
 
     private var sessionRefreshKey: String {

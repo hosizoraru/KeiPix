@@ -317,6 +317,9 @@ struct PixivArtwork: Codable, Identifiable, Hashable, Sendable {
     var isR18: Bool {
         xRestrict == 1 || isR18G || tags.contains { $0.name.localizedCaseInsensitiveContains("R-18") }
     }
+    var isR18Only: Bool {
+        isR18 && isR18G == false
+    }
     var requiresScreenCaptureProtection: Bool {
         isR18 || isR18G
     }

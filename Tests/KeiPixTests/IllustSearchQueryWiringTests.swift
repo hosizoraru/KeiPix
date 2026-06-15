@@ -162,6 +162,77 @@ struct NovelSearchQueryWiringTests {
 @MainActor
 @Suite("Novel search filter wiring")
 struct NovelSearchFilterWiringTests {
+    @MainActor
+    @Test("Creator preview artwork cache honors current content filters")
+    func creatorPreviewArtworkCacheHonorsCurrentContentFilters() {
+        let store = KeiPixStore(
+            downloads: ArtworkDownloadStore(completionNotifier: DownloadCompletionNotifier(
+                center: FakeUserNotificationCenter(isAuthorized: false),
+                authorizationStore: InMemoryAuthorizationCacheStore(hasRequested: true),
+                coalesceWindowSeconds: 0.05
+            )),
+            bootstrapsAutomatically: false
+        )
+        let creator = PixivUser(id: 900, name: "Creator", account: "creator")
+        let allAges = artwork(id: 1, user: creator, isAI: false, xRestrict: 0)
+        let ai = artwork(id: 2, user: creator, isAI: true, xRestrict: 0)
+        let r18 = artwork(id: 3, user: creator, isAI: false, xRestrict: 1)
+        let r18g = artwork(id: 4, user: creator, isAI: false, xRestrict: 2)
+        store.creatorPreviewArtworkCache[creator.id] = [allAges, ai, r18, r18g]
+
+        #expect(r18.requiresScreenCaptureProtection)
+        #expect(r18g.requiresScreenCaptureProtection)
+
+        store.hideAIArtworks = false
+        store.hideR18Artworks = true
+        store.hideR18GArtworks = false
+        #expect(store.cachedCreatorPreviewArtworks(for: creator).map(\.id) == [1, 2, 4])
+
+        store.hideR18Artworks = false
+        store.hideR18GArtworks = true
+        #expect(store.cachedCreatorPreviewArtworks(for: creator).map(\.id) == [1, 2, 3])
+
+        store.hideAIArtworks = true
+        store.hideR18Artworks = true
+        store.hideR18GArtworks = true
+        #expect(store.cachedCreatorPreviewArtworks(for: creator).map(\.id) == [1])
+
+        store.hideAIArtworks = false
+        store.hideR18Artworks = false
+        store.hideR18GArtworks = false
+        #expect(store.cachedCreatorPreviewArtworks(for: creator).map(\.id) == [1, 2, 3, 4])
+    }
+
+    @MainActor
+    @Test("Content filter setters refresh creator preview surfaces")
+    func contentFilterSettersRefreshCreatorPreviewSurfaces() {
+        let defaults = UserDefaults.standard
+        let previousHideR18Value = defaults.object(forKey: "hideR18Artworks")
+        defer {
+            if let previousHideR18Value {
+                defaults.set(previousHideR18Value, forKey: "hideR18Artworks")
+            } else {
+                defaults.removeObject(forKey: "hideR18Artworks")
+            }
+        }
+        let store = KeiPixStore(
+            downloads: ArtworkDownloadStore(completionNotifier: DownloadCompletionNotifier(
+                center: FakeUserNotificationCenter(isAuthorized: false),
+                authorizationStore: InMemoryAuthorizationCacheStore(hasRequested: true),
+                coalesceWindowSeconds: 0.05
+            )),
+            bootstrapsAutomatically: false
+        )
+        store.hideR18Artworks = false
+        store.contentFilterGeneration = 0
+        store.creatorPreviewArtworkCacheGeneration = 0
+
+        store.setHideR18Artworks(true)
+
+        #expect(store.contentFilterGeneration == 1)
+        #expect(store.creatorPreviewArtworkCacheGeneration == 1)
+    }
+
     @Test("Novel search applies shared search filters locally")
     func novelSearchAppliesSharedSearchFiltersLocally() throws {
         let store = KeiPixStore(
@@ -217,5 +288,42 @@ struct NovelSearchFilterWiringTests {
         let popularNovel = try #require(VisualQASampleData.novelFeedNovels.first { $0.totalBookmarks > 1 })
 
         #expect(store.passesNovelContentFilter(popularNovel))
+    }
+
+    private func artwork(
+        id: Int,
+        user: PixivUser,
+        isAI: Bool,
+        xRestrict: Int
+    ) -> PixivArtwork {
+        PixivArtwork(
+            id: id,
+            title: "Artwork \(id)",
+            type: "illust",
+            caption: "",
+            user: user,
+            tags: [],
+            createDate: Date(timeIntervalSince1970: TimeInterval(id)),
+            pageCount: 1,
+            width: 1200,
+            height: 1600,
+            totalView: 100,
+            totalBookmarks: 10,
+            totalComments: 0,
+            isBookmarked: false,
+            isMuted: false,
+            isAI: isAI,
+            sanityLevel: 2,
+            xRestrict: xRestrict,
+            series: nil,
+            images: [
+                PixivImageSet(
+                    squareMedium: URL(string: "https://example.com/\(id)-square.jpg"),
+                    medium: URL(string: "https://example.com/\(id)-medium.jpg"),
+                    large: URL(string: "https://example.com/\(id)-large.jpg"),
+                    original: URL(string: "https://example.com/\(id)-original.jpg")
+                )
+            ]
+        )
     }
 }
