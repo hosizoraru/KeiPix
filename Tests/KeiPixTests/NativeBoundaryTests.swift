@@ -875,8 +875,16 @@ struct NativeBoundaryTests {
             contentsOf: root.appending(path: "Sources/KeiPix/Support/PhoneFeedFilterBarLayout.swift"),
             encoding: .utf8
         )
+        let mobilePageFilterPreference = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Support/MobileRouteBadgePreference.swift"),
+            encoding: .utf8
+        )
         let searchWorkspace = try String(
             contentsOf: root.appending(path: "Sources/KeiPix/Views/SearchWorkspaceView.swift"),
+            encoding: .utf8
+        )
+        let userPreviewList = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/UserPreviewListView.swift"),
             encoding: .utf8
         )
         let tabBarBridge = try String(
@@ -925,10 +933,18 @@ struct NativeBoundaryTests {
         #expect(iPadContentView.contains("PhoneFeedFilterBarOverlayBridge("))
         #expect(iPadContentView.contains("text: phoneFeedFilterTextBinding"))
         #expect(iPadContentView.contains("private var phoneFeedFilterTextBinding: Binding<String>"))
+        #expect(iPadContentView.contains("@State private var mobilePageFilters: [PixivRoute: MobilePageFilterSnapshot] = [:]"))
+        #expect(iPadContentView.contains(".onPreferenceChange(MobilePageFilterPreferenceKey.self) { filters in"))
+        #expect(iPadContentView.contains("mobilePageFilters = filters"))
+        #expect(iPadContentView.contains("private var currentMobilePageFilter: MobilePageFilterSnapshot?"))
         #expect(iPadContentView.contains("store.selectedRoute == .downloads {\n                return store.downloads.downloadSearchText"))
         #expect(iPadContentView.contains("store.downloads.setDownloadSearchText(value)"))
         #expect(iPadContentView.contains("placeholder: phoneFeedFilterPlaceholder"))
         #expect(iPadContentView.contains("isEnabled: isPhoneFeedFilterEnabled(layout: layout)"))
+        #expect(iPadContentView.contains("if currentMobilePageFilter != nil {\n            return true\n        }"))
+        #expect(iPadContentView.contains("if let currentMobilePageFilter {\n            return currentMobilePageFilter.totalCount\n        }"))
+        #expect(iPadContentView.contains("if let currentMobilePageFilter {\n            return currentMobilePageFilter.visibleCount\n        }"))
+        #expect(iPadContentView.contains("if let currentMobilePageFilter {\n            return currentMobilePageFilter.placeholder\n        }"))
         #expect(iPadContentView.contains("isAtContentStart:") == false)
         #expect(iPadContentView.contains("isVisible: showsPhoneCollapsedFeedFilter(layout: layout)") == false)
         #expect(iPadContentView.contains("private func showsPhoneCollapsedFeedFilter(layout: MobileWorkspaceLayout) -> Bool") == false)
@@ -1013,6 +1029,12 @@ struct NativeBoundaryTests {
         #expect(nativeInlineFilterField.contains("field.disabledBackground = UIImage()"))
         #expect(nativeInlineFilterField.contains("field.clearButtonMode = .never"))
         #expect(nativeInlineFilterField.contains("field.clearButtonMode = .whileEditing"))
+        #expect(mobilePageFilterPreference.contains("struct MobilePageFilterSnapshot: Equatable"))
+        #expect(mobilePageFilterPreference.contains("let route: PixivRoute"))
+        #expect(mobilePageFilterPreference.contains("let totalCount: Int"))
+        #expect(mobilePageFilterPreference.contains("let visibleCount: Int"))
+        #expect(mobilePageFilterPreference.contains("struct MobilePageFilterPreferenceKey: PreferenceKey"))
+        #expect(mobilePageFilterPreference.contains("func mobilePageFilter(_ snapshot: MobilePageFilterSnapshot?) -> some View"))
         #expect(tabBarBridge.contains("filterField?.accessibilityValue = resultText"))
         #expect(iPadContentView.contains("title: currentMobilePlatform == .phone ? nil : store.selectedRoute.title"))
         #expect(iPadContentView.contains("badgeText: routeMenuCountBadgeText"))
@@ -1225,6 +1247,15 @@ struct NativeBoundaryTests {
         #expect(searchWorkspace.contains("selectSearchRoute(.trendingTags)"))
         #expect(searchWorkspace.contains("selectSearchRoute(.savedSearches)"))
         #expect(searchWorkspace.contains("compactSearchContent") == false)
+        #expect(userPreviewList.contains("private var creatorListRootWithPageHeader: some View"))
+        #expect(userPreviewList.contains("if usesPhoneCreatorFilterPill {"))
+        #expect(userPreviewList.contains("creatorListRoot\n                .platformPageHeader("))
+        #expect(userPreviewList.contains("creatorSearchText: creatorFilterTextBinding"))
+        #expect(userPreviewList.contains("private var creatorFilterTextBinding: Binding<String>"))
+        #expect(userPreviewList.contains("store.clientFilterQuery = value"))
+        #expect(userPreviewList.contains(".mobilePageFilter(mobileCreatorPageFilterSnapshot)"))
+        #expect(userPreviewList.contains("private var mobileCreatorPageFilterSnapshot: MobilePageFilterSnapshot?"))
+        #expect(userPreviewList.contains("UIDevice.current.userInterfaceIdiom == .phone && showsCloseButton == false"))
         #expect(sharedComponents.contains("private var usesCollapsedPhoneSearch: Bool"))
         #expect(sharedComponents.contains("UIDevice.current.userInterfaceIdiom == .phone"))
         #expect(feedHeader.contains("private var usesPhoneCurrentFeedFilterOverlay: Bool"))

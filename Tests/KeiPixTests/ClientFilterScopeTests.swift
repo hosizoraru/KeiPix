@@ -42,6 +42,19 @@ struct ClientFilterScopeTests {
         store.restoreClientFilterQueryForCurrentScope()
         #expect(store.clientFilterQuery == "ratio:landscape")
 
+        store.searchText = "alice"
+        store.selectedRoute = .searchUsers
+        #expect(store.clientFilterQuery == "")
+        store.clientFilterQuery = "followed"
+
+        store.searchText = "bob"
+        store.restoreClientFilterQueryForCurrentScope()
+        #expect(store.clientFilterQuery == "")
+
+        store.searchText = "alice"
+        store.restoreClientFilterQueryForCurrentScope()
+        #expect(store.clientFilterQuery == "followed")
+
         store.searchText = "novel wide"
         store.selectedRoute = .novelSearch
         #expect(store.clientFilterQuery == "")

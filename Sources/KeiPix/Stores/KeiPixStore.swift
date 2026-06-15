@@ -59,7 +59,7 @@ final class KeiPixStore {
 
     private var currentClientFilterScopeID: String {
         var components = [selectedRoute.rawValue]
-        if selectedRoute == .search || selectedRoute == .novelSearch {
+        if selectedRoute == .search || selectedRoute == .searchUsers || selectedRoute == .novelSearch {
             components.append("keyword:\(searchText.trimmingCharacters(in: .whitespacesAndNewlines))")
         }
         if let focusedUser {

@@ -32,6 +32,7 @@ struct ContentView: View {
     @State private var statusMessage: String?
     @State private var pendingDownloadDangerAction: DownloadDangerAction?
     @State private var mobileRouteBadgeCounts: [PixivRoute: Int] = [:]
+    @State private var mobilePageFilters: [PixivRoute: MobilePageFilterSnapshot] = [:]
     @State private var bookmarkEditorLayoutProfileOverride: BookmarkEditorLayoutProfile = .compact
     @AppStorage("mobileBottomTabItemIDs") private var mobileBottomTabDefaultRouteIDs = MobileBottomTabConfiguration.defaultStorageID
     @AppStorage("mobileBottomTabLaunchTarget") private var mobileBottomTabLaunchTargetID = MobileBottomTabConfiguration.defaultLaunchTarget.rawValue
@@ -93,6 +94,9 @@ struct ContentView: View {
             }
             .onPreferenceChange(MobileRouteBadgePreferenceKey.self) { counts in
                 mobileRouteBadgeCounts = counts
+            }
+            .onPreferenceChange(MobilePageFilterPreferenceKey.self) { filters in
+                mobilePageFilters = filters
             }
             .onOpenURL { url in
                 Task { await store.openPixivLink(url) }
@@ -2428,11 +2432,17 @@ struct ContentView: View {
             return store.downloads.downloadSearchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false
                 || store.downloads.downloadQueueFilter != .all
         }
+        if currentMobilePageFilter != nil {
+            return store.clientFilterQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false
+        }
         return store.clientFilterQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false
     }
 
     private var phoneSupportsClientFeedFilter: Bool {
         if store.selectedRoute == .downloads {
+            return true
+        }
+        if currentMobilePageFilter != nil {
             return true
         }
         return store.selectedRoute.usesArtworkFeed
@@ -2443,6 +2453,9 @@ struct ContentView: View {
     private var phoneClientFilterTotalCount: Int {
         if store.selectedRoute == .downloads {
             return store.downloads.items.filter(store.downloads.downloadQueueFilter.includes).count
+        }
+        if let currentMobilePageFilter {
+            return currentMobilePageFilter.totalCount
         }
         if store.selectedRoute == .pixivActivity {
             return store.pixivActivityItems.count
@@ -2457,6 +2470,9 @@ struct ContentView: View {
         if store.selectedRoute == .downloads {
             return store.downloads.filteredItems.count
         }
+        if let currentMobilePageFilter {
+            return currentMobilePageFilter.visibleCount
+        }
         if store.selectedRoute == .pixivActivity {
             return store.pixivActivityVisibleItems.count
         }
@@ -2469,6 +2485,9 @@ struct ContentView: View {
     private var phoneFeedFilterPlaceholder: String {
         if store.selectedRoute == .downloads {
             return L10n.filterDownloads
+        }
+        if let currentMobilePageFilter {
+            return currentMobilePageFilter.placeholder
         }
         if store.selectedRoute == .pixivActivity {
             return L10n.filterActivity
@@ -2488,6 +2507,10 @@ struct ContentView: View {
             return "\(totalCount.formatted()) \(L10n.results)"
         }
         return "\(phoneClientFilterVisibleCount.formatted())/\(totalCount.formatted()) \(L10n.results)"
+    }
+
+    private var currentMobilePageFilter: MobilePageFilterSnapshot? {
+        mobilePageFilters[store.selectedRoute]
     }
 
     private func compactTabBarSyncID(layout: MobileWorkspaceLayout) -> String {

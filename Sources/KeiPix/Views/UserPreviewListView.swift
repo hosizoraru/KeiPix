@@ -1,5 +1,8 @@
 import Foundation
 import SwiftUI
+#if os(iOS)
+import UIKit
+#endif
 
 struct UserPreviewListView: View {
     @Bindable var store: KeiPixStore
@@ -42,22 +45,10 @@ struct UserPreviewListView: View {
     }
 
     var body: some View {
-        Group {
-            if store.session == nil {
-                PixivSignedOutStateView(store: store)
-            } else {
-                creatorListSurface
-            }
-        }
-        .platformPageHeader(
-            title: mode.title,
-            status: creatorNavigationStatus,
-            statusSystemImage: "person.2"
-        ) {
-            creatorTitleActions
-        }
+        creatorListRootWithPageHeader
         .platformPageNavigationChrome(title: mode.title, status: creatorNavigationStatus)
         .mobileRouteBadgeCount(visiblePreviews.count, for: routeBadgeRoute)
+        .mobilePageFilter(mobileCreatorPageFilterSnapshot)
         .toolbar {
             // Main routes use the outer route refresh button. Sheets do
             // not have that parent chrome, so creator-list sheets keep a
@@ -193,6 +184,47 @@ struct UserPreviewListView: View {
         }
     }
 
+    @ViewBuilder
+    private var creatorListRoot: some View {
+        if store.session == nil {
+            PixivSignedOutStateView(store: store)
+        } else {
+            creatorListSurface
+        }
+    }
+
+    @ViewBuilder
+    private var creatorListRootWithPageHeader: some View {
+        #if os(iOS)
+        if usesPhoneCreatorFilterPill {
+            creatorListRoot
+                .platformPageHeader(
+                    title: mode.title,
+                    status: creatorNavigationStatus,
+                    statusSystemImage: "person.2"
+                )
+        } else {
+            creatorListRoot
+                .platformPageHeader(
+                    title: mode.title,
+                    status: creatorNavigationStatus,
+                    statusSystemImage: "person.2"
+                ) {
+                    creatorTitleActions
+                }
+        }
+        #else
+        creatorListRoot
+            .platformPageHeader(
+                title: mode.title,
+                status: creatorNavigationStatus,
+                statusSystemImage: "person.2"
+            ) {
+                creatorTitleActions
+            }
+        #endif
+    }
+
     private var creatorListSurface: some View {
         VStack(spacing: 0) {
             if showsCreatorSearchBar {
@@ -200,7 +232,7 @@ struct UserPreviewListView: View {
                     mode: mode,
                     showsRestrictPicker: false,
                     restrict: restrictBinding,
-                    creatorSearchText: $creatorSearchText,
+                    creatorSearchText: creatorFilterTextBinding,
                     globalSearchKeyword: searchKeyword,
                     clearGlobalSearch: clearCreatorSearch
                 )
@@ -293,16 +325,19 @@ struct UserPreviewListView: View {
     }
 
     private var hasActiveCreatorSearchState: Bool {
-        creatorSearchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false
+        creatorFilterQuery.isEmpty == false
             || (mode.requiresSearchKeyword && searchKeyword.isEmpty == false)
     }
 
     private var showsCreatorSearchBar: Bool {
-        isCreatorSearchPresented || hasActiveCreatorSearchState
+        if usesPhoneCreatorFilterPill {
+            return false
+        }
+        return isCreatorSearchPresented || hasActiveCreatorSearchState
     }
 
     private var visiblePreviews: [PixivUserPreview] {
-        let normalizedQuery = creatorSearchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        let normalizedQuery = creatorFilterQuery
         let filtered = previews.filter { preview in
             let matchesQuery = normalizedQuery.isEmpty || preview.matchesCreatorQuery(normalizedQuery)
             guard matchesQuery else { return false }
@@ -365,10 +400,33 @@ struct UserPreviewListView: View {
     private var creatorAutoLoadContextKey: String {
         [
             modeKey,
-            creatorSearchText.trimmingCharacters(in: .whitespacesAndNewlines),
+            creatorFilterQuery,
             creatorFilter.rawValue,
             creatorSort.rawValue
         ].joined(separator: "|")
+    }
+
+    private var creatorFilterQuery: String {
+        creatorFilterTextBinding.wrappedValue.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private var creatorFilterTextBinding: Binding<String> {
+        Binding {
+            #if os(iOS)
+            if usesPhoneCreatorFilterPill {
+                return store.clientFilterQuery
+            }
+            #endif
+            return creatorSearchText
+        } set: { value in
+            #if os(iOS)
+            if usesPhoneCreatorFilterPill {
+                store.clientFilterQuery = value
+                return
+            }
+            #endif
+            creatorSearchText = value
+        }
     }
 
     /// Subtitle shown beside the navigation title. Keep it compact:
@@ -485,12 +543,34 @@ struct UserPreviewListView: View {
 
     private func clearCreatorSearch() {
         withAnimation(.snappy(duration: 0.16)) {
-            creatorSearchText = ""
+            creatorFilterTextBinding.wrappedValue = ""
             if mode.requiresSearchKeyword {
                 store.clearSearchText()
             }
             isCreatorSearchPresented = false
         }
+    }
+
+    private var mobileCreatorPageFilterSnapshot: MobilePageFilterSnapshot? {
+        #if os(iOS)
+        guard usesPhoneCreatorFilterPill, store.session != nil else { return nil }
+        return MobilePageFilterSnapshot(
+            route: routeBadgeRoute,
+            totalCount: previews.count,
+            visibleCount: visiblePreviews.count,
+            placeholder: L10n.searchCreatorsInList
+        )
+        #else
+        return nil
+        #endif
+    }
+
+    private var usesPhoneCreatorFilterPill: Bool {
+        #if os(iOS)
+        UIDevice.current.userInterfaceIdiom == .phone && showsCloseButton == false
+        #else
+        false
+        #endif
     }
 
     private func bulkActionTargetCount(_ action: CreatorBulkAction) -> Int {

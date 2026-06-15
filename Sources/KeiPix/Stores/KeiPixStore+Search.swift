@@ -23,6 +23,7 @@ extension KeiPixStore {
         feedNarrowingContext = nil
         if selectedRoute == .searchUsers {
             searchSubmissionID += 1
+            restoreClientFilterQueryForCurrentScope()
             allSearchPopularPreviewArtworks = []
             searchPopularPreviewArtworks = []
             isLoadingSearchPopularPreview = false
@@ -69,6 +70,7 @@ extension KeiPixStore {
 
         guard selectedRoute == .search || selectedRoute == .searchUsers else { return }
         searchSubmissionID += 1
+        restoreClientFilterQueryForCurrentScope()
 
         if selectedRoute == .search {
             activeFeedSnapshotRestoration = nil
