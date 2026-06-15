@@ -621,6 +621,7 @@ struct ContentView: View {
     @ToolbarContentBuilder
     private func feedBoardToolbar(showsSidebarToggle: Bool) -> some ToolbarContent {
         refreshToolbarItem(showsSidebarToggle: showsSidebarToggle)
+        pixivCollectionsToolbarItem(showsSidebarToggle: showsSidebarToggle)
         downloadQueueToolbarItem(showsSidebarToggle: showsSidebarToggle)
         clearSearchToolbarItem
         galleryLayoutToolbarItem(showsSidebarToggle: showsSidebarToggle)
@@ -695,6 +696,20 @@ struct ContentView: View {
                     systemImage: pixivActivityDisplaySystemImage,
                     accessibilityLabel: L10n.pixivActivityDisplay,
                     menu: pixivActivityDisplayMenu,
+                    select: { handleNativeToolbarMenuAction($0, showsSidebarToggle: showsSidebarToggle) }
+                )
+                .fixedSize(horizontal: true, vertical: false)
+            }
+        }
+    }
+
+    private func pixivCollectionsToolbarItem(showsSidebarToggle: Bool) -> some ToolbarContent {
+        ToolbarItem(placement: .primaryAction) {
+            if showsPixivCollectionsToolbarMenu {
+                NativeToolbarMenuButton(
+                    systemImage: "slider.horizontal.3",
+                    accessibilityLabel: L10n.pixivCollections,
+                    menu: pixivCollectionsToolbarMenu,
                     select: { handleNativeToolbarMenuAction($0, showsSidebarToggle: showsSidebarToggle) }
                 )
                 .fixedSize(horizontal: true, vertical: false)
@@ -1126,6 +1141,10 @@ struct ContentView: View {
         store.selectedRoute == .pixivActivity
     }
 
+    private var showsPixivCollectionsToolbarMenu: Bool {
+        store.session != nil && pixivCollectionToolbarMode != nil
+    }
+
     private var showsDownloadQueueToolbarMenu: Bool {
         currentMobilePlatform == .phone && store.selectedRoute == .downloads
     }
@@ -1224,6 +1243,19 @@ struct ContentView: View {
         store.pixivActivityKindFilter == .all
             ? store.pixivActivityFeedScope.systemImage
             : store.pixivActivityKindFilter.systemImage
+    }
+
+    private var pixivCollectionToolbarMode: PixivCollectionListMode? {
+        switch store.selectedRoute {
+        case .pixivCollections:
+            return .discovery
+        case .myPixivCollections:
+            return .created
+        case .savedPixivCollections:
+            return .saved
+        default:
+            return nil
+        }
     }
 
     private var selectedArtworkMenuSystemImage: String {
@@ -1439,6 +1471,146 @@ struct ContentView: View {
             store.pixivActivityLayoutMode.rawValue,
             currentMobilePlatform == .phone ? "phone" : "wide"
         ].joined(separator: ":")
+    }
+
+    private var pixivCollectionsToolbarMenu: NativeToolbarMenu {
+        guard let mode = pixivCollectionToolbarMode else {
+            return NativeToolbarMenu(title: L10n.pixivCollections, sections: [])
+        }
+
+        var sections: [NativeToolbarMenuSection] = []
+        if mode == .discovery {
+            var items: [NativeToolbarMenuItem] = [
+                NativeToolbarMenuItem.singleSelectionSubmenu(
+                    title: L10n.pixivCollectionSource,
+                    selectedTitle: store.pixivCollectionDiscoveryScope.title,
+                    selectedOption: store.pixivCollectionDiscoveryScope,
+                    systemImage: store.pixivCollectionDiscoveryScope.systemImage,
+                    options: PixivCollectionDiscoveryScope.allCases,
+                    id: IPadToolbarMenuAction.pixivCollectionScope,
+                    optionTitle: \.title,
+                    optionSystemImage: \.systemImage
+                )
+            ]
+
+            if store.pixivCollectionDiscoveryScope != .everyone {
+                items.append(pixivCollectionTagSubmenu)
+            }
+
+            sections.append(
+                NativeToolbarMenuSection(
+                    presentation: .root,
+                    items: items
+                )
+            )
+        }
+
+        var actionItems: [NativeToolbarMenuItem] = []
+        if mode == .saved, store.pixivWebSession == nil {
+            actionItems.append(
+                .action(
+                    id: IPadToolbarMenuAction.connectPixivWebSession,
+                    title: L10n.connectPixivWebSession,
+                    systemImage: "globe.badge.chevron.backward"
+                )
+            )
+        }
+        actionItems.append(
+            .action(
+                id: IPadToolbarMenuAction.openPixivLinkFromClipboard,
+                title: L10n.openPixivLinkFromClipboard,
+                systemImage: "doc.on.clipboard"
+            )
+        )
+        if pixivCollectionWebURL(for: mode) != nil {
+            actionItems.append(
+                .action(
+                    id: IPadToolbarMenuAction.openPixivCollectionWeb(mode),
+                    title: mode.webActionTitle,
+                    systemImage: "safari"
+                )
+            )
+        }
+        if actionItems.isEmpty == false {
+            sections.append(
+                NativeToolbarMenuSection(
+                    title: L10n.moreActions,
+                    items: actionItems
+                )
+            )
+        }
+
+        return NativeToolbarMenu(
+            title: L10n.pixivCollections,
+            cacheKey: pixivCollectionsToolbarMenuCacheKey(mode: mode),
+            sections: sections
+        )
+    }
+
+    private var pixivCollectionTagSubmenu: NativeToolbarMenuItem {
+        let selectedTag = store.pixivCollectionDiscoverySelectedTag
+        let defaultTitle = defaultPixivCollectionDiscoveryTagTitle
+        var items: [NativeToolbarMenuItem] = [
+            .action(
+                id: IPadToolbarMenuAction.pixivCollectionTag(nil),
+                title: defaultTitle,
+                systemImage: "sparkles",
+                isSelected: selectedTag == nil
+            )
+        ]
+        items.append(
+            contentsOf: store.pixivCollectionDiscoveryTagsForCurrentScope.map { tag in
+                .action(
+                    id: IPadToolbarMenuAction.pixivCollectionTag(tag.name),
+                    title: tag.displayTitle,
+                    systemImage: "number",
+                    isSelected: selectedTag == tag.name
+                )
+            }
+        )
+        return .submenu(
+            title: L10n.pixivCollectionTags,
+            subtitle: selectedTag.map { "#\($0)" } ?? defaultTitle,
+            systemImage: selectedTag == nil ? "sparkles" : "number",
+            presentation: .singleSelection,
+            items: items
+        )
+    }
+
+    private var defaultPixivCollectionDiscoveryTagTitle: String {
+        switch store.pixivCollectionDiscoveryScope {
+        case .discover:
+            return L10n.recommendedPixivCollections
+        case .everyone:
+            return L10n.popularPixivCollections
+        case .tags:
+            return L10n.recommendedPixivCollections
+        }
+    }
+
+    private func pixivCollectionsToolbarMenuCacheKey(mode: PixivCollectionListMode) -> String {
+        [
+            "pixiv-collections",
+            mode.rawValue,
+            store.pixivCollectionDiscoveryScope.rawValue,
+            store.pixivCollectionDiscoverySelectedTag ?? "default",
+            store.pixivCollectionDiscoveryTagsForCurrentScope.map(\.name).joined(separator: ","),
+            store.pixivWebSession == nil ? "web-session-missing" : "web-session-ready",
+            pixivCollectionWebURL(for: mode) == nil ? "web-url-missing" : "web-url-ready"
+        ].joined(separator: ":")
+    }
+
+    private func pixivCollectionWebURL(for mode: PixivCollectionListMode) -> URL? {
+        switch mode {
+        case .discovery:
+            return PixivWebURLBuilder.collectionsURL()
+        case .created:
+            guard let userID = store.session?.user.id else { return nil }
+            return PixivWebURLBuilder.userPublishedCollectionsURL(userID: String(userID))
+        case .saved:
+            guard let userID = store.session?.user.id else { return nil }
+            return PixivWebURLBuilder.userBookmarkCollectionsURL(userID: String(userID))
+        }
     }
 
     private func artworkActionsMenu(showsSidebarToggle: Bool) -> NativeToolbarMenu {
@@ -1681,6 +1853,18 @@ struct ContentView: View {
             store.setPixivActivityKindFilter(filter)
             return
         }
+        if let scope = IPadToolbarMenuAction.pixivCollectionDiscoveryScope(from: id) {
+            store.selectPixivCollectionDiscoveryScope(scope)
+            return
+        }
+        if let tagName = IPadToolbarMenuAction.pixivCollectionTagName(from: id) {
+            selectPixivCollectionDiscoveryTag(named: tagName)
+            return
+        }
+        if let mode = IPadToolbarMenuAction.pixivCollectionWebMode(from: id) {
+            openPixivCollectionWeb(mode: mode)
+            return
+        }
         if let route = IPadToolbarMenuAction.route(from: id) {
             selectRoute(route)
             return
@@ -1692,6 +1876,8 @@ struct ContentView: View {
         case IPadToolbarMenuAction.openPixivID:
             dismissTransientArtworkPresentationBeforeGlobalOpen()
             isPixivIDOpenPresented = true
+        case IPadToolbarMenuAction.connectPixivWebSession:
+            store.isPixivWebSessionPresented = true
         case IPadToolbarMenuAction.randomFromCurrentFeed:
             _ = store.randomFromCurrentFeed(opensDetail: false)
         case IPadToolbarMenuAction.downloadDestinationInfo:
@@ -1771,6 +1957,20 @@ struct ContentView: View {
         default:
             break
         }
+    }
+
+    private func selectPixivCollectionDiscoveryTag(named tagName: String?) {
+        guard let tagName,
+              let tag = store.pixivCollectionDiscoveryTagsForCurrentScope.first(where: { $0.name == tagName }) else {
+            store.selectPixivCollectionDiscoveryTag(nil)
+            return
+        }
+        store.selectPixivCollectionDiscoveryTag(tag)
+    }
+
+    private func openPixivCollectionWeb(mode: PixivCollectionListMode) {
+        guard let url = pixivCollectionWebURL(for: mode) else { return }
+        UIApplication.shared.open(url)
     }
 
     private func openPixivLinkFromClipboard() async {
@@ -2710,6 +2910,7 @@ private enum IPadToolbarMenuAction {
     static let downloadPauseResume = "download-pause-resume"
     static let downloadCopyVisibleLinks = "download-copy-visible-links"
     static let downloadRetryFailed = "download-retry-failed"
+    static let connectPixivWebSession = "connect-pixiv-web-session"
     static let settings = "settings"
 
     private static let downloadSortPrefix = "download-sort:"
@@ -2719,6 +2920,9 @@ private enum IPadToolbarMenuAction {
     private static let pixivActivityLayoutPrefix = "pixiv-activity-layout:"
     private static let pixivActivityScopePrefix = "pixiv-activity-scope:"
     private static let pixivActivityKindPrefix = "pixiv-activity-kind:"
+    private static let pixivCollectionScopePrefix = "pixiv-collection-scope:"
+    private static let pixivCollectionTagPrefix = "pixiv-collection-tag:"
+    private static let pixivCollectionWebPrefix = "pixiv-collection-web:"
     private static let routePrefix = "route:"
 
     static func downloadSort(_ sort: DownloadQueueSort) -> String {
@@ -2820,6 +3024,36 @@ private enum IPadToolbarMenuAction {
         guard id.hasPrefix(pixivActivityKindPrefix) else { return nil }
         let rawValue = String(id.dropFirst(pixivActivityKindPrefix.count))
         return PixivActivityKindFilter(rawValue: rawValue)
+    }
+
+    static func pixivCollectionScope(_ scope: PixivCollectionDiscoveryScope) -> String {
+        pixivCollectionScopePrefix + scope.rawValue
+    }
+
+    static func pixivCollectionDiscoveryScope(from id: String) -> PixivCollectionDiscoveryScope? {
+        guard id.hasPrefix(pixivCollectionScopePrefix) else { return nil }
+        let rawValue = String(id.dropFirst(pixivCollectionScopePrefix.count))
+        return PixivCollectionDiscoveryScope(rawValue: rawValue)
+    }
+
+    static func pixivCollectionTag(_ tagName: String?) -> String {
+        pixivCollectionTagPrefix + (tagName ?? "")
+    }
+
+    static func pixivCollectionTagName(from id: String) -> String?? {
+        guard id.hasPrefix(pixivCollectionTagPrefix) else { return nil }
+        let rawValue = String(id.dropFirst(pixivCollectionTagPrefix.count))
+        return rawValue.isEmpty ? .some(nil) : .some(rawValue)
+    }
+
+    static func openPixivCollectionWeb(_ mode: PixivCollectionListMode) -> String {
+        pixivCollectionWebPrefix + mode.rawValue
+    }
+
+    static func pixivCollectionWebMode(from id: String) -> PixivCollectionListMode? {
+        guard id.hasPrefix(pixivCollectionWebPrefix) else { return nil }
+        let rawValue = String(id.dropFirst(pixivCollectionWebPrefix.count))
+        return PixivCollectionListMode(rawValue: rawValue)
     }
 
     static func route(_ route: PixivRoute) -> String {

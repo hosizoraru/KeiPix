@@ -95,14 +95,14 @@ struct PixivCollectionsView: View {
     @ViewBuilder
     private var pixivCollectionTitleActions: some View {
         if store.session != nil {
+            #if os(iOS)
+            EmptyView()
+            #else
             OS26LibraryActionRail {
-                if mode == .discovery, usesCompactDiscoveryChrome {
-                    compactDiscoverySelectionMenu
-                }
-
                 pixivCollectionMoreMenu
             }
             .controlSize(.small)
+            #endif
         }
     }
 
@@ -110,11 +110,8 @@ struct PixivCollectionsView: View {
     private var pixivCollectionToolbar: some ToolbarContent {
         if store.session != nil {
             #if os(iOS)
-            if mode == .discovery, usesCompactDiscoveryChrome == false {
-                ToolbarItem(placement: .principal) {
-                    wideDiscoveryControls
-                        .controlSize(.small)
-                }
+            ToolbarItem(placement: .primaryAction) {
+                EmptyView()
             }
             #else
             if mode == .discovery {
@@ -146,38 +143,6 @@ struct PixivCollectionsView: View {
 
                 discoveryTagMenu
             }
-        }
-    }
-
-    private var compactDiscoverySelectionMenu: some View {
-        Menu {
-            Picker(L10n.pixivCollections, selection: discoveryScopeBinding) {
-                discoveryScopePickerOptions
-            }
-            .pickerStyle(.inline)
-
-            if store.pixivCollectionDiscoveryScope != .everyone {
-                Divider()
-                discoveryTagPicker
-            }
-        } label: {
-            PixivCollectionDropdownMenuLabel(
-                title: compactDiscoverySelectionTitle,
-                fallbackTitle: store.pixivCollectionDiscoveryScope.title,
-                compactTitle: L10n.pixivCollections,
-                systemImage: store.pixivCollectionDiscoveryScope.systemImage,
-                maxWidth: 142
-            )
-        }
-        .os26GlassButton(prominent: store.currentPixivCollectionDiscoverySelection.tag != nil)
-        .help(compactDiscoveryAccessibilityTitle)
-        .accessibilityLabel(compactDiscoveryAccessibilityTitle)
-    }
-
-    @ViewBuilder
-    private var discoveryScopePickerOptions: some View {
-        ForEach(PixivCollectionDiscoveryScope.allCases) { scope in
-            Label(scope.title, systemImage: scope.systemImage).tag(scope)
         }
     }
 
@@ -395,15 +360,6 @@ struct PixivCollectionsView: View {
         }
     }
 
-    private var usesCompactDiscoveryChrome: Bool {
-        #if os(iOS)
-        if UIDevice.current.userInterfaceIdiom == .phone || horizontalSizeClass == .compact {
-            return true
-        }
-        #endif
-        return false
-    }
-
     private var defaultDiscoveryTagTitle: String {
         switch store.pixivCollectionDiscoveryScope {
         case .discover:
@@ -421,18 +377,6 @@ struct PixivCollectionsView: View {
 
     private var discoverySecondarySystemImage: String {
         store.currentPixivCollectionDiscoverySelection.tag == nil ? "sparkles" : "number"
-    }
-
-    private var compactDiscoverySelectionTitle: String {
-        if let tag = store.currentPixivCollectionDiscoverySelection.tag {
-            return "#\(tag)"
-        }
-
-        return store.pixivCollectionDiscoveryScope.title
-    }
-
-    private var compactDiscoveryAccessibilityTitle: String {
-        "\(store.pixivCollectionDiscoveryScope.title): \(discoverySecondaryTitle)"
     }
 
     private var collectionsWebURL: URL? {
