@@ -1,16 +1,10 @@
 import SwiftUI
-#if os(iOS)
-import UIKit
-#endif
 
 struct SpotlightView: View {
     @Bindable var store: KeiPixStore
     let fixedCollectionMode: SpotlightArticleCollectionMode?
     let title: String
     var openArticle: ((PixivSpotlightArticle) -> Void)?
-    #if os(iOS)
-    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
-    #endif
     @State private var articles: [PixivSpotlightArticle] = []
     @State private var nextURL: URL?
     @State private var isLoading = false
@@ -94,46 +88,18 @@ struct SpotlightView: View {
         .platformPageHeader(
             title: title,
             status: spotlightNavigationStatus
-        ) {
-            compactCollectionMenu
-        }
+        )
         .platformPageNavigationChrome(title: title, status: spotlightNavigationStatus)
         .mobileRouteBadgeCount(displayedArticles.count, for: spotlightBadgeRoute)
         .toolbar {
             if store.session != nil {
-                // Principal placement works well on macOS and wide
-                // iPad layouts, but it becomes an extra floating tab
-                // strip on iPhone. Compact iOS moves the collection
-                // switcher into the title row instead.
-                if usesCompactSpotlightChrome == false, fixedCollectionMode == nil {
-                    ToolbarItem(placement: .principal) {
-                        collectionModePicker
-                            .pickerStyle(.segmented)
-                            .labelsHidden()
-                            .frame(minWidth: 360, idealWidth: 440)
-                            .help(L10n.spotlightCollection)
-                        }
-                }
-
                 // A single "view options" menu consolidates
-                // filter/sort/layout, plus a destructive "clear
-                // history" entry that only shows up for the History
-                // collection. Refresh is owned by the outer route
-                // toolbar so compact iOS does not show two refresh
-                // buttons for the same content.
-                ToolbarItem(placement: .secondaryAction) {
+                // collection/filter/layout, plus a destructive clear
+                // entry for History. Refresh is owned by the outer
+                // route toolbar so compact iOS does not show two
+                // refresh buttons for the same content.
+                ToolbarItem(placement: .primaryAction) {
                     viewOptionsMenu
-                }
-
-                if collectionMode == .history {
-                    ToolbarItem(placement: .secondaryAction) {
-                        Button(role: .destructive, action: clearHistory) {
-                            Label(L10n.clearArticleHistory, systemImage: "trash")
-                        }
-                        .labelStyle(.iconOnly)
-                        .help(L10n.clearArticleHistory)
-                        .disabled(store.spotlightArticleHistory.isEmpty)
-                    }
                 }
             }
         }
@@ -230,14 +196,6 @@ struct SpotlightView: View {
         }
     }
 
-    private var usesCompactSpotlightChrome: Bool {
-        #if os(iOS)
-        UIDevice.current.userInterfaceIdiom == .phone || horizontalSizeClass == .compact
-        #else
-        false
-        #endif
-    }
-
     private var collectionModePicker: some View {
         Picker(L10n.spotlightCollection, selection: $collectionMode) {
             ForEach(SpotlightArticleCollectionMode.allCases) { mode in
@@ -290,6 +248,27 @@ struct SpotlightView: View {
     /// inline as a Picker, no nested submenus.
     private var viewOptionsMenu: some View {
         Menu {
+            if fixedCollectionMode == nil {
+                collectionModePicker
+                    .pickerStyle(.inline)
+
+                Divider()
+            }
+
+            // Category filter only applies to the live "latest" feed.
+            // Use the vetted picker cases so dead Pixivision alternates
+            // like Cosplay don't route into a 400 app-API request.
+            if collectionMode.supportsCategoryFilter {
+                Picker(L10n.spotlightCategoryAll, selection: $category) {
+                    ForEach(SpotlightArticleCategory.pickerCases) { category in
+                        Label(category.title, systemImage: category.systemImage).tag(category)
+                    }
+                }
+                .pickerStyle(.inline)
+
+                Divider()
+            }
+
             Picker(L10n.spotlightListLayout, selection: spotlightLayoutBinding) {
                 ForEach(SpotlightListLayoutMode.allCases) { mode in
                     Label(mode.title, systemImage: mode.systemImage).tag(mode)
@@ -297,64 +276,19 @@ struct SpotlightView: View {
             }
             .pickerStyle(.inline)
 
-            // Category filter only applies to the live "latest" feed.
-            // Use the vetted picker cases so dead Pixivision alternates
-            // like Cosplay don't route into a 400 app-API request.
-            if collectionMode.supportsCategoryFilter, usesCompactSpotlightChrome == false {
+            if collectionMode == .history {
                 Divider()
 
-                Picker(L10n.spotlightCategoryAll, selection: $category) {
-                    ForEach(SpotlightArticleCategory.pickerCases) { category in
-                        Label(category.title, systemImage: category.systemImage).tag(category)
-                    }
+                Button(role: .destructive, action: clearHistory) {
+                    Label(L10n.clearArticleHistory, systemImage: "trash")
                 }
-                .pickerStyle(.inline)
+                .disabled(store.spotlightArticleHistory.isEmpty)
             }
         } label: {
             Label(L10n.viewOptions, systemImage: "slider.horizontal.3")
         }
         .labelStyle(.iconOnly)
         .help(L10n.viewOptions)
-    }
-
-    @ViewBuilder
-    private var compactCollectionMenu: some View {
-        if usesCompactSpotlightChrome, store.session != nil, fixedCollectionMode == nil {
-            Menu {
-                collectionModePicker
-                    .pickerStyle(.inline)
-
-                if collectionMode.supportsCategoryFilter {
-                    Divider()
-
-                    Picker(L10n.spotlightCategoryAll, selection: $category) {
-                        ForEach(SpotlightArticleCategory.pickerCases) { category in
-                            Label(category.title, systemImage: category.systemImage).tag(category)
-                        }
-                    }
-                    .pickerStyle(.inline)
-                }
-            } label: {
-                HStack(spacing: 6) {
-                    Image(systemName: collectionMode.systemImage)
-                        .symbolRenderingMode(.hierarchical)
-                    Text(collectionMode.title)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.82)
-                    Image(systemName: "chevron.down")
-                        .font(.caption2.weight(.bold))
-                        .foregroundStyle(.tertiary)
-                }
-                .font(.subheadline.weight(.semibold))
-                .foregroundStyle(.secondary)
-                .padding(.horizontal, 10)
-                .padding(.vertical, 5)
-                .frame(maxWidth: 128)
-                .glassEffect(.regular.interactive(), in: Capsule(style: .continuous))
-            }
-            .accessibilityLabel("\(L10n.spotlightCollection): \(collectionMode.title)")
-            .help(L10n.spotlightCollection)
-        }
     }
 
     private var displayedArticles: [PixivSpotlightArticle] {

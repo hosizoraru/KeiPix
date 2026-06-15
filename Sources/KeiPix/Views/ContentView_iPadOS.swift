@@ -579,7 +579,8 @@ struct ContentView: View {
     private func feedToolbar(showsSidebarToggle: Bool) -> some ToolbarContent {
         feedLeadingToolbar(showsSidebarToggle: showsSidebarToggle)
         artworkNavigationToolbar
-        feedPrimaryToolbar(showsSidebarToggle: showsSidebarToggle)
+        feedBoardToolbar(showsSidebarToggle: showsSidebarToggle)
+        appControlsToolbarItem(showsSidebarToggle: showsSidebarToggle)
     }
 
     @ToolbarContentBuilder
@@ -618,7 +619,7 @@ struct ContentView: View {
     }
 
     @ToolbarContentBuilder
-    private func feedPrimaryToolbar(showsSidebarToggle: Bool) -> some ToolbarContent {
+    private func feedBoardToolbar(showsSidebarToggle: Bool) -> some ToolbarContent {
         refreshToolbarItem(showsSidebarToggle: showsSidebarToggle)
         downloadQueueToolbarItem(showsSidebarToggle: showsSidebarToggle)
         clearSearchToolbarItem
@@ -627,7 +628,6 @@ struct ContentView: View {
         spotlightDetailToggleToolbarItem(showsSidebarToggle: showsSidebarToggle)
         artworkDetailToggleToolbarItem(showsSidebarToggle: showsSidebarToggle)
         artworkActionsToolbarItem(showsSidebarToggle: showsSidebarToggle)
-        appControlsToolbarItem(showsSidebarToggle: showsSidebarToggle)
     }
 
     private func refreshToolbarItem(showsSidebarToggle: Bool) -> some ToolbarContent {
@@ -754,16 +754,27 @@ struct ContentView: View {
         }
     }
 
+    @ToolbarContentBuilder
     private func appControlsToolbarItem(showsSidebarToggle: Bool) -> some ToolbarContent {
-        ToolbarItem(placement: .primaryAction) {
-            NativeToolbarMenuButton(
-                systemImage: "ellipsis.circle",
-                accessibilityLabel: L10n.appControls,
-                menu: appControlsMenu,
-                select: { handleNativeToolbarMenuAction($0, showsSidebarToggle: showsSidebarToggle) }
-            )
-            .fixedSize(horizontal: true, vertical: false)
+        if #available(iOS 27.0, *) {
+            ToolbarItem(placement: .topBarPinnedTrailing) {
+                appControlsToolbarButton(showsSidebarToggle: showsSidebarToggle)
+            }
+        } else {
+            ToolbarItem(placement: .primaryAction) {
+                appControlsToolbarButton(showsSidebarToggle: showsSidebarToggle)
+            }
         }
+    }
+
+    private func appControlsToolbarButton(showsSidebarToggle: Bool) -> some View {
+        NativeToolbarMenuButton(
+            systemImage: "ellipsis.circle",
+            accessibilityLabel: L10n.appControls,
+            menu: appControlsMenu,
+            select: { handleNativeToolbarMenuAction($0, showsSidebarToggle: showsSidebarToggle) }
+        )
+        .fixedSize(horizontal: true, vertical: false)
     }
 
     private func sidebarToggleButton(title: String) -> some View {
