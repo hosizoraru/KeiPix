@@ -645,14 +645,19 @@ enum L10n {
     static var previewWorks: String { text("Preview Works") }
     static var searchCreatorsInList: String { text("Search creators in this list") }
     static var creatorActions: String { text("Creator Actions") }
+    static var creatorSelection: String { text("Creator Selection") }
+    static var selectedCreatorsFormat: String { text("%d selected creators") }
+    static var noSelectedCreators: String { text("No selected creators") }
+    static var selectCreator: String { text("Select Creator") }
+    static var deselectCreator: String { text("Deselect Creator") }
     static var checkFollowVisibility: String { text("Check Follow Visibility") }
     static var checkingFollowVisibility: String { text("Checking follow visibility") }
-    static var followVisiblePublicly: String { text("Follow Visible Publicly") }
-    static var followVisiblePrivately: String { text("Follow Visible Privately") }
-    static var muteVisibleCreators: String { text("Mute Visible Creators") }
-    static var unfollowVisibleCreators: String { text("Unfollow Visible Creators") }
-    static var copyVisibleCreatorLinks: String { text("Copy Visible Creator Links") }
-    static var copyVisibleCreatorSummary: String { text("Copy Visible Creator Summary") }
+    static var followSelectedPublicly: String { text("Follow Selected Publicly") }
+    static var followSelectedPrivately: String { text("Follow Selected Privately") }
+    static var muteSelectedCreators: String { text("Mute Selected Creators") }
+    static var unfollowSelectedCreators: String { text("Unfollow Selected Creators") }
+    static var copySelectedCreatorLinks: String { text("Copy Selected Creator Links") }
+    static var copySelectedCreatorSummary: String { text("Copy Selected Creator Summary") }
     static var runningCreatorAction: String { text("Updating creators") }
     static var noCreatorLinksToCopy: String { text("No creator links to copy") }
     static var noCreatorSummariesToCopy: String { text("No creator summaries to copy") }
@@ -660,10 +665,10 @@ enum L10n {
     static var noMatchingCreatorsForAction: String { text("No matching creators for this action") }
     static var publicFollow: String { text("Public Follow") }
     static var privateFollow: String { text("Private Follow") }
-    static var followVisiblePubliclyConfirmationFormat: String { text("Follow %d visible creators publicly?") }
-    static var followVisiblePrivatelyConfirmationFormat: String { text("Follow %d visible creators privately?") }
-    static var muteVisibleCreatorsConfirmationFormat: String { text("Mute %d visible creators?") }
-    static var unfollowVisibleCreatorsConfirmationFormat: String { text("Unfollow %d visible creators?") }
+    static var followSelectedPubliclyConfirmationFormat: String { text("Follow %d selected creators publicly?") }
+    static var followSelectedPrivatelyConfirmationFormat: String { text("Follow %d selected creators privately?") }
+    static var muteSelectedCreatorsConfirmationFormat: String { text("Mute %d selected creators?") }
+    static var unfollowSelectedCreatorsConfirmationFormat: String { text("Unfollow %d selected creators?") }
     static var creatorActionCompletedFormat: String { text("Updated %d creators") }
     static var copiedCreatorLinksFormat: String { text("Copied %d creator links") }
     static var copiedCreatorSummaryFormat: String { text("Copied %d creator summaries") }
@@ -1645,13 +1650,31 @@ enum L10n {
     static var openSeriesInPixiv: String { text("Open Series in Pixiv") }
     static var copySeriesLink: String { text("Copy Series Link") }
     static var openLatestArtwork: String { text("Open Latest Artwork") }
+    static var selectSeries: String { text("Select Series") }
+    static var deselectSeries: String { text("Deselect Series") }
     static var updatedSeries: String { text("Updated") }
+    static var noUpdates: String { text("No Updates") }
+    static var unreadUpdates: String { text("Unread Updates") }
+    static var seriesCount: String { text("Series Count") }
     static var unreadUpdatesFormat: String { text("%d unread") }
     static var markWatchlistRead: String { text("Mark as Read") }
     static var noWatchlistSeries: String { text("No watchlist series") }
     static var noMatchingWatchlistSeries: String { text("No matching watchlist series") }
     static var noMatchingWatchlistSeriesSubtitle: String { text("Change the watchlist search to see other series.") }
     static var searchWatchlistSeries: String { text("Search watchlist series") }
+    static var resetWatchlistFilters: String { text("Reset Watchlist Filters") }
+    static var resetWatchlistFiltersDone: String { text("Reset watchlist filters") }
+    static var mangaWatchlistActions: String { text("Manga Watchlist Actions") }
+    static var watchlistSelection: String { text("Watchlist Selection") }
+    static var selectedSeriesFormat: String { text("%d selected series") }
+    static var noSelectedSeries: String { text("No selected series") }
+    static var shareSelectedSeries: String { text("Share Selected Series") }
+    static var copySelectedSeriesLinks: String { text("Copy Selected Series Links") }
+    static var noSeriesLinksToCopy: String { text("No series links to copy") }
+    static var copiedSeriesLinksFormat: String { text("Copied %d series links") }
+    static var removeSelectedWatchlistSeries: String { text("Remove Selected Series") }
+    static var removeSelectedWatchlistSeriesConfirmationFormat: String { text("Remove %d selected series from watchlist?") }
+    static var removedWatchlistSeriesFormat: String { text("Removed %d selected series from watchlist") }
     static var loadMoreWatchlist: String { text("Load More Watchlist") }
     static var loadedWatchlistSeriesFormat: String { text("Loaded %d watchlist series") }
     static var refreshedWatchlistSeriesFormat: String { text("Refreshed %d watchlist series") }

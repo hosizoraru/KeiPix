@@ -22,6 +22,7 @@ struct UserPreviewListView: View {
     @State private var isCreatorSearchPresented = false
     @State private var creatorFilter: CreatorListFilter = .all
     @State private var creatorSort: CreatorListSort = .defaultOrder
+    @State private var creatorSelection = CreatorListSelection()
     @State private var pendingBulkAction: CreatorBulkAction?
     @State private var isShowingBulkConfirmation = false
     @State private var isRunningBulkAction = false
@@ -70,10 +71,12 @@ struct UserPreviewListView: View {
             ToolbarItem(placement: .secondaryAction) {
                 CreatorListViewOptionsMenu(
                     mode: mode,
+                    selectedRoute: store.selectedRoute,
                     restrict: restrictBinding,
                     creatorFilter: $creatorFilter,
                     creatorSort: $creatorSort,
-                    layoutMode: creatorLayoutBinding
+                    layoutMode: creatorLayoutBinding,
+                    selectRoute: { store.select($0) }
                 )
             }
 
@@ -91,15 +94,12 @@ struct UserPreviewListView: View {
 
             ToolbarItem(placement: .secondaryAction) {
                 CreatorListBulkActionsMenu(
-                    isRunningBulkAction: isRunningBulkAction,
-                    isCheckingFollowVisibility: isCheckingFollowVisibility,
+                    isSelectionMode: creatorSelection.isSelectionMode,
+                    selectedCount: creatorSelection.count,
                     visiblePreviewsCount: visiblePreviews.count,
-                    visibleFollowedPreviewsCount: visibleFollowedPreviews.count,
-                    bulkActionTargetCount: bulkActionTargetCount,
-                    checkVisibleFollowVisibility: { Task { await checkVisibleFollowVisibility() } },
-                    copyVisibleCreatorLinks: copyVisibleCreatorLinks,
-                    copyVisibleCreatorSummary: copyVisibleCreatorSummary,
-                    requestBulkAction: requestBulkAction
+                    startSelection: startCreatorSelection,
+                    selectAllVisibleCreators: selectAllVisibleCreators,
+                    clearSelection: clearCreatorSelection
                 )
             }
 
@@ -107,6 +107,31 @@ struct UserPreviewListView: View {
                 ToolbarItem(placement: .confirmationAction) {
                     SheetCloseButton(style: .bordered)
                 }
+            }
+        }
+        .overlay(alignment: .bottom) {
+            if showsCreatorSelectionFloatingActions {
+                CreatorSelectionFloatingActions(
+                    selectedCount: creatorSelection.count,
+                    canSelectAll: visiblePreviews.isEmpty == false,
+                    canCopyLinks: selectedCreatorLinks.isEmpty == false,
+                    canCopySummary: selectedCreatorPreviews.isEmpty == false,
+                    canCheckFollowVisibility: selectedFollowedPreviews.isEmpty == false,
+                    canFollowPublic: bulkActionTargetCount(.followPublic) > 0,
+                    canFollowPrivate: bulkActionTargetCount(.followPrivate) > 0,
+                    canMute: bulkActionTargetCount(.mute) > 0,
+                    canUnfollow: bulkActionTargetCount(.unfollow) > 0,
+                    isRunningBulkAction: isRunningBulkAction,
+                    isCheckingFollowVisibility: isCheckingFollowVisibility,
+                    selectAllVisibleCreators: selectAllVisibleCreators,
+                    clearSelection: clearCreatorSelection,
+                    copySelectedCreatorLinks: copySelectedCreatorLinks,
+                    copySelectedCreatorSummary: copySelectedCreatorSummary,
+                    checkSelectedFollowVisibility: { Task { await checkSelectedFollowVisibility() } },
+                    requestBulkAction: requestBulkAction
+                )
+                .padding(.horizontal, 18)
+                .padding(.bottom, creatorSelectionAccessoryBottomPadding)
             }
         }
         .overlay(alignment: .bottom) {
@@ -125,6 +150,8 @@ struct UserPreviewListView: View {
             }
         }
         .animation(.snappy(duration: 0.18), value: isStatusBannerVisible)
+        .animation(.snappy(duration: 0.18), value: showsCreatorSelectionFloatingActions)
+        .animation(.snappy(duration: 0.18), value: creatorSelection.count)
         .animation(.snappy(duration: 0.18), value: showsCreatorSearchBar)
         .confirmationDialog(
             pendingBulkAction?.title ?? L10n.creatorActions,
@@ -181,6 +208,9 @@ struct UserPreviewListView: View {
         }
         .onChange(of: modeKey) {
             clearTransientCreatorListChrome()
+        }
+        .onChange(of: visibleCreatorSelectionFingerprint) {
+            pruneCreatorSelectionToVisibleCreators()
         }
     }
 
@@ -252,6 +282,8 @@ struct UserPreviewListView: View {
                 isLoadingMore: isLoadingMore,
                 followRestrictsByUserID: followRestrictsByUserID,
                 updatingCreatorIDs: updatingCreatorIDs,
+                isCreatorSelectionMode: creatorSelection.isSelectionMode,
+                selectedCreatorIDs: creatorSelection.selectedIDs,
                 showContentBadges: store.showContentBadges,
                 maskSensitivePreviews: store.maskSensitivePreviews,
                 retry: { Task { await loadInitial() } },
@@ -265,6 +297,7 @@ struct UserPreviewListView: View {
                 requestFeedback: presentFeedback,
                 copyCreatorLink: copyCreatorLink,
                 copyArtworkLink: copyArtworkLink,
+                toggleCreatorSelection: toggleCreatorSelection,
                 isPinnedCreator: store.isPinnedCreator,
                 togglePinnedCreator: togglePinnedCreator,
                 selectArtwork: { store.selectedArtwork = $0 },
@@ -302,15 +335,45 @@ struct UserPreviewListView: View {
     }
 
     private var statusBannerBottomPadding: CGFloat {
+        if showsCreatorSelectionFloatingActions {
+            return creatorSelectionAccessoryBottomPadding + 64
+        }
+
         #if os(iOS)
-        UIDevice.current.userInterfaceIdiom == .phone || horizontalSizeClass == .compact ? 92 : 14
+        return UIDevice.current.userInterfaceIdiom == .phone || horizontalSizeClass == .compact ? 92 : 14
         #else
-        14
+        return 14
         #endif
     }
 
-    private var visibleFollowedPreviews: [PixivUserPreview] {
-        visiblePreviews.filter(\.user.isFollowed)
+    private var showsCreatorSelectionFloatingActions: Bool {
+        store.session != nil
+            && visiblePreviews.isEmpty == false
+            && (creatorSelection.isSelectionMode || creatorSelection.hasSelection)
+    }
+
+    private var creatorSelectionAccessoryBottomPadding: CGFloat {
+        #if os(iOS)
+        UIDevice.current.userInterfaceIdiom == .phone ? 124 : 24
+        #else
+        24
+        #endif
+    }
+
+    private var visibleCreatorSelectionFingerprint: String {
+        visiblePreviews.map { String($0.user.id) }.joined(separator: ",")
+    }
+
+    private var selectedCreatorPreviews: [PixivUserPreview] {
+        visiblePreviews.filter { creatorSelection.contains($0.user.id) }
+    }
+
+    private var selectedFollowedPreviews: [PixivUserPreview] {
+        selectedCreatorPreviews.filter(\.user.isFollowed)
+    }
+
+    private var selectedCreatorLinks: [String] {
+        selectedCreatorPreviews.compactMap { $0.user.pixivURL?.absoluteString }
     }
 
     private var isCurrentAccountFollowingList: Bool {
@@ -502,7 +565,51 @@ struct UserPreviewListView: View {
         }
     }
 
+    private func startCreatorSelection() {
+        guard visiblePreviews.isEmpty == false else {
+            bulkStatusText = L10n.noCreators
+            return
+        }
+        withAnimation(.snappy(duration: 0.16)) {
+            creatorSelection.isSelectionMode = true
+        }
+    }
+
+    private func toggleCreatorSelection(_ userID: Int) {
+        withAnimation(.snappy(duration: 0.16)) {
+            creatorSelection.toggle(userID)
+            creatorSelection.isSelectionMode = true
+        }
+    }
+
+    private func selectAllVisibleCreators() {
+        let userIDs = visiblePreviews.map(\.user.id)
+        guard userIDs.isEmpty == false else {
+            bulkStatusText = L10n.noCreators
+            return
+        }
+        withAnimation(.snappy(duration: 0.16)) {
+            creatorSelection.selectAll(userIDs)
+            creatorSelection.isSelectionMode = true
+        }
+    }
+
+    private func clearCreatorSelection() {
+        withAnimation(.snappy(duration: 0.16)) {
+            creatorSelection.clear()
+        }
+    }
+
+    private func pruneCreatorSelectionToVisibleCreators() {
+        guard creatorSelection.isSelectionMode || creatorSelection.hasSelection else { return }
+        creatorSelection.prune(visibleCreatorIDs: visiblePreviews.map(\.user.id))
+    }
+
     private func requestBulkAction(_ action: CreatorBulkAction) {
+        guard creatorSelection.hasSelection else {
+            bulkStatusText = L10n.noSelectedCreators
+            return
+        }
         guard bulkActionTargetCount(action) > 0 else {
             bulkStatusText = L10n.noMatchingCreatorsForAction
             return
@@ -531,6 +638,7 @@ struct UserPreviewListView: View {
         pendingBulkAction = nil
         pendingDangerAction = nil
         isShowingBulkConfirmation = false
+        creatorSelection.clear()
     }
 
     private func resetCreatorListState() {
@@ -580,11 +688,11 @@ struct UserPreviewListView: View {
     private func bulkActionTargets(_ action: CreatorBulkAction) -> [PixivUserPreview] {
         switch action {
         case .followPublic, .followPrivate:
-            visiblePreviews.filter { $0.user.isFollowed == false }
+            selectedCreatorPreviews.filter { $0.user.isFollowed == false }
         case .mute:
-            visiblePreviews.filter { $0.isMuted == false }
+            selectedCreatorPreviews.filter { $0.isMuted == false }
         case .unfollow:
-            visiblePreviews.filter(\.user.isFollowed)
+            selectedCreatorPreviews.filter(\.user.isFollowed)
         }
     }
 
@@ -668,8 +776,8 @@ struct UserPreviewListView: View {
         return restores
     }
 
-    private func checkVisibleFollowVisibility() async {
-        let targets = visibleFollowedPreviews
+    private func checkSelectedFollowVisibility() async {
+        let targets = selectedFollowedPreviews
         guard targets.isEmpty == false else {
             bulkStatusText = L10n.noFollowedCreatorsToCheck
             return
@@ -906,8 +1014,8 @@ struct UserPreviewListView: View {
         bulkStatusText = String(format: isPinned ? L10n.pinnedCreatorFormat : L10n.unpinnedCreatorFormat, user.name)
     }
 
-    private func copyVisibleCreatorLinks() {
-        let links = visiblePreviews.compactMap { $0.user.pixivURL?.absoluteString }
+    private func copySelectedCreatorLinks() {
+        let links = selectedCreatorLinks
         guard links.isEmpty == false else {
             bulkStatusText = L10n.noCreatorLinksToCopy
             return
@@ -916,8 +1024,8 @@ struct UserPreviewListView: View {
         bulkStatusText = String(format: L10n.copiedCreatorLinksFormat, links.count)
     }
 
-    private func copyVisibleCreatorSummary() {
-        let summaries = visiblePreviews.map { preview in
+    private func copySelectedCreatorSummary() {
+        let summaries = selectedCreatorPreviews.map { preview in
             store.renderCreatorCopySummary(preview.user)
         }
         guard summaries.isEmpty == false else {

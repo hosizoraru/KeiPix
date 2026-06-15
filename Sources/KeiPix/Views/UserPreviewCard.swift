@@ -47,6 +47,9 @@ struct UserPreviewCard: View {
     let requestFeedback: () -> Void
     let copyCreatorLink: () -> Void
     let copyArtworkLink: (PixivArtwork) -> Void
+    let isSelectionMode: Bool
+    let isSelected: Bool
+    let toggleSelection: () -> Void
     let isPinned: Bool
     let togglePinnedCreator: () -> Void
     let selectArtwork: (PixivArtwork) -> Void
@@ -59,7 +62,7 @@ struct UserPreviewCard: View {
     var loadExpandedArtworks: (() async throws -> [PixivArtwork])? = nil
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: NativeCollectionLayoutMetrics.informationCardContentSpacing) {
             header
             if expandedPreview {
                 expandedCommandRail
@@ -74,8 +77,17 @@ struct UserPreviewCard: View {
                 }
             }
         }
-        .padding(12)
+        .padding(NativeCollectionLayoutMetrics.informationCardPadding)
         .keiInteractiveGlass(20)
+        .overlay {
+            if isSelectionMode {
+                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                    .strokeBorder(
+                        isSelected ? Color.accentColor.opacity(0.72) : Color.secondary.opacity(0.18),
+                        lineWidth: isSelected ? 1.5 : 1
+                    )
+            }
+        }
         .contextMenu { creatorContextMenu }
     }
 
@@ -110,10 +122,29 @@ struct UserPreviewCard: View {
 
     private var headerActionControls: some View {
         HStack(spacing: 6) {
+            if isSelectionMode {
+                selectionActionChip
+            }
             pinActionChip
             followButton
         }
         .layoutPriority(1)
+    }
+
+    private var selectionActionChip: some View {
+        Button(action: toggleSelection) {
+            creatorButtonLabel(
+                title: isSelected ? L10n.deselectCreator : L10n.selectCreator,
+                systemImage: isSelected ? "checkmark.circle.fill" : "circle",
+                displayStyle: .iconOnly
+            )
+        }
+        .buttonStyle(.glass)
+        .buttonBorderShape(.capsule)
+        .controlSize(.small)
+        .foregroundStyle(isSelected ? Color.accentColor : Color.secondary)
+        .help(isSelected ? L10n.deselectCreator : L10n.selectCreator)
+        .accessibilityLabel(isSelected ? L10n.deselectCreator : L10n.selectCreator)
     }
 
     private var avatar: some View {
@@ -339,31 +370,6 @@ struct UserPreviewCard: View {
         )
     }
 
-    private func compactPreviewStrip(artworks: [PixivArtwork]) -> some View {
-        // GeometryReader hands us the card's placed width so the
-        // three (or fewer) thumbnails can scale together as the
-        // grid widens, instead of staying pinned to a static
-        // 132-pt tile. Aspect is held at 4:5 so the row reads as a
-        // consistent shelf regardless of card width.
-        GeometryReader { proxy in
-            let count = min(artworks.count, 3)
-            let spacing: CGFloat = 8
-            let totalSpacing = spacing * CGFloat(max(0, count - 1))
-            let tileWidth = max((proxy.size.width - totalSpacing) / CGFloat(count), 64)
-
-            HStack(spacing: spacing) {
-                ForEach(artworks.prefix(count)) { artwork in
-                    artworkThumbButton(artwork, tileWidth: tileWidth)
-                }
-            }
-            .frame(width: proxy.size.width, height: proxy.size.height, alignment: .leading)
-        }
-        // Match the strip aspect to the tile aspect so the
-        // GeometryReader receives a height that the thumbnails can
-        // honour — ~5/4 of tile width for the 4:5 portrait shelf.
-        .aspectRatio(previewStripAspect(for: artworks.count), contentMode: .fit)
-    }
-
     /// Horizontally scrollable shelf used by the single-column layout.
     /// The shelf is its own subview so it can own the lazy-fetch state
     /// (loaded artworks + isLoading + error) without the rest of the
@@ -379,40 +385,6 @@ struct UserPreviewCard: View {
             copyArtworkLink: copyArtworkLink,
             loadArtworks: loadExpandedArtworks
         )
-    }
-
-    private func artworkThumbButton(_ artwork: PixivArtwork, tileWidth: CGFloat) -> some View {
-        Button {
-            selectArtwork(artwork)
-        } label: {
-            ArtworkPreviewThumb(
-                artwork: artwork,
-                tileWidth: tileWidth,
-                showContentBadges: showContentBadges,
-                maskSensitivePreview: maskSensitivePreviews
-            )
-        }
-        .buttonStyle(.plain)
-        .contextMenu {
-            Button(L10n.selectArtwork) { selectArtwork(artwork) }
-            if let url = artwork.pixivURL {
-                Link(L10n.openInPixiv, destination: url)
-                Button(L10n.copyLink) { copyArtworkLink(artwork) }
-            }
-        }
-    }
-
-    /// Combined width:height ratio for the row of thumbnails. Three
-    /// portrait tiles + 2 gutters land at roughly 1.92 — close enough
-    /// that the `aspectRatio` modifier hands the GeometryReader a
-    /// height that matches the tiles' natural 4:5 ratio.
-    private func previewStripAspect(for artworkCount: Int) -> CGFloat {
-        let count = CGFloat(max(min(artworkCount, 3), 1))
-        // 4:5 portrait tiles -> tile height = tile width * 5/4
-        // strip height = tile height; strip width = count * tile width + gutters
-        // ratio = (count * tile + gutters) / (tile * 5/4)
-        // gutters ~= small relative to tiles; approximate via tileless math
-        return count * (4.0 / 5.0)
     }
 
     // MARK: - Navigation row
@@ -857,57 +829,65 @@ private struct CompactCreatorPreviewStrip: View {
 
     var body: some View {
         GeometryReader { proxy in
-            let visibleArtworks = Array(renderedArtworks.prefix(3))
-            let placeholderCount = visibleArtworks.isEmpty ? 3 : visibleArtworks.count
-            let spacing: CGFloat = 8
-            let totalSpacing = spacing * CGFloat(max(0, placeholderCount - 1))
-            let tileWidth = max((proxy.size.width - totalSpacing) / CGFloat(placeholderCount), 64)
+            let visibleArtworks = Array(renderedArtworks.prefix(NativeCollectionLayoutMetrics.compactCreatorPreviewSlotCount))
+            let slotCount = NativeCollectionLayoutMetrics.compactCreatorPreviewSlotCount
+            let spacing = NativeCollectionLayoutMetrics.informationCardContentSpacing
+            let totalSpacing = spacing * CGFloat(max(0, slotCount - 1))
+            let tileWidth = max((proxy.size.width - totalSpacing) / CGFloat(slotCount), 64)
 
             HStack(spacing: spacing) {
-                if visibleArtworks.isEmpty {
-                    ForEach(0..<placeholderCount, id: \.self) { _ in
-                        SkeletonPlaceholder(width: tileWidth, height: tileWidth * 5.0 / 4.0, cornerRadius: 10)
-                            .overlay {
-                                Image(systemName: "photo")
-                                    .font(.caption.weight(.semibold))
-                                    .foregroundStyle(.secondary)
-                            }
-                    }
-                } else {
-                    ForEach(visibleArtworks) { artwork in
-                        Button {
-                            selectArtwork(artwork)
-                        } label: {
-                            ArtworkPreviewThumb(
-                                artwork: artwork,
-                                tileWidth: tileWidth,
-                                showContentBadges: showContentBadges,
-                                maskSensitivePreview: maskSensitivePreviews
-                            )
-                        }
-                        .buttonStyle(.plain)
-                        .contextMenu {
-                            Button(L10n.selectArtwork) { selectArtwork(artwork) }
-                            if let url = artwork.pixivURL {
-                                Link(L10n.openInPixiv, destination: url)
-                                Button(L10n.copyLink) { copyArtworkLink(artwork) }
-                            }
-                        }
-                    }
+                ForEach(0..<slotCount, id: \.self) { index in
+                    previewSlot(at: index, visibleArtworks: visibleArtworks, tileWidth: tileWidth)
                 }
             }
             .opacity(isLoading && visibleArtworks.isEmpty ? 0.82 : 1)
             .frame(width: proxy.size.width, height: proxy.size.height, alignment: .leading)
         }
-        .aspectRatio(previewStripAspect(for: renderedArtworks.isEmpty ? 3 : renderedArtworks.count), contentMode: .fit)
+        .aspectRatio(NativeCollectionLayoutMetrics.compactCreatorPreviewAspect, contentMode: .fit)
         .task(id: userID) {
             resetFetchState()
             await loadIfNeeded()
         }
     }
 
-    private func previewStripAspect(for artworkCount: Int) -> CGFloat {
-        CGFloat(max(min(artworkCount, 3), 1)) * (4.0 / 5.0)
+    @ViewBuilder
+    private func previewSlot(
+        at index: Int,
+        visibleArtworks: [PixivArtwork],
+        tileWidth: CGFloat
+    ) -> some View {
+        if index < visibleArtworks.count {
+            let artwork = visibleArtworks[index]
+            Button {
+                selectArtwork(artwork)
+            } label: {
+                ArtworkPreviewThumb(
+                    artwork: artwork,
+                    tileWidth: tileWidth,
+                    showContentBadges: showContentBadges,
+                    maskSensitivePreview: maskSensitivePreviews
+                )
+            }
+            .buttonStyle(.plain)
+            .contextMenu {
+                Button(L10n.selectArtwork) { selectArtwork(artwork) }
+                if let url = artwork.pixivURL {
+                    Link(L10n.openInPixiv, destination: url)
+                    Button(L10n.copyLink) { copyArtworkLink(artwork) }
+                }
+            }
+        } else {
+            SkeletonPlaceholder(
+                width: tileWidth,
+                height: tileWidth / NativeCollectionLayoutMetrics.compactCreatorPreviewTileAspect,
+                cornerRadius: 10
+            )
+            .overlay {
+                Image(systemName: "photo")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.secondary)
+            }
+        }
     }
 
     private func loadIfNeeded() async {

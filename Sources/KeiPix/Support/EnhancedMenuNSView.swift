@@ -134,12 +134,9 @@ enum MenuAction {
     case bookmark
     case mute
     case delete
-    case checkFollowVisibility
-    case copyVisibleCreatorLinks
-    case copyVisibleCreatorSummary
-    case followPublic
-    case followPrivate
-    case unfollow
+    case startCreatorSelection
+    case selectAllVisibleCreators
+    case clearCreatorSelection
 }
 
 // MARK: - SwiftUI wrapper

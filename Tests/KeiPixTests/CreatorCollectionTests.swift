@@ -1,11 +1,13 @@
 import Foundation
 import CoreGraphics
+import SwiftUI
 import Testing
 @testable import KeiPix
 
 struct CreatorCollectionTests {
     @Test("Native creator preview layout keeps compact cards dense")
     func nativeCreatorPreviewLayoutKeepsCompactCardsDense() {
+        let metrics = NativeCollectionLayoutMetrics.informationCards
         let layout = NativeCreatorPreviewCollectionLayout(mode: .auto)
         let containerWidth: CGFloat = 393
         let size = layout.itemSize(
@@ -13,11 +15,62 @@ struct CreatorCollectionTests {
             containerWidth: containerWidth
         )
 
-        #expect(layout.lineSpacing <= 10)
-        #expect(layout.sectionInsets.top <= 10)
-        #expect(layout.sectionInsets.bottom <= 14)
+        #expect(layout.interitemSpacing == metrics.itemSpacing)
+        #expect(layout.lineSpacing == metrics.itemSpacing)
+        Self.expect(layout.sectionInsets, matches: metrics.insets)
         #expect(size.width >= 340)
-        #expect(size.height < size.width * 0.84)
+        #expect(size.height < size.width * 0.74)
+    }
+
+    @Test("Native card grids use shared collection spacing metrics")
+    func nativeCardGridsUseSharedCollectionSpacingMetrics() {
+        let informationMetrics = NativeCollectionLayoutMetrics.informationCards
+        let artworkMetrics = NativeCollectionLayoutMetrics.artworkCards
+        let tagMetrics = NativeCollectionLayoutMetrics.tagChips
+        let compactDownloadMetrics = NativeCollectionLayoutMetrics.compactDownloadCards
+        let adaptiveLayout = NativeAdaptiveGridCollectionLayout(
+            minimumItemWidth: 160,
+            maximumItemWidth: 260,
+            itemHeight: 180
+        )
+        let creatorLayout = NativeCreatorPreviewCollectionLayout(mode: .auto)
+        let bookmarkLayout = NativeBookmarkTagCollectionLayout()
+        let galleryLayout = NativeGalleryCollectionLayout.compactGrid(cardHeight: 220, loadMoreHeight: 80)
+        let browsingHistoryLayout = NativeBrowsingHistoryCollectionLayout.localCards
+        let compactDownloadLayout = DownloadQueueMasonryPresentation.metrics(
+            for: 393,
+            layoutKind: .compactPhone
+        )
+
+        #expect(adaptiveLayout.spacing == informationMetrics.itemSpacing)
+        Self.expect(adaptiveLayout.sectionInsets, matches: informationMetrics.insets)
+        #expect(creatorLayout.lineSpacing == informationMetrics.itemSpacing)
+        Self.expect(creatorLayout.sectionInsets, matches: informationMetrics.insets)
+
+        #expect(bookmarkLayout.spacing == tagMetrics.itemSpacing)
+        Self.expect(bookmarkLayout.sectionInsets, matches: tagMetrics.insets)
+
+        #expect(galleryLayout.interitemSpacing == artworkMetrics.itemSpacing)
+        Self.expect(galleryLayout.sectionInsets, matches: artworkMetrics.insets)
+        #expect(browsingHistoryLayout.interitemSpacing == artworkMetrics.itemSpacing)
+        Self.expect(browsingHistoryLayout.sectionInsets, matches: artworkMetrics.insets)
+
+        #expect(compactDownloadLayout.spacing == compactDownloadMetrics.itemSpacing)
+        Self.expect(compactDownloadLayout, matches: compactDownloadMetrics.insets)
+    }
+
+    @Test("Compact creator preview metrics keep sparse thumbnails in fixed slots")
+    func compactCreatorPreviewMetricsKeepSparseThumbnailsInFixedSlots() {
+        let contentWidth: CGFloat = 240
+
+        #expect(NativeCollectionLayoutMetrics.compactCreatorPreviewSlotCount == 3)
+        #expect(abs(NativeCollectionLayoutMetrics.compactCreatorPreviewAspect - 2.4) < 0.0001)
+        #expect(
+            abs(
+                NativeCollectionLayoutMetrics.compactCreatorPreviewHeight(forContentWidth: contentWidth)
+                    - contentWidth / NativeCollectionLayoutMetrics.compactCreatorPreviewAspect
+            ) < 0.0001
+        )
     }
 
     @Test("Pinned creator library keeps newest pins first")
@@ -53,6 +106,27 @@ struct CreatorCollectionTests {
         #expect(secondRemoval == false)
     }
 
+    @Test("Creator list selection tracks selected creators and prunes hidden ids")
+    func creatorListSelectionTracksSelectedCreatorsAndPrunesHiddenIDs() {
+        var selection = CreatorListSelection()
+
+        selection.toggle(1)
+        #expect(selection.contains(1))
+        #expect(selection.count == 1)
+
+        selection.selectAll([2, 3])
+        selection.isSelectionMode = true
+        #expect(selection.selectedIDs == [1, 2, 3])
+
+        selection.prune(visibleCreatorIDs: [2, 3, 4])
+        #expect(selection.selectedIDs == [2, 3])
+        #expect(selection.isSelectionMode)
+
+        selection.prune(visibleCreatorIDs: [4])
+        #expect(selection.selectedIDs.isEmpty)
+        #expect(selection.isSelectionMode == false)
+    }
+
     @Test("Visual QA creator profile includes related creators and recent works")
     func visualQACreatorProfileFixture() {
         let detail = VisualQASampleData.creatorProfileDetail
@@ -65,6 +139,23 @@ struct CreatorCollectionTests {
 
     private static func preview(id: Int) -> PixivUserPreview {
         PixivUserPreview(user: user(id: id, name: "Alice"), illusts: [], isMuted: false)
+    }
+
+    private static func expect(_ edgeInsets: EdgeInsets, matches insets: NativeCollectionLayoutInsets) {
+        #expect(edgeInsets.top == insets.top)
+        #expect(edgeInsets.leading == insets.leading)
+        #expect(edgeInsets.bottom == insets.bottom)
+        #expect(edgeInsets.trailing == insets.trailing)
+    }
+
+    private static func expect(
+        _ metrics: DownloadQueueMasonryMetrics,
+        matches insets: NativeCollectionLayoutInsets
+    ) {
+        #expect(metrics.topInset == insets.top)
+        #expect(metrics.leadingInset == insets.leading)
+        #expect(metrics.bottomInset == insets.bottom)
+        #expect(metrics.trailingInset == insets.trailing)
     }
 
     private static func user(id: Int, name: String, account: String? = nil) -> PixivUser {

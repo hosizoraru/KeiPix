@@ -1,4 +1,7 @@
 import SwiftUI
+#if os(iOS)
+import UIKit
+#endif
 
 struct CreatorListStatusBanner: View {
     let errorMessage: String?
@@ -159,10 +162,12 @@ private struct CreatorSearchScopeChip: View {
 /// value.
 struct CreatorListViewOptionsMenu: View {
     let mode: UserPreviewListMode
+    let selectedRoute: PixivRoute?
     @Binding var restrict: BookmarkRestrict
     @Binding var creatorFilter: CreatorListFilter
     @Binding var creatorSort: CreatorListSort
     @Binding var layoutMode: CreatorListLayoutMode
+    let selectRoute: (PixivRoute) -> Void
 
     @ViewBuilder
     var body: some View {
@@ -182,6 +187,11 @@ struct CreatorListViewOptionsMenu: View {
     private var swiftUIViewOptionsMenu: some View {
         Menu {
             Section(L10n.viewOptions) {
+                if let selectedRoute,
+                   let family = selectedRoute.routeScopeFamily {
+                    creatorRouteScopeMenu(family: family, selectedRoute: selectedRoute)
+                }
+
                 if mode.usesRestrictPicker {
                     creatorListPickerMenu(
                         title: L10n.followingCreators,
@@ -238,6 +248,22 @@ struct CreatorListViewOptionsMenu: View {
     #if os(iOS)
     private var nativeViewOptionsMenu: NativeToolbarMenu {
         var items: [NativeToolbarMenuItem] = []
+        if let selectedRoute,
+           let family = selectedRoute.routeScopeFamily {
+            items.append(
+                NativeToolbarMenuItem.singleSelectionSubmenu(
+                    title: family.title,
+                    selectedTitle: selectedRoute.title,
+                    selectedOption: selectedRoute,
+                    systemImage: family.systemImage,
+                    options: family.routes,
+                    id: CreatorListViewOptionsAction.route,
+                    optionTitle: \.title,
+                    optionSystemImage: \.systemImage
+                )
+            )
+        }
+
         if mode.usesRestrictPicker {
             items.append(
                 NativeToolbarMenuItem.singleSelectionSubmenu(
@@ -306,6 +332,7 @@ struct CreatorListViewOptionsMenu: View {
         [
             "creator-list-view-options",
             mode.key,
+            selectedRoute?.rawValue ?? "no-route",
             restrict.rawValue,
             creatorFilter.rawValue,
             creatorSort.rawValue,
@@ -316,6 +343,10 @@ struct CreatorListViewOptionsMenu: View {
     private func handleNativeViewOptionsAction(_ id: String) {
         if let selectedRestrict = CreatorListViewOptionsAction.restrict(from: id) {
             restrict = selectedRestrict
+            return
+        }
+        if let route = CreatorListViewOptionsAction.route(from: id) {
+            selectRoute(route)
             return
         }
         if let selectedLayoutMode = CreatorListViewOptionsAction.layoutMode(from: id) {
@@ -331,6 +362,21 @@ struct CreatorListViewOptionsMenu: View {
         }
     }
     #endif
+
+    private func creatorRouteScopeMenu(family: PixivRouteScopeFamily, selectedRoute: PixivRoute) -> some View {
+        Menu {
+            ForEach(family.routes) { route in
+                Button {
+                    selectRoute(route)
+                } label: {
+                    Label(route.title, systemImage: route == selectedRoute ? "checkmark" : route.systemImage)
+                }
+            }
+        } label: {
+            Label(family.title, systemImage: family.systemImage)
+            Text(selectedRoute.title)
+        }
+    }
 
     private func creatorListPickerMenu<SelectionValue: Hashable, Options: View>(
         title: String,
@@ -382,10 +428,20 @@ struct CreatorListViewOptionsMenu: View {
 }
 
 private enum CreatorListViewOptionsAction {
+    private static let routePrefix = "creator-list-view-options:route:"
     private static let restrictPrefix = "creator-list-view-options:restrict:"
     private static let layoutPrefix = "creator-list-view-options:layout:"
     private static let filterPrefix = "creator-list-view-options:filter:"
     private static let sortPrefix = "creator-list-view-options:sort:"
+
+    static func route(_ route: PixivRoute) -> String {
+        routePrefix + route.rawValue
+    }
+
+    static func route(from id: String) -> PixivRoute? {
+        guard id.hasPrefix(routePrefix) else { return nil }
+        return PixivRoute(rawValue: String(id.dropFirst(routePrefix.count)))
+    }
 
     static func restrict(_ restrict: BookmarkRestrict) -> String {
         restrictPrefix + restrict.rawValue
@@ -424,20 +480,16 @@ private enum CreatorListViewOptionsAction {
     }
 }
 
-/// Bulk-action menu rendered in the creator list's toolbar. The menu
-/// includes verification (Check follow visibility), copy helpers, and
-/// destructive bulk operations. Empty rows disable themselves so the
-/// menu is always shown but never lies about what it can do.
+/// Selection-entry menu rendered in the creator list's toolbar. Author
+/// operations run through explicit selection now; the toolbar only starts
+/// selection or manages the current visible selection.
 struct CreatorListBulkActionsMenu: View {
-    let isRunningBulkAction: Bool
-    let isCheckingFollowVisibility: Bool
+    let isSelectionMode: Bool
+    let selectedCount: Int
     let visiblePreviewsCount: Int
-    let visibleFollowedPreviewsCount: Int
-    let bulkActionTargetCount: (CreatorBulkAction) -> Int
-    let checkVisibleFollowVisibility: () -> Void
-    let copyVisibleCreatorLinks: () -> Void
-    let copyVisibleCreatorSummary: () -> Void
-    let requestBulkAction: (CreatorBulkAction) -> Void
+    let startSelection: () -> Void
+    let selectAllVisibleCreators: () -> Void
+    let clearSelection: () -> Void
 
     var body: some View {
         #if os(macOS)
@@ -453,62 +505,33 @@ struct CreatorListBulkActionsMenu: View {
     private var swiftUIMenu: some View {
         Menu {
             Button {
-                checkVisibleFollowVisibility()
+                startSelection()
             } label: {
-                Label(L10n.checkFollowVisibility, systemImage: "checkmark.seal")
-            }
-            .disabled(isCheckingFollowVisibility || visibleFollowedPreviewsCount == 0)
-
-            Divider()
-
-            Button {
-                copyVisibleCreatorLinks()
-            } label: {
-                Label(L10n.copyVisibleCreatorLinks, systemImage: "link")
+                Label(L10n.selectionMode, systemImage: "checkmark.circle")
             }
             .disabled(visiblePreviewsCount == 0)
 
             Button {
-                copyVisibleCreatorSummary()
+                selectAllVisibleCreators()
             } label: {
-                Label(L10n.copyVisibleCreatorSummary, systemImage: "doc.text")
+                Label(L10n.selectAll, systemImage: "checkmark.circle.fill")
             }
             .disabled(visiblePreviewsCount == 0)
 
-            Divider()
+            if selectedCount > 0 {
+                Divider()
 
-            Button {
-                requestBulkAction(.followPublic)
-            } label: {
-                Label(L10n.followVisiblePublicly, systemImage: "person.crop.circle.badge.plus")
+                Button {
+                    clearSelection()
+                } label: {
+                    Label(L10n.clearSelection, systemImage: "xmark.circle")
+                }
             }
-            .disabled(isRunningBulkAction || bulkActionTargetCount(.followPublic) == 0)
-
-            Button {
-                requestBulkAction(.followPrivate)
-            } label: {
-                Label(L10n.followVisiblePrivately, systemImage: "lock.circle")
-            }
-            .disabled(isRunningBulkAction || bulkActionTargetCount(.followPrivate) == 0)
-
-            Divider()
-
-            Button(role: .destructive) {
-                requestBulkAction(.mute)
-            } label: {
-                Label(L10n.muteVisibleCreators, systemImage: "eye.slash")
-            }
-            .disabled(isRunningBulkAction || bulkActionTargetCount(.mute) == 0)
-
-            Button(role: .destructive) {
-                requestBulkAction(.unfollow)
-            } label: {
-                Label(L10n.unfollowVisibleCreators, systemImage: "person.crop.circle.badge.minus")
-            }
-            .disabled(isRunningBulkAction || bulkActionTargetCount(.unfollow) == 0)
         } label: {
-            if isRunningBulkAction {
-                ProgressView().controlSize(.small)
+            if selectedCount > 0 {
+                Label(String(format: L10n.selectedCreatorsFormat, selectedCount), systemImage: "checkmark.circle.fill")
+            } else if isSelectionMode {
+                Label(L10n.creatorSelection, systemImage: "checkmark.circle")
             } else {
                 Label(L10n.creatorActions, systemImage: "ellipsis.circle")
             }
@@ -521,64 +544,35 @@ struct CreatorListBulkActionsMenu: View {
     private var enhancedMenuSections: [MenuSection] {
         [
             MenuSection(
-                title: L10n.checkFollowVisibility,
+                title: L10n.creatorSelection,
                 items: [
                     MenuItem(
-                        title: L10n.checkFollowVisibility,
-                        icon: menuIcon("checkmark.seal"),
-                        isEnabled: isCheckingFollowVisibility == false && visibleFollowedPreviewsCount > 0,
-                        action: .checkFollowVisibility
-                    )
-                ]
-            ),
-            MenuSection(
-                title: L10n.visibleCreators,
-                items: [
-                    MenuItem(
-                        title: L10n.copyVisibleCreatorLinks,
-                        icon: menuIcon("link"),
+                        title: L10n.selectionMode,
+                        icon: menuIcon("checkmark.circle"),
                         isEnabled: visiblePreviewsCount > 0,
-                        action: .copyVisibleCreatorLinks
+                        action: .startCreatorSelection
                     ),
                     MenuItem(
-                        title: L10n.copyVisibleCreatorSummary,
-                        icon: menuIcon("doc.text"),
+                        title: L10n.selectAll,
+                        icon: menuIcon("checkmark.circle.fill"),
                         isEnabled: visiblePreviewsCount > 0,
-                        action: .copyVisibleCreatorSummary
+                        action: .selectAllVisibleCreators
                     )
                 ]
-            ),
+            )
+        ] + clearSelectionMenuSections
+    }
+
+    private var clearSelectionMenuSections: [MenuSection] {
+        guard selectedCount > 0 else { return [] }
+        return [
             MenuSection(
-                title: L10n.following,
+                title: String(format: L10n.selectedCreatorsFormat, selectedCount),
                 items: [
                     MenuItem(
-                        title: L10n.followVisiblePublicly,
-                        icon: menuIcon("person.crop.circle.badge.plus"),
-                        isEnabled: isRunningBulkAction == false && bulkActionTargetCount(.followPublic) > 0,
-                        action: .followPublic
-                    ),
-                    MenuItem(
-                        title: L10n.followVisiblePrivately,
-                        icon: menuIcon("lock.circle"),
-                        isEnabled: isRunningBulkAction == false && bulkActionTargetCount(.followPrivate) > 0,
-                        action: .followPrivate
-                    )
-                ]
-            ),
-            MenuSection(
-                title: L10n.creatorActions,
-                items: [
-                    MenuItem(
-                        title: L10n.muteVisibleCreators,
-                        icon: menuIcon("eye.slash"),
-                        isEnabled: isRunningBulkAction == false && bulkActionTargetCount(.mute) > 0,
-                        action: .mute
-                    ),
-                    MenuItem(
-                        title: L10n.unfollowVisibleCreators,
-                        icon: menuIcon("person.crop.circle.badge.minus"),
-                        isEnabled: isRunningBulkAction == false && bulkActionTargetCount(.unfollow) > 0,
-                        action: .unfollow
+                        title: L10n.clearSelection,
+                        icon: menuIcon("xmark.circle"),
+                        action: .clearCreatorSelection
                     )
                 ]
             )
@@ -587,20 +581,12 @@ struct CreatorListBulkActionsMenu: View {
 
     private func handleEnhancedMenuItem(_ item: MenuItem) {
         switch item.action {
-        case .checkFollowVisibility:
-            checkVisibleFollowVisibility()
-        case .copyVisibleCreatorLinks:
-            copyVisibleCreatorLinks()
-        case .copyVisibleCreatorSummary:
-            copyVisibleCreatorSummary()
-        case .followPublic:
-            requestBulkAction(.followPublic)
-        case .followPrivate:
-            requestBulkAction(.followPrivate)
-        case .mute:
-            requestBulkAction(.mute)
-        case .unfollow:
-            requestBulkAction(.unfollow)
+        case .startCreatorSelection:
+            startSelection()
+        case .selectAllVisibleCreators:
+            selectAllVisibleCreators()
+        case .clearCreatorSelection:
+            clearSelection()
         default:
             break
         }
@@ -610,6 +596,240 @@ struct CreatorListBulkActionsMenu: View {
         NSImage(systemSymbolName: systemName, accessibilityDescription: nil)
     }
     #endif
+}
+
+struct CreatorSelectionFloatingActions: View {
+    let selectedCount: Int
+    let canSelectAll: Bool
+    let canCopyLinks: Bool
+    let canCopySummary: Bool
+    let canCheckFollowVisibility: Bool
+    let canFollowPublic: Bool
+    let canFollowPrivate: Bool
+    let canMute: Bool
+    let canUnfollow: Bool
+    let isRunningBulkAction: Bool
+    let isCheckingFollowVisibility: Bool
+    let selectAllVisibleCreators: () -> Void
+    let clearSelection: () -> Void
+    let copySelectedCreatorLinks: () -> Void
+    let copySelectedCreatorSummary: () -> Void
+    let checkSelectedFollowVisibility: () -> Void
+    let requestBulkAction: (CreatorBulkAction) -> Void
+
+    var body: some View {
+        GlassEffectContainer(spacing: 8) {
+            selectionAccessoryControls
+                .frame(maxWidth: accessoryMaxWidth)
+        }
+        .controlSize(.regular)
+        .frame(maxWidth: accessoryMaxWidth)
+        .transition(.move(edge: .bottom).combined(with: .opacity))
+        .accessibilityElement(children: .contain)
+    }
+
+    @ViewBuilder
+    private var selectionAccessoryControls: some View {
+        if usesCompactAccessory {
+            compactAccessoryControls
+        } else {
+            ViewThatFits(in: .horizontal) {
+                wideAccessoryControls
+                compactAccessoryControls
+            }
+        }
+    }
+
+    private var compactAccessoryControls: some View {
+        HStack(spacing: 8) {
+            selectionActionsMenu
+                .buttonStyle(.glassProminent)
+                .frame(minWidth: 164, maxWidth: .infinity)
+
+            closeButton
+        }
+    }
+
+    private var wideAccessoryControls: some View {
+        HStack(spacing: 10) {
+            Label(accessoryTitle, systemImage: accessorySystemImage)
+                .font(.callout.weight(.semibold))
+                .lineLimit(1)
+                .minimumScaleFactor(0.82)
+                .padding(.horizontal, 12)
+                .frame(minWidth: 160, alignment: .leading)
+
+            Divider()
+                .frame(height: 26)
+
+            Button {
+                selectAllVisibleCreators()
+            } label: {
+                Label(L10n.selectAll, systemImage: "checkmark.circle.fill")
+            }
+            .disabled(canSelectAll == false)
+
+            if selectedCount > 0 {
+                Button {
+                    checkSelectedFollowVisibility()
+                } label: {
+                    Label(L10n.checkFollowVisibility, systemImage: "checkmark.seal")
+                }
+                .disabled(canCheckFollowVisibility == false || isCheckingFollowVisibility)
+
+                Button {
+                    copySelectedCreatorLinks()
+                } label: {
+                    Label(L10n.copySelectedCreatorLinks, systemImage: "link")
+                }
+                .disabled(canCopyLinks == false)
+
+                Button {
+                    copySelectedCreatorSummary()
+                } label: {
+                    Label(L10n.copySelectedCreatorSummary, systemImage: "doc.text")
+                }
+                .disabled(canCopySummary == false)
+
+                batchActionsMenu
+
+                Button {
+                    clearSelection()
+                } label: {
+                    Label(L10n.clearSelection, systemImage: "xmark.circle")
+                }
+            }
+
+            closeButton
+        }
+        .buttonStyle(.glass)
+    }
+
+    private var selectionActionsMenu: some View {
+        Menu {
+            Button {
+                selectAllVisibleCreators()
+            } label: {
+                Label(L10n.selectAll, systemImage: "checkmark.circle.fill")
+            }
+            .disabled(canSelectAll == false)
+
+            if selectedCount > 0 {
+                Button {
+                    clearSelection()
+                } label: {
+                    Label(L10n.clearSelection, systemImage: "xmark.circle")
+                }
+
+                Divider()
+
+                Button {
+                    checkSelectedFollowVisibility()
+                } label: {
+                    Label(L10n.checkFollowVisibility, systemImage: "checkmark.seal")
+                }
+                .disabled(canCheckFollowVisibility == false || isCheckingFollowVisibility)
+
+                Button {
+                    copySelectedCreatorLinks()
+                } label: {
+                    Label(L10n.copySelectedCreatorLinks, systemImage: "link")
+                }
+                .disabled(canCopyLinks == false)
+
+                Button {
+                    copySelectedCreatorSummary()
+                } label: {
+                    Label(L10n.copySelectedCreatorSummary, systemImage: "doc.text")
+                }
+                .disabled(canCopySummary == false)
+
+                batchActionsMenu
+            }
+        } label: {
+            Label(accessoryTitle, systemImage: accessorySystemImage)
+                .lineLimit(1)
+                .minimumScaleFactor(0.82)
+        }
+        .help(accessoryTitle)
+        .accessibilityLabel(accessoryTitle)
+    }
+
+    private var batchActionsMenu: some View {
+        Menu {
+            Button {
+                requestBulkAction(.followPublic)
+            } label: {
+                Label(L10n.followSelectedPublicly, systemImage: "person.crop.circle.badge.plus")
+            }
+            .disabled(isRunningBulkAction || canFollowPublic == false)
+
+            Button {
+                requestBulkAction(.followPrivate)
+            } label: {
+                Label(L10n.followSelectedPrivately, systemImage: "lock.circle")
+            }
+            .disabled(isRunningBulkAction || canFollowPrivate == false)
+
+            Divider()
+
+            Button(role: .destructive) {
+                requestBulkAction(.mute)
+            } label: {
+                Label(L10n.muteSelectedCreators, systemImage: "eye.slash")
+            }
+            .disabled(isRunningBulkAction || canMute == false)
+
+            Button(role: .destructive) {
+                requestBulkAction(.unfollow)
+            } label: {
+                Label(L10n.unfollowSelectedCreators, systemImage: "person.crop.circle.badge.minus")
+            }
+            .disabled(isRunningBulkAction || canUnfollow == false)
+        } label: {
+            Label(L10n.batchActions, systemImage: "person.2.badge.gearshape")
+        }
+    }
+
+    private var closeButton: some View {
+        Button {
+            clearSelection()
+        } label: {
+            Label(L10n.close, systemImage: "xmark")
+                .labelStyle(.iconOnly)
+        }
+        .help(L10n.close)
+        .accessibilityLabel(L10n.close)
+        .buttonStyle(.glass)
+        .frame(width: 44, height: 44)
+    }
+
+    private var accessoryTitle: String {
+        if selectedCount > 0 {
+            return String(format: L10n.selectedCreatorsFormat, selectedCount)
+        }
+        return L10n.creatorSelection
+    }
+
+    private var accessorySystemImage: String {
+        selectedCount > 0 ? "checkmark.circle.fill" : "checkmark.circle"
+    }
+
+    private var usesCompactAccessory: Bool {
+        #if os(iOS)
+        UIDevice.current.userInterfaceIdiom == .phone
+        #else
+        false
+        #endif
+    }
+
+    private var accessoryMaxWidth: CGFloat {
+        #if os(iOS)
+        UIDevice.current.userInterfaceIdiom == .phone ? 340 : 980
+        #else
+        1040
+        #endif
+    }
 }
 
 struct CreatorPreviewListContent: View {
@@ -624,6 +844,8 @@ struct CreatorPreviewListContent: View {
     let isLoadingMore: Bool
     let followRestrictsByUserID: [Int: BookmarkRestrict]
     let updatingCreatorIDs: Set<Int>
+    let isCreatorSelectionMode: Bool
+    let selectedCreatorIDs: Set<Int>
     let showContentBadges: Bool
     let maskSensitivePreviews: Bool
     let retry: () -> Void
@@ -637,6 +859,7 @@ struct CreatorPreviewListContent: View {
     let requestFeedback: (PixivUser) -> Void
     let copyCreatorLink: (PixivUser) -> Void
     let copyArtworkLink: (PixivArtwork) -> Void
+    let toggleCreatorSelection: (Int) -> Void
     let isPinnedCreator: (PixivUser) -> Bool
     let togglePinnedCreator: (PixivUser) -> Void
     let selectArtwork: (PixivArtwork) -> Void
@@ -662,9 +885,10 @@ struct CreatorPreviewListContent: View {
         } else if visiblePreviews.isEmpty {
             ScrollView {
                 noMatchingCreators
-                    .padding(.horizontal, 18)
-                    .padding(.top, 14)
-                    .padding(.bottom, 20)
+                    .padding(.leading, listMetrics.insets.leading)
+                    .padding(.trailing, listMetrics.insets.trailing)
+                    .padding(.top, listMetrics.insets.top)
+                    .padding(.bottom, listMetrics.insets.bottom)
             }
             .scrollEdgeEffectStyle(.soft, for: .top)
         } else {
@@ -725,7 +949,7 @@ struct CreatorPreviewListContent: View {
     }
 
     private var noMatchingCreators: some View {
-        VStack(spacing: 14) {
+        VStack(spacing: NativeCollectionLayoutMetrics.informationCardContentSpacing) {
             OS26InlineUnavailableView(
                 title: L10n.noMatchingCreators,
                 systemImage: "person.crop.circle.badge.questionmark",
@@ -740,6 +964,10 @@ struct CreatorPreviewListContent: View {
                     .frame(maxWidth: 420)
             }
         }
+    }
+
+    private var listMetrics: NativeCollectionMetrics {
+        NativeCollectionLayoutMetrics.informationCards
     }
 
     private var creatorCollectionItems: [NativeCreatorPreviewCollectionItem] {
@@ -796,6 +1024,11 @@ struct CreatorPreviewListContent: View {
         hasher.combine(maskSensitivePreviews)
         hasher.combine(isLoadingMore)
         hasher.combine(creatorPreviewArtworkCacheGeneration)
+        hasher.combine(isCreatorSelectionMode)
+        hasher.combine(selectedCreatorIDs.count)
+        for userID in selectedCreatorIDs.sorted() {
+            hasher.combine(userID)
+        }
         for preview in visiblePreviews {
             hasher.combine(preview.user)
             hasher.combine(preview.isMuted)
@@ -832,6 +1065,9 @@ struct CreatorPreviewListContent: View {
                     requestFeedback: { requestFeedback(preview.user) },
                     copyCreatorLink: { copyCreatorLink(preview.user) },
                     copyArtworkLink: copyArtworkLink,
+                    isSelectionMode: isCreatorSelectionMode,
+                    isSelected: selectedCreatorIDs.contains(preview.user.id),
+                    toggleSelection: { toggleCreatorSelection(preview.user.id) },
                     isPinned: isPinnedCreator(preview.user),
                     togglePinnedCreator: { togglePinnedCreator(preview.user) },
                     selectArtwork: selectArtwork,
@@ -854,7 +1090,7 @@ struct CreatorPreviewListContent: View {
 
 private struct CreatorSearchLandingState: View {
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
+        VStack(alignment: .leading, spacing: NativeCollectionLayoutMetrics.informationCardContentSpacing) {
             Label {
                 VStack(alignment: .leading, spacing: 5) {
                     Text(L10n.enterSearchKeyword)
@@ -880,11 +1116,12 @@ private struct CreatorSearchLandingState: View {
             .padding(.vertical, 6)
             .glassEffect(.regular, in: Capsule(style: .continuous))
         }
-        .padding(18)
+        .padding(NativeCollectionLayoutMetrics.informationCardPadding)
         .frame(maxWidth: 520, alignment: .leading)
         .keiGlass(22)
-        .padding(.horizontal, 18)
-        .padding(.top, 18)
+        .padding(.leading, NativeCollectionLayoutMetrics.informationCards.insets.leading)
+        .padding(.trailing, NativeCollectionLayoutMetrics.informationCards.insets.trailing)
+        .padding(.top, NativeCollectionLayoutMetrics.informationCards.insets.top)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .accessibilityLabel(L10n.enterSearchKeyword)
     }
@@ -895,13 +1132,15 @@ private struct CreatorPreviewListLoadingPlaceholder: View {
 
     var body: some View {
         ScrollView {
-            LazyVGrid(columns: columns, spacing: 14) {
+            LazyVGrid(columns: columns, spacing: metrics.itemSpacing) {
                 ForEach(0..<placeholderCount, id: \.self) { _ in
                     CreatorPreviewSkeletonCard(expanded: layoutMode.usesExpandedPreview)
                 }
             }
-            .padding(.horizontal, 18)
-            .padding(.vertical, 14)
+            .padding(.leading, metrics.insets.leading)
+            .padding(.trailing, metrics.insets.trailing)
+            .padding(.top, metrics.insets.top)
+            .padding(.bottom, metrics.insets.bottom)
         }
         .scrollEdgeEffectStyle(.soft, for: .top)
         .allowsHitTesting(false)
@@ -912,10 +1151,14 @@ private struct CreatorPreviewListLoadingPlaceholder: View {
         layoutMode.usesExpandedPreview ? 4 : 8
     }
 
+    private var metrics: NativeCollectionMetrics {
+        NativeCollectionLayoutMetrics.informationCards
+    }
+
     private var columns: [GridItem] {
         let minimum: CGFloat = layoutMode.usesExpandedPreview ? 380 : 280
         return [
-            GridItem(.adaptive(minimum: minimum, maximum: layoutMode.usesExpandedPreview ? 540 : 380), spacing: 16)
+            GridItem(.adaptive(minimum: minimum, maximum: layoutMode.usesExpandedPreview ? 540 : 380), spacing: metrics.itemSpacing)
         ]
     }
 }
@@ -924,7 +1167,7 @@ private struct CreatorPreviewSkeletonCard: View {
     let expanded: Bool
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: NativeCollectionLayoutMetrics.informationCardContentSpacing) {
             HStack(alignment: .center, spacing: 12) {
                 SkeletonPlaceholder(width: 44, height: 44, cornerRadius: 22)
 
@@ -956,7 +1199,7 @@ private struct CreatorPreviewSkeletonCard: View {
                 SkeletonPlaceholder(width: nil, height: 88, cornerRadius: 14)
             }
         }
-        .padding(14)
+        .padding(NativeCollectionLayoutMetrics.informationCardPadding)
         .frame(maxWidth: .infinity, alignment: .leading)
         .os26SkeletonSurface(20)
         .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))

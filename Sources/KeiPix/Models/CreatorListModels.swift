@@ -130,6 +130,42 @@ enum CreatorListSort: String, CaseIterable, Identifiable {
     }
 }
 
+struct CreatorListSelection: Hashable, Sendable {
+    var selectedIDs: Set<Int> = []
+    var isSelectionMode = false
+
+    var count: Int { selectedIDs.count }
+    var hasSelection: Bool { selectedIDs.isEmpty == false }
+
+    func contains(_ userID: Int) -> Bool {
+        selectedIDs.contains(userID)
+    }
+
+    mutating func toggle(_ userID: Int) {
+        if selectedIDs.contains(userID) {
+            selectedIDs.remove(userID)
+        } else {
+            selectedIDs.insert(userID)
+        }
+    }
+
+    mutating func selectAll(_ userIDs: some Sequence<Int>) {
+        selectedIDs.formUnion(userIDs)
+    }
+
+    mutating func clear() {
+        selectedIDs.removeAll()
+        isSelectionMode = false
+    }
+
+    mutating func prune(visibleCreatorIDs: some Sequence<Int>) {
+        selectedIDs.formIntersection(Set(visibleCreatorIDs))
+        if selectedIDs.isEmpty {
+            isSelectionMode = false
+        }
+    }
+}
+
 enum CreatorBulkAction: String, Identifiable {
     case followPublic
     case followPrivate
@@ -141,13 +177,13 @@ enum CreatorBulkAction: String, Identifiable {
     var title: String {
         switch self {
         case .followPublic:
-            L10n.followVisiblePublicly
+            L10n.followSelectedPublicly
         case .followPrivate:
-            L10n.followVisiblePrivately
+            L10n.followSelectedPrivately
         case .mute:
-            L10n.muteVisibleCreators
+            L10n.muteSelectedCreators
         case .unfollow:
-            L10n.unfollowVisibleCreators
+            L10n.unfollowSelectedCreators
         }
     }
 
@@ -163,13 +199,13 @@ enum CreatorBulkAction: String, Identifiable {
     func confirmationMessage(count: Int) -> String {
         switch self {
         case .followPublic:
-            String(format: L10n.followVisiblePubliclyConfirmationFormat, count)
+            String(format: L10n.followSelectedPubliclyConfirmationFormat, count)
         case .followPrivate:
-            String(format: L10n.followVisiblePrivatelyConfirmationFormat, count)
+            String(format: L10n.followSelectedPrivatelyConfirmationFormat, count)
         case .mute:
-            String(format: L10n.muteVisibleCreatorsConfirmationFormat, count)
+            String(format: L10n.muteSelectedCreatorsConfirmationFormat, count)
         case .unfollow:
-            String(format: L10n.unfollowVisibleCreatorsConfirmationFormat, count)
+            String(format: L10n.unfollowSelectedCreatorsConfirmationFormat, count)
         }
     }
 }
