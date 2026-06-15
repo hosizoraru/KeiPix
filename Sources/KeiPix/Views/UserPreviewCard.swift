@@ -26,6 +26,10 @@ import SwiftUI
 ///    layout now separates `nav row` from `action rail` so each row has
 ///    breathing room and a clear job.
 struct UserPreviewCard: View {
+    #if os(iOS)
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    #endif
+
     let preview: PixivUserPreview
     let followRestrict: BookmarkRestrict?
     let isUpdating: Bool
@@ -326,47 +330,12 @@ struct UserPreviewCard: View {
 
     private var navigationRow: some View {
         GlassEffectContainer(spacing: 8) {
-            ViewThatFits(in: .horizontal) {
-                HStack(spacing: 8) {
-                    navigationChip(
-                        title: L10n.creatorProfile,
-                        systemImage: "person.crop.circle",
-                        displayStyle: .titleAndIcon,
-                        action: openProfile
-                    )
-                    navigationChip(
-                        title: L10n.illustrations,
-                        systemImage: "photo",
-                        displayStyle: .titleAndIcon,
-                        action: openIllustrations
-                    )
-                    navigationChip(
-                        title: L10n.manga,
-                        systemImage: "book.closed",
-                        displayStyle: .titleAndIcon,
-                        action: openManga
-                    )
-                }
-
-                HStack(spacing: 8) {
-                    navigationChip(
-                        title: L10n.creatorProfile,
-                        systemImage: "person.crop.circle",
-                        displayStyle: .iconOnly,
-                        action: openProfile
-                    )
-                    navigationChip(
-                        title: L10n.illustrations,
-                        systemImage: "photo",
-                        displayStyle: .iconOnly,
-                        action: openIllustrations
-                    )
-                    navigationChip(
-                        title: L10n.manga,
-                        systemImage: "book.closed",
-                        displayStyle: .iconOnly,
-                        action: openManga
-                    )
+            if usesIconOnlyActionLabels {
+                iconOnlyNavigationButtons
+            } else {
+                ViewThatFits(in: .horizontal) {
+                    fullWidthNavigationButtons(displayStyle: .titleAndIcon)
+                    iconOnlyNavigationButtons
                 }
             }
         }
@@ -374,83 +343,111 @@ struct UserPreviewCard: View {
 
     private var expandedCommandRail: some View {
         GlassEffectContainer(spacing: 8) {
-            ViewThatFits(in: .horizontal) {
-                HStack(spacing: 8) {
-                    compactNavigationChip(
-                        title: L10n.creatorProfile,
-                        systemImage: "person.crop.circle",
-                        displayStyle: .titleAndIcon,
-                        action: openProfile
-                    )
-                    compactNavigationChip(
-                        title: L10n.illustrations,
-                        systemImage: "photo",
-                        displayStyle: .titleAndIcon,
-                        action: openIllustrations
-                    )
-                    compactNavigationChip(
-                        title: L10n.manga,
-                        systemImage: "book.closed",
-                        displayStyle: .titleAndIcon,
-                        action: openManga
-                    )
-
-                    Spacer(minLength: 8)
-
-                    actionChip(
-                        title: isPinned ? L10n.unpinCreator : L10n.pinCreator,
-                        systemImage: isPinned ? "pin.slash" : "pin",
-                        displayStyle: .iconOnly,
-                        action: togglePinnedCreator
-                    )
-                    pixivLink(displayStyle: .titleAndIcon)
-                    actionChip(
-                        title: L10n.copyLink,
-                        systemImage: "link",
-                        displayStyle: .iconOnly,
-                        action: copyCreatorLink
-                    )
-                    overflowMenu
-                }
-
-                HStack(spacing: 8) {
-                    compactNavigationChip(
-                        title: L10n.creatorProfile,
-                        systemImage: "person.crop.circle",
-                        displayStyle: .iconOnly,
-                        action: openProfile
-                    )
-                    compactNavigationChip(
-                        title: L10n.illustrations,
-                        systemImage: "photo",
-                        displayStyle: .iconOnly,
-                        action: openIllustrations
-                    )
-                    compactNavigationChip(
-                        title: L10n.manga,
-                        systemImage: "book.closed",
-                        displayStyle: .iconOnly,
-                        action: openManga
-                    )
-
-                    Spacer(minLength: 8)
-
-                    actionChip(
-                        title: isPinned ? L10n.unpinCreator : L10n.pinCreator,
-                        systemImage: isPinned ? "pin.slash" : "pin",
-                        displayStyle: .iconOnly,
-                        action: togglePinnedCreator
-                    )
-                    pixivLink(displayStyle: .iconOnly)
-                    actionChip(
-                        title: L10n.copyLink,
-                        systemImage: "link",
-                        displayStyle: .iconOnly,
-                        action: copyCreatorLink
-                    )
-                    overflowMenu
+            if usesIconOnlyActionLabels {
+                expandedCommandRailContent(displayStyle: .iconOnly)
+            } else {
+                ViewThatFits(in: .horizontal) {
+                    expandedCommandRailContent(displayStyle: .titleAndIcon)
+                    expandedCommandRailContent(displayStyle: .iconOnly)
                 }
             }
+        }
+    }
+
+    private var usesIconOnlyActionLabels: Bool {
+        #if os(iOS)
+        if horizontalSizeClass == .compact {
+            return true
+        }
+        #endif
+
+        return expandedPreview == false
+    }
+
+    private var iconOnlyNavigationButtons: some View {
+        HStack(spacing: 8) {
+            compactNavigationChip(
+                title: L10n.creatorProfile,
+                systemImage: "person.crop.circle",
+                displayStyle: .iconOnly,
+                action: openProfile
+            )
+            compactNavigationChip(
+                title: L10n.illustrations,
+                systemImage: "photo",
+                displayStyle: .iconOnly,
+                action: openIllustrations
+            )
+            compactNavigationChip(
+                title: L10n.manga,
+                systemImage: "book.closed",
+                displayStyle: .iconOnly,
+                action: openManga
+            )
+            Spacer(minLength: 0)
+        }
+    }
+
+    private func fullWidthNavigationButtons(displayStyle: CreatorCardButtonDisplayStyle) -> some View {
+        HStack(spacing: 8) {
+            navigationChip(
+                title: L10n.creatorProfile,
+                systemImage: "person.crop.circle",
+                displayStyle: displayStyle,
+                action: openProfile
+            )
+            navigationChip(
+                title: L10n.illustrations,
+                systemImage: "photo",
+                displayStyle: displayStyle,
+                action: openIllustrations
+            )
+            navigationChip(
+                title: L10n.manga,
+                systemImage: "book.closed",
+                displayStyle: displayStyle,
+                action: openManga
+            )
+        }
+    }
+
+    private func expandedCommandRailContent(displayStyle: CreatorCardButtonDisplayStyle) -> some View {
+        HStack(spacing: 8) {
+            compactNavigationChip(
+                title: L10n.creatorProfile,
+                systemImage: "person.crop.circle",
+                displayStyle: displayStyle,
+                action: openProfile
+            )
+            compactNavigationChip(
+                title: L10n.illustrations,
+                systemImage: "photo",
+                displayStyle: displayStyle,
+                action: openIllustrations
+            )
+            compactNavigationChip(
+                title: L10n.manga,
+                systemImage: "book.closed",
+                displayStyle: displayStyle,
+                action: openManga
+            )
+
+            Spacer(minLength: 8)
+
+            actionChip(
+                title: isPinned ? L10n.unpinCreator : L10n.pinCreator,
+                systemImage: isPinned ? "pin.slash" : "pin",
+                displayStyle: .iconOnly,
+                action: togglePinnedCreator
+            )
+            pixivLink(displayStyle: displayStyle)
+            actionChip(
+                title: L10n.copyLink,
+                systemImage: "link",
+                displayStyle: .iconOnly,
+                action: copyCreatorLink
+            )
+            overflowMenu
         }
     }
 
@@ -500,51 +497,38 @@ struct UserPreviewCard: View {
 
     private var actionRail: some View {
         GlassEffectContainer(spacing: 8) {
-            ViewThatFits(in: .horizontal) {
-                HStack(spacing: 8) {
-                    actionChip(
-                        title: isPinned ? L10n.unpinCreator : L10n.pinCreator,
-                        systemImage: isPinned ? "pin.slash" : "pin",
-                        displayStyle: .iconOnly,
-                        action: togglePinnedCreator
-                    )
-
-                    pixivLink(displayStyle: .titleAndIcon)
-
-                    actionChip(
-                        title: L10n.copyLink,
-                        systemImage: "link",
-                        displayStyle: .iconOnly,
-                        action: copyCreatorLink
-                    )
-
-                    Spacer(minLength: 8)
-
-                    overflowMenu
-                }
-
-                HStack(spacing: 8) {
-                    actionChip(
-                        title: isPinned ? L10n.unpinCreator : L10n.pinCreator,
-                        systemImage: isPinned ? "pin.slash" : "pin",
-                        displayStyle: .iconOnly,
-                        action: togglePinnedCreator
-                    )
-
-                    pixivLink(displayStyle: .iconOnly)
-
-                    actionChip(
-                        title: L10n.copyLink,
-                        systemImage: "link",
-                        displayStyle: .iconOnly,
-                        action: copyCreatorLink
-                    )
-
-                    Spacer(minLength: 8)
-
-                    overflowMenu
+            if usesIconOnlyActionLabels {
+                actionRailContent(pixivDisplayStyle: .iconOnly)
+            } else {
+                ViewThatFits(in: .horizontal) {
+                    actionRailContent(pixivDisplayStyle: .titleAndIcon)
+                    actionRailContent(pixivDisplayStyle: .iconOnly)
                 }
             }
+        }
+    }
+
+    private func actionRailContent(pixivDisplayStyle: CreatorCardButtonDisplayStyle) -> some View {
+        HStack(spacing: 8) {
+            actionChip(
+                title: isPinned ? L10n.unpinCreator : L10n.pinCreator,
+                systemImage: isPinned ? "pin.slash" : "pin",
+                displayStyle: .iconOnly,
+                action: togglePinnedCreator
+            )
+
+            pixivLink(displayStyle: pixivDisplayStyle)
+
+            actionChip(
+                title: L10n.copyLink,
+                systemImage: "link",
+                displayStyle: .iconOnly,
+                action: copyCreatorLink
+            )
+
+            Spacer(minLength: 8)
+
+            overflowMenu
         }
     }
 
