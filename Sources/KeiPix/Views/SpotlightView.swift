@@ -1,4 +1,7 @@
 import SwiftUI
+#if os(iOS)
+import UIKit
+#endif
 
 struct SpotlightView: View {
     @Bindable var store: KeiPixStore
@@ -825,7 +828,18 @@ private struct SpotlightArticleCard: View {
     }
 
     private var compactPublishDateText: String {
-        article.publishDate.formatted(
+        #if os(iOS)
+        if UIDevice.current.userInterfaceIdiom == .phone,
+           layoutMode == .twoUp {
+            return article.publishDate.formatted(
+                .dateTime
+                    .month(.abbreviated)
+                    .day(.defaultDigits)
+            )
+        }
+        #endif
+
+        return article.publishDate.formatted(
             .dateTime
                 .year(.twoDigits)
                 .month(.abbreviated)

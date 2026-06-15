@@ -702,6 +702,7 @@ struct NativeBoundaryTests {
         #expect(spotlightView.contains("private var swiftUIViewOptionsMenu: some View"))
         #expect(spotlightView.contains("private var articleTitleRow: some View"))
         #expect(spotlightView.contains("Text(compactPublishDateText)"))
+        #expect(spotlightView.contains("if UIDevice.current.userInterfaceIdiom == .phone,\n           layoutMode == .twoUp"))
         #expect(spotlightView.contains(".year(.twoDigits)"))
         #expect(spotlightView.contains(".month(.abbreviated)"))
         #expect(spotlightView.contains(".day(.defaultDigits)"))
