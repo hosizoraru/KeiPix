@@ -242,33 +242,37 @@ struct PlatformPageTitleHeader<Trailing: View>: View {
 
     var body: some View {
         #if os(iOS)
-        ViewThatFits(in: .horizontal) {
-            HStack(alignment: .firstTextBaseline, spacing: 10) {
-                if showsInlineTitleAndStatus {
-                    titleText
-                    statusPill
-                }
-                Spacer(minLength: 0)
-                trailing()
-            }
-
-            VStack(alignment: .leading, spacing: 8) {
+        if isPhone, Trailing.self == EmptyView.self {
+            EmptyView()
+        } else {
+            ViewThatFits(in: .horizontal) {
                 HStack(alignment: .firstTextBaseline, spacing: 10) {
                     if showsInlineTitleAndStatus {
                         titleText
                         statusPill
                     }
                     Spacer(minLength: 0)
-                }
-                HStack(spacing: 8) {
-                    Spacer(minLength: 0)
                     trailing()
                 }
+
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack(alignment: .firstTextBaseline, spacing: 10) {
+                        if showsInlineTitleAndStatus {
+                            titleText
+                            statusPill
+                        }
+                        Spacer(minLength: 0)
+                    }
+                    HStack(spacing: 8) {
+                        Spacer(minLength: 0)
+                        trailing()
+                    }
+                }
             }
+            .padding(.horizontal, 18)
+            .padding(.top, 7)
+            .padding(.bottom, 5)
         }
-        .padding(.horizontal, 18)
-        .padding(.top, 7)
-        .padding(.bottom, 5)
         #else
         EmptyView()
         #endif

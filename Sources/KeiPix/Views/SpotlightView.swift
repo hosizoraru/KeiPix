@@ -53,42 +53,46 @@ struct SpotlightView: View {
                     }
                 }
             } else {
-                ScrollView {
-                    VStack(spacing: 14) {
-                        LazyVGrid(columns: articleColumns, spacing: 12) {
-                            ForEach(displayedArticles) { article in
-                                SpotlightArticleCard(
-                                    article: article,
-                                    isSelected: store.selectedSpotlightArticle?.id == article.id,
-                                    isSaved: store.isSpotlightArticleSaved(article),
-                                    isRead: store.isSpotlightArticleRead(article),
-                                    isInHistory: store.spotlightArticleHistory.contains { $0.id == article.id },
-                                    layoutMode: store.spotlightListLayoutMode
-                                ) {
-                                    select(article)
-                                } copied: {
-                                    showActionMessage(L10n.copied)
-                                } toggleSaved: {
-                                    toggleSaved(article)
-                                } toggleRead: {
-                                    toggleRead(article)
-                                } removeFromHistory: {
-                                    store.removeSpotlightArticleHistory(article)
-                                    showActionMessage(L10n.removedArticleHistory)
-                                }
-                                .onAppear {
-                                    loadMoreIfNeeded(after: article)
+                GeometryReader { proxy in
+                    ScrollView {
+                        VStack(spacing: 14) {
+                            LazyVGrid(columns: articleColumns, spacing: 12) {
+                                ForEach(displayedArticles) { article in
+                                    SpotlightArticleCard(
+                                        article: article,
+                                        isSelected: store.selectedSpotlightArticle?.id == article.id,
+                                        isSaved: store.isSpotlightArticleSaved(article),
+                                        isRead: store.isSpotlightArticleRead(article),
+                                        isInHistory: store.spotlightArticleHistory.contains { $0.id == article.id },
+                                        layoutMode: store.spotlightListLayoutMode,
+                                        presentation: spotlightArticleCardPresentation(containerWidth: proxy.size.width)
+                                    ) {
+                                        select(article)
+                                    } copied: {
+                                        showActionMessage(L10n.copied)
+                                    } toggleSaved: {
+                                        toggleSaved(article)
+                                    } toggleRead: {
+                                        toggleRead(article)
+                                    } removeFromHistory: {
+                                        store.removeSpotlightArticleHistory(article)
+                                        showActionMessage(L10n.removedArticleHistory)
+                                    }
+                                    .onAppear {
+                                        loadMoreIfNeeded(after: article)
+                                    }
                                 }
                             }
-                        }
 
-                        paginationFooter
+                            paginationFooter
+                        }
+                        .padding(.horizontal, 18)
+                        .padding(.top, 14)
+                        .padding(.bottom, 18)
                     }
-                    .padding(.horizontal, 18)
-                    .padding(.top, 14)
-                    .padding(.bottom, 18)
+                    .scrollEdgeEffectStyle(.soft, for: .top)
+                    .nativeBottomTabContentSurface()
                 }
-                .scrollEdgeEffectStyle(.soft, for: .top)
             }
         }
         .platformPageHeader(
@@ -164,6 +168,28 @@ struct SpotlightView: View {
             // overwrite a freshly-fetched ranking or recommend list.
             guard collectionMode.supportsCategoryFilter else { return }
             Task { await load() }
+        }
+    }
+
+    private func spotlightArticleCardPresentation(containerWidth: CGFloat) -> SpotlightArticleCardPresentation {
+        let columnCount = estimatedArticleColumnCount(containerWidth: containerWidth)
+        #if os(iOS)
+        if UIDevice.current.userInterfaceIdiom == .phone {
+            return columnCount == 1 ? .immersiveCover : .standard
+        }
+        #endif
+        return columnCount <= 2 ? .immersiveCover : .standard
+    }
+
+    private func estimatedArticleColumnCount(containerWidth: CGFloat) -> Int {
+        switch store.spotlightListLayoutMode {
+        case .single:
+            return 1
+        case .twoUp:
+            return 2
+        case .auto:
+            let contentWidth = max(0, containerWidth - 36)
+            return max(1, Int((contentWidth + 12) / (240 + 12)))
         }
     }
 
@@ -692,6 +718,11 @@ private enum SpotlightViewOptionsAction {
     }
 }
 
+private enum SpotlightArticleCardPresentation: Equatable {
+    case standard
+    case immersiveCover
+}
+
 private struct SpotlightArticleCard: View {
     let article: PixivSpotlightArticle
     let isSelected: Bool
@@ -699,6 +730,7 @@ private struct SpotlightArticleCard: View {
     let isRead: Bool
     let isInHistory: Bool
     let layoutMode: SpotlightListLayoutMode
+    let presentation: SpotlightArticleCardPresentation
     let select: () -> Void
     let copied: () -> Void
     let toggleSaved: () -> Void
@@ -708,7 +740,9 @@ private struct SpotlightArticleCard: View {
 
     var body: some View {
         Button(action: select) {
-            if layoutMode.usesHeroCardLayout {
+            if presentation == .immersiveCover {
+                immersiveCoverLayout
+            } else if layoutMode.usesHeroCardLayout {
                 heroLayout
             } else {
                 stackedLayout
@@ -740,6 +774,70 @@ private struct SpotlightArticleCard: View {
         }
     }
 
+    private var immersiveCoverLayout: some View {
+        articleThumbnail
+            .overlay(alignment: .bottom) {
+                LinearGradient(
+                    colors: [
+                        .black.opacity(0),
+                        .black.opacity(0.2),
+                        .black.opacity(0.74)
+                    ],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+                .frame(height: layoutMode.usesHeroCardLayout ? 140 : 118)
+                .allowsHitTesting(false)
+            }
+            .overlay(alignment: .bottomLeading) {
+                immersiveMetadataOverlay
+                    .padding(.horizontal, 11)
+                    .padding(.bottom, 10)
+                    .padding(.trailing, 10)
+            }
+            .overlay {
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .stroke(
+                        isSelected
+                            ? Color.accentColor
+                            : Color.white.opacity(isHovering ? 0.26 : 0.1),
+                        lineWidth: isSelected ? 2 : 1
+                    )
+            }
+    }
+
+    private var immersiveMetadataOverlay: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                Text(primaryTitle)
+                    .font(layoutMode.usesHeroCardLayout ? .headline.weight(.semibold) : .subheadline.weight(.semibold))
+                    .foregroundStyle(.white)
+                    .lineLimit(layoutMode.usesHeroCardLayout ? 2 : 1)
+                    .minimumScaleFactor(0.82)
+                    .layoutPriority(1)
+
+                Spacer(minLength: 6)
+
+                Text(compactPublishDateText)
+                    .font(.caption2.weight(.semibold))
+                    .foregroundStyle(.white.opacity(0.78))
+                    .monospacedDigit()
+                    .lineLimit(1)
+                    .fixedSize(horizontal: true, vertical: false)
+            }
+
+            if let secondaryTitle {
+                Text(secondaryTitle)
+                    .font(.caption.weight(.medium))
+                    .foregroundStyle(.white.opacity(0.78))
+                    .lineLimit(layoutMode.usesHeroCardLayout ? 2 : 1)
+                    .minimumScaleFactor(0.84)
+            }
+        }
+        .shadow(color: .black.opacity(0.45), radius: 8, y: 1)
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
     /// Stacked (portrait) layout — thumbnail on top, text underneath.
     /// Used in `.auto` and `.twoUp` modes.
     private var stackedLayout: some View {
@@ -752,10 +850,7 @@ private struct SpotlightArticleCard: View {
         // rest. Letting the card hug its content shrinks busy lists by
         // ~30 pt per row.
         VStack(alignment: .leading, spacing: 10) {
-            SpotlightArticleThumbnail(
-                url: article.thumbnail,
-                aspectRatio: 16.0 / 9.0
-            )
+            articleThumbnail
 
             metadataBlock
         }
@@ -779,11 +874,8 @@ private struct SpotlightArticleCard: View {
     /// banner. Mirrors Pixivision Web's desktop article hero.
     private var heroLayout: some View {
         HStack(alignment: .top, spacing: 14) {
-            SpotlightArticleThumbnail(
-                url: article.thumbnail,
-                aspectRatio: 16.0 / 9.0
-            )
-            .frame(maxWidth: 280)
+            articleThumbnail
+                .frame(maxWidth: 280)
 
             metadataBlock
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -813,15 +905,19 @@ private struct SpotlightArticleCard: View {
                     .lineLimit(layoutMode.usesHeroCardLayout ? 3 : 2)
                     .multilineTextAlignment(.leading)
             }
-
-            // No spacer here. The metadata should hug its actual
-            // content so two-column cards do not inherit the tallest
-            // footer in the row.
-            if isSaved || isRead {
-                articleStateFooter
-            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var articleThumbnail: some View {
+        SpotlightArticleThumbnail(
+            url: article.thumbnail,
+            aspectRatio: 16.0 / 9.0
+        )
+        .overlay(alignment: .topTrailing) {
+            articleStateOverlayBadges
+                .padding(8)
+        }
     }
 
     private var articleTitleRow: some View {
@@ -863,23 +959,56 @@ private struct SpotlightArticleCard: View {
         )
     }
 
-    private var articleStateFooter: some View {
-        HStack(alignment: .firstTextBaseline, spacing: 8) {
-            if isSaved {
-                Image(systemName: "star.fill")
-                    .foregroundStyle(.yellow)
-                    .help(L10n.savedArticle)
-            }
+    @ViewBuilder
+    private var articleStateOverlayBadges: some View {
+        if isSaved || isRead {
+            GlassEffectContainer(spacing: 6) {
+                HStack(spacing: 6) {
+                    if isSaved {
+                        articleStateOverlayBadge(
+                            title: L10n.savedArticle,
+                            systemImage: "star.fill",
+                            tint: .yellow,
+                            showsTitle: false
+                        )
+                    }
 
-            if isRead {
-                Label(L10n.readArticle, systemImage: "checkmark.circle.fill")
-                    .labelStyle(.titleAndIcon)
-                    .foregroundStyle(.secondary)
-                    .help(L10n.readArticle)
+                    if isRead {
+                        articleStateOverlayBadge(
+                            title: L10n.readArticle,
+                            systemImage: "checkmark.circle.fill",
+                            tint: .accentColor,
+                            showsTitle: true
+                        )
+                    }
+                }
             }
         }
-        .font(.caption2.weight(.semibold))
-        .foregroundStyle(.secondary)
+    }
+
+    private func articleStateOverlayBadge(
+        title: String,
+        systemImage: String,
+        tint: Color,
+        showsTitle: Bool
+    ) -> some View {
+        Group {
+            if showsTitle {
+                Label(title, systemImage: systemImage)
+                    .labelStyle(.titleAndIcon)
+            } else {
+                Label(title, systemImage: systemImage)
+                    .labelStyle(.iconOnly)
+            }
+        }
+        .font(.caption2.weight(.bold))
+        .symbolRenderingMode(.hierarchical)
+        .foregroundStyle(tint)
+        .padding(.horizontal, showsTitle ? 8 : 6)
+        .padding(.vertical, 5)
+        .glassEffect(.regular, in: Capsule(style: .continuous))
+        .help(title)
+        .accessibilityLabel(title)
     }
 
     private var primaryTitle: String {
