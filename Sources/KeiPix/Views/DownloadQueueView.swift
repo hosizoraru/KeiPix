@@ -429,7 +429,6 @@ private struct DownloadQueueOverviewCard: View {
         VStack(alignment: .leading, spacing: 5) {
             latestCompletedLine
             metricStrip
-            filterControls
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
@@ -482,6 +481,7 @@ private struct DownloadQueueOverviewCard: View {
                     value: downloads.activeCount.formatted(),
                     systemImage: "arrow.down.circle.fill",
                     tint: .blue,
+                    showsTitle: false,
                     isSelected: downloads.downloadQueueFilter == .active
                 ) {
                     withAnimation(.snappy(duration: 0.16)) {
@@ -496,6 +496,7 @@ private struct DownloadQueueOverviewCard: View {
                     value: downloads.completedCount.formatted(),
                     systemImage: "checkmark.circle.fill",
                     tint: .green,
+                    showsTitle: false,
                     isSelected: downloads.downloadQueueFilter == .completed,
                     action: showCompletedHistory
                 )
@@ -506,6 +507,7 @@ private struct DownloadQueueOverviewCard: View {
                     value: downloads.historySnapshot.failedCount.formatted(),
                     systemImage: "exclamationmark.triangle.fill",
                     tint: .red,
+                    showsTitle: false,
                     isSelected: downloads.downloadQueueFilter == .failed,
                     action: showFailedHistory
                 )
@@ -540,25 +542,25 @@ private struct DownloadQueueOverviewCard: View {
     private var filterPillRow: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 7) {
-                searchTriggerPill
+                filterTriggerPill
                 activeFilterPills
             }
             .padding(.vertical, 1)
         }
     }
 
-    private var searchTriggerPill: some View {
+    private var filterTriggerPill: some View {
         Button {
             withAnimation(.snappy(duration: 0.16)) {
                 isSearchPresented.toggle()
             }
         } label: {
             HStack(spacing: 6) {
-                Image(systemName: searchTriggerSystemImage)
+                Image(systemName: filterTriggerSystemImage)
                     .font(.caption.weight(.semibold))
                     .symbolRenderingMode(.hierarchical)
 
-                Text(usesCompactPhoneLayout ? L10n.search : L10n.searchDownloads)
+                Text(L10n.feedFilter)
                     .font(.caption.weight(.semibold))
                     .lineLimit(1)
             }
@@ -567,27 +569,31 @@ private struct DownloadQueueOverviewCard: View {
             .contentShape(Capsule(style: .continuous))
         }
         .buttonStyle(.plain)
-        .background(Color.accentColor.opacity(searchTriggerIsActive ? 0.14 : 0.06), in: Capsule(style: .continuous))
+        .background(Color.accentColor.opacity(filterTriggerIsActive ? 0.14 : 0.06), in: Capsule(style: .continuous))
         .keiInteractiveGlass(usesCompactPhoneLayout ? 15 : 17)
         .overlay {
             Capsule(style: .continuous)
-                .stroke(Color.accentColor.opacity(searchTriggerIsActive ? 0.36 : 0.14), lineWidth: 1)
+                .stroke(Color.accentColor.opacity(filterTriggerIsActive ? 0.36 : 0.14), lineWidth: 1)
         }
-        .help(L10n.searchDownloads)
-        .accessibilityLabel(L10n.searchDownloads)
+        .help(L10n.filterDownloads)
+        .accessibilityLabel(L10n.feedFilter)
     }
 
     private var filterSearchField: some View {
-        NativeSearchField(
+        OS26LibrarySearchField(
             text: downloadSearchBinding,
-            placeholder: L10n.searchDownloads,
-            suggestions: [],
-            onSubmit: {},
-            onTextChange: { downloads.setDownloadSearchText($0) }
+            placeholder: L10n.filterDownloads,
+            minWidth: usesCompactPhoneLayout ? 180 : 220,
+            idealWidth: usesCompactPhoneLayout ? 260 : 320,
+            maxWidth: usesCompactPhoneLayout ? 520 : 560,
+            collapsesOnPhone: false,
+            onClose: {
+                isSearchPresented = false
+            }
         )
         .frame(minWidth: usesCompactPhoneLayout ? 0 : 220, maxWidth: .infinity)
         .layoutPriority(1)
-        .accessibilityLabel(L10n.searchDownloads)
+        .accessibilityLabel(L10n.filterDownloads)
     }
 
     @ViewBuilder
@@ -630,12 +636,12 @@ private struct DownloadQueueOverviewCard: View {
         isSearchPresented
     }
 
-    private var searchTriggerIsActive: Bool {
+    private var filterTriggerIsActive: Bool {
         isSearchPresented || normalizedSearchText.isEmpty == false
     }
 
-    private var searchTriggerSystemImage: String {
-        normalizedSearchText.isEmpty ? "magnifyingglass" : "magnifyingglass.circle.fill"
+    private var filterTriggerSystemImage: String {
+        filterTriggerIsActive ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle"
     }
 
     private var normalizedSearchText: String {
@@ -677,7 +683,14 @@ private struct DownloadQueueLatestSummary: View {
     }
 
     private var summaryContent: some View {
-        Label {
+        HStack(alignment: .top, spacing: usesCompactLayout ? 8 : 9) {
+            Image(systemName: systemImage)
+                .font((usesCompactLayout ? Font.body : Font.title3).weight(.semibold))
+                .symbolRenderingMode(.hierarchical)
+                .foregroundStyle(iconTint)
+                .frame(width: usesCompactLayout ? 20 : 24, height: usesCompactLayout ? 20 : 24)
+                .padding(.top, summaryIconTopPadding)
+
             VStack(alignment: .leading, spacing: usesCompactLayout ? 1 : 2) {
                 Text(caption)
                     .font(.caption2.weight(.semibold))
@@ -692,13 +705,12 @@ private struct DownloadQueueLatestSummary: View {
                         .foregroundStyle(.tertiary)
                 }
             }
-        } icon: {
-            Image(systemName: systemImage)
-                .font((usesCompactLayout ? Font.body : Font.title3).weight(.semibold))
-                .symbolRenderingMode(.hierarchical)
-                .foregroundStyle(iconTint)
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .labelStyle(.titleAndIcon)
+    }
+
+    private var summaryIconTopPadding: CGFloat {
+        usesCompactLayout ? 12 : 13
     }
 
     private var caption: String {
@@ -780,6 +792,7 @@ private struct DownloadQueueMetricChip: View {
     let value: String
     let systemImage: String
     let tint: Color
+    var showsTitle = true
     let isSelected: Bool
     let action: () -> Void
 
@@ -793,18 +806,20 @@ private struct DownloadQueueMetricChip: View {
                 Text(value)
                     .font(.caption.monospacedDigit().weight(.bold))
                     .foregroundStyle(valueStyle)
-                Text(title)
-                    .font(.caption.weight(.semibold))
-                    .lineLimit(1)
-                    .foregroundStyle(titleStyle)
+                if showsTitle {
+                    Text(title)
+                        .font(.caption.weight(.semibold))
+                        .lineLimit(1)
+                        .foregroundStyle(titleStyle)
+                }
             }
             .padding(.horizontal, 10)
-            .frame(height: 34)
+            .frame(height: showsTitle ? 34 : 30)
             .contentShape(Capsule(style: .continuous))
         }
         .buttonStyle(.plain)
         .background(tint.opacity(isSelected ? 0.16 : 0.06), in: Capsule(style: .continuous))
-        .keiInteractiveGlass(17)
+        .keiInteractiveGlass(showsTitle ? 17 : 15)
         .overlay {
             Capsule(style: .continuous)
                 .stroke(tint.opacity(isSelected ? 0.45 : 0.18), lineWidth: 1)

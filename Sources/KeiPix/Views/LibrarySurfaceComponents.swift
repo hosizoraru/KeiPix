@@ -11,6 +11,7 @@ struct OS26LibrarySearchField: View {
     private let idealWidth: CGFloat
     private let maxWidth: CGFloat
     private let collapsesOnPhone: Bool
+    private let onClose: (() -> Void)?
     private let onSubmit: () -> Void
     @State private var isExpanded = false
 
@@ -22,6 +23,7 @@ struct OS26LibrarySearchField: View {
         idealWidth: CGFloat = 240,
         maxWidth: CGFloat = 320,
         collapsesOnPhone: Bool = true,
+        onClose: (() -> Void)? = nil,
         onSubmit: @escaping () -> Void = {}
     ) {
         _text = text
@@ -31,6 +33,7 @@ struct OS26LibrarySearchField: View {
         self.idealWidth = idealWidth
         self.maxWidth = maxWidth
         self.collapsesOnPhone = collapsesOnPhone
+        self.onClose = onClose
         self.onSubmit = onSubmit
     }
 
@@ -55,7 +58,11 @@ struct OS26LibrarySearchField: View {
                 if text.isEmpty {
                     Button {
                         withAnimation(.snappy(duration: 0.16)) {
-                            isExpanded = false
+                            if let onClose {
+                                onClose()
+                            } else {
+                                isExpanded = false
+                            }
                         }
                     } label: {
                         Label(L10n.close, systemImage: "xmark.circle.fill")

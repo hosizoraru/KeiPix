@@ -471,6 +471,7 @@ enum L10n {
     static var concurrentDownloads: String { text("Concurrent Downloads") }
     static var concurrentDownloadsHint: String { text("Use fewer concurrent downloads for unstable proxies; use more when the connection is healthy.") }
     static var downloadFilter: String { text("Download Filter") }
+    static var filterDownloads: String { text("Filter downloads...") }
     static var searchDownloads: String { text("Search downloads") }
     static var sortDownloads: String { text("Sort Downloads") }
     static var recentlyUpdated: String { text("Recently Updated") }

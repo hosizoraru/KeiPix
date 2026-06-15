@@ -33728,6 +33728,35 @@
         }
       }
     },
+    "Filter downloads...": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Filter downloads..."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ダウンロードを絞り込み..."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "筛选下载..."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "篩選下載..."
+          }
+        }
+      }
+    },
     "Search downloads": {
       "extractionState": "manual",
       "localizations": {

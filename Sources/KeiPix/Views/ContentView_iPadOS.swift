@@ -419,7 +419,7 @@ struct ContentView: View {
             )
                 .allowsHitTesting(false)
             PhoneFeedFilterBarOverlayBridge(
-                text: $store.clientFilterQuery,
+                text: phoneFeedFilterTextBinding,
                 placeholder: phoneFeedFilterPlaceholder,
                 resultText: phoneCollapsedFeedFilterResultText,
                 isEnabled: isPhoneFeedFilterEnabled(layout: layout),
@@ -2075,6 +2075,21 @@ struct ContentView: View {
         isCompactCustomTabRootActive ? .onScrollDown : .automatic
     }
 
+    private var phoneFeedFilterTextBinding: Binding<String> {
+        Binding {
+            if store.selectedRoute == .downloads {
+                return store.downloads.downloadSearchText
+            }
+            return store.clientFilterQuery
+        } set: { value in
+            if store.selectedRoute == .downloads {
+                store.downloads.setDownloadSearchText(value)
+            } else {
+                store.clientFilterQuery = value
+            }
+        }
+    }
+
     private func isPhoneFeedFilterEnabled(layout: MobileWorkspaceLayout) -> Bool {
         layout.platform == .phone
             && isCompactCustomTabRootActive
@@ -2083,16 +2098,26 @@ struct ContentView: View {
     }
 
     private var phoneHasActiveFeedFilter: Bool {
-        store.clientFilterQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false
+        if store.selectedRoute == .downloads {
+            return store.downloads.downloadSearchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false
+                || store.downloads.downloadQueueFilter != .all
+        }
+        return store.clientFilterQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false
     }
 
     private var phoneSupportsClientFeedFilter: Bool {
-        store.selectedRoute.usesArtworkFeed
+        if store.selectedRoute == .downloads {
+            return true
+        }
+        return store.selectedRoute.usesArtworkFeed
             || (store.selectedRoute.usesNovelFeed && store.selectedRoute != .novelWatchlist)
             || store.selectedRoute == .pixivActivity
     }
 
     private var phoneClientFilterTotalCount: Int {
+        if store.selectedRoute == .downloads {
+            return store.downloads.items.filter(store.downloads.downloadQueueFilter.includes).count
+        }
         if store.selectedRoute == .pixivActivity {
             return store.pixivActivityItems.count
         }
@@ -2103,6 +2128,9 @@ struct ContentView: View {
     }
 
     private var phoneClientFilterVisibleCount: Int {
+        if store.selectedRoute == .downloads {
+            return store.downloads.filteredItems.count
+        }
         if store.selectedRoute == .pixivActivity {
             return store.pixivActivityVisibleItems.count
         }
@@ -2113,6 +2141,9 @@ struct ContentView: View {
     }
 
     private var phoneFeedFilterPlaceholder: String {
+        if store.selectedRoute == .downloads {
+            return L10n.filterDownloads
+        }
         if store.selectedRoute == .pixivActivity {
             return L10n.filterActivity
         }
