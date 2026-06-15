@@ -54,15 +54,25 @@ enum NativeCreatorPreviewCollectionLayout: Equatable {
         }
     }
 
-    var interitemSpacing: CGFloat { 14 }
+    var interitemSpacing: CGFloat {
+        if case .horizontalShelf = self {
+            return 14
+        }
+        return 10
+    }
 
-    var lineSpacing: CGFloat { 14 }
+    var lineSpacing: CGFloat {
+        if case .horizontalShelf = self {
+            return 14
+        }
+        return 10
+    }
 
     var sectionInsets: EdgeInsets {
         if case .horizontalShelf = self {
             return EdgeInsets(top: 2, leading: 1, bottom: 2, trailing: 1)
         }
-        return EdgeInsets(top: 14, leading: 18, bottom: 20, trailing: 18)
+        return EdgeInsets(top: 10, leading: 16, bottom: 12, trailing: 16)
     }
 
     var viewportHeight: CGFloat? {
@@ -106,13 +116,42 @@ enum NativeCreatorPreviewCollectionLayout: Equatable {
     private func itemHeight(forWidth width: CGFloat) -> CGFloat {
         switch self {
         case .single:
-            return 342
+            return NativeCreatorPreviewCardMetrics.expandedHeight
         case .auto, .twoUp:
-            let previewHeight = max(width / 2.4, 118)
-            return 54 + previewHeight + 28 + 28 + 36 + 28
+            return NativeCreatorPreviewCardMetrics.compactHeight(forWidth: width)
         case .horizontalShelf(_, let itemHeight):
             return itemHeight
         }
+    }
+}
+
+private enum NativeCreatorPreviewCardMetrics {
+    static let headerHeight: CGFloat = 54
+    static let cardVerticalPadding: CGFloat = 24
+    static let stackSpacing: CGFloat = 20
+    static let compactPreviewMinimumHeight: CGFloat = 118
+    static let compactPreviewAspect: CGFloat = 2.4
+    static let compactActionRailHeight: CGFloat = 32
+    static let expandedPreviewShelfHeight: CGFloat = 178
+
+    static var expandedHeight: CGFloat {
+        headerHeight
+            + compactActionRailHeight
+            + expandedPreviewShelfHeight
+            + cardVerticalPadding
+            + stackSpacing
+    }
+
+    static func compactHeight(forWidth width: CGFloat) -> CGFloat {
+        headerHeight
+            + compactPreviewHeight(forWidth: width)
+            + compactActionRailHeight
+            + cardVerticalPadding
+            + stackSpacing
+    }
+
+    private static func compactPreviewHeight(forWidth width: CGFloat) -> CGFloat {
+        max(width / compactPreviewAspect, compactPreviewMinimumHeight)
     }
 }
 

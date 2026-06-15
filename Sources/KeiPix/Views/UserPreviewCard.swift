@@ -59,7 +59,7 @@ struct UserPreviewCard: View {
     var loadExpandedArtworks: (() async throws -> [PixivArtwork])? = nil
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 10) {
             header
             if expandedPreview {
                 expandedCommandRail
@@ -74,7 +74,7 @@ struct UserPreviewCard: View {
                 }
             }
         }
-        .padding(14)
+        .padding(12)
         .keiInteractiveGlass(20)
         .contextMenu { creatorContextMenu }
     }
@@ -214,7 +214,7 @@ struct UserPreviewCard: View {
                     compactFollowLabel
                 }
             }
-            .buttonStyle(.glassProminent)
+            .buttonStyle(.glass)
             .buttonBorderShape(.capsule)
             .controlSize(.small)
             .foregroundStyle(profile.foregroundStyle)

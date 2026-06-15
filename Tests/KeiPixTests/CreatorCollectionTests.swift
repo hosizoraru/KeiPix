@@ -1,8 +1,25 @@
 import Foundation
+import CoreGraphics
 import Testing
 @testable import KeiPix
 
 struct CreatorCollectionTests {
+    @Test("Native creator preview layout keeps compact cards dense")
+    func nativeCreatorPreviewLayoutKeepsCompactCardsDense() {
+        let layout = NativeCreatorPreviewCollectionLayout(mode: .auto)
+        let containerWidth: CGFloat = 393
+        let size = layout.itemSize(
+            for: .preview(Self.preview(id: 42)),
+            containerWidth: containerWidth
+        )
+
+        #expect(layout.lineSpacing <= 10)
+        #expect(layout.sectionInsets.top <= 10)
+        #expect(layout.sectionInsets.bottom <= 14)
+        #expect(size.width >= 340)
+        #expect(size.height < size.width * 0.84)
+    }
+
     @Test("Pinned creator library keeps newest pins first")
     func pinnedCreatorLibraryKeepsNewestPinsFirst() {
         var library = PinnedCreatorLibrary()
@@ -44,6 +61,10 @@ struct CreatorCollectionTests {
         #expect(detail.profile.totalIllusts > 0)
         #expect(VisualQASampleData.creatorProfileRecentWorks.isEmpty == false)
         #expect(VisualQASampleData.creatorProfileRelatedUsers.count >= 2)
+    }
+
+    private static func preview(id: Int) -> PixivUserPreview {
+        PixivUserPreview(user: user(id: id, name: "Alice"), illusts: [], isMuted: false)
     }
 
     private static func user(id: Int, name: String, account: String? = nil) -> PixivUser {

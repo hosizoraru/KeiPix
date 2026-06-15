@@ -4948,6 +4948,9 @@ struct NativeBoundaryTests {
         let compactRailStart = try #require(creatorCard.range(of: "private var compactCommandRail: some View"))
         let compactRailEnd = try #require(creatorCard.range(of: "private var iconOnlyNavigationButtons"))
         let compactRailSource = String(creatorCard[compactRailStart.lowerBound..<compactRailEnd.lowerBound])
+        let followButtonStart = try #require(creatorCard.range(of: "private var followButton: some View"))
+        let followButtonEnd = try #require(creatorCard.range(of: "private var compactFollowLabel: some View"))
+        let followButtonSource = String(creatorCard[followButtonStart.lowerBound..<followButtonEnd.lowerBound])
 
         #expect(creatorComponents.contains("NativeCreatorPreviewCollectionView("))
         #expect(creatorComponents.contains(".frame(maxWidth: .infinity, maxHeight: .infinity)"))
@@ -5027,7 +5030,10 @@ struct NativeBoundaryTests {
         #expect(creatorCard.contains("private struct CreatorCardPinControlProfile"))
         #expect(creatorCard.contains("compactFollowLabel"))
         #expect(creatorCard.contains("compactFollowMenuForegroundStyle"))
+        #expect(followButtonSource.contains(".buttonStyle(.glassProminent)") == false)
+        #expect(followButtonSource.contains(".buttonStyle(.glass)"))
         #expect(creatorCard.contains("compactPinForegroundStyle"))
+        #expect(nativeCollection.contains("54 + previewHeight + 28 + 28 + 36 + 28") == false)
         #expect(compactRailSource.contains("togglePinnedCreator") == false)
         #expect(compactRailSource.contains("feedbackActionChip"))
         #expect(compactRailSource.contains("muteCreatorActionChip"))
@@ -5404,7 +5410,8 @@ struct NativeBoundaryTests {
         #expect(creatorCard.contains("cachedArtworks.isEmpty == false"))
         #expect(creatorCard.contains(".task(id: userID)"))
         #expect(nativeCollection.contains("let minimumWidth: CGFloat = 300"))
-        #expect(nativeCollection.contains("return 342"))
+        #expect(nativeCollection.contains("NativeCreatorPreviewCardMetrics.expandedHeight"))
+        #expect(nativeCollection.contains("NativeCreatorPreviewCardMetrics.compactHeight(forWidth: width)"))
     }
 
     @Test("Creator profile shelves use native horizontal collection bridges")
