@@ -244,16 +244,20 @@ struct PlatformPageTitleHeader<Trailing: View>: View {
         #if os(iOS)
         ViewThatFits(in: .horizontal) {
             HStack(alignment: .firstTextBaseline, spacing: 10) {
-                titleText
-                statusPill
+                if showsInlineTitleAndStatus {
+                    titleText
+                    statusPill
+                }
                 Spacer(minLength: 0)
                 trailing()
             }
 
             VStack(alignment: .leading, spacing: 8) {
                 HStack(alignment: .firstTextBaseline, spacing: 10) {
-                    titleText
-                    statusPill
+                    if showsInlineTitleAndStatus {
+                        titleText
+                        statusPill
+                    }
                     Spacer(minLength: 0)
                 }
                 HStack(spacing: 8) {
@@ -311,9 +315,21 @@ struct PlatformPageTitleHeader<Trailing: View>: View {
 
     private var showsStatusPillIcon: Bool {
         #if os(iOS)
-        UIDevice.current.userInterfaceIdiom != .phone
+        showsInlineTitleAndStatus
         #else
         true
+        #endif
+    }
+
+    private var showsInlineTitleAndStatus: Bool {
+        isPhone == false
+    }
+
+    private var isPhone: Bool {
+        #if os(iOS)
+        UIDevice.current.userInterfaceIdiom == .phone
+        #else
+        false
         #endif
     }
 }

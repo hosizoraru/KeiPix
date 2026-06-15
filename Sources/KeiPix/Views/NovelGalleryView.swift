@@ -1,4 +1,7 @@
 import SwiftUI
+#if os(iOS)
+import UIKit
+#endif
 
 /// Gallery column for novel routes. Mirrors `GalleryView`'s
 /// responsibilities (refresh, paginate, empty state, selection) but
@@ -52,7 +55,7 @@ struct NovelGalleryView: View {
             .animation(.snappy(duration: 0.22), value: novelStore.novels.isEmpty)
             .animation(.snappy(duration: 0.22), value: hasAttemptedInitialLoad)
         }
-        .navigationTitle(store.selectedRoute.title)
+        .navigationTitle(platformNavigationTitle)
         .mobileFloatingTopChrome(syncID: "novels|\(store.selectedRoute.rawValue)")
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
@@ -116,6 +119,14 @@ struct NovelGalleryView: View {
                 .os26SheetChrome(.compactBookmarkEditor)
                 #endif
         }
+    }
+
+    private var platformNavigationTitle: String {
+        #if os(iOS)
+        return UIDevice.current.userInterfaceIdiom == .phone ? "" : store.selectedRoute.title
+        #else
+        return store.selectedRoute.title
+        #endif
     }
 
     @ViewBuilder

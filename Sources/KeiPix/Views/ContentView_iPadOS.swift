@@ -1091,17 +1091,50 @@ struct ContentView: View {
     }
 
     private var routeMenuCountBadgeText: String? {
+        if currentMobilePlatform == .phone,
+           let count = phoneRouteMenuBadgeCount {
+            return routeBadgeText(for: count)
+        }
         if store.selectedRoute == .pixivActivity {
             return PixivActivityFeedPresentation.routeBadgeText(itemCount: store.pixivActivityVisibleItems.count)
         }
         if store.selectedRoute == .downloads {
-            let count = store.downloads.filteredItems.count
-            guard count > 0 else { return nil }
-            return count > 999 ? "999+" : "\(count)"
+            return routeBadgeText(for: store.downloads.filteredItems.count)
         }
         guard store.selectedRoute.usesArtworkFeed else { return nil }
         let hasLocalFilter = store.clientFilterQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false
         let count = hasLocalFilter ? store.clientFilteredArtworks.count : store.artworks.count
+        return routeBadgeText(for: count)
+    }
+
+    private var phoneRouteMenuBadgeCount: Int? {
+        switch store.selectedRoute {
+        case .pixivActivity:
+            return store.pixivActivityVisibleItems.count
+        case .downloads:
+            return store.downloads.filteredItems.count
+        case .savedSearches:
+            return store.savedSearchPresets.count + store.savedSearches.count + store.searchHistory.count
+        case .history:
+            return store.localBrowsingHistory.count
+        case .watchLater:
+            return store.watchLaterQueue.count
+        case .workSubscriptions:
+            return store.workSubscriptions.count
+        case .mutedContent:
+            return store.mutedContentArchiveSnapshot().totalCount
+        case .mangaWatchlist:
+            return store.mangaWatchlistReadStateLibrary.items.count
+        case .novelWatchlist:
+            return store.novels.watchlistSeries.count
+        case .pixivCollections, .myPixivCollections, .savedPixivCollections:
+            return store.pixivCollections.count
+        default:
+            return nil
+        }
+    }
+
+    private func routeBadgeText(for count: Int) -> String? {
         guard count > 0 else { return nil }
         return count > 999 ? "999+" : "\(count)"
     }
@@ -1130,6 +1163,7 @@ struct ContentView: View {
     }
 
     private var downloadQueueToolbarBadgeText: String? {
+        guard currentMobilePlatform != .phone else { return nil }
         let actionableCount = store.downloads.activeCount + store.downloads.failedFilteredCount
         guard actionableCount > 0 else { return nil }
         return actionableCount > 99 ? "99+" : actionableCount.formatted()

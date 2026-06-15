@@ -1,4 +1,7 @@
 import SwiftUI
+#if os(iOS)
+import UIKit
+#endif
 
 enum DiscoveryDashboardPresentation {
     case full
@@ -245,13 +248,15 @@ private struct DiscoveryDashboardHeroCard: View {
             )
 
             VStack(alignment: .leading, spacing: style == .full ? 5 : 3) {
-                Text(L10n.discover)
-                    .font(style == .full ? .title2.weight(.semibold) : .headline.weight(.semibold))
-                    .lineLimit(1)
+                if showsBoardTitle {
+                    Text(L10n.discover)
+                        .font(style == .full ? .title2.weight(.semibold) : .headline.weight(.semibold))
+                        .lineLimit(1)
+                }
 
                 Text(accountSubtitle)
-                    .font(style == .full ? .callout : .caption)
-                    .foregroundStyle(.secondary)
+                    .font(accountSubtitleFont)
+                    .foregroundStyle(showsBoardTitle ? .secondary : .primary)
                     .lineLimit(1)
                     .truncationMode(.middle)
             }
@@ -262,6 +267,21 @@ private struct DiscoveryDashboardHeroCard: View {
         .padding(style == .full ? 16 : 13)
         .frame(maxWidth: .infinity, alignment: .leading)
         .keiGlass(style.cornerRadius)
+    }
+
+    private var showsBoardTitle: Bool {
+        #if os(iOS)
+        UIDevice.current.userInterfaceIdiom != .phone
+        #else
+        true
+        #endif
+    }
+
+    private var accountSubtitleFont: Font {
+        if showsBoardTitle {
+            return style == .full ? .callout : .caption
+        }
+        return .headline.weight(.semibold)
     }
 
     private var accountSubtitle: String {

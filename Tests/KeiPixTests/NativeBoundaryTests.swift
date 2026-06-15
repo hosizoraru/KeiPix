@@ -908,6 +908,25 @@ struct NativeBoundaryTests {
         #expect(iPadContentView.contains("badgeText: routeMenuCountBadgeText"))
         #expect(iPadContentView.contains("store.selectedRoute == .pixivActivity"))
         #expect(iPadContentView.contains("PixivActivityFeedPresentation.routeBadgeText(itemCount: store.pixivActivityVisibleItems.count)"))
+        #expect(iPadContentView.contains("private var phoneRouteMenuBadgeCount: Int?"))
+        #expect(iPadContentView.contains("case .savedSearches:"))
+        #expect(iPadContentView.contains("store.savedSearchPresets.count + store.savedSearches.count + store.searchHistory.count"))
+        #expect(iPadContentView.contains("case .history:"))
+        #expect(iPadContentView.contains("store.localBrowsingHistory.count"))
+        #expect(iPadContentView.contains("case .watchLater:"))
+        #expect(iPadContentView.contains("store.watchLaterQueue.count"))
+        #expect(iPadContentView.contains("case .workSubscriptions:"))
+        #expect(iPadContentView.contains("store.workSubscriptions.count"))
+        #expect(iPadContentView.contains("case .mutedContent:"))
+        #expect(iPadContentView.contains("store.mutedContentArchiveSnapshot().totalCount"))
+        #expect(iPadContentView.contains("case .mangaWatchlist:"))
+        #expect(iPadContentView.contains("store.mangaWatchlistReadStateLibrary.items.count"))
+        #expect(iPadContentView.contains("case .novelWatchlist:"))
+        #expect(iPadContentView.contains("store.novels.watchlistSeries.count"))
+        #expect(iPadContentView.contains("case .pixivCollections, .myPixivCollections, .savedPixivCollections:"))
+        #expect(iPadContentView.contains("store.pixivCollections.count"))
+        #expect(iPadContentView.contains("private func routeBadgeText(for count: Int) -> String?"))
+        #expect(iPadContentView.contains("guard currentMobilePlatform != .phone else { return nil }"))
         #expect(nativeToolbarMenuButton.contains("let badgeText: String?"))
         #expect(nativeToolbarMenuButton.contains("configuration.title = badgeText") == false)
         #expect(nativeToolbarMenuButton.contains("configuration.image = Self.toolbarImage("))
@@ -2143,8 +2162,8 @@ struct NativeBoundaryTests {
         #expect(novelStore.contains("func hasReusableFeed(for route: PixivRoute) -> Bool"))
     }
 
-    @Test("iPad page status uses inline title chrome")
-    func iPadPageStatusUsesInlineTitleChrome() throws {
+    @Test("iPhone page chrome keeps board titles out of the content header")
+    func iPhonePageChromeKeepsBoardTitlesOutOfContentHeader() throws {
         let root = try packageRoot()
         let emptyState = try String(
             contentsOf: root.appending(path: "Sources/KeiPix/Views/EmptyStateView.swift"),
@@ -2178,6 +2197,8 @@ struct NativeBoundaryTests {
             "Sources/KeiPix/Views/TrendingTagsView.swift",
             "Sources/KeiPix/Views/BookmarkTagsView.swift",
             "Sources/KeiPix/Views/MangaWatchlistView.swift",
+            "Sources/KeiPix/Views/NovelWatchlistView.swift",
+            "Sources/KeiPix/Views/PixivCollectionsView.swift",
             "Sources/KeiPix/Views/UserPreviewListView.swift",
             "Sources/KeiPix/Views/SpotlightView.swift",
             "Sources/KeiPix/Views/WorkSubscriptionsView.swift",
@@ -2192,11 +2213,15 @@ struct NativeBoundaryTests {
         #expect(emptyState.contains("func platformPageHeader<Trailing: View>("))
         #expect(emptyState.contains("@ViewBuilder trailing: @escaping () -> Trailing"))
         #expect(emptyState.contains("ViewThatFits(in: .horizontal)"))
-        #expect(emptyState.contains("statusPill\n                Spacer(minLength: 0)\n                trailing()"))
-        #expect(emptyState.contains("titleText\n                    statusPill\n                    Spacer(minLength: 0)"))
+        #expect(emptyState.contains("if showsInlineTitleAndStatus {\n                    titleText\n                    statusPill\n                }"))
+        #expect(emptyState.contains("private var titleText: some View"))
+        #expect(emptyState.contains("Text(title)\n            .font(.largeTitle.weight(.bold))"))
+        #expect(emptyState.contains("private var isPhone: Bool"))
+        #expect(emptyState.contains("private var showsInlineTitleAndStatus: Bool"))
         #expect(emptyState.contains("Spacer(minLength: 0)\n                    trailing()"))
         #expect(emptyState.contains("if let statusSystemImage, showsStatusPillIcon"))
-        #expect(emptyState.contains("UIDevice.current.userInterfaceIdiom != .phone"))
+        #expect(emptyState.contains("UIDevice.current.userInterfaceIdiom == .phone"))
+        #expect(emptyState.contains("showsInlineTitleAndStatus"))
         #expect(emptyState.contains(".mobileFloatingTopChrome(syncID: \"\\(title)|\\(status)\")"))
         #expect(emptyState.contains(".glassEffect(.regular, in: Capsule(style: .continuous))"))
         #expect(mobileTopChrome.contains("func mobileFloatingTopChrome(syncID: String = \"default\")"))
@@ -2211,6 +2236,9 @@ struct NativeBoundaryTests {
         #expect(mobileTopChrome.contains(".toolbarBackground(.hidden, for: .navigationBar)"))
         #expect(gallery.contains(".mobileFloatingTopChrome(syncID: \"gallery|\\(store.selectedRoute.rawValue)\")"))
         #expect(novelGallery.contains(".mobileFloatingTopChrome(syncID: \"novels|\\(store.selectedRoute.rawValue)\")"))
+        #expect(novelGallery.contains(".navigationTitle(platformNavigationTitle)"))
+        #expect(novelGallery.contains("import UIKit"))
+        #expect(novelGallery.contains("return UIDevice.current.userInterfaceIdiom == .phone ? \"\" : store.selectedRoute.title"))
         #expect(novelGallery.contains(".nativeBottomTabContentSurface()"))
         #expect(searchWorkspace.contains(".platformPageNavigationChrome(title: L10n.search, status: searchNavigationStatus)"))
         #expect(searchWorkspace.contains("NativeBottomTabScrollContentHost(showsIndicators: true)"))
@@ -2219,7 +2247,7 @@ struct NativeBoundaryTests {
 
         for path in inlineStatusPages {
             let source = try String(contentsOf: root.appending(path: path), encoding: .utf8)
-            #expect(source.contains(".platformPageHeader("), "\(path) should render iPadOS page status beside the title")
+            #expect(source.contains(".platformPageHeader("), "\(path) should render phone page status/actions while preserving iPad title chrome")
             #expect(source.contains(".platformPageNavigationChrome("), "\(path) should keep macOS navigation subtitle behavior centralized")
             #expect(source.contains(".navigationSubtitle(") == false, "\(path) should not force iPadOS status into the system subtitle row")
         }
