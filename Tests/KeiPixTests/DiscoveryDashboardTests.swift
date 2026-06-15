@@ -112,10 +112,44 @@ struct DiscoveryDashboardTests {
         #expect(sidebarWorks.routes.contains(.savedPixivCollections) == false)
         #expect(sidebarLibrary.routes.contains(.savedPixivisionArticles))
         #expect(sidebarLibrary.routes.contains(.myPixivCollections))
-        #expect(sidebarLibrary.routes.contains(.savedPixivCollections))
+        #expect(sidebarLibrary.routes.contains(.savedPixivCollections) == false)
         #expect(dashboardLibrary.routes.contains(.savedPixivisionArticles))
         #expect(dashboardLibrary.routes.contains(.myPixivCollections))
-        #expect(dashboardLibrary.routes.contains(.savedPixivCollections))
+        #expect(dashboardLibrary.routes.contains(.savedPixivCollections) == false)
+    }
+
+    @Test("Merged library route families keep a single visible entry")
+    func mergedLibraryRouteFamiliesKeepSingleVisibleEntry() throws {
+        let sidebarLibrary = try #require(PixivRoute.sidebarSections.first { $0 == .library })
+        let dashboardLibrary = try #require(DiscoveryDashboardSection.all.first { $0.id == "library" })
+        let creatorNetwork = try #require(DiscoveryDashboardSection.all.first { $0.id == "creators-search" })
+
+        #expect(PixivRoute.privateBookmarks.routeScopeFamily == .ownBookmarks)
+        #expect(PixivRoute.savedPixivCollections.routeScopeFamily == .pixivCollectionsLibrary)
+        #expect(PixivRoute.privateFollowing.routeScopeFamily == .followingArtwork)
+        #expect(PixivRoute.pinnedCreators.routeScopeFamily == .followedCreators)
+        #expect(PixivRoute.privateBookmarks.visibleLibraryRoute == .publicBookmarks)
+        #expect(PixivRoute.savedPixivCollections.visibleLibraryRoute == .myPixivCollections)
+        #expect(PixivRoute.privateFollowing.visibleLibraryRoute == .following)
+        #expect(PixivRoute.pinnedCreators.visibleLibraryRoute == .followingCreators)
+
+        #expect(sidebarLibrary.routes.contains(.publicBookmarks))
+        #expect(sidebarLibrary.routes.contains(.privateBookmarks) == false)
+        #expect(sidebarLibrary.routes.contains(.myPixivCollections))
+        #expect(sidebarLibrary.routes.contains(.savedPixivCollections) == false)
+        #expect(sidebarLibrary.routes.contains(.following))
+        #expect(sidebarLibrary.routes.contains(.privateFollowing) == false)
+        #expect(sidebarLibrary.routes.contains(.followingCreators))
+        #expect(sidebarLibrary.routes.contains(.pinnedCreators) == false)
+
+        #expect(dashboardLibrary.routes.contains(.publicBookmarks))
+        #expect(dashboardLibrary.routes.contains(.privateBookmarks) == false)
+        #expect(dashboardLibrary.routes.contains(.myPixivCollections))
+        #expect(dashboardLibrary.routes.contains(.savedPixivCollections) == false)
+        #expect(dashboardLibrary.routes.contains(.following))
+        #expect(dashboardLibrary.routes.contains(.privateFollowing) == false)
+        #expect(creatorNetwork.routes.contains(.followingCreators))
+        #expect(creatorNetwork.routes.contains(.pinnedCreators) == false)
     }
 
     @Test("Compact dashboard route previews keep density without hiding selection")

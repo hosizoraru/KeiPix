@@ -579,8 +579,9 @@ struct ContentView: View {
     }
 
     private func syncSidebarSelectionFromRoute() {
-        guard store.selectedRoute.isSidebarRoute else { return }
-        let destination = KeiPixSidebarDestination.route(store.selectedRoute)
+        let visibleRoute = store.selectedRoute.visibleLibraryRoute
+        guard visibleRoute.isSidebarRoute else { return }
+        let destination = KeiPixSidebarDestination.route(visibleRoute)
         if sidebarSelection != destination {
             sidebarSelection = destination
         }

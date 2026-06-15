@@ -370,26 +370,36 @@ enum MobileRouteMenuConfiguration {
         case .bookmarks:
             [
                 MobileRouteMenuSection(
-                    id: "bookmarks",
+                    id: "bookmarks-owned",
                     title: L10n.bookmarks,
+                    routes: PixivRoute.ownBookmarkRoutes,
+                    presentation: .submenu(systemImage: "bookmark")
+                ),
+                MobileRouteMenuSection(
+                    id: "bookmarks",
+                    title: L10n.savedArticles,
                     routes: [
-                        .publicBookmarks,
-                        .privateBookmarks,
                         .bookmarkTags,
-                        .savedPixivisionArticles,
-                        .myPixivCollections,
-                        .savedPixivCollections
+                        .savedPixivisionArticles
                     ]
                 ),
                 MobileRouteMenuSection(
-                    id: "bookmarks-following",
+                    id: "bookmarks-pixiv-collections",
+                    title: L10n.pixivCollections,
+                    routes: PixivRoute.pixivCollectionsLibraryRoutes,
+                    presentation: .submenu(systemImage: "rectangle.stack.badge.person.crop")
+                ),
+                MobileRouteMenuSection(
+                    id: "bookmarks-following-artwork",
                     title: L10n.following,
-                    routes: [
-                        .following,
-                        .privateFollowing,
-                        .followingCreators,
-                        .pinnedCreators
-                    ]
+                    routes: PixivRoute.followingArtworkRoutes,
+                    presentation: .submenu(systemImage: "person.2")
+                ),
+                MobileRouteMenuSection(
+                    id: "bookmarks-following-creators",
+                    title: L10n.followingCreators,
+                    routes: PixivRoute.followedCreatorRoutes,
+                    presentation: .submenu(systemImage: "person.2.crop.square.stack")
                 ),
                 MobileRouteMenuSection(
                     id: "bookmarks-library",

@@ -151,6 +151,9 @@ struct MobileBottomTabConfigurationTests {
         #expect(bookmarkRoutes.contains(.savedPixivisionArticles))
         #expect(bookmarkRoutes.contains(.myPixivCollections))
         #expect(bookmarkRoutes.contains(.savedPixivCollections))
+        #expect(bookmarkRoutes.contains(.privateBookmarks))
+        #expect(bookmarkRoutes.contains(.privateFollowing))
+        #expect(bookmarkRoutes.contains(.pinnedCreators))
         #expect(bookmarkRoutes.contains(.allFollowing) == false)
         #expect(bookmarkRoutes.contains(.followingCreators))
         #expect(bookmarkRoutes.contains(.downloads))
@@ -177,16 +180,42 @@ struct MobileBottomTabConfigurationTests {
     @Test("Following artwork menus expose public and private feeds without the aggregate route")
     func followingArtworkMenusExposePublicAndPrivateFeedsWithoutAggregateRoute() throws {
         let bookmarkSections = MobileRouteMenuConfiguration.sections(for: .bookmarks)
-        let followingSection = try #require(bookmarkSections.first { $0.id == "bookmarks-following" })
+        let followingSection = try #require(bookmarkSections.first { $0.id == "bookmarks-following-artwork" })
 
+        #expect(followingSection.presentation == .submenu(systemImage: "person.2"))
         #expect(followingSection.routes.contains(.following))
         #expect(followingSection.routes.contains(.privateFollowing))
         #expect(followingSection.routes.contains(.allFollowing) == false)
         #expect(PixivRoute.following.title == L10n.publicFollowing)
         #expect(PixivRouteSection.library.routes.contains(.following))
-        #expect(PixivRouteSection.library.routes.contains(.privateFollowing))
+        #expect(PixivRouteSection.library.routes.contains(.privateFollowing) == false)
         #expect(PixivRouteSection.library.routes.contains(.allFollowing) == false)
         #expect(DiscoveryDashboardSection.dashboardRoutes.contains(.allFollowing) == false)
+    }
+
+    @Test("Bookmark library families collapse behind submenu entries")
+    func bookmarkLibraryFamiliesCollapseBehindSubmenuEntries() throws {
+        let bookmarkSections = MobileRouteMenuConfiguration.sections(for: .bookmarks)
+        let ownBookmarks = try #require(bookmarkSections.first { $0.id == "bookmarks-owned" })
+        let collections = try #require(bookmarkSections.first { $0.id == "bookmarks-pixiv-collections" })
+        let followingArtwork = try #require(bookmarkSections.first { $0.id == "bookmarks-following-artwork" })
+        let followingCreators = try #require(bookmarkSections.first { $0.id == "bookmarks-following-creators" })
+        let inlineRoutes = bookmarkSections
+            .filter { $0.presentation == .inline }
+            .flatMap(\.routes)
+
+        #expect(ownBookmarks.presentation == .submenu(systemImage: "bookmark"))
+        #expect(collections.presentation == .submenu(systemImage: "rectangle.stack.badge.person.crop"))
+        #expect(followingArtwork.presentation == .submenu(systemImage: "person.2"))
+        #expect(followingCreators.presentation == .submenu(systemImage: "person.2.crop.square.stack"))
+        #expect(ownBookmarks.routes == PixivRoute.routes(for: .ownBookmarks))
+        #expect(collections.routes == PixivRoute.routes(for: .pixivCollectionsLibrary))
+        #expect(followingArtwork.routes == PixivRoute.routes(for: .followingArtwork))
+        #expect(followingCreators.routes == PixivRoute.routes(for: .followedCreators))
+        #expect(inlineRoutes.contains(.privateBookmarks) == false)
+        #expect(inlineRoutes.contains(.savedPixivCollections) == false)
+        #expect(inlineRoutes.contains(.privateFollowing) == false)
+        #expect(inlineRoutes.contains(.pinnedCreators) == false)
     }
 
     @Test("Dedicated search tab owns search-related routes")
@@ -211,6 +240,9 @@ struct MobileBottomTabConfigurationTests {
         #expect(MobileBottomTabKind.kind(containing: .savedPixivisionArticles) == .bookmarks)
         #expect(MobileBottomTabKind.kind(containing: .myPixivCollections) == .bookmarks)
         #expect(MobileBottomTabKind.kind(containing: .savedPixivCollections) == .bookmarks)
+        #expect(MobileBottomTabKind.kind(containing: .privateBookmarks) == .bookmarks)
+        #expect(MobileBottomTabKind.kind(containing: .privateFollowing) == .bookmarks)
+        #expect(MobileBottomTabKind.kind(containing: .pinnedCreators) == .bookmarks)
     }
 
     @Test("Mobile cold launch restores the last concrete bottom-tab page")

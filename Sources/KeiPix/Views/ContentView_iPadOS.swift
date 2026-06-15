@@ -486,7 +486,7 @@ struct ContentView: View {
             selectSidebarItem(item)
         }
         .onChange(of: store.selectedRoute) { _, route in
-            selectedSidebarItem = .route(route)
+            selectedSidebarItem = .route(route.visibleLibraryRoute)
             selectedTab = tab(for: route)
         }
         .navigationSplitViewStyle(.balanced)
@@ -1483,8 +1483,24 @@ struct ContentView: View {
         }
 
         var sections: [NativeToolbarMenuSection] = []
+        var primaryItems: [NativeToolbarMenuItem] = []
+        if let family = mode.route.routeScopeFamily {
+            primaryItems.append(
+                NativeToolbarMenuItem.singleSelectionSubmenu(
+                    title: family.title,
+                    selectedTitle: mode.route.title,
+                    selectedOption: mode.route,
+                    systemImage: family.systemImage,
+                    options: family.routes,
+                    id: IPadToolbarMenuAction.route,
+                    optionTitle: \.title,
+                    optionSystemImage: \.systemImage
+                )
+            )
+        }
+
         if mode == .discovery {
-            var items: [NativeToolbarMenuItem] = [
+            primaryItems.append(
                 NativeToolbarMenuItem.singleSelectionSubmenu(
                     title: L10n.pixivCollectionSource,
                     selectedTitle: store.pixivCollectionDiscoveryScope.title,
@@ -1495,16 +1511,18 @@ struct ContentView: View {
                     optionTitle: \.title,
                     optionSystemImage: \.systemImage
                 )
-            ]
+            )
 
             if store.pixivCollectionDiscoveryScope != .everyone {
-                items.append(pixivCollectionTagSubmenu)
+                primaryItems.append(pixivCollectionTagSubmenu)
             }
+        }
 
+        if primaryItems.isEmpty == false {
             sections.append(
                 NativeToolbarMenuSection(
                     presentation: .root,
-                    items: items
+                    items: primaryItems
                 )
             )
         }
@@ -1593,7 +1611,8 @@ struct ContentView: View {
             store.pixivCollectionDiscoverySelectedTag ?? "default",
             store.pixivCollectionDiscoveryTagsForCurrentScope.map(\.name).joined(separator: ","),
             store.pixivWebSession == nil ? "web-session-missing" : "web-session-ready",
-            pixivCollectionWebURL(for: mode) == nil ? "web-url-missing" : "web-url-ready"
+            pixivCollectionWebURL(for: mode) == nil ? "web-url-missing" : "web-url-ready",
+            store.selectedRoute.rawValue
         ].joined(separator: ":")
     }
 
@@ -2571,7 +2590,7 @@ struct ContentView: View {
     private func syncSidebarSelectionFromCurrentTab() {
         switch selectedTab {
         case .feed:
-            selectedSidebarItem = .route(store.selectedRoute)
+            selectedSidebarItem = .route(store.selectedRoute.visibleLibraryRoute)
         case .library:
             selectedSidebarItem = .route(.downloads)
         case .settings:
@@ -2580,7 +2599,7 @@ struct ContentView: View {
             let route = MobileSearchTabConfiguration.contains(store.selectedRoute) ? store.selectedRoute : .search
             selectedSidebarItem = .route(route)
         case .mobile(let kind):
-            selectedSidebarItem = .route(mobileDefaultRoute(for: kind))
+            selectedSidebarItem = .route(mobileDefaultRoute(for: kind).visibleLibraryRoute)
         }
     }
 
@@ -2597,7 +2616,7 @@ struct ContentView: View {
 
     private func selectRoute(_ route: PixivRoute, clearsArtworkDetail: Bool = true) {
         withCompactContentTransition(to: route) {
-            selectedSidebarItem = .route(route)
+            selectedSidebarItem = .route(route.visibleLibraryRoute)
             setCompactSelectedTab(tab(for: route), skipsHandler: true)
             if clearsArtworkDetail {
                 dismissArtworkDetail(clearSelection: true)
@@ -2628,7 +2647,7 @@ struct ContentView: View {
         withCompactContentTransition(to: route) {
             mobileBottomTabLastKindID = kind.rawValue
             setCompactSelectedTab(.mobile(kind), skipsHandler: false)
-            selectedSidebarItem = .route(route)
+            selectedSidebarItem = .route(route.visibleLibraryRoute)
             if route.usesArtworkFeed == false {
                 dismissArtworkDetail(clearSelection: true)
             }

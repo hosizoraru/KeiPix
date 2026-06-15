@@ -130,8 +130,7 @@ struct DiscoveryDashboardSection: Identifiable {
                     .searchUsers,
                     .savedSearches,
                     .recommendedUsers,
-                    .followingCreators,
-                    .pinnedCreators
+                    .followingCreators
                 ]
             ),
             DiscoveryDashboardSection(
@@ -202,13 +201,10 @@ struct DiscoveryDashboardSection: Identifiable {
                 systemImage: "books.vertical",
                 routes: [
                     .publicBookmarks,
-                    .privateBookmarks,
                     .bookmarkTags,
                     .savedPixivisionArticles,
                     .myPixivCollections,
-                    .savedPixivCollections,
                     .following,
-                    .privateFollowing,
                     .history,
                     .watchLater,
                     .workSubscriptions,

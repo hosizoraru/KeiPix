@@ -99,6 +99,9 @@ struct PixivCollectionsView: View {
             EmptyView()
             #else
             OS26LibraryActionRail {
+                if let family = collectionRouteScopeFamily {
+                    pixivCollectionScopeMenu(for: family)
+                }
                 pixivCollectionMoreMenu
             }
             .controlSize(.small)
@@ -118,6 +121,12 @@ struct PixivCollectionsView: View {
                 ToolbarItem(placement: .principal) {
                     wideDiscoveryControls
                         .controlSize(.small)
+                }
+            }
+
+            if let family = collectionRouteScopeFamily {
+                ToolbarItem(placement: .secondaryAction) {
+                    pixivCollectionScopeMenu(for: family)
                 }
             }
 
@@ -200,6 +209,18 @@ struct PixivCollectionsView: View {
         .os26GlassIconButton()
         .help(L10n.moreActions)
         .accessibilityLabel(L10n.moreActions)
+    }
+
+    private func pixivCollectionScopeMenu(for family: PixivRouteScopeFamily) -> some View {
+        PixivRouteScopeMenu(
+            family: family,
+            selectedRoute: mode.route,
+            selectRoute: { route in
+                store.select(route)
+                actionMessage = route.title
+            }
+        )
+        .os26GlassButton(prominent: mode.route != mode.route.visibleLibraryRoute)
     }
 
     private var discoveryTagPicker: some View {
@@ -383,6 +404,11 @@ struct PixivCollectionsView: View {
             guard let userID = store.session?.user.id else { return nil }
             return PixivWebURLBuilder.userBookmarkCollectionsURL(userID: String(userID))
         }
+    }
+
+    private var collectionRouteScopeFamily: PixivRouteScopeFamily? {
+        guard mode != .discovery else { return nil }
+        return mode.route.routeScopeFamily
     }
 
     private var statusText: String {

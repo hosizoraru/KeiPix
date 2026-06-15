@@ -96,15 +96,11 @@ enum PixivRouteSection: Identifiable {
         case .library:
             [
                 .publicBookmarks,
-                .privateBookmarks,
                 .bookmarkTags,
                 .savedPixivisionArticles,
                 .myPixivCollections,
-                .savedPixivCollections,
                 .following,
-                .privateFollowing,
                 .followingCreators,
-                .pinnedCreators,
                 .history,
                 .watchLater,
                 .workSubscriptions,
@@ -120,6 +116,58 @@ enum PixivRankingFamily: String, CaseIterable {
     case illustration
     case manga
     case novel
+}
+
+enum PixivRouteScopeFamily: String, CaseIterable, Identifiable, Sendable {
+    case ownBookmarks
+    case pixivCollectionsLibrary
+    case followingArtwork
+    case followedCreators
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .ownBookmarks:
+            L10n.bookmarks
+        case .pixivCollectionsLibrary:
+            L10n.pixivCollections
+        case .followingArtwork:
+            L10n.following
+        case .followedCreators:
+            L10n.followingCreators
+        }
+    }
+
+    var systemImage: String {
+        switch self {
+        case .ownBookmarks:
+            "bookmark"
+        case .pixivCollectionsLibrary:
+            "rectangle.stack.badge.person.crop"
+        case .followingArtwork:
+            "person.2"
+        case .followedCreators:
+            "person.2.crop.square.stack"
+        }
+    }
+
+    var routes: [PixivRoute] {
+        switch self {
+        case .ownBookmarks:
+            PixivRoute.ownBookmarkRoutes
+        case .pixivCollectionsLibrary:
+            PixivRoute.pixivCollectionsLibraryRoutes
+        case .followingArtwork:
+            PixivRoute.followingArtworkRoutes
+        case .followedCreators:
+            PixivRoute.followedCreatorRoutes
+        }
+    }
+
+    var primaryRoute: PixivRoute {
+        routes[0]
+    }
 }
 
 enum PixivRoute: String, CaseIterable, Identifiable, Codable {
@@ -462,6 +510,36 @@ enum PixivRoute: String, CaseIterable, Identifiable, Codable {
         case .novel:
             novelRankingRoutes
         }
+    }
+
+    static var ownBookmarkRoutes: [PixivRoute] {
+        [.publicBookmarks, .privateBookmarks]
+    }
+
+    static var pixivCollectionsLibraryRoutes: [PixivRoute] {
+        [.myPixivCollections, .savedPixivCollections]
+    }
+
+    static var followingArtworkRoutes: [PixivRoute] {
+        [.following, .privateFollowing]
+    }
+
+    static var followedCreatorRoutes: [PixivRoute] {
+        [.followingCreators, .pinnedCreators]
+    }
+
+    static func routes(for family: PixivRouteScopeFamily) -> [PixivRoute] {
+        family.routes
+    }
+
+    var routeScopeFamily: PixivRouteScopeFamily? {
+        PixivRouteScopeFamily.allCases.first { family in
+            family.routes.contains(self)
+        }
+    }
+
+    var visibleLibraryRoute: PixivRoute {
+        routeScopeFamily?.primaryRoute ?? self
     }
 
     var isOwnBookmarkRoute: Bool {

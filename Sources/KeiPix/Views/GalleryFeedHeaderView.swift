@@ -157,6 +157,12 @@ struct FeedHeaderView: View {
 
     private var compactFeedActionsMenu: some View {
         Menu {
+            if let family = store.selectedRoute.routeScopeFamily {
+                Section(family.title) {
+                    routeScopeMenuButtons(for: family)
+                }
+            }
+
             if store.selectedRoute.isOwnBookmarkRoute {
                 Section(L10n.bookmarkFilters) {
                     bookmarkFiltersSubmenu
@@ -189,6 +195,7 @@ struct FeedHeaderView: View {
     private var compactFeedActionsAreActive: Bool {
         store.clientFilterQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false
             || bookmarkFiltersActiveCount > 0
+            || store.selectedRoute != store.selectedRoute.visibleLibraryRoute
     }
 
     private var showsSelectionModeEntry: Bool {
@@ -209,6 +216,10 @@ struct FeedHeaderView: View {
     private var headerActions: some View {
         feedCountBadge
         activeFeedClearChip
+
+        if let family = store.selectedRoute.routeScopeFamily {
+            routeScopeMenu(for: family)
+        }
 
         if store.artworks.isEmpty == false {
             #if os(macOS)
@@ -345,6 +356,31 @@ struct FeedHeaderView: View {
             .accessibilityLabel(L10n.search)
             .feedHeaderActionChrome()
         }
+    }
+
+    private func routeScopeMenu(for family: PixivRouteScopeFamily) -> some View {
+        PixivRouteScopeMenu(
+            family: family,
+            selectedRoute: store.selectedRoute,
+            selectRoute: selectRouteScope
+        )
+        .feedHeaderActionChrome()
+    }
+
+    private func routeScopeMenuButtons(for family: PixivRouteScopeFamily) -> some View {
+        ForEach(family.routes) { route in
+            Button {
+                selectRouteScope(route)
+            } label: {
+                Label(route.title, systemImage: route == store.selectedRoute ? "checkmark" : route.systemImage)
+            }
+        }
+    }
+
+    private func selectRouteScope(_ route: PixivRoute) {
+        guard route != store.selectedRoute else { return }
+        store.select(route)
+        actionMessage = route.title
     }
 
     #if os(macOS)
