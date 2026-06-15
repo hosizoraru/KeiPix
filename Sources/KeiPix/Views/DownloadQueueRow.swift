@@ -23,7 +23,7 @@ struct DownloadQueueRow: View {
 
     var body: some View {
         rowLayout
-        .padding(usesPhoneLayout ? 10 : 12)
+        .padding(usesPhoneLayout ? 8 : 12)
         .keiInteractiveGlass(18)
         // Subtle accent ring on the focused row so users can see which
         // entry the space bar will preview. Mirrors how Finder's list
@@ -228,14 +228,14 @@ private struct PhoneDownloadQueueRowLayout: View {
     let delete: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack(alignment: .top, spacing: 10) {
+        VStack(alignment: .leading, spacing: 5) {
+            HStack(alignment: .top, spacing: 8) {
                 DownloadQueueStatusIcon(status: item.status)
                     .font(.title3)
-                    .frame(width: 24, height: 24)
+                    .frame(width: 22, height: 22)
                     .padding(.top, 1)
 
-                VStack(alignment: .leading, spacing: 3) {
+                VStack(alignment: .leading, spacing: 2) {
                     Text(item.title)
                         .font(.callout.weight(.semibold))
                         .lineLimit(2)
@@ -280,7 +280,7 @@ private struct DownloadQueueMetadataFlow: View {
     let includesStateBadges: Bool
 
     var body: some View {
-        FlowLayout(spacing: 6) {
+        FlowLayout(spacing: 5) {
             if includesStateBadges {
                 DownloadQueueStatusBadge(status: item.status)
                 DownloadQueueMetadataChip(
@@ -345,15 +345,15 @@ private struct DownloadQueuePhoneActionBar: View {
     let delete: () -> Void
 
     var body: some View {
-        GlassEffectContainer(spacing: 7) {
-            HStack(spacing: 7) {
+        GlassEffectContainer(spacing: 5) {
+            HStack(spacing: 5) {
                 if item.status == .failed {
                     DownloadQueueRetryButton(item: item, action: retry)
                 } else if item.status == .queued || item.status == .downloading {
                     DownloadQueueCancelButton(action: cancel)
                 }
 
-                Spacer(minLength: 6)
+                Spacer(minLength: 4)
 
                 DownloadQueueOpenButton(canOpen: canOpen, action: open)
                 DownloadQueueQuickLookButton(canOpen: canOpen, action: quickLook)

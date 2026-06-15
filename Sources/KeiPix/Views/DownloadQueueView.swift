@@ -83,7 +83,7 @@ struct DownloadQueueView: View {
                 )
             } else {
                 downloadOverviewCard
-                    .platformGlassControlBar(verticalPadding: 7, topPadding: 2, bottomPadding: 8)
+                    .platformGlassControlBar(verticalPadding: 5, topPadding: 1, bottomPadding: 5)
                     .transition(.move(edge: .top).combined(with: .opacity))
 
                 if visibleItems.isEmpty {
@@ -406,12 +406,14 @@ private struct DownloadQueueOverviewCard: View {
     let showCompletedHistory: () -> Void
     let showFailedHistory: () -> Void
 
+    @State private var isSearchPresented = false
+
     #if os(iOS)
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     #endif
 
     var body: some View {
-        GlassEffectContainer(spacing: 10) {
+        GlassEffectContainer(spacing: usesCompactPhoneLayout ? 6 : 10) {
             if usesCompactPhoneLayout {
                 compactLayout
             } else {
@@ -419,20 +421,21 @@ private struct DownloadQueueOverviewCard: View {
             }
         }
         .controlSize(.small)
+        .animation(.snappy(duration: 0.18), value: isSearchPresented)
+        .animation(.snappy(duration: 0.18), value: normalizedSearchText)
     }
 
     private var compactLayout: some View {
-        VStack(alignment: .leading, spacing: 7) {
+        VStack(alignment: .leading, spacing: 5) {
             latestCompletedLine
             metricStrip
-            filterSearchField
-            activeFilterPills
+            filterControls
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private var wideLayout: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .top, spacing: 12) {
                 latestCompletedLine
                     .layoutPriority(1)
@@ -451,11 +454,15 @@ private struct DownloadQueueOverviewCard: View {
                 metricStrip
                     .layoutPriority(1)
                 Spacer(minLength: 10)
-                filterSearchField
-                    .frame(minWidth: 220, idealWidth: 320, maxWidth: 480)
+                filterPillRow
+                    .frame(minWidth: 220, idealWidth: 360, maxWidth: 560, alignment: .trailing)
             }
 
-            activeFilterPills
+            if showsDownloadSearchField {
+                filterSearchField
+                    .frame(minWidth: 220, idealWidth: 360, maxWidth: 560, alignment: .leading)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
@@ -519,6 +526,57 @@ private struct DownloadQueueOverviewCard: View {
         }
     }
 
+    private var filterControls: some View {
+        VStack(alignment: .leading, spacing: 5) {
+            filterPillRow
+
+            if showsDownloadSearchField {
+                filterSearchField
+                    .transition(.move(edge: .top).combined(with: .opacity))
+            }
+        }
+    }
+
+    private var filterPillRow: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 7) {
+                searchTriggerPill
+                activeFilterPills
+            }
+            .padding(.vertical, 1)
+        }
+    }
+
+    private var searchTriggerPill: some View {
+        Button {
+            withAnimation(.snappy(duration: 0.16)) {
+                isSearchPresented.toggle()
+            }
+        } label: {
+            HStack(spacing: 6) {
+                Image(systemName: searchTriggerSystemImage)
+                    .font(.caption.weight(.semibold))
+                    .symbolRenderingMode(.hierarchical)
+
+                Text(usesCompactPhoneLayout ? L10n.search : L10n.searchDownloads)
+                    .font(.caption.weight(.semibold))
+                    .lineLimit(1)
+            }
+            .padding(.horizontal, 10)
+            .frame(height: usesCompactPhoneLayout ? 30 : 34)
+            .contentShape(Capsule(style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .background(Color.accentColor.opacity(searchTriggerIsActive ? 0.14 : 0.06), in: Capsule(style: .continuous))
+        .keiInteractiveGlass(usesCompactPhoneLayout ? 15 : 17)
+        .overlay {
+            Capsule(style: .continuous)
+                .stroke(Color.accentColor.opacity(searchTriggerIsActive ? 0.36 : 0.14), lineWidth: 1)
+        }
+        .help(L10n.searchDownloads)
+        .accessibilityLabel(L10n.searchDownloads)
+    }
+
     private var filterSearchField: some View {
         NativeSearchField(
             text: downloadSearchBinding,
@@ -535,42 +593,49 @@ private struct DownloadQueueOverviewCard: View {
     @ViewBuilder
     private var activeFilterPills: some View {
         if hasActiveFilterPills {
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 8) {
-                    if downloads.downloadQueueFilter != .all {
-                        FeedFilterClearChip(
-                            title: downloads.downloadQueueFilter.title,
-                            clearLabel: L10n.clearFeedFilter,
-                            systemImage: "line.3.horizontal.decrease.circle.fill",
-                            maximumWidth: 190
-                        ) {
-                            withAnimation(.snappy(duration: 0.16)) {
-                                downloads.setDownloadQueueFilter(.all)
-                            }
-                        }
-                    }
-
-                    if normalizedSearchText.isEmpty == false {
-                        FeedFilterClearChip(
-                            title: String(format: L10n.activeArtworkFilterFormat, normalizedSearchText),
-                            clearLabel: L10n.clearFeedFilter,
-                            systemImage: "magnifyingglass.circle.fill",
-                            maximumWidth: usesCompactPhoneLayout ? 220 : 260
-                        ) {
-                            withAnimation(.snappy(duration: 0.16)) {
-                                downloads.setDownloadSearchText("")
-                            }
-                        }
+            if downloads.downloadQueueFilter != .all {
+                FeedFilterClearChip(
+                    title: downloads.downloadQueueFilter.title,
+                    clearLabel: L10n.clearFeedFilter,
+                    systemImage: "line.3.horizontal.decrease.circle.fill",
+                    maximumWidth: 190
+                ) {
+                    withAnimation(.snappy(duration: 0.16)) {
+                        downloads.setDownloadQueueFilter(.all)
                     }
                 }
-                .padding(.vertical, 1)
             }
-            .transition(.opacity.combined(with: .scale(scale: 0.97)))
+
+            if normalizedSearchText.isEmpty == false {
+                FeedFilterClearChip(
+                    title: String(format: L10n.activeArtworkFilterFormat, normalizedSearchText),
+                    clearLabel: L10n.clearSearch,
+                    systemImage: "magnifyingglass.circle.fill",
+                    maximumWidth: usesCompactPhoneLayout ? 220 : 260
+                ) {
+                    withAnimation(.snappy(duration: 0.16)) {
+                        downloads.setDownloadSearchText("")
+                        isSearchPresented = false
+                    }
+                }
+            }
         }
     }
 
     private var hasActiveFilterPills: Bool {
         downloads.downloadQueueFilter != .all || normalizedSearchText.isEmpty == false
+    }
+
+    private var showsDownloadSearchField: Bool {
+        isSearchPresented
+    }
+
+    private var searchTriggerIsActive: Bool {
+        isSearchPresented || normalizedSearchText.isEmpty == false
+    }
+
+    private var searchTriggerSystemImage: String {
+        normalizedSearchText.isEmpty ? "magnifyingglass" : "magnifyingglass.circle.fill"
     }
 
     private var normalizedSearchText: String {
@@ -622,7 +687,7 @@ private struct DownloadQueueLatestSummary: View {
                     .lineLimit(1)
                     .truncationMode(.middle)
                 if let completedAt = snapshot.latestCompletedAt {
-                    Text(completedAt, style: .relative)
+                    Text(downloadRelativeTimeText(for: completedAt))
                         .font(.caption2)
                         .foregroundStyle(.tertiary)
                 }
@@ -683,6 +748,30 @@ private struct DownloadQueueLatestSummary: View {
             return L10n.failedDownloads
         }
         return L10n.noDownloadsTitle
+    }
+
+    private func downloadRelativeTimeText(
+        for date: Date,
+        now: Date = Date(),
+        calendar: Calendar = .current
+    ) -> String {
+        let elapsed = max(0, now.timeIntervalSince(date))
+        if elapsed < 60 {
+            return L10n.justNow
+        }
+        if elapsed < 3_600 {
+            return String(format: L10n.minutesAgoFormat, max(1, Int(elapsed / 60)))
+        }
+        if elapsed < 86_400 {
+            return String(format: L10n.hoursAgoFormat, max(1, Int(elapsed / 3_600)))
+        }
+
+        let dayCount = calendar.dateComponents(
+            [.day],
+            from: calendar.startOfDay(for: date),
+            to: calendar.startOfDay(for: now)
+        ).day ?? Int(elapsed / 86_400)
+        return String(format: L10n.daysAgoFormat, max(1, dayCount))
     }
 }
 

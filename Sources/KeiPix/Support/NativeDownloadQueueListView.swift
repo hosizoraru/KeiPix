@@ -218,7 +218,7 @@ extension NativeDownloadQueueListView: UIViewRepresentable {
 
     func makeUIView(context: Context) -> UICollectionView {
         let layout = UICollectionViewFlowLayout()
-        layout.minimumLineSpacing = 6
+        layout.minimumLineSpacing = 4
         layout.sectionInset = UIEdgeInsets(top: 18, left: 18, bottom: 18, right: 18)
 
         let collectionView = NativeDownloadQueueCollectionView(frame: .zero, collectionViewLayout: layout)
@@ -251,8 +251,8 @@ extension NativeDownloadQueueListView: UIViewRepresentable {
 
         var parent: NativeDownloadQueueListView
         private var lastItemIDs: [UUID] = []
-        private let compactPhoneRowHeight: CGFloat = 144
-        private let compactPhoneSupplementalMetadataHeight: CGFloat = 24
+        private let compactPhoneRowHeight: CGFloat = 132
+        private let compactPhoneSupplementalMetadataHeight: CGFloat = 18
         private let regularRowHeight: CGFloat = 124
         private let contentScrollRegistration = NativeContentScrollRegistration()
 
@@ -276,15 +276,19 @@ extension NativeDownloadQueueListView: UIViewRepresentable {
                 return
             }
             let isCompactPhone = collectionView.traitCollection.horizontalSizeClass == .compact
-            let horizontalInset: CGFloat = isCompactPhone ? 12 : 18
+            let horizontalInset: CGFloat = isCompactPhone ? 10 : 18
+            let desiredLineSpacing: CGFloat = isCompactPhone ? 4 : 6
             let desiredInsets = UIEdgeInsets(
-                top: isCompactPhone ? 10 : 18,
+                top: isCompactPhone ? 6 : 18,
                 left: horizontalInset,
-                bottom: isCompactPhone ? 12 : 18,
+                bottom: isCompactPhone ? 8 : 18,
                 right: horizontalInset
             )
-            guard layout.sectionInset != desiredInsets else { return }
+            guard layout.sectionInset != desiredInsets || layout.minimumLineSpacing != desiredLineSpacing else {
+                return
+            }
             layout.sectionInset = desiredInsets
+            layout.minimumLineSpacing = desiredLineSpacing
             layout.invalidateLayout()
         }
 
@@ -346,7 +350,7 @@ extension NativeDownloadQueueListView: UIViewRepresentable {
             sizeForItemAt indexPath: IndexPath
         ) -> CGSize {
             let isCompactPhone = collectionView.traitCollection.horizontalSizeClass == .compact
-            let horizontalInset: CGFloat = isCompactPhone ? 24 : 36
+            let horizontalInset: CGFloat = isCompactPhone ? 20 : 36
             let baseHeight = isCompactPhone ? compactPhoneRowHeight : regularRowHeight
             let supplementalHeight: CGFloat
             if isCompactPhone,
