@@ -6,6 +6,22 @@ extension KeiPixStore {
         spotlightFavoriteArticles.contains { $0.id == article.id }
     }
 
+    func isSpotlightArticleRead(_ article: PixivSpotlightArticle) -> Bool {
+        spotlightArticleReadStateLibrary.isRead(article)
+    }
+
+    func markSpotlightArticleRead(_ article: PixivSpotlightArticle) {
+        guard spotlightArticleReadStateLibrary.isRead(article) == false else { return }
+        spotlightArticleReadStateLibrary.markRead(article)
+        persistSpotlightArticleReadState()
+    }
+
+    func markSpotlightArticleUnread(_ article: PixivSpotlightArticle) {
+        guard spotlightArticleReadStateLibrary.isRead(article) else { return }
+        spotlightArticleReadStateLibrary.markUnread(article)
+        persistSpotlightArticleReadState()
+    }
+
     @discardableResult
     func toggleSpotlightArticleFavorite(_ article: PixivSpotlightArticle) -> Bool {
         if let index = spotlightFavoriteArticles.firstIndex(where: { $0.id == article.id }) {
@@ -26,6 +42,7 @@ extension KeiPixStore {
         spotlightArticleHistory.insert(article, at: 0)
         spotlightArticleHistory = Array(spotlightArticleHistory.prefix(500))
         persistSpotlightArticleHistory()
+        markSpotlightArticleRead(article)
     }
 
     func clearSpotlightArticleHistory() {
@@ -44,6 +61,11 @@ extension KeiPixStore {
 
     private func persistSpotlightArticleHistory() {
         persistSpotlightArticles(spotlightArticleHistory, key: "spotlightArticleHistory")
+    }
+
+    private func persistSpotlightArticleReadState() {
+        guard let data = try? JSONEncoder().encode(spotlightArticleReadStateLibrary) else { return }
+        UserDefaults.standard.set(data, forKey: "spotlightArticleReadStateLibrary")
     }
 
     private func persistSpotlightArticles(_ articles: [PixivSpotlightArticle], key: String) {

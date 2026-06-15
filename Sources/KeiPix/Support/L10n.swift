@@ -57,8 +57,13 @@ enum L10n {
     static var recommendedHint: String { text("Editorial picks Pixivision is highlighting right now.") }
     static var savedArticles: String { text("Saved Articles") }
     static var articleHistory: String { text("Article History") }
+    static var readArticle: String { text("Read Article") }
     static var saveArticle: String { text("Save Article") }
     static var removeSavedArticle: String { text("Remove Saved Article") }
+    static var markArticleRead: String { text("Mark Article as Read") }
+    static var markArticleUnread: String { text("Mark Article as Unread") }
+    static var markedArticleRead: String { text("Marked article read") }
+    static var markedArticleUnread: String { text("Marked article unread") }
     static var savedArticle: String { text("Saved article") }
     static var removedSavedArticle: String { text("Removed saved article") }
     static var noSavedArticles: String { text("No saved articles") }

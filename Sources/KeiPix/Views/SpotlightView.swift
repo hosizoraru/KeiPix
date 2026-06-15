@@ -61,6 +61,7 @@ struct SpotlightView: View {
                                     article: article,
                                     isSelected: store.selectedSpotlightArticle?.id == article.id,
                                     isSaved: store.isSpotlightArticleSaved(article),
+                                    isRead: store.isSpotlightArticleRead(article),
                                     isInHistory: store.spotlightArticleHistory.contains { $0.id == article.id },
                                     layoutMode: store.spotlightListLayoutMode
                                 ) {
@@ -69,6 +70,8 @@ struct SpotlightView: View {
                                     showActionMessage(L10n.copied)
                                 } toggleSaved: {
                                     toggleSaved(article)
+                                } toggleRead: {
+                                    toggleRead(article)
                                 } removeFromHistory: {
                                     store.removeSpotlightArticleHistory(article)
                                     showActionMessage(L10n.removedArticleHistory)
@@ -624,6 +627,16 @@ struct SpotlightView: View {
         showActionMessage(saved ? L10n.savedArticle : L10n.removedSavedArticle)
     }
 
+    private func toggleRead(_ article: PixivSpotlightArticle) {
+        if store.isSpotlightArticleRead(article) {
+            store.markSpotlightArticleUnread(article)
+            showActionMessage(L10n.markedArticleUnread)
+        } else {
+            store.markSpotlightArticleRead(article)
+            showActionMessage(L10n.markedArticleRead)
+        }
+    }
+
     private func select(_ article: PixivSpotlightArticle) {
         store.recordSpotlightArticleHistory(article)
         store.selectedSpotlightArticle = article
@@ -683,11 +696,13 @@ private struct SpotlightArticleCard: View {
     let article: PixivSpotlightArticle
     let isSelected: Bool
     let isSaved: Bool
+    let isRead: Bool
     let isInHistory: Bool
     let layoutMode: SpotlightListLayoutMode
     let select: () -> Void
     let copied: () -> Void
     let toggleSaved: () -> Void
+    let toggleRead: () -> Void
     let removeFromHistory: () -> Void
     @State private var isHovering = false
 
@@ -708,6 +723,7 @@ private struct SpotlightArticleCard: View {
         .contextMenu {
             Button(L10n.openArticle) { select() }
             Button(isSaved ? L10n.removeSavedArticle : L10n.saveArticle) { toggleSaved() }
+            Button(isRead ? L10n.markArticleUnread : L10n.markArticleRead) { toggleRead() }
             if isInHistory {
                 Button(role: .destructive) {
                     removeFromHistory()
@@ -801,7 +817,7 @@ private struct SpotlightArticleCard: View {
             // No spacer here. The metadata should hug its actual
             // content so two-column cards do not inherit the tallest
             // footer in the row.
-            if isSaved || isInHistory {
+            if isSaved || isRead {
                 articleStateFooter
             }
         }
@@ -855,13 +871,14 @@ private struct SpotlightArticleCard: View {
                     .help(L10n.savedArticle)
             }
 
-            if isInHistory {
-                Image(systemName: "clock.arrow.circlepath")
+            if isRead {
+                Label(L10n.readArticle, systemImage: "checkmark.circle.fill")
+                    .labelStyle(.titleAndIcon)
                     .foregroundStyle(.secondary)
-                    .help(L10n.articleHistory)
+                    .help(L10n.readArticle)
             }
         }
-        .font(.caption)
+        .font(.caption2.weight(.semibold))
         .foregroundStyle(.secondary)
     }
 

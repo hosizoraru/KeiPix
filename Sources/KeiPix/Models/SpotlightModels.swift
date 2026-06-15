@@ -65,6 +65,34 @@ struct PixivSpotlightArticle: Codable, Identifiable, Hashable, Sendable {
     }
 }
 
+struct SpotlightArticleReadStateLibrary: Codable, Equatable, Sendable {
+    private var ids: Set<Int>
+
+    init(readArticleIDs: Set<Int> = []) {
+        ids = readArticleIDs
+    }
+
+    var readArticleIDs: [Int] {
+        ids.sorted()
+    }
+
+    mutating func markRead(_ article: PixivSpotlightArticle) {
+        ids.insert(article.id)
+    }
+
+    mutating func markUnread(_ article: PixivSpotlightArticle) {
+        ids.remove(article.id)
+    }
+
+    mutating func clear() {
+        ids.removeAll()
+    }
+
+    func isRead(_ article: PixivSpotlightArticle) -> Bool {
+        ids.contains(article.id)
+    }
+}
+
 enum SpotlightArticleCollectionMode: String, CaseIterable, Identifiable {
     case latest
     case monthlyRanking

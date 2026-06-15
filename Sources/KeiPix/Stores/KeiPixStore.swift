@@ -186,6 +186,7 @@ final class KeiPixStore {
     var watchLaterQueue = KeiPixStore.loadWatchLaterQueue()
     var spotlightFavoriteArticles = KeiPixStore.loadSpotlightArticles(key: "spotlightFavoriteArticles")
     var spotlightArticleHistory = KeiPixStore.loadSpotlightArticles(key: "spotlightArticleHistory")
+    var spotlightArticleReadStateLibrary = KeiPixStore.loadSpotlightArticleReadStateLibrary()
     var readerProgressLibrary = KeiPixStore.loadReaderProgressLibrary()
     var downloadedReaderProgressLibrary = KeiPixStore.loadDownloadedReaderProgressLibrary()
     var mangaWatchlistReadStateLibrary = KeiPixStore.loadMangaWatchlistReadStateLibrary()
@@ -1438,6 +1439,14 @@ final class KeiPixStore {
             return []
         }
         return (try? JSONDecoder().decode([PixivSpotlightArticle].self, from: data)) ?? []
+    }
+
+    private static func loadSpotlightArticleReadStateLibrary() -> SpotlightArticleReadStateLibrary {
+        guard let data = UserDefaults.standard.data(forKey: "spotlightArticleReadStateLibrary") else {
+            return SpotlightArticleReadStateLibrary()
+        }
+        return (try? JSONDecoder().decode(SpotlightArticleReadStateLibrary.self, from: data))
+            ?? SpotlightArticleReadStateLibrary()
     }
 
     private static func loadReaderProgressLibrary() -> ArtworkReaderProgressLibrary {
