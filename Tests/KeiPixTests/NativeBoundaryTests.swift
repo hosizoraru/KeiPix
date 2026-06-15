@@ -3963,6 +3963,8 @@ struct NativeBoundaryTests {
         #expect(store.contains("FileManager.default.urls(for: .documentDirectory") == false)
 
         #expect(photosSaver.contains("PHPhotoLibrary.requestAuthorization(for: .addOnly)"))
+        #expect(photosSaver.contains("@MainActor\n    static func saveImage") == false)
+        #expect(photosSaver.contains("@MainActor\n    static func saveImageData") == false)
         #expect(photosSaver.contains("PHAssetCreationRequest.forAsset()"))
         #expect(photosSaver.contains("PHAssetResourceCreationOptions()"))
         #expect(photosSaver.contains("options.originalFilename"))

@@ -9,7 +9,6 @@ import Photos
 enum PhotosSaver {
     /// Save an image file to the Photos library.
     /// Returns true on success, false on failure or cancellation.
-    @MainActor
     static func saveImage(from url: URL, originalFilename: String? = nil) async -> Bool {
         let status = await PHPhotoLibrary.requestAuthorization(for: .addOnly)
         guard status == .authorized || status == .limited else {
@@ -30,7 +29,6 @@ enum PhotosSaver {
     }
 
     /// Save image data to the Photos library.
-    @MainActor
     static func saveImageData(_ data: Data, originalFilename: String? = nil) async -> Bool {
         let status = await PHPhotoLibrary.requestAuthorization(for: .addOnly)
         guard status == .authorized || status == .limited else {
