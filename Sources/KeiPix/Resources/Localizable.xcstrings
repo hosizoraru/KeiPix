@@ -26623,6 +26623,35 @@
         }
       }
     },
+    "Pixivision Display": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pixivision Display"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pixivision表示"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pixivision 显示"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pixivision 顯示"
+          }
+        }
+      }
+    },
     "Play Ugoira": {
       "extractionState": "manual",
       "localizations": {

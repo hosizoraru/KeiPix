@@ -153,10 +153,10 @@ private struct CreatorSearchScopeChip: View {
     }
 }
 
-/// View-options menu rendered in the creator list's toolbar. Combines
-/// the filter and sort pickers in one dropdown — Apple Mail's "Sort"
-/// menu, Photos's "View Options" menu, and Music's "Sort By" menu all
-/// share this Picker(.inline) inside a Menu pattern.
+/// View-options menu rendered in the creator list's toolbar. The root
+/// menu stays short and descriptive; each control is a submenu whose
+/// row title says what it changes and whose subtitle shows the current
+/// value.
 struct CreatorListViewOptionsMenu: View {
     let mode: UserPreviewListMode
     @Binding var restrict: BookmarkRestrict
@@ -166,45 +166,74 @@ struct CreatorListViewOptionsMenu: View {
 
     var body: some View {
         Menu {
-            if mode.usesRestrictPicker {
-                Picker(L10n.followingCreators, selection: $restrict) {
-                    Text(L10n.publicRestrict).tag(BookmarkRestrict.public)
-                    Text(L10n.privateRestrict).tag(BookmarkRestrict.private)
+            Section(L10n.viewOptions) {
+                if mode.usesRestrictPicker {
+                    creatorListPickerMenu(
+                        title: L10n.followingCreators,
+                        currentValueTitle: restrict.title,
+                        systemImage: restrict == .public ? "globe" : "lock",
+                        selection: $restrict
+                    ) {
+                        Text(L10n.publicRestrict).tag(BookmarkRestrict.public)
+                        Text(L10n.privateRestrict).tag(BookmarkRestrict.private)
+                    }
                 }
-                .pickerStyle(.inline)
 
-                Divider()
-            }
+                creatorListPickerMenu(
+                    title: L10n.creatorListLayout,
+                    currentValueTitle: layoutMode.title,
+                    systemImage: layoutMode.systemImage,
+                    selection: $layoutMode
+                ) {
+                    ForEach(CreatorListLayoutMode.allCases) { mode in
+                        Label(mode.title, systemImage: mode.systemImage).tag(mode)
+                    }
+                }
 
-            Picker(L10n.creatorListLayout, selection: $layoutMode) {
-                ForEach(CreatorListLayoutMode.allCases) { mode in
-                    Label(mode.title, systemImage: mode.systemImage).tag(mode)
+                creatorListPickerMenu(
+                    title: L10n.creatorFilter,
+                    currentValueTitle: creatorFilter.title,
+                    systemImage: "line.3.horizontal.decrease.circle",
+                    selection: $creatorFilter
+                ) {
+                    ForEach(CreatorListFilter.allCases) { filter in
+                        Text(filter.title).tag(filter)
+                    }
+                }
+
+                creatorListPickerMenu(
+                    title: L10n.creatorSort,
+                    currentValueTitle: creatorSort.title,
+                    systemImage: "arrow.up.arrow.down",
+                    selection: $creatorSort
+                ) {
+                    ForEach(CreatorListSort.allCases) { sort in
+                        Text(sort.title).tag(sort)
+                    }
                 }
             }
-            .pickerStyle(.inline)
-
-            Divider()
-
-            Picker(L10n.creatorFilter, selection: $creatorFilter) {
-                ForEach(CreatorListFilter.allCases) { filter in
-                    Text(filter.title).tag(filter)
-                }
-            }
-            .pickerStyle(.inline)
-
-            Divider()
-
-            Picker(L10n.creatorSort, selection: $creatorSort) {
-                ForEach(CreatorListSort.allCases) { sort in
-                    Text(sort.title).tag(sort)
-                }
-            }
-            .pickerStyle(.inline)
         } label: {
             Label(L10n.viewOptions, systemImage: "slider.horizontal.3")
         }
+        .menuOrder(.fixed)
         .labelStyle(.iconOnly)
         .help(L10n.viewOptions)
+    }
+
+    private func creatorListPickerMenu<SelectionValue: Hashable, Options: View>(
+        title: String,
+        currentValueTitle: String,
+        systemImage: String,
+        selection: Binding<SelectionValue>,
+        @ViewBuilder options: () -> Options
+    ) -> some View {
+        Picker(selection: selection) {
+            options()
+        } label: {
+            Label(title, systemImage: systemImage)
+            Text(currentValueTitle)
+        }
+        .pickerStyle(.menu)
     }
 }
 

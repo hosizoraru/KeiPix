@@ -242,53 +242,96 @@ struct SpotlightView: View {
         }
     }
 
-    /// View-options dropdown that consolidates filter / layout pickers
-    /// the way Apple Mail's "Sort" menu and Photos's "View Options"
-    /// menu do — one trailing-edge entry point, every option visible
-    /// inline as a Picker, no nested submenus.
+    /// View-options dropdown that keeps each Pixivision control behind
+    /// a titled submenu. The root stays short in compact toolbars while
+    /// every row still explains what it changes and shows the current
+    /// value before the user drills in.
     private var viewOptionsMenu: some View {
         Menu {
-            if fixedCollectionMode == nil {
-                collectionModePicker
-                    .pickerStyle(.inline)
-
-                Divider()
-            }
-
-            // Category filter only applies to the live "latest" feed.
-            // Use the vetted picker cases so dead Pixivision alternates
-            // like Cosplay don't route into a 400 app-API request.
-            if collectionMode.supportsCategoryFilter {
-                Picker(L10n.spotlightCategoryAll, selection: $category) {
-                    ForEach(SpotlightArticleCategory.pickerCases) { category in
-                        Label(category.title, systemImage: category.systemImage).tag(category)
-                    }
+            Section(L10n.pixivisionDisplay) {
+                if fixedCollectionMode == nil {
+                    pixivisionCollectionMenu
                 }
-                .pickerStyle(.inline)
 
-                Divider()
-            }
-
-            Picker(L10n.spotlightListLayout, selection: spotlightLayoutBinding) {
-                ForEach(SpotlightListLayoutMode.allCases) { mode in
-                    Label(mode.title, systemImage: mode.systemImage).tag(mode)
+                // Category filter only applies to the live "latest" feed.
+                // Use the vetted picker cases so dead Pixivision alternates
+                // like Cosplay don't route into a 400 app-API request.
+                if collectionMode.supportsCategoryFilter {
+                    pixivisionCategoryMenu
                 }
+
+                pixivisionLayoutMenu
             }
-            .pickerStyle(.inline)
 
             if collectionMode == .history {
-                Divider()
-
-                Button(role: .destructive, action: clearHistory) {
-                    Label(L10n.clearArticleHistory, systemImage: "trash")
+                Section {
+                    Button(role: .destructive, action: clearHistory) {
+                        Label(L10n.clearArticleHistory, systemImage: "trash")
+                    }
+                    .disabled(store.spotlightArticleHistory.isEmpty)
                 }
-                .disabled(store.spotlightArticleHistory.isEmpty)
             }
         } label: {
             Label(L10n.viewOptions, systemImage: "slider.horizontal.3")
         }
+        .menuOrder(.fixed)
         .labelStyle(.iconOnly)
         .help(L10n.viewOptions)
+    }
+
+    private var pixivisionCollectionMenu: some View {
+        pixivisionPickerMenu(
+            title: L10n.spotlightCollection,
+            currentValueTitle: collectionMode.title,
+            systemImage: collectionMode.systemImage,
+            selection: $collectionMode
+        ) {
+            ForEach(SpotlightArticleCollectionMode.allCases) { mode in
+                Label(mode.title, systemImage: mode.systemImage).tag(mode)
+            }
+        }
+    }
+
+    private var pixivisionCategoryMenu: some View {
+        pixivisionPickerMenu(
+            title: L10n.spotlightCategoryAll,
+            currentValueTitle: category.title,
+            systemImage: category.systemImage,
+            selection: $category
+        ) {
+            ForEach(SpotlightArticleCategory.pickerCases) { category in
+                Label(category.title, systemImage: category.systemImage).tag(category)
+            }
+        }
+    }
+
+    private var pixivisionLayoutMenu: some View {
+        pixivisionPickerMenu(
+            title: L10n.spotlightListLayout,
+            currentValueTitle: store.spotlightListLayoutMode.title,
+            systemImage: store.spotlightListLayoutMode.systemImage,
+            selection: spotlightLayoutBinding
+        ) {
+            ForEach(SpotlightListLayoutMode.allCases) { mode in
+                Label(mode.title, systemImage: mode.systemImage).tag(mode)
+            }
+        }
+    }
+
+    private func pixivisionPickerMenu<SelectionValue: Hashable, Options: View>(
+        title: String,
+        currentValueTitle: String,
+        systemImage: String,
+        selection: Binding<SelectionValue>,
+        @ViewBuilder options: () -> Options
+    ) -> some View {
+        Picker(selection: selection) {
+            options()
+        } label: {
+            Label(title, systemImage: systemImage)
+            Text(currentValueTitle)
+        }
+        .pickerStyle(.menu)
     }
 
     private var displayedArticles: [PixivSpotlightArticle] {
