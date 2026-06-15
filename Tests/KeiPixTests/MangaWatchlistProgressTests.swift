@@ -76,19 +76,124 @@ struct MangaWatchlistProgressTests {
         #expect(library.items.map(\.seriesID) == [20])
     }
 
+    @Test("Watchlist selection toggles all visible series and prunes hidden ids")
+    func watchlistSelectionTracksVisibleSeries() {
+        var selection = MangaWatchlistSelection()
+
+        selection.toggle(10)
+        selection.toggle(20)
+        selection.isSelectionMode = true
+
+        #expect(selection.contains(10))
+        #expect(selection.contains(20))
+        #expect(selection.count == 2)
+
+        selection.toggle(10)
+        #expect(selection.selectedIDs == [20])
+
+        selection.selectAll([30, 40])
+        #expect(selection.selectedIDs == [20, 30, 40])
+
+        selection.prune(visibleSeriesIDs: [30, 50])
+        #expect(selection.selectedIDs == [30])
+        #expect(selection.isSelectionMode)
+
+        selection.prune(visibleSeriesIDs: [50])
+        #expect(selection.selectedIDs.isEmpty)
+        #expect(selection.isSelectionMode == false)
+    }
+
+    @Test("Presentation filters by query across title creator and account")
+    func presentationFiltersByQueryAcrossSeriesMetadata() {
+        let presentation = MangaWatchlistPresentation(query: "panel")
+        let visible = presentation.visibleSeries(from: [
+            makeSeries(id: 10, title: "Weekend Panels", userName: "Aki", account: "aki"),
+            makeSeries(id: 20, title: "Quiet Study", userName: "Panel Artist", account: "daily"),
+            makeSeries(id: 30, title: "Garden", userName: "Mika", account: "mika_panel"),
+            makeSeries(id: 40, title: "Kitchen", userName: "Mika", account: "mika")
+        ]) { _ in .none }
+
+        #expect(visible.map(\.id) == [10, 20, 30])
+    }
+
+    @Test("Presentation update filter uses local watchlist status")
+    func presentationUpdateFilterUsesLocalStatus() {
+        let presentation = MangaWatchlistPresentation(filter: .updated)
+        let visible = presentation.visibleSeries(from: [
+            makeSeries(id: 10),
+            makeSeries(id: 20),
+            makeSeries(id: 30)
+        ]) { series in
+            series.id == 20 ? MangaWatchlistUpdateStatus(hasUpdate: true, unreadCount: 2) : .none
+        }
+
+        #expect(visible.map(\.id) == [20])
+    }
+
+    @Test("Presentation sort can prioritize unread updates")
+    func presentationSortPrioritizesUnreadUpdates() {
+        let presentation = MangaWatchlistPresentation(sort: .unreadUpdates)
+        let visible = presentation.visibleSeries(from: [
+            makeSeries(id: 10, title: "B", lastPublishedContentDate: Date(timeIntervalSince1970: 200), publishedContentCount: 1),
+            makeSeries(id: 20, title: "A", lastPublishedContentDate: Date(timeIntervalSince1970: 100), publishedContentCount: 1),
+            makeSeries(id: 30, title: "C", lastPublishedContentDate: Date(timeIntervalSince1970: 300), publishedContentCount: 1)
+        ]) { series in
+            switch series.id {
+            case 10:
+                MangaWatchlistUpdateStatus(hasUpdate: true, unreadCount: 1)
+            case 20:
+                MangaWatchlistUpdateStatus(hasUpdate: true, unreadCount: 4)
+            default:
+                .none
+            }
+        }
+
+        #expect(visible.map(\.id) == [20, 10, 30])
+    }
+
+    @Test("Presentation sort can order by latest publish date and work count")
+    func presentationSortsByDateAndWorkCount() {
+        let series = [
+            makeSeries(id: 10, title: "B", lastPublishedContentDate: Date(timeIntervalSince1970: 100), publishedContentCount: 8),
+            makeSeries(id: 20, title: "A", lastPublishedContentDate: Date(timeIntervalSince1970: 300), publishedContentCount: 3),
+            makeSeries(id: 30, title: "C", lastPublishedContentDate: Date(timeIntervalSince1970: 200), publishedContentCount: 8)
+        ]
+
+        #expect(
+            MangaWatchlistPresentation(sort: .recentlyUpdated)
+                .visibleSeries(from: series) { _ in .none }
+                .map(\.id) == [20, 30, 10]
+        )
+        #expect(
+            MangaWatchlistPresentation(sort: .publishedCount)
+                .visibleSeries(from: series) { _ in .none }
+                .map(\.id) == [30, 10, 20]
+        )
+    }
+
     private func makeSeries(
         id: Int,
+        title: String? = nil,
+        userName: String? = nil,
+        account: String? = nil,
         latestContentID: Int = 100,
+        lastPublishedContentDate: Date? = nil,
         publishedContentCount: Int = 3,
         apiUnreadContentCount: Int? = nil,
         apiIsUnread: Bool? = nil
     ) -> PixivMangaSeriesPreview {
         PixivMangaSeriesPreview(
             id: id,
-            title: "Series \(id)",
-            user: nil,
+            title: title ?? "Series \(id)",
+            user: userName.map { name in
+                PixivMangaSeriesUser(user: PixivUser(
+                    id: id + 1_000,
+                    name: name,
+                    account: account ?? ""
+                ))
+            },
             latestContentID: latestContentID,
-            lastPublishedContentDate: nil,
+            lastPublishedContentDate: lastPublishedContentDate,
             publishedContentCount: publishedContentCount,
             coverURL: nil,
             maskText: nil,
