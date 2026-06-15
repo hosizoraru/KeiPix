@@ -785,10 +785,7 @@ private struct SpotlightArticleCard: View {
 
     private var metadataBlock: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text(primaryTitle)
-                .font(layoutMode.usesHeroCardLayout ? .title3.weight(.semibold) : .subheadline.weight(.semibold))
-                .lineLimit(layoutMode.usesHeroCardLayout ? 3 : 2)
-                .multilineTextAlignment(.leading)
+            articleTitleRow
 
             if let secondaryTitle {
                 Text(secondaryTitle)
@@ -798,39 +795,60 @@ private struct SpotlightArticleCard: View {
                     .multilineTextAlignment(.leading)
             }
 
-            // No `Spacer` here on purpose. The previous version pushed
-            // the date footer to the bottom of the available space
-            // with `Spacer(minLength: 2)`, which combined with the
-            // grid's adaptive sizing meant a card with a short
-            // 2-line title still grew to fit the tallest card on its
-            // row — leaving a big gap between the title and the
-            // date. Letting the metadata block hug its content keeps
-            // every card the height of its actual text.
-            HStack(alignment: .firstTextBaseline, spacing: 8) {
-                Label(article.publishDate.formatted(date: .abbreviated, time: .omitted), systemImage: "calendar")
-                    .lineLimit(1)
-
-                if isSaved {
-                    Image(systemName: "star.fill")
-                        .foregroundStyle(.yellow)
-                        .help(L10n.savedArticle)
-                }
-
-                if isInHistory {
-                    Image(systemName: "clock.arrow.circlepath")
-                        .foregroundStyle(.secondary)
-                        .help(L10n.articleHistory)
-                }
-
-                Spacer()
-
-                Label(L10n.openArticle, systemImage: "newspaper")
-                    .lineLimit(1)
+            // No spacer here. The metadata should hug its actual
+            // content so two-column cards do not inherit the tallest
+            // footer in the row.
+            if isSaved || isInHistory {
+                articleStateFooter
             }
-            .font(.caption)
-            .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var articleTitleRow: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 8) {
+            Text(primaryTitle)
+                .font(layoutMode.usesHeroCardLayout ? .title3.weight(.semibold) : .subheadline.weight(.semibold))
+                .lineLimit(layoutMode.usesHeroCardLayout ? 3 : 2)
+                .multilineTextAlignment(.leading)
+                .layoutPriority(1)
+
+            Spacer(minLength: 4)
+
+            Text(compactPublishDateText)
+                .font(layoutMode.usesHeroCardLayout ? .caption.weight(.medium) : .caption2.weight(.medium))
+                .foregroundStyle(.secondary)
+                .monospacedDigit()
+                .lineLimit(1)
+                .fixedSize(horizontal: true, vertical: false)
+        }
+    }
+
+    private var compactPublishDateText: String {
+        article.publishDate.formatted(
+            .dateTime
+                .year(.twoDigits)
+                .month(.abbreviated)
+                .day(.defaultDigits)
+        )
+    }
+
+    private var articleStateFooter: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 8) {
+            if isSaved {
+                Image(systemName: "star.fill")
+                    .foregroundStyle(.yellow)
+                    .help(L10n.savedArticle)
+            }
+
+            if isInHistory {
+                Image(systemName: "clock.arrow.circlepath")
+                    .foregroundStyle(.secondary)
+                    .help(L10n.articleHistory)
+            }
+        }
+        .font(.caption)
+        .foregroundStyle(.secondary)
     }
 
     private var primaryTitle: String {
