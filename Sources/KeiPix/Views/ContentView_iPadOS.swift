@@ -1515,13 +1515,6 @@ struct ContentView: View {
                 )
             )
         }
-        actionItems.append(
-            .action(
-                id: IPadToolbarMenuAction.openPixivLinkFromClipboard,
-                title: L10n.openPixivLinkFromClipboard,
-                systemImage: "doc.on.clipboard"
-            )
-        )
         if pixivCollectionWebURL(for: mode) != nil {
             actionItems.append(
                 .action(

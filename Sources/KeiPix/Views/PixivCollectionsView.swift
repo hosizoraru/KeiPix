@@ -184,16 +184,9 @@ struct PixivCollectionsView: View {
                     Label(L10n.connectPixivWebSession, systemImage: "globe.badge.chevron.backward")
                 }
 
-                Divider()
-            }
-
-            Button {
-                Task {
-                    let message = await store.openPixivLinkFromClipboard()
-                    actionMessage = message
+                if collectionsWebURL != nil {
+                    Divider()
                 }
-            } label: {
-                Label(L10n.openPixivLinkFromClipboard, systemImage: "doc.on.clipboard")
             }
 
             if let webURL = collectionsWebURL {
