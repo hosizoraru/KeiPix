@@ -279,10 +279,28 @@ enum MobileBottomTabConfiguration {
     }
 }
 
+enum MobileRouteMenuSectionPresentation: Equatable, Sendable {
+    case inline
+    case submenu(systemImage: String)
+}
+
 struct MobileRouteMenuSection: Identifiable, Equatable {
     let id: String
     let title: String
     let routes: [PixivRoute]
+    let presentation: MobileRouteMenuSectionPresentation
+
+    init(
+        id: String,
+        title: String,
+        routes: [PixivRoute],
+        presentation: MobileRouteMenuSectionPresentation = .inline
+    ) {
+        self.id = id
+        self.title = title
+        self.routes = routes
+        self.presentation = presentation
+    }
 }
 
 enum MobileRouteMenuConfiguration {
@@ -306,7 +324,8 @@ enum MobileRouteMenuConfiguration {
                 MobileRouteMenuSection(
                     id: "illustration-ranking",
                     title: L10n.ranking,
-                    routes: PixivRoute.illustrationRankingRoutes
+                    routes: PixivRoute.illustrationRankingRoutes,
+                    presentation: .submenu(systemImage: "chart.bar")
                 )
             ]
         case .manga:
@@ -323,7 +342,8 @@ enum MobileRouteMenuConfiguration {
                 MobileRouteMenuSection(
                     id: "manga-ranking",
                     title: L10n.mangaRanking,
-                    routes: PixivRoute.mangaRankingRoutes
+                    routes: PixivRoute.mangaRankingRoutes,
+                    presentation: .submenu(systemImage: "chart.bar.doc.horizontal")
                 )
             ]
         case .novels:
@@ -343,7 +363,8 @@ enum MobileRouteMenuConfiguration {
                 MobileRouteMenuSection(
                     id: "novel-ranking",
                     title: L10n.novelRanking,
-                    routes: PixivRoute.novelRankingRoutes
+                    routes: PixivRoute.novelRankingRoutes,
+                    presentation: .submenu(systemImage: "chart.bar.doc.horizontal")
                 )
             ]
         case .bookmarks:

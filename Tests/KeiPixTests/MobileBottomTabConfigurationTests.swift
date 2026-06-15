@@ -157,6 +157,23 @@ struct MobileBottomTabConfigurationTests {
         #expect(bookmarkRoutes.contains(.search) == false)
     }
 
+    @Test("Ranking route groups collapse behind one submenu entry")
+    func rankingRouteGroupsCollapseBehindOneSubmenuEntry() throws {
+        let illustrationSections = MobileRouteMenuConfiguration.sections(for: .illustrations)
+        let discover = try #require(illustrationSections.first { $0.id == "illustration-discover" })
+        let ranking = try #require(illustrationSections.first { $0.id == "illustration-ranking" })
+        let mangaRanking = try #require(MobileRouteMenuConfiguration.sections(for: .manga).first { $0.id == "manga-ranking" })
+        let novelRanking = try #require(MobileRouteMenuConfiguration.sections(for: .novels).first { $0.id == "novel-ranking" })
+
+        #expect(discover.presentation == .inline)
+        #expect(ranking.presentation == .submenu(systemImage: "chart.bar"))
+        #expect(mangaRanking.presentation == .submenu(systemImage: "chart.bar.doc.horizontal"))
+        #expect(novelRanking.presentation == .submenu(systemImage: "chart.bar.doc.horizontal"))
+        #expect(ranking.routes == PixivRoute.illustrationRankingRoutes)
+        #expect(mangaRanking.routes == PixivRoute.mangaRankingRoutes)
+        #expect(novelRanking.routes == PixivRoute.novelRankingRoutes)
+    }
+
     @Test("Following artwork menus expose public and private feeds without the aggregate route")
     func followingArtworkMenusExposePublicAndPrivateFeedsWithoutAggregateRoute() throws {
         let bookmarkSections = MobileRouteMenuConfiguration.sections(for: .bookmarks)

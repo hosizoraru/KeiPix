@@ -983,18 +983,50 @@ struct ContentView: View {
             title: L10n.currentRoute,
             sections: routeMenuSections.map { section in
                 NativeToolbarMenuSection(
-                    title: section.title,
-                    items: section.routes.map { route in
-                        .action(
-                            id: IPadToolbarMenuAction.route(route),
-                            title: route.title,
-                            systemImage: route.systemImage,
-                            isSelected: route == store.selectedRoute
-                        )
-                    }
+                    title: routeMenuSectionTitle(for: section),
+                    items: routeMenuItems(for: section)
                 )
             }
         )
+    }
+
+    private func routeMenuSectionTitle(for section: MobileRouteMenuSection) -> String {
+        switch section.presentation {
+        case .inline:
+            section.title
+        case .submenu:
+            ""
+        }
+    }
+
+    private func routeMenuItems(for section: MobileRouteMenuSection) -> [NativeToolbarMenuItem] {
+        switch section.presentation {
+        case .inline:
+            section.routes.map(routeMenuAction)
+        case .submenu(let systemImage):
+            [
+                .submenu(
+                    title: section.title,
+                    subtitle: selectedRouteTitle(in: section),
+                    systemImage: systemImage,
+                    presentation: .singleSelection,
+                    items: section.routes.map(routeMenuAction)
+                )
+            ]
+        }
+    }
+
+    private func routeMenuAction(for route: PixivRoute) -> NativeToolbarMenuItem {
+        .action(
+            id: IPadToolbarMenuAction.route(route),
+            title: route.title,
+            systemImage: route.systemImage,
+            isSelected: route == store.selectedRoute
+        )
+    }
+
+    private func selectedRouteTitle(in section: MobileRouteMenuSection) -> String? {
+        section.routes.first { $0 == store.selectedRoute }?.title
     }
 
     private var routeMenuSections: [MobileRouteMenuSection] {
