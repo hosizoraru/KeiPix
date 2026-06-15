@@ -1161,13 +1161,13 @@ enum L10n {
     static var quickLookHint: String { text("Press Space to peek the file with Quick Look, just like Finder.") }
     static var qaQuickLook: String { text("Quick Look preview") }
     static var qaQuickLookRequirement: String {
-        text("Completed downloads expose a Quick Look affordance — Space-bar peek, toolbar button, and context-menu entry — that opens Apple's system preview panel.")
+        text("Completed downloads expose file preview through Quick Look in the More menu, context menu, and Space-bar handler, opening Apple's system preview panel.")
     }
     static var qaQuickLookNext: String {
         text("Keep DownloadQueueView's quickLookURL binding and focus-driven Space handler covered so Apple's preview panel never falls back to a third-party fallback.")
     }
     static var qaQuickLookEvidence: String {
-        text("Each completed row resolves a Quick Look URL and surfaces the preview button, context-menu entry, and Space-bar handler.")
+        text("Each completed row resolves a Quick Look URL and surfaces the More-menu preview entry, context-menu entry, and Space-bar handler.")
     }
     static var qaDownloadThroughput: String { text("Live download throughput") }
     static var qaDownloadThroughputRequirement: String {

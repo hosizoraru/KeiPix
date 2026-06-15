@@ -3878,6 +3878,12 @@ struct NativeBoundaryTests {
             contentsOf: root.appending(path: "Sources/KeiPix/Views/DownloadQueueRow.swift"),
             encoding: .utf8
         )
+        let phoneActionBar = try #require(rowView.range(of: "private struct DownloadQueuePhoneActionBar: View"))
+        let regularActionRail = try #require(rowView.range(of: "private struct DownloadQueueRegularActionRail: View"))
+        let moreMenu = try #require(rowView.range(of: "private struct DownloadQueueMoreMenu: View"))
+        let phoneActionSource = String(rowView[phoneActionBar.lowerBound..<regularActionRail.lowerBound])
+        let regularActionSource = String(rowView[regularActionRail.lowerBound..<moreMenu.lowerBound])
+        let moreMenuSource = String(rowView[moreMenu.lowerBound...])
 
         #expect(queueView.contains("NativeDownloadQueueListView("))
         #expect(queueView.contains("downloads.historySnapshot"))
@@ -3942,6 +3948,11 @@ struct NativeBoundaryTests {
         #expect(rowView.contains("private struct DownloadQueuePhoneActionBar: View"))
         #expect(rowView.contains("FlowLayout(spacing: 5)"))
         #expect(rowView.contains("phoneLayout") && rowView.contains("regularLayout"))
+        #expect(rowView.contains("if isFocused && usesPhoneLayout == false"))
+        #expect(phoneActionSource.contains("DownloadQueueQuickLookButton") == false)
+        #expect(regularActionSource.contains("DownloadQueueQuickLookButton") == false)
+        #expect(rowView.contains("private struct DownloadQueueQuickLookButton") == false)
+        #expect(moreMenuSource.contains("Label(L10n.quickLook, systemImage: \"eye\")"))
     }
 
     @Test("Downloads use Photos on iOS and custom folders on macOS")

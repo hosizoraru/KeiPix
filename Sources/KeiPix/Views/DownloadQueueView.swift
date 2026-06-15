@@ -13,7 +13,7 @@ struct DownloadQueueView: View {
     /// Drives `.quickLookPreview(_:)`. Setting this binding to a non-nil
     /// URL pops Apple's system Quick Look panel — same affordance Finder
     /// gives a selected file when the user hits the space bar. We park a
-    /// single binding at the view root so toolbar buttons, context-menu
+    /// single binding at the view root so more-menu items, context-menu
     /// items, and the space-bar key handler all share one source of
     /// truth and only one panel can be on screen at a time.
     @State private var quickLookURL: URL?

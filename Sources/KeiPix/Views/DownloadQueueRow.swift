@@ -3,7 +3,7 @@ import SwiftUI
 /// Single row inside `DownloadQueueView`. Lives in its own file so the
 /// queue view stays under SwiftLint's 1000-line ceiling and so the row
 /// can evolve independently as we add the live-throughput badge,
-/// Quick Look button, drag affordance, and focus indicator.
+/// Quick Look menu, drag affordance, and focus indicator.
 struct DownloadQueueRow: View {
     let item: ArtworkDownloadItem
     @Bindable var downloads: ArtworkDownloadStore
@@ -31,7 +31,7 @@ struct DownloadQueueRow: View {
             // which entry the space bar will preview. Mirrors how
             // Finder paints a halo around the selected file.
             .overlay {
-                if isFocused {
+                if isFocused && usesPhoneLayout == false {
                     RoundedRectangle(cornerRadius: 18, style: .continuous)
                         .stroke(Color.accentColor.opacity(0.65), lineWidth: 2)
                 }
@@ -366,7 +366,6 @@ private struct DownloadQueuePhoneActionBar: View {
                 Spacer(minLength: 4)
 
                 DownloadQueueOpenButton(canOpen: canOpen, action: open)
-                DownloadQueueQuickLookButton(canOpen: canOpen, action: quickLook)
                 DownloadQueueMoreMenu(
                     item: item,
                     canOpen: canOpen,
@@ -414,7 +413,6 @@ private struct DownloadQueueRegularActionRail: View {
             }
 
             DownloadQueueOpenButton(canOpen: canOpen, action: open)
-            DownloadQueueQuickLookButton(canOpen: canOpen, action: quickLook)
             #if os(macOS)
             DownloadQueueRevealButton(action: reveal)
             #endif
@@ -591,23 +589,6 @@ private struct DownloadQueueOpenButton: View {
     }
 }
 
-private struct DownloadQueueQuickLookButton: View {
-    let canOpen: Bool
-    let action: () -> Void
-
-    var body: some View {
-        // Quick Look mirrors Finder's space-bar preview. The keyboard
-        // shortcut stays on the native list, so rendered buttons never
-        // compete for one accelerator.
-        Button(action: action) {
-            Label(L10n.quickLook, systemImage: "eye")
-        }
-        .os26GlassIconButton()
-        .disabled(canOpen == false)
-        .help(L10n.quickLookHint)
-    }
-}
-
 private struct DownloadQueueRevealButton: View {
     let action: () -> Void
 
@@ -631,7 +612,16 @@ private struct DownloadQueueMoreMenu: View {
 
     var body: some View {
         Menu {
+            Button {
+                quickLook()
+            } label: {
+                Label(L10n.quickLook, systemImage: "eye")
+            }
+            .disabled(canOpen == false)
+
             if let pixivURL = item.pixivURL {
+                Divider()
+
                 Button {
                     PlatformWorkspace.open(pixivURL)
                 } label: {
@@ -646,15 +636,10 @@ private struct DownloadQueueMoreMenu: View {
                 }
             }
 
-            Button {
-                quickLook()
-            } label: {
-                Label(L10n.quickLook, systemImage: "eye")
-            }
-            .disabled(canOpen == false)
-
             #if os(macOS)
             if let reveal {
+                Divider()
+
                 Button {
                     reveal()
                 } label: {

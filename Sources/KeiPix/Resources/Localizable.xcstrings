@@ -6932,31 +6932,31 @@
         }
       }
     },
-    "Completed downloads expose a Quick Look affordance — Space-bar peek, toolbar button, and context-menu entry — that opens Apple's system preview panel.": {
+    "Completed downloads expose file preview through Quick Look in the More menu, context menu, and Space-bar handler, opening Apple's system preview panel.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Completed downloads expose a Quick Look affordance — Space-bar peek, toolbar button, and context-menu entry — that opens Apple's system preview panel."
+            "value": "Completed downloads expose file preview through Quick Look in the More menu, context menu, and Space-bar handler, opening Apple's system preview panel."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "ダウンロード済みの作品では、スペースキー、ツールバーボタン、コンテキストメニューからクイックルックを呼び出し、Apple のシステムプレビューパネルを表示できます。"
+            "value": "ダウンロード済みの作品では、その他メニュー、コンテキストメニュー、スペースキーからクイックルックのファイルプレビューを開き、Apple のシステムプレビューパネルを表示できます。"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "已完成的下载提供快速查看入口——空格键预览、工具栏按钮和右键菜单项均会调起 Apple 系统预览面板。"
+            "value": "已完成的下载通过更多菜单、右键菜单和空格键提供快速查看文件预览，并调起 Apple 系统预览面板。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "已完成的下載提供快速查看入口——空格鍵預覽、工具欄按钮和右鍵菜單項均會調起 Apple 系統預覽面板。"
+            "value": "已完成的下載透過更多選單、右鍵選單與空格鍵提供快速查看檔案預覽，並叫出 Apple 系統預覽面板。"
           }
         }
       }
@@ -11543,31 +11543,31 @@
         }
       }
     },
-    "Each completed row resolves a Quick Look URL and surfaces the preview button, context-menu entry, and Space-bar handler.": {
+    "Each completed row resolves a Quick Look URL and surfaces the More-menu preview entry, context-menu entry, and Space-bar handler.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Each completed row resolves a Quick Look URL and surfaces the preview button, context-menu entry, and Space-bar handler."
+            "value": "Each completed row resolves a Quick Look URL and surfaces the More-menu preview entry, context-menu entry, and Space-bar handler."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "ダウンロード済みの各行はクイックルック URL を解決し、プレビューボタン、コンテキストメニュー項目、スペースキー処理を提供します。"
+            "value": "ダウンロード済みの各行はクイックルック URL を解決し、その他メニューのプレビュー項目、コンテキストメニュー項目、スペースキー処理を提供します。"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "每个已完成的下载行都能解析出快速查看 URL，并暴露预览按钮、右键菜单项和空格键处理。"
+            "value": "每个已完成的下载行都能解析出快速查看 URL，并提供更多菜单预览项、右键菜单项和空格键处理。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "每個已完成的下載行都能解析出快速查看 URL，並暴露預覽按钮、右鍵菜單項和空格鍵處理。"
+            "value": "每個已完成的下載列都能解析出快速查看 URL，並提供更多選單預覽項目、右鍵選單項目與空格鍵處理。"
           }
         }
       }

@@ -335,13 +335,12 @@ extension KeiPixStore {
     /// growing as we land P2 items, and inlining each new check pushes
     /// the parent function past the 100-line limit.
     private func qaQuickLookItem(visualEvidence: VisualQAEvidenceIndex) -> NonNovelQAItem {
-        // Quick Look — passes once a download-queue screenshot covers
-        // the surface (the Quick Look button only renders inside that
-        // view) and the row helper still resolves a non-nil URL for at
-        // least one completed item with a readable artifact. The
-        // visual surface check is the regression anchor; the live
-        // resolution check guards against future refactors that strip
-        // the helper but leave the toolbar button behind.
+        // Quick Look passes once a download-queue screenshot covers the
+        // surface and the row helper still resolves a non-nil URL for at
+        // least one completed item with a readable artifact. The visual
+        // surface check is the regression anchor; the live resolution check
+        // guards against future refactors that strip the helper but leave a
+        // stale menu entry behind.
         let quickLookSurfaces: [VisualQASurface] = [.downloadQueue]
         let hasResolvableQuickLook = self.downloads.completedItems.contains { item in
             self.downloads.hasReadableDownload(for: item)
