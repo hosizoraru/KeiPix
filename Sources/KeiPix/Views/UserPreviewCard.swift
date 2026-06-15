@@ -20,11 +20,9 @@ import SwiftUI
 ///    track the card's actual placed size — three thumbnails fill the
 ///    card edge to edge with 8 pt gutters, no static numbers.
 ///
-/// 3. **Navigation is one row, not two.** Profile / Illustrations /
-///    Manga used to share a row with the overflow menu (`More`)
-///    crammed onto the right, all under `controlSize(.small)`. The
-///    layout now separates `nav row` from `action rail` so each row has
-///    breathing room and a clear job.
+/// 3. **Compact actions are one row.** Phone and multi-column cards
+///    use icon-only controls in a single command rail. Wider single-card
+///    layouts can still show text where the extra width actually helps.
 struct UserPreviewCard: View {
     #if os(iOS)
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
@@ -68,8 +66,12 @@ struct UserPreviewCard: View {
                 previewStrip
             } else {
                 previewStrip
-                navigationRow
-                actionRail
+                if usesIconOnlyActionLabels {
+                    compactCommandRail
+                } else {
+                    navigationRow
+                    actionRail
+                }
             }
         }
         .padding(14)
@@ -364,6 +366,49 @@ struct UserPreviewCard: View {
         return expandedPreview == false
     }
 
+    private var compactCommandRail: some View {
+        GlassEffectContainer(spacing: 6) {
+            HStack(spacing: 6) {
+                compactNavigationChip(
+                    title: L10n.creatorProfile,
+                    systemImage: "person.crop.circle",
+                    displayStyle: .iconOnly,
+                    action: openProfile
+                )
+                compactNavigationChip(
+                    title: L10n.illustrations,
+                    systemImage: "photo",
+                    displayStyle: .iconOnly,
+                    action: openIllustrations
+                )
+                compactNavigationChip(
+                    title: L10n.manga,
+                    systemImage: "book.closed",
+                    displayStyle: .iconOnly,
+                    action: openManga
+                )
+
+                Spacer(minLength: 4)
+
+                actionChip(
+                    title: isPinned ? L10n.unpinCreator : L10n.pinCreator,
+                    systemImage: isPinned ? "pin.slash" : "pin",
+                    displayStyle: .iconOnly,
+                    action: togglePinnedCreator
+                )
+                pixivLink(displayStyle: .iconOnly)
+                actionChip(
+                    title: L10n.copyLink,
+                    systemImage: "link",
+                    displayStyle: .iconOnly,
+                    action: copyCreatorLink
+                )
+                feedbackActionChip
+                muteCreatorActionChip
+            }
+        }
+    }
+
     private var iconOnlyNavigationButtons: some View {
         HStack(spacing: 8) {
             compactNavigationChip(
@@ -550,6 +595,39 @@ struct UserPreviewCard: View {
         .controlSize(.small)
         .help(title)
         .accessibilityLabel(title)
+    }
+
+    private var feedbackActionChip: some View {
+        Button(action: requestFeedback) {
+            creatorButtonLabel(
+                title: L10n.feedbackAndMute,
+                systemImage: "exclamationmark.bubble",
+                displayStyle: .iconOnly
+            )
+        }
+        .buttonStyle(.glass)
+        .buttonBorderShape(.capsule)
+        .controlSize(.small)
+        .disabled(isUpdating)
+        .help(L10n.feedbackAndMute)
+        .accessibilityLabel(L10n.feedbackAndMute)
+    }
+
+    private var muteCreatorActionChip: some View {
+        Button(role: .destructive, action: requestMuteCreator) {
+            creatorButtonLabel(
+                title: L10n.muteCreator,
+                systemImage: "eye.slash",
+                displayStyle: .iconOnly
+            )
+        }
+        .buttonStyle(.glass)
+        .buttonBorderShape(.capsule)
+        .controlSize(.small)
+        .foregroundStyle(.red)
+        .disabled(isUpdating)
+        .help(L10n.muteCreator)
+        .accessibilityLabel(L10n.muteCreator)
     }
 
     @ViewBuilder
