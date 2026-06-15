@@ -46,6 +46,7 @@ struct WatchLaterView: View {
             watchLaterTitleActions
         }
         .platformPageNavigationChrome(title: L10n.watchLater, status: watchLaterStatusText)
+        .mobileRouteBadgeCount(items.count, for: .watchLater)
         .confirmationDialog(
             L10n.clearHistoryConfirmation,
             isPresented: $isClearConfirmationPresented,

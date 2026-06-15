@@ -40,6 +40,7 @@ struct MutedContentView: View {
             mutedContentTitleActions
         }
         .platformPageNavigationChrome(title: L10n.mutedContent, status: totalCountText)
+        .mobileRouteBadgeCount(totalCount, for: .mutedContent)
         .overlay(alignment: .bottom) {
             if let statusMessage {
                 FloatingStatusBanner(maxWidth: 520) {

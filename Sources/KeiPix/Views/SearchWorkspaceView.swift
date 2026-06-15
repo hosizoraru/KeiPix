@@ -54,6 +54,7 @@ struct SearchWorkspaceView: View {
             statusSystemImage: "magnifyingglass"
         )
         .platformPageNavigationChrome(title: L10n.search, status: searchNavigationStatus)
+        .mobileRouteBadgeCount(searchBadgeCount, for: .search)
         .overlay(alignment: .bottom) {
             if let actionMessage {
                 FloatingStatusBanner(maxWidth: 520) {
@@ -561,6 +562,13 @@ struct SearchWorkspaceView: View {
             parts.append("\(store.searchHistory.count.formatted()) \(L10n.recentSearches)")
         }
         return parts.joined(separator: " · ")
+    }
+
+    private var searchBadgeCount: Int {
+        if store.clientFilteredArtworks.isEmpty == false {
+            return store.clientFilteredArtworks.count
+        }
+        return store.savedSearches.count + store.searchHistory.count
     }
 
     private var normalizedSearchKeyword: String {

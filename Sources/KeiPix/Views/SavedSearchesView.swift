@@ -129,6 +129,7 @@ struct SavedSearchesView: View {
             statusSystemImage: "magnifyingglass"
         )
         .platformPageNavigationChrome(title: L10n.savedSearches, status: savedSearchStatusText)
+        .mobileRouteBadgeCount(savedSearchBadgeCount, for: .savedSearches)
         .overlay(alignment: .bottom) {
             if let actionMessage {
                 FloatingStatusBanner(maxWidth: 520) {
@@ -243,6 +244,10 @@ struct SavedSearchesView: View {
             return savedSearchStatusText
         }
         return "\(normalizedLibrarySearchText) · \(savedSearchStatusText)"
+    }
+
+    private var savedSearchBadgeCount: Int {
+        visiblePresets.count + visibleSavedSearches.count + visibleSearchHistory.count
     }
 
     private var normalizedLibrarySearchText: String {

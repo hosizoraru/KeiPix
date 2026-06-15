@@ -39,6 +39,7 @@ struct MangaWatchlistView: View {
             mangaWatchlistTitleActions
         }
         .platformPageNavigationChrome(title: L10n.mangaWatchlist, status: watchlistNavigationStatus)
+        .mobileRouteBadgeCount(filteredSeries.count, for: .mangaWatchlist)
         .confirmationDialog(
             L10n.removeFromWatchlist,
             isPresented: removalBinding,

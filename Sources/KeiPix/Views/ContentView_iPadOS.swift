@@ -31,6 +31,7 @@ struct ContentView: View {
     @State private var feedbackRequest: FeedbackReportRequest?
     @State private var statusMessage: String?
     @State private var pendingDownloadDangerAction: DownloadDangerAction?
+    @State private var mobileRouteBadgeCounts: [PixivRoute: Int] = [:]
     @State private var bookmarkEditorLayoutProfileOverride: BookmarkEditorLayoutProfile = .compact
     @AppStorage("mobileBottomTabItemIDs") private var mobileBottomTabDefaultRouteIDs = MobileBottomTabConfiguration.defaultStorageID
     @AppStorage("mobileBottomTabLaunchTarget") private var mobileBottomTabLaunchTargetID = MobileBottomTabConfiguration.defaultLaunchTarget.rawValue
@@ -89,6 +90,9 @@ struct ContentView: View {
             .preferredColorScheme(store.appColorScheme.preferredColorScheme)
             .onPreferenceChange(BookmarkEditorLayoutProfilePreferenceKey.self) { profile in
                 bookmarkEditorLayoutProfileOverride = profile
+            }
+            .onPreferenceChange(MobileRouteBadgePreferenceKey.self) { counts in
+                mobileRouteBadgeCounts = counts
             }
             .onOpenURL { url in
                 Task { await store.openPixivLink(url) }
@@ -1091,6 +1095,10 @@ struct ContentView: View {
     }
 
     private var routeMenuCountBadgeText: String? {
+        if currentMobilePlatform == .phone,
+           let count = mobileRouteBadgeCounts[store.selectedRoute] {
+            return routeBadgeText(for: count)
+        }
         if currentMobilePlatform == .phone,
            let count = phoneRouteMenuBadgeCount {
             return routeBadgeText(for: count)

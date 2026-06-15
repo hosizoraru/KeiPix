@@ -19,6 +19,7 @@ struct PixivActivityFeedView: View {
             }
         }
         .platformPageNavigationChrome(title: L10n.pixivActivity, status: statusText)
+        .mobileRouteBadgeCount(store.pixivActivityVisibleItems.count, for: .pixivActivity)
         .sheet(item: $presentedActivityDetail) { detail in
             NavigationStack {
                 switch detail {

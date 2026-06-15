@@ -98,6 +98,7 @@ struct SpotlightView: View {
             compactCollectionMenu
         }
         .platformPageNavigationChrome(title: title, status: spotlightNavigationStatus)
+        .mobileRouteBadgeCount(displayedArticles.count, for: spotlightBadgeRoute)
         .toolbar {
             if store.session != nil {
                 // Principal placement works well on macOS and wide
@@ -365,6 +366,10 @@ struct SpotlightView: View {
         case .history:
             store.spotlightArticleHistory
         }
+    }
+
+    private var spotlightBadgeRoute: PixivRoute {
+        fixedCollectionMode == .favorites ? .savedPixivisionArticles : .spotlight
     }
 
     private var emptyTitle: String {

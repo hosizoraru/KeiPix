@@ -38,6 +38,7 @@ struct BrowsingHistoryView: View {
             historyTitleActions
         }
         .platformPageNavigationChrome(title: L10n.history, status: historyStatusText)
+        .mobileRouteBadgeCount(historyBadgeCount, for: .history)
         .confirmationDialog(
             L10n.clearHistoryConfirmation,
             isPresented: $isClearConfirmationPresented,
@@ -453,6 +454,15 @@ struct BrowsingHistoryView: View {
                 return "\(visibleCount.formatted())/\(store.artworks.count.formatted())"
             }
             return visibleCount.formatted()
+        }
+    }
+
+    private var historyBadgeCount: Int {
+        switch source {
+        case .local:
+            filteredLocalHistoryItems.count
+        case .pixiv:
+            filteredPixivHistoryArtworks.count
         }
     }
 

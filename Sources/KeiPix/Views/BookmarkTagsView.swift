@@ -41,6 +41,7 @@ struct BookmarkTagsView: View {
             bookmarkTagTitleActions
         }
         .platformPageNavigationChrome(title: L10n.bookmarkTags, status: bookmarkTagNavigationStatus)
+        .mobileRouteBadgeCount(filteredTags.count, for: .bookmarkTags)
         .overlay(alignment: .bottom) {
             VStack(spacing: 8) {
                 if let actionMessage {

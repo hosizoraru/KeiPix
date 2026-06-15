@@ -54,6 +54,7 @@ struct GalleryView: View {
         }
         .animation(.snappy(duration: 0.18), value: actionMessage)
         .navigationSubtitle(platformGallerySubtitle)
+        .mobileRouteBadgeCount(galleryBadgeCount, for: store.selectedRoute)
         .mobileFloatingTopChrome(syncID: "gallery|\(store.selectedRoute.rawValue)")
     }
 
@@ -114,6 +115,10 @@ struct GalleryView: View {
             }
         }
         return parts.joined(separator: " · ")
+    }
+
+    private var galleryBadgeCount: Int {
+        store.clientFilteredArtworks.count
     }
 }
 

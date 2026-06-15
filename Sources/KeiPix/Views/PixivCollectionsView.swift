@@ -33,6 +33,7 @@ struct PixivCollectionsView: View {
             pixivCollectionTitleActions
         }
         .platformPageNavigationChrome(title: mode.title, status: statusText)
+        .mobileRouteBadgeCount(store.pixivCollections.count, for: mode.route)
         .toolbar {
             pixivCollectionToolbar
         }

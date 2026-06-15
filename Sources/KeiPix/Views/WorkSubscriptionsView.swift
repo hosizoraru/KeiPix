@@ -41,6 +41,7 @@ struct WorkSubscriptionsView: View {
             subscriptionTitleActions
         }
         .platformPageNavigationChrome(title: L10n.workSubscriptions, status: subtitle)
+        .mobileRouteBadgeCount(filteredSubscriptions.count, for: .workSubscriptions)
         .overlay(alignment: .bottom) {
             if let actionMessage {
                 FloatingStatusBanner(maxWidth: 520) {

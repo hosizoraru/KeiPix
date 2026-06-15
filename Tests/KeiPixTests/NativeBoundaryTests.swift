@@ -2304,6 +2304,52 @@ struct NativeBoundaryTests {
         #expect(downloads.contains(".platformGlassControlBar("))
     }
 
+    @Test("iPhone route badge chrome is reported by child pages")
+    func iPhoneRouteBadgeChromeIsReportedByChildPages() throws {
+        let root = try packageRoot()
+        let preferenceURL = root.appending(path: "Sources/KeiPix/Support/MobileRouteBadgePreference.swift")
+        let preference = try String(contentsOf: preferenceURL, encoding: .utf8)
+        let contentView = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/ContentView_iPadOS.swift"),
+            encoding: .utf8
+        )
+
+        #expect(preference.contains("struct MobileRouteBadgePreferenceKey: PreferenceKey"))
+        #expect(preference.contains("static let defaultValue: [PixivRoute: Int] = [:]"))
+        #expect(preference.contains("func mobileRouteBadgeCount(_ count: Int?, for route: PixivRoute) -> some View"))
+        #expect(preference.contains("max(0, normalizedCount)"))
+        #expect(contentView.contains("@State private var mobileRouteBadgeCounts: [PixivRoute: Int] = [:]"))
+        #expect(contentView.contains(".onPreferenceChange(MobileRouteBadgePreferenceKey.self) { counts in"))
+        #expect(contentView.contains("mobileRouteBadgeCounts = counts"))
+        #expect(contentView.contains("if currentMobilePlatform == .phone,\n           let count = mobileRouteBadgeCounts[store.selectedRoute]"))
+        #expect(contentView.contains("phoneRouteMenuBadgeCount"))
+
+        let reportingPages: [(String, String)] = [
+            ("Sources/KeiPix/Views/GalleryView.swift", ".mobileRouteBadgeCount(galleryBadgeCount, for: store.selectedRoute)"),
+            ("Sources/KeiPix/Views/NovelGalleryView.swift", ".mobileRouteBadgeCount(filteredNovels.count, for: store.selectedRoute)"),
+            ("Sources/KeiPix/Views/DownloadQueueView.swift", ".mobileRouteBadgeCount(visibleItems.count, for: .downloads)"),
+            ("Sources/KeiPix/Views/PixivActivityFeedView.swift", ".mobileRouteBadgeCount(store.pixivActivityVisibleItems.count, for: .pixivActivity)"),
+            ("Sources/KeiPix/Views/SearchWorkspaceView.swift", ".mobileRouteBadgeCount(searchBadgeCount, for: .search)"),
+            ("Sources/KeiPix/Views/TrendingTagsView.swift", ".mobileRouteBadgeCount(tags.count, for: .trendingTags)"),
+            ("Sources/KeiPix/Views/BookmarkTagsView.swift", ".mobileRouteBadgeCount(filteredTags.count, for: .bookmarkTags)"),
+            ("Sources/KeiPix/Views/MangaWatchlistView.swift", ".mobileRouteBadgeCount(filteredSeries.count, for: .mangaWatchlist)"),
+            ("Sources/KeiPix/Views/NovelWatchlistView.swift", ".mobileRouteBadgeCount(novelStore.watchlistSeries.count, for: .novelWatchlist)"),
+            ("Sources/KeiPix/Views/PixivCollectionsView.swift", ".mobileRouteBadgeCount(store.pixivCollections.count, for: mode.route)"),
+            ("Sources/KeiPix/Views/BrowsingHistoryView.swift", ".mobileRouteBadgeCount(historyBadgeCount, for: .history)"),
+            ("Sources/KeiPix/Views/WatchLaterView.swift", ".mobileRouteBadgeCount(items.count, for: .watchLater)"),
+            ("Sources/KeiPix/Views/WorkSubscriptionsView.swift", ".mobileRouteBadgeCount(filteredSubscriptions.count, for: .workSubscriptions)"),
+            ("Sources/KeiPix/Views/MutedContentView.swift", ".mobileRouteBadgeCount(totalCount, for: .mutedContent)"),
+            ("Sources/KeiPix/Views/SavedSearchesView.swift", ".mobileRouteBadgeCount(savedSearchBadgeCount, for: .savedSearches)"),
+            ("Sources/KeiPix/Views/SpotlightView.swift", ".mobileRouteBadgeCount(displayedArticles.count, for: spotlightBadgeRoute)"),
+            ("Sources/KeiPix/Views/UserPreviewListView.swift", ".mobileRouteBadgeCount(visiblePreviews.count, for: routeBadgeRoute)")
+        ]
+
+        for (path, marker) in reportingPages {
+            let source = try String(contentsOf: root.appending(path: path), encoding: .utf8)
+            #expect(source.contains(marker), "\(path) should report its visible count to the shared iPhone route badge chrome")
+        }
+    }
+
     @Test("OS 26 chrome avoids legacy bar and capsule materials")
     func os26ChromeAvoidsLegacyBarAndCapsuleMaterials() throws {
         let root = try packageRoot()

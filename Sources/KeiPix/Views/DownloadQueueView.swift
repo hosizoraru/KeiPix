@@ -40,6 +40,7 @@ struct DownloadQueueView: View {
     private func queueColumnWithChrome(visibleItems: [ArtworkDownloadItem]) -> some View {
         queueColumn(visibleItems: visibleItems)
             .platformPageNavigationChrome(title: L10n.downloads, status: downloadStatusText)
+            .mobileRouteBadgeCount(visibleItems.count, for: .downloads)
             .quickLookPreview($quickLookURL)
             .overlay(alignment: .bottom) {
                 actionMessageOverlay

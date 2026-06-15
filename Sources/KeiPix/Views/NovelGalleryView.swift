@@ -57,6 +57,7 @@ struct NovelGalleryView: View {
         }
         .navigationTitle(platformNavigationTitle)
         .mobileFloatingTopChrome(syncID: "novels|\(store.selectedRoute.rawValue)")
+        .mobileRouteBadgeCount(filteredNovels.count, for: store.selectedRoute)
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 if surface.showsLayoutMenu {

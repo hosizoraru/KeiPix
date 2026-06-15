@@ -69,6 +69,7 @@ struct TrendingTagsView: View {
             statusSystemImage: "number"
         )
         .platformPageNavigationChrome(title: L10n.trendingTags, status: trendingTagsStatusText)
+        .mobileRouteBadgeCount(tags.count, for: .trendingTags)
         .overlay(alignment: .bottom) {
             VStack(spacing: 8) {
                 if let actionMessage {

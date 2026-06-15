@@ -47,6 +47,7 @@ struct NovelWatchlistView: View {
             statusSystemImage: "books.vertical"
         )
         .platformPageNavigationChrome(title: L10n.novelWatchlist, status: novelWatchlistStatusText)
+        .mobileRouteBadgeCount(novelStore.watchlistSeries.count, for: .novelWatchlist)
         .task(id: store.routeRefreshGeneration) {
             // Mirrors `MangaWatchlistView` — only the route refresh
             // signal triggers a fresh fetch so toolbar Refresh works.

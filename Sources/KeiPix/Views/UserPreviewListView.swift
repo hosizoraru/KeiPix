@@ -57,6 +57,7 @@ struct UserPreviewListView: View {
             creatorTitleActions
         }
         .platformPageNavigationChrome(title: mode.title, status: creatorNavigationStatus)
+        .mobileRouteBadgeCount(visiblePreviews.count, for: routeBadgeRoute)
         .toolbar {
             // Main routes use the outer route refresh button. Sheets do
             // not have that parent chrome, so creator-list sheets keep a
@@ -383,6 +384,21 @@ struct UserPreviewListView: View {
     private var creatorNavigationStatus: String {
         guard store.session != nil else { return "" }
         return navigationSubtitle
+    }
+
+    private var routeBadgeRoute: PixivRoute {
+        switch mode {
+        case .recommended:
+            .recommendedUsers
+        case .following:
+            .followingCreators
+        case .pinned:
+            .pinnedCreators
+        case .search:
+            .searchUsers
+        case .userFollowing, .userFollowers, .userMyPixiv, .related:
+            store.selectedRoute
+        }
     }
 
     private var restrictBinding: Binding<BookmarkRestrict> {
