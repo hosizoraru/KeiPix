@@ -109,9 +109,9 @@ enum NativeGalleryCollectionLayout: Equatable {
     var interitemSpacing: CGFloat {
         switch self {
         case .compactGrid:
-            12
+            NativeCollectionLayoutMetrics.artworkCards.itemSpacing
         case .listRow:
-            10
+            NativeCollectionLayoutMetrics.listRows.itemSpacing
         case .masonry(let configuration, _):
             configuration.spacing
         }
@@ -122,7 +122,7 @@ enum NativeGalleryCollectionLayout: Equatable {
     }
 
     var sectionInsets: EdgeInsets {
-        EdgeInsets(top: 10, leading: 18, bottom: 20, trailing: 18)
+        NativeCollectionLayoutMetrics.artworkCards.insets.edgeInsets
     }
 
     func itemSize(for item: NativeGalleryCollectionItem, containerWidth: CGFloat) -> CGSize {

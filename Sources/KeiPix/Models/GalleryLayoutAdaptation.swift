@@ -27,7 +27,7 @@ enum GalleryLayoutAdaptation: Equatable, Sendable {
 
     var portraitTabletMasonryConfiguration: ArtworkMasonryLayoutConfiguration {
         ArtworkMasonryLayoutConfiguration(
-            spacing: 10,
+            spacing: NativeCollectionLayoutMetrics.listRows.itemSpacing,
             preferredColumnWidth: 220,
             minColumnWidth: 176,
             maxColumnWidth: 280,
@@ -38,7 +38,7 @@ enum GalleryLayoutAdaptation: Equatable, Sendable {
 
     var phoneTwoColumnMasonryConfiguration: ArtworkMasonryLayoutConfiguration {
         ArtworkMasonryLayoutConfiguration(
-            spacing: 8,
+            spacing: NativeCollectionLayoutMetrics.informationCards.itemSpacing,
             preferredColumnWidth: 168,
             minColumnWidth: 126,
             maxColumnWidth: 220,
@@ -51,7 +51,7 @@ enum GalleryLayoutAdaptation: Equatable, Sendable {
         let fixedColumnCount = mode.fixedColumnCount
         let usesDenseThreeColumnLayout = fixedColumnCount == 3
         return ArtworkMasonryLayoutConfiguration(
-            spacing: 12,
+            spacing: NativeCollectionLayoutMetrics.artworkCards.itemSpacing,
             preferredColumnWidth: usesDenseThreeColumnLayout ? 168 : 224,
             minColumnWidth: usesDenseThreeColumnLayout ? 116 : 176,
             maxColumnWidth: 260,

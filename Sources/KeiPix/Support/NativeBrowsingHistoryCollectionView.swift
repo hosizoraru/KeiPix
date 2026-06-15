@@ -52,12 +52,12 @@ enum NativeBrowsingHistoryCollectionLayout: Equatable {
     case localCards
     case pixivCards
 
-    var interitemSpacing: CGFloat { 14 }
+    var interitemSpacing: CGFloat { NativeCollectionLayoutMetrics.artworkCards.itemSpacing }
 
-    var lineSpacing: CGFloat { 14 }
+    var lineSpacing: CGFloat { NativeCollectionLayoutMetrics.artworkCards.itemSpacing }
 
     var sectionInsets: EdgeInsets {
-        EdgeInsets(top: 14, leading: 18, bottom: 20, trailing: 18)
+        NativeCollectionLayoutMetrics.artworkCards.insets.edgeInsets
     }
 
     func itemSize(for item: NativeBrowsingHistoryCollectionItem, containerWidth: CGFloat) -> CGSize {

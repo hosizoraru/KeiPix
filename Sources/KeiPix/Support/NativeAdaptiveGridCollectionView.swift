@@ -9,8 +9,8 @@ struct NativeAdaptiveGridCollectionLayout: Equatable {
     var minimumItemWidth: CGFloat
     var maximumItemWidth: CGFloat
     var itemHeight: CGFloat
-    var spacing: CGFloat = 14
-    var sectionInsets = EdgeInsets(top: 18, leading: 18, bottom: 20, trailing: 18)
+    var spacing: CGFloat = NativeCollectionLayoutMetrics.informationCards.itemSpacing
+    var sectionInsets = NativeCollectionLayoutMetrics.informationCards.insets.edgeInsets
 
     func itemSize(containerWidth: CGFloat) -> CGSize {
         let availableWidth = max(containerWidth - sectionInsets.leading - sectionInsets.trailing, 1)

@@ -204,24 +204,26 @@ enum DownloadQueueMasonryPresentation {
     ) -> DownloadQueueMasonryMetrics {
         switch layoutKind {
         case .compactPhone:
-            DownloadQueueMasonryMetrics(
-                spacing: 8,
-                leadingInset: 10,
-                trailingInset: 10,
-                topInset: 6,
-                bottomInset: 92,
+            let metrics = NativeCollectionLayoutMetrics.compactDownloadCards
+            return DownloadQueueMasonryMetrics(
+                spacing: metrics.itemSpacing,
+                leadingInset: metrics.insets.leading,
+                trailingInset: metrics.insets.trailing,
+                topInset: metrics.insets.top,
+                bottomInset: metrics.insets.bottom,
                 preferredColumnWidth: 178,
                 minColumnWidth: 150,
                 maxColumnWidth: 220,
                 fixedColumnCount: containerWidth >= 340 ? 2 : 1
             )
         case .regular:
-            DownloadQueueMasonryMetrics(
-                spacing: 12,
-                leadingInset: 18,
-                trailingInset: 18,
-                topInset: 18,
-                bottomInset: 18,
+            let metrics = NativeCollectionLayoutMetrics.regularDownloadCards
+            return DownloadQueueMasonryMetrics(
+                spacing: metrics.itemSpacing,
+                leadingInset: metrics.insets.leading,
+                trailingInset: metrics.insets.trailing,
+                topInset: metrics.insets.top,
+                bottomInset: metrics.insets.bottom,
                 preferredColumnWidth: 300,
                 minColumnWidth: 230,
                 maxColumnWidth: 340,

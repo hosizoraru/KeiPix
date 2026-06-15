@@ -56,23 +56,23 @@ enum NativeCreatorPreviewCollectionLayout: Equatable {
 
     var interitemSpacing: CGFloat {
         if case .horizontalShelf = self {
-            return 14
+            return NativeCollectionLayoutMetrics.horizontalShelves.itemSpacing
         }
-        return 10
+        return NativeCollectionLayoutMetrics.informationCards.itemSpacing
     }
 
     var lineSpacing: CGFloat {
         if case .horizontalShelf = self {
-            return 14
+            return NativeCollectionLayoutMetrics.horizontalShelves.itemSpacing
         }
-        return 10
+        return NativeCollectionLayoutMetrics.informationCards.itemSpacing
     }
 
     var sectionInsets: EdgeInsets {
         if case .horizontalShelf = self {
-            return EdgeInsets(top: 2, leading: 1, bottom: 2, trailing: 1)
+            return NativeCollectionLayoutMetrics.horizontalShelves.insets.edgeInsets
         }
-        return EdgeInsets(top: 10, leading: 16, bottom: 12, trailing: 16)
+        return NativeCollectionLayoutMetrics.informationCards.insets.edgeInsets
     }
 
     var viewportHeight: CGFloat? {
@@ -127,11 +127,10 @@ enum NativeCreatorPreviewCollectionLayout: Equatable {
 
 private enum NativeCreatorPreviewCardMetrics {
     static let headerHeight: CGFloat = 54
-    static let cardVerticalPadding: CGFloat = 24
-    static let stackSpacing: CGFloat = 20
-    static let compactPreviewMinimumHeight: CGFloat = 118
-    static let compactPreviewAspect: CGFloat = 2.4
-    static let compactActionRailHeight: CGFloat = 32
+    static let cardVerticalPadding = NativeCollectionLayoutMetrics.informationCardPadding * 2
+    static let cardHorizontalPadding = NativeCollectionLayoutMetrics.informationCardPadding * 2
+    static let stackSpacing = NativeCollectionLayoutMetrics.informationCardContentSpacing * 2
+    static let compactActionRailHeight = NativeCollectionLayoutMetrics.compactCreatorActionRailHeight
     static let expandedPreviewShelfHeight: CGFloat = 178
 
     static var expandedHeight: CGFloat {
@@ -144,14 +143,14 @@ private enum NativeCreatorPreviewCardMetrics {
 
     static func compactHeight(forWidth width: CGFloat) -> CGFloat {
         headerHeight
-            + compactPreviewHeight(forWidth: width)
+            + compactPreviewHeight(forWidth: max(width - cardHorizontalPadding, 1))
             + compactActionRailHeight
             + cardVerticalPadding
             + stackSpacing
     }
 
     private static func compactPreviewHeight(forWidth width: CGFloat) -> CGFloat {
-        max(width / compactPreviewAspect, compactPreviewMinimumHeight)
+        NativeCollectionLayoutMetrics.compactCreatorPreviewHeight(forContentWidth: width)
     }
 }
 

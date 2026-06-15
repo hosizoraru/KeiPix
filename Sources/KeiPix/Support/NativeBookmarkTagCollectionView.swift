@@ -55,8 +55,8 @@ struct NativeBookmarkTagCollectionLayout: Equatable {
     var emptyMessageHeight: CGFloat = 104
     var loadMoreHeight: CGFloat = 64
     var fullWidthTagDisplayWidthThreshold: Double = 10.0
-    var spacing: CGFloat = 8
-    var sectionInsets = EdgeInsets(top: 10, leading: 14, bottom: 24, trailing: 14)
+    var spacing: CGFloat = NativeCollectionLayoutMetrics.tagChips.itemSpacing
+    var sectionInsets = NativeCollectionLayoutMetrics.tagChips.insets.edgeInsets
 
     func itemSize(for item: NativeBookmarkTagCollectionItem, containerWidth: CGFloat) -> CGSize {
         let availableWidth = max(containerWidth - sectionInsets.leading - sectionInsets.trailing, 1)
