@@ -516,160 +516,7 @@ struct ContentView: View {
                     SpotlightArticleDetailView(store: store)
                 }
                 .toolbar {
-                    if showsSidebarToggle {
-                        ToolbarItem(placement: .topBarLeading) {
-                            Button {
-                                toggleIPadSidebar()
-                            } label: {
-                                Label(sidebarVisibilityTitle, systemImage: "sidebar.leading")
-                            }
-                            .labelStyle(.iconOnly)
-                            .help(sidebarVisibilityTitle)
-                            .accessibilityLabel(sidebarVisibilityTitle)
-                        }
-
-                        if splitColumnVisibility == .detailOnly {
-                            ToolbarItem(placement: .topBarLeading) {
-                                if showsRouteMenu(showsSidebarToggle: showsSidebarToggle) {
-                                    routeMenu
-                                }
-                            }
-                        }
-                    } else {
-                        ToolbarItem(placement: .topBarLeading) {
-                            if showsRouteMenu(showsSidebarToggle: showsSidebarToggle) {
-                                routeMenu
-                            }
-                        }
-                    }
-
-                    ToolbarItemGroup(placement: .topBarLeading) {
-                        if showsArtworkNavigationControls {
-                            Group {
-                                artworkNavigationToolbarButtons
-                            }
-                            .transition(.opacity.combined(with: .scale(scale: 0.94)))
-                            .animation(.snappy(duration: 0.18), value: showsArtworkNavigationControls)
-                        }
-                    }
-
-                    ToolbarItem(placement: .primaryAction) {
-                        if showsRefreshToolbarButton(showsSidebarToggle: showsSidebarToggle) {
-                            Button {
-                                store.requestRouteRefresh()
-                            } label: {
-                                Label(L10n.refresh, systemImage: "arrow.clockwise")
-                            }
-                        }
-                    }
-
-                    ToolbarItem(placement: .primaryAction) {
-                        if showsDownloadQueueToolbarMenu {
-                            NativeToolbarMenuButton(
-                                systemImage: "arrow.down.circle",
-                                accessibilityLabel: L10n.downloadActions,
-                                menu: downloadQueueToolbarMenu,
-                                badgeText: downloadQueueToolbarBadgeText,
-                                select: { handleNativeToolbarMenuAction($0, showsSidebarToggle: showsSidebarToggle) }
-                            )
-                            .fixedSize(horizontal: true, vertical: false)
-                        }
-                    }
-
-                    ToolbarItem(placement: .primaryAction) {
-                        if showsGlobalClearSearchButton {
-                            Button {
-                                withAnimation(.snappy(duration: 0.16)) {
-                                    store.clearSearchText()
-                                }
-                            } label: {
-                                Label(L10n.clearSearch, systemImage: "xmark.circle.fill")
-                            }
-                            .labelStyle(.iconOnly)
-                            .help(L10n.clearSearch)
-                            .accessibilityLabel(L10n.clearSearch)
-                        }
-                    }
-
-                    ToolbarItem(placement: .primaryAction) {
-                        if showsGalleryLayoutPicker(showsSidebarToggle: showsSidebarToggle) {
-                            NativeToolbarMenuButton(
-                                systemImage: store.galleryLayoutMode.systemImage,
-                                accessibilityLabel: L10n.galleryLayout,
-                                menu: galleryLayoutMenu,
-                                select: { handleNativeToolbarMenuAction($0, showsSidebarToggle: showsSidebarToggle) }
-                            )
-                            .fixedSize(horizontal: true, vertical: false)
-                        }
-                    }
-
-                    ToolbarItem(placement: .primaryAction) {
-                        if showsPixivActivityDisplayPicker(showsSidebarToggle: showsSidebarToggle) {
-                            NativeToolbarMenuButton(
-                                systemImage: pixivActivityDisplaySystemImage,
-                                accessibilityLabel: L10n.pixivActivityDisplay,
-                                menu: pixivActivityDisplayMenu,
-                                select: { handleNativeToolbarMenuAction($0, showsSidebarToggle: showsSidebarToggle) }
-                            )
-                            .fixedSize(horizontal: true, vertical: false)
-                        }
-                    }
-
-                    ToolbarItem(placement: .primaryAction) {
-                        if showsSpotlightDetailToggle(showsSidebarToggle: showsSidebarToggle) {
-                            Button {
-                                toggleSpotlightDetailPanel(hidesSidebar: showsSidebarToggle)
-                            } label: {
-                                Label(
-                                    isSpotlightDetailPanelUserEnabled ? L10n.hideDetails : L10n.showDetails,
-                                    systemImage: spotlightDetailToggleSystemImage
-                                )
-                            }
-                            .labelStyle(.iconOnly)
-                            .help(isSpotlightDetailPanelUserEnabled ? L10n.hideDetails : L10n.showDetails)
-                            .accessibilityLabel(isSpotlightDetailPanelUserEnabled ? L10n.hideDetails : L10n.showDetails)
-                            .disabled(canShowSpotlightDetailPanel == false && isSpotlightDetailPanelUserEnabled == false)
-                        }
-                    }
-
-                    ToolbarItem(placement: .primaryAction) {
-                        if showsArtworkDetailToggle(showsSidebarToggle: showsSidebarToggle) {
-                            Button {
-                                toggleArtworkDetailPanel(hidesSidebar: showsSidebarToggle)
-                            } label: {
-                                Label(
-                                    isArtworkDetailPanelUserEnabled ? L10n.hideDetails : L10n.showDetails,
-                                    systemImage: artworkDetailToggleSystemImage
-                                )
-                            }
-                            .labelStyle(.iconOnly)
-                            .help(isArtworkDetailPanelUserEnabled ? L10n.hideDetails : L10n.showDetails)
-                            .accessibilityLabel(isArtworkDetailPanelUserEnabled ? L10n.hideDetails : L10n.showDetails)
-                            .disabled(canShowArtworkDetailPanel == false && isArtworkDetailPanelUserEnabled == false)
-                        }
-                    }
-
-                    ToolbarItem(placement: .primaryAction) {
-                        if showsArtworkActionsMenu(showsSidebarToggle: showsSidebarToggle) {
-                            NativeToolbarMenuButton(
-                                systemImage: selectedArtworkMenuSystemImage,
-                                accessibilityLabel: L10n.currentArtwork,
-                                menu: artworkActionsMenu(showsSidebarToggle: showsSidebarToggle),
-                                select: { handleNativeToolbarMenuAction($0, showsSidebarToggle: showsSidebarToggle) }
-                            )
-                            .fixedSize(horizontal: true, vertical: false)
-                        }
-                    }
-
-                    ToolbarItem(placement: .primaryAction) {
-                        NativeToolbarMenuButton(
-                            systemImage: "ellipsis.circle",
-                            accessibilityLabel: L10n.appControls,
-                            menu: appControlsMenu,
-                            select: { handleNativeToolbarMenuAction($0, showsSidebarToggle: showsSidebarToggle) }
-                        )
-                        .fixedSize(horizontal: true, vertical: false)
-                    }
+                    feedToolbar(showsSidebarToggle: showsSidebarToggle)
                 }
                 .modifier(MobileGlobalSearchModifier(
                     store: store,
@@ -726,6 +573,208 @@ struct ContentView: View {
                     dismissCompactArtworkDetail(clearSelection: false)
                 }
         }
+    }
+
+    @ToolbarContentBuilder
+    private func feedToolbar(showsSidebarToggle: Bool) -> some ToolbarContent {
+        feedLeadingToolbar(showsSidebarToggle: showsSidebarToggle)
+        artworkNavigationToolbar
+        feedPrimaryToolbar(showsSidebarToggle: showsSidebarToggle)
+    }
+
+    @ToolbarContentBuilder
+    private func feedLeadingToolbar(showsSidebarToggle: Bool) -> some ToolbarContent {
+        if showsSidebarToggle {
+            ToolbarItem(placement: .topBarLeading) {
+                sidebarToggleButton(title: sidebarVisibilityTitle)
+            }
+
+            if splitColumnVisibility == .detailOnly {
+                routeMenuToolbarItem(showsSidebarToggle: showsSidebarToggle)
+            }
+        } else {
+            routeMenuToolbarItem(showsSidebarToggle: showsSidebarToggle)
+        }
+    }
+
+    private func routeMenuToolbarItem(showsSidebarToggle: Bool) -> some ToolbarContent {
+        ToolbarItem(placement: .topBarLeading) {
+            if showsRouteMenu(showsSidebarToggle: showsSidebarToggle) {
+                routeMenu
+            }
+        }
+    }
+
+    private var artworkNavigationToolbar: some ToolbarContent {
+        ToolbarItemGroup(placement: .topBarLeading) {
+            if showsArtworkNavigationControls {
+                Group {
+                    artworkNavigationToolbarButtons
+                }
+                .transition(.opacity.combined(with: .scale(scale: 0.94)))
+                .animation(.snappy(duration: 0.18), value: showsArtworkNavigationControls)
+            }
+        }
+    }
+
+    @ToolbarContentBuilder
+    private func feedPrimaryToolbar(showsSidebarToggle: Bool) -> some ToolbarContent {
+        refreshToolbarItem(showsSidebarToggle: showsSidebarToggle)
+        downloadQueueToolbarItem(showsSidebarToggle: showsSidebarToggle)
+        clearSearchToolbarItem
+        galleryLayoutToolbarItem(showsSidebarToggle: showsSidebarToggle)
+        pixivActivityDisplayToolbarItem(showsSidebarToggle: showsSidebarToggle)
+        spotlightDetailToggleToolbarItem(showsSidebarToggle: showsSidebarToggle)
+        artworkDetailToggleToolbarItem(showsSidebarToggle: showsSidebarToggle)
+        artworkActionsToolbarItem(showsSidebarToggle: showsSidebarToggle)
+        appControlsToolbarItem(showsSidebarToggle: showsSidebarToggle)
+    }
+
+    private func refreshToolbarItem(showsSidebarToggle: Bool) -> some ToolbarContent {
+        ToolbarItem(placement: .primaryAction) {
+            if showsRefreshToolbarButton(showsSidebarToggle: showsSidebarToggle) {
+                Button {
+                    store.requestRouteRefresh()
+                } label: {
+                    Label(L10n.refresh, systemImage: "arrow.clockwise")
+                }
+            }
+        }
+    }
+
+    private func downloadQueueToolbarItem(showsSidebarToggle: Bool) -> some ToolbarContent {
+        ToolbarItem(placement: .primaryAction) {
+            if showsDownloadQueueToolbarMenu {
+                NativeToolbarMenuButton(
+                    systemImage: "arrow.down.circle",
+                    accessibilityLabel: L10n.downloadActions,
+                    menu: downloadQueueToolbarMenu,
+                    badgeText: downloadQueueToolbarBadgeText,
+                    select: { handleNativeToolbarMenuAction($0, showsSidebarToggle: showsSidebarToggle) }
+                )
+                .fixedSize(horizontal: true, vertical: false)
+            }
+        }
+    }
+
+    private var clearSearchToolbarItem: some ToolbarContent {
+        ToolbarItem(placement: .primaryAction) {
+            if showsGlobalClearSearchButton {
+                Button {
+                    withAnimation(.snappy(duration: 0.16)) {
+                        store.clearSearchText()
+                    }
+                } label: {
+                    Label(L10n.clearSearch, systemImage: "xmark.circle.fill")
+                }
+                .labelStyle(.iconOnly)
+                .help(L10n.clearSearch)
+                .accessibilityLabel(L10n.clearSearch)
+            }
+        }
+    }
+
+    private func galleryLayoutToolbarItem(showsSidebarToggle: Bool) -> some ToolbarContent {
+        ToolbarItem(placement: .primaryAction) {
+            if showsGalleryLayoutPicker(showsSidebarToggle: showsSidebarToggle) {
+                NativeToolbarMenuButton(
+                    systemImage: store.galleryLayoutMode.systemImage,
+                    accessibilityLabel: L10n.galleryLayout,
+                    menu: galleryLayoutMenu,
+                    select: { handleNativeToolbarMenuAction($0, showsSidebarToggle: showsSidebarToggle) }
+                )
+                .fixedSize(horizontal: true, vertical: false)
+            }
+        }
+    }
+
+    private func pixivActivityDisplayToolbarItem(showsSidebarToggle: Bool) -> some ToolbarContent {
+        ToolbarItem(placement: .primaryAction) {
+            if showsPixivActivityDisplayPicker(showsSidebarToggle: showsSidebarToggle) {
+                NativeToolbarMenuButton(
+                    systemImage: pixivActivityDisplaySystemImage,
+                    accessibilityLabel: L10n.pixivActivityDisplay,
+                    menu: pixivActivityDisplayMenu,
+                    select: { handleNativeToolbarMenuAction($0, showsSidebarToggle: showsSidebarToggle) }
+                )
+                .fixedSize(horizontal: true, vertical: false)
+            }
+        }
+    }
+
+    private func spotlightDetailToggleToolbarItem(showsSidebarToggle: Bool) -> some ToolbarContent {
+        ToolbarItem(placement: .primaryAction) {
+            if showsSpotlightDetailToggle(showsSidebarToggle: showsSidebarToggle) {
+                Button {
+                    toggleSpotlightDetailPanel(hidesSidebar: showsSidebarToggle)
+                } label: {
+                    Label(
+                        isSpotlightDetailPanelUserEnabled ? L10n.hideDetails : L10n.showDetails,
+                        systemImage: spotlightDetailToggleSystemImage
+                    )
+                }
+                .labelStyle(.iconOnly)
+                .help(isSpotlightDetailPanelUserEnabled ? L10n.hideDetails : L10n.showDetails)
+                .accessibilityLabel(isSpotlightDetailPanelUserEnabled ? L10n.hideDetails : L10n.showDetails)
+                .disabled(canShowSpotlightDetailPanel == false && isSpotlightDetailPanelUserEnabled == false)
+            }
+        }
+    }
+
+    private func artworkDetailToggleToolbarItem(showsSidebarToggle: Bool) -> some ToolbarContent {
+        ToolbarItem(placement: .primaryAction) {
+            if showsArtworkDetailToggle(showsSidebarToggle: showsSidebarToggle) {
+                Button {
+                    toggleArtworkDetailPanel(hidesSidebar: showsSidebarToggle)
+                } label: {
+                    Label(
+                        isArtworkDetailPanelUserEnabled ? L10n.hideDetails : L10n.showDetails,
+                        systemImage: artworkDetailToggleSystemImage
+                    )
+                }
+                .labelStyle(.iconOnly)
+                .help(isArtworkDetailPanelUserEnabled ? L10n.hideDetails : L10n.showDetails)
+                .accessibilityLabel(isArtworkDetailPanelUserEnabled ? L10n.hideDetails : L10n.showDetails)
+                .disabled(canShowArtworkDetailPanel == false && isArtworkDetailPanelUserEnabled == false)
+            }
+        }
+    }
+
+    private func artworkActionsToolbarItem(showsSidebarToggle: Bool) -> some ToolbarContent {
+        ToolbarItem(placement: .primaryAction) {
+            if showsArtworkActionsMenu(showsSidebarToggle: showsSidebarToggle) {
+                NativeToolbarMenuButton(
+                    systemImage: selectedArtworkMenuSystemImage,
+                    accessibilityLabel: L10n.currentArtwork,
+                    menu: artworkActionsMenu(showsSidebarToggle: showsSidebarToggle),
+                    select: { handleNativeToolbarMenuAction($0, showsSidebarToggle: showsSidebarToggle) }
+                )
+                .fixedSize(horizontal: true, vertical: false)
+            }
+        }
+    }
+
+    private func appControlsToolbarItem(showsSidebarToggle: Bool) -> some ToolbarContent {
+        ToolbarItem(placement: .primaryAction) {
+            NativeToolbarMenuButton(
+                systemImage: "ellipsis.circle",
+                accessibilityLabel: L10n.appControls,
+                menu: appControlsMenu,
+                select: { handleNativeToolbarMenuAction($0, showsSidebarToggle: showsSidebarToggle) }
+            )
+            .fixedSize(horizontal: true, vertical: false)
+        }
+    }
+
+    private func sidebarToggleButton(title: String) -> some View {
+        Button {
+            toggleIPadSidebar()
+        } label: {
+            Label(title, systemImage: "sidebar.leading")
+        }
+        .labelStyle(.iconOnly)
+        .help(title)
+        .accessibilityLabel(title)
     }
 
     @ViewBuilder

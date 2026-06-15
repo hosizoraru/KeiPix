@@ -289,14 +289,19 @@ enum PixivActivityFeedPresentation {
         formatter.timeZone = calendar.timeZone
         formatter.locale = .autoupdatingCurrent
 
-        if calendar.isDateInYesterday(date) {
+        let dayDistance = calendar.dateComponents(
+            [.day],
+            from: calendar.startOfDay(for: date),
+            to: calendar.startOfDay(for: now)
+        ).day
+
+        if dayDistance == 1 {
             formatter.dateStyle = .none
             formatter.timeStyle = .short
             return String(format: L10n.yesterdayTimeFormat, formatter.string(from: date))
         }
 
-        let components = calendar.dateComponents([.day], from: calendar.startOfDay(for: date), to: calendar.startOfDay(for: now))
-        if let days = components.day, days > 0, days < 7 {
+        if let days = dayDistance, days > 0, days < 7 {
             return String(format: L10n.daysAgoFormat, days)
         }
 
