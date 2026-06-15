@@ -246,7 +246,22 @@ struct SpotlightView: View {
     /// a titled submenu. The root stays short in compact toolbars while
     /// every row still explains what it changes and shows the current
     /// value before the user drills in.
+    @ViewBuilder
     private var viewOptionsMenu: some View {
+        #if os(iOS)
+        NativeToolbarMenuButton(
+            systemImage: "slider.horizontal.3",
+            accessibilityLabel: L10n.viewOptions,
+            menu: nativeViewOptionsMenu,
+            select: handleNativeViewOptionsAction
+        )
+        .fixedSize(horizontal: true, vertical: false)
+        #else
+        swiftUIViewOptionsMenu
+        #endif
+    }
+
+    private var swiftUIViewOptionsMenu: some View {
         Menu {
             Section(L10n.pixivisionDisplay) {
                 if fixedCollectionMode == nil {
@@ -278,6 +293,111 @@ struct SpotlightView: View {
         .labelStyle(.iconOnly)
         .help(L10n.viewOptions)
     }
+
+    #if os(iOS)
+    private var nativeViewOptionsMenu: NativeToolbarMenu {
+        var items: [NativeToolbarMenuItem] = []
+        if fixedCollectionMode == nil {
+            items.append(
+                NativeToolbarMenuItem.singleSelectionSubmenu(
+                    title: L10n.spotlightCollection,
+                    selectedTitle: collectionMode.title,
+                    selectedOption: collectionMode,
+                    systemImage: collectionMode.systemImage,
+                    options: SpotlightArticleCollectionMode.allCases,
+                    id: SpotlightViewOptionsAction.collection,
+                    optionTitle: \.title,
+                    optionSystemImage: \.systemImage
+                )
+            )
+        }
+
+        if collectionMode.supportsCategoryFilter {
+            items.append(
+                NativeToolbarMenuItem.singleSelectionSubmenu(
+                    title: L10n.spotlightCategoryAll,
+                    selectedTitle: category.title,
+                    selectedOption: category,
+                    systemImage: category.systemImage,
+                    options: SpotlightArticleCategory.pickerCases,
+                    id: SpotlightViewOptionsAction.category,
+                    optionTitle: \.title,
+                    optionSystemImage: \.systemImage
+                )
+            )
+        }
+
+        items.append(
+            NativeToolbarMenuItem.singleSelectionSubmenu(
+                title: L10n.spotlightListLayout,
+                selectedTitle: store.spotlightListLayoutMode.title,
+                selectedOption: store.spotlightListLayoutMode,
+                systemImage: store.spotlightListLayoutMode.systemImage,
+                options: SpotlightListLayoutMode.allCases,
+                id: SpotlightViewOptionsAction.layout,
+                optionTitle: \.title,
+                optionSystemImage: \.systemImage
+            )
+        )
+
+        var sections = [
+            NativeToolbarMenuSection(
+                presentation: .root,
+                items: items
+            )
+        ]
+        if collectionMode == .history {
+            sections.append(
+                NativeToolbarMenuSection(
+                    items: [
+                        .action(
+                            id: SpotlightViewOptionsAction.clearHistory,
+                            title: L10n.clearArticleHistory,
+                            systemImage: "trash",
+                            isEnabled: store.spotlightArticleHistory.isEmpty == false,
+                            isDestructive: true
+                        )
+                    ]
+                )
+            )
+        }
+
+        return NativeToolbarMenu(
+            title: L10n.pixivisionDisplay,
+            cacheKey: nativeViewOptionsMenuCacheKey,
+            sections: sections
+        )
+    }
+
+    private var nativeViewOptionsMenuCacheKey: String {
+        [
+            "pixivision-display",
+            fixedCollectionMode?.rawValue ?? "switchable",
+            collectionMode.rawValue,
+            category.rawValue,
+            store.spotlightListLayoutMode.rawValue,
+            store.spotlightArticleHistory.isEmpty ? "history-empty" : "history-has-items"
+        ].joined(separator: ":")
+    }
+
+    private func handleNativeViewOptionsAction(_ id: String) {
+        if let mode = SpotlightViewOptionsAction.collectionMode(from: id) {
+            collectionMode = mode
+            return
+        }
+        if let selectedCategory = SpotlightViewOptionsAction.category(from: id) {
+            category = selectedCategory
+            return
+        }
+        if let layoutMode = SpotlightViewOptionsAction.layoutMode(from: id) {
+            store.setSpotlightListLayoutMode(layoutMode)
+            return
+        }
+        if id == SpotlightViewOptionsAction.clearHistory {
+            clearHistory()
+        }
+    }
+    #endif
 
     private var pixivisionCollectionMenu: some View {
         pixivisionPickerMenu(
@@ -518,6 +638,41 @@ struct SpotlightView: View {
     private func applyFixedCollectionModeIfNeeded() {
         guard let fixedCollectionMode, collectionMode != fixedCollectionMode else { return }
         collectionMode = fixedCollectionMode
+    }
+}
+
+private enum SpotlightViewOptionsAction {
+    static let clearHistory = "pixivision-display:clear-history"
+
+    private static let collectionPrefix = "pixivision-display:collection:"
+    private static let categoryPrefix = "pixivision-display:category:"
+    private static let layoutPrefix = "pixivision-display:layout:"
+
+    static func collection(_ mode: SpotlightArticleCollectionMode) -> String {
+        collectionPrefix + mode.rawValue
+    }
+
+    static func collectionMode(from id: String) -> SpotlightArticleCollectionMode? {
+        guard id.hasPrefix(collectionPrefix) else { return nil }
+        return SpotlightArticleCollectionMode(rawValue: String(id.dropFirst(collectionPrefix.count)))
+    }
+
+    static func category(_ category: SpotlightArticleCategory) -> String {
+        categoryPrefix + category.rawValue
+    }
+
+    static func category(from id: String) -> SpotlightArticleCategory? {
+        guard id.hasPrefix(categoryPrefix) else { return nil }
+        return SpotlightArticleCategory(rawValue: String(id.dropFirst(categoryPrefix.count)))
+    }
+
+    static func layout(_ mode: SpotlightListLayoutMode) -> String {
+        layoutPrefix + mode.rawValue
+    }
+
+    static func layoutMode(from id: String) -> SpotlightListLayoutMode? {
+        guard id.hasPrefix(layoutPrefix) else { return nil }
+        return SpotlightListLayoutMode(rawValue: String(id.dropFirst(layoutPrefix.count)))
     }
 }
 

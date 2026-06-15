@@ -164,7 +164,22 @@ struct CreatorListViewOptionsMenu: View {
     @Binding var creatorSort: CreatorListSort
     @Binding var layoutMode: CreatorListLayoutMode
 
+    @ViewBuilder
     var body: some View {
+        #if os(iOS)
+        NativeToolbarMenuButton(
+            systemImage: "slider.horizontal.3",
+            accessibilityLabel: L10n.viewOptions,
+            menu: nativeViewOptionsMenu,
+            select: handleNativeViewOptionsAction
+        )
+        .fixedSize(horizontal: true, vertical: false)
+        #else
+        swiftUIViewOptionsMenu
+        #endif
+    }
+
+    private var swiftUIViewOptionsMenu: some View {
         Menu {
             Section(L10n.viewOptions) {
                 if mode.usesRestrictPicker {
@@ -220,6 +235,103 @@ struct CreatorListViewOptionsMenu: View {
         .help(L10n.viewOptions)
     }
 
+    #if os(iOS)
+    private var nativeViewOptionsMenu: NativeToolbarMenu {
+        var items: [NativeToolbarMenuItem] = []
+        if mode.usesRestrictPicker {
+            items.append(
+                NativeToolbarMenuItem.singleSelectionSubmenu(
+                    title: L10n.followingCreators,
+                    selectedTitle: restrict.title,
+                    selectedOption: restrict,
+                    systemImage: restrictSystemImage(restrict),
+                    options: BookmarkRestrict.allCases,
+                    id: CreatorListViewOptionsAction.restrict,
+                    optionTitle: \.title,
+                    optionSystemImage: restrictSystemImage
+                )
+            )
+        }
+
+        items.append(
+            NativeToolbarMenuItem.singleSelectionSubmenu(
+                title: L10n.creatorListLayout,
+                selectedTitle: layoutMode.title,
+                selectedOption: layoutMode,
+                systemImage: layoutMode.systemImage,
+                options: CreatorListLayoutMode.allCases,
+                id: CreatorListViewOptionsAction.layout,
+                optionTitle: \.title,
+                optionSystemImage: \.systemImage
+            )
+        )
+        items.append(
+            NativeToolbarMenuItem.singleSelectionSubmenu(
+                title: L10n.creatorFilter,
+                selectedTitle: creatorFilter.title,
+                selectedOption: creatorFilter,
+                systemImage: creatorFilterSystemImage(creatorFilter),
+                options: CreatorListFilter.allCases,
+                id: CreatorListViewOptionsAction.filter,
+                optionTitle: \.title,
+                optionSystemImage: creatorFilterSystemImage
+            )
+        )
+        items.append(
+            NativeToolbarMenuItem.singleSelectionSubmenu(
+                title: L10n.creatorSort,
+                selectedTitle: creatorSort.title,
+                selectedOption: creatorSort,
+                systemImage: creatorSortSystemImage(creatorSort),
+                options: CreatorListSort.allCases,
+                id: CreatorListViewOptionsAction.sort,
+                optionTitle: \.title,
+                optionSystemImage: creatorSortSystemImage
+            )
+        )
+
+        return NativeToolbarMenu(
+            title: L10n.viewOptions,
+            cacheKey: nativeViewOptionsMenuCacheKey,
+            sections: [
+                NativeToolbarMenuSection(
+                    presentation: .root,
+                    items: items
+                )
+            ]
+        )
+    }
+
+    private var nativeViewOptionsMenuCacheKey: String {
+        [
+            "creator-list-view-options",
+            mode.key,
+            restrict.rawValue,
+            creatorFilter.rawValue,
+            creatorSort.rawValue,
+            layoutMode.rawValue
+        ].joined(separator: ":")
+    }
+
+    private func handleNativeViewOptionsAction(_ id: String) {
+        if let selectedRestrict = CreatorListViewOptionsAction.restrict(from: id) {
+            restrict = selectedRestrict
+            return
+        }
+        if let selectedLayoutMode = CreatorListViewOptionsAction.layoutMode(from: id) {
+            layoutMode = selectedLayoutMode
+            return
+        }
+        if let selectedCreatorFilter = CreatorListViewOptionsAction.filter(from: id) {
+            creatorFilter = selectedCreatorFilter
+            return
+        }
+        if let selectedCreatorSort = CreatorListViewOptionsAction.sort(from: id) {
+            creatorSort = selectedCreatorSort
+        }
+    }
+    #endif
+
     private func creatorListPickerMenu<SelectionValue: Hashable, Options: View>(
         title: String,
         currentValueTitle: String,
@@ -234,6 +346,81 @@ struct CreatorListViewOptionsMenu: View {
             Text(currentValueTitle)
         }
         .pickerStyle(.menu)
+    }
+
+    private func restrictSystemImage(_ restrict: BookmarkRestrict) -> String {
+        restrict == .public ? "globe" : "lock"
+    }
+
+    private func creatorFilterSystemImage(_ filter: CreatorListFilter) -> String {
+        switch filter {
+        case .all:
+            "line.3.horizontal.decrease.circle"
+        case .followed:
+            "person.crop.circle.badge.checkmark"
+        case .unfollowed:
+            "person.crop.circle.badge.questionmark"
+        case .muted:
+            "speaker.slash"
+        }
+    }
+
+    private func creatorSortSystemImage(_ sort: CreatorListSort) -> String {
+        switch sort {
+        case .defaultOrder:
+            "arrow.up.arrow.down"
+        case .name:
+            "textformat"
+        case .account:
+            "at"
+        case .previewWorks:
+            "photo.stack"
+        case .followState:
+            "person.crop.circle.badge.checkmark"
+        }
+    }
+}
+
+private enum CreatorListViewOptionsAction {
+    private static let restrictPrefix = "creator-list-view-options:restrict:"
+    private static let layoutPrefix = "creator-list-view-options:layout:"
+    private static let filterPrefix = "creator-list-view-options:filter:"
+    private static let sortPrefix = "creator-list-view-options:sort:"
+
+    static func restrict(_ restrict: BookmarkRestrict) -> String {
+        restrictPrefix + restrict.rawValue
+    }
+
+    static func restrict(from id: String) -> BookmarkRestrict? {
+        guard id.hasPrefix(restrictPrefix) else { return nil }
+        return BookmarkRestrict(rawValue: String(id.dropFirst(restrictPrefix.count)))
+    }
+
+    static func layout(_ mode: CreatorListLayoutMode) -> String {
+        layoutPrefix + mode.rawValue
+    }
+
+    static func layoutMode(from id: String) -> CreatorListLayoutMode? {
+        guard id.hasPrefix(layoutPrefix) else { return nil }
+        return CreatorListLayoutMode(rawValue: String(id.dropFirst(layoutPrefix.count)))
+    }
+
+    static func filter(_ filter: CreatorListFilter) -> String {
+        filterPrefix + filter.rawValue
+    }
+
+    static func filter(from id: String) -> CreatorListFilter? {
+        guard id.hasPrefix(filterPrefix) else { return nil }
+        return CreatorListFilter(rawValue: String(id.dropFirst(filterPrefix.count)))
+    }
+
+    static func sort(_ sort: CreatorListSort) -> String {
+        sortPrefix + sort.rawValue
+    }
+
+    static func sort(from id: String) -> CreatorListSort? {
+        guard id.hasPrefix(sortPrefix) else { return nil }
+        return CreatorListSort(rawValue: String(id.dropFirst(sortPrefix.count)))
     }
 }
 
