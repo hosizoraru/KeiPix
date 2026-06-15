@@ -775,6 +775,7 @@ struct ContentView: View {
 
     @ToolbarContentBuilder
     private func appControlsToolbarItem(showsSidebarToggle: Bool) -> some ToolbarContent {
+        #if swift(>=6.4)
         if #available(iOS 27.0, *) {
             ToolbarItem(placement: .topBarPinnedTrailing) {
                 appControlsToolbarButton(showsSidebarToggle: showsSidebarToggle)
@@ -784,6 +785,11 @@ struct ContentView: View {
                 appControlsToolbarButton(showsSidebarToggle: showsSidebarToggle)
             }
         }
+        #else
+        ToolbarItem(placement: .primaryAction) {
+            appControlsToolbarButton(showsSidebarToggle: showsSidebarToggle)
+        }
+        #endif
     }
 
     private func appControlsToolbarButton(showsSidebarToggle: Bool) -> some View {
