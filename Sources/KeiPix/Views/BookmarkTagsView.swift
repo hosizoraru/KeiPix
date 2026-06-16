@@ -1,4 +1,7 @@
 import SwiftUI
+#if os(iOS)
+import UIKit
+#endif
 
 struct BookmarkTagsView: View {
     @Bindable var store: KeiPixStore
@@ -17,31 +20,13 @@ struct BookmarkTagsView: View {
     private let tagCollectionLayout = NativeBookmarkTagCollectionLayout()
 
     var body: some View {
-        Group {
-            if store.session == nil {
-                PixivSignedOutStateView(store: store)
-            } else if isLoading {
-                OS26LibraryLoadingView(title: L10n.loading, systemImage: "tag")
-            } else {
-                VStack(spacing: 0) {
-                    if showsBookmarkTagSearchBar {
-                        header
-                            .platformGlassControlBar(verticalPadding: 6, topPadding: 2)
-                            .transition(.move(edge: .top).combined(with: .opacity))
-                    }
-                    tagCollectionContent
-                }
-            }
-        }
-        .platformPageHeader(
-            title: L10n.bookmarkTags,
-            status: bookmarkTagNavigationStatus,
-            statusSystemImage: "tag"
-        ) {
-            bookmarkTagTitleActions
-        }
+        bookmarkTagRootWithPageHeader
         .platformPageNavigationChrome(title: L10n.bookmarkTags, status: bookmarkTagNavigationStatus)
         .mobileRouteBadgeCount(filteredTags.count, for: .bookmarkTags)
+        .mobilePageFilter(mobileBookmarkTagPageFilterSnapshot)
+        .toolbar {
+            bookmarkTagToolbar
+        }
         .overlay(alignment: .bottom) {
             VStack(spacing: 8) {
                 if let actionMessage {
@@ -75,6 +60,73 @@ struct BookmarkTagsView: View {
         }
     }
 
+    @ViewBuilder
+    private var bookmarkTagRoot: some View {
+        Group {
+            if store.session == nil {
+                PixivSignedOutStateView(store: store)
+            } else if isLoading {
+                OS26LibraryLoadingView(title: L10n.loading, systemImage: "tag")
+            } else {
+                VStack(spacing: 0) {
+                    if showsBookmarkTagSearchBar {
+                        header
+                            .platformGlassControlBar(verticalPadding: 6, topPadding: 2)
+                            .transition(.move(edge: .top).combined(with: .opacity))
+                    }
+                    tagCollectionContent
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var bookmarkTagRootWithPageHeader: some View {
+        #if os(iOS)
+        if usesPhoneBookmarkTagFilterPill {
+            bookmarkTagRoot
+                .platformPageHeader(
+                    title: L10n.bookmarkTags,
+                    status: bookmarkTagNavigationStatus,
+                    statusSystemImage: "tag"
+                )
+        } else {
+            bookmarkTagRoot
+                .platformPageHeader(
+                    title: L10n.bookmarkTags,
+                    status: bookmarkTagNavigationStatus,
+                    statusSystemImage: "tag"
+                ) {
+                    bookmarkTagTitleActions
+                }
+        }
+        #else
+        bookmarkTagRoot
+            .platformPageHeader(
+                title: L10n.bookmarkTags,
+                status: bookmarkTagNavigationStatus,
+                statusSystemImage: "tag"
+            ) {
+                bookmarkTagTitleActions
+            }
+        #endif
+    }
+
+    @ToolbarContentBuilder
+    private var bookmarkTagToolbar: some ToolbarContent {
+        #if os(iOS)
+        if store.session != nil, usesPhoneBookmarkTagFilterPill {
+            ToolbarItem(placement: .secondaryAction) {
+                bookmarkTagActionsMenu
+            }
+        }
+        #else
+        ToolbarItem(placement: .secondaryAction) {
+            EmptyView()
+        }
+        #endif
+    }
+
     private var bookmarkTagLoadKey: String {
         "\(selectedRestrict.rawValue)-\(store.routeRefreshGeneration)"
     }
@@ -88,7 +140,7 @@ struct BookmarkTagsView: View {
         GlassEffectContainer(spacing: 8) {
             HStack(spacing: 10) {
                 OS26LibrarySearchField(
-                    text: $filterText,
+                    text: bookmarkTagFilterTextBinding,
                     placeholder: L10n.searchBookmarkTags,
                     minWidth: 160,
                     idealWidth: 220,
@@ -107,105 +159,78 @@ struct BookmarkTagsView: View {
     private var bookmarkTagTitleActions: some View {
         if store.session != nil {
             OS26LibraryActionRail {
-                bookmarkRestrictScopeMenu
-
-                Button {
-                    withAnimation(.snappy(duration: 0.16)) {
-                        if showsBookmarkTagSearchBar, normalizedFilterText.isEmpty {
-                            isSearchPresented = false
-                        } else {
-                            isSearchPresented = true
+                if usesPhoneBookmarkTagFilterPill == false {
+                    Button {
+                        withAnimation(.snappy(duration: 0.16)) {
+                            if showsBookmarkTagSearchBar, normalizedFilterText.isEmpty {
+                                isSearchPresented = false
+                            } else {
+                                isSearchPresented = true
+                            }
                         }
+                    } label: {
+                        Label(
+                            L10n.search,
+                            systemImage: normalizedFilterText.isEmpty ? "magnifyingglass" : "magnifyingglass.circle.fill"
+                        )
                     }
-                } label: {
-                    Label(
-                        L10n.search,
-                        systemImage: normalizedFilterText.isEmpty ? "magnifyingglass" : "magnifyingglass.circle.fill"
-                    )
-                }
-                .os26GlassIconButton(prominent: showsBookmarkTagSearchBar || normalizedFilterText.isEmpty == false)
-                .help(L10n.searchBookmarkTags)
-                .accessibilityLabel(L10n.searchBookmarkTags)
+                    .os26GlassIconButton(prominent: showsBookmarkTagSearchBar || normalizedFilterText.isEmpty == false)
+                    .help(L10n.searchBookmarkTags)
+                    .accessibilityLabel(L10n.searchBookmarkTags)
 
-                Button {
-                    withAnimation(.snappy(duration: 0.16)) {
-                        filterText = ""
-                        isSearchPresented = false
+                    Button {
+                        clearBookmarkTagSearch()
+                    } label: {
+                        Label(L10n.clearSearch, systemImage: "xmark.circle")
                     }
-                } label: {
-                    Label(L10n.clearSearch, systemImage: "xmark.circle")
+                    .os26GlassIconButton()
+                    .disabled(normalizedFilterText.isEmpty && isSearchPresented == false)
+                    .help(L10n.clearSearch)
                 }
-                .os26GlassIconButton()
-                .disabled(normalizedFilterText.isEmpty && isSearchPresented == false)
-                .help(L10n.clearSearch)
 
-                sortMenu
-
-                bookmarkTagMoreMenu
+                bookmarkTagActionsMenu
             }
             .controlSize(.small)
         }
     }
 
-    @ViewBuilder
-    private var bookmarkRestrictScopeMenu: some View {
-        if store.session != nil {
-            Menu {
-                Picker(L10n.bookmarkVisibility, selection: $selectedRestrict) {
-                    ForEach(BookmarkRestrict.allCases) { restrict in
-                        Label(restrict.title, systemImage: restrict.systemImage).tag(restrict)
-                    }
-                }
-            } label: {
-                Label(selectedRestrict.title, systemImage: selectedRestrict.systemImage)
-                    .lineLimit(1)
-            }
-            .controlSize(.small)
-            .os26GlassButton()
-            .help("\(L10n.bookmarkVisibility): \(selectedRestrict.title)")
-            .accessibilityLabel("\(L10n.bookmarkVisibility): \(selectedRestrict.title)")
-        }
-    }
-
-    private var sortMenu: some View {
-        Menu {
-            Picker(L10n.sort, selection: $sortMode) {
-                ForEach(BookmarkTagIndexSort.allCases) { mode in
-                    Label(mode.title, systemImage: mode.systemImage).tag(mode)
-                }
-            }
-        } label: {
-            ViewThatFits(in: .horizontal) {
-                Label(sortMode.title, systemImage: sortMode.systemImage)
-                Label(L10n.sort, systemImage: "arrow.up.arrow.down.circle")
-            }
-        }
-        .os26GlassButton()
-        .help("\(L10n.sort): \(sortMode.title)")
-        .accessibilityLabel("\(L10n.sort): \(sortMode.title)")
-    }
-
-    private var bookmarkTagMoreMenu: some View {
-        Menu {
-            Button {
-                copyVisibleTags()
-            } label: {
-                Label(L10n.copyTag, systemImage: "doc.on.doc")
-            }
-            .disabled(filteredTags.isEmpty)
-        } label: {
-            Label(L10n.moreActions, systemImage: "ellipsis.circle")
-        }
-        .os26GlassIconButton()
-        .help(L10n.moreActions)
+    private var bookmarkTagActionsMenu: some View {
+        BookmarkTagActionsMenu(
+            selectedRestrict: $selectedRestrict,
+            sortMode: $sortMode,
+            hasActiveOptions: hasActiveBookmarkTagOptions,
+            canCopyVisibleTags: filteredTags.isEmpty == false,
+            copyVisibleTags: copyVisibleTags,
+            resetOptions: resetBookmarkTagOptions
+        )
     }
 
     private var showsBookmarkTagSearchBar: Bool {
-        isSearchPresented || normalizedFilterText.isEmpty == false
+        guard usesPhoneBookmarkTagFilterPill == false else { return false }
+        return isSearchPresented || normalizedFilterText.isEmpty == false
     }
 
     private var normalizedFilterText: String {
-        filterText.trimmingCharacters(in: .whitespacesAndNewlines)
+        bookmarkTagFilterText.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private var bookmarkTagFilterText: String {
+        bookmarkTagFilterTextBinding.wrappedValue
+    }
+
+    private var bookmarkTagFilterTextBinding: Binding<String> {
+        Binding {
+            if usesPhoneBookmarkTagFilterPill {
+                return store.clientFilterQuery
+            }
+            return filterText
+        } set: { value in
+            if usesPhoneBookmarkTagFilterPill {
+                store.clientFilterQuery = value
+            } else {
+                filterText = value
+            }
+        }
     }
 
     @ViewBuilder
@@ -333,19 +358,45 @@ struct BookmarkTagsView: View {
     private var filteredTags: [PixivBookmarkTag] {
         BookmarkTagIndexPresentation.visibleTags(
             tags,
-            query: filterText,
+            query: bookmarkTagFilterText,
             pinnedTags: store.pinnedBookmarkTags,
             sort: sortMode
         )
     }
 
     private var isFilteringTags: Bool {
-        filterText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false
+        normalizedFilterText.isEmpty == false
     }
 
     private var totalVisibleCount: Int? {
         let total = tags.reduce(0) { $0 + $1.count }
         return total > 0 ? total : nil
+    }
+
+    private var hasActiveBookmarkTagOptions: Bool {
+        selectedRestrict != .public || sortMode != .mostUsed || normalizedFilterText.isEmpty == false
+    }
+
+    private var mobileBookmarkTagPageFilterSnapshot: MobilePageFilterSnapshot? {
+        #if os(iOS)
+        guard usesPhoneBookmarkTagFilterPill, store.session != nil else { return nil }
+        return MobilePageFilterSnapshot(
+            route: .bookmarkTags,
+            totalCount: tags.count,
+            visibleCount: filteredTags.count,
+            placeholder: L10n.searchBookmarkTags
+        )
+        #else
+        return nil
+        #endif
+    }
+
+    private var usesPhoneBookmarkTagFilterPill: Bool {
+        #if os(iOS)
+        UIDevice.current.userInterfaceIdiom == .phone
+        #else
+        false
+        #endif
     }
 
     private func load(showFeedback: Bool = false) async {
@@ -406,6 +457,23 @@ struct BookmarkTagsView: View {
         showActionMessage(String(format: L10n.copiedBookmarkTagsFormat, names.count))
     }
 
+    private func clearBookmarkTagSearch() {
+        withAnimation(.snappy(duration: 0.16)) {
+            bookmarkTagFilterTextBinding.wrappedValue = ""
+            isSearchPresented = false
+        }
+    }
+
+    private func resetBookmarkTagOptions() {
+        withAnimation(.snappy(duration: 0.16)) {
+            selectedRestrict = .public
+            sortMode = .mostUsed
+            bookmarkTagFilterTextBinding.wrappedValue = ""
+            isSearchPresented = false
+        }
+        showActionMessage(L10n.resetBookmarkTagOptions)
+    }
+
     private func togglePin(_ tagName: String) {
         let isPinned = store.togglePinnedBookmarkTag(tagName)
         showActionMessage(String(
@@ -422,6 +490,219 @@ struct BookmarkTagsView: View {
                 actionMessage = nil
             }
         }
+    }
+}
+
+private struct BookmarkTagActionsMenu: View {
+    @Binding var selectedRestrict: BookmarkRestrict
+    @Binding var sortMode: BookmarkTagIndexSort
+    let hasActiveOptions: Bool
+    let canCopyVisibleTags: Bool
+    let copyVisibleTags: () -> Void
+    let resetOptions: () -> Void
+
+    @ViewBuilder
+    var body: some View {
+        #if os(iOS)
+        NativeToolbarMenuButton(
+            systemImage: actionsSystemImage,
+            accessibilityLabel: L10n.bookmarkTagActions,
+            menu: nativeActionsMenu,
+            select: handleNativeAction
+        )
+        .frame(width: 38, height: 34)
+        .glassEffect(.regular.interactive(), in: Capsule(style: .continuous))
+        .help(L10n.bookmarkTagActions)
+        #else
+        swiftUIActionsMenu
+        #endif
+    }
+
+    private var actionsSystemImage: String {
+        hasActiveOptions ? "slider.horizontal.3.circle.fill" : "ellipsis.circle"
+    }
+
+    private var swiftUIActionsMenu: some View {
+        Menu {
+            Section(L10n.bookmarkVisibility) {
+                bookmarkTagPickerMenu(
+                    title: L10n.bookmarkVisibility,
+                    currentValueTitle: selectedRestrict.title,
+                    systemImage: selectedRestrict.systemImage,
+                    selection: $selectedRestrict
+                ) {
+                    ForEach(BookmarkRestrict.allCases) { restrict in
+                        Label(restrict.title, systemImage: restrict.systemImage).tag(restrict)
+                    }
+                }
+            }
+
+            Section(L10n.viewOptions) {
+                bookmarkTagPickerMenu(
+                    title: L10n.sort,
+                    currentValueTitle: sortMode.title,
+                    systemImage: sortMode.systemImage,
+                    selection: $sortMode
+                ) {
+                    ForEach(BookmarkTagIndexSort.allCases) { mode in
+                        Label(mode.title, systemImage: mode.systemImage).tag(mode)
+                    }
+                }
+
+                Button {
+                    resetOptions()
+                } label: {
+                    Label(L10n.resetBookmarkTagOptions, systemImage: "arrow.counterclockwise")
+                }
+                .disabled(hasActiveOptions == false)
+            }
+
+            Section(L10n.moreActions) {
+                Button {
+                    copyVisibleTags()
+                } label: {
+                    Label(L10n.copyVisibleBookmarkTags, systemImage: "doc.on.doc")
+                }
+                .disabled(canCopyVisibleTags == false)
+            }
+        } label: {
+            Label(L10n.bookmarkTagActions, systemImage: actionsSystemImage)
+        }
+        .menuOrder(.fixed)
+        .os26GlassIconButton(prominent: hasActiveOptions)
+        .help(L10n.bookmarkTagActions)
+        .accessibilityLabel(L10n.bookmarkTagActions)
+    }
+
+    private func bookmarkTagPickerMenu<SelectionValue: Hashable, Options: View>(
+        title: String,
+        currentValueTitle: String,
+        systemImage: String,
+        selection: Binding<SelectionValue>,
+        @ViewBuilder options: () -> Options
+    ) -> some View {
+        Picker(selection: selection) {
+            options()
+        } label: {
+            Label(title, systemImage: systemImage)
+            Text(currentValueTitle)
+        }
+        .pickerStyle(.menu)
+    }
+
+    #if os(iOS)
+    private var nativeActionsMenu: NativeToolbarMenu {
+        NativeToolbarMenu(
+            title: L10n.bookmarkTagActions,
+            cacheKey: nativeActionsMenuCacheKey,
+            sections: [
+                NativeToolbarMenuSection(
+                    title: L10n.bookmarkVisibility,
+                    presentation: .root,
+                    items: [
+                        NativeToolbarMenuItem.singleSelectionSubmenu(
+                            title: L10n.bookmarkVisibility,
+                            selectedTitle: selectedRestrict.title,
+                            selectedOption: selectedRestrict,
+                            systemImage: selectedRestrict.systemImage,
+                            options: Array(BookmarkRestrict.allCases),
+                            id: BookmarkTagActionsMenuAction.restrict,
+                            optionTitle: \.title,
+                            optionSystemImage: \.systemImage
+                        )
+                    ]
+                ),
+                NativeToolbarMenuSection(
+                    title: L10n.viewOptions,
+                    presentation: .root,
+                    items: [
+                        NativeToolbarMenuItem.singleSelectionSubmenu(
+                            title: L10n.sort,
+                            selectedTitle: sortMode.title,
+                            selectedOption: sortMode,
+                            systemImage: sortMode.systemImage,
+                            options: Array(BookmarkTagIndexSort.allCases),
+                            id: BookmarkTagActionsMenuAction.sort,
+                            optionTitle: \.title,
+                            optionSystemImage: \.systemImage
+                        ),
+                        .action(
+                            id: BookmarkTagActionsMenuAction.resetOptions,
+                            title: L10n.resetBookmarkTagOptions,
+                            systemImage: "arrow.counterclockwise",
+                            isEnabled: hasActiveOptions
+                        )
+                    ]
+                ),
+                NativeToolbarMenuSection(
+                    title: L10n.moreActions,
+                    items: [
+                        .action(
+                            id: BookmarkTagActionsMenuAction.copyVisibleTags,
+                            title: L10n.copyVisibleBookmarkTags,
+                            systemImage: "doc.on.doc",
+                            isEnabled: canCopyVisibleTags
+                        )
+                    ]
+                )
+            ]
+        )
+    }
+
+    private var nativeActionsMenuCacheKey: String {
+        [
+            "bookmark-tag-actions",
+            selectedRestrict.rawValue,
+            sortMode.rawValue,
+            hasActiveOptions.description,
+            canCopyVisibleTags.description
+        ].joined(separator: ":")
+    }
+
+    private func handleNativeAction(_ id: String) {
+        if let restrict = BookmarkTagActionsMenuAction.restrict(from: id) {
+            selectedRestrict = restrict
+            return
+        }
+        if let sort = BookmarkTagActionsMenuAction.sort(from: id) {
+            sortMode = sort
+            return
+        }
+
+        switch id {
+        case BookmarkTagActionsMenuAction.copyVisibleTags:
+            copyVisibleTags()
+        case BookmarkTagActionsMenuAction.resetOptions:
+            resetOptions()
+        default:
+            break
+        }
+    }
+    #endif
+}
+
+private enum BookmarkTagActionsMenuAction {
+    static let copyVisibleTags = "bookmark-tag-actions:copy-visible-tags"
+    static let resetOptions = "bookmark-tag-actions:reset-options"
+    private static let restrictPrefix = "bookmark-tag-actions:restrict:"
+    private static let sortPrefix = "bookmark-tag-actions:sort:"
+
+    static func restrict(_ restrict: BookmarkRestrict) -> String {
+        restrictPrefix + restrict.rawValue
+    }
+
+    static func restrict(from id: String) -> BookmarkRestrict? {
+        guard id.hasPrefix(restrictPrefix) else { return nil }
+        return BookmarkRestrict(rawValue: String(id.dropFirst(restrictPrefix.count)))
+    }
+
+    static func sort(_ sort: BookmarkTagIndexSort) -> String {
+        sortPrefix + sort.rawValue
+    }
+
+    static func sort(from id: String) -> BookmarkTagIndexSort? {
+        guard id.hasPrefix(sortPrefix) else { return nil }
+        return BookmarkTagIndexSort(rawValue: String(id.dropFirst(sortPrefix.count)))
     }
 }
 

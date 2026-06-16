@@ -4323,7 +4323,8 @@ struct NativeBoundaryTests {
         #expect(bookmarkTagsView.contains("bookmarkTagCollectionItems"))
         #expect(bookmarkTagsView.contains("nativeBookmarkTagContent(for: item)"))
         #expect(bookmarkTagsView.contains("BookmarkTagIndexPresentation.visibleTags("))
-        #expect(bookmarkTagsView.contains("bookmarkRestrictScopeMenu"))
+        #expect(bookmarkTagsView.contains("BookmarkTagActionsMenu("))
+        #expect(bookmarkTagsView.contains("mobileBookmarkTagPageFilterSnapshot"))
         #expect(bookmarkTagsView.contains("Label(L10n.refresh") == false)
         #expect(bookmarkTagsView.contains("@State private var sortMode: BookmarkTagIndexSort"))
         #expect(bookmarkTagsView.contains("LazyVGrid") == false)
@@ -4665,11 +4666,13 @@ struct NativeBoundaryTests {
             encoding: .utf8
         )
 
-        #expect(bookmarkTags.contains(".platformPageHeader(\n            title: L10n.bookmarkTags") && bookmarkTags.contains("bookmarkTagTitleActions"))
+        #expect(bookmarkTags.contains("title: L10n.bookmarkTags") && bookmarkTags.contains("bookmarkTagTitleActions"))
         #expect(bookmarkTags.contains("if showsBookmarkTagSearchBar"))
         #expect(bookmarkTags.contains("private var bookmarkTagTitleActions: some View"))
-        #expect(bookmarkTags.contains("bookmarkRestrictScopeMenu"))
-        #expect(bookmarkTags.contains("sortMenu"))
+        #expect(bookmarkTags.contains("bookmarkTagActionsMenu"))
+        #expect(bookmarkTags.contains("BookmarkTagActionsMenu("))
+        #expect(bookmarkTags.contains("usesPhoneBookmarkTagFilterPill"))
+        #expect(bookmarkTags.contains("private var bookmarkTagToolbar: some ToolbarContent"))
 
         #expect(browsingHistory.contains(".platformPageHeader(\n            title: L10n.history") && browsingHistory.contains("historyTitleActions"))
         #expect(browsingHistory.contains("if showsHistorySearchBar"))

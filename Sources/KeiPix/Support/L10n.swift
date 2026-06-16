@@ -499,6 +499,7 @@ enum L10n {
     static var saveBookmark: String { text("Save Bookmark") }
     static var savedBookmarkFormat: String { text("Saved bookmark for %@") }
     static var bookmarkTags: String { text("Bookmark Tags") }
+    static var bookmarkTagActions: String { text("Bookmark Tag Actions") }
     static var bookmarkFilters: String { text("Bookmark Filters") }
     static var bookmarkVisibility: String { text("Bookmark Visibility") }
     static var defaultRestrictFormat: String { text("Default (%@)") }
@@ -586,9 +587,11 @@ enum L10n {
     static var noBookmarkTags: String { text("No bookmark tags") }
     static var noMatchingBookmarkTags: String { text("No matching bookmark tags") }
     static var noBookmarkTagsToCopy: String { text("No bookmark tags to copy") }
+    static var copyVisibleBookmarkTags: String { text("Copy Visible Bookmark Tags") }
     static var copiedBookmarkTagsFormat: String { text("Copied %d bookmark tags") }
     static var refreshedBookmarkTagsFormat: String { text("Refreshed %d bookmark tags") }
     static var loadedBookmarkTagsFormat: String { text("Loaded %d bookmark tags") }
+    static var resetBookmarkTagOptions: String { text("Reset Bookmark Tag Options") }
     static var selectAll: String { text("Select All") }
     static var clearSelection: String { text("Clear Selection") }
     static var selectedBookmarkTagsFormat: String { text("Selected %d bookmark tags") }

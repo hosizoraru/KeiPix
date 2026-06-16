@@ -4670,6 +4670,35 @@
         }
       }
     },
+    "Bookmark Tag Actions": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bookmark Tag Actions"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ブックマークタグ操作"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "收藏标签操作"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "收藏標籤操作"
+          }
+        }
+      }
+    },
     "Bookmark Visibility": {
       "extractionState": "manual",
       "localizations": {
@@ -8755,6 +8784,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "複製可見作者摘要"
+          }
+        }
+      }
+    },
+    "Copy Visible Bookmark Tags": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy Visible Bookmark Tags"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "表示ブックマークタグをコピー"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "复制可见收藏标签"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "複製可見收藏標籤"
           }
         }
       }
@@ -32187,6 +32245,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "重置收藏編輯"
+          }
+        }
+      }
+    },
+    "Reset Bookmark Tag Options": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reset Bookmark Tag Options"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ブックマークタグオプションをリセット"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重置收藏标签选项"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重置收藏標籤選項"
           }
         }
       }
