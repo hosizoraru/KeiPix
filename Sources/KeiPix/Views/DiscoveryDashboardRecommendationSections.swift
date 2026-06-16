@@ -157,13 +157,6 @@ struct DiscoveryDashboardForYouSection: View {
                 accent: .blue
             ),
             DiscoveryDashboardFeature(
-                route: .trendingTags,
-                title: L10n.trendingTags,
-                subtitle: L10n.explore,
-                systemImage: "number",
-                accent: .purple
-            ),
-            DiscoveryDashboardFeature(
                 route: .recommendedUsers,
                 title: L10n.recommendedCreators,
                 subtitle: L10n.creatorNetwork,
@@ -204,6 +197,19 @@ struct DiscoveryDashboardForYouSection: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .keiGlass(style.cornerRadius)
         }
+    }
+}
+
+struct DiscoveryDashboardTagRecommendationsSection: View {
+    @Bindable var store: KeiPixStore
+
+    var body: some View {
+        DiscoveryTrendingTagsStrip(
+            store: store,
+            showsHeader: true,
+            showsEmptyState: true,
+            title: L10n.recommendedTags
+        )
     }
 }
 

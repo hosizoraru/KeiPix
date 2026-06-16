@@ -587,7 +587,7 @@ struct NativeBoundaryTests {
         #expect(contentView.contains("store.requestRouteRefresh()"))
         #expect(contentView.contains("Task { await store.reloadCurrentFeed() }") == false)
         #expect(contentView.contains("private func feedToolbar(showsSidebarToggle: Bool) -> some ToolbarContent {\n        feedLeadingToolbar(showsSidebarToggle: showsSidebarToggle)\n        artworkNavigationToolbar\n        feedBoardToolbar(showsSidebarToggle: showsSidebarToggle)\n        appControlsToolbarItem(showsSidebarToggle: showsSidebarToggle)\n    }"))
-        #expect(contentView.contains("private func feedBoardToolbar(showsSidebarToggle: Bool) -> some ToolbarContent {\n        refreshToolbarItem(showsSidebarToggle: showsSidebarToggle)\n        pixivCollectionsToolbarItem(showsSidebarToggle: showsSidebarToggle)\n        downloadQueueToolbarItem(showsSidebarToggle: showsSidebarToggle)\n        clearSearchToolbarItem\n        galleryLayoutToolbarItem(showsSidebarToggle: showsSidebarToggle)\n        pixivActivityDisplayToolbarItem(showsSidebarToggle: showsSidebarToggle)\n        spotlightDetailToggleToolbarItem(showsSidebarToggle: showsSidebarToggle)\n        artworkDetailToggleToolbarItem(showsSidebarToggle: showsSidebarToggle)\n        artworkActionsToolbarItem(showsSidebarToggle: showsSidebarToggle)\n    }"))
+        #expect(contentView.contains("private func feedBoardToolbar(showsSidebarToggle: Bool) -> some ToolbarContent {\n        refreshToolbarItem(showsSidebarToggle: showsSidebarToggle)\n        discoveryDashboardToolbarItem(showsSidebarToggle: showsSidebarToggle)\n        pixivCollectionsToolbarItem(showsSidebarToggle: showsSidebarToggle)\n        downloadQueueToolbarItem(showsSidebarToggle: showsSidebarToggle)\n        clearSearchToolbarItem\n        galleryLayoutToolbarItem(showsSidebarToggle: showsSidebarToggle)\n        pixivActivityDisplayToolbarItem(showsSidebarToggle: showsSidebarToggle)\n        spotlightDetailToggleToolbarItem(showsSidebarToggle: showsSidebarToggle)\n        artworkDetailToggleToolbarItem(showsSidebarToggle: showsSidebarToggle)\n        artworkActionsToolbarItem(showsSidebarToggle: showsSidebarToggle)\n    }"))
         #expect(contentView.contains("private func appControlsToolbarItem(showsSidebarToggle: Bool) -> some ToolbarContent {\n        #if swift(>=6.4)\n        if #available(iOS 27.0, *) {\n            ToolbarItem(placement: .topBarPinnedTrailing)"))
         #expect(contentView.contains("#else\n        ToolbarItem(placement: .primaryAction) {\n            appControlsToolbarButton(showsSidebarToggle: showsSidebarToggle)\n        }\n        #endif"))
         #expect(contentView.contains("} else {\n            ToolbarItem(placement: .primaryAction) {\n                appControlsToolbarButton(showsSidebarToggle: showsSidebarToggle)"))
@@ -599,9 +599,9 @@ struct NativeBoundaryTests {
         #expect(dashboardView.contains("private enum DiscoveryDashboardHeroStyle: Equatable"))
         #expect(dashboardView.contains("private struct DiscoveryDashboardHeroCard: View"))
         #expect(dashboardView.contains("private struct DiscoveryDashboardSectionHeader: View"))
-        #expect(dashboardView.contains("DashboardMetricGroupCard"))
+        #expect(dashboardView.contains("DiscoveryDashboardActivitySummarySection"))
         #expect(dashboardView.contains("DashboardMetricTile"))
-        #expect(dashboardView.contains("ViewThatFits(in: .horizontal)"))
+        #expect(dashboardView.contains("DashboardMetric(id: \"feed\"") == false)
         #expect(dashboardView.contains("ForEach(store.visibleDashboardSections)"))
         #expect(dashboardView.contains("private enum DiscoveryDashboardRouteSectionLayout: Equatable"))
         #expect(dashboardView.contains("case compactPreview"))
@@ -770,10 +770,12 @@ struct NativeBoundaryTests {
             encoding: .utf8
         )
 
-        let settingsRange = try #require(contentView.range(of: "id: IPadToolbarMenuAction.settings"))
-        let customizeRange = try #require(contentView.range(of: "id: IPadToolbarMenuAction.customizeBottomTabs"))
-        let randomRange = try #require(contentView.range(of: "id: IPadToolbarMenuAction.randomFromCurrentFeed"))
-        let firstFilterRange = try #require(contentView.range(of: "id: IPadToolbarMenuAction.hideMutedContent"))
+        let appControlsRange = try #require(contentView.range(of: "private var appControlsMenu: NativeToolbarMenu"))
+        let appControlsSource = contentView[appControlsRange.lowerBound...]
+        let settingsRange = try #require(appControlsSource.range(of: "id: IPadToolbarMenuAction.settings"))
+        let customizeRange = try #require(appControlsSource.range(of: "id: IPadToolbarMenuAction.customizeBottomTabs"))
+        let randomRange = try #require(appControlsSource.range(of: "id: IPadToolbarMenuAction.randomFromCurrentFeed"))
+        let firstFilterRange = try #require(appControlsSource.range(of: "id: IPadToolbarMenuAction.hideMutedContent"))
 
         #expect(settingsRange.lowerBound < firstFilterRange.lowerBound)
         #expect(customizeRange.lowerBound < firstFilterRange.lowerBound)

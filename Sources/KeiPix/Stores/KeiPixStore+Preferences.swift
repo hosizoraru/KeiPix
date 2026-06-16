@@ -484,21 +484,28 @@ extension KeiPixStore {
     }
 
     var visibleDashboardCards: [DiscoveryDashboardCardKind] {
-        DiscoveryDashboardCardKind.visibleCards(order: dashboardCardOrder, hiddenIDs: hiddenDashboardCardIDs)
+        DiscoveryDashboardCardKind.visibleCards(order: dashboardCardOrder, hiddenIDs: effectiveHiddenDashboardCardIDs)
     }
 
     func isDashboardCardVisible(_ card: DiscoveryDashboardCardKind) -> Bool {
-        hiddenDashboardCardIDs.contains(card.id) == false
+        effectiveHiddenDashboardCardIDs.contains(card.id) == false
     }
 
     func setDashboardCardVisible(_ visible: Bool, for card: DiscoveryDashboardCardKind) {
         hiddenDashboardCardIDs = DiscoveryDashboardCardKind.hiddenIDs(
             afterSetting: visible,
             for: card,
-            currentHiddenIDs: hiddenDashboardCardIDs,
+            currentHiddenIDs: effectiveHiddenDashboardCardIDs,
             order: dashboardCardOrder
         )
         UserDefaults.standard.set(Array(hiddenDashboardCardIDs), forKey: "hiddenDashboardCardIDs")
+    }
+
+    private var effectiveHiddenDashboardCardIDs: Set<String> {
+        guard UserDefaults.standard.object(forKey: "hiddenDashboardCardIDs") != nil else {
+            return hiddenDashboardCardIDs.union(DiscoveryDashboardCardKind.defaultHiddenIDs)
+        }
+        return hiddenDashboardCardIDs
     }
 
     func moveDashboardCard(_ card: DiscoveryDashboardCardKind, offset: Int) {

@@ -11,7 +11,6 @@ enum DiscoveryDashboardPresentation {
 struct DiscoveryDashboardView: View {
     @Bindable var store: KeiPixStore
     let presentation: DiscoveryDashboardPresentation
-    @State private var isCustomizationPresented = false
 
     init(store: KeiPixStore, presentation: DiscoveryDashboardPresentation = .full) {
         self.store = store
@@ -27,18 +26,6 @@ struct DiscoveryDashboardView: View {
             }
         }
         .platformPageNavigationChrome(title: L10n.discover, status: navigationSubtitle)
-        .sheet(isPresented: $isCustomizationPresented) {
-            DashboardCustomizationSheet(store: store)
-                .os26SheetChrome(.form)
-        }
-        #if DEBUG
-        .task {
-            if VisualQALaunchArgument.contains(.discoverDashboardCustomization) {
-                await Task.yield()
-                isCustomizationPresented = true
-            }
-        }
-        #endif
     }
 
     private var navigationSubtitle: String {
@@ -107,8 +94,7 @@ struct DiscoveryDashboardView: View {
         DiscoveryDashboardHeroCard(
             store: store,
             style: .full,
-            surprise: { Task { await store.surpriseMe() } },
-            customize: { isCustomizationPresented = true }
+            surprise: { Task { await store.surpriseMe() } }
         )
     }
 
@@ -116,39 +102,12 @@ struct DiscoveryDashboardView: View {
         DiscoveryDashboardHeroCard(
             store: store,
             style: .compact,
-            surprise: { Task { await store.surpriseMe() } },
-            customize: { isCustomizationPresented = true }
+            surprise: { Task { await store.surpriseMe() } }
         )
     }
 
     private var companionOverview: some View {
-        ViewThatFits(in: .horizontal) {
-            HStack(alignment: .top, spacing: 14) {
-                companionPrimaryColumn
-                    .frame(minWidth: 260, maxWidth: .infinity, alignment: .topLeading)
-                companionSecondaryColumn
-                    .frame(minWidth: 260, maxWidth: .infinity, alignment: .topLeading)
-            }
-
-            VStack(alignment: .leading, spacing: 14) {
-                companionPrimaryColumn
-                companionSecondaryColumn
-            }
-        }
-    }
-
-    private var companionPrimaryColumn: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            DashboardMetricGroupCard(title: L10n.works, systemImage: "photo.stack", metrics: workMetrics)
-            DashboardMetricGroupCard(title: L10n.downloads, systemImage: "arrow.down.circle", metrics: downloadMetrics)
-        }
-    }
-
-    private var companionSecondaryColumn: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            DashboardMetricGroupCard(title: L10n.library, systemImage: "books.vertical", metrics: libraryMetrics)
-            DashboardMetricGroupCard(title: L10n.creatorNetwork, systemImage: "person.2.crop.square.stack", metrics: creatorMetrics)
-        }
+        DiscoveryDashboardActivitySummarySection(metrics: activityMetrics)
     }
 
     @ViewBuilder
@@ -162,6 +121,8 @@ struct DiscoveryDashboardView: View {
             DiscoveryDashboardHighlightsSection(store: store, style: featureStyle)
         case .forYou:
             DiscoveryDashboardForYouSection(store: store, style: featureStyle)
+        case .tagRecommendations:
+            DiscoveryDashboardTagRecommendationsSection(store: store)
         case .metrics:
             companionOverview
         case .routeGroups:
@@ -171,33 +132,14 @@ struct DiscoveryDashboardView: View {
         }
     }
 
-    private var workMetrics: [DashboardMetric] {
+    private var activityMetrics: [DashboardMetric] {
         [
-            DashboardMetric(id: "feed", title: L10n.feed, value: store.artworks.count.formatted(), systemImage: "photo.on.rectangle"),
-            DashboardMetric(id: "manga-watchlist", title: L10n.mangaWatchlist, value: store.mangaWatchlistReadStateLibrary.items.count.formatted(), systemImage: "book.closed"),
-            DashboardMetric(id: "novel-watchlist", title: L10n.novelWatchlist, value: store.novels.watchlistSeries.count.formatted(), systemImage: "books.vertical")
-        ]
-    }
-
-    private var libraryMetrics: [DashboardMetric] {
-        [
-            DashboardMetric(id: "saved-searches", title: L10n.savedSearches, value: store.savedSearches.count.formatted(), systemImage: "tag.circle"),
             DashboardMetric(id: "history", title: L10n.history, value: store.localBrowsingHistory.count.formatted(), systemImage: "clock.arrow.circlepath"),
-            DashboardMetric(id: "watch-later", title: L10n.watchLater, value: store.watchLaterQueue.count.formatted(), systemImage: "bookmark.circle"),
-            DashboardMetric(id: "muted-content", title: L10n.mutedContent, value: store.mutedContentArchiveSnapshot().totalCount.formatted(), systemImage: "eye.slash")
-        ]
-    }
-
-    private var downloadMetrics: [DashboardMetric] {
-        [
             DashboardMetric(id: "download-total", title: L10n.downloads, value: store.downloads.items.count.formatted(), systemImage: "tray.and.arrow.down"),
             DashboardMetric(id: "download-active", title: L10n.activeDownloads, value: store.downloads.activeCount.formatted(), systemImage: "arrow.down.circle"),
-            DashboardMetric(id: "download-completed", title: L10n.completedDownloads, value: store.downloads.completedCount.formatted(), systemImage: "checkmark.circle")
-        ]
-    }
-
-    private var creatorMetrics: [DashboardMetric] {
-        [
+            DashboardMetric(id: "saved-searches", title: L10n.savedSearches, value: store.savedSearches.count.formatted(), systemImage: "tag.circle"),
+            DashboardMetric(id: "watch-later", title: L10n.watchLater, value: store.watchLaterQueue.count.formatted(), systemImage: "bookmark.circle"),
+            DashboardMetric(id: "muted-content", title: L10n.mutedContent, value: store.mutedContentArchiveSnapshot().totalCount.formatted(), systemImage: "eye.slash"),
             DashboardMetric(id: "pinned-creators", title: L10n.pinnedCreators, value: store.pinnedCreatorLibrary.creators.count.formatted(), systemImage: "pin"),
             DashboardMetric(id: "work-subscriptions", title: L10n.workSubscriptions, value: store.workSubscriptions.count.formatted(), systemImage: "bell.badge")
         ]
@@ -232,7 +174,6 @@ private struct DiscoveryDashboardHeroCard: View {
     @Bindable var store: KeiPixStore
     let style: DiscoveryDashboardHeroStyle
     let surprise: () -> Void
-    let customize: () -> Void
 
     @ScaledMetric(relativeTo: .headline) private var compactAvatarSymbolSize: CGFloat = 28
     @ScaledMetric(relativeTo: .largeTitle) private var fullAvatarSymbolSize: CGFloat = 36
@@ -267,10 +208,8 @@ private struct DiscoveryDashboardHeroCard: View {
             }
 
             DiscoveryDashboardHeroControlRow(
-                store: store,
                 style: style,
-                surprise: surprise,
-                customize: customize
+                surprise: surprise
             )
             .padding(.leading, controlRowLeadingPadding)
         }
@@ -314,10 +253,8 @@ private struct DiscoveryDashboardHeroCard: View {
 }
 
 private struct DiscoveryDashboardHeroControlRow: View {
-    @Bindable var store: KeiPixStore
     let style: DiscoveryDashboardHeroStyle
     let surprise: () -> Void
-    let customize: () -> Void
 
     var body: some View {
         HStack(spacing: style == .full ? 9 : 8) {
@@ -331,51 +268,8 @@ private struct DiscoveryDashboardHeroControlRow: View {
             .help(L10n.surpriseMe)
             .accessibilityLabel(L10n.surpriseMe)
 
-            DiscoveryDashboardPageMenu(
-                store: store,
-                style: style,
-                customize: customize
-            )
-
             Spacer(minLength: 0)
         }
-    }
-}
-
-private struct DiscoveryDashboardPageMenu: View {
-    @Bindable var store: KeiPixStore
-    let style: DiscoveryDashboardHeroStyle
-    let customize: () -> Void
-
-    var body: some View {
-        Menu {
-            Section(L10n.dashboardCards) {
-                Button(action: customize) {
-                    Label(L10n.customizeDashboard, systemImage: "rectangle.grid.2x2")
-                }
-            }
-
-            Section(L10n.viewOptions) {
-                Toggle(L10n.showContentBadges, isOn: store.settings_showContentBadgesBinding)
-                Toggle(L10n.maskSensitivePreviews, isOn: store.settings_maskSensitivePreviewsBinding)
-            }
-
-            Section(L10n.contentFilters) {
-                Toggle(L10n.hideMutedContent, isOn: store.settings_hideMutedBinding)
-                Toggle(L10n.hideAIArtworks, isOn: store.settings_hideAIBinding)
-                Toggle(L10n.hideR18Artworks, isOn: store.settings_hideR18Binding)
-                Toggle(L10n.hideR18GArtworks, isOn: store.settings_hideR18GBinding)
-            }
-        } label: {
-            Label(L10n.customizeDashboard, systemImage: "slider.horizontal.3")
-                .labelStyle(.iconOnly)
-        }
-        .buttonStyle(.glass)
-        .buttonBorderShape(.capsule)
-        .controlSize(style == .full ? .regular : .small)
-        .menuStyle(.button)
-        .help(L10n.customizeDashboard)
-        .accessibilityLabel(L10n.customizeDashboard)
     }
 }
 
@@ -386,23 +280,21 @@ private struct DashboardMetric: Identifiable {
     let systemImage: String
 }
 
-private struct DashboardMetricGroupCard: View {
-    let title: String
-    let systemImage: String
+private struct DiscoveryDashboardActivitySummarySection: View {
     let metrics: [DashboardMetric]
 
     var body: some View {
         GlassEffectContainer(spacing: 10) {
             VStack(alignment: .leading, spacing: 11) {
                 HStack(spacing: 9) {
-                    Image(systemName: systemImage)
+                    Image(systemName: "chart.bar.xaxis")
                         .font(.subheadline.weight(.semibold))
                         .symbolRenderingMode(.hierarchical)
                         .foregroundStyle(.secondary)
                         .frame(width: 30, height: 30)
                         .keiGlass(13)
 
-                    Text(title)
+                    Text(L10n.discoveryMetrics)
                         .font(.headline.weight(.semibold))
                         .foregroundStyle(.primary)
                         .lineLimit(1)
@@ -410,14 +302,20 @@ private struct DashboardMetricGroupCard: View {
                     Spacer(minLength: 0)
                 }
 
-                VStack(alignment: .leading, spacing: 8) {
+                LazyVGrid(
+                    columns: [
+                        GridItem(.adaptive(minimum: 156, maximum: 230), spacing: 8, alignment: .top)
+                    ],
+                    alignment: .leading,
+                    spacing: 8
+                ) {
                     ForEach(metrics) { metric in
                         DashboardMetricTile(metric: metric)
                     }
                 }
             }
             .padding(13)
-            .frame(maxWidth: .infinity, minHeight: 160, alignment: .topLeading)
+            .frame(maxWidth: .infinity, alignment: .topLeading)
             .keiGlass(20)
         }
     }
@@ -731,7 +629,7 @@ private struct DiscoveryDashboardRouteCard: View {
     }
 }
 
-private struct DashboardCustomizationSheet: View {
+struct DashboardCustomizationSheet: View {
     @Bindable var store: KeiPixStore
     @Environment(\.dismiss) private var dismiss
 

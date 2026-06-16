@@ -3,6 +3,7 @@ import Foundation
 enum DiscoveryDashboardCardKind: String, CaseIterable, Codable, Hashable, Identifiable, Sendable {
     case highlights
     case forYou
+    case tagRecommendations
     case metrics
     case routeGroups
 
@@ -14,6 +15,8 @@ enum DiscoveryDashboardCardKind: String, CaseIterable, Codable, Hashable, Identi
             L10n.discoveryHighlights
         case .forYou:
             L10n.discoveryForYou
+        case .tagRecommendations:
+            L10n.recommendedTags
         case .metrics:
             L10n.discoveryMetrics
         case .routeGroups:
@@ -27,6 +30,8 @@ enum DiscoveryDashboardCardKind: String, CaseIterable, Codable, Hashable, Identi
             "sparkles.rectangle.stack"
         case .forYou:
             "person.crop.circle.badge.sparkles"
+        case .tagRecommendations:
+            "number"
         case .metrics:
             "chart.bar.xaxis"
         case .routeGroups:
@@ -37,9 +42,18 @@ enum DiscoveryDashboardCardKind: String, CaseIterable, Codable, Hashable, Identi
     static let defaultOrder: [DiscoveryDashboardCardKind] = [
         .highlights,
         .forYou,
+        .tagRecommendations,
         .metrics,
         .routeGroups
     ]
+
+    static let defaultHiddenIDs: Set<String> = [
+        DiscoveryDashboardCardKind.routeGroups.id
+    ]
+
+    static var defaultVisibleOrder: [DiscoveryDashboardCardKind] {
+        defaultOrder.filter { defaultHiddenIDs.contains($0.id) == false }
+    }
 
     static func ordered(from storageID: String?) -> [DiscoveryDashboardCardKind] {
         let stored = (storageID ?? "")
@@ -60,7 +74,7 @@ enum DiscoveryDashboardCardKind: String, CaseIterable, Codable, Hashable, Identi
 
     static func visibleCards(order: [DiscoveryDashboardCardKind], hiddenIDs: Set<String>) -> [DiscoveryDashboardCardKind] {
         let visible = order.filter { hiddenIDs.contains($0.id) == false }
-        return visible.isEmpty ? defaultOrder : visible
+        return visible.isEmpty ? defaultVisibleOrder : visible
     }
 
     static func hiddenIDs(

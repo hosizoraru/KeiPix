@@ -9,6 +9,8 @@ enum L10n {
     static var discoveryHighlights: String { text("Discovery Highlights") }
     static var discoveryForYou: String { text("For You") }
     static var discoveryMetrics: String { text("Discovery Metrics") }
+    static var discoverySettings: String { text("Discovery Settings") }
+    static var recommendedTags: String { text("Recommended Tags") }
     static var customizeDashboard: String { text("Customize Dashboard") }
     static var bottomTabs: String { text("Bottom Tabs", table: L10nTable.navigation) }
     static var bottomTabBehavior: String { text("Bottom Tab Behavior", table: L10nTable.navigation) }

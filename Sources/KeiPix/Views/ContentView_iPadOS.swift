@@ -24,6 +24,7 @@ struct ContentView: View {
     @State private var isPixivIDOpenPresented = false
     @State private var isSettingsSheetPresented = false
     @State private var isMobileTabCustomizationPresented = false
+    @State private var isDashboardCustomizationPresented = false
     @State private var isCompactCustomTabRootActive = false
     @State private var hasAppliedMobileBottomTabLaunchTarget = false
     @State private var skipsNextCompactTabSelectionHandler = false
@@ -126,6 +127,10 @@ struct ContentView: View {
                     hasAppliedMobileBottomTabLaunchTarget = true
                     selectedSidebarItem = .route(.home)
                     selectedTab = .feed
+                }
+                if VisualQALaunchArgument.contains(.discoverDashboardCustomization) {
+                    await Task.yield()
+                    isDashboardCustomizationPresented = true
                 }
                 if VisualQALaunchArgument.contains(.pixivActivity) {
                     store.presentPixivActivityVisualQA()
@@ -249,6 +254,10 @@ struct ContentView: View {
                     )
                 }
                 .os26SheetChrome(.form)
+            }
+            .sheet(isPresented: $isDashboardCustomizationPresented) {
+                DashboardCustomizationSheet(store: store)
+                    .os26SheetChrome(.form)
             }
             .sheet(item: $feedbackRequest) { request in
                 FeedbackReportSheet(request: request, localMuteAction: {}) { _ in }
@@ -625,6 +634,7 @@ struct ContentView: View {
     @ToolbarContentBuilder
     private func feedBoardToolbar(showsSidebarToggle: Bool) -> some ToolbarContent {
         refreshToolbarItem(showsSidebarToggle: showsSidebarToggle)
+        discoveryDashboardToolbarItem(showsSidebarToggle: showsSidebarToggle)
         pixivCollectionsToolbarItem(showsSidebarToggle: showsSidebarToggle)
         downloadQueueToolbarItem(showsSidebarToggle: showsSidebarToggle)
         clearSearchToolbarItem
@@ -643,6 +653,20 @@ struct ContentView: View {
                 } label: {
                     Label(L10n.refresh, systemImage: "arrow.clockwise")
                 }
+            }
+        }
+    }
+
+    private func discoveryDashboardToolbarItem(showsSidebarToggle: Bool) -> some ToolbarContent {
+        ToolbarItem(placement: .primaryAction) {
+            if showsDiscoveryDashboardToolbarMenu(showsSidebarToggle: showsSidebarToggle) {
+                NativeToolbarMenuButton(
+                    systemImage: "slider.horizontal.3",
+                    accessibilityLabel: L10n.discoverySettings,
+                    menu: discoveryDashboardToolbarMenu,
+                    select: { handleNativeToolbarMenuAction($0, showsSidebarToggle: showsSidebarToggle) }
+                )
+                .fixedSize(horizontal: true, vertical: false)
             }
         }
     }
@@ -1151,6 +1175,10 @@ struct ContentView: View {
         store.selectedRoute == .pixivActivity
     }
 
+    private func showsDiscoveryDashboardToolbarMenu(showsSidebarToggle: Bool) -> Bool {
+        store.session != nil && store.selectedRoute == .home
+    }
+
     private var showsPixivCollectionsToolbarMenu: Bool {
         store.session != nil && pixivCollectionToolbarMode != nil
     }
@@ -1480,6 +1508,83 @@ struct ContentView: View {
             store.pixivActivityKindFilter.rawValue,
             store.pixivActivityLayoutMode.rawValue,
             currentMobilePlatform == .phone ? "phone" : "wide"
+        ].joined(separator: ":")
+    }
+
+    private var discoveryDashboardToolbarMenu: NativeToolbarMenu {
+        NativeToolbarMenu(
+            title: L10n.discoverySettings,
+            cacheKey: discoveryDashboardToolbarMenuCacheKey,
+            sections: [
+                NativeToolbarMenuSection(
+                    title: L10n.dashboardCards,
+                    items: [
+                        .action(
+                            id: IPadToolbarMenuAction.customizeDashboard,
+                            title: L10n.customizeDashboard,
+                            systemImage: "rectangle.grid.2x2"
+                        )
+                    ]
+                ),
+                NativeToolbarMenuSection(
+                    title: L10n.viewOptions,
+                    items: [
+                        .action(
+                            id: IPadToolbarMenuAction.showContentBadges,
+                            title: L10n.showContentBadges,
+                            systemImage: "tag",
+                            isSelected: store.showContentBadges
+                        ),
+                        .action(
+                            id: IPadToolbarMenuAction.maskSensitivePreviews,
+                            title: L10n.maskSensitivePreviews,
+                            systemImage: "eye.trianglebadge.exclamationmark",
+                            isSelected: store.maskSensitivePreviews
+                        )
+                    ]
+                ),
+                NativeToolbarMenuSection(
+                    title: L10n.contentFilters,
+                    items: [
+                        .action(
+                            id: IPadToolbarMenuAction.hideMutedContent,
+                            title: L10n.hideMutedContent,
+                            systemImage: "eye.slash",
+                            isSelected: store.hideMutedContent
+                        ),
+                        .action(
+                            id: IPadToolbarMenuAction.hideAIArtworks,
+                            title: L10n.hideAIArtworks,
+                            systemImage: "sparkles",
+                            isSelected: store.hideAIArtworks
+                        ),
+                        .action(
+                            id: IPadToolbarMenuAction.hideR18Artworks,
+                            title: L10n.hideR18Artworks,
+                            systemImage: "18.circle",
+                            isSelected: store.hideR18Artworks
+                        ),
+                        .action(
+                            id: IPadToolbarMenuAction.hideR18GArtworks,
+                            title: L10n.hideR18GArtworks,
+                            systemImage: "exclamationmark.triangle",
+                            isSelected: store.hideR18GArtworks
+                        )
+                    ]
+                )
+            ]
+        )
+    }
+
+    private var discoveryDashboardToolbarMenuCacheKey: String {
+        [
+            "discovery-dashboard",
+            store.showContentBadges ? "badges-on" : "badges-off",
+            store.maskSensitivePreviews ? "mask-on" : "mask-off",
+            store.hideMutedContent ? "muted-hidden" : "muted-visible",
+            store.hideAIArtworks ? "ai-hidden" : "ai-visible",
+            store.hideR18Artworks ? "r18-hidden" : "r18-visible",
+            store.hideR18GArtworks ? "r18g-hidden" : "r18g-visible"
         ].joined(separator: ":")
     }
 
@@ -1968,6 +2073,8 @@ struct ContentView: View {
             store.setHideR18Artworks(!store.hideR18Artworks)
         case IPadToolbarMenuAction.hideR18GArtworks:
             store.setHideR18GArtworks(!store.hideR18GArtworks)
+        case IPadToolbarMenuAction.customizeDashboard:
+            isDashboardCustomizationPresented = true
         case IPadToolbarMenuAction.customizeBottomTabs:
             isMobileTabCustomizationPresented = true
         case IPadToolbarMenuAction.settings:
@@ -2946,6 +3053,7 @@ private enum IPadToolbarMenuAction {
     static let hideAIArtworks = "hide-ai-artworks"
     static let hideR18Artworks = "hide-r18-artworks"
     static let hideR18GArtworks = "hide-r18g-artworks"
+    static let customizeDashboard = "customize-dashboard"
     static let customizeBottomTabs = "customize-bottom-tabs"
     static let randomFromCurrentFeed = "random-from-current-feed"
     static let downloadDestinationInfo = "download-destination-info"

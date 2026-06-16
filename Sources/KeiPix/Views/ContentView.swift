@@ -12,6 +12,7 @@ struct ContentView: View {
     @State private var isPixivIDOpenPresented = false
     @State private var isPixivLinkDropTargeted = false
     @State private var isSeriesSheetVisualQAPresented = false
+    @State private var isDashboardCustomizationPresented = false
     @State private var feedbackVisualQARequest: FeedbackReportRequest?
     @State private var creatorProfileVisualQAUser: PixivUser?
     @State private var bookmarkEditorVisualQAArtwork: PixivArtwork?
@@ -97,6 +98,10 @@ struct ContentView: View {
                 }
                 .labelStyle(.iconOnly)
                 .help(L10n.refresh)
+
+                if store.selectedRoute == .home {
+                    discoveryDashboardToolbarMenu
+                }
             }
 
             ToolbarSpacer(.fixed, placement: .primaryAction)
@@ -162,6 +167,11 @@ struct ContentView: View {
             LoginSheetView(store: store)
                 .frame(width: 900, height: 680)
                 .os26SheetChrome(.immersive)
+        }
+        .sheet(isPresented: $isDashboardCustomizationPresented) {
+            DashboardCustomizationSheet(store: store)
+                .frame(minWidth: 380, minHeight: 440)
+                .os26SheetChrome(.form)
         }
         .sheet(isPresented: $store.isTokenLoginPresented) {
             TokenLoginSheetView(store: store)
@@ -296,6 +306,10 @@ struct ContentView: View {
             if VisualQALaunchArgument.contains(.discoverDashboard)
                 || VisualQALaunchArgument.contains(.discoverDashboardCustomization) {
                 store.presentDiscoverDashboardVisualQA()
+            }
+            if VisualQALaunchArgument.contains(.discoverDashboardCustomization) {
+                await Task.yield()
+                isDashboardCustomizationPresented = true
             }
             if VisualQALaunchArgument.contains(.pixivActivity) {
                 store.presentPixivActivityVisualQA()
@@ -489,6 +503,35 @@ struct ContentView: View {
 
     private var showsGlobalClearSearchButton: Bool {
         hasActiveGlobalSearchText && store.selectedRoute != .search
+    }
+
+    private var discoveryDashboardToolbarMenu: some View {
+        Menu {
+            Section(L10n.dashboardCards) {
+                Button {
+                    isDashboardCustomizationPresented = true
+                } label: {
+                    Label(L10n.customizeDashboard, systemImage: "rectangle.grid.2x2")
+                }
+            }
+
+            Section(L10n.viewOptions) {
+                Toggle(L10n.showContentBadges, isOn: showContentBadgesBinding)
+                Toggle(L10n.maskSensitivePreviews, isOn: maskSensitivePreviewsBinding)
+            }
+
+            Section(L10n.contentFilters) {
+                Toggle(L10n.hideMutedContent, isOn: hideMutedContentBinding)
+                Toggle(L10n.hideAIArtworks, isOn: hideAIBinding)
+                Toggle(L10n.hideR18Artworks, isOn: hideR18Binding)
+                Toggle(L10n.hideR18GArtworks, isOn: hideR18GBinding)
+            }
+        } label: {
+            Label(L10n.discoverySettings, systemImage: "slider.horizontal.3")
+        }
+        .labelStyle(.iconOnly)
+        .help(L10n.discoverySettings)
+        .accessibilityLabel(L10n.discoverySettings)
     }
 
     private var appControlsMenu: some View {

@@ -17,21 +17,30 @@ import SwiftUI
 ///   intentionally a snapshot of "what's trending right now."
 /// - Surfaces only the first 12 tags. The point is to nudge the user
 ///   into the full route, not replicate it.
-/// - Skips rendering if the user is signed-out or the API returned no
-///   tags after a successful load — keeps the dashboard from showing an
-///   empty rail.
+/// - Can either skip rendering when the API returns no tags, or show a
+///   stable fallback card for dashboard layouts that reserve a dedicated
+///   tag-recommendation slot.
 struct DiscoveryTrendingTagsStrip: View {
     @Bindable var store: KeiPixStore
     let showsHeader: Bool
+    let showsEmptyState: Bool
+    let title: String
 
     @State private var tags: [PixivTrendingTag] = []
     @State private var isLoading = false
     @State private var loadFailed = false
     @State private var hasAttemptedLoad = false
 
-    init(store: KeiPixStore, showsHeader: Bool = true) {
+    init(
+        store: KeiPixStore,
+        showsHeader: Bool = true,
+        showsEmptyState: Bool = false,
+        title: String? = nil
+    ) {
         self.store = store
         self.showsHeader = showsHeader
+        self.showsEmptyState = showsEmptyState
+        self.title = title ?? L10n.trendingTags
     }
 
     /// Cap the rail at 12 tags. Pixiv Web's discovery rail surfaces a
@@ -51,8 +60,9 @@ struct DiscoveryTrendingTagsStrip: View {
     }
 
     private var shouldHideSection: Bool {
-        store.session == nil
-            || (loadFailed && tags.isEmpty)
+        guard store.session != nil else { return true }
+        guard showsEmptyState == false else { return false }
+        return (loadFailed && tags.isEmpty)
             || (hasAttemptedLoad && isLoading == false && tags.isEmpty)
     }
 
@@ -67,7 +77,7 @@ struct DiscoveryTrendingTagsStrip: View {
                     HStack(spacing: 8) {
                         ProgressView()
                             .controlSize(.small)
-                        Text(showsHeader ? L10n.trendingTags : L10n.loading)
+                        Text(showsHeader ? title : L10n.loading)
                             .font(.caption.weight(.medium))
                             .foregroundStyle(.secondary)
                     }
@@ -75,6 +85,8 @@ struct DiscoveryTrendingTagsStrip: View {
                     .padding(.vertical, 10)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .keiGlass(16)
+                } else if tags.isEmpty {
+                    emptyRecommendationCard
                 } else {
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(alignment: .top, spacing: 12) {
@@ -103,9 +115,50 @@ struct DiscoveryTrendingTagsStrip: View {
         }
     }
 
+    private var emptyRecommendationCard: some View {
+        Button {
+            store.select(.trendingTags)
+        } label: {
+            HStack(spacing: 10) {
+                Image(systemName: "number")
+                    .font(.subheadline.weight(.semibold))
+                    .symbolRenderingMode(.hierarchical)
+                    .foregroundStyle(.secondary)
+                    .frame(width: 34, height: 34)
+                    .keiGlass(14)
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(title)
+                        .font(.callout.weight(.semibold))
+                        .foregroundStyle(.primary)
+                        .lineLimit(1)
+
+                    Text(L10n.explore)
+                        .font(.caption.weight(.medium))
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                }
+
+                Spacer(minLength: 0)
+
+                Image(systemName: "chevron.right.circle")
+                    .font(.subheadline.weight(.semibold))
+                    .symbolRenderingMode(.hierarchical)
+                    .foregroundStyle(.secondary)
+            }
+            .padding(12)
+            .frame(maxWidth: 360, alignment: .leading)
+            .contentShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .keiInteractiveGlass(18)
+        .help(title)
+        .accessibilityLabel(title)
+    }
+
     private var header: some View {
         HStack(alignment: .firstTextBaseline, spacing: 8) {
-            Label(L10n.trendingTags, systemImage: "number")
+            Label(title, systemImage: "number")
                 .font(.headline.weight(.semibold))
                 .foregroundStyle(.primary)
 
