@@ -68,11 +68,18 @@ struct RemoteImageView: View {
     }
 
     private func load() async {
-        if let localURL, let localImage = PlatformImage(contentsOf: localURL) {
-            failed = false
-            image = localImage
-            onImageLoaded?(localImage)
-            return
+        if let localURL {
+            do {
+                let localImage = try await ImagePipeline.shared.image(contentsOf: localURL)
+                failed = false
+                image = localImage
+                onImageLoaded?(localImage)
+                return
+            } catch {
+                // Preserve the previous fallback behavior: if a downloaded
+                // file moved or has not landed yet, the remote URL can still
+                // keep the surface useful.
+            }
         }
 
         guard let url else {

@@ -137,20 +137,23 @@ struct ImageScrollView: UIViewRepresentable {
             currentLoadKey = loadKey
             beginImageReload()
 
-            if let localURL, let image = UIImage(contentsOf: localURL) {
-                applyImage(image)
-                return
-            }
-
-            guard let imageURL else {
-                imageView?.image = nil
-                scrollView?.contentSize = .zero
-                isImageReloadInProgress = false
-                return
-            }
-
             Task { @MainActor [weak self] in
                 guard let self else { return }
+                if let localURL,
+                   let localImage = try? await ImagePipeline.shared.image(contentsOf: localURL) {
+                    guard Self.loadKey(imageURL: imageURL, localURL: localURL) == currentLoadKey else { return }
+                    applyImage(localImage)
+                    return
+                }
+
+                guard let imageURL else {
+                    guard Self.loadKey(imageURL: imageURL, localURL: localURL) == currentLoadKey else { return }
+                    imageView?.image = nil
+                    scrollView?.contentSize = .zero
+                    isImageReloadInProgress = false
+                    return
+                }
+
                 let loadedImage = try? await ImagePipeline.shared.image(for: imageURL)
                 guard Self.loadKey(imageURL: imageURL, localURL: localURL) == currentLoadKey else { return }
                 if let loadedImage {

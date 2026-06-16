@@ -168,6 +168,38 @@ final class ImagePipeline: @unchecked Sendable {
         return data
     }
 
+    /// Loads and force-decodes a local image file off the main thread.
+    ///
+    /// Reader and downloaded-artwork surfaces frequently hand us file URLs.
+    /// Creating `NSImage(contentsOf:)` / `UIImage(contentsOfFile:)` from those
+    /// hot paths can synchronously read and lazily decode on the UI thread.
+    /// Keep local files on the same decoded-bitmap path as remote images so
+    /// first paint stays smooth.
+    func image(contentsOf localURL: URL, priority: Priority = .userInitiated) async throws -> PlatformImage {
+        let key = localURL as NSURL
+        if let cached = memoryCache.object(forKey: key) {
+            return cached
+        }
+
+        let task: Task<PlatformImage, Error> = inFlightLock.withLock {
+            if let existing = inFlight[localURL] {
+                return existing
+            }
+            let new = Task<PlatformImage, Error>(priority: priority.taskPriority) { [weak self] in
+                guard let self else { throw CancellationError() }
+                defer { self.removeInFlight(localURL) }
+                let data = try await self.readLocalImageData(from: localURL, qos: priority.dispatchQoS)
+                let image = try await self.decode(data: data, qos: priority.dispatchQoS)
+                let cost = self.approximateCost(of: image, fallback: data.count)
+                self.memoryCache.setObject(image, forKey: key, cost: cost)
+                return image
+            }
+            inFlight[localURL] = new
+            return new
+        }
+        return try await task.value
+    }
+
     /// Fire-and-forget concurrent prefetch. Downloads the URLs we
     /// don't already have hot, capped at `concurrency` in-flight at
     /// once so we don't crowd visible-cell loads off the wire.
@@ -223,6 +255,22 @@ final class ImagePipeline: @unchecked Sendable {
         let cost = approximateCost(of: image, fallback: data.count)
         memoryCache.setObject(image, forKey: url as NSURL, cost: cost)
         return image
+    }
+
+    private func readLocalImageData(from url: URL, qos: DispatchQoS.QoSClass) async throws -> Data {
+        try Task.checkCancellation()
+        return try await withCheckedThrowingContinuation { continuation in
+            decodeQueue.async(qos: DispatchQoS(qosClass: qos, relativePriority: 0)) {
+                do {
+                    try Task.checkCancellation()
+                    let data = try Data(contentsOf: url, options: [.mappedIfSafe])
+                    try Task.checkCancellation()
+                    continuation.resume(returning: data)
+                } catch {
+                    continuation.resume(throwing: error)
+                }
+            }
+        }
     }
 
     /// Active image processors, loaded from UserDefaults.
