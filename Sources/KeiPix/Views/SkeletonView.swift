@@ -7,7 +7,11 @@ import SwiftUI
 /// placeholder shape.
 struct SkeletonView: ViewModifier {
     var cornerRadius: CGFloat = 8
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var isAnimating = false
+    @State private var startTask: Task<Void, Never>?
+
+    private let shimmerDelay: Duration = .milliseconds(180)
 
     func body(content: Content) -> some View {
         content
@@ -28,6 +32,7 @@ struct SkeletonView: ViewModifier {
                             )
                             .frame(width: width * 0.5)
                             .offset(x: isAnimating ? width : -width * 0.5)
+                            .opacity(reduceMotion ? 0 : 1)
                         }
                         .mask(
                             RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
@@ -36,10 +41,40 @@ struct SkeletonView: ViewModifier {
                     .allowsHitTesting(false)
             }
             .onAppear {
+                restartShimmerIfNeeded()
+            }
+            .onDisappear {
+                stopShimmer()
+            }
+            .onChange(of: reduceMotion) { _, _ in
+                restartShimmerIfNeeded()
+            }
+    }
+
+    @MainActor
+    private func restartShimmerIfNeeded() {
+        stopShimmer()
+        guard reduceMotion == false else { return }
+        startTask = Task {
+            do {
+                try await Task.sleep(for: shimmerDelay)
+            } catch {
+                return
+            }
+            guard Task.isCancelled == false else { return }
+            await MainActor.run {
                 withAnimation(.linear(duration: 1.5).repeatForever(autoreverses: false)) {
                     isAnimating = true
                 }
             }
+        }
+    }
+
+    @MainActor
+    private func stopShimmer() {
+        startTask?.cancel()
+        startTask = nil
+        isAnimating = false
     }
 }
 

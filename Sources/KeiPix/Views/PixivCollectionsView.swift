@@ -84,7 +84,8 @@ struct PixivCollectionsView: View {
             onRefresh: nil,
             onScrollDirectionChange: nil,
             onNearContentEnd: nearContentEndAction,
-            onPrefetchItems: prefetchNativeItems
+            onPrefetchItems: prefetchNativeItems,
+            onCancelPrefetchItems: nil
         ) { item in
             AnyView(nativeContent(for: item))
         }

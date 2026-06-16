@@ -593,7 +593,8 @@ private struct GalleryFeedView: View {
                 },
                 onScrollDirectionChange: onGalleryScrollDirectionChange,
                 onNearContentEnd: triggerAutomaticLoadMoreIfNeeded,
-                onPrefetchItems: prefetchNativeGalleryItems
+                onPrefetchItems: prefetchNativeGalleryItems,
+                onCancelPrefetchItems: cancelNativeGalleryPrefetchItems
             ) { item in
                 AnyView(nativeGalleryContent(for: item))
             }
@@ -1041,6 +1042,28 @@ private struct GalleryFeedView: View {
         }
         store.hydrateCreatorTagSummariesIfNeeded(for: artworks, limit: 8)
 
+        let urls = nativeGalleryPrefetchURLs(for: items)
+        guard urls.isEmpty == false else { return }
+
+        Task(priority: .utility) {
+            await nativePrefetchScheduler.enqueue(urls)
+        }
+    }
+
+    private func cancelNativeGalleryPrefetchItems(_ items: [NativeGalleryCollectionItem]) {
+        let urls = nativeGalleryPrefetchURLs(for: items)
+        guard urls.isEmpty == false else { return }
+
+        Task(priority: .utility) {
+            await nativePrefetchScheduler.cancel(urls)
+        }
+    }
+
+    private func nativeGalleryPrefetchURLs(for items: [NativeGalleryCollectionItem]) -> [URL] {
+        let artworks = items.compactMap { item -> PixivArtwork? in
+            guard case .artwork(let artwork) = item else { return nil }
+            return artwork
+        }
         var urls = GalleryImagePrefetchPolicy.previewURLs(
             for: artworks,
             tier: store.feedPreviewImageQualityTier
@@ -1050,11 +1073,7 @@ private struct GalleryFeedView: View {
             return collection.coverImageURL
         }
         urls.append(contentsOf: collectionCoverURLs)
-        guard urls.isEmpty == false else { return }
-
-        Task(priority: .utility) {
-            await nativePrefetchScheduler.enqueue(urls)
-        }
+        return urls
     }
 
     private func cancelNativePrefetch() {

@@ -224,6 +224,7 @@ struct NativeGalleryCollectionView: NSViewRepresentable {
     let onScrollDirectionChange: ((NativeGalleryScrollEvent) -> Void)?
     let onNearContentEnd: (() -> Void)?
     let onPrefetchItems: (([NativeGalleryCollectionItem]) -> Void)?
+    let onCancelPrefetchItems: (([NativeGalleryCollectionItem]) -> Void)?
     let content: (NativeGalleryCollectionItem) -> AnyView
 
     func makeNSView(context: Context) -> NSScrollView {
@@ -652,6 +653,7 @@ struct NativeGalleryCollectionView: UIViewRepresentable {
     let onScrollDirectionChange: ((NativeGalleryScrollEvent) -> Void)?
     let onNearContentEnd: (() -> Void)?
     let onPrefetchItems: (([NativeGalleryCollectionItem]) -> Void)?
+    let onCancelPrefetchItems: (([NativeGalleryCollectionItem]) -> Void)?
     let content: (NativeGalleryCollectionItem) -> AnyView
 
     func makeUIView(context: Context) -> UICollectionView {
@@ -1030,6 +1032,18 @@ struct NativeGalleryCollectionView: UIViewRepresentable {
                 }
             guard items.isEmpty == false else { return }
             onPrefetchItems(items)
+        }
+
+        func collectionView(_ collectionView: UICollectionView, cancelPrefetchingForItemsAt indexPaths: [IndexPath]) {
+            guard let onCancelPrefetchItems = parent.onCancelPrefetchItems else { return }
+            let items = indexPaths
+                .sorted()
+                .compactMap { indexPath -> NativeGalleryCollectionItem? in
+                    guard indexPath.item < parent.items.count else { return nil }
+                    return parent.items[indexPath.item]
+                }
+            guard items.isEmpty == false else { return }
+            onCancelPrefetchItems(items)
         }
 
         private func scrollToSelectionIfNeeded(in collectionView: UICollectionView) {

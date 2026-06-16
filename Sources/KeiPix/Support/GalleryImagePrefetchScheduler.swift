@@ -20,6 +20,25 @@ actor GalleryImagePrefetchScheduler {
         pendingURLSet.removeAll(keepingCapacity: true)
     }
 
+    func cancel(_ urls: [URL]) {
+        guard urls.isEmpty == false, pendingURLs.isEmpty == false else { return }
+        let cancelled = Set(urls)
+        guard cancelled.isEmpty == false else { return }
+
+        pendingURLs.removeAll { url in
+            if cancelled.contains(url) {
+                pendingURLSet.remove(url)
+                return true
+            }
+            return false
+        }
+
+        if pendingURLs.isEmpty {
+            flushTask?.cancel()
+            flushTask = nil
+        }
+    }
+
     private func scheduleFlushIfNeeded() {
         guard flushTask == nil else { return }
         flushTask = Task(priority: .utility) { [weak self] in

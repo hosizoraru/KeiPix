@@ -3407,10 +3407,12 @@ struct NativeBoundaryTests {
         #expect(galleryView.contains("onScrollDirectionChange: onGalleryScrollDirectionChange"))
         #expect(galleryView.contains("onNearContentEnd: triggerAutomaticLoadMoreIfNeeded"))
         #expect(galleryView.contains("onPrefetchItems: prefetchNativeGalleryItems"))
+        #expect(galleryView.contains("onCancelPrefetchItems: cancelNativeGalleryPrefetchItems"))
         #expect(galleryView.contains("@State private var nativePrefetchScheduler = GalleryImagePrefetchScheduler()"))
         #expect(galleryView.contains("GalleryImagePrefetchPolicy.previewURLs("))
         #expect(galleryView.contains("store.hydrateCreatorTagSummariesIfNeeded(for: artworks, limit: 8)"))
         #expect(galleryView.contains("await nativePrefetchScheduler.enqueue(urls)"))
+        #expect(galleryView.contains("await nativePrefetchScheduler.cancel(urls)"))
         let prefetchScheduler = try String(
             contentsOf: root.appending(path: "Sources/KeiPix/Support/GalleryImagePrefetchScheduler.swift"),
             encoding: .utf8
@@ -3420,6 +3422,7 @@ struct NativeBoundaryTests {
         #expect(prefetchScheduler.contains("Task.sleep(for: .milliseconds(GalleryImagePrefetchPolicy.delayMilliseconds))"))
         #expect(prefetchScheduler.contains("ImagePipeline.shared.prefetch("))
         #expect(prefetchScheduler.contains("concurrency: GalleryImagePrefetchPolicy.concurrency"))
+        #expect(prefetchScheduler.contains("func cancel(_ urls: [URL])"))
         #expect(galleryView.contains("GalleryAutoLoadMorePolicy.shouldTrigger("))
         #expect(galleryView.contains("iPadNativeFeedHeader"))
         #expect(galleryView.contains("CreatorFeedContextCard("))
@@ -3500,9 +3503,11 @@ struct NativeBoundaryTests {
         #expect(nativeCollection.contains("let onScrollDirectionChange: ((NativeGalleryScrollEvent) -> Void)?"))
         #expect(nativeCollection.contains("let onNearContentEnd: (() -> Void)?"))
         #expect(nativeCollection.contains("let onPrefetchItems: (([NativeGalleryCollectionItem]) -> Void)?"))
+        #expect(nativeCollection.contains("let onCancelPrefetchItems: (([NativeGalleryCollectionItem]) -> Void)?"))
         #expect(nativeCollection.contains("collectionView.prefetchDataSource = context.coordinator"))
         #expect(nativeCollection.contains("UICollectionViewDataSourcePrefetching"))
         #expect(nativeCollection.contains("prefetchItemsAt indexPaths"))
+        #expect(nativeCollection.contains("cancelPrefetchingForItemsAt indexPaths"))
         #expect(nativeCollection.contains("func update(parent newParent: NativeGalleryCollectionView, collectionView: UICollectionView)"))
         #expect(nativeCollection.contains("collectionLayoutMayNeedRefresh("))
         #expect(nativeCollection.contains("lastRefreshControlEnabled"))
@@ -4580,6 +4585,10 @@ struct NativeBoundaryTests {
             contentsOf: root.appending(path: "Sources/KeiPix/Views/LibrarySurfaceComponents.swift"),
             encoding: .utf8
         )
+        let skeletonView = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/SkeletonView.swift"),
+            encoding: .utf8
+        )
         let pagePaths = [
             "Sources/KeiPix/Views/BookmarkTagsView.swift",
             "Sources/KeiPix/Views/BrowsingHistoryView.swift",
@@ -4602,6 +4611,9 @@ struct NativeBoundaryTests {
         #expect(sharedComponents.contains("struct OS26LoadMoreButton: View") == false)
         #expect(sharedComponents.contains("GlassEffectContainer(spacing: 8)"))
         #expect(sharedComponents.contains("ViewThatFits(in: .horizontal)"))
+        #expect(skeletonView.contains("@Environment(\\.accessibilityReduceMotion) private var reduceMotion"))
+        #expect(skeletonView.contains("private let shimmerDelay: Duration = .milliseconds(180)"))
+        #expect(skeletonView.contains("stopShimmer()"))
 
         for path in pagePaths {
             let source = try String(contentsOf: root.appending(path: path), encoding: .utf8)
