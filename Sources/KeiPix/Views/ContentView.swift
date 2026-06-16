@@ -568,6 +568,24 @@ struct ContentView: View {
                 }
             }
 
+            Section(L10n.imageQualityTierSection) {
+                Menu {
+                    ForEach(ArtworkImageQualityTier.allCases) { tier in
+                        Button {
+                            store.setArtworkImageQualityTier(tier)
+                        } label: {
+                            Label(
+                                tier.title,
+                                systemImage: store.sharedArtworkImageQualityTier == tier ? "checkmark" : tier.systemImage
+                            )
+                        }
+                    }
+                } label: {
+                    Label(L10n.imageQualityTierSection, systemImage: imageQualityMenuSystemImage)
+                }
+                .help(imageQualityMenuHelp)
+            }
+
             Section(L10n.viewOptions) {
                 Toggle(L10n.showContentBadges, isOn: showContentBadgesBinding)
                 Toggle(L10n.maskSensitivePreviews, isOn: maskSensitivePreviewsBinding)
@@ -588,6 +606,17 @@ struct ContentView: View {
         }
         .labelStyle(.iconOnly)
         .help(L10n.appControls)
+    }
+
+    private var imageQualityMenuSystemImage: String {
+        store.sharedArtworkImageQualityTier?.systemImage ?? "slider.horizontal.3"
+    }
+
+    private var imageQualityMenuHelp: String {
+        if let tier = store.sharedArtworkImageQualityTier {
+            return "\(L10n.imageQualityTierSection): \(tier.title)"
+        }
+        return L10n.imageQualityTierSection
     }
 
     private var dangerActionBinding: Binding<Bool> {

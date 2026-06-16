@@ -31,44 +31,6 @@ struct GeneralSettingsPage: View {
                 ) { scheme, isSelected in
                     Label(scheme.title, systemImage: isSelected ? "checkmark" : scheme.systemImage)
                 }
-            }
-
-            OS26SettingsSection(
-                L10n.imageQualityTierSection,
-                systemImage: "photo.on.rectangle.angled"
-            ) {
-                OS26SettingsMenuPicker(
-                    title: L10n.feedPreviewQuality,
-                    value: store.feedPreviewImageQualityTier.title,
-                    detail: L10n.feedPreviewQualityHint,
-                    systemImage: store.feedPreviewImageQualityTier.systemImage,
-                    selection: store.settings_feedPreviewImageQualityTierBinding,
-                    options: ArtworkImageQualityTier.allCases
-                ) { tier, isSelected in
-                    Label(tier.title, systemImage: isSelected ? "checkmark" : tier.systemImage)
-                }
-
-                OS26SettingsMenuPicker(
-                    title: L10n.illustDetailQuality,
-                    value: store.illustDetailImageQualityTier.title,
-                    detail: L10n.illustDetailQualityHint,
-                    systemImage: store.illustDetailImageQualityTier.systemImage,
-                    selection: store.settings_illustDetailImageQualityTierBinding,
-                    options: ArtworkImageQualityTier.allCases
-                ) { tier, isSelected in
-                    Label(tier.title, systemImage: isSelected ? "checkmark" : tier.systemImage)
-                }
-
-                OS26SettingsMenuPicker(
-                    title: L10n.mangaDetailQuality,
-                    value: store.mangaDetailImageQualityTier.title,
-                    detail: L10n.mangaDetailQualityHint,
-                    systemImage: store.mangaDetailImageQualityTier.systemImage,
-                    selection: store.settings_mangaDetailImageQualityTierBinding,
-                    options: ArtworkImageQualityTier.allCases
-                ) { tier, isSelected in
-                    Label(tier.title, systemImage: isSelected ? "checkmark" : tier.systemImage)
-                }
 
                 OS26SettingsToggleRow(
                     title: L10n.showTranslatedTags,

@@ -70,7 +70,6 @@ enum SettingsCategory: String, CaseIterable, Identifiable, Hashable {
                 title,
                 L10n.language,
                 L10n.appearance,
-                L10n.useOriginalImages,
                 L10n.showTranslatedTags,
                 L10n.layout,
                 L10n.galleryLayout

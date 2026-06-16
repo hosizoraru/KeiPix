@@ -131,6 +131,20 @@ extension KeiPixStore {
         UserDefaults.standard.set(tier.rawValue, forKey: "feedPreviewImageQualityTier")
     }
 
+    var sharedArtworkImageQualityTier: ArtworkImageQualityTier? {
+        guard feedPreviewImageQualityTier == illustDetailImageQualityTier,
+              feedPreviewImageQualityTier == mangaDetailImageQualityTier else {
+            return nil
+        }
+        return feedPreviewImageQualityTier
+    }
+
+    func setArtworkImageQualityTier(_ tier: ArtworkImageQualityTier) {
+        setFeedPreviewImageQualityTier(tier)
+        setIllustDetailImageQualityTier(tier)
+        setMangaDetailImageQualityTier(tier)
+    }
+
     /// Tier resolver mirroring `preferOriginalImages(for:)` so call
     /// sites can pick illust vs manga without re-implementing the
     /// content-kind switch. The reader, downloads, and ugoira surfaces

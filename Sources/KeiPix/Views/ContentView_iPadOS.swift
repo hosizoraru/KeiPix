@@ -826,6 +826,24 @@ struct ContentView: View {
         .fixedSize(horizontal: true, vertical: false)
     }
 
+    private var artworkImageQualityMenuItem: NativeToolbarMenuItem {
+        let selectedTier = store.sharedArtworkImageQualityTier
+        return .submenu(
+            title: L10n.imageQualityTierSection,
+            subtitle: selectedTier?.title,
+            systemImage: selectedTier?.systemImage ?? "slider.horizontal.3",
+            presentation: .singleSelection,
+            items: ArtworkImageQualityTier.allCases.map { tier in
+                .action(
+                    id: IPadToolbarMenuAction.artworkImageQualityTier(tier),
+                    title: tier.title,
+                    systemImage: tier.systemImage,
+                    isSelected: selectedTier == tier
+                )
+            }
+        )
+    }
+
     private func sidebarToggleButton(title: String) -> some View {
         Button {
             toggleIPadSidebar()
@@ -1525,67 +1543,13 @@ struct ContentView: View {
                             systemImage: "rectangle.grid.2x2"
                         )
                     ]
-                ),
-                NativeToolbarMenuSection(
-                    title: L10n.viewOptions,
-                    items: [
-                        .action(
-                            id: IPadToolbarMenuAction.showContentBadges,
-                            title: L10n.showContentBadges,
-                            systemImage: "tag",
-                            isSelected: store.showContentBadges
-                        ),
-                        .action(
-                            id: IPadToolbarMenuAction.maskSensitivePreviews,
-                            title: L10n.maskSensitivePreviews,
-                            systemImage: "eye.trianglebadge.exclamationmark",
-                            isSelected: store.maskSensitivePreviews
-                        )
-                    ]
-                ),
-                NativeToolbarMenuSection(
-                    title: L10n.contentFilters,
-                    items: [
-                        .action(
-                            id: IPadToolbarMenuAction.hideMutedContent,
-                            title: L10n.hideMutedContent,
-                            systemImage: "eye.slash",
-                            isSelected: store.hideMutedContent
-                        ),
-                        .action(
-                            id: IPadToolbarMenuAction.hideAIArtworks,
-                            title: L10n.hideAIArtworks,
-                            systemImage: "sparkles",
-                            isSelected: store.hideAIArtworks
-                        ),
-                        .action(
-                            id: IPadToolbarMenuAction.hideR18Artworks,
-                            title: L10n.hideR18Artworks,
-                            systemImage: "18.circle",
-                            isSelected: store.hideR18Artworks
-                        ),
-                        .action(
-                            id: IPadToolbarMenuAction.hideR18GArtworks,
-                            title: L10n.hideR18GArtworks,
-                            systemImage: "exclamationmark.triangle",
-                            isSelected: store.hideR18GArtworks
-                        )
-                    ]
                 )
             ]
         )
     }
 
     private var discoveryDashboardToolbarMenuCacheKey: String {
-        [
-            "discovery-dashboard",
-            store.showContentBadges ? "badges-on" : "badges-off",
-            store.maskSensitivePreviews ? "mask-on" : "mask-off",
-            store.hideMutedContent ? "muted-hidden" : "muted-visible",
-            store.hideAIArtworks ? "ai-hidden" : "ai-visible",
-            store.hideR18Artworks ? "r18-hidden" : "r18-visible",
-            store.hideR18GArtworks ? "r18g-hidden" : "r18g-visible"
-        ].joined(separator: ":")
+        "discovery-dashboard"
     }
 
     private var pixivCollectionsToolbarMenu: NativeToolbarMenu {
@@ -1897,6 +1861,7 @@ struct ContentView: View {
                 NativeToolbarMenuSection(
                     presentation: .root,
                     items: [
+                        artworkImageQualityMenuItem,
                         .submenu(
                             title: L10n.viewOptions,
                             systemImage: "slider.horizontal.3",
@@ -1995,6 +1960,10 @@ struct ContentView: View {
         }
         if let route = IPadToolbarMenuAction.route(from: id) {
             selectRoute(route)
+            return
+        }
+        if let tier = IPadToolbarMenuAction.artworkImageQualityTier(from: id) {
+            store.setArtworkImageQualityTier(tier)
             return
         }
 
@@ -3053,6 +3022,7 @@ private enum IPadToolbarMenuAction {
     static let hideAIArtworks = "hide-ai-artworks"
     static let hideR18Artworks = "hide-r18-artworks"
     static let hideR18GArtworks = "hide-r18g-artworks"
+    static let artworkImageQualityTierPrefix = "artwork-image-quality:"
     static let customizeDashboard = "customize-dashboard"
     static let customizeBottomTabs = "customize-bottom-tabs"
     static let randomFromCurrentFeed = "random-from-current-feed"
@@ -3214,6 +3184,16 @@ private enum IPadToolbarMenuAction {
         guard id.hasPrefix(routePrefix) else { return nil }
         let rawValue = String(id.dropFirst(routePrefix.count))
         return PixivRoute(rawValue: rawValue)
+    }
+
+    static func artworkImageQualityTier(_ tier: ArtworkImageQualityTier) -> String {
+        artworkImageQualityTierPrefix + tier.rawValue
+    }
+
+    static func artworkImageQualityTier(from id: String) -> ArtworkImageQualityTier? {
+        guard id.hasPrefix(artworkImageQualityTierPrefix) else { return nil }
+        let rawValue = String(id.dropFirst(artworkImageQualityTierPrefix.count))
+        return ArtworkImageQualityTier(rawValue: rawValue)
     }
 }
 
