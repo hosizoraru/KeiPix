@@ -1,4 +1,7 @@
 import SwiftUI
+#if os(iOS)
+import UIKit
+#endif
 
 enum SearchWorkspaceHeaderLayout: Sendable {
     case adaptive
@@ -106,9 +109,7 @@ struct SearchWorkspaceView: View {
                     .frame(minWidth: 280, idealWidth: 440, maxWidth: 620)
                     .layoutPriority(1)
 
-                searchPrimaryActionGroup
-
-                searchUtilityActionRail
+                searchHeaderActionRail
 
                 Spacer(minLength: 0)
             }
@@ -116,17 +117,7 @@ struct SearchWorkspaceView: View {
             VStack(alignment: .leading, spacing: 10) {
                 searchField
 
-                ViewThatFits(in: .horizontal) {
-                    HStack(spacing: 8) {
-                        searchPrimaryActionGroup
-                        searchUtilityActionRail
-                    }
-
-                    VStack(alignment: .leading, spacing: 8) {
-                        searchPrimaryActionGroup
-                        searchUtilityActionRail
-                    }
-                }
+                searchHeaderActionRail
             }
         }
     }
@@ -135,11 +126,7 @@ struct SearchWorkspaceView: View {
         VStack(alignment: .leading, spacing: 10) {
             searchField
 
-            HStack(spacing: 8) {
-                searchTargetMenu
-                compactSearchUtilityActionRail
-                Spacer(minLength: 0)
-            }
+            searchHeaderActionRail
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
@@ -157,173 +144,28 @@ struct SearchWorkspaceView: View {
         )
     }
 
-    private var searchPrimaryActionGroup: some View {
-        GlassEffectContainer(spacing: 8) {
-            ViewThatFits(in: .horizontal) {
-                HStack(spacing: 8) {
-                    searchTargetButton(
-                        title: L10n.works,
-                        systemImage: "photo.on.rectangle",
-                        isProminent: true,
-                        action: { submitArtworkSearch() }
-                    )
-
-                    searchTargetButton(
-                        title: L10n.searchCreators,
-                        systemImage: "person.crop.circle.badge.questionmark",
-                        action: submitCreatorSearch
-                    )
-
-                    searchTargetButton(
-                        title: L10n.searchNovels,
-                        systemImage: "text.magnifyingglass",
-                        action: submitNovelSearch
-                    )
-                }
-
-                searchTargetMenu
-            }
-        }
-    }
-
-    private func searchTargetButton(
-        title: String,
-        systemImage: String,
-        isProminent: Bool = false,
-        action: @escaping () -> Void
-    ) -> some View {
-        Button(action: action) {
-            Label(title, systemImage: systemImage)
-                .lineLimit(1)
-                .minimumScaleFactor(0.84)
-        }
-        .os26GlassButton(prominent: isProminent && hasSearchKeyword)
-        .disabled(hasSearchKeyword == false)
-        .help(title)
-        .accessibilityLabel(title)
-    }
-
-    private var searchTargetMenu: some View {
-        Menu {
-            Button {
-                submitArtworkSearch()
-            } label: {
-                Label(L10n.works, systemImage: "photo.on.rectangle")
-            }
-            .disabled(hasSearchKeyword == false)
-
-            Button {
-                submitCreatorSearch()
-            } label: {
-                Label(L10n.searchCreators, systemImage: "person.crop.circle.badge.questionmark")
-            }
-            .disabled(hasSearchKeyword == false)
-
-            Button {
-                submitNovelSearch()
-            } label: {
-                Label(L10n.searchNovels, systemImage: "text.magnifyingglass")
-            }
-            .disabled(hasSearchKeyword == false)
-        } label: {
-            Label(hasSearchKeyword ? L10n.search : L10n.searchActions, systemImage: "magnifyingglass.circle")
-        }
-        .os26GlassButton(prominent: hasSearchKeyword)
-        .help(L10n.searchActions)
-        .accessibilityLabel(L10n.searchActions)
-    }
-
-    private var searchUtilityActionRail: some View {
+    private var searchHeaderActionRail: some View {
         OS26LibraryActionRail {
+            SearchWorkspaceActionsMenu(
+                hasSearchKeyword: hasSearchKeyword,
+                hasActiveSearchFilters: store.searchOptions.isDefault == false,
+                submitArtworkSearch: { submitArtworkSearch() },
+                submitCreatorSearch: submitCreatorSearch,
+                submitNovelSearch: submitNovelSearch,
+                presentLocalImageSearch: { store.presentLocalImageSourceSearch() },
+                openTrendingTags: { selectSearchRoute(.trendingTags) },
+                openSavedSearches: { selectSearchRoute(.savedSearches) },
+                saveSearch: saveCurrentSearch,
+                saveSearchWithFilters: saveCurrentSearchWithFilters,
+                resetSearchFilters: resetSearchFilters,
+                clearSearch: clearSearch
+            )
+
             ViewThatFits(in: .horizontal) {
                 SearchFilterButton(store: store, isIconOnly: false)
                 SearchFilterButton(store: store)
             }
-
-            searchUtilityMenu
-
-            if hasSearchKeyword {
-                saveSearchMenu
-                clearSearchButton
-            }
         }
-    }
-
-    private var compactSearchUtilityActionRail: some View {
-        OS26LibraryActionRail {
-            SearchFilterButton(store: store)
-
-            searchUtilityMenu
-
-            if hasSearchKeyword {
-                saveSearchMenu
-                clearSearchButton
-            }
-        }
-    }
-
-    private var clearSearchButton: some View {
-        Button {
-            withAnimation(.snappy(duration: 0.16)) {
-                submittedSearchKeyword = ""
-                store.clearSearchText()
-            }
-        } label: {
-            Label(L10n.clearSearch, systemImage: "xmark.circle")
-        }
-        .os26GlassIconButton()
-        .disabled(store.searchText.isEmpty)
-        .help(L10n.clearSearch)
-        .accessibilityLabel(L10n.clearSearch)
-    }
-
-    private var searchUtilityMenu: some View {
-        Menu {
-            Button {
-                store.presentLocalImageSourceSearch()
-            } label: {
-                Label(L10n.searchLocalImageSource, systemImage: "photo.badge.magnifyingglass")
-            }
-
-            Button {
-                selectSearchRoute(.trendingTags)
-            } label: {
-                Label(L10n.trendingTags, systemImage: "number")
-            }
-
-            Button {
-                selectSearchRoute(.savedSearches)
-            } label: {
-                Label(L10n.savedSearches, systemImage: "tag.circle")
-            }
-        } label: {
-            Label(L10n.searchActions, systemImage: "square.grid.2x2")
-        }
-        .os26GlassIconButton()
-        .help(L10n.searchActions)
-    }
-
-    private var saveSearchMenu: some View {
-        Menu {
-            Button {
-                store.saveCurrentSearch()
-                actionMessage = String(format: L10n.savedSearchFormat, normalizedSearchKeyword)
-            } label: {
-                Label(L10n.saveSearch, systemImage: "star")
-            }
-
-            Button {
-                store.saveCurrentSearchPreset()
-                actionMessage = String(format: L10n.savedSearchPresetFormat, normalizedSearchKeyword)
-            } label: {
-                Label(L10n.saveSearchWithFilters, systemImage: "slider.horizontal.3")
-            }
-        } label: {
-            Label(L10n.saveSearch, systemImage: "star")
-        }
-        .os26GlassIconButton()
-        .disabled(hasSearchKeyword == false)
-        .help(L10n.saveSearch)
     }
 
     private var searchLanding: some View {
@@ -341,7 +183,7 @@ struct SearchWorkspaceView: View {
 
     private var searchLandingContent: some View {
         VStack(alignment: .leading, spacing: 14) {
-            searchQuickActionsSection
+            searchLandingActionsSection
             searchFilterSummarySection
             searchSuggestionsSection
             localSearchLibrarySection
@@ -353,37 +195,36 @@ struct SearchWorkspaceView: View {
         .frame(maxWidth: .infinity, alignment: .top)
     }
 
-    private var searchQuickActionsSection: some View {
+    private var searchLandingActionsSection: some View {
         SearchWorkspaceChipSection(
-            title: L10n.searchActions,
-            systemImage: "square.grid.2x2"
+            title: hasSearchKeyword ? L10n.searchTargets : L10n.searchTools,
+            systemImage: hasSearchKeyword ? "magnifyingglass.circle" : "square.grid.2x2"
         ) {
             LazyVGrid(
                 columns: [GridItem(.adaptive(minimum: 136), spacing: 8)],
                 alignment: .leading,
                 spacing: 8
             ) {
-                quickActionButton(
-                    title: L10n.works,
-                    systemImage: "photo.on.rectangle",
-                    isEnabled: hasSearchKeyword,
-                    isProminent: hasSearchKeyword,
-                    action: { submitArtworkSearch() }
-                )
+                if hasSearchKeyword {
+                    quickActionButton(
+                        title: L10n.works,
+                        systemImage: "photo.on.rectangle",
+                        isProminent: true,
+                        action: { submitArtworkSearch() }
+                    )
 
-                quickActionButton(
-                    title: L10n.searchCreators,
-                    systemImage: "person.crop.circle.badge.questionmark",
-                    isEnabled: hasSearchKeyword,
-                    action: submitCreatorSearch
-                )
+                    quickActionButton(
+                        title: L10n.searchCreators,
+                        systemImage: "person.crop.circle.badge.questionmark",
+                        action: submitCreatorSearch
+                    )
 
-                quickActionButton(
-                    title: L10n.searchNovels,
-                    systemImage: "text.magnifyingglass",
-                    isEnabled: hasSearchKeyword,
-                    action: submitNovelSearch
-                )
+                    quickActionButton(
+                        title: L10n.searchNovels,
+                        systemImage: "text.magnifyingglass",
+                        action: submitNovelSearch
+                    )
+                }
 
                 quickActionButton(
                     title: L10n.trendingTags,
@@ -417,8 +258,7 @@ struct SearchWorkspaceView: View {
                 SearchFilterButton(store: store, isIconOnly: false)
 
                 Button {
-                    store.resetSearchOptions()
-                    actionMessage = L10n.searchFiltersReset
+                    resetSearchFilters()
                 } label: {
                     Label(L10n.reset, systemImage: "arrow.counterclockwise")
                 }
@@ -616,6 +456,30 @@ struct SearchWorkspaceView: View {
         store.select(route)
     }
 
+    private func saveCurrentSearch() {
+        guard hasSearchKeyword else { return }
+        store.saveCurrentSearch()
+        actionMessage = String(format: L10n.savedSearchFormat, normalizedSearchKeyword)
+    }
+
+    private func saveCurrentSearchWithFilters() {
+        guard hasSearchKeyword else { return }
+        store.saveCurrentSearchPreset()
+        actionMessage = String(format: L10n.savedSearchPresetFormat, normalizedSearchKeyword)
+    }
+
+    private func resetSearchFilters() {
+        store.resetSearchOptions()
+        actionMessage = L10n.searchFiltersReset
+    }
+
+    private func clearSearch() {
+        withAnimation(.snappy(duration: 0.16)) {
+            submittedSearchKeyword = ""
+            store.clearSearchText()
+        }
+    }
+
     private func dismissActionMessageIfNeeded(_ message: String?) async {
         guard let message else { return }
         try? await Task.sleep(for: .seconds(2))
@@ -623,6 +487,265 @@ struct SearchWorkspaceView: View {
             actionMessage = nil
         }
     }
+}
+
+private struct SearchWorkspaceActionsMenu: View {
+    let hasSearchKeyword: Bool
+    let hasActiveSearchFilters: Bool
+    let submitArtworkSearch: () -> Void
+    let submitCreatorSearch: () -> Void
+    let submitNovelSearch: () -> Void
+    let presentLocalImageSearch: () -> Void
+    let openTrendingTags: () -> Void
+    let openSavedSearches: () -> Void
+    let saveSearch: () -> Void
+    let saveSearchWithFilters: () -> Void
+    let resetSearchFilters: () -> Void
+    let clearSearch: () -> Void
+
+    @ViewBuilder
+    var body: some View {
+        #if os(iOS)
+        NativeToolbarMenuButton(
+            systemImage: actionsSystemImage,
+            title: L10n.searchActions,
+            accessibilityLabel: L10n.searchActions,
+            menu: nativeActionsMenu,
+            select: handleNativeAction
+        )
+        .frame(width: 126, height: 34)
+        .fixedSize(horizontal: true, vertical: false)
+        .glassEffect(.regular.interactive(), in: Capsule(style: .continuous))
+        .help(L10n.searchActions)
+        #else
+        swiftUIActionsMenu
+        #endif
+    }
+
+    private var actionsSystemImage: String {
+        hasSearchKeyword || hasActiveSearchFilters ? "magnifyingglass.circle.fill" : "magnifyingglass.circle"
+    }
+
+    private var swiftUIActionsMenu: some View {
+        Menu {
+            Section(L10n.searchTargets) {
+                Button {
+                    submitArtworkSearch()
+                } label: {
+                    Label(L10n.works, systemImage: "photo.on.rectangle")
+                }
+                .disabled(hasSearchKeyword == false)
+
+                Button {
+                    submitCreatorSearch()
+                } label: {
+                    Label(L10n.searchCreators, systemImage: "person.crop.circle.badge.questionmark")
+                }
+                .disabled(hasSearchKeyword == false)
+
+                Button {
+                    submitNovelSearch()
+                } label: {
+                    Label(L10n.searchNovels, systemImage: "text.magnifyingglass")
+                }
+                .disabled(hasSearchKeyword == false)
+            }
+
+            Section(L10n.searchTools) {
+                Button {
+                    openTrendingTags()
+                } label: {
+                    Label(L10n.trendingTags, systemImage: "number")
+                }
+
+                Button {
+                    openSavedSearches()
+                } label: {
+                    Label(L10n.savedSearches, systemImage: "tag.circle")
+                }
+
+                Button {
+                    presentLocalImageSearch()
+                } label: {
+                    Label(L10n.searchLocalImageSource, systemImage: "photo.badge.magnifyingglass")
+                }
+            }
+
+            Section(L10n.savedSearches) {
+                Button {
+                    saveSearch()
+                } label: {
+                    Label(L10n.saveSearch, systemImage: "star")
+                }
+                .disabled(hasSearchKeyword == false)
+
+                Button {
+                    saveSearchWithFilters()
+                } label: {
+                    Label(L10n.saveSearchWithFilters, systemImage: "slider.horizontal.3")
+                }
+                .disabled(hasSearchKeyword == false)
+            }
+
+            Section(L10n.viewOptions) {
+                Button {
+                    resetSearchFilters()
+                } label: {
+                    Label(L10n.resetSearchFilters, systemImage: "arrow.counterclockwise")
+                }
+                .disabled(hasActiveSearchFilters == false)
+
+                Button {
+                    clearSearch()
+                } label: {
+                    Label(L10n.clearSearch, systemImage: "xmark.circle")
+                }
+                .disabled(hasSearchKeyword == false)
+            }
+        } label: {
+            Label(L10n.searchActions, systemImage: actionsSystemImage)
+        }
+        .menuOrder(.fixed)
+        .os26GlassButton(prominent: hasSearchKeyword || hasActiveSearchFilters)
+        .help(L10n.searchActions)
+        .accessibilityLabel(L10n.searchActions)
+    }
+
+    #if os(iOS)
+    private var nativeActionsMenu: NativeToolbarMenu {
+        NativeToolbarMenu(
+            title: L10n.searchActions,
+            cacheKey: nativeActionsMenuCacheKey,
+            sections: [
+                NativeToolbarMenuSection(
+                    title: L10n.searchTargets,
+                    items: [
+                        .action(
+                            id: SearchWorkspaceActionsMenuAction.searchWorks,
+                            title: L10n.works,
+                            systemImage: "photo.on.rectangle",
+                            isEnabled: hasSearchKeyword
+                        ),
+                        .action(
+                            id: SearchWorkspaceActionsMenuAction.searchCreators,
+                            title: L10n.searchCreators,
+                            systemImage: "person.crop.circle.badge.questionmark",
+                            isEnabled: hasSearchKeyword
+                        ),
+                        .action(
+                            id: SearchWorkspaceActionsMenuAction.searchNovels,
+                            title: L10n.searchNovels,
+                            systemImage: "text.magnifyingglass",
+                            isEnabled: hasSearchKeyword
+                        )
+                    ]
+                ),
+                NativeToolbarMenuSection(
+                    title: L10n.searchTools,
+                    items: [
+                        .action(
+                            id: SearchWorkspaceActionsMenuAction.openTrendingTags,
+                            title: L10n.trendingTags,
+                            systemImage: "number"
+                        ),
+                        .action(
+                            id: SearchWorkspaceActionsMenuAction.openSavedSearches,
+                            title: L10n.savedSearches,
+                            systemImage: "tag.circle"
+                        ),
+                        .action(
+                            id: SearchWorkspaceActionsMenuAction.searchLocalImage,
+                            title: L10n.searchLocalImageSource,
+                            systemImage: "photo.badge.magnifyingglass"
+                        )
+                    ]
+                ),
+                NativeToolbarMenuSection(
+                    title: L10n.savedSearches,
+                    items: [
+                        .action(
+                            id: SearchWorkspaceActionsMenuAction.saveSearch,
+                            title: L10n.saveSearch,
+                            systemImage: "star",
+                            isEnabled: hasSearchKeyword
+                        ),
+                        .action(
+                            id: SearchWorkspaceActionsMenuAction.saveSearchWithFilters,
+                            title: L10n.saveSearchWithFilters,
+                            systemImage: "slider.horizontal.3",
+                            isEnabled: hasSearchKeyword
+                        )
+                    ]
+                ),
+                NativeToolbarMenuSection(
+                    title: L10n.viewOptions,
+                    items: [
+                        .action(
+                            id: SearchWorkspaceActionsMenuAction.resetSearchFilters,
+                            title: L10n.resetSearchFilters,
+                            systemImage: "arrow.counterclockwise",
+                            isEnabled: hasActiveSearchFilters
+                        ),
+                        .action(
+                            id: SearchWorkspaceActionsMenuAction.clearSearch,
+                            title: L10n.clearSearch,
+                            systemImage: "xmark.circle",
+                            isEnabled: hasSearchKeyword
+                        )
+                    ]
+                )
+            ]
+        )
+    }
+
+    private var nativeActionsMenuCacheKey: String {
+        [
+            "search-workspace-actions",
+            hasSearchKeyword.description,
+            hasActiveSearchFilters.description
+        ].joined(separator: ":")
+    }
+
+    private func handleNativeAction(_ id: String) {
+        switch id {
+        case SearchWorkspaceActionsMenuAction.searchWorks:
+            submitArtworkSearch()
+        case SearchWorkspaceActionsMenuAction.searchCreators:
+            submitCreatorSearch()
+        case SearchWorkspaceActionsMenuAction.searchNovels:
+            submitNovelSearch()
+        case SearchWorkspaceActionsMenuAction.openTrendingTags:
+            openTrendingTags()
+        case SearchWorkspaceActionsMenuAction.openSavedSearches:
+            openSavedSearches()
+        case SearchWorkspaceActionsMenuAction.searchLocalImage:
+            presentLocalImageSearch()
+        case SearchWorkspaceActionsMenuAction.saveSearch:
+            saveSearch()
+        case SearchWorkspaceActionsMenuAction.saveSearchWithFilters:
+            saveSearchWithFilters()
+        case SearchWorkspaceActionsMenuAction.resetSearchFilters:
+            resetSearchFilters()
+        case SearchWorkspaceActionsMenuAction.clearSearch:
+            clearSearch()
+        default:
+            break
+        }
+    }
+    #endif
+}
+
+private enum SearchWorkspaceActionsMenuAction {
+    static let searchWorks = "search-workspace-actions:works"
+    static let searchCreators = "search-workspace-actions:creators"
+    static let searchNovels = "search-workspace-actions:novels"
+    static let openTrendingTags = "search-workspace-actions:trending-tags"
+    static let openSavedSearches = "search-workspace-actions:saved-searches"
+    static let searchLocalImage = "search-workspace-actions:local-image"
+    static let saveSearch = "search-workspace-actions:save-search"
+    static let saveSearchWithFilters = "search-workspace-actions:save-search-with-filters"
+    static let resetSearchFilters = "search-workspace-actions:reset-filters"
+    static let clearSearch = "search-workspace-actions:clear-search"
 }
 
 private struct SearchWorkspaceChipSection<Content: View>: View {

@@ -85,6 +85,8 @@ enum L10n {
     static var saveSearchWithFilters: String { text("Save Search with Filters") }
     static var searchSummary: String { text("Search Summary") }
     static var searchActions: String { text("Search Actions") }
+    static var searchTargets: String { text("Search Targets") }
+    static var searchTools: String { text("Search Tools") }
     static var copySearchSummary: String { text("Copy Search Summary") }
     static var copiedSearchSummary: String { text("Copied Search Summary") }
     static var resetSearchFilters: String { text("Reset Search Filters") }
