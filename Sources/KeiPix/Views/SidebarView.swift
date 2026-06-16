@@ -10,8 +10,8 @@ struct SidebarColumnWidth {
     let ideal: CGFloat
     let max: CGFloat
 
-    static let macOS = SidebarColumnWidth(min: 246, ideal: 266, max: 310)
-    static let iPadOS = SidebarColumnWidth(min: 196, ideal: 218, max: 250)
+    static let macOS = SidebarColumnWidth(min: 252, ideal: 286, max: 336)
+    static let iPadOS = SidebarColumnWidth(min: 214, ideal: 238, max: 284)
 }
 
 struct SidebarView: View {
@@ -58,6 +58,7 @@ struct SidebarView: View {
             ideal: columnWidth.ideal,
             max: columnWidth.max
         )
+        .navigationTitle("KeiPix")
     }
 
     private var optionalSelection: Binding<KeiPixSidebarDestination?> {

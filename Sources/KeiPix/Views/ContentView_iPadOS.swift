@@ -12,6 +12,7 @@ struct ContentView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var selectedTab: iPadTab = .feed
     @State private var splitColumnVisibility: NavigationSplitViewVisibility = .all
+    @State private var preferredLandscapeCompactColumn: NavigationSplitViewColumn = .detail
     @State private var selectedSidebarItem: KeiPixSidebarDestination = .route(.home)
     @State private var isArtworkDetailPresented = false
     @State private var isCompactArtworkDetailPresented = false
@@ -479,7 +480,10 @@ struct ContentView: View {
     }
 
     private var landscapeSplitRoot: some View {
-        NavigationSplitView(columnVisibility: $splitColumnVisibility) {
+        NavigationSplitView(
+            columnVisibility: $splitColumnVisibility,
+            preferredCompactColumn: $preferredLandscapeCompactColumn
+        ) {
             SidebarView(
                 store: store,
                 selection: $selectedSidebarItem,

@@ -86,7 +86,7 @@ struct AccountIdentityMenuButton: View {
             label
         }
         .buttonStyle(.plain)
-        .padding(.vertical, displayStyle.isSidebar ? 6 : 0)
+        .padding(.vertical, displayStyle.isSidebar ? 2 : 0)
         .help(headerHelp)
         .accessibilityLabel(headerHelp)
     }
@@ -104,12 +104,12 @@ struct AccountIdentityMenuButton: View {
     private var sidebarLabel: some View {
         Group {
             if showIdentity {
-                HStack(spacing: 12) {
+                HStack(spacing: 9) {
                     avatar
 
                     VStack(alignment: .leading, spacing: 3) {
                         Text(title)
-                            .font(.headline)
+                            .font(.subheadline.weight(.semibold))
                             .lineLimit(1)
                             .truncationMode(.tail)
                         Text(subtitle)
@@ -120,7 +120,7 @@ struct AccountIdentityMenuButton: View {
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                 }
-                .padding(.vertical, 8)
+                .padding(.vertical, 5)
                 .padding(.horizontal, 2)
             } else {
                 HStack {
@@ -128,7 +128,7 @@ struct AccountIdentityMenuButton: View {
                     avatar
                     Spacer(minLength: 0)
                 }
-                .padding(.vertical, 10)
+                .padding(.vertical, 6)
             }
         }
         .frame(maxWidth: .infinity, alignment: showIdentity ? .leading : .center)
@@ -156,7 +156,7 @@ struct AccountIdentityMenuButton: View {
     private var avatarDiameter: CGFloat {
         switch displayStyle {
         case .sidebar:
-            showIdentity ? 46 : 62
+            showIdentity ? 30 : 34
         case .heroAvatar(let diameter, _):
             diameter
         }
@@ -165,7 +165,7 @@ struct AccountIdentityMenuButton: View {
     private var avatarSymbolSize: CGFloat {
         switch displayStyle {
         case .sidebar:
-            showIdentity ? 36 : 48
+            showIdentity ? 22 : 26
         case .heroAvatar(_, let symbolSize):
             symbolSize
         }

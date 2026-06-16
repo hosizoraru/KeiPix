@@ -28,7 +28,6 @@ struct ContentView: View {
                 selection: $sidebarSelection,
                 columnWidth: .macOS
             )
-                .toolbar(removing: .sidebarToggle)
         } detail: {
             macBrowserWorkspace
         }
@@ -69,14 +68,6 @@ struct ContentView: View {
             }
 
             ToolbarItemGroup(placement: .primaryAction) {
-                Button {
-                    toggleSidebar()
-                } label: {
-                    Label(sidebarVisible ? L10n.hideSidebar : L10n.showSidebar, systemImage: "sidebar.leading")
-                }
-                .labelStyle(.iconOnly)
-                .help(sidebarVisible ? L10n.hideSidebar : L10n.showSidebar)
-
                 if showsMacDetailPanelToggle {
                     Button {
                         toggleMacDetailPanel()
@@ -663,16 +654,6 @@ struct ContentView: View {
 
     private var sidebarVisible: Bool {
         isSidebarPresented
-    }
-
-    private func toggleSidebar() {
-        if sidebarVisible {
-            isSidebarPresented = false
-            columnVisibility = .detailOnly
-        } else {
-            isSidebarPresented = true
-            columnVisibility = .all
-        }
     }
 
     private func selectSidebarRoute(_ route: PixivRoute) {
