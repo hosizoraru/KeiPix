@@ -8,8 +8,8 @@ enum KeiPixSidebarDestination: Hashable {
 struct SidebarColumnWidth {
     let ideal: CGFloat
 
-    static let macOS = SidebarColumnWidth(ideal: 286)
-    static let iPadOS = SidebarColumnWidth(ideal: 238)
+    static let macOS = SidebarColumnWidth(ideal: 264)
+    static let iPadOS = SidebarColumnWidth(ideal: 224)
 }
 
 struct SidebarView: View {
@@ -46,7 +46,7 @@ struct SidebarView: View {
             }
         }
         .listStyle(.sidebar)
-        .navigationSplitViewColumnWidth(columnWidth.ideal)
+        .navigationSplitViewColumnWidth(ideal: columnWidth.ideal)
         .navigationTitle("KeiPix")
     }
 
