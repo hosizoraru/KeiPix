@@ -256,12 +256,12 @@ final class KeiPixStore {
         )
     )
     /// Feed preview tier — controls what `ArtworkCardView` /
-    /// `RemoteImageView` request when rendering thumbnails. Pixez's
-    /// `feedPreviewQuality` defaults to `medium` (the cheapest) since
-    /// most users browse on flaky mobile data; we follow suit.
+    /// `RemoteImageView` request when rendering thumbnails. Defaults to
+    /// `.large` so the unified image quality control has a visible default
+    /// that matches the legacy detail resolver.
     var feedPreviewImageQualityTier = KeiPixStore.loadEnum(
         "feedPreviewImageQualityTier",
-        defaultValue: ArtworkImageQualityTier.medium
+        defaultValue: ArtworkImageQualityTier.large
     )
     var galleryLayoutMode = KeiPixStore.loadGalleryLayoutMode()
     var creatorListLayoutMode = KeiPixStore.loadCreatorListLayoutMode()

@@ -30,7 +30,7 @@ struct DownloadsSettingsPage: View {
     }
 
     private var folderSection: some View {
-        OS26SettingsSection(L10n.downloadFolder, systemImage: "folder", footer: nil) {
+        OS26SettingsSection(L10n.downloadFolder, systemImage: "folder", tone: .downloads, footer: nil) {
             LabeledContent(L10n.downloadFolder) {
                 Text(store.downloads.downloadDirectoryPath)
                     .lineLimit(1)
@@ -48,6 +48,7 @@ struct DownloadsSettingsPage: View {
                     Label(L10n.chooseFolder, systemImage: "folder.badge.gearshape")
                 }
                 .os26GlassButton(prominent: true)
+                .tint(OS26SettingsTone.downloads.symbolColor)
 
                 Button {
                     coordinator.setActionMessage(
@@ -59,6 +60,7 @@ struct DownloadsSettingsPage: View {
                     Label(L10n.openFolder, systemImage: "folder")
                 }
                 .os26GlassButton()
+                .tint(OS26SettingsTone.downloads.symbolColor)
             }
         }
     }
@@ -68,6 +70,7 @@ struct DownloadsSettingsPage: View {
         return OS26SettingsSection(
             L10n.saveDestination,
             systemImage: destination.systemImage,
+            tone: .downloads,
             footer: L10n.photosLibraryDestinationHint
         ) {
             LabeledContent(L10n.saveDestination) {
@@ -94,6 +97,7 @@ struct DownloadsSettingsPage: View {
         OS26SettingsSection(
             L10n.concurrentDownloads,
             systemImage: "arrow.down.to.line.compact",
+            tone: .downloads,
             footer: "\(L10n.concurrentDownloadsHint)\n\(L10n.autoBookmarkDownloadedArtworksHint)\n\(L10n.notifyOnDownloadFinishHint)"
         ) {
             Stepper(
@@ -118,6 +122,7 @@ struct DownloadsSettingsPage: View {
         OS26SettingsSection(
             L10n.downloadNamingTemplate,
             systemImage: "textformat.abc",
+            tone: .downloads,
             footer: namingTemplateFooter
         ) {
             templateEditor
@@ -164,6 +169,7 @@ struct DownloadsSettingsPage: View {
                 Label(L10n.resetTemplate, systemImage: "arrow.counterclockwise")
             }
             .os26GlassButton()
+            .tint(OS26SettingsTone.downloads.symbolColor)
         }
     }
 

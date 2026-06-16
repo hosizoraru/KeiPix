@@ -131,10 +131,13 @@ extension KeiPixStore {
         UserDefaults.standard.set(tier.rawValue, forKey: "feedPreviewImageQualityTier")
     }
 
-    var sharedArtworkImageQualityTier: ArtworkImageQualityTier? {
+    /// Effective value for unified quality controls. Older installs can have
+    /// per-surface tiers that diverged; show `.large` until the user chooses a
+    /// single tier and `setArtworkImageQualityTier(_:)` writes them back in sync.
+    var sharedArtworkImageQualityTier: ArtworkImageQualityTier {
         guard feedPreviewImageQualityTier == illustDetailImageQualityTier,
               feedPreviewImageQualityTier == mangaDetailImageQualityTier else {
-            return nil
+            return .large
         }
         return feedPreviewImageQualityTier
     }

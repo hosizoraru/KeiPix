@@ -830,8 +830,8 @@ struct ContentView: View {
         let selectedTier = store.sharedArtworkImageQualityTier
         return .submenu(
             title: L10n.imageQualityTierSection,
-            subtitle: selectedTier?.title,
-            systemImage: selectedTier?.systemImage ?? "slider.horizontal.3",
+            subtitle: selectedTier.title,
+            systemImage: selectedTier.systemImage,
             presentation: .singleSelection,
             items: ArtworkImageQualityTier.allCases.map { tier in
                 .action(

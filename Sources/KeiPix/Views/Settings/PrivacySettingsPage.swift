@@ -30,13 +30,13 @@ struct PrivacySettingsPage: View {
     }
 
     private var appControlsSection: some View {
-        OS26SettingsSection(L10n.appControls, systemImage: "hand.raised", footer: L10n.privacyModeHint) {
+        OS26SettingsSection(L10n.appControls, systemImage: "hand.raised", tone: .privacy, footer: L10n.privacyModeHint) {
             Toggle(L10n.privacyMode, isOn: store.settings_privacyModeBinding)
         }
     }
 
     private var screenCaptureSection: some View {
-        OS26SettingsSection(L10n.protectSensitiveContent, systemImage: "rectangle.dashed.badge.record", footer: L10n.screenCaptureProtectionHint) {
+        OS26SettingsSection(L10n.protectSensitiveContent, systemImage: "rectangle.dashed.badge.record", tone: .privacy, footer: L10n.screenCaptureProtectionHint) {
             Toggle(
                 L10n.protectSensitiveContent,
                 isOn: store.settings_screenCaptureProtectionBinding
@@ -45,7 +45,7 @@ struct PrivacySettingsPage: View {
     }
 
     private var accountIdentitySection: some View {
-        OS26SettingsSection(L10n.privacyAndIdentity, systemImage: "person.crop.circle", footer: L10n.accountIdentityPrivacyHint) {
+        OS26SettingsSection(L10n.privacyAndIdentity, systemImage: "person.crop.circle", tone: .privacy, footer: L10n.accountIdentityPrivacyHint) {
             Toggle(L10n.showAccountIdentity, isOn: store.settings_accountIdentityBinding)
         }
     }
@@ -57,7 +57,7 @@ struct PrivacySettingsPage: View {
         // the system-wide search index. The Rebuild and Clear buttons
         // mirror the affordances Apple's own apps ship next to a
         // Spotlight toggle.
-        OS26SettingsSection(L10n.spotlightIndexing, systemImage: "magnifyingglass", footer: L10n.spotlightIndexingHint) {
+        OS26SettingsSection(L10n.spotlightIndexing, systemImage: "magnifyingglass", tone: .network, footer: L10n.spotlightIndexingHint) {
             Toggle(
                 L10n.spotlightIndexingDownloads,
                 isOn: Binding(
@@ -67,12 +67,12 @@ struct PrivacySettingsPage: View {
             )
 
             FlowLayout(spacing: 8) {
-                OS26SettingsActionButton(title: L10n.spotlightRebuildIndex, systemImage: "arrow.triangle.2.circlepath") {
+                OS26SettingsActionButton(title: L10n.spotlightRebuildIndex, systemImage: "arrow.triangle.2.circlepath", tone: .network) {
                     store.rebuildSpotlightIndex()
                 }
                 .disabled(store.spotlightIndexingEnabled == false)
 
-                OS26SettingsActionButton(title: L10n.spotlightClearIndex, systemImage: "trash", role: .destructive) {
+                OS26SettingsActionButton(title: L10n.spotlightClearIndex, systemImage: "trash", role: .destructive, tone: .danger) {
                     store.clearSpotlightIndex()
                 }
             }
@@ -83,13 +83,13 @@ struct PrivacySettingsPage: View {
         // Apple-style cross-links to neighbouring settings pages so the user
         // can pivot between Privacy and the related Safety / Account
         // surfaces without scanning the sidebar.
-        OS26SettingsSection(L10n.relatedSettings, systemImage: "link") {
+        OS26SettingsSection(L10n.relatedSettings, systemImage: "link", tone: .accent) {
             FlowLayout(spacing: 8) {
-                OS26SettingsActionButton(title: L10n.settingsSafety, systemImage: SettingsCategory.safety.systemImage) {
+                OS26SettingsActionButton(title: L10n.settingsSafety, systemImage: SettingsCategory.safety.systemImage, tone: .safety) {
                     coordinator.selection = .safety
                 }
 
-                OS26SettingsActionButton(title: L10n.account, systemImage: SettingsCategory.account.systemImage) {
+                OS26SettingsActionButton(title: L10n.account, systemImage: SettingsCategory.account.systemImage, tone: .privacy) {
                     coordinator.selection = .account
                 }
             }

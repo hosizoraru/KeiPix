@@ -12,7 +12,8 @@ struct ReadingSettingsPage: View {
         ) {
             OS26SettingsSection(
                 L10n.readingWindow,
-                systemImage: "book.pages"
+                systemImage: "book.pages",
+                tone: .accent
             ) {
                 readingModePicker(
                     title: L10n.defaultArtworkReadingMode,
@@ -32,16 +33,36 @@ struct ReadingSettingsPage: View {
                     title: L10n.restoreLastReadPage,
                     detail: L10n.restoreLastReadPageHint,
                     systemImage: "clock.arrow.circlepath",
+                    tone: .accent,
                     isOn: store.settings_restoreReaderProgressBinding
                 )
             }
 
-            OS26SettingsSection(L10n.translate, systemImage: "translate") {
+            OS26SettingsSection(
+                L10n.imageQualityTierSection,
+                systemImage: "photo.stack",
+                tone: .accent
+            ) {
+                OS26SettingsMenuPicker(
+                    title: L10n.imageQualityTierSection,
+                    value: store.sharedArtworkImageQualityTier.title,
+                    detail: L10n.imageQualityTierHint,
+                    systemImage: store.sharedArtworkImageQualityTier.systemImage,
+                    tone: .accent,
+                    selection: store.settings_artworkImageQualityTierBinding,
+                    options: ArtworkImageQualityTier.allCases
+                ) { tier, isSelected in
+                    Label(tier.title, systemImage: isSelected ? "checkmark" : tier.systemImage)
+                }
+            }
+
+            OS26SettingsSection(L10n.translate, systemImage: "translate", tone: .accent) {
                 OS26SettingsMenuPicker(
                     title: L10n.translationTargetLanguage,
                     value: store.translationTargetLanguage.title,
                     detail: L10n.translationTargetLanguageHint,
                     systemImage: translationSystemImage(store.translationTargetLanguage),
+                    tone: .accent,
                     selection: store.settings_translationTargetLanguageBinding,
                     options: TranslationTargetLanguage.allCases
                 ) { language, isSelected in
@@ -53,18 +74,20 @@ struct ReadingSettingsPage: View {
                     OS26SettingsActionButton(
                         title: L10n.clearNovelTranslationCache,
                         systemImage: "trash",
-                        role: .destructive
+                        role: .destructive,
+                        tone: .danger
                     ) {
                         clearNovelTranslationCache()
                     }
                 }
             }
 
-            OS26SettingsSection(L10n.trackpad, systemImage: "trackpad") {
+            OS26SettingsSection(L10n.trackpad, systemImage: "trackpad", tone: .accent) {
                 OS26SettingsToggleRow(
                     title: L10n.enableTrackpadGestures,
                     detail: L10n.trackpadGesturesHint,
                     systemImage: "hand.draw",
+                    tone: .accent,
                     isOn: store.settings_trackpadGesturesBinding
                 )
 
@@ -73,6 +96,7 @@ struct ReadingSettingsPage: View {
                     value: store.horizontalSwipeBehavior.title,
                     detail: L10n.twoFingerSwipeBehaviorHint,
                     systemImage: swipeBehaviorSystemImage(store.horizontalSwipeBehavior),
+                    tone: .accent,
                     selection: store.settings_horizontalSwipeBehaviorBinding,
                     options: TrackpadHorizontalSwipeBehavior.allCases
                 ) { behavior, isSelected in
@@ -93,6 +117,7 @@ struct ReadingSettingsPage: View {
             value: value.title,
             detail: detail,
             systemImage: value.systemImage,
+            tone: .accent,
             selection: selection,
             options: ArtworkReadingMode.allCases
         ) { mode, isSelected in

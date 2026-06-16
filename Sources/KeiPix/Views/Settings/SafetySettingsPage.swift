@@ -26,52 +26,59 @@ struct SafetySettingsPage: View {
     }
 
     private var filtersSection: some View {
-        OS26SettingsSection(L10n.contentFilters, systemImage: "line.3.horizontal.decrease.circle") {
+        OS26SettingsSection(L10n.contentFilters, systemImage: "line.3.horizontal.decrease.circle", tone: .safety) {
             OS26SettingsToggleRow(
                 title: L10n.showContentBadges,
                 detail: L10n.showContentBadgesHint,
                 systemImage: "tag.circle",
+                tone: .accent,
                 isOn: store.settings_showContentBadgesBinding
             )
             OS26SettingsToggleRow(
                 title: L10n.hideMutedContent,
                 detail: L10n.hideMutedContentHint,
                 systemImage: "eye.slash",
+                tone: .safety,
                 isOn: store.settings_hideMutedBinding
             )
             OS26SettingsToggleRow(
                 title: L10n.hideAIArtworks,
                 detail: L10n.hideAIArtworksHint,
                 systemImage: "sparkles.square.filled.on.square",
+                tone: .warning,
                 isOn: store.settings_hideAIBinding
             )
             OS26SettingsToggleRow(
                 title: L10n.hideR18Artworks,
                 detail: L10n.hideR18ArtworksHint,
                 systemImage: "exclamationmark.triangle",
+                tone: .danger,
                 isOn: store.settings_hideR18Binding
             )
             OS26SettingsToggleRow(
                 title: L10n.hideR18GArtworks,
                 detail: L10n.hideR18GArtworksHint,
                 systemImage: "exclamationmark.octagon",
+                tone: .danger,
                 isOn: store.settings_hideR18GBinding
             )
             OS26SettingsToggleRow(
                 title: L10n.maskSensitivePreviews,
                 detail: L10n.maskSensitivePreviewsHint,
                 systemImage: "rectangle.dashed.badge.record",
+                tone: .privacy,
                 isOn: store.settings_maskSensitivePreviewsBinding
             )
         }
     }
 
     private var pixivSafetySection: some View {
-        OS26SettingsSection(L10n.pixivSection, systemImage: "shield.lefthalf.filled") {
+        OS26SettingsSection(L10n.pixivSection, systemImage: "shield.lefthalf.filled", tone: .safety) {
             pixivAccountToggleRow(
                 title: L10n.pixivRestrictedMode,
                 detail: L10n.pixivRestrictedModeHint,
                 systemImage: "exclamationmark.shield",
+                tone: .danger,
                 isOn: restrictedModeBinding,
                 isPending: store.restrictedModeEnabled == nil || coordinator.isUpdatingRestrictedMode
             )
@@ -87,6 +94,7 @@ struct SafetySettingsPage: View {
                 title: L10n.pixivAIDisplay,
                 detail: L10n.pixivAIDisplayHint,
                 systemImage: "sparkles",
+                tone: .warning,
                 isOn: aiShowBinding,
                 isPending: store.aiShowEnabled == nil || coordinator.isUpdatingAIShow
             )
@@ -101,18 +109,19 @@ struct SafetySettingsPage: View {
     }
 
     private var mutedContentSection: some View {
-        OS26SettingsSection(L10n.mutedContent, systemImage: "eye.slash") {
+        OS26SettingsSection(L10n.mutedContent, systemImage: "eye.slash", tone: .safety) {
             OS26SettingsControlRow(
                 title: L10n.mutedContent,
                 detail: L10n.muteSyncHint,
-                systemImage: "list.bullet.rectangle"
+                systemImage: "list.bullet.rectangle",
+                tone: .safety
             ) {
                 Text(String(format: L10n.mutedContentCountFormat, mutedContentCount))
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(.secondary)
             }
 
-            OS26SettingsActionButton(title: L10n.openMutedContentManager, systemImage: "eye.slash", isProminent: true) {
+            OS26SettingsActionButton(title: L10n.openMutedContentManager, systemImage: "eye.slash", isProminent: true, tone: .safety) {
                 store.select(.mutedContent)
             }
 
@@ -135,7 +144,7 @@ struct SafetySettingsPage: View {
             }
 
             FlowLayout(spacing: 8) {
-                OS26SettingsActionButton(title: L10n.exportMutedContent, systemImage: "square.and.arrow.up") {
+                OS26SettingsActionButton(title: L10n.exportMutedContent, systemImage: "square.and.arrow.up", tone: .safety) {
                     exportLocalFile()
                 }
                 .disabled(coordinator.isSyncingMutedContent
@@ -143,7 +152,7 @@ struct SafetySettingsPage: View {
                         && store.mutedUserList.isEmpty
                         && store.mutedArtworkList.isEmpty))
 
-                OS26SettingsActionButton(title: L10n.importMutedContent, systemImage: "square.and.arrow.down") {
+                OS26SettingsActionButton(title: L10n.importMutedContent, systemImage: "square.and.arrow.down", tone: .safety) {
                     coordinator.isMutedContentImportConfirmationPresented = true
                 }
                 .disabled(coordinator.isSyncingMutedContent)
@@ -163,8 +172,8 @@ struct SafetySettingsPage: View {
         // Settings → Privacy & Security). Keep a deep-link here so users
         // looking for "Privacy Mode" or "Show account identity" while
         // browsing Safety can pivot one click away.
-        OS26SettingsSection(L10n.privacy, systemImage: SettingsCategory.privacy.systemImage, footer: L10n.privacyHint) {
-            OS26SettingsActionButton(title: L10n.openPrivacySettings, systemImage: SettingsCategory.privacy.systemImage) {
+        OS26SettingsSection(L10n.privacy, systemImage: SettingsCategory.privacy.systemImage, tone: .privacy, footer: L10n.privacyHint) {
+            OS26SettingsActionButton(title: L10n.openPrivacySettings, systemImage: SettingsCategory.privacy.systemImage, tone: .privacy) {
                 coordinator.selection = .privacy
             }
         }
@@ -178,10 +187,11 @@ struct SafetySettingsPage: View {
         title: String,
         detail: String,
         systemImage: String,
+        tone: OS26SettingsTone,
         isOn: Binding<Bool>,
         isPending: Bool
     ) -> some View {
-        OS26SettingsControlRow(title: title, detail: detail, systemImage: systemImage) {
+        OS26SettingsControlRow(title: title, detail: detail, systemImage: systemImage, tone: tone) {
             HStack(spacing: 8) {
                 Toggle(title, isOn: isOn)
                     .labelsHidden()

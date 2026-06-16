@@ -47,7 +47,7 @@ struct StorageSettingsPage: View {
     }
 
     private var overviewSection: some View {
-        OS26SettingsSection(L10n.storageOverview, systemImage: "internaldrive", footer: L10n.storageHint) {
+        OS26SettingsSection(L10n.storageOverview, systemImage: "internaldrive", tone: .storage, footer: L10n.storageHint) {
             LabeledContent(L10n.totalCacheSize) {
                 Text(formattedTotal)
                     .monospacedDigit()
@@ -57,7 +57,7 @@ struct StorageSettingsPage: View {
     }
 
     private func categorySection(_ snapshot: CacheCategorySnapshot) -> some View {
-        OS26SettingsSection(snapshot.title, systemImage: "externaldrive", footer: snapshot.detail) {
+        OS26SettingsSection(snapshot.title, systemImage: "externaldrive", tone: .storage, footer: snapshot.detail) {
             VStack(alignment: .leading, spacing: 6) {
                 HStack(alignment: .firstTextBaseline) {
                     Text(snapshot.title)
@@ -72,7 +72,8 @@ struct StorageSettingsPage: View {
                     OS26SettingsActionButton(
                         title: L10n.clearCategory,
                         systemImage: "trash",
-                        role: .destructive
+                        role: .destructive,
+                        tone: .danger
                     ) {
                         clear(snapshot.id)
                     }
@@ -84,11 +85,12 @@ struct StorageSettingsPage: View {
     }
 
     private var footerSection: some View {
-        OS26SettingsSection(L10n.clearAllCaches, systemImage: "trash.slash") {
+        OS26SettingsSection(L10n.clearAllCaches, systemImage: "trash.slash", tone: .danger) {
             OS26SettingsActionButton(
                 title: L10n.clearAllCaches,
                 systemImage: "trash.slash",
-                role: .destructive
+                role: .destructive,
+                tone: .danger
             ) {
                 clearAll()
             }
@@ -103,16 +105,17 @@ struct StorageSettingsPage: View {
     /// "what's on my disk" mental model in one place, the same way
     /// macOS Time Machine settings live under General → Storage.
     private var backupSection: some View {
-        OS26SettingsSection(L10n.backupAndRestore, systemImage: "archivebox", footer: L10n.backupHint) {
+        OS26SettingsSection(L10n.backupAndRestore, systemImage: "archivebox", tone: .storage, footer: L10n.backupHint) {
             FlowLayout(spacing: 8) {
                 OS26SettingsActionButton(
                     title: L10n.exportBackup,
                     systemImage: "square.and.arrow.up",
-                    isProminent: true
+                    isProminent: true,
+                    tone: .storage
                 ) {
                     exportBackup()
                 }
-                OS26SettingsActionButton(title: L10n.importBackup, systemImage: "square.and.arrow.down") {
+                OS26SettingsActionButton(title: L10n.importBackup, systemImage: "square.and.arrow.down", tone: .storage) {
                     importBackup()
                 }
             }

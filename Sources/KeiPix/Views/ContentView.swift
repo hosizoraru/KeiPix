@@ -597,14 +597,11 @@ struct ContentView: View {
     }
 
     private var imageQualityMenuSystemImage: String {
-        store.sharedArtworkImageQualityTier?.systemImage ?? "slider.horizontal.3"
+        store.sharedArtworkImageQualityTier.systemImage
     }
 
     private var imageQualityMenuHelp: String {
-        if let tier = store.sharedArtworkImageQualityTier {
-            return "\(L10n.imageQualityTierSection): \(tier.title)"
-        }
-        return L10n.imageQualityTierSection
+        "\(L10n.imageQualityTierSection): \(store.sharedArtworkImageQualityTier.title)"
     }
 
     private var dangerActionBinding: Binding<Bool> {

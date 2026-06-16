@@ -681,9 +681,43 @@ struct OS26SettingsPageHeader: View {
                 Text(subtitle)
                     .font(.callout)
                     .foregroundStyle(.secondary)
-                    .lineLimit(3)
                     .fixedSize(horizontal: false, vertical: true)
             }
+        }
+    }
+}
+
+enum OS26SettingsTone: Equatable {
+    case neutral
+    case accent
+    case safety
+    case privacy
+    case danger
+    case warning
+    case network
+    case downloads
+    case storage
+
+    var symbolColor: Color {
+        switch self {
+        case .neutral:
+            .secondary
+        case .accent:
+            .accentColor
+        case .safety:
+            .green
+        case .privacy:
+            .indigo
+        case .danger:
+            .red
+        case .warning:
+            .orange
+        case .network:
+            .cyan
+        case .downloads:
+            .blue
+        case .storage:
+            .teal
         }
     }
 }
@@ -691,17 +725,20 @@ struct OS26SettingsPageHeader: View {
 struct OS26SettingsSection<Content: View>: View {
     let title: String
     let systemImage: String?
+    let tone: OS26SettingsTone
     let footer: String?
     private let content: Content
 
     init(
         _ title: String,
         systemImage: String? = nil,
+        tone: OS26SettingsTone = .neutral,
         footer: String? = nil,
         @ViewBuilder content: () -> Content
     ) {
         self.title = title
         self.systemImage = systemImage
+        self.tone = tone
         self.footer = footer
         self.content = content()
     }
@@ -712,7 +749,7 @@ struct OS26SettingsSection<Content: View>: View {
                 if let systemImage {
                     Image(systemName: systemImage)
                         .symbolRenderingMode(.hierarchical)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(tone.symbolColor)
                 }
 
                 Text(title)
@@ -753,6 +790,7 @@ struct OS26SettingsRowLabel: View {
     let title: String
     var detail: String?
     var systemImage: String?
+    var tone: OS26SettingsTone = .neutral
 
     var body: some View {
         HStack(alignment: .top, spacing: 10) {
@@ -760,7 +798,7 @@ struct OS26SettingsRowLabel: View {
                 Image(systemName: systemImage)
                     .font(.callout.weight(.semibold))
                     .symbolRenderingMode(.hierarchical)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(tone.symbolColor)
                     .frame(width: 20, alignment: .center)
                     .padding(.top, 1)
             }
@@ -769,7 +807,6 @@ struct OS26SettingsRowLabel: View {
                 Text(title)
                     .font(.callout.weight(.semibold))
                     .foregroundStyle(.primary)
-                    .lineLimit(2)
                     .fixedSize(horizontal: false, vertical: true)
 
                 if let detail, detail.isEmpty == false {
@@ -777,6 +814,7 @@ struct OS26SettingsRowLabel: View {
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
+                        .textSelection(.enabled)
                 }
             }
         }
@@ -788,40 +826,49 @@ struct OS26SettingsControlRow<Accessory: View>: View {
     let title: String
     var detail: String?
     var systemImage: String?
+    var tone: OS26SettingsTone = .neutral
     private let accessory: Accessory
+    #if os(iOS)
+        @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    #endif
 
     init(
         title: String,
         detail: String? = nil,
         systemImage: String? = nil,
+        tone: OS26SettingsTone = .neutral,
         @ViewBuilder accessory: () -> Accessory
     ) {
         self.title = title
         self.detail = detail
         self.systemImage = systemImage
+        self.tone = tone
         self.accessory = accessory()
     }
 
     var body: some View {
-        ViewThatFits(in: .horizontal) {
-            HStack(alignment: .center, spacing: 12) {
-                label
-                    .layoutPriority(1)
-                accessory
-                    .fixedSize(horizontal: true, vertical: false)
-            }
+        HStack(alignment: .center, spacing: 10) {
+            label
+                .layoutPriority(1)
 
-            VStack(alignment: .leading, spacing: 10) {
-                label
-                accessory
-                    .frame(maxWidth: .infinity, alignment: .leading)
-            }
+            accessory
+                .lineLimit(1)
+                .frame(width: accessoryWidth, alignment: .trailing)
+                .layoutPriority(2)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private var label: some View {
-        OS26SettingsRowLabel(title: title, detail: detail, systemImage: systemImage)
+        OS26SettingsRowLabel(title: title, detail: detail, systemImage: systemImage, tone: tone)
+    }
+
+    private var accessoryWidth: CGFloat {
+        #if os(iOS)
+            horizontalSizeClass == .compact ? 112 : 150
+        #else
+            160
+        #endif
     }
 }
 
@@ -829,11 +876,12 @@ struct OS26SettingsToggleRow: View {
     let title: String
     var detail: String?
     var systemImage: String?
+    var tone: OS26SettingsTone = .neutral
     @Binding var isOn: Bool
 
     var body: some View {
         Toggle(isOn: $isOn) {
-            OS26SettingsRowLabel(title: title, detail: detail, systemImage: systemImage)
+            OS26SettingsRowLabel(title: title, detail: detail, systemImage: systemImage, tone: tone)
         }
     }
 }
@@ -843,6 +891,7 @@ struct OS26SettingsMenuPicker<Option: Identifiable & Hashable, RowLabel: View>: 
     let value: String
     var detail: String?
     var systemImage: String?
+    var tone: OS26SettingsTone = .neutral
     @Binding private var selection: Option
     private let options: [Option]
     private let rowLabel: (Option, Bool) -> RowLabel
@@ -852,6 +901,7 @@ struct OS26SettingsMenuPicker<Option: Identifiable & Hashable, RowLabel: View>: 
         value: String,
         detail: String? = nil,
         systemImage: String? = nil,
+        tone: OS26SettingsTone = .neutral,
         selection: Binding<Option>,
         options: [Option],
         @ViewBuilder rowLabel: @escaping (Option, Bool) -> RowLabel
@@ -860,6 +910,7 @@ struct OS26SettingsMenuPicker<Option: Identifiable & Hashable, RowLabel: View>: 
         self.value = value
         self.detail = detail
         self.systemImage = systemImage
+        self.tone = tone
         _selection = selection
         self.options = options
         self.rowLabel = rowLabel
@@ -875,19 +926,20 @@ struct OS26SettingsMenuPicker<Option: Identifiable & Hashable, RowLabel: View>: 
                 }
             }
         } label: {
-            OS26SettingsControlRow(title: title, detail: detail, systemImage: systemImage) {
+            OS26SettingsControlRow(title: title, detail: detail, systemImage: systemImage, tone: tone) {
                 HStack(spacing: 6) {
                     Text(value)
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(.secondary)
+                        .font(.callout.weight(.semibold))
+                        .foregroundStyle(.primary)
                         .lineLimit(1)
                         .truncationMode(.middle)
-                        .minimumScaleFactor(0.82)
+                        .minimumScaleFactor(0.9)
 
                     Image(systemName: "chevron.up.chevron.down")
-                        .font(.caption.weight(.bold))
-                        .foregroundStyle(.tertiary)
+                        .font(.footnote.weight(.bold))
+                        .foregroundStyle(.secondary)
                 }
+                .accessibilityValue(value)
             }
         }
         .buttonStyle(.plain)
@@ -900,6 +952,7 @@ struct OS26SettingsActionButton: View {
     let systemImage: String
     var role: ButtonRole?
     var isProminent = false
+    var tone: OS26SettingsTone = .neutral
     let action: () -> Void
 
     var body: some View {
@@ -908,6 +961,14 @@ struct OS26SettingsActionButton: View {
                 .lineLimit(1)
         }
         .os26GlassButton(prominent: isProminent)
+        .tint(actionTint)
+    }
+
+    private var actionTint: Color? {
+        if role == .destructive {
+            return .red
+        }
+        return tone == .neutral ? nil : tone.symbolColor
     }
 }
 
