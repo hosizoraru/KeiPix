@@ -776,13 +776,19 @@ struct NativeBoundaryTests {
         let customizeRange = try #require(appControlsSource.range(of: "id: IPadToolbarMenuAction.customizeBottomTabs"))
         let randomRange = try #require(appControlsSource.range(of: "id: IPadToolbarMenuAction.randomFromCurrentFeed"))
         let firstFilterRange = try #require(appControlsSource.range(of: "id: IPadToolbarMenuAction.hideMutedContent"))
+        let topSectionRange = try #require(appControlsSource.range(of: "NativeToolbarMenuSection(\n                    items: ["))
+        let paletteSectionRange = try #require(appControlsSource.range(of: "NativeToolbarMenuSection(\n                    presentation: .palette"))
+        let topSectionSource = appControlsSource[topSectionRange.lowerBound..<paletteSectionRange.lowerBound]
         let rootSectionRange = try #require(appControlsSource.range(of: "NativeToolbarMenuSection(\n                    presentation: .root,\n                    items: ["))
         let rootSectionSource = appControlsSource[rootSectionRange.lowerBound...]
 
         #expect(settingsRange.lowerBound < firstFilterRange.lowerBound)
         #expect(customizeRange.lowerBound < firstFilterRange.lowerBound)
         #expect(randomRange.lowerBound < firstFilterRange.lowerBound)
-        #expect(rootSectionSource.contains("artworkImageQualityMenuItem,\n                        .submenu(\n                            title: L10n.viewOptions"))
+        #expect(topSectionSource.contains("artworkImageQualityMenuItem"))
+        #expect(topSectionSource.contains("id: IPadToolbarMenuAction.customizeBottomTabs"))
+        #expect(rootSectionSource.contains("artworkImageQualityMenuItem") == false)
+        #expect(rootSectionSource.contains(".submenu(\n                            title: L10n.viewOptions"))
         #expect(appControlsSource.contains("NativeToolbarMenuSection(\n                    title: L10n.imageQualityTierSection") == false)
         #expect(contentView.contains("case IPadToolbarMenuAction.randomFromCurrentFeed:\n            _ = store.randomFromCurrentFeed(opensDetail: false)"))
         #expect(contentView.contains("id: IPadToolbarMenuAction.artworkImageQualityTier("))

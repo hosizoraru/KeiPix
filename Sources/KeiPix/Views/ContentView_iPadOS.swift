@@ -1831,7 +1831,8 @@ struct ContentView: View {
                             id: IPadToolbarMenuAction.customizeBottomTabs,
                             title: L10n.customizeBottomTabs,
                             systemImage: "rectangle.bottomthird.inset.filled"
-                        )
+                        ),
+                        artworkImageQualityMenuItem
                     ]
                 ),
                 NativeToolbarMenuSection(
@@ -1861,7 +1862,6 @@ struct ContentView: View {
                 NativeToolbarMenuSection(
                     presentation: .root,
                     items: [
-                        artworkImageQualityMenuItem,
                         .submenu(
                             title: L10n.viewOptions,
                             systemImage: "slider.horizontal.3",
