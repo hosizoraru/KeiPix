@@ -191,7 +191,10 @@ struct WatchLaterView: View {
 
     private var mobileWatchLaterPageFilterSnapshot: MobilePageFilterSnapshot? {
         #if os(iOS)
-        guard usesPhoneWatchLaterFilterPill, store.watchLaterQueue.isEmpty == false else { return nil }
+        guard usesPhoneWatchLaterFilterPill,
+              store.watchLaterQueue.isEmpty == false || normalizedWatchLaterFilterText.isEmpty == false else {
+            return nil
+        }
         return MobilePageFilterSnapshot(
             route: .watchLater,
             totalCount: store.watchLaterQueue.count,
@@ -408,46 +411,64 @@ private struct WatchLaterActionsMenu: View {
 
     #if os(iOS)
     private var nativeActionsMenu: NativeToolbarMenu {
-        NativeToolbarMenu(
-            title: L10n.watchLater,
-            cacheKey: nativeActionsMenuCacheKey,
-            sections: [
+        var sections: [NativeToolbarMenuSection] = []
+        let viewOptionItems = nativeViewOptionItems
+        if viewOptionItems.isEmpty == false {
+            sections.append(
                 NativeToolbarMenuSection(
                     title: L10n.viewOptions,
-                    items: [
-                        .action(
-                            id: WatchLaterActionsMenuAction.showSearch,
-                            title: L10n.search,
-                            systemImage: "magnifyingglass",
-                            isEnabled: canShowSearch
-                        ),
-                        .action(
-                            id: WatchLaterActionsMenuAction.clearSearch,
-                            title: L10n.clearSearch,
-                            systemImage: "xmark.circle",
-                            isEnabled: canClearSearch
-                        )
-                    ]
-                ),
-                NativeToolbarMenuSection(
-                    title: L10n.moreActions,
-                    items: [
-                        .action(
-                            id: WatchLaterActionsMenuAction.openHistory,
-                            title: L10n.history,
-                            systemImage: "clock.arrow.circlepath"
-                        ),
-                        .action(
-                            id: WatchLaterActionsMenuAction.clearQueue,
-                            title: L10n.watchLaterClear,
-                            systemImage: "trash",
-                            isEnabled: canClearQueue,
-                            isDestructive: true
-                        )
-                    ]
+                    items: viewOptionItems
                 )
-            ]
+            )
+        }
+        sections.append(
+            NativeToolbarMenuSection(
+                title: L10n.moreActions,
+                items: [
+                    .action(
+                        id: WatchLaterActionsMenuAction.openHistory,
+                        title: L10n.history,
+                        systemImage: "clock.arrow.circlepath"
+                    ),
+                    .action(
+                        id: WatchLaterActionsMenuAction.clearQueue,
+                        title: L10n.watchLaterClear,
+                        systemImage: "trash",
+                        isEnabled: canClearQueue,
+                        isDestructive: true
+                    )
+                ]
+            )
         )
+
+        return NativeToolbarMenu(
+            title: L10n.watchLater,
+            cacheKey: nativeActionsMenuCacheKey,
+            sections: sections
+        )
+    }
+
+    private var nativeViewOptionItems: [NativeToolbarMenuItem] {
+        var items: [NativeToolbarMenuItem] = []
+        if canShowSearch {
+            items.append(
+                .action(
+                    id: WatchLaterActionsMenuAction.showSearch,
+                    title: L10n.search,
+                    systemImage: "magnifyingglass"
+                )
+            )
+        }
+        if canClearSearch {
+            items.append(
+                .action(
+                    id: WatchLaterActionsMenuAction.clearSearch,
+                    title: L10n.clearSearch,
+                    systemImage: "xmark.circle"
+                )
+            )
+        }
+        return items
     }
 
     private var nativeActionsMenuCacheKey: String {

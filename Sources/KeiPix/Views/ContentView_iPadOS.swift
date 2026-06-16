@@ -174,13 +174,13 @@ struct ContentView: View {
                     store.presentWorkSubscriptionsVisualQA()
                     hasAppliedMobileBottomTabLaunchTarget = true
                     selectedSidebarItem = .route(.workSubscriptions)
-                    selectedTab = .library
+                    selectedTab = .mobile(.bookmarks)
                 }
                 if VisualQALaunchArgument.contains(.mutedContent) {
                     store.presentMutedContentVisualQA()
                     hasAppliedMobileBottomTabLaunchTarget = true
                     selectedSidebarItem = .route(.mutedContent)
-                    selectedTab = .library
+                    selectedTab = .mobile(.bookmarks)
                 }
                 if VisualQALaunchArgument.contains(.downloadQueue) {
                     store.presentDownloadQueueVisualQA()

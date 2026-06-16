@@ -100,10 +100,18 @@ struct WorkSubscriptionsView: View {
 
     @ToolbarContentBuilder
     private var subscriptionToolbar: some ToolbarContent {
+        subscriptionRefreshToolbarItem
+        #if os(iOS)
+        subscriptionActionsToolbarItem
+        #endif
+    }
+
+    @ToolbarContentBuilder
+    private var subscriptionRefreshToolbarItem: some ToolbarContent {
         #if os(iOS)
         if usesPhoneSubscriptionFilterPill, store.session != nil {
             ToolbarItem(placement: .primaryAction) {
-                subscriptionActionsMenu(usesSystemToolbarChrome: true)
+                subscriptionRefreshButton(usesSystemToolbarChrome: true)
             }
         }
         #else
@@ -112,6 +120,17 @@ struct WorkSubscriptionsView: View {
         }
         #endif
     }
+
+    #if os(iOS)
+    @ToolbarContentBuilder
+    private var subscriptionActionsToolbarItem: some ToolbarContent {
+        if usesPhoneSubscriptionFilterPill, store.session != nil {
+            ToolbarItem(placement: .primaryAction) {
+                subscriptionActionsMenu(usesSystemToolbarChrome: true)
+            }
+        }
+    }
+    #endif
 
     private var header: some View {
         GlassEffectContainer(spacing: 8) {
@@ -171,6 +190,7 @@ struct WorkSubscriptionsView: View {
                     .help(L10n.clearSearch)
                 }
 
+                subscriptionRefreshButton()
                 subscriptionActionsMenu()
             }
             .controlSize(.small)
@@ -183,12 +203,33 @@ struct WorkSubscriptionsView: View {
             hasActiveOptions: hasActiveSubscriptionOptions,
             canShowSearch: usesPhoneSubscriptionFilterPill == false,
             canClearSearch: normalizedSubscriptionFilterText.isEmpty == false || isSearchPresented,
-            canCheckUpdates: store.session != nil && store.workSubscriptions.isEmpty == false && isChecking == false,
-            isChecking: isChecking,
             showSearch: showSubscriptionSearch,
-            clearSearch: clearSubscriptionSearch,
-            checkForUpdates: { Task { await checkForUpdates(showFeedback: true) } }
+            clearSearch: clearSubscriptionSearch
         )
+    }
+
+    @ViewBuilder
+    private func subscriptionRefreshButton(usesSystemToolbarChrome: Bool = false) -> some View {
+        let button = Button {
+            Task { await checkForUpdates(showFeedback: true) }
+        } label: {
+            Label(
+                L10n.refresh,
+                systemImage: isChecking ? "arrow.triangle.2.circlepath" : "arrow.clockwise"
+            )
+        }
+        .labelStyle(.iconOnly)
+        .disabled(canCheckSubscriptionUpdates == false)
+        .help(L10n.workSubscriptionsCheckNow)
+        .accessibilityLabel(L10n.refresh)
+
+        if usesSystemToolbarChrome {
+            button
+                .fixedSize(horizontal: true, vertical: false)
+        } else {
+            button
+                .os26GlassIconButton(prominent: isChecking)
+        }
     }
 
     private var showsSubscriptionSearchBar: Bool {
@@ -200,6 +241,10 @@ struct WorkSubscriptionsView: View {
 
     private var hasActiveSubscriptionOptions: Bool {
         normalizedSubscriptionFilterText.isEmpty == false
+    }
+
+    private var canCheckSubscriptionUpdates: Bool {
+        store.session != nil && store.workSubscriptions.isEmpty == false && isChecking == false
     }
 
     private var normalizedSubscriptionFilterText: String {
@@ -358,11 +403,8 @@ private struct SubscriptionActionsMenu: View {
     let hasActiveOptions: Bool
     let canShowSearch: Bool
     let canClearSearch: Bool
-    let canCheckUpdates: Bool
-    let isChecking: Bool
     let showSearch: () -> Void
     let clearSearch: () -> Void
-    let checkForUpdates: () -> Void
 
     @ViewBuilder
     var body: some View {
@@ -381,9 +423,6 @@ private struct SubscriptionActionsMenu: View {
     }
 
     private var actionsSystemImage: String {
-        if isChecking {
-            return "arrow.triangle.2.circlepath"
-        }
         return ToolbarMenuIcon.pageOptions
     }
 
@@ -405,20 +444,11 @@ private struct SubscriptionActionsMenu: View {
                 .disabled(canClearSearch == false)
             }
 
-            Section(L10n.moreActions) {
-                Button {
-                    checkForUpdates()
-                } label: {
-                    Label(L10n.refresh, systemImage: "arrow.clockwise")
-                    Text(L10n.workSubscriptionsCheckNow)
-                }
-                .disabled(canCheckUpdates == false)
-            }
         } label: {
             Label(L10n.workSubscriptions, systemImage: actionsSystemImage)
         }
         .menuOrder(.fixed)
-        .os26GlassIconButton(prominent: hasActiveOptions || isChecking)
+        .os26GlassIconButton(prominent: hasActiveOptions)
         .help(L10n.workSubscriptions)
         .accessibilityLabel(L10n.workSubscriptions)
     }
@@ -445,18 +475,6 @@ private struct SubscriptionActionsMenu: View {
                             isEnabled: canClearSearch
                         )
                     ]
-                ),
-                NativeToolbarMenuSection(
-                    title: L10n.moreActions,
-                    items: [
-                        .action(
-                            id: SubscriptionActionsMenuAction.checkUpdates,
-                            title: L10n.refresh,
-                            subtitle: L10n.workSubscriptionsCheckNow,
-                            systemImage: "arrow.clockwise",
-                            isEnabled: canCheckUpdates
-                        )
-                    ]
                 )
             ]
         )
@@ -467,9 +485,7 @@ private struct SubscriptionActionsMenu: View {
             "subscription-actions",
             hasActiveOptions.description,
             canShowSearch.description,
-            canClearSearch.description,
-            canCheckUpdates.description,
-            isChecking.description
+            canClearSearch.description
         ].joined(separator: ":")
     }
 
@@ -479,8 +495,6 @@ private struct SubscriptionActionsMenu: View {
             showSearch()
         case SubscriptionActionsMenuAction.clearSearch:
             clearSearch()
-        case SubscriptionActionsMenuAction.checkUpdates:
-            checkForUpdates()
         default:
             break
         }
@@ -491,7 +505,6 @@ private struct SubscriptionActionsMenu: View {
 private enum SubscriptionActionsMenuAction {
     static let showSearch = "subscription-actions:show-search"
     static let clearSearch = "subscription-actions:clear-search"
-    static let checkUpdates = "subscription-actions:check-updates"
 }
 
 private struct SubscriptionCard: View {

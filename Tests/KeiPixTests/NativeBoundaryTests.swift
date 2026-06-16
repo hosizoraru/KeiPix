@@ -4664,9 +4664,9 @@ struct NativeBoundaryTests {
         #expect(subscriptions.contains("store.searchText = \"user:") == false)
         #expect(subscriptions.contains("newArtworkCount") == false)
         #expect(subscriptions.contains("SubscriptionActionsMenu("))
-        #expect(subscriptions.contains("Label(L10n.refresh, systemImage: \"arrow.clockwise\")"))
-        #expect(subscriptions.contains("subtitle: L10n.workSubscriptionsCheckNow"))
-        #expect(subscriptions.contains("systemImage: isChecking ? \"arrow.triangle.2.circlepath\" : \"arrow.clockwise\"") == false)
+        #expect(subscriptions.contains("subscriptionRefreshButton(usesSystemToolbarChrome: true)"))
+        #expect(subscriptions.contains("systemImage: isChecking ? \"arrow.triangle.2.circlepath\" : \"arrow.clockwise\""))
+        #expect(subscriptions.contains("subtitle: L10n.workSubscriptionsCheckNow") == false)
         #expect(subscriptions.contains("LazyVGrid") == false)
         #expect(subscriptions.contains("ScrollView {") == false)
         #expect(macContentView.contains("VisualQALaunchArgument.contains(.workSubscriptions)"))
@@ -4722,8 +4722,9 @@ struct NativeBoundaryTests {
         )
 
         #expect(browsingHistory.contains(".task(id: store.routeRefreshGeneration)"))
-        #expect(browsingHistory.contains("HistoryActionsMenuAction.refreshHistory"))
-        #expect(browsingHistory.contains("subtitle: L10n.pixivHistory"))
+        #expect(browsingHistory.contains("historyRefreshButton(usesSystemToolbarChrome: true)"))
+        #expect(browsingHistory.contains("HistoryActionsMenuAction.refreshHistory") == false)
+        #expect(browsingHistory.contains("subtitle: L10n.pixivHistory") == false)
         #expect(trendingTags.contains(".task(id: store.routeRefreshGeneration)"))
         #expect(trendingTags.contains("Label(L10n.refresh, systemImage: \"arrow.clockwise\")") == false)
         #expect(spotlight.contains(".task(id: store.routeRefreshGeneration)"))
@@ -4732,8 +4733,9 @@ struct NativeBoundaryTests {
         #expect(mangaWatchlist.contains("Label(L10n.refresh, systemImage: \"arrow.clockwise\")") == false)
         #expect(creatorList.contains("if showsCloseButton {\n                ToolbarItem(placement: .secondaryAction)"))
         #expect(subscriptions.contains(".task(id: store.routeRefreshGeneration)"))
-        #expect(subscriptions.contains("SubscriptionActionsMenuAction.checkUpdates"))
-        #expect(subscriptions.contains("subtitle: L10n.workSubscriptionsCheckNow"))
+        #expect(subscriptions.contains("subscriptionRefreshButton(usesSystemToolbarChrome: true)"))
+        #expect(subscriptions.contains("SubscriptionActionsMenuAction.checkUpdates") == false)
+        #expect(subscriptions.contains("subtitle: L10n.workSubscriptionsCheckNow") == false)
     }
 
     @Test("Watch later uses a native adaptive grid")
@@ -4945,7 +4947,7 @@ struct NativeBoundaryTests {
 
         #expect(iPadContentView.contains("VisualQALaunchArgument.contains(.mutedContent)"))
         #expect(iPadContentView.contains("selectedSidebarItem = .route(.mutedContent)"))
-        #expect(iPadContentView.contains("selectedTab = .library"))
+        #expect(iPadContentView.contains("selectedTab = .mobile(.bookmarks)"))
     }
 
     @Test("Mobile library page menus keep concrete actions")
@@ -4968,14 +4970,19 @@ struct NativeBoundaryTests {
             encoding: .utf8
         )
 
-        #expect(browsingHistory.contains("HistoryActionsMenuAction.refreshHistory"))
-        #expect(browsingHistory.contains("subtitle: L10n.pixivHistory"))
+        #expect(browsingHistory.contains("historyRefreshToolbarItem"))
+        #expect(browsingHistory.contains("historyRefreshButton(usesSystemToolbarChrome: true)"))
+        #expect(browsingHistory.contains("historyRefreshButton()"))
+        #expect(browsingHistory.contains("HistoryActionsMenuAction.refreshHistory") == false)
+        #expect(browsingHistory.contains("subtitle: L10n.pixivHistory") == false)
         #expect(browsingHistory.contains("HistoryActionsMenuAction.resetOptions"))
         #expect(browsingHistory.contains("NativeToolbarMenuItem.singleSelectionSubmenu(\n                            title: L10n.historySource"))
         #expect(browsingHistory.contains("NativeToolbarMenuItem.singleSelectionSubmenu(\n                            title: L10n.historyFilters"))
 
         #expect(watchLater.contains("if usesPhoneWatchLaterFilterPill {\n            ToolbarItem(placement: .primaryAction)"))
         #expect(watchLater.contains("showsWatchLaterActionsMenu") == false)
+        #expect(watchLater.contains("store.watchLaterQueue.isEmpty == false || normalizedWatchLaterFilterText.isEmpty == false"))
+        #expect(watchLater.contains("if canShowSearch {"))
         #expect(watchLater.contains("WatchLaterActionsMenuAction.showSearch"))
         #expect(watchLater.contains("WatchLaterActionsMenuAction.clearSearch"))
         #expect(watchLater.contains("WatchLaterActionsMenuAction.openHistory"))
@@ -4983,10 +4990,17 @@ struct NativeBoundaryTests {
 
         #expect(subscriptions.contains("SubscriptionActionsMenuAction.showSearch"))
         #expect(subscriptions.contains("SubscriptionActionsMenuAction.clearSearch"))
-        #expect(subscriptions.contains("SubscriptionActionsMenuAction.checkUpdates"))
-        #expect(subscriptions.contains("subtitle: L10n.workSubscriptionsCheckNow"))
+        #expect(subscriptions.contains("subscriptionRefreshToolbarItem"))
+        #expect(subscriptions.contains("subscriptionRefreshButton(usesSystemToolbarChrome: true)"))
+        #expect(subscriptions.contains("subscriptionRefreshButton()"))
+        #expect(subscriptions.contains("SubscriptionActionsMenuAction.checkUpdates") == false)
+        #expect(subscriptions.contains("subtitle: L10n.workSubscriptionsCheckNow") == false)
 
-        #expect(mutedContent.contains("NativeToolbarMenuItem.singleSelectionSubmenu(\n                            title: L10n.mutedContent"))
+        #expect(mutedContent.contains("totalCount > 0 || normalizedMutedContentFilterText.isEmpty == false"))
+        #expect(mutedContent.contains("totalCount: mutedContentFilterTotalCount"))
+        #expect(mutedContent.contains("visibleCount: mutedContentFilterVisibleCount"))
+        #expect(mutedContent.contains("NativeToolbarMenuItem.singleSelectionSubmenu("))
+        #expect(mutedContent.contains("title: L10n.mutedContent"))
         #expect(mutedContent.contains("MutedContentActionsMenuAction.syncFromPixiv"))
         #expect(mutedContent.contains("MutedContentActionsMenuAction.uploadToPixiv"))
         #expect(mutedContent.contains("MutedContentActionsMenuAction.exportLocalContent"))

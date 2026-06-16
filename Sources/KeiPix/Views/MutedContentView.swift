@@ -297,16 +297,33 @@ struct MutedContentView: View {
 
     private var mobileMutedContentPageFilterSnapshot: MobilePageFilterSnapshot? {
         #if os(iOS)
-        guard usesPhoneMutedContentFilterPill, categoryTotalCount > 0 else { return nil }
+        guard usesPhoneMutedContentFilterPill,
+              totalCount > 0 || normalizedMutedContentFilterText.isEmpty == false else {
+            return nil
+        }
         return MobilePageFilterSnapshot(
             route: .mutedContent,
-            totalCount: categoryTotalCount,
-            visibleCount: categoryVisibleCount,
+            totalCount: mutedContentFilterTotalCount,
+            visibleCount: mutedContentFilterVisibleCount,
             placeholder: L10n.searchMutedContent
         )
         #else
         return nil
         #endif
+    }
+
+    private var mutedContentFilterTotalCount: Int {
+        if categoryTotalCount > 0 || normalizedMutedContentFilterText.isEmpty == false {
+            return categoryTotalCount
+        }
+        return totalCount
+    }
+
+    private var mutedContentFilterVisibleCount: Int {
+        if categoryTotalCount > 0 || normalizedMutedContentFilterText.isEmpty == false {
+            return categoryVisibleCount
+        }
+        return totalCount
     }
 
     private var usesPhoneMutedContentFilterPill: Bool {
@@ -877,75 +894,88 @@ private struct MutedContentActionsMenu: View {
 
     #if os(iOS)
     private var nativeActionsMenu: NativeToolbarMenu {
-        NativeToolbarMenu(
-            title: L10n.mutedContent,
-            cacheKey: nativeActionsMenuCacheKey,
-            sections: [
-                NativeToolbarMenuSection(
-                    title: L10n.mutedContent,
-                    presentation: .root,
-                    items: [
-                        NativeToolbarMenuItem.singleSelectionSubmenu(
-                            title: L10n.mutedContent,
-                            selectedTitle: category.title,
-                            selectedOption: category,
-                            systemImage: category.systemImage,
-                            options: Array(MutedContentCategory.allCases),
-                            id: MutedContentActionsMenuAction.category,
-                            optionTitle: \.title,
-                            optionSystemImage: \.systemImage
-                        )
-                    ]
-                ),
+        var sections: [NativeToolbarMenuSection] = [
+            NativeToolbarMenuSection(
+                title: L10n.mutedContent,
+                presentation: .root,
+                items: [
+                    NativeToolbarMenuItem.singleSelectionSubmenu(
+                        title: L10n.mutedContent,
+                        selectedTitle: category.title,
+                        selectedOption: category,
+                        systemImage: category.systemImage,
+                        options: Array(MutedContentCategory.allCases),
+                        id: MutedContentActionsMenuAction.category,
+                        optionTitle: \.title,
+                        optionSystemImage: \.systemImage
+                    )
+                ]
+            )
+        ]
+        let viewOptionItems = nativeViewOptionItems
+        if viewOptionItems.isEmpty == false {
+            sections.append(
                 NativeToolbarMenuSection(
                     title: L10n.viewOptions,
-                    items: [
-                        .action(
-                            id: MutedContentActionsMenuAction.clearSearch,
-                            title: L10n.clearSearch,
-                            systemImage: "xmark.circle",
-                            isEnabled: canClearSearch
-                        )
-                    ]
-                ),
-                NativeToolbarMenuSection(
-                    title: L10n.moreActions,
-                    items: [
-                        .action(
-                            id: MutedContentActionsMenuAction.syncFromPixiv,
-                            title: L10n.syncFromPixiv,
-                            systemImage: "arrow.down.circle",
-                            isEnabled: canSyncFromPixiv
-                        ),
-                        .action(
-                            id: MutedContentActionsMenuAction.uploadToPixiv,
-                            title: L10n.uploadToPixiv,
-                            systemImage: "arrow.up.circle",
-                            isEnabled: canUploadToPixiv
-                        ),
-                        .action(
-                            id: MutedContentActionsMenuAction.exportLocalContent,
-                            title: L10n.exportMutedContent,
-                            systemImage: "square.and.arrow.up",
-                            isEnabled: canExportLocalContent
-                        ),
-                        .action(
-                            id: MutedContentActionsMenuAction.importLocalContent,
-                            title: L10n.importMutedContent,
-                            systemImage: "square.and.arrow.down",
-                            isEnabled: canImportLocalContent
-                        ),
-                        .action(
-                            id: MutedContentActionsMenuAction.clearMutedContent,
-                            title: L10n.clearMutedContent,
-                            systemImage: "trash",
-                            isEnabled: canClearMutedContent,
-                            isDestructive: true
-                        )
-                    ]
+                    items: viewOptionItems
                 )
-            ]
+            )
+        }
+        sections.append(
+            NativeToolbarMenuSection(
+                title: L10n.moreActions,
+                items: [
+                    .action(
+                        id: MutedContentActionsMenuAction.syncFromPixiv,
+                        title: L10n.syncFromPixiv,
+                        systemImage: "arrow.down.circle",
+                        isEnabled: canSyncFromPixiv
+                    ),
+                    .action(
+                        id: MutedContentActionsMenuAction.uploadToPixiv,
+                        title: L10n.uploadToPixiv,
+                        systemImage: "arrow.up.circle",
+                        isEnabled: canUploadToPixiv
+                    ),
+                    .action(
+                        id: MutedContentActionsMenuAction.exportLocalContent,
+                        title: L10n.exportMutedContent,
+                        systemImage: "square.and.arrow.up",
+                        isEnabled: canExportLocalContent
+                    ),
+                    .action(
+                        id: MutedContentActionsMenuAction.importLocalContent,
+                        title: L10n.importMutedContent,
+                        systemImage: "square.and.arrow.down",
+                        isEnabled: canImportLocalContent
+                    ),
+                    .action(
+                        id: MutedContentActionsMenuAction.clearMutedContent,
+                        title: L10n.clearMutedContent,
+                        systemImage: "trash",
+                        isEnabled: canClearMutedContent,
+                        isDestructive: true
+                    )
+                ]
+            )
         )
+
+        return NativeToolbarMenu(
+            title: L10n.mutedContent,
+            cacheKey: nativeActionsMenuCacheKey,
+            sections: sections
+        )
+    }
+
+    private var nativeViewOptionItems: [NativeToolbarMenuItem] {
+        guard canClearSearch else { return [] }
+        return [
+            .action(
+                id: MutedContentActionsMenuAction.clearSearch,
+                title: L10n.clearSearch,
+                systemImage: "xmark.circle"
+            )
+        ]
     }
 
     private var nativeActionsMenuCacheKey: String {

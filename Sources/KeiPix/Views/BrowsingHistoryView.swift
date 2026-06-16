@@ -133,10 +133,18 @@ struct BrowsingHistoryView: View {
 
     @ToolbarContentBuilder
     private var historyToolbar: some ToolbarContent {
+        historyRefreshToolbarItem
+        #if os(iOS)
+        historyActionsToolbarItem
+        #endif
+    }
+
+    @ToolbarContentBuilder
+    private var historyRefreshToolbarItem: some ToolbarContent {
         #if os(iOS)
         if usesPhoneHistoryFilterPill {
             ToolbarItem(placement: .primaryAction) {
-                historyActionsMenu(usesSystemToolbarChrome: true)
+                historyRefreshButton(usesSystemToolbarChrome: true)
             }
         }
         #else
@@ -145,6 +153,17 @@ struct BrowsingHistoryView: View {
         }
         #endif
     }
+
+    #if os(iOS)
+    @ToolbarContentBuilder
+    private var historyActionsToolbarItem: some ToolbarContent {
+        if usesPhoneHistoryFilterPill {
+            ToolbarItem(placement: .primaryAction) {
+                historyActionsMenu(usesSystemToolbarChrome: true)
+            }
+        }
+    }
+    #endif
 
     private var header: some View {
         GlassEffectContainer(spacing: 8) {
@@ -197,6 +216,7 @@ struct BrowsingHistoryView: View {
                 .help(L10n.clearSearch)
             }
 
+            historyRefreshButton()
             historyActionsMenu()
         }
         .controlSize(.small)
@@ -210,11 +230,30 @@ struct BrowsingHistoryView: View {
             hasActiveOptions: hasActiveHistoryOptions,
             canExportHistory: source == .local && store.localBrowsingHistory.isEmpty == false,
             canClearHistory: source == .local && store.localBrowsingHistory.isEmpty == false,
-            refreshHistory: refreshPixivHistoryFromMenu,
             exportHistory: exportHistory,
             clearHistory: { isClearConfirmationPresented = true },
             resetOptions: resetHistoryOptions
         )
+    }
+
+    @ViewBuilder
+    private func historyRefreshButton(usesSystemToolbarChrome: Bool = false) -> some View {
+        let button = Button {
+            refreshPixivHistoryFromButton()
+        } label: {
+            Label(L10n.refresh, systemImage: "arrow.clockwise")
+        }
+        .labelStyle(.iconOnly)
+        .help(L10n.pixivHistory)
+        .accessibilityLabel(L10n.refresh)
+
+        if usesSystemToolbarChrome {
+            button
+                .fixedSize(horizontal: true, vertical: false)
+        } else {
+            button
+                .os26GlassIconButton(prominent: source == .pixiv && store.isLoading)
+        }
     }
 
     private var showsHistorySearchBar: Bool {
@@ -602,7 +641,7 @@ struct BrowsingHistoryView: View {
         actionMessage = L10n.reset
     }
 
-    private func refreshPixivHistoryFromMenu() {
+    private func refreshPixivHistoryFromButton() {
         if source != .pixiv {
             source = .pixiv
         }
@@ -667,7 +706,6 @@ private struct HistoryActionsMenu: View {
     let hasActiveOptions: Bool
     let canExportHistory: Bool
     let canClearHistory: Bool
-    let refreshHistory: () -> Void
     let exportHistory: () -> Void
     let clearHistory: () -> Void
     let resetOptions: () -> Void
@@ -739,13 +777,6 @@ private struct HistoryActionsMenu: View {
             }
 
             Section(L10n.moreActions) {
-                Button {
-                    refreshHistory()
-                } label: {
-                    Label(L10n.refresh, systemImage: "arrow.clockwise")
-                    Text(L10n.pixivHistory)
-                }
-
                 Button {
                     exportHistory()
                 } label: {
@@ -833,12 +864,6 @@ private struct HistoryActionsMenu: View {
                     title: L10n.moreActions,
                     items: [
                         .action(
-                            id: HistoryActionsMenuAction.refreshHistory,
-                            title: L10n.refresh,
-                            subtitle: L10n.pixivHistory,
-                            systemImage: "arrow.clockwise"
-                        ),
-                        .action(
                             id: HistoryActionsMenuAction.exportHistory,
                             title: L10n.exportHistory,
                             systemImage: "square.and.arrow.up",
@@ -879,8 +904,6 @@ private struct HistoryActionsMenu: View {
         }
 
         switch id {
-        case HistoryActionsMenuAction.refreshHistory:
-            refreshHistory()
         case HistoryActionsMenuAction.exportHistory:
             exportHistory()
         case HistoryActionsMenuAction.clearHistory:
@@ -895,7 +918,6 @@ private struct HistoryActionsMenu: View {
 }
 
 private enum HistoryActionsMenuAction {
-    static let refreshHistory = "history-actions:refresh"
     static let exportHistory = "history-actions:export"
     static let clearHistory = "history-actions:clear"
     static let resetOptions = "history-actions:reset"
