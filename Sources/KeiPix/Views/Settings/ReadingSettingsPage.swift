@@ -56,6 +56,8 @@ struct ReadingSettingsPage: View {
                 }
             }
 
+            imageProcessingSection
+
             OS26SettingsSection(L10n.translate, systemImage: "translate", tone: .accent) {
                 OS26SettingsMenuPicker(
                     title: L10n.translationTargetLanguage,
@@ -106,6 +108,36 @@ struct ReadingSettingsPage: View {
         }
     }
 
+    private var imageProcessingSection: some View {
+        OS26SettingsSection(
+            L10n.imageProcessing,
+            systemImage: "camera.filters",
+            tone: .warning
+        ) {
+            OS26SettingsToggleRow(
+                title: L10n.imageProcessorsEnabled,
+                detail: L10n.imageProcessorsHint,
+                systemImage: "wand.and.stars",
+                tone: .warning,
+                isOn: store.settings_imageProcessorsEnabledBinding
+            )
+
+            if store.imageProcessorsEnabled {
+                OS26SettingsDivider()
+
+                ForEach(ImageProcessorRegistry.allProcessors, id: \.identifier) { processor in
+                    OS26SettingsToggleRow(
+                        title: processor.displayName,
+                        detail: nil,
+                        systemImage: processorSystemImage(processor.identifier),
+                        tone: processorSettingsTone(processor.identifier),
+                        isOn: processorToggleBinding(for: processor.identifier)
+                    )
+                }
+            }
+        }
+    }
+
     private func readingModePicker(
         title: String,
         value: ArtworkReadingMode,
@@ -144,6 +176,44 @@ struct ReadingSettingsPage: View {
             "rectangle"
         case .pageThenArtworkAtEdges:
             "rectangle.stack.badge.play"
+        }
+    }
+
+    private func processorSystemImage(_ identifier: String) -> String {
+        switch identifier {
+        case "smartCrop":
+            "crop"
+        case "sharpen":
+            "sparkle.magnifyingglass"
+        case "denoise":
+            "circle.dotted"
+        default:
+            "camera.filters"
+        }
+    }
+
+    private func processorSettingsTone(_ identifier: String) -> OS26SettingsTone {
+        switch identifier {
+        case "smartCrop":
+            .warning
+        default:
+            .accent
+        }
+    }
+
+    private func processorToggleBinding(for identifier: String) -> Binding<Bool> {
+        Binding {
+            store.activeImageProcessors.contains(identifier)
+        } set: { enabled in
+            var current = store.activeImageProcessors
+            if enabled {
+                if !current.contains(identifier) {
+                    current.append(identifier)
+                }
+            } else {
+                current.removeAll { $0 == identifier }
+            }
+            store.setActiveImageProcessors(current)
         }
     }
 

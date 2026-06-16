@@ -22,6 +22,7 @@ enum VisualQALaunchArgument: String, CaseIterable {
     case ranking = "--visual-qa-ranking"
     case mutedContent = "--visual-qa-muted-content"
     case settingsWindow = "--visual-qa-settings-window"
+    case readingSettings = "--visual-qa-reading-settings"
     case downloadSettings = "--visual-qa-download-settings"
     case bottomTabs = "--visual-qa-bottom-tabs"
     case runtimeReadiness = "--visual-qa-runtime-readiness"
@@ -76,7 +77,7 @@ enum VisualQALaunchArgument: String, CaseIterable {
             .ranking
         case .mutedContent:
             .mutedContent
-        case .settingsWindow:
+        case .settingsWindow, .readingSettings:
             .settingsWindow
         case .downloadSettings:
             .downloadSettings

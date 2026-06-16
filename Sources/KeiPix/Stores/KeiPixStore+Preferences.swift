@@ -584,6 +584,10 @@ extension KeiPixStore {
     // MARK: - Image Processing
 
     func setImageProcessorsEnabled(_ value: Bool) {
+        if value, activeImageProcessors.isEmpty {
+            activeImageProcessors = ImageProcessorRegistry.defaultActiveProcessorIdentifiers
+            UserDefaults.standard.set(activeImageProcessors, forKey: "activeImageProcessors")
+        }
         imageProcessorsEnabled = value
         UserDefaults.standard.set(value, forKey: "imageProcessorsEnabled")
         _ = ImagePipeline.shared.clearCaches()

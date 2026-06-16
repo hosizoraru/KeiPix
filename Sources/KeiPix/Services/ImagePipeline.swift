@@ -277,7 +277,8 @@ final class ImagePipeline: @unchecked Sendable {
     /// Empty array means no processing (pass-through).
     private static var activeProcessors: [any ImageProcessor] {
         guard UserDefaults.standard.bool(forKey: "imageProcessorsEnabled") else { return [] }
-        let identifiers = UserDefaults.standard.stringArray(forKey: "activeImageProcessors") ?? []
+        let identifiers = UserDefaults.standard.stringArray(forKey: "activeImageProcessors")
+            ?? ImageProcessorRegistry.defaultActiveProcessorIdentifiers
         return identifiers.compactMap { ImageProcessorRegistry.processor(for: $0) }
     }
 

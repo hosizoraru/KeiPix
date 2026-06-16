@@ -4,6 +4,12 @@ import Foundation
 /// and `ImagePipeline` both look up processors by identifier
 /// through this registry.
 enum ImageProcessorRegistry {
+    /// Conservative default for the app-controls quick toggle.
+    /// Smart Crop is intentionally opt-in because it can change composition.
+    static let defaultActiveProcessorIdentifiers = [
+        SharpenProcessor().identifier
+    ]
+
     /// Every processor the app ships with, in the order they
     /// appear in the settings UI.
     static let allProcessors: [any ImageProcessor] = [

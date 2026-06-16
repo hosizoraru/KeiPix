@@ -419,7 +419,8 @@ final class KeiPixStore {
     // MARK: - Image Processing
 
     var imageProcessorsEnabled = UserDefaults.standard.bool(forKey: "imageProcessorsEnabled")
-    var activeImageProcessors: [String] = UserDefaults.standard.stringArray(forKey: "activeImageProcessors") ?? []
+    var activeImageProcessors: [String] = UserDefaults.standard.stringArray(forKey: "activeImageProcessors")
+        ?? ImageProcessorRegistry.defaultActiveProcessorIdentifiers
     var horizontalSwipeBehavior = UserDefaults.standard.string(forKey: "horizontalSwipeBehavior")
         .flatMap(TrackpadHorizontalSwipeBehavior.init(rawValue:)) ?? .pageOnly
     var defaultArtworkReadingMode = KeiPixStore.loadEnum(

@@ -47310,6 +47310,35 @@
         }
       }
     },
+    "Apply on-device visual enhancements to decoded images using Core Image and Vision filters. Changes take effect on newly loaded images.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apply on-device visual enhancements to decoded images using Core Image and Vision filters. Changes take effect on newly loaded images."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "使用本机 Core Image 和 Vision 滤镜对解码图像应用视觉增强。更改对新加载的图像生效。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "使用本機 Core Image 和 Vision 濾鏡對解碼影像套用視覺增強。變更對新載入的影像生效。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "オンデバイスのCore ImageとVisionフィルターを使用してデコード画像に視覚的強化を適用します。変更は新しく読み込まれた画像に適用されます。"
+          }
+        }
+      }
+    },
     "Apply visual enhancements to decoded images using Core Image and Vision filters. Changes take effect on newly loaded images.": {
       "extractionState": "manual",
       "localizations": {

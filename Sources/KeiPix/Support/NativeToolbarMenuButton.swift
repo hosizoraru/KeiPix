@@ -333,6 +333,7 @@ indirect enum NativeToolbarMenuItem: Equatable {
     case action(
         id: String,
         title: String,
+        subtitle: String? = nil,
         systemImage: String,
         paletteTitle: String? = nil,
         isSelected: Bool = false,
@@ -385,6 +386,7 @@ indirect enum NativeToolbarMenuItem: Equatable {
         case .action(
             let id,
             let title,
+            let subtitle,
             let systemImage,
             let paletteTitle,
             let isSelected,
@@ -401,6 +403,7 @@ indirect enum NativeToolbarMenuItem: Equatable {
             }
             let action = UIAction(
                 title: prefersPaletteTitle ? (paletteTitle ?? title) : title,
+                subtitle: subtitle,
                 image: UIImage(systemName: systemImage),
                 identifier: UIAction.Identifier(id),
                 attributes: attributes,

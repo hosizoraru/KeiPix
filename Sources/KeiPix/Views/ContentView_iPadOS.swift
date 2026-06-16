@@ -112,6 +112,7 @@ struct ContentView: View {
             .task {
                 if VisualQALaunchArgument.contains(.about)
                     || VisualQALaunchArgument.contains(.settingsWindow)
+                    || VisualQALaunchArgument.contains(.readingSettings)
                     || VisualQALaunchArgument.contains(.downloadSettings) {
                     isSettingsSheetPresented = true
                 }
@@ -842,6 +843,24 @@ struct ContentView: View {
                 )
             }
         )
+    }
+
+    private var imageProcessingMenuItem: NativeToolbarMenuItem {
+        .action(
+            id: IPadToolbarMenuAction.toggleImageProcessing,
+            title: L10n.imageProcessing,
+            subtitle: imageProcessingMenuSubtitle,
+            systemImage: imageProcessingMenuSystemImage,
+            isSelected: store.imageProcessorsEnabled
+        )
+    }
+
+    private var imageProcessingMenuSubtitle: String {
+        store.imageProcessorsEnabled ? L10n.enabled : L10n.disabled
+    }
+
+    private var imageProcessingMenuSystemImage: String {
+        "camera.filters"
     }
 
     private func sidebarToggleButton(title: String) -> some View {
@@ -1832,7 +1851,8 @@ struct ContentView: View {
                             title: L10n.customizeBottomTabs,
                             systemImage: "rectangle.bottomthird.inset.filled"
                         ),
-                        artworkImageQualityMenuItem
+                        artworkImageQualityMenuItem,
+                        imageProcessingMenuItem
                     ]
                 ),
                 NativeToolbarMenuSection(
@@ -2030,6 +2050,8 @@ struct ContentView: View {
                 store.copySelectedArtworkLink()
                 showStatus(L10n.copied)
             }
+        case IPadToolbarMenuAction.toggleImageProcessing:
+            store.setImageProcessorsEnabled(!store.imageProcessorsEnabled)
         case IPadToolbarMenuAction.showContentBadges:
             store.setShowContentBadges(!store.showContentBadges)
         case IPadToolbarMenuAction.maskSensitivePreviews:
@@ -3023,6 +3045,7 @@ private enum IPadToolbarMenuAction {
     static let hideR18Artworks = "hide-r18-artworks"
     static let hideR18GArtworks = "hide-r18g-artworks"
     static let artworkImageQualityTierPrefix = "artwork-image-quality:"
+    static let toggleImageProcessing = "toggle-image-processing"
     static let customizeDashboard = "customize-dashboard"
     static let customizeBottomTabs = "customize-bottom-tabs"
     static let randomFromCurrentFeed = "random-from-current-feed"

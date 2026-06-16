@@ -1224,6 +1224,7 @@ struct NativeBoundaryTests {
         #expect(iPadContentView.contains("isMobileTabCustomizationPresented = true"))
         #expect(iPadContentView.contains("VisualQALaunchArgument.contains(.bottomTabs)"))
         #expect(iPadContentView.contains("VisualQALaunchArgument.contains(.settingsWindow)"))
+        #expect(iPadContentView.contains("VisualQALaunchArgument.contains(.readingSettings)"))
         #expect(iPadContentView.contains("VisualQALaunchArgument.contains(.downloadSettings)"))
         #expect(iPadContentView.contains(".os26SheetChrome(.settings)"))
         #expect(iPadContentView.contains("SearchWorkspaceView("))
@@ -3261,8 +3262,20 @@ struct NativeBoundaryTests {
             contentsOf: root.appending(path: "Sources/KeiPix/Views/Settings/SettingsBindings.swift"),
             encoding: .utf8
         )
+        let macContentView = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/ContentView.swift"),
+            encoding: .utf8
+        )
+        let mobileContentView = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/ContentView_iPadOS.swift"),
+            encoding: .utf8
+        )
         let readingSettings = try String(
             contentsOf: root.appending(path: "Sources/KeiPix/Views/Settings/ReadingSettingsPage.swift"),
+            encoding: .utf8
+        )
+        let advancedQASettings = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/Settings/AdvancedQASettingsPage.swift"),
             encoding: .utf8
         )
         let safetySettings = try String(
@@ -3322,6 +3335,7 @@ struct NativeBoundaryTests {
         #expect(generalSettings.contains(".pickerStyle(.segmented)") == false)
         #expect(settingsCategory.contains("L10n.useOriginalImages") == false)
         #expect(settingsCategory.contains("if VisualQALaunchArgument.contains(.settingsWindow) {\n            return .general"))
+        #expect(settingsCategory.contains("if VisualQALaunchArgument.contains(.readingSettings) {\n            return .reading"))
         #expect(settingsCategory.contains("if VisualQALaunchArgument.contains(.downloadSettings) {\n            return .downloads"))
 
         #expect(settingsSurface.contains("struct OS26SettingsPage<Content: View>: View"))
@@ -3361,6 +3375,19 @@ struct NativeBoundaryTests {
         #expect(readingSettings.contains("OS26SettingsMenuPicker("))
         #expect(readingSettings.contains("title: L10n.imageQualityTierSection"))
         #expect(readingSettings.contains("selection: store.settings_artworkImageQualityTierBinding"))
+        #expect(readingSettings.contains("L10n.imageProcessing"))
+        #expect(readingSettings.contains("store.settings_imageProcessorsEnabledBinding"))
+        #expect(readingSettings.contains("ImageProcessorRegistry.allProcessors"))
+        #expect(readingSettings.contains("processorToggleBinding(for: processor.identifier)"))
+        #expect(readingSettings.contains("tone: .warning"))
+        #expect(advancedQASettings.contains("L10n.imageProcessing") == false)
+        #expect(advancedQASettings.contains("ImageProcessorRegistry.allProcessors") == false)
+        #expect(advancedQASettings.contains("settings_imageProcessorsEnabledBinding") == false)
+        #expect(macContentView.contains("store.setImageProcessorsEnabled(!store.imageProcessorsEnabled)"))
+        #expect(macContentView.contains("store.imageProcessorsEnabled ? L10n.enabled : L10n.disabled"))
+        #expect(mobileContentView.contains("IPadToolbarMenuAction.toggleImageProcessing"))
+        #expect(mobileContentView.contains("subtitle: imageProcessingMenuSubtitle"))
+        #expect(mobileContentView.contains("store.setImageProcessorsEnabled(!store.imageProcessorsEnabled)"))
         #expect(readingSettings.contains("L10n.feedPreviewQuality") == false)
         #expect(readingSettings.contains("L10n.illustDetailQuality") == false)
         #expect(readingSettings.contains("L10n.mangaDetailQuality") == false)

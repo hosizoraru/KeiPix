@@ -574,6 +574,15 @@ struct ContentView: View {
                 .help(imageQualityMenuHelp)
             }
 
+            Section(L10n.imageProcessing) {
+                Button {
+                    store.setImageProcessorsEnabled(!store.imageProcessorsEnabled)
+                } label: {
+                    Label(imageProcessingMenuTitle, systemImage: imageProcessingMenuSystemImage)
+                }
+                .help(imageProcessingMenuHelp)
+            }
+
             Section(L10n.viewOptions) {
                 Toggle(L10n.showContentBadges, isOn: showContentBadgesBinding)
                 Toggle(L10n.maskSensitivePreviews, isOn: maskSensitivePreviewsBinding)
@@ -602,6 +611,18 @@ struct ContentView: View {
 
     private var imageQualityMenuHelp: String {
         "\(L10n.imageQualityTierSection): \(store.sharedArtworkImageQualityTier.title)"
+    }
+
+    private var imageProcessingMenuTitle: String {
+        "\(L10n.imageProcessing): \(store.imageProcessorsEnabled ? L10n.enabled : L10n.disabled)"
+    }
+
+    private var imageProcessingMenuSystemImage: String {
+        "camera.filters"
+    }
+
+    private var imageProcessingMenuHelp: String {
+        "\(L10n.imageProcessorsEnabled): \(store.imageProcessorsEnabled ? L10n.enabled : L10n.disabled)"
     }
 
     private var dangerActionBinding: Binding<Bool> {
