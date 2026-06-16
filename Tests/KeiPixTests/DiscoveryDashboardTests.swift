@@ -234,6 +234,10 @@ struct DiscoveryDashboardTests {
             contentsOf: root.appending(path: "Sources/KeiPix/Views/ContentView_iPadOS.swift"),
             encoding: .utf8
         )
+        let macContent = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/ContentView.swift"),
+            encoding: .utf8
+        )
         let visualQASampleData = try String(
             contentsOf: root.appending(path: "Sources/KeiPix/Support/VisualQASampleData.swift"),
             encoding: .utf8
@@ -299,6 +303,15 @@ struct DiscoveryDashboardTests {
         #expect(discoveryMenuSource.contains("L10n.contentFilters") == false)
         #expect(discoveryMenuSource.contains("IPadToolbarMenuAction.showContentBadges") == false)
         #expect(discoveryMenuSource.contains("IPadToolbarMenuAction.hideMutedContent") == false)
+        let macDiscoveryMenuRange = try #require(macContent.range(of: "private var discoveryDashboardToolbarMenu: some View"))
+        let macAppControlsRange = try #require(macContent.range(of: "private var appControlsMenu: some View"))
+        let macDiscoveryMenuSource = macContent[macDiscoveryMenuRange.lowerBound..<macAppControlsRange.lowerBound]
+        #expect(macDiscoveryMenuSource.contains("Section(L10n.dashboardCards)"))
+        #expect(macDiscoveryMenuSource.contains("isDashboardCustomizationPresented = true"))
+        #expect(macDiscoveryMenuSource.contains("L10n.viewOptions") == false)
+        #expect(macDiscoveryMenuSource.contains("L10n.contentFilters") == false)
+        #expect(macDiscoveryMenuSource.contains("Toggle(L10n.showContentBadges") == false)
+        #expect(macDiscoveryMenuSource.contains("Toggle(L10n.hideMutedContent") == false)
         #expect(dashboard.contains("VisualQALaunchArgument.contains(.discoverDashboardCustomization)") == false)
         #expect(visualQASampleData.contains("func presentDiscoverDashboardVisualQA()"))
         #expect(visualQASampleData.contains("selectedRoute = .home"))

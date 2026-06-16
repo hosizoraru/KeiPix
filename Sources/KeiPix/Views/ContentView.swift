@@ -514,18 +514,6 @@ struct ContentView: View {
                     Label(L10n.customizeDashboard, systemImage: "rectangle.grid.2x2")
                 }
             }
-
-            Section(L10n.viewOptions) {
-                Toggle(L10n.showContentBadges, isOn: showContentBadgesBinding)
-                Toggle(L10n.maskSensitivePreviews, isOn: maskSensitivePreviewsBinding)
-            }
-
-            Section(L10n.contentFilters) {
-                Toggle(L10n.hideMutedContent, isOn: hideMutedContentBinding)
-                Toggle(L10n.hideAIArtworks, isOn: hideAIBinding)
-                Toggle(L10n.hideR18Artworks, isOn: hideR18Binding)
-                Toggle(L10n.hideR18GArtworks, isOn: hideR18GBinding)
-            }
         } label: {
             Label(L10n.discoverySettings, systemImage: "slider.horizontal.3")
         }
