@@ -4,5 +4,5 @@
 // x.y.z form. CURRENT_PROJECT_VERSION maps to CFBundleVersion and uses the
 // tag-derived integer code: major * 10000 + minor * 100 + patch. For example,
 // 0.27.0 is 2700, 0.27.2 is 2702, and 1.2.3 is 10203.
-MARKETING_VERSION = 0.27.6
-CURRENT_PROJECT_VERSION = 2706
+MARKETING_VERSION = 0.27.7
+CURRENT_PROJECT_VERSION = 2707
