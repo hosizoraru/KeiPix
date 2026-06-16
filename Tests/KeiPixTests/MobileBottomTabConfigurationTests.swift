@@ -145,6 +145,12 @@ struct MobileBottomTabConfigurationTests {
         #expect(restored[.novels] == .novelLatest)
         #expect(restored[.discovery] == .spotlight)
         #expect(restored[.bookmarks] == .watchLater)
+
+        let savedDiscovery = MobileBottomTabConfiguration.defaultRouteMap(
+            from: "bookmarks=savedPixivisionArticles"
+        )
+        #expect(savedDiscovery[.discovery] == .savedPixivisionArticles)
+        #expect(savedDiscovery[.bookmarks] == .publicBookmarks)
     }
 
     @Test("Route menus are split by the four bottom tab families")
@@ -167,7 +173,7 @@ struct MobileBottomTabConfigurationTests {
         #expect(illustrationRoutes.contains(.newManga))
         #expect(illustrationRoutes.contains(.mangaWatchlist))
         #expect(illustrationRoutes.contains(.mangaRankingDaily))
-        #expect(illustrationRoutes.contains(.recommendedUsers))
+        #expect(illustrationRoutes.contains(.recommendedUsers) == false)
 
         #expect(novelRoutes.contains(.novelRecommended))
         #expect(novelRoutes.contains(.novelLatest))
@@ -175,16 +181,25 @@ struct MobileBottomTabConfigurationTests {
         #expect(novelRoutes.contains(.novelRankingWeekly))
         #expect(novelRoutes.contains(.publicBookmarks) == false)
 
-        #expect(discoveryRoutes == [.home, .spotlight, .pixivCollections, .pixivActivity])
+        #expect(discoveryRoutes == [
+            .home,
+            .recommendedUsers,
+            .spotlight,
+            .pixivCollections,
+            .pixivActivity,
+            .savedPixivisionArticles,
+            .myPixivCollections,
+            .savedPixivCollections
+        ])
         #expect(discoveryRoutes.contains(.illustrations) == false)
         #expect(discoveryRoutes.contains(.mangaRecommended) == false)
 
         #expect(bookmarkRoutes.contains(.publicBookmarks))
         #expect(bookmarkRoutes.contains(.pixivCollections) == false)
         #expect(bookmarkRoutes.contains(.pixivCollectionWorks) == false)
-        #expect(bookmarkRoutes.contains(.savedPixivisionArticles))
-        #expect(bookmarkRoutes.contains(.myPixivCollections))
-        #expect(bookmarkRoutes.contains(.savedPixivCollections))
+        #expect(bookmarkRoutes.contains(.savedPixivisionArticles) == false)
+        #expect(bookmarkRoutes.contains(.myPixivCollections) == false)
+        #expect(bookmarkRoutes.contains(.savedPixivCollections) == false)
         #expect(bookmarkRoutes.contains(.privateBookmarks))
         #expect(bookmarkRoutes.contains(.privateFollowing))
         #expect(bookmarkRoutes.contains(.pinnedCreators))
@@ -203,14 +218,33 @@ struct MobileBottomTabConfigurationTests {
         let mangaRanking = try #require(illustrationSections.first { $0.id == "manga-ranking" })
         let novelRanking = try #require(MobileRouteMenuConfiguration.sections(for: .novels).first { $0.id == "novel-ranking" })
 
+        #expect(illustrationSections.map(\.id) == ["illustration-feed", "illustration-ranking", "manga-feed", "manga-ranking"])
         #expect(illustrationFeed.presentation == .inline)
         #expect(mangaFeed.presentation == .inline)
+        #expect(ranking.title == L10n.illustrationRanking)
+        #expect(mangaRanking.title == L10n.mangaRanking)
         #expect(ranking.presentation == .submenu(systemImage: "chart.bar"))
         #expect(mangaRanking.presentation == .submenu(systemImage: "chart.bar.doc.horizontal"))
         #expect(novelRanking.presentation == .submenu(systemImage: "chart.bar.doc.horizontal"))
         #expect(ranking.routes == PixivRoute.illustrationRankingRoutes)
         #expect(mangaRanking.routes == PixivRoute.mangaRankingRoutes)
         #expect(novelRanking.routes == PixivRoute.novelRankingRoutes)
+    }
+
+    @Test("Discovery menus own creator, editorial, activity, and collection library routes")
+    func discoveryMenusOwnCreatorEditorialActivityAndCollectionLibraryRoutes() throws {
+        let discoverySections = MobileRouteMenuConfiguration.sections(for: .discovery)
+        let explore = try #require(discoverySections.first { $0.id == "discovery-explore" })
+        let savedArticles = try #require(discoverySections.first { $0.id == "discovery-saved-articles" })
+        let collections = try #require(discoverySections.first { $0.id == "discovery-pixiv-collections" })
+
+        #expect(discoverySections.map(\.id) == ["discovery-explore", "discovery-saved-articles", "discovery-pixiv-collections"])
+        #expect(explore.routes == [.home, .recommendedUsers, .spotlight, .pixivCollections, .pixivActivity])
+        #expect(savedArticles.title == L10n.savedArticles)
+        #expect(savedArticles.routes == [.savedPixivisionArticles])
+        #expect(collections.title == L10n.pixivCollections)
+        #expect(collections.routes == PixivRoute.routes(for: .pixivCollectionsLibrary))
+        #expect(collections.presentation == .submenu(systemImage: "rectangle.stack.badge.person.crop"))
     }
 
     @Test("Novel bookmark routes collapse behind one submenu entry")
@@ -248,7 +282,7 @@ struct MobileBottomTabConfigurationTests {
     func bookmarkLibraryFamiliesCollapseBehindSubmenuEntries() throws {
         let bookmarkSections = MobileRouteMenuConfiguration.sections(for: .bookmarks)
         let ownBookmarks = try #require(bookmarkSections.first { $0.id == "bookmarks-owned" })
-        let collections = try #require(bookmarkSections.first { $0.id == "bookmarks-pixiv-collections" })
+        let bookmarkTags = try #require(bookmarkSections.first { $0.id == "bookmarks-tags" })
         let followingArtwork = try #require(bookmarkSections.first { $0.id == "bookmarks-following-artwork" })
         let followingCreators = try #require(bookmarkSections.first { $0.id == "bookmarks-following-creators" })
         let inlineRoutes = bookmarkSections
@@ -256,13 +290,14 @@ struct MobileBottomTabConfigurationTests {
             .flatMap(\.routes)
 
         #expect(ownBookmarks.presentation == .submenu(systemImage: "bookmark"))
-        #expect(collections.presentation == .submenu(systemImage: "rectangle.stack.badge.person.crop"))
+        #expect(bookmarkTags.presentation == .inline)
+        #expect(bookmarkTags.routes == [.bookmarkTags])
         #expect(followingArtwork.presentation == .submenu(systemImage: "person.2"))
         #expect(followingCreators.presentation == .submenu(systemImage: "person.2.crop.square.stack"))
         #expect(ownBookmarks.routes == PixivRoute.routes(for: .ownBookmarks))
-        #expect(collections.routes == PixivRoute.routes(for: .pixivCollectionsLibrary))
         #expect(followingArtwork.routes == PixivRoute.routes(for: .followingArtwork))
         #expect(followingCreators.routes == PixivRoute.routes(for: .followedCreators))
+        #expect(bookmarkSections.contains { $0.id == "bookmarks-pixiv-collections" } == false)
         #expect(inlineRoutes.contains(.privateBookmarks) == false)
         #expect(inlineRoutes.contains(.savedPixivCollections) == false)
         #expect(inlineRoutes.contains(.privateFollowing) == false)
@@ -291,9 +326,10 @@ struct MobileBottomTabConfigurationTests {
         #expect(MobileBottomTabKind.kind(containing: .pixivCollections) == .discovery)
         #expect(MobileBottomTabKind.kind(containing: .pixivCollectionWorks) == .discovery)
         #expect(MobileBottomTabKind.kind(containing: .pixivActivity) == .discovery)
-        #expect(MobileBottomTabKind.kind(containing: .savedPixivisionArticles) == .bookmarks)
-        #expect(MobileBottomTabKind.kind(containing: .myPixivCollections) == .bookmarks)
-        #expect(MobileBottomTabKind.kind(containing: .savedPixivCollections) == .bookmarks)
+        #expect(MobileBottomTabKind.kind(containing: .recommendedUsers) == .discovery)
+        #expect(MobileBottomTabKind.kind(containing: .savedPixivisionArticles) == .discovery)
+        #expect(MobileBottomTabKind.kind(containing: .myPixivCollections) == .discovery)
+        #expect(MobileBottomTabKind.kind(containing: .savedPixivCollections) == .discovery)
         #expect(MobileBottomTabKind.kind(containing: .privateBookmarks) == .bookmarks)
         #expect(MobileBottomTabKind.kind(containing: .privateFollowing) == .bookmarks)
         #expect(MobileBottomTabKind.kind(containing: .pinnedCreators) == .bookmarks)

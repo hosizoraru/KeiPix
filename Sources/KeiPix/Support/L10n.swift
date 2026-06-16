@@ -153,6 +153,7 @@ enum L10n {
     static var unableToExportSearchLibrary: String { text("Unable to export search library") }
     static var noPixivWebSearchLink: String { text("No Pixiv Web search link") }
     static var ranking: String { text("Ranking") }
+    static var illustrationRanking: String { text("Illustration Ranking") }
     static var mangaRanking: String { text("Manga Ranking") }
     static var bookmarks: String { text("Bookmarks") }
     static var library: String { text("Library") }

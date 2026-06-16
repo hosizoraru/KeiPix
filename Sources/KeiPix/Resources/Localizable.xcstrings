@@ -15487,6 +15487,35 @@
         }
       }
     },
+    "Illustration Ranking": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Illustration Ranking"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "イラストランキング"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "插画排行榜"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "插畫排行榜"
+          }
+        }
+      }
+    },
     "Image Cache": {
       "extractionState": "manual",
       "localizations": {
@@ -18782,13 +18811,13 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "漫画榜"
+            "value": "漫画排行榜"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "漫畫榜"
+            "value": "漫畫排行榜"
           }
         }
       }
@@ -43281,13 +43310,13 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "小说追更"
+            "value": "追更小说"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "小說追更"
+            "value": "追更小說"
           }
         },
         "ja": {

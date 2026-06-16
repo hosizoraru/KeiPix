@@ -296,6 +296,10 @@ enum MobileBottomTabConfiguration {
            MobileBottomTabKind.discovery.contains(route) {
             return .discovery
         }
+        if storageKindID == "bookmarks",
+           MobileBottomTabKind.discovery.contains(route) {
+            return .discovery
+        }
         return nil
     }
 
@@ -338,9 +342,14 @@ enum MobileRouteMenuConfiguration {
                     title: L10n.illustrations,
                     routes: [
                         .illustrations,
-                        .newIllustrations,
-                        .recommendedUsers
+                        .newIllustrations
                     ]
+                ),
+                MobileRouteMenuSection(
+                    id: "illustration-ranking",
+                    title: L10n.illustrationRanking,
+                    routes: PixivRoute.illustrationRankingRoutes,
+                    presentation: .submenu(systemImage: "chart.bar")
                 ),
                 MobileRouteMenuSection(
                     id: "manga-feed",
@@ -350,12 +359,6 @@ enum MobileRouteMenuConfiguration {
                         .newManga,
                         .mangaWatchlist
                     ]
-                ),
-                MobileRouteMenuSection(
-                    id: "illustration-ranking",
-                    title: L10n.ranking,
-                    routes: PixivRoute.illustrationRankingRoutes,
-                    presentation: .submenu(systemImage: "chart.bar")
                 ),
                 MobileRouteMenuSection(
                     id: "manga-ranking",
@@ -392,14 +395,28 @@ enum MobileRouteMenuConfiguration {
         case .discovery:
             [
                 MobileRouteMenuSection(
-                    id: "discovery",
+                    id: "discovery-explore",
                     title: L10n.discover,
                     routes: [
                         .home,
+                        .recommendedUsers,
                         .spotlight,
                         .pixivCollections,
                         .pixivActivity
                     ]
+                ),
+                MobileRouteMenuSection(
+                    id: "discovery-saved-articles",
+                    title: L10n.savedArticles,
+                    routes: [
+                        .savedPixivisionArticles
+                    ]
+                ),
+                MobileRouteMenuSection(
+                    id: "discovery-pixiv-collections",
+                    title: L10n.pixivCollections,
+                    routes: PixivRoute.pixivCollectionsLibraryRoutes,
+                    presentation: .submenu(systemImage: "rectangle.stack.badge.person.crop")
                 )
             ]
         case .bookmarks:
@@ -411,18 +428,11 @@ enum MobileRouteMenuConfiguration {
                     presentation: .submenu(systemImage: "bookmark")
                 ),
                 MobileRouteMenuSection(
-                    id: "bookmarks",
-                    title: L10n.savedArticles,
+                    id: "bookmarks-tags",
+                    title: L10n.bookmarkTags,
                     routes: [
-                        .bookmarkTags,
-                        .savedPixivisionArticles
+                        .bookmarkTags
                     ]
-                ),
-                MobileRouteMenuSection(
-                    id: "bookmarks-pixiv-collections",
-                    title: L10n.pixivCollections,
-                    routes: PixivRoute.pixivCollectionsLibraryRoutes,
-                    presentation: .submenu(systemImage: "rectangle.stack.badge.person.crop")
                 ),
                 MobileRouteMenuSection(
                     id: "bookmarks-following-artwork",
