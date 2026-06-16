@@ -30,6 +30,14 @@ extension KeiPixStore {
         }
     }
 
+    var settings_chromeMaterialModeBinding: Binding<ChromeMaterialMode> {
+        Binding {
+            self.chromeMaterialMode
+        } set: { value in
+            self.setChromeMaterialMode(value)
+        }
+    }
+
     var settings_launchDestinationBinding: Binding<LaunchDestination> {
         Binding {
             self.launchDestination

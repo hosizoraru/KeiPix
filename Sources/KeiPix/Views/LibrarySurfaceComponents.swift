@@ -1068,11 +1068,12 @@ private struct OS26SettingsPickerValueLabel: View {
     var body: some View {
         HStack(spacing: 6) {
             Text(value)
-                .font(.callout.weight(.semibold))
+                .font(.body.weight(.semibold))
                 .foregroundStyle(.primary)
-                .lineLimit(1)
-                .truncationMode(.middle)
-                .minimumScaleFactor(0.86)
+                .lineLimit(2)
+                .minimumScaleFactor(0.92)
+                .multilineTextAlignment(.trailing)
+                .fixedSize(horizontal: false, vertical: true)
 
             Image(systemName: chevronSystemImage)
                 .font(.footnote.weight(.bold))

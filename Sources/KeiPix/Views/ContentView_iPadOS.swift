@@ -88,6 +88,7 @@ struct ContentView: View {
     var body: some View {
         adaptiveRoot
             .environment(\.bookmarkEditorLayoutProfileOverride, bookmarkEditorLayoutProfileOverride)
+            .environment(\.chromeMaterialMode, store.chromeMaterialMode)
             .environment(\.locale, store.appLanguage.locale ?? .current)
             .preferredColorScheme(store.appColorScheme.preferredColorScheme)
             .onPreferenceChange(BookmarkEditorLayoutProfilePreferenceKey.self) { profile in
@@ -441,6 +442,7 @@ struct ContentView: View {
                 placeholder: phoneFeedFilterPlaceholder,
                 resultText: phoneCollapsedFeedFilterResultText,
                 isEnabled: isPhoneFeedFilterEnabled(layout: layout),
+                chromeMaterialMode: store.chromeMaterialMode,
                 syncID: compactTabBarSyncID(layout: layout)
             )
         }
@@ -852,6 +854,25 @@ struct ContentView: View {
             subtitle: imageProcessingMenuSubtitle,
             systemImage: imageProcessingMenuSystemImage,
             isSelected: store.imageProcessorsEnabled
+        )
+    }
+
+    private var chromeMaterialModeMenuItem: NativeToolbarMenuItem {
+        let selectedMode = store.chromeMaterialMode
+        return .submenu(
+            title: L10n.chromeMaterialMode,
+            subtitle: selectedMode.title,
+            systemImage: selectedMode.systemImage,
+            presentation: .singleSelection,
+            items: ChromeMaterialMode.allCases.map { mode in
+                .action(
+                    id: IPadToolbarMenuAction.chromeMaterialMode(mode),
+                    title: mode.title,
+                    subtitle: mode.detail,
+                    systemImage: mode.systemImage,
+                    isSelected: selectedMode == mode
+                )
+            }
         )
     }
 
@@ -1852,6 +1873,7 @@ struct ContentView: View {
                             systemImage: "rectangle.bottomthird.inset.filled"
                         ),
                         artworkImageQualityMenuItem,
+                        chromeMaterialModeMenuItem,
                         imageProcessingMenuItem
                     ]
                 ),
@@ -1984,6 +2006,10 @@ struct ContentView: View {
         }
         if let tier = IPadToolbarMenuAction.artworkImageQualityTier(from: id) {
             store.setArtworkImageQualityTier(tier)
+            return
+        }
+        if let mode = IPadToolbarMenuAction.chromeMaterialMode(from: id) {
+            store.setChromeMaterialMode(mode)
             return
         }
 
@@ -3045,6 +3071,7 @@ private enum IPadToolbarMenuAction {
     static let hideR18Artworks = "hide-r18-artworks"
     static let hideR18GArtworks = "hide-r18g-artworks"
     static let artworkImageQualityTierPrefix = "artwork-image-quality:"
+    static let chromeMaterialModePrefix = "chrome-material-mode:"
     static let toggleImageProcessing = "toggle-image-processing"
     static let customizeDashboard = "customize-dashboard"
     static let customizeBottomTabs = "customize-bottom-tabs"
@@ -3217,6 +3244,16 @@ private enum IPadToolbarMenuAction {
         guard id.hasPrefix(artworkImageQualityTierPrefix) else { return nil }
         let rawValue = String(id.dropFirst(artworkImageQualityTierPrefix.count))
         return ArtworkImageQualityTier(rawValue: rawValue)
+    }
+
+    static func chromeMaterialMode(_ mode: ChromeMaterialMode) -> String {
+        chromeMaterialModePrefix + mode.rawValue
+    }
+
+    static func chromeMaterialMode(from id: String) -> ChromeMaterialMode? {
+        guard id.hasPrefix(chromeMaterialModePrefix) else { return nil }
+        let rawValue = String(id.dropFirst(chromeMaterialModePrefix.count))
+        return ChromeMaterialMode(rawValue: rawValue)
     }
 }
 

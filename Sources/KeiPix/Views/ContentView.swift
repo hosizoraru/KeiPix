@@ -574,6 +574,24 @@ struct ContentView: View {
                 .help(imageQualityMenuHelp)
             }
 
+            Section(L10n.chromeMaterialMode) {
+                Menu {
+                    ForEach(ChromeMaterialMode.allCases) { mode in
+                        Button {
+                            store.setChromeMaterialMode(mode)
+                        } label: {
+                            Label(
+                                mode.title,
+                                systemImage: store.chromeMaterialMode == mode ? "checkmark" : mode.systemImage
+                            )
+                        }
+                    }
+                } label: {
+                    Label(L10n.chromeMaterialMode, systemImage: chromeMaterialMenuSystemImage)
+                }
+                .help(chromeMaterialMenuHelp)
+            }
+
             Section(L10n.imageProcessing) {
                 Button {
                     store.setImageProcessorsEnabled(!store.imageProcessorsEnabled)
@@ -611,6 +629,14 @@ struct ContentView: View {
 
     private var imageQualityMenuHelp: String {
         "\(L10n.imageQualityTierSection): \(store.sharedArtworkImageQualityTier.title)"
+    }
+
+    private var chromeMaterialMenuSystemImage: String {
+        store.chromeMaterialMode.systemImage
+    }
+
+    private var chromeMaterialMenuHelp: String {
+        "\(L10n.chromeMaterialMode): \(store.chromeMaterialMode.title)"
     }
 
     private var imageProcessingMenuTitle: String {

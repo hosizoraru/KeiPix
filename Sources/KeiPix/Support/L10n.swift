@@ -744,6 +744,14 @@ enum L10n {
     static var themeLight: String { text("Light") }
     static var themeDark: String { text("Dark") }
     static var themeHint: String { text("Apply a fixed light or dark mode inside KeiPix while leaving the system appearance unchanged.") }
+    static var chromeMaterialMode: String { text("Chrome Material") }
+    static var chromeMaterialModeHint: String { text("Controls the top and bottom chrome over artwork. Full Liquid Glass looks richest; lighter modes reduce background blur and reflection work.") }
+    static var chromeMaterialModePlain: String { text("No Blur") }
+    static var chromeMaterialModePlainHint: String { text("Use a solid, readable surface with no background blur.") }
+    static var chromeMaterialModeTranslucentBlur: String { text("Translucent Blur") }
+    static var chromeMaterialModeTranslucentBlurHint: String { text("Keep a lightweight system blur without Liquid Glass reflections.") }
+    static var chromeMaterialModeLiquidGlass: String { text("Full Liquid Glass") }
+    static var chromeMaterialModeLiquidGlassHint: String { text("Use Liquid Glass reflections and interaction on supported OS versions.") }
     static var useOriginalImages: String { text("Use original images in detail") }
     static var useOriginalImagesForManga: String { text("Use original images for manga") }
     static var imageQualityHint: String { text("Pick a default per content type — illust details and multi-page manga can use different quality presets.") }

@@ -34,6 +34,18 @@ struct GeneralSettingsPage: View {
                     Label(scheme.title, systemImage: isSelected ? "checkmark" : scheme.systemImage)
                 }
 
+                OS26SettingsMenuPicker(
+                    title: L10n.chromeMaterialMode,
+                    value: store.chromeMaterialMode.title,
+                    detail: L10n.chromeMaterialModeHint,
+                    systemImage: store.chromeMaterialMode.systemImage,
+                    tone: .accent,
+                    selection: store.settings_chromeMaterialModeBinding,
+                    options: ChromeMaterialMode.allCases
+                ) { mode, isSelected in
+                    Label(mode.title, systemImage: isSelected ? "checkmark" : mode.systemImage)
+                }
+
                 OS26SettingsToggleRow(
                     title: L10n.showTranslatedTags,
                     detail: L10n.showTranslatedTagsHint,

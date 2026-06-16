@@ -24,6 +24,7 @@ struct KeiPixApp: App {
                 .background(WindowCaptureProtectionBridge(isProtected: store.isMainWindowCaptureProtected))
                 .automaticKeyViewLoop()
                 #endif
+                .environment(\.chromeMaterialMode, store.chromeMaterialMode)
                 .environment(\.locale, store.appLanguage.locale ?? .current)
                 .preferredColorScheme(store.appColorScheme.preferredColorScheme)
                 .onAppear {
@@ -94,6 +95,7 @@ struct KeiPixApp: App {
         Window(L10n.aboutKeiPix, id: "about") {
             AboutView(presentation: .window)
                 .automaticKeyViewLoop()
+                .environment(\.chromeMaterialMode, store.chromeMaterialMode)
                 .environment(\.locale, store.appLanguage.locale ?? .current)
                 .preferredColorScheme(store.appColorScheme.preferredColorScheme)
         }
@@ -103,6 +105,7 @@ struct KeiPixApp: App {
         Window(L10n.logs, id: "logs") {
             LogViewerView()
                 .automaticKeyViewLoop()
+                .environment(\.chromeMaterialMode, store.chromeMaterialMode)
                 .environment(\.locale, store.appLanguage.locale ?? .current)
                 .preferredColorScheme(store.appColorScheme.preferredColorScheme)
         }
@@ -125,6 +128,7 @@ struct KeiPixApp: App {
                 }
             }
             .automaticKeyViewLoop()
+            .environment(\.chromeMaterialMode, store.chromeMaterialMode)
             .environment(\.locale, store.appLanguage.locale ?? .current)
             .preferredColorScheme(store.appColorScheme.preferredColorScheme)
         }
@@ -133,6 +137,7 @@ struct KeiPixApp: App {
         Settings {
             SettingsView(store: store)
                 .automaticKeyViewLoop()
+                .environment(\.chromeMaterialMode, store.chromeMaterialMode)
                 .environment(\.locale, store.appLanguage.locale ?? .current)
                 .preferredColorScheme(store.appColorScheme.preferredColorScheme)
         }
@@ -140,6 +145,7 @@ struct KeiPixApp: App {
         MenuBarExtra {
             MenuBarExtraView(store: store)
                 .automaticKeyViewLoop()
+                .environment(\.chromeMaterialMode, store.chromeMaterialMode)
                 .environment(\.locale, store.appLanguage.locale ?? .current)
         } label: {
             Image(systemName: "photo.on.rectangle.angled")

@@ -195,6 +195,10 @@ extension KeiPixStore {
         }
     }
 
+    func setChromeMaterialMode(_ mode: ChromeMaterialMode) {
+        persistRaw("chromeMaterialMode", value: mode, to: \.chromeMaterialMode)
+    }
+
     func setShowTranslatedTags(_ value: Bool) {
         persist("showTranslatedTags", value: value, to: \.showTranslatedTags)
     }

@@ -3307,6 +3307,238 @@
         }
       }
     },
+    "Chrome Material": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chrome Material"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "UIクローム素材"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "界面材质"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "介面材質"
+          }
+        }
+      }
+    },
+    "Controls the top and bottom chrome over artwork. Full Liquid Glass looks richest; lighter modes reduce background blur and reflection work.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Controls the top and bottom chrome over artwork. Full Liquid Glass looks richest; lighter modes reduce background blur and reflection work."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "作品の上部と下部に重なるクロームを調整します。完全なLiquid Glassは最も豊かに見え、軽いモードでは背景ぼかしと反射の負荷を抑えます。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "控制作品上方和底部的界面背景。完整液态玻璃效果最丰富；较轻模式会减少背景模糊和反射开销。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "控制作品上方與底部的介面背景。完整液態玻璃效果最豐富；較輕模式會減少背景模糊與反射開銷。"
+          }
+        }
+      }
+    },
+    "Full Liquid Glass": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Full Liquid Glass"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "完全なLiquid Glass"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "完整液态玻璃"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "完整液態玻璃"
+          }
+        }
+      }
+    },
+    "Keep a lightweight system blur without Liquid Glass reflections.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep a lightweight system blur without Liquid Glass reflections."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Liquid Glassの反射を使わず、軽量なシステムぼかしだけを残します。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保留轻量系统模糊，不使用液态玻璃反射。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保留輕量系統模糊，不使用液態玻璃反射。"
+          }
+        }
+      }
+    },
+    "No Blur": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No Blur"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ぼかしなし"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无模糊"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "無模糊"
+          }
+        }
+      }
+    },
+    "Translucent Blur": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Translucent Blur"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "半透明ぼかし"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "半透明模糊"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "半透明模糊"
+          }
+        }
+      }
+    },
+    "Use a solid, readable surface with no background blur.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use a solid, readable surface with no background blur."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "背景ぼかしを使わず、読みやすい単色の面を使います。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "使用清晰可读的实色界面，不进行背景模糊。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "使用清晰可讀的實色介面，不進行背景模糊。"
+          }
+        }
+      }
+    },
+    "Use Liquid Glass reflections and interaction on supported OS versions.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use Liquid Glass reflections and interaction on supported OS versions."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "対応するOSでLiquid Glassの反射とインタラクションを使います。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在支持的系统版本上使用液态玻璃反射和交互效果。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在支援的系統版本上使用液態玻璃反射與互動效果。"
+          }
+        }
+      }
+    },
     "Apple's system translation sheet stays reachable on artwork captions and comments, gated to skip empty / emoji-only text.": {
       "extractionState": "manual",
       "localizations": {

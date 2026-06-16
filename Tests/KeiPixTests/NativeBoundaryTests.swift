@@ -2529,9 +2529,17 @@ struct NativeBoundaryTests {
         #expect(glassSupport.contains("InsettableShape") == false)
         #expect(glassSupport.contains("ButtonBorderShape.roundedRectangle(radius: radius)"))
         #expect(glassSupport.contains(".containerShape(shape)"))
+        #expect(glassSupport.contains("private struct ChromeMaterialModeKey: EnvironmentKey"))
+        #expect(glassSupport.contains("var chromeMaterialMode: ChromeMaterialMode"))
+        #expect(glassSupport.contains("@Environment(\\.chromeMaterialMode) private var chromeMaterialMode"))
+        #expect(glassSupport.contains("case .liquidGlass:"))
+        #expect(glassSupport.contains("case .translucentBlur:"))
+        #expect(glassSupport.contains("case .plain:"))
         #expect(glassSupport.contains(".glassEffect(.regular, in: shape)"))
         #expect(glassSupport.contains(".glassEffect(.regular.interactive(), in: shape)"))
-        #expect(glassSupport.contains(".keiGlass(20)"))
+        #expect(glassSupport.contains(".background(.ultraThinMaterial, in: shape)"))
+        #expect(glassSupport.contains(".background(Color.keiPlainChromeFill, in: shape)"))
+        #expect(glassSupport.contains("barContent(content, horizontalPadding: 14, radius: 20)"))
         #expect(glassSupport.contains("func keiPanel(_ radius: CGFloat = 16, clipsContent: Bool = false)"))
         #expect(glassSupport.contains(".clipShape(shape)"))
         #expect(glassSupport.contains("func macOSWindowCompanionBackground()"))
@@ -3262,6 +3270,26 @@ struct NativeBoundaryTests {
             contentsOf: root.appending(path: "Sources/KeiPix/Views/Settings/SettingsBindings.swift"),
             encoding: .utf8
         )
+        let storeSource = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Stores/KeiPixStore.swift"),
+            encoding: .utf8
+        )
+        let preferenceSource = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Stores/KeiPixStore+Preferences.swift"),
+            encoding: .utf8
+        )
+        let glassSupport = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Support/Glass.swift"),
+            encoding: .utf8
+        )
+        let tabBarBridge = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Support/TabBarMinimizeBehaviorBridge.swift"),
+            encoding: .utf8
+        )
+        let appEntry = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/App/KeiPixApp.swift"),
+            encoding: .utf8
+        )
         let macContentView = try String(
             contentsOf: root.appending(path: "Sources/KeiPix/Views/ContentView.swift"),
             encoding: .utf8
@@ -3323,6 +3351,10 @@ struct NativeBoundaryTests {
         #expect(generalSettings.contains("OS26SettingsMenuPicker("))
         #expect(generalSettings.contains("private struct GeneralSettingsMenuPicker") == false)
         #expect(generalSettings.contains("value: store.appLanguage.title"))
+        #expect(generalSettings.contains("title: L10n.chromeMaterialMode"))
+        #expect(generalSettings.contains("value: store.chromeMaterialMode.title"))
+        #expect(generalSettings.contains("selection: store.settings_chromeMaterialModeBinding"))
+        #expect(generalSettings.contains("options: ChromeMaterialMode.allCases"))
         #expect(generalSettings.contains("value: store.galleryLayoutMode.title"))
         #expect(generalSettings.contains("OS26SettingsSection(\n                L10n.imageQualityTierSection") == false)
         #expect(generalSettings.contains("L10n.feedPreviewQuality") == false)
@@ -3349,6 +3381,9 @@ struct NativeBoundaryTests {
         #expect(settingsSurface.contains("private var inlineOptionPicker: some View"))
         #expect(settingsSurface.contains("private var menuPicker: some View"))
         #expect(settingsSurface.contains("#if os(macOS)\n            menuPicker\n        #else\n            inlineOptionPicker\n        #endif"))
+        #expect(settingsSurface.contains(".font(.body.weight(.semibold))"))
+        #expect(settingsSurface.contains(".lineLimit(2)"))
+        #expect(settingsSurface.contains(".truncationMode(.middle)") == false)
         #expect(settingsSurface.contains("struct OS26SettingsActionButton: View"))
         #expect(settingsSurface.contains("enum OS26SettingsTone"))
         #expect(settingsSurface.contains("tone: OS26SettingsTone = .neutral"))
@@ -3376,6 +3411,15 @@ struct NativeBoundaryTests {
         #expect(settingsBindings.contains("settings_defaultMangaBookmarkRestrictBinding"))
         #expect(settingsBindings.contains("settings_defaultNovelBookmarkRestrictBinding"))
         #expect(settingsBindings.contains("settings_routeSwitchRefreshExpirationBinding"))
+        #expect(settingsBindings.contains("settings_chromeMaterialModeBinding"))
+        #expect(storeSource.contains("chromeMaterialMode = KeiPixStore.loadEnum("))
+        #expect(storeSource.contains("defaultValue: ChromeMaterialMode.liquidGlass"))
+        #expect(preferenceSource.contains("func setChromeMaterialMode(_ mode: ChromeMaterialMode)"))
+        #expect(glassSupport.contains("ChromeMaterialModeKey"))
+        #expect(appEntry.contains(".environment(\\.chromeMaterialMode, store.chromeMaterialMode)"))
+        #expect(mobileContentView.contains("chromeMaterialMode: store.chromeMaterialMode"))
+        #expect(tabBarBridge.contains("let chromeMaterialMode: ChromeMaterialMode"))
+        #expect(tabBarBridge.contains("mode: chromeMaterialMode"))
         #expect(discoverySettings.contains("OS26SettingsToggleRow("))
         #expect(readingSettings.contains("OS26SettingsMenuPicker("))
         #expect(readingSettings.contains("title: L10n.imageQualityTierSection"))
@@ -3390,9 +3434,14 @@ struct NativeBoundaryTests {
         #expect(advancedQASettings.contains("settings_imageProcessorsEnabledBinding") == false)
         #expect(macContentView.contains("store.setImageProcessorsEnabled(!store.imageProcessorsEnabled)"))
         #expect(macContentView.contains("store.imageProcessorsEnabled ? L10n.enabled : L10n.disabled"))
+        #expect(macContentView.contains("Section(L10n.chromeMaterialMode)"))
+        #expect(macContentView.contains("store.chromeMaterialMode == mode"))
+        #expect(macContentView.contains("store.setChromeMaterialMode(mode)"))
         #expect(mobileContentView.contains("IPadToolbarMenuAction.toggleImageProcessing"))
         #expect(mobileContentView.contains("subtitle: imageProcessingMenuSubtitle"))
         #expect(mobileContentView.contains("store.setImageProcessorsEnabled(!store.imageProcessorsEnabled)"))
+        #expect(mobileContentView.contains("id: IPadToolbarMenuAction.chromeMaterialMode(mode)"))
+        #expect(mobileContentView.contains("store.setChromeMaterialMode(mode)"))
         #expect(readingSettings.contains("L10n.feedPreviewQuality") == false)
         #expect(readingSettings.contains("L10n.illustDetailQuality") == false)
         #expect(readingSettings.contains("L10n.mangaDetailQuality") == false)

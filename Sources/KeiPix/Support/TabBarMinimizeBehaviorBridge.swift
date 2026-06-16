@@ -336,6 +336,7 @@ struct PhoneFeedFilterBarOverlayBridge: UIViewControllerRepresentable {
     let placeholder: String
     let resultText: String
     let isEnabled: Bool
+    let chromeMaterialMode: ChromeMaterialMode
     let syncID: String
 
     func makeUIViewController(context: Context) -> Controller {
@@ -344,6 +345,7 @@ struct PhoneFeedFilterBarOverlayBridge: UIViewControllerRepresentable {
             placeholder: placeholder,
             resultText: resultText,
             isEnabled: isEnabled,
+            chromeMaterialMode: chromeMaterialMode,
             syncID: syncID
         )
     }
@@ -353,6 +355,7 @@ struct PhoneFeedFilterBarOverlayBridge: UIViewControllerRepresentable {
         controller.placeholder = placeholder
         controller.resultText = resultText
         controller.isEnabled = isEnabled
+        controller.chromeMaterialMode = chromeMaterialMode
         controller.syncID = syncID
         controller.applyOverlay()
     }
@@ -362,6 +365,14 @@ struct PhoneFeedFilterBarOverlayBridge: UIViewControllerRepresentable {
         var placeholder: String
         var resultText: String
         var isEnabled: Bool
+        var chromeMaterialMode: ChromeMaterialMode {
+            didSet {
+                if oldValue != chromeMaterialMode {
+                    removeChrome()
+                }
+                scheduleDeferredLayout()
+            }
+        }
         var syncID: String {
             didSet {
                 if oldValue != syncID {
@@ -388,12 +399,14 @@ struct PhoneFeedFilterBarOverlayBridge: UIViewControllerRepresentable {
             placeholder: String,
             resultText: String,
             isEnabled: Bool,
+            chromeMaterialMode: ChromeMaterialMode,
             syncID: String
         ) {
             self.text = text
             self.placeholder = placeholder
             self.resultText = resultText
             self.isEnabled = isEnabled
+            self.chromeMaterialMode = chromeMaterialMode
             self.syncID = syncID
             super.init(nibName: nil, bundle: nil)
         }
@@ -473,7 +486,11 @@ struct PhoneFeedFilterBarOverlayBridge: UIViewControllerRepresentable {
             glassContainerView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
             glassContainerView.backgroundColor = .clear
 
-            let pillView = makeGlassOverlay(cornerRadius: PhoneFeedFilterChromeLayout.pillHeight / 2, isInteractive: true)
+            let pillView = makeGlassOverlay(
+                cornerRadius: PhoneFeedFilterChromeLayout.pillHeight / 2,
+                isInteractive: true,
+                mode: chromeMaterialMode
+            )
             let pillControl = UIControl(frame: .zero)
             pillControl.addTarget(self, action: #selector(showFilterPanel), for: .touchUpInside)
             pillControl.translatesAutoresizingMaskIntoConstraints = false
@@ -519,7 +536,11 @@ struct PhoneFeedFilterBarOverlayBridge: UIViewControllerRepresentable {
                 pillIconView.heightAnchor.constraint(equalToConstant: 16)
             ])
 
-            let panelView = makeGlassOverlay(cornerRadius: PhoneFeedFilterChromeLayout.panelHeight / 2, isInteractive: true)
+            let panelView = makeGlassOverlay(
+                cornerRadius: PhoneFeedFilterChromeLayout.panelHeight / 2,
+                isInteractive: true,
+                mode: chromeMaterialMode
+            )
             let field = UITextField(frame: .zero)
             field.delegate = self
             field.autocorrectionType = .no
@@ -579,7 +600,7 @@ struct PhoneFeedFilterBarOverlayBridge: UIViewControllerRepresentable {
         }
 
         private func makeGlassContainer() -> UIView {
-            if #available(iOS 26.0, *) {
+            if chromeMaterialMode == .liquidGlass, #available(iOS 26.0, *) {
                 let effect = UIGlassContainerEffect()
                 effect.spacing = 14
                 let containerView = PassThroughVisualEffectView(effect: effect)
@@ -596,15 +617,22 @@ struct PhoneFeedFilterBarOverlayBridge: UIViewControllerRepresentable {
             (containerView as? UIVisualEffectView)?.contentView ?? containerView
         }
 
-        private func makeGlassOverlay(cornerRadius: CGFloat, isInteractive: Bool) -> UIVisualEffectView {
+        private func makeGlassOverlay(
+            cornerRadius: CGFloat,
+            isInteractive: Bool,
+            mode: ChromeMaterialMode
+        ) -> UIVisualEffectView {
             let overlayView: UIVisualEffectView
-            if #available(iOS 26.0, *) {
+            if mode == .liquidGlass, #available(iOS 26.0, *) {
                 let glassEffect = UIGlassEffect(style: .regular)
                 glassEffect.isInteractive = isInteractive
                 glassEffect.tintColor = UIColor.secondarySystemBackground.withAlphaComponent(0.18)
                 overlayView = UIVisualEffectView(effect: glassEffect)
-            } else {
+            } else if mode == .translucentBlur {
                 overlayView = UIVisualEffectView(effect: UIBlurEffect(style: .systemChromeMaterial))
+            } else {
+                overlayView = UIVisualEffectView(effect: nil)
+                overlayView.backgroundColor = UIColor.secondarySystemBackground.withAlphaComponent(0.92)
             }
             overlayView.layer.cornerRadius = cornerRadius
             overlayView.layer.cornerCurve = .continuous
@@ -699,7 +727,17 @@ struct PhoneFeedFilterBarOverlayBridge: UIViewControllerRepresentable {
         }
 
         private func configureGlassTint() {
-            guard #available(iOS 26.0, *) else { return }
+            guard chromeMaterialMode == .liquidGlass, #available(iOS 26.0, *) else {
+                let activeTint = UIColor.systemBlue.withAlphaComponent(0.12)
+                let restingAlpha: CGFloat = chromeMaterialMode == .plain ? 0.92 : 0.34
+                pillView?.backgroundColor = hasActiveFilter
+                    ? activeTint
+                    : UIColor.secondarySystemBackground.withAlphaComponent(restingAlpha)
+                panelView?.backgroundColor = UIColor.secondarySystemBackground.withAlphaComponent(
+                    chromeMaterialMode == .plain ? 0.94 : 0.28
+                )
+                return
+            }
             let activeTint = UIColor.systemBlue.withAlphaComponent(0.16)
             let restingTint = UIColor.secondarySystemBackground.withAlphaComponent(0.18)
             (pillView?.effect as? UIGlassEffect)?.tintColor = hasActiveFilter ? activeTint : restingTint

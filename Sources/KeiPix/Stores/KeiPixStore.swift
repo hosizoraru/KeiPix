@@ -218,6 +218,10 @@ final class KeiPixStore {
         .flatMap(TranslationTargetLanguage.init(rawValue:)) ?? .system
     var appColorScheme = UserDefaults.standard.string(forKey: "appColorScheme")
         .flatMap(AppColorScheme.init(rawValue:)) ?? .system
+    var chromeMaterialMode = KeiPixStore.loadEnum(
+        "chromeMaterialMode",
+        defaultValue: ChromeMaterialMode.liquidGlass
+    )
     /// User-chosen destination to land on at launch. Mirrors the "open at
     /// launch" preference Mail / Notes / Music ship and Pixes exposes
     /// under its initial-page setting.
