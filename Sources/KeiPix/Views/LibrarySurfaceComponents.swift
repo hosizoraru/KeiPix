@@ -917,6 +917,14 @@ struct OS26SettingsMenuPicker<Option: Identifiable & Hashable, RowLabel: View>: 
     }
 
     var body: some View {
+        #if os(macOS)
+            menuPicker
+        #else
+            inlineOptionPicker
+        #endif
+    }
+
+    private var menuPicker: some View {
         Menu {
             ForEach(options) { option in
                 Button {
@@ -927,23 +935,150 @@ struct OS26SettingsMenuPicker<Option: Identifiable & Hashable, RowLabel: View>: 
             }
         } label: {
             OS26SettingsControlRow(title: title, detail: detail, systemImage: systemImage, tone: tone) {
-                HStack(spacing: 6) {
-                    Text(value)
-                        .font(.callout.weight(.semibold))
-                        .foregroundStyle(.primary)
-                        .lineLimit(1)
-                        .truncationMode(.middle)
-                        .minimumScaleFactor(0.9)
-
-                    Image(systemName: "chevron.up.chevron.down")
-                        .font(.footnote.weight(.bold))
-                        .foregroundStyle(.secondary)
-                }
-                .accessibilityValue(value)
+                OS26SettingsPickerValueLabel(value: value, chevronSystemImage: "chevron.up.chevron.down")
+                    .accessibilityValue(value)
             }
         }
         .buttonStyle(.plain)
         .tint(.primary)
+    }
+
+    private var inlineOptionPicker: some View {
+        OS26SettingsInlineOptionPicker(
+            title: title,
+            value: value,
+            detail: detail,
+            systemImage: systemImage,
+            tone: tone,
+            selection: $selection,
+            options: options,
+            rowLabel: rowLabel
+        )
+    }
+}
+
+struct OS26SettingsInlineOptionPicker<Option: Identifiable & Hashable, RowLabel: View>: View {
+    let title: String
+    let value: String
+    var detail: String?
+    var systemImage: String?
+    var tone: OS26SettingsTone = .neutral
+    @Binding private var selection: Option
+    @State private var isExpanded = false
+    private let options: [Option]
+    private let rowLabel: (Option, Bool) -> RowLabel
+
+    init(
+        title: String,
+        value: String,
+        detail: String? = nil,
+        systemImage: String? = nil,
+        tone: OS26SettingsTone = .neutral,
+        selection: Binding<Option>,
+        options: [Option],
+        @ViewBuilder rowLabel: @escaping (Option, Bool) -> RowLabel
+    ) {
+        self.title = title
+        self.value = value
+        self.detail = detail
+        self.systemImage = systemImage
+        self.tone = tone
+        _selection = selection
+        self.options = options
+        self.rowLabel = rowLabel
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Button {
+                withAnimation(.snappy(duration: 0.18)) {
+                    isExpanded.toggle()
+                }
+            } label: {
+                OS26SettingsControlRow(title: title, detail: detail, systemImage: systemImage, tone: tone) {
+                    OS26SettingsPickerValueLabel(
+                        value: value,
+                        chevronSystemImage: isExpanded ? "chevron.up" : "chevron.down"
+                    )
+                    .accessibilityValue(value)
+                }
+            }
+            .buttonStyle(.plain)
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel(title)
+            .accessibilityValue(value)
+            .accessibilityHint(detail ?? "")
+
+            if isExpanded {
+                optionList
+                    .transition(.opacity.combined(with: .move(edge: .top)))
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var optionList: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Divider()
+                .opacity(0.45)
+
+            VStack(alignment: .leading, spacing: 4) {
+                ForEach(options) { option in
+                    optionButton(for: option)
+                }
+            }
+        }
+        .padding(.top, 2)
+    }
+
+    private func optionButton(for option: Option) -> some View {
+        let isSelected = option == selection
+        return Button {
+            withAnimation(.snappy(duration: 0.16)) {
+                selection = option
+                isExpanded = false
+            }
+        } label: {
+            rowLabel(option, isSelected)
+                .font(.callout.weight(isSelected ? .semibold : .regular))
+                .foregroundStyle(isSelected ? tone.symbolColor : .primary)
+                .lineLimit(2)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 9)
+                .background {
+                    if isSelected {
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .fill(tone.symbolColor.opacity(0.12))
+                    }
+                }
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
+    }
+}
+
+private struct OS26SettingsPickerValueLabel: View {
+    let value: String
+    let chevronSystemImage: String
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Text(value)
+                .font(.callout.weight(.semibold))
+                .foregroundStyle(.primary)
+                .lineLimit(1)
+                .truncationMode(.middle)
+                .minimumScaleFactor(0.86)
+
+            Image(systemName: chevronSystemImage)
+                .font(.footnote.weight(.bold))
+                .foregroundStyle(.secondary)
+                .accessibilityHidden(true)
+        }
     }
 }
 
