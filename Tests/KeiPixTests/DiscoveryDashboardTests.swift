@@ -291,8 +291,11 @@ struct DiscoveryDashboardTests {
         #expect(iPadContent.contains("store.presentDiscoverDashboardVisualQA()"))
         #expect(iPadContent.contains("store.presentDiscoverDashboardVisualQA()\n                    hasAppliedMobileBottomTabLaunchTarget = true"))
         #expect(iPadContent.contains("isDashboardCustomizationPresented = true"))
-        #expect(iPadContent.contains("private var discoveryDashboardToolbarMenu: NativeToolbarMenu"))
-        #expect(iPadContent.contains("id: IPadToolbarMenuAction.customizeDashboard"))
+        let discoveryMenuRange = try #require(iPadContent.range(of: "private var discoveryDashboardToolbarMenu: NativeToolbarMenu"))
+        let discoveryMenuSource = iPadContent[discoveryMenuRange.lowerBound...]
+        #expect(discoveryMenuSource.contains("id: IPadToolbarMenuAction.customizeDashboard"))
+        #expect(discoveryMenuSource.contains("Section(L10n.viewOptions)") == false)
+        #expect(discoveryMenuSource.contains("Section(L10n.contentFilters)") == false)
         #expect(dashboard.contains("VisualQALaunchArgument.contains(.discoverDashboardCustomization)") == false)
         #expect(visualQASampleData.contains("func presentDiscoverDashboardVisualQA()"))
         #expect(visualQASampleData.contains("selectedRoute = .home"))

@@ -204,14 +204,18 @@ private struct DiscoveryDashboardHeroCard: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
 
-                Spacer(minLength: 0)
+                if showsSurpriseButton {
+                    Spacer(minLength: 0)
+                }
             }
 
-            DiscoveryDashboardHeroControlRow(
-                style: style,
-                surprise: surprise
-            )
-            .padding(.leading, controlRowLeadingPadding)
+            if showsSurpriseButton {
+                DiscoveryDashboardHeroControlRow(
+                    style: style,
+                    surprise: surprise
+                )
+                .padding(.leading, controlRowLeadingPadding)
+            }
         }
         .padding(style == .full ? 16 : 13)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -227,6 +231,14 @@ private struct DiscoveryDashboardHeroCard: View {
     }
 
     private var showsBoardTitle: Bool {
+        #if os(iOS)
+        UIDevice.current.userInterfaceIdiom != .phone
+        #else
+        true
+        #endif
+    }
+
+    private var showsSurpriseButton: Bool {
         #if os(iOS)
         UIDevice.current.userInterfaceIdiom != .phone
         #else
