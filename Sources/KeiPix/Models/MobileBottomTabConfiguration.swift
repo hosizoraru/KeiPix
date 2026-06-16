@@ -3,8 +3,8 @@ import Foundation
 
 enum MobileBottomTabKind: String, CaseIterable, Codable, Hashable, Identifiable, Sendable {
     case illustrations
-    case manga
     case novels
+    case discovery
     case bookmarks
 
     var id: String { rawValue }
@@ -12,8 +12,8 @@ enum MobileBottomTabKind: String, CaseIterable, Codable, Hashable, Identifiable,
     var title: String {
         switch self {
         case .illustrations: L10n.illustrations
-        case .manga: L10n.manga
         case .novels: L10n.novels
+        case .discovery: L10n.discover
         case .bookmarks: L10n.mobileBookmarkTab
         }
     }
@@ -21,8 +21,8 @@ enum MobileBottomTabKind: String, CaseIterable, Codable, Hashable, Identifiable,
     var systemImage: String {
         switch self {
         case .illustrations: "photo.on.rectangle"
-        case .manga: "book.pages"
         case .novels: "book"
+        case .discovery: "square.grid.2x2"
         case .bookmarks: "bookmark"
         }
     }
@@ -30,8 +30,8 @@ enum MobileBottomTabKind: String, CaseIterable, Codable, Hashable, Identifiable,
     var defaultRoute: PixivRoute {
         switch self {
         case .illustrations: .illustrations
-        case .manga: .mangaRecommended
         case .novels: .novelRecommended
+        case .discovery: .home
         case .bookmarks: .publicBookmarks
         }
     }
@@ -50,7 +50,7 @@ enum MobileBottomTabKind: String, CaseIterable, Codable, Hashable, Identifiable,
 
     static func kind(containing route: PixivRoute) -> MobileBottomTabKind? {
         if route == .pixivCollectionWorks {
-            return .illustrations
+            return .discovery
         }
         return allCases.first { $0.contains(route) }
     }
@@ -68,7 +68,16 @@ enum MobileBottomTabLaunchTarget: String, CaseIterable, Codable, Hashable, Ident
     case illustrations
     case manga
     case novels
+    case discovery
     case bookmarks
+
+    static let allCases: [MobileBottomTabLaunchTarget] = [
+        .lastUsed,
+        .illustrations,
+        .novels,
+        .discovery,
+        .bookmarks
+    ]
 
     var id: String { rawValue }
 
@@ -76,8 +85,9 @@ enum MobileBottomTabLaunchTarget: String, CaseIterable, Codable, Hashable, Ident
         switch self {
         case .lastUsed: L10n.mobileBottomTabLaunchLastUsed
         case .illustrations: MobileBottomTabKind.illustrations.title
-        case .manga: MobileBottomTabKind.manga.title
+        case .manga: MobileBottomTabKind.illustrations.title
         case .novels: MobileBottomTabKind.novels.title
+        case .discovery: MobileBottomTabKind.discovery.title
         case .bookmarks: MobileBottomTabKind.bookmarks.title
         }
     }
@@ -86,8 +96,9 @@ enum MobileBottomTabLaunchTarget: String, CaseIterable, Codable, Hashable, Ident
         switch self {
         case .lastUsed: "clock.arrow.circlepath"
         case .illustrations: MobileBottomTabKind.illustrations.systemImage
-        case .manga: MobileBottomTabKind.manga.systemImage
+        case .manga: MobileBottomTabKind.illustrations.systemImage
         case .novels: MobileBottomTabKind.novels.systemImage
+        case .discovery: MobileBottomTabKind.discovery.systemImage
         case .bookmarks: MobileBottomTabKind.bookmarks.systemImage
         }
     }
@@ -96,8 +107,9 @@ enum MobileBottomTabLaunchTarget: String, CaseIterable, Codable, Hashable, Ident
         switch self {
         case .lastUsed: nil
         case .illustrations: .illustrations
-        case .manga: .manga
+        case .manga: .illustrations
         case .novels: .novels
+        case .discovery: .discovery
         case .bookmarks: .bookmarks
         }
     }
@@ -162,10 +174,12 @@ enum MobileBottomTabConfiguration {
         for component in trimmedStorageID.split(separator: ",") {
             let pair = component.split(separator: "=", maxSplits: 1).map(String.init)
             guard pair.count == 2,
-                  let kind = MobileBottomTabKind(rawValue: pair[0]),
                   let route = PixivRoute(rawValue: pair[1]) else {
                 continue
             }
+            let kind = migratedKind(forStorageKindID: pair[0], route: route)
+                ?? MobileBottomTabKind(rawValue: pair[0])
+            guard let kind else { continue }
             result[kind] = sanitized(route, for: kind)
         }
         return result
@@ -274,6 +288,17 @@ enum MobileBottomTabConfiguration {
         }
     }
 
+    private static func migratedKind(forStorageKindID storageKindID: String, route: PixivRoute) -> MobileBottomTabKind? {
+        if storageKindID == "manga" {
+            return .illustrations
+        }
+        if storageKindID == "illustrations",
+           MobileBottomTabKind.discovery.contains(route) {
+            return .discovery
+        }
+        return nil
+    }
+
     private static func sanitized(_ route: PixivRoute, for kind: MobileBottomTabKind) -> PixivRoute {
         kind.contains(route) ? route : kind.defaultRoute
     }
@@ -309,27 +334,14 @@ enum MobileRouteMenuConfiguration {
         case .illustrations:
             [
                 MobileRouteMenuSection(
-                    id: "illustration-discover",
-                    title: L10n.discover,
+                    id: "illustration-feed",
+                    title: L10n.illustrations,
                     routes: [
-                        .home,
                         .illustrations,
                         .newIllustrations,
-                        .spotlight,
-                        .pixivCollections,
-                        .pixivActivity,
                         .recommendedUsers
                     ]
                 ),
-                MobileRouteMenuSection(
-                    id: "illustration-ranking",
-                    title: L10n.ranking,
-                    routes: PixivRoute.illustrationRankingRoutes,
-                    presentation: .submenu(systemImage: "chart.bar")
-                )
-            ]
-        case .manga:
-            [
                 MobileRouteMenuSection(
                     id: "manga-feed",
                     title: L10n.manga,
@@ -338,6 +350,12 @@ enum MobileRouteMenuConfiguration {
                         .newManga,
                         .mangaWatchlist
                     ]
+                ),
+                MobileRouteMenuSection(
+                    id: "illustration-ranking",
+                    title: L10n.ranking,
+                    routes: PixivRoute.illustrationRankingRoutes,
+                    presentation: .submenu(systemImage: "chart.bar")
                 ),
                 MobileRouteMenuSection(
                     id: "manga-ranking",
@@ -369,6 +387,19 @@ enum MobileRouteMenuConfiguration {
                     title: L10n.novelRanking,
                     routes: PixivRoute.novelRankingRoutes,
                     presentation: .submenu(systemImage: "chart.bar.doc.horizontal")
+                )
+            ]
+        case .discovery:
+            [
+                MobileRouteMenuSection(
+                    id: "discovery",
+                    title: L10n.discover,
+                    routes: [
+                        .home,
+                        .spotlight,
+                        .pixivCollections,
+                        .pixivActivity
+                    ]
                 )
             ]
         case .bookmarks:

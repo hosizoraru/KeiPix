@@ -6,10 +6,10 @@ import Testing
 struct MobileBottomTabConfigurationTests {
     @Test("Compact tabs are four fixed content families")
     func compactTabsAreFourFixedContentFamilies() {
-        #expect(MobileBottomTabConfiguration.fixedKinds == [.illustrations, .manga, .novels, .bookmarks])
+        #expect(MobileBottomTabConfiguration.fixedKinds == [.illustrations, .novels, .discovery, .bookmarks])
         #expect(MobileBottomTabConfiguration.defaultRouteMap[.illustrations] == .illustrations)
-        #expect(MobileBottomTabConfiguration.defaultRouteMap[.manga] == .mangaRecommended)
         #expect(MobileBottomTabConfiguration.defaultRouteMap[.novels] == .novelRecommended)
+        #expect(MobileBottomTabConfiguration.defaultRouteMap[.discovery] == .home)
         #expect(MobileBottomTabConfiguration.defaultRouteMap[.bookmarks] == .publicBookmarks)
         #expect(MobileBottomTabConfiguration.defaultLaunchTarget == .lastUsed)
         #expect(MobileBottomTabConfiguration.defaultRemembersLastRoute)
@@ -18,17 +18,17 @@ struct MobileBottomTabConfigurationTests {
     @Test("Default route storage round-trips every fixed content family")
     func defaultRouteStorageRoundTripsEveryFixedContentFamily() {
         let routeMap: [MobileBottomTabKind: PixivRoute] = [
-            .illustrations: .newIllustrations,
-            .manga: .mangaRankingWeekly,
+            .illustrations: .mangaRankingWeekly,
             .novels: .novelRankingMonthly,
+            .discovery: .pixivActivity,
             .bookmarks: .downloads
         ]
         let storageID = MobileBottomTabConfiguration.storageID(for: routeMap)
         let restored = MobileBottomTabConfiguration.defaultRouteMap(from: storageID)
 
-        #expect(restored[.illustrations] == .newIllustrations)
-        #expect(restored[.manga] == .mangaRankingWeekly)
+        #expect(restored[.illustrations] == .mangaRankingWeekly)
         #expect(restored[.novels] == .novelRankingMonthly)
+        #expect(restored[.discovery] == .pixivActivity)
         #expect(restored[.bookmarks] == .downloads)
     }
 
@@ -36,8 +36,8 @@ struct MobileBottomTabConfigurationTests {
     func invalidDefaultsFallBackInsideTheirOwnContentFamily() {
         let routeMap: [MobileBottomTabKind: PixivRoute] = [
             .illustrations: .novelRecommended,
-            .manga: .publicBookmarks,
             .novels: .mangaRecommended,
+            .discovery: .publicBookmarks,
             .bookmarks: .rankingDaily
         ]
         let restored = MobileBottomTabConfiguration.defaultRouteMap(
@@ -45,15 +45,17 @@ struct MobileBottomTabConfigurationTests {
         )
 
         #expect(restored[.illustrations] == .illustrations)
-        #expect(restored[.manga] == .mangaRecommended)
         #expect(restored[.novels] == .novelRecommended)
+        #expect(restored[.discovery] == .home)
         #expect(restored[.bookmarks] == .publicBookmarks)
     }
 
     @Test("Launch target resolves fixed tabs and last used tab")
     func launchTargetResolvesFixedTabsAndLastUsedTab() {
         #expect(MobileBottomTabLaunchTarget.illustrations.resolvedKind(lastUsedKindID: "bookmarks") == .illustrations)
-        #expect(MobileBottomTabLaunchTarget.manga.resolvedKind(lastUsedKindID: "bookmarks") == .manga)
+        #expect(MobileBottomTabLaunchTarget.discovery.resolvedKind(lastUsedKindID: "bookmarks") == .discovery)
+        #expect(MobileBottomTabLaunchTarget.manga.resolvedKind(lastUsedKindID: "bookmarks") == .illustrations)
+        #expect(MobileBottomTabLaunchTarget.allCases.contains(.manga) == false)
         #expect(MobileBottomTabLaunchTarget.lastUsed.resolvedKind(lastUsedKindID: "bookmarks") == .bookmarks)
         #expect(MobileBottomTabLaunchTarget.lastUsed.resolvedKind(lastUsedKindID: "not-a-tab") == .illustrations)
     }
@@ -62,14 +64,14 @@ struct MobileBottomTabConfigurationTests {
     func rememberedRoutesRestoreLastConcretePageOnlyWhenEnabled() {
         let defaultRoutes: [MobileBottomTabKind: PixivRoute] = [
             .illustrations: .newIllustrations,
-            .manga: .mangaRecommended,
             .novels: .novelRecommended,
+            .discovery: .home,
             .bookmarks: .publicBookmarks
         ]
         let rememberedRoutes: [MobileBottomTabKind: PixivRoute] = [
-            .illustrations: .rankingWeekly,
-            .manga: .mangaWatchlist,
+            .illustrations: .mangaWatchlist,
             .novels: .novelRankingDaily,
+            .discovery: .spotlight,
             .bookmarks: .history
         ]
         let defaultStorageID = MobileBottomTabConfiguration.storageID(for: defaultRoutes)
@@ -80,7 +82,7 @@ struct MobileBottomTabConfigurationTests {
             defaultRouteStorageID: defaultStorageID,
             rememberedRouteStorageID: rememberedStorageID,
             remembersLastRoute: true
-        ) == .rankingWeekly)
+        ) == .mangaWatchlist)
         #expect(MobileBottomTabConfiguration.route(
             for: .illustrations,
             defaultRouteStorageID: defaultStorageID,
@@ -100,30 +102,56 @@ struct MobileBottomTabConfigurationTests {
         #expect(restored[.novels] == .novelRankingWeekly)
         #expect(restored[.illustrations] == .illustrations)
 
-        let unchanged = MobileBottomTabConfiguration.recordingRememberedRoute(
-            .search,
+        let discoveryStorageID = MobileBottomTabConfiguration.recordingRememberedRoute(
+            .pixivActivity,
             in: storageID
         )
-        #expect(unchanged == storageID)
+        let discoveryRestored = MobileBottomTabConfiguration.defaultRouteMap(from: discoveryStorageID)
+        #expect(discoveryRestored[.discovery] == .pixivActivity)
+
+        let mangaStorageID = MobileBottomTabConfiguration.recordingRememberedRoute(
+            .mangaRankingWeekly,
+            in: discoveryStorageID
+        )
+        let mangaRestored = MobileBottomTabConfiguration.defaultRouteMap(from: mangaStorageID)
+        #expect(mangaRestored[.illustrations] == .mangaRankingWeekly)
+
+        let unchanged = MobileBottomTabConfiguration.recordingRememberedRoute(
+            .search,
+            in: mangaStorageID
+        )
+        #expect(unchanged == mangaStorageID)
     }
 
-    @Test("Legacy three-slot storage is migrated into category defaults")
-    func legacyThreeSlotStorageMigratesIntoCategoryDefaults() {
+    @Test("Legacy route storage is migrated into category defaults")
+    func legacyRouteStorageMigratesIntoCategoryDefaults() {
         let restored = MobileBottomTabConfiguration.defaultRouteMap(
-            from: "downloads,novels,spotlight"
+            from: "downloads,novels,spotlight,manga"
         )
 
-        #expect(restored[.illustrations] == .spotlight)
-        #expect(restored[.manga] == .mangaRecommended)
+        #expect(restored[.illustrations] == .mangaRecommended)
         #expect(restored[.novels] == .novelRecommended)
+        #expect(restored[.discovery] == .spotlight)
         #expect(restored[.bookmarks] == .downloads)
+    }
+
+    @Test("Legacy keyed route storage preserves routes that moved between tabs")
+    func legacyKeyedRouteStoragePreservesRoutesThatMovedBetweenTabs() {
+        let restored = MobileBottomTabConfiguration.defaultRouteMap(
+            from: "illustrations=spotlight,manga=mangaRankingWeekly,novels=novelLatest,bookmarks=watchLater"
+        )
+
+        #expect(restored[.illustrations] == .mangaRankingWeekly)
+        #expect(restored[.novels] == .novelLatest)
+        #expect(restored[.discovery] == .spotlight)
+        #expect(restored[.bookmarks] == .watchLater)
     }
 
     @Test("Route menus are split by the four bottom tab families")
     func routeMenusAreSplitByFourBottomTabFamilies() {
         let illustrationRoutes = MobileRouteMenuConfiguration.sections(for: .illustrations).flatMap(\.routes)
-        let mangaRoutes = MobileRouteMenuConfiguration.sections(for: .manga).flatMap(\.routes)
         let novelRoutes = MobileRouteMenuConfiguration.sections(for: .novels).flatMap(\.routes)
+        let discoveryRoutes = MobileRouteMenuConfiguration.sections(for: .discovery).flatMap(\.routes)
         let bookmarkRoutes = MobileRouteMenuConfiguration.sections(for: .bookmarks).flatMap(\.routes)
 
         #expect(illustrationRoutes.contains(.illustrations))
@@ -131,19 +159,25 @@ struct MobileBottomTabConfigurationTests {
         #expect(illustrationRoutes.contains(.searchUsers) == false)
         #expect(illustrationRoutes.contains(.savedSearches) == false)
         #expect(illustrationRoutes.contains(.trendingTags) == false)
-        #expect(illustrationRoutes.contains(.pixivCollections))
+        #expect(illustrationRoutes.contains(.pixivCollections) == false)
+        #expect(illustrationRoutes.contains(.pixivActivity) == false)
+        #expect(illustrationRoutes.contains(.spotlight) == false)
         #expect(illustrationRoutes.contains(.rankingDaily))
-        #expect(illustrationRoutes.contains(.mangaRecommended) == false)
-
-        #expect(mangaRoutes.contains(.mangaRecommended))
-        #expect(mangaRoutes.contains(.mangaRankingDaily))
-        #expect(mangaRoutes.contains(.novelRecommended) == false)
+        #expect(illustrationRoutes.contains(.mangaRecommended))
+        #expect(illustrationRoutes.contains(.newManga))
+        #expect(illustrationRoutes.contains(.mangaWatchlist))
+        #expect(illustrationRoutes.contains(.mangaRankingDaily))
+        #expect(illustrationRoutes.contains(.recommendedUsers))
 
         #expect(novelRoutes.contains(.novelRecommended))
         #expect(novelRoutes.contains(.novelLatest))
         #expect(novelRoutes.contains(.novelSearch) == false)
         #expect(novelRoutes.contains(.novelRankingWeekly))
         #expect(novelRoutes.contains(.publicBookmarks) == false)
+
+        #expect(discoveryRoutes == [.home, .spotlight, .pixivCollections, .pixivActivity])
+        #expect(discoveryRoutes.contains(.illustrations) == false)
+        #expect(discoveryRoutes.contains(.mangaRecommended) == false)
 
         #expect(bookmarkRoutes.contains(.publicBookmarks))
         #expect(bookmarkRoutes.contains(.pixivCollections) == false)
@@ -163,12 +197,14 @@ struct MobileBottomTabConfigurationTests {
     @Test("Ranking route groups collapse behind one submenu entry")
     func rankingRouteGroupsCollapseBehindOneSubmenuEntry() throws {
         let illustrationSections = MobileRouteMenuConfiguration.sections(for: .illustrations)
-        let discover = try #require(illustrationSections.first { $0.id == "illustration-discover" })
+        let illustrationFeed = try #require(illustrationSections.first { $0.id == "illustration-feed" })
+        let mangaFeed = try #require(illustrationSections.first { $0.id == "manga-feed" })
         let ranking = try #require(illustrationSections.first { $0.id == "illustration-ranking" })
-        let mangaRanking = try #require(MobileRouteMenuConfiguration.sections(for: .manga).first { $0.id == "manga-ranking" })
+        let mangaRanking = try #require(illustrationSections.first { $0.id == "manga-ranking" })
         let novelRanking = try #require(MobileRouteMenuConfiguration.sections(for: .novels).first { $0.id == "novel-ranking" })
 
-        #expect(discover.presentation == .inline)
+        #expect(illustrationFeed.presentation == .inline)
+        #expect(mangaFeed.presentation == .inline)
         #expect(ranking.presentation == .submenu(systemImage: "chart.bar"))
         #expect(mangaRanking.presentation == .submenu(systemImage: "chart.bar.doc.horizontal"))
         #expect(novelRanking.presentation == .submenu(systemImage: "chart.bar.doc.horizontal"))
@@ -247,11 +283,14 @@ struct MobileBottomTabConfigurationTests {
     @Test("Route kind detection keeps tab selection stable")
     func routeKindDetectionKeepsTabSelectionStable() {
         #expect(MobileBottomTabKind.kind(containing: .rankingWeekly) == .illustrations)
-        #expect(MobileBottomTabKind.kind(containing: .mangaRankingMonthly) == .manga)
+        #expect(MobileBottomTabKind.kind(containing: .mangaRankingMonthly) == .illustrations)
         #expect(MobileBottomTabKind.kind(containing: .novelSearch) == nil)
         #expect(MobileBottomTabKind.kind(containing: .watchLater) == .bookmarks)
-        #expect(MobileBottomTabKind.kind(containing: .pixivCollections) == .illustrations)
-        #expect(MobileBottomTabKind.kind(containing: .pixivCollectionWorks) == .illustrations)
+        #expect(MobileBottomTabKind.kind(containing: .home) == .discovery)
+        #expect(MobileBottomTabKind.kind(containing: .spotlight) == .discovery)
+        #expect(MobileBottomTabKind.kind(containing: .pixivCollections) == .discovery)
+        #expect(MobileBottomTabKind.kind(containing: .pixivCollectionWorks) == .discovery)
+        #expect(MobileBottomTabKind.kind(containing: .pixivActivity) == .discovery)
         #expect(MobileBottomTabKind.kind(containing: .savedPixivisionArticles) == .bookmarks)
         #expect(MobileBottomTabKind.kind(containing: .myPixivCollections) == .bookmarks)
         #expect(MobileBottomTabKind.kind(containing: .savedPixivCollections) == .bookmarks)
@@ -268,8 +307,8 @@ struct MobileBottomTabConfigurationTests {
 
         let rememberedRoutes = MobileBottomTabConfiguration.storageID(for: [
             .illustrations: .illustrations,
-            .manga: .mangaRecommended,
             .novels: .novelRecommended,
+            .discovery: .home,
             .bookmarks: .bookmarkTags
         ])
         defaults.set(LaunchDestination.home.rawValue, forKey: AppLaunchRouteResolver.launchDestinationDefaultsKey)
