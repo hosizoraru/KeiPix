@@ -1762,12 +1762,6 @@ struct ContentView: View {
                             id: IPadToolbarMenuAction.customizeBottomTabs,
                             title: L10n.customizeBottomTabs,
                             systemImage: "rectangle.bottomthird.inset.filled"
-                        ),
-                        .action(
-                            id: IPadToolbarMenuAction.randomFromCurrentFeed,
-                            title: L10n.randomFromFeed,
-                            systemImage: "shuffle",
-                            isEnabled: store.selectedRoute.usesArtworkFeed && store.artworks.isEmpty == false
                         )
                     ]
                 ),
@@ -1785,6 +1779,13 @@ struct ContentView: View {
                             title: L10n.openPixivID,
                             systemImage: "number",
                             paletteTitle: L10n.quickPixivID
+                        ),
+                        .action(
+                            id: IPadToolbarMenuAction.randomFromCurrentFeed,
+                            title: L10n.randomFromFeed,
+                            systemImage: "shuffle",
+                            paletteTitle: L10n.randomFromFeed,
+                            isEnabled: store.selectedRoute.usesArtworkFeed && store.artworks.isEmpty == false
                         )
                     ]
                 ),
