@@ -6,51 +6,60 @@ struct AdvancedQASettingsPage: View {
     @Environment(\.openWindow) private var openWindow
 
     var body: some View {
-        // `RuntimeReadinessView.body` returns a `Section`, which only renders
-        // properly inside a `Form`. Wrap it the same way every other Settings
-        // page does so the section chrome (header, dividers, grouped material)
-        // matches the rest of the sidebar destinations.
-        Form {
-            RuntimeReadinessView(store: store, state: coordinator.runtimeReadinessState)
+        OS26SettingsPage(
+            title: L10n.settingsAdvancedQA,
+            subtitle: L10n.runtimeReadinessHint,
+            systemImage: SettingsCategory.advancedQA.systemImage
+        ) {
+            OS26SettingsSection(L10n.runtimeReadiness, systemImage: "checklist.checked") {
+                RuntimeReadinessView(
+                    store: store,
+                    state: coordinator.runtimeReadinessState
+                )
+                .settingsContent
+            }
 
-            // Log viewer entry point. Lives next to the runtime-readiness
-            // diagnostics because both surfaces feed into the same triage
-            // flow: a user sees a misbehaviour in QA, then jumps to the
-            // log tail to grab a copyable trace for a bug report.
-            Section(L10n.diagnostics) {
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(L10n.logViewerSummary)
-                        .font(.callout)
-                        .foregroundStyle(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
-                    Button {
-                        openWindow(id: "logs")
-                    } label: {
-                        Label(L10n.openLogViewer, systemImage: "doc.text.magnifyingglass")
-                    }
+            OS26SettingsSection(L10n.diagnostics, systemImage: "doc.text.magnifyingglass", footer: L10n.logViewerSummary) {
+                OS26SettingsActionButton(title: L10n.openLogViewer, systemImage: "doc.text.magnifyingglass") {
+                    openWindow(id: "logs")
                 }
             }
 
-            Section {
-                Toggle(L10n.imageProcessorsEnabled, isOn: store.settings_imageProcessorsEnabledBinding)
+            OS26SettingsSection(L10n.imageProcessing, systemImage: "camera.filters") {
+                OS26SettingsToggleRow(
+                    title: L10n.imageProcessorsEnabled,
+                    detail: L10n.imageProcessorsHint,
+                    systemImage: "wand.and.stars",
+                    isOn: store.settings_imageProcessorsEnabledBinding
+                )
+
                 if store.imageProcessorsEnabled {
+                    OS26SettingsDivider()
+
                     ForEach(ImageProcessorRegistry.allProcessors, id: \.identifier) { processor in
-                        Toggle(
-                            processor.displayName,
+                        OS26SettingsToggleRow(
+                            title: processor.displayName,
+                            detail: nil,
+                            systemImage: processorSystemImage(processor.identifier),
                             isOn: processorToggleBinding(for: processor.identifier)
                         )
                     }
                 }
-            } header: {
-                Text(L10n.imageProcessing)
-            } footer: {
-                Text(L10n.imageProcessorsHint)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
             }
         }
-        .formStyle(.grouped)
-        .navigationTitle(L10n.settingsAdvancedQA)
+    }
+
+    private func processorSystemImage(_ identifier: String) -> String {
+        switch identifier {
+        case "smart-crop":
+            "crop"
+        case "sharpen":
+            "sparkle.magnifyingglass"
+        case "denoise":
+            "circle.dotted"
+        default:
+            "camera.filters"
+        }
     }
 
     private func processorToggleBinding(for identifier: String) -> Binding<Bool> {

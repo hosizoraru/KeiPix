@@ -9,23 +9,23 @@ struct GeneralSettingsPage: View {
             subtitle: L10n.themeHint,
             systemImage: SettingsCategory.general.systemImage
         ) {
-            OS26SettingsSection(L10n.appearance, systemImage: "paintpalette", footer: L10n.themeHint) {
-                GeneralSettingsMenuPicker(
+            OS26SettingsSection(L10n.appearance, systemImage: "paintpalette") {
+                OS26SettingsMenuPicker(
                     title: L10n.language,
                     value: store.appLanguage.title,
+                    detail: L10n.languageHint,
+                    systemImage: "globe",
                     selection: store.settings_languageBinding,
                     options: AppLanguage.allCases
                 ) { language, isSelected in
-                    if isSelected {
-                        Label(language.title, systemImage: "checkmark")
-                    } else {
-                        Text(language.title)
-                    }
+                    Label(language.title, systemImage: isSelected ? "checkmark" : languageSystemImage(language))
                 }
 
-                GeneralSettingsMenuPicker(
+                OS26SettingsMenuPicker(
                     title: L10n.theme,
                     value: store.appColorScheme.title,
+                    detail: L10n.themeHint,
+                    systemImage: store.appColorScheme.systemImage,
                     selection: store.settings_appColorSchemeBinding,
                     options: AppColorScheme.allCases
                 ) { scheme, isSelected in
@@ -35,60 +35,78 @@ struct GeneralSettingsPage: View {
 
             OS26SettingsSection(
                 L10n.imageQualityTierSection,
-                systemImage: "photo.on.rectangle.angled",
-                footer: L10n.imageQualityTierHint
+                systemImage: "photo.on.rectangle.angled"
             ) {
-                GeneralSettingsMenuPicker(
+                OS26SettingsMenuPicker(
                     title: L10n.feedPreviewQuality,
                     value: store.feedPreviewImageQualityTier.title,
+                    detail: L10n.feedPreviewQualityHint,
+                    systemImage: store.feedPreviewImageQualityTier.systemImage,
                     selection: store.settings_feedPreviewImageQualityTierBinding,
                     options: ArtworkImageQualityTier.allCases
                 ) { tier, isSelected in
                     Label(tier.title, systemImage: isSelected ? "checkmark" : tier.systemImage)
                 }
 
-                GeneralSettingsMenuPicker(
+                OS26SettingsMenuPicker(
                     title: L10n.illustDetailQuality,
                     value: store.illustDetailImageQualityTier.title,
+                    detail: L10n.illustDetailQualityHint,
+                    systemImage: store.illustDetailImageQualityTier.systemImage,
                     selection: store.settings_illustDetailImageQualityTierBinding,
                     options: ArtworkImageQualityTier.allCases
                 ) { tier, isSelected in
                     Label(tier.title, systemImage: isSelected ? "checkmark" : tier.systemImage)
                 }
 
-                GeneralSettingsMenuPicker(
+                OS26SettingsMenuPicker(
                     title: L10n.mangaDetailQuality,
                     value: store.mangaDetailImageQualityTier.title,
+                    detail: L10n.mangaDetailQualityHint,
+                    systemImage: store.mangaDetailImageQualityTier.systemImage,
                     selection: store.settings_mangaDetailImageQualityTierBinding,
                     options: ArtworkImageQualityTier.allCases
                 ) { tier, isSelected in
                     Label(tier.title, systemImage: isSelected ? "checkmark" : tier.systemImage)
                 }
 
-                Toggle(L10n.showTranslatedTags, isOn: store.settings_showTranslatedTagsBinding)
+                OS26SettingsToggleRow(
+                    title: L10n.showTranslatedTags,
+                    detail: L10n.showTranslatedTagsHint,
+                    systemImage: "character.book.closed",
+                    isOn: store.settings_showTranslatedTagsBinding
+                )
             }
 
-            OS26SettingsSection(L10n.layout, systemImage: "rectangle.3.group", footer: L10n.emphasizeFollowingArtistsHint) {
-                GeneralSettingsMenuPicker(
+            OS26SettingsSection(L10n.layout, systemImage: "rectangle.3.group") {
+                OS26SettingsMenuPicker(
                     title: L10n.galleryLayout,
                     value: store.galleryLayoutMode.title,
+                    detail: L10n.galleryLayoutHint,
+                    systemImage: store.galleryLayoutMode.systemImage,
                     selection: store.settings_galleryLayoutBinding,
                     options: GalleryLayoutMode.allCases
                 ) { mode, isSelected in
                     Label(mode.title, systemImage: isSelected ? "checkmark" : mode.systemImage)
                 }
 
-                Toggle(L10n.emphasizeFollowingArtists, isOn: store.settings_emphasizeFollowingArtistsBinding)
+                OS26SettingsToggleRow(
+                    title: L10n.emphasizeFollowingArtists,
+                    detail: L10n.emphasizeFollowingArtistsHint,
+                    systemImage: "person.crop.circle.badge.checkmark",
+                    isOn: store.settings_emphasizeFollowingArtistsBinding
+                )
             }
 
             OS26SettingsSection(
                 L10n.routeSwitchRefreshExpiration,
-                systemImage: "clock.arrow.circlepath",
-                footer: L10n.routeSwitchRefreshExpirationHint
+                systemImage: "clock.arrow.circlepath"
             ) {
-                GeneralSettingsMenuPicker(
+                OS26SettingsMenuPicker(
                     title: L10n.routeSwitchRefreshExpiration,
                     value: store.routeSwitchRefreshExpiration.title,
+                    detail: L10n.routeSwitchRefreshExpirationHint,
+                    systemImage: store.routeSwitchRefreshExpiration.systemImage,
                     selection: store.settings_routeSwitchRefreshExpirationBinding,
                     options: RouteSwitchRefreshExpiration.allCases
                 ) { expiration, isSelected in
@@ -97,48 +115,46 @@ struct GeneralSettingsPage: View {
             }
 
             #if os(macOS)
-            OS26SettingsSection(L10n.openAtLaunch, systemImage: "arrow.up.forward.app", footer: L10n.openAtLaunchHint) {
-                GeneralSettingsMenuPicker(
-                    title: L10n.openAtLaunch,
-                    value: store.launchDestination.title,
-                    selection: store.settings_launchDestinationBinding,
-                    options: LaunchDestination.allCases
-                ) { destination, isSelected in
-                    Label(destination.title, systemImage: isSelected ? "checkmark" : destination.systemImage)
+                OS26SettingsSection(L10n.openAtLaunch, systemImage: "arrow.up.forward.app") {
+                    OS26SettingsMenuPicker(
+                        title: L10n.openAtLaunch,
+                        value: store.launchDestination.title,
+                        detail: L10n.openAtLaunchHint,
+                        systemImage: store.launchDestination.systemImage,
+                        selection: store.settings_launchDestinationBinding,
+                        options: LaunchDestination.allCases
+                    ) { destination, isSelected in
+                        Label(destination.title, systemImage: isSelected ? "checkmark" : destination.systemImage)
+                    }
                 }
-            }
             #endif
 
             OS26SettingsSection(
                 L10n.network,
                 systemImage: "network",
-                footer: "\(L10n.proxyConfigurationHint)\n\(L10n.proxyConfigurationRestartHint)"
+                footer: store.proxyConfigurationMode == .manual ? L10n.proxyConfigurationRestartHint : nil
             ) {
-                GeneralSettingsMenuPicker(
+                OS26SettingsMenuPicker(
                     title: L10n.proxyConfiguration,
                     value: title(for: store.proxyConfigurationMode),
+                    detail: L10n.proxyConfigurationHint,
+                    systemImage: proxyModeSystemImage(store.proxyConfigurationMode),
                     selection: store.settings_proxyConfigurationModeBinding,
                     options: ProxyConfigurationMode.allCases
                 ) { mode, isSelected in
-                    if isSelected {
-                        Label(title(for: mode), systemImage: "checkmark")
-                    } else {
-                        Text(title(for: mode))
-                    }
+                    Label(title(for: mode), systemImage: isSelected ? "checkmark" : proxyModeSystemImage(mode))
                 }
 
                 if store.proxyConfigurationMode == .manual {
-                    GeneralSettingsMenuPicker(
+                    OS26SettingsMenuPicker(
                         title: L10n.proxyScheme,
                         value: title(for: store.proxyConfigurationScheme),
+                        detail: L10n.proxyConfigurationRestartHint,
+                        systemImage: "point.3.connected.trianglepath.dotted",
                         selection: store.settings_proxyConfigurationSchemeBinding,
                         options: ProxyScheme.allCases
                     ) { scheme, isSelected in
-                        if isSelected {
-                            Label(title(for: scheme), systemImage: "checkmark")
-                        } else {
-                            Text(title(for: scheme))
-                        }
+                        Label(title(for: scheme), systemImage: isSelected ? "checkmark" : "network")
                     }
 
                     OS26LibraryTextEntryField(
@@ -153,8 +169,13 @@ struct GeneralSettingsPage: View {
                 }
             }
 
-            OS26SettingsSection(L10n.checkForUpdates, systemImage: "arrow.down.circle", footer: L10n.checkForUpdatesOnLaunchHint) {
-                Toggle(L10n.checkForUpdatesOnLaunch, isOn: store.settings_checkForUpdatesOnLaunchBinding)
+            OS26SettingsSection(L10n.checkForUpdates, systemImage: "arrow.down.circle") {
+                OS26SettingsToggleRow(
+                    title: L10n.checkForUpdatesOnLaunch,
+                    detail: L10n.checkForUpdatesOnLaunchHint,
+                    systemImage: "calendar.badge.clock",
+                    isOn: store.settings_checkForUpdatesOnLaunchBinding
+                )
 
                 OS26SettingsActionButton(
                     title: store.isCheckingForUpdates ? L10n.checkingForUpdates : L10n.checkForUpdates,
@@ -164,6 +185,19 @@ struct GeneralSettingsPage: View {
                 }
                 .disabled(store.isCheckingForUpdates)
             }
+        }
+    }
+
+    private func languageSystemImage(_ language: AppLanguage) -> String {
+        switch language {
+        case .automatic:
+            "globe"
+        case .simplifiedChinese, .traditionalChinese:
+            "character.bubble"
+        case .japanese:
+            "textformat.characters"
+        case .english:
+            "textformat.abc"
         }
     }
 
@@ -182,82 +216,15 @@ struct GeneralSettingsPage: View {
         case .socks5: L10n.proxySchemeSOCKS5
         }
     }
-}
 
-private struct GeneralSettingsMenuPicker<Option: Identifiable & Hashable, RowLabel: View>: View {
-    let title: String
-    let value: String
-    @Binding private var selection: Option
-    private let options: [Option]
-    private let rowLabel: (Option, Bool) -> RowLabel
-
-    init(
-        title: String,
-        value: String,
-        selection: Binding<Option>,
-        options: [Option],
-        @ViewBuilder rowLabel: @escaping (Option, Bool) -> RowLabel
-    ) {
-        self.title = title
-        self.value = value
-        _selection = selection
-        self.options = options
-        self.rowLabel = rowLabel
-    }
-
-    var body: some View {
-        Menu {
-            ForEach(options) { option in
-                Button {
-                    selection = option
-                } label: {
-                    rowLabel(option, option == selection)
-                }
-            }
-        } label: {
-            ViewThatFits(in: .horizontal) {
-                HStack(alignment: .firstTextBaseline, spacing: 10) {
-                    titleText
-                    Spacer(minLength: 8)
-                    valueText
-                    menuChevron
-                }
-
-                VStack(alignment: .leading, spacing: 4) {
-                    titleText
-                    HStack(spacing: 6) {
-                        valueText
-                        menuChevron
-                    }
-                }
-            }
-            .contentShape(Rectangle())
-            .frame(maxWidth: .infinity, alignment: .leading)
+    private func proxyModeSystemImage(_ mode: ProxyConfigurationMode) -> String {
+        switch mode {
+        case .system:
+            "gearshape.2"
+        case .direct:
+            "bolt.horizontal"
+        case .manual:
+            "slider.horizontal.3"
         }
-        .buttonStyle(.plain)
-        .tint(.primary)
-    }
-
-    private var titleText: some View {
-        Text(title)
-            .font(.callout.weight(.semibold))
-            .foregroundStyle(.primary)
-            .lineLimit(1)
-            .minimumScaleFactor(0.84)
-    }
-
-    private var valueText: some View {
-        Text(value)
-            .font(.caption.weight(.semibold))
-            .foregroundStyle(.secondary)
-            .lineLimit(1)
-            .truncationMode(.middle)
-            .minimumScaleFactor(0.82)
-    }
-
-    private var menuChevron: some View {
-        Image(systemName: "chevron.up.chevron.down")
-            .font(.caption.weight(.bold))
-            .foregroundStyle(.tertiary)
     }
 }

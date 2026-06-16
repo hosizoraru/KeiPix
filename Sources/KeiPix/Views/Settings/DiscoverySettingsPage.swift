@@ -11,8 +11,7 @@ struct DiscoverySettingsPage: View {
         ) {
             OS26SettingsSection(
                 L10n.defaultBookmarkVisibility,
-                systemImage: "bookmark",
-                footer: "\(L10n.autoTagBookmarksWithArtworkTagsHint)\n\(L10n.followCreatorAfterBookmarkHint)\n\(L10n.autoDownloadBookmarkedArtworksHint)"
+                systemImage: "bookmark"
             ) {
                 bookmarkDefaultVisibilityRow(
                     L10n.illustrations,
@@ -30,18 +29,37 @@ struct DiscoverySettingsPage: View {
                     selection: store.settings_defaultNovelBookmarkRestrictBinding
                 )
 
-                Toggle(L10n.autoTagBookmarksWithArtworkTags, isOn: store.settings_autoTagBookmarksBinding)
-                Toggle(L10n.followCreatorAfterBookmark, isOn: store.settings_followCreatorAfterBookmarkBinding)
-                Toggle(L10n.autoDownloadBookmarkedArtworks, isOn: store.settings_autoDownloadBookmarksBinding)
+                OS26SettingsToggleRow(
+                    title: L10n.autoTagBookmarksWithArtworkTags,
+                    detail: L10n.autoTagBookmarksWithArtworkTagsHint,
+                    systemImage: "tag",
+                    isOn: store.settings_autoTagBookmarksBinding
+                )
+                OS26SettingsToggleRow(
+                    title: L10n.followCreatorAfterBookmark,
+                    detail: L10n.followCreatorAfterBookmarkHint,
+                    systemImage: "person.crop.circle.badge.plus",
+                    isOn: store.settings_followCreatorAfterBookmarkBinding
+                )
+                OS26SettingsToggleRow(
+                    title: L10n.autoDownloadBookmarkedArtworks,
+                    detail: L10n.autoDownloadBookmarkedArtworksHint,
+                    systemImage: "arrow.down.circle",
+                    isOn: store.settings_autoDownloadBookmarksBinding
+                )
             }
 
             OS26SettingsSection(L10n.followingCreators, systemImage: "person.2") {
-                Picker(L10n.defaultFollowVisibility, selection: store.settings_defaultFollowRestrictBinding) {
-                    ForEach(BookmarkRestrict.allCases) { restrict in
-                        Text(restrict.title).tag(restrict)
-                    }
+                OS26SettingsMenuPicker(
+                    title: L10n.defaultFollowVisibility,
+                    value: store.defaultFollowRestrict.title,
+                    detail: L10n.defaultFollowVisibilityHint,
+                    systemImage: restrictSystemImage(store.defaultFollowRestrict),
+                    selection: store.settings_defaultFollowRestrictBinding,
+                    options: BookmarkRestrict.allCases
+                ) { restrict, isSelected in
+                    Label(restrict.title, systemImage: isSelected ? "checkmark" : restrictSystemImage(restrict))
                 }
-                .pickerStyle(.segmented)
             }
         }
     }
@@ -51,18 +69,24 @@ struct DiscoverySettingsPage: View {
         systemImage: String,
         selection: Binding<BookmarkRestrict>
     ) -> some View {
-        LabeledContent {
-            Picker(title, selection: selection) {
-                ForEach(BookmarkRestrict.allCases) { restrict in
-                    Text(restrict.title).tag(restrict)
-                }
-            }
-            .labelsHidden()
-            .pickerStyle(.segmented)
-            .frame(maxWidth: 220, alignment: .trailing)
-        } label: {
-            Label(title, systemImage: systemImage)
-                .lineLimit(1)
+        OS26SettingsMenuPicker(
+            title: title,
+            value: selection.wrappedValue.title,
+            detail: L10n.defaultBookmarkVisibilityHint,
+            systemImage: systemImage,
+            selection: selection,
+            options: BookmarkRestrict.allCases
+        ) { restrict, isSelected in
+            Label(restrict.title, systemImage: isSelected ? "checkmark" : restrictSystemImage(restrict))
+        }
+    }
+
+    private func restrictSystemImage(_ restrict: BookmarkRestrict) -> String {
+        switch restrict {
+        case .public:
+            "globe"
+        case .private:
+            "lock"
         }
     }
 }

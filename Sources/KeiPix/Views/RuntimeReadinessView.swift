@@ -45,7 +45,7 @@ struct RuntimeReadinessView: View {
     @Bindable var state: RuntimeReadinessState
 
     // MARK: - State forwarders
-    //
+
     // The runtime-readiness state was lifted onto `SettingsCoordinator` so the
     // page can survive sidebar switches in `NavigationSplitView`. The body and
     // helper methods below predate that move and still reference the values by
@@ -57,104 +57,140 @@ struct RuntimeReadinessView: View {
         get { state.didCopyDiagnostics }
         nonmutating set { state.didCopyDiagnostics = newValue }
     }
+
     private var didCopyChecklist: Bool {
         get { state.didCopyChecklist }
         nonmutating set { state.didCopyChecklist = newValue }
     }
+
     private var isRunningReadOnlyQA: Bool {
         get { state.isRunningReadOnlyQA }
         nonmutating set { state.isRunningReadOnlyQA = newValue }
     }
+
     private var isRunningAccountHealthDiagnostics: Bool {
         get { state.isRunningAccountHealthDiagnostics }
         nonmutating set { state.isRunningAccountHealthDiagnostics = newValue }
     }
+
     private var isRunningDiagnostics: Bool {
         get { state.isRunningDiagnostics }
         nonmutating set { state.isRunningDiagnostics = newValue }
     }
+
     private var isRunningSearchDiagnostics: Bool {
         get { state.isRunningSearchDiagnostics }
         nonmutating set { state.isRunningSearchDiagnostics = newValue }
     }
+
     private var isRunningNonNovelQA: Bool {
         get { state.isRunningNonNovelQA }
         nonmutating set { state.isRunningNonNovelQA = newValue }
     }
+
     private var isRunningMutableActionQA: Bool {
         get { state.isRunningMutableActionQA }
         nonmutating set { state.isRunningMutableActionQA = newValue }
     }
+
     private var isRunningDirectNavigationDiagnostics: Bool {
         get { state.isRunningDirectNavigationDiagnostics }
         nonmutating set { state.isRunningDirectNavigationDiagnostics = newValue }
     }
+
     private var isRunningCommentFeedbackDiagnostics: Bool {
         get { state.isRunningCommentFeedbackDiagnostics }
         nonmutating set { state.isRunningCommentFeedbackDiagnostics = newValue }
     }
+
     private var isRunningMuteSyncDiagnostics: Bool {
         get { state.isRunningMuteSyncDiagnostics }
         nonmutating set { state.isRunningMuteSyncDiagnostics = newValue }
     }
+
     private var isLoadingCommentFeedbackPreview: Bool {
         get { state.isLoadingCommentFeedbackPreview }
         nonmutating set { state.isLoadingCommentFeedbackPreview = newValue }
     }
+
     private var isMutableActionQAAuthorizationPresented: Bool {
         get { state.isMutableActionQAAuthorizationPresented }
         nonmutating set { state.isMutableActionQAAuthorizationPresented = newValue }
     }
+
     private var feedbackPreviewRequest: FeedbackReportRequest? {
         get { state.feedbackPreviewRequest }
         nonmutating set { state.feedbackPreviewRequest = newValue }
     }
+
     private var accountHealthResults: [NetworkDiagnosticResult] {
         get { state.accountHealthResults }
         nonmutating set { state.accountHealthResults = newValue }
     }
+
     private var networkResults: [NetworkDiagnosticResult] {
         get { state.networkResults }
         nonmutating set { state.networkResults = newValue }
     }
+
     private var searchResults: [NetworkDiagnosticResult] {
         get { state.searchResults }
         nonmutating set { state.searchResults = newValue }
     }
+
     private var mutableActionQAResults: [NetworkDiagnosticResult] {
         get { state.mutableActionQAResults }
         nonmutating set { state.mutableActionQAResults = newValue }
     }
+
     private var directNavigationResults: [NetworkDiagnosticResult] {
         get { state.directNavigationResults }
         nonmutating set { state.directNavigationResults = newValue }
     }
+
     private var commentFeedbackResults: [NetworkDiagnosticResult] {
         get { state.commentFeedbackResults }
         nonmutating set { state.commentFeedbackResults = newValue }
     }
+
     private var muteSyncResults: [NetworkDiagnosticResult] {
         get { state.muteSyncResults }
         nonmutating set { state.muteSyncResults = newValue }
     }
+
     private var cacheStatus: ImageCacheStatus? {
         get { state.cacheStatus }
         nonmutating set { state.cacheStatus = newValue }
     }
+
     private var cacheMessage: String? {
         get { state.cacheMessage }
         nonmutating set { state.cacheMessage = newValue }
     }
 
     var body: some View {
+        runtimeReadinessContainer {
+            Section(L10n.runtimeReadiness) {
+                runtimeReadinessContent
+            }
+        }
+    }
+
+    var settingsContent: some View {
+        runtimeReadinessContainer {
+            runtimeReadinessContent
+        }
+    }
+
+    @ViewBuilder
+    private var runtimeReadinessContent: some View {
         let snapshot = store.runtimeReadinessSnapshot
 
-        Section(L10n.runtimeReadiness) {
-            Text(L10n.runtimeReadinessHint)
-                .font(.caption)
-                .foregroundStyle(.secondary)
+        Text(L10n.runtimeReadinessHint)
+            .font(.caption)
+            .foregroundStyle(.secondary)
 
-            #if DEBUG
+        #if DEBUG
             if usesRuntimeReadinessVisualQA {
                 let qaSnapshot = store.lastNonNovelQAMatrixSnapshot ?? NonNovelQAMatrixSnapshot(
                     checkedAt: snapshot.checkedAt,
@@ -174,113 +210,113 @@ struct RuntimeReadinessView: View {
 
                 Divider()
             }
-            #endif
+        #endif
 
-            if usesRuntimeReadinessVisualQA {
-                MutableActionReadinessView(
-                    items: snapshot.mutableActionItems,
-                    didCopyChecklist: didCopyChecklist,
-                    copyChecklist: {
-                        PasteboardWriter.copy(snapshot.mutableActionChecklistText)
-                        didCopyChecklist = true
-                    }
-                )
-                .task(id: didCopyChecklist) {
-                    await dismissChecklistCopyStatusIfNeeded()
+        if usesRuntimeReadinessVisualQA {
+            MutableActionReadinessView(
+                items: snapshot.mutableActionItems,
+                didCopyChecklist: didCopyChecklist,
+                copyChecklist: {
+                    PasteboardWriter.copy(snapshot.mutableActionChecklistText)
+                    didCopyChecklist = true
                 }
-
-                Divider()
-            }
-
-            ForEach(snapshot.rows) { row in
-                RuntimeReadinessRowView(row: row)
-            }
-
-            if let cacheStatus {
-                RuntimeReadinessRowView(row: RuntimeReadinessRow(
-                    id: "image-cache-live",
-                    title: L10n.imageCache,
-                    value: String(format: L10n.cacheUsageFormat, cacheStatus.diskUsageText, cacheStatus.diskCapacityText),
-                    systemImage: "externaldrive",
-                    isReady: true
-                ))
-            }
-
-            if networkResults.isEmpty == false {
-                Divider()
-
-                ForEach(networkResults) { result in
-                    NetworkDiagnosticResultRow(result: result)
-                }
-            }
-
-            if accountHealthResults.isEmpty == false {
-                Divider()
-
-                ForEach(accountHealthResults) { result in
-                    NetworkDiagnosticResultRow(result: result)
-                }
-            }
-
-            if searchResults.isEmpty == false {
-                Divider()
-
-                ForEach(searchResults) { result in
-                    NetworkDiagnosticResultRow(result: result)
-                }
-            }
-
-            if mutableActionQAResults.isEmpty == false {
-                Divider()
-
-                ForEach(mutableActionQAResults) { result in
-                    NetworkDiagnosticResultRow(result: result)
-                }
-            }
-
-            if directNavigationResults.isEmpty == false {
-                Divider()
-
-                ForEach(directNavigationResults) { result in
-                    NetworkDiagnosticResultRow(result: result)
-                }
-            }
-
-            if commentFeedbackResults.isEmpty == false {
-                Divider()
-
-                ForEach(commentFeedbackResults) { result in
-                    NetworkDiagnosticResultRow(result: result)
-                }
-            }
-
-            if muteSyncResults.isEmpty == false {
-                Divider()
-
-                ForEach(muteSyncResults) { result in
-                    NetworkDiagnosticResultRow(result: result)
-                }
+            )
+            .task(id: didCopyChecklist) {
+                await dismissChecklistCopyStatusIfNeeded()
             }
 
             Divider()
+        }
 
-            if usesRuntimeReadinessVisualQA == false {
-                MutableActionReadinessView(
-                    items: snapshot.mutableActionItems,
-                    didCopyChecklist: didCopyChecklist,
-                    copyChecklist: {
-                        PasteboardWriter.copy(snapshot.mutableActionChecklistText)
-                        didCopyChecklist = true
-                    }
-                )
-                .task(id: didCopyChecklist) {
-                    await dismissChecklistCopyStatusIfNeeded()
+        ForEach(snapshot.rows) { row in
+            RuntimeReadinessRowView(row: row)
+        }
+
+        if let cacheStatus {
+            RuntimeReadinessRowView(row: RuntimeReadinessRow(
+                id: "image-cache-live",
+                title: L10n.imageCache,
+                value: String(format: L10n.cacheUsageFormat, cacheStatus.diskUsageText, cacheStatus.diskCapacityText),
+                systemImage: "externaldrive",
+                isReady: true
+            ))
+        }
+
+        if networkResults.isEmpty == false {
+            Divider()
+
+            ForEach(networkResults) { result in
+                NetworkDiagnosticResultRow(result: result)
+            }
+        }
+
+        if accountHealthResults.isEmpty == false {
+            Divider()
+
+            ForEach(accountHealthResults) { result in
+                NetworkDiagnosticResultRow(result: result)
+            }
+        }
+
+        if searchResults.isEmpty == false {
+            Divider()
+
+            ForEach(searchResults) { result in
+                NetworkDiagnosticResultRow(result: result)
+            }
+        }
+
+        if mutableActionQAResults.isEmpty == false {
+            Divider()
+
+            ForEach(mutableActionQAResults) { result in
+                NetworkDiagnosticResultRow(result: result)
+            }
+        }
+
+        if directNavigationResults.isEmpty == false {
+            Divider()
+
+            ForEach(directNavigationResults) { result in
+                NetworkDiagnosticResultRow(result: result)
+            }
+        }
+
+        if commentFeedbackResults.isEmpty == false {
+            Divider()
+
+            ForEach(commentFeedbackResults) { result in
+                NetworkDiagnosticResultRow(result: result)
+            }
+        }
+
+        if muteSyncResults.isEmpty == false {
+            Divider()
+
+            ForEach(muteSyncResults) { result in
+                NetworkDiagnosticResultRow(result: result)
+            }
+        }
+
+        Divider()
+
+        if usesRuntimeReadinessVisualQA == false {
+            MutableActionReadinessView(
+                items: snapshot.mutableActionItems,
+                didCopyChecklist: didCopyChecklist,
+                copyChecklist: {
+                    PasteboardWriter.copy(snapshot.mutableActionChecklistText)
+                    didCopyChecklist = true
                 }
-
-                Divider()
+            )
+            .task(id: didCopyChecklist) {
+                await dismissChecklistCopyStatusIfNeeded()
             }
 
-            #if DEBUG
+            Divider()
+        }
+
+        #if DEBUG
             if usesRuntimeReadinessVisualQA == false {
                 let qaSnapshot = store.lastNonNovelQAMatrixSnapshot ?? NonNovelQAMatrixSnapshot(
                     checkedAt: snapshot.checkedAt,
@@ -298,247 +334,252 @@ struct RuntimeReadinessView: View {
                     isRunning: isRunningNonNovelQA
                 )
             }
-            #endif
+        #endif
 
-            FlowLayout(spacing: 8) {
-                Button {
-                    Task { await runReadOnlyQA() }
-                } label: {
-                    Label(L10n.runReadOnlyQA, systemImage: "checklist.checked")
-                }
-                .buttonStyle(.glassProminent)
-                .disabled(isRunningReadOnlyQA)
-
-                Button {
-                    Task { await runNonNovelQA() }
-                } label: {
-                    Label(L10n.runNonNovelQAMatrix, systemImage: "tablecells")
-                }
-                .disabled(isRunningNonNovelQA)
-
-                Button {
-                    Task { await runDiagnostics() }
-                } label: {
-                    Label(L10n.runNetworkDiagnostics, systemImage: "network.badge.shield.half.filled")
-                }
-                .disabled(isRunningDiagnostics)
-
-                Button {
-                    Task { await runAccountHealthDiagnostics() }
-                } label: {
-                    Label(L10n.runAccountHealthDiagnostics, systemImage: "person.crop.circle.badge.checkmark")
-                }
-                .disabled(isRunningAccountHealthDiagnostics)
-
-                Button {
-                    Task { await runSearchDiagnostics() }
-                } label: {
-                    Label(L10n.runSearchDiagnostics, systemImage: "magnifyingglass.circle")
-                }
-                .disabled(isRunningSearchDiagnostics)
-
-                Button(role: .destructive) {
-                    isMutableActionQAAuthorizationPresented = true
-                } label: {
-                    Label(L10n.runMutableActionQA, systemImage: "checkmark.shield")
-                }
-                .disabled(isRunningMutableActionQA)
-
-                Button {
-                    Task { await runDirectNavigationDiagnostics() }
-                } label: {
-                    Label(L10n.runIDNavigationDiagnostics, systemImage: "number.circle")
-                }
-                .disabled(isRunningDirectNavigationDiagnostics)
-
-                Button {
-                    Task { await runCommentFeedbackDiagnostics() }
-                } label: {
-                    Label(L10n.runCommentFeedbackDiagnostics, systemImage: "text.bubble")
-                }
-                .disabled(isRunningCommentFeedbackDiagnostics)
-
-                Button {
-                    Task { await runMuteSyncDiagnostics() }
-                } label: {
-                    PixivPremiumInlineLabel(
-                        title: L10n.runMuteSyncDiagnostics,
-                        systemImage: "eye.slash"
-                    )
-                }
-                .disabled(isRunningMuteSyncDiagnostics)
-
-                Button {
-                    Task { await previewCommentFeedback() }
-                } label: {
-                    Label(L10n.previewCommentFeedback, systemImage: "exclamationmark.bubble")
-                }
-                .disabled(isLoadingCommentFeedbackPreview)
-
-                Button {
-                    Task { await refreshCacheStatus() }
-                } label: {
-                    Label(L10n.refreshCacheStatus, systemImage: "externaldrive.badge.magnifyingglass")
-                }
-
-                Button(role: .destructive) {
-                    Task { await clearImageCache() }
-                } label: {
-                    Label(L10n.clearImageCache, systemImage: "trash")
-                }
+        FlowLayout(spacing: 8) {
+            Button {
+                Task { await runReadOnlyQA() }
+            } label: {
+                Label(L10n.runReadOnlyQA, systemImage: "checklist.checked")
             }
-
-            if isRunningDiagnostics {
-                HStack(spacing: 8) {
-                    ProgressView()
-                        .controlSize(.small)
-                    Text(L10n.runningDiagnostics)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-            }
-
-            if isRunningAccountHealthDiagnostics {
-                HStack(spacing: 8) {
-                    ProgressView()
-                        .controlSize(.small)
-                    Text(L10n.runningAccountHealthDiagnostics)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-            }
-
-            if isRunningReadOnlyQA {
-                HStack(spacing: 8) {
-                    ProgressView()
-                        .controlSize(.small)
-                    Text(L10n.runningReadOnlyQA)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-            }
-
-            if isRunningNonNovelQA {
-                HStack(spacing: 8) {
-                    ProgressView()
-                        .controlSize(.small)
-                    Text(L10n.runningNonNovelQAMatrix)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-            }
-
-            if isRunningSearchDiagnostics {
-                HStack(spacing: 8) {
-                    ProgressView()
-                        .controlSize(.small)
-                    Text(L10n.runningSearchDiagnostics)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-            }
-
-            if isRunningMutableActionQA {
-                HStack(spacing: 8) {
-                    ProgressView()
-                        .controlSize(.small)
-                    Text(L10n.runningMutableActionQA)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-            }
-
-            if isRunningDirectNavigationDiagnostics {
-                HStack(spacing: 8) {
-                    ProgressView()
-                        .controlSize(.small)
-                    Text(L10n.runningIDNavigationDiagnostics)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-            }
-
-            if isRunningCommentFeedbackDiagnostics {
-                HStack(spacing: 8) {
-                    ProgressView()
-                        .controlSize(.small)
-                    Text(L10n.runningCommentFeedbackDiagnostics)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-            }
-
-            if isRunningMuteSyncDiagnostics {
-                HStack(spacing: 8) {
-                    ProgressView()
-                        .controlSize(.small)
-                    Text(L10n.runningMuteSyncDiagnostics)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-            }
-
-            if isLoadingCommentFeedbackPreview {
-                HStack(spacing: 8) {
-                    ProgressView()
-                        .controlSize(.small)
-                    Text(L10n.loadingCommentFeedbackPreview)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-            }
-
-            if let cacheMessage {
-                Text(cacheMessage)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .textSelection(.enabled)
-            }
+            .buttonStyle(.glassProminent)
+            .disabled(isRunningReadOnlyQA)
 
             Button {
-                copyDiagnostics(snapshot)
-                didCopyDiagnostics = true
+                Task { await runNonNovelQA() }
             } label: {
-                Label(L10n.copyDiagnostics, systemImage: "doc.on.doc")
+                Label(L10n.runNonNovelQAMatrix, systemImage: "tablecells")
             }
-            .task(id: didCopyDiagnostics) {
-                await dismissCopyStatusIfNeeded()
-            }
+            .disabled(isRunningNonNovelQA)
 
             Button {
-                saveDiagnostics(snapshot)
+                Task { await runDiagnostics() }
             } label: {
-                Label(L10n.saveDiagnostics, systemImage: "square.and.arrow.down")
+                Label(L10n.runNetworkDiagnostics, systemImage: "network.badge.shield.half.filled")
+            }
+            .disabled(isRunningDiagnostics)
+
+            Button {
+                Task { await runAccountHealthDiagnostics() }
+            } label: {
+                Label(L10n.runAccountHealthDiagnostics, systemImage: "person.crop.circle.badge.checkmark")
+            }
+            .disabled(isRunningAccountHealthDiagnostics)
+
+            Button {
+                Task { await runSearchDiagnostics() }
+            } label: {
+                Label(L10n.runSearchDiagnostics, systemImage: "magnifyingglass.circle")
+            }
+            .disabled(isRunningSearchDiagnostics)
+
+            Button(role: .destructive) {
+                isMutableActionQAAuthorizationPresented = true
+            } label: {
+                Label(L10n.runMutableActionQA, systemImage: "checkmark.shield")
+            }
+            .disabled(isRunningMutableActionQA)
+
+            Button {
+                Task { await runDirectNavigationDiagnostics() }
+            } label: {
+                Label(L10n.runIDNavigationDiagnostics, systemImage: "number.circle")
+            }
+            .disabled(isRunningDirectNavigationDiagnostics)
+
+            Button {
+                Task { await runCommentFeedbackDiagnostics() }
+            } label: {
+                Label(L10n.runCommentFeedbackDiagnostics, systemImage: "text.bubble")
+            }
+            .disabled(isRunningCommentFeedbackDiagnostics)
+
+            Button {
+                Task { await runMuteSyncDiagnostics() }
+            } label: {
+                PixivPremiumInlineLabel(
+                    title: L10n.runMuteSyncDiagnostics,
+                    systemImage: "eye.slash"
+                )
+            }
+            .disabled(isRunningMuteSyncDiagnostics)
+
+            Button {
+                Task { await previewCommentFeedback() }
+            } label: {
+                Label(L10n.previewCommentFeedback, systemImage: "exclamationmark.bubble")
+            }
+            .disabled(isLoadingCommentFeedbackPreview)
+
+            Button {
+                Task { await refreshCacheStatus() }
+            } label: {
+                Label(L10n.refreshCacheStatus, systemImage: "externaldrive.badge.magnifyingglass")
             }
 
-            if didCopyDiagnostics {
-                Text(L10n.copiedDiagnostics)
+            Button(role: .destructive) {
+                Task { await clearImageCache() }
+            } label: {
+                Label(L10n.clearImageCache, systemImage: "trash")
+            }
+        }
+
+        if isRunningDiagnostics {
+            HStack(spacing: 8) {
+                ProgressView()
+                    .controlSize(.small)
+                Text(L10n.runningDiagnostics)
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
         }
-        .task {
-            await refreshCacheStatus()
-        }
-        .sheet(isPresented: $state.isMutableActionQAAuthorizationPresented) {
-            MutableActionQAAuthorizationSheet {
-                Task { await runMutableActionQA() }
+
+        if isRunningAccountHealthDiagnostics {
+            HStack(spacing: 8) {
+                ProgressView()
+                    .controlSize(.small)
+                Text(L10n.runningAccountHealthDiagnostics)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
-            .os26SheetChrome(.form)
         }
-        .sheet(item: $state.feedbackPreviewRequest) { request in
-            FeedbackReportSheet(request: request, localMuteAction: nil) { message in
-                cacheMessage = message
+
+        if isRunningReadOnlyQA {
+            HStack(spacing: 8) {
+                ProgressView()
+                    .controlSize(.small)
+                Text(L10n.runningReadOnlyQA)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
-            .os26SheetChrome(.form)
         }
+
+        if isRunningNonNovelQA {
+            HStack(spacing: 8) {
+                ProgressView()
+                    .controlSize(.small)
+                Text(L10n.runningNonNovelQAMatrix)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+
+        if isRunningSearchDiagnostics {
+            HStack(spacing: 8) {
+                ProgressView()
+                    .controlSize(.small)
+                Text(L10n.runningSearchDiagnostics)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+
+        if isRunningMutableActionQA {
+            HStack(spacing: 8) {
+                ProgressView()
+                    .controlSize(.small)
+                Text(L10n.runningMutableActionQA)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+
+        if isRunningDirectNavigationDiagnostics {
+            HStack(spacing: 8) {
+                ProgressView()
+                    .controlSize(.small)
+                Text(L10n.runningIDNavigationDiagnostics)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+
+        if isRunningCommentFeedbackDiagnostics {
+            HStack(spacing: 8) {
+                ProgressView()
+                    .controlSize(.small)
+                Text(L10n.runningCommentFeedbackDiagnostics)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+
+        if isRunningMuteSyncDiagnostics {
+            HStack(spacing: 8) {
+                ProgressView()
+                    .controlSize(.small)
+                Text(L10n.runningMuteSyncDiagnostics)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+
+        if isLoadingCommentFeedbackPreview {
+            HStack(spacing: 8) {
+                ProgressView()
+                    .controlSize(.small)
+                Text(L10n.loadingCommentFeedbackPreview)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+
+        if let cacheMessage {
+            Text(cacheMessage)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .textSelection(.enabled)
+        }
+
+        Button {
+            copyDiagnostics(snapshot)
+            didCopyDiagnostics = true
+        } label: {
+            Label(L10n.copyDiagnostics, systemImage: "doc.on.doc")
+        }
+        .task(id: didCopyDiagnostics) {
+            await dismissCopyStatusIfNeeded()
+        }
+
+        Button {
+            saveDiagnostics(snapshot)
+        } label: {
+            Label(L10n.saveDiagnostics, systemImage: "square.and.arrow.down")
+        }
+
+        if didCopyDiagnostics {
+            Text(L10n.copiedDiagnostics)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    private func runtimeReadinessContainer<Content: View>(
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        content()
+            .task {
+                await refreshCacheStatus()
+            }
+            .sheet(isPresented: $state.isMutableActionQAAuthorizationPresented) {
+                MutableActionQAAuthorizationSheet {
+                    Task { await runMutableActionQA() }
+                }
+                .os26SheetChrome(.form)
+            }
+            .sheet(item: $state.feedbackPreviewRequest) { request in
+                FeedbackReportSheet(request: request, localMuteAction: nil) { message in
+                    cacheMessage = message
+                }
+                .os26SheetChrome(.form)
+            }
     }
 
     private func runReadOnlyQA() async {
         isRunningReadOnlyQA = true
         defer { isRunningReadOnlyQA = false }
         #if DEBUG
-        async let nonNovelQA = store.runNonNovelQAMatrix()
+            async let nonNovelQA = store.runNonNovelQAMatrix()
         #endif
         async let network = store.runNetworkDiagnostics()
         async let search = store.runSearchDiagnostics()
@@ -546,7 +587,7 @@ struct RuntimeReadinessView: View {
         async let commentFeedback = store.runCommentFeedbackDiagnostics()
         async let muteSync = store.runMuteSyncDiagnostics()
         #if DEBUG
-        _ = await nonNovelQA
+            _ = await nonNovelQA
         #endif
         networkResults = await network
         searchResults = await search
@@ -562,9 +603,9 @@ struct RuntimeReadinessView: View {
 
     private func runNonNovelQA() async {
         #if DEBUG
-        isRunningNonNovelQA = true
-        defer { isRunningNonNovelQA = false }
-        _ = await store.runNonNovelQAMatrix()
+            isRunningNonNovelQA = true
+            defer { isRunningNonNovelQA = false }
+            _ = await store.runNonNovelQAMatrix()
         #endif
     }
 
@@ -640,21 +681,21 @@ struct RuntimeReadinessView: View {
 
     private func saveDiagnostics(_ snapshot: RuntimeReadinessSnapshot) {
         #if os(macOS)
-        let panel = NSSavePanel()
-        panel.title = L10n.saveDiagnostics
-        panel.nameFieldStringValue = "keipix-diagnostics-\(Self.fileDateFormatter.string(from: Date())).txt"
-        panel.allowedContentTypes = [.plainText]
+            let panel = NSSavePanel()
+            panel.title = L10n.saveDiagnostics
+            panel.nameFieldStringValue = "keipix-diagnostics-\(Self.fileDateFormatter.string(from: Date())).txt"
+            panel.allowedContentTypes = [.plainText]
 
-        guard panel.runModal() == .OK, let url = panel.url else {
-            return
-        }
+            guard panel.runModal() == .OK, let url = panel.url else {
+                return
+            }
 
-        do {
-            try diagnosticsReport(snapshot).write(to: url, atomically: true, encoding: .utf8)
-            cacheMessage = L10n.savedDiagnostics
-        } catch {
-            cacheMessage = "\(L10n.unableToSaveDiagnostics): \(error.localizedDescription)"
-        }
+            do {
+                try diagnosticsReport(snapshot).write(to: url, atomically: true, encoding: .utf8)
+                cacheMessage = L10n.savedDiagnostics
+            } catch {
+                cacheMessage = "\(L10n.unableToSaveDiagnostics): \(error.localizedDescription)"
+            }
         #endif
     }
 

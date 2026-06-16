@@ -49225,6 +49225,499 @@
         }
       }
     },
+    "Follow the system language, or keep KeiPix pinned to a specific language.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Follow the system language, or keep KeiPix pinned to a specific language."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "システム言語に従うか、KeiPix で使う言語を固定します。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "跟随系统语言，或让 KeiPix 固定使用指定语言。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "跟隨系統語言，或讓 KeiPix 固定使用指定語言。"
+          }
+        }
+      }
+    },
+    "Controls thumbnails in feeds and discovery lists. Lower quality reduces scrolling bandwidth.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Controls thumbnails in feeds and discovery lists. Lower quality reduces scrolling bandwidth."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "フィードや発見リストのサムネイル画質を調整します。低い画質ほどスクロール時の通信量を抑えます。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "控制信息流和发现列表里的缩略图。较低画质可减少滚动时的流量。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "控制資訊流和發現列表裡的縮圖。較低畫質可減少捲動時的流量。"
+          }
+        }
+      }
+    },
+    "Used when opening single illustrations and artwork detail sheets.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Used when opening single illustrations and artwork detail sheets."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "単枚イラストや作品詳細シートを開くときに使います。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "打开单张插画和作品详情表单时使用。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "打開單張插畫和作品詳情表單時使用。"
+          }
+        }
+      }
+    },
+    "Used for multi-page manga readers where original pages can be large.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Used for multi-page manga readers where original pages can be large."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "元画像が大きくなりやすい複数ページ漫画リーダーで使います。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "用于多页漫画阅读器，原图页面通常会更大。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "用於多頁漫畫閱讀器，原圖頁面通常會更大。"
+          }
+        }
+      }
+    },
+    "Display translated tag aliases alongside Pixiv tag names when KeiPix has them.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Display translated tag aliases alongside Pixiv tag names when KeiPix has them."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "KeiPix が持っている翻訳済みタグ別名を Pixiv のタグ名と一緒に表示します。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "当 KeiPix 有标签译名时，在 Pixiv 标签名旁一起显示。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "當 KeiPix 有標籤譯名時，在 Pixiv 標籤名旁一起顯示。"
+          }
+        }
+      }
+    },
+    "Show AI, R-18, and R-18G badges on cards that remain visible.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show AI, R-18, and R-18G badges on cards that remain visible."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "表示されるカードに AI、R-18、R-18G のバッジを表示します。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在仍然可见的卡片上显示 AI、R-18 和 R-18G 标识。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在仍然可見的卡片上顯示 AI、R-18 和 R-18G 標識。"
+          }
+        }
+      }
+    },
+    "Remove artworks, creators, and tags in your local mute list from feeds and history.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove artworks, creators, and tags in your local mute list from feeds and history."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ローカルのミュートリストにある作品、作者、タグをフィードや履歴から除外します。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "从信息流和历史记录中移除本地静音列表里的作品、作者和标签。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "從資訊流和歷史記錄中移除本地靜音列表裡的作品、作者和標籤。"
+          }
+        }
+      }
+    },
+    "Filter AI-labeled artworks locally before they reach feeds, search, and history.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Filter AI-labeled artworks locally before they reach feeds, search, and history."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI ラベル付き作品をフィード、検索、履歴に届く前にローカルで除外します。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在进入信息流、搜索和历史记录前，本地过滤带 AI 标记的作品。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在進入資訊流、搜尋和歷史記錄前，本地過濾帶 AI 標記的作品。"
+          }
+        }
+      }
+    },
+    "Filter regular R-18 works locally while keeping R-18G controlled separately.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Filter regular R-18 works locally while keeping R-18G controlled separately."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "通常の R-18 作品をローカルで除外し、R-18G は別の設定で管理します。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "本地过滤普通 R-18 作品，同时让 R-18G 保持独立控制。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "本地過濾普通 R-18 作品，同時讓 R-18G 保持獨立控制。"
+          }
+        }
+      }
+    },
+    "Filter R-18G works locally without changing the regular R-18 filter.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Filter R-18G works locally without changing the regular R-18 filter."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "通常の R-18 フィルターとは別に、R-18G 作品をローカルで除外します。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "本地过滤 R-18G 作品，不改变普通 R-18 过滤设置。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "本地過濾 R-18G 作品，不改變普通 R-18 過濾設定。"
+          }
+        }
+      }
+    },
+    "Used by quick follow actions and automatic follows after bookmarking.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Used by quick follow actions and automatic follows after bookmarking."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "クイックフォローやブックマーク後の自動フォローで使います。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "用于快速关注，以及收藏后的自动关注。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "用於快速追蹤，以及收藏後的自動追蹤。"
+          }
+        }
+      }
+    },
+    "Choose whether quick bookmarks start public or private for this content type.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose whether quick bookmarks start public or private for this content type."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "この種類のクイックブックマークを公開または非公開のどちらで作成するか選びます。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "选择这个内容类型的快速收藏默认公开还是私密。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "選擇這個內容類型的快速收藏預設公開還是私密。"
+          }
+        }
+      }
+    },
+    "Choose the default feed layout. Auto adapts to platform and available width.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose the default feed layout. Auto adapts to platform and available width."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "既定のフィードレイアウトを選びます。自動ではプラットフォームと幅に合わせます。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "选择默认信息流布局。自动模式会根据平台和可用宽度适配。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "選擇預設資訊流佈局。自動模式會根據平台和可用寬度適配。"
+          }
+        }
+      }
+    },
+    "Used for illustrations and short page sets unless you change the reader mode manually.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Used for illustrations and short page sets unless you change the reader mode manually."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "リーダーモードを手動で変えない限り、イラストや短いページ構成で使います。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "用于插画和较短页组，除非你在阅读器中手动更改模式。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "用於插畫和較短頁組，除非你在閱讀器中手動更改模式。"
+          }
+        }
+      }
+    },
+    "Used for manga and long page sets where continuous reading is often more comfortable.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Used for manga and long page sets where continuous reading is often more comfortable."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "連続読みが快適になりやすい漫画や長いページ構成で使います。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "用于漫画和较长页组，这类内容通常连续阅读更舒适。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "用於漫畫和較長頁組，這類內容通常連續閱讀更舒適。"
+          }
+        }
+      }
+    },
+    "Let Magic Trackpad and Magic Keyboard gestures drive page turns and reader navigation.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Let Magic Trackpad and Magic Keyboard gestures drive page turns and reader navigation."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Magic Trackpad と Magic Keyboard のジェスチャでページ送りやリーダーナビゲーションを操作します。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "允许 Magic Trackpad 和 Magic Keyboard 手势控制翻页与阅读器导航。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "允許 Magic Trackpad 和 Magic Keyboard 手勢控制翻頁與閱讀器導覽。"
+          }
+        }
+      }
+    },
+    "Choose whether a horizontal swipe only flips pages or can continue to adjacent artworks at the edges.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose whether a horizontal swipe only flips pages or can continue to adjacent artworks at the edges."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "横スワイプをページ送りだけにするか、端で隣の作品へ進めるかを選びます。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "选择横向滑动只翻页，还是在边缘继续切换到相邻作品。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "選擇橫向滑動只翻頁，還是在邊緣繼續切換到相鄰作品。"
+          }
+        }
+      }
+    },
     "Go Forward": {
       "extractionState": "manual",
       "localizations": {

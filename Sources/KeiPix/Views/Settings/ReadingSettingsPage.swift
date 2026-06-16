@@ -12,33 +12,41 @@ struct ReadingSettingsPage: View {
         ) {
             OS26SettingsSection(
                 L10n.readingWindow,
-                systemImage: "book.pages",
-                footer: "\(L10n.defaultReadingModeHint)\n\(L10n.restoreLastReadPageHint)"
+                systemImage: "book.pages"
             ) {
-                Picker(L10n.defaultArtworkReadingMode, selection: store.settings_defaultArtworkReadingModeBinding) {
-                    ForEach(ArtworkReadingMode.allCases) { mode in
-                        Text(mode.title).tag(mode)
-                    }
-                }
-                .pickerStyle(.segmented)
+                readingModePicker(
+                    title: L10n.defaultArtworkReadingMode,
+                    value: store.defaultArtworkReadingMode,
+                    detail: L10n.defaultArtworkReadingModeHint,
+                    selection: store.settings_defaultArtworkReadingModeBinding
+                )
 
-                Picker(L10n.defaultMangaReadingMode, selection: store.settings_defaultMangaReadingModeBinding) {
-                    ForEach(ArtworkReadingMode.allCases) { mode in
-                        Text(mode.title).tag(mode)
-                    }
-                }
-                .pickerStyle(.segmented)
+                readingModePicker(
+                    title: L10n.defaultMangaReadingMode,
+                    value: store.defaultMangaReadingMode,
+                    detail: L10n.defaultMangaReadingModeHint,
+                    selection: store.settings_defaultMangaReadingModeBinding
+                )
 
-                Toggle(L10n.restoreLastReadPage, isOn: store.settings_restoreReaderProgressBinding)
+                OS26SettingsToggleRow(
+                    title: L10n.restoreLastReadPage,
+                    detail: L10n.restoreLastReadPageHint,
+                    systemImage: "clock.arrow.circlepath",
+                    isOn: store.settings_restoreReaderProgressBinding
+                )
             }
 
-            OS26SettingsSection(L10n.translate, systemImage: "translate", footer: L10n.translationTargetLanguageHint) {
-                Picker(L10n.translationTargetLanguage, selection: store.settings_translationTargetLanguageBinding) {
-                    ForEach(TranslationTargetLanguage.allCases) { language in
-                        Text(language.title).tag(language)
-                    }
+            OS26SettingsSection(L10n.translate, systemImage: "translate") {
+                OS26SettingsMenuPicker(
+                    title: L10n.translationTargetLanguage,
+                    value: store.translationTargetLanguage.title,
+                    detail: L10n.translationTargetLanguageHint,
+                    systemImage: translationSystemImage(store.translationTargetLanguage),
+                    selection: store.settings_translationTargetLanguageBinding,
+                    options: TranslationTargetLanguage.allCases
+                ) { language, isSelected in
+                    Label(language.title, systemImage: isSelected ? "checkmark" : translationSystemImage(language))
                 }
-                .pickerStyle(.menu)
 
                 HStack {
                     Spacer()
@@ -53,15 +61,64 @@ struct ReadingSettingsPage: View {
             }
 
             OS26SettingsSection(L10n.trackpad, systemImage: "trackpad") {
-                Toggle(L10n.enableTrackpadGestures, isOn: store.settings_trackpadGesturesBinding)
+                OS26SettingsToggleRow(
+                    title: L10n.enableTrackpadGestures,
+                    detail: L10n.trackpadGesturesHint,
+                    systemImage: "hand.draw",
+                    isOn: store.settings_trackpadGesturesBinding
+                )
 
-                Picker(L10n.twoFingerSwipeBehavior, selection: store.settings_horizontalSwipeBehaviorBinding) {
-                    ForEach(TrackpadHorizontalSwipeBehavior.allCases) { behavior in
-                        Text(behavior.title).tag(behavior)
-                    }
+                OS26SettingsMenuPicker(
+                    title: L10n.twoFingerSwipeBehavior,
+                    value: store.horizontalSwipeBehavior.title,
+                    detail: L10n.twoFingerSwipeBehaviorHint,
+                    systemImage: swipeBehaviorSystemImage(store.horizontalSwipeBehavior),
+                    selection: store.settings_horizontalSwipeBehaviorBinding,
+                    options: TrackpadHorizontalSwipeBehavior.allCases
+                ) { behavior, isSelected in
+                    Label(behavior.title, systemImage: isSelected ? "checkmark" : swipeBehaviorSystemImage(behavior))
                 }
-                .pickerStyle(.menu)
             }
+        }
+    }
+
+    private func readingModePicker(
+        title: String,
+        value: ArtworkReadingMode,
+        detail: String,
+        selection: Binding<ArtworkReadingMode>
+    ) -> some View {
+        OS26SettingsMenuPicker(
+            title: title,
+            value: value.title,
+            detail: detail,
+            systemImage: value.systemImage,
+            selection: selection,
+            options: ArtworkReadingMode.allCases
+        ) { mode, isSelected in
+            Label(mode.title, systemImage: isSelected ? "checkmark" : mode.systemImage)
+        }
+    }
+
+    private func translationSystemImage(_ language: TranslationTargetLanguage) -> String {
+        switch language {
+        case .system:
+            "globe"
+        case .simplifiedChinese, .traditionalChinese:
+            "character.bubble"
+        case .japanese:
+            "textformat.characters"
+        case .english:
+            "textformat.abc"
+        }
+    }
+
+    private func swipeBehaviorSystemImage(_ behavior: TrackpadHorizontalSwipeBehavior) -> String {
+        switch behavior {
+        case .pageOnly:
+            "rectangle"
+        case .pageThenArtworkAtEdges:
+            "rectangle.stack.badge.play"
         }
     }
 

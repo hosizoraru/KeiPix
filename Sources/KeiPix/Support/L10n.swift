@@ -611,8 +611,10 @@ enum L10n {
     static var followUsingDefault: String { text("Follow Using Default") }
     static var followVisibility: String { text("Follow Visibility") }
     static var defaultFollowVisibility: String { text("Default Follow Visibility") }
+    static var defaultFollowVisibilityHint: String { text("Used by quick follow actions and automatic follows after bookmarking.") }
     static var autoTagBookmarksWithArtworkTags: String { text("Use artwork tags for new bookmarks") }
     static var autoTagBookmarksWithArtworkTagsHint: String { text("Quick bookmarks use the artwork tags, and the bookmark editor preselects them for new bookmarks.") }
+    static var defaultBookmarkVisibilityHint: String { text("Choose whether quick bookmarks start public or private for this content type.") }
     static var premium: String { text("Premium") }
     static var showMore: String { text("Show More") }
     static var showLess: String { text("Show Less") }
@@ -728,6 +730,7 @@ enum L10n {
     static var showSidebar: String { text("Show Sidebar") }
     static var hideSidebar: String { text("Hide Sidebar") }
     static var language: String { text("Language") }
+    static var languageHint: String { text("Follow the system language, or keep KeiPix pinned to a specific language.") }
     static var automatic: String { text("Automatic") }
     static var simplifiedChinese: String { text("Simplified Chinese") }
     static var traditionalChinese: String { text("Traditional Chinese") }
@@ -750,8 +753,11 @@ enum L10n {
     static var imageQualityTierOriginal: String { text("Original") }
     static var imageQualityTierSection: String { text("Image Quality") }
     static var feedPreviewQuality: String { text("Feed preview quality") }
+    static var feedPreviewQualityHint: String { text("Controls thumbnails in feeds and discovery lists. Lower quality reduces scrolling bandwidth.") }
     static var illustDetailQuality: String { text("Illust detail quality") }
+    static var illustDetailQualityHint: String { text("Used when opening single illustrations and artwork detail sheets.") }
     static var mangaDetailQuality: String { text("Manga detail quality") }
+    static var mangaDetailQualityHint: String { text("Used for multi-page manga readers where original pages can be large.") }
     static var imageQualityTierHint: String { text("Pixiv ships every illust at three sizes. Pick the rung that matches your bandwidth — Medium loads fastest, Original is the source asset.") }
     static var imageProcessing: String { text("Image Processing") }
     static var imageProcessorsEnabled: String { text("Enable image processing") }
@@ -803,17 +809,23 @@ enum L10n {
     static var bulkBlockSummaryFormat: String { text("Blocked %d item(s).") }
     static var commentRegexHint: String { text("Wrap a phrase in /slashes/ to match as a regular expression — e.g. /^spam.*/i.") }
     static var showTranslatedTags: String { text("Show translated tag names") }
+    static var showTranslatedTagsHint: String { text("Display translated tag aliases alongside Pixiv tag names when KeiPix has them.") }
     static var contentFilters: String { text("Content Filters") }
     static var showContentBadges: String { text("Show content badges") }
+    static var showContentBadgesHint: String { text("Show AI, R-18, and R-18G badges on cards that remain visible.") }
     static var hideMutedContent: String { text("Hide muted content") }
+    static var hideMutedContentHint: String { text("Remove artworks, creators, and tags in your local mute list from feeds and history.") }
     static var hideAIArtworks: String { text("Hide AI-generated artworks") }
+    static var hideAIArtworksHint: String { text("Filter AI-labeled artworks locally before they reach feeds, search, and history.") }
     static var pixivAIDisplay: String { text("Pixiv AI Display") }
     static var pixivAIDisplayHint: String { text("Toggles the account-wide AI display on Pixiv. When off, Pixiv hides AI-generated artworks across every client signed into the account.") }
     static var pixivAIDisplayUnknownHint: String { text("Sign in with a real Pixiv account to manage account-wide AI visibility.") }
     static var aiVisibilityLocalHidden: String { text("Local AI artworks hidden") }
     static var aiVisibilityLocalVisible: String { text("Local AI artworks visible") }
     static var hideR18Artworks: String { text("Hide R-18 artworks") }
+    static var hideR18ArtworksHint: String { text("Filter regular R-18 works locally while keeping R-18G controlled separately.") }
     static var hideR18GArtworks: String { text("Hide R-18G artworks") }
+    static var hideR18GArtworksHint: String { text("Filter R-18G works locally without changing the regular R-18 filter.") }
     static var maskSensitivePreviews: String { text("Mask R-18 previews") }
     static var maskSensitivePreviewsHint: String { text("Blur R-18 and R-18G thumbnails while keeping metadata and actions visible.") }
     static var r18PreviewHidden: String { text("R-18 preview hidden") }
@@ -886,6 +898,7 @@ enum L10n {
     static var openReaderWindow: String { text("Open Reader Window") }
     static var layout: String { text("Layout") }
     static var galleryLayout: String { text("Gallery Layout") }
+    static var galleryLayoutHint: String { text("Choose the default feed layout. Auto adapts to platform and available width.") }
     static var emphasizeFollowingArtists: String { text("Emphasize artworks from following artists") }
     static var emphasizeFollowingArtistsHint: String {
         text("Adds an accent border and a Following badge so artists you follow stand out in mixed feeds.")
@@ -910,13 +923,17 @@ enum L10n {
     static var wideWindow: String { text("Wide") }
     static var readingWindow: String { text("Reading") }
     static var defaultArtworkReadingMode: String { text("Default Artwork Reading Mode") }
+    static var defaultArtworkReadingModeHint: String { text("Used for illustrations and short page sets unless you change the reader mode manually.") }
     static var defaultMangaReadingMode: String { text("Default Manga Reading Mode") }
+    static var defaultMangaReadingModeHint: String { text("Used for manga and long page sets where continuous reading is often more comfortable.") }
     static var defaultReadingModeHint: String { text("Changing the reader mode in an artwork updates the matching default for future works.") }
     static var restoreLastReadPage: String { text("Restore Last Read Page") }
     static var restoreLastReadPageHint: String { text("Reopen multi-page artworks on the last page read on this Mac.") }
     static var trackpad: String { text("Trackpad") }
     static var enableTrackpadGestures: String { text("Enable trackpad gestures") }
+    static var trackpadGesturesHint: String { text("Let Magic Trackpad and Magic Keyboard gestures drive page turns and reader navigation.") }
     static var twoFingerSwipeBehavior: String { text("Two-finger swipe behavior") }
+    static var twoFingerSwipeBehaviorHint: String { text("Choose whether a horizontal swipe only flips pages or can continue to adjacent artworks at the edges.") }
     static var pageOnlySwipe: String { text("Page within artwork") }
     static var pageThenArtworkSwipe: String { text("Switch artwork at edges") }
     static var privacy: String { text("Privacy") }

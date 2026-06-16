@@ -1,6 +1,6 @@
 import SwiftUI
 #if os(iOS)
-import UIKit
+    import UIKit
 #endif
 
 struct OS26LibrarySearchField: View {
@@ -39,48 +39,48 @@ struct OS26LibrarySearchField: View {
 
     var body: some View {
         #if os(iOS)
-        if usesCollapsedPhoneSearch {
-            Button {
-                withAnimation(.snappy(duration: 0.18)) {
-                    isExpanded = true
+            if usesCollapsedPhoneSearch {
+                Button {
+                    withAnimation(.snappy(duration: 0.18)) {
+                        isExpanded = true
+                    }
+                } label: {
+                    Label(L10n.search, systemImage: "magnifyingglass")
+                        .lineLimit(1)
                 }
-            } label: {
-                Label(L10n.search, systemImage: "magnifyingglass")
-                    .lineLimit(1)
-            }
-            .os26GlassButton()
-            .accessibilityLabel(placeholder)
-        } else if isPhone {
-            HStack(spacing: 8) {
+                .os26GlassButton()
+                .accessibilityLabel(placeholder)
+            } else if isPhone {
+                HStack(spacing: 8) {
+                    nativeField
+                        .frame(minWidth: minWidth, idealWidth: idealWidth, maxWidth: maxWidth)
+
+                    if text.isEmpty {
+                        Button {
+                            withAnimation(.snappy(duration: 0.16)) {
+                                if let onClose {
+                                    onClose()
+                                } else {
+                                    isExpanded = false
+                                }
+                            }
+                        } label: {
+                            Label(L10n.close, systemImage: "xmark.circle.fill")
+                        }
+                        .labelStyle(.iconOnly)
+                        .buttonStyle(.plain)
+                        .foregroundStyle(.secondary)
+                        .help(L10n.close)
+                        .accessibilityLabel(L10n.close)
+                    }
+                }
+            } else {
                 nativeField
                     .frame(minWidth: minWidth, idealWidth: idealWidth, maxWidth: maxWidth)
-
-                if text.isEmpty {
-                    Button {
-                        withAnimation(.snappy(duration: 0.16)) {
-                            if let onClose {
-                                onClose()
-                            } else {
-                                isExpanded = false
-                            }
-                        }
-                    } label: {
-                        Label(L10n.close, systemImage: "xmark.circle.fill")
-                    }
-                    .labelStyle(.iconOnly)
-                    .buttonStyle(.plain)
-                    .foregroundStyle(.secondary)
-                    .help(L10n.close)
-                    .accessibilityLabel(L10n.close)
-                }
             }
-        } else {
+        #else
             nativeField
                 .frame(minWidth: minWidth, idealWidth: idealWidth, maxWidth: maxWidth)
-        }
-        #else
-        nativeField
-            .frame(minWidth: minWidth, idealWidth: idealWidth, maxWidth: maxWidth)
         #endif
     }
 
@@ -96,13 +96,13 @@ struct OS26LibrarySearchField: View {
     }
 
     #if os(iOS)
-    private var usesCollapsedPhoneSearch: Bool {
-        collapsesOnPhone && isPhone && text.isEmpty && isExpanded == false
-    }
+        private var usesCollapsedPhoneSearch: Bool {
+            collapsesOnPhone && isPhone && text.isEmpty && isExpanded == false
+        }
 
-    private var isPhone: Bool {
-        UIDevice.current.userInterfaceIdiom == .phone
-    }
+        private var isPhone: Bool {
+            UIDevice.current.userInterfaceIdiom == .phone
+        }
     #endif
 }
 
@@ -154,12 +154,12 @@ struct OS26LibraryLoadingView: View {
 
     var body: some View {
         #if os(iOS)
-        NativeBottomTabScrollContentHost {
-            loadingCard
-        }
+            NativeBottomTabScrollContentHost {
+                loadingCard
+            }
         #else
-        loadingCard
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            loadingCard
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
         #endif
     }
 
@@ -181,7 +181,7 @@ struct OS26LibraryLoadingView: View {
             }
 
             VStack(alignment: .leading, spacing: 10) {
-                ForEach(0..<5, id: \.self) { index in
+                ForEach(0 ..< 5, id: \.self) { index in
                     SkeletonPlaceholder(
                         width: index.isMultiple(of: 2) ? nil : 280,
                         height: 18,
@@ -370,12 +370,12 @@ struct OS26LibraryUnavailableView<Actions: View>: View {
 
     var body: some View {
         #if os(iOS)
-        NativeBottomTabScrollContentHost {
-            unavailableCard
-        }
+            NativeBottomTabScrollContentHost {
+                unavailableCard
+            }
         #else
-        unavailableCard
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            unavailableCard
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
         #endif
     }
 
@@ -459,12 +459,10 @@ extension View {
     @ViewBuilder
     func os26GlassButton(prominent: Bool = false) -> some View {
         if prominent {
-            self
-                .buttonStyle(.glassProminent)
+            buttonStyle(.glassProminent)
                 .buttonBorderShape(.capsule)
         } else {
-            self
-                .buttonStyle(.glass)
+            buttonStyle(.glass)
                 .buttonBorderShape(.capsule)
         }
     }
@@ -472,13 +470,11 @@ extension View {
     @ViewBuilder
     func os26GlassIconButton(prominent: Bool = false) -> some View {
         if prominent {
-            self
-                .labelStyle(.iconOnly)
+            labelStyle(.iconOnly)
                 .buttonStyle(.glassProminent)
                 .buttonBorderShape(.capsule)
         } else {
-            self
-                .labelStyle(.iconOnly)
+            labelStyle(.iconOnly)
                 .buttonStyle(.glass)
                 .buttonBorderShape(.capsule)
         }
@@ -547,7 +543,7 @@ struct OS26SettingsPage<Content: View>: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .navigationTitle(showsHeader ? title : "")
         #if !os(macOS)
-        .navigationBarTitleDisplayMode(showsHeader ? .automatic : .inline)
+            .navigationBarTitleDisplayMode(showsHeader ? .automatic : .inline)
         #endif
     }
 }
@@ -568,13 +564,13 @@ private struct OS26SettingsPageMetrics {
         guard usesAdaptiveGrid else { return 1 }
         let width = contentWidth
         #if os(macOS)
-        if width >= 1040 { return 3 }
-        if width >= 680 { return 2 }
-        return 1
+            if width >= 1040 { return 3 }
+            if width >= 680 { return 2 }
+            return 1
         #else
-        if width >= 900 { return 3 }
-        if width >= 590 { return 2 }
-        return 1
+            if width >= 900 { return 3 }
+            if width >= 590 { return 2 }
+            return 1
         #endif
     }
 
@@ -585,37 +581,37 @@ private struct OS26SettingsPageMetrics {
     var pageMaxWidth: CGFloat {
         guard usesAdaptiveGrid else { return 860 }
         #if os(macOS)
-        return 1180
+            return 1180
         #else
-        if availableWidth < 560 {
-            return 520
-        }
-        if availableWidth < 900 {
-            return 860
-        }
-        return 1160
+            if availableWidth < 560 {
+                return 520
+            }
+            if availableWidth < 900 {
+                return 860
+            }
+            return 1160
         #endif
     }
 
     var horizontalPadding: CGFloat {
         #if os(macOS)
-        return 28
+            return 28
         #else
-        if availableWidth < 430 {
-            return 12
-        }
-        if availableWidth < 900 {
-            return 16
-        }
-        return 18
+            if availableWidth < 430 {
+                return 12
+            }
+            if availableWidth < 900 {
+                return 16
+            }
+            return 18
         #endif
     }
 
     var gridSpacing: CGFloat {
         #if os(macOS)
-        return 16
+            return 16
         #else
-        return availableWidth < 560 ? 12 : 14
+            return availableWidth < 560 ? 12 : 14
         #endif
     }
 
@@ -629,17 +625,17 @@ private struct OS26SettingsPageMetrics {
 
     var bottomPadding: CGFloat {
         #if os(macOS)
-        return 20
+            return 20
         #else
-        return availableWidth < 900 ? 14 : 20
+            return availableWidth < 900 ? 14 : 20
         #endif
     }
 
     var pageAlignment: Alignment {
         #if os(macOS)
-        return .topLeading
+            return .topLeading
         #else
-        return .top
+            return .top
         #endif
     }
 }
@@ -750,6 +746,152 @@ struct OS26SettingsDivider: View {
     var body: some View {
         Divider()
             .opacity(0.55)
+    }
+}
+
+struct OS26SettingsRowLabel: View {
+    let title: String
+    var detail: String?
+    var systemImage: String?
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 10) {
+            if let systemImage {
+                Image(systemName: systemImage)
+                    .font(.callout.weight(.semibold))
+                    .symbolRenderingMode(.hierarchical)
+                    .foregroundStyle(.secondary)
+                    .frame(width: 20, alignment: .center)
+                    .padding(.top, 1)
+            }
+
+            VStack(alignment: .leading, spacing: 3) {
+                Text(title)
+                    .font(.callout.weight(.semibold))
+                    .foregroundStyle(.primary)
+                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                if let detail, detail.isEmpty == false {
+                    Text(detail)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+struct OS26SettingsControlRow<Accessory: View>: View {
+    let title: String
+    var detail: String?
+    var systemImage: String?
+    private let accessory: Accessory
+
+    init(
+        title: String,
+        detail: String? = nil,
+        systemImage: String? = nil,
+        @ViewBuilder accessory: () -> Accessory
+    ) {
+        self.title = title
+        self.detail = detail
+        self.systemImage = systemImage
+        self.accessory = accessory()
+    }
+
+    var body: some View {
+        ViewThatFits(in: .horizontal) {
+            HStack(alignment: .center, spacing: 12) {
+                label
+                    .layoutPriority(1)
+                accessory
+                    .fixedSize(horizontal: true, vertical: false)
+            }
+
+            VStack(alignment: .leading, spacing: 10) {
+                label
+                accessory
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var label: some View {
+        OS26SettingsRowLabel(title: title, detail: detail, systemImage: systemImage)
+    }
+}
+
+struct OS26SettingsToggleRow: View {
+    let title: String
+    var detail: String?
+    var systemImage: String?
+    @Binding var isOn: Bool
+
+    var body: some View {
+        Toggle(isOn: $isOn) {
+            OS26SettingsRowLabel(title: title, detail: detail, systemImage: systemImage)
+        }
+    }
+}
+
+struct OS26SettingsMenuPicker<Option: Identifiable & Hashable, RowLabel: View>: View {
+    let title: String
+    let value: String
+    var detail: String?
+    var systemImage: String?
+    @Binding private var selection: Option
+    private let options: [Option]
+    private let rowLabel: (Option, Bool) -> RowLabel
+
+    init(
+        title: String,
+        value: String,
+        detail: String? = nil,
+        systemImage: String? = nil,
+        selection: Binding<Option>,
+        options: [Option],
+        @ViewBuilder rowLabel: @escaping (Option, Bool) -> RowLabel
+    ) {
+        self.title = title
+        self.value = value
+        self.detail = detail
+        self.systemImage = systemImage
+        _selection = selection
+        self.options = options
+        self.rowLabel = rowLabel
+    }
+
+    var body: some View {
+        Menu {
+            ForEach(options) { option in
+                Button {
+                    selection = option
+                } label: {
+                    rowLabel(option, option == selection)
+                }
+            }
+        } label: {
+            OS26SettingsControlRow(title: title, detail: detail, systemImage: systemImage) {
+                HStack(spacing: 6) {
+                    Text(value)
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                        .minimumScaleFactor(0.82)
+
+                    Image(systemName: "chevron.up.chevron.down")
+                        .font(.caption.weight(.bold))
+                        .foregroundStyle(.tertiary)
+                }
+            }
+        }
+        .buttonStyle(.plain)
+        .tint(.primary)
     }
 }
 

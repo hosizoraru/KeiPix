@@ -1,7 +1,7 @@
 import CoreGraphics
 import Foundation
-import Testing
 @testable import KeiPix
+import Testing
 
 struct NativeBoundaryTests {
     @Test("Package stays on the native macOS SwiftPM route")
@@ -21,12 +21,12 @@ struct NativeBoundaryTests {
         let root = try packageRoot()
         let sourceRoot = root.appending(path: "Sources/KeiPix", directoryHint: .isDirectory)
         let files = try sourceFiles(in: sourceRoot)
-        let forbiddenExtensions: Set<String> = [
+        let forbiddenExtensions: Set = [
             "dart",
             "gradle",
             "java",
             "kt",
-            "kts"
+            "kts",
         ]
         let forbiddenTerms = [
             "import Flutter",
@@ -35,7 +35,7 @@ struct NativeBoundaryTests {
             "Widget build(",
             "@Composable",
             "Jetpack Compose",
-            "kotlinx.coroutines"
+            "kotlinx.coroutines",
         ]
 
         let forbiddenFiles = files.filter { forbiddenExtensions.contains($0.pathExtension.lowercased()) }
@@ -811,7 +811,7 @@ struct NativeBoundaryTests {
             "Customize Bottom Tabs",
             "Reset Bottom Tabs",
             "Default Tab Pages",
-            "Choose the default page for each iPhone and iPad portrait tab."
+            "Choose the default page for each iPhone and iPad portrait tab.",
         ] {
             #expect(navigationCatalog.contains("\"\(key)\""), "\(key) should be localized for the mobile navigation UI")
         }
@@ -1323,7 +1323,7 @@ struct NativeBoundaryTests {
             "Sources/KeiPix/Support/NativeAdaptiveGridCollectionView.swift",
             "Sources/KeiPix/Support/NativeBookmarkTagCollectionView.swift",
             "Sources/KeiPix/Support/NativeBrowsingHistoryCollectionView.swift",
-            "Sources/KeiPix/Support/NativeDownloadQueueListView.swift"
+            "Sources/KeiPix/Support/NativeDownloadQueueListView.swift",
         ]
 
         #expect(helper.contains("final class NativeContentScrollRegistration"))
@@ -1359,7 +1359,7 @@ struct NativeBoundaryTests {
             "Sources/KeiPix/Views/PixivCollectionsView.swift",
             "Sources/KeiPix/Views/SpotlightView.swift",
             "Sources/KeiPix/Views/WatchLaterView.swift",
-            "Sources/KeiPix/Views/WorkSubscriptionsView.swift"
+            "Sources/KeiPix/Views/WorkSubscriptionsView.swift",
         ]
 
         #expect(helper.contains("func nativeBottomTabContentSurface(isEnabled: Bool = true)"))
@@ -1888,7 +1888,7 @@ struct NativeBoundaryTests {
         for (name, source) in [
             ("UgoiraPlayerView", playerView),
             ("UgoiraPlaybackBar", playbackBar),
-            ("DownloadedUgoiraViewer", downloadedViewer)
+            ("DownloadedUgoiraViewer", downloadedViewer),
         ] {
             #expect(source.contains(".buttonStyle(.bordered)") == false, "\(name) should use glass actions")
             #expect(source.contains(".buttonStyle(.borderedProminent)") == false, "\(name) should use prominent glass actions")
@@ -1936,7 +1936,7 @@ struct NativeBoundaryTests {
             (
                 "Sources/KeiPix/Views/ArtworkSeriesView.swift",
                 "#if os(macOS)\n        .frame(width: 860, height: 680)"
-            )
+            ),
         ]
 
         for (relativePath, expectedFrame) in expectedMacOnlyFrames {
@@ -1970,7 +1970,7 @@ struct NativeBoundaryTests {
             "Sources/KeiPix/Views/NovelWatchlistView.swift",
             "Sources/KeiPix/Views/SpotlightView.swift",
             "Sources/KeiPix/Views/UserPreviewListView.swift",
-            "Sources/KeiPix/Views/WorkSubscriptionsView.swift"
+            "Sources/KeiPix/Views/WorkSubscriptionsView.swift",
         ]
 
         #expect(emptyState.contains("struct PixivSignedOutStateView: View"))
@@ -2362,7 +2362,7 @@ struct NativeBoundaryTests {
             "Sources/KeiPix/Views/WatchLaterView.swift",
             "Sources/KeiPix/Views/BrowsingHistoryView.swift",
             "Sources/KeiPix/Views/SavedSearchesView.swift",
-            "Sources/KeiPix/Views/MutedContentView.swift"
+            "Sources/KeiPix/Views/MutedContentView.swift",
         ]
 
         #expect(emptyState.contains("struct PlatformPageTitleHeader<Trailing: View>: View"))
@@ -2458,7 +2458,7 @@ struct NativeBoundaryTests {
             ("Sources/KeiPix/Views/MutedContentView.swift", ".mobileRouteBadgeCount(totalCount, for: .mutedContent)"),
             ("Sources/KeiPix/Views/SavedSearchesView.swift", ".mobileRouteBadgeCount(savedSearchBadgeCount, for: .savedSearches)"),
             ("Sources/KeiPix/Views/SpotlightView.swift", ".mobileRouteBadgeCount(displayedArticles.count, for: spotlightBadgeRoute)"),
-            ("Sources/KeiPix/Views/UserPreviewListView.swift", ".mobileRouteBadgeCount(visiblePreviews.count, for: routeBadgeRoute)")
+            ("Sources/KeiPix/Views/UserPreviewListView.swift", ".mobileRouteBadgeCount(visiblePreviews.count, for: routeBadgeRoute)"),
         ]
 
         for (path, marker) in reportingPages {
@@ -2608,7 +2608,7 @@ struct NativeBoundaryTests {
             "Sources/KeiPix/Views/ContentView_iPadOS.swift",
             "Sources/KeiPix/Views/ArtworkTranslateButton.swift",
             "Sources/KeiPix/Views/MutedContentView.swift",
-            "Sources/KeiPix/Views/PixivCommentEmojiTextView.swift"
+            "Sources/KeiPix/Views/PixivCommentEmojiTextView.swift",
         ]
 
         for relativePath in guardedPaths {
@@ -2761,7 +2761,7 @@ struct NativeBoundaryTests {
             ),
             "navigation": stringCatalogKeys(
                 at: root.appending(path: "Sources/KeiPix/Resources/Navigation.xcstrings")
-            )
+            ),
         ]
         let regex = try NSRegularExpression(
             pattern: #"text\("((?:[^"\\]|\\.)*)"(?:,\s*table:\s*L10nTable\.([A-Za-z0-9_]+))?\)"#
@@ -2796,14 +2796,14 @@ struct NativeBoundaryTests {
         )
         let sourceFiles = [
             root.appending(path: "Sources/KeiPix/Intents/KeiPixIntents.swift"),
-            root.appending(path: "Sources/KeiPix/Intents/KeiPixShortcuts.swift")
+            root.appending(path: "Sources/KeiPix/Intents/KeiPixShortcuts.swift"),
         ]
         let patterns = [
             #"LocalizedStringResource\s*=\s*"((?:[^"\\]|\\.)*)""#,
             #"IntentDescription\(\s*"((?:[^"\\]|\\.)*)""#,
             #"\btitle:\s*"((?:[^"\\]|\\.)*)""#,
             #"\bdescription:\s*"((?:[^"\\]|\\.)*)""#,
-            #"shortTitle:\s*"((?:[^"\\]|\\.)*)""#
+            #"shortTitle:\s*"((?:[^"\\]|\\.)*)""#,
         ]
         let regexes = try patterns.map { try NSRegularExpression(pattern: $0) }
         var missing: [String] = []
@@ -3237,12 +3237,21 @@ struct NativeBoundaryTests {
             contentsOf: root.appending(path: "Sources/KeiPix/Views/Settings/SettingsBindings.swift"),
             encoding: .utf8
         )
+        let readingSettings = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/Settings/ReadingSettingsPage.swift"),
+            encoding: .utf8
+        )
+        let safetySettings = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/Settings/SafetySettingsPage.swift"),
+            encoding: .utf8
+        )
         let downloadsSettings = try String(
             contentsOf: root.appending(path: "Sources/KeiPix/Views/Settings/DownloadsSettingsPage.swift"),
             encoding: .utf8
         )
         let migratedPages = [
             "Sources/KeiPix/Views/Settings/AccountSettingsPage.swift",
+            "Sources/KeiPix/Views/Settings/AdvancedQASettingsPage.swift",
             "Sources/KeiPix/Views/Settings/DiscoverySettingsPage.swift",
             "Sources/KeiPix/Views/Settings/DownloadsSettingsPage.swift",
             "Sources/KeiPix/Views/Settings/GeneralSettingsPage.swift",
@@ -3251,7 +3260,7 @@ struct NativeBoundaryTests {
             "Sources/KeiPix/Views/Settings/ReadingSettingsPage.swift",
             "Sources/KeiPix/Views/Settings/SafetySettingsPage.swift",
             "Sources/KeiPix/Views/Settings/SharingSettingsPage.swift",
-            "Sources/KeiPix/Views/Settings/StorageSettingsPage.swift"
+            "Sources/KeiPix/Views/Settings/StorageSettingsPage.swift",
         ]
 
         #expect(settingsView.contains("private var settingsRoot: some View"))
@@ -3272,8 +3281,10 @@ struct NativeBoundaryTests {
         #expect(settingsView.contains(".environment(\\.os26SettingsPageUsesAdaptiveGrid, true)"))
         #expect(settingsView.contains(".frame(\n            minWidth: 820"))
         #expect(settingsView.contains("Text(coordinator.selection.title)") == false)
-        #expect(generalSettings.contains("#if os(macOS)\n            OS26SettingsSection(L10n.openAtLaunch"))
-        #expect(generalSettings.contains("private struct GeneralSettingsMenuPicker"))
+        #expect(generalSettings.contains("#if os(macOS)"))
+        #expect(generalSettings.contains("OS26SettingsSection(L10n.openAtLaunch"))
+        #expect(generalSettings.contains("OS26SettingsMenuPicker("))
+        #expect(generalSettings.contains("private struct GeneralSettingsMenuPicker") == false)
         #expect(generalSettings.contains("value: store.appLanguage.title"))
         #expect(generalSettings.contains("value: store.galleryLayoutMode.title"))
         #expect(generalSettings.contains("L10n.routeSwitchRefreshExpiration"))
@@ -3286,6 +3297,10 @@ struct NativeBoundaryTests {
 
         #expect(settingsSurface.contains("struct OS26SettingsPage<Content: View>: View"))
         #expect(settingsSurface.contains("struct OS26SettingsSection<Content: View>: View"))
+        #expect(settingsSurface.contains("struct OS26SettingsRowLabel: View"))
+        #expect(settingsSurface.contains("struct OS26SettingsControlRow<Accessory: View>: View"))
+        #expect(settingsSurface.contains("struct OS26SettingsToggleRow: View"))
+        #expect(settingsSurface.contains("struct OS26SettingsMenuPicker<Option: Identifiable & Hashable, RowLabel: View>: View"))
         #expect(settingsSurface.contains("struct OS26SettingsActionButton: View"))
         #expect(settingsSurface.contains("LazyVGrid("))
         #expect(settingsSurface.contains("private struct OS26SettingsPageMetrics"))
@@ -3300,6 +3315,9 @@ struct NativeBoundaryTests {
         #expect(settingsBindings.contains("settings_defaultMangaBookmarkRestrictBinding"))
         #expect(settingsBindings.contains("settings_defaultNovelBookmarkRestrictBinding"))
         #expect(settingsBindings.contains("settings_routeSwitchRefreshExpirationBinding"))
+        #expect(discoverySettings.contains("OS26SettingsToggleRow("))
+        #expect(readingSettings.contains("OS26SettingsMenuPicker("))
+        #expect(safetySettings.contains("OS26SettingsToggleRow("))
         #expect(downloadsSettings.contains("private var templateEditor: some View"))
         #expect(downloadsSettings.contains("ViewThatFits(in: .horizontal)"))
         #expect(downloadsSettings.contains("private var tokenMenu: some View"))
@@ -3721,11 +3739,12 @@ struct NativeBoundaryTests {
         #expect(nativeText.contains("UIFontMetrics(forTextStyle: .body).scaledFont"))
 
         guard let continuousLayoutStart = readerView.range(of: "private var continuousReaderLayout"),
-              let pagedLayoutStart = readerView.range(of: "// MARK: - Single page layout") else {
+              let pagedLayoutStart = readerView.range(of: "// MARK: - Single page layout")
+        else {
             Issue.record("Expected continuous and paged reader layout sections")
             return
         }
-        let continuousLayout = String(readerView[continuousLayoutStart.lowerBound..<pagedLayoutStart.lowerBound])
+        let continuousLayout = String(readerView[continuousLayoutStart.lowerBound ..< pagedLayoutStart.lowerBound])
         #expect(continuousLayout.contains(".readerGestures(") == false)
     }
 
@@ -4129,8 +4148,8 @@ struct NativeBoundaryTests {
         let phoneActionBar = try #require(rowView.range(of: "private struct DownloadQueuePhoneActionBar: View"))
         let regularActionRail = try #require(rowView.range(of: "private struct DownloadQueueRegularActionRail: View"))
         let moreMenu = try #require(rowView.range(of: "private struct DownloadQueueMoreMenu: View"))
-        let phoneActionSource = String(rowView[phoneActionBar.lowerBound..<regularActionRail.lowerBound])
-        let regularActionSource = String(rowView[regularActionRail.lowerBound..<moreMenu.lowerBound])
+        let phoneActionSource = String(rowView[phoneActionBar.lowerBound ..< regularActionRail.lowerBound])
+        let regularActionSource = String(rowView[regularActionRail.lowerBound ..< moreMenu.lowerBound])
         let moreMenuSource = String(rowView[moreMenu.lowerBound...])
 
         #expect(queueView.contains("NativeDownloadQueueListView("))
@@ -4598,7 +4617,7 @@ struct NativeBoundaryTests {
             "Sources/KeiPix/Views/MutedContentView.swift",
             "Sources/KeiPix/Views/MangaWatchlistView.swift",
             "Sources/KeiPix/Views/DownloadQueueView.swift",
-            "Sources/KeiPix/Views/DownloadQueueRow.swift"
+            "Sources/KeiPix/Views/DownloadQueueRow.swift",
         ]
 
         #expect(sharedComponents.contains("struct OS26LibrarySearchField: View"))
@@ -4788,7 +4807,7 @@ struct NativeBoundaryTests {
             "Sources/KeiPix/Views/Settings/DownloadsSettingsPage.swift",
             "Sources/KeiPix/Views/Settings/GeneralSettingsPage.swift",
             "Sources/KeiPix/Views/Settings/SharingSettingsPage.swift",
-            "Sources/KeiPix/Views/Settings/KeyboardSettingsPage.swift"
+            "Sources/KeiPix/Views/Settings/KeyboardSettingsPage.swift",
         ]
 
         for relativePath in relativePaths {
@@ -4973,16 +4992,16 @@ struct NativeBoundaryTests {
         )
         let searchBarStart = try #require(creatorComponents.range(of: "struct CreatorListSearchBar: View"))
         let searchBarEnd = try #require(creatorComponents.range(of: "private struct CreatorSearchScopeChip: View"))
-        let searchBarSource = String(creatorComponents[searchBarStart.lowerBound..<searchBarEnd.lowerBound])
+        let searchBarSource = String(creatorComponents[searchBarStart.lowerBound ..< searchBarEnd.lowerBound])
         let optionsMenuStart = try #require(creatorComponents.range(of: "struct CreatorListViewOptionsMenu: View"))
         let optionsMenuEnd = try #require(creatorComponents.range(of: "/// Selection-entry menu rendered in the creator list's toolbar."))
-        let optionsMenuSource = String(creatorComponents[optionsMenuStart.lowerBound..<optionsMenuEnd.lowerBound])
+        let optionsMenuSource = String(creatorComponents[optionsMenuStart.lowerBound ..< optionsMenuEnd.lowerBound])
         let compactRailStart = try #require(creatorCard.range(of: "private var compactCommandRail: some View"))
         let compactRailEnd = try #require(creatorCard.range(of: "private var iconOnlyNavigationButtons"))
-        let compactRailSource = String(creatorCard[compactRailStart.lowerBound..<compactRailEnd.lowerBound])
+        let compactRailSource = String(creatorCard[compactRailStart.lowerBound ..< compactRailEnd.lowerBound])
         let followButtonStart = try #require(creatorCard.range(of: "private var followButton: some View"))
         let followButtonEnd = try #require(creatorCard.range(of: "private var compactFollowLabel: some View"))
-        let followButtonSource = String(creatorCard[followButtonStart.lowerBound..<followButtonEnd.lowerBound])
+        let followButtonSource = String(creatorCard[followButtonStart.lowerBound ..< followButtonEnd.lowerBound])
 
         #expect(creatorComponents.contains("NativeCreatorPreviewCollectionView("))
         #expect(creatorComponents.contains(".frame(maxWidth: .infinity, maxHeight: .infinity)"))
@@ -5519,7 +5538,7 @@ struct NativeBoundaryTests {
 
     private func packageRoot() throws -> URL {
         var candidate = URL(fileURLWithPath: FileManager.default.currentDirectoryPath, isDirectory: true)
-        for _ in 0..<8 {
+        for _ in 0 ..< 8 {
             if FileManager.default.fileExists(atPath: candidate.appending(path: "Package.swift").path(percentEncoded: false)) {
                 return candidate
             }
@@ -5529,7 +5548,7 @@ struct NativeBoundaryTests {
         // works under both SwiftPM (`swift test`) and Xcode (`xcodebuild test`),
         // since the latter sets the current directory inside DerivedData.
         var fileBased = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
-        for _ in 0..<10 {
+        for _ in 0 ..< 10 {
             if FileManager.default.fileExists(atPath: fileBased.appending(path: "Package.swift").path(percentEncoded: false)) {
                 return fileBased
             }

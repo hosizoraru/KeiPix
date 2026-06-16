@@ -26,31 +26,55 @@ struct SafetySettingsPage: View {
     }
 
     private var filtersSection: some View {
-        OS26SettingsSection(L10n.contentFilters, systemImage: "line.3.horizontal.decrease.circle", footer: L10n.maskSensitivePreviewsHint) {
-            Toggle(L10n.showContentBadges, isOn: store.settings_showContentBadgesBinding)
-            Toggle(L10n.hideMutedContent, isOn: store.settings_hideMutedBinding)
-            Toggle(L10n.hideAIArtworks, isOn: store.settings_hideAIBinding)
-            Toggle(L10n.hideR18Artworks, isOn: store.settings_hideR18Binding)
-            Toggle(L10n.hideR18GArtworks, isOn: store.settings_hideR18GBinding)
-            Toggle(L10n.maskSensitivePreviews, isOn: store.settings_maskSensitivePreviewsBinding)
+        OS26SettingsSection(L10n.contentFilters, systemImage: "line.3.horizontal.decrease.circle") {
+            OS26SettingsToggleRow(
+                title: L10n.showContentBadges,
+                detail: L10n.showContentBadgesHint,
+                systemImage: "tag.circle",
+                isOn: store.settings_showContentBadgesBinding
+            )
+            OS26SettingsToggleRow(
+                title: L10n.hideMutedContent,
+                detail: L10n.hideMutedContentHint,
+                systemImage: "eye.slash",
+                isOn: store.settings_hideMutedBinding
+            )
+            OS26SettingsToggleRow(
+                title: L10n.hideAIArtworks,
+                detail: L10n.hideAIArtworksHint,
+                systemImage: "sparkles.square.filled.on.square",
+                isOn: store.settings_hideAIBinding
+            )
+            OS26SettingsToggleRow(
+                title: L10n.hideR18Artworks,
+                detail: L10n.hideR18ArtworksHint,
+                systemImage: "exclamationmark.triangle",
+                isOn: store.settings_hideR18Binding
+            )
+            OS26SettingsToggleRow(
+                title: L10n.hideR18GArtworks,
+                detail: L10n.hideR18GArtworksHint,
+                systemImage: "exclamationmark.octagon",
+                isOn: store.settings_hideR18GBinding
+            )
+            OS26SettingsToggleRow(
+                title: L10n.maskSensitivePreviews,
+                detail: L10n.maskSensitivePreviewsHint,
+                systemImage: "rectangle.dashed.badge.record",
+                isOn: store.settings_maskSensitivePreviewsBinding
+            )
         }
     }
 
     private var pixivSafetySection: some View {
-        OS26SettingsSection(
-            L10n.pixivSection,
-            systemImage: "shield.lefthalf.filled",
-            footer: "\(L10n.pixivRestrictedModeHint)\n\(L10n.pixivAIDisplayHint)"
-        ) {
-            HStack(spacing: 8) {
-                Toggle(L10n.pixivRestrictedMode, isOn: restrictedModeBinding)
-                    .disabled(store.restrictedModeEnabled == nil || coordinator.isUpdatingRestrictedMode)
-
-                if store.restrictedModeEnabled == nil || coordinator.isUpdatingRestrictedMode {
-                    ProgressView()
-                        .controlSize(.small)
-                }
-            }
+        OS26SettingsSection(L10n.pixivSection, systemImage: "shield.lefthalf.filled") {
+            pixivAccountToggleRow(
+                title: L10n.pixivRestrictedMode,
+                detail: L10n.pixivRestrictedModeHint,
+                systemImage: "exclamationmark.shield",
+                isOn: restrictedModeBinding,
+                isPending: store.restrictedModeEnabled == nil || coordinator.isUpdatingRestrictedMode
+            )
 
             if let restrictedModeMessage = coordinator.restrictedModeMessage {
                 Text(restrictedModeMessage)
@@ -59,15 +83,13 @@ struct SafetySettingsPage: View {
                     .textSelection(.enabled)
             }
 
-            HStack(spacing: 8) {
-                Toggle(L10n.pixivAIDisplay, isOn: aiShowBinding)
-                    .disabled(store.aiShowEnabled == nil || coordinator.isUpdatingAIShow)
-
-                if store.aiShowEnabled == nil || coordinator.isUpdatingAIShow {
-                    ProgressView()
-                        .controlSize(.small)
-                }
-            }
+            pixivAccountToggleRow(
+                title: L10n.pixivAIDisplay,
+                detail: L10n.pixivAIDisplayHint,
+                systemImage: "sparkles",
+                isOn: aiShowBinding,
+                isPending: store.aiShowEnabled == nil || coordinator.isUpdatingAIShow
+            )
 
             if let aiShowMessage = coordinator.aiShowMessage {
                 Text(aiShowMessage)
@@ -79,9 +101,14 @@ struct SafetySettingsPage: View {
     }
 
     private var mutedContentSection: some View {
-        OS26SettingsSection(L10n.mutedContent, systemImage: "eye.slash", footer: L10n.muteSyncHint) {
-            LabeledContent(L10n.mutedContent) {
+        OS26SettingsSection(L10n.mutedContent, systemImage: "eye.slash") {
+            OS26SettingsControlRow(
+                title: L10n.mutedContent,
+                detail: L10n.muteSyncHint,
+                systemImage: "list.bullet.rectangle"
+            ) {
                 Text(String(format: L10n.mutedContentCountFormat, mutedContentCount))
+                    .font(.caption.weight(.semibold))
                     .foregroundStyle(.secondary)
             }
 
@@ -99,7 +126,7 @@ struct SafetySettingsPage: View {
                     coordinator.isMutedContentUploadConfirmationPresented = true
                 }
                 .disabled(coordinator.isSyncingMutedContent
-                          || (store.mutedTagList.isEmpty && store.mutedUserList.isEmpty))
+                    || (store.mutedTagList.isEmpty && store.mutedUserList.isEmpty))
 
                 if coordinator.isSyncingMutedContent {
                     ProgressView()
@@ -112,9 +139,9 @@ struct SafetySettingsPage: View {
                     exportLocalFile()
                 }
                 .disabled(coordinator.isSyncingMutedContent
-                          || (store.mutedTagList.isEmpty
-                              && store.mutedUserList.isEmpty
-                              && store.mutedArtworkList.isEmpty))
+                    || (store.mutedTagList.isEmpty
+                        && store.mutedUserList.isEmpty
+                        && store.mutedArtworkList.isEmpty))
 
                 OS26SettingsActionButton(title: L10n.importMutedContent, systemImage: "square.and.arrow.down") {
                     coordinator.isMutedContentImportConfirmationPresented = true
@@ -145,6 +172,28 @@ struct SafetySettingsPage: View {
 
     private var mutedContentCount: Int {
         store.mutedTagList.count + store.mutedUserList.count + store.mutedArtworkList.count
+    }
+
+    private func pixivAccountToggleRow(
+        title: String,
+        detail: String,
+        systemImage: String,
+        isOn: Binding<Bool>,
+        isPending: Bool
+    ) -> some View {
+        OS26SettingsControlRow(title: title, detail: detail, systemImage: systemImage) {
+            HStack(spacing: 8) {
+                Toggle(title, isOn: isOn)
+                    .labelsHidden()
+                    .disabled(isPending)
+                    .accessibilityLabel(title)
+
+                if isPending {
+                    ProgressView()
+                        .controlSize(.small)
+                }
+            }
+        }
     }
 
     private func pixivPremiumSettingsActionButton(
