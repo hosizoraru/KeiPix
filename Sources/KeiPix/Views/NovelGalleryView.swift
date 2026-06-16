@@ -60,6 +60,14 @@ struct NovelGalleryView: View {
         .mobileRouteBadgeCount(filteredNovels.count, for: store.selectedRoute)
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
+                if surface.showsRouteScopeMenu, let family = store.selectedRoute.routeScopeFamily {
+                    PixivRouteScopeMenu(
+                        family: family,
+                        selectedRoute: store.selectedRoute,
+                        selectRoute: selectRouteScope
+                    )
+                }
+
                 if surface.showsLayoutMenu {
                     novelLayoutMenu
                 }
@@ -340,6 +348,11 @@ struct NovelGalleryView: View {
         readerNovel = novel
         Task { await novelStore.openNovel(novel) }
     }
+
+    private func selectRouteScope(_ route: PixivRoute) {
+        guard route != store.selectedRoute else { return }
+        store.select(route)
+    }
 }
 
 private struct NovelGallerySurfaceLayout: Equatable {
@@ -354,6 +367,14 @@ private struct NovelGallerySurfaceLayout: Equatable {
         return workspace.platform == .pad && workspace.usesCondensedChrome == false
         #else
         return false
+        #endif
+    }
+
+    var showsRouteScopeMenu: Bool {
+        #if os(iOS)
+        return workspace.platform == .pad
+        #else
+        return true
         #endif
     }
 

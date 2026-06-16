@@ -76,7 +76,6 @@ enum PixivRouteSection: Identifiable {
                 .novelFollowing,
                 .novelSearch,
                 .novelPublicBookmarks,
-                .novelPrivateBookmarks,
                 .novelWatchlist
             ]
         case .novelRanking:
@@ -120,6 +119,7 @@ enum PixivRankingFamily: String, CaseIterable {
 
 enum PixivRouteScopeFamily: String, CaseIterable, Identifiable, Sendable {
     case ownBookmarks
+    case ownNovelBookmarks
     case pixivCollectionsLibrary
     case followingArtwork
     case followedCreators
@@ -130,6 +130,8 @@ enum PixivRouteScopeFamily: String, CaseIterable, Identifiable, Sendable {
         switch self {
         case .ownBookmarks:
             L10n.bookmarks
+        case .ownNovelBookmarks:
+            L10n.novelBookmarks
         case .pixivCollectionsLibrary:
             L10n.pixivCollections
         case .followingArtwork:
@@ -143,6 +145,8 @@ enum PixivRouteScopeFamily: String, CaseIterable, Identifiable, Sendable {
         switch self {
         case .ownBookmarks:
             "bookmark"
+        case .ownNovelBookmarks:
+            "bookmark.square"
         case .pixivCollectionsLibrary:
             "rectangle.stack.badge.person.crop"
         case .followingArtwork:
@@ -156,6 +160,8 @@ enum PixivRouteScopeFamily: String, CaseIterable, Identifiable, Sendable {
         switch self {
         case .ownBookmarks:
             PixivRoute.ownBookmarkRoutes
+        case .ownNovelBookmarks:
+            PixivRoute.ownNovelBookmarkRoutes
         case .pixivCollectionsLibrary:
             PixivRoute.pixivCollectionsLibraryRoutes
         case .followingArtwork:
@@ -514,6 +520,10 @@ enum PixivRoute: String, CaseIterable, Identifiable, Codable {
 
     static var ownBookmarkRoutes: [PixivRoute] {
         [.publicBookmarks, .privateBookmarks]
+    }
+
+    static var ownNovelBookmarkRoutes: [PixivRoute] {
+        [.novelPublicBookmarks, .novelPrivateBookmarks]
     }
 
     static var pixivCollectionsLibraryRoutes: [PixivRoute] {

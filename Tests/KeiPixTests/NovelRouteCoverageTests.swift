@@ -54,8 +54,13 @@ struct NovelRouteCoverageTests {
     func ownNovelBookmarkFlag() {
         #expect(PixivRoute.novelPublicBookmarks.isOwnNovelBookmarkRoute)
         #expect(PixivRoute.novelPrivateBookmarks.isOwnNovelBookmarkRoute)
+        #expect(PixivRoute.novelPublicBookmarks.routeScopeFamily == .ownNovelBookmarks)
+        #expect(PixivRoute.novelPrivateBookmarks.routeScopeFamily == .ownNovelBookmarks)
+        #expect(PixivRoute.novelPrivateBookmarks.visibleLibraryRoute == .novelPublicBookmarks)
         #expect(PixivRoute.novelWatchlist.isOwnNovelBookmarkRoute == false)
         #expect(PixivRoute.publicBookmarks.isOwnNovelBookmarkRoute == false)
+        #expect(PixivRouteSection.novels.routes.contains(.novelPublicBookmarks))
+        #expect(PixivRouteSection.novels.routes.contains(.novelPrivateBookmarks) == false)
     }
 
     @Test("usesNovelFeed and usesArtworkFeed are mutually exclusive for every route")

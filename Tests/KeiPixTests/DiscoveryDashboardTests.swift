@@ -122,16 +122,19 @@ struct DiscoveryDashboardTests {
     func mergedLibraryRouteFamiliesKeepSingleVisibleEntry() throws {
         let sidebarLibrary = try #require(PixivRoute.sidebarSections.first { $0 == .library })
         let dashboardLibrary = try #require(DiscoveryDashboardSection.all.first { $0.id == "library" })
+        let dashboardNovels = try #require(DiscoveryDashboardSection.all.first { $0.id == "novels" })
         let creatorNetwork = try #require(DiscoveryDashboardSection.all.first { $0.id == "creators-search" })
 
         #expect(PixivRoute.privateBookmarks.routeScopeFamily == .ownBookmarks)
         #expect(PixivRoute.savedPixivCollections.routeScopeFamily == .pixivCollectionsLibrary)
         #expect(PixivRoute.privateFollowing.routeScopeFamily == .followingArtwork)
         #expect(PixivRoute.pinnedCreators.routeScopeFamily == .followedCreators)
+        #expect(PixivRoute.novelPrivateBookmarks.routeScopeFamily == .ownNovelBookmarks)
         #expect(PixivRoute.privateBookmarks.visibleLibraryRoute == .publicBookmarks)
         #expect(PixivRoute.savedPixivCollections.visibleLibraryRoute == .myPixivCollections)
         #expect(PixivRoute.privateFollowing.visibleLibraryRoute == .following)
         #expect(PixivRoute.pinnedCreators.visibleLibraryRoute == .followingCreators)
+        #expect(PixivRoute.novelPrivateBookmarks.visibleLibraryRoute == .novelPublicBookmarks)
 
         #expect(sidebarLibrary.routes.contains(.publicBookmarks))
         #expect(sidebarLibrary.routes.contains(.privateBookmarks) == false)
@@ -148,6 +151,8 @@ struct DiscoveryDashboardTests {
         #expect(dashboardLibrary.routes.contains(.savedPixivCollections) == false)
         #expect(dashboardLibrary.routes.contains(.following))
         #expect(dashboardLibrary.routes.contains(.privateFollowing) == false)
+        #expect(dashboardNovels.routes.contains(.novelPublicBookmarks))
+        #expect(dashboardNovels.routes.contains(.novelPrivateBookmarks) == false)
         #expect(creatorNetwork.routes.contains(.followingCreators))
         #expect(creatorNetwork.routes.contains(.pinnedCreators) == false)
     }

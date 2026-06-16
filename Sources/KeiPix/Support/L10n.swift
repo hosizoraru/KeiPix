@@ -1515,6 +1515,7 @@ enum L10n {
     static var novelTextLengthShort: String { text("5,000-19,999 Characters") }
     static var novelTextLengthMedium: String { text("20,000-79,999 Characters") }
     static var novelTextLengthLong: String { text("80,000+ Characters") }
+    static var novelBookmarks: String { text("Novel Bookmarks") }
     static var novelPublicBookmarks: String { text("Public Novel Bookmarks") }
     static var novelPrivateBookmarks: String { text("Private Novel Bookmarks") }
     static var novelWatchlist: String { text("Novel Watchlist") }

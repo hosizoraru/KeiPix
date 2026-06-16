@@ -173,7 +173,6 @@ struct DiscoveryDashboardSection: Identifiable {
                     .novelFollowing,
                     .novelSearch,
                     .novelPublicBookmarks,
-                    .novelPrivateBookmarks,
                     .novelWatchlist
                 ]
             ),

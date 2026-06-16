@@ -355,10 +355,14 @@ enum MobileRouteMenuConfiguration {
                         .novelRecommended,
                         .novelLatest,
                         .novelFollowing,
-                        .novelPublicBookmarks,
-                        .novelPrivateBookmarks,
                         .novelWatchlist
                     ]
+                ),
+                MobileRouteMenuSection(
+                    id: "novel-bookmarks",
+                    title: L10n.novelBookmarks,
+                    routes: PixivRoute.ownNovelBookmarkRoutes,
+                    presentation: .submenu(systemImage: "bookmark.square")
                 ),
                 MobileRouteMenuSection(
                     id: "novel-ranking",

@@ -177,6 +177,21 @@ struct MobileBottomTabConfigurationTests {
         #expect(novelRanking.routes == PixivRoute.novelRankingRoutes)
     }
 
+    @Test("Novel bookmark routes collapse behind one submenu entry")
+    func novelBookmarkRoutesCollapseBehindOneSubmenuEntry() throws {
+        let novelSections = MobileRouteMenuConfiguration.sections(for: .novels)
+        let novelBookmarks = try #require(novelSections.first { $0.id == "novel-bookmarks" })
+        let inlineRoutes = novelSections
+            .filter { $0.presentation == .inline }
+            .flatMap(\.routes)
+
+        #expect(novelBookmarks.title == L10n.novelBookmarks)
+        #expect(novelBookmarks.presentation == .submenu(systemImage: "bookmark.square"))
+        #expect(novelBookmarks.routes == PixivRoute.routes(for: .ownNovelBookmarks))
+        #expect(inlineRoutes.contains(.novelPublicBookmarks) == false)
+        #expect(inlineRoutes.contains(.novelPrivateBookmarks) == false)
+    }
+
     @Test("Following artwork menus expose public and private feeds without the aggregate route")
     func followingArtworkMenusExposePublicAndPrivateFeedsWithoutAggregateRoute() throws {
         let bookmarkSections = MobileRouteMenuConfiguration.sections(for: .bookmarks)
