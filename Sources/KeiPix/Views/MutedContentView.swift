@@ -1,4 +1,7 @@
 import SwiftUI
+#if os(iOS)
+import UIKit
+#endif
 
 struct MutedContentView: View {
     @Bindable var store: KeiPixStore
@@ -17,30 +20,13 @@ struct MutedContentView: View {
     @State private var pendingRemoval: MutedContentRemovalAction?
 
     var body: some View {
-        VStack(spacing: 0) {
-            if showsMutedContentSearchBar {
-                header
-                    .platformGlassControlBar(verticalPadding: 8, topPadding: 2)
-                    .transition(.move(edge: .top).combined(with: .opacity))
-            }
-
-            ScrollView {
-                VStack(alignment: .leading, spacing: 16) {
-                    contentPanel
-                }
-                .padding(18)
-            }
-            .scrollEdgeEffectStyle(.soft, for: .top)
-        }
-        .platformPageHeader(
-            title: L10n.mutedContent,
-            status: totalCountText,
-            statusSystemImage: "eye.slash"
-        ) {
-            mutedContentTitleActions
-        }
+        mutedContentRootWithPageHeader
         .platformPageNavigationChrome(title: L10n.mutedContent, status: totalCountText)
         .mobileRouteBadgeCount(totalCount, for: .mutedContent)
+        .mobilePageFilter(mobileMutedContentPageFilterSnapshot)
+        .toolbar {
+            mutedContentToolbar
+        }
         .overlay(alignment: .bottom) {
             if let statusMessage {
                 FloatingStatusBanner(maxWidth: 520) {
@@ -126,6 +112,71 @@ struct MutedContentView: View {
         }
     }
 
+    private var mutedContentRoot: some View {
+        VStack(spacing: 0) {
+            if showsMutedContentSearchBar {
+                header
+                    .platformGlassControlBar(verticalPadding: 8, topPadding: 2)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+            }
+
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    contentPanel
+                }
+                .padding(18)
+            }
+            .scrollEdgeEffectStyle(.soft, for: .top)
+        }
+    }
+
+    @ViewBuilder
+    private var mutedContentRootWithPageHeader: some View {
+        #if os(iOS)
+        if usesPhoneMutedContentFilterPill {
+            mutedContentRoot
+                .platformPageHeader(
+                    title: L10n.mutedContent,
+                    status: totalCountText,
+                    statusSystemImage: "eye.slash"
+                )
+        } else {
+            mutedContentRoot
+                .platformPageHeader(
+                    title: L10n.mutedContent,
+                    status: totalCountText,
+                    statusSystemImage: "eye.slash"
+                ) {
+                    mutedContentTitleActions
+                }
+        }
+        #else
+        mutedContentRoot
+        .platformPageHeader(
+            title: L10n.mutedContent,
+            status: totalCountText,
+            statusSystemImage: "eye.slash"
+        ) {
+            mutedContentTitleActions
+        }
+        #endif
+    }
+
+    @ToolbarContentBuilder
+    private var mutedContentToolbar: some ToolbarContent {
+        #if os(iOS)
+        if usesPhoneMutedContentFilterPill {
+            ToolbarItem(placement: .primaryAction) {
+                mutedContentActionsMenu(usesSystemToolbarChrome: true)
+            }
+        }
+        #else
+        ToolbarItem(placement: .secondaryAction) {
+            EmptyView()
+        }
+        #endif
+    }
+
     private var header: some View {
         GlassEffectContainer(spacing: 8) {
             HStack(spacing: 10) {
@@ -140,7 +191,7 @@ struct MutedContentView: View {
 
     private var searchField: some View {
         OS26LibrarySearchField(
-            text: $searchText,
+            text: mutedContentFilterTextBinding,
             placeholder: L10n.searchMutedContent,
             minWidth: 180,
             idealWidth: 260,
@@ -151,125 +202,119 @@ struct MutedContentView: View {
 
     private var mutedContentTitleActions: some View {
         OS26LibraryActionRail {
-            mutedCategoryMenu
-
-            Button {
-                withAnimation(.snappy(duration: 0.16)) {
-                    if showsMutedContentSearchBar, normalizedSearchText.isEmpty {
-                        isSearchPresented = false
-                    } else {
-                        isSearchPresented = true
+            if usesPhoneMutedContentFilterPill == false {
+                Button {
+                    withAnimation(.snappy(duration: 0.16)) {
+                        if showsMutedContentSearchBar, normalizedMutedContentFilterText.isEmpty {
+                            isSearchPresented = false
+                        } else {
+                            isSearchPresented = true
+                        }
                     }
+                } label: {
+                    Label(
+                        L10n.search,
+                        systemImage: normalizedMutedContentFilterText.isEmpty ? "magnifyingglass" : "magnifyingglass.circle.fill"
+                    )
                 }
-            } label: {
-                Label(
-                    L10n.search,
-                    systemImage: normalizedSearchText.isEmpty ? "magnifyingglass" : "magnifyingglass.circle.fill"
-                )
-            }
-            .os26GlassIconButton(prominent: showsMutedContentSearchBar || normalizedSearchText.isEmpty == false)
-            .help(L10n.searchMutedContent)
-            .accessibilityLabel(L10n.searchMutedContent)
+                .os26GlassIconButton(prominent: showsMutedContentSearchBar || normalizedMutedContentFilterText.isEmpty == false)
+                .help(L10n.searchMutedContent)
+                .accessibilityLabel(L10n.searchMutedContent)
 
-            Button {
-                withAnimation(.snappy(duration: 0.16)) {
-                    searchText = ""
-                    isSearchPresented = false
+                Button {
+                    clearMutedContentSearch()
+                } label: {
+                    Label(L10n.clearSearch, systemImage: "xmark.circle")
                 }
-            } label: {
-                Label(L10n.clearSearch, systemImage: "xmark.circle")
+                .os26GlassIconButton()
+                .disabled(normalizedMutedContentFilterText.isEmpty && isSearchPresented == false)
+                .help(L10n.clearSearch)
             }
-            .os26GlassIconButton()
-            .disabled(normalizedSearchText.isEmpty && isSearchPresented == false)
-            .help(L10n.clearSearch)
 
-            mutedContentMoreMenu
+            mutedContentActionsMenu()
         }
         .controlSize(.small)
     }
 
-    private var mutedCategoryMenu: some View {
-        Menu {
-            Picker(L10n.mutedContent, selection: $category) {
-                ForEach(MutedContentCategory.allCases) { category in
-                    Label(category.title, systemImage: category.systemImage)
-                        .tag(category)
-                }
-            }
-        } label: {
-            ViewThatFits(in: .horizontal) {
-                Label(category.title, systemImage: category.systemImage)
-                Label(L10n.mutedContent, systemImage: category.systemImage)
-            }
-        }
-        .os26GlassButton()
-        .help("\(L10n.mutedContent): \(category.title)")
-        .accessibilityLabel("\(L10n.mutedContent): \(category.title)")
-    }
-
-    private var mutedContentMoreMenu: some View {
-        Menu {
-            Button {
-                isSyncConfirmationPresented = true
-            } label: {
-                PixivPremiumMenuLabel(
-                    title: L10n.syncFromPixiv,
-                    systemImage: "arrow.down.circle"
-                )
-            }
-            .disabled(isSyncing)
-
-            Button {
-                isUploadConfirmationPresented = true
-            } label: {
-                PixivPremiumMenuLabel(
-                    title: L10n.uploadToPixiv,
-                    systemImage: "arrow.up.circle"
-                )
-            }
-            .disabled(isSyncing || (store.mutedTagList.isEmpty && store.mutedUserList.isEmpty))
-
-            Divider()
-
-            Button {
-                exportLocalMutedContent()
-            } label: {
-                Label(L10n.exportMutedContent, systemImage: "square.and.arrow.up")
-            }
-            .disabled(isSyncing || totalCount == 0)
-
-            Button {
-                isImportConfirmationPresented = true
-            } label: {
-                Label(L10n.importMutedContent, systemImage: "square.and.arrow.down")
-            }
-            .disabled(isSyncing)
-
-            Divider()
-
-            Button(role: .destructive) {
-                isClearConfirmationPresented = true
-            } label: {
-                Label(L10n.clearMutedContent, systemImage: "trash")
-            }
-            .disabled(totalCount == 0)
-        } label: {
-            Label(
-                L10n.moreActions,
-                systemImage: isSyncing ? "arrow.triangle.2.circlepath" : "ellipsis.circle"
-            )
-        }
-        .os26GlassIconButton()
-        .disabled(isSyncing)
-        .help(L10n.muteSyncHint)
+    private func mutedContentActionsMenu(usesSystemToolbarChrome: Bool = false) -> some View {
+        MutedContentActionsMenu(
+            category: $category,
+            usesSystemToolbarChrome: usesSystemToolbarChrome,
+            hasActiveOptions: hasActiveMutedContentOptions,
+            canClearSearch: normalizedMutedContentFilterText.isEmpty == false || isSearchPresented,
+            canSyncFromPixiv: isSyncing == false,
+            canUploadToPixiv: isSyncing == false && (store.mutedTagList.isEmpty == false || store.mutedUserList.isEmpty == false),
+            canExportLocalContent: isSyncing == false && totalCount > 0,
+            canImportLocalContent: isSyncing == false,
+            canClearMutedContent: totalCount > 0,
+            isSyncing: isSyncing,
+            clearSearch: clearMutedContentSearch,
+            syncFromPixiv: { isSyncConfirmationPresented = true },
+            uploadToPixiv: { isUploadConfirmationPresented = true },
+            exportLocalContent: exportLocalMutedContent,
+            importLocalContent: { isImportConfirmationPresented = true },
+            clearMutedContent: { isClearConfirmationPresented = true }
+        )
     }
 
     private var showsMutedContentSearchBar: Bool {
-        isSearchPresented || normalizedSearchText.isEmpty == false
+        if usesPhoneMutedContentFilterPill {
+            return false
+        }
+        return isSearchPresented || normalizedMutedContentFilterText.isEmpty == false
     }
 
-    private var normalizedSearchText: String {
-        searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+    private var hasActiveMutedContentOptions: Bool {
+        category != .tags || normalizedMutedContentFilterText.isEmpty == false
+    }
+
+    private var normalizedMutedContentFilterText: String {
+        mutedContentFilterText.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private var mutedContentFilterText: String {
+        mutedContentFilterTextBinding.wrappedValue
+    }
+
+    private var mutedContentFilterTextBinding: Binding<String> {
+        Binding {
+            #if os(iOS)
+            if usesPhoneMutedContentFilterPill {
+                return store.clientFilterQuery
+            }
+            #endif
+            return searchText
+        } set: { value in
+            #if os(iOS)
+            if usesPhoneMutedContentFilterPill {
+                store.clientFilterQuery = value
+                return
+            }
+            #endif
+            searchText = value
+        }
+    }
+
+    private var mobileMutedContentPageFilterSnapshot: MobilePageFilterSnapshot? {
+        #if os(iOS)
+        guard usesPhoneMutedContentFilterPill, categoryTotalCount > 0 else { return nil }
+        return MobilePageFilterSnapshot(
+            route: .mutedContent,
+            totalCount: categoryTotalCount,
+            visibleCount: categoryVisibleCount,
+            placeholder: L10n.searchMutedContent
+        )
+        #else
+        return nil
+        #endif
+    }
+
+    private var usesPhoneMutedContentFilterPill: Bool {
+        #if os(iOS)
+        UIDevice.current.userInterfaceIdiom == .phone
+        #else
+        false
+        #endif
     }
 
     private var contentPanel: some View {
@@ -467,8 +512,8 @@ struct MutedContentView: View {
 
     private var emptyState: some View {
         OS26InlineUnavailableView(
-            title: L10n.noMutedContent,
-            subtitle: L10n.noMutedContentHint,
+            title: categoryTotalCount == 0 ? L10n.noMutedContent : L10n.noMatchingHistoryTitle,
+            subtitle: categoryTotalCount == 0 ? L10n.noMutedContentHint : L10n.noMatchingHistorySubtitle,
             systemImage: category.systemImage,
             minHeight: 180
         )
@@ -544,7 +589,7 @@ struct MutedContentView: View {
     }
 
     private func matches(_ value: String) -> Bool {
-        let normalized = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        let normalized = normalizedMutedContentFilterText
         guard normalized.isEmpty == false else { return true }
         return value.localizedCaseInsensitiveContains(normalized)
     }
@@ -610,18 +655,43 @@ struct MutedContentView: View {
     }
 
     private var categoryCountText: String {
-        let count: Int
+        if normalizedMutedContentFilterText.isEmpty == false {
+            return "\(categoryVisibleCount.formatted())/\(categoryTotalCount.formatted())"
+        }
+        return String(format: L10n.mutedContentCountFormat, categoryVisibleCount)
+    }
+
+    private var categoryVisibleCount: Int {
         switch category {
         case .tags:
-            count = filteredTags.count
+            filteredTags.count
         case .creators:
-            count = filteredUsers.count
+            filteredUsers.count
         case .artworks:
-            count = filteredArtworks.count
+            filteredArtworks.count
         case .commentPhrases:
-            count = filteredCommentPhrases.count
+            filteredCommentPhrases.count
         }
-        return String(format: L10n.mutedContentCountFormat, count)
+    }
+
+    private var categoryTotalCount: Int {
+        switch category {
+        case .tags:
+            store.mutedTagList.count
+        case .creators:
+            store.mutedUserList.count
+        case .artworks:
+            store.mutedArtworkList.count
+        case .commentPhrases:
+            store.mutedCommentPhraseList.count
+        }
+    }
+
+    private func clearMutedContentSearch() {
+        withAnimation(.snappy(duration: 0.16)) {
+            mutedContentFilterTextBinding.wrappedValue = ""
+            isSearchPresented = false
+        }
     }
 
     private func syncFromPixiv() async {
@@ -685,6 +755,259 @@ struct MutedContentView: View {
     }
 }
 
+private struct MutedContentActionsMenu: View {
+    @Binding var category: MutedContentCategory
+    let usesSystemToolbarChrome: Bool
+    let hasActiveOptions: Bool
+    let canClearSearch: Bool
+    let canSyncFromPixiv: Bool
+    let canUploadToPixiv: Bool
+    let canExportLocalContent: Bool
+    let canImportLocalContent: Bool
+    let canClearMutedContent: Bool
+    let isSyncing: Bool
+    let clearSearch: () -> Void
+    let syncFromPixiv: () -> Void
+    let uploadToPixiv: () -> Void
+    let exportLocalContent: () -> Void
+    let importLocalContent: () -> Void
+    let clearMutedContent: () -> Void
+
+    @ViewBuilder
+    var body: some View {
+        #if os(iOS)
+        NativeToolbarMenuButton(
+            systemImage: actionsSystemImage,
+            accessibilityLabel: L10n.mutedContent,
+            menu: nativeActionsMenu,
+            select: handleNativeAction
+        )
+        .nativeToolbarMenuButtonChrome(usesSystemToolbarChrome: usesSystemToolbarChrome)
+        .help(L10n.mutedContent)
+        #else
+        swiftUIActionsMenu
+        #endif
+    }
+
+    private var actionsSystemImage: String {
+        if isSyncing {
+            return "arrow.triangle.2.circlepath"
+        }
+        return ToolbarMenuIcon.pageOptions
+    }
+
+    private var swiftUIActionsMenu: some View {
+        Menu {
+            Section(L10n.mutedContent) {
+                Picker(selection: $category) {
+                    ForEach(MutedContentCategory.allCases) { category in
+                        Label(category.title, systemImage: category.systemImage)
+                            .tag(category)
+                    }
+                } label: {
+                    Label(L10n.mutedContent, systemImage: category.systemImage)
+                    Text(category.title)
+                }
+                .pickerStyle(.menu)
+            }
+
+            Section(L10n.viewOptions) {
+                Button {
+                    clearSearch()
+                } label: {
+                    Label(L10n.clearSearch, systemImage: "xmark.circle")
+                }
+                .disabled(canClearSearch == false)
+            }
+
+            Section(L10n.moreActions) {
+                Button {
+                    syncFromPixiv()
+                } label: {
+                    PixivPremiumMenuLabel(
+                        title: L10n.syncFromPixiv,
+                        systemImage: "arrow.down.circle"
+                    )
+                }
+                .disabled(canSyncFromPixiv == false)
+
+                Button {
+                    uploadToPixiv()
+                } label: {
+                    PixivPremiumMenuLabel(
+                        title: L10n.uploadToPixiv,
+                        systemImage: "arrow.up.circle"
+                    )
+                }
+                .disabled(canUploadToPixiv == false)
+
+                Divider()
+
+                Button {
+                    exportLocalContent()
+                } label: {
+                    Label(L10n.exportMutedContent, systemImage: "square.and.arrow.up")
+                }
+                .disabled(canExportLocalContent == false)
+
+                Button {
+                    importLocalContent()
+                } label: {
+                    Label(L10n.importMutedContent, systemImage: "square.and.arrow.down")
+                }
+                .disabled(canImportLocalContent == false)
+
+                Divider()
+
+                Button(role: .destructive) {
+                    clearMutedContent()
+                } label: {
+                    Label(L10n.clearMutedContent, systemImage: "trash")
+                }
+                .disabled(canClearMutedContent == false)
+            }
+        } label: {
+            Label(L10n.mutedContent, systemImage: actionsSystemImage)
+        }
+        .menuOrder(.fixed)
+        .os26GlassIconButton(prominent: hasActiveOptions || isSyncing)
+        .help(L10n.muteSyncHint)
+        .accessibilityLabel(L10n.mutedContent)
+    }
+
+    #if os(iOS)
+    private var nativeActionsMenu: NativeToolbarMenu {
+        NativeToolbarMenu(
+            title: L10n.mutedContent,
+            cacheKey: nativeActionsMenuCacheKey,
+            sections: [
+                NativeToolbarMenuSection(
+                    title: L10n.mutedContent,
+                    presentation: .root,
+                    items: [
+                        NativeToolbarMenuItem.singleSelectionSubmenu(
+                            title: L10n.mutedContent,
+                            selectedTitle: category.title,
+                            selectedOption: category,
+                            systemImage: category.systemImage,
+                            options: Array(MutedContentCategory.allCases),
+                            id: MutedContentActionsMenuAction.category,
+                            optionTitle: \.title,
+                            optionSystemImage: \.systemImage
+                        )
+                    ]
+                ),
+                NativeToolbarMenuSection(
+                    title: L10n.viewOptions,
+                    items: [
+                        .action(
+                            id: MutedContentActionsMenuAction.clearSearch,
+                            title: L10n.clearSearch,
+                            systemImage: "xmark.circle",
+                            isEnabled: canClearSearch
+                        )
+                    ]
+                ),
+                NativeToolbarMenuSection(
+                    title: L10n.moreActions,
+                    items: [
+                        .action(
+                            id: MutedContentActionsMenuAction.syncFromPixiv,
+                            title: L10n.syncFromPixiv,
+                            systemImage: "arrow.down.circle",
+                            isEnabled: canSyncFromPixiv
+                        ),
+                        .action(
+                            id: MutedContentActionsMenuAction.uploadToPixiv,
+                            title: L10n.uploadToPixiv,
+                            systemImage: "arrow.up.circle",
+                            isEnabled: canUploadToPixiv
+                        ),
+                        .action(
+                            id: MutedContentActionsMenuAction.exportLocalContent,
+                            title: L10n.exportMutedContent,
+                            systemImage: "square.and.arrow.up",
+                            isEnabled: canExportLocalContent
+                        ),
+                        .action(
+                            id: MutedContentActionsMenuAction.importLocalContent,
+                            title: L10n.importMutedContent,
+                            systemImage: "square.and.arrow.down",
+                            isEnabled: canImportLocalContent
+                        ),
+                        .action(
+                            id: MutedContentActionsMenuAction.clearMutedContent,
+                            title: L10n.clearMutedContent,
+                            systemImage: "trash",
+                            isEnabled: canClearMutedContent,
+                            isDestructive: true
+                        )
+                    ]
+                )
+            ]
+        )
+    }
+
+    private var nativeActionsMenuCacheKey: String {
+        [
+            "muted-content-actions",
+            category.rawValue,
+            hasActiveOptions.description,
+            canClearSearch.description,
+            canSyncFromPixiv.description,
+            canUploadToPixiv.description,
+            canExportLocalContent.description,
+            canImportLocalContent.description,
+            canClearMutedContent.description,
+            isSyncing.description
+        ].joined(separator: ":")
+    }
+
+    private func handleNativeAction(_ id: String) {
+        if let selectedCategory = MutedContentActionsMenuAction.category(from: id) {
+            category = selectedCategory
+            return
+        }
+
+        switch id {
+        case MutedContentActionsMenuAction.clearSearch:
+            clearSearch()
+        case MutedContentActionsMenuAction.syncFromPixiv:
+            syncFromPixiv()
+        case MutedContentActionsMenuAction.uploadToPixiv:
+            uploadToPixiv()
+        case MutedContentActionsMenuAction.exportLocalContent:
+            exportLocalContent()
+        case MutedContentActionsMenuAction.importLocalContent:
+            importLocalContent()
+        case MutedContentActionsMenuAction.clearMutedContent:
+            clearMutedContent()
+        default:
+            break
+        }
+    }
+    #endif
+}
+
+private enum MutedContentActionsMenuAction {
+    static let clearSearch = "muted-content-actions:clear-search"
+    static let syncFromPixiv = "muted-content-actions:sync-from-pixiv"
+    static let uploadToPixiv = "muted-content-actions:upload-to-pixiv"
+    static let exportLocalContent = "muted-content-actions:export-local-content"
+    static let importLocalContent = "muted-content-actions:import-local-content"
+    static let clearMutedContent = "muted-content-actions:clear-muted-content"
+    private static let categoryPrefix = "muted-content-actions:category:"
+
+    static func category(_ category: MutedContentCategory) -> String {
+        categoryPrefix + category.rawValue
+    }
+
+    static func category(from id: String) -> MutedContentCategory? {
+        guard id.hasPrefix(categoryPrefix) else { return nil }
+        return MutedContentCategory(rawValue: String(id.dropFirst(categoryPrefix.count)))
+    }
+}
+
 private enum MutedContentRemovalAction: Identifiable {
     case tag(String)
     case creator(MutedUserEntry)
@@ -722,7 +1045,7 @@ private enum MutedContentRemovalAction: Identifiable {
     }
 }
 
-private enum MutedContentCategory: String, CaseIterable, Identifiable {
+private enum MutedContentCategory: String, CaseIterable, Identifiable, Equatable {
     case tags
     case creators
     case artworks

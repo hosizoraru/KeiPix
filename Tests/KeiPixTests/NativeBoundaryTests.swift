@@ -420,7 +420,7 @@ struct NativeBoundaryTests {
         #expect(contentView.contains("galleryLayoutAdaptation: galleryLayoutAdaptation(showsSidebarToggle: showsSidebarToggle)"))
         #expect(contentView.contains("private func galleryLayoutAdaptation(showsSidebarToggle: Bool) -> GalleryLayoutAdaptation"))
         #expect(contentView.contains("return currentMobilePlatform == .pad ? .portraitTabletMasonry : .phoneTwoColumnMasonry"))
-        #expect(contentView.contains("systemImage: \"ellipsis.circle\""))
+        #expect(contentView.contains("systemImage: ToolbarMenuIcon.appControls"))
         #expect(contentView.contains("accessibilityLabel: L10n.appControls"))
         #expect(contentView.contains("showsAppControlsMenu(showsSidebarToggle:") == false)
         #expect(contentView.contains("title: L10n.galleryLayout"))
@@ -3220,7 +3220,9 @@ struct NativeBoundaryTests {
         #expect(novelWatchlist.contains("return novelStore.watchlistSeries.count.formatted()"))
         #expect(trendingTags.contains("return tags.count.formatted()"))
         #expect(userPreviewList.contains("let counts = \"\\(visiblePreviews.count.formatted())/\\(previews.count.formatted())\""))
-        #expect(workSubscriptions.contains("var parts = [count.formatted()]"))
+        #expect(workSubscriptions.contains("hasActiveSubscriptionOptions"))
+        #expect(workSubscriptions.contains("\"\\(count.formatted())/\\(store.workSubscriptions.count.formatted())\""))
+        #expect(workSubscriptions.contains(": count.formatted()"))
     }
 
     @Test("Refresh token export is explicit and confirmation gated")
@@ -3651,12 +3653,21 @@ struct NativeBoundaryTests {
         #expect(galleryView.contains("Label(L10n.refresh, systemImage: \"arrow.clockwise\")\n                    }\n                    .labelStyle(.iconOnly)"))
         #expect(galleryView.contains("presentation: .phoneToolbarMenu"))
         #expect(galleryView.contains(".toolbar {\n            if showsPhoneFeedToolbarActions"))
+        let phoneFeedToolbarMenu = feedHeader
+            .components(separatedBy: "if presentation == .phoneToolbarMenu {")
+            .dropFirst()
+            .first?
+            .components(separatedBy: "} else {")
+            .first ?? ""
+        #expect(phoneFeedToolbarMenu.contains(".feedToolbarActionChrome()"))
+        #expect(phoneFeedToolbarMenu.contains(".iPadFeedHeaderActionChrome()") == false)
         #expect(galleryView.contains("if showsNativeFeedHeader"))
         #expect(feedHeader.contains("private var showsInlineHeaderFilter: Bool"))
         #expect(feedHeader.contains("UIDevice.current.userInterfaceIdiom != .phone"))
         #expect(feedHeader.contains("private var usesPhoneCurrentFeedFilterOverlay: Bool"))
         #expect(feedHeader.contains("NativeInlineFilterField("))
         #expect(feedHeader.contains("iPadFeedHeaderActionChrome()"))
+        #expect(feedHeader.contains("func feedToolbarActionChrome() -> some View"))
         #expect(nativeCollection.contains("enum NativeGalleryScrollDirection: Sendable"))
         #expect(nativeCollection.contains("struct NativeGalleryScrollEvent: Equatable, Sendable"))
         #expect(nativeCollection.contains("let isAtContentStart: Bool"))
@@ -4456,7 +4467,7 @@ struct NativeBoundaryTests {
         #expect(historyView.contains("pageCountBadge"))
         #expect(historyView.contains("ArtworkCoverCardChrome("))
         #expect(historyView.contains("maskSensitivePreview: store.maskSensitivePreviews"))
-        #expect(historyView.contains("historySourceMenu"))
+        #expect(historyView.contains("HistoryActionsMenu("))
         #expect(historyView.contains("Label(\"\\(item.pageCount) \\(L10n.pages)\", systemImage: \"square.stack\")") == false)
         #expect(nativeCollection.contains("NSCollectionView"))
         #expect(nativeCollection.contains("UICollectionView"))
@@ -4652,7 +4663,9 @@ struct NativeBoundaryTests {
         #expect(subscriptions.contains("store.selectedRoute = .search") == false)
         #expect(subscriptions.contains("store.searchText = \"user:") == false)
         #expect(subscriptions.contains("newArtworkCount") == false)
-        #expect(subscriptions.contains("L10n.workSubscriptionsCheckNow") == false)
+        #expect(subscriptions.contains("SubscriptionActionsMenu("))
+        #expect(subscriptions.contains("Label(L10n.refresh, systemImage: \"arrow.clockwise\")"))
+        #expect(subscriptions.contains("subtitle: L10n.workSubscriptionsCheckNow"))
         #expect(subscriptions.contains("systemImage: isChecking ? \"arrow.triangle.2.circlepath\" : \"arrow.clockwise\"") == false)
         #expect(subscriptions.contains("LazyVGrid") == false)
         #expect(subscriptions.contains("ScrollView {") == false)
@@ -4709,7 +4722,8 @@ struct NativeBoundaryTests {
         )
 
         #expect(browsingHistory.contains(".task(id: store.routeRefreshGeneration)"))
-        #expect(browsingHistory.contains("Label(L10n.refresh, systemImage: \"arrow.clockwise\")") == false)
+        #expect(browsingHistory.contains("HistoryActionsMenuAction.refreshHistory"))
+        #expect(browsingHistory.contains("subtitle: L10n.pixivHistory"))
         #expect(trendingTags.contains(".task(id: store.routeRefreshGeneration)"))
         #expect(trendingTags.contains("Label(L10n.refresh, systemImage: \"arrow.clockwise\")") == false)
         #expect(spotlight.contains(".task(id: store.routeRefreshGeneration)"))
@@ -4718,7 +4732,8 @@ struct NativeBoundaryTests {
         #expect(mangaWatchlist.contains("Label(L10n.refresh, systemImage: \"arrow.clockwise\")") == false)
         #expect(creatorList.contains("if showsCloseButton {\n                ToolbarItem(placement: .secondaryAction)"))
         #expect(subscriptions.contains(".task(id: store.routeRefreshGeneration)"))
-        #expect(subscriptions.contains("L10n.workSubscriptionsCheckNow") == false)
+        #expect(subscriptions.contains("SubscriptionActionsMenuAction.checkUpdates"))
+        #expect(subscriptions.contains("subtitle: L10n.workSubscriptionsCheckNow"))
     }
 
     @Test("Watch later uses a native adaptive grid")
@@ -4819,8 +4834,8 @@ struct NativeBoundaryTests {
         #expect(row.contains(".os26GlassIconButton(prominent: true)"))
     }
 
-    @Test("Library management title chrome keeps filters and actions on the title row")
-    func libraryManagementTitleChromeKeepsFiltersAndActionsOnTitleRow() throws {
+    @Test("Library management chrome keeps page actions compact")
+    func libraryManagementChromeKeepsPageActionsCompact() throws {
         let root = try packageRoot()
         let bookmarkTags = try String(
             contentsOf: root.appending(path: "Sources/KeiPix/Views/BookmarkTagsView.swift"),
@@ -4850,13 +4865,22 @@ struct NativeBoundaryTests {
         #expect(browsingHistory.contains(".platformPageHeader(\n            title: L10n.history") && browsingHistory.contains("historyTitleActions"))
         #expect(browsingHistory.contains("if showsHistorySearchBar"))
         #expect(browsingHistory.contains("private var historyTitleActions: some View"))
-        #expect(browsingHistory.contains("historySourceMenu"))
-        #expect(browsingHistory.contains("historyFilterMenu"))
+        #expect(browsingHistory.contains("historyActionsMenu"))
+        #expect(browsingHistory.contains("HistoryActionsMenu("))
+        #expect(browsingHistory.contains("usesPhoneHistoryFilterPill"))
+        #expect(browsingHistory.contains("private var historyToolbar: some ToolbarContent"))
+        #expect(browsingHistory.contains("historySourceMenu") == false)
+        #expect(browsingHistory.contains("historyFilterMenu") == false)
 
         #expect(mutedContent.contains(".platformPageHeader(\n            title: L10n.mutedContent") && mutedContent.contains("mutedContentTitleActions"))
         #expect(mutedContent.contains("if showsMutedContentSearchBar"))
         #expect(mutedContent.contains("private var mutedContentTitleActions: some View"))
-        #expect(mutedContent.contains("mutedCategoryMenu"))
+        #expect(mutedContent.contains("mutedContentActionsMenu"))
+        #expect(mutedContent.contains("MutedContentActionsMenu("))
+        #expect(mutedContent.contains("usesPhoneMutedContentFilterPill"))
+        #expect(mutedContent.contains("private var mutedContentToolbar: some ToolbarContent"))
+        #expect(mutedContent.contains("mutedCategoryMenu") == false)
+        #expect(mutedContent.contains("mutedContentMoreMenu") == false)
 
         #expect(downloads.contains(".platformPageHeader(\n                title: L10n.downloads") == false)
         #expect(downloads.contains("private var downloadTitleActions: some View") == false)
@@ -4867,6 +4891,148 @@ struct NativeBoundaryTests {
         #expect(downloads.contains("private var showsDownloadSearchField: Bool"))
         #expect(downloads.contains("DownloadQueueActionRail("))
         #expect(downloads.contains("showsActionRail"))
+    }
+
+    @Test("Mobile library pages use page menus and phone filter pills")
+    func mobileLibraryPagesUsePageMenusAndPhoneFilterPills() throws {
+        let root = try packageRoot()
+        let iPadContentView = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/ContentView_iPadOS.swift"),
+            encoding: .utf8
+        )
+        let pages = [
+            (
+                path: "Sources/KeiPix/Views/BrowsingHistoryView.swift",
+                menu: "HistoryActionsMenu(",
+                toolbar: "historyToolbar",
+                pill: "mobileHistoryPageFilterSnapshot",
+                gate: "usesPhoneHistoryFilterPill"
+            ),
+            (
+                path: "Sources/KeiPix/Views/WatchLaterView.swift",
+                menu: "WatchLaterActionsMenu(",
+                toolbar: "watchLaterToolbar",
+                pill: "mobileWatchLaterPageFilterSnapshot",
+                gate: "usesPhoneWatchLaterFilterPill"
+            ),
+            (
+                path: "Sources/KeiPix/Views/WorkSubscriptionsView.swift",
+                menu: "SubscriptionActionsMenu(",
+                toolbar: "subscriptionToolbar",
+                pill: "mobileSubscriptionPageFilterSnapshot",
+                gate: "usesPhoneSubscriptionFilterPill"
+            ),
+            (
+                path: "Sources/KeiPix/Views/MutedContentView.swift",
+                menu: "MutedContentActionsMenu(",
+                toolbar: "mutedContentToolbar",
+                pill: "mobileMutedContentPageFilterSnapshot",
+                gate: "usesPhoneMutedContentFilterPill"
+            )
+        ]
+
+        for page in pages {
+            let source = try String(contentsOf: root.appending(path: page.path), encoding: .utf8)
+            #expect(source.contains(page.menu), "\(page.path) should consolidate page-specific controls into one menu")
+            #expect(source.contains("@ToolbarContentBuilder\n    private var \(page.toolbar): some ToolbarContent"), "\(page.path) should expose phone menu through the page toolbar")
+            #expect(source.contains("ToolbarItem(placement: .primaryAction)"), "\(page.path) should expose the native menu as a direct toolbar action instead of nesting it in overflow")
+            #expect(source.contains(".mobilePageFilter(\(page.pill))"), "\(page.path) should publish phone filter pill metadata")
+            #expect(source.contains("private var \(page.gate): Bool"), "\(page.path) should keep the phone filter gate local to the page")
+            #expect(source.contains("NativeToolbarMenuButton("), "\(page.path) should use the native UIKit menu bridge on iOS/iPadOS")
+            #expect(source.contains("usesSystemToolbarChrome: true"), "\(page.path) should let the iPhone system toolbar own the outer glass chrome")
+            #expect(source.contains(".glassEffect(.regular.interactive(), in: Capsule(style: .continuous))") == false, "\(page.path) should not add a second glass capsule around native toolbar menus")
+        }
+
+        #expect(iPadContentView.contains("VisualQALaunchArgument.contains(.mutedContent)"))
+        #expect(iPadContentView.contains("selectedSidebarItem = .route(.mutedContent)"))
+        #expect(iPadContentView.contains("selectedTab = .library"))
+    }
+
+    @Test("Mobile library page menus keep concrete actions")
+    func mobileLibraryPageMenusKeepConcreteActions() throws {
+        let root = try packageRoot()
+        let browsingHistory = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/BrowsingHistoryView.swift"),
+            encoding: .utf8
+        )
+        let watchLater = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/WatchLaterView.swift"),
+            encoding: .utf8
+        )
+        let subscriptions = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/WorkSubscriptionsView.swift"),
+            encoding: .utf8
+        )
+        let mutedContent = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/MutedContentView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(browsingHistory.contains("HistoryActionsMenuAction.refreshHistory"))
+        #expect(browsingHistory.contains("subtitle: L10n.pixivHistory"))
+        #expect(browsingHistory.contains("HistoryActionsMenuAction.resetOptions"))
+        #expect(browsingHistory.contains("NativeToolbarMenuItem.singleSelectionSubmenu(\n                            title: L10n.historySource"))
+        #expect(browsingHistory.contains("NativeToolbarMenuItem.singleSelectionSubmenu(\n                            title: L10n.historyFilters"))
+
+        #expect(watchLater.contains("if usesPhoneWatchLaterFilterPill {\n            ToolbarItem(placement: .primaryAction)"))
+        #expect(watchLater.contains("showsWatchLaterActionsMenu") == false)
+        #expect(watchLater.contains("WatchLaterActionsMenuAction.showSearch"))
+        #expect(watchLater.contains("WatchLaterActionsMenuAction.clearSearch"))
+        #expect(watchLater.contains("WatchLaterActionsMenuAction.openHistory"))
+        #expect(watchLater.contains("WatchLaterActionsMenuAction.clearQueue"))
+
+        #expect(subscriptions.contains("SubscriptionActionsMenuAction.showSearch"))
+        #expect(subscriptions.contains("SubscriptionActionsMenuAction.clearSearch"))
+        #expect(subscriptions.contains("SubscriptionActionsMenuAction.checkUpdates"))
+        #expect(subscriptions.contains("subtitle: L10n.workSubscriptionsCheckNow"))
+
+        #expect(mutedContent.contains("NativeToolbarMenuItem.singleSelectionSubmenu(\n                            title: L10n.mutedContent"))
+        #expect(mutedContent.contains("MutedContentActionsMenuAction.syncFromPixiv"))
+        #expect(mutedContent.contains("MutedContentActionsMenuAction.uploadToPixiv"))
+        #expect(mutedContent.contains("MutedContentActionsMenuAction.exportLocalContent"))
+        #expect(mutedContent.contains("MutedContentActionsMenuAction.importLocalContent"))
+        #expect(mutedContent.contains("MutedContentActionsMenuAction.clearMutedContent"))
+    }
+
+    @Test("Toolbar dropdown icons use semantic app and page option symbols")
+    func toolbarDropdownIconsUseSemanticAppAndPageOptionSymbols() throws {
+        let root = try packageRoot()
+        let toolbarIcons = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Support/ToolbarMenuIcon.swift"),
+            encoding: .utf8
+        )
+        let macContentView = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/ContentView.swift"),
+            encoding: .utf8
+        )
+        let mobileContentView = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/ContentView_iPadOS.swift"),
+            encoding: .utf8
+        )
+        let pageOptionFiles = [
+            "Sources/KeiPix/Views/BrowsingHistoryView.swift",
+            "Sources/KeiPix/Views/WatchLaterView.swift",
+            "Sources/KeiPix/Views/WorkSubscriptionsView.swift",
+            "Sources/KeiPix/Views/MutedContentView.swift",
+            "Sources/KeiPix/Views/BookmarkTagsView.swift",
+            "Sources/KeiPix/Views/GalleryFeedHeaderView.swift",
+            "Sources/KeiPix/Views/SearchWorkspaceView.swift",
+            "Sources/KeiPix/Views/MangaWatchlistView.swift",
+            "Sources/KeiPix/Views/SpotlightView.swift",
+            "Sources/KeiPix/Views/UserPreviewListComponents.swift"
+        ]
+
+        #expect(toolbarIcons.contains("static let appControls = \"ellipsis\""))
+        #expect(toolbarIcons.contains("static let pageOptions = \"slider.horizontal.3\""))
+        #expect(macContentView.contains("Label(L10n.appControls, systemImage: ToolbarMenuIcon.appControls)"))
+        #expect(mobileContentView.contains("systemImage: ToolbarMenuIcon.appControls,\n            accessibilityLabel: L10n.appControls"))
+        #expect(mobileContentView.contains("systemImage: \"ellipsis.circle\"") == false)
+
+        for path in pageOptionFiles {
+            let source = try String(contentsOf: root.appending(path: path), encoding: .utf8)
+            #expect(source.contains("ToolbarMenuIcon.pageOptions"), "\(path) should use the shared page-options dropdown icon")
+            #expect(source.contains("slider.horizontal.3.circle.fill") == false, "\(path) should not use a filled page-options icon variant")
+        }
     }
 
     @Test("Loading placeholders and sheets avoid overlapping legacy chrome")
@@ -4912,8 +5078,9 @@ struct NativeBoundaryTests {
         #expect(creatorComponents.contains(".os26SkeletonSurface(20)"))
         #expect(creatorComponents.contains("ContentUnavailableView") == false)
 
-        #expect(mutedContent.contains("private var mutedCategoryMenu: some View"))
-        #expect(mutedContent.contains("Picker(L10n.mutedContent, selection: $category)"))
+        #expect(mutedContent.contains("private struct MutedContentActionsMenu: View"))
+        #expect(mutedContent.contains("NativeToolbarMenuItem.singleSelectionSubmenu("))
+        #expect(mutedContent.contains("options: Array(MutedContentCategory.allCases)"))
         #expect(mutedContent.contains("private var addTagButton: some View"))
         #expect(mutedContent.contains(".os26GlassIconButton(prominent: true)"))
         #expect(mutedContent.contains("ContentUnavailableView") == false)

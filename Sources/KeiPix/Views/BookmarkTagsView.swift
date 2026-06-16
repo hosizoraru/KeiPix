@@ -117,7 +117,7 @@ struct BookmarkTagsView: View {
         #if os(iOS)
         if store.session != nil, usesPhoneBookmarkTagFilterPill {
             ToolbarItem(placement: .secondaryAction) {
-                bookmarkTagActionsMenu
+                bookmarkTagActionsMenu(usesSystemToolbarChrome: true)
             }
         }
         #else
@@ -188,16 +188,17 @@ struct BookmarkTagsView: View {
                     .help(L10n.clearSearch)
                 }
 
-                bookmarkTagActionsMenu
+                bookmarkTagActionsMenu()
             }
             .controlSize(.small)
         }
     }
 
-    private var bookmarkTagActionsMenu: some View {
+    private func bookmarkTagActionsMenu(usesSystemToolbarChrome: Bool = false) -> some View {
         BookmarkTagActionsMenu(
             selectedRestrict: $selectedRestrict,
             sortMode: $sortMode,
+            usesSystemToolbarChrome: usesSystemToolbarChrome,
             hasActiveOptions: hasActiveBookmarkTagOptions,
             canCopyVisibleTags: filteredTags.isEmpty == false,
             copyVisibleTags: copyVisibleTags,
@@ -496,6 +497,7 @@ struct BookmarkTagsView: View {
 private struct BookmarkTagActionsMenu: View {
     @Binding var selectedRestrict: BookmarkRestrict
     @Binding var sortMode: BookmarkTagIndexSort
+    let usesSystemToolbarChrome: Bool
     let hasActiveOptions: Bool
     let canCopyVisibleTags: Bool
     let copyVisibleTags: () -> Void
@@ -510,8 +512,7 @@ private struct BookmarkTagActionsMenu: View {
             menu: nativeActionsMenu,
             select: handleNativeAction
         )
-        .frame(width: 38, height: 34)
-        .glassEffect(.regular.interactive(), in: Capsule(style: .continuous))
+        .nativeToolbarMenuButtonChrome(usesSystemToolbarChrome: usesSystemToolbarChrome)
         .help(L10n.bookmarkTagActions)
         #else
         swiftUIActionsMenu
@@ -519,7 +520,7 @@ private struct BookmarkTagActionsMenu: View {
     }
 
     private var actionsSystemImage: String {
-        hasActiveOptions ? "slider.horizontal.3.circle.fill" : "ellipsis.circle"
+        ToolbarMenuIcon.pageOptions
     }
 
     private var swiftUIActionsMenu: some View {

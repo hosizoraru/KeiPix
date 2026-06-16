@@ -282,7 +282,7 @@ struct SpotlightView: View {
     private var viewOptionsMenu: some View {
         #if os(iOS)
         NativeToolbarMenuButton(
-            systemImage: "slider.horizontal.3",
+            systemImage: ToolbarMenuIcon.pageOptions,
             accessibilityLabel: L10n.viewOptions,
             menu: nativeViewOptionsMenu,
             select: handleNativeViewOptionsAction
@@ -319,7 +319,7 @@ struct SpotlightView: View {
                 }
             }
         } label: {
-            Label(L10n.viewOptions, systemImage: "slider.horizontal.3")
+            Label(L10n.viewOptions, systemImage: ToolbarMenuIcon.pageOptions)
         }
         .menuOrder(.fixed)
         .labelStyle(.iconOnly)

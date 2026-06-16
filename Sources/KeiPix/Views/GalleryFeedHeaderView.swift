@@ -155,7 +155,18 @@ struct FeedHeaderView: View {
     }
     #endif
 
+    @ViewBuilder
     private var compactFeedActionsMenu: some View {
+        if presentation == .phoneToolbarMenu {
+            compactFeedActionsMenuBase
+                .feedToolbarActionChrome()
+        } else {
+            compactFeedActionsMenuBase
+                .iPadFeedHeaderActionChrome()
+        }
+    }
+
+    private var compactFeedActionsMenuBase: some View {
         Menu {
             if let family = store.selectedRoute.routeScopeFamily {
                 Section(family.title) {
@@ -182,14 +193,10 @@ struct FeedHeaderView: View {
         .help(compactFeedActionsAccessibilityLabel)
         .accessibilityLabel(compactFeedActionsAccessibilityLabel)
         .tint(compactFeedActionsAreActive ? .accentColor : nil)
-        .iPadFeedHeaderActionChrome()
     }
 
     private var compactFeedActionsSystemImage: String {
-        if presentation == .phoneToolbarMenu {
-            return "slider.horizontal.3"
-        }
-        return compactFeedActionsAreActive ? "slider.horizontal.3" : "ellipsis.circle"
+        ToolbarMenuIcon.pageOptions
     }
 
     private var compactFeedActionsAreActive: Bool {
@@ -296,10 +303,10 @@ struct FeedHeaderView: View {
                     store.saveCurrentSearchPreset()
                     actionMessage = String(format: L10n.savedSearchPresetFormat, normalizedSearchKeyword)
                 } label: {
-                    Label(L10n.saveSearchWithFilters, systemImage: "slider.horizontal.3")
+                    Label(L10n.saveSearchWithFilters, systemImage: ToolbarMenuIcon.pageOptions)
                 }
             } label: {
-                Label(L10n.searchActions, systemImage: "ellipsis.circle")
+                Label(L10n.searchActions, systemImage: ToolbarMenuIcon.pageOptions)
             }
             .help(L10n.searchActions)
             .accessibilityLabel(L10n.searchActions)
@@ -456,7 +463,7 @@ struct FeedHeaderView: View {
             }
             .disabled(store.clientFilterQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
         } label: {
-            Label(L10n.advancedFilter, systemImage: "slider.horizontal.3")
+            Label(L10n.advancedFilter, systemImage: ToolbarMenuIcon.pageOptions)
         }
         .help(L10n.advancedFilter)
         .accessibilityLabel(L10n.advancedFilter)
@@ -574,7 +581,7 @@ struct FeedHeaderView: View {
                 bookmarkPixivWebMenu
             }
         } label: {
-            Label(L10n.moreActions, systemImage: "ellipsis.circle")
+            Label(L10n.moreActions, systemImage: ToolbarMenuIcon.pageOptions)
         }
     }
 
@@ -941,7 +948,7 @@ struct FeedHeaderView: View {
             return FeedClearChipContext(
                 action: .searchFilters,
                 title: L10n.activeSearchFilters,
-                systemImage: "slider.horizontal.3"
+                systemImage: ToolbarMenuIcon.pageOptions
             )
         }
 
@@ -1153,6 +1160,16 @@ private extension View {
         self
         #endif
     }
+
+    @ViewBuilder
+    func feedToolbarActionChrome() -> some View {
+        #if os(iOS)
+        self
+            .labelStyle(.iconOnly)
+        #else
+        self
+        #endif
+    }
 }
 
 private struct AdvancedLocalFilterEditorPopover: View {
@@ -1164,7 +1181,7 @@ private struct AdvancedLocalFilterEditorPopover: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 14) {
                 HStack(spacing: 8) {
-                    Label(L10n.advancedFilter, systemImage: "slider.horizontal.3")
+                    Label(L10n.advancedFilter, systemImage: ToolbarMenuIcon.pageOptions)
                         .font(.headline)
 
                     Spacer(minLength: 12)

@@ -218,6 +218,25 @@ struct NativeToolbarMenuButton: UIViewRepresentable {
     }
 }
 
+extension View {
+    @ViewBuilder
+    func nativeToolbarMenuButtonChrome(
+        usesSystemToolbarChrome: Bool,
+        width: CGFloat = 38,
+        height: CGFloat = 34
+    ) -> some View {
+        if usesSystemToolbarChrome {
+            self
+                .frame(width: width, height: height)
+                .fixedSize(horizontal: true, vertical: false)
+        } else {
+            self
+                .frame(width: width, height: height)
+                .glassEffect(.regular.interactive(), in: Capsule(style: .continuous))
+        }
+    }
+}
+
 struct NativeToolbarMenu: Equatable {
     let title: String
     let cacheKey: String?

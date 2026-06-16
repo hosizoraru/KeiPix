@@ -176,6 +176,12 @@ struct ContentView: View {
                     selectedSidebarItem = .route(.workSubscriptions)
                     selectedTab = .library
                 }
+                if VisualQALaunchArgument.contains(.mutedContent) {
+                    store.presentMutedContentVisualQA()
+                    hasAppliedMobileBottomTabLaunchTarget = true
+                    selectedSidebarItem = .route(.mutedContent)
+                    selectedTab = .library
+                }
                 if VisualQALaunchArgument.contains(.downloadQueue) {
                     store.presentDownloadQueueVisualQA()
                     hasAppliedMobileBottomTabLaunchTarget = true
@@ -668,7 +674,7 @@ struct ContentView: View {
         ToolbarItem(placement: .primaryAction) {
             if showsDiscoveryDashboardToolbarMenu(showsSidebarToggle: showsSidebarToggle) {
                 NativeToolbarMenuButton(
-                    systemImage: "slider.horizontal.3",
+                    systemImage: ToolbarMenuIcon.pageOptions,
                     accessibilityLabel: L10n.discoverySettings,
                     menu: discoveryDashboardToolbarMenu,
                     select: { handleNativeToolbarMenuAction($0, showsSidebarToggle: showsSidebarToggle) }
@@ -742,7 +748,7 @@ struct ContentView: View {
         ToolbarItem(placement: .primaryAction) {
             if showsPixivCollectionsToolbarMenu {
                 NativeToolbarMenuButton(
-                    systemImage: "slider.horizontal.3",
+                    systemImage: ToolbarMenuIcon.pageOptions,
                     accessibilityLabel: L10n.pixivCollections,
                     menu: pixivCollectionsToolbarMenu,
                     select: { handleNativeToolbarMenuAction($0, showsSidebarToggle: showsSidebarToggle) }
@@ -825,7 +831,7 @@ struct ContentView: View {
 
     private func appControlsToolbarButton(showsSidebarToggle: Bool) -> some View {
         NativeToolbarMenuButton(
-            systemImage: "ellipsis.circle",
+            systemImage: ToolbarMenuIcon.appControls,
             accessibilityLabel: L10n.appControls,
             menu: appControlsMenu,
             select: { handleNativeToolbarMenuAction($0, showsSidebarToggle: showsSidebarToggle) }
@@ -1910,7 +1916,7 @@ struct ContentView: View {
                     items: [
                         .submenu(
                             title: L10n.viewOptions,
-                            systemImage: "slider.horizontal.3",
+                            systemImage: ToolbarMenuIcon.pageOptions,
                             items: [
                                 .action(
                                     id: IPadToolbarMenuAction.showContentBadges,

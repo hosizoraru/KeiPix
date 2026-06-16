@@ -506,7 +506,7 @@ struct ContentView: View {
                 }
             }
         } label: {
-            Label(L10n.discoverySettings, systemImage: "slider.horizontal.3")
+            Label(L10n.discoverySettings, systemImage: ToolbarMenuIcon.pageOptions)
         }
         .labelStyle(.iconOnly)
         .help(L10n.discoverySettings)
@@ -608,7 +608,7 @@ struct ContentView: View {
                 Label(L10n.settings, systemImage: "gearshape")
             }
         } label: {
-            Label(L10n.appControls, systemImage: "ellipsis.circle")
+            Label(L10n.appControls, systemImage: ToolbarMenuIcon.appControls)
         }
         .labelStyle(.iconOnly)
         .help(L10n.appControls)

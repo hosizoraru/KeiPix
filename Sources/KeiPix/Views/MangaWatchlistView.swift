@@ -794,7 +794,7 @@ private struct MangaWatchlistActionsMenu: View {
     var body: some View {
         #if os(iOS)
         NativeToolbarMenuButton(
-            systemImage: "ellipsis",
+            systemImage: ToolbarMenuIcon.pageOptions,
             accessibilityLabel: L10n.mangaWatchlistActions,
             menu: nativeActionsMenu,
             badgeText: selectedCount > 0 ? selectedCount.formatted() : nil,
@@ -872,7 +872,10 @@ private struct MangaWatchlistActionsMenu: View {
                 }
             }
         } label: {
-            Label(L10n.mangaWatchlistActions, systemImage: selectedCount > 0 ? "checkmark.circle.fill" : "ellipsis.circle")
+            Label(
+                L10n.mangaWatchlistActions,
+                systemImage: selectedCount > 0 ? "checkmark.circle.fill" : ToolbarMenuIcon.pageOptions
+            )
         }
         .menuOrder(.fixed)
         .labelStyle(.iconOnly)

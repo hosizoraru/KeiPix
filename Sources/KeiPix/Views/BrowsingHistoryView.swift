@@ -16,29 +16,13 @@ struct BrowsingHistoryView: View {
     @State private var actionMessage: String?
 
     var body: some View {
-        VStack(spacing: 0) {
-            if showsHistorySearchBar {
-                header
-                    .platformGlassControlBar(verticalPadding: 8, topPadding: 2)
-                    .transition(.move(edge: .top).combined(with: .opacity))
-            }
-
-            switch source {
-            case .local:
-                localHistoryContent
-            case .pixiv:
-                pixivHistoryContent
-            }
-        }
-        .platformPageHeader(
-            title: L10n.history,
-            status: historyStatusText,
-            statusSystemImage: "clock.arrow.circlepath"
-        ) {
-            historyTitleActions
-        }
+        historyRootWithPageHeader
         .platformPageNavigationChrome(title: L10n.history, status: historyStatusText)
         .mobileRouteBadgeCount(historyBadgeCount, for: .history)
+        .mobilePageFilter(mobileHistoryPageFilterSnapshot)
+        .toolbar {
+            historyToolbar
+        }
         .confirmationDialog(
             L10n.clearHistoryConfirmation,
             isPresented: $isClearConfirmationPresented,
@@ -98,11 +82,75 @@ struct BrowsingHistoryView: View {
         }
     }
 
+    private var historyRoot: some View {
+        VStack(spacing: 0) {
+            if showsHistorySearchBar {
+                header
+                    .platformGlassControlBar(verticalPadding: 8, topPadding: 2)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+            }
+
+            switch source {
+            case .local:
+                localHistoryContent
+            case .pixiv:
+                pixivHistoryContent
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var historyRootWithPageHeader: some View {
+        #if os(iOS)
+        if usesPhoneHistoryFilterPill {
+            historyRoot
+                .platformPageHeader(
+                    title: L10n.history,
+                    status: historyStatusText,
+                    statusSystemImage: "clock.arrow.circlepath"
+                )
+        } else {
+            historyRoot
+                .platformPageHeader(
+                    title: L10n.history,
+                    status: historyStatusText,
+                    statusSystemImage: "clock.arrow.circlepath"
+                ) {
+                    historyTitleActions
+                }
+        }
+        #else
+        historyRoot
+        .platformPageHeader(
+            title: L10n.history,
+            status: historyStatusText,
+            statusSystemImage: "clock.arrow.circlepath"
+        ) {
+            historyTitleActions
+        }
+        #endif
+    }
+
+    @ToolbarContentBuilder
+    private var historyToolbar: some ToolbarContent {
+        #if os(iOS)
+        if usesPhoneHistoryFilterPill {
+            ToolbarItem(placement: .primaryAction) {
+                historyActionsMenu(usesSystemToolbarChrome: true)
+            }
+        }
+        #else
+        ToolbarItem(placement: .secondaryAction) {
+            EmptyView()
+        }
+        #endif
+    }
+
     private var header: some View {
         GlassEffectContainer(spacing: 8) {
             HStack(spacing: 10) {
                 OS26LibrarySearchField(
-                    text: $localSearchText,
+                    text: historyFilterTextBinding,
                     placeholder: L10n.searchHistory,
                     minWidth: 180,
                     idealWidth: 260,
@@ -120,12 +168,10 @@ struct BrowsingHistoryView: View {
     @ViewBuilder
     private var historyTitleActions: some View {
         OS26LibraryActionRail {
-            historySourceMenu
-
-            if source == .local {
+            if usesPhoneHistoryFilterPill == false {
                 Button {
                     withAnimation(.snappy(duration: 0.16)) {
-                        if showsHistorySearchBar, normalizedLocalSearchText.isEmpty {
+                        if showsHistorySearchBar, normalizedHistoryFilterText.isEmpty {
                             isSearchPresented = false
                         } else {
                             isSearchPresented = true
@@ -134,127 +180,75 @@ struct BrowsingHistoryView: View {
                 } label: {
                     Label(
                         L10n.search,
-                        systemImage: normalizedLocalSearchText.isEmpty ? "magnifyingglass" : "magnifyingglass.circle.fill"
+                        systemImage: normalizedHistoryFilterText.isEmpty ? "magnifyingglass" : "magnifyingglass.circle.fill"
                     )
                 }
-                .os26GlassIconButton(prominent: showsHistorySearchBar || normalizedLocalSearchText.isEmpty == false)
+                .os26GlassIconButton(prominent: showsHistorySearchBar || normalizedHistoryFilterText.isEmpty == false)
                 .help(L10n.searchHistory)
                 .accessibilityLabel(L10n.searchHistory)
 
                 Button {
-                    withAnimation(.snappy(duration: 0.16)) {
-                        localSearchText = ""
-                        isSearchPresented = false
-                    }
+                    clearHistorySearch()
                 } label: {
                     Label(L10n.clearSearch, systemImage: "xmark.circle")
                 }
                 .os26GlassIconButton()
-                .disabled(normalizedLocalSearchText.isEmpty && isSearchPresented == false)
+                .disabled(normalizedHistoryFilterText.isEmpty && isSearchPresented == false)
                 .help(L10n.clearSearch)
             }
 
-            historyFilterMenu
-
-            if source == .local {
-                historyMoreMenu
-            }
+            historyActionsMenu()
         }
         .controlSize(.small)
     }
 
-    private var historySourceMenu: some View {
-        Menu {
-            ForEach(BrowsingHistorySource.allCases) { source in
-                Button {
-                    self.source = source
-                } label: {
-                    if source.requiresPixivPremiumForFullBehavior {
-                        PixivPremiumMenuLabel(
-                            title: source.title,
-                            systemImage: source.systemImage,
-                            isSelected: self.source == source
-                        )
-                    } else {
-                        Label(
-                            source.title,
-                            systemImage: self.source == source ? "checkmark" : source.systemImage
-                        )
-                    }
-                }
-            }
-        } label: {
-            HStack(spacing: 6) {
-                Label(source.title, systemImage: source.systemImage)
-                    .lineLimit(1)
-                if source.requiresPixivPremiumForFullBehavior {
-                    PixivPremiumBadge()
-                }
-            }
-        }
-        .os26GlassButton()
-        .help(L10n.historySource)
-        .accessibilityLabel(L10n.historySource)
-    }
-
-    private var historyFilterMenu: some View {
-        Menu {
-            Picker(L10n.historyFilters, selection: $statusFilter) {
-                ForEach(BrowsingHistoryStatusFilter.allCases) { filter in
-                    Label(filter.title, systemImage: filter.systemImage)
-                        .tag(filter)
-                }
-            }
-
-            if statusFilter.isActive {
-                Divider()
-
-                Button {
-                    withAnimation(.snappy(duration: 0.16)) {
-                        statusFilter = .all
-                    }
-                } label: {
-                    Label(L10n.all, systemImage: "line.3.horizontal.decrease.circle")
-                }
-            }
-        } label: {
-            Label(statusFilter.isActive ? statusFilter.title : L10n.historyFilters, systemImage: statusFilter.systemImage)
-        }
-        .os26GlassButton(prominent: statusFilter.isActive)
-        .help(statusFilter.isActive ? statusFilter.title : L10n.historyFilters)
-        .accessibilityLabel(L10n.historyFilters)
-    }
-
-    private var historyMoreMenu: some View {
-        Menu {
-            Button {
-                exportHistory()
-            } label: {
-                Label(L10n.exportHistory, systemImage: "square.and.arrow.up")
-            }
-            .disabled(store.localBrowsingHistory.isEmpty)
-
-            Divider()
-
-            Button(role: .destructive) {
-                isClearConfirmationPresented = true
-            } label: {
-                Label(L10n.clearHistory, systemImage: "trash")
-            }
-            .disabled(store.localBrowsingHistory.isEmpty)
-        } label: {
-            Label(L10n.moreActions, systemImage: "ellipsis.circle")
-        }
-        .os26GlassIconButton()
-        .help(L10n.moreActions)
+    private func historyActionsMenu(usesSystemToolbarChrome: Bool = false) -> some View {
+        HistoryActionsMenu(
+            source: $source,
+            statusFilter: $statusFilter,
+            usesSystemToolbarChrome: usesSystemToolbarChrome,
+            hasActiveOptions: hasActiveHistoryOptions,
+            canExportHistory: source == .local && store.localBrowsingHistory.isEmpty == false,
+            canClearHistory: source == .local && store.localBrowsingHistory.isEmpty == false,
+            refreshHistory: refreshPixivHistoryFromMenu,
+            exportHistory: exportHistory,
+            clearHistory: { isClearConfirmationPresented = true },
+            resetOptions: resetHistoryOptions
+        )
     }
 
     private var showsHistorySearchBar: Bool {
-        source == .local && (isSearchPresented || normalizedLocalSearchText.isEmpty == false)
+        if usesPhoneHistoryFilterPill {
+            return false
+        }
+        return isSearchPresented || normalizedHistoryFilterText.isEmpty == false
     }
 
-    private var normalizedLocalSearchText: String {
-        localSearchText.trimmingCharacters(in: .whitespacesAndNewlines)
+    private var normalizedHistoryFilterText: String {
+        historyFilterText.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private var historyFilterText: String {
+        historyFilterTextBinding.wrappedValue
+    }
+
+    private var historyFilterTextBinding: Binding<String> {
+        Binding {
+            #if os(iOS)
+            if usesPhoneHistoryFilterPill {
+                return store.clientFilterQuery
+            }
+            #endif
+            return localSearchText
+        } set: { value in
+            #if os(iOS)
+            if usesPhoneHistoryFilterPill {
+                store.clientFilterQuery = value
+                return
+            }
+            #endif
+            localSearchText = value
+        }
     }
 
     private var localHistoryContent: some View {
@@ -333,16 +327,17 @@ struct BrowsingHistoryView: View {
     }
 
     private var filteredLocalHistoryItems: [LocalArtworkHistoryItem] {
-        store.localHistoryItems(matching: localSearchText)
+        store.localHistoryItems(matching: historyFilterText)
             .filter(statusFilter.includes)
     }
 
     private var filteredPixivHistoryArtworks: [PixivArtwork] {
-        store.artworks.filter(statusFilter.includes)
+        ClientFilterDSL.filter(store.artworks, query: historyFilterText)
+            .filter(statusFilter.includes)
     }
 
-    private var isLocalSearchOrFilterActive: Bool {
-        localSearchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false
+    private var isHistorySearchOrFilterActive: Bool {
+        normalizedHistoryFilterText.isEmpty == false
             || statusFilter.isActive
     }
 
@@ -438,7 +433,7 @@ struct BrowsingHistoryView: View {
 
     private var localHistoryCountText: String {
         let visibleCount = filteredLocalHistoryItems.count
-        if isLocalSearchOrFilterActive {
+        if isHistorySearchOrFilterActive {
             return "\(visibleCount.formatted())/\(store.localBrowsingHistory.count.formatted())"
         }
         return visibleCount.formatted()
@@ -450,7 +445,7 @@ struct BrowsingHistoryView: View {
             return localHistoryCountText
         case .pixiv:
             let visibleCount = filteredPixivHistoryArtworks.count
-            if statusFilter.isActive {
+            if isHistorySearchOrFilterActive {
                 return "\(visibleCount.formatted())/\(store.artworks.count.formatted())"
             }
             return visibleCount.formatted()
@@ -464,6 +459,41 @@ struct BrowsingHistoryView: View {
         case .pixiv:
             filteredPixivHistoryArtworks.count
         }
+    }
+
+    private var historyTotalCount: Int {
+        switch source {
+        case .local:
+            store.localBrowsingHistory.count
+        case .pixiv:
+            store.artworks.count
+        }
+    }
+
+    private var hasActiveHistoryOptions: Bool {
+        source != .local || statusFilter.isActive || normalizedHistoryFilterText.isEmpty == false
+    }
+
+    private var mobileHistoryPageFilterSnapshot: MobilePageFilterSnapshot? {
+        #if os(iOS)
+        guard usesPhoneHistoryFilterPill, historyTotalCount > 0 else { return nil }
+        return MobilePageFilterSnapshot(
+            route: .history,
+            totalCount: historyTotalCount,
+            visibleCount: historyBadgeCount,
+            placeholder: L10n.searchHistory
+        )
+        #else
+        return nil
+        #endif
+    }
+
+    private var usesPhoneHistoryFilterPill: Bool {
+        #if os(iOS)
+        UIDevice.current.userInterfaceIdiom == .phone
+        #else
+        false
+        #endif
     }
 
     private func localHistoryContentReloadToken(for items: [LocalArtworkHistoryItem]) -> Int {
@@ -555,6 +585,30 @@ struct BrowsingHistoryView: View {
         actionMessage = L10n.copied
     }
 
+    private func clearHistorySearch() {
+        withAnimation(.snappy(duration: 0.16)) {
+            historyFilterTextBinding.wrappedValue = ""
+            isSearchPresented = false
+        }
+    }
+
+    private func resetHistoryOptions() {
+        withAnimation(.snappy(duration: 0.16)) {
+            source = .local
+            statusFilter = .all
+            historyFilterTextBinding.wrappedValue = ""
+            isSearchPresented = false
+        }
+        actionMessage = L10n.reset
+    }
+
+    private func refreshPixivHistoryFromMenu() {
+        if source != .pixiv {
+            source = .pixiv
+        }
+        Task { await reloadPixivHistory(showFeedback: true) }
+    }
+
     private func exportHistory() {
         let items = store.localBrowsingHistory
         guard items.isEmpty == false else { return }
@@ -603,6 +657,267 @@ private enum BrowsingHistorySource: String, CaseIterable, Identifiable {
         case .pixiv:
             true
         }
+    }
+}
+
+private struct HistoryActionsMenu: View {
+    @Binding var source: BrowsingHistorySource
+    @Binding var statusFilter: BrowsingHistoryStatusFilter
+    let usesSystemToolbarChrome: Bool
+    let hasActiveOptions: Bool
+    let canExportHistory: Bool
+    let canClearHistory: Bool
+    let refreshHistory: () -> Void
+    let exportHistory: () -> Void
+    let clearHistory: () -> Void
+    let resetOptions: () -> Void
+
+    @ViewBuilder
+    var body: some View {
+        #if os(iOS)
+        NativeToolbarMenuButton(
+            systemImage: actionsSystemImage,
+            accessibilityLabel: L10n.history,
+            menu: nativeActionsMenu,
+            select: handleNativeAction
+        )
+        .nativeToolbarMenuButtonChrome(usesSystemToolbarChrome: usesSystemToolbarChrome)
+        .help(L10n.history)
+        #else
+        swiftUIActionsMenu
+        #endif
+    }
+
+    private var actionsSystemImage: String {
+        ToolbarMenuIcon.pageOptions
+    }
+
+    private var swiftUIActionsMenu: some View {
+        Menu {
+            Section(L10n.historySource) {
+                historyPickerMenu(
+                    title: L10n.historySource,
+                    currentValueTitle: source.title,
+                    systemImage: source.systemImage,
+                    selection: $source
+                ) {
+                    ForEach(BrowsingHistorySource.allCases) { option in
+                        if option.requiresPixivPremiumForFullBehavior {
+                            PixivPremiumMenuLabel(
+                                title: option.title,
+                                systemImage: option.systemImage,
+                                isSelected: source == option
+                            )
+                            .tag(option)
+                        } else {
+                            Label(option.title, systemImage: option.systemImage)
+                                .tag(option)
+                        }
+                    }
+                }
+            }
+
+            Section(L10n.historyFilters) {
+                historyPickerMenu(
+                    title: L10n.historyFilters,
+                    currentValueTitle: statusFilter.title,
+                    systemImage: statusFilter.systemImage,
+                    selection: $statusFilter
+                ) {
+                    ForEach(BrowsingHistoryStatusFilter.allCases) { filter in
+                        Label(filter.title, systemImage: filter.systemImage)
+                            .tag(filter)
+                    }
+                }
+
+                Button {
+                    resetOptions()
+                } label: {
+                    Label(L10n.reset, systemImage: "arrow.counterclockwise")
+                }
+                .disabled(hasActiveOptions == false)
+            }
+
+            Section(L10n.moreActions) {
+                Button {
+                    refreshHistory()
+                } label: {
+                    Label(L10n.refresh, systemImage: "arrow.clockwise")
+                    Text(L10n.pixivHistory)
+                }
+
+                Button {
+                    exportHistory()
+                } label: {
+                    Label(L10n.exportHistory, systemImage: "square.and.arrow.up")
+                }
+                .disabled(canExportHistory == false)
+
+                Button(role: .destructive) {
+                    clearHistory()
+                } label: {
+                    Label(L10n.clearHistory, systemImage: "trash")
+                }
+                .disabled(canClearHistory == false)
+            }
+        } label: {
+            Label(L10n.history, systemImage: actionsSystemImage)
+        }
+        .menuOrder(.fixed)
+        .os26GlassIconButton(prominent: hasActiveOptions)
+        .help(L10n.history)
+        .accessibilityLabel(L10n.history)
+    }
+
+    private func historyPickerMenu<SelectionValue: Hashable, Options: View>(
+        title: String,
+        currentValueTitle: String,
+        systemImage: String,
+        selection: Binding<SelectionValue>,
+        @ViewBuilder options: () -> Options
+    ) -> some View {
+        Picker(selection: selection) {
+            options()
+        } label: {
+            Label(title, systemImage: systemImage)
+            Text(currentValueTitle)
+        }
+        .pickerStyle(.menu)
+    }
+
+    #if os(iOS)
+    private var nativeActionsMenu: NativeToolbarMenu {
+        NativeToolbarMenu(
+            title: L10n.history,
+            cacheKey: nativeActionsMenuCacheKey,
+            sections: [
+                NativeToolbarMenuSection(
+                    title: L10n.historySource,
+                    presentation: .root,
+                    items: [
+                        NativeToolbarMenuItem.singleSelectionSubmenu(
+                            title: L10n.historySource,
+                            selectedTitle: source.title,
+                            selectedOption: source,
+                            systemImage: source.systemImage,
+                            options: BrowsingHistorySource.allCases,
+                            id: HistoryActionsMenuAction.source,
+                            optionTitle: \.title,
+                            optionSystemImage: \.systemImage
+                        )
+                    ]
+                ),
+                NativeToolbarMenuSection(
+                    title: L10n.historyFilters,
+                    presentation: .root,
+                    items: [
+                        NativeToolbarMenuItem.singleSelectionSubmenu(
+                            title: L10n.historyFilters,
+                            selectedTitle: statusFilter.title,
+                            selectedOption: statusFilter,
+                            systemImage: statusFilter.systemImage,
+                            options: BrowsingHistoryStatusFilter.allCases,
+                            id: HistoryActionsMenuAction.status,
+                            optionTitle: \.title,
+                            optionSystemImage: \.systemImage
+                        ),
+                        .action(
+                            id: HistoryActionsMenuAction.resetOptions,
+                            title: L10n.reset,
+                            systemImage: "arrow.counterclockwise",
+                            isEnabled: hasActiveOptions
+                        )
+                    ]
+                ),
+                NativeToolbarMenuSection(
+                    title: L10n.moreActions,
+                    items: [
+                        .action(
+                            id: HistoryActionsMenuAction.refreshHistory,
+                            title: L10n.refresh,
+                            subtitle: L10n.pixivHistory,
+                            systemImage: "arrow.clockwise"
+                        ),
+                        .action(
+                            id: HistoryActionsMenuAction.exportHistory,
+                            title: L10n.exportHistory,
+                            systemImage: "square.and.arrow.up",
+                            isEnabled: canExportHistory
+                        ),
+                        .action(
+                            id: HistoryActionsMenuAction.clearHistory,
+                            title: L10n.clearHistory,
+                            systemImage: "trash",
+                            isEnabled: canClearHistory,
+                            isDestructive: true
+                        )
+                    ]
+                )
+            ]
+        )
+    }
+
+    private var nativeActionsMenuCacheKey: String {
+        [
+            "history-actions",
+            source.rawValue,
+            statusFilter.rawValue,
+            hasActiveOptions.description,
+            canExportHistory.description,
+            canClearHistory.description
+        ].joined(separator: ":")
+    }
+
+    private func handleNativeAction(_ id: String) {
+        if let nextSource = HistoryActionsMenuAction.source(from: id) {
+            source = nextSource
+            return
+        }
+        if let nextStatus = HistoryActionsMenuAction.status(from: id) {
+            statusFilter = nextStatus
+            return
+        }
+
+        switch id {
+        case HistoryActionsMenuAction.refreshHistory:
+            refreshHistory()
+        case HistoryActionsMenuAction.exportHistory:
+            exportHistory()
+        case HistoryActionsMenuAction.clearHistory:
+            clearHistory()
+        case HistoryActionsMenuAction.resetOptions:
+            resetOptions()
+        default:
+            break
+        }
+    }
+    #endif
+}
+
+private enum HistoryActionsMenuAction {
+    static let refreshHistory = "history-actions:refresh"
+    static let exportHistory = "history-actions:export"
+    static let clearHistory = "history-actions:clear"
+    static let resetOptions = "history-actions:reset"
+    private static let sourcePrefix = "history-actions:source:"
+    private static let statusPrefix = "history-actions:status:"
+
+    static func source(_ source: BrowsingHistorySource) -> String {
+        sourcePrefix + source.rawValue
+    }
+
+    static func source(from id: String) -> BrowsingHistorySource? {
+        guard id.hasPrefix(sourcePrefix) else { return nil }
+        return BrowsingHistorySource(rawValue: String(id.dropFirst(sourcePrefix.count)))
+    }
+
+    static func status(_ status: BrowsingHistoryStatusFilter) -> String {
+        statusPrefix + status.rawValue
+    }
+
+    static func status(from id: String) -> BrowsingHistoryStatusFilter? {
+        guard id.hasPrefix(statusPrefix) else { return nil }
+        return BrowsingHistoryStatusFilter(rawValue: String(id.dropFirst(statusPrefix.count)))
     }
 }
 

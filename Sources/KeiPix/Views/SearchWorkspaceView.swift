@@ -523,7 +523,7 @@ private struct SearchWorkspaceActionsMenu: View {
     }
 
     private var actionsSystemImage: String {
-        hasSearchKeyword || hasActiveSearchFilters ? "magnifyingglass.circle.fill" : "magnifyingglass.circle"
+        ToolbarMenuIcon.pageOptions
     }
 
     private var swiftUIActionsMenu: some View {
@@ -582,7 +582,7 @@ private struct SearchWorkspaceActionsMenu: View {
                 Button {
                     saveSearchWithFilters()
                 } label: {
-                    Label(L10n.saveSearchWithFilters, systemImage: "slider.horizontal.3")
+                    Label(L10n.saveSearchWithFilters, systemImage: ToolbarMenuIcon.pageOptions)
                 }
                 .disabled(hasSearchKeyword == false)
             }
@@ -672,7 +672,7 @@ private struct SearchWorkspaceActionsMenu: View {
                         .action(
                             id: SearchWorkspaceActionsMenuAction.saveSearchWithFilters,
                             title: L10n.saveSearchWithFilters,
-                            systemImage: "slider.horizontal.3",
+                            systemImage: ToolbarMenuIcon.pageOptions,
                             isEnabled: hasSearchKeyword
                         )
                     ]
