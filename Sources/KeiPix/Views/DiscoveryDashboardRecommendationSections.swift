@@ -40,12 +40,17 @@ enum DiscoveryDashboardFeatureSectionStyle: Equatable {
         }
     }
 
-    var recommendationCardWidth: CGFloat {
+    var recommendationColumns: [GridItem] {
         switch self {
         case .full:
-            194
+            [
+                GridItem(.adaptive(minimum: 172, maximum: 240), spacing: 10, alignment: .top)
+            ]
         case .compact:
-            168
+            [
+                GridItem(.flexible(minimum: 118), spacing: 10, alignment: .top),
+                GridItem(.flexible(minimum: 118), spacing: 10, alignment: .top)
+            ]
         }
     }
 }
@@ -147,7 +152,7 @@ struct DiscoveryDashboardForYouSection: View {
             DiscoveryDashboardFeature(
                 route: .pixivCollections,
                 title: L10n.pixivCollections,
-                subtitle: L10n.works,
+                subtitle: L10n.discover,
                 systemImage: "rectangle.stack.badge.person.crop",
                 accent: .blue
             ),
@@ -164,13 +169,6 @@ struct DiscoveryDashboardForYouSection: View {
                 subtitle: L10n.creatorNetwork,
                 systemImage: "person.crop.circle.badge.plus",
                 accent: .indigo
-            ),
-            DiscoveryDashboardFeature(
-                route: .mangaRecommended,
-                title: L10n.manga,
-                subtitle: L10n.works,
-                systemImage: "book.closed",
-                accent: .green
             ),
             DiscoveryDashboardFeature(
                 route: .novelRecommended,
@@ -190,23 +188,17 @@ struct DiscoveryDashboardForYouSection: View {
                     systemImage: "person.crop.circle.badge.sparkles"
                 )
 
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(alignment: .top, spacing: 10) {
-                        ForEach(features) { feature in
-                            DiscoveryDashboardRecommendationChip(
-                                feature: feature,
-                                style: style,
-                                isSelected: store.selectedRoute == feature.route
-                            ) {
-                                store.select(feature.route)
-                            }
+                LazyVGrid(columns: style.recommendationColumns, alignment: .leading, spacing: 10) {
+                    ForEach(features) { feature in
+                        DiscoveryDashboardForYouCard(
+                            feature: feature,
+                            style: style,
+                            isSelected: store.selectedRoute == feature.route
+                        ) {
+                            store.select(feature.route)
                         }
                     }
-                    .padding(.horizontal, 1)
-                    .padding(.bottom, 1)
                 }
-
-                DiscoveryTrendingTagsStrip(store: store, showsHeader: false)
             }
             .padding(style.sectionPadding)
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -349,7 +341,7 @@ private struct DiscoveryDashboardHighlightCard: View {
     }
 }
 
-private struct DiscoveryDashboardRecommendationChip: View {
+private struct DiscoveryDashboardForYouCard: View {
     let feature: DiscoveryDashboardFeature
     let style: DiscoveryDashboardFeatureSectionStyle
     let isSelected: Bool
@@ -359,19 +351,21 @@ private struct DiscoveryDashboardRecommendationChip: View {
 
     var body: some View {
         Button(action: action) {
-            HStack(alignment: .center, spacing: 10) {
+            VStack(alignment: .leading, spacing: style == .full ? 12 : 10) {
                 Image(systemName: feature.systemImage)
                     .font(.subheadline.weight(.semibold))
                     .symbolRenderingMode(.hierarchical)
                     .foregroundStyle(isSelected ? Color.accentColor : feature.accent)
-                    .frame(width: 34, height: 34)
+                    .frame(width: 34, height: 34, alignment: .center)
                     .keiGlass(14)
 
                 VStack(alignment: .leading, spacing: 3) {
                     Text(feature.title)
-                        .font(.callout.weight(.semibold))
+                        .font(style == .full ? .callout.weight(.semibold) : .caption.weight(.semibold))
                         .foregroundStyle(.primary)
-                        .lineLimit(1)
+                        .lineLimit(2)
+                        .multilineTextAlignment(.leading)
+                        .fixedSize(horizontal: false, vertical: true)
 
                     Text(feature.subtitle)
                         .font(.caption.weight(.medium))
@@ -381,9 +375,8 @@ private struct DiscoveryDashboardRecommendationChip: View {
 
                 Spacer(minLength: 0)
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 10)
-            .frame(width: style.recommendationCardWidth, alignment: .leading)
+            .padding(12)
+            .frame(maxWidth: .infinity, minHeight: style == .full ? 116 : 104, alignment: .topLeading)
             .contentShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         }
         .buttonStyle(.plain)

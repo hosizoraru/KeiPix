@@ -238,35 +238,53 @@ private struct DiscoveryDashboardHeroCard: View {
     @ScaledMetric(relativeTo: .largeTitle) private var fullAvatarSymbolSize: CGFloat = 36
 
     var body: some View {
-        HStack(alignment: .center, spacing: style == .full ? 16 : 12) {
-            AccountIdentityMenuButton(
-                store: store,
-                displayStyle: .heroAvatar(
-                    diameter: style.iconSide,
-                    symbolSize: style == .full ? fullAvatarSymbolSize : compactAvatarSymbolSize
+        VStack(alignment: .leading, spacing: style == .full ? 12 : 10) {
+            HStack(alignment: .center, spacing: titleRowSpacing) {
+                AccountIdentityMenuButton(
+                    store: store,
+                    displayStyle: .heroAvatar(
+                        diameter: style.iconSide,
+                        symbolSize: style == .full ? fullAvatarSymbolSize : compactAvatarSymbolSize
+                    )
                 )
-            )
 
-            VStack(alignment: .leading, spacing: style == .full ? 5 : 3) {
-                if showsBoardTitle {
-                    Text(L10n.discover)
-                        .font(style == .full ? .title2.weight(.semibold) : .headline.weight(.semibold))
+                VStack(alignment: .leading, spacing: style == .full ? 5 : 3) {
+                    if showsBoardTitle {
+                        Text(L10n.discover)
+                            .font(style == .full ? .title2.weight(.semibold) : .headline.weight(.semibold))
+                            .lineLimit(1)
+                    }
+
+                    Text(accountSubtitle)
+                        .font(accountSubtitleFont)
+                        .foregroundStyle(showsBoardTitle ? .secondary : .primary)
                         .lineLimit(1)
+                        .truncationMode(.middle)
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
 
-                Text(accountSubtitle)
-                    .font(accountSubtitleFont)
-                    .foregroundStyle(showsBoardTitle ? .secondary : .primary)
-                    .lineLimit(1)
-                    .truncationMode(.middle)
+                Spacer(minLength: 0)
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
 
-            heroActions
+            DiscoveryDashboardHeroControlRow(
+                store: store,
+                style: style,
+                surprise: surprise,
+                customize: customize
+            )
+            .padding(.leading, controlRowLeadingPadding)
         }
         .padding(style == .full ? 16 : 13)
         .frame(maxWidth: .infinity, alignment: .leading)
         .keiGlass(style.cornerRadius)
+    }
+
+    private var titleRowSpacing: CGFloat {
+        style == .full ? 16 : 12
+    }
+
+    private var controlRowLeadingPadding: CGFloat {
+        style.iconSide + titleRowSpacing
     }
 
     private var showsBoardTitle: Bool {
@@ -293,71 +311,71 @@ private struct DiscoveryDashboardHeroCard: View {
         }
         return store.accountSessionMode == .real ? "@\(session.user.account)" : store.accountSessionMode.title
     }
+}
 
-    private var heroActions: some View {
-        ViewThatFits(in: .horizontal) {
-            HStack(spacing: 9) {
-                surpriseButton(showsTitle: style == .full)
-                customizeButton(showsTitle: style == .full)
-            }
+private struct DiscoveryDashboardHeroControlRow: View {
+    @Bindable var store: KeiPixStore
+    let style: DiscoveryDashboardHeroStyle
+    let surprise: () -> Void
+    let customize: () -> Void
 
-            HStack(spacing: 8) {
-                surpriseButton(showsTitle: false)
-                customizeButton(showsTitle: false)
-            }
-        }
-    }
-
-    @ViewBuilder
-    private func surpriseButton(showsTitle: Bool) -> some View {
-        if showsTitle {
+    var body: some View {
+        HStack(spacing: style == .full ? 9 : 8) {
             Button(action: surprise) {
                 Label(L10n.surpriseMe, systemImage: "shuffle")
-                    .lineLimit(1)
+                    .labelStyle(.iconOnly)
             }
-            .labelStyle(.titleAndIcon)
             .buttonStyle(.glassProminent)
             .buttonBorderShape(.capsule)
             .controlSize(style == .full ? .regular : .small)
             .help(L10n.surpriseMe)
             .accessibilityLabel(L10n.surpriseMe)
-        } else {
-            Button(action: surprise) {
-                Label(L10n.surpriseMe, systemImage: "shuffle")
-            }
-            .labelStyle(.iconOnly)
-            .buttonStyle(.glassProminent)
-            .buttonBorderShape(.capsule)
-            .controlSize(style == .full ? .regular : .small)
-            .help(L10n.surpriseMe)
-            .accessibilityLabel(L10n.surpriseMe)
+
+            DiscoveryDashboardPageMenu(
+                store: store,
+                style: style,
+                customize: customize
+            )
+
+            Spacer(minLength: 0)
         }
     }
+}
 
-    @ViewBuilder
-    private func customizeButton(showsTitle: Bool) -> some View {
-        if showsTitle {
-            Button(action: customize) {
-                Label(L10n.customizeDashboard, systemImage: "slider.horizontal.3")
-                    .lineLimit(1)
+private struct DiscoveryDashboardPageMenu: View {
+    @Bindable var store: KeiPixStore
+    let style: DiscoveryDashboardHeroStyle
+    let customize: () -> Void
+
+    var body: some View {
+        Menu {
+            Section(L10n.dashboardCards) {
+                Button(action: customize) {
+                    Label(L10n.customizeDashboard, systemImage: "rectangle.grid.2x2")
+                }
             }
-            .labelStyle(.titleAndIcon)
-            .buttonStyle(.glass)
-            .buttonBorderShape(.capsule)
-            .controlSize(style == .full ? .regular : .small)
-            .help(L10n.customizeDashboard)
-            .accessibilityLabel(L10n.customizeDashboard)
-        } else {
-            Button(action: customize) {
-                Label(L10n.customizeDashboard, systemImage: "slider.horizontal.3")
+
+            Section(L10n.viewOptions) {
+                Toggle(L10n.showContentBadges, isOn: store.settings_showContentBadgesBinding)
+                Toggle(L10n.maskSensitivePreviews, isOn: store.settings_maskSensitivePreviewsBinding)
             }
-            .labelStyle(.iconOnly)
-            .buttonStyle(.glass)
-            .buttonBorderShape(.capsule)
-            .controlSize(style == .full ? .regular : .small)
-            .help(L10n.customizeDashboard)
-            .accessibilityLabel(L10n.customizeDashboard)
+
+            Section(L10n.contentFilters) {
+                Toggle(L10n.hideMutedContent, isOn: store.settings_hideMutedBinding)
+                Toggle(L10n.hideAIArtworks, isOn: store.settings_hideAIBinding)
+                Toggle(L10n.hideR18Artworks, isOn: store.settings_hideR18Binding)
+                Toggle(L10n.hideR18GArtworks, isOn: store.settings_hideR18GBinding)
+            }
+        } label: {
+            Label(L10n.customizeDashboard, systemImage: "slider.horizontal.3")
+                .labelStyle(.iconOnly)
         }
+        .buttonStyle(.glass)
+        .buttonBorderShape(.capsule)
+        .controlSize(style == .full ? .regular : .small)
+        .menuStyle(.button)
+        .help(L10n.customizeDashboard)
+        .accessibilityLabel(L10n.customizeDashboard)
     }
 }
 
