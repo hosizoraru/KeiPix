@@ -6,12 +6,10 @@ enum KeiPixSidebarDestination: Hashable {
 }
 
 struct SidebarColumnWidth {
-    let min: CGFloat
     let ideal: CGFloat
-    let max: CGFloat
 
-    static let macOS = SidebarColumnWidth(min: 252, ideal: 286, max: 336)
-    static let iPadOS = SidebarColumnWidth(min: 214, ideal: 238, max: 284)
+    static let macOS = SidebarColumnWidth(ideal: 286)
+    static let iPadOS = SidebarColumnWidth(ideal: 238)
 }
 
 struct SidebarView: View {
@@ -48,16 +46,7 @@ struct SidebarView: View {
             }
         }
         .listStyle(.sidebar)
-        .frame(
-            minWidth: columnWidth.min,
-            idealWidth: columnWidth.ideal,
-            maxWidth: columnWidth.max
-        )
-        .navigationSplitViewColumnWidth(
-            min: columnWidth.min,
-            ideal: columnWidth.ideal,
-            max: columnWidth.max
-        )
+        .navigationSplitViewColumnWidth(columnWidth.ideal)
         .navigationTitle("KeiPix")
     }
 

@@ -18,7 +18,7 @@ struct KeiPixApp: App {
             ContentView(store: store)
                 #if os(macOS)
                 .frame(
-                    minWidth: MainWindowSizing.minimumWidth(sidebarVisible: true),
+                    minWidth: MainWindowSizing.minimumWidth(sidebarVisible: false),
                     minHeight: MainWindowSizing.minimumHeight
                 )
                 .background(WindowCaptureProtectionBridge(isProtected: store.isMainWindowCaptureProtected))
