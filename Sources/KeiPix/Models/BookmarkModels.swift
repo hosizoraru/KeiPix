@@ -181,6 +181,16 @@ struct PixivBookmarkDetail: Decodable, Sendable {
         case tags
         case restrict
     }
+
+    var registeredTagNames: [String] {
+        var seen = Set<String>()
+        return tags.compactMap { tag in
+            guard tag.isRegistered else { return nil }
+            let name = tag.name.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard name.isEmpty == false, seen.insert(name).inserted else { return nil }
+            return name
+        }
+    }
 }
 
 struct PixivBookmarkTagRegistration: Decodable, Identifiable, Hashable, Sendable {

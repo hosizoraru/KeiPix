@@ -2263,6 +2263,40 @@ struct NativeBoundaryTests {
         #expect(keyboardShortcuts.contains("batchDownloadLoadedArtworks") == false)
     }
 
+    @Test("Public bookmark waterfall exposes move to private bookmark actions")
+    func publicBookmarkWaterfallExposesMoveToPrivateBookmarkActions() throws {
+        let root = try packageRoot()
+        let galleryView = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/GalleryView.swift"),
+            encoding: .utf8
+        )
+        let galleryArtworkGrid = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/GalleryArtworkGrid.swift"),
+            encoding: .utf8
+        )
+        let store = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Stores/KeiPixStore+ArtworkActions.swift"),
+            encoding: .utf8
+        )
+        let l10n = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Support/L10n.swift"),
+            encoding: .utf8
+        )
+
+        #expect(galleryView.contains("Label(L10n.moveBookmarkToPrivate, systemImage: \"lock.fill\")"))
+        #expect(galleryView.contains("Label(L10n.moveSelectedBookmarksToPrivate, systemImage: \"lock.fill\")"))
+        #expect(galleryView.contains("selectedPublicBookmarkMovePlan"))
+        #expect(galleryView.contains("store.selectedRoute == .publicBookmarks"))
+        #expect(galleryView.contains("store.moveBookmarksToPrivate(plan.candidates)"))
+        #expect(galleryArtworkGrid.contains("Label(L10n.moveBookmarkToPrivate, systemImage: \"lock.fill\")"))
+        #expect(galleryArtworkGrid.contains("store.selectedRoute == .publicBookmarks"))
+        #expect(store.contains("func moveBookmarkToPrivate(_ artwork: PixivArtwork) async throws"))
+        #expect(store.contains("detail.registeredTagNames"))
+        #expect(store.contains("removeMovedPublicBookmarksFromCurrentFeed"))
+        #expect(l10n.contains("static var moveBookmarkToPrivate"))
+        #expect(l10n.contains("static var moveSelectedBookmarksToPrivate"))
+    }
+
     @Test("Novel detail exposes comments through the shared comment surface")
     func novelDetailExposesSharedCommentSurface() throws {
         let root = try packageRoot()

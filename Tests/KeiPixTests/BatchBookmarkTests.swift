@@ -45,6 +45,45 @@ struct BatchBookmarkTests {
         #expect(preview.applyArtworks.map(\.id) == [6, 7])
     }
 
+    @Test("Bookmark visibility move plan keeps unique public bookmark candidates")
+    func bookmarkVisibilityMovePlanKeepsUniqueCandidates() throws {
+        let bookmarked = try artwork(id: 1, isBookmarked: true)
+        let duplicate = try artwork(id: 1, isBookmarked: true)
+        let unbookmarked = try artwork(id: 2, isBookmarked: false)
+        let secondBookmarked = try artwork(id: 3, isBookmarked: true)
+
+        let plan = BookmarkVisibilityMovePlan.publicToPrivate(
+            artworks: [bookmarked, duplicate, unbookmarked, secondBookmarked]
+        )
+
+        #expect(plan.sourceRestrict == .public)
+        #expect(plan.destinationRestrict == .private)
+        #expect(plan.candidates.map(\.id) == [1, 3])
+        #expect(plan.skippedUnbookmarked.map(\.id) == [2])
+        #expect(plan.canApply)
+    }
+
+    @Test("Bookmark detail registered tag names preserve only active unique tags")
+    func bookmarkDetailRegisteredTagNamesPreserveOnlyActiveTags() throws {
+        let payload = """
+        {
+          "is_bookmarked": true,
+          "restrict": "public",
+          "tags": [
+            { "name": " favorite ", "is_registered": true },
+            { "name": "favorite", "is_registered": true },
+            { "name": "suggested", "is_registered": false },
+            { "name": " ", "is_registered": true },
+            { "name": "watercolor", "is_registered": true }
+          ]
+        }
+        """
+
+        let detail = try JSONDecoder().decode(PixivBookmarkDetail.self, from: Data(payload.utf8))
+
+        #expect(detail.registeredTagNames == ["favorite", "watercolor"])
+    }
+
     private func artwork(id: Int, isBookmarked: Bool) throws -> PixivArtwork {
         let payload = """
         {

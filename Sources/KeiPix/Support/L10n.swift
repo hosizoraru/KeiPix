@@ -460,6 +460,9 @@ enum L10n {
     static var batchBookmarkedResultFormat: String { text("Bookmarked %d works · %d failed") }
     static var moreBatchBookmarkItemsFormat: String { text("%d more works will be bookmarked") }
     static var moreSkippedBatchBookmarkItemsFormat: String { text("%d more already-bookmarked works skipped") }
+    static var moveSelectedBookmarksToPrivate: String { text("Move Selected to Private Bookmarks") }
+    static var movedBookmarksToPrivateResultFormat: String { text("Moved %d works to private bookmarks · %d failed") }
+    static var noPublicBookmarkMoveCandidates: String { text("No public bookmark candidates") }
     static var maximumDownloads: String { text("Maximum downloads") }
     static var addToDownloadQueue: String { text("Add to Download Queue") }
     static var queuedDownloadsFormat: String { text("Queued %d downloads") }
@@ -500,9 +503,11 @@ enum L10n {
     static var bookmarked: String { text("Bookmarked") }
     static var unbookmarked: String { text("Unbookmarked") }
     static var removeBookmark: String { text("Remove Bookmark") }
+    static var moveBookmarkToPrivate: String { text("Move to Private Bookmark") }
     static var editBookmark: String { text("Edit Bookmark") }
     static var saveBookmark: String { text("Save Bookmark") }
     static var savedBookmarkFormat: String { text("Saved bookmark for %@") }
+    static var movedBookmarkToPrivateFormat: String { text("Moved %@ to private bookmarks") }
     static var bookmarkTags: String { text("Bookmark Tags") }
     static var bookmarkTagActions: String { text("Bookmark Tag Actions") }
     static var bookmarkFilters: String { text("Bookmark Filters") }

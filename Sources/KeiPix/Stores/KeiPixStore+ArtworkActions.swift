@@ -95,6 +95,43 @@ extension KeiPixStore {
         return BatchBookmarkResult(savedCount: savedCount, failedCount: failedCount)
     }
 
+    func moveBookmarkToPrivate(_ artwork: PixivArtwork) async throws {
+        let detail = try await bookmarkDetail(for: artwork)
+        guard detail.isBookmarked else {
+            throw PixivAPIError.serverMessage(L10n.noPublicBookmarkMoveCandidates)
+        }
+
+        if detail.restrict != .private {
+            try await api.addBookmark(
+                illustID: artwork.id,
+                restrict: .private,
+                tags: detail.registeredTagNames
+            )
+        }
+
+        updateArtwork(artwork.id) { $0.isBookmarked = true }
+        updateLocalBrowsingHistoryBookmarkState(artworkID: artwork.id, isBookmarked: true)
+        removeMovedPublicBookmarksFromCurrentFeed(ids: [artwork.id])
+    }
+
+    func moveBookmarksToPrivate(_ artworks: [PixivArtwork]) async -> BookmarkVisibilityMoveResult {
+        let plan = BookmarkVisibilityMovePlan.publicToPrivate(artworks: artworks)
+        var movedCount = 0
+        var failedCount = 0
+
+        for artwork in plan.candidates {
+            do {
+                try await moveBookmarkToPrivate(artwork)
+                movedCount += 1
+            } catch {
+                failedCount += 1
+                errorMessage = error.localizedDescription
+            }
+        }
+
+        return BookmarkVisibilityMoveResult(movedCount: movedCount, failedCount: failedCount)
+    }
+
     func setBookmarkTagFilter(_ tag: String?) {
         bookmarkTagFilter = tag
         Task { await reloadCurrentFeed() }
@@ -421,6 +458,12 @@ extension KeiPixStore {
             ?? artworks.first(where: { $0.id == artwork.id })?.isBookmarked
             ?? selectedArtwork.flatMap { $0.id == artwork.id ? $0.isBookmarked : nil }
             ?? artwork.isBookmarked
+    }
+
+    private func removeMovedPublicBookmarksFromCurrentFeed(ids: Set<Int>) {
+        guard selectedRoute == .publicBookmarks, ids.isEmpty == false else { return }
+        allArtworks.removeAll { ids.contains($0.id) }
+        applyContentFilters()
     }
 
     private func followCreatorAfterBookmarkIfNeeded(_ artwork: PixivArtwork) async {

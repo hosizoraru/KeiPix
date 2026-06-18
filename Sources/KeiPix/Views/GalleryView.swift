@@ -158,6 +158,7 @@ private struct GalleryFeedView: View {
     @State private var bulkMutePreview: BulkMutePreview?
     @State private var batchBookmarkPreview: BatchBookmarkPreview?
     @State private var isApplyingBatchBookmark = false
+    @State private var isMovingBookmarksToPrivate = false
     @State private var savedScrollPositions: [String: String] = [:]
     @State private var feedbackRequest: FeedbackReportRequest?
     @State private var feedbackArtwork: PixivArtwork?
@@ -425,6 +426,15 @@ private struct GalleryFeedView: View {
                 batchBookmarkSelectedArtworks()
             } label: {
                 Label(L10n.batchBookmarkSelected, systemImage: "bookmark")
+            }
+
+            if canMoveSelectedBookmarksToPrivate {
+                Button {
+                    moveSelectedBookmarksToPrivate()
+                } label: {
+                    Label(L10n.moveSelectedBookmarksToPrivate, systemImage: "lock.fill")
+                }
+                .disabled(isMovingBookmarksToPrivate)
             }
 
             bulkMuteSelectionMenu
@@ -1174,6 +1184,13 @@ private struct GalleryFeedView: View {
                 Task { await bookmark(artwork) }
             }
         }
+        if canMoveBookmarkToPrivate(artwork) {
+            Button {
+                moveBookmarkToPrivate(artwork)
+            } label: {
+                Label(L10n.moveBookmarkToPrivate, systemImage: "lock.fill")
+            }
+        }
         Button(L10n.download) {
             store.enqueueDownload(artwork)
             actionMessage = String(format: L10n.queuedDownloadsFormat, 1)
@@ -1256,6 +1273,27 @@ private struct GalleryFeedView: View {
         }
     }
 
+    private func canMoveBookmarkToPrivate(_ artwork: PixivArtwork) -> Bool {
+        store.selectedRoute == .publicBookmarks && artwork.isBookmarked
+    }
+
+    private func moveBookmarkToPrivate(_ artwork: PixivArtwork) {
+        guard canMoveBookmarkToPrivate(artwork) else {
+            actionMessage = L10n.noPublicBookmarkMoveCandidates
+            return
+        }
+
+        Task {
+            do {
+                try await store.moveBookmarkToPrivate(artwork)
+                artworkSelection.prune(visibleArtworkIDs: store.artworks.map(\.id))
+                actionMessage = String(format: L10n.movedBookmarkToPrivateFormat, artwork.title)
+            } catch {
+                store.errorMessage = error.localizedDescription
+            }
+        }
+    }
+
     private func presentFeedback(_ artwork: PixivArtwork) {
         feedbackArtwork = artwork
         feedbackRequest = .artwork(artwork)
@@ -1301,6 +1339,17 @@ private struct GalleryFeedView: View {
 
     private var selectedArtworkLinks: [String] {
         selectedArtworks.compactMap { $0.pixivURL?.absoluteString }
+    }
+
+    private var selectedPublicBookmarkMovePlan: BookmarkVisibilityMovePlan {
+        guard store.selectedRoute == .publicBookmarks else {
+            return .publicToPrivate(artworks: [])
+        }
+        return .publicToPrivate(artworks: selectedArtworks)
+    }
+
+    private var canMoveSelectedBookmarksToPrivate: Bool {
+        selectedPublicBookmarkMovePlan.canApply
     }
 
     #if DEBUG
@@ -1432,6 +1481,27 @@ private struct GalleryFeedView: View {
         batchBookmarkPreview = preview
         if preview.canApply == false {
             actionMessage = preview.scope.emptyStateTitle
+        }
+    }
+
+    private func moveSelectedBookmarksToPrivate() {
+        guard isMovingBookmarksToPrivate == false else { return }
+        let plan = selectedPublicBookmarkMovePlan
+        guard plan.canApply else {
+            actionMessage = L10n.noPublicBookmarkMoveCandidates
+            return
+        }
+
+        isMovingBookmarksToPrivate = true
+        Task {
+            let result = await store.moveBookmarksToPrivate(plan.candidates)
+            isMovingBookmarksToPrivate = false
+            artworkSelection.prune(visibleArtworkIDs: store.artworks.map(\.id))
+            actionMessage = String(
+                format: L10n.movedBookmarksToPrivateResultFormat,
+                result.movedCount,
+                result.failedCount
+            )
         }
     }
 

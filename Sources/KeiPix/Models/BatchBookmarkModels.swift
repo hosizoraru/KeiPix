@@ -84,3 +84,40 @@ struct BatchBookmarkResult: Equatable, Sendable {
     let savedCount: Int
     let failedCount: Int
 }
+
+struct BookmarkVisibilityMovePlan: Equatable, Sendable {
+    let sourceRestrict: BookmarkRestrict
+    let destinationRestrict: BookmarkRestrict
+    let candidates: [PixivArtwork]
+    let skippedUnbookmarked: [PixivArtwork]
+
+    var canApply: Bool {
+        candidates.isEmpty == false
+    }
+
+    static func publicToPrivate(artworks: [PixivArtwork]) -> BookmarkVisibilityMovePlan {
+        var seenIDs = Set<Int>()
+        var candidates: [PixivArtwork] = []
+        var skippedUnbookmarked: [PixivArtwork] = []
+
+        for artwork in artworks where seenIDs.insert(artwork.id).inserted {
+            if artwork.isBookmarked {
+                candidates.append(artwork)
+            } else {
+                skippedUnbookmarked.append(artwork)
+            }
+        }
+
+        return BookmarkVisibilityMovePlan(
+            sourceRestrict: .public,
+            destinationRestrict: .private,
+            candidates: candidates,
+            skippedUnbookmarked: skippedUnbookmarked
+        )
+    }
+}
+
+struct BookmarkVisibilityMoveResult: Equatable, Sendable {
+    let movedCount: Int
+    let failedCount: Int
+}

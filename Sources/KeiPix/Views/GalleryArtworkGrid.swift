@@ -98,6 +98,13 @@ struct GalleryContentGrid: View {
                 Task { await bookmark(artwork) }
             }
         }
+        if canMoveBookmarkToPrivate(artwork) {
+            Button {
+                moveBookmarkToPrivate(artwork)
+            } label: {
+                Label(L10n.moveBookmarkToPrivate, systemImage: "lock.fill")
+            }
+        }
         Button(L10n.download) {
             store.enqueueDownload(artwork)
             actionMessage = String(format: L10n.queuedDownloadsFormat, 1)
@@ -172,6 +179,13 @@ struct GalleryContentGrid: View {
                     store.requestDangerAction(AppDangerAction(kind: .removeBookmark(artwork)))
                 } else {
                     Task { await bookmark(artwork) }
+                }
+            }
+            if canMoveBookmarkToPrivate(artwork) {
+                Button {
+                    moveBookmarkToPrivate(artwork)
+                } label: {
+                    Label(L10n.moveBookmarkToPrivate, systemImage: "lock.fill")
                 }
             }
             Button(L10n.download) {
@@ -257,6 +271,27 @@ struct GalleryContentGrid: View {
         }
     }
 
+    private func canMoveBookmarkToPrivate(_ artwork: PixivArtwork) -> Bool {
+        store.selectedRoute == .publicBookmarks && artwork.isBookmarked
+    }
+
+    private func moveBookmarkToPrivate(_ artwork: PixivArtwork) {
+        guard canMoveBookmarkToPrivate(artwork) else {
+            actionMessage = L10n.noPublicBookmarkMoveCandidates
+            return
+        }
+
+        Task {
+            do {
+                try await store.moveBookmarkToPrivate(artwork)
+                artworkSelection.prune(visibleArtworkIDs: store.artworks.map(\.id))
+                actionMessage = String(format: L10n.movedBookmarkToPrivateFormat, artwork.title)
+            } catch {
+                store.errorMessage = error.localizedDescription
+            }
+        }
+    }
+
     private func presentFeedback(_ artwork: PixivArtwork) {
         feedbackArtwork = artwork
         feedbackRequest = .artwork(artwork)
@@ -321,6 +356,13 @@ private struct MasonryArtworkGrid: View {
                             Task { await bookmark(artwork) }
                         }
                     }
+                    if canMoveBookmarkToPrivate(artwork) {
+                        Button {
+                            moveBookmarkToPrivate(artwork)
+                        } label: {
+                            Label(L10n.moveBookmarkToPrivate, systemImage: "lock.fill")
+                        }
+                    }
                     Button(L10n.download) {
                         store.enqueueDownload(artwork)
                         actionMessage = String(format: L10n.queuedDownloadsFormat, 1)
@@ -379,6 +421,27 @@ private struct MasonryArtworkGrid: View {
             actionMessage = String(format: L10n.savedBookmarkFormat, artwork.title)
         } catch {
             store.errorMessage = error.localizedDescription
+        }
+    }
+
+    private func canMoveBookmarkToPrivate(_ artwork: PixivArtwork) -> Bool {
+        store.selectedRoute == .publicBookmarks && artwork.isBookmarked
+    }
+
+    private func moveBookmarkToPrivate(_ artwork: PixivArtwork) {
+        guard canMoveBookmarkToPrivate(artwork) else {
+            actionMessage = L10n.noPublicBookmarkMoveCandidates
+            return
+        }
+
+        Task {
+            do {
+                try await store.moveBookmarkToPrivate(artwork)
+                artworkSelection.prune(visibleArtworkIDs: store.artworks.map(\.id))
+                actionMessage = String(format: L10n.movedBookmarkToPrivateFormat, artwork.title)
+            } catch {
+                store.errorMessage = error.localizedDescription
+            }
         }
     }
 
