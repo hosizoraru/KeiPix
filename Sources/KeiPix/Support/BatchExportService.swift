@@ -1,5 +1,6 @@
 import PDFKit
 import SwiftUI
+import ImageIO
 #if os(macOS)
 import AppKit
 #elseif os(iOS)
@@ -55,15 +56,17 @@ enum BatchExportService {
     ) -> URL? {
         guard imageURLs.isEmpty == false else { return nil }
 
-        let images = imageURLs.compactMap { PlatformImage(contentsOf: $0) }
-        guard images.isEmpty == false else { return nil }
+        let sources = imageURLs.compactMap { url in
+            imageSize(at: url).map { ImageExportSource(url: url, size: $0) }
+        }
+        guard sources.isEmpty == false else { return nil }
 
-        let cols = min(columns, images.count)
-        let rows = Int(ceil(Double(images.count) / Double(cols)))
+        let cols = min(max(columns, 1), sources.count)
+        let rows = Int(ceil(Double(sources.count) / Double(cols)))
 
         // Uniform cell size based on the largest image aspect ratio
-        let maxW = images.map(\.size.width).max() ?? 512
-        let maxH = images.map(\.size.height).max() ?? 512
+        let maxW = sources.map(\.size.width).max() ?? 512
+        let maxH = sources.map(\.size.height).max() ?? 512
 
         // Scale cells so the collage fits within maxDimension
         let cellW: CGFloat = 512
@@ -85,7 +88,7 @@ enum BatchExportService {
         NSColor.windowBackgroundColor.setFill()
         NSRect(origin: .zero, size: size).fill()
 
-        for (index, img) in images.enumerated() {
+        for (index, source) in sources.enumerated() {
             let col = index % cols
             let row = index / cols
 
@@ -93,7 +96,10 @@ enum BatchExportService {
             let y = size.height - ((CGFloat(row) + 1) * cellH + CGFloat(row) * spacing) * scale
 
             let destRect = NSRect(x: x, y: y, width: cellW * scale, height: cellH * scale)
-            img.draw(in: destRect, from: .zero, operation: .sourceOver, fraction: 1.0)
+            autoreleasepool {
+                guard let image = PlatformImage(contentsOf: source.url) else { return }
+                image.draw(in: destRect, from: .zero, operation: .sourceOver, fraction: 1.0)
+            }
         }
         image.unlockFocus()
 
@@ -108,14 +114,17 @@ enum BatchExportService {
             PlatformColor.systemBackground.setFill()
             context.fill(CGRect(origin: .zero, size: size))
 
-            for (index, image) in images.enumerated() {
+            for (index, source) in sources.enumerated() {
                 let col = index % cols
                 let row = index / cols
 
                 let x = (CGFloat(col) * (cellW + spacing)) * scale
                 let y = (CGFloat(row) * (cellH + spacing)) * scale
                 let destRect = CGRect(x: x, y: y, width: cellW * scale, height: cellH * scale)
-                image.draw(in: destRect)
+                autoreleasepool {
+                    guard let image = PlatformImage(contentsOf: source.url) else { return }
+                    image.draw(in: destRect)
+                }
             }
         }
         #endif
@@ -136,4 +145,35 @@ enum BatchExportService {
             return nil
         }
     }
+
+    private static func imageSize(at url: URL) -> CGSize? {
+        guard let source = CGImageSourceCreateWithURL(url as CFURL, nil),
+              let properties = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any]
+        else {
+            return PlatformImage(contentsOf: url)?.size
+        }
+
+        let width = cgFloatProperty(properties[kCGImagePropertyPixelWidth])
+        let height = cgFloatProperty(properties[kCGImagePropertyPixelHeight])
+
+        guard let width, let height, width > 0, height > 0 else {
+            return PlatformImage(contentsOf: url)?.size
+        }
+        return CGSize(width: width, height: height)
+    }
+
+    private static func cgFloatProperty(_ value: Any?) -> CGFloat? {
+        if let value = value as? CGFloat {
+            return value
+        }
+        if let value = value as? NSNumber {
+            return CGFloat(truncating: value)
+        }
+        return nil
+    }
+}
+
+private struct ImageExportSource {
+    let url: URL
+    let size: CGSize
 }

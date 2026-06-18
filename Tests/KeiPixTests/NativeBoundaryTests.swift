@@ -4504,7 +4504,11 @@ struct NativeBoundaryTests {
         #expect(downloadedViewer.contains(".keiPanel(18, clipsContent: true)"))
         #expect(downloadedViewer.contains(".os26GlassButton()"))
         #expect(downloadedViewer.contains(".os26GlassIconButton()"))
-        #expect(downloadedViewer.contains("OS26InlineUnavailableView("))
+        #expect(downloadedViewer.contains("RemoteImageView(url: nil, localURL: url, contentMode: contentMode)"))
+        #expect(downloadedViewer.contains("PlatformImage(contentsOf: url)") == false)
+        #expect(downloadedViewer.contains("@State private var isExporting = false"))
+        #expect(downloadedViewer.contains("Task.detached(priority: .userInitiated)"))
+        #expect(downloadedViewer.contains(".disabled(isExporting)"))
         #expect(downloadedViewer.contains(".background(.regularMaterial") == false)
         #expect(downloadedViewer.contains(".buttonStyle(.bordered)") == false)
         #expect(downloadedViewer.contains("ContentUnavailableView(") == false)
@@ -4561,6 +4565,33 @@ struct NativeBoundaryTests {
         #expect(regularActionSource.contains("DownloadQueueQuickLookButton") == false)
         #expect(rowView.contains("private struct DownloadQueueQuickLookButton") == false)
         #expect(moreMenuSource.contains("Label(L10n.quickLook, systemImage: \"eye\")"))
+    }
+
+    @Test("Local image source search is reachable on iOS and iPadOS")
+    func localImageSourceSearchIsReachableOniOSAndiPadOS() throws {
+        let root = try packageRoot()
+        let storeSource = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Stores/KeiPixStore+ImageSourceSearch.swift"),
+            encoding: .utf8
+        )
+        let store = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Stores/KeiPixStore.swift"),
+            encoding: .utf8
+        )
+        let iOSContentView = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/ContentView_iPadOS.swift"),
+            encoding: .utf8
+        )
+
+        #expect(store.contains("var isImageSourceSearchImporterPresented = false"))
+        #expect(storeSource.contains("isImageSourceSearchImporterPresented = true"))
+        #expect(storeSource.contains("completeLocalImageSourceSearchImport"))
+        #expect(storeSource.contains("startAccessingSecurityScopedResource()"))
+        #expect(storeSource.contains("FileManager.default.copyItem(at: url, to: importedURL)"))
+        #expect(storeSource.contains("TODO: Implement with PHPickerViewController or .fileImporter") == false)
+        #expect(iOSContentView.contains(".fileImporter("))
+        #expect(iOSContentView.contains("isPresented: $store.isImageSourceSearchImporterPresented"))
+        #expect(iOSContentView.contains("store.completeLocalImageSourceSearchImport($0)"))
     }
 
     @Test("Downloads use Photos on iOS and custom folders on macOS")

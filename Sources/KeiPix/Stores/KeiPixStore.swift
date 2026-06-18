@@ -138,6 +138,7 @@ final class KeiPixStore {
     /// type and helpers.
     var readerWindowRegistry = ReaderWindowArtworkRegistry()
     var imageSourceSearchRequest: ImageSourceSearchRequest?
+    var isImageSourceSearchImporterPresented = false
     var pendingDangerAction: AppDangerAction?
     var undoAction: AppUndoAction?
     var focusedUser: PixivUser? {
@@ -586,6 +587,7 @@ final class KeiPixStore {
         isLoadingMorePixivActivityFeed = false
         readerWindowArtwork = nil
         imageSourceSearchRequest = nil
+        isImageSourceSearchImporterPresented = false
         searchSuggestions = []
         nextURL = nil
         creatorArtworkTagFilter = nil

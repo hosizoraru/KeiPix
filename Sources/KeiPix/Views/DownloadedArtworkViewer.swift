@@ -13,6 +13,7 @@ struct DownloadedArtworkViewer: View {
     @State private var readingMode: ArtworkReadingMode = .continuous
     @State private var readerAvailableSize: CGSize = .zero
     @State private var actionMessage: String?
+    @State private var isExporting = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -162,18 +163,20 @@ struct DownloadedArtworkViewer: View {
                 #endif
 
                 Button {
-                    exportAsPDF()
+                    Task { await exportAsPDF() }
                 } label: {
                     Label(L10n.exportAsPDF, systemImage: "doc.richtext")
                 }
                 .help(L10n.exportAsPDF)
+                .disabled(isExporting)
 
                 Button {
-                    exportAsCollage()
+                    Task { await exportAsCollage() }
                 } label: {
                     Label(L10n.exportAsCollage, systemImage: "square.grid.3x3")
                 }
                 .help(L10n.exportAsCollage)
+                .disabled(isExporting)
             } label: {
                 Label(L10n.moreActions, systemImage: "ellipsis.circle")
             }
@@ -414,8 +417,17 @@ struct DownloadedArtworkViewer: View {
         PlatformWorkspace.revealInFiles(currentImageURL)
     }
 
-    private func exportAsPDF() {
-        guard let url = BatchExportService.exportPDF(from: imageURLs, title: item.title) else {
+    private func exportAsPDF() async {
+        guard isExporting == false else { return }
+        isExporting = true
+        defer { isExporting = false }
+        let urls = imageURLs
+        let title = item.title
+        let outputURL = await Task.detached(priority: .userInitiated) {
+            BatchExportService.exportPDF(from: urls, title: title)
+        }.value
+
+        guard let url = outputURL else {
             actionMessage = L10n.exportFailed
             return
         }
@@ -423,8 +435,17 @@ struct DownloadedArtworkViewer: View {
         PlatformWorkspace.revealInFiles(url)
     }
 
-    private func exportAsCollage() {
-        guard let url = BatchExportService.exportCollage(from: imageURLs, title: item.title) else {
+    private func exportAsCollage() async {
+        guard isExporting == false else { return }
+        isExporting = true
+        defer { isExporting = false }
+        let urls = imageURLs
+        let title = item.title
+        let outputURL = await Task.detached(priority: .userInitiated) {
+            BatchExportService.exportCollage(from: urls, title: title)
+        }.value
+
+        guard let url = outputURL else {
             actionMessage = L10n.exportFailed
             return
         }
@@ -446,16 +467,6 @@ private struct LocalImageView: View {
     let contentMode: ContentMode
 
     var body: some View {
-        if let image = PlatformImage(contentsOf: url) {
-            image.swiftUIImage
-                .resizable()
-                .aspectRatio(contentMode: contentMode)
-        } else {
-            OS26InlineUnavailableView(
-                title: L10n.failed,
-                systemImage: "photo.badge.exclamationmark"
-            )
-                .frame(maxWidth: .infinity, minHeight: 180)
-        }
+        RemoteImageView(url: nil, localURL: url, contentMode: contentMode)
     }
 }

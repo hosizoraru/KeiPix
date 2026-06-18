@@ -38,8 +38,42 @@ extension KeiPixStore {
 
         imageSourceSearchRequest = ImageSourceSearchRequest(localImageURL: url)
         #else
-        // iPadOS: image source search via Photos picker or document picker
-        // TODO: Implement with PHPickerViewController or .fileImporter
+        isImageSourceSearchImporterPresented = true
         #endif
     }
+
+    #if os(iOS)
+    func completeLocalImageSourceSearchImport(_ result: Result<[URL], Error>) {
+        isImageSourceSearchImporterPresented = false
+
+        do {
+            let urls = try result.get()
+            guard let url = urls.first else { return }
+            let importedURL = try Self.copyImageSourceSearchFile(from: url)
+            imageSourceSearchRequest = ImageSourceSearchRequest(localImageURL: importedURL)
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    private static func copyImageSourceSearchFile(from url: URL) throws -> URL {
+        let didStartAccessing = url.startAccessingSecurityScopedResource()
+        defer {
+            if didStartAccessing {
+                url.stopAccessingSecurityScopedResource()
+            }
+        }
+
+        let folder = URL.temporaryDirectory.appending(path: "KeiPix/ImageSourceSearch", directoryHint: .isDirectory)
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+
+        let fileExtension = url.pathExtension.isEmpty ? "image" : url.pathExtension
+        let importedURL = folder.appending(path: "\(UUID().uuidString).\(fileExtension)", directoryHint: .notDirectory)
+        if FileManager.default.fileExists(atPath: importedURL.path(percentEncoded: false)) {
+            try FileManager.default.removeItem(at: importedURL)
+        }
+        try FileManager.default.copyItem(at: url, to: importedURL)
+        return importedURL
+    }
+    #endif
 }

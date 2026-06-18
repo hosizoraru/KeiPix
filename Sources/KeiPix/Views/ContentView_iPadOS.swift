@@ -1,6 +1,7 @@
 #if os(iOS)
 import SwiftUI
 import UIKit
+import UniformTypeIdentifiers
 
 /// iPadOS-specific ContentView with a split landscape shell and compact tabs.
 ///
@@ -223,6 +224,13 @@ struct ContentView: View {
             .sheet(item: $store.imageSourceSearchRequest) { request in
                 ImageSourceSearchSheet(store: store, request: request)
                     .os26SheetChrome(.detail)
+            }
+            .fileImporter(
+                isPresented: $store.isImageSourceSearchImporterPresented,
+                allowedContentTypes: [.image],
+                allowsMultipleSelection: false
+            ) {
+                store.completeLocalImageSourceSearchImport($0)
             }
             .sheet(item: $store.presentedUserProfile) { user in
                 UserProfileSheet(user: user, store: store)
