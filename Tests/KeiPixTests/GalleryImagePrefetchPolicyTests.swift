@@ -35,7 +35,28 @@ struct GalleryImagePrefetchPolicyTests {
         #expect(urls.map(\.absoluteString) == ["https://example.com/1-large.jpg"])
     }
 
-    private func artwork(id: Int, mediumURL: URL, largeURL: URL?) -> PixivArtwork {
+    @Test("Preview prefetch avoids original assets when original quality is selected")
+    func previewURLsAvoidOriginalAssetsForOriginalTier() {
+        let artworks = [
+            artwork(
+                id: 1,
+                mediumURL: URL(string: "https://example.com/1-medium.jpg")!,
+                largeURL: URL(string: "https://example.com/1-large.jpg")!,
+                originalURL: URL(string: "https://example.com/1-original.jpg")!
+            )
+        ]
+
+        let urls = GalleryImagePrefetchPolicy.previewURLs(for: artworks, tier: .original)
+
+        #expect(urls.map(\.absoluteString) == ["https://example.com/1-large.jpg"])
+    }
+
+    private func artwork(
+        id: Int,
+        mediumURL: URL,
+        largeURL: URL?,
+        originalURL: URL? = nil
+    ) -> PixivArtwork {
         PixivArtwork(
             id: id,
             title: "Artwork \(id)",
@@ -61,7 +82,7 @@ struct GalleryImagePrefetchPolicyTests {
                     squareMedium: nil,
                     medium: mediumURL,
                     large: largeURL,
-                    original: nil
+                    original: originalURL
                 )
             ]
         )

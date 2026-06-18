@@ -20,7 +20,7 @@ enum GalleryImagePrefetchPolicy: Sendable {
 
         for artwork in artworks {
             guard urls.count < limit else { break }
-            guard let url = artwork.feedPreviewURL(tier: tier) ?? artwork.thumbnailURL else {
+            guard let url = previewPrefetchURL(for: artwork, requestedTier: tier) else {
                 continue
             }
             guard seen.insert(url).inserted else { continue }
@@ -28,5 +28,19 @@ enum GalleryImagePrefetchPolicy: Sendable {
         }
 
         return urls
+    }
+
+    private static func previewPrefetchURL(
+        for artwork: PixivArtwork,
+        requestedTier: ArtworkImageQualityTier
+    ) -> URL? {
+        guard let first = artwork.images.first else { return artwork.thumbnailURL }
+
+        switch requestedTier.backgroundPrefetchTier {
+        case .medium:
+            return first.medium ?? first.squareMedium ?? first.large ?? artwork.thumbnailURL
+        case .large, .original:
+            return first.large ?? first.medium ?? first.squareMedium ?? artwork.thumbnailURL
+        }
     }
 }

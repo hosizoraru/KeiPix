@@ -35,6 +35,32 @@ struct ArtworkImageQualityTierTests {
         #expect(artwork.imageURL(at: 0, tier: .original)?.absoluteString == "https://example.com/1_original.jpg")
     }
 
+    @Test("Original prefetch is bounded to the current and next page")
+    func originalPrefetchOnlyWarmsCurrentAndNextPage() {
+        let artwork = samplePagedArtwork(pageCount: 4)
+
+        let urls = artwork.prefetchURLs(around: 1, tier: .original)
+
+        #expect(urls.map(\.absoluteString) == [
+            "https://example.com/1_original.jpg",
+            "https://example.com/2_original.jpg"
+        ])
+    }
+
+    @Test("Large prefetch keeps the wider neighbor window")
+    func largePrefetchKeepsWiderNeighborWindow() {
+        let artwork = samplePagedArtwork(pageCount: 4)
+
+        let urls = artwork.prefetchURLs(around: 1, tier: .large)
+
+        #expect(urls.map(\.absoluteString) == [
+            "https://example.com/1_large.jpg",
+            "https://example.com/2_large.jpg",
+            "https://example.com/3_large.jpg",
+            "https://example.com/0_large.jpg"
+        ])
+    }
+
     private func sampleArtwork(includeLarge: Bool = true) throws -> PixivArtwork {
         let largeKV = includeLarge ? "\"large\": \"https://example.com/1_large.jpg\"," : ""
         let payload = """
@@ -64,5 +90,37 @@ struct ArtworkImageQualityTierTests {
         }
         """
         return try JSONDecoder().decode(PixivArtwork.self, from: Data(payload.utf8))
+    }
+
+    private func samplePagedArtwork(pageCount: Int) -> PixivArtwork {
+        PixivArtwork(
+            id: 10,
+            title: "Paged Sample",
+            type: "manga",
+            caption: "",
+            user: PixivUser(id: 9001, name: "Creator", account: "creator9001"),
+            tags: [],
+            createDate: Date(timeIntervalSince1970: 1_700_000_000),
+            pageCount: pageCount,
+            width: 1200,
+            height: 1600,
+            totalView: 0,
+            totalBookmarks: 0,
+            totalComments: 0,
+            isBookmarked: false,
+            isMuted: false,
+            isAI: false,
+            sanityLevel: 0,
+            xRestrict: 0,
+            series: nil,
+            images: (0..<pageCount).map { page in
+                PixivImageSet(
+                    squareMedium: URL(string: "https://example.com/\(page)_square.jpg")!,
+                    medium: URL(string: "https://example.com/\(page)_medium.jpg")!,
+                    large: URL(string: "https://example.com/\(page)_large.jpg")!,
+                    original: URL(string: "https://example.com/\(page)_original.jpg")!
+                )
+            }
+        )
     }
 }

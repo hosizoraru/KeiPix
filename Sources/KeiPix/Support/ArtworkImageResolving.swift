@@ -63,12 +63,19 @@ extension PixivArtwork {
 
     func prefetchURLs(around index: Int, tier: ArtworkImageQualityTier) -> [URL] {
         let pageCount = displayPageCount
-        let candidates = [index, index + 1, index + 2, index - 1]
-            .filter { (0..<pageCount).contains($0) }
-
-        return candidates.compactMap {
-            imageURL(at: $0, tier: tier)
+        let candidates: [Int]
+        switch tier {
+        case .medium, .large:
+            candidates = [index, index + 1, index + 2, index - 1]
+        case .original:
+            candidates = [index, index + 1]
         }
+
+        return candidates
+            .filter { (0..<pageCount).contains($0) }
+            .compactMap {
+                imageURL(at: $0, tier: tier)
+            }
     }
 
     func prefetchURLs(around index: Int, preferOriginal: Bool) -> [URL] {

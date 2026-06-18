@@ -2,6 +2,7 @@ import Foundation
 import Testing
 @testable import KeiPix
 
+@Suite(.serialized)
 struct ImagePipelineTests {
     @Test("Local image files are decoded through the shared pipeline")
     func localImageFilesDecodeThroughPipeline() async throws {
@@ -31,6 +32,22 @@ struct ImagePipelineTests {
 
         #expect(cached.size == image.size)
         #expect(cached.platformCGImage != nil)
+    }
+
+    @Test("Decoded memory cache can be cleared without clearing the full image cache")
+    func decodedMemoryCacheCanBeClearedSeparately() async throws {
+        let pngData = try #require(Data(base64Encoded: Self.onePixelPNGBase64))
+        let fileURL = FileManager.default.temporaryDirectory
+            .appending(path: "keipix-decoded-cache-clear-\(UUID().uuidString).png")
+        try pngData.write(to: fileURL, options: .atomic)
+        defer { try? FileManager.default.removeItem(at: fileURL) }
+
+        _ = try await ImagePipeline.shared.image(contentsOf: fileURL)
+        #expect(ImagePipeline.shared.cachedImage(for: fileURL) != nil)
+
+        _ = ImagePipeline.shared.clearDecodedMemoryCaches()
+
+        #expect(ImagePipeline.shared.cachedImage(for: fileURL) == nil)
     }
 
     private static let onePixelPNGBase64 =

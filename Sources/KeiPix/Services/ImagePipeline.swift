@@ -3,6 +3,9 @@ import Foundation
 import ImageIO
 import os
 import SwiftUI
+#if os(iOS)
+import UIKit
+#endif
 #if os(macOS)
 import AppKit
 #endif
@@ -60,11 +63,75 @@ final class ImagePipeline: @unchecked Sendable {
 
     // MARK: - Storage
 
+    private static let decodedMemoryCacheCostLimit: Int = {
+        #if os(iOS)
+        return 96 * 1024 * 1024
+        #else
+        return 256 * 1024 * 1024
+        #endif
+    }()
+
+    private static let decodedMemoryCacheCountLimit: Int = {
+        #if os(iOS)
+        return 384
+        #else
+        return 1024
+        #endif
+    }()
+
+    private static let maximumDecodedCacheInsertionCost: Int = {
+        #if os(iOS)
+        return 48 * 1024 * 1024
+        #else
+        return 192 * 1024 * 1024
+        #endif
+    }()
+
+    private static let recentDecodedImageCostLimit: Int = {
+        #if os(iOS)
+        return 48 * 1024 * 1024
+        #else
+        return 128 * 1024 * 1024
+        #endif
+    }()
+
+    private static let recentDecodedImageCountLimit: Int = {
+        #if os(iOS)
+        return 64
+        #else
+        return 128
+        #endif
+    }()
+
+    private static let maximumRecentImagePinCost: Int = {
+        #if os(iOS)
+        return 12 * 1024 * 1024
+        #else
+        return 64 * 1024 * 1024
+        #endif
+    }()
+
+    private static let urlCacheMemoryCapacity: Int = {
+        #if os(iOS)
+        return 32 * 1024 * 1024
+        #else
+        return 64 * 1024 * 1024
+        #endif
+    }()
+
+    private static let maximumPrefetchConcurrency: Int = {
+        #if os(iOS)
+        return 2
+        #else
+        return 4
+        #endif
+    }()
+
     private let session: URLSession
     private let urlCache: URLCache
     private let memoryCache = NSCache<NSURL, PlatformImage>()
-    private let recentImageCostLimit = 128 * 1024 * 1024
-    private let recentImageCountLimit = 128
+    private let recentImageCostLimit = ImagePipeline.recentDecodedImageCostLimit
+    private let recentImageCountLimit = ImagePipeline.recentDecodedImageCountLimit
     private var recentImages: [URL: PlatformImage] = [:]
     private var recentImageCosts: [URL: Int] = [:]
     private var recentImageOrder: [URL] = []
@@ -81,22 +148,33 @@ final class ImagePipeline: @unchecked Sendable {
         autoreleaseFrequency: .workItem
     )
 
+    /// Lower-priority decode lane for prefetch. Visible original loads stay on
+    /// the user-initiated queue while scroll-ahead warming yields sooner under
+    /// CPU pressure.
+    private let utilityDecodeQueue = DispatchQueue(
+        label: "com.keipix.image-decode.utility",
+        qos: .utility,
+        attributes: .concurrent,
+        autoreleaseFrequency: .workItem
+    )
+
     /// In-flight fetch map. Multiple concurrent callers asking for
     /// the same URL share a single network + decode task. Guarded by
     /// `inFlightLock` because we mutate it from arbitrary callers.
     private var inFlight: [URL: Task<PlatformImage, Error>] = [:]
     private let inFlightLock = OSAllocatedUnfairLock()
 
+    #if os(iOS)
+    private var memoryWarningObserver: NSObjectProtocol?
+    #endif
+
     private init() {
-        // 256 MB of decoded bitmaps in memory is enough to keep the
-        // current viewport plus a couple of screens of prefetch hot
-        // without bloating the resident set. We cost-bound by pixel
-        // area (4 bytes per RGBA pixel) instead of count-bound so a
-        // wall of 5 MB master1200 illustrations and a wall of 20 KB
-        // square thumbnails both behave reasonably.
-        memoryCache.totalCostLimit = 256 * 1024 * 1024
+        // Cost-bound decoded bitmaps by platform. iOS/iPadOS need a tighter
+        // ceiling because a handful of source originals can otherwise keep
+        // hundreds of MB resident while the waterfall continues loading.
+        memoryCache.totalCostLimit = Self.decodedMemoryCacheCostLimit
         // Keep `countLimit` generous; cost limit is the real ceiling.
-        memoryCache.countLimit = 1024
+        memoryCache.countLimit = Self.decodedMemoryCacheCountLimit
 
         let configuration = URLSessionConfiguration.default
         // 8 sockets per host fits Pixiv's CDN behaviour (HTTP/2
@@ -106,7 +184,7 @@ final class ImagePipeline: @unchecked Sendable {
         // Disk-backed HTTPCache lets repeat launches start with warm
         // thumbnails and skips re-downloading paginated feeds.
         let urlCache = URLCache(
-            memoryCapacity: 64 * 1024 * 1024,
+            memoryCapacity: Self.urlCacheMemoryCapacity,
             diskCapacity: 512 * 1024 * 1024,
             directory: URL.cachesDirectory.appending(path: "KeiPixImages")
         )
@@ -134,6 +212,24 @@ final class ImagePipeline: @unchecked Sendable {
         }
 
         session = URLSession(configuration: configuration)
+
+        #if os(iOS)
+        memoryWarningObserver = NotificationCenter.default.addObserver(
+            forName: UIApplication.didReceiveMemoryWarningNotification,
+            object: nil,
+            queue: nil
+        ) { [weak self] _ in
+            _ = self?.clearDecodedMemoryCaches()
+        }
+        #endif
+    }
+
+    deinit {
+        #if os(iOS)
+        if let memoryWarningObserver {
+            NotificationCenter.default.removeObserver(memoryWarningObserver)
+        }
+        #endif
     }
 
     // MARK: - Public API
@@ -241,21 +337,32 @@ final class ImagePipeline: @unchecked Sendable {
         // doesn't waste a slot on a no-op.
         let cold = urls.filter { memoryCache.object(forKey: $0 as NSURL) == nil }
         guard cold.isEmpty == false else { return }
+        let effectiveConcurrency = min(
+            max(concurrency, 1),
+            Self.maximumPrefetchConcurrency,
+            cold.count
+        )
 
         await withTaskGroup(of: Void.self) { group in
             var iterator = cold.makeIterator()
             // Seed the group up to the concurrency cap, then refill
             // one slot every time a child completes. This is the
             // structured-concurrency equivalent of a semaphore.
-            for _ in 0..<min(concurrency, cold.count) {
+            for _ in 0..<effectiveConcurrency {
                 guard let url = iterator.next() else { break }
                 group.addTask(priority: Priority.utility.taskPriority) { [weak self] in
+                    guard Task.isCancelled == false else { return }
                     _ = try? await self?.image(for: url, priority: .utility)
                 }
             }
             for await _ in group {
+                guard Task.isCancelled == false else {
+                    group.cancelAll()
+                    return
+                }
                 guard let url = iterator.next() else { continue }
                 group.addTask(priority: Priority.utility.taskPriority) { [weak self] in
+                    guard Task.isCancelled == false else { return }
                     _ = try? await self?.image(for: url, priority: .utility)
                 }
             }
@@ -272,6 +379,13 @@ final class ImagePipeline: @unchecked Sendable {
     }
 
     func clearCaches() -> ImageCacheStatus {
+        _ = clearDecodedMemoryCaches()
+        urlCache.removeAllCachedResponses()
+        return cacheStatus()
+    }
+
+    @discardableResult
+    func clearDecodedMemoryCaches() -> ImageCacheStatus {
         memoryCache.removeAllObjects()
         recentImageLock.withLock {
             recentImages.removeAll(keepingCapacity: true)
@@ -279,7 +393,6 @@ final class ImagePipeline: @unchecked Sendable {
             recentImageOrder.removeAll(keepingCapacity: true)
             recentImageTotalCost = 0
         }
-        urlCache.removeAllCachedResponses()
         return cacheStatus()
     }
 
@@ -295,6 +408,11 @@ final class ImagePipeline: @unchecked Sendable {
     }
 
     private func storeDecodedImage(_ image: PlatformImage, for url: URL, cost: Int) {
+        guard cost <= Self.maximumDecodedCacheInsertionCost else {
+            memoryCache.removeObject(forKey: url as NSURL)
+            forgetRecentImage(for: url)
+            return
+        }
         memoryCache.setObject(image, forKey: url as NSURL, cost: cost)
         rememberRecentImage(image, for: url, cost: cost)
     }
@@ -315,7 +433,7 @@ final class ImagePipeline: @unchecked Sendable {
         // Do not pin monster original images in the deterministic MRU layer.
         // They still live in NSCache and URLCache, but the strong cache is for
         // the recent scrolling window where thumbnails should feel instant.
-        guard cost <= recentImageCostLimit / 2 else { return }
+        guard cost <= min(recentImageCostLimit / 2, Self.maximumRecentImagePinCost) else { return }
 
         recentImageLock.withLock {
             if let previousCost = recentImageCosts[url] {
@@ -333,18 +451,28 @@ final class ImagePipeline: @unchecked Sendable {
         while recentImageTotalCost > recentImageCostLimit
             || recentImageOrder.count > recentImageCountLimit {
             guard let oldest = recentImageOrder.first else { return }
-            recentImageOrder.removeFirst()
-            recentImages.removeValue(forKey: oldest)
-            if let cost = recentImageCosts.removeValue(forKey: oldest) {
-                recentImageTotalCost -= cost
-            }
+            forgetRecentImageLocked(for: oldest)
+        }
+    }
+
+    private func forgetRecentImage(for url: URL) {
+        recentImageLock.withLock {
+            forgetRecentImageLocked(for: url)
+        }
+    }
+
+    private func forgetRecentImageLocked(for url: URL) {
+        recentImageOrder.removeAll { $0 == url }
+        recentImages.removeValue(forKey: url)
+        if let cost = recentImageCosts.removeValue(forKey: url) {
+            recentImageTotalCost -= cost
         }
     }
 
     private func readLocalImageData(from url: URL, qos: DispatchQoS.QoSClass) async throws -> Data {
         try Task.checkCancellation()
         return try await withCheckedThrowingContinuation { continuation in
-            decodeQueue.async(qos: DispatchQoS(qosClass: qos, relativePriority: 0)) {
+            decodeDispatchQueue(for: qos).async(qos: DispatchQoS(qosClass: qos, relativePriority: 0)) {
                 do {
                     try Task.checkCancellation()
                     let data = try Data(contentsOf: url, options: [.mappedIfSafe])
@@ -374,7 +502,7 @@ final class ImagePipeline: @unchecked Sendable {
     /// master1200 frame) — which lands as a scroll stutter.
     private func decode(data: Data, qos: DispatchQoS.QoSClass) async throws -> PlatformImage {
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<PlatformImage, Error>) in
-            decodeQueue.async(qos: DispatchQoS(qosClass: qos, relativePriority: 0)) {
+            decodeDispatchQueue(for: qos).async(qos: DispatchQoS(qosClass: qos, relativePriority: 0)) {
                 let options: [CFString: Any] = [
                     kCGImageSourceShouldCache: true,
                     kCGImageSourceShouldCacheImmediately: true
@@ -428,6 +556,15 @@ final class ImagePipeline: @unchecked Sendable {
                 #endif
                 continuation.resume(returning: image)
             }
+        }
+    }
+
+    private func decodeDispatchQueue(for qos: DispatchQoS.QoSClass) -> DispatchQueue {
+        switch qos {
+        case .background, .utility:
+            return utilityDecodeQueue
+        default:
+            return decodeQueue
         }
     }
 
