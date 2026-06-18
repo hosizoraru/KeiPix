@@ -220,6 +220,7 @@ struct ImageScrollView: NSViewRepresentable {
             guard let imageView, let scrollView else { return }
             let size = Self.displaySize(for: image)
 
+            prepareImageViewForReplacement()
             imageView.image = image
             imageView.frame = CGRect(origin: .zero, size: size)
             scrollView.documentView = imageView
@@ -228,6 +229,18 @@ struct ImageScrollView: NSViewRepresentable {
             lastReportedLogicalZoom = nil
             updateFitMagnification(preservingLogicalZoom: false)
             onImageLoaded?(image)
+        }
+
+        private func prepareImageViewForReplacement() {
+            guard let scrollView else { return }
+            scrollView.layer?.removeAllAnimations()
+            imageView?.layer?.removeAllAnimations()
+            scrollView.minMagnification = min(scrollView.minMagnification, 1)
+            scrollView.maxMagnification = max(scrollView.maxMagnification, 1)
+            scrollView.magnification = 1
+            scrollView.contentInsets = NSEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
+            scrollView.contentView.scroll(to: .zero)
+            scrollView.reflectScrolledClipView(scrollView.contentView)
         }
 
         private func updateFitMagnification(preservingLogicalZoom: Bool) {

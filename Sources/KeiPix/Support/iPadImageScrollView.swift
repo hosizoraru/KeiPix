@@ -263,6 +263,7 @@ struct ImageScrollView: UIViewRepresentable {
                 ? image.size
                 : CGSize(width: 1, height: 1)
 
+            prepareImageViewForReplacement()
             imageView.image = image
             imageView.frame = CGRect(origin: .zero, size: size)
             scrollView.contentSize = size
@@ -288,6 +289,19 @@ struct ImageScrollView: UIViewRepresentable {
             }
             scrollView.setContentOffset(.zero, animated: false)
             onZoomChanged?(ArtworkReaderInteractionState.minimumScale)
+        }
+
+        private func prepareImageViewForReplacement() {
+            guard let scrollView, let imageView else { return }
+            scrollView.layer.removeAllAnimations()
+            imageView.layer.removeAllAnimations()
+            scrollView.minimumZoomScale = min(scrollView.minimumZoomScale, 1)
+            scrollView.maximumZoomScale = max(scrollView.maximumZoomScale, 1)
+            scrollView.setZoomScale(1, animated: false)
+            scrollView.setContentOffset(.zero, animated: false)
+            scrollView.contentInset = .zero
+            scrollView.scrollIndicatorInsets = .zero
+            imageView.transform = .identity
         }
 
         private func finishImageReloadWithoutImage() {
