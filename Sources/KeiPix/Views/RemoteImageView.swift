@@ -3,6 +3,42 @@ import SwiftUI
 import AppKit
 #endif
 
+struct RemoteImageLoadKey: Hashable, Sendable {
+    let rawValue: String
+
+    init(localURL: URL?, url: URL?) {
+        rawValue = "\(localURL?.path(percentEncoded: false) ?? "")|\(url?.absoluteString ?? "")"
+    }
+}
+
+enum RemoteImageLoadPolicy {
+    static func shouldDisplay(
+        loadedImageKey: RemoteImageLoadKey?,
+        currentKey: RemoteImageLoadKey
+    ) -> Bool {
+        loadedImageKey == currentKey
+    }
+
+    static func shouldCommit(
+        requestedKey: RemoteImageLoadKey,
+        activeKey: RemoteImageLoadKey?,
+        isCancelled: Bool
+    ) -> Bool {
+        isCancelled == false && activeKey == requestedKey
+    }
+}
+
+private struct RemoteImageLoadedImage {
+    let key: RemoteImageLoadKey
+    let image: PlatformImage
+}
+
+private struct RemoteImageLoadRequest {
+    let key: RemoteImageLoadKey
+    let localURL: URL?
+    let url: URL?
+}
+
 /// Remote image view that fills whatever space the parent proposes.
 ///
 /// **Why this is small.** This view used to flip its intrinsic size as
@@ -26,10 +62,17 @@ struct RemoteImageView: View {
     var localURL: URL? = nil
     var contentMode: ContentMode = .fill
     var onImageLoaded: ((PlatformImage) -> Void)? = nil
-    @State private var image: PlatformImage?
-    @State private var failed = false
+    @State private var loadedImage: RemoteImageLoadedImage?
+    @State private var failedKey: RemoteImageLoadKey?
+    @State private var activeLoadKey: RemoteImageLoadKey?
 
     var body: some View {
+        let currentLoadKey = loadKey
+        let isDisplayingCurrentImage = RemoteImageLoadPolicy.shouldDisplay(
+            loadedImageKey: loadedImage?.key,
+            currentKey: currentLoadKey
+        )
+
         // `Rectangle().fill(.quaternary)` is the placeholder fill: a
         // Shape is a flexible View, so it always grows to whatever
         // proposal the parent makes (unlike a bare `Color` which is
@@ -40,8 +83,11 @@ struct RemoteImageView: View {
         Rectangle()
             .fill(.quaternary)
             .overlay {
-                if image == nil {
-                    if failed {
+                if isDisplayingCurrentImage == false {
+                    if RemoteImageLoadPolicy.shouldDisplay(
+                        loadedImageKey: failedKey,
+                        currentKey: currentLoadKey
+                    ) {
                         Image(systemName: "photo")
                             .foregroundStyle(.secondary)
                     } else {
@@ -51,55 +97,89 @@ struct RemoteImageView: View {
                 }
             }
             .overlay {
-                if let image {
+                if isDisplayingCurrentImage,
+                   let image = loadedImage?.image {
                     image.swiftUIImage
                         .resizable()
                         .aspectRatio(contentMode: contentMode)
                 }
             }
             .clipped()
-            .task(id: loadKey) {
-                await load()
+            .task(id: currentLoadKey) {
+                await load(
+                    RemoteImageLoadRequest(
+                        key: currentLoadKey,
+                        localURL: localURL,
+                        url: url
+                    )
+                )
             }
     }
 
-    private var loadKey: String {
-        "\(localURL?.path(percentEncoded: false) ?? "")|\(url?.absoluteString ?? "")"
+    private var loadKey: RemoteImageLoadKey {
+        RemoteImageLoadKey(localURL: localURL, url: url)
     }
 
-    private func load() async {
-        if let localURL {
+    private func load(_ request: RemoteImageLoadRequest) async {
+        activeLoadKey = request.key
+        failedKey = nil
+
+        if let localURL = request.localURL {
             do {
                 let localImage = try await ImagePipeline.shared.image(contentsOf: localURL)
-                failed = false
-                image = localImage
-                onImageLoaded?(localImage)
+                commit(localImage, for: request.key)
                 return
             } catch {
                 // Preserve the previous fallback behavior: if a downloaded
                 // file moved or has not landed yet, the remote URL can still
                 // keep the surface useful.
             }
+            guard Task.isCancelled == false else { return }
         }
 
-        guard let url else {
-            failed = true
+        guard let url = request.url else {
+            fail(for: request.key)
             return
         }
-        failed = false
-        // Don't clear `image` here. The previous version set
-        // `image = nil` before fetching, which forced every cell that
-        // was already showing a decoded image to revert to the
-        // placeholder for one layout pass — yet another invalidation
-        // the layout cache had to chase. Keep the old bitmap visible
-        // until the new one is ready (or the load fails).
+        // Do not mutate `loadedImage` at the start of a new request. The
+        // rendered bitmap is keyed below, so a reused gallery cell stops
+        // showing the old artwork immediately while an unchanged URL keeps
+        // its decoded image through refreshes.
         do {
             let loadedImage = try await ImagePipeline.shared.image(for: url)
-            image = loadedImage
-            onImageLoaded?(loadedImage)
+            commit(loadedImage, for: request.key)
         } catch {
-            failed = true
-            image = nil
+            fail(for: request.key)
+        }
+    }
+
+    private func commit(_ image: PlatformImage, for key: RemoteImageLoadKey) {
+        guard RemoteImageLoadPolicy.shouldCommit(
+            requestedKey: key,
+            activeKey: activeLoadKey,
+            isCancelled: Task.isCancelled
+        ) else {
+            return
+        }
+        failedKey = nil
+        loadedImage = RemoteImageLoadedImage(key: key, image: image)
+        onImageLoaded?(image)
+    }
+
+    private func fail(for key: RemoteImageLoadKey) {
+        guard RemoteImageLoadPolicy.shouldCommit(
+            requestedKey: key,
+            activeKey: activeLoadKey,
+            isCancelled: Task.isCancelled
+        ) else {
+            return
+        }
+        failedKey = key
+        if RemoteImageLoadPolicy.shouldDisplay(
+            loadedImageKey: loadedImage?.key,
+            currentKey: key
+        ) {
+            loadedImage = nil
         }
     }
 }
