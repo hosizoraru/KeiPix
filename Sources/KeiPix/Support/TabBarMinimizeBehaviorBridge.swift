@@ -6,6 +6,7 @@ struct TabBarMinimizeBehaviorBridge: UIViewControllerRepresentable {
     let behavior: UITabBarController.MinimizeBehavior
     let isTabBarHidden: Bool
     let usesTransparentBackground: Bool
+    let chromeMaterialMode: ChromeMaterialMode
     let scrollsToTopOnCurrentTabReselection: Bool
     let syncID: String
     let tabBarGeometry: Binding<TabBarGeometrySnapshot?>? = nil
@@ -15,6 +16,7 @@ struct TabBarMinimizeBehaviorBridge: UIViewControllerRepresentable {
             behavior: behavior,
             isTabBarHidden: isTabBarHidden,
             usesTransparentBackground: usesTransparentBackground,
+            chromeMaterialMode: chromeMaterialMode,
             scrollsToTopOnCurrentTabReselection: scrollsToTopOnCurrentTabReselection,
             syncID: syncID,
             onGeometryChange: { geometry in
@@ -36,6 +38,9 @@ struct TabBarMinimizeBehaviorBridge: UIViewControllerRepresentable {
         if controller.usesTransparentBackground != usesTransparentBackground {
             controller.usesTransparentBackground = usesTransparentBackground
         }
+        if controller.chromeMaterialMode != chromeMaterialMode {
+            controller.chromeMaterialMode = chromeMaterialMode
+        }
         if controller.scrollsToTopOnCurrentTabReselection != scrollsToTopOnCurrentTabReselection {
             controller.scrollsToTopOnCurrentTabReselection = scrollsToTopOnCurrentTabReselection
         }
@@ -56,6 +61,7 @@ struct TabBarMinimizeBehaviorBridge: UIViewControllerRepresentable {
         private var lastAppliedBehavior: UITabBarController.MinimizeBehavior?
         private var lastAppliedTabBarHidden: Bool?
         private var lastAppliedTransparentBackground: Bool?
+        private var lastAppliedChromeMaterialMode: ChromeMaterialMode?
         private var lastPublishedGeometry: TabBarGeometrySnapshot?
         var onGeometryChange: (TabBarGeometrySnapshot?) -> Void
 
@@ -72,6 +78,12 @@ struct TabBarMinimizeBehaviorBridge: UIViewControllerRepresentable {
         }
 
         var usesTransparentBackground: Bool {
+            didSet {
+                applyBehavior()
+            }
+        }
+
+        var chromeMaterialMode: ChromeMaterialMode {
             didSet {
                 applyBehavior()
             }
@@ -94,6 +106,7 @@ struct TabBarMinimizeBehaviorBridge: UIViewControllerRepresentable {
             behavior: UITabBarController.MinimizeBehavior,
             isTabBarHidden: Bool,
             usesTransparentBackground: Bool,
+            chromeMaterialMode: ChromeMaterialMode,
             scrollsToTopOnCurrentTabReselection: Bool,
             syncID: String,
             onGeometryChange: @escaping (TabBarGeometrySnapshot?) -> Void
@@ -101,6 +114,7 @@ struct TabBarMinimizeBehaviorBridge: UIViewControllerRepresentable {
             self.behavior = behavior
             self.isTabBarHidden = isTabBarHidden
             self.usesTransparentBackground = usesTransparentBackground
+            self.chromeMaterialMode = chromeMaterialMode
             self.scrollsToTopOnCurrentTabReselection = scrollsToTopOnCurrentTabReselection
             self.syncID = syncID
             self.onGeometryChange = onGeometryChange
@@ -151,6 +165,7 @@ struct TabBarMinimizeBehaviorBridge: UIViewControllerRepresentable {
                 lastAppliedBehavior = nil
                 lastAppliedTabBarHidden = nil
                 lastAppliedTransparentBackground = nil
+                lastAppliedChromeMaterialMode = nil
             }
             applyAppearance(to: tabBarController.tabBar)
             syncSelectedTabContentScrollView()
@@ -284,22 +299,43 @@ struct TabBarMinimizeBehaviorBridge: UIViewControllerRepresentable {
         }
 
         private func applyAppearance(to tabBar: UITabBar) {
-            guard lastAppliedTransparentBackground != usesTransparentBackground else { return }
+            guard lastAppliedTransparentBackground != usesTransparentBackground ||
+                  lastAppliedChromeMaterialMode != chromeMaterialMode else { return }
 
             let appearance = UITabBarAppearance()
-            if usesTransparentBackground {
+            if chromeMaterialMode == .plain {
                 appearance.configureWithTransparentBackground()
+                appearance.backgroundEffect = nil
                 appearance.backgroundColor = .clear
+                appearance.shadowColor = .clear
+                appearance.shadowImage = nil
+                tabBar.isTranslucent = true
+                tabBar.backgroundColor = .clear
+            } else if usesTransparentBackground {
+                appearance.configureWithTransparentBackground()
+                switch chromeMaterialMode {
+                case .liquidGlass:
+                    appearance.backgroundEffect = nil
+                    appearance.backgroundColor = .clear
+                case .translucentBlur:
+                    appearance.backgroundEffect = UIBlurEffect(style: .systemChromeMaterial)
+                    appearance.backgroundColor = UIColor.systemBackground.withAlphaComponent(0.18)
+                case .plain:
+                    break
+                }
                 appearance.shadowColor = .clear
                 appearance.shadowImage = nil
                 tabBar.isTranslucent = true
                 tabBar.backgroundColor = .clear
             } else {
                 appearance.configureWithDefaultBackground()
+                tabBar.isTranslucent = true
+                tabBar.backgroundColor = nil
             }
             tabBar.standardAppearance = appearance
-            tabBar.scrollEdgeAppearance = usesTransparentBackground ? appearance : nil
+            tabBar.scrollEdgeAppearance = (usesTransparentBackground || chromeMaterialMode == .plain) ? appearance : nil
             lastAppliedTransparentBackground = usesTransparentBackground
+            lastAppliedChromeMaterialMode = chromeMaterialMode
         }
 
         private func resolvedTabBarController() -> UITabBarController? {

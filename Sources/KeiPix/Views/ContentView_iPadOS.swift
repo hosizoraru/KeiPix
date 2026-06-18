@@ -440,6 +440,7 @@ struct ContentView: View {
                 behavior: compactUITabBarMinimizeBehavior,
                 isTabBarHidden: false,
                 usesTransparentBackground: layout.usesCompactTabs,
+                chromeMaterialMode: store.chromeMaterialMode,
                 scrollsToTopOnCurrentTabReselection: true,
                 syncID: compactTabBarSyncID(layout: layout)
             )
@@ -528,6 +529,7 @@ struct ContentView: View {
         case .settings:
             NavigationStack {
                 SettingsView(store: store)
+                    .mobileToolbarChromeMaterial(syncID: "settings|landscape")
             }
         }
     }
@@ -544,6 +546,7 @@ struct ContentView: View {
                 .toolbar {
                     feedToolbar(showsSidebarToggle: showsSidebarToggle)
                 }
+                .mobileToolbarChromeMaterial(syncID: "feed|\(showsSidebarToggle)|\(store.selectedRoute.rawValue)")
                 .modifier(MobileGlobalSearchModifier(
                     store: store,
                     searchText: globalSearchTextBinding,
@@ -2949,6 +2952,7 @@ struct ContentView: View {
     private var libraryTab: some View {
         NavigationStack {
             DownloadQueueView(store: store)
+                .mobileToolbarChromeMaterial(syncID: "library")
         }
     }
 
@@ -2957,6 +2961,7 @@ struct ContentView: View {
     private var settingsTab: some View {
         NavigationStack {
             SettingsView(store: store)
+                .mobileToolbarChromeMaterial(syncID: "settings")
         }
     }
 
