@@ -109,7 +109,7 @@ enum L10n {
     static var openPixivID: String { text("Open Pixiv ID") }
     static var openPixivIDTarget: String { text("Pixiv ID Type") }
     static var openPixivIDHint: String { text("Open an artwork or creator directly by numeric Pixiv ID.") }
-    static var pixivIDQuickOpenHint: String { text("Search also accepts illust:123 and user:123.") }
+    static var pixivIDQuickOpenHint: String { text("Search also accepts pid:123, uid:123, illust:123, and user:123.") }
     static var pixivIDResultFormat: String { text("Pixiv ID #%d") }
     static var pixivisionDisplay: String { text("Pixivision Display") }
     static var artworkIDPlaceholder: String { text("Enter artwork ID") }

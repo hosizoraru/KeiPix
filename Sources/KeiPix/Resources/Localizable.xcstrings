@@ -35439,31 +35439,31 @@
         }
       }
     },
-    "Search also accepts illust:123 and user:123.": {
+    "Search also accepts pid:123, uid:123, illust:123, and user:123.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Search also accepts illust:123 and user:123."
+            "value": "Search also accepts pid:123, uid:123, illust:123, and user:123."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "検索は illust:123 や user:123 も受け付けます"
+            "value": "検索は pid:123、uid:123、illust:123、user:123 も受け付けます。"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "搜索框也支持 illust:123 和 user:123。"
+            "value": "搜索框也支持 pid:123、uid:123、illust:123 和 user:123。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "搜尋框也支持 illust:123 和 user:123。"
+            "value": "搜尋框也支援 pid:123、uid:123、illust:123 和 user:123。"
           }
         }
       }
