@@ -55,6 +55,39 @@ struct RemoteImageViewTests {
         #expect(RemoteImageLoadPolicy.shouldCommit(requestedKey: currentKey, activeKey: nil, isCancelled: false) == false)
     }
 
+    @Test("Remote image views can paint a cached current source before async load commits")
+    func cachedCurrentSourceCanStandInForReusedCellState() throws {
+        let oldKey = RemoteImageLoadKey(
+            localURL: nil,
+            url: try testURL("https://example.com/old.jpg")
+        )
+        let currentKey = RemoteImageLoadKey(
+            localURL: nil,
+            url: try testURL("https://example.com/current.jpg")
+        )
+
+        #expect(RemoteImageLoadPolicy.shouldUseCachedImage(
+            loadedImageKey: nil,
+            currentKey: currentKey,
+            cachedImageAvailable: true
+        ))
+        #expect(RemoteImageLoadPolicy.shouldUseCachedImage(
+            loadedImageKey: oldKey,
+            currentKey: currentKey,
+            cachedImageAvailable: true
+        ))
+        #expect(RemoteImageLoadPolicy.shouldUseCachedImage(
+            loadedImageKey: currentKey,
+            currentKey: currentKey,
+            cachedImageAvailable: true
+        ) == false)
+        #expect(RemoteImageLoadPolicy.shouldUseCachedImage(
+            loadedImageKey: nil,
+            currentKey: currentKey,
+            cachedImageAvailable: false
+        ) == false)
+    }
+
     private func testURL(_ rawValue: String) throws -> URL {
         try #require(URL(string: rawValue))
     }

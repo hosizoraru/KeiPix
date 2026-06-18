@@ -19,6 +19,17 @@ enum RemoteImageLoadPolicy {
         loadedImageKey == currentKey
     }
 
+    static func shouldUseCachedImage(
+        loadedImageKey: RemoteImageLoadKey?,
+        currentKey: RemoteImageLoadKey,
+        cachedImageAvailable: Bool
+    ) -> Bool {
+        cachedImageAvailable && shouldDisplay(
+            loadedImageKey: loadedImageKey,
+            currentKey: currentKey
+        ) == false
+    }
+
     static func shouldCommit(
         requestedKey: RemoteImageLoadKey,
         activeKey: RemoteImageLoadKey?,
@@ -68,10 +79,8 @@ struct RemoteImageView: View {
 
     var body: some View {
         let currentLoadKey = loadKey
-        let isDisplayingCurrentImage = RemoteImageLoadPolicy.shouldDisplay(
-            loadedImageKey: loadedImage?.key,
-            currentKey: currentLoadKey
-        )
+        let displayImage = displayImage(for: currentLoadKey)
+        let isDisplayingCurrentImage = displayImage != nil
 
         // `Rectangle().fill(.quaternary)` is the placeholder fill: a
         // Shape is a flexible View, so it always grows to whatever
@@ -98,7 +107,7 @@ struct RemoteImageView: View {
             }
             .overlay {
                 if isDisplayingCurrentImage,
-                   let image = loadedImage?.image {
+                   let image = displayImage {
                     image.swiftUIImage
                         .resizable()
                         .aspectRatio(contentMode: contentMode)
@@ -118,6 +127,31 @@ struct RemoteImageView: View {
 
     private var loadKey: RemoteImageLoadKey {
         RemoteImageLoadKey(localURL: localURL, url: url)
+    }
+
+    private func displayImage(for key: RemoteImageLoadKey) -> PlatformImage? {
+        if RemoteImageLoadPolicy.shouldDisplay(
+            loadedImageKey: loadedImage?.key,
+            currentKey: key
+        ) {
+            return loadedImage?.image
+        }
+        let cachedImage = cachedImageForCurrentSource()
+        guard RemoteImageLoadPolicy.shouldUseCachedImage(
+            loadedImageKey: loadedImage?.key,
+            currentKey: key,
+            cachedImageAvailable: cachedImage != nil
+        ) else {
+            return nil
+        }
+        return cachedImage
+    }
+
+    private func cachedImageForCurrentSource() -> PlatformImage? {
+        if let localImage = ImagePipeline.shared.cachedImage(for: localURL) {
+            return localImage
+        }
+        return ImagePipeline.shared.cachedImage(for: url)
     }
 
     private func load(_ request: RemoteImageLoadRequest) async {

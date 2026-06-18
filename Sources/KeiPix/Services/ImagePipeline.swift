@@ -63,6 +63,13 @@ final class ImagePipeline: @unchecked Sendable {
     private let session: URLSession
     private let urlCache: URLCache
     private let memoryCache = NSCache<NSURL, PlatformImage>()
+    private let recentImageCostLimit = 128 * 1024 * 1024
+    private let recentImageCountLimit = 128
+    private var recentImages: [URL: PlatformImage] = [:]
+    private var recentImageCosts: [URL: Int] = [:]
+    private var recentImageOrder: [URL] = []
+    private var recentImageTotalCost = 0
+    private let recentImageLock = OSAllocatedUnfairLock()
 
     /// Decode queue separate from the URLSession delegate queue so
     /// CPU-heavy bitmap decoding doesn't starve the network's
@@ -159,6 +166,30 @@ final class ImagePipeline: @unchecked Sendable {
         return try await task.value
     }
 
+    /// Synchronous decoded-bitmap cache lookup for reused scroll cells.
+    ///
+    /// `RemoteImageView` state disappears when native collection cells
+    /// leave the reuse window, but the decoded bitmap can still be hot in
+    /// `NSCache`. Let the next cell paint that cached image on its first
+    /// body pass instead of showing a spinner while an async task discovers
+    /// the same cache hit.
+    func cachedImage(for url: URL?) -> PlatformImage? {
+        guard let url else { return nil }
+        if let image = memoryCache.object(forKey: url as NSURL) {
+            promoteRecentImage(for: url)
+            return image
+        }
+
+        return recentImageLock.withLock {
+            guard let image = recentImages[url] else { return nil }
+            promoteRecentImageLocked(for: url)
+            if let cost = recentImageCosts[url] {
+                memoryCache.setObject(image, forKey: url as NSURL, cost: cost)
+            }
+            return image
+        }
+    }
+
     /// Raw bytes for the URL. Used by the download queue and the
     /// reverse-image-search sheet — both consumers want the file
     /// payload, not a decoded bitmap.
@@ -191,7 +222,7 @@ final class ImagePipeline: @unchecked Sendable {
                 let data = try await self.readLocalImageData(from: localURL, qos: priority.dispatchQoS)
                 let image = try await self.decode(data: data, qos: priority.dispatchQoS)
                 let cost = self.approximateCost(of: image, fallback: data.count)
-                self.memoryCache.setObject(image, forKey: key, cost: cost)
+                self.storeDecodedImage(image, for: localURL, cost: cost)
                 return image
             }
             inFlight[localURL] = new
@@ -242,6 +273,12 @@ final class ImagePipeline: @unchecked Sendable {
 
     func clearCaches() -> ImageCacheStatus {
         memoryCache.removeAllObjects()
+        recentImageLock.withLock {
+            recentImages.removeAll(keepingCapacity: true)
+            recentImageCosts.removeAll(keepingCapacity: true)
+            recentImageOrder.removeAll(keepingCapacity: true)
+            recentImageTotalCost = 0
+        }
         urlCache.removeAllCachedResponses()
         return cacheStatus()
     }
@@ -253,8 +290,55 @@ final class ImagePipeline: @unchecked Sendable {
         try validate(response: response)
         let image = try await decode(data: data, qos: priority.dispatchQoS)
         let cost = approximateCost(of: image, fallback: data.count)
-        memoryCache.setObject(image, forKey: url as NSURL, cost: cost)
+        storeDecodedImage(image, for: url, cost: cost)
         return image
+    }
+
+    private func storeDecodedImage(_ image: PlatformImage, for url: URL, cost: Int) {
+        memoryCache.setObject(image, forKey: url as NSURL, cost: cost)
+        rememberRecentImage(image, for: url, cost: cost)
+    }
+
+    private func promoteRecentImage(for url: URL) {
+        recentImageLock.withLock {
+            promoteRecentImageLocked(for: url)
+        }
+    }
+
+    private func promoteRecentImageLocked(for url: URL) {
+        guard recentImages[url] != nil else { return }
+        recentImageOrder.removeAll { $0 == url }
+        recentImageOrder.append(url)
+    }
+
+    private func rememberRecentImage(_ image: PlatformImage, for url: URL, cost: Int) {
+        // Do not pin monster original images in the deterministic MRU layer.
+        // They still live in NSCache and URLCache, but the strong cache is for
+        // the recent scrolling window where thumbnails should feel instant.
+        guard cost <= recentImageCostLimit / 2 else { return }
+
+        recentImageLock.withLock {
+            if let previousCost = recentImageCosts[url] {
+                recentImageTotalCost -= previousCost
+            }
+            recentImages[url] = image
+            recentImageCosts[url] = cost
+            recentImageTotalCost += cost
+            promoteRecentImageLocked(for: url)
+            trimRecentImagesLocked()
+        }
+    }
+
+    private func trimRecentImagesLocked() {
+        while recentImageTotalCost > recentImageCostLimit
+            || recentImageOrder.count > recentImageCountLimit {
+            guard let oldest = recentImageOrder.first else { return }
+            recentImageOrder.removeFirst()
+            recentImages.removeValue(forKey: oldest)
+            if let cost = recentImageCosts.removeValue(forKey: oldest) {
+                recentImageTotalCost -= cost
+            }
+        }
     }
 
     private func readLocalImageData(from url: URL, qos: DispatchQoS.QoSClass) async throws -> Data {
