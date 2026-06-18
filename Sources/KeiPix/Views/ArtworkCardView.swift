@@ -3,6 +3,34 @@ import SwiftUI
 import UIKit
 #endif
 
+struct ArtworkCardOverlayContrast: Equatable, Sendable {
+    var titleOpacity: Double = 0.98
+    var secondaryOpacity: Double = 0.86
+    var metricsOpacity: Double = 0.82
+    var scrimUpperOpacity: Double = 0.18
+    var scrimMiddleOpacity: Double = 0.58
+    var scrimBottomOpacity: Double = 0.86
+    var textShadowOpacity: Double = 0.44
+    var textShadowRadius: CGFloat = 4
+    var textShadowY: CGFloat = 1.5
+
+    static let `default` = ArtworkCardOverlayContrast()
+
+    var titleColor: Color { .white.opacity(titleOpacity) }
+    var secondaryColor: Color { .white.opacity(secondaryOpacity) }
+    var metricsColor: Color { .white.opacity(metricsOpacity) }
+    var textShadowColor: Color { .black.opacity(textShadowOpacity) }
+
+    var scrimColors: [Color] {
+        [
+            .clear,
+            .black.opacity(scrimUpperOpacity),
+            .black.opacity(scrimMiddleOpacity),
+            .black.opacity(scrimBottomOpacity)
+        ]
+    }
+}
+
 struct ArtworkCoverCardChrome<Overlay: View, BottomContent: View>: View {
     let imageURL: URL?
     let contentBadges: [ArtworkContentBadge]
@@ -10,6 +38,7 @@ struct ArtworkCoverCardChrome<Overlay: View, BottomContent: View>: View {
     var maskSensitivePreview = false
     var gradientFraction: CGFloat = ArtworkCardDisplayStyle.regular.overlayFraction
     var imageHeight: CGFloat?
+    var overlayContrast: ArtworkCardOverlayContrast = .default
     @ViewBuilder var overlay: () -> Overlay
     @ViewBuilder var bottomContent: () -> BottomContent
 
@@ -22,7 +51,7 @@ struct ArtworkCoverCardChrome<Overlay: View, BottomContent: View>: View {
                 .frame(maxWidth: .infinity)
                 .overlay(alignment: .bottom) {
                     LinearGradient(
-                        colors: [.clear, .black.opacity(0.68)],
+                        colors: overlayContrast.scrimColors,
                         startPoint: .center,
                         endPoint: .bottom
                     )
@@ -39,6 +68,13 @@ struct ArtworkCoverCardChrome<Overlay: View, BottomContent: View>: View {
 
             bottomContent()
                 .padding(10)
+                .foregroundStyle(overlayContrast.titleColor)
+                .shadow(
+                    color: overlayContrast.textShadowColor,
+                    radius: overlayContrast.textShadowRadius,
+                    x: 0,
+                    y: overlayContrast.textShadowY
+                )
         }
         .frame(maxWidth: .infinity, maxHeight: imageHeight == nil ? .infinity : nil)
     }
@@ -161,7 +197,8 @@ struct ArtworkCardView: View {
             showContentBadges: showContentBadges,
             maskSensitivePreview: shouldMaskSensitivePreview,
             gradientFraction: resolvedDisplayStyle.overlayFraction,
-            imageHeight: height
+            imageHeight: height,
+            overlayContrast: overlayContrast
         ) {
             if downloadState != .none {
                 ArtworkDownloadStateBadge(state: downloadState)
@@ -173,6 +210,7 @@ struct ArtworkCardView: View {
                 HStack(alignment: .firstTextBaseline, spacing: 6) {
                     Text(artwork.title)
                         .font(isCompact ? .caption.weight(.semibold) : .subheadline.weight(.semibold))
+                        .foregroundStyle(overlayContrast.titleColor)
                         .lineLimit(resolvedDisplayStyle.titleLineLimit)
                         .minimumScaleFactor(0.82)
                         .fixedSize(horizontal: false, vertical: true)
@@ -184,7 +222,7 @@ struct ArtworkCardView: View {
 
                 Text(artwork.user.name)
                     .font(.caption2)
-                    .foregroundStyle(.white.opacity(0.78))
+                    .foregroundStyle(overlayContrast.secondaryColor)
                     .lineLimit(1)
                     .minimumScaleFactor(0.82)
 
@@ -199,7 +237,7 @@ struct ArtworkCardView: View {
                         .lineLimit(1)
                 }
                 .font(.caption2)
-                .foregroundStyle(.white.opacity(0.74))
+                .foregroundStyle(overlayContrast.metricsColor)
                 .labelStyle(.titleAndIcon)
                 .minimumScaleFactor(0.76)
             }
@@ -229,6 +267,10 @@ struct ArtworkCardView: View {
 
     private var resolvedDisplayStyle: ArtworkCardDisplayStyle {
         isCompact ? .compact : displayStyle
+    }
+
+    private var overlayContrast: ArtworkCardOverlayContrast {
+        .default
     }
 
     private var hasStatusBadges: Bool {
