@@ -295,6 +295,42 @@ final class ImagePipeline: @unchecked Sendable {
         return data
     }
 
+    /// Downloads a remote resource to a file without materializing the payload
+    /// as `Data`, keeping original-size saves and ZIP artifacts out of heap
+    /// memory. The URLSession temporary file is first moved to a staging file
+    /// beside the destination, then promoted into place so partially-completed
+    /// downloads do not appear as finished files.
+    @discardableResult
+    func downloadFile(for url: URL, to destinationURL: URL) async throws -> Int {
+        let (temporaryURL, response) = try await session.download(for: authenticatedRequest(for: url))
+        try validate(response: response)
+
+        let destinationFolder = destinationURL.deletingLastPathComponent()
+        try FileManager.default.createDirectory(at: destinationFolder, withIntermediateDirectories: true)
+
+        let stagingURL = destinationFolder.appending(
+            path: ".\(destinationURL.lastPathComponent).\(UUID().uuidString).download",
+            directoryHint: .notDirectory
+        )
+        defer {
+            try? FileManager.default.removeItem(at: temporaryURL)
+            try? FileManager.default.removeItem(at: stagingURL)
+        }
+
+        if FileManager.default.fileExists(atPath: stagingURL.path(percentEncoded: false)) {
+            try FileManager.default.removeItem(at: stagingURL)
+        }
+        try FileManager.default.moveItem(at: temporaryURL, to: stagingURL)
+
+        if FileManager.default.fileExists(atPath: destinationURL.path(percentEncoded: false)) {
+            try FileManager.default.removeItem(at: destinationURL)
+        }
+        try FileManager.default.moveItem(at: stagingURL, to: destinationURL)
+
+        let values = try? destinationURL.resourceValues(forKeys: [.fileSizeKey, .totalFileAllocatedSizeKey])
+        return values?.fileSize ?? values?.totalFileAllocatedSize ?? 0
+    }
+
     /// Loads and force-decodes a local image file off the main thread.
     ///
     /// Reader and downloaded-artwork surfaces frequently hand us file URLs.

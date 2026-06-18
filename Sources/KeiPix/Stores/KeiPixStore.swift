@@ -454,6 +454,7 @@ final class KeiPixStore {
     /// cells can refresh when profile sheets or card shelves fill the
     /// same author's recent-work cache.
     var creatorPreviewArtworkCacheGeneration = 0
+    static let creatorPreviewArtworkCacheLimit = 64
     private var activeFeedRequestID: UUID?
     private var activeSearchPopularPreviewRequestID: UUID?
     @ObservationIgnored private var hydratingCreatorTagArtworkIDs: Set<Int> = []
@@ -461,6 +462,7 @@ final class KeiPixStore {
     @ObservationIgnored private var failedCreatorTagArtworkIDs: Set<Int> = []
     @ObservationIgnored var isApplyingSearchOptionsProfile = false
     @ObservationIgnored var creatorPreviewArtworkCache: [Int: [PixivArtwork]] = [:]
+    @ObservationIgnored var creatorPreviewArtworkCacheOrder: [Int] = []
     @ObservationIgnored var creatorPreviewArtworkRequests: [Int: Task<[PixivArtwork], Error>] = [:]
     var mutedTags = Set(UserDefaults.standard.stringArray(forKey: "mutedTags") ?? [])
     var mutedUsers = KeiPixStore.loadIntStringDictionary("mutedUsers")

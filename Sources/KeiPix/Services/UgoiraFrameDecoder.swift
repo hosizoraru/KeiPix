@@ -10,20 +10,31 @@ enum UgoiraFrameDecoder {
         try decode(zipData: zipData, frames: metadata.frames)
     }
 
-    static func decode(zipData: Data, frames metadataFrames: [PixivUgoiraFrame]) throws -> UgoiraAnimation {
-        let imageDataByName = try UgoiraZipArchive.extractFiles(from: zipData)
+    static func decode(zipFileURL: URL, metadata: PixivUgoiraMetadata) throws -> UgoiraAnimation {
+        try decode(zipFileURL: zipFileURL, frames: metadata.frames)
+    }
 
-        let frames = metadataFrames.compactMap { frame -> UgoiraAnimationFrame? in
-            guard let data = imageDataByName[frame.file],
-                  let image = PlatformImage(data: data) else {
-                return nil
+    static func decode(zipFileURL: URL, frames metadataFrames: [PixivUgoiraFrame]) throws -> UgoiraAnimation {
+        let zipData = try Data(contentsOf: zipFileURL, options: [.mappedIfSafe])
+        return try decode(zipData: zipData, frames: metadataFrames)
+    }
+
+    static func decode(zipData: Data, frames metadataFrames: [PixivUgoiraFrame]) throws -> UgoiraAnimation {
+        let archive = try UgoiraZipArchive(data: zipData)
+
+        let frames = try metadataFrames.compactMap { frame -> UgoiraAnimationFrame? in
+            try autoreleasepool {
+                guard let data = try archive.frameData(named: frame.file),
+                      let image = PlatformImage(data: data) else {
+                    return nil
+                }
+                let delayMilliseconds = max(frame.delay, 1)
+                return UgoiraAnimationFrame(
+                    image: image,
+                    delay: .milliseconds(delayMilliseconds),
+                    delayMilliseconds: delayMilliseconds
+                )
             }
-            let delayMilliseconds = max(frame.delay, 1)
-            return UgoiraAnimationFrame(
-                image: image,
-                delay: .milliseconds(delayMilliseconds),
-                delayMilliseconds: delayMilliseconds
-            )
         }
 
         guard frames.isEmpty == false else {
@@ -33,14 +44,35 @@ enum UgoiraFrameDecoder {
     }
 }
 
-private enum UgoiraZipArchive {
+private struct UgoiraZipArchive {
     private static let localFileHeaderSignature: UInt32 = 0x0403_4B50
     private static let centralFileHeaderSignature: UInt32 = 0x0201_4B50
     private static let endOfCentralDirectorySignature: UInt32 = 0x0605_4B50
+    private static let maximumFramePayloadBytes = 64 * 1024 * 1024
 
-    static func extractFiles(from data: Data) throws -> [String: Data] {
+    private struct Entry {
+        let localHeaderOffset: Int
+        let compressionMethod: UInt16
+        let compressedSize: Int
+        let uncompressedSize: Int
+    }
+
+    private let data: Data
+    private let entriesByName: [String: Entry]
+
+    init(data: Data) throws {
+        self.data = data
+        entriesByName = try Self.entries(in: data)
+    }
+
+    func frameData(named fileName: String) throws -> Data? {
+        guard let entry = entriesByName[fileName] else { return nil }
+        return try Self.extractFile(from: data, entry: entry)
+    }
+
+    private static func entries(in data: Data) throws -> [String: Entry] {
         let centralDirectory = try centralDirectoryRange(in: data)
-        var files: [String: Data] = [:]
+        var entries: [String: Entry] = [:]
         var offset = centralDirectory.lowerBound
 
         while offset < centralDirectory.upperBound {
@@ -73,8 +105,11 @@ private enum UgoiraZipArchive {
                 continue
             }
 
-            files[fileName] = try extractFile(
-                from: data,
+            guard uncompressedSize <= maximumFramePayloadBytes else {
+                throw PixivAPIError.invalidResponse
+            }
+
+            entries[fileName] = Entry(
                 localHeaderOffset: localHeaderOffset,
                 compressionMethod: compressionMethod,
                 compressedSize: compressedSize,
@@ -82,7 +117,7 @@ private enum UgoiraZipArchive {
             )
         }
 
-        return files
+        return entries
     }
 
     private static func centralDirectoryRange(in data: Data) throws -> Range<Int> {
@@ -108,11 +143,9 @@ private enum UgoiraZipArchive {
 
     private static func extractFile(
         from data: Data,
-        localHeaderOffset: Int,
-        compressionMethod: UInt16,
-        compressedSize: Int,
-        uncompressedSize: Int
+        entry: Entry
     ) throws -> Data {
+        let localHeaderOffset = entry.localHeaderOffset
         guard try data.littleEndianUInt32(at: localHeaderOffset) == localFileHeaderSignature else {
             throw PixivAPIError.invalidResponse
         }
@@ -120,13 +153,13 @@ private enum UgoiraZipArchive {
         let fileNameLength = Int(try data.littleEndianUInt16(at: localHeaderOffset + 26))
         let extraFieldLength = Int(try data.littleEndianUInt16(at: localHeaderOffset + 28))
         let dataStart = localHeaderOffset + 30 + fileNameLength + extraFieldLength
-        let compressedData = try data.checkedSubdata(in: dataStart..<(dataStart + compressedSize))
+        let compressedData = try data.checkedSubdata(in: dataStart..<(dataStart + entry.compressedSize))
 
-        switch compressionMethod {
+        switch entry.compressionMethod {
         case 0:
             return compressedData
         case 8:
-            return try inflateRawDeflate(compressedData, uncompressedSize: uncompressedSize)
+            return try inflateRawDeflate(compressedData, uncompressedSize: entry.uncompressedSize)
         default:
             throw PixivAPIError.invalidResponse
         }

@@ -1047,10 +1047,6 @@ actor PixivAPI {
         return response.metadata
     }
 
-    func ugoiraZipData(url: URL) async throws -> Data {
-        try await requestData(url, includeAuth: false, includePixivImageReferer: true)
-    }
-
     func illustComments(illustID: Int) async throws -> PixivCommentResponse {
         var components = URLComponents(url: URL(string: "/v3/illust/comments", relativeTo: Endpoint.apiBase)!, resolvingAgainstBaseURL: true)!
         components.queryItems = [URLQueryItem(name: "illust_id", value: "\(illustID)")]

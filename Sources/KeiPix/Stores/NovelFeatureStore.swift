@@ -62,7 +62,9 @@ final class NovelFeatureStore {
 
     /// Cached novel header keyed by id so reopening a recently visited
     /// novel renders instantly while a fresh detail call is in flight.
+    static let novelDetailCacheLimit = 96
     private var novelDetailCache: [Int: PixivNovel] = [:]
+    private var novelDetailCacheOrder: [Int] = []
     private(set) var loadedNovelText: PixivNovelText?
     private(set) var loadedNovelTextID: Int?
     private(set) var isLoadingNovelText = false
@@ -139,7 +141,7 @@ final class NovelFeatureStore {
         allNovels = [novel]
         nextURL = nil
         selectedNovel = novel
-        novelDetailCache[novel.id] = novel
+        cacheNovelDetail(novel)
         loadedNovelTextID = novel.id
         loadedNovelText = text
         loadedNovelTokens = NovelTextTokenizer.tokenize(text.novelText)
@@ -161,10 +163,10 @@ final class NovelFeatureStore {
         self.nextURL = nextURL
         if let selectedID, let selected = novels.first(where: { $0.id == selectedID }) {
             selectedNovel = selected
-            novelDetailCache[selected.id] = selected
+            cacheNovelDetail(selected)
         } else if let first = novels.first {
             selectedNovel = first
-            novelDetailCache[first.id] = first
+            cacheNovelDetail(first)
         } else {
             selectedNovel = nil
         }
@@ -173,7 +175,7 @@ final class NovelFeatureStore {
 
     func presentTransientNovelDetail(_ novel: PixivNovel) {
         selectedNovel = novel
-        novelDetailCache[novel.id] = novel
+        cacheNovelDetail(novel)
     }
 
     // MARK: - Feed loading
@@ -346,7 +348,7 @@ final class NovelFeatureStore {
     /// -circuits redundant fetches.
     func openNovel(_ novel: PixivNovel) async {
         selectedNovel = novel
-        novelDetailCache[novel.id] = novel
+        cacheNovelDetail(novel)
         await loadNovelText(for: novel.id)
     }
 
@@ -459,7 +461,7 @@ final class NovelFeatureStore {
     func refreshNovelDetail(novelID: Int) async -> PixivNovel? {
         do {
             let novel = try await api.novelDetail(novelID: novelID)
-            novelDetailCache[novelID] = novel
+            cacheNovelDetail(novel)
             if selectedNovel?.id == novelID {
                 selectedNovel = novel
             }
@@ -530,7 +532,7 @@ final class NovelFeatureStore {
     private func mutateBookmark(novelID: Int, isBookmarked: Bool) {
         if var cached = novelDetailCache[novelID] {
             cached.isBookmarked = isBookmarked
-            novelDetailCache[novelID] = cached
+            cacheNovelDetail(cached)
         }
         if selectedNovel?.id == novelID {
             selectedNovel?.isBookmarked = isBookmarked
@@ -657,6 +659,43 @@ final class NovelFeatureStore {
             novels[index] = novel
         }
     }
+
+    private func cacheNovelDetail(_ novel: PixivNovel) {
+        novelDetailCache[novel.id] = novel
+        touchNovelDetailCache(novelID: novel.id)
+        trimNovelDetailCache()
+    }
+
+    private func touchNovelDetailCache(novelID: Int) {
+        novelDetailCacheOrder.removeAll { $0 == novelID }
+        novelDetailCacheOrder.append(novelID)
+    }
+
+    private func trimNovelDetailCache() {
+        while novelDetailCache.count > Self.novelDetailCacheLimit,
+              let oldestNovelID = novelDetailCacheOrder.first {
+            novelDetailCacheOrder.removeFirst()
+            novelDetailCache.removeValue(forKey: oldestNovelID)
+        }
+
+        if novelDetailCacheOrder.count > novelDetailCache.count {
+            novelDetailCacheOrder.removeAll { novelDetailCache[$0] == nil }
+        }
+    }
+
+    #if DEBUG
+    var cachedNovelDetailCountForTesting: Int {
+        novelDetailCache.count
+    }
+
+    func cachedNovelDetailForTesting(id: Int) -> PixivNovel? {
+        novelDetailCache[id]
+    }
+
+    func cacheNovelDetailForTesting(_ novel: PixivNovel) {
+        cacheNovelDetail(novel)
+    }
+    #endif
 
     /// Set by `KeiPixStore` so the novel store can resolve the active
     /// account ID without importing the artwork store.

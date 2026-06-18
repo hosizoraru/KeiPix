@@ -18,7 +18,6 @@ struct UgoiraPlayerView: View {
 
     @State private var player = UgoiraPlayer()
     @State private var exportedGIFURL: URL?
-    @State private var exportPackage: UgoiraExportPackage?
     @State private var isExporting = false
     @State private var statusMessage: String?
 
@@ -235,33 +234,33 @@ struct UgoiraPlayerView: View {
         player.beginLoading()
 
         do {
-            let package = VisualQALaunchArgument.contains(.ugoiraPlayer)
-                ? UgoiraExportPackage.visualQASample
-                : try await store.loadUgoiraExportPackage(for: artwork)
-            exportPackage = package
-            player.install(package.animation)
+            let animation = VisualQALaunchArgument.contains(.ugoiraPlayer)
+                ? UgoiraExportPackage.visualQASample.animation
+                : try await store.loadUgoiraAnimation(for: artwork)
+            player.install(animation)
         } catch {
             player.reportFailure(error.localizedDescription)
         }
     }
 
-    private func loadedExportPackage() async throws -> UgoiraExportPackage {
-        if let exportPackage {
-            return exportPackage
+    private func loadedAnimation() async throws -> UgoiraAnimation {
+        if let animation = player.animation {
+            return animation
         }
         player.beginLoading()
-        let package = try await store.loadUgoiraExportPackage(for: artwork)
-        exportPackage = package
-        player.install(package.animation)
-        return package
+        let animation = VisualQALaunchArgument.contains(.ugoiraPlayer)
+            ? UgoiraExportPackage.visualQASample.animation
+            : try await store.loadUgoiraAnimation(for: artwork)
+        player.install(animation)
+        return animation
     }
 
     // MARK: - Export
 
     private func exportGIF() async {
-        let package: UgoiraExportPackage
+        let animation: UgoiraAnimation
         do {
-            package = try await loadedExportPackage()
+            animation = try await loadedAnimation()
         } catch {
             showStatus(error.localizedDescription)
             return
@@ -273,7 +272,7 @@ struct UgoiraPlayerView: View {
 
         do {
             try await Task.detached(priority: .userInitiated) {
-                try UgoiraGIFExporter.export(animation: package.animation, to: url)
+                try UgoiraGIFExporter.export(animation: animation, to: url)
             }.value
             exportedGIFURL = url
             showStatus(String(format: L10n.exportedGIFFormat, url.lastPathComponent))
@@ -283,20 +282,16 @@ struct UgoiraPlayerView: View {
     }
 
     private func exportZip() async {
-        let package: UgoiraExportPackage
-        do {
-            package = try await loadedExportPackage()
-        } catch {
-            showStatus(error.localizedDescription)
-            return
-        }
-
         guard let url = savePanelURL(extension: "zip", contentType: .zip, title: L10n.exportUgoiraZip) else { return }
         isExporting = true
         defer { isExporting = false }
 
         do {
-            try package.zipData.write(to: url, options: .atomic)
+            if VisualQALaunchArgument.contains(.ugoiraPlayer) {
+                try UgoiraExportPackage.visualQASample.zipData.write(to: url, options: .atomic)
+            } else {
+                try await store.exportUgoiraZip(for: artwork, to: url)
+            }
             showStatus(String(format: L10n.exportedZipFormat, url.lastPathComponent))
         } catch {
             showStatus(error.localizedDescription)

@@ -86,6 +86,15 @@ enum ArtworkDownloadArtifactKind: String, Codable, Sendable {
             L10n.ugoiraZip
         }
     }
+
+    var shouldMirrorToPhotosLibrary: Bool {
+        switch self {
+        case .imagePages:
+            true
+        case .ugoiraZip:
+            false
+        }
+    }
 }
 
 enum ArtworkDownloadDestinationKind: String, Sendable {

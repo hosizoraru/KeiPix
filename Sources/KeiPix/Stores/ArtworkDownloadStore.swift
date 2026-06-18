@@ -563,24 +563,13 @@ final class ArtworkDownloadStore {
         let root = URL(fileURLWithPath: downloadDirectoryPath, isDirectory: true)
         try fileManager.createDirectory(at: root, withIntermediateDirectories: true)
         let template = DownloadNamingTemplate(rawValue: downloadNamingTemplate)
+        let artifactKind = item.resolvedArtifactKind
 
         let totalPages = item.sourceTotalPageCount ?? sourceURLs.count
         var lastFolder = root
         for (pageIndex, url) in sourceURLs.enumerated() {
             try Task.checkCancellation()
             let pageStart = Date()
-            let data = try await ImagePipeline.shared.data(for: url)
-            try Task.checkCancellation()
-            // Record one sample per page. Wall-clock duration includes
-            // the cooperative-yield gaps between `await`s, but those
-            // dominate only on a saturated worker pool — close enough
-            // for a UX speedometer where the goal is "is it moving".
-            let pageDuration = Date().timeIntervalSince(pageStart)
-            throughputSampler.record(
-                itemID: item.id,
-                bytes: data.count,
-                durationSeconds: pageDuration
-            )
             let sourcePageIndex = item.sourcePageIndexes?[safe: pageIndex] ?? pageIndex
             let renderedPath = template.render(context: .init(
                 item: item,
@@ -591,8 +580,18 @@ final class ArtworkDownloadStore {
             let folder = folderURL(root: root, components: renderedPath.parentComponents)
             let fileURL = fileURL(root: root, components: renderedPath.components)
             try fileManager.createDirectory(at: folder, withIntermediateDirectories: true)
-            try data.write(to: fileURL, options: .atomic)
-            try await saveDownloadedImageToPhotosLibraryIfNeeded(fileURL)
+            let byteCount = try await ImagePipeline.shared.downloadFile(for: url, to: fileURL)
+            try Task.checkCancellation()
+            // Record one sample per page. Wall-clock duration includes the
+            // filesystem promotion into place, but that is close enough for a
+            // UX speedometer where the goal is "is it moving".
+            let pageDuration = Date().timeIntervalSince(pageStart)
+            throughputSampler.record(
+                itemID: item.id,
+                bytes: byteCount,
+                durationSeconds: pageDuration
+            )
+            try await saveDownloadedImageToPhotosLibraryIfNeeded(fileURL, artifactKind: artifactKind)
             lastFolder = folder
             markPageCompleted(itemID: item.id, completedPages: pageIndex + 1, folder: folder, file: fileURL)
         }
@@ -600,14 +599,19 @@ final class ArtworkDownloadStore {
         return lastFolder
     }
 
-    private func saveDownloadedImageToPhotosLibraryIfNeeded(_ fileURL: URL) async throws {
+    private func saveDownloadedImageToPhotosLibraryIfNeeded(
+        _ fileURL: URL,
+        artifactKind: ArtworkDownloadArtifactKind
+    ) async throws {
         #if os(iOS)
+        guard artifactKind.shouldMirrorToPhotosLibrary else { return }
         let saved = await PhotosSaver.saveImage(from: fileURL, originalFilename: fileURL.lastPathComponent)
         if saved == false {
             throw ArtworkDownloadError.photosLibrarySaveFailed
         }
         #else
         _ = fileURL
+        _ = artifactKind
         #endif
     }
 

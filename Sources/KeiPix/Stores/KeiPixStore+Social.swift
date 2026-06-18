@@ -42,11 +42,14 @@ extension KeiPixStore {
     }
 
     func cachedCreatorPreviewArtworks(for user: PixivUser) -> [PixivArtwork] {
-        (creatorPreviewArtworkCache[user.id] ?? []).filter(passesContentFilters)
+        guard let cached = creatorPreviewArtworkCache[user.id] else { return [] }
+        touchCreatorPreviewArtworkCache(userID: user.id)
+        return cached.filter(passesContentFilters)
     }
 
     func creatorPreviewArtworks(for user: PixivUser) async throws -> [PixivArtwork] {
         if let cached = creatorPreviewArtworkCache[user.id] {
+            touchCreatorPreviewArtworkCache(userID: user.id)
             return cached.filter(passesContentFilters)
         }
 
@@ -72,13 +75,36 @@ extension KeiPixStore {
 
         do {
             let artworks = try await request.value
-            creatorPreviewArtworkCache[user.id] = artworks
-            creatorPreviewArtworkCacheGeneration &+= 1
+            cacheCreatorPreviewArtworks(artworks, forUserID: user.id)
             creatorPreviewArtworkRequests[user.id] = nil
             return artworks.filter(passesContentFilters)
         } catch {
             creatorPreviewArtworkRequests[user.id] = nil
             throw error
+        }
+    }
+
+    func cacheCreatorPreviewArtworks(_ artworks: [PixivArtwork], forUserID userID: Int) {
+        creatorPreviewArtworkCache[userID] = artworks
+        touchCreatorPreviewArtworkCache(userID: userID)
+        trimCreatorPreviewArtworkCache()
+        creatorPreviewArtworkCacheGeneration &+= 1
+    }
+
+    private func touchCreatorPreviewArtworkCache(userID: Int) {
+        creatorPreviewArtworkCacheOrder.removeAll { $0 == userID }
+        creatorPreviewArtworkCacheOrder.append(userID)
+    }
+
+    private func trimCreatorPreviewArtworkCache() {
+        while creatorPreviewArtworkCache.count > Self.creatorPreviewArtworkCacheLimit,
+              let oldestUserID = creatorPreviewArtworkCacheOrder.first {
+            creatorPreviewArtworkCacheOrder.removeFirst()
+            creatorPreviewArtworkCache.removeValue(forKey: oldestUserID)
+        }
+
+        if creatorPreviewArtworkCacheOrder.count > creatorPreviewArtworkCache.count {
+            creatorPreviewArtworkCacheOrder.removeAll { creatorPreviewArtworkCache[$0] == nil }
         }
     }
 

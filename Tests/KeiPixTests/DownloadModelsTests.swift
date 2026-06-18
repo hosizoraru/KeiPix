@@ -22,6 +22,12 @@ struct DownloadModelsTests {
         #expect(DownloadRetryBackoff.delay(forRetryIndex: 999) == 60)
     }
 
+    @Test("Only image page downloads mirror into Photos")
+    func onlyImagePageDownloadsMirrorIntoPhotos() {
+        #expect(ArtworkDownloadArtifactKind.imagePages.shouldMirrorToPhotosLibrary)
+        #expect(ArtworkDownloadArtifactKind.ugoiraZip.shouldMirrorToPhotosLibrary == false)
+    }
+
     @MainActor
     @Test("Download destination exposes the current platform's user-facing target")
     func downloadDestinationSummary() {

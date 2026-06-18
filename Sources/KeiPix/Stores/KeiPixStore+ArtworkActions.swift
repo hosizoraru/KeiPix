@@ -441,15 +441,23 @@ extension KeiPixStore {
 
     func loadUgoiraAnimation(for artwork: PixivArtwork) async throws -> UgoiraAnimation {
         let metadata = try await api.ugoiraMetadata(illustID: artwork.id)
-        let zipData = try await api.ugoiraZipData(url: metadata.zipURLs.medium)
-        return try UgoiraFrameDecoder.decode(zipData: zipData, metadata: metadata)
+        let zipURL = temporaryUgoiraZipURL(artworkID: artwork.id)
+        defer { try? FileManager.default.removeItem(at: zipURL) }
+        try await ImagePipeline.shared.downloadFile(for: metadata.zipURLs.medium, to: zipURL)
+        return try await Task.detached(priority: .userInitiated) {
+            try UgoiraFrameDecoder.decode(zipFileURL: zipURL, metadata: metadata)
+        }.value
     }
 
-    func loadUgoiraExportPackage(for artwork: PixivArtwork) async throws -> UgoiraExportPackage {
+    func exportUgoiraZip(for artwork: PixivArtwork, to destinationURL: URL) async throws {
         let metadata = try await api.ugoiraMetadata(illustID: artwork.id)
-        let zipData = try await api.ugoiraZipData(url: metadata.zipURLs.medium)
-        let animation = try UgoiraFrameDecoder.decode(zipData: zipData, metadata: metadata)
-        return UgoiraExportPackage(metadata: metadata, zipData: zipData, animation: animation)
+        try await ImagePipeline.shared.downloadFile(for: metadata.zipURLs.medium, to: destinationURL)
+    }
+
+    private func temporaryUgoiraZipURL(artworkID: Int) -> URL {
+        URL.temporaryDirectory
+            .appending(path: "KeiPix/Ugoira", directoryHint: .isDirectory)
+            .appending(path: "\(artworkID)-\(UUID().uuidString).zip", directoryHint: .notDirectory)
     }
 
     private func enqueueUgoiraDownload(_ artwork: PixivArtwork) async {

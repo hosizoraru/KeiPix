@@ -259,8 +259,9 @@ struct DownloadedUgoiraViewer: View {
         player.beginLoading()
 
         do {
-            let data = try Data(contentsOf: zipURL)
-            let animation = try UgoiraFrameDecoder.decode(zipData: data, frames: frames)
+            let animation = try await Task.detached(priority: .userInitiated) {
+                try UgoiraFrameDecoder.decode(zipFileURL: zipURL, frames: frames)
+            }.value
             player.install(animation)
         } catch {
             player.reportFailure(error.localizedDescription)

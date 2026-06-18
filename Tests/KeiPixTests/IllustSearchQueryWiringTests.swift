@@ -233,6 +233,58 @@ struct NovelSearchFilterWiringTests {
         #expect(store.creatorPreviewArtworkCacheGeneration == 1)
     }
 
+    @MainActor
+    @Test("Creator preview artwork cache evicts least recent authors")
+    func creatorPreviewArtworkCacheEvictsLeastRecentAuthors() {
+        let store = KeiPixStore(
+            downloads: ArtworkDownloadStore(completionNotifier: DownloadCompletionNotifier(
+                center: FakeUserNotificationCenter(isAuthorized: false),
+                authorizationStore: InMemoryAuthorizationCacheStore(hasRequested: true),
+                coalesceWindowSeconds: 0.05
+            )),
+            bootstrapsAutomatically: false
+        )
+
+        for userID in 0..<(KeiPixStore.creatorPreviewArtworkCacheLimit + 4) {
+            let user = PixivUser(id: userID, name: "Creator \(userID)", account: "creator_\(userID)")
+            store.cacheCreatorPreviewArtworks(
+                [artwork(id: userID, user: user, isAI: false, xRestrict: 0)],
+                forUserID: userID
+            )
+        }
+
+        #expect(store.creatorPreviewArtworkCache.count == KeiPixStore.creatorPreviewArtworkCacheLimit)
+        #expect(store.creatorPreviewArtworkCache[0] == nil)
+        #expect(store.creatorPreviewArtworkCache[1] == nil)
+        #expect(store.creatorPreviewArtworkCache[2] == nil)
+        #expect(store.creatorPreviewArtworkCache[3] == nil)
+        #expect(store.creatorPreviewArtworkCache[4]?.first?.id == 4)
+    }
+
+    @MainActor
+    @Test("Novel detail cache evicts least recent novels")
+    func novelDetailCacheEvictsLeastRecentNovels() throws {
+        let store = KeiPixStore(
+            downloads: ArtworkDownloadStore(completionNotifier: DownloadCompletionNotifier(
+                center: FakeUserNotificationCenter(isAuthorized: false),
+                authorizationStore: InMemoryAuthorizationCacheStore(hasRequested: true),
+                coalesceWindowSeconds: 0.05
+            )),
+            bootstrapsAutomatically: false
+        )
+
+        for novelID in 0..<(NovelFeatureStore.novelDetailCacheLimit + 4) {
+            store.novels.cacheNovelDetailForTesting(try novel(id: novelID))
+        }
+
+        #expect(store.novels.cachedNovelDetailCountForTesting == NovelFeatureStore.novelDetailCacheLimit)
+        #expect(store.novels.cachedNovelDetailForTesting(id: 0) == nil)
+        #expect(store.novels.cachedNovelDetailForTesting(id: 1) == nil)
+        #expect(store.novels.cachedNovelDetailForTesting(id: 2) == nil)
+        #expect(store.novels.cachedNovelDetailForTesting(id: 3) == nil)
+        #expect(store.novels.cachedNovelDetailForTesting(id: 4)?.id == 4)
+    }
+
     @Test("Novel search applies shared search filters locally")
     func novelSearchAppliesSharedSearchFiltersLocally() throws {
         let store = KeiPixStore(
@@ -325,5 +377,44 @@ struct NovelSearchFilterWiringTests {
                 )
             ]
         )
+    }
+
+    private func novel(id: Int) throws -> PixivNovel {
+        let payload = """
+        {
+          "id": \(id),
+          "title": "Novel \(id)",
+          "caption": "",
+          "restrict": 0,
+          "x_restrict": 0,
+          "is_original": false,
+          "image_urls": {
+            "square_medium": "https://example.com/novel-\(id)-square.jpg",
+            "medium": "https://example.com/novel-\(id)-medium.jpg",
+            "large": "https://example.com/novel-\(id)-large.jpg"
+          },
+          "create_date": \(id),
+          "tags": [],
+          "page_count": 1,
+          "text_length": 1000,
+          "user": {
+            "id": 5001,
+            "name": "Novel QA Creator",
+            "account": "novel_qa",
+            "is_followed": false
+          },
+          "series": {},
+          "is_bookmarked": false,
+          "total_bookmarks": 0,
+          "total_view": 0,
+          "total_comments": 0,
+          "visible": true,
+          "is_muted": false,
+          "is_mypixiv_only": false,
+          "is_x_restricted": false,
+          "novel_ai_type": 0
+        }
+        """
+        return try JSONDecoder().decode(PixivNovel.self, from: Data(payload.utf8))
     }
 }

@@ -1909,6 +1909,14 @@ struct NativeBoundaryTests {
             contentsOf: root.appending(path: "Sources/KeiPix/Views/UgoiraPlayerView.swift"),
             encoding: .utf8
         )
+        let artworkActions = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Stores/KeiPixStore+ArtworkActions.swift"),
+            encoding: .utf8
+        )
+        let frameDecoder = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Services/UgoiraFrameDecoder.swift"),
+            encoding: .utf8
+        )
         let playbackBar = try String(
             contentsOf: root.appending(path: "Sources/KeiPix/Views/UgoiraPlaybackBar.swift"),
             encoding: .utf8
@@ -1936,6 +1944,21 @@ struct NativeBoundaryTests {
         #expect(downloadedViewer.contains("OS26InlineUnavailableView("))
         #expect(downloadedViewer.contains("ContentUnavailableView") == false)
         #expect(downloadedViewer.contains(".os26GlassIconButton()"))
+        #expect(frameDecoder.contains("static func decode(zipFileURL: URL, frames"))
+        #expect(frameDecoder.contains("frameData(named:"))
+        #expect(frameDecoder.contains("extractFiles(from:") == false)
+        #expect(frameDecoder.contains("[String: Data]") == false)
+        #expect(downloadedViewer.contains("Task.detached(priority: .userInitiated)"))
+        #expect(downloadedViewer.contains("UgoiraFrameDecoder.decode(zipFileURL: zipURL"))
+        #expect(artworkActions.contains("Task.detached(priority: .userInitiated)"))
+        #expect(artworkActions.contains("try await ImagePipeline.shared.downloadFile(for: metadata.zipURLs.medium, to: zipURL)"))
+        #expect(artworkActions.contains("UgoiraFrameDecoder.decode(zipFileURL: zipURL, metadata: metadata)"))
+        #expect(artworkActions.contains("func exportUgoiraZip(for artwork: PixivArtwork, to destinationURL: URL) async throws"))
+        #expect(playerView.contains("@State private var exportPackage") == false)
+        #expect(playerView.contains("store.loadUgoiraAnimation(for: artwork)"))
+        #expect(playerView.contains("store.exportUgoiraZip(for: artwork, to: url)"))
+        #expect(playerView.contains("store.loadUgoiraExportPackage(for: artwork)") == false)
+        #expect(playerView.contains("store.loadUgoiraZipData(for: artwork)") == false)
     }
 
     @Test("Mobile utility sheets avoid fixed desktop widths")
@@ -4555,6 +4578,10 @@ struct NativeBoundaryTests {
             contentsOf: root.appending(path: "Sources/KeiPix/Support/PhotosSaver.swift"),
             encoding: .utf8
         )
+        let imagePipeline = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Services/ImagePipeline.swift"),
+            encoding: .utf8
+        )
         let settingsPage = try String(
             contentsOf: root.appending(path: "Sources/KeiPix/Views/Settings/DownloadsSettingsPage.swift"),
             encoding: .utf8
@@ -4575,10 +4602,15 @@ struct NativeBoundaryTests {
         #expect(store.contains("var downloadDestination: ArtworkDownloadDestinationSummary"))
         #expect(store.contains("private func saveDownloadedImageToPhotosLibraryIfNeeded"))
         #expect(store.contains("try await saveDownloadedImageToPhotosLibraryIfNeeded"))
+        #expect(store.contains("ImagePipeline.shared.downloadFile(for: url, to: fileURL)"))
+        #expect(store.contains("ImagePipeline.shared.data(for: url)") == false)
+        #expect(store.contains("artifactKind.shouldMirrorToPhotosLibrary"))
         #expect(store.contains("FileManager.default.url(\n            for: .applicationSupportDirectory"))
         #expect(store.contains("#if os(macOS)\n        downloadDirectoryPath = UserDefaults.standard.string(forKey: \"downloadDirectoryPath\")"))
         #expect(store.contains("#else\n        downloadDirectoryPath = ArtworkDownloadStore.defaultDownloadDirectory.path(percentEncoded: false)"))
         #expect(store.contains("FileManager.default.urls(for: .documentDirectory") == false)
+        #expect(models.contains("var shouldMirrorToPhotosLibrary: Bool"))
+        #expect(models.contains("case .ugoiraZip:\n            false"))
 
         #expect(photosSaver.contains("PHPhotoLibrary.requestAuthorization(for: .addOnly)"))
         #expect(photosSaver.contains("@MainActor\n    static func saveImage") == false)
@@ -4587,6 +4619,9 @@ struct NativeBoundaryTests {
         #expect(photosSaver.contains("PHAssetResourceCreationOptions()"))
         #expect(photosSaver.contains("options.originalFilename"))
         #expect(photosSaver.contains("creationRequestForAsset(from: image)") == false)
+        #expect(imagePipeline.contains("func downloadFile(for url: URL, to destinationURL: URL)"))
+        #expect(imagePipeline.contains("session.download(for: authenticatedRequest(for: url))"))
+        #expect(imagePipeline.contains("FileManager.default.moveItem(at: stagingURL, to: destinationURL)"))
 
         #expect(settingsPage.contains("#if os(macOS)\n            folderSection\n            #else\n            photosLibrarySection"))
         #expect(settingsPage.contains("private var photosLibrarySection: some View"))
