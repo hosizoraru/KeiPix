@@ -119,6 +119,7 @@ struct UserPreviewListView: View {
                     canCheckFollowVisibility: selectedFollowedPreviews.isEmpty == false,
                     canFollowPublic: bulkActionTargetCount(.followPublic) > 0,
                     canFollowPrivate: bulkActionTargetCount(.followPrivate) > 0,
+                    canMoveSelectedCreatorsToPrivateFollow: bulkActionTargetCount(.moveToPrivateFollow) > 0,
                     canMute: bulkActionTargetCount(.mute) > 0,
                     canUnfollow: bulkActionTargetCount(.unfollow) > 0,
                     isRunningBulkAction: isRunningBulkAction,
@@ -381,6 +382,10 @@ struct UserPreviewListView: View {
             return true
         }
         return false
+    }
+
+    private var isPublicCurrentAccountFollowingList: Bool {
+        isCurrentAccountFollowingList && restrict == .public
     }
 
     private var hasActiveCreatorViewOptionState: Bool {
@@ -688,11 +693,20 @@ struct UserPreviewListView: View {
     private func bulkActionTargets(_ action: CreatorBulkAction) -> [PixivUserPreview] {
         switch action {
         case .followPublic, .followPrivate:
-            selectedCreatorPreviews.filter { $0.user.isFollowed == false }
+            return selectedCreatorPreviews.filter { $0.user.isFollowed == false }
+        case .moveToPrivateFollow:
+            guard isPublicCurrentAccountFollowingList else { return [] }
+            let candidateIDs = Set(
+                CreatorFollowVisibilityMovePlan
+                    .publicToPrivate(previews: selectedCreatorPreviews)
+                    .candidates
+                    .map(\.id)
+            )
+            return selectedCreatorPreviews.filter { candidateIDs.contains($0.user.id) }
         case .mute:
-            selectedCreatorPreviews.filter { $0.isMuted == false }
+            return selectedCreatorPreviews.filter { $0.isMuted == false }
         case .unfollow:
-            selectedCreatorPreviews.filter(\.user.isFollowed)
+            return selectedCreatorPreviews.filter(\.user.isFollowed)
         }
     }
 
@@ -712,6 +726,7 @@ struct UserPreviewListView: View {
         }
 
         var updatedCount = 0
+        var completedStatusText: String?
         switch action {
         case .followPublic:
             let followedUsers = await followCreators(targets, restrict: .public)
@@ -725,6 +740,14 @@ struct UserPreviewListView: View {
             if followedUsers.isEmpty == false {
                 presentUndo(CreatorUndoAction(kind: .unfollowUsers(followedUsers)))
             }
+        case .moveToPrivateFollow:
+            let result = await moveCreatorsToPrivateFollow(targets)
+            updatedCount = result.movedCount
+            completedStatusText = String(
+                format: L10n.movedCreatorsToPrivateFollowResultFormat,
+                result.movedCount,
+                result.failedCount
+            )
         case .mute:
             let mutedUsers = targets.map(\.user)
             for target in targets {
@@ -742,9 +765,9 @@ struct UserPreviewListView: View {
             }
         }
 
-        bulkStatusText = updatedCount > 0
+        bulkStatusText = completedStatusText ?? (updatedCount > 0
             ? String(format: L10n.creatorActionCompletedFormat, updatedCount)
-            : L10n.noMatchingCreatorsForAction
+            : L10n.noMatchingCreatorsForAction)
     }
 
     private func followCreators(_ targets: [PixivUserPreview], restrict: BookmarkRestrict) async -> [PixivUser] {
@@ -774,6 +797,38 @@ struct UserPreviewListView: View {
             }
         }
         return restores
+    }
+
+    private func moveCreatorsToPrivateFollow(_ targets: [PixivUserPreview]) async -> VisibilityMoveResult {
+        let plan = CreatorFollowVisibilityMovePlan.publicToPrivate(previews: targets)
+        guard plan.canApply else {
+            return VisibilityMoveResult(movedCount: 0, failedCount: 0)
+        }
+
+        var movedIDs = Set<Int>()
+        var failedCount = 0
+
+        for user in plan.candidates {
+            do {
+                try await store.setFollow(user, isFollowed: true, restrict: .private)
+                updateFollowState(userID: user.id, isFollowed: true, restrict: .private)
+                movedIDs.insert(user.id)
+            } catch {
+                if presentCreatorListError(error) {
+                    failedCount += 1
+                }
+            }
+        }
+
+        if isPublicCurrentAccountFollowingList, movedIDs.isEmpty == false {
+            previews.removeAll { movedIDs.contains($0.user.id) }
+            for userID in movedIDs {
+                followRestrictsByUserID[userID] = nil
+            }
+            pruneCreatorSelectionToVisibleCreators()
+        }
+
+        return VisibilityMoveResult(movedCount: movedIDs.count, failedCount: failedCount)
     }
 
     private func checkSelectedFollowVisibility() async {

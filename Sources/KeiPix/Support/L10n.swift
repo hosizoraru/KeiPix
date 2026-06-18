@@ -669,6 +669,8 @@ enum L10n {
     static var checkingFollowVisibility: String { text("Checking follow visibility") }
     static var followSelectedPublicly: String { text("Follow Selected Publicly") }
     static var followSelectedPrivately: String { text("Follow Selected Privately") }
+    static var moveCreatorToPrivateFollow: String { text("Move Creator to Private Follow") }
+    static var moveSelectedCreatorsToPrivateFollow: String { text("Move Selected to Private Follow") }
     static var muteSelectedCreators: String { text("Mute Selected Creators") }
     static var unfollowSelectedCreators: String { text("Unfollow Selected Creators") }
     static var copySelectedCreatorLinks: String { text("Copy Selected Creator Links") }
@@ -682,6 +684,10 @@ enum L10n {
     static var privateFollow: String { text("Private Follow") }
     static var followSelectedPubliclyConfirmationFormat: String { text("Follow %d selected creators publicly?") }
     static var followSelectedPrivatelyConfirmationFormat: String { text("Follow %d selected creators privately?") }
+    static var moveSelectedCreatorsToPrivateFollowConfirmationFormat: String { text("Move %d selected public follows to private?") }
+    static var movedCreatorToPrivateFollowFormat: String { text("Moved %@ to private follow") }
+    static var movedCreatorsToPrivateFollowResultFormat: String { text("Moved %d creators to private follow · %d failed") }
+    static var noPublicFollowMoveCandidates: String { text("No public follow candidates") }
     static var muteSelectedCreatorsConfirmationFormat: String { text("Mute %d selected creators?") }
     static var unfollowSelectedCreatorsConfirmationFormat: String { text("Unfollow %d selected creators?") }
     static var creatorActionCompletedFormat: String { text("Updated %d creators") }
@@ -1561,6 +1567,10 @@ enum L10n {
     static var creatorNovelBookmarks: String { text("Creator Novel Bookmarks") }
     static var openNovel: String { text("Open Novel") }
     static var selectNovel: String { text("Select a novel") }
+    static var selectNovelForBatch: String { text("Select Novel") }
+    static var deselectNovel: String { text("Deselect Novel") }
+    static var novelSelection: String { text("Novel Selection") }
+    static var selectedNovelsFormat: String { text("%d selected novels") }
     static var openInPixivNovel: String { text("Open Novel in Pixiv") }
     static var copyNovelLink: String { text("Copy Novel Link") }
     static var copiedNovelLink: String { text("Copied novel link") }
@@ -1588,6 +1598,11 @@ enum L10n {
     static var novelWatchlistRemovedFormat: String { text("Removed %@ from watchlist") }
     static var novelBookmark: String { text("Bookmark Novel") }
     static var novelRemoveBookmark: String { text("Remove Novel Bookmark") }
+    static var moveNovelBookmarkToPrivate: String { text("Move Novel to Private Bookmark") }
+    static var moveSelectedNovelBookmarksToPrivate: String { text("Move Selected Novels to Private Bookmarks") }
+    static var movedNovelBookmarkToPrivateFormat: String { text("Moved %@ to private novel bookmarks") }
+    static var movedNovelBookmarksToPrivateResultFormat: String { text("Moved %d novels to private bookmarks · %d failed") }
+    static var noPublicNovelBookmarkMoveCandidates: String { text("No public novel bookmark candidates") }
     static var novelExport: String { text("Export Novel") }
     static var novelExportTXT: String { text("Export as TXT") }
     static var novelExportMarkdown: String { text("Export as Markdown") }

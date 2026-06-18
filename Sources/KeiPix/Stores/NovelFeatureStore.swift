@@ -499,6 +499,34 @@ final class NovelFeatureStore {
         }
     }
 
+    func moveNovelBookmarkToPrivate(_ novel: PixivNovel) async throws {
+        guard novel.isBookmarked else {
+            throw PixivAPIError.serverMessage(L10n.noPublicNovelBookmarkMoveCandidates)
+        }
+
+        try await api.addNovelBookmark(novelID: novel.id, restrict: .private, tags: [])
+        mutateBookmark(novelID: novel.id, isBookmarked: true)
+        removeMovedPublicNovelBookmarksFromCurrentFeed(ids: [novel.id])
+    }
+
+    func moveNovelBookmarksToPrivate(_ novels: [PixivNovel]) async -> VisibilityMoveResult {
+        let plan = NovelBookmarkVisibilityMovePlan.publicToPrivate(novels: novels)
+        var movedCount = 0
+        var failedCount = 0
+
+        for novel in plan.candidates {
+            do {
+                try await moveNovelBookmarkToPrivate(novel)
+                movedCount += 1
+            } catch {
+                failedCount += 1
+                errorMessage = String(describing: error)
+            }
+        }
+
+        return VisibilityMoveResult(movedCount: movedCount, failedCount: failedCount)
+    }
+
     private func mutateBookmark(novelID: Int, isBookmarked: Bool) {
         if var cached = novelDetailCache[novelID] {
             cached.isBookmarked = isBookmarked
@@ -513,6 +541,15 @@ final class NovelFeatureStore {
         if let index = novels.firstIndex(where: { $0.id == novelID }) {
             novels[index].isBookmarked = isBookmarked
         }
+    }
+
+    private func removeMovedPublicNovelBookmarksFromCurrentFeed(ids: Set<Int>) {
+        guard loadedFeedRoute == .novelPublicBookmarks, ids.isEmpty == false else { return }
+        allNovels.removeAll { ids.contains($0.id) }
+        if let selectedNovel, ids.contains(selectedNovel.id) {
+            self.selectedNovel = allNovels.first
+        }
+        applyContentFilter()
     }
 
     // MARK: - Watchlist

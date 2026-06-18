@@ -132,6 +132,33 @@ extension KeiPixStore {
         return BookmarkVisibilityMoveResult(movedCount: movedCount, failedCount: failedCount)
     }
 
+    func moveFollowedCreatorToPrivate(_ user: PixivUser) async throws {
+        guard user.isFollowed else {
+            throw PixivAPIError.serverMessage(L10n.noPublicFollowMoveCandidates)
+        }
+
+        try await setFollow(user, isFollowed: true, restrict: .private)
+        removeMovedPublicFollowingCreatorsFromCurrentFeed(userIDs: [user.id])
+    }
+
+    func moveFollowedCreatorsToPrivate(_ users: [PixivUser]) async -> VisibilityMoveResult {
+        let plan = CreatorFollowVisibilityMovePlan.publicToPrivate(users: users)
+        var movedCount = 0
+        var failedCount = 0
+
+        for user in plan.candidates {
+            do {
+                try await moveFollowedCreatorToPrivate(user)
+                movedCount += 1
+            } catch {
+                failedCount += 1
+                errorMessage = error.localizedDescription
+            }
+        }
+
+        return VisibilityMoveResult(movedCount: movedCount, failedCount: failedCount)
+    }
+
     func setBookmarkTagFilter(_ tag: String?) {
         bookmarkTagFilter = tag
         Task { await reloadCurrentFeed() }
@@ -463,6 +490,12 @@ extension KeiPixStore {
     private func removeMovedPublicBookmarksFromCurrentFeed(ids: Set<Int>) {
         guard selectedRoute == .publicBookmarks, ids.isEmpty == false else { return }
         allArtworks.removeAll { ids.contains($0.id) }
+        applyContentFilters()
+    }
+
+    private func removeMovedPublicFollowingCreatorsFromCurrentFeed(userIDs: Set<Int>) {
+        guard selectedRoute == .following, userIDs.isEmpty == false else { return }
+        allArtworks.removeAll { userIDs.contains($0.user.id) }
         applyContentFilters()
     }
 

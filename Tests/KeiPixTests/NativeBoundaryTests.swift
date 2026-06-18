@@ -2297,6 +2297,97 @@ struct NativeBoundaryTests {
         #expect(l10n.contains("static var moveSelectedBookmarksToPrivate"))
     }
 
+    @Test("Public following waterfall exposes move creators to private follow actions")
+    func publicFollowingWaterfallExposesMoveCreatorsToPrivateFollowActions() throws {
+        let root = try packageRoot()
+        let galleryView = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/GalleryView.swift"),
+            encoding: .utf8
+        )
+        let galleryArtworkGrid = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/GalleryArtworkGrid.swift"),
+            encoding: .utf8
+        )
+        let store = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Stores/KeiPixStore+ArtworkActions.swift"),
+            encoding: .utf8
+        )
+        let l10n = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Support/L10n.swift"),
+            encoding: .utf8
+        )
+
+        #expect(galleryView.contains("Label(L10n.moveCreatorToPrivateFollow, systemImage: \"lock.fill\")"))
+        #expect(galleryView.contains("Label(L10n.moveSelectedCreatorsToPrivateFollow, systemImage: \"lock.fill\")"))
+        #expect(galleryView.contains("selectedPublicFollowMovePlan"))
+        #expect(galleryView.contains("store.selectedRoute == .following"))
+        #expect(galleryView.contains("store.moveFollowedCreatorsToPrivate(plan.candidates)"))
+        #expect(galleryArtworkGrid.contains("Label(L10n.moveCreatorToPrivateFollow, systemImage: \"lock.fill\")"))
+        #expect(galleryArtworkGrid.contains("store.selectedRoute == .following"))
+        #expect(store.contains("func moveFollowedCreatorToPrivate(_ user: PixivUser) async throws"))
+        #expect(store.contains("func moveFollowedCreatorsToPrivate(_ users: [PixivUser]) async -> VisibilityMoveResult"))
+        #expect(store.contains("removeMovedPublicFollowingCreatorsFromCurrentFeed"))
+        #expect(l10n.contains("static var moveCreatorToPrivateFollow"))
+        #expect(l10n.contains("static var moveSelectedCreatorsToPrivateFollow"))
+    }
+
+    @Test("Following creator list exposes move selected creators to private follow")
+    func followingCreatorListExposesMoveSelectedCreatorsToPrivateFollow() throws {
+        let root = try packageRoot()
+        let listView = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/UserPreviewListView.swift"),
+            encoding: .utf8
+        )
+        let components = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/UserPreviewListComponents.swift"),
+            encoding: .utf8
+        )
+        let models = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Models/CreatorListModels.swift"),
+            encoding: .utf8
+        )
+
+        #expect(models.contains("case moveToPrivateFollow"))
+        #expect(components.contains("let canMoveSelectedCreatorsToPrivateFollow: Bool"))
+        #expect(components.contains("requestBulkAction(.moveToPrivateFollow)"))
+        #expect(components.contains("Label(L10n.moveSelectedCreatorsToPrivateFollow, systemImage: \"lock.fill\")"))
+        #expect(listView.contains("canMoveSelectedCreatorsToPrivateFollow: bulkActionTargetCount(.moveToPrivateFollow) > 0"))
+        #expect(listView.contains("isPublicCurrentAccountFollowingList"))
+        #expect(listView.contains("CreatorFollowVisibilityMovePlan.publicToPrivate(previews: targets)"))
+        #expect(listView.contains("try await store.setFollow(user, isFollowed: true, restrict: .private)"))
+        #expect(listView.contains("previews.removeAll { movedIDs.contains($0.user.id) }"))
+    }
+
+    @Test("Public novel bookmarks expose move to private bookmark actions")
+    func publicNovelBookmarksExposeMoveToPrivateBookmarkActions() throws {
+        let root = try packageRoot()
+        let novelGallery = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Views/NovelGalleryView.swift"),
+            encoding: .utf8
+        )
+        let novelStore = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Stores/NovelFeatureStore.swift"),
+            encoding: .utf8
+        )
+        let l10n = try String(
+            contentsOf: root.appending(path: "Sources/KeiPix/Support/L10n.swift"),
+            encoding: .utf8
+        )
+
+        #expect(novelGallery.contains("NovelSelectionFloatingActions("))
+        #expect(novelGallery.contains("Label(L10n.moveNovelBookmarkToPrivate, systemImage: \"lock.fill\")"))
+        #expect(novelGallery.contains("Label(L10n.moveSelectedNovelBookmarksToPrivate, systemImage: \"lock.fill\")"))
+        #expect(novelGallery.contains("store.selectedRoute == .novelPublicBookmarks"))
+        #expect(novelGallery.contains("selectedPublicNovelBookmarkMovePlan"))
+        #expect(novelGallery.contains("novelStore.moveNovelBookmarksToPrivate(plan.candidates)"))
+        #expect(novelStore.contains("func moveNovelBookmarkToPrivate(_ novel: PixivNovel) async throws"))
+        #expect(novelStore.contains("func moveNovelBookmarksToPrivate(_ novels: [PixivNovel]) async -> VisibilityMoveResult"))
+        #expect(novelStore.contains("api.addNovelBookmark(novelID: novel.id, restrict: .private, tags: [])"))
+        #expect(novelStore.contains("removeMovedPublicNovelBookmarksFromCurrentFeed"))
+        #expect(l10n.contains("static var moveNovelBookmarkToPrivate"))
+        #expect(l10n.contains("static var moveSelectedNovelBookmarksToPrivate"))
+    }
+
     @Test("Novel detail exposes comments through the shared comment surface")
     func novelDetailExposesSharedCommentSurface() throws {
         let root = try packageRoot()

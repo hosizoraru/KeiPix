@@ -606,6 +606,7 @@ struct CreatorSelectionFloatingActions: View {
     let canCheckFollowVisibility: Bool
     let canFollowPublic: Bool
     let canFollowPrivate: Bool
+    let canMoveSelectedCreatorsToPrivateFollow: Bool
     let canMute: Bool
     let canUnfollow: Bool
     let isRunningBulkAction: Bool
@@ -770,6 +771,13 @@ struct CreatorSelectionFloatingActions: View {
                 Label(L10n.followSelectedPrivately, systemImage: "lock.circle")
             }
             .disabled(isRunningBulkAction || canFollowPrivate == false)
+
+            Button {
+                requestBulkAction(.moveToPrivateFollow)
+            } label: {
+                Label(L10n.moveSelectedCreatorsToPrivateFollow, systemImage: "lock.fill")
+            }
+            .disabled(isRunningBulkAction || canMoveSelectedCreatorsToPrivateFollow == false)
 
             Divider()
 

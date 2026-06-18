@@ -169,6 +169,7 @@ struct CreatorListSelection: Hashable, Sendable {
 enum CreatorBulkAction: String, Identifiable {
     case followPublic
     case followPrivate
+    case moveToPrivateFollow
     case mute
     case unfollow
 
@@ -180,6 +181,8 @@ enum CreatorBulkAction: String, Identifiable {
             L10n.followSelectedPublicly
         case .followPrivate:
             L10n.followSelectedPrivately
+        case .moveToPrivateFollow:
+            L10n.moveSelectedCreatorsToPrivateFollow
         case .mute:
             L10n.muteSelectedCreators
         case .unfollow:
@@ -191,7 +194,7 @@ enum CreatorBulkAction: String, Identifiable {
         switch self {
         case .mute, .unfollow:
             .destructive
-        case .followPublic, .followPrivate:
+        case .followPublic, .followPrivate, .moveToPrivateFollow:
             nil
         }
     }
@@ -202,6 +205,8 @@ enum CreatorBulkAction: String, Identifiable {
             String(format: L10n.followSelectedPubliclyConfirmationFormat, count)
         case .followPrivate:
             String(format: L10n.followSelectedPrivatelyConfirmationFormat, count)
+        case .moveToPrivateFollow:
+            String(format: L10n.moveSelectedCreatorsToPrivateFollowConfirmationFormat, count)
         case .mute:
             String(format: L10n.muteSelectedCreatorsConfirmationFormat, count)
         case .unfollow:

@@ -159,6 +159,7 @@ private struct GalleryFeedView: View {
     @State private var batchBookmarkPreview: BatchBookmarkPreview?
     @State private var isApplyingBatchBookmark = false
     @State private var isMovingBookmarksToPrivate = false
+    @State private var isMovingFollowedCreatorsToPrivate = false
     @State private var savedScrollPositions: [String: String] = [:]
     @State private var feedbackRequest: FeedbackReportRequest?
     @State private var feedbackArtwork: PixivArtwork?
@@ -435,6 +436,15 @@ private struct GalleryFeedView: View {
                     Label(L10n.moveSelectedBookmarksToPrivate, systemImage: "lock.fill")
                 }
                 .disabled(isMovingBookmarksToPrivate)
+            }
+
+            if canMoveSelectedFollowedCreatorsToPrivate {
+                Button {
+                    moveSelectedFollowedCreatorsToPrivate()
+                } label: {
+                    Label(L10n.moveSelectedCreatorsToPrivateFollow, systemImage: "lock.fill")
+                }
+                .disabled(isMovingFollowedCreatorsToPrivate)
             }
 
             bulkMuteSelectionMenu
@@ -1191,6 +1201,13 @@ private struct GalleryFeedView: View {
                 Label(L10n.moveBookmarkToPrivate, systemImage: "lock.fill")
             }
         }
+        if canMoveCreatorToPrivateFollow(artwork) {
+            Button {
+                moveCreatorToPrivateFollow(artwork)
+            } label: {
+                Label(L10n.moveCreatorToPrivateFollow, systemImage: "lock.fill")
+            }
+        }
         Button(L10n.download) {
             store.enqueueDownload(artwork)
             actionMessage = String(format: L10n.queuedDownloadsFormat, 1)
@@ -1277,6 +1294,10 @@ private struct GalleryFeedView: View {
         store.selectedRoute == .publicBookmarks && artwork.isBookmarked
     }
 
+    private func canMoveCreatorToPrivateFollow(_ artwork: PixivArtwork) -> Bool {
+        store.selectedRoute == .following && artwork.user.isFollowed
+    }
+
     private func moveBookmarkToPrivate(_ artwork: PixivArtwork) {
         guard canMoveBookmarkToPrivate(artwork) else {
             actionMessage = L10n.noPublicBookmarkMoveCandidates
@@ -1288,6 +1309,23 @@ private struct GalleryFeedView: View {
                 try await store.moveBookmarkToPrivate(artwork)
                 artworkSelection.prune(visibleArtworkIDs: store.artworks.map(\.id))
                 actionMessage = String(format: L10n.movedBookmarkToPrivateFormat, artwork.title)
+            } catch {
+                store.errorMessage = error.localizedDescription
+            }
+        }
+    }
+
+    private func moveCreatorToPrivateFollow(_ artwork: PixivArtwork) {
+        guard canMoveCreatorToPrivateFollow(artwork) else {
+            actionMessage = L10n.noPublicFollowMoveCandidates
+            return
+        }
+
+        Task {
+            do {
+                try await store.moveFollowedCreatorToPrivate(artwork.user)
+                artworkSelection.prune(visibleArtworkIDs: store.artworks.map(\.id))
+                actionMessage = String(format: L10n.movedCreatorToPrivateFollowFormat, artwork.user.name)
             } catch {
                 store.errorMessage = error.localizedDescription
             }
@@ -1350,6 +1388,17 @@ private struct GalleryFeedView: View {
 
     private var canMoveSelectedBookmarksToPrivate: Bool {
         selectedPublicBookmarkMovePlan.canApply
+    }
+
+    private var selectedPublicFollowMovePlan: CreatorFollowVisibilityMovePlan {
+        guard store.selectedRoute == .following else {
+            return .publicToPrivate(artworks: [])
+        }
+        return .publicToPrivate(artworks: selectedArtworks)
+    }
+
+    private var canMoveSelectedFollowedCreatorsToPrivate: Bool {
+        selectedPublicFollowMovePlan.canApply
     }
 
     #if DEBUG
@@ -1499,6 +1548,27 @@ private struct GalleryFeedView: View {
             artworkSelection.prune(visibleArtworkIDs: store.artworks.map(\.id))
             actionMessage = String(
                 format: L10n.movedBookmarksToPrivateResultFormat,
+                result.movedCount,
+                result.failedCount
+            )
+        }
+    }
+
+    private func moveSelectedFollowedCreatorsToPrivate() {
+        guard isMovingFollowedCreatorsToPrivate == false else { return }
+        let plan = selectedPublicFollowMovePlan
+        guard plan.canApply else {
+            actionMessage = L10n.noPublicFollowMoveCandidates
+            return
+        }
+
+        isMovingFollowedCreatorsToPrivate = true
+        Task {
+            let result = await store.moveFollowedCreatorsToPrivate(plan.candidates)
+            isMovingFollowedCreatorsToPrivate = false
+            artworkSelection.prune(visibleArtworkIDs: store.artworks.map(\.id))
+            actionMessage = String(
+                format: L10n.movedCreatorsToPrivateFollowResultFormat,
                 result.movedCount,
                 result.failedCount
             )

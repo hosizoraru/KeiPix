@@ -105,6 +105,13 @@ struct GalleryContentGrid: View {
                 Label(L10n.moveBookmarkToPrivate, systemImage: "lock.fill")
             }
         }
+        if canMoveCreatorToPrivateFollow(artwork) {
+            Button {
+                moveCreatorToPrivateFollow(artwork)
+            } label: {
+                Label(L10n.moveCreatorToPrivateFollow, systemImage: "lock.fill")
+            }
+        }
         Button(L10n.download) {
             store.enqueueDownload(artwork)
             actionMessage = String(format: L10n.queuedDownloadsFormat, 1)
@@ -186,6 +193,13 @@ struct GalleryContentGrid: View {
                     moveBookmarkToPrivate(artwork)
                 } label: {
                     Label(L10n.moveBookmarkToPrivate, systemImage: "lock.fill")
+                }
+            }
+            if canMoveCreatorToPrivateFollow(artwork) {
+                Button {
+                    moveCreatorToPrivateFollow(artwork)
+                } label: {
+                    Label(L10n.moveCreatorToPrivateFollow, systemImage: "lock.fill")
                 }
             }
             Button(L10n.download) {
@@ -275,6 +289,10 @@ struct GalleryContentGrid: View {
         store.selectedRoute == .publicBookmarks && artwork.isBookmarked
     }
 
+    private func canMoveCreatorToPrivateFollow(_ artwork: PixivArtwork) -> Bool {
+        store.selectedRoute == .following && artwork.user.isFollowed
+    }
+
     private func moveBookmarkToPrivate(_ artwork: PixivArtwork) {
         guard canMoveBookmarkToPrivate(artwork) else {
             actionMessage = L10n.noPublicBookmarkMoveCandidates
@@ -286,6 +304,23 @@ struct GalleryContentGrid: View {
                 try await store.moveBookmarkToPrivate(artwork)
                 artworkSelection.prune(visibleArtworkIDs: store.artworks.map(\.id))
                 actionMessage = String(format: L10n.movedBookmarkToPrivateFormat, artwork.title)
+            } catch {
+                store.errorMessage = error.localizedDescription
+            }
+        }
+    }
+
+    private func moveCreatorToPrivateFollow(_ artwork: PixivArtwork) {
+        guard canMoveCreatorToPrivateFollow(artwork) else {
+            actionMessage = L10n.noPublicFollowMoveCandidates
+            return
+        }
+
+        Task {
+            do {
+                try await store.moveFollowedCreatorToPrivate(artwork.user)
+                artworkSelection.prune(visibleArtworkIDs: store.artworks.map(\.id))
+                actionMessage = String(format: L10n.movedCreatorToPrivateFollowFormat, artwork.user.name)
             } catch {
                 store.errorMessage = error.localizedDescription
             }
@@ -363,6 +398,13 @@ private struct MasonryArtworkGrid: View {
                             Label(L10n.moveBookmarkToPrivate, systemImage: "lock.fill")
                         }
                     }
+                    if canMoveCreatorToPrivateFollow(artwork) {
+                        Button {
+                            moveCreatorToPrivateFollow(artwork)
+                        } label: {
+                            Label(L10n.moveCreatorToPrivateFollow, systemImage: "lock.fill")
+                        }
+                    }
                     Button(L10n.download) {
                         store.enqueueDownload(artwork)
                         actionMessage = String(format: L10n.queuedDownloadsFormat, 1)
@@ -428,6 +470,10 @@ private struct MasonryArtworkGrid: View {
         store.selectedRoute == .publicBookmarks && artwork.isBookmarked
     }
 
+    private func canMoveCreatorToPrivateFollow(_ artwork: PixivArtwork) -> Bool {
+        store.selectedRoute == .following && artwork.user.isFollowed
+    }
+
     private func moveBookmarkToPrivate(_ artwork: PixivArtwork) {
         guard canMoveBookmarkToPrivate(artwork) else {
             actionMessage = L10n.noPublicBookmarkMoveCandidates
@@ -439,6 +485,23 @@ private struct MasonryArtworkGrid: View {
                 try await store.moveBookmarkToPrivate(artwork)
                 artworkSelection.prune(visibleArtworkIDs: store.artworks.map(\.id))
                 actionMessage = String(format: L10n.movedBookmarkToPrivateFormat, artwork.title)
+            } catch {
+                store.errorMessage = error.localizedDescription
+            }
+        }
+    }
+
+    private func moveCreatorToPrivateFollow(_ artwork: PixivArtwork) {
+        guard canMoveCreatorToPrivateFollow(artwork) else {
+            actionMessage = L10n.noPublicFollowMoveCandidates
+            return
+        }
+
+        Task {
+            do {
+                try await store.moveFollowedCreatorToPrivate(artwork.user)
+                artworkSelection.prune(visibleArtworkIDs: store.artworks.map(\.id))
+                actionMessage = String(format: L10n.movedCreatorToPrivateFollowFormat, artwork.user.name)
             } catch {
                 store.errorMessage = error.localizedDescription
             }
