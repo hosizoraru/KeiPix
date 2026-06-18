@@ -462,7 +462,7 @@ private struct ArtworkSinglePageReader: View {
         SinglePageReaderViewportLayout(presentation: presentation) {
             ZStack {
                 ImageScrollView(
-                    imageURL: artwork.imageURL(at: currentPageIndex, preferOriginal: store.preferOriginalImages(for: artwork)),
+                    imageURL: artwork.imageURL(at: currentPageIndex, tier: store.imageQualityTier(for: artwork, pageCount: pageCount)),
                     localURL: store.downloads.downloadedImageURL(artworkID: artwork.id, pageIndex: currentPageIndex),
                     resetZoomTrigger: interaction.resetZoomTrigger,
                     toggleZoomTrigger: interaction.toggleZoomTrigger,
@@ -552,7 +552,7 @@ private struct ArtworkContinuousReader: View {
 
                 VStack(spacing: 8) {
                     RemoteImageView(
-                        url: artwork.imageURL(at: index, preferOriginal: store.preferOriginalImages(for: artwork)),
+                        url: artwork.imageURL(at: index, tier: store.imageQualityTier(for: artwork, pageCount: pageCount)),
                         localURL: store.downloads.downloadedImageURL(artworkID: artwork.id, pageIndex: index),
                         contentMode: .fit,
                         onImageLoaded: { image in
@@ -665,7 +665,7 @@ private struct ArtworkDoublePageReader: View {
     @ViewBuilder
     private func pageView(index: Int) -> some View {
         ImageScrollView(
-            imageURL: artwork.imageURL(at: index, preferOriginal: store.preferOriginalImages(for: artwork)),
+            imageURL: artwork.imageURL(at: index, tier: store.imageQualityTier(for: artwork, pageCount: pageCount)),
             localURL: store.downloads.downloadedImageURL(artworkID: artwork.id, pageIndex: index),
             resetZoomTrigger: interaction.resetZoomTrigger,
             toggleZoomTrigger: interaction.toggleZoomTrigger,

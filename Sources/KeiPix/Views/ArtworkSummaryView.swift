@@ -352,7 +352,7 @@ private struct ArtworkActionStrip: View {
     }
 
     private var currentPageURL: URL? {
-        artwork.imageURL(at: pageIndex, preferOriginal: store.preferOriginalImages(for: artwork, pageCount: pageCount))
+        artwork.imageURL(at: pageIndex, tier: store.imageQualityTier(for: artwork, pageCount: pageCount))
     }
 
     private var currentLocalPageURL: URL? {
@@ -635,8 +635,7 @@ private struct AdaptiveActionRow: View {
                 Button {
                     store.enqueueDownloadPage(
                         artwork,
-                        pageIndex: pageIndex,
-                        preferOriginal: store.preferOriginalImages(for: artwork, pageCount: pageCount)
+                        pageIndex: pageIndex
                     )
                     showActionMessage(L10n.queuedCurrentPage)
                 } label: {

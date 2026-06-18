@@ -612,9 +612,13 @@ final class ArtworkDownloadStore {
     }
 
     func sourceImageURLs(for artwork: PixivArtwork, preferOriginal: Bool) -> [URL] {
+        sourceImageURLs(for: artwork, tier: .legacy(preferOriginal: preferOriginal))
+    }
+
+    func sourceImageURLs(for artwork: PixivArtwork, tier: ArtworkImageQualityTier) -> [URL] {
         let pageCount = max(artwork.images.count, 1)
         return (0..<pageCount).compactMap {
-            artwork.imageURL(at: $0, preferOriginal: preferOriginal)
+            artwork.imageURL(at: $0, tier: tier)
         }
     }
 

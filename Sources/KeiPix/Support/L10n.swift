@@ -779,7 +779,7 @@ enum L10n {
     static var illustDetailQualityHint: String { text("Used when opening single illustrations and artwork detail sheets.") }
     static var mangaDetailQuality: String { text("Manga detail quality") }
     static var mangaDetailQualityHint: String { text("Used for multi-page manga readers where original pages can be large.") }
-    static var imageQualityTierHint: String { text("Pixiv ships every illust at three sizes. Pick the rung that matches your bandwidth — Medium loads fastest, Original is the source asset.") }
+    static var imageQualityTierHint: String { text("Pixiv ships every illust at three sizes. KeiPix uses this same tier for reading, Photos saves, and local downloads, so saved files match the quality you see.") }
     static var imageProcessing: String { text("Image Processing") }
     static var imageProcessorsEnabled: String { text("Enable image processing") }
     static var imageProcessorsHint: String { text("Apply on-device visual enhancements to decoded images using Core Image and Vision filters. Changes take effect on newly loaded images.") }

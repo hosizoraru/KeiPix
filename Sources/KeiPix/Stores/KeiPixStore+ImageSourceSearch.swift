@@ -10,7 +10,7 @@ import UniformTypeIdentifiers
 extension KeiPixStore {
     func presentImageSourceSearch(for artwork: PixivArtwork, pageIndex: Int = 0) {
         let clampedPageIndex = min(max(pageIndex, 0), artwork.displayPageCount - 1)
-        let imageURL = artwork.imageURL(at: clampedPageIndex, preferOriginal: useOriginalImagesInDetail)
+        let imageURL = artwork.imageURL(at: clampedPageIndex, tier: imageQualityTier(for: artwork))
         let localImageURL = downloads.downloadedImageURL(artworkID: artwork.id, pageIndex: clampedPageIndex)
 
         guard imageURL != nil || localImageURL != nil else {

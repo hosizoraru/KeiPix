@@ -1496,8 +1496,7 @@ private struct GalleryFeedView: View {
         defer { isGatheringBatchDownloadPages = false }
         let queuedCount = store.enqueueDownloads(
             batchDownloadArtworks,
-            limit: plan.limit,
-            preferOriginal: true
+            limit: plan.limit
         )
         lastQueuedDownloadCount = queuedCount
         guard queuedCount > 0 else { return }

@@ -28015,31 +28015,31 @@
         }
       }
     },
-    "Pixiv ships every illust at three sizes. Pick the rung that matches your bandwidth — Medium loads fastest, Original is the source asset.": {
+    "Pixiv ships every illust at three sizes. KeiPix uses this same tier for reading, Photos saves, and local downloads, so saved files match the quality you see.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pixiv ships every illust at three sizes. Pick the rung that matches your bandwidth — Medium loads fastest, Original is the source asset."
+            "value": "Pixiv ships every illust at three sizes. KeiPix uses this same tier for reading, Photos saves, and local downloads, so saved files match the quality you see."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pixiv は各作品を 3 段階のサイズで配信しています。回線に合わせて選んでください — 中が最速、オリジナルが原本です。"
+            "value": "Pixiv は各作品を 3 段階のサイズで配信しています。KeiPix は読書、写真への保存、ローカルダウンロードに同じ段階を使うため、保存されるファイルは表示中の画質と一致します。"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pixiv 为每张作品提供三档尺寸，按带宽与画质需求选择 — 中等加载最快，原图为原始素材。"
+            "value": "Pixiv 为每张作品提供三档尺寸。KeiPix 会把同一档位用于阅读、保存到照片图库和本地下载，所以保存文件会匹配你看到的画质。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pixiv 為每张作品提供三档尺寸，按帶寬與畫质需求選擇 — 中等載入最快，原圖為原始素材。"
+            "value": "Pixiv 為每張作品提供三檔尺寸。KeiPix 會把同一檔位用於閱讀、儲存到照片圖庫和本機下載，所以儲存檔案會匹配你看到的畫質。"
           }
         }
       }

@@ -68,6 +68,10 @@ extension ArtworkDownloadStore {
     }
 
     func enqueue(_ artwork: PixivArtwork, preferOriginal: Bool = true) {
+        enqueue(artwork, tier: .legacy(preferOriginal: preferOriginal))
+    }
+
+    func enqueue(_ artwork: PixivArtwork, tier: ArtworkImageQualityTier) {
         if let existingIndex = items.firstIndex(where: {
             $0.artworkID == artwork.id
                 && $0.resolvedArtifactKind == .imagePages
@@ -79,7 +83,7 @@ extension ArtworkDownloadStore {
             return
         }
 
-        let sourceURLs = sourceImageURLs(for: artwork, preferOriginal: preferOriginal)
+        let sourceURLs = sourceImageURLs(for: artwork, tier: tier)
         let item = ArtworkDownloadItem(
             id: UUID(),
             artworkID: artwork.id,
@@ -107,12 +111,16 @@ extension ArtworkDownloadStore {
         )
         items.insert(item, at: 0)
         persistItems()
-        startWorkerIfNeeded(preferOriginal: preferOriginal)
+        startWorkerIfNeeded(preferOriginal: tier.prefersOriginal)
     }
 
     func enqueuePage(_ artwork: PixivArtwork, pageIndex: Int, preferOriginal: Bool = true) {
+        enqueuePage(artwork, pageIndex: pageIndex, tier: .legacy(preferOriginal: preferOriginal))
+    }
+
+    func enqueuePage(_ artwork: PixivArtwork, pageIndex: Int, tier: ArtworkImageQualityTier) {
         let clampedPageIndex = min(max(pageIndex, 0), max(artwork.displayPageCount - 1, 0))
-        guard let sourceURL = artwork.imageURL(at: clampedPageIndex, preferOriginal: preferOriginal) else { return }
+        guard let sourceURL = artwork.imageURL(at: clampedPageIndex, tier: tier) else { return }
 
         if let existingIndex = items.firstIndex(where: {
             $0.artworkID == artwork.id
@@ -154,12 +162,17 @@ extension ArtworkDownloadStore {
         )
         items.insert(item, at: 0)
         persistItems()
-        startWorkerIfNeeded(preferOriginal: preferOriginal)
+        startWorkerIfNeeded(preferOriginal: tier.prefersOriginal)
     }
 
     @discardableResult
     func enqueuePages(_ artwork: PixivArtwork, pageRange: ClosedRange<Int>, preferOriginal: Bool = true) -> Int {
         enqueuePages(artwork, pageIndexes: Array(pageRange), preferOriginal: preferOriginal)
+    }
+
+    @discardableResult
+    func enqueuePages(_ artwork: PixivArtwork, pageRange: ClosedRange<Int>, tier: ArtworkImageQualityTier) -> Int {
+        enqueuePages(artwork, pageIndexes: Array(pageRange), tier: tier)
     }
 
     /// Queues an arbitrary subset of pages from a multi-page artwork.
@@ -171,12 +184,17 @@ extension ArtworkDownloadStore {
     /// page list without first sanitising it.
     @discardableResult
     func enqueuePages(_ artwork: PixivArtwork, pageIndexes: [Int], preferOriginal: Bool = true) -> Int {
+        enqueuePages(artwork, pageIndexes: pageIndexes, tier: .legacy(preferOriginal: preferOriginal))
+    }
+
+    @discardableResult
+    func enqueuePages(_ artwork: PixivArtwork, pageIndexes: [Int], tier: ArtworkImageQualityTier) -> Int {
         let displayPageCount = max(artwork.displayPageCount, 1)
         let normalized = Array(Set(pageIndexes.map { min(max($0, 0), displayPageCount - 1) })).sorted()
         guard normalized.isEmpty == false else { return 0 }
 
         let sourcePairs = normalized.compactMap { pageIndex -> (Int, URL)? in
-            guard let sourceURL = artwork.imageURL(at: pageIndex, preferOriginal: preferOriginal) else { return nil }
+            guard let sourceURL = artwork.imageURL(at: pageIndex, tier: tier) else { return nil }
             return (pageIndex, sourceURL)
         }
         guard sourcePairs.isEmpty == false else { return 0 }
@@ -222,12 +240,26 @@ extension ArtworkDownloadStore {
         )
         items.insert(item, at: 0)
         persistItems()
-        startWorkerIfNeeded(preferOriginal: preferOriginal)
+        startWorkerIfNeeded(preferOriginal: tier.prefersOriginal)
         return sourcePairs.count
     }
 
     @discardableResult
     func enqueue(_ artworks: [PixivArtwork], limit: Int, preferOriginal: Bool = true) -> Int {
+        enqueue(artworks, limit: limit, tier: .legacy(preferOriginal: preferOriginal))
+    }
+
+    @discardableResult
+    func enqueue(_ artworks: [PixivArtwork], limit: Int, tier: ArtworkImageQualityTier) -> Int {
+        enqueue(artworks, limit: limit) { _ in tier }
+    }
+
+    @discardableResult
+    func enqueue(
+        _ artworks: [PixivArtwork],
+        limit: Int,
+        tierForArtwork: (PixivArtwork) -> ArtworkImageQualityTier
+    ) -> Int {
         let existingArtworkIDs = Set(items.filter {
             $0.status != .failed && $0.resolvedArtifactKind == .imagePages && $0.sourcePageIndexes == nil
         }.map(\.artworkID))
@@ -235,8 +267,13 @@ extension ArtworkDownloadStore {
         guard candidates.isEmpty == false else { return 0 }
 
         let now = Date()
-        let newItems = candidates.map { artwork in
-            let sourceURLs = sourceImageURLs(for: artwork, preferOriginal: preferOriginal)
+        let tieredCandidates = candidates.map { artwork in
+            (artwork: artwork, tier: tierForArtwork(artwork))
+        }
+        let newItems = tieredCandidates.map { candidate in
+            let artwork = candidate.artwork
+            let tier = candidate.tier
+            let sourceURLs = sourceImageURLs(for: artwork, tier: tier)
             return ArtworkDownloadItem(
                 id: UUID(),
                 artworkID: artwork.id,
@@ -266,7 +303,7 @@ extension ArtworkDownloadStore {
 
         items.insert(contentsOf: newItems, at: 0)
         persistItems()
-        startWorkerIfNeeded(preferOriginal: preferOriginal)
+        startWorkerIfNeeded(preferOriginal: tieredCandidates.contains { $0.tier.prefersOriginal })
         return newItems.count
     }
 

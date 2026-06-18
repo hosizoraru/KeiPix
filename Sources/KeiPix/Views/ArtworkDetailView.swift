@@ -405,7 +405,7 @@ private struct ArtworkInspectorView: View {
     }
 
     private func prefetchAround(_ index: Int) {
-        let urls = artwork.prefetchURLs(around: index, preferOriginal: store.preferOriginalImages(for: artwork))
+        let urls = artwork.prefetchURLs(around: index, tier: store.imageQualityTier(for: artwork))
         Task {
             await ImagePipeline.shared.prefetch(urls)
         }

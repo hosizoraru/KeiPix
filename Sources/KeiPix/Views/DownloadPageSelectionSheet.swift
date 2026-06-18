@@ -116,7 +116,7 @@ struct DownloadPageSelectionSheet: View {
         } label: {
             ZStack(alignment: .topTrailing) {
                 RemoteImageView(
-                    url: artwork.imageURL(at: index, preferOriginal: false),
+                    url: artwork.imageURL(at: index, tier: store.imageQualityTier(for: artwork, pageCount: pageCount)),
                     contentMode: .fill
                 )
                 .frame(height: 120)
@@ -161,8 +161,7 @@ struct DownloadPageSelectionSheet: View {
         let indexes = selectedPages.sorted()
         let queuedCount = store.enqueueDownloadPages(
             artwork,
-            pageIndexes: indexes,
-            preferOriginal: store.preferOriginalImages(for: artwork, pageCount: pageCount)
+            pageIndexes: indexes
         )
         onComplete(queuedCount, indexes)
         dismiss()

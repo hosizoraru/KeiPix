@@ -231,31 +231,39 @@ extension KeiPixStore {
         enqueueDownload(selectedArtwork)
     }
 
-    func enqueueDownload(_ artwork: PixivArtwork, preferOriginal: Bool = true) {
+    func enqueueDownload(_ artwork: PixivArtwork, preferOriginal: Bool? = nil) {
         if artwork.isUgoira {
             Task { await enqueueUgoiraDownload(artwork) }
         } else {
-            downloads.enqueue(artwork, preferOriginal: preferOriginal)
+            downloads.enqueue(artwork, tier: downloadImageQualityTier(for: artwork, preferOriginal: preferOriginal))
             bookmarkDownloadedArtworkIfNeeded(artwork)
         }
     }
 
-    func enqueueDownloadPage(_ artwork: PixivArtwork, pageIndex: Int, preferOriginal: Bool = true) {
+    func enqueueDownloadPage(_ artwork: PixivArtwork, pageIndex: Int, preferOriginal: Bool? = nil) {
         guard artwork.isUgoira == false else {
             enqueueDownload(artwork, preferOriginal: preferOriginal)
             return
         }
-        downloads.enqueuePage(artwork, pageIndex: pageIndex, preferOriginal: preferOriginal)
+        downloads.enqueuePage(
+            artwork,
+            pageIndex: pageIndex,
+            tier: downloadImageQualityTier(for: artwork, preferOriginal: preferOriginal)
+        )
         bookmarkDownloadedArtworkIfNeeded(artwork)
     }
 
     @discardableResult
-    func enqueueDownloadPages(_ artwork: PixivArtwork, pageRange: ClosedRange<Int>, preferOriginal: Bool = true) -> Int {
+    func enqueueDownloadPages(_ artwork: PixivArtwork, pageRange: ClosedRange<Int>, preferOriginal: Bool? = nil) -> Int {
         guard artwork.isUgoira == false else {
             enqueueDownload(artwork, preferOriginal: preferOriginal)
             return 1
         }
-        let count = downloads.enqueuePages(artwork, pageRange: pageRange, preferOriginal: preferOriginal)
+        let count = downloads.enqueuePages(
+            artwork,
+            pageRange: pageRange,
+            tier: downloadImageQualityTier(for: artwork, preferOriginal: preferOriginal)
+        )
         bookmarkDownloadedArtworkIfNeeded(artwork)
         return count
     }
@@ -264,22 +272,32 @@ extension KeiPixStore {
     /// Backs `DownloadPageSelectionSheet` so users can tick the exact pages
     /// they want to save instead of being limited to a contiguous range.
     @discardableResult
-    func enqueueDownloadPages(_ artwork: PixivArtwork, pageIndexes: [Int], preferOriginal: Bool = true) -> Int {
+    func enqueueDownloadPages(_ artwork: PixivArtwork, pageIndexes: [Int], preferOriginal: Bool? = nil) -> Int {
         guard artwork.isUgoira == false else {
             enqueueDownload(artwork, preferOriginal: preferOriginal)
             return 1
         }
-        let count = downloads.enqueuePages(artwork, pageIndexes: pageIndexes, preferOriginal: preferOriginal)
+        let count = downloads.enqueuePages(
+            artwork,
+            pageIndexes: pageIndexes,
+            tier: downloadImageQualityTier(for: artwork, preferOriginal: preferOriginal)
+        )
         bookmarkDownloadedArtworkIfNeeded(artwork)
         return count
     }
 
     @discardableResult
-    func enqueueDownloads(_ artworks: [PixivArtwork], limit: Int, preferOriginal: Bool = true) -> Int {
+    func enqueueDownloads(_ artworks: [PixivArtwork], limit: Int, preferOriginal: Bool? = nil) -> Int {
         let candidates = Array(artworks.prefix(max(limit, 0)))
         let imageArtworks = candidates.filter { $0.isUgoira == false }
         let ugoiraArtworks = candidates.filter(\.isUgoira)
-        let imageCount = downloads.enqueue(imageArtworks, limit: imageArtworks.count, preferOriginal: preferOriginal)
+        let imageCount = downloads.enqueue(
+            imageArtworks,
+            limit: imageArtworks.count,
+            tierForArtwork: { artwork in
+                downloadImageQualityTier(for: artwork, preferOriginal: preferOriginal)
+            }
+        )
         bookmarkDownloadedArtworksIfNeeded(imageArtworks)
         for artwork in ugoiraArtworks {
             enqueueDownload(artwork, preferOriginal: preferOriginal)
@@ -291,7 +309,7 @@ extension KeiPixStore {
     func enqueueDownloadsFromCurrentFeed(
         limit: Int,
         remotePageLimit: Int,
-        preferOriginal: Bool = true
+        preferOriginal: Bool? = nil
     ) async -> BatchDownloadResult {
         let safeLimit = min(max(limit, 1), BatchDownloadPlan.maximumLoadedFeedLimit)
         let safeRemotePageLimit = min(max(remotePageLimit, 0), BatchDownloadPlan.maximumRemotePageLimit)
@@ -351,6 +369,17 @@ extension KeiPixStore {
             fetchedPageCount: fetchedPageCount,
             reachedEnd: nextURL == nil
         )
+    }
+
+    private func downloadImageQualityTier(
+        for artwork: PixivArtwork,
+        pageCount: Int? = nil,
+        preferOriginal: Bool?
+    ) -> ArtworkImageQualityTier {
+        if let preferOriginal {
+            return .legacy(preferOriginal: preferOriginal)
+        }
+        return imageQualityTier(for: artwork, pageCount: pageCount)
     }
 
     func openSelectedArtworkInPixiv() {

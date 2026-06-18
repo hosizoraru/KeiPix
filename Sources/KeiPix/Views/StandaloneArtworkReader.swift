@@ -366,8 +366,8 @@ struct StandaloneArtworkReader: View {
     }
 
     private func prefetchAround(_ index: Int) {
-        let preferOriginal = store.preferOriginalImages(for: artwork, pageCount: pageCount)
-        let urls = artwork.prefetchURLs(around: index, preferOriginal: preferOriginal)
+        let tier = store.imageQualityTier(for: artwork, pageCount: pageCount)
+        let urls = artwork.prefetchURLs(around: index, tier: tier)
         Task {
             await ImagePipeline.shared.prefetch(urls)
         }

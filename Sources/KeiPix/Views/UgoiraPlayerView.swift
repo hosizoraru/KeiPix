@@ -95,7 +95,7 @@ struct UgoiraPlayerView: View {
                 .id(player.currentFrameIndex)
         } else {
             RemoteImageView(
-                url: artwork.imageURL(at: 0, preferOriginal: store.preferOriginalImages(for: artwork)),
+                url: artwork.imageURL(at: 0, tier: store.imageQualityTier(for: artwork)),
                 contentMode: .fit
             )
         }
