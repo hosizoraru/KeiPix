@@ -289,6 +289,7 @@ struct SettingsView: View {
             text: $coordinator.searchText,
             prompt: Text(L10n.searchSettings)
         )
+        .iOSMinimizedSearchToolbar()
         #endif
     }
 

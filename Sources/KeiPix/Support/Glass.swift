@@ -43,6 +43,15 @@ extension View {
     }
 
     @ViewBuilder
+    func iOSMinimizedSearchToolbar() -> some View {
+        #if os(iOS)
+        searchToolbarBehavior(.minimize)
+        #else
+        self
+        #endif
+    }
+
+    @ViewBuilder
     func macOSWindowCompanionBackground() -> some View {
         #if os(macOS)
         if #available(macOS 27.0, *) {

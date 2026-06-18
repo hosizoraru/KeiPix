@@ -3040,6 +3040,7 @@ private struct MobileGlobalSearchModifier: ViewModifier {
         if isEnabled {
             content
                 .searchable(text: searchText, prompt: L10n.searchPlaceholder)
+                .iOSMinimizedSearchToolbar()
                 .searchSuggestions {
                     ForEach(store.matchingLocalSearchTerms(), id: \.self) { keyword in
                         SearchKeywordSuggestionRow(
