@@ -4,15 +4,16 @@ import Testing
 
 @Suite(.serialized)
 struct ImagePipelineTests {
-    @Test("Local image files are decoded through the shared pipeline")
+    @Test("Local image files are decoded through the image pipeline")
     func localImageFilesDecodeThroughPipeline() async throws {
+        let pipeline = ImagePipeline()
         let pngData = try #require(Data(base64Encoded: Self.onePixelPNGBase64))
         let fileURL = FileManager.default.temporaryDirectory
             .appending(path: "keipix-local-image-\(UUID().uuidString).png")
         try pngData.write(to: fileURL, options: .atomic)
         defer { try? FileManager.default.removeItem(at: fileURL) }
 
-        let image = try await ImagePipeline.shared.image(contentsOf: fileURL)
+        let image = try await pipeline.image(contentsOf: fileURL)
 
         #expect(image.size.width > 0)
         #expect(image.size.height > 0)
@@ -21,14 +22,15 @@ struct ImagePipelineTests {
 
     @Test("Decoded images are synchronously available for reused scroll cells")
     func decodedImagesAreSynchronouslyAvailableForReusedScrollCells() async throws {
+        let pipeline = ImagePipeline()
         let pngData = try #require(Data(base64Encoded: Self.onePixelPNGBase64))
         let fileURL = FileManager.default.temporaryDirectory
             .appending(path: "keipix-reused-scroll-cell-\(UUID().uuidString).png")
         try pngData.write(to: fileURL, options: .atomic)
         defer { try? FileManager.default.removeItem(at: fileURL) }
 
-        let image = try await ImagePipeline.shared.image(contentsOf: fileURL)
-        let cached = try #require(ImagePipeline.shared.cachedImage(for: fileURL))
+        let image = try await pipeline.image(contentsOf: fileURL)
+        let cached = try #require(pipeline.cachedImage(for: fileURL))
 
         #expect(cached.size == image.size)
         #expect(cached.platformCGImage != nil)
@@ -36,18 +38,19 @@ struct ImagePipelineTests {
 
     @Test("Decoded memory cache can be cleared without clearing the full image cache")
     func decodedMemoryCacheCanBeClearedSeparately() async throws {
+        let pipeline = ImagePipeline()
         let pngData = try #require(Data(base64Encoded: Self.onePixelPNGBase64))
         let fileURL = FileManager.default.temporaryDirectory
             .appending(path: "keipix-decoded-cache-clear-\(UUID().uuidString).png")
         try pngData.write(to: fileURL, options: .atomic)
         defer { try? FileManager.default.removeItem(at: fileURL) }
 
-        _ = try await ImagePipeline.shared.image(contentsOf: fileURL)
-        #expect(ImagePipeline.shared.cachedImage(for: fileURL) != nil)
+        _ = try await pipeline.image(contentsOf: fileURL)
+        #expect(pipeline.cachedImage(for: fileURL) != nil)
 
-        _ = ImagePipeline.shared.clearDecodedMemoryCaches()
+        _ = pipeline.clearDecodedMemoryCaches()
 
-        #expect(ImagePipeline.shared.cachedImage(for: fileURL) == nil)
+        #expect(pipeline.cachedImage(for: fileURL) == nil)
     }
 
     private static let onePixelPNGBase64 =

@@ -168,7 +168,7 @@ final class ImagePipeline: @unchecked Sendable {
     private var memoryWarningObserver: NSObjectProtocol?
     #endif
 
-    private init() {
+    init() {
         // Cost-bound decoded bitmaps by platform. iOS/iPadOS need a tighter
         // ceiling because a handful of source originals can otherwise keep
         // hundreds of MB resident while the waterfall continues loading.
