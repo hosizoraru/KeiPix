@@ -275,13 +275,14 @@ extension KeiPixStore {
         selectedPixivCollectionSourceRoute = sourceRoute
         errorMessage = nil
         selectedRoute = .pixivCollectionWorks
-        allArtworks = detail.artworks
-        artworks = detail.artworks
+        let uniqueArtworks = ArtworkFeedDeduplication.unique(detail.artworks)
+        allArtworks = uniqueArtworks
+        artworks = uniqueArtworks
         activeFeedSnapshotRestoration = nil
         allSearchPopularPreviewArtworks = []
         searchPopularPreviewArtworks = []
         nextURL = nil
-        selectedArtwork = detail.artworks.first
+        selectedArtwork = uniqueArtworks.first
         if recordsNavigation {
             navigationHistory.push(.route(sourceRoute))
         }

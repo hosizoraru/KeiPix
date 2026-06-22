@@ -786,11 +786,11 @@ final class KeiPixStore {
         do {
             let response = try await loadFeed(for: context.route)
             guard currentFeedRequestContext() == context else { return }
-            allArtworks = response.illusts
+            allArtworks = ArtworkFeedDeduplication.unique(response.illusts)
             nextURL = response.nextURL
             applyContentFilters()
             activeFeedSnapshotRestoration = nil
-            storeFeedSnapshot(response, for: context)
+            storeFeedSnapshot(PixivFeedResponse(illusts: allArtworks, nextURL: response.nextURL), for: context)
             hydrateCreatorTagSummariesIfNeeded(for: artworks, limit: 12)
         } catch {
             guard isCancellationLike(error) == false else { return }
@@ -801,11 +801,14 @@ final class KeiPixStore {
                 do {
                     let response = try await loadFeed(for: context.route)
                     guard selectedRoute == context.route else { return }
-                    allArtworks = response.illusts
+                    allArtworks = ArtworkFeedDeduplication.unique(response.illusts)
                     nextURL = response.nextURL
                     applyContentFilters()
                     activeFeedSnapshotRestoration = nil
-                    storeFeedSnapshot(response, for: currentFeedRequestContext())
+                    storeFeedSnapshot(
+                        PixivFeedResponse(illusts: allArtworks, nextURL: response.nextURL),
+                        for: currentFeedRequestContext()
+                    )
                     hydrateCreatorTagSummariesIfNeeded(for: artworks, limit: 12)
                     errorMessage = L10n.rankingDateFallbackMessage
                 } catch {
@@ -943,7 +946,7 @@ final class KeiPixStore {
         do {
             let response = try await api.nextFeed(nextURL)
             guard currentFeedRequestContext() == context else { return }
-            allArtworks.append(contentsOf: response.illusts)
+            allArtworks = ArtworkFeedDeduplication.appending(response.illusts, to: allArtworks)
             self.nextURL = response.nextURL
             applyContentFilters()
             activeFeedSnapshotRestoration = nil
@@ -1156,7 +1159,11 @@ final class KeiPixStore {
 
     func applyContentFilters() {
         let selectedID = selectedArtwork?.id
-        let visibleArtworks = allArtworks.filter(passesContentFilters)
+        let uniqueArtworks = ArtworkFeedDeduplication.unique(allArtworks)
+        if uniqueArtworks.count != allArtworks.count {
+            allArtworks = uniqueArtworks
+        }
+        let visibleArtworks = uniqueArtworks.filter(passesContentFilters)
         artworks = selectedRoute.isOwnBookmarkRoute
             ? bookmarkFeedOptions.applying(to: visibleArtworks)
             : visibleArtworks

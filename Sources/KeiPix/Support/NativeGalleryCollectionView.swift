@@ -84,6 +84,12 @@ enum NativeGalleryCollectionItem: Hashable, Identifiable {
     }
 }
 
+enum NativeGalleryCollectionItems {
+    static func diffableItems(_ items: [NativeGalleryCollectionItem]) -> [NativeGalleryCollectionItem] {
+        items.uniqued(by: \.id)
+    }
+}
+
 enum NativeGalleryScrollDirection: Sendable {
     case towardContentEnd
     case towardContentStart
@@ -253,7 +259,7 @@ struct NativeGalleryCollectionView: NSViewRepresentable {
         scrollView.contentView.postsBoundsChangedNotifications = true
 
         context.coordinator.configureDataSource(for: collectionView)
-        context.coordinator.parent = self
+        context.coordinator.update(parent: self)
         context.coordinator.observeBoundsChanges(for: scrollView)
         context.coordinator.updateCollectionLayout(for: collectionView)
         context.coordinator.applySnapshot(to: collectionView)
@@ -263,7 +269,7 @@ struct NativeGalleryCollectionView: NSViewRepresentable {
 
     func updateNSView(_ scrollView: NSScrollView, context: Context) {
         guard let collectionView = scrollView.documentView as? NSCollectionView else { return }
-        context.coordinator.parent = self
+        context.coordinator.update(parent: self)
         context.coordinator.observeBoundsChanges(for: scrollView)
         context.coordinator.updateCollectionLayout(for: collectionView)
         context.coordinator.applySnapshot(to: collectionView)
@@ -277,6 +283,7 @@ struct NativeGalleryCollectionView: NSViewRepresentable {
     final class Coordinator: NSObject, NSCollectionViewDelegateFlowLayout {
         var parent: NativeGalleryCollectionView
         private var dataSource: NSCollectionViewDiffableDataSource<Int, NativeGalleryCollectionItem>?
+        private var displayedItems: [NativeGalleryCollectionItem]
         private var lastSnapshotItemIDs: [String] = []
         private var lastLayout: NativeGalleryCollectionLayout?
         private var lastLayoutFingerprint: [NativeGalleryLayoutItemFingerprint] = []
@@ -290,10 +297,16 @@ struct NativeGalleryCollectionView: NSViewRepresentable {
 
         init(parent: NativeGalleryCollectionView) {
             self.parent = parent
+            self.displayedItems = NativeGalleryCollectionItems.diffableItems(parent.items)
         }
 
         deinit {
             NotificationCenter.default.removeObserver(self)
+        }
+
+        func update(parent newParent: NativeGalleryCollectionView) {
+            parent = newParent
+            displayedItems = NativeGalleryCollectionItems.diffableItems(newParent.items)
         }
 
         func makeCollectionLayout() -> NSCollectionViewLayout {
@@ -304,7 +317,7 @@ struct NativeGalleryCollectionView: NSViewRepresentable {
         }
 
         func updateCollectionLayout(for collectionView: NSCollectionView) {
-            let layoutFingerprint = parent.layoutFingerprint
+            let layoutFingerprint = Self.layoutFingerprint(for: displayedItems)
             let containerWidth = collectionView.enclosingScrollView?.contentSize.width ?? collectionView.bounds.width
             let layoutNeedsRefresh = lastLayout != parent.layout
                 || lastLayoutFingerprint != layoutFingerprint
@@ -322,7 +335,7 @@ struct NativeGalleryCollectionView: NSViewRepresentable {
                     layoutWasReplaced = true
                 }
                 if layoutWasReplaced || layoutNeedsRefresh {
-                    masonryLayout.items = parent.items
+                    masonryLayout.items = displayedItems
                     masonryLayout.nativeLayout = parent.layout
                     masonryLayout.invalidateLayout()
                     rememberLayout(fingerprint: layoutFingerprint, containerWidth: containerWidth)
@@ -366,7 +379,7 @@ struct NativeGalleryCollectionView: NSViewRepresentable {
         }
 
         func applySnapshot(to collectionView: NSCollectionView) {
-            let itemIDs = parent.itemIDs
+            let itemIDs = displayedItems.map(\.id)
             let itemsChanged = itemIDs != lastSnapshotItemIDs
             let contentChanged = lastContentReloadToken != parent.contentReloadToken
             let needsInitialSnapshot = dataSource?.snapshot().numberOfItems == 0
@@ -379,7 +392,7 @@ struct NativeGalleryCollectionView: NSViewRepresentable {
 
             var snapshot = NSDiffableDataSourceSnapshot<Int, NativeGalleryCollectionItem>()
             snapshot.appendSections([0])
-            snapshot.appendItems(parent.items, toSection: 0)
+            snapshot.appendItems(displayedItems, toSection: 0)
             lastSnapshotItemIDs = itemIDs
             lastContentReloadToken = parent.contentReloadToken
             dataSource?.apply(snapshot, animatingDifferences: false) { [weak self, weak collectionView] in
@@ -419,7 +432,7 @@ struct NativeGalleryCollectionView: NSViewRepresentable {
 
         private func triggerNearContentEndIfNeeded(in scrollView: NSScrollView) {
             guard parent.onNearContentEnd != nil,
-                  parent.items.contains(.loadMore),
+                  displayedItems.contains(.loadMore),
                   let documentView = scrollView.documentView else {
                 isNearContentEndArmed = true
                 return
@@ -449,16 +462,16 @@ struct NativeGalleryCollectionView: NSViewRepresentable {
             layout collectionViewLayout: NSCollectionViewLayout,
             sizeForItemAt indexPath: IndexPath
         ) -> NSSize {
-            guard indexPath.item < parent.items.count else { return .zero }
+            guard indexPath.item < displayedItems.count else { return .zero }
             return parent.layout.itemSize(
-                for: parent.items[indexPath.item],
+                for: displayedItems[indexPath.item],
                 containerWidth: collectionView.enclosingScrollView?.contentSize.width ?? collectionView.bounds.width
             )
         }
 
         private func scrollToSelectionIfNeeded(in collectionView: NSCollectionView) {
             guard let artworkID = parent.scrollToArtworkID,
-                  let index = parent.items.firstIndex(where: { $0.artworkID == artworkID }) else {
+                  let index = displayedItems.firstIndex(where: { $0.artworkID == artworkID }) else {
                 return
             }
             let indexPath = IndexPath(item: index, section: 0)
@@ -506,19 +519,31 @@ struct NativeGalleryCollectionView: NSViewRepresentable {
             at indexPaths: Set<IndexPath>,
             in collectionView: NSCollectionView
         ) {
-            for indexPath in indexPaths where indexPath.item < parent.items.count {
+            for indexPath in indexPaths where indexPath.item < displayedItems.count {
                 guard let cell = collectionView.item(at: indexPath) as? NativeGalleryHostingCollectionItem else {
                     continue
                 }
-                cell.configure(with: parent.content(parent.items[indexPath.item]))
+                cell.configure(with: parent.content(displayedItems[indexPath.item]))
             }
         }
 
         private func indexPaths(forArtworkIDs artworkIDs: Set<Int>) -> Set<IndexPath> {
             Set(artworkIDs.compactMap { artworkID in
-                parent.items.firstIndex { $0.artworkID == artworkID }
+                displayedItems.firstIndex { $0.artworkID == artworkID }
                     .map { IndexPath(item: $0, section: 0) }
             })
+        }
+
+        private static func layoutFingerprint(
+            for items: [NativeGalleryCollectionItem]
+        ) -> [NativeGalleryLayoutItemFingerprint] {
+            items.map { item in
+                NativeGalleryLayoutItemFingerprint(
+                    id: item.id,
+                    artworkAspectRatio: item.artworkAspectRatio,
+                    isFullWidth: item.isFullWidth
+                )
+            }
         }
     }
 }
@@ -693,6 +718,7 @@ struct NativeGalleryCollectionView: UIViewRepresentable {
     final class Coordinator: NSObject, UICollectionViewDelegateFlowLayout, UICollectionViewDataSourcePrefetching {
         var parent: NativeGalleryCollectionView
         private var dataSource: UICollectionViewDiffableDataSource<Int, NativeGalleryCollectionItem>?
+        private var displayedItems: [NativeGalleryCollectionItem]
         private var lastSnapshotItemIDs: [String] = []
         private var lastLayout: NativeGalleryCollectionLayout?
         private var lastLayoutFingerprint: [NativeGalleryLayoutItemFingerprint] = []
@@ -712,6 +738,7 @@ struct NativeGalleryCollectionView: UIViewRepresentable {
 
         init(parent: NativeGalleryCollectionView) {
             self.parent = parent
+            self.displayedItems = NativeGalleryCollectionItems.diffableItems(parent.items)
         }
 
         deinit {
@@ -723,9 +750,10 @@ struct NativeGalleryCollectionView: UIViewRepresentable {
 
         func update(parent newParent: NativeGalleryCollectionView, collectionView: UICollectionView) {
             parent = newParent
+            displayedItems = NativeGalleryCollectionItems.diffableItems(newParent.items)
             registerContentScrollViewIfNeeded(collectionView)
 
-            let itemIDs = parent.itemIDs
+            let itemIDs = displayedItems.map(\.id)
             let itemsChanged = itemIDs != lastSnapshotItemIDs
             let contentChanged = lastContentReloadToken != parent.contentReloadToken
             let needsInitialSnapshot = dataSource?.snapshot().numberOfItems == 0
@@ -789,7 +817,7 @@ struct NativeGalleryCollectionView: UIViewRepresentable {
                 || itemsChanged
                 || (parent.layout.usesMasonry && contentChanged)
             let layoutFingerprint = shouldRecomputeFingerprint
-                ? parent.layoutFingerprint
+                ? Self.layoutFingerprint(for: displayedItems)
                 : lastLayoutFingerprint
             let layoutNeedsRefresh = lastLayout != parent.layout
                 || lastLayoutFingerprint != layoutFingerprint
@@ -807,7 +835,7 @@ struct NativeGalleryCollectionView: UIViewRepresentable {
                     layoutWasReplaced = true
                 }
                 if layoutWasReplaced || layoutNeedsRefresh {
-                    masonryLayout.items = parent.items
+                    masonryLayout.items = displayedItems
                     masonryLayout.nativeLayout = parent.layout
                     masonryLayout.invalidateLayout()
                     rememberLayout(fingerprint: layoutFingerprint, containerWidth: containerWidth)
@@ -911,7 +939,7 @@ struct NativeGalleryCollectionView: UIViewRepresentable {
 
             var snapshot = NSDiffableDataSourceSnapshot<Int, NativeGalleryCollectionItem>()
             snapshot.appendSections([0])
-            snapshot.appendItems(parent.items, toSection: 0)
+            snapshot.appendItems(displayedItems, toSection: 0)
             lastSnapshotItemIDs = itemIDs
             lastContentReloadToken = parent.contentReloadToken
             let completion: () -> Void = { [weak self, weak collectionView] in
@@ -935,9 +963,9 @@ struct NativeGalleryCollectionView: UIViewRepresentable {
             layout collectionViewLayout: UICollectionViewLayout,
             sizeForItemAt indexPath: IndexPath
         ) -> CGSize {
-            guard indexPath.item < parent.items.count else { return .zero }
+            guard indexPath.item < displayedItems.count else { return .zero }
             return parent.layout.itemSize(
-                for: parent.items[indexPath.item],
+                for: displayedItems[indexPath.item],
                 containerWidth: collectionView.bounds.width
             )
         }
@@ -1000,7 +1028,7 @@ struct NativeGalleryCollectionView: UIViewRepresentable {
 
         private func triggerNearContentEndIfNeeded(in scrollView: UIScrollView) {
             guard parent.onNearContentEnd != nil,
-                  parent.items.contains(.loadMore) else {
+                  displayedItems.contains(.loadMore) else {
                 isNearContentEndArmed = true
                 return
             }
@@ -1027,8 +1055,8 @@ struct NativeGalleryCollectionView: UIViewRepresentable {
             let items = indexPaths
                 .sorted()
                 .compactMap { indexPath -> NativeGalleryCollectionItem? in
-                    guard indexPath.item < parent.items.count else { return nil }
-                    return parent.items[indexPath.item]
+                    guard indexPath.item < displayedItems.count else { return nil }
+                    return displayedItems[indexPath.item]
                 }
             guard items.isEmpty == false else { return }
             onPrefetchItems(items)
@@ -1039,8 +1067,8 @@ struct NativeGalleryCollectionView: UIViewRepresentable {
             let items = indexPaths
                 .sorted()
                 .compactMap { indexPath -> NativeGalleryCollectionItem? in
-                    guard indexPath.item < parent.items.count else { return nil }
-                    return parent.items[indexPath.item]
+                    guard indexPath.item < displayedItems.count else { return nil }
+                    return displayedItems[indexPath.item]
                 }
             guard items.isEmpty == false else { return }
             onCancelPrefetchItems(items)
@@ -1048,7 +1076,7 @@ struct NativeGalleryCollectionView: UIViewRepresentable {
 
         private func scrollToSelectionIfNeeded(in collectionView: UICollectionView) {
             guard let artworkID = parent.scrollToArtworkID,
-                  let index = parent.items.firstIndex(where: { $0.artworkID == artworkID }) else {
+                  let index = displayedItems.firstIndex(where: { $0.artworkID == artworkID }) else {
                 return
             }
             let indexPath = IndexPath(item: index, section: 0)
@@ -1097,20 +1125,32 @@ struct NativeGalleryCollectionView: UIViewRepresentable {
             at indexPaths: Set<IndexPath>,
             in collectionView: UICollectionView
         ) {
-            for indexPath in indexPaths where indexPath.item < parent.items.count {
+            for indexPath in indexPaths where indexPath.item < displayedItems.count {
                 guard let cell = collectionView.cellForItem(at: indexPath) as? NativeGalleryHostingCollectionCell else {
                     continue
                 }
-                let item = parent.items[indexPath.item]
+                let item = displayedItems[indexPath.item]
                 cell.configure(with: parent.content(item), item: item)
             }
         }
 
         private func indexPaths(forArtworkIDs artworkIDs: Set<Int>) -> Set<IndexPath> {
             Set(artworkIDs.compactMap { artworkID in
-                parent.items.firstIndex { $0.artworkID == artworkID }
+                displayedItems.firstIndex { $0.artworkID == artworkID }
                     .map { IndexPath(item: $0, section: 0) }
             })
+        }
+
+        private static func layoutFingerprint(
+            for items: [NativeGalleryCollectionItem]
+        ) -> [NativeGalleryLayoutItemFingerprint] {
+            items.map { item in
+                NativeGalleryLayoutItemFingerprint(
+                    id: item.id,
+                    artworkAspectRatio: item.artworkAspectRatio,
+                    isFullWidth: item.isFullWidth
+                )
+            }
         }
     }
 }
@@ -1343,19 +1383,3 @@ private extension UIView {
     }
 }
 #endif
-
-private extension NativeGalleryCollectionView {
-    var itemIDs: [String] {
-        items.map(\.id)
-    }
-
-    var layoutFingerprint: [NativeGalleryLayoutItemFingerprint] {
-        items.map { item in
-            NativeGalleryLayoutItemFingerprint(
-                id: item.id,
-                artworkAspectRatio: item.artworkAspectRatio,
-                isFullWidth: item.isFullWidth
-            )
-        }
-    }
-}

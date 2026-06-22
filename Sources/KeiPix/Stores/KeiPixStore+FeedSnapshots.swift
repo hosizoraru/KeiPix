@@ -3,14 +3,15 @@ import Foundation
 @MainActor
 extension KeiPixStore {
     func storeFeedSnapshot(_ response: PixivFeedResponse, for context: FeedRequestContext) {
-        guard response.illusts.isEmpty == false else { return }
+        let artworks = ArtworkFeedDeduplication.unique(response.illusts)
+        guard artworks.isEmpty == false else { return }
         feedSnapshotLibrary.store(
             FeedSnapshot(
                 key: context.snapshotKey,
                 routeRawValue: context.route.rawValue,
                 title: context.snapshotTitle,
                 savedAt: Date(),
-                artworks: response.illusts,
+                artworks: artworks,
                 nextURL: response.nextURL
             )
         )
@@ -19,7 +20,7 @@ extension KeiPixStore {
     }
 
     func restoreFeedSnapshotForRouteActivation(_ snapshot: FeedSnapshot) {
-        allArtworks = snapshot.artworks
+        allArtworks = ArtworkFeedDeduplication.unique(snapshot.artworks)
         nextURL = snapshot.nextURL
         applyContentFilters()
         activeFeedSnapshotRestoration = nil
@@ -32,14 +33,22 @@ extension KeiPixStore {
               snapshot.artworks.isEmpty == false else {
             return false
         }
-        allArtworks = snapshot.artworks
+        allArtworks = ArtworkFeedDeduplication.unique(snapshot.artworks)
         nextURL = snapshot.nextURL
         applyContentFilters()
-        activeFeedSnapshotRestoration = FeedSnapshotRestoration(snapshot: snapshot, error: error)
+        let restoredSnapshot = FeedSnapshot(
+            key: snapshot.key,
+            routeRawValue: snapshot.routeRawValue,
+            title: snapshot.title,
+            savedAt: snapshot.savedAt,
+            artworks: allArtworks,
+            nextURL: snapshot.nextURL
+        )
+        activeFeedSnapshotRestoration = FeedSnapshotRestoration(snapshot: restoredSnapshot, error: error)
         errorMessage = String(
             format: L10n.loadedCachedFeedFormat,
             snapshot.title,
-            snapshot.artworks.count,
+            allArtworks.count,
             error.localizedDescription
         )
         return true
