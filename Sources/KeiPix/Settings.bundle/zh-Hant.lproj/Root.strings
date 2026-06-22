@@ -1,0 +1,3 @@
+"Recovery" = "恢復";
+"Turn this on if KeiPix crashes before its settings screen opens. The next launch clears regenerable caches, then turns this switch off. Account sessions, downloads, bookmarks, muted content, and subscriptions are kept." = "如果 KeiPix 在開啟設定畫面前就崩潰，請開啟此開關。下次啟動會清理可再生成快取，然後自動關閉此開關。帳號登入、下載、收藏、封鎖內容和訂閱都會保留。";
+"Clear Caches on Next Launch" = "下次啟動時清理快取";

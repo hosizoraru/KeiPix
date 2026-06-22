@@ -17,7 +17,8 @@ let package = Package(
             name: "KeiPix",
             exclude: [
                 "Resources/Localizable.xcstrings",
-                "Resources/Navigation.xcstrings"
+                "Resources/Navigation.xcstrings",
+                "Settings.bundle"
             ],
             resources: [
                 .process("Resources/keipixiv.icon")

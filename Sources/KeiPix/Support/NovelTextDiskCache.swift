@@ -43,6 +43,14 @@ actor NovelTextDiskCache {
         try? FileManager.default.removeItem(at: cacheDirectory)
     }
 
+    nonisolated static func clearAllSynchronously() {
+        try? FileManager.default.removeItem(
+            at: URL.cachesDirectory
+                .appendingPathComponent("KeiPix", isDirectory: true)
+                .appendingPathComponent("NovelText", isDirectory: true)
+        )
+    }
+
     nonisolated func cachedSize() -> Int {
         guard let files = try? FileManager.default.contentsOfDirectory(
             at: cacheDirectory,

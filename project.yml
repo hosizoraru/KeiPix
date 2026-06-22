@@ -54,6 +54,7 @@ targets:
       - path: Sources/KeiPix
         excludes:
           - "**/.DS_Store"
+          - "Settings.bundle/**"
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.keipix.client
@@ -84,6 +85,9 @@ targets:
       - path: Sources/KeiPix
         excludes:
           - "**/.DS_Store"
+          - "Settings.bundle/**"
+      - path: Sources/KeiPix/Settings.bundle
+        buildPhase: resources
       - path: PrivacyInfo.xcprivacy
         buildPhase: resources
     settings:
@@ -113,6 +117,9 @@ targets:
       - path: Sources/KeiPix
         excludes:
           - "**/.DS_Store"
+          - "Settings.bundle/**"
+      - path: Sources/KeiPix/Settings.bundle
+        buildPhase: resources
       - path: PrivacyInfo.xcprivacy
         buildPhase: resources
     settings:

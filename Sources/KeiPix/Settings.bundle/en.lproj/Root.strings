@@ -1,0 +1,3 @@
+"Recovery" = "Recovery";
+"Turn this on if KeiPix crashes before its settings screen opens. The next launch clears regenerable caches, then turns this switch off. Account sessions, downloads, bookmarks, muted content, and subscriptions are kept." = "Turn this on if KeiPix crashes before its settings screen opens. The next launch clears regenerable caches, then turns this switch off. Account sessions, downloads, bookmarks, muted content, and subscriptions are kept.";
+"Clear Caches on Next Launch" = "Clear Caches on Next Launch";

@@ -1,0 +1,3 @@
+"Recovery" = "復旧";
+"Turn this on if KeiPix crashes before its settings screen opens. The next launch clears regenerable caches, then turns this switch off. Account sessions, downloads, bookmarks, muted content, and subscriptions are kept." = "KeiPix が設定画面を開く前にクラッシュする場合はオンにしてください。次回起動時に再生成できるキャッシュを消去し、その後このスイッチを自動でオフにします。アカウント、ダウンロード、ブックマーク、ミュート、購読は保持されます。";
+"Clear Caches on Next Launch" = "次回起動時にキャッシュを消去";

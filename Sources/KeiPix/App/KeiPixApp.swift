@@ -11,7 +11,7 @@ struct KeiPixApp: App {
     @Environment(\.openSettings) private var openSettings
     #endif
     @FocusedValue(\.gallerySelectionCommandActions) private var gallerySelectionCommandActions
-    @State private var store = KeiPixStore()
+    @State private var store = KeiPixApp.makeStore()
 
     var body: some Scene {
         WindowGroup("KeiPix", id: "main") {
@@ -151,6 +151,11 @@ struct KeiPixApp: App {
             Image(systemName: "photo.on.rectangle.angled")
         }
         #endif
+    }
+
+    private static func makeStore() -> KeiPixStore {
+        LaunchCacheRecovery.performIfRequested()
+        return KeiPixStore()
     }
 
     #if os(macOS)
